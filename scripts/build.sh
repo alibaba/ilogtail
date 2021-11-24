@@ -19,10 +19,8 @@ function os() {
     return 2
   elif uname -s | grep Linux; then
     return 1
-  elif uname -s |grep MINGW; then
-    return 3
   else
-    return 4
+    return 3
   fi
 }
 
@@ -51,10 +49,6 @@ elif [ $OS_FLAG = 2 ] && [ $BUILDMODE = "c-shared" ]; then
 elif [ $OS_FLAG = 3 ]; then
   GOARCH=386
   CGO_ENABLED=1
-else
-  echo "This platform is not suitable for compilation"
-  uname -s
-  exit 1
 fi
 
 go build -mod="$MOD" -buildmode="$BUILDMODE" -ldflags="$IDFLAGS" -o "$ROOTDIR"/bin/${NAME} "$ROOTDIR"/main
