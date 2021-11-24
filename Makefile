@@ -41,11 +41,7 @@ OUT_DIR = bin
 
 .PHONY: tools
 tools:
-	if [ $(OS) == Darwin ]; then \
-	    $(GO_LINT) version || brew install golangci-lint ; \
-	else \
-  		$(GO_LINT) version || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GO_PATH)/bin v1.39.0; \
-  	fi
+	$(GO_LINT) version || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GO_PATH)/bin v1.39.0
 	$(GO_ADDLICENSE) version || go install github.com/google/addlicense
 
 
