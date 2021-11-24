@@ -29,12 +29,15 @@ jobs:
         runner: [ ubuntu ]
 #      fail-fast: true
     steps:
+      - name: prepare ubuntu environment
+        if: matrix.runner == 'ubuntu'
+        run: sudo apt-get install -y libsystemd-dev
+
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
-      - name: prepare environment
-        run: sudo apt-get install -y libsystemd-dev
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
         with:
