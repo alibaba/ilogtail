@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Build and Test
+name: 1.15 Build
 
 on:
   pull_request:
