@@ -62,6 +62,10 @@ func (k *FlusherKafka) Init(context ilogtail.Context) error {
 		partitioner = sarama.NewRoundRobinPartitioner
 	case "hash":
 		partitioner = sarama.NewHashPartitioner
+	case "random":
+		partitioner = sarama.NewRandomPartitioner
+	default:
+		logger.Error(k.context.GetRuntimeContext(), "INVALID_KAFKA_PARTITIONER", "invalid PartitionerType, use RandomPartitioner instead, type", k.PartitionerType)
 	}
 	config.Producer.Partitioner = partitioner
 	config.Producer.Timeout = 5 * time.Second
@@ -136,7 +140,8 @@ func (k *FlusherKafka) Stop() error {
 func init() {
 	ilogtail.Flushers["flusher_kafka"] = func() ilogtail.Flusher {
 		return &FlusherKafka{
-			ClientID: "LogtailPlugin",
+			ClientID:        "LogtailPlugin",
+			PartitionerType: "random",
 		}
 	}
 }
