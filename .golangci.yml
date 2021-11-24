@@ -32,7 +32,7 @@ run:
   # from this option's value (see skip-dirs-use-default).
   skip-dirs:
     - (^|/)vendor($|/)
-    - (^|/|\\\\)external($|/|\\\\)
+    - (^|/)external($|/)
     # todo delete or polish packages
     - (^|/)plugins/input/input_wineventlog($|/)
 

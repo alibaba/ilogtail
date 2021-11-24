@@ -40,11 +40,6 @@ jobs:
         with:
           submodules: true
 
-      - name: golangci-lint-install
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.39
-
       - name: Check License Header
         if: matrix.runner == 'ubuntu'
         run: make check-license
