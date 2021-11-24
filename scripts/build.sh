@@ -15,6 +15,7 @@
 # limitations under the License.
 
 function os() {
+
   if uname -s | grep Darwin; then
     return 2
   elif uname -s | grep Linux; then
