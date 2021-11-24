@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.16 ]
-        runner: [ ubuntu, macos, windows ]
+        runner: [ ubuntu, macos ]
 #      fail-fast: true
     steps:
       - name: Set up Go ${{ matrix.go-version }}
