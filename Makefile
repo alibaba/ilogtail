@@ -95,6 +95,10 @@ docker: clean
 coveragedocker: clean
 	./scripts/docker-build.sh $(VERSION) coverage
 
+# provide base environment for ilogtail
+basedocker: clean
+	./scripts/docker-build.sh $(VERSION) base
+
 # provide a goc server for e2e testing
 .PHONY: gocdocker
 gocdocker: clean
