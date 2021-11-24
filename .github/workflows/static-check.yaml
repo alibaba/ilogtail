@@ -44,9 +44,10 @@ jobs:
         if: matrix.runner == 'ubuntu'
         run: make check-license
 
-#      - name: Check Dependencies Licences
-#        run: make check-dependency-licenses
-#
+      - name: Check Dependencies Licences
+        if: matrix.runner == 'ubuntu'
+        run: make check-dependency-licenses
+
 #      - name: Lint
 #        run: make lint
 
