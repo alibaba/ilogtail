@@ -53,6 +53,7 @@ elif [ $OS_FLAG = 3 ]; then
   CGO_ENABLED=1
 else
   echo "This platform is not suitable for compilation"
+  uname -s
   exit 1
 fi
 
