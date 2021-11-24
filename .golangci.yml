@@ -104,7 +104,7 @@ linters-settings:
     simplify: true
 
   goimports:
-    local-prefixes: logtailplugin
+    local-prefixes: github.com/alibaba/ilogtail
 
   misspell:
     locale: US
