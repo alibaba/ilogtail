@@ -34,8 +34,11 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: prepare environment
-        if: matrix.runner == 'ubuntu'
-        run: apt-get install -y libsystemd-dev
+        uses: feelpp/action-install-feelpp@v1
+        with:
+          dist: ubuntu
+          flavor: focal
+          install: libsystemd-dev
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
         with:
