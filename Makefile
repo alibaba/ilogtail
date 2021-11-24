@@ -46,7 +46,7 @@ tools:
 	else \
   		$(GO_LINT) version || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GO_PATH)/bin v1.39.0; \
   	fi
-	$(GO_ADDLICENSE) version || GO111MODULE=off $(GO_GET) -u github.com/google/addlicense
+	$(GO_ADDLICENSE) version || go install github.com/google/addlicense
 
 
 .PHONY: clean
