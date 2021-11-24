@@ -19,8 +19,10 @@ function os() {
     return 2
   elif uname -s | grep Linux; then
     return 1
+  elif uname -s |grep MINGW; then
+    return 3
   else
-    return 2
+    return 4
   fi
 }
 
@@ -46,6 +48,12 @@ if [ $OS_FLAG = 1 ]; then
   fi
 elif [ $OS_FLAG = 2 ] && [ $BUILDMODE = "c-shared" ]; then
   NAME=libPluginBase.dll
+elif [ $OS_FLAG = 3 ]; then
+  GOARCH=386
+  CGO_ENABLED=1
+else
+  echo "This platform is not suitable for compilation"
+  exit 1
 fi
 
 go build -mod="$MOD" -buildmode="$BUILDMODE" -ldflags="$IDFLAGS" -o "$ROOTDIR"/bin/${NAME} "$ROOTDIR"/main
