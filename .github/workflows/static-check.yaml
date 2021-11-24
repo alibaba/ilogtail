@@ -48,8 +48,8 @@ jobs:
         if: matrix.runner == 'ubuntu'
         run: make check-dependency-licenses
 
-#      - name: Lint
-#        run: make lint
+      - name: Lint
+        run: make lint
 
   result:
     runs-on: ubuntu-latest
