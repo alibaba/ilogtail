@@ -77,7 +77,7 @@ lint-e2e: clean tools
 
 .PHONY: build
 build: clean
-	./scripts/build.sh vendor default
+	sh -x ./scripts/build.sh vendor default
 
 .PHONY: cgobuild
 cgobuild: clean
