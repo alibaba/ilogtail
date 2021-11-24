@@ -38,7 +38,7 @@ jobs:
         with:
           dist: ubuntu
           flavor: focal
-          install: libsystemd-dev
+          install: libfeelpp1 feelpp-tools libfeelpp-dev
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
         with:
