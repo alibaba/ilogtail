@@ -90,11 +90,11 @@ func TestFormat(t *testing.T) {
 		{"2016/01/02-12:59:59", "%Y/%m/%d-%H:%M:%S", time.Date(2016, time.January, 2, 12, 59, 59, 0, nowTime.Location()).Unix()},
 		{"2016/01/02 12:59:59.123", "%Y/%m/%d %H:%M:%S", time.Date(2016, time.January, 2, 12, 59, 59, 0, nowTime.Location()).Unix()},
 		{"2016/01/02 12:59:59 +0700 (UTC)", "%Y/%m/%d %H:%M:%S %z (%Z)", time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+7", 7*60*60)).Unix()},
-		{"1451710799", "%s", time.Date(2016, time.January, 2, 12, 59, 59, 0, nowTime.Location()).Unix()},
-		{"1451710799000", "%s", time.Date(2016, time.January, 2, 12, 59, 59, 0, nowTime.Location()).Unix()},
-		{"1451710799000000", "%s", time.Date(2016, time.January, 2, 12, 59, 59, 0, nowTime.Location()).Unix()},
-		{"2016/Jan/02 12:59:59", "%Y/%b/%d %H:%M:%S", time.Date(2016, time.January, 2, 12, 59, 59, 0, nowTime.Location()).Unix()},
-		{"2019-07-15T04:16:47Z", "%Y-%m-%dT%H:%M:%S", time.Date(2019, time.July, 15, 4, 16, 47, 0, nowTime.Location()).Unix()},
+		{"1451710799", "%s", time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix()},
+		{"1451710799000", "%s", time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix()},
+		{"1451710799000000", "%s", time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix()},
+		{"2016/Jan/02 12:59:59", "%Y/%b/%d %H:%M:%S", time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix()},
+		{"2019-07-15T04:16:47Z", "%Y-%m-%dT%H:%M:%S", time.Date(2019, time.July, 15, 4, 16, 47, 0, time.FixedZone("UTC+8", 8*60*60)).Unix()},
 	}
 	for idx, test := range tests {
 		processor, err := newProcessor(test.Format, nilUTCOffset)
