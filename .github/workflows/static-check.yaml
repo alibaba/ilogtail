@@ -24,7 +24,38 @@ jobs:
   CI:
     runs-on: ${{ matrix.runner }}-latest
     timeout-minutes: 30
-    permissions: read-all|write-all
+    strategy:
+      matrix:
+        go-version: [ 1.16 ]
+        runner: [ ubuntu， macos ]
+      fail-fast: true
+    steps:
+
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Check License Header
+        if: matrix.runner == 'ubuntu'
+        run: make check-license
+
+      - name: Check Dependencies Licences
+        if: matrix.runner == 'ubuntu'
+        run: make check-dependency-licenses
+
+      - name: Lint
+        run: make lint
+  Test:
+    env:
+      RUNNER_ALLOW_RUNASROOT: 1
+    runs-on: ${{ matrix.runner }}-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         go-version: [ 1.16 ]
@@ -47,27 +78,16 @@ jobs:
         with:
           submodules: true
 
-      - name: Check License Header
-        if: matrix.runner == 'ubuntu'
-        run: make check-license
-
-      - name: Check Dependencies Licences
-        if: matrix.runner == 'ubuntu'
-        run: make check-dependency-licenses
-
       - name: Test
         run: make test
 
       - name: Test E2e Engine
         run: make test-e2e-engine
 
-      - name: Lint
-        run: make lint
-
   result:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [ CI ]
+    needs: [ CI, Test ]
     steps:
       - name: Build Result
         run: echo "Just to make the GitHub merge button green"
