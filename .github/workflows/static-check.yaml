@@ -22,14 +22,21 @@ on:
 
 jobs:
   CI:
+    env:
+      RUNNER_ALLOW_RUNASROOT: 1
     runs-on: ${{ matrix.runner }}-latest
     timeout-minutes: 30
     strategy:
       matrix:
         go-version: [ 1.16 ]
-        runner: [ ubuntu， macos ]
+        runner: [ ubuntu, macos ]
       fail-fast: true
     steps:
+
+      # prepare ubuntu environment
+      - name: prepare ubuntu environment
+        if: matrix.runner == 'ubuntu'
+        run: sudo apt-get install -y libsystemd-dev
 
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v2
@@ -51,32 +58,6 @@ jobs:
 
       - name: Lint
         run: make lint
-  Test:
-    env:
-      RUNNER_ALLOW_RUNASROOT: 1
-    runs-on: ${{ matrix.runner }}-latest
-    timeout-minutes: 30
-    strategy:
-      matrix:
-        go-version: [ 1.16 ]
-        runner: [ ubuntu ]
-      fail-fast: true
-    steps:
-
-      # prepare ubuntu environment
-      - name: prepare ubuntu environment
-        if: matrix.runner == 'ubuntu'
-        run: sudo apt-get install -y libsystemd-dev
-
-      - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ matrix.go-version }}
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: Test
         run: make test
@@ -84,10 +65,11 @@ jobs:
       - name: Test E2e Engine
         run: make test-e2e-engine
 
+
   result:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [ CI, Test ]
+    needs: [ CI ]
     steps:
       - name: Build Result
         run: echo "Just to make the GitHub merge button green"
