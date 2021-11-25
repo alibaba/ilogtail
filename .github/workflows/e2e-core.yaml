@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Static Check
+name: E2E Core Test
 
 on:
   pull_request:
@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.16 ]
-        runner: [ ubuntu, macos ]
+        runner: [ ubuntu ]
 #      fail-fast: true
     steps:
       - name: Set up Go ${{ matrix.go-version }}
@@ -40,22 +40,8 @@ jobs:
         with:
           submodules: true
 
-      - name: Check License Header
-        if: matrix.runner == 'ubuntu'
-        run: make check-license
-
-      - name: Check Dependencies Licences
-        if: matrix.runner == 'ubuntu'
-        run: make check-dependency-licenses
-
-      - name: Lint
-        run: make lint
-
-      - name: Test
-        run: make test
-
-      - name: Test E2e Engine
-        run: make test-e2e-engine
+      - name: E2E Core Structure Test
+        run: make e2e-core
 
   result:
     runs-on: ubuntu-latest
