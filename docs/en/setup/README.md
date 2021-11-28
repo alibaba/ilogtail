@@ -11,7 +11,7 @@ complete, please follow [this document](https://golang.org/doc/code#Organization
 Set up your development directory and environment variables such as GOPATH correctly. The rest of this article will
 assume that you have installed the Go development environment and set GOPATH. Currently, the Logtail plugin supports
 running on Linux/Windows/macOS. Some plugins may have conditional compilation and only run under Linux or Windows.
-Please debug in the corresponding environment.
+Please debug in the corresponding environment. More details please see [here](../guides/How-to-do-manual-test.md).
 
 ### Local start
 
