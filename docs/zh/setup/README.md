@@ -7,7 +7,7 @@ iLogtail 插件基于 Go 语言实现，所以在进行开发前，需要安装�
 语言开发环境，如何安装可以参见[官方文档](https://golang.org/doc/install)
 。在安装完成后，为了方便后续地开发，请遵照[此文档](https://golang.org/doc/code#Organization)
 正确地设置你的开发目录以及 GOPATH 等环境变量。本文的后续内容将假设你已安装 Go 开发环境且设置了 GOPATH。
-目前Logtail 插件支持Linux/Windows/macOS 上运行的，某些插件可能存在条件编译仅在Linux或Windows 下运行，请再相应环境进行调试，详细的描述可以参考 [此文档](../guides/How-to-do-manual-test.md)。
+目前Logtail 插件支持Linux/Windows/macOS 上运行的，某些插件可能存在条件编译仅在Linux或Windows 下运行，请在相应环境进行调试，详细的描述可以参考 [此文档](../guides/How-to-do-manual-test.md)。
 
 ### 本地启动
 在根目录下执行 `make build` 命令，会得到 `bin/ilogtail` 可执行文件，使用以下命令可以快速启动iLogtail 程序，并将日志使用控制台输出。
