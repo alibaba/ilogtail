@@ -99,7 +99,7 @@ For ilogtail-GO (this code repository), it can run standalone or work together w
 make [Logtail AlibabaCloud](https://help.aliyun.com/document_detail/28979.html). If you are
 using [Logtail AlibabaCloud](https://help.aliyun.com/document_detail/28979.html), the repository can be compiled as an
 so library to work on the AlibabaCloud. And you cloud use
-the [SLS observable platform](https://www.aliyun.com/product/sls?spm=5176.19720258.J_8058803260.41.68232c4a8fRbNM) to
+the [SLS observable platform](https://www.aliyun.com/product/sls) to
 config the settings or view the collect data. The following will introduce how to use AlibabaCloud to run the plugin
 program written by yourself.
 

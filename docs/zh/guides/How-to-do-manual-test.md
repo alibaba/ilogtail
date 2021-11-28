@@ -91,7 +91,7 @@ Key/Value 为1111：2222 的数据，通过processor_add_fields 插件，最终�
 对于 iLogtail作为-GO(本代码库) 来说，既可以独立运行，也可以与 iLogtail作为-C
 程序协同工作，共同组成[Logtail AlibabaCloud](https://help.aliyun.com/document_detail/28979.html)
 ，如果你已经在使用[Logtail AlibabaCloud](https://help.aliyun.com/document_detail/28979.html) ，你也可以将本代码库编译成so
-library，直接使用 [SLS observable platform](https://www.aliyun.com/product/sls?spm=5176.19720258.J_8058803260.41.68232c4a8fRbNM)
+library，直接使用 [SLS observable platform](https://www.aliyun.com/product/sls)
 控制台进行配置设置，使用控制台查看采集数据。以下将分别介绍2种情况下如何使用AlibabaCloud 运行你自己编写的插件程序。
 
 ### 基于ECS 主机运行 [Logtail AlibabaCloud](https://help.aliyun.com/document_detail/28979.html)
