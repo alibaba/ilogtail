@@ -28,3 +28,5 @@ This project will generate binaries for at least two platforms (Linux/Windows.no
 
 
 ## [Unreleased]
+- `public` `both` `updated` optimize system_v2 IOCounter metrics
+- `public` `both` `updated` change kafka flusher partition strategy to hash key
