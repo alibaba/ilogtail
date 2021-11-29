@@ -334,8 +334,8 @@ func (r *InputSystem) CollectNet(collector ilogtail.Collector) {
 		}
 		r.lastNetTime = nowTime
 		r.lastNetStatMap = make(map[string]*net.IOCountersStat)
-		for _, stat := range netIoStatAll {
-			r.lastNetStatMap[stat.Name] = &stat
+		for i := range netIoStatAll {
+			r.lastNetStatMap[netIoStatAll[i].Name] = &netIoStatAll[i]
 		}
 	}
 }
