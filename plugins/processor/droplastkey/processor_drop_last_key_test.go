@@ -52,6 +52,37 @@ func TestSourceKey(t *testing.T) {
 	assert.Equal(t, "234", log.Contents[0].Value)
 }
 
+func TestDropKeyError(t *testing.T) {
+	logger.ClearMemoryLog()
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	processor := &ProcessorDropLastKey{
+		Include: []string{"src", "test"},
+		DropKey: "",
+	}
+	err := processor.Init(ctx)
+	assert.Equal(t, err.Error(), "Invalid config, DropKey is empty")
+}
+
+func TestIncludeError(t *testing.T) {
+	logger.ClearMemoryLog()
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	processor := &ProcessorDropLastKey{
+		Include: []string{},
+		DropKey: "src",
+	}
+	err := processor.Init(ctx)
+	assert.Equal(t, err.Error(), "Invalid config, Include is empty")
+}
+
+func TestDropFlag(t *testing.T) {
+	processor, err := newProcessor()
+	require.NoError(t, err)
+	log := &protocol.Log{Time: 0}
+	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "xxx", Value: "234"})
+	processor.ProcessLogs([]*protocol.Log{log})
+	assert.Equal(t, "234", log.Contents[0].Value)
+}
+
 func TestDescription(t *testing.T) {
 	processor, err := newProcessor()
 	require.NoError(t, err)
