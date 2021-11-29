@@ -191,7 +191,7 @@ func (info *K8SInfo) Merge(o *K8SInfo) {
 	}
 }
 
-// IsContainerLabelMatch ...
+// IsMatch ...
 func (info *K8SInfo) IsMatch(filter *K8SFilter) bool {
 	if info.PausedContainer {
 		return false
