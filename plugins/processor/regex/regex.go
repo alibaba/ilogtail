@@ -53,7 +53,7 @@ func (p *ProcessorRegex) Init(context ilogtail.Context) error {
 		return errNoRegexKey
 	}
 	var err error
-	p.re, err = regexp.Compile(p.Regex)
+	p.re, err = regexp.Compile("(?s)" + p.Regex)
 	if err != nil {
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init regex error", err, "regex", p.Regex)
 		return err
