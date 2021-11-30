@@ -29,3 +29,4 @@ This project will generate binaries for at least two platforms (Linux/Windows.no
 
 ## [Unreleased]
 - [inner][both][fixed] `service_http_server`: unlink unix sock before listen.
+- [inner][both][fixed] `metric_meta_kubernetes`: remove global variables.
