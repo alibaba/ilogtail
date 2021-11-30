@@ -56,7 +56,6 @@ func BenchmarkTest(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				reg.FindStringSubmatch(log)
-				//fmt.Printf("%v",arr)
 			}
 			b.StopTimer()
 		})
