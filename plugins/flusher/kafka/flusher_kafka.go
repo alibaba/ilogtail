@@ -17,13 +17,18 @@ package kafka
 import (
 	"encoding/json"
 	"errors"
-	"time"
-
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/Shopify/sarama"
+)
+
+var (
+	hashKey sarama.StringEncoder
 )
 
 type FlusherKafka struct {
@@ -36,6 +41,9 @@ type FlusherKafka struct {
 	ClientID        string
 	isTerminal      chan bool
 	producer        sarama.AsyncProducer
+	HashKey         []string
+	once            sync.Once //for sidecar mode load config once
+	RunMode         string    //sidecar or daemonset or other
 }
 
 func (k *FlusherKafka) Init(context ilogtail.Context) error {
@@ -104,6 +112,7 @@ func (k *FlusherKafka) Description() string {
 func (k *FlusherKafka) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		logger.Debug(k.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
+
 		for _, log := range logGroup.Logs {
 			buf, _ := json.Marshal(log)
 			logger.Debug(k.context.GetRuntimeContext(), string(buf))
@@ -111,10 +120,29 @@ func (k *FlusherKafka) Flush(projectName string, logstoreName string, configName
 				Topic: k.Topic,
 				Value: sarama.ByteEncoder(buf),
 			}
-			key := logstoreName
-			if key != "" {
-				m.Key = sarama.StringEncoder(key)
+			//set key when partition type is hash
+			if k.PartitionerType == "hash" {
+				keyFunc := func() {
+					var hashData []string
+					for _, content := range log.GetContents() {
+						if contains(k.HashKey, content.Key) {
+							hashData = append(hashData, content.Value)
+						}
+					}
+					if len(hashData) == 0 {
+						hashData = append(hashData, logstoreName)
+					}
+					logger.Debug(k.context.GetRuntimeContext(), "partition key", hashData)
+					hashKey = sarama.StringEncoder(strings.Join(hashData, ""))
+				}
+				if k.RunMode == "sidecar" {
+					k.once.Do(keyFunc)
+				} else {
+					keyFunc()
+				}
+				m.Key = hashKey
 			}
+
 			k.producer.Input() <- m
 		}
 	}
@@ -144,4 +172,12 @@ func init() {
 			PartitionerType: "random",
 		}
 	}
+}
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
