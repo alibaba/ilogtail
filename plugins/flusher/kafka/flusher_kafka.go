@@ -37,10 +37,12 @@ type FlusherKafka struct {
 	HashKeys        []string
 	HashOnce        bool
 	ClientID        string
-	isTerminal      chan bool
-	producer        sarama.AsyncProducer
-	hashKeyMap      map[string]struct{}
-	hashKey         sarama.StringEncoder
+
+	isTerminal chan bool
+	producer   sarama.AsyncProducer
+	hashKeyMap map[string]struct{}
+	hashKey    sarama.StringEncoder
+	flusher    FlusherFunc
 }
 
 type FlusherFunc func(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
@@ -74,6 +76,7 @@ func (k *FlusherKafka) Init(context ilogtail.Context) error {
 		for _, key := range k.HashKeys {
 			k.hashKeyMap[key] = struct{}{}
 		}
+		k.flusher = k.HashFlush
 	case "random":
 		partitioner = sarama.NewRandomPartitioner
 	default:
@@ -114,13 +117,7 @@ func (k *FlusherKafka) Description() string {
 }
 
 func (k *FlusherKafka) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
-	var flusher FlusherFunc
-	if k.PartitionerType == "hash" {
-		flusher = k.HashFlush
-	} else {
-		flusher = k.NormalFlush
-	}
-	return flusher(projectName, logstoreName, configName, logGroupList)
+	return k.flusher(projectName, logstoreName, configName, logGroupList)
 }
 
 func (k *FlusherKafka) NormalFlush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
@@ -198,9 +195,11 @@ func (k *FlusherKafka) Stop() error {
 
 func init() {
 	ilogtail.Flushers["flusher_kafka"] = func() ilogtail.Flusher {
-		return &FlusherKafka{
+		f := &FlusherKafka{
 			ClientID:        "LogtailPlugin",
 			PartitionerType: "random",
 		}
+		f.flusher = f.NormalFlush
+		return f
 	}
 }
