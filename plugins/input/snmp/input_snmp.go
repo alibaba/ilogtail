@@ -20,46 +20,44 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	g "github.com/gosnmp/gosnmp"
 	"net"
 	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/alibaba/ilogtail"
-
-	g "github.com/gosnmp/gosnmp"
 )
 
 const pluginName = "service_snmp"
 
 // SNMPAgent holds the configuration for a SNMP agent and will finally convert it into *g.GoSNMP agent.
 type SNMPAgent struct {
-	//Targets sets list of status target device ip
+	// Targets sets list of status target device ip
 	Targets []string
-	//Port sets local agent address
+	// Port sets local agent address
 	Port string
-	//Transport sets connection type TCP/UDP
+	// Transport sets connection type TCP/UDP
 	Transport string
-	//Community sets authorize community for snmp v2
+	// Community sets authorize community for snmp v2
 	Community string
-	//Version sets SNMP version
+	// Version sets SNMP version
 	Version int
-	//MaxRepetitions sets the GETBULK max-repetitions used by BulkWalk*
+	// MaxRepetitions sets the GETBULK max-repetitions used by BulkWalk*
 	MaxRepetitions uint32
-	//Timeout is the timeout for one SNMP request/response.
+	// Timeout is the timeout for one SNMP request/response.
 	Timeout int
-	//Retries sets the number of retries to attempt
+	// Retries sets the number of retries to attempt
 	Retries int
-	//ExponentialTimeout sets whether Double timeout in each retry
+	// ExponentialTimeout sets whether Double timeout in each retry
 	ExponentialTimeout bool
-	//Oids give the Object Identifier list for agent to collect
+	// Oids give the Object Identifier list for agent to collect
 	Oids []string
-	//Fields give the untranslated oids for agent to collect
+	// Fields give the untranslated oids for agent to collect
 	Fields []string
-	//Tables give the table list for agent to collect
+	// Tables give the table list for agent to collect
 	Tables []string
 
 	MaxTargetsLength int
@@ -76,6 +74,7 @@ type SNMPAgent struct {
 	PrivacyProtocol          string
 	PrivacyPassphrase        string
 
+	/* #nosec */
 	gs            []*g.GoSNMP
 	target        string
 	fieldContents []Field
@@ -140,7 +139,7 @@ func (s *SNMPAgent) Init(context ilogtail.Context) (int, error) {
 	}
 
 	if s.Transport != "tcp" && s.Transport != "udp" {
-		return 1, fmt.Errorf("invalid trasnport %v, only support \"tcp\", \"udp\"", s.Transport)
+		return 1, fmt.Errorf("invalid transport %v, only support \"tcp\", \"udp\"", s.Transport)
 	}
 
 	if len(s.fieldContents) > s.MaxSearchLength {
@@ -322,6 +321,7 @@ func execCmd(arg0 string, args ...string) ([]byte, error) {
 	cmd := exec.Command(arg0, args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil && !strings.Contains(err.Error(), "no child process") {
+		/* #nosec */
 		if err, ok := err.(*exec.ExitError); ok {
 			return nil, fmt.Errorf("%s: %w", bytes.TrimRight(err.Stderr, "\r\n"), err)
 		}
@@ -358,6 +358,7 @@ func snmpTranslateCall(oid string) (oidNum string, oidText string, conversion st
 			return oid, oid, "", "", "", nil
 		}
 		oidText = oid
+		oidSuffix = ""
 	} else {
 		mibName = oidText[:i]
 		oidSuffix = oidText[i+2:]
@@ -483,15 +484,16 @@ func (s *SNMPAgent) Start(collector ilogtail.Collector) error {
 
 				result, err := thisGsAgent.Get(oids)
 
-				if errors.Is(err, g.ErrUnknownSecurityLevel) {
+				switch {
+				case errors.Is(err, g.ErrUnknownSecurityLevel):
 					return fmt.Errorf("unknown security level")
-				} else if errors.Is(err, g.ErrUnknownUsername) {
+				case errors.Is(err, g.ErrUnknownUsername):
 					return fmt.Errorf("unknown username")
-				} else if errors.Is(err, g.ErrWrongDigest) {
+				case errors.Is(err, g.ErrWrongDigest):
 					return fmt.Errorf("wrong digest")
-				} else if errors.Is(err, g.ErrDecryption) {
+				case errors.Is(err, g.ErrDecryption):
 					return fmt.Errorf("decryption error")
-				} else if err != nil {
+				case err != nil:
 					return err
 				}
 

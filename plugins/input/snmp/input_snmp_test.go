@@ -84,14 +84,14 @@ func defaultInput() (*pluginmanager.ContextImp, *SNMPAgent) {
 	return ctx, input
 }
 
-func newUdpInputV1() (*pluginmanager.ContextImp, *SNMPAgent) {
+func newUDPInputV1() (*pluginmanager.ContextImp, *SNMPAgent) {
 	ctx, input := defaultInput()
 	input.Version = 1
 	input.Transport = "udp"
 	return ctx, input
 }
 
-func newTcpInputV1() (*pluginmanager.ContextImp, *SNMPAgent) {
+func newTCPInputV1() (*pluginmanager.ContextImp, *SNMPAgent) {
 	ctx, input := defaultInput()
 	input.Version = 1
 	input.Transport = "tcp"
@@ -132,12 +132,14 @@ func TestStartAndStop(t *testing.T) {
 	ctx := &pluginmanager.ContextImp{}
 	ctx.InitContext("test_project", "test_logstore", "test_configname")
 
-	ctx, input := newUdpInputV1()
+	ctx, input := newUDPInputV1()
 	_ = InitGoSNMP(ctx, input)
 
 	collector := &mockCollector{}
+
+	var err error
 	go func() {
-		err := input.Start(collector)
+		err = input.Start(collector)
 		require.NoError(t, err)
 	}()
 
@@ -145,27 +147,29 @@ func TestStartAndStop(t *testing.T) {
 	assert.Equal(t, len(collector.logs), 1)
 
 	t1 := time.Now()
-	err := input.Stop()
+	err = input.Stop()
 	require.NoError(t, err)
-	dur := time.Now().Sub(t1)
+	dur := time.Since(t1)
+	//dur := time.Now().Sub(t1) // for lint requirements
 	require.True(t, dur/time.Microsecond < 2000, "dur: %v", dur)
 
-	ctx, input = newTcpInputV1()
+	ctx, input = newTCPInputV1()
 	_ = InitGoSNMP(ctx, input)
 
 	collector = &mockCollector{}
 	go func() {
-		err := input.Start(collector)
+		err = input.Start(collector)
 		require.NoError(t, err)
 	}()
 
 	//time.Sleep(time.Duration(1) * time.Second)
 	//assert.Equal(t, len(collector.logs), 1)
 
-	t1 = time.Now()
-	//err = input.Stop()
-	//require.NoError(t, err)
-	dur = time.Now().Sub(t1)
+	t2 := time.Now()
+	err = input.Stop()
+	require.NoError(t, err)
+	dur = time.Since(t2)
+	//dur := time.Now().Sub(t1) // for lint requirements
 	require.True(t, dur/time.Microsecond < 2000, "dur: %v", dur)
 
 }
@@ -179,7 +183,7 @@ func TestGET(t *testing.T) {
 	require.NoError(t, err)
 	collector := &mockCollector{}
 	go func() {
-		err := input.Start(collector)
+		err = input.Start(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -203,7 +207,7 @@ func TestGET(t *testing.T) {
 	require.NoError(t, err)
 	collector = &mockCollector{}
 	go func() {
-		err := input.Start(collector)
+		err = input.Start(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -220,14 +224,14 @@ func TestGET(t *testing.T) {
 			"_content_":     "Me <me@example.org>",
 			"_targetindex_": "0"}},
 	)
-	ctx, input = newTcpInputV1()
+	ctx, input = newTCPInputV1()
 	err = InitGoSNMP(ctx, input)
 	require.NoError(t, err)
 	err = input.gs[0].Connect()
 	require.NoError(t, err)
 	collector = &mockCollector{}
 	go func() {
-		err := input.Start(collector)
+		err = input.Start(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -244,14 +248,14 @@ func TestGET(t *testing.T) {
 			"_content_":     "Me <me@example.org>",
 			"_targetindex_": "0"}},
 	)
-	ctx, input = newUdpInputV1()
+	ctx, input = newUDPInputV1()
 	err = InitGoSNMP(ctx, input)
 	require.NoError(t, err)
 	err = input.gs[0].Connect()
 	require.NoError(t, err)
 	collector = &mockCollector{}
 	go func() {
-		err := input.Start(collector)
+		err = input.Start(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
