@@ -14,7 +14,6 @@
 
 package snmp
 
-/* #nosec */
 import (
 	// stdlib
 	"bufio"
@@ -38,6 +37,10 @@ import (
 )
 
 const pluginName = "service_snmp"
+
+// SNMP is a service input plugin to collect logs following SNMP protocol.
+// It works with SNMP agents configured by users. It uses TCP or UDP
+// to receive log from agents, and then translate them with MIB.
 
 // SNMPAgent holds the configuration for a SNMP agent and will finally convert it into *g.GoSNMP agent.
 type SNMPAgent struct {
@@ -82,7 +85,7 @@ type SNMPAgent struct {
 
 	gs            []*g.GoSNMP
 	fieldContents []Field
-	context       ilogtail.Context // #nosec
+	context       ilogtail.Context
 }
 
 // Field holds the configuration for a Field to look up.
