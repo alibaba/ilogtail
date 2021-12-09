@@ -16,13 +16,13 @@ package snmp
 
 /* #nosec */
 import (
-	"fmt"
-	"github.com/alibaba/ilogtail/pkg/protocol" // #nosec
-	"github.com/alibaba/ilogtail/pluginmanager"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
+	"fmt"                                       // #nosec
+	"github.com/alibaba/ilogtail/pkg/protocol"  // #nosec
+	"github.com/alibaba/ilogtail/pluginmanager" // #nosec
+	"github.com/stretchr/testify/assert"        // #nosec
+	"github.com/stretchr/testify/require"       // #nosec
+	"testing"                                   // #nosec
+	"time"                                      // #nosec
 )
 
 type ContextTest struct {
@@ -66,7 +66,7 @@ func (p *ContextTest) LogWarn(alarmType string, kvPairs ...interface{}) {
 	fmt.Println(alarmType, kvPairs)
 }
 func defaultInput() (*pluginmanager.ContextImp, *SNMPAgent) {
-	//to use this function, create "public" community first
+	// to use this function, create "public" community first
 	ctx := &pluginmanager.ContextImp{}
 	input := &SNMPAgent{
 		Targets:            []string{"127.0.0.1"},
@@ -107,7 +107,7 @@ func newInputV2() (*pluginmanager.ContextImp, *SNMPAgent) {
 }
 
 func newInputV3() (*pluginmanager.ContextImp, *SNMPAgent) {
-	//to use this function, run `net-snmp-create-v3-user -ro -A SecUREDpass -a SHA -X StRongPASS -x AES snmpreadonly` first
+	// to use this function, run `net-snmp-create-v3-user -ro -A SecUREDpass -a SHA -X StRongPASS -x AES snmpreadonly` first
 	ctx, input := defaultInput()
 	input.Version = 3
 	input.Transport = "udp"
@@ -129,7 +129,7 @@ func InitGoSNMP(ctx *pluginmanager.ContextImp, input *SNMPAgent) error {
 }
 
 func TestStartAndStop(t *testing.T) {
-	//need open both udp and tcp transport in  snmpd.conf
+	// need open both udp and tcp transport in  snmpd.conf
 	ctx := &pluginmanager.ContextImp{}
 	ctx.InitContext("test_project", "test_logstore", "test_configname")
 
@@ -151,7 +151,7 @@ func TestStartAndStop(t *testing.T) {
 	err = input.Stop()
 	require.NoError(t, err)
 	dur := time.Since(t1)
-	//dur := time.Now().Sub(t1) // for lint requirements
+	// dur := time.Now().Sub(t1) // for lint requirements
 	require.True(t, dur/time.Microsecond < 2000, "dur: %v", dur)
 
 	ctx, input = newTCPInputV1()
@@ -163,20 +163,20 @@ func TestStartAndStop(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	//time.Sleep(time.Duration(1) * time.Second)
-	//assert.Equal(t, len(collector.logs), 1)
+	// time.Sleep(time.Duration(1) * time.Second)
+	// assert.Equal(t, len(collector.logs), 1)
 
 	t2 := time.Now()
 	err = input.Stop()
 	require.NoError(t, err)
 	dur = time.Since(t2)
-	//dur := time.Now().Sub(t1) // for lint requirements
+	// dur := time.Now().Sub(t1) // for lint requirements
 	require.True(t, dur/time.Microsecond < 2000, "dur: %v", dur)
 
 }
 
 func TestGET(t *testing.T) {
-	//"Content" equals to result of command `snmpget -v2c -c public 127.0.0.1 <Oid>`, may different on different machines
+	// "Content" equals to result of command `snmpget -v2c -c public 127.0.0.1 <Oid>`, may different on different machines
 	ctx, input := newInputV3()
 	err := InitGoSNMP(ctx, input)
 	require.NoError(t, err)
@@ -319,7 +319,7 @@ func TestAuth(t *testing.T) {
 }
 
 func TestOidsParser(t *testing.T) {
-	//`Field` equals to results of command `snmptranslate -Td -Ob -m all <Oids>`, may different on different machines
+	// `Field` equals to results of command `snmptranslate -Td -Ob -m all <Oids>`, may different on different machines
 	ctx, input := newInputV2()
 	input.Oids = append(input.Oids, "1.3.6.1.2.1.1.3.0")
 	input.Oids = append(input.Oids, "1.3.6.1.2.1.1.4.0")
@@ -359,7 +359,7 @@ func TestFieldsParser(t *testing.T) {
 }
 
 func TestTablesParser(t *testing.T) {
-	//`fieldContents` equals to results of command `snmptable -v 2c -c public -Ch 127.0.0.1 <Tables>`, may different on different machines
+	// `fieldContents` equals to results of command `snmptable -v 2c -c public -Ch 127.0.0.1 <Tables>`, may different on different machines
 	ctx, input := newInputV2()
 	input.Tables = append(input.Tables, "SNMPv2-MIB::sysORTable")
 	_, err := input.Init(ctx)

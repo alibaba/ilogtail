@@ -21,9 +21,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	g "github.com/gosnmp/gosnmp"
+	"github.com/alibaba/ilogtail"            // #nosec
+	"github.com/alibaba/ilogtail/pkg/logger" // #nosec
+	g "github.com/gosnmp/gosnmp"             // #nosec
 	"net"
 	"os/exec"
 	"runtime"
