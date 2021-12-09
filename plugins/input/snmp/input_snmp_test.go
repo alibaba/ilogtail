@@ -14,9 +14,10 @@
 
 package snmp
 
+/* #nosec */
 import (
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/protocol" // #nosec
 	"github.com/alibaba/ilogtail/pluginmanager"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

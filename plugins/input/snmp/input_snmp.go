@@ -14,6 +14,7 @@
 
 package snmp
 
+/* #nosec */
 import (
 	"bufio"
 	"bytes"
@@ -66,7 +67,7 @@ type SNMPAgent struct {
 	MaxTablesLength  int
 	MaxSearchLength  int
 
-	//Authentication information for SNMP v3
+	// Authentication information for SNMP v3
 	UserName                 string
 	AuthoritativeEngineID    string
 	AuthenticationProtocol   string
@@ -74,12 +75,11 @@ type SNMPAgent struct {
 	PrivacyProtocol          string
 	PrivacyPassphrase        string
 
-	/* #nosec */
 	gs            []*g.GoSNMP
 	target        string
 	fieldContents []Field
-	context       ilogtail.Context
-	collector     ilogtail.Collector
+	context       ilogtail.Context   // #nosec
+	collector     ilogtail.Collector // #nosec
 }
 
 // Field holds the configuration for a Field to look up.
@@ -124,7 +124,7 @@ func (s *SNMPAgent) Init(context ilogtail.Context) (int, error) {
 		}
 	}
 
-	//handle table inputs
+	// handle table inputs
 	for _, table := range s.Tables {
 		err := s.snmpTableCall(table)
 		if err != nil {
@@ -132,7 +132,7 @@ func (s *SNMPAgent) Init(context ilogtail.Context) (int, error) {
 		}
 	}
 
-	//handle Fields and oids
+	// handle Fields and oids
 	err := s.GetTranslated()
 	if err != nil {
 		return 1, err
@@ -153,7 +153,7 @@ func (s *SNMPAgent) Init(context ilogtail.Context) (int, error) {
 	}
 
 	for _, target := range s.Targets {
-		//use anonymous function to avoid resource leak
+		// use anonymous function to avoid resource leak
 		ThisSNMPAgent, err := s.Wrapper(target)
 		s.gs = append(s.gs, ThisSNMPAgent)
 		if err != nil {
@@ -318,6 +318,7 @@ func Asn1BER2String(source g.Asn1BER) (res string) {
 
 // execCmd helps execute snmp
 func execCmd(arg0 string, args ...string) ([]byte, error) {
+	/* #nosec */
 	cmd := exec.Command(arg0, args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil && !strings.Contains(err.Error(), "no child process") {
@@ -397,11 +398,11 @@ func snmpTranslateCall(oid string) (oidNum string, oidText string, conversion st
 
 // snmpTableCall search local MIBs to translate table oid information, append table information to r.Field, needs command `snmptable`
 func (s *SNMPAgent) snmpTableCall(oid string) error {
-	//return oidNum, oidText, conversion, mibName , oidSuffix,nil
-	_, oidText, _, mibName, _, err := snmpTranslateCall(oid)
+	// return oidNum, oidText, conversion, mibName , oidSuffix,nil
+	_, oidText, _, mibName, oidSuffix, err := snmpTranslateCall(oid)
 	mibPrefix := mibName + "::"
 	if err != nil {
-		return fmt.Errorf("translating error: %w", err)
+		return fmt.Errorf("translating error: %w, oidSuffix %v", err, oidSuffix)
 	}
 	out, err := execCmd("snmptable", "-Ch", "-Cl", "-c", "public", "127.0.0.1", oidText)
 	if err != nil {
@@ -458,7 +459,7 @@ func (s *SNMPAgent) GetTranslated() error {
 func (s *SNMPAgent) Start(collector ilogtail.Collector) error {
 	runtime.GOMAXPROCS(len(s.gs))
 	for index, GsAgent := range s.gs {
-		//use anonymous function to avoid resource leak
+		// use anonymous function to avoid resource leak
 		thisGsAgent := GsAgent
 		thisIndex := index
 		go func() {
