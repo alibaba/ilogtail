@@ -81,7 +81,6 @@ type SNMPAgent struct {
 	PrivacyPassphrase        string
 
 	gs            []*g.GoSNMP
-	target        string
 	fieldContents []Field
 	context       ilogtail.Context // #nosec
 }

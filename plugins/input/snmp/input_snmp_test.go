@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"testing" // #nosec
 	"time"    // #nosec
+
 	// other packages of this project
 	"github.com/alibaba/ilogtail/pkg/protocol"  // #nosec
 	"github.com/alibaba/ilogtail/pluginmanager" // #nosec
