@@ -16,20 +16,25 @@ package snmp
 
 /* #nosec */
 import (
+	// stdlib
 	"bufio"
 	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/alibaba/ilogtail"            // #nosec
-	"github.com/alibaba/ilogtail/pkg/logger" // #nosec
-	g "github.com/gosnmp/gosnmp"             // #nosec
 	"net"
 	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	// other packages of that project
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/logger"
+
+	// third-party
+	g "github.com/gosnmp/gosnmp"
 )
 
 const pluginName = "service_snmp"
@@ -78,8 +83,7 @@ type SNMPAgent struct {
 	gs            []*g.GoSNMP
 	target        string
 	fieldContents []Field
-	context       ilogtail.Context   // #nosec
-	collector     ilogtail.Collector // #nosec
+	context       ilogtail.Context // #nosec
 }
 
 // Field holds the configuration for a Field to look up.

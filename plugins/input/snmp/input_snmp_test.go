@@ -16,13 +16,17 @@ package snmp
 
 /* #nosec */
 import (
-	"fmt"                                       // #nosec
+	// stdlib
+	"fmt"
+	"testing" // #nosec
+	"time"    // #nosec
+	// other packages of this project
 	"github.com/alibaba/ilogtail/pkg/protocol"  // #nosec
 	"github.com/alibaba/ilogtail/pluginmanager" // #nosec
-	"github.com/stretchr/testify/assert"        // #nosec
-	"github.com/stretchr/testify/require"       // #nosec
-	"testing"                                   // #nosec
-	"time"                                      // #nosec
+
+	// third party
+	"github.com/stretchr/testify/assert"  // #nosec
+	"github.com/stretchr/testify/require" // #nosec
 )
 
 type ContextTest struct {
