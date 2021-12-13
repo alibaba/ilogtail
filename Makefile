@@ -139,4 +139,11 @@ test-e2e-engine: clean
 .PHONY: test
 test: clean
 	cp pkg/logtail/libPluginAdapter.so ./main
-	go test $$(go list ./...|grep -v vendor |grep -v telegraf|grep -v external|grep -v envconfig) -coverprofile .testCoverage.txt
+	cp pkg/logtail/PluginAdapter.dll ./main
+	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig"| grep -Ev "main|pluginmanager") -coverprofile .testCoverage.txt
+
+.PHONY: core-test
+core-test: clean
+	cp pkg/logtail/libPluginAdapter.so ./main
+	cp pkg/logtail/PluginAdapter.dll ./main
+	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig"| grep -E "main|pluginmanager") -coverprofile .coretestCoverage.txt

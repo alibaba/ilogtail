@@ -62,6 +62,9 @@ jobs:
       - name: Test
         run: make test
 
+      - name: Test Core
+        run: make core-test
+
       - name: Test E2e Engine
         run: make test-e2e-engine
 
