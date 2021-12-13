@@ -18,7 +18,6 @@ import (
 	_ "github.com/alibaba/ilogtail/pkg/logger/test"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pluginmanager"
-	"github.com/stretchr/testify/assert"
 
 	"fmt"
 	"math/rand"
@@ -28,6 +27,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
