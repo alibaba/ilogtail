@@ -15,8 +15,10 @@
 package inputsyslog
 
 import (
+	_ "github.com/alibaba/ilogtail/pkg/logger/test"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pluginmanager"
+	"github.com/stretchr/testify/assert"
 
 	"fmt"
 	"math/rand"
@@ -34,21 +36,25 @@ func TestStartAndStop(t *testing.T) {
 	ctx.InitContext("test_project", "test_logstore", "test_configname")
 
 	syslog := newSyslog()
+	collector := &mockCollector{}
 	_, _ = syslog.Init(ctx)
 	go func() {
-		err := syslog.Start(nil)
+		err := syslog.Start(collector)
 		require.NoError(t, err)
 	}()
-	time.Sleep(time.Duration(1) * time.Second)
+	time.Sleep(time.Second)
 
 	const connCount = 10
 	var conns []net.Conn
 	for i := 0; i < connCount; i++ {
 		conn := connect(t, syslog)
+		log := getLog(int(rand.Int31n(24)*8+rand.Int31n(8)), "hostname", "program", "message", nil)
+		_, err := conn.Write([]byte(log))
+		assert.NoError(t, err)
 		conns = append(conns, conn)
 	}
 
-	time.Sleep(time.Duration(2) * time.Second)
+	time.Sleep(3 * time.Second)
 	require.Equal(t, connCount, len(syslog.connections))
 	require.Equal(t, len(conns), len(syslog.connections))
 
