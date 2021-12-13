@@ -141,7 +141,7 @@ e2e-performance: clean docker
 
 # unit test
 .PHONY: test-e2e-engine
-test-e2e-engine: clean
+test-e2e-engine: clean docker
 	cd test && go test  ./... -coverprofile=../e2e-engine-coverage.txt -covermode=atomic -tags docker_ready
 
 .PHONY: test
