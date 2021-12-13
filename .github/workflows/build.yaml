@@ -27,7 +27,7 @@ jobs:
       matrix:
         go-version: [ 1.15, 1.16 ]
         # https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idruns-on
-        runner: [  ubuntu, macos, windows ]
+        runner: [  ubuntu, macos-11, windows ]
       fail-fast: true
     steps:
 
