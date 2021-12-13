@@ -16,7 +16,7 @@ package inputsyslog
 
 import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	pluginmanager "github.com/alibaba/ilogtail/pluginmanager"
+	"github.com/alibaba/ilogtail/pluginmanager"
 
 	"fmt"
 	"math/rand"
@@ -60,8 +60,19 @@ func TestStartAndStop(t *testing.T) {
 }
 
 func connect(t *testing.T, syslog *Syslog) net.Conn {
-	scheme, host, err := getAddressParts(syslog.Address)
+	scheme, path, err := getAddressParts(syslog.Address)
 	require.NoError(t, err)
+
+	var host string
+	switch {
+	case scheme == "unixgram":
+		host = path
+	case syslog.tcpListener != nil:
+		host = fmt.Sprintf("127.0.0.1:%d", syslog.tcpListener.Addr().(*net.TCPAddr).Port)
+	case syslog.udpListener != nil:
+		host = fmt.Sprintf("127.0.0.1:%d", syslog.udpListener.LocalAddr().(*net.UDPAddr).Port)
+	}
+
 	var conn net.Conn
 	switch {
 	case syslog.isStream:
@@ -169,7 +180,7 @@ func TestMockTcpRun(t *testing.T) {
 
 	syslog := newSyslog()
 	syslog.ParseProtocol = "rfc3164"
-	syslog.Address = "tcp://127.0.0.1:9998"
+	syslog.Address = "tcp://127.0.0.1:0"
 	_, _ = syslog.Init(ctx)
 	go func() {
 		err := syslog.Start(collector)
@@ -187,7 +198,7 @@ func TestMockUdpRun(t *testing.T) {
 
 	syslog := newSyslog()
 	syslog.ParseProtocol = "rfc3164"
-	syslog.Address = "udp://127.0.0.1:9999"
+	syslog.Address = "udp://127.0.0.1:0"
 	_, _ = syslog.Init(ctx)
 	go func() {
 		err := syslog.Start(collector)

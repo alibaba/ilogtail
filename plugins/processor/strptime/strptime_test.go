@@ -78,6 +78,7 @@ func TestSourceKey(t *testing.T) {
 }
 
 func TestFormat(t *testing.T) {
+	time.Local = time.UTC
 	logger.ClearMemoryLog()
 	tests := []struct {
 		Value        string
