@@ -104,6 +104,14 @@ basedocker: clean
 gocdocker: clean
 	docker build -t goc-server:latest  --no-cache . -f ./docker/Dockerfile_goc
 
+.PHONY: wholedocker
+wholedocker: clean
+	./scripts/docker-build.sh $(VERSION) whole
+
+.PHONY: solib
+solib: clean
+	./scripts/docker-build.sh $(VERSION) lib && ./scripts/solib.sh
+
 .PHONY: vendor
 vendor: clean
 	rm -rf vendor
@@ -116,7 +124,7 @@ check-dependency-licenses: clean
 
 .PHONY: e2e-docs
 e2e-docs: clean
-	cd test && go build -o logtailplugin-test-tool  . && ./logtailplugin-test-tool docs && rm -f logtailplugin-test-tool
+	cd test && go build -o ilogtail-test-tool  . && ./ilogtail-test-tool docs && rm -f ilogtail-test-tool
 
 # e2e test
 .PHONY: e2e
