@@ -18,13 +18,13 @@ import (
 	_ "github.com/alibaba/ilogtail/pkg/logger/test"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pluginmanager"
-	"sync"
 
 	"fmt"
 	"math/rand"
 	"net"
 	"os"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -54,13 +54,13 @@ func TestStartAndStop(t *testing.T) {
 		assert.NoError(t, err)
 		conns = append(conns, conn)
 	}
-	time.Sleep(time.Millisecond*2)
+	time.Sleep(time.Millisecond * 2)
 	syslog.connectionsMu.Lock()
 	require.Equal(t, connCount, len(syslog.connections))
 	require.Equal(t, len(conns), len(syslog.connections))
 	syslog.connectionsMu.Unlock()
 
-	time.Sleep(time.Millisecond*10)
+	time.Sleep(time.Millisecond * 10)
 	_ = syslog.Stop()
 	require.Equal(t, 0, len(syslog.connections))
 }

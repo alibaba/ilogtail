@@ -56,6 +56,9 @@ jobs:
         if: matrix.runner == 'ubuntu'
         run: make check-dependency-licenses
 
+      - name: Lint
+        run: make lint
+
       - name: Test
         run: make test
 
@@ -66,8 +69,6 @@ jobs:
         if: matrix.runner == 'ubuntu'
         run: make test-e2e-engine
 
-      - name: Lint
-        run: make lint
   result:
     runs-on: ubuntu-latest
     timeout-minutes: 30
