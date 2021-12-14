@@ -56,16 +56,15 @@ jobs:
         if: matrix.runner == 'ubuntu'
         run: make check-dependency-licenses
 
-
-
       - name: Test
         run: make test
 
-      - name: Test E2e Engine
-        run: make test-e2e-engine
-
       - name: Test Core
         run: make core-test
+
+      - name: Test E2e Engine
+        if: matrix.runner == 'ubuntu'
+        run: make test-e2e-engine
 
       - name: Lint
         run: make lint
