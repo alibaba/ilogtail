@@ -54,12 +54,13 @@ func TestStartAndStop(t *testing.T) {
 		assert.NoError(t, err)
 		conns = append(conns, conn)
 	}
+	time.Sleep(time.Millisecond*2)
 	syslog.connectionsMu.Lock()
 	require.Equal(t, connCount, len(syslog.connections))
 	require.Equal(t, len(conns), len(syslog.connections))
 	syslog.connectionsMu.Unlock()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(time.Millisecond*10)
 	_ = syslog.Stop()
 	require.Equal(t, 0, len(syslog.connections))
 }
