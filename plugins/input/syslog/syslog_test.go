@@ -18,6 +18,7 @@ import (
 	_ "github.com/alibaba/ilogtail/pkg/logger/test"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pluginmanager"
+	"sync"
 
 	"fmt"
 	"math/rand"
@@ -54,16 +55,15 @@ func TestStartAndStop(t *testing.T) {
 		conns = append(conns, conn)
 	}
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(3 * time.Second)
+	syslog.connectionsMu.Lock()
 	require.Equal(t, connCount, len(syslog.connections))
 	require.Equal(t, len(conns), len(syslog.connections))
+	syslog.connectionsMu.Unlock()
 
 	time.Sleep(1 * time.Second)
-	t1 := time.Now()
 	_ = syslog.Stop()
-	dur := time.Since(t1)
 	require.Equal(t, 0, len(syslog.connections))
-	require.True(t, dur/time.Microsecond < 2000, "dur: %v", dur)
 }
 
 func connect(t *testing.T, syslog *Syslog) net.Conn {
@@ -107,10 +107,12 @@ type mockLog struct {
 type mockCollector struct {
 	rawLogs []string
 	logs    []*mockLog
+	lock    sync.Mutex
 }
 
-func (c *mockCollector) AddData(
-	tags map[string]string, fields map[string]string, t ...time.Time) {
+func (c *mockCollector) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	c.logs = append(c.logs, &mockLog{tags, fields, t[0], true})
 }
 
@@ -163,6 +165,13 @@ func mockRun(t *testing.T, syslog *Syslog, collector *mockCollector) {
 	}
 
 	time.Sleep(time.Duration(1) * time.Second)
+
+	t1 := time.Now()
+	assert.NoError(t, syslog.Stop())
+	dur := time.Since(t1)
+	require.True(t, dur/time.Microsecond < 2000, "dur: %v", dur)
+	assert.NoError(t, conn.Close())
+
 	require.Equal(t, len(collector.rawLogs), len(collector.logs))
 	for idx, rawLog := range collector.rawLogs {
 		slog := collector.logs[idx]
@@ -172,12 +181,8 @@ func mockRun(t *testing.T, syslog *Syslog, collector *mockCollector) {
 		require.Equal(t, rawLog, log, "log index: %v, slog: %v, raw log: %v", idx, slog, rawLog)
 	}
 
-	t1 := time.Now()
-	syslog.Stop()
-	dur := time.Since(t1)
-	require.True(t, dur/time.Microsecond < 2000, "dur: %v", dur)
-	conn.Close()
 	t.Logf("Total log count: %v, reconnect count: %v\n", totalLogCount, reconnectCount)
+
 }
 
 func TestMockTcpRun(t *testing.T) {
