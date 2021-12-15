@@ -154,7 +154,7 @@ func TestStartAndStop(t *testing.T) {
 	res, _ := ExecCmdWithOption("ps aux | awk '{print $11}' | grep ^snmp", false)
 	n := strings.Count(res, "\n")
 	if n < 1 {
-		//snmpd is not running, skip the test
+		// snmpd is not running, skip the test
 		return
 	}
 
@@ -208,7 +208,7 @@ func TestGET(t *testing.T) {
 	res, _ := ExecCmdWithOption("ps aux | awk '{print $11}' | grep ^snmp", false)
 	n := strings.Count(res, "\n")
 	if n < 1 {
-		//snmpd is not running, skip the test
+		// snmpd is not running, skip the test
 		return
 	}
 
@@ -314,7 +314,7 @@ func TestAuth(t *testing.T) {
 	res, _ := ExecCmdWithOption("ps aux | awk '{print $11}' | grep ^snmp", false)
 	n := strings.Count(res, "\n")
 	if n < 1 {
-		//snmpd is not running, skip the test
+		// snmpd is not running, skip the test
 		return
 	}
 
@@ -365,7 +365,7 @@ func TestOidsParser(t *testing.T) {
 	res, _ := ExecCmdWithOption("ps aux | awk '{print $11}' | grep ^snmp", false)
 	n := strings.Count(res, "\n")
 	if n < 1 {
-		//snmpd is not running, skip the test
+		// snmpd is not running, skip the test
 		return
 	}
 
@@ -391,7 +391,7 @@ func TestFieldsParser(t *testing.T) {
 	res, _ := ExecCmdWithOption("ps aux | awk '{print $11}' | grep ^snmp", false)
 	n := strings.Count(res, "\n")
 	if n < 1 {
-		//snmpd is not running, skip the test
+		// snmpd is not running, skip the test
 		return
 	}
 
@@ -419,7 +419,7 @@ func TestTablesParser(t *testing.T) {
 	res, _ := ExecCmdWithOption("ps aux | awk '{print $11}' | grep ^snmp", false)
 	n := strings.Count(res, "\n")
 	if n < 1 {
-		//snmpd is not running, skip the test
+		// snmpd is not running, skip the test
 		return
 	}
 
