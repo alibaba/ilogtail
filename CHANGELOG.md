@@ -42,4 +42,3 @@ your changes, such as:
 - [public] [both] [updated] change kafka flusher partition strategy to hash key
 - [inner]  [both]  [fixed] `service_http_server`: unlink unix sock before listen.
 - [inner]  [both]  [fixed] `metric_meta_kubernetes`: remove global variables.
-- [public] [linux] [added] `snmp`: support SNMP protocol
