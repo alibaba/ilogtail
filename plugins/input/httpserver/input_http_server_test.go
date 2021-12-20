@@ -18,7 +18,9 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"syscall"
 	"testing"
 	"time"
 
@@ -55,7 +57,7 @@ func newInput(format string) (*ServiceHTTP, error) {
 		ReadTimeoutSec:     10,
 		ShutdownTimeoutSec: 5,
 		MaxBodySize:        64 * 1024 * 1024,
-		Address:            ":19999",
+		Address:            ":0",
 		Format:             format,
 	}
 	_, err := input.Init(&ctx.ContextImp)
@@ -151,8 +153,8 @@ cpu,host=server\ 01,region=uswest value=1,msg="all systems nominal"
 cpu,host=server\ 01,region=us\,west value_int=1i
 `
 
-func sendRequest(bodyToSend string) error {
-	url := "http://localhost:19999/notes"
+func sendRequest(bodyToSend string, port int) error {
+	url := fmt.Sprintf("http://localhost:%d/notes", port)
 
 	var jsonStr = []byte(bodyToSend)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
@@ -174,19 +176,20 @@ func sendRequest(bodyToSend string) error {
 }
 
 func TestInputPrometheus(t *testing.T) {
+
 	input, err := newInput("prometheus")
 	require.NoError(t, err)
 	collector := &mockCollector{}
 	err = input.Start(collector)
 	require.NoError(t, err)
-
+	port := input.listener.Addr().(*net.TCPAddr).Port
 	defer func() {
 		require.NoError(t, input.Stop())
 	}()
 
-	err = sendRequest(textFormatProm)
+	err = sendRequest(textFormatProm, port)
 	require.NoError(t, err)
-	err = sendRequest(textFormatProm)
+	err = sendRequest(textFormatProm, port)
 	require.NoError(t, err)
 
 	time.Sleep(time.Second * 2)
@@ -204,14 +207,15 @@ func TestInputInfluxDB(t *testing.T) {
 	collector := &mockCollector{}
 	err = input.Start(collector)
 	require.NoError(t, err)
+	port := input.listener.Addr().(*net.TCPAddr).Port
 
 	defer func() {
 		require.NoError(t, input.Stop())
 	}()
 
-	err = sendRequest(textFormatInflux)
+	err = sendRequest(textFormatInflux, port)
 	require.NoError(t, err)
-	err = sendRequest(textFormatInflux)
+	err = sendRequest(textFormatInflux, port)
 	require.NoError(t, err)
 
 	time.Sleep(time.Second * 2)
@@ -220,4 +224,26 @@ func TestInputInfluxDB(t *testing.T) {
 	for _, log := range collector.rawLogs {
 		fmt.Println(log.String())
 	}
+}
+
+func TestUnlinkUnixSock(t *testing.T) {
+	const sockPath = "test_service_http_server_unlink_unix_sock.run"
+	_ = syscall.Unlink(sockPath)
+	listener, err := net.Listen("unix", sockPath)
+	require.NoError(t, err)
+	defer listener.Close()
+
+	ctx := &ContextTest{}
+	ctx.ContextImp.InitContext("a", "b", "c")
+	input := &ServiceHTTP{
+		Address:        "unix://" + sockPath,
+		Format:         "influx",
+		UnlinkUnixSock: true,
+	}
+	_, err = input.Init(&ctx.ContextImp)
+	require.NoError(t, err)
+
+	collector := &mockCollector{}
+	require.NoError(t, input.Start(collector))
+	require.NoError(t, input.Stop())
 }
