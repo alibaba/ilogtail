@@ -23,6 +23,8 @@ HOST_OS=`uname -s`
 case $DOCKER_TYPE in
 coverage) DOCKERFILE=Dockerfile_coverage;;
 base) DOCKERFILE=Dockerfile_base;;
+lib) DOCKERFILE=Dockerfile_lib;;
+whole) DOCKERFILE=Dockerfile_whole;;
 *) DOCKERFILE=Dockerfile;;
 esac
 
