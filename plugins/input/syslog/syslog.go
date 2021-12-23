@@ -391,7 +391,7 @@ func (s *Syslog) listenPacket(collector ilogtail.Collector) {
 	}
 }
 
-func (s *Syslog) parse(b []byte, clientIp string, collector ilogtail.Collector) {
+func (s *Syslog) parse(b []byte, clientIP string, collector ilogtail.Collector) {
 	lines := bytes.Split(b, []byte("\n"))
 	if '\n' == b[len(b)-1] {
 		lines = lines[:len(lines)-1]
@@ -421,8 +421,8 @@ func (s *Syslog) parse(b []byte, clientIp string, collector ilogtail.Collector) 
 		} else {
 			fields["_hostname_"] = rst.hostname
 		}
-		if len(clientIp) > 0 {
-			fields["_client_ip_"] = strings.Split(clientIp, ":")[0]
+		if len(clientIP) > 0 {
+			fields["_client_ip_"] = strings.Split(clientIP, ":")[0]
 		} else {
 			fields["_client_ip_"] = ""
 		}
