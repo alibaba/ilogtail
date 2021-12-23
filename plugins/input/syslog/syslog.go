@@ -334,8 +334,7 @@ func (s *Syslog) handle(conn net.Conn, collector ilogtail.Collector) {
 
 		data := scanner.Bytes()
 		if len(data) > 0 {
-			s.parse(data, conn.RemoteAddr().String(), collector) //有三个解码的入口，这是其中之一，解码后不直接.add，而是作为中间变量存着，分离出一个专门的addSysLOG函数，把con传过去，prase的结果传过去，单独增加。注意一下会不会跳走。简单的方法是直接把conn也传过去
-			//s.addSyslog(data,conn.RemoteAddr().String(),collector)//换成这个
+			s.parse(data, conn.RemoteAddr().String(), collector)
 		}
 		s.resetTimeout(conn)
 	}
