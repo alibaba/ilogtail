@@ -334,7 +334,8 @@ func (s *Syslog) handle(conn net.Conn, collector ilogtail.Collector) {
 
 		data := scanner.Bytes()
 		if len(data) > 0 {
-			s.parse(data, collector)
+			s.parse(data, conn.RemoteAddr().String(), collector) //有三个解码的入口，这是其中之一，解码后不直接.add，而是作为中间变量存着，分离出一个专门的addSysLOG函数，把con传过去，prase的结果传过去，单独增加。注意一下会不会跳走。简单的方法是直接把conn也传过去
+			//s.addSyslog(data,conn.RemoteAddr().String(),collector)//换成这个
 		}
 		s.resetTimeout(conn)
 	}
@@ -362,7 +363,7 @@ func (s *Syslog) listenPacket(collector ilogtail.Collector) {
 		if s.TimeoutSeconds > 0 {
 			_ = s.udpListener.SetReadDeadline(time.Now().Add(time.Duration(s.TimeoutSeconds) * time.Second))
 		}
-		n, _, err := s.udpListener.ReadFrom(b)
+		n, addr, err := s.udpListener.ReadFrom(b)
 		if err != nil {
 			if strings.HasSuffix(err.Error(), ": use of closed network connection") {
 				logger.Info(s.context.GetRuntimeContext(), "Quit packet connection because of closed network connection")
@@ -386,12 +387,12 @@ func (s *Syslog) listenPacket(collector ilogtail.Collector) {
 
 		data := b[:n]
 		if len(data) > 0 {
-			s.parse(data, collector)
+			s.parse(data, fmt.Sprint(addr), collector)
 		}
 	}
 }
 
-func (s *Syslog) parse(b []byte, collector ilogtail.Collector) {
+func (s *Syslog) parse(b []byte, clientIp string, collector ilogtail.Collector) {
 	lines := bytes.Split(b, []byte("\n"))
 	if '\n' == b[len(b)-1] {
 		lines = lines[:len(lines)-1]
@@ -421,6 +422,12 @@ func (s *Syslog) parse(b []byte, collector ilogtail.Collector) {
 		} else {
 			fields["_hostname_"] = rst.hostname
 		}
+		if len(clientIp) > 0 {
+			fields["_client_ip_"] = strings.Split(clientIp, ":")[0]
+		} else {
+			fields["_client_ip_"] = ""
+		}
+
 		fields["_ip_"] = util.GetIPAddress()
 		fields["_content_"] = rst.content
 

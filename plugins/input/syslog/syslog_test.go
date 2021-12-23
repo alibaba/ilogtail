@@ -178,6 +178,7 @@ func mockRun(t *testing.T, syslog *Syslog, collector *mockCollector) {
 		log := getLog(priority,
 			slog.fields["_hostname_"], slog.fields["_program_"], slog.fields["_content_"], &slog.t)
 		require.Equal(t, rawLog, log, "log index: %v, slog: %v, raw log: %v", idx, slog, rawLog)
+		require.Equal(t, "127.0.0.1", slog.fields["_client_ip_"])
 	}
 
 	t.Logf("Total log count: %v, reconnect count: %v\n", totalLogCount, reconnectCount)
