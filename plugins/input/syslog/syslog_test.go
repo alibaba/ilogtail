@@ -168,7 +168,7 @@ func mockRun(t *testing.T, syslog *Syslog, collector *mockCollector) {
 	t1 := time.Now()
 	assert.NoError(t, syslog.Stop())
 	dur := time.Since(t1)
-	require.True(t, dur/time.Microsecond < 2000, "dur: %v", dur)
+	require.True(t, dur/time.Microsecond < 3000, "dur: %v", dur)
 	assert.NoError(t, conn.Close())
 
 	require.Equal(t, len(collector.rawLogs), len(collector.logs))
