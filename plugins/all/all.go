@@ -15,6 +15,11 @@
 package all
 
 import (
+	"context"
+	"runtime"
+	"time"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/defaultone"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/logstorerouter"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/shardhash"
@@ -77,3 +82,28 @@ import (
 	_ "github.com/alibaba/ilogtail/plugins/processor/split/string"
 	_ "github.com/alibaba/ilogtail/plugins/processor/strptime"
 )
+
+func init() {
+	go func() {
+		for {
+		   printMemStats()
+		   time.Sleep(10 * time.Second)
+		}
+	 }()
+   
+}
+
+func printMemStats() {
+	//定义一个 runtime.MemStats对象
+	var ms runtime.MemStats
+
+	//通过对象的属性 查询内存的信息
+	//1 将内存中的数据加载到 ms对象中
+	runtime.ReadMemStats(&ms)
+
+	logger.Infof(context.Background(), "====> Alloc:%d(M), HeapIdle:%d(M), "+
+		"HeapReleased:%d(M), HeapInuse:%d(M), "+
+		"GCSys:%d(M), Sys:%d(M)",
+		ms.Alloc/1024/1024, ms.HeapIdle/1024/1024, ms.HeapReleased/1024/1024, ms.HeapInuse/1024/1024, ms.GCSys/1024/1024, ms.Sys/1024/1024,
+	)
+}
