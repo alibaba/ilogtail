@@ -58,11 +58,6 @@ For documentation on the latest version see the [documentation index](./docs/en/
 - [Aggregator Plugins](./docs/en/guides/How-to-write-aggregator-plugins.md)
 - [Flusher Plugins](./docs/en/guides/How-to-write-flusher-plugins.md)
 
-
-# Use cases
-
-- [ilogtail use cases](./docs/zh/usecases/README.md)
-
 # Contribution
 
 There are many ways to contribute:
