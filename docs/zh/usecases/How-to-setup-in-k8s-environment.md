@@ -288,7 +288,7 @@ pod/demo-pod created
 <img src="https://cdn.nlark.com/yuque/0/2021/png/22577445/1640928315676-7d4d93ed-0b3d-4406-8ac5-5c57d38f3c51.png#clientId=u38ae2f00-0bbf-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=340&id=u2d157d21&margin=%5Bobject%20Object%5D&name=image.png&originHeight=780&originWidth=1376&originalType=binary&ratio=1&rotation=0&showTitle=false&size=109988&status=done&style=none&taskId=ub304321b-1a4c-4f8d-891b-aa056f8841b&title=&width=600" alt="image.png" width="600"/>
 
 ## What's Next
-&emsp;&emsp;&emsp;你可以进入下一节学习《[ilogtail使用入门-iLogtail本地部署方案](./How-to-local-deploy.md)》
+&emsp;&emsp;&emsp;你可以进入下一节学习《[iLogtail本地配置模式部署(For Kafka Flusher)](./How-to-local-deploy.md)》
 
 &emsp;&emsp;&emsp;了解容器采集原理《[通过DaemonSet-控制台方式采集容器标准输出](https://help.aliyun.com/document_detail/66658.html)》
 
