@@ -75,6 +75,7 @@ $ ll
 - 文件最外层的key为`metrics`，内部为各个具体的采集配置。
 - 采集配置的key为配置名，改名称需保证在本文件中唯一。建议命名："##1.0##采集配置名称"。
 - 采集配置value内部为具体采集参数配置，其中关键参数以及含义如下：
+
 | 参数名 | 类型 | 描述 |
 | --- | --- | --- |
 | enable | bool | 该配置是否生效，为false时该配置不生效。 |
@@ -86,13 +87,11 @@ $ ll
 | version | int | 该配置版本号，建议每次修改配置后加1 |
 
 - plugin 字段为json object，为具体输入源以及处理方式配置：
+
 | 配置项 | 类型 | 描述 |
 | --- | --- | --- |
-| processors | object array | 处理方式配置，具体请参考[链接](https://help.aliyun.com/document_detail/196153.html)。
-- processor_json：将原始日志按照json格式展开。
- |
-| flushers | object array | flusher_stdout：采集到标准输出，一般用于调试场景。
-flusher_kafka：采集到kafka。 |
+| processors | object array | 处理方式配置，具体请参考[链接](https://help.aliyun.com/document_detail/196153.html)。 processor_json：将原始日志按照json格式展开。 |
+| flushers | object array | flusher_stdout：采集到标准输出，一般用于调试场景; flusher_kafka：采集到kafka。 |
 
 ## 完整配置样例
 
