@@ -17,3 +17,60 @@
 
 package protocol
 
+import (
+	"sync"
+)
+
+type Pool struct {
+	logPool       *sync.Pool
+	logGroupPool  *sync.Pool
+	logConentPool *sync.Pool
+}
+
+func NewPools() *Pool {
+	p := new(Pool)
+	p.logPool = &sync.Pool{New: func() interface{} { return new(Log) }}
+	p.logGroupPool = &sync.Pool{New: func() interface{} { return new(LogGroup) }}
+	p.logConentPool = &sync.Pool{New: func() interface{} { return new(Log_Content) }}
+	return p
+}
+
+func (p *Pool) PutLogGroup(logGroup *LogGroup) {
+	for _, l := range logGroup.Logs {
+		p.PutLog(l)
+	}
+	logGroup.Logs = nil
+	logGroup.LogTags = nil
+	logGroup.Category = ""
+	logGroup.MachineUUID = ""
+	logGroup.Source = ""
+	logGroup.Topic = ""
+	p.logGroupPool.Put(logGroup)
+}
+
+func (p *Pool) PutLog(log *Log) {
+	for _, c := range log.Contents {
+		p.PutLogContent(c)
+	}
+	log.Contents = nil
+	log.Time = 0
+	p.logPool.Put(log)
+}
+
+func (p *Pool) PutLogContent(context *Log_Content) {
+	context.Key = ""
+	context.Value = ""
+	p.logConentPool.Put(context)
+}
+
+func (p *Pool) GetLogContent() (context *Log_Content) {
+	return p.logConentPool.Get().(*Log_Content)
+}
+
+func (p *Pool) GetLog(contentNum int) (log *Log) {
+	return p.logPool.Get().(*Log)
+}
+
+func (p *Pool) GetLogGroup() (group *LogGroup) {
+	return p.logGroupPool.Get().(*LogGroup)
+}

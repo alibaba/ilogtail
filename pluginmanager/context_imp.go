@@ -34,6 +34,7 @@ type ContextImp struct {
 	common      *pkg.LogtailContextMeta
 	pluginNames string
 	ctx         context.Context
+	pools       *protocol.Pool
 }
 
 var contextMutex sync.Mutex
@@ -63,6 +64,7 @@ func (p *ContextImp) AddPlugin(name string) {
 func (p *ContextImp) InitContext(project, logstore, configName string) {
 	// bind metadata information.
 	p.ctx, p.common = pkg.NewLogtailContextMeta(project, logstore, configName)
+	p.pools = protocol.NewPools()
 }
 
 func (p *ContextImp) RegisterCounterMetric(metric ilogtail.CounterMetric) {

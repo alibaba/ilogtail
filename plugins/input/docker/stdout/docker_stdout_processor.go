@@ -72,7 +72,8 @@ type DockerStdoutProcessor struct {
 }
 
 func NewDockerStdoutProcessor(beginLineReg *regexp.Regexp, beginLineTimeout time.Duration, beginLineCheckLength int,
-	maxLogSize int, stdout bool, stderr bool, context ilogtail.Context, collector ilogtail.Collector, tags map[string]string) *DockerStdoutProcessor {
+	maxLogSize int, stdout bool, stderr bool, context ilogtail.Context, collector ilogtail.Collector,
+	 tags map[string]string) *DockerStdoutProcessor {
 	processor := &DockerStdoutProcessor{
 		beginLineReg:         beginLineReg,
 		beginLineTimeout:     beginLineTimeout,
