@@ -74,6 +74,10 @@ type mockCollector struct {
 	rawLogs []*protocol.Log
 }
 
+func (c *mockCollector) GetBufferPool() *protocol.Pool {
+	return nil
+}
+
 func (c *mockCollector) AddData(
 	tags map[string]string, fields map[string]string, t ...time.Time) {
 	c.logs = append(c.logs, &mockLog{tags, fields})

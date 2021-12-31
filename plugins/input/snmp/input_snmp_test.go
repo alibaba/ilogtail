@@ -61,6 +61,9 @@ func ExecCmdWithOption(cmd string, panicErr bool) (string, error) {
 	result := strings.Trim(string(output), "\n")
 	return result, err
 }
+func (c *mockCollector) GetBufferPool() *protocol.Pool {
+	return nil
+}
 
 func (c *mockCollector) AddData(
 	tags map[string]string, fields map[string]string, t ...time.Time) {

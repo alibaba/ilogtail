@@ -98,7 +98,7 @@ func (p *AggregatorDefault) Add(log *protocol.Log) error {
 	defer p.Lock.Unlock()
 	if len(p.defaultLogGroup) == 0 {
 		p.nowLoggroupSize = 0
-		p.defaultLogGroup = append(p.defaultLogGroup, &protocol.LogGroup{})
+		p.defaultLogGroup = append(p.defaultLogGroup, p.context.GetBufferPool().GetLogGroup())
 	}
 	nowLogGroup := p.defaultLogGroup[len(p.defaultLogGroup)-1]
 	logSize := p.evaluateLogSize(log)
@@ -125,7 +125,7 @@ func (p *AggregatorDefault) Add(log *protocol.Log) error {
 		}
 		// New log group, reset size.
 		p.nowLoggroupSize = 0
-		p.defaultLogGroup = append(p.defaultLogGroup, &protocol.LogGroup{})
+		p.defaultLogGroup = append(p.defaultLogGroup, p.context.GetBufferPool().GetLogGroup())
 		nowLogGroup = p.defaultLogGroup[len(p.defaultLogGroup)-1]
 	}
 

@@ -64,7 +64,7 @@ type DockerStdoutProcessor struct {
 	collector            ilogtail.Collector
 
 	needCheckStream bool
-	tags            []protocol.Log_Content
+	tags            map[string]string
 
 	// save last parsed logs
 	lastLogs      []*LogMessage
@@ -73,7 +73,7 @@ type DockerStdoutProcessor struct {
 
 func NewDockerStdoutProcessor(beginLineReg *regexp.Regexp, beginLineTimeout time.Duration, beginLineCheckLength int,
 	maxLogSize int, stdout bool, stderr bool, context ilogtail.Context, collector ilogtail.Collector,
-	 tags map[string]string) *DockerStdoutProcessor {
+	tags map[string]string) *DockerStdoutProcessor {
 	processor := &DockerStdoutProcessor{
 		beginLineReg:         beginLineReg,
 		beginLineTimeout:     beginLineTimeout,
@@ -90,11 +90,7 @@ func NewDockerStdoutProcessor(beginLineReg *regexp.Regexp, beginLineTimeout time
 	} else {
 		processor.needCheckStream = true
 	}
-	for key, value := range tags {
-		processor.tags = append(processor.tags, protocol.Log_Content{
-			Key: key, Value: value,
-		})
-	}
+	processor.tags = tags
 	return processor
 }
 
@@ -193,37 +189,6 @@ func (p *DockerStdoutProcessor) StreamAllowed(log *LogMessage) bool {
 	return true
 }
 
-func (p *DockerStdoutProcessor) flushLastLog() {
-	p.allLogValues[1] = p.lastLogs[0].Time
-	p.allLogValues[2] = p.lastLogs[0].StreamType
-	var multiLine strings.Builder
-	if len(p.lastLogs) > 0 {
-		lastOne := p.lastLogs[len(p.lastLogs)-1]
-		if lastOne.Content[len(lastOne.Content)-1] == '\n' {
-			lastOne.Content = lastOne.Content[:len(lastOne.Content)-1]
-		}
-	}
-	var sum int
-	for _, log := range p.lastLogs {
-		sum += len(log.Content)
-	}
-	multiLine.Grow(sum)
-
-	for index, log := range p.lastLogs {
-		multiLine.Write(log.Content)
-		// @note force set lastLog's content nil to let GC recycle this logs
-		p.lastLogs[index] = nil
-	}
-	p.allLogValues[0] = multiLine.String()
-	p.collector.AddDataArray(nil, p.allLogKeys, p.allLogValues)
-	p.lastLogs = p.lastLogs[:0]
-	p.lastLogsCount = 0
-	// @note force set log values empty to let GC recycle this logs
-	p.allLogValues[0] = ""
-	p.allLogValues[1] = ""
-	p.allLogValues[2] = ""
-}
-
 func (p *DockerStdoutProcessor) Process(fileBlock []byte, noChangeInterval time.Duration) int {
 	nowIndex := 0
 	processedCount := 0
@@ -236,22 +201,19 @@ func (p *DockerStdoutProcessor) Process(fileBlock []byte, noChangeInterval time.
 			if contentLen := len(thisLog.Content); contentLen > 0 {
 				lastChar = thisLog.Content[contentLen-1]
 			}
-			// single line and log not splited
 			switch {
 			case p.beginLineReg == nil && len(p.lastLogs) == 0 && lastChar == '\n':
-				if contentSize := len(thisLog.Content); contentSize > 0 && thisLog.Content[contentSize-1] == '\n' {
-					thisLog.Content = thisLog.Content[0 : contentSize-1]
-				}
-				p.collector.AddRawLog(
-					,
-				)
+				// collect single line
+				p.collector.AddRawLog(p.newRawLogBySingleLine(thisLog))
 			case p.beginLineReg == nil:
+				// collect spilt multi lines, such as containerd.
 				p.lastLogs = append(p.lastLogs, thisLog)
 				p.lastLogsCount += len(thisLog.Content) + 24
 				if lastChar == '\n' {
-					p.flushLastLog()
+					p.collector.AddRawLog(p.newRawLogByMultiLine())
 				}
 			default:
+				// collect user multi lines.
 				var checkLine []byte
 				if len(thisLog.Content) > p.beginLineCheckLength {
 					checkLine = thisLog.Content[0:p.beginLineCheckLength]
@@ -260,7 +222,7 @@ func (p *DockerStdoutProcessor) Process(fileBlock []byte, noChangeInterval time.
 				}
 				if p.beginLineReg.Match(checkLine) {
 					if len(p.lastLogs) != 0 {
-						p.flushLastLog()
+						p.collector.AddRawLog(p.newRawLogByMultiLine())
 					}
 				}
 				p.lastLogs = append(p.lastLogs, thisLog)
@@ -276,35 +238,74 @@ func (p *DockerStdoutProcessor) Process(fileBlock []byte, noChangeInterval time.
 
 	// last line and multi line timeout expired
 	if len(p.lastLogs) > 0 && (noChangeInterval > p.beginLineTimeout || p.lastLogsCount > p.maxLogSize) {
-		p.flushLastLog()
+		p.collector.AddRawLog(p.newRawLogByMultiLine())
 	}
 
 	// no new line
 	if nowIndex == 0 && len(fileBlock) > 0 {
-		p.allLogValues[0] = string(fileBlock)
-		p.collector.AddDataArray(nil, p.allLogKeys, p.allLogValues)
-		p.allLogValues[0] = ""
+		l := &LogMessage{Time: "_time_", StreamType: "_source_", Content: fileBlock}
+		p.collector.AddRawLog(p.newRawLogBySingleLine(l))
 		processedCount = len(fileBlock)
 	}
 	return processedCount
 }
 
-func (p *DockerStdoutProcessor) newRawLog(logs *LogMessage...) *protocol.Log {
-	l:=new(protocol.Log)
-	l.
-	if len(logs)==1 {
-
+// newRawLogBySingleLine convert single line log to protocol.Log.
+func (p *DockerStdoutProcessor) newRawLogBySingleLine(msg *LogMessage) *protocol.Log {
+	log := p.newStdoutLog()
+	if len(msg.Content) > 0 && msg.Content[len(msg.Content)-1] == '\n' {
+		msg.Content = msg.Content[0 : len(msg.Content)-1]
 	}
+	log.Contents[0].Value = *(*string)(unsafe.Pointer(&msg.Content))
+	log.Contents[1].Value = msg.Time
+	log.Contents[2].Value = msg.StreamType
+	return log
+}
 
-
-	 log:=&protocol.Log{
-		Time: uint32(time.Now().unix),
-		Contents: make([]*protocol.Log_Content, 0,len(p.tags)+3),
+// newRawLogByMultiLine convert last logs to protocol.Log.
+func (p *DockerStdoutProcessor) newRawLogByMultiLine() *protocol.Log {
+	lastOne := p.lastLogs[len(p.lastLogs)-1]
+	if len(lastOne.Content) > 0 && lastOne.Content[len(lastOne.Content)-1] == '\n' {
+		lastOne.Content = lastOne.Content[:len(lastOne.Content)-1]
 	}
+	var multiLine strings.Builder
+	var sum int
+	for _, log := range p.lastLogs {
+		sum += len(log.Content)
+	}
+	multiLine.Grow(sum)
 
-	log.
-	
-	
+	log := p.newStdoutLog()
+	log.Contents[1].Value = p.lastLogs[0].Time
+	log.Contents[2].Value = p.lastLogs[0].StreamType
 
+	for index, log := range p.lastLogs {
+		multiLine.Write(log.Content)
+		// @note force set lastLog's content nil to let GC recycle this logs
+		p.lastLogs[index] = nil
+	}
+	log.Contents[0].Value = multiLine.String()
+	// reset multiline cache
+	p.lastLogs = p.lastLogs[:0]
+	p.lastLogsCount = 0
+	return log
+}
 
+func (p *DockerStdoutProcessor) newStdoutLog() *protocol.Log {
+	num := len(p.tags) + 3
+	log := p.context.GetBufferPool().GetLog(num)
+	log.Time = uint32(time.Now().Unix())
+	for i := 0; i < len(log.Contents); i++ {
+		log.Contents[i] = p.context.GetBufferPool().GetLogContent()
+	}
+	log.Contents[0].Key = "content"
+	log.Contents[1].Key = "_time_"
+	log.Contents[2].Key = "_source_"
+	idx := 3
+	for k, v := range p.tags {
+		log.Contents[idx].Key = k
+		log.Contents[idx].Value = v
+		idx++
+	}
+	return log
 }

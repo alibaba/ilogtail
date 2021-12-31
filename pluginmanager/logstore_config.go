@@ -375,6 +375,9 @@ func (lc *LogstoreConfig) flushInternal() {
 					}
 					break
 				}
+				for _, group := range logGroups {
+					lc.Context.GetBufferPool().PutLogGroup(group)
+				}
 				if !lc.FlushOutFlag {
 					time.Sleep(time.Duration(10) * time.Millisecond)
 					continue

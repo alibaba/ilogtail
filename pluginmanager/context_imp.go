@@ -156,3 +156,7 @@ func (p *ContextImp) GetCheckPointObject(key string, obj interface{}) (exist boo
 	}
 	return true
 }
+
+func (p *ContextImp) GetBufferPool() *protocol.Pool {
+	return p.pools
+}
