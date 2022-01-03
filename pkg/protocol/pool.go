@@ -67,10 +67,8 @@ func (p *Pool) GetLogContent() (context *Log_Content) {
 	return p.logConentPool.Get().(*Log_Content)
 }
 
-func (p *Pool) GetLog(contentNum int) (log *Log) {
-	l := p.logPool.Get().(*Log)
-	l.Contents = make([]*Log_Content, 0, contentNum)
-	return l
+func (p *Pool) GetLog() (log *Log) {
+	return p.logPool.Get().(*Log)
 }
 
 func (p *Pool) GetLogGroup() (group *LogGroup) {

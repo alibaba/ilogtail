@@ -17,7 +17,6 @@ package stdout
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -294,25 +293,21 @@ func (p *DockerStdoutProcessor) newRawLogByMultiLine() *protocol.Log {
 
 func (p *DockerStdoutProcessor) newStdoutLog() *protocol.Log {
 	num := len(p.tags) + 3
-	log := p.context.GetBufferPool().GetLog(num)
+	log := p.context.GetBufferPool().GetLog()
 	log.Time = uint32(time.Now().Unix())
-	fmt.Printf("===>1: %+v,%d", log, len(log.Contents))
+	log.Contents = make([]*protocol.Log_Content, 0, num)
 	for i := 0; i < num; i++ {
-		log.Contents[i] = p.context.GetBufferPool().GetLogContent()
+		log.Contents = append(log.Contents, p.context.GetBufferPool().GetLogContent())
 	}
 	log.Contents[0].Key = "content"
 	log.Contents[1].Key = "_time_"
 	log.Contents[2].Key = "_source_"
 
-	fmt.Println(p.context.GetRuntimeContext(), "===>2")
-	if num > 3 {
-		logger.Info(p.context.GetRuntimeContext(), "===>3")
-		idx := 3
-		for k, v := range p.tags {
-			log.Contents[idx].Key = k
-			log.Contents[idx].Value = v
-			idx++
-		}
+	idx := 3
+	for k, v := range p.tags {
+		log.Contents[idx].Key = k
+		log.Contents[idx].Value = v
+		idx++
 	}
 	return log
 }
