@@ -17,6 +17,7 @@ package stdout
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -295,7 +296,7 @@ func (p *DockerStdoutProcessor) newStdoutLog() *protocol.Log {
 	num := len(p.tags) + 3
 	log := p.context.GetBufferPool().GetLog(num)
 	log.Time = uint32(time.Now().Unix())
-	logger.Info(p.context.GetRuntimeContext(), "===>1")
+	fmt.Printf("===>1: %+v,%d", log, len(log.Contents))
 	for i := 0; i < num; i++ {
 		log.Contents[i] = p.context.GetBufferPool().GetLogContent()
 	}
@@ -303,7 +304,7 @@ func (p *DockerStdoutProcessor) newStdoutLog() *protocol.Log {
 	log.Contents[1].Key = "_time_"
 	log.Contents[2].Key = "_source_"
 
-	logger.Info(p.context.GetRuntimeContext(), "===>2")
+	fmt.Println(p.context.GetRuntimeContext(), "===>2")
 	if num > 3 {
 		logger.Info(p.context.GetRuntimeContext(), "===>3")
 		idx := 3
