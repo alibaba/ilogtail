@@ -295,17 +295,23 @@ func (p *DockerStdoutProcessor) newStdoutLog() *protocol.Log {
 	num := len(p.tags) + 3
 	log := p.context.GetBufferPool().GetLog(num)
 	log.Time = uint32(time.Now().Unix())
-	for i := 0; i < len(log.Contents); i++ {
+	logger.Info(p.context.GetRuntimeContext(), "===>1")
+	for i := 0; i < num; i++ {
 		log.Contents[i] = p.context.GetBufferPool().GetLogContent()
 	}
 	log.Contents[0].Key = "content"
 	log.Contents[1].Key = "_time_"
 	log.Contents[2].Key = "_source_"
-	idx := 3
-	for k, v := range p.tags {
-		log.Contents[idx].Key = k
-		log.Contents[idx].Value = v
-		idx++
+
+	logger.Info(p.context.GetRuntimeContext(), "===>2")
+	if num > 3 {
+		logger.Info(p.context.GetRuntimeContext(), "===>3")
+		idx := 3
+		for k, v := range p.tags {
+			log.Contents[idx].Key = k
+			log.Contents[idx].Value = v
+			idx++
+		}
 	}
 	return log
 }
