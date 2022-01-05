@@ -38,3 +38,4 @@ your changes, such as:
 - [public] [linux] [doc] add ilogtail local deloyment doc for kafka flusher
 - [public] [linux] [doc] add ilogtail local deloyment doc for sls flusher
 - [public] [linux] [doc] add ilogtail k8s deloyment doc for sls flusher 
+- [public] [linux] [updated] enhance memory cost for stdout collection
