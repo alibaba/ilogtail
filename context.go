@@ -34,7 +34,6 @@ type Context interface {
 	GetProject() string
 	GetLogstore() string
 	GetRuntimeContext() context.Context
-	GetBufferPool() *protocol.Pool
 	RegisterCounterMetric(metric CounterMetric)
 	RegisterStringMetric(metric StringMetric)
 	RegisterLatencyMetric(metric LatencyMetric)

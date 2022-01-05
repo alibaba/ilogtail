@@ -86,19 +86,15 @@ import (
 func init() {
 	go func() {
 		for {
-		   printMemStats()
-		   time.Sleep(10 * time.Second)
+			printMemStats()
+			time.Sleep(10 * time.Second)
 		}
-	 }()
-   
+	}()
+
 }
 
 func printMemStats() {
-	//定义一个 runtime.MemStats对象
 	var ms runtime.MemStats
-
-	//通过对象的属性 查询内存的信息
-	//1 将内存中的数据加载到 ms对象中
 	runtime.ReadMemStats(&ms)
 
 	logger.Infof(context.Background(), "====> Alloc:%d(M), HeapIdle:%d(M), "+

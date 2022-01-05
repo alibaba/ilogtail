@@ -81,7 +81,7 @@ func newGlobalConfig() (cfg GlobalConfig) {
 	if runtime.GOOS == "windows" {
 		cfg.LogtailSysConfDir = "C:\\LogtailData"
 	} else {
-		cfg.LogtailSysConfDir = "/etc/ilogtail"
+		cfg.LogtailSysConfDir = "/etc/ilogtail/temp"
 	}
 	return
 }

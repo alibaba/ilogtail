@@ -78,10 +78,6 @@ func (c *mockCollector) AddRawLog(log *protocol.Log) {
 
 }
 
-func (c *mockCollector) GetBufferPool() *protocol.Pool {
-	return nil
-}
-
 // Invalid Test
 func InvalidTestInputKafka(t *testing.T) {
 	initKafka()

@@ -64,7 +64,8 @@ type DockerStdoutProcessor struct {
 	collector            ilogtail.Collector
 
 	needCheckStream bool
-	tags            map[string]string
+	tags            []protocol.Log_Content
+	fieldNum        int
 
 	// save last parsed logs
 	lastLogs      []*LogMessage
@@ -90,7 +91,10 @@ func NewDockerStdoutProcessor(beginLineReg *regexp.Regexp, beginLineTimeout time
 	} else {
 		processor.needCheckStream = true
 	}
-	processor.tags = tags
+	for k, v := range tags {
+		processor.tags = append(processor.tags, protocol.Log_Content{Key: k, Value: v})
+	}
+	processor.fieldNum = len(processor.tags) + 3
 	return processor
 }
 
@@ -100,7 +104,6 @@ func NewDockerStdoutProcessor(beginLineReg *regexp.Regexp, beginLineTimeout time
 func parseCRILog(line []byte) (*LogMessage, error) {
 	// Ref: https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/kuberuntime/logs/logs.go#L125-L169
 	log := &LogMessage{}
-
 	idx := bytes.Index(line, delimiter)
 	if idx < 0 {
 		return &LogMessage{}, errors.New("invalid CRI log, timestamp not found")
@@ -252,13 +255,30 @@ func (p *DockerStdoutProcessor) Process(fileBlock []byte, noChangeInterval time.
 
 // newRawLogBySingleLine convert single line log to protocol.Log.
 func (p *DockerStdoutProcessor) newRawLogBySingleLine(msg *LogMessage) *protocol.Log {
-	log := p.newStdoutLog()
+	log := &protocol.Log{
+		Contents: make([]*protocol.Log_Content, 0, p.fieldNum),
+		Time:     uint32(time.Now().Unix()),
+	}
 	if len(msg.Content) > 0 && msg.Content[len(msg.Content)-1] == '\n' {
 		msg.Content = msg.Content[0 : len(msg.Content)-1]
 	}
-	log.Contents[0].Value = *(*string)(unsafe.Pointer(&msg.Content))
-	log.Contents[1].Value = msg.Time
-	log.Contents[2].Value = msg.StreamType
+	log.Contents = append(log.Contents, &protocol.Log_Content{
+		Key: "content",
+		// nolint:gosec
+		Value: *(*string)(unsafe.Pointer(&msg.Content)),
+	})
+	log.Contents = append(log.Contents, &protocol.Log_Content{
+		Key:   "_time_",
+		Value: msg.Time,
+	})
+	log.Contents = append(log.Contents, &protocol.Log_Content{
+		Key:   "_source_",
+		Value: msg.StreamType,
+	})
+	for i := range p.tags {
+		copy := p.tags[i]
+		log.Contents = append(log.Contents, &copy)
+	}
 	return log
 }
 
@@ -274,40 +294,34 @@ func (p *DockerStdoutProcessor) newRawLogByMultiLine() *protocol.Log {
 		sum += len(log.Content)
 	}
 	multiLine.Grow(sum)
-
-	log := p.newStdoutLog()
-	log.Contents[1].Value = p.lastLogs[0].Time
-	log.Contents[2].Value = p.lastLogs[0].StreamType
-
 	for index, log := range p.lastLogs {
 		multiLine.Write(log.Content)
 		// @note force set lastLog's content nil to let GC recycle this logs
 		p.lastLogs[index] = nil
 	}
-	log.Contents[0].Value = multiLine.String()
+
+	log := &protocol.Log{
+		Contents: make([]*protocol.Log_Content, 0, p.fieldNum),
+		Time:     uint32(time.Now().Unix()),
+	}
+	log.Contents = append(log.Contents, &protocol.Log_Content{
+		Key:   "content",
+		Value: multiLine.String(),
+	})
+	log.Contents = append(log.Contents, &protocol.Log_Content{
+		Key:   "_time_",
+		Value: lastOne.Time,
+	})
+	log.Contents = append(log.Contents, &protocol.Log_Content{
+		Key:   "_source_",
+		Value: lastOne.StreamType,
+	})
+	for i := range p.tags {
+		copy := p.tags[i]
+		log.Contents = append(log.Contents, &copy)
+	}
 	// reset multiline cache
 	p.lastLogs = p.lastLogs[:0]
 	p.lastLogsCount = 0
-	return log
-}
-
-func (p *DockerStdoutProcessor) newStdoutLog() *protocol.Log {
-	num := len(p.tags) + 3
-	log := p.context.GetBufferPool().GetLog()
-	log.Time = uint32(time.Now().Unix())
-	log.Contents = make([]*protocol.Log_Content, 0, num)
-	for i := 0; i < num; i++ {
-		log.Contents = append(log.Contents, p.context.GetBufferPool().GetLogContent())
-	}
-	log.Contents[0].Key = "content"
-	log.Contents[1].Key = "_time_"
-	log.Contents[2].Key = "_source_"
-
-	idx := 3
-	for k, v := range p.tags {
-		log.Contents[idx].Key = k
-		log.Contents[idx].Value = v
-		idx++
-	}
 	return log
 }
