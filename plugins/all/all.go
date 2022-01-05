@@ -15,11 +15,6 @@
 package all
 
 import (
-	"context"
-	"runtime"
-	"time"
-
-	"github.com/alibaba/ilogtail/pkg/logger"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/defaultone"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/logstorerouter"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/shardhash"
@@ -82,24 +77,3 @@ import (
 	_ "github.com/alibaba/ilogtail/plugins/processor/split/string"
 	_ "github.com/alibaba/ilogtail/plugins/processor/strptime"
 )
-
-func init() {
-	go func() {
-		for {
-			printMemStats()
-			time.Sleep(10 * time.Second)
-		}
-	}()
-
-}
-
-func printMemStats() {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-
-	logger.Infof(context.Background(), "====> Alloc:%d(M), HeapIdle:%d(M), "+
-		"HeapReleased:%d(M), HeapInuse:%d(M), "+
-		"GCSys:%d(M), Sys:%d(M)",
-		ms.Alloc/1024/1024, ms.HeapIdle/1024/1024, ms.HeapReleased/1024/1024, ms.HeapInuse/1024/1024, ms.GCSys/1024/1024, ms.Sys/1024/1024,
-	)
-}
