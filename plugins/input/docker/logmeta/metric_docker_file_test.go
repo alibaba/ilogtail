@@ -44,6 +44,7 @@ func TestServiceDockerStdout_Init(t *testing.T) {
 		K8sNamespaceRegex: "1",
 		K8sContainerRegex: "2",
 		K8sPodRegex:       "3",
+		LogPath:           "tets",
 	}
 	ctx := mock.NewEmptyContext("project", "store", "config")
 	_, err := sds.Init(ctx)
