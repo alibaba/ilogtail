@@ -49,6 +49,10 @@ jobs:
         with:
           submodules: true
 
+      - name: Copy Lib
+        if: matrix.runner == 'ubuntu'
+        run: sudo cp ./pkg/logtail/libPluginAdapter.so /usr/lib/
+
       - name: Check License Header
         if: matrix.runner == 'ubuntu'
         run: make check-license
@@ -61,7 +65,7 @@ jobs:
         run: make lint
 
       - name: Test
-        run: sudo cp ./pkg/logtail/libPluginAdapter.so /usr/lib/ && make test
+        run: make test
 
       - name: Test Core
         run: make core-test
