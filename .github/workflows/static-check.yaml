@@ -36,7 +36,7 @@ jobs:
       # prepare ubuntu environment
       - name: prepare ubuntu environment
         if: matrix.runner == 'ubuntu'
-        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev && sudo cp pkg/logtail/libPluginAdapter.so /usr/lib/
+        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev
 
 
       - name: Set up Go ${{ matrix.go-version }}
@@ -61,7 +61,7 @@ jobs:
         run: make lint
 
       - name: Test
-        run: make test
+        run: sudo cp ./pkg/logtail/libPluginAdapter.so /usr/lib/ && make test
 
       - name: Test Core
         run: make core-test
