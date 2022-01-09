@@ -187,7 +187,7 @@ func (s *Agent) checkInput(checkpoint string) bool {
 	return flag
 }
 
-// Wrapper convert Agent configs into gosnmp.GoSNMP configs
+// Wrapper convert SNMPAgent configs into gosnmp.GoSNMP configs
 func (s *Agent) Wrapper(envTarget string) (*g.GoSNMP, error) {
 	envPort := s.Port
 	port, _ := strconv.ParseUint(envPort, 10, 16)
