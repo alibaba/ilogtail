@@ -36,7 +36,8 @@ jobs:
       # prepare ubuntu environment
       - name: prepare ubuntu environment
         if: matrix.runner == 'ubuntu'
-        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev
+        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev && sudo cp pkg/logtail/libPluginAdapter.so /usr/lib/
+
 
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v2
