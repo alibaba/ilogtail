@@ -16,7 +16,9 @@ package logmeta
 
 import (
 	"github.com/alibaba/ilogtail/plugins/test/mock"
+
 	"github.com/stretchr/testify/assert"
+
 	"regexp"
 	"testing"
 )
