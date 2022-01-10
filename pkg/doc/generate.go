@@ -100,6 +100,9 @@ func extractDocConfig(doc Doc) (configs []*FieldConfig) {
 			Name:    rt.Field(i).Name,
 			Comment: rt.Field(i).Tag.Get("comment"),
 		}
+		if field.Comment == "" {
+			continue
+		}
 
 		field.Type = rt.Field(i).Type.String()
 
