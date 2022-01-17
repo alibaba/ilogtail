@@ -15,6 +15,8 @@
 package doc
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -34,6 +36,7 @@ type FieldConfig struct {
 	Name    string
 	Type    string
 	Comment string
+	Default string
 }
 
 // Generate plugin doc to the path/category directory.
@@ -72,10 +75,10 @@ func generatePluginDoc(fileName, pluginName string, doc Doc) {
 	str += doc.Description() + lf
 	str += secondLevel + "Config" + lf
 	if configs := extractDocConfig(doc); len(configs) > 0 {
-		str += `|  field   |   type   |   description   |
-| ---- | ---- | ---- |`
+		str += `|  field   |   type   |   description   | default value   |
+| ---- | ---- | ---- | ---- |`
 		for _, config := range configs {
-			str += lf + tableSplitor + config.Name + tableSplitor + config.Type + tableSplitor + config.Comment + tableSplitor
+			str += lf + tableSplitor + config.Name + tableSplitor + config.Type + tableSplitor + config.Comment + tableSplitor + config.Default + tableSplitor
 		}
 	}
 	_ = ioutil.WriteFile(fileName, []byte(str), 0600)
@@ -83,8 +86,10 @@ func generatePluginDoc(fileName, pluginName string, doc Doc) {
 
 func extractDocConfig(doc Doc) (configs []*FieldConfig) {
 	rt := reflect.TypeOf(doc)
+	val := reflect.ValueOf(doc)
 	if rt.Kind() == reflect.Ptr {
 		rt = rt.Elem()
+		val = val.Elem()
 	}
 	overrideName := func(index int, tag string, field *FieldConfig) {
 		name := rt.Field(index).Tag.Get(tag)
@@ -109,6 +114,12 @@ func extractDocConfig(doc Doc) (configs []*FieldConfig) {
 		overrideName(i, "yaml", field)
 		overrideName(i, "json", field)
 		overrideName(i, "mapstructure", field)
+
+		bytes, err := json.Marshal(val.Field(i).Interface())
+		if err != nil {
+			panic(fmt.Errorf("cannot extract default value: %+v", err))
+		}
+		field.Default = string(bytes)
 		configs = append(configs, field)
 	}
 	return
