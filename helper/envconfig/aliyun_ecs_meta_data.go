@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -129,21 +130,22 @@ func decrypt(s string, keyring []byte) ([]byte, error) {
 }
 
 func getAKFromLocalFile() (accessKeyID, accessKeySecret, securityToken string, expireTime time.Time, err error) {
-	var TokenConfigPath string
+	var tokenConfigPath string
 	if runtime.GOOS == "windows" {
 		// NB(thxCode): since os.Stat has not worked as expected,
 		// we use os.Lstat instead of os.Stat here,
 		// ref to https://github.com/microsoft/Windows-Containers/issues/97#issuecomment-887713195.
-		TokenConfigPath = ConfigPathForWindows
-		_, err = os.Lstat(TokenConfigPath)
+		tokenConfigPath = filepath.Clean(ConfigPathForWindows)
+		_, err = os.Lstat(tokenConfigPath)
 	} else {
-		TokenConfigPath = ConfigPath
-		_, err = os.Stat(TokenConfigPath)
+		tokenConfigPath = filepath.Clean(ConfigPath)
+		_, err = os.Stat(tokenConfigPath)
 	}
+
 	if err == nil {
 		var akInfo AKInfo
 		// 获取token config json
-		encodeTokenCfg, err := ioutil.ReadFile(TokenConfigPath)
+		encodeTokenCfg, err := ioutil.ReadFile(tokenConfigPath)
 		if err != nil {
 			return accessKeyID, accessKeySecret, securityToken, expireTime, err
 		}
