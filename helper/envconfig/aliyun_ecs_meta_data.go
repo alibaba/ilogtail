@@ -131,6 +131,9 @@ func decrypt(s string, keyring []byte) ([]byte, error) {
 func getAKFromLocalFile() (accessKeyID, accessKeySecret, securityToken string, expireTime time.Time, err error) {
 	var TokenConfigPath string
 	if runtime.GOOS == "windows" {
+		// NB(thxCode): since os.Stat has not worked as expected,
+		// we use os.Lstat instead of os.Stat here,
+		// ref to https://github.com/microsoft/Windows-Containers/issues/97#issuecomment-887713195.
 		TokenConfigPath = ConfigPathForWindows
 		_, err = os.Lstat(TokenConfigPath)
 	} else {
