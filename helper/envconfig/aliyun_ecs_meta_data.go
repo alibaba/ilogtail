@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -38,7 +39,8 @@ const (
 var errNoFile = errors.New("no secret file")
 
 const (
-	ConfigPath = "/var/addon/token-config"
+	ConfigPath           = "/var/addon/token-config"
+	ConfigPathForWindows = "C:\\var\\addon-logtail\\token-config"
 )
 
 // AKInfo ...
@@ -127,10 +129,18 @@ func decrypt(s string, keyring []byte) ([]byte, error) {
 }
 
 func getAKFromLocalFile() (accessKeyID, accessKeySecret, securityToken string, expireTime time.Time, err error) {
-	if _, err = os.Stat(ConfigPath); err == nil {
+	var TokenConfigPath string
+	if runtime.GOOS == "windows" {
+		TokenConfigPath = ConfigPathForWindows
+		_, err = os.Lstat(TokenConfigPath)
+	} else {
+		TokenConfigPath = ConfigPath
+		_, err = os.Stat(TokenConfigPath)
+	}
+	if err == nil {
 		var akInfo AKInfo
 		// 获取token config json
-		encodeTokenCfg, err := ioutil.ReadFile(ConfigPath)
+		encodeTokenCfg, err := ioutil.ReadFile(TokenConfigPath)
 		if err != nil {
 			return accessKeyID, accessKeySecret, securityToken, expireTime, err
 		}
