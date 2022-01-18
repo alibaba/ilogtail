@@ -135,17 +135,17 @@ func getAKFromLocalFile() (accessKeyID, accessKeySecret, securityToken string, e
 		// NB(thxCode): since os.Stat has not worked as expected,
 		// we use os.Lstat instead of os.Stat here,
 		// ref to https://github.com/microsoft/Windows-Containers/issues/97#issuecomment-887713195.
-		tokenConfigPath = filepath.Clean(ConfigPathForWindows)
+		tokenConfigPath = ConfigPathForWindows
 		_, err = os.Lstat(tokenConfigPath)
 	} else {
-		tokenConfigPath = filepath.Clean(ConfigPath)
+		tokenConfigPath = ConfigPath
 		_, err = os.Stat(tokenConfigPath)
 	}
 
 	if err == nil {
 		var akInfo AKInfo
 		// 获取token config json
-		encodeTokenCfg, err := ioutil.ReadFile(tokenConfigPath)
+		encodeTokenCfg, err := ioutil.ReadFile(filepath.Clean(tokenConfigPath))
 		if err != nil {
 			return accessKeyID, accessKeySecret, securityToken, expireTime, err
 		}
