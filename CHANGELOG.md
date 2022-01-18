@@ -36,3 +36,4 @@ your changes, such as:
 ## [Unreleased]
 
 - [public] [both] [doc] add input stdout plugin doc
+- [public] [both] [updated] support running multi prometheus input plugins at the same time
