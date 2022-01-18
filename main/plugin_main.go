@@ -45,13 +45,25 @@ func main() {
 	fmt.Println("hostname : ", util.GetHostName())
 	fmt.Println("hostIP : ", util.GetIPAddress())
 	fmt.Printf("load config %s %s %s\n", *flags.GlobalConfig, *flags.PluginConfig, *flags.FlusherConfig)
-	pluginCfg, globalCfg := flags.LoadConfig()
 	handlers["/loadconfig"] = &handler{handlerFunc: HandleLoadConfig, description: "load new logtail plugin configuration"}
 	handlers["/holdon"] = &handler{handlerFunc: HandleHoldOn, description: "hold on logtail plugin process"}
-	if InitPluginBaseV2(globalCfg) != 0 || LoadConfig("PluginProject", "PluginLogstore",
-		"1.0#PluginProject##MockConfig2", 123, pluginCfg) != 0 {
+
+	if globalCfg, pluginCfgs, err := flags.LoadConfig(); err != nil {
 		return
+	} else if InitPluginBaseV2(globalCfg) != 0 {
+		return
+	} else {
+		for i, cfg := range pluginCfgs {
+			p := fmt.Sprintf("PluginProject_%d", i)
+			l := fmt.Sprintf("PluginLogstore_%d", i)
+			c := fmt.Sprintf("1.0#PluginProject_%d##Config%d", i, i)
+			if LoadConfig(p, l, c, 123, cfg) != 0 {
+				logger.Warningf(context.Background(), "START_PLUGIN_ALARM", "%s_%s_%s start fail, config is %s", p, l, c, cfg)
+				return
+			}
+		}
 	}
+
 	Resume()
 	// handle the first shutdown signal gracefully
 	<-signals.SetupSignalHandler()
