@@ -34,7 +34,8 @@ type ServiceStaticPrometheus struct {
 	Yaml           string `comment:"the prometheus configuration content, more details please see [here](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)"`
 	ConfigFilePath string `comment:"the prometheus configuration path, and the param would be ignored when Yaml param is configured."`
 
-	sctaper   *promscrape.Scraper
+
+	sctaper   *promscrape.Scraper //nolint:typecheck
 	shutdown  chan struct{}
 	waitGroup sync.WaitGroup
 	context   ilogtail.Context
@@ -57,7 +58,7 @@ func (p *ServiceStaticPrometheus) Init(context ilogtail.Context) (int, error) {
 		return 0, errors.New("the scrape configuration is required")
 	}
 	name := strings.Join([]string{context.GetProject(), context.GetLogstore(), context.GetConfigName()}, "_")
-	p.sctaper = promscrape.NewScraper(configPath, name)
+	p.sctaper = promscrape.NewScraper(configPath, name) //nolint:typecheck
 	if err := p.sctaper.CheckConfig(); err != nil {
 		return 0, fmt.Errorf("illegal prometheus configuration file %s: %v", configPath, err)
 	}

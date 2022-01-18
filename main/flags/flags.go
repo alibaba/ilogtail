@@ -55,7 +55,7 @@ var (
 
 // LoadConfig read the plugin content.
 func LoadConfig() (globalCfg string, pluginCfgs []string, err error) {
-	if gCfg, err := ioutil.ReadFile(*GlobalConfig); err != nil {
+	if gCfg, errRead := ioutil.ReadFile(*GlobalConfig); errRead != nil {
 		globalCfg = defaultGlobalConfig
 	} else {
 		globalCfg = string(gCfg)
@@ -67,7 +67,7 @@ func LoadConfig() (globalCfg string, pluginCfgs []string, err error) {
 	}
 
 	var pluginCfg string
-	if pCfg, err := ioutil.ReadFile(*PluginConfig); err == nil {
+	if pCfg, errRead := ioutil.ReadFile(*PluginConfig); errRead == nil {
 		pluginCfg = string(pCfg)
 	} else {
 		pluginCfg = defaultPluginConfig
