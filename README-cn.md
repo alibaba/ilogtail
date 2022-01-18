@@ -60,6 +60,9 @@ make build && sh bin/ilogtail
 - [Processor 插件](./docs/zh/guides/How-to-write-processor-plugins.md)
 - [Aggregator 插件](./docs/zh/guides/How-to-write-aggregator-plugins.md)
 - [Flusher 插件](./docs/zh/guides/How-to-write-flusher-plugins.md)
+## iLogtail 性能测试
+- [容器场景iLogtail 与Filebeat 性能对比测试](./docs/zh/performance/Performance-compare-with-filebeat.md)
+
 ## iLogtail 使用案例
 - [iLogtail使用入门-主机环境日志采集到SLS](./docs/zh/usecases/How-to-setup-on-host.md)
 - [iLogtail使用入门-K8S环境日志采集到SLS](./docs/zh/usecases/How-to-setup-in-k8s-environment.md)
@@ -80,7 +83,7 @@ make build && sh bin/ilogtail
 - 哔哩哔哩：[阿里云SLS](https://space.bilibili.com/630680534?from=search&seid=2845737427240690794&spm_id_from=333.337.0.0)
 - 知乎：[阿里云日志服务](https://www.zhihu.com/people/a-li-yun-ri-zhi-fu-wu)
 
-<img src="https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail-contact.png?versionId=CAEQMxiBgIC.jPui6RciIDhlNzVjYmQ5OTIwNzQ4NTBiMzk1YTgyN2VkNmU5MDBi" alt="ilogtail logo" style="width: 100%; height: 100%" />
+<img src="https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail-contact.png?versionId=CAEQOhiBgICQkM6b8xciIDcxZTU5M2FjMDAzODQ1Njg5NjI3ZDc4M2FhOTZkNWNk" style="width: 100%; height: 100%" />
 
 # 我们的用户
 
