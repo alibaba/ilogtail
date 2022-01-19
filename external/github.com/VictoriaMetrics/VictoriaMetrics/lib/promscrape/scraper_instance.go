@@ -9,6 +9,7 @@ import (
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/logger"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/prompbmarshal"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/promscrape/discovery/consul"
+	"github.com/VictoriaMetrics/metrics"
 )
 
 type Scraper struct {
@@ -78,6 +79,7 @@ func (s *Scraper) runScraper() {
 	startTime := time.Now()
 	scs.stop()
 	logger.Infof("stopped Prometheus scrapers in %.3f seconds", time.Since(startTime).Seconds())
+	metrics.Clear(s.name)
 }
 
 // loadContentConfig loads Prometheus config from the configuration content.

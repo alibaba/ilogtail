@@ -71,6 +71,7 @@ func (s *Scraper) runScraper() {
 	scs.add(s.name+"_gce_sd_configs", *gceSDCheckInterval, func(cfg *Config, swsPrev []*ScrapeWork) []*ScrapeWork { return cfg.getGCESDScrapeWork(swsPrev) })
 	scs.add(s.name+"_dockerswarm_sd_configs", *dockerswarmSDCheckInterval, func(cfg *Config, swsPrev []*ScrapeWork) []*ScrapeWork { return cfg.getDockerSwarmSDScrapeWork(swsPrev) })
 
+	panic()
 	scs.updateConfig(cfg)
 	<-s.globalStopCh
 	cfg.mustStop()
@@ -78,6 +79,7 @@ func (s *Scraper) runScraper() {
 	startTime := time.Now()
 	scs.stop()
 	logger.Infof("stopped Prometheus scrapers in %.3f seconds", time.Since(startTime).Seconds())
+	//metrics.Clear(s.name)
 }
 
 // loadContentConfig loads Prometheus config from the configuration content.

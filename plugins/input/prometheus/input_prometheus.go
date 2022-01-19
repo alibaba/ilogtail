@@ -32,6 +32,8 @@ import (
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
+var libLoggerOnce sync.Once
+
 type ServiceStaticPrometheus struct {
 	Yaml              string `comment:"the prometheus configuration content, more details please see [here](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)"`
 	ConfigFilePath    string `comment:"the prometheus configuration path, and the param would be ignored when Yaml param is configured."`
@@ -41,11 +43,10 @@ type ServiceStaticPrometheus struct {
 	shutdown      chan struct{}
 	waitGroup     sync.WaitGroup
 	context       ilogtail.Context
-	libLoggerOnce sync.Once
 }
 
 func (p *ServiceStaticPrometheus) Init(context ilogtail.Context) (int, error) {
-	p.libLoggerOnce.Do(func() {
+	libLoggerOnce.Do(func() {
 		if f := flag.Lookup("loggerOutput"); f != nil {
 			_ = f.Value.Set("stdout")
 		}
