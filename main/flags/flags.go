@@ -82,12 +82,11 @@ func LoadConfig() (globalCfg string, pluginCfgs []string, err error) {
 	errUnmarshal := json.Unmarshal([]byte(pluginCfg), &cfgs)
 	if errUnmarshal != nil {
 		pluginCfgs = append(pluginCfgs, pluginCfg)
-	} else {
-		for _, cfg := range cfgs {
-			bytes, _ := json.Marshal(cfg)
-			pluginCfgs = append(pluginCfgs, string(bytes))
-
-		}
+		return
+	}
+	for _, cfg := range cfgs {
+		bytes, _ := json.Marshal(cfg)
+		pluginCfgs = append(pluginCfgs, string(bytes))
 	}
 	return
 }

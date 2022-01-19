@@ -20,51 +20,73 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg/logger"
-
+	liblogger "github.com/VictoriaMetrics/VictoriaMetrics/lib/logger"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/prompbmarshal"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/promscrape"
+
+	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/alibaba/ilogtail"
 )
 
 type ServiceStaticPrometheus struct {
-	Yaml           string `comment:"the prometheus configuration content, more details please see [here](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)"`
-	ConfigFilePath string `comment:"the prometheus configuration path, and the param would be ignored when Yaml param is configured."`
+	Yaml              string `comment:"the prometheus configuration content, more details please see [here](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)"`
+	ConfigFilePath    string `comment:"the prometheus configuration path, and the param would be ignored when Yaml param is configured."`
+	AuthorizationPath string `comment:"the prometheus authorization path, only using in authorization files. When Yaml param is configured, the default value is the current binary path. However, the default value is the ConfigFilePath directory when ConfigFilePath is working."`
 
-
-	sctaper   *promscrape.Scraper //nolint:typecheck
-	shutdown  chan struct{}
-	waitGroup sync.WaitGroup
-	context   ilogtail.Context
+	scraper       *promscrape.Scraper //nolint:typecheck
+	shutdown      chan struct{}
+	waitGroup     sync.WaitGroup
+	context       ilogtail.Context
+	libLoggerOnce sync.Once
 }
 
 func (p *ServiceStaticPrometheus) Init(context ilogtail.Context) (int, error) {
+	p.libLoggerOnce.Do(func() {
+		if f := flag.Lookup("loggerOutput"); f != nil {
+			_ = f.Value.Set("stdout")
+		}
+		liblogger.Init()
+	})
 	p.context = context
-	var configPath string
+	var detail []byte
 	switch {
 	case p.Yaml != "":
-		name := strings.Join([]string{p.context.GetProject(), p.context.GetLogstore(), p.context.GetConfigName(), "scrape.yml"}, "_")
-		_ = ioutil.WriteFile(name, []byte(p.Yaml), os.FileMode(0744))
-		configPath = name
-	case p.ConfigFilePath != "":
-		if _, err := os.Stat(p.ConfigFilePath); err != nil {
-			return 0, fmt.Errorf("read scrape configuration fail: %v", err)
+		detail = []byte(p.Yaml)
+		if p.AuthorizationPath == "" {
+			p.AuthorizationPath = util.GetCurrentBinaryPath()
 		}
-		configPath = p.ConfigFilePath
+	case p.ConfigFilePath != "":
+		f, err := os.Open(p.ConfigFilePath)
+		if err != nil {
+			return 0, fmt.Errorf("cannot find prometheus configuration file")
+		}
+		defer func(f *os.File) {
+			_ = f.Close()
+		}(f)
+		bytes, err := ioutil.ReadAll(f)
+		if err != nil {
+			return 0, fmt.Errorf("cannot read prometheus configuration file")
+		}
+		detail = bytes
+		if p.AuthorizationPath == "" {
+			p.AuthorizationPath = filepath.Dir(p.ConfigFilePath)
+		}
 	default:
 		return 0, errors.New("the scrape configuration is required")
 	}
-	name := strings.Join([]string{context.GetProject(), context.GetLogstore(), context.GetConfigName()}, "_")
-	p.sctaper = promscrape.NewScraper(configPath, name) //nolint:typecheck
-	if err := p.sctaper.CheckConfig(); err != nil {
-		return 0, fmt.Errorf("illegal prometheus configuration file %s: %v", configPath, err)
+	var err error
+	if p.AuthorizationPath, err = filepath.Abs(p.AuthorizationPath); err != nil {
+		return 0, fmt.Errorf("cannot find the abs authorization path: %v", err)
 	}
-	if scrapeFlag := flag.Lookup("promscrape.configCheckInterval"); scrapeFlag != nil {
-		_ = scrapeFlag.Value.Set("15s")
-		logger.Info(p.context.GetRuntimeContext(), "set prometheus scrape config file reload interval", "15s")
+
+	name := strings.Join([]string{context.GetProject(), context.GetLogstore(), context.GetConfigName()}, "_")
+	p.scraper = promscrape.NewScraper(detail, name, p.AuthorizationPath) //nolint:typecheck
+	if err := p.scraper.CheckConfig(); err != nil {
+		return 0, fmt.Errorf("illegal prometheus configuration file %s: %v", name, err)
 	}
 	return 0, nil
 }
@@ -78,7 +100,7 @@ func (p *ServiceStaticPrometheus) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()
-	p.sctaper.Init(func(wr *prompbmarshal.WriteRequest) {
+	p.scraper.Init(func(wr *prompbmarshal.WriteRequest) {
 		appendTSDataToSlsLog(c, wr)
 	})
 	<-p.shutdown
@@ -94,8 +116,6 @@ func (p *ServiceStaticPrometheus) Stop() error {
 
 func init() {
 	ilogtail.ServiceInputs["service_prometheus"] = func() ilogtail.ServiceInput {
-		return &ServiceStaticPrometheus{
-			ConfigFilePath: "prometheus_scrape_config_default.yml",
-		}
+		return &ServiceStaticPrometheus{}
 	}
 }
