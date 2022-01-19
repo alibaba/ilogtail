@@ -28,8 +28,8 @@ import (
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/prompbmarshal"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/promscrape"
 
-	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type ServiceStaticPrometheus struct {
@@ -103,6 +103,7 @@ func (p *ServiceStaticPrometheus) Start(c ilogtail.Collector) error {
 		appendTSDataToSlsLog(c, wr)
 	})
 	<-p.shutdown
+	p.scraper.Stop()
 	return nil
 }
 
