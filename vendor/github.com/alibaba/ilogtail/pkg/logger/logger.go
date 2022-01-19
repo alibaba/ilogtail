@@ -315,8 +315,8 @@ func catchStandardOutput() {
 			return err
 		}
 		old := catcher(w)
+		wait.Add(1)
 		go func() {
-			wait.Add(1)
 			defer wait.Done()
 			reader := bufio.NewReader(r)
 			go func() {
