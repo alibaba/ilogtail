@@ -82,7 +82,6 @@ func (p *ServiceStaticPrometheus) Init(context ilogtail.Context) (int, error) {
 	if p.AuthorizationPath, err = filepath.Abs(p.AuthorizationPath); err != nil {
 		return 0, fmt.Errorf("cannot find the abs authorization path: %v", err)
 	}
-
 	name := strings.Join([]string{context.GetProject(), context.GetLogstore(), context.GetConfigName()}, "_")
 	p.scraper = promscrape.NewScraper(detail, name, p.AuthorizationPath) //nolint:typecheck
 	if err := p.scraper.CheckConfig(); err != nil {
