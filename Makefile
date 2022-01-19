@@ -154,10 +154,10 @@ test-e2e-engine: clean gocdocker coveragedocker
 test: clean
 	cp pkg/logtail/libPluginAdapter.so ./main
 	cp pkg/logtail/PluginAdapter.dll ./main
-	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig"| grep -Ev "main|pluginmanager") -coverprofile .testCoverage.txt
+	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|prometheus"| grep -Ev "main|pluginmanager") -coverprofile .testCoverage.txt
 
 .PHONY: core-test
 core-test: clean
 	cp pkg/logtail/libPluginAdapter.so ./main
 	cp pkg/logtail/PluginAdapter.dll ./main
-	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig"| grep -E "main|pluginmanager") -coverprofile .coretestCoverage.txt
+	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|prometheus"| grep -E "main|pluginmanager") -coverprofile .coretestCoverage.txt
