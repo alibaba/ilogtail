@@ -1,0 +1,40 @@
+services:
+    container:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        environment:
+            - STDOUT_SWITCH=true
+        hostname: container
+    goc:
+        healthcheck:
+            interval: 1s
+            retries: 10
+            test:
+                - CMD-SHELL
+                - curl -O /dev/null http://localhost:7777 || exit 1
+            timeout: 5s
+        hostname: goc
+        image: goc-server:latest
+        ports:
+            - 7777:7777
+        volumes:
+            - /home/liujiapeng.ljp/data/ilogtail/behavior-test/report/input_docker_stdout_coverage.out:/coverage.log
+    ilogtail:
+        depends_on:
+            goc:
+                condition: service_healthy
+        environment:
+            - LOGTAIL_FORCE_COLLECT_SELF_TELEMETRY=true
+            - LOGTAIL_DEBUG_FLAG=true
+            - LOGTAIL_AUTO_PROF=false
+        hostname: ilogtail
+        image: aliyun/ilogtail:latest
+        ports:
+            - 18689:18689
+        volumes:
+            - ./default_flusher.json:/aliyun/default_flusher.json
+            - /home/liujiapeng.ljp/data/ilogtail/behavior-test/report/input_docker_stdout_ilogtail.log:/aliyun/logtail_plugin.LOG
+            - /:/logtail_host
+            - /var/run/docker.sock:/var/run/docker.sock
+version: "3.8"
