@@ -31,6 +31,10 @@ func GetMountedFilePathWithBasePath(basePath, logPath string) string {
 	return basePath + logPath
 }
 
+func NormalizePath(path string) string {
+	return path
+}
+
 func init() {
 	defaultPath := "/logtail_host"
 	_, err := os.Stat(defaultPath)
