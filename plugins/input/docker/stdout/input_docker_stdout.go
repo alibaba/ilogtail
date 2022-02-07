@@ -80,6 +80,11 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 			checkpoint.Path = info.ContainerInfo.LogPath
 		}
 
+		logger.Info(sds.context.GetRuntimeContext(), "docker id", info.ContainerInfo.ID,
+			"sds.LogtailInDocker", sds.LogtailInDocker,
+			"container logpath", info.ContainerInfo.LogPath,
+			"checkpoint.Path", checkpoint.Path)
+
 		// first watch this container
 		stat, err := os.Stat(checkpoint.Path)
 		if err != nil {

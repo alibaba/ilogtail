@@ -18,6 +18,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/alibaba/ilogtail/pkg/util"
