@@ -49,7 +49,7 @@ elif [ $OS_FLAG = 3 ]; then
   export GOARCH=386
   export CGO_ENABLED=1
   if [ $BUILDMODE = "c-shared" ]; then
-       NAME=libPluginBase.dll
+       NAME=PluginBase.dll
   fi
 elif [ $OS_FLAG = 3 ]; then
   BUILDMODE=default
