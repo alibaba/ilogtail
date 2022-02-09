@@ -18,7 +18,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -118,14 +117,4 @@ func GetMountedFilePathWithBasePath(basePath, filePath string) string {
 		return ""
 	}
 	return basePath + filePath[colonPos+1:]
-}
-
-// NormalizePath returns the normal path in heterogeneous platform.
-// parses the root path with windows system driver.
-func NormalizePath(path string) string {
-	if strings.HasPrefix(path, "/") {
-		path = filepath.FromSlash(path)
-		return filepath.VolumeName(DefaultLogtailMountPath) + path
-	}
-	return path
 }

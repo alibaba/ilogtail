@@ -41,8 +41,8 @@ const (
 var errNoFile = errors.New("no secret file")
 
 const (
-	AddOnTokenConfigPathEnv     = "ALIYUN_LOG_ADDON_TOKEN_PATH"
-	DefaultAddOnTokenConfigPath = "/var/addon/token-config"
+	AddOnTokenConfigPathEnv     = "ALIYUN_LOG_ADDON_TOKEN_PATH" //nolint:gosec
+	DefaultAddOnTokenConfigPath = "/var/addon/token-config"     //nolint:gosec
 )
 
 // AKInfo ...
@@ -141,7 +141,7 @@ func getAddOnTokenConfigPath() string {
 func getAKFromLocalFile() (accessKeyID, accessKeySecret, securityToken string, expireTime time.Time, err error) {
 	addonTokenConfigPath := getAddOnTokenConfigPath()
 	if runtime.GOOS == "windows" {
-		addonTokenConfigPath = helper.NormalizePath(addonTokenConfigPath)
+		addonTokenConfigPath = helper.NormalizeWindowsPath(addonTokenConfigPath)
 
 		// NB(thxCode): since os.Stat has not worked as expected,
 		// we use os.Lstat instead of os.Stat here,
