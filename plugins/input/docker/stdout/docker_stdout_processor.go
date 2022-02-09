@@ -17,15 +17,13 @@ package stdout
 import (
 	"bytes"
 	"errors"
-	"regexp"
-	"strings"
-	"time"
-	"unsafe"
-
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"regexp"
+	"strings"
+	"time"
 )
 
 var (
@@ -265,7 +263,7 @@ func (p *DockerStdoutProcessor) newRawLogBySingleLine(msg *LogMessage) *protocol
 	log.Contents = append(log.Contents, &protocol.Log_Content{
 		Key: "content",
 		// nolint:gosec
-		Value: *(*string)(unsafe.Pointer(&msg.Content)),
+		Value: string(msg.Content),
 	})
 	log.Contents = append(log.Contents, &protocol.Log_Content{
 		Key:   "_time_",
