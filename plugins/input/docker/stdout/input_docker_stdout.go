@@ -80,11 +80,6 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 			checkpoint.Path = info.ContainerInfo.LogPath
 		}
 
-		logger.Info(sds.context.GetRuntimeContext(), "docker id", info.ContainerInfo.ID,
-			"sds.LogtailInDocker", sds.LogtailInDocker,
-			"container logpath", info.ContainerInfo.LogPath,
-			"checkpoint.Path", checkpoint.Path)
-
 		// first watch this container
 		stat, err := os.Stat(checkpoint.Path)
 		if err != nil {
@@ -103,6 +98,12 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 	if sds.CloseUnChangedSec < 10 {
 		sds.CloseUnChangedSec = 10
 	}
+
+	logger.Info(sds.context.GetRuntimeContext(), "docker id", info.ContainerInfo.ID,
+		"sds.LogtailInDocker", sds.LogtailInDocker,
+		"container logpath", info.ContainerInfo.LogPath,
+		"checkpoint.Path", checkpoint.Path)
+
 	config := helper.LogFileReaderConfig{
 		ReadIntervalMs:   sds.ReadIntervalMs,
 		MaxReadBlockSize: sds.MaxLogSize,
