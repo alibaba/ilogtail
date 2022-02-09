@@ -41,8 +41,8 @@ const (
 var errNoFile = errors.New("no secret file")
 
 const (
-	addOnTokenConfigPathEnv     = "ALIYUN_LOG_ADDON_TOKEN_PATH"
-	defaultAddOnTokenConfigPath = "/var/addon/token-config"
+	AddOnTokenConfigPathEnv     = "ALIYUN_LOG_ADDON_TOKEN_PATH"
+	DefaultAddOnTokenConfigPath = "/var/addon/token-config"
 )
 
 // AKInfo ...
@@ -131,9 +131,9 @@ func decrypt(s string, keyring []byte) ([]byte, error) {
 }
 
 func getAddOnTokenConfigPath() string {
-	tokenPath := os.Getenv(addOnTokenConfigPathEnv)
+	tokenPath := os.Getenv(AddOnTokenConfigPathEnv)
 	if len(tokenPath) == 0 {
-		return defaultAddOnTokenConfigPath
+		return DefaultAddOnTokenConfigPath
 	}
 	return tokenPath
 }
