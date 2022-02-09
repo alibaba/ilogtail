@@ -68,7 +68,7 @@ func TestGetMountedFilePath(t *testing.T) {
 		require.Equal(t, c.outFilePath, GetMountedFilePath(c.filePath))
 	}
 
-	require.Equal(t, NormalizePath("C:\\var\\addon-logtail\\token-config"), "C:\\var\\addon-logtail\\token-config")
-	require.Equal(t, NormalizePath("/var/addon-logtail/token-config"), "C:\\var\\addon-logtail\\token-config")
-	require.Equal(t, NormalizePath(""), "")
+	require.Equal(t, NormalizeWindowsPath("C:\\var\\addon-logtail\\token-config"), "C:\\var\\addon-logtail\\token-config")
+	require.Equal(t, NormalizeWindowsPath("/var/addon-logtail/token-config"), "C:\\var\\addon-logtail\\token-config")
+	require.Equal(t, NormalizeWindowsPath(""), "")
 }
