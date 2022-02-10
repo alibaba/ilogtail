@@ -99,10 +99,9 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 		sds.CloseUnChangedSec = 10
 	}
 
-	logger.Info(sds.context.GetRuntimeContext(), "docker id", info.ContainerInfo.ID,
-		"sds.LogtailInDocker", sds.LogtailInDocker,
-		"container logpath", info.ContainerInfo.LogPath,
-		"checkpoint.Path", checkpoint.Path)
+	logger.Info(sds.context.GetRuntimeContext(), "docker_id", info.ContainerInfo.ID,
+		"checkpoint_logpath", checkpoint.Path,
+		"in_docker", sds.LogtailInDocker)
 
 	config := helper.LogFileReaderConfig{
 		ReadIntervalMs:   sds.ReadIntervalMs,
