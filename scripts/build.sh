@@ -51,7 +51,7 @@ elif [ $OS_FLAG = 3 ]; then
   if [ $BUILDMODE = "c-shared" ]; then
        NAME=PluginBase.dll
   fi
-elif [ $OS_FLAG = 3 ]; then
+elif [ $OS_FLAG = 2 ]; then
   BUILDMODE=default
 fi
 
