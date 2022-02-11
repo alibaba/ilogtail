@@ -151,7 +151,7 @@ func getAKFromLocalFile() (accessKeyID, accessKeySecret, securityToken string, e
 		_, err = os.Stat(addonTokenConfigPath)
 	}
 	logger.Info(context.Background(), "get security token addon tokenconfig. path", addonTokenConfigPath,
-		"errcode", err)
+		"ret_code", err)
 
 	if err == nil {
 		var akInfo AKInfo

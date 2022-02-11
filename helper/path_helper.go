@@ -33,7 +33,7 @@ func mustGetWindowsSystemDrive() string {
 		systemDrive = filepath.VolumeName(os.Getenv("SYSTEMROOT"))
 	}
 	if systemDrive == "" {
-		panic("unable to get windows system driver")
+		systemDrive = "C:"
 	}
 	return systemDrive
 }
