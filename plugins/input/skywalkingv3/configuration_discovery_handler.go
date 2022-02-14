@@ -18,7 +18,6 @@ import (
 	"context"
 
 	v3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/agent/configuration/v3"
-
 	v3command "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/common/v3"
 )
 
