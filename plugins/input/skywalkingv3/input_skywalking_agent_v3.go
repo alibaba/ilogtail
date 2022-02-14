@@ -15,14 +15,16 @@
 package skywalkingv3
 
 import (
+	"net"
+
+	"google.golang.org/grpc"
+
 	"github.com/alibaba/ilogtail"
+
 	configuration "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/agent/configuration/v3"
 	agent "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/language/agent/v3"
 	profile "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/language/profile/v3"
 	management "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/management/v3"
-	"net"
-
-	"google.golang.org/grpc"
 )
 
 type Input struct {
