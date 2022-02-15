@@ -19,12 +19,23 @@ import (
 	"runtime/debug"
 	"sync"
 	"time"
+	"unsafe"
 
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/main/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/pluginmanager"
 )
+
+/*
+struct containerMeta{
+	char* podName;
+	char* k8sNamespace;
+	char* containerName;
+	char* image;
+};
+*/
 import "C"
 
 var initOnce sync.Once
@@ -124,6 +135,20 @@ func Resume() {
 //export CtlCmd
 func CtlCmd(configName string, cmdId int, cmdDetail string) {
 	logger.Info(context.Background(), "execute cmd", cmdId, "detail", cmdDetail, "config", configName)
+}
+
+//export GetContainerMeta
+func GetContainerMeta(containerID string) *C.struct_containerMeta {
+	detail, ok := helper.GetDockerCenterInstance().GetContainerDetail(containerID)
+	returnStruct := (*C.struct_containerMeta)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_containerMeta{}))))
+	if ok {
+		returnStruct.podName = C.CString(detail.K8SInfo.Pod)
+		returnStruct.k8sNamespace = C.CString(detail.K8SInfo.Namespace)
+		returnStruct.containerName = C.CString(detail.K8SInfo.ContainerName)
+		returnStruct.image = C.CString(detail.ContainerInfo.Image)
+	}
+
+	return returnStruct
 }
 
 func initPluginBase(cfgStr string) int {
