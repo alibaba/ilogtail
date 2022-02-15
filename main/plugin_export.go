@@ -140,15 +140,16 @@ func CtlCmd(configName string, cmdId int, cmdDetail string) {
 //export GetContainerMeta
 func GetContainerMeta(containerID string) *C.struct_containerMeta {
 	detail, ok := helper.GetDockerCenterInstance().GetContainerDetail(containerID)
-	returnStruct := (*C.struct_containerMeta)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_containerMeta{}))))
 	if ok {
+		returnStruct := (*C.struct_containerMeta)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_containerMeta{}))))
 		returnStruct.podName = C.CString(detail.K8SInfo.Pod)
 		returnStruct.k8sNamespace = C.CString(detail.K8SInfo.Namespace)
 		returnStruct.containerName = C.CString(detail.K8SInfo.ContainerName)
 		returnStruct.image = C.CString(detail.ContainerInfo.Image)
+		return returnStruct
 	}
 
-	return returnStruct
+	return nil
 }
 
 func initPluginBase(cfgStr string) int {
