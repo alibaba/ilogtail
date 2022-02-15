@@ -148,6 +148,7 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 		returnStruct.image = C.CString(detail.ContainerInfo.Image)
 		return returnStruct
 	}
+	// TODO: fetchAll again when not found.
 
 	return nil
 }
