@@ -295,10 +295,11 @@ tailf node_exporter.json
 # 总结
 iLogtail 提供了完整Prometheus 指标采集能力，无需改造Exporter 指标，即可完成Prometheus 指标的采集。而通过日志服务MetricStore的能力，用户也可以使用其作为Prometheus 替代选项，通过的Grafana 商店丰富的看板模板快速构建自己的监控大盘。
 # 参考文档
-[Grafana安装指南](https://grafana.com/docs/grafana/latest/installation/)
-[时序数据对接Grafana](https://help.aliyun.com/document_detail/173903.html)
-[iLogtail 的传输层协议](https://github.com/alibaba/ilogtail/blob/main/pkg/protocol/proto/sls_logs.proto)
-[主机环境日志采集到SLS](https://github.com/alibaba/ilogtail/blob/main/docs/zh/usecases/How-to-setup-on-host.md)
+- [Grafana安装指南](https://grafana.com/docs/grafana/latest/installation/)
+
+- [时序数据对接Grafana](https://help.aliyun.com/document_detail/173903.html)
+- [iLogtail 的传输层协议](https://github.com/alibaba/ilogtail/blob/main/pkg/protocol/proto/sls_logs.proto)
+- [主机环境日志采集到SLS](https://github.com/alibaba/ilogtail/blob/main/docs/zh/usecases/How-to-setup-on-host.md)
 ​
 
 ​
