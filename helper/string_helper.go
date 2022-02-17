@@ -19,6 +19,7 @@ import (
 	"unsafe"
 )
 
+//nolint:gosec
 func ZeroCopyString(b []byte) (s string) {
 	pbytes := (*reflect.SliceHeader)(unsafe.Pointer(&b))
 	pstring := (*reflect.StringHeader)(unsafe.Pointer(&s))
@@ -27,6 +28,7 @@ func ZeroCopyString(b []byte) (s string) {
 	return
 }
 
+//nolint:gosec
 func ZeroCopySlice(s string) (b []byte) {
 	pbytes := (*reflect.SliceHeader)(unsafe.Pointer(&b))
 	pstring := (*reflect.StringHeader)(unsafe.Pointer(&s))

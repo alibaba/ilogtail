@@ -17,14 +17,15 @@ package stdout
 import (
 	"bytes"
 	"errors"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"regexp"
-	"strings"
-	"time"
 )
 
 var (

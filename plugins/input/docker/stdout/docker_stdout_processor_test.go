@@ -16,8 +16,6 @@ package stdout
 
 import (
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -25,9 +23,11 @@ import (
 	"time"
 
 	"github.com/pingcap/check"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
@@ -78,9 +78,9 @@ var context6 = `2017-09-12 22:32:21.212 [INFO][88] exception 2:
 
 var logErrorJSON = `{"log":"1:M 09 Nov 13:27:36.276 # User requested shutdown...\n","stream":"stdout", "time":"2018-05-16T06:28:41.2195434Z"`
 
-var logErrorContainerd_1 = `2017-09-12T22:32:21.212861448Zstderr2017-09-1222:32:21.212[INFO][88]exception2:`
-var logErrorContainerd_2 = `2017-09-12T22:32:21.212861448Z stderr2017-09-1222:32:21.212[INFO][88]exception2:`
-var logErrorContainerd_3 = `2017-09-12T22:32:21.212861448Z stderr F2017-09-1222:32:21.212[INFO][88]exception2:`
+var logErrorContainerd1 = `2017-09-12T22:32:21.212861448Zstderr2017-09-1222:32:21.212[INFO][88]exception2:`
+var logErrorContainerd2 = `2017-09-12T22:32:21.212861448Z stderr2017-09-1222:32:21.212[INFO][88]exception2:`
+var logErrorContainerd3 = `2017-09-12T22:32:21.212861448Z stderr F2017-09-1222:32:21.212[INFO][88]exception2:`
 
 var splitedlog1 = `{"log":"1","stream":"stdout", "time":"2018-05-16T06:28:41.2195434Z"}
 `
@@ -232,33 +232,33 @@ func (s *inputProcessorTestSuite) TestError(c *check.C) {
 	c.Assert(s.collector.Logs[1].Contents[2].GetKey(), check.Equals, "_source_")
 	c.Assert(s.collector.Logs[1].Contents[0].GetValue(), check.Equals, logErrorJSON)
 
-	n = processor.Process([]byte(logErrorContainerd_1), time.Duration(0))
-	c.Assert(n, check.Equals, len(logErrorContainerd_1))
+	n = processor.Process([]byte(logErrorContainerd1), time.Duration(0))
+	c.Assert(n, check.Equals, len(logErrorContainerd1))
 	c.Assert(s.collector.Logs[2].Contents[0].GetKey(), check.Equals, "content")
 	c.Assert(s.collector.Logs[2].Contents[1].GetKey(), check.Equals, "_time_")
 	c.Assert(s.collector.Logs[2].Contents[2].GetKey(), check.Equals, "_source_")
-	c.Assert(s.collector.Logs[2].Contents[0].GetValue(), check.Equals, logErrorContainerd_1)
+	c.Assert(s.collector.Logs[2].Contents[0].GetValue(), check.Equals, logErrorContainerd1)
 
-	n = processor.Process([]byte(logErrorContainerd_1+"\n"), time.Duration(0))
-	c.Assert(n, check.Equals, len(logErrorContainerd_1)+1)
+	n = processor.Process([]byte(logErrorContainerd1+"\n"), time.Duration(0))
+	c.Assert(n, check.Equals, len(logErrorContainerd1)+1)
 	c.Assert(s.collector.Logs[3].Contents[0].GetKey(), check.Equals, "content")
 	c.Assert(s.collector.Logs[3].Contents[1].GetKey(), check.Equals, "_time_")
 	c.Assert(s.collector.Logs[3].Contents[2].GetKey(), check.Equals, "_source_")
-	c.Assert(s.collector.Logs[3].Contents[0].GetValue(), check.Equals, logErrorContainerd_1)
+	c.Assert(s.collector.Logs[3].Contents[0].GetValue(), check.Equals, logErrorContainerd1)
 
-	n = processor.Process([]byte(logErrorContainerd_2+"\n"), time.Duration(0))
-	c.Assert(n, check.Equals, len(logErrorContainerd_2)+1)
+	n = processor.Process([]byte(logErrorContainerd2+"\n"), time.Duration(0))
+	c.Assert(n, check.Equals, len(logErrorContainerd2)+1)
 	c.Assert(s.collector.Logs[4].Contents[0].GetKey(), check.Equals, "content")
 	c.Assert(s.collector.Logs[4].Contents[1].GetKey(), check.Equals, "_time_")
 	c.Assert(s.collector.Logs[4].Contents[2].GetKey(), check.Equals, "_source_")
-	c.Assert(s.collector.Logs[4].Contents[0].GetValue(), check.Equals, logErrorContainerd_2)
+	c.Assert(s.collector.Logs[4].Contents[0].GetValue(), check.Equals, logErrorContainerd2)
 
-	n = processor.Process([]byte(logErrorContainerd_3+"\n"), time.Duration(0))
-	c.Assert(n, check.Equals, len(logErrorContainerd_3)+1)
+	n = processor.Process([]byte(logErrorContainerd3+"\n"), time.Duration(0))
+	c.Assert(n, check.Equals, len(logErrorContainerd3)+1)
 	c.Assert(s.collector.Logs[5].Contents[0].GetKey(), check.Equals, "content")
 	c.Assert(s.collector.Logs[5].Contents[1].GetKey(), check.Equals, "_time_")
 	c.Assert(s.collector.Logs[5].Contents[2].GetKey(), check.Equals, "_source_")
-	c.Assert(s.collector.Logs[5].Contents[0].GetValue(), check.Equals, logErrorContainerd_3)
+	c.Assert(s.collector.Logs[5].Contents[0].GetValue(), check.Equals, logErrorContainerd3)
 
 }
 
@@ -411,13 +411,13 @@ func TestSingleLineChangeBlock(t *testing.T) {
 
 		assert.Equal(t, processor.Process(dockerSingleLine, time.Hour), len(dockerSingleLine))
 		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "1:M 09 Nov 13:27:36.276 # User requested shutdown...")
-		dockerSingleLine[8] = dockerSingleLine[8] + 1
+		dockerSingleLine[8]++
 		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "1:M 09 Nov 13:27:36.276 # User requested shutdown...")
 
 		contianerdSingleLine := []byte("2021-07-13T16:32:21.212861448Z stdout F full line line end\n")
 		assert.Equal(t, processor.Process(contianerdSingleLine, time.Hour), len(contianerdSingleLine))
 		assert.Equal(t, collector.Logs[1].Contents[0].GetValue(), "full line line end")
-		contianerdSingleLine[40] = contianerdSingleLine[40] + 1
+		contianerdSingleLine[40]++
 		assert.Equal(t, collector.Logs[1].Contents[0].GetValue(), "full line line end")
 		collector.Logs = collector.Logs[:0]
 	}
@@ -428,7 +428,7 @@ func TestSingleLineChangeBlock(t *testing.T) {
 
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 0)
-		part1[38] = part1[38] - 10
+		part1[38] -= 10
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 1)
 		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "partial line:partial line:")
@@ -443,10 +443,10 @@ func TestSingleLineChangeBlock(t *testing.T) {
 
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 0)
-		part1[38] = part1[38] + 40
+		part1[38] += 40
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 0)
-		part1[38] = part1[38] - 40
+		part1[38] -= 40
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 1)
 		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "2017-09-12 22:32:21.212 [INFO][88] exception 1: \nZ017-09-12 22:32:21.212 [INFO][88] exception 1: ")
@@ -461,10 +461,10 @@ func TestSingleLineChangeBlock(t *testing.T) {
 
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 0)
-		part1[8] = part1[8] + 40
+		part1[8] += 40
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 0)
-		part1[8] = part1[8] - 40
+		part1[8] -= 40
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 1)
 		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "2017-09-12 22:32:21.212 13:27:36.276 # User requested shutdown...\nZ017-09-12 22:32:21.212 13:27:36.276 # User requested shutdown...")
