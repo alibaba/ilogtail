@@ -67,6 +67,7 @@ make build && sh bin/ilogtail
 - [iLogtail使用入门-主机环境日志采集到SLS](./docs/zh/usecases/How-to-setup-on-host.md)
 - [iLogtail使用入门-K8S环境日志采集到SLS](./docs/zh/usecases/How-to-setup-in-k8s-environment.md)
 - [iLogtail使用入门-iLogtail本地配置模式部署(For Kafka Flusher)](./docs/zh/usecases/How-to-local-deploy-kafka-flusher.md)
+- [iLogtail使用入门-如何采集Prometheus Exporter数据](./docs/zh/usecases/How-to-use-prometheus-fetcher.md)
 
 # 贡献
 
@@ -78,12 +79,12 @@ make build && sh bin/ilogtail
 # 联系我们
 您可以通过[Github Issues](https://github.com/alibaba/ilogtail/issues) 报告bug、提出建议或参与讨论，或通过以下方式联系我们：
 
-- 钉钉：33867413
+- 钉钉：iLogtail社区
 - 微信：日志服务
 - 哔哩哔哩：[阿里云SLS](https://space.bilibili.com/630680534?from=search&seid=2845737427240690794&spm_id_from=333.337.0.0)
 - 知乎：[阿里云日志服务](https://www.zhihu.com/people/a-li-yun-ri-zhi-fu-wu)
 
-<img src="https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail-contact.png?versionId=CAEQMxiBgIC.jPui6RciIDhlNzVjYmQ5OTIwNzQ4NTBiMzk1YTgyN2VkNmU5MDBi" alt="ilogtail logo" style="width: 100%; height: 100%" />
+<img src="https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail-contact.png?versionId=CAEQOhiBgICQkM6b8xciIDcxZTU5M2FjMDAzODQ1Njg5NjI3ZDc4M2FhOTZkNWNk" style="width: 100%; height: 100%" />
 
 # 我们的用户
 
