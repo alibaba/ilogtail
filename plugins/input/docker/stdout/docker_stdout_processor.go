@@ -17,14 +17,14 @@ package stdout
 import (
 	"bytes"
 	"errors"
-	"regexp"
-	"strings"
-	"time"
-
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"regexp"
+	"strings"
+	"time"
 )
 
 var (
@@ -44,6 +44,16 @@ type LogMessage struct {
 	Time       string
 	StreamType string
 	Content    []byte
+	Safe       bool
+}
+
+// safeContent allocate self memory for content to avoid modifying.
+func (l *LogMessage) safeContent() {
+	if !l.Safe {
+		b := make([]byte, len(l.Content))
+		copy(b, l.Content)
+		l.Content = b
+	}
 }
 
 // // Parse timestamp
@@ -105,38 +115,46 @@ func parseCRILog(line []byte) (*LogMessage, error) {
 	log := &LogMessage{}
 	idx := bytes.Index(line, delimiter)
 	if idx < 0 {
-		return &LogMessage{}, errors.New("invalid CRI log, timestamp not found")
+		return &LogMessage{
+			Content: line,
+		}, errors.New("invalid CRI log, timestamp not found")
 	}
 	log.Time = string(line[:idx])
 
-	line = line[idx+1:]
-	idx = bytes.Index(line, delimiter)
+	temp := line[idx+1:]
+	idx = bytes.Index(temp, delimiter)
 	if idx < 0 {
-		return &LogMessage{}, errors.New("invalid CRI log, stream type not found")
+		return &LogMessage{
+			Content: line,
+		}, errors.New("invalid CRI log, stream type not found")
 	}
-	log.StreamType = string(line[:idx])
+	log.StreamType = string(temp[:idx])
 
-	line = line[idx+1:]
+	temp = temp[idx+1:]
 
 	switch {
-	case bytes.HasPrefix(line, contianerdFullTag):
-		i := bytes.Index(line, delimiter)
+	case bytes.HasPrefix(temp, contianerdFullTag):
+		i := bytes.Index(temp, delimiter)
 		if i < 0 {
-			return &LogMessage{}, errors.New("invalid CRI log, log content not found")
+			return &LogMessage{
+				Content: line,
+			}, errors.New("invalid CRI log, log content not found")
 		}
-		log.Content = line[i+1:]
-	case bytes.HasPrefix(line, contianerdPartTag):
-		i := bytes.Index(line, delimiter)
+		log.Content = temp[i+1:]
+	case bytes.HasPrefix(temp, contianerdPartTag):
+		i := bytes.Index(temp, delimiter)
 		if i < 0 {
-			return &LogMessage{}, errors.New("invalid CRI log, log content not found")
+			return &LogMessage{
+				Content: line,
+			}, errors.New("invalid CRI log, log content not found")
 		}
-		if bytes.HasSuffix(line, lineSuffix) {
-			log.Content = line[i+1 : len(line)-1]
+		if bytes.HasSuffix(temp, lineSuffix) {
+			log.Content = temp[i+1 : len(temp)-1]
 		} else {
-			log.Content = line[i+1:]
+			log.Content = temp[i+1:]
 		}
 	default:
-		log.Content = line
+		log.Content = temp
 	}
 	return log, nil
 }
@@ -151,12 +169,14 @@ func parseDockerJSONLog(line []byte) (*LogMessage, error) {
 		lm.Content = line
 		return lm, err
 	}
-
-	return &LogMessage{
+	l := &LogMessage{
 		Time:       dockerLog.Time,
 		StreamType: dockerLog.StreamType,
-		Content:    []byte(dockerLog.LogContent),
-	}, nil
+		Content:    helper.ZeroCopySlice(dockerLog.LogContent),
+		Safe:       true,
+	}
+	dockerLog.LogContent = ""
+	return l, nil
 }
 
 func (p *DockerStdoutProcessor) ParseContainerLogLine(line []byte) *LogMessage {
@@ -209,6 +229,9 @@ func (p *DockerStdoutProcessor) Process(fileBlock []byte, noChangeInterval time.
 				p.collector.AddRawLog(p.newRawLogBySingleLine(thisLog))
 			case p.beginLineReg == nil:
 				// collect spilt multi lines, such as containerd.
+				if lastChar != '\n' {
+					thisLog.safeContent()
+				}
 				p.lastLogs = append(p.lastLogs, thisLog)
 				p.lastLogsCount += len(thisLog.Content) + 24
 				if lastChar == '\n' {
@@ -227,6 +250,7 @@ func (p *DockerStdoutProcessor) Process(fileBlock []byte, noChangeInterval time.
 						p.collector.AddRawLog(p.newRawLogByMultiLine())
 					}
 				}
+				thisLog.safeContent()
 				p.lastLogs = append(p.lastLogs, thisLog)
 				p.lastLogsCount += len(thisLog.Content) + 24
 			}
@@ -261,11 +285,17 @@ func (p *DockerStdoutProcessor) newRawLogBySingleLine(msg *LogMessage) *protocol
 	if len(msg.Content) > 0 && msg.Content[len(msg.Content)-1] == '\n' {
 		msg.Content = msg.Content[0 : len(msg.Content)-1]
 	}
-	log.Contents = append(log.Contents, &protocol.Log_Content{
-		Key: "content",
-		// nolint:gosec
-		Value: string(msg.Content),
-	})
+	if msg.Safe {
+		log.Contents = append(log.Contents, &protocol.Log_Content{
+			Key:   "content",
+			Value: helper.ZeroCopyString(msg.Content),
+		})
+	} else {
+		log.Contents = append(log.Contents, &protocol.Log_Content{
+			Key:   "content",
+			Value: string(msg.Content),
+		})
+	}
 	log.Contents = append(log.Contents, &protocol.Log_Content{
 		Key:   "_time_",
 		Value: msg.Time,

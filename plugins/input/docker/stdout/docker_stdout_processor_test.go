@@ -16,6 +16,8 @@ package stdout
 
 import (
 	"fmt"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -33,20 +35,28 @@ import (
 // go test -check.f "inputProcessorTestSuite.*" -args -debug=true -console=true
 var _ = check.Suite(&inputProcessorTestSuite{})
 
-var log1 = `{"log":"1:M 09 Nov 13:27:36.276 # User requested shutdown...\n","stream":"stdout", "time":"2018-05-16T06:28:41.2195434Z"
-`
+func Test(t *testing.T) {
+	logger.InitTestLogger()
+	check.TestingT(t)
+}
 
 // error json
-var context1 = `{"log":"1:M 09 Nov 13:27:36.276 # User requested shutdown...\n","stream":"stdout", "time":"2018-05-16T06:28:41.2195434Z"`
+var context1 = `1:M 09 Nov 13:27:36.276 # User requested shutdown...`
+var log1 = `{"log":"1:M 09 Nov 13:27:36.276 # User requested shutdown...\n","stream":"stdout", "time":"2018-05-16T06:28:41.2195434Z"}
+`
+
+var context2 = `1:M 09 Nov 13:27:36.276 # User requested begin...`
 var log2 = `{"log":"1:M 09 Nov 13:27:36.276 # User requested begin...\n","stream":"stderr", "time":"2018-05-16T06:28:41.2195434Z"}
 `
-var context2 = `1:M 09 Nov 13:27:36.276 # User requested begin...`
+
+var context3 = `2017-09-12 22:32:21.212 [INFO][88] table.go 710: Invalidating dataplane cache`
 var log3 = `2017-09-12T22:32:21.212861448Z stdout 2017-09-12 22:32:21.212 [INFO][88] table.go 710: Invalidating dataplane cache
 `
-var context3 = `2017-09-12 22:32:21.212 [INFO][88] table.go 710: Invalidating dataplane cache`
+
+var context4 = `2017-09-12 22:32:21.212 [INFO][88] table.go 710:`
 var log4 = `2017-09-12T22:32:21.212861448Z stderr 2017-09-12 22:32:21.212 [INFO][88] table.go 710:
 `
-var context4 = `2017-09-12 22:32:21.212 [INFO][88] table.go 710:`
+
 var log5 = `2017-09-12T22:32:21.212861448Z stderr 2017-09-12 22:32:21.212 [INFO][88] exception 1: 
 `
 var log6 = `2017-09-12T22:32:21.212861448Z stderr    java.io.xxx.exception1....
@@ -67,6 +77,10 @@ var context6 = `2017-09-12 22:32:21.212 [INFO][88] exception 2:
    java.io.xxx.exception22....`
 
 var logErrorJSON = `{"log":"1:M 09 Nov 13:27:36.276 # User requested shutdown...\n","stream":"stdout", "time":"2018-05-16T06:28:41.2195434Z"`
+
+var logErrorContainerd_1 = `2017-09-12T22:32:21.212861448Zstderr2017-09-1222:32:21.212[INFO][88]exception2:`
+var logErrorContainerd_2 = `2017-09-12T22:32:21.212861448Z stderr2017-09-1222:32:21.212[INFO][88]exception2:`
+var logErrorContainerd_3 = `2017-09-12T22:32:21.212861448Z stderr F2017-09-1222:32:21.212[INFO][88]exception2:`
 
 var splitedlog1 = `{"log":"1","stream":"stdout", "time":"2018-05-16T06:28:41.2195434Z"}
 `
@@ -217,6 +231,35 @@ func (s *inputProcessorTestSuite) TestError(c *check.C) {
 	c.Assert(s.collector.Logs[1].Contents[1].GetKey(), check.Equals, "_time_")
 	c.Assert(s.collector.Logs[1].Contents[2].GetKey(), check.Equals, "_source_")
 	c.Assert(s.collector.Logs[1].Contents[0].GetValue(), check.Equals, logErrorJSON)
+
+	n = processor.Process([]byte(logErrorContainerd_1), time.Duration(0))
+	c.Assert(n, check.Equals, len(logErrorContainerd_1))
+	c.Assert(s.collector.Logs[2].Contents[0].GetKey(), check.Equals, "content")
+	c.Assert(s.collector.Logs[2].Contents[1].GetKey(), check.Equals, "_time_")
+	c.Assert(s.collector.Logs[2].Contents[2].GetKey(), check.Equals, "_source_")
+	c.Assert(s.collector.Logs[2].Contents[0].GetValue(), check.Equals, logErrorContainerd_1)
+
+	n = processor.Process([]byte(logErrorContainerd_1+"\n"), time.Duration(0))
+	c.Assert(n, check.Equals, len(logErrorContainerd_1)+1)
+	c.Assert(s.collector.Logs[3].Contents[0].GetKey(), check.Equals, "content")
+	c.Assert(s.collector.Logs[3].Contents[1].GetKey(), check.Equals, "_time_")
+	c.Assert(s.collector.Logs[3].Contents[2].GetKey(), check.Equals, "_source_")
+	c.Assert(s.collector.Logs[3].Contents[0].GetValue(), check.Equals, logErrorContainerd_1)
+
+	n = processor.Process([]byte(logErrorContainerd_2+"\n"), time.Duration(0))
+	c.Assert(n, check.Equals, len(logErrorContainerd_2)+1)
+	c.Assert(s.collector.Logs[4].Contents[0].GetKey(), check.Equals, "content")
+	c.Assert(s.collector.Logs[4].Contents[1].GetKey(), check.Equals, "_time_")
+	c.Assert(s.collector.Logs[4].Contents[2].GetKey(), check.Equals, "_source_")
+	c.Assert(s.collector.Logs[4].Contents[0].GetValue(), check.Equals, logErrorContainerd_2)
+
+	n = processor.Process([]byte(logErrorContainerd_3+"\n"), time.Duration(0))
+	c.Assert(n, check.Equals, len(logErrorContainerd_3)+1)
+	c.Assert(s.collector.Logs[5].Contents[0].GetKey(), check.Equals, "content")
+	c.Assert(s.collector.Logs[5].Contents[1].GetKey(), check.Equals, "_time_")
+	c.Assert(s.collector.Logs[5].Contents[2].GetKey(), check.Equals, "_source_")
+	c.Assert(s.collector.Logs[5].Contents[0].GetValue(), check.Equals, logErrorContainerd_3)
+
 }
 
 func (s *inputProcessorTestSuite) TestMultiLine(c *check.C) {
@@ -350,4 +393,82 @@ func TestParseCRILine(t *testing.T) {
 			"2021-07-13 partial line line 1 partial  partial line line 1 full\n"+
 				"  partial line line 2 partial  partial line line 2 full")
 	}
+}
+
+func TestSingleLineChangeBlock(t *testing.T) {
+	var context helper.LocalContext
+	var collector helper.LocalCollector
+	tags := map[string]string{
+		"container":    "test",
+		"container_id": "id",
+	}
+	processor := NewDockerStdoutProcessor(nil, time.Duration(0),
+		0, 512*1024, true, true, &context, &collector, tags)
+
+	// valid single line when change block
+	{
+		dockerSingleLine := []byte("{\"log\":\"1:M 09 Nov 13:27:36.276 # User requested shutdown...\\n\",\"stream\":\"stdout\", \"time\":\"2018-05-16T06:28:41.2195434Z\"}\n")
+
+		assert.Equal(t, processor.Process(dockerSingleLine, time.Hour), len(dockerSingleLine))
+		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "1:M 09 Nov 13:27:36.276 # User requested shutdown...")
+		dockerSingleLine[8] = dockerSingleLine[8] + 1
+		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "1:M 09 Nov 13:27:36.276 # User requested shutdown...")
+
+		contianerdSingleLine := []byte("2021-07-13T16:32:21.212861448Z stdout F full line line end\n")
+		assert.Equal(t, processor.Process(contianerdSingleLine, time.Hour), len(contianerdSingleLine))
+		assert.Equal(t, collector.Logs[1].Contents[0].GetValue(), "full line line end")
+		contianerdSingleLine[40] = contianerdSingleLine[40] + 1
+		assert.Equal(t, collector.Logs[1].Contents[0].GetValue(), "full line line end")
+		collector.Logs = collector.Logs[:0]
+	}
+
+	// valid split line when change block
+	{
+		part1 := []byte("2021-07-13T16:32:21.212861448Z stdout P partial line:\n")
+
+		assert.Equal(t, processor.Process(part1, 0), len(part1))
+		assert.Equal(t, len(collector.Logs), 0)
+		part1[38] = part1[38] - 10
+		assert.Equal(t, processor.Process(part1, 0), len(part1))
+		assert.Equal(t, len(collector.Logs), 1)
+		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "partial line:partial line:")
+		collector.Logs = collector.Logs[:0]
+	}
+
+	// valid containerd multi line when change block
+	{
+		processor := NewDockerStdoutProcessor(regexp.MustCompile(`^\d+-\d+-\d+.*`), time.Duration(0),
+			10, 512*1024, true, true, &context, &collector, tags)
+		part1 := []byte("2017-09-12T22:32:21.212861448Z stderr 2017-09-12 22:32:21.212 [INFO][88] exception 1: \n")
+
+		assert.Equal(t, processor.Process(part1, 0), len(part1))
+		assert.Equal(t, len(collector.Logs), 0)
+		part1[38] = part1[38] + 40
+		assert.Equal(t, processor.Process(part1, 0), len(part1))
+		assert.Equal(t, len(collector.Logs), 0)
+		part1[38] = part1[38] - 40
+		assert.Equal(t, processor.Process(part1, 0), len(part1))
+		assert.Equal(t, len(collector.Logs), 1)
+		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "2017-09-12 22:32:21.212 [INFO][88] exception 1: \nZ017-09-12 22:32:21.212 [INFO][88] exception 1: ")
+		collector.Logs = collector.Logs[:0]
+	}
+
+	// valid docker multi line when change block
+	{
+		processor := NewDockerStdoutProcessor(regexp.MustCompile(`^\d+-\d+-\d+.*`), time.Duration(0),
+			10, 512*1024, true, true, &context, &collector, tags)
+		part1 := []byte("{\"log\":\"2017-09-12 22:32:21.212 13:27:36.276 # User requested shutdown...\\n\",\"stream\":\"stdout\", \"time\":\"2018-05-16T06:28:41.2195434Z\"}\n")
+
+		assert.Equal(t, processor.Process(part1, 0), len(part1))
+		assert.Equal(t, len(collector.Logs), 0)
+		part1[8] = part1[8] + 40
+		assert.Equal(t, processor.Process(part1, 0), len(part1))
+		assert.Equal(t, len(collector.Logs), 0)
+		part1[8] = part1[8] - 40
+		assert.Equal(t, processor.Process(part1, 0), len(part1))
+		assert.Equal(t, len(collector.Logs), 1)
+		assert.Equal(t, collector.Logs[0].Contents[0].GetValue(), "2017-09-12 22:32:21.212 13:27:36.276 # User requested shutdown...\nZ017-09-12 22:32:21.212 13:27:36.276 # User requested shutdown...")
+		collector.Logs = collector.Logs[:0]
+	}
+
 }
