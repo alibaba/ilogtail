@@ -37,3 +37,17 @@ func ZeroCopySlice(s string) (b []byte) {
 	pbytes.Cap = pstring.Len
 	return
 }
+
+func IsSafeString(str1, str2 string) bool {
+	slice1 := ZeroCopySlice(str1)
+	slice2 := ZeroCopySlice(str2)
+	isIn := func(bytes1, bytes2 []byte) bool {
+		for i := range bytes2 {
+			if &bytes2[i] == &bytes1[0] || &bytes2[i] == &bytes1[len(bytes1)-1] {
+				return true
+			}
+		}
+		return false
+	}
+	return !isIn(slice1, slice2) && !isIn(slice2, slice1)
+}

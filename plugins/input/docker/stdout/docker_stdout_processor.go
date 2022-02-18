@@ -54,6 +54,7 @@ func (l *LogMessage) safeContent() {
 		b := make([]byte, len(l.Content))
 		copy(b, l.Content)
 		l.Content = b
+		l.Safe = true
 	}
 }
 
@@ -286,17 +287,11 @@ func (p *DockerStdoutProcessor) newRawLogBySingleLine(msg *LogMessage) *protocol
 	if len(msg.Content) > 0 && msg.Content[len(msg.Content)-1] == '\n' {
 		msg.Content = msg.Content[0 : len(msg.Content)-1]
 	}
-	if msg.Safe {
-		log.Contents = append(log.Contents, &protocol.Log_Content{
-			Key:   "content",
-			Value: helper.ZeroCopyString(msg.Content),
-		})
-	} else {
-		log.Contents = append(log.Contents, &protocol.Log_Content{
-			Key:   "content",
-			Value: string(msg.Content),
-		})
-	}
+	msg.safeContent()
+	log.Contents = append(log.Contents, &protocol.Log_Content{
+		Key:   "content",
+		Value: helper.ZeroCopyString(msg.Content),
+	})
 	log.Contents = append(log.Contents, &protocol.Log_Content{
 		Key:   "_time_",
 		Value: msg.Time,

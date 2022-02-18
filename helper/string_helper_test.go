@@ -108,3 +108,12 @@ func BenchmarkZeroCopySlice(b *testing.B) {
 		})
 	}
 }
+
+func TestIsSafeString(t *testing.T) {
+	str1 := "123456"
+	str2 := "123"
+	unsafeStr := ZeroCopyString(ZeroCopySlice(str1)[:4])
+	assert.True(t, IsSafeString(str2, str1))
+	assert.False(t, IsSafeString(str1, unsafeStr))
+	assert.False(t, IsSafeString(unsafeStr, str1))
+}
