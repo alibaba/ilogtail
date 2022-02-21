@@ -567,7 +567,7 @@ func TestSingleLineChangeBlock(t *testing.T) {
 
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 0)
-		part1[38] = part1[38] - 10
+		part1[38] -= part1[38]
 		assert.Equal(t, processor.Process(part1, 0), len(part1))
 		assert.Equal(t, len(collector.Logs), 1)
 		value := collector.Logs[0].Contents[0].GetValue()
