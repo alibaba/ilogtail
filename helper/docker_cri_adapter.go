@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux
 // +build linux
 
 package helper
@@ -31,6 +32,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 
 	containerdcriserver "github.com/containerd/cri/pkg/server"
 	docker "github.com/fsouza/go-dockerclient"
@@ -194,7 +196,15 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(_ context.Context, c *cri.Conta
 			}
 		}
 	}
-	if !foundInfo {
+	if foundInfo {
+		exist, err := util.PathExists(GetMountedFilePath(fmt.Sprintf("/proc/%d/stat", ci.Pid)))
+		if err != nil {
+			return nil, fmt.Errorf("cannot read container %s pid %d proc stat path: %v", c.GetId(), ci.Pid, err)
+		}
+		if !exist {
+			return nil, fmt.Errorf("find container %s pid %d has already been stopped", c.GetId(), ci.Pid)
+		}
+	} else {
 		logger.Warningf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "can not find container info from CRI::ContainerStatus, containerId: %s", c.GetId())
 	}
 
