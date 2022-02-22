@@ -198,11 +198,12 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(_ context.Context, c *cri.Conta
 	}
 	if foundInfo {
 		exist, err := util.PathExists(GetMountedFilePath(fmt.Sprintf("/proc/%d/stat", ci.Pid)))
-		if err != nil {
-			return nil, fmt.Errorf("cannot read container %s pid %d proc stat path: %v", c.GetId(), ci.Pid, err)
-		}
 		if !exist {
 			return nil, fmt.Errorf("find container %s pid %d has already been stopped", c.GetId(), ci.Pid)
+		}
+		if err != nil {
+			// only log error info to avoid log collection loss.
+			logger.Error(context.Background(), "DETECT_CONTAINER_ALARM", "read container pid error", err)
 		}
 	} else {
 		logger.Warningf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "can not find container info from CRI::ContainerStatus, containerId: %s", c.GetId())
