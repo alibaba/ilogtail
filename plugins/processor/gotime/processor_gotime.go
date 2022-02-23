@@ -16,6 +16,7 @@ package gotime
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/alibaba/ilogtail"
@@ -83,11 +84,30 @@ func (p *ProcessorGotime) processLog(log *protocol.Log) {
 	found := false
 	for idx, content := range log.Contents {
 		if content.Key == p.SourceKey {
-			parsedTime, err := time.ParseInLocation(p.SourceFormat, content.Value, p.sourceLocation)
-			if err != nil && p.AlarmIfFail {
-				logger.Warningf(p.context.GetRuntimeContext(), "GOTIME_PARSE_ALARM", "ParseInLocation(%v, %v, %v) failed: %v",
-					p.SourceFormat, content.Value, p.sourceLocation, err)
-				return
+			var parsedTime time.Time
+			if p.SourceFormat == "1136185445" || p.SourceFormat == "1136185445000" || p.SourceFormat == "1136185445000000" {
+				i, err := strconv.ParseInt(content.Value, 10, 64)
+				if err != nil && p.AlarmIfFail {
+					logger.Warningf(p.context.GetRuntimeContext(), "GOTIME_PARSE_ALARM", "ParseInt(%v, %v) failed: %v",
+						p.SourceFormat, content.Value, err)
+					return
+				}
+				switch p.SourceFormat {
+				case "1136185445":
+					parsedTime = time.Unix(i, 0)
+				case "1136185445000":
+					parsedTime = time.UnixMilli(i)
+				case "1136185445000000":
+					parsedTime = time.UnixMicro(i)
+				}
+			} else {
+				parsedStringTime, err := time.ParseInLocation(p.SourceFormat, content.Value, p.sourceLocation)
+				if err != nil && p.AlarmIfFail {
+					logger.Warningf(p.context.GetRuntimeContext(), "GOTIME_PARSE_ALARM", "ParseInLocation(%v, %v, %v) failed: %v",
+						p.SourceFormat, content.Value, p.sourceLocation, err)
+					return
+				}
+				parsedTime = parsedStringTime
 			}
 			if p.SetTime {
 				log.Time = uint32(parsedTime.Unix())
