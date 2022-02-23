@@ -96,9 +96,9 @@ func (p *ProcessorGotime) processLog(log *protocol.Log) {
 				case "1136185445":
 					parsedTime = time.Unix(i, 0)
 				case "1136185445000":
-					parsedTime = time.UnixMilli(i)
+					parsedTime = time.Unix(i/1e3, (i%1e3)*1e6)
 				case "1136185445000000":
-					parsedTime = time.UnixMicro(i)
+					parsedTime = time.Unix(i/1e6, (i%1e6)*1e3)
 				}
 			} else {
 				parsedStringTime, err := time.ParseInLocation(p.SourceFormat, content.Value, p.sourceLocation)
