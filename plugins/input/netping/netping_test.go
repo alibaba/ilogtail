@@ -3,10 +3,8 @@ package netping
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
@@ -33,9 +31,6 @@ func TestInitEmpty(t *testing.T) {
 	assert.Equal(t, 1, len(netPing.TCPConfigs))
 
 	// 0 match
-	monkey.Patch(getOutboudIP, func() (net.IP, error) {
-		return net.IPv4(0, 0, 0, 0), nil
-	})
 	netPing.Init(ctx)
 	assert.Equal(t, 0, len(netPing.ICMPConfigs))
 	assert.Equal(t, 0, len(netPing.TCPConfigs))
@@ -64,9 +59,7 @@ func TestInitAndCollect(t *testing.T) {
 	assert.Equal(t, 1, len(netPing.TCPConfigs))
 
 	// 1 match
-	monkey.Patch(getOutboudIP, func() (net.IP, error) {
-		return net.IPv4(1, 1, 1, 1), nil
-	})
+	// change config1 ipaddr to match your outing going ip
 	netPing.Init(ctx)
 	assert.Equal(t, 1, len(netPing.ICMPConfigs))
 	assert.Equal(t, 1, len(netPing.TCPConfigs))
