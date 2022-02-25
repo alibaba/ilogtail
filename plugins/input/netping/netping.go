@@ -1,5 +1,3 @@
-package netping
-
 // Copyright 2021 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +12,8 @@ package netping
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package netping
+
 import (
 	"fmt"
 	"math"
@@ -23,6 +23,7 @@ import (
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+
 	goping "github.com/go-ping/ping"
 )
 
@@ -63,17 +64,17 @@ type NetPing struct {
 	TCPConfigs      []TCPConfig  `json:"tcp" comment:"the tcping config list, example: {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${REMOTE_HOST}\", \"port\" : ${PORT}, \"count\" : 3}"`
 }
 
-const MIN_INTERVAL_SECODS = 30 // min inteval should large than 30s
+const MinIntervalSecods = 30 // min inteval should large than 30s
 
 // Get preferred outbound ip of this machine
 func getOutboudIP() (net.IP, error) {
-	if conn, err := net.Dial("udp", "114.114.114.114:53"); err != nil {
+	conn, err := net.Dial("udp", "114.114.114.114:53")
+	if err != nil {
 		return nil, err
-	} else {
-		defer conn.Close()
-		localAddr := conn.LocalAddr().(*net.UDPAddr)
-		return localAddr.IP, nil
 	}
+	defer conn.Close()
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP, nil
 }
 
 // refer https://github.com/cloverstd/tcping/blob/master/ping/tcp.go
@@ -83,7 +84,10 @@ func evaluteTcping(target string, port int, timeout time.Duration) (time.Duratio
 	if err != nil {
 		return 0, err
 	}
-	conn.Close()
+	err = conn.Close()
+	if err != nil {
+		return 0, err
+	}
 
 	return time.Since(now), nil
 }
@@ -92,8 +96,8 @@ func evaluteTcping(target string, port int, timeout time.Duration) (time.Duratio
 // value of counter to 100. And we return 0 to use the default trigger interval.
 func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 	m.context = context
-	if m.IntervalSeconds <= MIN_INTERVAL_SECODS {
-		m.IntervalSeconds = MIN_INTERVAL_SECODS
+	if m.IntervalSeconds <= MinIntervalSecods {
+		m.IntervalSeconds = MinIntervalSecods
 	}
 
 	localAddr, err := getOutboudIP()
@@ -164,9 +168,9 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 		helper.AddMetric(collector, fmt.Sprintf("%s_success", result.Type), time.Now(), result.Label, float64(result.Success))
 		helper.AddMetric(collector, fmt.Sprintf("%s_failed", result.Type), time.Now(), result.Label, float64(result.Failed))
 		if result.Success > 0 {
-			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_min", result.Type), time.Now(), result.Label, float64(result.MinRTTMs))
-			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_max", result.Type), time.Now(), result.Label, float64(result.MaxRTTMs))
-			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_avg", result.Type), time.Now(), result.Label, float64(result.AvgRTTMs))
+			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_min", result.Type), time.Now(), result.Label, result.MinRTTMs)
+			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_max", result.Type), time.Now(), result.Label, result.MaxRTTMs)
+			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_avg", result.Type), time.Now(), result.Label, result.AvgRTTMs)
 		}
 	}
 
@@ -223,9 +227,7 @@ func (m *NetPing) doICMPing(config ICMPConfig, ch chan *Result) {
 func (m *NetPing) doTCPing(config TCPConfig, ch chan *Result) {
 	success := 0
 	failed := 0
-	var minRTT time.Duration = 0
-	var maxRTT time.Duration = 0
-	var totalRTT time.Duration = 0
+	var minRTT, maxRTT, totalRTT time.Duration
 
 	for i := 0; i < config.Count; i++ {
 		rtt, err := evaluteTcping(config.Target, config.Port, time.Second*5)
@@ -244,7 +246,7 @@ func (m *NetPing) doTCPing(config TCPConfig, ch chan *Result) {
 		success++
 	}
 
-	var avgRTTMs float64 = 0
+	var avgRTTMs float64
 
 	if success > 0 {
 		avgRTTMs = math.Round(float64(totalRTT/time.Millisecond) / float64(success))
