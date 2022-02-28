@@ -36,3 +36,4 @@ your changes, such as:
 ## [Unreleased]
 - [public] [both] [doc] add prometheus fetcher usecase doc
 - [public] [both] [updated] enhance memory cost for stdout collection
+- [public] [both] [updated] support parse timestamp in processor_gotime plugin
