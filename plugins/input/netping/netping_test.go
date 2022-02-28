@@ -17,13 +17,13 @@ package netping
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
@@ -47,8 +47,8 @@ func TestInitEmpty(t *testing.T) {
 	assert.Equal(t, 2, len(netPing.ICMPConfigs))
 	assert.Equal(t, 1, len(netPing.TCPConfigs))
 
-	funcPatch := gomonkey.ApplyFunc(getOutboudIP, func() (net.IP, error) {
-		return net.IPv4(0, 0, 0, 0), nil
+	funcPatch := gomonkey.ApplyFunc(util.GetIPAddress, func() string {
+		return "0.0.0.0"
 	})
 	defer funcPatch.Reset()
 	// 0 match
@@ -80,8 +80,8 @@ func TestInitAndCollect(t *testing.T) {
 	assert.Equal(t, 1, len(netPing.TCPConfigs))
 
 	// 1 match
-	funcPatch := gomonkey.ApplyFunc(getOutboudIP, func() (net.IP, error) {
-		return net.IPv4(1, 1, 1, 1), nil
+	funcPatch := gomonkey.ApplyFunc(util.GetIPAddress, func() string {
+		return "1.1.1.1"
 	})
 	defer funcPatch.Reset()
 
@@ -90,7 +90,7 @@ func TestInitAndCollect(t *testing.T) {
 	assert.Equal(t, 1, len(netPing.TCPConfigs))
 
 	c := &test.MockMetricCollector{}
-	netPing.IcmpPrivileged = false
+	netPing.icmpPrivileged = false
 	netPing.Collect(c)
 
 	assert.Equal(t, 12, len(c.Logs))
@@ -120,16 +120,15 @@ func TestDoICMPing(t *testing.T) {
 	assert.NoError(t, err, "cannot init the mock process plugin: %v", err)
 
 	// sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
-	netPing.IcmpPrivileged = false
+	netPing.icmpPrivileged = false
 
-	ch := make(chan *Result, 100)
 	config1 := ICMPConfig{
 		Target: "www.baidu.com",
 		Count:  3,
 	}
 
-	netPing.doICMPing(config1, ch)
-	res1 := <-ch
+	netPing.doICMPing(config1)
+	res1 := <-netPing.resultChannel
 	fmt.Println(res1)
 
 	assert.Equal(t, "src#$#|dst#$#www.baidu.com", res1.Label)
@@ -144,8 +143,8 @@ func TestDoICMPing(t *testing.T) {
 		Count:  3,
 	}
 
-	netPing.doICMPing(config2, ch)
-	res2 := <-ch
+	netPing.doICMPing(config2)
+	res2 := <-netPing.resultChannel
 	fmt.Println(res2)
 
 	assert.Equal(t, true, res2.Valid)
@@ -161,16 +160,15 @@ func TestDoTCPing(t *testing.T) {
 	_, err := netPing.Init(cxt)
 	assert.NoError(t, err, "cannot init the mock process plugin: %v", err)
 
-	ch := make(chan *Result, 100)
 	config1 := TCPConfig{
 		Target: "www.baidu.com",
 		Port:   80,
 		Count:  3,
 	}
 
-	go netPing.doTCPing(config1, ch)
+	go netPing.doTCPing(config1)
 
-	res1 := <-ch
+	res1 := <-netPing.resultChannel
 	fmt.Println(res1)
 	assert.Equal(t, true, res1.Valid)
 	assert.Equal(t, 3, res1.Total)
@@ -183,8 +181,8 @@ func TestDoTCPing(t *testing.T) {
 		Count:  3,
 	}
 
-	go netPing.doTCPing(config2, ch)
-	res2 := <-ch
+	go netPing.doTCPing(config2)
+	res2 := <-netPing.resultChannel
 	fmt.Println(res2)
 
 	assert.Equal(t, true, res2.Valid)

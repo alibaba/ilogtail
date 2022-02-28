@@ -23,6 +23,7 @@ import (
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 
 	goping "github.com/go-ping/ping"
 )
@@ -53,11 +54,10 @@ type TCPConfig struct {
 }
 
 // NetPing struct implements the MetricInput interface.
-// The plugin has a counter field, which would be increment every 5 seconds.
-// And, the value of this counter will be sent as metrics data.
 type NetPing struct {
-	IcmpPrivileged  bool
-	HasConfig       bool
+	icmpPrivileged  bool
+	hasConfig       bool
+	resultChannel   chan *Result
 	context         ilogtail.Context
 	IntervalSeconds int          `json:"interval_seconds" comment:"the interval of ping/tcping, unit is second,must large than 30"`
 	ICMPConfigs     []ICMPConfig `json:"icmp" comment:"the icmping config list, example:  {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${REMOTE_HOST}\", \"count\" : 3}"`
@@ -65,17 +65,6 @@ type NetPing struct {
 }
 
 const MinIntervalSecods = 30 // min inteval should large than 30s
-
-// Get preferred outbound ip of this machine
-func getOutboudIP() (net.IP, error) {
-	conn, err := net.Dial("udp", "114.114.114.114:53")
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	return localAddr.IP, nil
-}
 
 // refer https://github.com/cloverstd/tcping/blob/master/ping/tcp.go
 func evaluteTcping(target string, port int, timeout time.Duration) (time.Duration, error) {
@@ -92,30 +81,22 @@ func evaluteTcping(target string, port int, timeout time.Duration) (time.Duratio
 	return time.Since(now), nil
 }
 
-// Init method would be triggered before working. In the example plugin, we set the initial
-// value of counter to 100. And we return 0 to use the default trigger interval.
 func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 	m.context = context
 	if m.IntervalSeconds <= MinIntervalSecods {
 		m.IntervalSeconds = MinIntervalSecods
 	}
 
-	localAddr, err := getOutboudIP()
-	if err != nil {
-		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_INIT_NETPING", err.Error())
-		return 0, err
-	}
+	localIP := util.GetIPAddress()
 
-	localIP := localAddr.String()
-
-	m.HasConfig = false
+	m.hasConfig = false
 	// get local icmp target
 	localICMPConfigs := make([]ICMPConfig, 0)
 
 	for _, c := range m.ICMPConfigs {
 		if c.Src == localIP {
 			localICMPConfigs = append(localICMPConfigs, c)
-			m.HasConfig = true
+			m.hasConfig = true
 		}
 	}
 	m.ICMPConfigs = localICMPConfigs
@@ -125,12 +106,14 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 	for _, c := range m.TCPConfigs {
 		if c.Src == localIP {
 			localTCPConfigs = append(localTCPConfigs, c)
-			m.HasConfig = true
+			m.hasConfig = true
 		}
 	}
 	m.TCPConfigs = localTCPConfigs
 
-	m.IcmpPrivileged = true
+	m.icmpPrivileged = true
+
+	m.resultChannel = make(chan *Result, 100)
 	return m.IntervalSeconds * 1000, nil
 }
 
@@ -140,20 +123,21 @@ func (m *NetPing) Description() string {
 
 // Collect is called every trigger interval to collect the metrics and send them to the collector.
 func (m *NetPing) Collect(collector ilogtail.Collector) error {
-
-	ch := make(chan *Result, 100)
-
+	if !m.hasConfig {
+		return nil
+	}
+	nowTs := time.Now()
 	counter := 0
 	if len(m.ICMPConfigs) > 0 {
 		for _, config := range m.ICMPConfigs {
-			go m.doICMPing(config, ch)
+			go m.doICMPing(config)
 			counter++
 		}
 	}
 
 	if len(m.TCPConfigs) > 0 {
 		for _, config := range m.TCPConfigs {
-			go m.doTCPing(config, ch)
+			go m.doTCPing(config)
 			counter++
 		}
 	}
@@ -163,25 +147,25 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 	}
 
 	for i := 0; i < counter; i++ {
-		result := <-ch
-		helper.AddMetric(collector, fmt.Sprintf("%s_total", result.Type), time.Now(), result.Label, float64(result.Total))
-		helper.AddMetric(collector, fmt.Sprintf("%s_success", result.Type), time.Now(), result.Label, float64(result.Success))
-		helper.AddMetric(collector, fmt.Sprintf("%s_failed", result.Type), time.Now(), result.Label, float64(result.Failed))
+		result := <-m.resultChannel
+		helper.AddMetric(collector, fmt.Sprintf("%s_total", result.Type), nowTs, result.Label, float64(result.Total))
+		helper.AddMetric(collector, fmt.Sprintf("%s_success", result.Type), nowTs, result.Label, float64(result.Success))
+		helper.AddMetric(collector, fmt.Sprintf("%s_failed", result.Type), nowTs, result.Label, float64(result.Failed))
 		if result.Success > 0 {
-			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_min", result.Type), time.Now(), result.Label, result.MinRTTMs)
-			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_max", result.Type), time.Now(), result.Label, result.MaxRTTMs)
-			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_avg", result.Type), time.Now(), result.Label, result.AvgRTTMs)
+			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_min", result.Type), nowTs, result.Label, result.MinRTTMs)
+			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_max", result.Type), nowTs, result.Label, result.MaxRTTMs)
+			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_avg", result.Type), nowTs, result.Label, result.AvgRTTMs)
 		}
 	}
 
 	return nil
 }
 
-func (m *NetPing) doICMPing(config ICMPConfig, ch chan *Result) {
+func (m *NetPing) doICMPing(config ICMPConfig) {
 	pinger, err := goping.NewPinger(config.Target)
 	if err != nil {
 		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_INIT_PING", err.Error())
-		ch <- &Result{
+		m.resultChannel <- &Result{
 			Valid:  true,
 			Type:   "ping",
 			Total:  config.Count,
@@ -190,14 +174,14 @@ func (m *NetPing) doICMPing(config ICMPConfig, ch chan *Result) {
 		return
 	}
 
-	if m.IcmpPrivileged {
+	if m.icmpPrivileged {
 		pinger.SetPrivileged(true)
 	}
 	pinger.Count = config.Count
 	err = pinger.Run() // Blocks until finished.
 	if err != nil {
 		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_RUN_PING", err.Error())
-		ch <- &Result{
+		m.resultChannel <- &Result{
 			Valid:  true,
 			Type:   "ping",
 			Total:  config.Count,
@@ -211,7 +195,7 @@ func (m *NetPing) doICMPing(config ICMPConfig, ch chan *Result) {
 	label.Append("src", config.Src)
 	label.Append("dst", config.Target)
 
-	ch <- &Result{
+	m.resultChannel <- &Result{
 		Valid:    true,
 		Label:    label.String(),
 		Type:     "ping",
@@ -224,7 +208,7 @@ func (m *NetPing) doICMPing(config ICMPConfig, ch chan *Result) {
 	}
 }
 
-func (m *NetPing) doTCPing(config TCPConfig, ch chan *Result) {
+func (m *NetPing) doTCPing(config TCPConfig) {
 	success := 0
 	failed := 0
 	var minRTT, maxRTT, totalRTT time.Duration
@@ -252,7 +236,7 @@ func (m *NetPing) doTCPing(config TCPConfig, ch chan *Result) {
 		avgRTTMs = math.Round(float64(totalRTT/time.Millisecond) / float64(success))
 	}
 
-	ch <- &Result{
+	m.resultChannel <- &Result{
 		Valid:    true,
 		Type:     "tcping",
 		Total:    config.Count,
