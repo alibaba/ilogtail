@@ -55,6 +55,7 @@ type TCPConfig struct {
 
 // NetPing struct implements the MetricInput interface.
 type NetPing struct {
+	timeout         time.Duration
 	icmpPrivileged  bool
 	hasConfig       bool
 	resultChannel   chan *Result
@@ -114,6 +115,7 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 	m.icmpPrivileged = true
 
 	m.resultChannel = make(chan *Result, 100)
+	m.timeout = time.Duration(m.IntervalSeconds / 2 * int(time.Second))
 	return m.IntervalSeconds * 1000, nil
 }
 
@@ -173,12 +175,13 @@ func (m *NetPing) doICMPing(config ICMPConfig) {
 		}
 		return
 	}
+	pinger.Timeout = m.timeout
 
 	if m.icmpPrivileged {
 		pinger.SetPrivileged(true)
 	}
 	pinger.Count = config.Count
-	err = pinger.Run() // Blocks until finished.
+	err = pinger.Run() // Blocks until finished or timeout.
 	if err != nil {
 		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_RUN_PING", err.Error())
 		m.resultChannel <- &Result{
@@ -214,7 +217,7 @@ func (m *NetPing) doTCPing(config TCPConfig) {
 	var minRTT, maxRTT, totalRTT time.Duration
 
 	for i := 0; i < config.Count; i++ {
-		rtt, err := evaluteTcping(config.Target, config.Port, time.Second*5)
+		rtt, err := evaluteTcping(config.Target, config.Port, m.timeout)
 		if err != nil {
 			failed++
 			continue

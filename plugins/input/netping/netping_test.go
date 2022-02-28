@@ -33,11 +33,11 @@ func TestInitEmpty(t *testing.T) {
 	config1 := `{
 		"interval_seconds" : 5,
 		"icmp" : [
-		  {"src" : "1.1.1.1", "target" : "www.baidu.com", "count" : 3},
-		  {"src" : "2.2.2.2", "target" : "www.baidu.com", "count" : 3}
+		  {"src" : "1.1.1.1", "target" : "8.8.8.8", "count" : 3},
+		  {"src" : "2.2.2.2", "target" : "8.8.8.8", "count" : 3}
 		],
 		"tcp" : [
-		  {"src" : "1.1.1.1",  "target" : "www.baidu.com", "port" : 80, "count" : 3}
+		  {"src" : "1.1.1.1",  "target" : "8.8.8.8", "port" : 80, "count" : 3}
 		]
 	  }`
 
@@ -62,8 +62,8 @@ func TestInitAndCollect(t *testing.T) {
 	config1 := fmt.Sprintf(`{
 		"interval_seconds" : 5,
 		"icmp" : [
-		  {"src" : "%s", "target" : "www.baidu.com", "count" : 3},
-		  {"src" : "2.2.2.2", "target" : "www.baidu.com", "count" : 3}
+		  {"src" : "%s", "target" : "8.8.8.8", "count" : 3},
+		  {"src" : "2.2.2.2", "target" : "8.8.8.8", "count" : 3}
 		],
 		"tcp" : [
 		  {"src" : "%s",  "target" : "www.baidu.com", "port" : 80, "count" : 3}
@@ -113,7 +113,7 @@ func TestDoICMPing(t *testing.T) {
 	netPing.icmpPrivileged = false
 
 	config1 := ICMPConfig{
-		Target: "www.baidu.com",
+		Target: "8.8.8.8",
 		Count:  3,
 	}
 
@@ -121,7 +121,7 @@ func TestDoICMPing(t *testing.T) {
 	res1 := <-netPing.resultChannel
 	fmt.Println(res1)
 
-	assert.Equal(t, "src#$#|dst#$#www.baidu.com", res1.Label)
+	assert.Equal(t, "src#$#|dst#$#8.8.8.8", res1.Label)
 	assert.Equal(t, true, res1.Valid)
 	assert.Equal(t, 3, res1.Total)
 	assert.Equal(t, 3, res1.Success)
