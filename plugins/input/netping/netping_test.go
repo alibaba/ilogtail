@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/agiledragon/gomonkey/v2"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/alibaba/ilogtail"
@@ -47,10 +46,6 @@ func TestInitEmpty(t *testing.T) {
 	assert.Equal(t, 2, len(netPing.ICMPConfigs))
 	assert.Equal(t, 1, len(netPing.TCPConfigs))
 
-	funcPatch := gomonkey.ApplyFunc(util.GetIPAddress, func() string {
-		return "0.0.0.0"
-	})
-	defer funcPatch.Reset()
 	// 0 match
 	netPing.Init(ctx)
 	assert.Equal(t, 0, len(netPing.ICMPConfigs))
@@ -63,27 +58,22 @@ func TestInitEmpty(t *testing.T) {
 func TestInitAndCollect(t *testing.T) {
 
 	ctx := mock.NewEmptyContext("project", "store", "config")
-	config1 := `{
+	ip := util.GetIPAddress()
+	config1 := fmt.Sprintf(`{
 		"interval_seconds" : 5,
 		"icmp" : [
-		  {"src" : "1.1.1.1", "target" : "www.baidu.com", "count" : 3},
+		  {"src" : "%s", "target" : "www.baidu.com", "count" : 3},
 		  {"src" : "2.2.2.2", "target" : "www.baidu.com", "count" : 3}
 		],
 		"tcp" : [
-		  {"src" : "1.1.1.1",  "target" : "www.baidu.com", "port" : 80, "count" : 3}
+		  {"src" : "%s",  "target" : "www.baidu.com", "port" : 80, "count" : 3}
 		]
-	  }`
+	  }`, ip, ip)
 
 	netPing := &NetPing{}
 	json.Unmarshal([]byte(config1), netPing)
 	assert.Equal(t, 2, len(netPing.ICMPConfigs))
 	assert.Equal(t, 1, len(netPing.TCPConfigs))
-
-	// 1 match
-	funcPatch := gomonkey.ApplyFunc(util.GetIPAddress, func() string {
-		return "1.1.1.1"
-	})
-	defer funcPatch.Reset()
 
 	netPing.Init(ctx)
 	assert.Equal(t, 1, len(netPing.ICMPConfigs))
