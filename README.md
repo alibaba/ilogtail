@@ -67,7 +67,6 @@ For documentation on the latest version see the [documentation index](./docs/en/
 - [Aggregator Plugins](./docs/en/guides/How-to-write-aggregator-plugins.md)
 - [Flusher Plugins](./docs/en/guides/How-to-write-flusher-plugins.md)
 
-
 # Contribution
 
 There are many ways to contribute:
@@ -79,12 +78,12 @@ There are many ways to contribute:
 # Contact Us
 You can report bugs, make suggestions or participate in discussions through [Github Issues](https://github.com/alibaba/ilogtail/issues), or contact us with the following ways:
 
-- DingTalk：33867413
+- DingTalk：iLogtail社区
 - WeChat：日志服务
-- Bilibli：[阿里云SLS](https://space.bilibili.com/630680534?from=search&seid=2845737427240690794&spm_id_from=333.337.0.0)
+- Bilibili：[阿里云SLS](https://space.bilibili.com/630680534?from=search&seid=2845737427240690794&spm_id_from=333.337.0.0)
 - Zhihu：[阿里云日志服务](https://www.zhihu.com/people/a-li-yun-ri-zhi-fu-wu)
 
-<img src="https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail-contact.png?versionId=CAEQMxiBgIC.jPui6RciIDhlNzVjYmQ5OTIwNzQ4NTBiMzk1YTgyN2VkNmU5MDBi" alt="ilogtail logo" style="width: 100%; height: 100%" />
+<img src="https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail-contact.png?versionId=CAEQOhiBgICQkM6b8xciIDcxZTU5M2FjMDAzODQ1Njg5NjI3ZDc4M2FhOTZkNWNk" style="width: 100%; height: 100%" />
 
 
 

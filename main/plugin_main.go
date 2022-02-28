@@ -20,9 +20,11 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/alibaba/ilogtail"
 	_ "github.com/alibaba/ilogtail/helper/envconfig"
 	"github.com/alibaba/ilogtail/main/flags"
 	_ "github.com/alibaba/ilogtail/main/wrapmemcpy"
+	"github.com/alibaba/ilogtail/pkg/doc"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/signals"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -33,18 +35,34 @@ import (
 func main() {
 	flag.Parse()
 	defer logger.Flush()
+	if *flags.Doc {
+		generatePluginDoc()
+		return
+	}
 	cpu := runtime.NumCPU()
 	procs := runtime.GOMAXPROCS(0)
 	fmt.Println("cpu num:", cpu, " GOMAXPROCS:", procs)
 	fmt.Println("hostname : ", util.GetHostName())
 	fmt.Println("hostIP : ", util.GetIPAddress())
 	fmt.Printf("load config %s %s %s\n", *flags.GlobalConfig, *flags.PluginConfig, *flags.FlusherConfig)
-	pluginCfg, globalCfg := flags.LoadConfig()
 	handlers["/loadconfig"] = &handler{handlerFunc: HandleLoadConfig, description: "load new logtail plugin configuration"}
 	handlers["/holdon"] = &handler{handlerFunc: HandleHoldOn, description: "hold on logtail plugin process"}
-	if InitPluginBaseV2(globalCfg) != 0 || LoadConfig("PluginProject", "PluginLogstore",
-		"1.0#PluginProject##MockConfig2", 123, pluginCfg) != 0 {
+
+	globalCfg, pluginCfgs, err := flags.LoadConfig()
+	if err != nil {
 		return
+	} else if InitPluginBaseV2(globalCfg) != 0 {
+		return
+	}
+	// load the static configs.
+	for i, cfg := range pluginCfgs {
+		p := fmt.Sprintf("PluginProject_%d", i)
+		l := fmt.Sprintf("PluginLogstore_%d", i)
+		c := fmt.Sprintf("1.0#PluginProject_%d##Config%d", i, i)
+		if LoadConfig(p, l, c, 123, cfg) != 0 {
+			logger.Warningf(context.Background(), "START_PLUGIN_ALARM", "%s_%s_%s start fail, config is %s", p, l, c, cfg)
+			return
+		}
 	}
 	Resume()
 	// handle the first shutdown signal gracefully
@@ -52,4 +70,23 @@ func main() {
 	logger.Info(context.Background(), "########################## exit process begin ##########################")
 	HoldOn(1)
 	logger.Info(context.Background(), "########################## exit process done ##########################")
+}
+
+func generatePluginDoc() {
+	for name, creator := range ilogtail.ServiceInputs {
+		doc.Register("service_input", name, creator())
+	}
+	for name, creator := range ilogtail.MetricInputs {
+		doc.Register("metric_input", name, creator())
+	}
+	for name, creator := range ilogtail.Processors {
+		doc.Register("processor", name, creator())
+	}
+	for name, creator := range ilogtail.Aggregators {
+		doc.Register("aggregator", name, creator())
+	}
+	for name, creator := range ilogtail.Flushers {
+		doc.Register("flusher", name, creator())
+	}
+	doc.Generate(*flags.DocPath)
 }

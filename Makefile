@@ -124,6 +124,10 @@ vendor: clean
 check-dependency-licenses: clean
 	./scripts/dependency_licenses.sh main LICENSE_OF_ILOGTAIL_DEPENDENCIES.md && ./scripts/dependency_licenses.sh test LICENSE_OF_TESTENGINE_DEPENDENCIES.md
 
+.PHONY: docs
+docs: clean build
+	./bin/ilogtail --doc
+
 .PHONY: e2e-docs
 e2e-docs: clean
 	cd test && go build -o ilogtail-test-tool  . && ./ilogtail-test-tool docs && rm -f ilogtail-test-tool
@@ -150,10 +154,14 @@ test-e2e-engine: clean gocdocker coveragedocker
 test: clean
 	cp pkg/logtail/libPluginAdapter.so ./main
 	cp pkg/logtail/PluginAdapter.dll ./main
-	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig"| grep -Ev "main|pluginmanager") -coverprofile .testCoverage.txt
+	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
+	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|(input\/prometheus)"| grep -Ev "main|pluginmanager") -coverprofile .testCoverage.txt
+	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 
 .PHONY: core-test
 core-test: clean
 	cp pkg/logtail/libPluginAdapter.so ./main
 	cp pkg/logtail/PluginAdapter.dll ./main
-	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig"| grep -E "main|pluginmanager") -coverprofile .coretestCoverage.txt
+	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
+	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|()"| grep -E "main|pluginmanager") -coverprofile .coretestCoverage.txt
+	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
