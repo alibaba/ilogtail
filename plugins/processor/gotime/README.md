@@ -65,7 +65,7 @@
 #### 示例2
 以 Unix 时间戳格式 `1136185445000`（东八区）解析字段 `s_key` 的值作为日志时间，并以格式 `2006/01/02 15:04:05`（东九区）将日志时间转换到新字段 `d_key` 中。
 
-> 目前支持以 1136185445(秒)、1136185445000(毫秒)、1136185445000000(微秒) 为单位的 Unix 时间戳。
+> 目前支持以 seconds(秒)、milliseconds(毫秒)、microseconds(微秒) 为单位的 Unix 时间戳。
 
 配置详情及处理结果如下：
 
@@ -84,7 +84,7 @@
       "type":"processor_gotime",
       "detail": {
         "SourceKey": "s_key",
-        "SourceFormat":"1136185445000",
+        "SourceFormat":"milliseconds",
         "SourceLocation":8,
         "DestKey":"d_key",
         "DestFormat":"2006/01/02 15:04:05.000",
