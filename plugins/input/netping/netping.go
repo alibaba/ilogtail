@@ -204,7 +204,7 @@ func (m *NetPing) doICMPing(config ICMPConfig) {
 		Type:     "ping",
 		Total:    pinger.Count,
 		Success:  stats.PacketsRecv,
-		Failed:   int(stats.PacketLoss),
+		Failed:   pinger.Count - stats.PacketsRecv,
 		MinRTTMs: float64(stats.MinRtt / time.Millisecond),
 		MaxRTTMs: float64(stats.MaxRtt / time.Millisecond),
 		AvgRTTMs: float64(stats.AvgRtt / time.Millisecond),
