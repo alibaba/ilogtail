@@ -280,7 +280,6 @@ func (m *NetPing) doTCPing(config TCPConfig) {
 		AvgRTTMs:    avgRTT / float64(time.Millisecond),
 		TotalRTTMs:  float64(totalRTT / time.Millisecond),
 		StdDevRTTMs: stdDevRtt / float64(time.Millisecond),
-
 	}
 }
 
