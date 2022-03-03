@@ -227,10 +227,12 @@ func (m *NetPing) doICMPing(config ICMPConfig) {
 }
 
 func (m *NetPing) doTCPing(config TCPConfig) {
+
 	failed := 0
 	var minRTT, maxRTT, totalRTT time.Duration
 
 	rtts := []time.Duration{}
+
 	for i := 0; i < config.Count; i++ {
 		rtt, err := evaluteTcping(config.Target, config.Port, m.timeout)
 		if err != nil {
@@ -278,6 +280,7 @@ func (m *NetPing) doTCPing(config TCPConfig) {
 		AvgRTTMs:    avgRTT / float64(time.Millisecond),
 		TotalRTTMs:  float64(totalRTT / time.Millisecond),
 		StdDevRTTMs: stdDevRtt / float64(time.Millisecond),
+
 	}
 }
 
