@@ -23,7 +23,7 @@ import (
 )
 
 // ProcessorAddEnvs struct implement the Processor interface.
-// The plugin would append the field to the input data.
+// The plugin would append the env-value to the input data.
 type ProcessorAddEnvs struct {
 	Envs        []string // the appending envs
 	IgnoreIfExist bool              // Whether to ignore when the same key exists
@@ -33,7 +33,7 @@ type ProcessorAddEnvs struct {
 const pluginName = "processor_add_envs"
 
 // Init method would be triggered before working for init some system resources,
-// like socket, mutex. In this plugin, it verifies Fields must not be empty.
+// like socket, mutex. In this plugin, it verifies Envs must not be empty.
 func (p *ProcessorAddEnvs) Init(context ilogtail.Context) error {
 	if len(p.Envs) == 0 {
 		return fmt.Errorf("must specify Envs for plugin %v", pluginName)
@@ -46,7 +46,7 @@ func (*ProcessorAddEnvs) Description() string {
 	return "add envs processor for ilogtail"
 }
 
-// ProcessLogs append Fields to each log.
+// ProcessLogs append Envs to each log.
 func (p *ProcessorAddEnvs) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 	for _, log := range logArray {
 		p.processLog(log)
