@@ -1,0 +1,31 @@
+{
+  "inputs": [
+    {
+      "type": "metric_mock",
+      "detail": {
+        "Fields": {
+          "1111": "2222"
+        }
+      }
+    }
+  ],
+  "processors": [
+    {
+      "type": "processor_add_envs",
+      "detail": {
+        "Envs": [
+          "aaa",
+          "bbb"
+        ]
+      }
+    }
+  ],
+  "flushers": [
+    {
+      "type": "flusher_stdout",
+      "detail": {
+        "OnlyStdout": true
+      }
+    }
+  ]
+}
