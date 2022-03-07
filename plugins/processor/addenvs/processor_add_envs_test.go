@@ -24,9 +24,9 @@ import (
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
 
-func newProcessor() (*ProcessorAddFields, error) {
+func newProcessor() (*ProcessorAddEnvs, error) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
-	processor := &ProcessorAddFields{
+	processor := &ProcessorAddEnvs{
 		Envs: []string{
 			"aaaa",
 		},
@@ -74,7 +74,7 @@ func TestIgnoreIfExistTrue(t *testing.T) {
 
 func TestParameterCheck(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
-	processor := &ProcessorAddFields{}
+	processor := &ProcessorAddEnvs{}
 	err := processor.Init(ctx)
 	assert.Error(t, err)
 }

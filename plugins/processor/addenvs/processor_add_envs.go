@@ -36,14 +36,14 @@ const pluginName = "processor_add_envs"
 // like socket, mutex. In this plugin, it verifies Fields must not be empty.
 func (p *ProcessorAddEnvs) Init(context ilogtail.Context) error {
 	if len(p.Envs) == 0 {
-		return fmt.Errorf("must specify Fields for plugin %v", pluginName)
+		return fmt.Errorf("must specify Envs for plugin %v", pluginName)
 	}
 	p.context = context
 	return nil
 }
 
 func (*ProcessorAddEnvs) Description() string {
-	return "add fields processor for ilogtail"
+	return "add envs processor for ilogtail"
 }
 
 // ProcessLogs append Fields to each log.
