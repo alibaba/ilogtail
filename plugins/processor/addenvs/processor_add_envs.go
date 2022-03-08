@@ -15,17 +15,20 @@
 package addenvs
 
 import (
-	"fmt"
+    "bufio"
+    "fmt"
+    "io"
     "os"
 
     "github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg/protocol"
+    "github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 // ProcessorAddEnvs struct implement the Processor interface.
 // The plugin would append the env-value to the input data.
 type ProcessorAddEnvs struct {
 	Envs        []string // the appending envs
+	Path string // read env key from file
 	IgnoreIfExist bool              // Whether to ignore when the same key exists
 	context       ilogtail.Context
 }
@@ -35,6 +38,23 @@ const pluginName = "processor_add_envs"
 // Init method would be triggered before working for init some system resources,
 // like socket, mutex. In this plugin, it verifies Envs must not be empty.
 func (p *ProcessorAddEnvs) Init(context ilogtail.Context) error {
+    // read env key from file
+    f, err := os.Open(p.Path)
+    if err == nil {
+        defer f.Close()
+        r := bufio.NewReader(f)
+        for {
+            n, _, err := r.ReadLine()
+            if err != nil && err != io.EOF {
+                continue
+            }
+            if err == io.EOF {
+                break
+            }
+            p.Envs = append(p.Envs, string(n))
+        }
+
+    }
 	if len(p.Envs) == 0 {
 		return fmt.Errorf("must specify Envs for plugin %v", pluginName)
 	}
