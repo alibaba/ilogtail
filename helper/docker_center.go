@@ -570,7 +570,7 @@ func (dc *DockerCenter) CreateInfoDetail(info *docker.Container, envConfigPrefix
 	}
 	// for cri-runtime
 	if criRuntimeWrapper != nil && info.HostConfig != nil && len(did.DefaultRootPath) == 0 {
-		did.DefaultRootPath = lookupContainerRootfsAbsDir(info)
+		did.DefaultRootPath = criRuntimeWrapper.lookupContainerRootfsAbsDir(info)
 	}
 	logger.Debugf(context.Background(), "container(id: %s, name: %s) default root path is %s", info.ID, info.Name, did.DefaultRootPath)
 	return did
@@ -1050,6 +1050,28 @@ func (dc *DockerCenter) cleanTimeoutContainer() {
 	}
 }
 
+func (dc *DockerCenter) sweepCache() {
+	// clear unuseful cache
+	usedImageIdSet := make(map[string]bool)
+	{
+		dc.lock.Lock()
+		defer dc.lock.Unlock()
+		for _, container := range dc.containerMap {
+			usedImageIdSet[container.ContainerInfo.Image] = true
+		}
+	}
+	{
+		dc.imageLock.Lock()
+		defer dc.imageLock.Unlock()
+		for key := range dc.imageCache {
+			if _, ok := usedImageIdSet[key]; !ok {
+				delete(dc.imageCache, key)
+				logger.Error(context.Background(), "DEBUG_ALARM", "sweeped one image id", key)
+			}
+		}
+	}
+}
+
 func dockerCenterRecover() {
 	if err := recover(); err != nil {
 		trace := make([]byte, 2048)
@@ -1122,6 +1144,7 @@ func (dc *DockerCenter) run() error {
 					fetchErrCount = 0
 				}
 				logger.Info(context.Background(), "docker fetch all", "stop")
+				dc.sweepCache()
 				lastFetchAllTime = time.Now()
 				if fetchErrCount > 3 && criRuntimeWrapper != nil {
 					logger.Info(context.Background(), "docker fetch is error and cri runtime wrapper is valid", "skpi docker listen")

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux
 // +build linux
 
 package helper
@@ -34,7 +35,6 @@ import (
 
 	containerdcriserver "github.com/containerd/cri/pkg/server"
 	docker "github.com/fsouza/go-dockerclient"
-	"go.uber.org/atomic"
 	"google.golang.org/grpc"
 	cri "k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
 )
@@ -45,8 +45,6 @@ const maxMsgSize = 1024 * 1024 * 16
 var DefaultSyncContainersPeriod = time.Second * 10
 var containerdUnixSocket = "/run/containerd/containerd.sock"
 var criRuntimeWrapper *CRIRuntimeWrapper
-
-var defaultContainerDFlag atomic.Int32
 
 // CRIRuntimeWrapper wrapper for containerd client
 type CRIRuntimeWrapper struct {
@@ -60,6 +58,9 @@ type CRIRuntimeWrapper struct {
 	containers     map[string]cri.ContainerState
 
 	stopCh <-chan struct{}
+
+	rootfsLock  sync.Mutex
+	rootfsCache map[string]string
 }
 
 func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
@@ -168,6 +169,7 @@ func NewCRIRuntimeWrapper(dockerCenter *DockerCenter) (*CRIRuntimeWrapper, error
 		runtimeVersion: runtimeVersion,
 		containers:     make(map[string]cri.ContainerState),
 		stopCh:         make(<-chan struct{}),
+		rootfsCache:    make(map[string]string),
 	}, nil
 }
 
@@ -381,6 +383,20 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 	return nil
 }
 
+func (cw *CRIRuntimeWrapper) sweepCache() {
+	// clear unuseful cache
+	cw.dockerCenter.lock.Lock()
+	defer cw.dockerCenter.lock.Unlock()
+	cw.rootfsLock.Lock()
+	defer cw.rootfsLock.Unlock()
+	for key := range cw.rootfsCache {
+		if _, ok := cw.dockerCenter.containerMap[key]; !ok {
+			delete(cw.rootfsCache, key)
+			logger.Error(context.Background(), "DEBUG_ALARM", "sweeped one container id", key)
+		}
+	}
+}
+
 func (cw *CRIRuntimeWrapper) run() error {
 	logger.Info(context.Background(), "CRIRuntime background syncer", "start")
 	_ = cw.fetchAll()
@@ -399,6 +415,7 @@ func (cw *CRIRuntimeWrapper) run() error {
 				err := cw.fetchAll()
 				logger.Info(context.Background(), "CRIRuntime fetch all", err)
 				lastFetchAllTime = time.Now()
+				cw.sweepCache()
 			}
 
 		}
@@ -426,8 +443,15 @@ func parseContainerInfo(data string) (containerdcriserver.ContainerInfo, error) 
 	return ci, err
 }
 
-func lookupContainerRootfsAbsDir(info *docker.Container) string {
+func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container) string {
 	// For cri-runtime
+	cw.rootfsLock.Lock()
+	defer cw.rootfsLock.Unlock()
+	containerId := info.ID
+	if dir, ok := cw.rootfsCache[containerId]; ok {
+		logger.Error(context.Background(), "DEBUG_ALARM", "hit container rootfs cache", containerId)
+		return dir
+	}
 
 	// Example: /run/containerd/io.containerd.runtime.v1.linux/k8s.io/{ContainerID}/rootfs/
 	aDirs := []string{
@@ -451,20 +475,13 @@ func lookupContainerRootfsAbsDir(info *docker.Container) string {
 		"root",
 	}
 
-	// if default is ok, skip stat
-	if defaultContainerDFlag.Load() == 1 {
-		return path.Join(aDirs[0], bDirs[0], cDirs[0], info.ID, dDirs[0])
-	}
-
-	for aIndex, a := range aDirs {
-		for bIndex, b := range bDirs {
-			for cIndex, c := range cDirs {
-				for dIndex, d := range dDirs {
+	for _, a := range aDirs {
+		for _, c := range cDirs {
+			for _, d := range dDirs {
+				for _, b := range bDirs {
 					dir := path.Join(a, b, c, info.ID, d)
 					if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
-						if aIndex == 0 && bIndex == 0 && cIndex == 0 && dIndex == 0 {
-							defaultContainerDFlag.Store(1)
-						}
+						cw.rootfsCache[containerId] = dir
 						return dir
 					}
 				}
