@@ -392,7 +392,6 @@ func (cw *CRIRuntimeWrapper) sweepCache() {
 	for key := range cw.rootfsCache {
 		if _, ok := cw.dockerCenter.containerMap[key]; !ok {
 			delete(cw.rootfsCache, key)
-			logger.Error(context.Background(), "DEBUG_ALARM", "sweeped one container id", key)
 		}
 	}
 }
@@ -449,7 +448,6 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container)
 	defer cw.rootfsLock.Unlock()
 	containerId := info.ID
 	if dir, ok := cw.rootfsCache[containerId]; ok {
-		logger.Error(context.Background(), "DEBUG_ALARM", "hit container rootfs cache", containerId)
 		return dir
 	}
 

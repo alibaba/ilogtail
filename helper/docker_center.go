@@ -1066,7 +1066,6 @@ func (dc *DockerCenter) sweepCache() {
 		for key := range dc.imageCache {
 			if _, ok := usedImageIdSet[key]; !ok {
 				delete(dc.imageCache, key)
-				logger.Error(context.Background(), "DEBUG_ALARM", "sweeped one image id", key)
 			}
 		}
 	}
