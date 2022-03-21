@@ -17,10 +17,12 @@ package kafka
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Shopify/sarama"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -37,6 +39,7 @@ type FlusherKafka struct {
 	HashKeys        []string
 	HashOnce        bool
 	ClientID        string
+	FlusherMode     int // 0 default, 1 keyvaluepairs, 2 __time__, __content__
 
 	isTerminal chan bool
 	producer   sarama.AsyncProducer
@@ -125,13 +128,70 @@ func (k *FlusherKafka) NormalFlush(projectName string, logstoreName string, conf
 		logger.Debug(k.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
 
 		for _, log := range logGroup.Logs {
-			buf, _ := json.Marshal(log)
-			logger.Debug(k.context.GetRuntimeContext(), string(buf))
-			m := &sarama.ProducerMessage{
-				Topic: k.Topic,
-				Value: sarama.ByteEncoder(buf),
+			switch k.FlusherMode {
+			//  1 keyvaluepairs
+			case 1:
+				for _, log := range logGroup.Logs {
+					writer := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 128)
+					writer.WriteObjectStart()
+					for _, c := range log.Contents {
+						writer.WriteObjectField(c.Key)
+						writer.WriteString(c.Value)
+						_, _ = writer.Write([]byte{','})
+					}
+					writer.WriteObjectField("__time__")
+					writer.WriteString(strconv.Itoa(int(log.Time)))
+					writer.WriteObjectEnd()
+					buf := writer.Buffer()
+					logger.Debug(k.context.GetRuntimeContext(), string(buf))
+					m := &sarama.ProducerMessage{
+						Topic: k.Topic,
+						Value: sarama.ByteEncoder(buf),
+					}
+					k.producer.Input() <- m
+				}
+				// 2 __time__, __content__
+			case 2:
+				for _, log := range logGroup.Logs {
+					writer := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 128)
+					writer.WriteObjectStart()
+					writer.WriteObjectField("__time__")
+					writer.WriteString(strconv.Itoa(int(log.Time)))
+					_, _ = writer.Write([]byte{','})
+
+					writer.WriteObjectField("__content__")
+					writer.WriteObjectStart()
+					cnt := len(log.Contents)
+					for key, c := range log.Contents {
+						writer.WriteObjectField(c.Key)
+						writer.WriteString(c.Value)
+						// the last key return
+						if key == cnt-1 {
+							writer.WriteObjectEnd()
+							_, _ = writer.Write([]byte{','})
+							break
+						}
+						_, _ = writer.Write([]byte{','})
+					}
+					writer.WriteObjectEnd()
+					buf := writer.Buffer()
+					logger.Debug(k.context.GetRuntimeContext(), string(buf))
+					m := &sarama.ProducerMessage{
+						Topic: k.Topic,
+						Value: sarama.ByteEncoder(buf),
+					}
+					k.producer.Input() <- m
+				}
+			default:
+				buf, _ := json.Marshal(log)
+				logger.Debug(k.context.GetRuntimeContext(), string(buf))
+				m := &sarama.ProducerMessage{
+					Topic: k.Topic,
+					Value: sarama.ByteEncoder(buf),
+				}
+				k.producer.Input() <- m
+
 			}
-			k.producer.Input() <- m
 		}
 	}
 	return nil
