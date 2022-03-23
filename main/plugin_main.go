@@ -14,15 +14,13 @@
 
 package main
 
+import "C"
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"runtime"
-	"time"
-
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	_ "github.com/alibaba/ilogtail/helper/envconfig"
 	"github.com/alibaba/ilogtail/main/flags"
 	_ "github.com/alibaba/ilogtail/main/wrapmemcpy"
@@ -31,6 +29,8 @@ import (
 	"github.com/alibaba/ilogtail/pkg/signals"
 	"github.com/alibaba/ilogtail/pkg/util"
 	_ "github.com/alibaba/ilogtail/plugins/all"
+	"runtime"
+	"time"
 )
 
 // main export http control method in pure GO.
@@ -70,9 +70,18 @@ func main() {
 
 	go func() {
 		for {
-			meta := GetContainerMeta("0990552356ff936375bd8da56cdc661119fd85fe1717fa11d6794dd45aa48c4a")
-			marshal, _ := json.Marshal(meta)
-			println(marshal)
+			detail, ok := helper.GetDockerCenterInstance().GetContainerDetail("0990552356ff936375bd8da56cdc661119fd85fe1717fa11d6794dd45aa48c4a")
+			if ok {
+				println(detail.K8SInfo.Pod)
+				println(detail.K8SInfo.Namespace)
+				if detail.K8SInfo.ContainerName == "" {
+					println(detail.ContainerInfo.Name)
+				} else {
+					println(detail.K8SInfo.ContainerName)
+				}
+				println(detail.ContainerNameTag["_image_name_"])
+				println("=================")
+			}
 			time.Sleep(time.Second)
 		}
 	}()
