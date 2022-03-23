@@ -16,9 +16,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"runtime"
+	"time"
 
 	"github.com/alibaba/ilogtail"
 	_ "github.com/alibaba/ilogtail/helper/envconfig"
@@ -65,6 +67,15 @@ func main() {
 		}
 	}
 	Resume()
+
+	go func() {
+		for {
+			meta := GetContainerMeta("0990552356ff936375bd8da56cdc661119fd85fe1717fa11d6794dd45aa48c4a")
+			marshal, _ := json.Marshal(meta)
+			println(marshal)
+			time.Sleep(time.Second)
+		}
+	}()
 	// handle the first shutdown signal gracefully
 	<-signals.SetupSignalHandler()
 	logger.Info(context.Background(), "########################## exit process begin ##########################")

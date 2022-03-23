@@ -144,8 +144,12 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 		returnStruct := (*C.struct_containerMeta)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_containerMeta{}))))
 		returnStruct.podName = C.CString(detail.K8SInfo.Pod)
 		returnStruct.k8sNamespace = C.CString(detail.K8SInfo.Namespace)
-		returnStruct.containerName = C.CString(detail.K8SInfo.ContainerName)
-		returnStruct.image = C.CString(detail.ContainerInfo.Image)
+		if detail.K8SInfo.ContainerName == "" {
+			returnStruct.containerName = C.CString(detail.ContainerInfo.Name)
+		} else {
+			returnStruct.containerName = C.CString(detail.K8SInfo.ContainerName)
+		}
+		returnStruct.image = C.CString(detail.ContainerNameTag["_image_name_"])
 		return returnStruct
 	}
 	// TODO: fetchAll again when not found.
