@@ -145,7 +145,7 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 		returnStruct.podName = C.CString(detail.K8SInfo.Pod)
 		returnStruct.k8sNamespace = C.CString(detail.K8SInfo.Namespace)
 		if detail.K8SInfo.ContainerName == "" {
-			returnStruct.containerName = C.CString(detail.ContainerInfo.Name)
+			returnStruct.containerName = C.CString(detail.ContainerNameTag["_container_name_"])
 		} else {
 			returnStruct.containerName = C.CString(detail.K8SInfo.ContainerName)
 		}
