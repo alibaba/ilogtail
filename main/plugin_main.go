@@ -19,6 +19,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"runtime"
+
 	"github.com/alibaba/ilogtail"
 	_ "github.com/alibaba/ilogtail/helper/envconfig"
 	"github.com/alibaba/ilogtail/main/flags"
@@ -28,7 +30,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/signals"
 	"github.com/alibaba/ilogtail/pkg/util"
 	_ "github.com/alibaba/ilogtail/plugins/all"
-	"runtime"
 )
 
 // main export http control method in pure GO.
