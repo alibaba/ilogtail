@@ -41,10 +41,10 @@ const (
 // Strptime use strptime to parse specified field (through SourceKey) with Format,
 // and overwrite the time of log if parsing is successful.
 //
-///////////////// Format comment //////////////
+// Format comment
 // Format follows rules of C strptime, but %Z does not support CST.
 //
-///////////////// UTCOffset comment //////////////
+// UTCOffset comment
 // By default, the processor will use the local UTC offset if it can not find any
 // information in Format (%z or %s).
 // You can use this parameter to set customized offset, such as -28800 for UTC-8.
@@ -152,15 +152,14 @@ func (s *Strptime) processLog(log *protocol.Log) {
 	}
 	if (s.EnablePreciseTimestamp && logTime != time.Time{}) {
 		var timestamp string
-		if len(s.PreciseTimestampUnit) == 0 {
+		switch s.PreciseTimestampUnit {
+		case "", timeStampMilliSecond:
 			timestamp = strconv.FormatInt(logTime.UnixNano()/1e6, 10)
-		} else if s.PreciseTimestampUnit == timeStampMilliSecond {
-			timestamp = strconv.FormatInt(logTime.UnixNano()/1e6, 10)
-		} else if s.PreciseTimestampUnit == timeStampMicroSecond {
+		case timeStampMicroSecond:
 			timestamp = strconv.FormatInt(logTime.UnixNano()/1e3, 10)
-		} else if s.PreciseTimestampUnit == timeStampNanoSecond {
+		case timeStampNanoSecond:
 			timestamp = strconv.FormatInt(logTime.UnixNano(), 10)
-		} else {
+		default:
 			timestamp = strconv.FormatInt(logTime.UnixNano()/1e6, 10)
 		}
 		log.Contents = append(log.Contents, &protocol.Log_Content{

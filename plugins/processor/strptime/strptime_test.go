@@ -287,65 +287,80 @@ func TestAlarmIfFail(t *testing.T) {
 }
 
 func TestPreciseTimestamp(t *testing.T) {
-	time.Local = time.UTC
-	logger.ClearMemoryLog()
-	tests := []struct {
-		InputTimeStr        string
-		Format              string
-		PreciseTimestampKey string
-		PreciseTimeUint     string
-		ExpectedTime        int64
-		PreciseTimeStamp    int64
-	}{
-		{"2016/01/02", "%Y/%m/%d", defaultPreciseTimestampKey, timeStampMilliSecond,
-			time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).UnixNano() / 1e6},
-		{"2016/01/02 12:59:59", "%Y/%m/%d %H:%M:%S", defaultPreciseTimestampKey, timeStampMicroSecond,
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).UnixNano() / 1e3},
-		{"2016/01/02-12:59:59.1", "%Y/%m/%d-%H:%M:%S.%f", defaultPreciseTimestampKey, timeStampNanoSecond,
-			time.Date(2016, time.January, 2, 12, 59, 59, 100000000, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 100000000, time.UTC).UnixNano()},
-		{"2016/01/02 12:59:59.1234", "%Y/%m/%d %H:%M:%S.%f", "new_key", timeStampMicroSecond,
-			time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).UnixNano() / 1e3},
-		{"2016/01/02 12:59:59.987654321 +0700 (UTC)", "%Y/%m/%d %H:%M:%S.%f %z (%Z)", "new_key", timeStampNanoSecond,
-			time.Date(2016, time.January, 2, 12, 59, 59, 987654321, time.FixedZone("UTC+7", 7*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 987654321, time.FixedZone("UTC+7", 7*60*60)).UnixNano()},
-		{"1451710799", "%s", "new_key", timeStampNanoSecond,
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano()},
-		{"1451710799123", "%s", "new_key", timeStampMicroSecond,
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano() / 1e3},
-		{"1451710799123456", "%s", "new_key", timeStampMicroSecond,
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano() / 1e3},
-		{"2016/Jan/02 12:59:59,123456", "%Y/%b/%d %H:%M:%S,%f", "new_key", "",
-			time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).UnixNano() / 1e6},
-		{"2019-07-15T04:16:47:123Z", "%Y-%m-%dT%H:%M:%S:%f", "new_key", timeStampMicroSecond,
-			time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).Unix(),
-			time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).UnixNano() / 1e3,
-		},
-	}
-	for idx, test := range tests {
-		processor, err := newProcessor(test.Format, nilUTCOffset, true)
-		processor.PreciseTimestampKey = test.PreciseTimestampKey
-		processor.PreciseTimestampUnit = test.PreciseTimeUint
-		require.NoError(t, err)
+	{
+		time.Local = time.UTC
+		logger.ClearMemoryLog()
+		tests := []struct {
+			InputTimeStr        string
+			Format              string
+			PreciseTimestampKey string
+			PreciseTimeUint     string
+			ExpectedTime        int64
+			PreciseTimeStamp    int64
+		}{
+			{"2016/01/02", "%Y/%m/%d", defaultPreciseTimestampKey, timeStampMilliSecond,
+				time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).Unix(),
+				time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).UnixNano() / 1e6},
+			{"2016/01/02 12:59:59", "%Y/%m/%d %H:%M:%S", defaultPreciseTimestampKey, timeStampMicroSecond,
+				time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).Unix(),
+				time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).UnixNano() / 1e3},
+			{"2016/01/02-12:59:59.1", "%Y/%m/%d-%H:%M:%S.%f", defaultPreciseTimestampKey, timeStampNanoSecond,
+				time.Date(2016, time.January, 2, 12, 59, 59, 100000000, time.UTC).Unix(),
+				time.Date(2016, time.January, 2, 12, 59, 59, 100000000, time.UTC).UnixNano()},
+			{"2016/01/02 12:59:59.1234", "%Y/%m/%d %H:%M:%S.%f", "new_key", timeStampMicroSecond,
+				time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).Unix(),
+				time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).UnixNano() / 1e3},
+			{"2016/01/02 12:59:59.987654321 +0700 (UTC)", "%Y/%m/%d %H:%M:%S.%f %z (%Z)", "new_key", timeStampNanoSecond,
+				time.Date(2016, time.January, 2, 12, 59, 59, 987654321, time.FixedZone("UTC+7", 7*60*60)).Unix(),
+				time.Date(2016, time.January, 2, 12, 59, 59, 987654321, time.FixedZone("UTC+7", 7*60*60)).UnixNano()},
+			{"1451710799", "%s", "new_key", timeStampNanoSecond,
+				time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
+				time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano()},
+			{"1451710799123", "%s", "new_key", timeStampMicroSecond,
+				time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
+				time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano() / 1e3},
+			{"1451710799123456", "%s", "new_key", timeStampMicroSecond,
+				time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
+				time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano() / 1e3},
+			{"2016/Jan/02 12:59:59,123456", "%Y/%b/%d %H:%M:%S,%f", "new_key", "",
+				time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).Unix(),
+				time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).UnixNano() / 1e6},
+			{"2019-07-15T04:16:47:123Z", "%Y-%m-%dT%H:%M:%S:%f", "new_key", timeStampMicroSecond,
+				time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).Unix(),
+				time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).UnixNano() / 1e3,
+			},
+		}
+		for idx, test := range tests {
+			processor, err := newProcessor(test.Format, nilUTCOffset, true)
+			processor.PreciseTimestampKey = test.PreciseTimestampKey
+			processor.PreciseTimestampUnit = test.PreciseTimeUint
+			require.NoError(t, err)
 
+			log := &protocol.Log{Time: 0}
+			log.Contents = append(log.Contents,
+				&protocol.Log_Content{Key: defaultSourceKey, Value: test.InputTimeStr})
+			processor.processLog(log)
+			require.Equal(t, 0, logger.GetMemoryLogCount())
+			require.Equal(t, test.ExpectedTime, int64(log.Time), "Test case %v failed", idx)
+
+			require.Equal(t, len(log.Contents), 2) // time + precise_timestamp
+			require.Equal(t, defaultSourceKey, log.GetContents()[0].Key)
+			require.Equal(t, test.InputTimeStr, log.GetContents()[0].Value)
+			require.Equal(t, test.PreciseTimestampKey, log.GetContents()[1].Key)
+			require.Equal(t, strconv.FormatInt(test.PreciseTimeStamp, 10), log.GetContents()[1].Value)
+		}
+	}
+
+	{
+		processor, _ := newProcessor("%Y/%m/%d", nilUTCOffset, false)
 		log := &protocol.Log{Time: 0}
 		log.Contents = append(log.Contents,
-			&protocol.Log_Content{Key: defaultSourceKey, Value: test.InputTimeStr})
+			&protocol.Log_Content{Key: defaultSourceKey, Value: "2016/01/02"})
+		processor.KeepSource = false
+		log.Time = 0
 		processor.processLog(log)
-		require.Equal(t, 0, logger.GetMemoryLogCount())
-		require.Equal(t, test.ExpectedTime, int64(log.Time), "Test case %v failed", idx)
-
-		require.Equal(t, len(log.Contents), 2) // time + precise_timestamp
-		require.Equal(t, defaultSourceKey, log.GetContents()[0].Key)
-		require.Equal(t, test.InputTimeStr, log.GetContents()[0].Value)
-		require.Equal(t, test.PreciseTimestampKey, log.GetContents()[1].Key)
-		require.Equal(t, strconv.FormatInt(test.PreciseTimeStamp, 10), log.GetContents()[1].Value)
+		require.Equal(t, time.Date(
+			2016, time.January, 2, 0, 0, 0, 0, time.Now().Location()).Unix(), int64(log.Time))
+		require.Equal(t, 0, len(log.Contents)) // precise_timestamp
 	}
 }
