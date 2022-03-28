@@ -96,35 +96,35 @@ func TestFormat(t *testing.T) {
 	}{
 		{"2016/01/02", "%Y/%m/%d",
 			time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).UnixMilli()},
+			time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).UnixNano() / 1e6},
 		{"2016/01/02 12:59:59", "%Y/%m/%d %H:%M:%S",
 			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).UnixMilli()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).UnixNano() / 1e6},
 		{"2016/01/02-12:59:59", "%Y/%m/%d-%H:%M:%S",
 			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).UnixMilli()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).UnixNano() / 1e6},
 		{"2016/01/02 12:59:59.1234", "%Y/%m/%d %H:%M:%S.%f",
 			time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).UnixMilli()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).UnixNano() / 1e6},
 		{"2016/01/02 12:59:59.987654321 +0700 (UTC)", "%Y/%m/%d %H:%M:%S.%f %z (%Z)",
 			time.Date(2016, time.January, 2, 12, 59, 59, 987654321, time.FixedZone("UTC+7", 7*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 987654321, time.FixedZone("UTC+7", 7*60*60)).UnixMilli()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 987654321, time.FixedZone("UTC+7", 7*60*60)).UnixNano() / 1e6},
 		{"1451710799", "%s",
 			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixMilli()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano() / 1e6},
 		{"1451710799123", "%s",
 			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixMilli()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano() / 1e6},
 		{"1451710799123456", "%s",
 			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixMilli()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano() / 1e6},
 		{"2016/Jan/02 12:59:59,123456", "%Y/%b/%d %H:%M:%S,%f",
 			time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).UnixMilli()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).UnixNano() / 1e6},
 		{"2019-07-15T04:16:47:123Z",
 			"%Y-%m-%dT%H:%M:%S:%f",
 			time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).Unix(),
-			time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).UnixMilli(),
+			time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).UnixNano() / 1e6,
 		},
 	}
 	for idx, test := range tests {
@@ -175,7 +175,7 @@ func TestUTCOffsetWithTimeZone(t *testing.T) {
 			require.Equal(t, defaultSourceKey, log.GetContents()[0].Key)
 			require.Equal(t, test.InputTimeStr, log.GetContents()[0].Value)
 			require.Equal(t, defaultPreciseTimestampKey, log.GetContents()[1].Key)
-			require.Equal(t, strconv.FormatInt(results[idx].UnixMilli(), 10), log.GetContents()[1].Value)
+			require.Equal(t, strconv.FormatInt(results[idx].UnixNano()/1e6, 10), log.GetContents()[1].Value)
 		}
 	}
 
@@ -201,7 +201,7 @@ func TestUTCOffsetWithTimeZone(t *testing.T) {
 			require.Equal(t, defaultSourceKey, log.GetContents()[0].Key)
 			require.Equal(t, test.InputTimeStr, log.GetContents()[0].Value)
 			require.Equal(t, defaultPreciseTimestampKey, log.GetContents()[1].Key)
-			require.Equal(t, strconv.FormatInt(results[idx].UnixMilli(), 10), log.GetContents()[1].Value)
+			require.Equal(t, strconv.FormatInt(results[idx].UnixNano()/1e6, 10), log.GetContents()[1].Value)
 		}
 	}
 }
@@ -299,16 +299,16 @@ func TestPreciseTimestamp(t *testing.T) {
 	}{
 		{"2016/01/02", "%Y/%m/%d", defaultPreciseTimestampKey, timeStampMilliSecond,
 			time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).UnixMilli()},
+			time.Date(2016, time.January, 2, 0, 0, 0, 0, time.UTC).UnixNano() / 1e6},
 		{"2016/01/02 12:59:59", "%Y/%m/%d %H:%M:%S", defaultPreciseTimestampKey, timeStampMicroSecond,
 			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).UnixMicro()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.UTC).UnixNano() / 1e3},
 		{"2016/01/02-12:59:59.1", "%Y/%m/%d-%H:%M:%S.%f", defaultPreciseTimestampKey, timeStampNanoSecond,
 			time.Date(2016, time.January, 2, 12, 59, 59, 100000000, time.UTC).Unix(),
 			time.Date(2016, time.January, 2, 12, 59, 59, 100000000, time.UTC).UnixNano()},
 		{"2016/01/02 12:59:59.1234", "%Y/%m/%d %H:%M:%S.%f", "new_key", timeStampMicroSecond,
 			time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).UnixMicro()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 123400000, time.UTC).UnixNano() / 1e3},
 		{"2016/01/02 12:59:59.987654321 +0700 (UTC)", "%Y/%m/%d %H:%M:%S.%f %z (%Z)", "new_key", timeStampNanoSecond,
 			time.Date(2016, time.January, 2, 12, 59, 59, 987654321, time.FixedZone("UTC+7", 7*60*60)).Unix(),
 			time.Date(2016, time.January, 2, 12, 59, 59, 987654321, time.FixedZone("UTC+7", 7*60*60)).UnixNano()},
@@ -317,16 +317,16 @@ func TestPreciseTimestamp(t *testing.T) {
 			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano()},
 		{"1451710799123", "%s", "new_key", timeStampMicroSecond,
 			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixMicro()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano() / 1e3},
 		{"1451710799123456", "%s", "new_key", timeStampMicroSecond,
 			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixMicro()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 0, time.FixedZone("UTC+8", 8*60*60)).UnixNano() / 1e3},
 		{"2016/Jan/02 12:59:59,123456", "%Y/%b/%d %H:%M:%S,%f", "new_key", "",
 			time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).Unix(),
-			time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).UnixMilli()},
+			time.Date(2016, time.January, 2, 12, 59, 59, 123456000, time.UTC).UnixNano() / 1e6},
 		{"2019-07-15T04:16:47:123Z", "%Y-%m-%dT%H:%M:%S:%f", "new_key", timeStampMicroSecond,
 			time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).Unix(),
-			time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).UnixMicro(),
+			time.Date(2019, time.July, 15, 4, 16, 47, 123000000, time.UTC).UnixNano() / 1e3,
 		},
 	}
 	for idx, test := range tests {

@@ -153,15 +153,15 @@ func (s *Strptime) processLog(log *protocol.Log) {
 	if (s.EnablePreciseTimestamp && logTime != time.Time{}) {
 		var timestamp string
 		if len(s.PreciseTimestampUnit) == 0 {
-			timestamp = strconv.FormatInt(logTime.UnixMilli(), 10)
+			timestamp = strconv.FormatInt(logTime.UnixNano()/1e6, 10)
 		} else if s.PreciseTimestampUnit == timeStampMilliSecond {
-			timestamp = strconv.FormatInt(logTime.UnixMilli(), 10)
+			timestamp = strconv.FormatInt(logTime.UnixNano()/1e6, 10)
 		} else if s.PreciseTimestampUnit == timeStampMicroSecond {
-			timestamp = strconv.FormatInt(logTime.UnixMicro(), 10)
+			timestamp = strconv.FormatInt(logTime.UnixNano()/1e3, 10)
 		} else if s.PreciseTimestampUnit == timeStampNanoSecond {
 			timestamp = strconv.FormatInt(logTime.UnixNano(), 10)
 		} else {
-			timestamp = strconv.FormatInt(logTime.UnixMilli(), 10)
+			timestamp = strconv.FormatInt(logTime.UnixNano()/1e6, 10)
 		}
 		log.Contents = append(log.Contents, &protocol.Log_Content{
 			Key:   s.PreciseTimestampKey,
