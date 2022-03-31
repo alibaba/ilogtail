@@ -59,12 +59,12 @@ type Strptime struct {
 	SourceKey              string `comment:"The source key prepared to be parsed by strptime."`
 	Format                 string `comment:"The source key formatted pattern, more details please see [here](https://golang.org/pkg/time/#Time.Format)."`
 	KeepSource             bool   `comment:"Optional. Specifies whether to keep the source key in the log content after the processing."`
-	AdjustUTCOffset        bool   `comment:"Optional. Specifies whether to modify the time zone. Default value: false."`
+	AdjustUTCOffset        bool   `comment:"Optional. Specifies whether to modify the time zone."`
 	UTCOffset              int    `comment:"Optional. The UTCOffset is used to modify the log time zone. For example, the value 28800 indicates that the time zone is modified to UTC+8."`
-	AlarmIfFail            bool   `comment:"Optional. Specifies whether to trigger an alert if the time information fails to be extracted. Default value: true."`
-	EnablePreciseTimestamp bool   `comment:"Optional. Specifies whether to enable precise timestamp. Default value: false."`
-	PreciseTimestampKey    string `comment:"Optional. The generated precise timestamp key. Default value: precise_timestamp."`
-	PreciseTimestampUnit   string `comment:"Optional. The generated precise timestamp unit. Default value: ms."`
+	AlarmIfFail            bool   `comment:"Optional. Specifies whether to trigger an alert if the time information fails to be extracted."`
+	EnablePreciseTimestamp bool   `comment:"Optional. Specifies whether to enable precise timestamp."`
+	PreciseTimestampKey    string `comment:"Optional. The generated precise timestamp key."`
+	PreciseTimestampUnit   string `comment:"Optional. The generated precise timestamp unit."`
 
 	context  ilogtail.Context
 	location *time.Location
