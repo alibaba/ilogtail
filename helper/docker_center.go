@@ -1052,19 +1052,19 @@ func (dc *DockerCenter) cleanTimeoutContainer() {
 
 func (dc *DockerCenter) sweepCache() {
 	// clear unuseful cache
-	usedImageIdSet := make(map[string]bool)
+	usedImageIDSet := make(map[string]bool)
 	{
 		dc.lock.Lock()
 		defer dc.lock.Unlock()
 		for _, container := range dc.containerMap {
-			usedImageIdSet[container.ContainerInfo.Image] = true
+			usedImageIDSet[container.ContainerInfo.Image] = true
 		}
 	}
 	{
 		dc.imageLock.Lock()
 		defer dc.imageLock.Unlock()
 		for key := range dc.imageCache {
-			if _, ok := usedImageIdSet[key]; !ok {
+			if _, ok := usedImageIDSet[key]; !ok {
 				delete(dc.imageCache, key)
 			}
 		}

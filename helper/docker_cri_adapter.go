@@ -446,8 +446,8 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container)
 	// For cri-runtime
 	cw.rootfsLock.Lock()
 	defer cw.rootfsLock.Unlock()
-	containerId := info.ID
-	if dir, ok := cw.rootfsCache[containerId]; ok {
+	containerID := info.ID
+	if dir, ok := cw.rootfsCache[containerID]; ok {
 		return dir
 	}
 
@@ -479,7 +479,7 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container)
 				for _, b := range bDirs {
 					dir := path.Join(a, b, c, info.ID, d)
 					if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
-						cw.rootfsCache[containerId] = dir
+						cw.rootfsCache[containerID] = dir
 						return dir
 					}
 				}
