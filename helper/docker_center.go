@@ -992,13 +992,12 @@ ContainerLoop:
 		var containerDetail *docker.Container
 		for idx := 0; idx < 3; idx++ {
 			if containerDetail, err = dc.client.InspectContainerWithOptions(docker.InspectContainerOptions{ID: container.ID}); err == nil {
-				var exist bool
-				exist, err = util.PathExists(GetMountedFilePath(fmt.Sprintf("/proc/%d/stat", containerDetail.State.Pid)))
-				if err != nil {
-					logger.Error(context.Background(), "DETECT_CONTAINER_ALARM", "err", err)
-				} else if exist {
+				exist := ContainerProcessAlive(containerDetail.State.Pid)
+				if exist {
 					containerMap[container.ID] = dc.CreateInfoDetail(containerDetail, envConfigPrefix, false)
 					continue ContainerLoop
+				} else {
+					logger.Debug(context.Background(), "find container", containerDetail.ID, "pid", containerDetail.State.Pid, "was already stopped")
 				}
 			}
 			time.Sleep(time.Second * 5)

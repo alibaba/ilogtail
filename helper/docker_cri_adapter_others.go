@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build !linux
 // +build !linux
 
 package helper
@@ -47,4 +48,8 @@ func NewCRIRuntimeWrapper(_ *DockerCenter) (*CRIRuntimeWrapper, error) {
 
 func (cw *CRIRuntimeWrapper) run() error {
 	return errUninplemented
+}
+
+func ContainerProcessAlive(pid int) bool {
+	return true
 }
