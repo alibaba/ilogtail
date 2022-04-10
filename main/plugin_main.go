@@ -14,7 +14,6 @@
 
 package main
 
-import "C"
 import (
 	"context"
 	"flag"
@@ -66,7 +65,6 @@ func main() {
 		}
 	}
 	Resume()
-
 	// handle the first shutdown signal gracefully
 	<-signals.SetupSignalHandler()
 	logger.Info(context.Background(), "########################## exit process begin ##########################")
