@@ -987,23 +987,31 @@ func (dc *DockerCenter) fetchAll() error {
 	logger.Debug(context.Background(), "fetch all", containers)
 	var containerMap = make(map[string]*DockerInfoDetail)
 	hasInspectErr := false
-ContainerLoop:
+
 	for _, container := range containers {
 		var containerDetail *docker.Container
 		for idx := 0; idx < 3; idx++ {
 			if containerDetail, err = dc.client.InspectContainerWithOptions(docker.InspectContainerOptions{ID: container.ID}); err == nil {
-				exist := ContainerProcessAlive(containerDetail.State.Pid)
-				if exist {
-					containerMap[container.ID] = dc.CreateInfoDetail(containerDetail, envConfigPrefix, false)
-					continue ContainerLoop
-				} else {
-					logger.Debug(context.Background(), "find container", containerDetail.ID, "pid", containerDetail.State.Pid, "was already stopped")
-				}
+				break
 			}
 			time.Sleep(time.Second * 5)
 		}
-		dc.setLastError(err, "inspect container error "+container.ID)
-		hasInspectErr = true
+		if err == nil {
+			if time.Now().Sub(containerDetail.Created) < DefaultSyncContainersPeriod {
+				containerMap[container.ID] = dc.CreateInfoDetail(containerDetail, envConfigPrefix, false)
+				continue
+			}
+			exist := ContainerProcessAlive(containerDetail.State.Pid)
+			if exist {
+				containerMap[container.ID] = dc.CreateInfoDetail(containerDetail, envConfigPrefix, false)
+				continue
+			} else {
+				logger.Debug(context.Background(), "find container", containerDetail.ID, "pid", containerDetail.State.Pid, "was already stopped")
+			}
+		} else {
+			dc.setLastError(err, "inspect container error "+container.ID)
+			hasInspectErr = true
+		}
 	}
 	dc.updateContainers(containerMap)
 	if !hasInspectErr {

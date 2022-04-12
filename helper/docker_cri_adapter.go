@@ -44,7 +44,7 @@ import (
 const kubeRuntimeAPIVersion = "0.1.0"
 const maxMsgSize = 1024 * 1024 * 16
 
-var DefaultSyncContainersPeriod = time.Second * 2
+var DefaultSyncContainersPeriod = time.Second * 3 // should be same as docker_config_update_interval gflag in C
 var containerdUnixSocket = "/run/containerd/containerd.sock"
 var criRuntimeWrapper *CRIRuntimeWrapper
 
@@ -201,13 +201,18 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(_ context.Context, c *cri.Conta
 			}
 		}
 	}
-	if foundInfo {
+
+	if !foundInfo {
+		logger.Warningf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "can not find container info from CRI::ContainerStatus, containerId: %s", c.GetId())
+		return nil, fmt.Errorf("can not find container info from CRI::ContainerStatus, containerId: %s", c.GetId())
+	}
+	// only check pid for container that is older than DefaultSyncContainersPeriod
+	// to give a chance to collect emphemeral containers
+	if time.Now().UnixNano()-c.CreatedAt > DefaultSyncContainersPeriod.Nanoseconds() {
 		exist := ContainerProcessAlive(int(ci.Pid))
 		if !exist {
 			return nil, fmt.Errorf("find container %s pid %d was already stopped", c.GetId(), ci.Pid)
 		}
-	} else {
-		logger.Warningf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "can not find container info from CRI::ContainerStatus, containerId: %s", c.GetId())
 	}
 
 	labels := c.GetLabels()
@@ -331,12 +336,23 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 }
 
 func (cw *CRIRuntimeWrapper) loopSyncContainers() {
-	listenLoopIntervalStr := os.Getenv("CONTAINERD_LISTEN_LOOP_INTERVAL")
+	listenLoopIntervalSec := 0
+	// Get env in the same order as in C Logtail
+	listenLoopIntervalStr := os.Getenv("docker_config_update_interval")
 	if len(listenLoopIntervalStr) > 0 {
-		listenLoopIntervalSec, _ := strconv.Atoi(listenLoopIntervalStr)
-		if listenLoopIntervalSec > 0 {
-			DefaultSyncContainersPeriod = time.Second * time.Duration(listenLoopIntervalSec)
-		}
+		listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
+	}
+	listenLoopIntervalStr = os.Getenv("ALIYUN_LOGTAIL_DOCKER_CONFIG_UPDATE_INTERVAL")
+	if len(listenLoopIntervalStr) > 0 {
+		listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
+	}
+	// Keep this env var for compatibility
+	listenLoopIntervalStr = os.Getenv("CONTAINERD_LISTEN_LOOP_INTERVAL")
+	if len(listenLoopIntervalStr) > 0 {
+		listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
+	}
+	if listenLoopIntervalSec > 0 {
+		DefaultSyncContainersPeriod = time.Second * time.Duration(listenLoopIntervalSec)
 	}
 	ticker := time.NewTicker(DefaultSyncContainersPeriod)
 	for {
