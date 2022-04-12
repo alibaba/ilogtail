@@ -998,7 +998,7 @@ func (dc *DockerCenter) fetchAll() error {
 			time.Sleep(time.Second * 5)
 		}
 		if err == nil {
-			if time.Now().Sub(containerDetail.Created) < DefaultSyncContainersPeriod {
+			if time.Since(containerDetail.Created) < DefaultSyncContainersPeriod {
 				containerMap[container.ID] = dc.CreateInfoDetail(containerDetail, envConfigPrefix, false)
 				continue
 			}

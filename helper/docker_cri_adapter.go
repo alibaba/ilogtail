@@ -207,7 +207,7 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(_ context.Context, c *cri.Conta
 	}
 	// only check pid for container that is older than DefaultSyncContainersPeriod
 	// to give a chance to collect emphemeral containers
-	if time.Now().UnixNano()-c.CreatedAt > DefaultSyncContainersPeriod.Nanoseconds() {
+	if time.Since(time.Unix(0, c.CreatedAt)) > DefaultSyncContainersPeriod {
 		exist := ContainerProcessAlive(int(ci.Pid))
 		if !exist {
 			return nil, fmt.Errorf("find container %s pid %d was already stopped", c.GetId(), ci.Pid)
