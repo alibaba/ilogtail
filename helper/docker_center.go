@@ -18,9 +18,11 @@ import (
 	"context"
 	"fmt"
 	"hash/fnv"
+	"os"
 	"path"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -581,6 +583,25 @@ func GetDockerCenterInstance() *DockerCenter {
 	onceDocker.Do(func() {
 		// load EnvTags first
 		LoadEnvTags()
+		listenLoopIntervalSec := 0
+		// Get env in the same order as in C Logtail
+		listenLoopIntervalStr := os.Getenv("docker_config_update_interval")
+		if len(listenLoopIntervalStr) > 0 {
+			listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
+		}
+		listenLoopIntervalStr = os.Getenv("ALIYUN_LOGTAIL_DOCKER_CONFIG_UPDATE_INTERVAL")
+		if len(listenLoopIntervalStr) > 0 {
+			listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
+		}
+		// Keep this env var for compatibility
+		listenLoopIntervalStr = os.Getenv("CONTAINERD_LISTEN_LOOP_INTERVAL")
+		if len(listenLoopIntervalStr) > 0 {
+			listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
+		}
+		if listenLoopIntervalSec > 0 {
+			DefaultSyncContainersPeriod = time.Second * time.Duration(listenLoopIntervalSec)
+		}
+
 		dockerCenterInstance = &DockerCenter{}
 		dockerCenterInstance.imageCache = make(map[string]string)
 		dockerCenterInstance.containerMap = make(map[string]*DockerInfoDetail)

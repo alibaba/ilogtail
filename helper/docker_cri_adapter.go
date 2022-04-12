@@ -26,7 +26,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -335,24 +334,6 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 }
 
 func (cw *CRIRuntimeWrapper) loopSyncContainers() {
-	listenLoopIntervalSec := 0
-	// Get env in the same order as in C Logtail
-	listenLoopIntervalStr := os.Getenv("docker_config_update_interval")
-	if len(listenLoopIntervalStr) > 0 {
-		listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
-	}
-	listenLoopIntervalStr = os.Getenv("ALIYUN_LOGTAIL_DOCKER_CONFIG_UPDATE_INTERVAL")
-	if len(listenLoopIntervalStr) > 0 {
-		listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
-	}
-	// Keep this env var for compatibility
-	listenLoopIntervalStr = os.Getenv("CONTAINERD_LISTEN_LOOP_INTERVAL")
-	if len(listenLoopIntervalStr) > 0 {
-		listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
-	}
-	if listenLoopIntervalSec > 0 {
-		DefaultSyncContainersPeriod = time.Second * time.Duration(listenLoopIntervalSec)
-	}
 	ticker := time.NewTicker(DefaultSyncContainersPeriod)
 	for {
 		select {
