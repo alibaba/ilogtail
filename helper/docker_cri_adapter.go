@@ -44,7 +44,6 @@ import (
 const kubeRuntimeAPIVersion = "0.1.0"
 const maxMsgSize = 1024 * 1024 * 16
 
-var DefaultSyncContainersPeriod = time.Second * 3 // should be same as docker_config_update_interval gflag in C
 var containerdUnixSocket = "/run/containerd/containerd.sock"
 var criRuntimeWrapper *CRIRuntimeWrapper
 

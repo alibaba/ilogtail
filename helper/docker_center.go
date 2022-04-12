@@ -42,6 +42,7 @@ var envConfigPrefix = "aliyun_logs_"
 const DockerTimeFormat = "2006-01-02T15:04:05.999999999Z"
 
 var FetchAllInterval = time.Second * time.Duration(300)
+var DefaultSyncContainersPeriod = time.Second * 3 // should be same as docker_config_update_interval gflag in C
 var ContainerInfoTimeoutMax = time.Second * time.Duration(450)
 var ContainerInfoDeletedTimeout = time.Second * time.Duration(30)
 var EventListenerTimeout = time.Second * time.Duration(3600)
