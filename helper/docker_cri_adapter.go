@@ -126,7 +126,7 @@ func parseEndpoint(endpoint string) (string, string, error) {
 		return "unix", u.Path, nil
 
 	case "":
-		return "", "", fmt.Errorf("Using %q as endpoint is deprecated, please consider using full url format", endpoint)
+		return "", "", fmt.Errorf("using %q as endpoint is deprecated, please consider using full url format", endpoint)
 
 	default:
 		return u.Scheme, "", fmt.Errorf("protocol %q not supported", u.Scheme)
@@ -386,27 +386,26 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 func (cw *CRIRuntimeWrapper) sweepCache() {
 	// clear unuseful cache
 	usedCacheItem := make(map[string]bool)
-	{
-		cw.dockerCenter.lock.RLock()
-		defer cw.dockerCenter.lock.RUnlock()
-		for key := range cw.dockerCenter.containerMap {
-			usedCacheItem[key] = true
+	cw.dockerCenter.lock.RLock()
+	for key := range cw.dockerCenter.containerMap {
+		usedCacheItem[key] = true
+	}
+	cw.dockerCenter.lock.RUnlock()
+
+	cw.rootfsLock.Lock()
+	for key := range cw.rootfsCache {
+		if _, ok := usedCacheItem[key]; !ok {
+			delete(cw.rootfsCache, key)
 		}
 	}
-	{
-		cw.rootfsLock.Lock()
-		defer cw.rootfsLock.Unlock()
-		for key := range cw.rootfsCache {
-			if _, ok := usedCacheItem[key]; !ok {
-				delete(cw.rootfsCache, key)
-			}
-		}
-	}
+	cw.rootfsLock.Unlock()
 }
 
 func (cw *CRIRuntimeWrapper) run() error {
+	logger.Init()
 	logger.Info(context.Background(), "CRIRuntime background syncer", "start")
 	_ = cw.fetchAll()
+	logger.Info(context.Background(), "CRIRuntime background syncer", "gogogogo")
 
 	timerFetch := func() {
 		defer dockerCenterRecover()
@@ -450,15 +449,20 @@ func parseContainerInfo(data string) (containerdcriserver.ContainerInfo, error) 
 	return ci, err
 }
 
+func (cw *CRIRuntimeWrapper) lookupRootfsCache(containerID string) string {
+	cw.rootfsLock.RLock()
+	defer cw.rootfsLock.RUnlock()
+	if dir, ok := cw.rootfsCache[containerID]; ok {
+		return dir
+	}
+	return ""
+}
+
 func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container) string {
 	// For cri-runtime
 	containerID := info.ID
-	{
-		cw.rootfsLock.RLock()
-		defer cw.rootfsLock.RUnlock()
-		if dir, ok := cw.rootfsCache[containerID]; ok {
-			return dir
-		}
+	if dir := cw.lookupRootfsCache(containerID); dir != "" {
+		return dir
 	}
 
 	// Example: /run/containerd/io.containerd.runtime.v1.linux/k8s.io/{ContainerID}/rootfs/
@@ -490,8 +494,8 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container)
 					dir := path.Join(a, b, c, info.ID, d)
 					if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
 						cw.rootfsLock.Lock()
-						defer cw.rootfsLock.Unlock()
 						cw.rootfsCache[containerID] = dir
+						cw.rootfsLock.Unlock()
 						return dir
 					}
 				}
