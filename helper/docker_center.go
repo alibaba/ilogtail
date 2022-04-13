@@ -427,7 +427,7 @@ type DockerCenter struct {
 	eventChan     chan *docker.APIEvents
 	eventChanLock sync.Mutex
 
-	imageLock  sync.Mutex
+	imageLock  sync.RWMutex
 	imageCache map[string]string
 
 	lastFetchAllSuccessTime        time.Time
@@ -468,14 +468,18 @@ func (dc *DockerCenter) GetImageName(id, defaultVal string) string {
 	if len(id) == 0 || dc.client == nil {
 		return defaultVal
 	}
-	dc.imageLock.Lock()
-	defer dc.imageLock.Unlock()
-	if imageName, ok := dc.imageCache[id]; ok {
-		return imageName
+	{
+		dc.imageLock.RLock()
+		defer dc.imageLock.RUnlock()
+		if imageName, ok := dc.imageCache[id]; ok {
+			return imageName
+		}
 	}
 	image, err := dc.client.InspectImage(id)
 	logger.Debug(context.Background(), "get image name, id", id, "error", err)
 	if err == nil && image != nil && len(image.RepoTags) > 0 {
+		dc.imageLock.Lock()
+		defer dc.imageLock.Unlock()
 		dc.imageCache[id] = image.RepoTags[0]
 		return image.RepoTags[0]
 	}
@@ -886,7 +890,7 @@ func (dc *DockerCenter) GetAllAcceptedInfoV2(
 
 func (dc *DockerCenter) GetAllSpecificInfo(filter func(*DockerInfoDetail) bool) (infoList []*DockerInfoDetail) {
 	dc.lock.RLock()
-	defer dc.lock.Unlock()
+	defer dc.lock.RUnlock()
 	for _, info := range dc.containerMap {
 		if filter(info) {
 			infoList = append(infoList, info)
@@ -1054,8 +1058,8 @@ func (dc *DockerCenter) sweepCache() {
 	// clear unuseful cache
 	usedImageIDSet := make(map[string]bool)
 	{
-		dc.lock.Lock()
-		defer dc.lock.Unlock()
+		dc.lock.RLock()
+		defer dc.lock.RUnlock()
 		for _, container := range dc.containerMap {
 			usedImageIDSet[container.ContainerInfo.Image] = true
 		}

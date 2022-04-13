@@ -59,7 +59,7 @@ type CRIRuntimeWrapper struct {
 
 	stopCh <-chan struct{}
 
-	rootfsLock  sync.Mutex
+	rootfsLock  sync.RWMutex
 	rootfsCache map[string]string
 }
 
@@ -385,13 +385,21 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 
 func (cw *CRIRuntimeWrapper) sweepCache() {
 	// clear unuseful cache
-	cw.dockerCenter.lock.Lock()
-	defer cw.dockerCenter.lock.Unlock()
-	cw.rootfsLock.Lock()
-	defer cw.rootfsLock.Unlock()
-	for key := range cw.rootfsCache {
-		if _, ok := cw.dockerCenter.containerMap[key]; !ok {
-			delete(cw.rootfsCache, key)
+	usedCacheItem := make(map[string]bool)
+	{
+		cw.dockerCenter.lock.RLock()
+		defer cw.dockerCenter.lock.RUnlock()
+		for key := range cw.dockerCenter.containerMap {
+			usedCacheItem[key] = true
+		}
+	}
+	{
+		cw.rootfsLock.Lock()
+		defer cw.rootfsLock.Unlock()
+		for key := range cw.rootfsCache {
+			if _, ok := usedCacheItem[key]; !ok {
+				delete(cw.rootfsCache, key)
+			}
 		}
 	}
 }
@@ -444,11 +452,13 @@ func parseContainerInfo(data string) (containerdcriserver.ContainerInfo, error) 
 
 func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container) string {
 	// For cri-runtime
-	cw.rootfsLock.Lock()
-	defer cw.rootfsLock.Unlock()
 	containerID := info.ID
-	if dir, ok := cw.rootfsCache[containerID]; ok {
-		return dir
+	{
+		cw.rootfsLock.RLock()
+		defer cw.rootfsLock.RUnlock()
+		if dir, ok := cw.rootfsCache[containerID]; ok {
+			return dir
+		}
 	}
 
 	// Example: /run/containerd/io.containerd.runtime.v1.linux/k8s.io/{ContainerID}/rootfs/
@@ -479,6 +489,8 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container)
 				for _, b := range bDirs {
 					dir := path.Join(a, b, c, info.ID, d)
 					if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
+						cw.rootfsLock.Lock()
+						defer cw.rootfsLock.Unlock()
 						cw.rootfsCache[containerID] = dir
 						return dir
 					}
