@@ -449,19 +449,17 @@ func parseContainerInfo(data string) (containerdcriserver.ContainerInfo, error) 
 	return ci, err
 }
 
-func (cw *CRIRuntimeWrapper) lookupRootfsCache(containerID string) string {
+func (cw *CRIRuntimeWrapper) lookupRootfsCache(containerID string) (string, bool) {
 	cw.rootfsLock.RLock()
 	defer cw.rootfsLock.RUnlock()
-	if dir, ok := cw.rootfsCache[containerID]; ok {
-		return dir
-	}
-	return ""
+	dir, ok := cw.rootfsCache[containerID]
+	return dir, ok
 }
 
 func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container) string {
 	// For cri-runtime
 	containerID := info.ID
-	if dir := cw.lookupRootfsCache(containerID); dir != "" {
+	if dir, ok := cw.lookupRootfsCache(containerID); ok {
 		return dir
 	}
 

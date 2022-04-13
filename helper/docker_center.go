@@ -464,20 +464,18 @@ func (dc *DockerCenter) UnRegisterEventListener(c chan *docker.APIEvents) {
 	dc.eventChan = nil
 }
 
-func (dc *DockerCenter) lookupImageCache(id string) string {
+func (dc *DockerCenter) lookupImageCache(id string) (string, bool) {
 	dc.imageLock.RLock()
 	defer dc.imageLock.RUnlock()
-	if imageName, ok := dc.imageCache[id]; ok {
-		return imageName
-	}
-	return ""
+	imageName, ok := dc.imageCache[id]
+	return imageName, ok
 }
 
 func (dc *DockerCenter) GetImageName(id, defaultVal string) string {
 	if len(id) == 0 || dc.client == nil {
 		return defaultVal
 	}
-	if imageName := dc.lookupImageCache(id); imageName != "" {
+	if imageName, ok := dc.lookupImageCache(id); ok {
 		return imageName
 	}
 
@@ -613,7 +611,7 @@ func GetDockerCenterInstance() *DockerCenter {
 			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "run docker center instance error")
 		}
 		if criRuntimeWrapper != nil {
-			criRuntimeWrapper.run()
+			_ = criRuntimeWrapper.run()
 		}
 
 		if isStaticContainerInfoEnabled() {
