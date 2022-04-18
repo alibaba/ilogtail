@@ -121,7 +121,7 @@ gocdocker: clean
 vendor: clean
 	rm -rf vendor
 	$(GO) mod vendor
-	python3 ./external/sync_vendor.py
+	./external/sync_vendor.py
 
 .PHONY: check-dependency-licenses
 check-dependency-licenses: clean
