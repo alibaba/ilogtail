@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux
 // +build linux
 
 package helper
@@ -66,20 +67,43 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 	if len(os.Getenv("USE_CONTAINERD")) > 0 {
 		return true
 	}
-	// Verify docker.sock existence.
-	for _, sock := range []string{"/var/run/docker.sock", "/run/docker.sock"} {
-		if fi, err := os.Stat(sock); err == nil && !fi.IsDir() {
-			return false
-		}
-	}
 
 	stat, err := os.Stat(criRuntimeEndpoint)
 	if err != nil || stat.IsDir() {
 		return false
 	}
 
-	//TODO: make a cri client and test version() @jiangbo
-
+	// Verify docker.sock existence.
+	hasDockerSock := false
+	for _, sock := range []string{"/var/run/docker.sock", "/run/docker.sock"} {
+		if fi, err := os.Stat(sock); err == nil && !fi.IsDir() {
+			hasDockerSock = true
+		}
+	}
+	if !hasDockerSock {
+		return true
+	} else {
+		dockerClient, err := docker.NewClientFromEnv()
+		dockerClient.SetTimeout(DockerCenterTimeout)
+		containers, err := dockerClient.ListContainers(docker.ListContainersOptions{})
+		logger.Info(context.Background(), "fetch all", containers)
+		hasLogtailds := false
+		for _, container := range containers {
+			var containerDetail *docker.Container
+			for idx := 0; idx < 3; idx++ {
+				if containerDetail, err = dockerClient.InspectContainerWithOptions(docker.InspectContainerOptions{ID: container.ID}); err == nil {
+					if strings.Contains(containerDetail.Name, "logtail-ds") {
+						hasLogtailds = true
+						break
+					}
+				}
+				time.Sleep(time.Second * 5)
+			}
+		}
+		if hasLogtailds {
+			return false
+		}
+	}
 	return true
 }
 
