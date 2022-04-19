@@ -85,19 +85,21 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 	} else {
 		dockerClient, err := docker.NewClientFromEnv()
 		dockerClient.SetTimeout(DockerCenterTimeout)
+		if err != nil {
+			return true
+		}
 		containers, err := dockerClient.ListContainers(docker.ListContainersOptions{})
+		if err != nil {
+			return true
+		}
 		logger.Info(context.Background(), "fetch all", containers)
 		hasLogtailds := false
 		for _, container := range containers {
-			var containerDetail *docker.Container
-			for idx := 0; idx < 3; idx++ {
-				if containerDetail, err = dockerClient.InspectContainerWithOptions(docker.InspectContainerOptions{ID: container.ID}); err == nil {
-					if strings.Contains(containerDetail.Name, "logtail-ds") {
-						hasLogtailds = true
-						break
-					}
+			for _, name := range container.Names {
+				if strings.Contains(name, "logtail-ds") {
+					hasLogtailds = true
+					break
 				}
-				time.Sleep(time.Second * 5)
 			}
 		}
 		if hasLogtailds {
