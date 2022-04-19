@@ -80,9 +80,7 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 			hasDockerSock = true
 		}
 	}
-	if !hasDockerSock {
-		return true
-	} else {
+	if hasDockerSock {
 		dockerClient, err := docker.NewClientFromEnv()
 		if err != nil {
 			return true
