@@ -93,17 +93,14 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 		hasLogtailds := false
 		for _, container := range containers {
 			for _, name := range container.Names {
-				if strings.Contains(name, "logtail-ds") {
+				if strings.HasPrefix(name, "/k8s_logtail_logtail-ds-") {
 					hasLogtailds = true
 					break
 				}
 			}
 			if hasLogtailds {
-				break
+				return false
 			}
-		}
-		if hasLogtailds {
-			return false
 		}
 	}
 	return true
