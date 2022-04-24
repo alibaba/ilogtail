@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -81,6 +82,7 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 	for _, sock := range []string{dockerUnixSocket1, dockerUnixSocket2} {
 		if fi, err := os.Stat(sock); err == nil && !fi.IsDir() {
 			hasDockerSock = true
+			break
 		}
 	}
 	if hasDockerSock {
@@ -93,7 +95,6 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 		if err != nil {
 			return true
 		}
-		hasRunningContainersByK8s := false
 		// naming rules: containerNamePrefix_containerName_PodFullName_namespace_PodUID_restartCount
 		// example:
 		// k8s_logtail_logtail-ds-vf6gm_kube-system_b770a8a8-9c2c-423a-b79a-7997d08bc724_0
@@ -101,19 +102,22 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 		for _, container := range containers {
 			for _, name := range container.Names {
 				if strings.HasPrefix(name, "/k8s_POD_") {
-					suffixName := strings.Split(name, "/k8s_POD_")[1]
+					// extract PodFullName_namespace_PodUID
+					nameRegexp := regexp.MustCompile(`^/k8s_POD_(.*)_\d+$`)
+					matchs := nameRegexp.FindStringSubmatch(name)
+					if matchs == nil || len(matchs) != 2 {
+						continue
+					}
+					suffixName := matchs[1]
 					for _, subContainer := range containers {
 						for _, subName := range subContainer.Names {
-							if strings.Contains(subName, suffixName) {
-								hasRunningContainersByK8s = true
-								break
+							if strings.Contains(subName, suffixName) && subName != name {
+								// has running container by k8s
+								return false
 							}
 						}
 					}
 				}
-			}
-			if hasRunningContainersByK8s {
-				return false
 			}
 		}
 	}
