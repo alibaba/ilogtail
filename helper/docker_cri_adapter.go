@@ -45,6 +45,9 @@ const maxMsgSize = 1024 * 1024 * 16
 
 var DefaultSyncContainersPeriod = time.Second * 10
 var containerdUnixSocket = "/run/containerd/containerd.sock"
+var dockerUnixSocket1 = "/var/run/docker.sock"
+var dockerUnixSocket2 = "/run/docker.sock"
+
 var criRuntimeWrapper *CRIRuntimeWrapper
 
 var defaultContainerDFlag atomic.Int32
@@ -75,7 +78,7 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 
 	// Verify docker.sock existence.
 	hasDockerSock := false
-	for _, sock := range []string{"/var/run/docker.sock", "/run/docker.sock"} {
+	for _, sock := range []string{dockerUnixSocket1, dockerUnixSocket2} {
 		if fi, err := os.Stat(sock); err == nil && !fi.IsDir() {
 			hasDockerSock = true
 		}
@@ -90,15 +93,26 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 		if err != nil {
 			return true
 		}
-		hasLogtailds := false
+		hasRunningContainersByK8s := false
+		// naming rules: containerNamePrefix_containerName_PodFullName_namespace_PodUID_restartCount
+		// example:
+		// k8s_logtail_logtail-ds-vf6gm_kube-system_b770a8a8-9c2c-423a-b79a-7997d08bc724_0
+		// k8s_POD_logtail-ds-vf6gm_kube-system_b770a8a8-9c2c-423a-b79a-7997d08bc724_0
 		for _, container := range containers {
 			for _, name := range container.Names {
-				if strings.HasPrefix(name, "/k8s_logtail_logtail-ds-") {
-					hasLogtailds = true
-					break
+				if strings.HasPrefix(name, "/k8s_POD_") {
+					suffixName := strings.Split(name, "/k8s_POD_")[1]
+					for _, subContainer := range containers {
+						for _, subName := range subContainer.Names {
+							if strings.Contains(subName, suffixName) {
+								hasRunningContainersByK8s = true
+								break
+							}
+						}
+					}
 				}
 			}
-			if hasLogtailds {
+			if hasRunningContainersByK8s {
 				return false
 			}
 		}
