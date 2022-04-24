@@ -144,7 +144,7 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 	m.icmpPrivileged = true
 
 	m.resultChannel = make(chan *Result, 100)
-	m.timeout = time.Duration(time.Duration(m.TimeoutSeconds) * time.Second)
+	m.timeout = time.Duration(m.TimeoutSeconds) * time.Second
 	logger.Info(context.GetRuntimeContext(),
 		"netping init result, hasConfig: ", m.hasConfig, " localIP: ", localIP, " timeout: ", m.timeout, " interval: ", m.IntervalSeconds)
 
