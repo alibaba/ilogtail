@@ -81,9 +81,11 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 		}
 	}
 
-	// Verify containerd.sock existence.
-	if fi, err := os.Stat(criRuntimeEndpoint); err == nil && !fi.IsDir() && IsCRIStatusValid(criRuntimeEndpoint) {
-		return true
+	// Verify containerd.sock cri valid.
+	if fi, err := os.Stat(criRuntimeEndpoint); err == nil && !fi.IsDir() {
+		if IsCRIStatusValid(criRuntimeEndpoint) {
+			return true
+		}
 	}
 	return false
 }
@@ -93,7 +95,6 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 	if err != nil {
 		return false
 	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -103,8 +104,20 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 	}
 
 	client := cri.NewRuntimeServiceClient(conn)
+	// check cri status
 	_, err = client.Status(ctx, &cri.StatusRequest{})
-	return err == nil
+	if err != nil {
+		return false
+	}
+	// check running containers
+	containersResp, err := client.ListContainers(ctx, &cri.ListContainersRequest{Filter: nil})
+	if err != nil {
+		return false
+	}
+	if containersResp.Containers != nil {
+		return true
+	}
+	return false
 }
 
 // GetAddressAndDialer returns the address parsed from the given endpoint and a dialer.
