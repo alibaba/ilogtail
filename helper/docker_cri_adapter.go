@@ -26,7 +26,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -48,6 +47,8 @@ var DefaultSyncContainersPeriod = time.Second * 10
 var containerdUnixSocket = "/run/containerd/containerd.sock"
 var dockerUnixSocket1 = "/var/run/docker.sock"
 var dockerUnixSocket2 = "/run/docker.sock"
+var dockerShimUnixSocket1 = "/var/run/dockershim.sock"
+var dockerShimUnixSocket2 = "/run/dockershim.sock"
 
 var criRuntimeWrapper *CRIRuntimeWrapper
 
@@ -77,6 +78,23 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 		return false
 	}
 
+	// Verify dockershim.sock existence.
+	for _, sock := range []string{dockerShimUnixSocket1, dockerShimUnixSocket2} {
+		if fi, err := os.Stat(sock); err == nil && !fi.IsDir() {
+			// Having dockershim.sock means k8s + docker cri
+			return false
+		}
+	}
+
+	// Verify containerd.sock existence.
+	hasContainerdSock := false
+	if fi, err := os.Stat(criRuntimeEndpoint); err == nil && !fi.IsDir() {
+		hasContainerdSock = true
+	}
+	if !hasContainerdSock {
+		return false
+	}
+
 	// Verify docker.sock existence.
 	hasDockerSock := false
 	for _, sock := range []string{dockerUnixSocket1, dockerUnixSocket2} {
@@ -85,41 +103,34 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 			break
 		}
 	}
-	if hasDockerSock {
-		dockerClient, err := docker.NewClientFromEnv()
-		if err != nil {
-			return true
-		}
-		dockerClient.SetTimeout(DockerCenterTimeout)
-		containers, err := dockerClient.ListContainers(docker.ListContainersOptions{})
-		if err != nil {
-			return true
-		}
-		// naming rules: containerNamePrefix_containerName_PodFullName_namespace_PodUID_restartCount
-		// example:
-		// k8s_logtail_logtail-ds-vf6gm_kube-system_b770a8a8-9c2c-423a-b79a-7997d08bc724_0
-		// k8s_POD_logtail-ds-vf6gm_kube-system_b770a8a8-9c2c-423a-b79a-7997d08bc724_0
-		for _, container := range containers {
-			for _, name := range container.Names {
-				if strings.HasPrefix(name, "/k8s_POD_") {
-					// extract PodFullName_namespace_PodUID
-					nameRegexp := regexp.MustCompile(`^/k8s_POD_(.*)_\d+$`)
-					matchs := nameRegexp.FindStringSubmatch(name)
-					if matchs == nil || len(matchs) != 2 {
-						continue
-					}
-					suffixName := matchs[1]
-					for _, subContainer := range containers {
-						for _, subName := range subContainer.Names {
-							if strings.Contains(subName, suffixName) && subName != name {
-								// has running container by k8s
-								return false
-							}
-						}
-					}
-				}
-			}
-		}
+	if !hasDockerSock {
+		return true
+	}
+
+	if IsCRIStatusValid(criRuntimeEndpoint) {
+		return true
+	}
+	return false
+}
+
+func IsCRIStatusValid(criRuntimeEndpoint string) bool {
+	addr, dailer, err := GetAddressAndDialer("unix://" + criRuntimeEndpoint)
+	if err != nil {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	conn, err := grpc.DialContext(ctx, addr, grpc.WithInsecure(), grpc.WithDialer(dailer), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*16))) //nolint:staticcheck
+	if err != nil {
+		return false
+	}
+
+	client := cri.NewRuntimeServiceClient(conn)
+	_, err = client.Status(ctx, &cri.StatusRequest{})
+	if err != nil {
+		return false
 	}
 	return true
 }
