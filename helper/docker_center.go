@@ -594,9 +594,11 @@ func GetDockerCenterInstance() *DockerCenter {
 		if IsCRIRuntimeValid(containerdUnixSocket) {
 			var err error
 			criRuntimeWrapper, err = NewCRIRuntimeWrapper(dockerCenterInstance)
-			logger.Infof(context.Background(), "[CRIRuntime] cri-runtime is valid, creating cri-runtime client... error: %v", err)
 			if err != nil {
+				logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "[CRIRuntime] creare cri-runtime client error: %v", err)
 				criRuntimeWrapper = nil
+			} else {
+				logger.Infof(context.Background(), "[CRIRuntime] create cri-runtime client successfully")
 			}
 		}
 		if ok, err := util.PathExists(DefaultLogtailMountPath); err == nil {
@@ -607,11 +609,15 @@ func GetDockerCenterInstance() *DockerCenter {
 		} else {
 			logger.Warning(context.Background(), "check docker mount path error", err.Error())
 		}
-		if err := dockerCenterInstance.run(); err != nil {
-			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "run docker center instance error")
-		}
+
 		if criRuntimeWrapper != nil {
-			_ = criRuntimeWrapper.run()
+			if err := criRuntimeWrapper.run(); err != nil {
+				logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "run cri runtime instance error")
+			}
+		} else {
+			if err := dockerCenterInstance.run(); err != nil {
+				logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "run docker center instance error")
+			}
 		}
 
 		if isStaticContainerInfoEnabled() {
