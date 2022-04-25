@@ -73,11 +73,6 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 		return true
 	}
 
-	stat, err := os.Stat(criRuntimeEndpoint)
-	if err != nil || stat.IsDir() {
-		return false
-	}
-
 	// Verify dockershim.sock existence.
 	for _, sock := range []string{dockerShimUnixSocket1, dockerShimUnixSocket2} {
 		if fi, err := os.Stat(sock); err == nil && !fi.IsDir() {
