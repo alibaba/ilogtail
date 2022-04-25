@@ -82,27 +82,7 @@ func IsCRIRuntimeValid(criRuntimeEndpoint string) bool {
 	}
 
 	// Verify containerd.sock existence.
-	hasContainerdSock := false
-	if fi, err := os.Stat(criRuntimeEndpoint); err == nil && !fi.IsDir() {
-		hasContainerdSock = true
-	}
-	if !hasContainerdSock {
-		return false
-	}
-
-	// Verify docker.sock existence.
-	hasDockerSock := false
-	for _, sock := range []string{dockerUnixSocket1, dockerUnixSocket2} {
-		if fi, err := os.Stat(sock); err == nil && !fi.IsDir() {
-			hasDockerSock = true
-			break
-		}
-	}
-	if !hasDockerSock {
-		return true
-	}
-
-	if IsCRIStatusValid(criRuntimeEndpoint) {
+	if fi, err := os.Stat(criRuntimeEndpoint); err == nil && !fi.IsDir() && IsCRIStatusValid(criRuntimeEndpoint) {
 		return true
 	}
 	return false
