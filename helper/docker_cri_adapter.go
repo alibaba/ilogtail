@@ -45,8 +45,6 @@ const maxMsgSize = 1024 * 1024 * 16
 
 var DefaultSyncContainersPeriod = time.Second * 10
 var containerdUnixSocket = "/run/containerd/containerd.sock"
-var dockerUnixSocket1 = "/var/run/docker.sock"
-var dockerUnixSocket2 = "/run/docker.sock"
 var dockerShimUnixSocket1 = "/var/run/dockershim.sock"
 var dockerShimUnixSocket2 = "/run/dockershim.sock"
 
