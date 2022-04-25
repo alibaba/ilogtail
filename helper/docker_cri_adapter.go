@@ -124,10 +124,7 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 
 	client := cri.NewRuntimeServiceClient(conn)
 	_, err = client.Status(ctx, &cri.StatusRequest{})
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 // GetAddressAndDialer returns the address parsed from the given endpoint and a dialer.
