@@ -113,6 +113,9 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 		}
 		time.Sleep(time.Millisecond * 100)
 	}
+	if err != nil {
+		return false
+	}
 	// check running containers
 	for tryCount := 0; tryCount < 5; tryCount++ {
 		containersResp, err := client.ListContainers(ctx, &cri.ListContainersRequest{Filter: nil})
