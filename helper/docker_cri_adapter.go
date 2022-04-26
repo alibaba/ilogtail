@@ -111,7 +111,7 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 		if strings.Contains(err.Error(), "code = Unimplemented") {
 			return false
 		}
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Millisecond * 100)
 	}
 	// check running containers
 	for tryCount := 0; tryCount < 5; tryCount++ {
@@ -119,7 +119,7 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 		if err == nil {
 			return containersResp.Containers != nil
 		}
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Millisecond * 100)
 	}
 	return false
 }
