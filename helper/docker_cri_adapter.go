@@ -93,7 +93,7 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 	if err != nil {
 		return false
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithInsecure(), grpc.WithDialer(dailer), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*16))) //nolint:staticcheck
