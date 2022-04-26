@@ -103,17 +103,23 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 
 	client := cri.NewRuntimeServiceClient(conn)
 	// check cri status
-	_, err = client.Status(ctx, &cri.StatusRequest{})
-	if err != nil {
-		return false
+	for tryCount := 0; tryCount < 5; tryCount++ {
+		_, err = client.Status(ctx, &cri.StatusRequest{})
+		if err == nil {
+			break
+		}
+		if strings.Contains(err.Error(), "code = Unimplemented") {
+			return false
+		}
+		time.Sleep(time.Second * 5)
 	}
 	// check running containers
-	containersResp, err := client.ListContainers(ctx, &cri.ListContainersRequest{Filter: nil})
-	if err != nil {
-		return false
-	}
-	if containersResp.Containers != nil {
-		return true
+	for tryCount := 0; tryCount < 5; tryCount++ {
+		containersResp, err := client.ListContainers(ctx, &cri.ListContainersRequest{Filter: nil})
+		if err == nil {
+			return containersResp.Containers != nil
+		}
+		time.Sleep(time.Second * 5)
 	}
 	return false
 }
