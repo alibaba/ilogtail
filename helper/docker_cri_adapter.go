@@ -102,6 +102,7 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 	}
 
 	client := cri.NewRuntimeServiceClient(conn)
+
 	// check cri status
 	_, err = client.Status(ctx, &cri.StatusRequest{})
 	if err != nil {
