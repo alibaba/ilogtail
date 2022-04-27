@@ -63,6 +63,7 @@ func (p *FlusherStdout) Init(context ilogtail.Context) error {
 	pattern := ""
 	if p.OnlyStdout {
 		pattern = "<console/>"
+		logger.CloseCatchStdout()
 	} else if p.FileName != "" {
 		pattern = `<rollingfile type="size" filename="%s" maxsize="%d" maxrolls="%d"/>`
 		if p.MaxSize <= 0 {
@@ -134,7 +135,10 @@ func (p *FlusherStdout) Flush(projectName string, logstoreName string, configNam
 	return nil
 }
 
-func (*FlusherStdout) SetUrgent(flag bool) {
+func (p *FlusherStdout) SetUrgent(flag bool) {
+	if p.outLogger != nil {
+		p.outLogger.Close()
+	}
 }
 
 // IsReady is ready to flush

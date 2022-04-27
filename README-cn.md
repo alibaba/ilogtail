@@ -48,6 +48,14 @@ iLogtail 为可观测场景而生，拥有的轻量级、高性能、自动化�
 make build && sh bin/ilogtail
 ```
 
+> **注意**: 对一些高版本Linux需要提前安装systemd-devel
+> ```shell
+> #centos
+> yum install systemd-devel
+> 
+> #ubuntu
+> apt-get update && apt-get install -y libsystemd-dev
+> ```
 2、阿里云启动
 
 请阅读此 [doc](https://help.aliyun.com/document_detail/65018.html)。
@@ -60,10 +68,15 @@ make build && sh bin/ilogtail
 - [Processor 插件](./docs/zh/guides/How-to-write-processor-plugins.md)
 - [Aggregator 插件](./docs/zh/guides/How-to-write-aggregator-plugins.md)
 - [Flusher 插件](./docs/zh/guides/How-to-write-flusher-plugins.md)
+## iLogtail 性能测试
+- [容器场景iLogtail 与Filebeat 性能对比测试](./docs/zh/performance/Performance-compare-with-filebeat.md)
 
-# 使用案例
-
-- [ilogtail使用案例](./docs/zh/usecases/README.md)
+## iLogtail 使用案例
+- [iLogtail使用入门-主机环境日志采集到SLS](./docs/zh/usecases/How-to-setup-on-host.md)
+- [iLogtail使用入门-K8S环境日志采集到SLS](./docs/zh/usecases/How-to-setup-in-k8s-environment.md)
+- [iLogtail使用入门-iLogtail本地配置模式部署(For Kafka Flusher)](./docs/zh/usecases/How-to-local-deploy-kafka-flusher.md)
+- [iLogtail使用入门-如何采集Prometheus Exporter数据](./docs/zh/usecases/How-to-use-prometheus-fetcher.md)
+- [iLogtail使用入门-如何采集 Telegraf 数据](./docs/zh/usecases/How-to-use-telegraf-receiver.md)
 
 # 贡献
 
@@ -75,12 +88,12 @@ make build && sh bin/ilogtail
 # 联系我们
 您可以通过[Github Issues](https://github.com/alibaba/ilogtail/issues) 报告bug、提出建议或参与讨论，或通过以下方式联系我们：
 
-- 钉钉：33867413
+- 钉钉：iLogtail社区
 - 微信：日志服务
 - 哔哩哔哩：[阿里云SLS](https://space.bilibili.com/630680534?from=search&seid=2845737427240690794&spm_id_from=333.337.0.0)
 - 知乎：[阿里云日志服务](https://www.zhihu.com/people/a-li-yun-ri-zhi-fu-wu)
 
-<img src="https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail-contact.png?versionId=CAEQMxiBgIC.jPui6RciIDhlNzVjYmQ5OTIwNzQ4NTBiMzk1YTgyN2VkNmU5MDBi" alt="ilogtail logo" style="width: 100%; height: 100%" />
+<img src="https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail-contact.png?versionId=CAEQOhiBgICQkM6b8xciIDcxZTU5M2FjMDAzODQ1Njg5NjI3ZDc4M2FhOTZkNWNk" style="width: 100%; height: 100%" />
 
 # 我们的用户
 

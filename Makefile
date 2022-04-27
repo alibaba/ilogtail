@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION ?= latest
+VERSION ?= github-latest
 DOCKER_TYPE ?= default
+DOCKER_PUSH ?= false
+DOCKER_REPOSITORY ?= aliyun/ilogtail
+
 SCOPE ?= .
 BINARY = logtail-plugin
 
@@ -91,28 +94,28 @@ gocbuild: clean
 
 .PHONY: docker
 docker: clean
-	./scripts/docker-build.sh $(VERSION) $(DOCKER_TYPE)
+	./scripts/docker-build.sh $(VERSION) $(DOCKER_TYPE) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
 # coveragedocker compile with goc to analysis the coverage in e2e testing
 coveragedocker: clean
-	./scripts/docker-build.sh $(VERSION) coverage
+	./scripts/docker-build.sh $(VERSION) coverage $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
 # provide base environment for ilogtail
 basedocker: clean
-	./scripts/docker-build.sh $(VERSION) base
+	./scripts/docker-build.sh $(VERSION) base $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+
+.PHONY: wholedocker
+wholedocker: clean
+	./scripts/docker-build.sh $(VERSION) whole $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+
+.PHONY: solib
+solib: clean
+	./scripts/docker-build.sh $(VERSION) lib "aliyun/ilogtail" false && ./scripts/solib.sh
 
 # provide a goc server for e2e testing
 .PHONY: gocdocker
 gocdocker: clean
 	docker build -t goc-server:latest  --no-cache . -f ./docker/Dockerfile_goc
-
-.PHONY: wholedocker
-wholedocker: clean
-	./scripts/docker-build.sh $(VERSION) whole
-
-.PHONY: solib
-solib: clean
-	./scripts/docker-build.sh $(VERSION) lib && ./scripts/solib.sh
 
 .PHONY: vendor
 vendor: clean
@@ -123,6 +126,10 @@ vendor: clean
 .PHONY: check-dependency-licenses
 check-dependency-licenses: clean
 	./scripts/dependency_licenses.sh main LICENSE_OF_ILOGTAIL_DEPENDENCIES.md && ./scripts/dependency_licenses.sh test LICENSE_OF_TESTENGINE_DEPENDENCIES.md
+
+.PHONY: docs
+docs: clean build
+	./bin/ilogtail --doc
 
 .PHONY: e2e-docs
 e2e-docs: clean
@@ -150,10 +157,14 @@ test-e2e-engine: clean gocdocker coveragedocker
 test: clean
 	cp pkg/logtail/libPluginAdapter.so ./main
 	cp pkg/logtail/PluginAdapter.dll ./main
-	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig"| grep -Ev "main|pluginmanager") -coverprofile .testCoverage.txt
+	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
+	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|(input\/prometheus)"| grep -Ev "main|pluginmanager") -coverprofile .testCoverage.txt
+	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 
 .PHONY: core-test
 core-test: clean
 	cp pkg/logtail/libPluginAdapter.so ./main
 	cp pkg/logtail/PluginAdapter.dll ./main
-	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig"| grep -E "main|pluginmanager") -coverprofile .coretestCoverage.txt
+	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
+	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|()"| grep -E "main|pluginmanager") -coverprofile .coretestCoverage.txt
+	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go

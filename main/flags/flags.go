@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"sync"
 
@@ -42,6 +43,8 @@ var (
 	Cpuprofile       = flag.String("cpu-profile", "cpu.prof", "write cpu profile to file.")
 	Memprofile       = flag.String("mem-profile", "mem.prof", "write mem profile to file.")
 	HTTPAddr         = flag.String("server", ":18689", "http server address.")
+	Doc              = flag.Bool("doc", false, "generate plugin docs")
+	DocPath          = flag.String("docpath", "./docs/en/plugins", "generate plugin docs")
 )
 
 var (
@@ -51,16 +54,39 @@ var (
 )
 
 // LoadConfig read the plugin content.
-func LoadConfig() (pluginCfg, globalCfg string) {
-	if gCfg, err := ioutil.ReadFile(*GlobalConfig); err != nil {
+func LoadConfig() (globalCfg string, pluginCfgs []string, err error) {
+	if gCfg, errRead := ioutil.ReadFile(*GlobalConfig); errRead != nil {
 		globalCfg = defaultGlobalConfig
 	} else {
 		globalCfg = string(gCfg)
 	}
-	if pCfg, err := ioutil.ReadFile(*PluginConfig); err == nil {
+
+	if !json.Valid([]byte(globalCfg)) {
+		err = fmt.Errorf("illegal input global config:%s", globalCfg)
+		return
+	}
+
+	var pluginCfg string
+	if pCfg, errRead := ioutil.ReadFile(*PluginConfig); errRead == nil {
 		pluginCfg = string(pCfg)
 	} else {
 		pluginCfg = defaultPluginConfig
+	}
+
+	if !json.Valid([]byte(pluginCfg)) {
+		err = fmt.Errorf("illegal input plugin config:%s", pluginCfg)
+		return
+	}
+
+	var cfgs []map[string]interface{}
+	errUnmarshal := json.Unmarshal([]byte(pluginCfg), &cfgs)
+	if errUnmarshal != nil {
+		pluginCfgs = append(pluginCfgs, pluginCfg)
+		return
+	}
+	for _, cfg := range cfgs {
+		bytes, _ := json.Marshal(cfg)
+		pluginCfgs = append(pluginCfgs, string(bytes))
 	}
 	return
 }
