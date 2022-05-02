@@ -1,0 +1,81 @@
+{
+    "inputs": [
+      {
+        "type": "metric_mock",
+        "detail": {
+          "Fields": {
+            "1111": "2222"
+          }
+        }
+      }
+    ],
+    "processors": [
+      {
+        "type": "processor_fields_with_condition",
+        "detail": {
+            "DropIfNotMatchCondition": true, 
+            "Switch":
+            [
+                {
+                    "Case":
+                    {
+                        "LogicalOperator": "and",
+                        "RelationOperator": "regexp",
+                        "FieldConditions":
+                        {
+                            "key1": "^value1.*",
+                            "key2": "value1"
+                        }
+                    },
+                    "Action": {
+                        "IgnoreIfExist": false,
+                        "AddFields":
+                        {
+                          "eventCode": "event_00001",
+                          "name": "error_oom"
+                        },
+                        "DropKeys":
+                        [
+                          "aaa1",
+                          "aaa2"
+                        ]
+                    }
+                },
+                {
+                    "Case":
+                    {
+                        "LogicalOperator": "and",
+                        "RelationOperator": "regexp",
+                        "FieldConditions":
+                        {
+                            "key1": "^value2.*",
+                            "key2": "value2"
+                        }
+                    },
+                    "Action": {
+                        "IgnoreIfExist": false,
+                        "AddFields":
+                        {
+                          "eventCode": "event_00002",
+                          "name": "error_oom2"
+                        },
+                        "DropKeys":
+                        [
+                          "aaa1",
+                          "aaa2"
+                        ]
+                    }
+                }
+            ]
+        }
+      }
+    ],
+    "flushers": [
+      {
+        "type": "flusher_stdout",
+        "detail": {
+          "OnlyStdout": true
+        }
+      }
+    ]
+  }
