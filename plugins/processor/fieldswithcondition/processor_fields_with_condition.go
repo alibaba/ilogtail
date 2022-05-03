@@ -132,7 +132,7 @@ func (p *ProcessorFieldsWithCondition) isCaseMatch(log *protocol.Log, conditionC
 				}
 			}
 		}
-		if conditionCase.LogicalOperator == LogicalOperatorAnd && includeCount == len(conditionCase.FieldConditions) {
+		if conditionCase.LogicalOperator == LogicalOperatorAnd && includeCount == len(conditionCase.fieldConditionFields) {
 			return true
 		}
 		if conditionCase.LogicalOperator == LogicalOperatorOr && includeCount > 0 {
@@ -145,40 +145,44 @@ func (p *ProcessorFieldsWithCondition) isCaseMatch(log *protocol.Log, conditionC
 //prcess action
 func (p *ProcessorFieldsWithCondition) processAction(log *protocol.Log, conditionAction ConditionAction) {
 	//add fields
-	if conditionAction.IgnoreIfExist && len(conditionAction.AddFields) > 1 {
-		dict := make(map[string]bool)
-		for idx := range log.Contents {
-			dict[log.Contents[idx].Key] = true
+	if conditionAction.AddFields != nil {
+		if conditionAction.IgnoreIfExist && len(conditionAction.AddFields) > 1 {
+			dict := make(map[string]bool)
+			for idx := range log.Contents {
+				dict[log.Contents[idx].Key] = true
+			}
+			for k, v := range conditionAction.AddFields {
+				if _, exists := dict[k]; exists {
+					continue
+				}
+				newContent := &protocol.Log_Content{
+					Key:   k,
+					Value: v,
+				}
+				log.Contents = append(log.Contents, newContent)
+			}
+		} else {
+			for k, v := range conditionAction.AddFields {
+				if conditionAction.IgnoreIfExist && p.isExist(log, k) {
+					continue
+				}
+				newContent := &protocol.Log_Content{
+					Key:   k,
+					Value: v,
+				}
+				log.Contents = append(log.Contents, newContent)
+			}
 		}
-		for k, v := range conditionAction.AddFields {
-			if _, exists := dict[k]; exists {
-				continue
+	}
+	// drop fields
+	if conditionAction.dropkeyDictionary != nil {
+		for idx := len(log.Contents) - 1; idx >= 0; idx-- {
+			if _, exists := conditionAction.dropkeyDictionary[log.Contents[idx].Key]; exists {
+				log.Contents = append(log.Contents[:idx], log.Contents[idx+1:]...)
 			}
-			newContent := &protocol.Log_Content{
-				Key:   k,
-				Value: v,
-			}
-			log.Contents = append(log.Contents, newContent)
-		}
-	} else {
-		for k, v := range conditionAction.AddFields {
-			if conditionAction.IgnoreIfExist && p.isExist(log, k) {
-				continue
-			}
-			newContent := &protocol.Log_Content{
-				Key:   k,
-				Value: v,
-			}
-			log.Contents = append(log.Contents, newContent)
 		}
 	}
 
-	// drop fields
-	for idx := len(log.Contents) - 1; idx >= 0; idx-- {
-		if _, exists := conditionAction.dropkeyDictionary[log.Contents[idx].Key]; exists {
-			log.Contents = append(log.Contents[:idx], log.Contents[idx+1:]...)
-		}
-	}
 }
 
 func (p *ProcessorFieldsWithCondition) isExist(log *protocol.Log, key string) bool {
