@@ -96,6 +96,7 @@ func (p *ProcessorFieldsWithCondition) Init(context ilogtail.Context) error {
 						return strings.HasPrefix(logContent, val)
 					}
 				default:
+					logger.Warning(p.context.GetRuntimeContext(), "CONDITION_INIT_ALARM", "init relationOpertor error, relationOpertor", relationOpertor)
 					p.Switch[i].Case.fieldConditionFields[key] = func(logContent string) bool {
 						return logContent == val
 					}
