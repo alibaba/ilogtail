@@ -16,6 +16,7 @@ package helper
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"path"
@@ -33,15 +34,14 @@ import (
 )
 
 var dockerCenterInstance *DockerCenter
+var containerFindingManager *ContainerFindingManager
 var onceDocker sync.Once
-var DockerCenterTimeout = time.Second * time.Duration(30)
 
 // set default value to aliyun_logs_
 var envConfigPrefix = "aliyun_logs_"
 
 const DockerTimeFormat = "2006-01-02T15:04:05.999999999Z"
 
-var FetchAllInterval = time.Second * time.Duration(300)
 var ContainerInfoTimeoutMax = time.Second * time.Duration(450)
 var ContainerInfoDeletedTimeout = time.Second * time.Duration(30)
 var EventListenerTimeout = time.Second * time.Duration(3600)
@@ -54,10 +54,6 @@ const k8sPodNameSpaceLabel = "io.kubernetes.pod.namespace"
 const k8sPodUUIDLabel = "io.kubernetes.pod.uid"
 const k8sInnerLabelPrefix = "io.kubernetes"
 const k8sInnerAnnotationPrefix = "annotation."
-
-// fetchAllSuccessTimeout controls when to force timeout containers if fetchAll
-//   failed continuously. By default, 20 times of FetchAllInterval.
-var fetchAllSuccessTimeout = FetchAllInterval * 20
 
 type EnvConfigInfo struct {
 	ConfigName    string
@@ -323,7 +319,6 @@ func (did *DockerInfoDetail) FindBestMatchedPath(pth string) (sourcePath, contai
 	return did.DefaultRootPath, ""
 }
 
-//
 func (did *DockerInfoDetail) MakeSureEnvConfigExist(configName string) *EnvConfigInfo {
 	if did.EnvConfigInfoMap == nil {
 		did.EnvConfigInfoMap = make(map[string]*EnvConfigInfo)
@@ -609,25 +604,20 @@ func GetDockerCenterInstance() *DockerCenter {
 		} else {
 			logger.Warning(context.Background(), "check docker mount path error", err.Error())
 		}
-
-		if criRuntimeWrapper != nil {
-			if err := criRuntimeWrapper.run(); err != nil {
-				logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "run cri runtime instance error")
-			}
-		}
-		// Cannot use else. We must consider such situation:
-		// pure docker + k8s containerd
-		if err := dockerCenterInstance.run(); err != nil {
-			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "run docker center instance error")
-		}
-
-		if isStaticContainerInfoEnabled() {
-			dockerCenterInstance.readStaticConfig(true)
-			go dockerCenterInstance.flushStaticConfig()
-		}
-
+		var enableCriFinding = criRuntimeWrapper != nil
+		var enableDocker = dockerCenterInstance.InitClient() == nil
+		var enableStatic = isStaticContainerInfoEnabled()
+		containerFindingManager = NewContainerFindingManager(enableDocker, enableCriFinding, enableStatic)
+		containerFindingManager.Init(3)
+		containerFindingManager.TimerFetch()
+		containerFindingManager.SyncContainers()
 	})
 	return dockerCenterInstance
+}
+
+func GetContainerFindingManager() *ContainerFindingManager {
+	GetDockerCenterInstance()
+	return containerFindingManager
 }
 
 func SetEnvConfigPrefix(prefix string) {
@@ -990,7 +980,10 @@ func (dc *DockerCenter) updateContainer(id string, container *DockerInfoDetail) 
 			}
 		}
 	}
-
+	if logger.DebugFlag() {
+		bytes, _ := json.Marshal(container)
+		logger.Debug(context.Background(), "update container info", string(bytes))
+	}
 	dc.containerMap[id] = container
 	dc.refreshLastUpdateMapTime()
 }
@@ -1025,7 +1018,7 @@ ContainerLoop:
 	return err
 }
 
-func (dc *DockerCenter) fetchOne(containerID string) error {
+func (dc *DockerCenter) fetchOne(containerID string, tryFindSandbox bool) error {
 	containerDetail, err := dc.client.InspectContainerWithOptions(docker.InspectContainerOptions{ID: containerID})
 	if err != nil {
 		dc.setLastError(err, "inspect container error "+containerID)
@@ -1033,6 +1026,17 @@ func (dc *DockerCenter) fetchOne(containerID string) error {
 		dc.updateContainer(containerID, dc.CreateInfoDetail(containerDetail, envConfigPrefix, false))
 	}
 	logger.Debug(context.Background(), "update container", containerID, "detail", containerDetail)
+	if tryFindSandbox && containerDetail.Config != nil {
+		if id := containerDetail.Config.Labels["io.kubernetes.sandbox.id"]; id != "" {
+			containerDetail, err = dc.client.InspectContainerWithOptions(docker.InspectContainerOptions{ID: id})
+			if err != nil {
+				dc.setLastError(err, "inspect sandbox container error "+id)
+			} else {
+				dc.updateContainer(id, dc.CreateInfoDetail(containerDetail, envConfigPrefix, false))
+				logger.Debug(context.Background(), "update sandbox container", id, "detail", containerDetail)
+			}
+		}
+	}
 	return err
 }
 
@@ -1094,145 +1098,78 @@ func dockerCenterRecover() {
 	}
 }
 
-func (dc *DockerCenter) run() error {
-	defer dockerCenterRecover()
-
-	// @note config for Fetch All Interval
-	fetchAllSec := (int)(FetchAllInterval.Seconds())
-	if err := util.InitFromEnvInt("DOCKER_FETCH_ALL_INTERVAL", &fetchAllSec, fetchAllSec); err != nil {
-		dc.setLastError(err, "initialize env DOCKER_FETCH_ALL_INTERVAL error")
-	}
-	if fetchAllSec > 0 && fetchAllSec < 3600*24 {
-		FetchAllInterval = time.Duration(fetchAllSec) * time.Second
-	}
-	logger.Info(context.Background(), "init docker center, fetch all seconds", FetchAllInterval.String())
-	{
-		timeoutSec := int(fetchAllSuccessTimeout.Seconds())
-		if err := util.InitFromEnvInt("DOCKER_FETCH_ALL_SUCCESS_TIMEOUT", &timeoutSec, timeoutSec); err != nil {
-			dc.setLastError(err, "initialize env DOCKER_FETCH_ALL_SUCCESS_TIMEOUT error")
-		}
-		if timeoutSec > int(FetchAllInterval.Seconds()) && timeoutSec <= 3600*24 {
-			fetchAllSuccessTimeout = time.Duration(timeoutSec) * time.Second
-		}
-	}
-	logger.Info(context.Background(), "init docker center, fecth all success timeout", fetchAllSuccessTimeout.String())
-	{
-		timeoutSec := int(DockerCenterTimeout.Seconds())
-		if err := util.InitFromEnvInt("DOCKER_CLIENT_REQUEST_TIMEOUT", &timeoutSec, timeoutSec); err != nil {
-			dc.setLastError(err, "initialize env DOCKER_CLIENT_REQUEST_TIMEOUT error")
-		}
-		if timeoutSec > 0 {
-			DockerCenterTimeout = time.Duration(timeoutSec) * time.Second
-		}
-	}
-	logger.Info(context.Background(), "init docker center, client request timeout", DockerCenterTimeout.String())
-
+func (dc *DockerCenter) InitClient() error {
 	var err error
 	if dc.client, err = docker.NewClientFromEnv(); err != nil {
 		dc.setLastError(err, "init docker client from env error")
 		return err
 	}
 	dc.client.SetTimeout(DockerCenterTimeout)
+	return nil
+}
 
-	for tryCount := 0; tryCount < 5; tryCount++ {
-		if err = dc.fetchAll(); err == nil {
+func (dc *DockerCenter) eventListener() {
+	errorCount := 0
+	defer dockerCenterRecover()
+	var err error
+	for {
+		logger.Info(context.Background(), "docker event listener", "start")
+		events := make(chan *docker.APIEvents)
+		err = dc.client.AddEventListener(events)
+		if err != nil {
 			break
 		}
-	}
-	timerFetch := func() {
-		defer dockerCenterRecover()
-		lastFetchAllTime := time.Now()
-		fetchErrCount := 0
+		timer := time.NewTimer(EventListenerTimeout)
+	ForBlock:
 		for {
-			time.Sleep(time.Duration(10) * time.Second)
-			logger.Debug(context.Background(), "docker clean timeout container", "start")
-			dc.cleanTimeoutContainer()
-			logger.Debug(context.Background(), "docker clean timeout container", "done")
-			if time.Since(lastFetchAllTime) >= FetchAllInterval {
-				logger.Info(context.Background(), "docker fetch all", "start")
-				dc.readStaticConfig(true)
-				fetchErr := dc.fetchAll()
-				if fetchErr != nil {
-					fetchErrCount++
-				} else {
-					fetchErrCount = 0
-				}
-				logger.Info(context.Background(), "docker fetch all", "stop")
-				dc.sweepCache()
-				lastFetchAllTime = time.Now()
-				if fetchErrCount > 3 && criRuntimeWrapper != nil {
-					logger.Info(context.Background(), "docker fetch is error and cri runtime wrapper is valid", "skip docker listen")
-					return
-				}
-			}
-		}
-	}
-	go timerFetch()
-
-	eventListener := func() {
-		errorCount := 0
-		defer dockerCenterRecover()
-		for {
-			logger.Info(context.Background(), "docker event listener", "start")
-			events := make(chan *docker.APIEvents)
-			err = dc.client.AddEventListener(events)
-			if err != nil {
-				break
-			}
-			timer := time.NewTimer(EventListenerTimeout)
-		ForBlock:
-			for {
-				select {
-				case event, ok := <-events:
-					if !ok {
-						logger.Info(context.Background(), "docker event listener", "stop")
-						errorCount++
-						break ForBlock
-					}
-					errorCount = 0
-					switch event.Status {
-					case "start", "restart":
-						_ = dc.fetchOne(event.ID)
-					case "rename":
-						_ = dc.fetchOne(event.ID)
-					case "die":
-						dc.markRemove(event.ID)
-					default:
-					}
-					logger.Debug(context.Background(), "event", *event)
-					timer.Reset(EventListenerTimeout)
-					dc.eventChanLock.Lock()
-					if dc.eventChan != nil {
-						// no block insert
-						select {
-						case dc.eventChan <- event:
-						default:
-							logger.Error(context.Background(), "DOCKER_EVENT_ALARM", "event queue is full, this event", *event)
-						}
-					}
-					dc.eventChanLock.Unlock()
-				case <-timer.C:
-					errorCount = 0
-					logger.Info(context.Background(), "no docker event in 1 hour", "remove and add event listener again")
+			select {
+			case event, ok := <-events:
+				if !ok {
+					logger.Info(context.Background(), "docker event listener", "stop")
+					errorCount++
 					break ForBlock
 				}
-			}
-			if err = dc.client.RemoveEventListener(events); err != nil {
-				dc.setLastError(err, "remove event listener error")
-			}
-			if errorCount > 10 && criRuntimeWrapper != nil {
-				logger.Info(context.Background(), "docker listen is error and cri runtime wrapper is valid", "skip docker listen")
-				return
-			}
-			// if always error, sleep 300 secs
-			if errorCount > 30 {
-				time.Sleep(time.Duration(300) * time.Second)
-			} else {
-				time.Sleep(time.Duration(10) * time.Second)
+				errorCount = 0
+				switch event.Status {
+				case "start", "restart":
+					_ = dc.fetchOne(event.ID, false)
+				case "rename":
+					_ = dc.fetchOne(event.ID, false)
+				case "die":
+					dc.markRemove(event.ID)
+				default:
+				}
+				logger.Debug(context.Background(), "event", *event)
+				timer.Reset(EventListenerTimeout)
+				dc.eventChanLock.Lock()
+				if dc.eventChan != nil {
+					// no block insert
+					select {
+					case dc.eventChan <- event:
+					default:
+						logger.Error(context.Background(), "DOCKER_EVENT_ALARM", "event queue is full, this event", *event)
+					}
+				}
+				dc.eventChanLock.Unlock()
+			case <-timer.C:
+				errorCount = 0
+				logger.Info(context.Background(), "no docker event in 1 hour", "remove and add event listener again")
+				break ForBlock
 			}
 		}
-		dc.setLastError(err, "docker event stream closed")
+		if err = dc.client.RemoveEventListener(events); err != nil {
+			dc.setLastError(err, "remove event listener error")
+		}
+		if errorCount > 10 && criRuntimeWrapper != nil {
+			logger.Info(context.Background(), "docker listen is error and cri runtime wrapper is valid", "skip docker listen")
+			return
+		}
+		// if always error, sleep 300 secs
+		if errorCount > 30 {
+			time.Sleep(time.Duration(300) * time.Second)
+		} else {
+			time.Sleep(time.Duration(10) * time.Second)
+		}
 	}
-	go eventListener()
-	return err
+	dc.setLastError(err, "docker event stream closed")
 }

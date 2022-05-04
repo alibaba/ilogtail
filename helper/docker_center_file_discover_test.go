@@ -25,8 +25,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	logger.InitTestLogger(logger.OptionDebugLevel, logger.OptionOpenConsole)
+
+}
 
 var staticDockerConfig = `[
 {

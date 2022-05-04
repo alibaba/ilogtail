@@ -34,3 +34,5 @@ your changes, such as:
 
 - [public] [both] [updated] add a new feature
 ## [Unreleased]
+- [public] [both] [fixed] fixed without k8s info in sync containers when using CRI runtime 
+- [public] [both] [updated] force fetch container info when not found in the cache for export GetContainerMeta API   

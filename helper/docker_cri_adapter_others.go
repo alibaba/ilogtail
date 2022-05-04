@@ -33,6 +33,22 @@ var criRuntimeWrapper *CRIRuntimeWrapper
 type CRIRuntimeWrapper struct {
 }
 
+func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
+	return nil
+}
+
+func (cw *CRIRuntimeWrapper) fetchAll() error {
+	return nil
+}
+
+func (cw *CRIRuntimeWrapper) loopSyncContainers() {
+
+}
+
+func (cw *CRIRuntimeWrapper) sweepCache() {
+
+}
+
 func IsCRIRuntimeValid(_ string) bool {
 	return false
 }

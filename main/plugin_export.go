@@ -139,8 +139,7 @@ func CtlCmd(configName string, cmdId int, cmdDetail string) {
 
 //export GetContainerMeta
 func GetContainerMeta(containerID string) *C.struct_containerMeta {
-	detail, ok := helper.GetDockerCenterInstance().GetContainerDetail(containerID)
-	if ok {
+	convertFunc := func(detail *helper.DockerInfoDetail) *C.struct_containerMeta {
 		returnStruct := (*C.struct_containerMeta)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_containerMeta{}))))
 		returnStruct.podName = C.CString(detail.K8SInfo.Pod)
 		returnStruct.k8sNamespace = C.CString(detail.K8SInfo.Namespace)
@@ -152,8 +151,22 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 		returnStruct.image = C.CString(detail.ContainerNameTag["_image_name_"])
 		return returnStruct
 	}
-	// TODO: fetchAll again when not found.
 
+	detail, ok := helper.GetDockerCenterInstance().GetContainerDetail(containerID)
+	if ok {
+		return convertFunc(detail)
+	}
+
+	if manager := helper.GetContainerFindingManager(); manager != nil {
+		if err := manager.FetchOne(containerID); err != nil {
+			logger.Debugf(context.Background(), "cannot fetch container for %s, error is %v", containerID, err)
+			return nil
+		}
+	}
+	detail, ok = helper.GetDockerCenterInstance().GetContainerDetail(containerID)
+	if ok {
+		return convertFunc(detail)
+	}
 	return nil
 }
 
