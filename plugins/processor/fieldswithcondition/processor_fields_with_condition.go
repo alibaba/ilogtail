@@ -54,8 +54,8 @@ type Condition struct {
 type FieldApply func(logContent string) bool
 
 type ConditionCase struct {
-	LogicalOperator  string            `comment:"Optional. The Logical operators between multiple conditional fields"`
-	RelationOperator string            `comment:"Optional. The Relational operators for conditional fields"`
+	LogicalOperator  string            `comment:"Optional. The Logical operators between multiple conditional fields, alternate values are and/or"`
+	RelationOperator string            `comment:"Optional. The Relational operators for conditional fields, alternate values are equals/regexp/contains/startwith"`
 	FieldConditions  map[string]string `comment:"The key-value pair of field names and expressions"`
 
 	fieldConditionFields map[string]FieldApply
