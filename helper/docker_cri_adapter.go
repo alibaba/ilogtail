@@ -220,7 +220,7 @@ func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
 	if err != nil {
 		return err
 	}
-	cw.wrapperK8sInfoById(sandboxID, dockerContainer)
+	cw.wrapperK8sInfoByID(sandboxID, dockerContainer)
 
 	if logger.DebugFlag() {
 		bytes, _ := json.Marshal(dockerContainer)
@@ -234,7 +234,7 @@ func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
 	return nil
 }
 
-func (cw *CRIRuntimeWrapper) wrapperK8sInfoById(sandboxID string, detail *DockerInfoDetail) {
+func (cw *CRIRuntimeWrapper) wrapperK8sInfoByID(sandboxID string, detail *DockerInfoDetail) {
 	ctx, cancel := getContextWithTimeout(time.Second * 10)
 	status, err := cw.client.PodSandboxStatus(ctx, &cri.PodSandboxStatusRequest{
 		PodSandboxId: sandboxID,
