@@ -36,8 +36,6 @@ type ContainerFindingManager struct {
 	enableDockerFinding bool // maybe changed
 	enableCRIFinding    bool
 	enableStaticFinding bool
-	fetchInterval       bool
-	lastFetchTime       time.Time
 
 	fetchOneCount    int32 // only limit the frequency of FetchOne
 	lastFetchOneTime int64

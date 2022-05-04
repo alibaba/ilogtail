@@ -61,7 +61,3 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(_ *docker.Container) st
 func NewCRIRuntimeWrapper(_ *DockerCenter) (*CRIRuntimeWrapper, error) {
 	return nil, errUninplemented
 }
-
-func (cw *CRIRuntimeWrapper) run() error {
-	return errUninplemented
-}

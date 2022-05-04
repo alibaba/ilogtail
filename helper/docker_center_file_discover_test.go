@@ -25,8 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/stretchr/testify/require"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 func init() {
