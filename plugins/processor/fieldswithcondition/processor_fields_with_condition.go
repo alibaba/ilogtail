@@ -38,8 +38,8 @@ const (
 )
 
 type ProcessorFieldsWithCondition struct {
-	DropIfNotMatchCondition bool
-	Switch                  []Condition
+	DropIfNotMatchCondition bool        `comment:"Optional. When the case condition is not met, whether the log is discarded (true) or retained (false)"`
+	Switch                  []Condition `comment:"The switch-case conditions"`
 
 	filterMetric    ilogtail.CounterMetric
 	processedMetric ilogtail.CounterMetric
@@ -47,24 +47,24 @@ type ProcessorFieldsWithCondition struct {
 }
 
 type Condition struct {
-	Case   ConditionCase
-	Action ConditionAction
+	Case   ConditionCase   `comment:"The condition that log data satisfies"`
+	Action ConditionAction `comment:"The action that executes when the case condition is met"`
 }
 
 type FieldApply func(logContent string) bool
 
 type ConditionCase struct {
-	LogicalOperator  string
-	RelationOperator string
-	FieldConditions  map[string]string
+	LogicalOperator  string            `comment:"Optional. The Logical operators between multiple conditional fields"`
+	RelationOperator string            `comment:"Optional. The Relational operators for conditional fields"`
+	FieldConditions  map[string]string `comment:"The key-value pair of field names and expressions"`
 
 	fieldConditionFields map[string]FieldApply
 }
 
 type ConditionAction struct {
-	IgnoreIfExist bool
-	AddFields     map[string]string
-	DropKeys      []string
+	IgnoreIfExist bool              `comment:"Optional. Whether to ignore when the same key exists"`
+	AddFields     map[string]string `comment:"The appending fields"`
+	DropKeys      []string          `comment:"The dropping fields"`
 
 	dropkeyDictionary map[string]bool
 }
@@ -73,7 +73,28 @@ type ConditionAction struct {
 func (p *ProcessorFieldsWithCondition) Init(context ilogtail.Context) error {
 	p.context = context
 	for i := range p.Switch {
+		// set default values
 		relationOpertor := p.Switch[i].Case.RelationOperator
+		switch relationOpertor {
+		case RelationOperatorEquals:
+		case RelationOperatorRegexp:
+		case RelationOperatorContains:
+		case RelationOperatorStartwith:
+		default:
+			if relationOpertor != RelationOperatorEquals {
+				logger.Warning(p.context.GetRuntimeContext(), "CONDITION_INIT_ALARM", "init relationOpertor error, relationOpertor", relationOpertor)
+			}
+			relationOpertor = RelationOperatorEquals
+			p.Switch[i].Case.RelationOperator = relationOpertor
+		}
+		logicalOperator := p.Switch[i].Case.LogicalOperator
+		switch logicalOperator {
+		case LogicalOperatorAnd:
+		case LogicalOperatorOr:
+		default:
+			p.Switch[i].Case.LogicalOperator = LogicalOperatorAnd
+		}
+
 		if p.Switch[i].Case.FieldConditions != nil {
 			p.Switch[i].Case.fieldConditionFields = make(map[string]FieldApply)
 			for key, val := range p.Switch[i].Case.FieldConditions {
@@ -96,7 +117,6 @@ func (p *ProcessorFieldsWithCondition) Init(context ilogtail.Context) error {
 						return strings.HasPrefix(logContent, val)
 					}
 				default:
-					logger.Warning(p.context.GetRuntimeContext(), "CONDITION_INIT_ALARM", "init relationOpertor error, relationOpertor", relationOpertor)
 					p.Switch[i].Case.fieldConditionFields[key] = func(logContent string) bool {
 						return logContent == val
 					}
@@ -119,24 +139,24 @@ func (p *ProcessorFieldsWithCondition) Init(context ilogtail.Context) error {
 }
 
 func (*ProcessorFieldsWithCondition) Description() string {
-	return "process fields with condition for logtail, if none of the condition is unmatched, drop this log"
+	return "Processor to match multiple conditions, and if one of the conditions is met, the corresponding action is performed."
 }
 
 //match single case
 func (p *ProcessorFieldsWithCondition) isCaseMatch(log *protocol.Log, conditionCase ConditionCase) bool {
 	if conditionCase.fieldConditionFields != nil {
-		includeCount := 0
+		matchedCount := 0
 		for _, cont := range log.Contents {
 			if fieldApply, ok := conditionCase.fieldConditionFields[cont.Key]; ok {
 				if fieldApply(cont.Value) {
-					includeCount++
+					matchedCount++
 				}
 			}
 		}
-		if conditionCase.LogicalOperator == LogicalOperatorAnd && includeCount == len(conditionCase.fieldConditionFields) {
+		if conditionCase.LogicalOperator == LogicalOperatorAnd && matchedCount == len(conditionCase.fieldConditionFields) {
 			return true
 		}
-		if conditionCase.LogicalOperator == LogicalOperatorOr && includeCount > 0 {
+		if conditionCase.LogicalOperator == LogicalOperatorOr && matchedCount > 0 {
 			return true
 		}
 	}
@@ -147,32 +167,19 @@ func (p *ProcessorFieldsWithCondition) isCaseMatch(log *protocol.Log, conditionC
 func (p *ProcessorFieldsWithCondition) processAction(log *protocol.Log, conditionAction ConditionAction) {
 	//add fields
 	if conditionAction.AddFields != nil {
-		if conditionAction.IgnoreIfExist && len(conditionAction.AddFields) > 1 {
-			dict := make(map[string]bool)
-			for idx := range log.Contents {
-				dict[log.Contents[idx].Key] = true
+		dict := make(map[string]bool)
+		for idx := range log.Contents {
+			dict[log.Contents[idx].Key] = true
+		}
+		for k, v := range conditionAction.AddFields {
+			if _, exists := dict[k]; conditionAction.IgnoreIfExist && exists {
+				continue
 			}
-			for k, v := range conditionAction.AddFields {
-				if _, exists := dict[k]; exists {
-					continue
-				}
-				newContent := &protocol.Log_Content{
-					Key:   k,
-					Value: v,
-				}
-				log.Contents = append(log.Contents, newContent)
+			newContent := &protocol.Log_Content{
+				Key:   k,
+				Value: v,
 			}
-		} else {
-			for k, v := range conditionAction.AddFields {
-				if conditionAction.IgnoreIfExist && p.isExist(log, k) {
-					continue
-				}
-				newContent := &protocol.Log_Content{
-					Key:   k,
-					Value: v,
-				}
-				log.Contents = append(log.Contents, newContent)
-			}
+			log.Contents = append(log.Contents, newContent)
 		}
 	}
 	// drop fields
@@ -183,16 +190,6 @@ func (p *ProcessorFieldsWithCondition) processAction(log *protocol.Log, conditio
 			}
 		}
 	}
-
-}
-
-func (p *ProcessorFieldsWithCondition) isExist(log *protocol.Log, key string) bool {
-	for idx := range log.Contents {
-		if log.Contents[idx].Key == key {
-			return true
-		}
-	}
-	return false
 }
 
 //match different cases
