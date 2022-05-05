@@ -383,7 +383,7 @@ func TestOptinalDefaultCase(t *testing.T) {
 					{
 						"type":"processor_add_fields",
 						"Fields":{
-							"eventcode":"c1",
+							"eventcode":"c1"
 						}
 					},
 					{
@@ -415,4 +415,75 @@ func TestOptinalDefaultCase(t *testing.T) {
 		assert.Equal(t, 1, len(actionAdd.Fields))
 		assert.Equal(t, 0, len(actionDrop.dropkeyDictionary))
 	}
+}
+
+//任意type错误创建失败
+func TestActionTypeErrorCase(t *testing.T) {
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	jsonStr := `{
+		"Switch":[
+			{
+				"Case":{
+					"FieldConditions":{
+						"content": "dummy"
+					}
+				},
+				"Actions":[
+					{
+						"type":"test_error",
+						"Fields":{
+							"eventcode":"c1"
+						}
+					},
+					{
+						"type":"processor_drop",
+						"DropKeys":[]
+					}
+				]
+			}
+		]
+	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
+	err := processor.Init(ctx)
+
+	assert.Condition(t, func() (success bool) {
+		return len(err.Error()) > 0
+	})
+}
+
+func TestActionNoFieldsCase(t *testing.T) {
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	jsonStr := `{
+		"Switch":[
+			{
+				"Case":{
+					"FieldConditions":{
+						"content": "dummy"
+					}
+				},
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"Fields":{}
+					},
+					{
+						"type":"processor_drop",
+						"DropKeys":[]
+					}
+				]
+			}
+		]
+	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
+	err := processor.Init(ctx)
+	require.NoError(t, err)
+	log1 := &protocol.Log{Time: 0}
+	value1 := "dummy"
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "content", Value: value1})
+	processor.ProcessLogs([]*protocol.Log{log1})
+	assert.Equal(t, 1, len(log1.Contents))
 }
