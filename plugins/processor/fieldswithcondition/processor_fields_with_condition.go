@@ -81,7 +81,7 @@ func (p *ProcessorFieldsWithCondition) Init(context ilogtail.Context) error {
 		case RelationOperatorContains:
 		case RelationOperatorStartwith:
 		default:
-			if relationOpertor != RelationOperatorEquals {
+			if len(relationOpertor) > 0 {
 				logger.Warning(p.context.GetRuntimeContext(), "CONDITION_INIT_ALARM", "init relationOpertor error, relationOpertor", relationOpertor)
 			}
 			relationOpertor = RelationOperatorEquals
@@ -92,6 +92,9 @@ func (p *ProcessorFieldsWithCondition) Init(context ilogtail.Context) error {
 		case LogicalOperatorAnd:
 		case LogicalOperatorOr:
 		default:
+			if len(logicalOperator) > 0 {
+				logger.Warning(p.context.GetRuntimeContext(), "CONDITION_INIT_ALARM", "init logicalOperator error, logicalOperator", logicalOperator)
+			}
 			p.Switch[i].Case.LogicalOperator = LogicalOperatorAnd
 		}
 
