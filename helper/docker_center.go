@@ -34,7 +34,7 @@ import (
 )
 
 var dockerCenterInstance *DockerCenter
-var containerFindingManager *ContainerFindingManager
+var containerFindingManager *ContainerDiscoverManager
 var onceDocker sync.Once
 
 // set default value to aliyun_logs_
@@ -607,7 +607,7 @@ func GetDockerCenterInstance() *DockerCenter {
 		var enableCriFinding = criRuntimeWrapper != nil
 		var enableDocker = dockerCenterInstance.InitClient() == nil
 		var enableStatic = isStaticContainerInfoEnabled()
-		containerFindingManager = NewContainerFindingManager(enableDocker, enableCriFinding, enableStatic)
+		containerFindingManager = NewContainerDiscoverManager(enableDocker, enableCriFinding, enableStatic)
 		containerFindingManager.Init(3)
 		containerFindingManager.TimerFetch()
 		containerFindingManager.SyncContainers()
@@ -615,7 +615,7 @@ func GetDockerCenterInstance() *DockerCenter {
 	return dockerCenterInstance
 }
 
-func GetContainerFindingManager() *ContainerFindingManager {
+func GetContainerFindingManager() *ContainerDiscoverManager {
 	GetDockerCenterInstance()
 	return containerFindingManager
 }

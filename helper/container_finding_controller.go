@@ -32,45 +32,45 @@ var fetchAllSuccessTimeout = FetchAllInterval * 20
 var DockerCenterTimeout = time.Second * time.Duration(30)
 var MaxFetchOneTriggerPerSecond int32 = 10
 
-type ContainerFindingManager struct {
-	enableDockerFinding bool // maybe changed
-	enableCRIFinding    bool
-	enableStaticFinding bool
+type ContainerDiscoverManager struct {
+	enableDockerDiscover bool // maybe changed
+	enableCRIDiscover    bool
+	enableStaticDiscover bool
 
 	fetchOneCount    int32 // only limit the frequency of FetchOne
 	lastFetchOneTime int64
 	fetchOneLock     sync.Mutex
 }
 
-func NewContainerFindingManager(enableDockerFinding, enableCRIFinding, enableStaticFinding bool) *ContainerFindingManager {
-	return &ContainerFindingManager{
-		enableDockerFinding: enableDockerFinding,
-		enableCRIFinding:    enableCRIFinding,
-		enableStaticFinding: enableStaticFinding,
+func NewContainerDiscoverManager(enableDockerDiscover, enableCRIDiscover, enableStaticDiscover bool) *ContainerDiscoverManager {
+	return &ContainerDiscoverManager{
+		enableDockerDiscover: enableDockerDiscover,
+		enableCRIDiscover:    enableCRIDiscover,
+		enableStaticDiscover: enableStaticDiscover,
 	}
 }
 
 // FetchAll
 // Currently, there are 3 ways to find containers, which are docker interface, cri interface and static container info file.
-func (c *ContainerFindingManager) FetchAll() {
+func (c *ContainerDiscoverManager) FetchAll() {
 	c.fetchStatic()
 	var err error
 
-	if c.enableDockerFinding {
+	if c.enableDockerDiscover {
 		if err = c.fetchDocker(); err != nil {
 			logger.Info(context.Background(), "container docker fetch all", err)
 		}
 	}
 
-	if c.enableCRIFinding {
+	if c.enableCRIDiscover {
 		if err = c.fetchCRI(); err != nil {
 			logger.Info(context.Background(), "container CRIRuntime fetch all", err)
 		}
 	}
 }
 
-func (c *ContainerFindingManager) FetchOne(containerID string) error {
-	logger.Debug(context.Background(), "finding manager fetch one", containerID)
+func (c *ContainerDiscoverManager) FetchOne(containerID string) error {
+	logger.Debug(context.Background(), "discover manager fetch one", containerID)
 	now := time.Now().Unix()
 	c.fetchOneLock.Lock()
 	if now > c.lastFetchOneTime {
@@ -79,74 +79,74 @@ func (c *ContainerFindingManager) FetchOne(containerID string) error {
 	}
 	c.fetchOneCount++
 	if c.fetchOneCount > MaxFetchOneTriggerPerSecond {
-		logger.Debug(context.Background(), "finding manager reject because of reaching the maximum fetch count", containerID)
+		logger.Debug(context.Background(), "discover manager reject because of reaching the maximum fetch count", containerID)
 		c.fetchOneLock.Unlock()
 		return fmt.Errorf("cannot fetch %s because of reaching the maximum fetch count", containerID)
 	}
 	c.fetchOneLock.Unlock()
 	var err error
-	if c.enableCRIFinding {
+	if c.enableCRIDiscover {
 		err = criRuntimeWrapper.fetchOne(containerID)
-		logger.Debug(context.Background(), "finding manager cri fetch one status", err == nil)
+		logger.Debug(context.Background(), "discover manager cri fetch one status", err == nil)
 		if err == nil {
 			return nil
 		}
 	}
-	if c.enableDockerFinding {
+	if c.enableDockerDiscover {
 		err = dockerCenterInstance.fetchOne(containerID, true)
-		logger.Debug(context.Background(), "finding manager docker fetch one status", err == nil)
+		logger.Debug(context.Background(), "discover manager docker fetch one status", err == nil)
 	}
 	return err
 }
 
-func (c *ContainerFindingManager) fetchDocker() error {
+func (c *ContainerDiscoverManager) fetchDocker() error {
 	if dockerCenterInstance == nil {
 		return nil
 	}
 	return dockerCenterInstance.fetchAll()
 }
 
-func (c *ContainerFindingManager) fetchStatic() {
+func (c *ContainerDiscoverManager) fetchStatic() {
 	if dockerCenterInstance == nil {
 		return
 	}
 	dockerCenterInstance.readStaticConfig(true)
 }
 
-func (c *ContainerFindingManager) fetchCRI() error {
+func (c *ContainerDiscoverManager) fetchCRI() error {
 	if criRuntimeWrapper == nil {
 		return nil
 	}
 	return criRuntimeWrapper.fetchAll()
 }
 
-func (c *ContainerFindingManager) SyncContainers() {
-	if c.enableCRIFinding {
-		logger.Debug(context.Background(), "finding manager start sync containers goroutine", "cri")
+func (c *ContainerDiscoverManager) SyncContainers() {
+	if c.enableCRIDiscover {
+		logger.Debug(context.Background(), "discover manager start sync containers goroutine", "cri")
 		go criRuntimeWrapper.loopSyncContainers()
 	}
-	if c.enableStaticFinding {
-		logger.Debug(context.Background(), "finding manager start sync containers goroutine", "static")
+	if c.enableStaticDiscover {
+		logger.Debug(context.Background(), "discover manager start sync containers goroutine", "static")
 		go dockerCenterInstance.flushStaticConfig()
 	}
-	if c.enableDockerFinding {
-		logger.Debug(context.Background(), "finding manager start sync containers goroutine", "docker")
+	if c.enableDockerDiscover {
+		logger.Debug(context.Background(), "discover manager start sync containers goroutine", "docker")
 		go dockerCenterInstance.eventListener()
 	}
 }
 
-func (c *ContainerFindingManager) Clean() {
+func (c *ContainerDiscoverManager) Clean() {
 	if criRuntimeWrapper != nil {
 		criRuntimeWrapper.sweepCache()
-		logger.Debug(context.Background(), "finding manager clean", "cri")
+		logger.Debug(context.Background(), "discover manager clean", "cri")
 	}
 	if dockerCenterInstance != nil {
 		dockerCenterInstance.sweepCache()
-		logger.Debug(context.Background(), "finding manager clean", "docker")
+		logger.Debug(context.Background(), "discover manager clean", "docker")
 	}
 }
 
-func (c *ContainerFindingManager) LogAlarm(err error, msg string) {
+func (c *ContainerDiscoverManager) LogAlarm(err error, msg string) {
 	if err != nil {
 		logger.Warning(context.Background(), "DOCKER_CENTER_ALARM", "message", msg, "error found", err)
 	} else {
@@ -154,9 +154,9 @@ func (c *ContainerFindingManager) LogAlarm(err error, msg string) {
 	}
 }
 
-func (c *ContainerFindingManager) Init(initTryTimes int) {
+func (c *ContainerDiscoverManager) Init(initTryTimes int) {
 	defer dockerCenterRecover()
-	logger.Info(context.Background(), "input", "param", "docker finding", c.enableDockerFinding, "cri finding", c.enableCRIFinding, "static finding", c.enableStaticFinding)
+	logger.Info(context.Background(), "input", "param", "docker discover", c.enableDockerDiscover, "cri discover", c.enableCRIDiscover, "static discover", c.enableStaticDiscover)
 	// @note config for Fetch All Interval
 	fetchAllSec := (int)(FetchAllInterval.Seconds())
 	if err := util.InitFromEnvInt("DOCKER_FETCH_ALL_INTERVAL", &fetchAllSec, fetchAllSec); err != nil {
@@ -198,35 +198,35 @@ func (c *ContainerFindingManager) Init(initTryTimes int) {
 	logger.Info(context.Background(), "init docker center, max fetchOne count per second", MaxFetchOneTriggerPerSecond)
 
 	var err error
-	if c.enableDockerFinding {
+	if c.enableDockerDiscover {
 		for i := 0; i < initTryTimes; i++ {
 			if err = c.fetchDocker(); err == nil {
 				break
 			}
 		}
 		if err != nil {
-			c.enableDockerFinding = false
-			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "fetch docker containers error in %d times, close docker finding", initTryTimes)
+			c.enableDockerDiscover = false
+			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "fetch docker containers error in %d times, close docker discover", initTryTimes)
 		}
 	}
-	if c.enableCRIFinding {
+	if c.enableCRIDiscover {
 		for i := 0; i < initTryTimes; i++ {
 			if err = c.fetchCRI(); err == nil {
 				break
 			}
 		}
 		if err != nil {
-			c.enableCRIFinding = false
-			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "fetch cri containers error in %d times, close cri finding", initTryTimes)
+			c.enableCRIDiscover = false
+			logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "fetch cri containers error in %d times, close cri discover", initTryTimes)
 		}
 	}
-	if c.enableStaticFinding {
+	if c.enableStaticDiscover {
 		c.fetchStatic()
 	}
-	logger.Info(context.Background(), "final", "param", "docker finding", c.enableDockerFinding, "cri finding", c.enableCRIFinding, "static finding", c.enableStaticFinding)
+	logger.Info(context.Background(), "final", "param", "docker discover", c.enableDockerDiscover, "cri discover", c.enableCRIDiscover, "static discover", c.enableStaticDiscover)
 }
 
-func (c *ContainerFindingManager) TimerFetch() {
+func (c *ContainerDiscoverManager) TimerFetch() {
 	timerFetch := func() {
 		defer dockerCenterRecover()
 		lastFetchAllTime := time.Now()
