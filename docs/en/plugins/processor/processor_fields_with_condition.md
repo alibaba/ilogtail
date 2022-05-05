@@ -11,7 +11,7 @@ Processor to match multiple conditions, and if one of the conditions is met, the
 |  field   |   type   |   description   | default value   |
 | ---- | ---- | ---- | ---- |
 |Case|ConditionCase|The condition that log data satisfies|null|
-|Action|ConditionAction|The action that executes when the case condition is met|null|
+|Actions|[]ConditionAction|The action that executes when the case condition is met|null|
 
 ### ConditionCase
 |  field   |   type   |   description   | default value   |
@@ -23,6 +23,7 @@ Processor to match multiple conditions, and if one of the conditions is met, the
 ### ConditionAction
 |  field   |   type   |   description   | default value   |
 | ---- | ---- | ---- | ---- |
+|type|string|action type. alternate values are processor_add_fields/processor_drop||
 |IgnoreIfExist|bool|Optional. Whether to ignore when the same key exists|false|
-|AddFields|map[string]string|The appending fields|null|
+|Fields|map[string]string|The appending fields|null|
 |DropKeys|[]string|The dropping fields|null|

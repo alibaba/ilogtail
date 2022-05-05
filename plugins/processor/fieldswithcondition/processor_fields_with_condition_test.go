@@ -14,6 +14,7 @@
 package fieldswithcondition
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -30,57 +31,72 @@ func init() {
 
 func newProcessor() (*ProcessorFieldsWithCondition, error) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
-	processor := &ProcessorFieldsWithCondition{
-		DropIfNotMatchCondition: true,
-		Switch: []Condition{
+	jsonStr := `{
+		"DropIfNotMatchCondition":true,
+		"Switch":[
 			{
-				Case: ConditionCase{
-					LogicalOperator:  "and",
-					RelationOperator: "contains",
-					FieldConditions: map[string]string{
-						"content": "Out of memory",
-					},
+				"Case":{
+					"LogicalOperator":"and",
+					"RelationOperator":"contains",
+					"FieldConditions":{
+						"content":"Out of memory"
+					}
 				},
-				Action: ConditionAction{
-					IgnoreIfExist: true,
-					AddFields: map[string]string{
-						"eventcode": "c1",
-						"cid":       "c-1",
-						"test1.1":   "test1.1",
-						"test1.2":   "test1.2",
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"IgnoreIfExist":false,
+						"Fields":{
+							"eventcode":"c1",
+							"cid":"c-1",
+							"test1.1":"test1.1",
+							"test1.2":"test1.2"
+						}
 					},
-					DropKeys: []string{
-						"test1.1",
-						"test1.2",
-					},
-				},
+					{
+						"type":"processor_drop",
+						"DropKeys":[
+							"test1.1",
+							"test1.2"
+						]
+					}
+				]
 			},
 			{
-				Case: ConditionCase{
-					LogicalOperator:  "and",
-					RelationOperator: "contains",
-					FieldConditions: map[string]string{
-						"content": "BIOS-provided",
-					},
+				"Case":{
+					"LogicalOperator":"and",
+					"RelationOperator":"contains",
+					"FieldConditions":{
+						"content":"BIOS-provided"
+					}
 				},
-				Action: ConditionAction{
-					IgnoreIfExist: true,
-					AddFields: map[string]string{
-						"eventcode": "c2",
-						"cid":       "c-2",
-						"test2.1":   "test2.1",
-						"test2.2":   "test2.2",
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"IgnoreIfExist":false,
+						"Fields":{
+							"eventcode":"c2",
+							"cid":"c-2",
+							"test2.1":"test2.1",
+							"test2.2":"test2.2"
+						}
 					},
-					DropKeys: []string{
-						"test2.1",
-						"test2.2",
-					},
-				},
-			},
-		},
+					{
+						"type":"processor_drop",
+						"DropKeys":[
+							"test2.1",
+							"test2.2"
+						]
+					}
+				]
+			}
+		]
 	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
 	err := processor.Init(ctx)
-	return processor, err
+	return &processor, err
 }
 
 func TestSuccessCase(t *testing.T) {
@@ -112,33 +128,42 @@ func TestSuccessCase(t *testing.T) {
 func TestRegexFail(t *testing.T) {
 	logger.ClearMemoryLog()
 	ctx := mock.NewEmptyContext("p", "l", "c")
-	processor := &ProcessorFieldsWithCondition{
-		DropIfNotMatchCondition: true,
-		Switch: []Condition{
+	jsonStr := `{
+		"DropIfNotMatchCondition":true,
+		"Switch":[
 			{
-				Case: ConditionCase{
-					LogicalOperator:  "and",
-					RelationOperator: "test123",
-					FieldConditions: map[string]string{
-						"content": "/^%$*",
-					},
+				"Case":{
+					"LogicalOperator":"and",
+					"RelationOperator":"test123",
+					"FieldConditions":{
+						"content": "/^%$*"
+					}
 				},
-				Action: ConditionAction{
-					IgnoreIfExist: true,
-					AddFields: map[string]string{
-						"eventcode": "c1",
-						"cid":       "c-1",
-						"test1.1":   "test1.1",
-						"test1.2":   "test1.2",
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"IgnoreIfExist":false,
+						"Fields":{
+							"eventcode":"c1",
+							"cid":"c-1",
+							"test1.1":"test1.1",
+							"test1.2":"test1.2"
+						}
 					},
-					DropKeys: []string{
-						"test1.1",
-						"test1.2",
-					},
-				},
-			},
-		},
+					{
+						"type":"processor_drop",
+						"DropKeys":[
+							"test1.1",
+							"test1.2"
+						]
+					}
+				]
+			}
+		]
 	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
 	err := processor.Init(ctx)
 	require.NoError(t, err)
 	memoryLog, ok := logger.ReadMemoryLog(1)
@@ -149,66 +174,78 @@ func TestRegexFail(t *testing.T) {
 
 func TestAllRelationsCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
-	processor := &ProcessorFieldsWithCondition{
-		Switch: []Condition{
+	jsonStr := `{
+		"DropIfNotMatchCondition":true,
+		"Switch":[
 			{
-				Case: ConditionCase{
-					RelationOperator: "regexp",
-					FieldConditions: map[string]string{
-						"content": "^dummy test1",
-					},
+				"Case":{
+					"RelationOperator":"regexp",
+					"FieldConditions":{
+						"content": "^dummy test1"
+					}
 				},
-				Action: ConditionAction{
-					AddFields: map[string]string{
-						"eventcode": "c1",
-					},
-					DropKeys: []string{},
-				},
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"Fields":{
+							"eventcode":"c1"
+						}
+					}
+				]
 			},
 			{
-				Case: ConditionCase{
-					RelationOperator: "contains",
-					FieldConditions: map[string]string{
-						"content": "dummy test2",
-					},
+				"Case":{
+					"RelationOperator":"contains",
+					"FieldConditions":{
+						"content": "dummy test2"
+					}
 				},
-				Action: ConditionAction{
-					AddFields: map[string]string{
-						"eventcode": "c2",
-					},
-					DropKeys: []string{},
-				},
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"Fields":{
+							"eventcode":"c2"
+						}
+					}
+				]
 			},
 			{
-				Case: ConditionCase{
-					RelationOperator: "startwith",
-					FieldConditions: map[string]string{
-						"content": "dummy test3",
-					},
+				"Case":{
+					"RelationOperator":"startwith",
+					"FieldConditions":{
+						"content": "dummy test3"
+					}
 				},
-				Action: ConditionAction{
-					AddFields: map[string]string{
-						"eventcode": "c3",
-					},
-					DropKeys: []string{},
-				},
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"Fields":{
+							"eventcode":"c3"
+						}
+					}
+				]
 			},
 			{
-				Case: ConditionCase{
-					RelationOperator: "equals",
-					FieldConditions: map[string]string{
-						"content": "dummy test4",
-					},
+				"Case":{
+					"RelationOperator":"equals",
+					"FieldConditions":{
+						"content": "dummy test4"
+					}
 				},
-				Action: ConditionAction{
-					AddFields: map[string]string{
-						"eventcode": "c4",
-					},
-					DropKeys: []string{},
-				},
-			},
-		},
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"Fields":{
+							"eventcode":"c4"
+						}
+					}
+				]
+			}
+		]
 	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
 	err := processor.Init(ctx)
 	require.NoError(t, err)
 	log1 := &protocol.Log{Time: 0}
@@ -244,27 +281,42 @@ func TestAllRelationsCase(t *testing.T) {
 
 func TestNoMatchCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
-	processor := &ProcessorFieldsWithCondition{
-		DropIfNotMatchCondition: true,
-		Switch: []Condition{
+	jsonStr := `{
+		"DropIfNotMatchCondition":true,
+		"Switch":[
 			{
-				Case: ConditionCase{
-					LogicalOperator:  "and",
-					RelationOperator: "equals",
-					FieldConditions: map[string]string{
-						"content": "dummy",
-					},
+				"Case":{
+					"LogicalOperator":"and",
+					"RelationOperator":"equals",
+					"FieldConditions":{
+						"content": "dummy"
+					}
 				},
-				Action: ConditionAction{
-					IgnoreIfExist: true,
-					AddFields: map[string]string{
-						"eventcode": "c1",
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"IgnoreIfExist":true,
+						"Fields":{
+							"eventcode":"c1",
+							"cid":"c-1",
+							"test1.1":"test1.1",
+							"test1.2":"test1.2"
+						}
 					},
-					DropKeys: []string{},
-				},
-			},
-		},
+					{
+						"type":"processor_drop",
+						"DropKeys":[
+							"test1.1",
+							"test1.2"
+						]
+					}
+				]
+			}
+		]
 	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
 	err := processor.Init(ctx)
 	require.NoError(t, err)
 	log1 := &protocol.Log{Time: 0}
@@ -275,27 +327,41 @@ func TestNoMatchCase(t *testing.T) {
 	//丢弃测试
 	assert.Equal(t, 0, len(logArray))
 
-	processor = &ProcessorFieldsWithCondition{
-		DropIfNotMatchCondition: false,
-		Switch: []Condition{
+	jsonStr = `{
+		"DropIfNotMatchCondition":false,
+		"Switch":[
 			{
-				Case: ConditionCase{
-					LogicalOperator:  "and",
-					RelationOperator: "equals",
-					FieldConditions: map[string]string{
-						"content": "dummy",
-					},
+				"Case":{
+					"LogicalOperator":"and",
+					"RelationOperator":"equals",
+					"FieldConditions":{
+						"content": "dummy"
+					}
 				},
-				Action: ConditionAction{
-					IgnoreIfExist: true,
-					AddFields: map[string]string{
-						"eventcode": "c1",
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"IgnoreIfExist":true,
+						"Fields":{
+							"eventcode":"c1",
+							"cid":"c-1",
+							"test1.1":"test1.1",
+							"test1.2":"test1.2"
+						}
 					},
-					DropKeys: []string{},
-				},
-			},
-		},
+					{
+						"type":"processor_drop",
+						"DropKeys":[
+							"test1.1",
+							"test1.2"
+						]
+					}
+				]
+			}
+		]
 	}
+	`
+	json.Unmarshal([]byte(jsonStr), &processor)
 	err = processor.Init(ctx)
 	require.NoError(t, err)
 	logArray = processor.ProcessLogs([]*protocol.Log{log1})
@@ -305,23 +371,32 @@ func TestNoMatchCase(t *testing.T) {
 
 func TestOptinalDefaultCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
-	processor := &ProcessorFieldsWithCondition{
-		Switch: []Condition{
+	jsonStr := `{
+		"Switch":[
 			{
-				Case: ConditionCase{
-					FieldConditions: map[string]string{
-						"content": "dummy",
-					},
+				"Case":{
+					"FieldConditions":{
+						"content": "dummy"
+					}
 				},
-				Action: ConditionAction{
-					AddFields: map[string]string{
-						"eventcode": "c1",
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"Fields":{
+							"eventcode":"c1",
+						}
 					},
-					DropKeys: []string{},
-				},
-			},
-		},
+					{
+						"type":"processor_drop",
+						"DropKeys":[]
+					}
+				]
+			}
+		]
 	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
 	err := processor.Init(ctx)
 	require.NoError(t, err)
 	assert.False(t, processor.DropIfNotMatchCondition)
@@ -334,10 +409,10 @@ func TestOptinalDefaultCase(t *testing.T) {
 		assert.Equal(t, LogicalOperatorAnd, logicalOpertor)
 		assert.Equal(t, 1, len(fieldConditions))
 
-		addFields := processor.Switch[i].Action.AddFields
-		dropKeys := processor.Switch[i].Action.DropKeys
-		assert.False(t, processor.Switch[i].Action.IgnoreIfExist)
-		assert.Equal(t, 1, len(addFields))
-		assert.Equal(t, 0, len(dropKeys))
+		actionAdd := processor.Switch[i].actions[0]
+		actionDrop := processor.Switch[i].actions[1]
+		assert.False(t, actionAdd.IgnoreIfExist)
+		assert.Equal(t, 1, len(actionAdd.Fields))
+		assert.Equal(t, 0, len(actionDrop.dropkeyDictionary))
 	}
 }

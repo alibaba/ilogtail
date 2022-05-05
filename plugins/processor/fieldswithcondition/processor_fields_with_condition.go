@@ -35,6 +35,9 @@ const (
 
 	LogicalOperatorAnd = "and"
 	LogicalOperatorOr  = "or"
+
+	ActionAddFieldsType = "processor_add_fields"
+	ActionDropType      = "processor_drop"
 )
 
 type ProcessorFieldsWithCondition struct {
@@ -47,8 +50,10 @@ type ProcessorFieldsWithCondition struct {
 }
 
 type Condition struct {
-	Case   ConditionCase   `comment:"The condition that log data satisfies"`
-	Action ConditionAction `comment:"The action that executes when the case condition is met"`
+	Case    ConditionCase            `comment:"The condition that log data satisfies"`
+	Actions []map[string]interface{} `comment:"The action that executes when the case condition is met"`
+
+	actions []ConditionAction
 }
 
 type FieldApply func(logContent string) bool
@@ -62,11 +67,12 @@ type ConditionCase struct {
 }
 
 type ConditionAction struct {
-	IgnoreIfExist bool              `comment:"Optional. Whether to ignore when the same key exists"`
-	AddFields     map[string]string `comment:"The appending fields"`
-	DropKeys      []string          `comment:"The dropping fields"`
+	Type          string                 `comment:"action type. alternate values are processor_add_fields/processor_drop"`
+	IgnoreIfExist bool                   `comment:"Optional. Whether to ignore when the same key exists"`
+	Fields        map[string]interface{} `comment:"The appending fields"`
+	DropKeys      []interface{}          `comment:"The dropping fields"`
 
-	dropkeyDictionary map[string]bool
+	dropkeyDictionary map[string]interface{}
 }
 
 // Init called for init some system resources, like socket, mutex...
@@ -127,10 +133,50 @@ func (p *ProcessorFieldsWithCondition) Init(context ilogtail.Context) error {
 			}
 		}
 
-		if p.Switch[i].Action.DropKeys != nil {
-			p.Switch[i].Action.dropkeyDictionary = make(map[string]bool)
-			for _, dropKey := range p.Switch[i].Action.DropKeys {
-				p.Switch[i].Action.dropkeyDictionary[dropKey] = true
+		if p.Switch[i].Actions != nil {
+			p.Switch[i].actions = make([]ConditionAction, len(p.Switch[i].Actions))
+			for j := range p.Switch[i].Actions {
+				action := p.Switch[i].Actions[j]
+				if typeName, ok := action["type"]; ok {
+					switch typeName {
+					case ActionAddFieldsType:
+						IgnoreIfExist := false
+						if ignoreIfExist, ok := action["IgnoreIfExist"]; ok {
+							if dropKeysArrInner, ok := ignoreIfExist.(bool); ok {
+								IgnoreIfExist = dropKeysArrInner
+							}
+						}
+						AddFields := make(map[string]interface{})
+						if addFields, ok := action["Fields"]; ok {
+							if addFieldsInner, ok := addFields.(map[string]interface{}); ok {
+								AddFields = addFieldsInner
+							}
+						}
+						p.Switch[i].actions[j] = ConditionAction{
+							Type:          ActionAddFieldsType,
+							IgnoreIfExist: IgnoreIfExist,
+							Fields:        AddFields,
+						}
+					case ActionDropType:
+						if dropKeys, ok := action["DropKeys"]; ok {
+							if dropKeysArr, ok := dropKeys.([]interface{}); ok {
+								dropkeyDictionary := make(map[string]interface{})
+								for _, dropKey := range dropKeysArr {
+									dropkeyDictionary[dropKey.(string)] = true
+								}
+								p.Switch[i].actions[j] = ConditionAction{
+									Type:              ActionDropType,
+									DropKeys:          dropKeysArr,
+									dropkeyDictionary: dropkeyDictionary,
+								}
+							}
+						}
+					default:
+						logger.Error(p.context.GetRuntimeContext(), "CONDITION_INIT_ALARM", "init condition action type error, type", typeName)
+						return fmt.Errorf("init condition action type error,type is %v", typeName)
+					}
+				}
+
 			}
 		}
 	}
@@ -168,25 +214,22 @@ func (p *ProcessorFieldsWithCondition) isCaseMatch(log *protocol.Log, conditionC
 
 //prcess action
 func (p *ProcessorFieldsWithCondition) processAction(log *protocol.Log, conditionAction ConditionAction) {
-	//add fields
-	if conditionAction.AddFields != nil {
+	if conditionAction.Type == ActionAddFieldsType {
 		dict := make(map[string]bool)
 		for idx := range log.Contents {
 			dict[log.Contents[idx].Key] = true
 		}
-		for k, v := range conditionAction.AddFields {
+		for k, v := range conditionAction.Fields {
 			if _, exists := dict[k]; conditionAction.IgnoreIfExist && exists {
 				continue
 			}
 			newContent := &protocol.Log_Content{
 				Key:   k,
-				Value: v,
+				Value: v.(string),
 			}
 			log.Contents = append(log.Contents, newContent)
 		}
-	}
-	// drop fields
-	if conditionAction.dropkeyDictionary != nil {
+	} else if conditionAction.Type == ActionDropType {
 		for idx := len(log.Contents) - 1; idx >= 0; idx-- {
 			if _, exists := conditionAction.dropkeyDictionary[log.Contents[idx].Key]; exists {
 				log.Contents = append(log.Contents[:idx], log.Contents[idx+1:]...)
@@ -200,7 +243,12 @@ func (p *ProcessorFieldsWithCondition) MatchAndProcess(log *protocol.Log) bool {
 	if p.Switch != nil {
 		for _, condition := range p.Switch {
 			if p.isCaseMatch(log, condition.Case) {
-				p.processAction(log, condition.Action)
+				if condition.actions != nil {
+					for i := range condition.actions {
+						action := condition.actions[i]
+						p.processAction(log, action)
+					}
+				}
 				return true
 			}
 		}
