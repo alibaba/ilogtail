@@ -15,7 +15,6 @@ package fieldswithcondition
 
 import (
 	"encoding/json"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -709,9 +708,6 @@ func TestMulti1Case(t *testing.T) {
 
 // Test multiple case2
 func TestMulti2Case(t *testing.T) {
-	reg, _ := regexp.Compile("^10.*")
-	println(reg.MatchString("1"))
-
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
 		"DropIfNotMatchCondition":true,
