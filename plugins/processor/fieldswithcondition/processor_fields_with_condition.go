@@ -56,14 +56,20 @@ type Condition struct {
 	actions []ConditionAction
 }
 
-type FieldApply func(logContent string) bool
+type FieldApply func(reg *regexp.Regexp, conditionContent string, logContent string) bool
+
+type Field struct {
+	apply            FieldApply
+	reg              *regexp.Regexp
+	conditionContent string
+}
 
 type ConditionCase struct {
 	LogicalOperator  string            `comment:"Optional. The Logical operators between multiple conditional fields, alternate values are and/or"`
 	RelationOperator string            `comment:"Optional. The Relational operators for conditional fields, alternate values are equals/regexp/contains/startwith"`
 	FieldConditions  map[string]string `comment:"The key-value pair of field names and expressions"`
 
-	fieldConditionFields map[string]FieldApply
+	fieldConditionFields map[string]Field
 }
 
 type ConditionAction struct {
@@ -105,7 +111,7 @@ func (p *ProcessorFieldsWithCondition) Init(context ilogtail.Context) error {
 		}
 
 		if p.Switch[i].Case.FieldConditions != nil {
-			p.Switch[i].Case.fieldConditionFields = make(map[string]FieldApply)
+			p.Switch[i].Case.fieldConditionFields = make(map[string]Field)
 			for key, val := range p.Switch[i].Case.FieldConditions {
 				switch relationOpertor {
 				case RelationOperatorRegexp:
@@ -114,20 +120,36 @@ func (p *ProcessorFieldsWithCondition) Init(context ilogtail.Context) error {
 						logger.Warning(p.context.GetRuntimeContext(), "CONDITION_INIT_ALARM", "init condition regex error, key", key, "regex", val, "error", err)
 						return err
 					}
-					p.Switch[i].Case.fieldConditionFields[key] = func(logContent string) bool {
-						return reg.MatchString(logContent)
+					p.Switch[i].Case.fieldConditionFields[key] = Field{
+						reg:              reg,
+						conditionContent: val,
+						apply: func(reg *regexp.Regexp, conditionContent string, logContent string) bool {
+							return reg.MatchString(logContent)
+						},
 					}
 				case RelationOperatorContains:
-					p.Switch[i].Case.fieldConditionFields[key] = func(logContent string) bool {
-						return strings.Contains(logContent, val)
+					p.Switch[i].Case.fieldConditionFields[key] = Field{
+						reg:              nil,
+						conditionContent: val,
+						apply: func(reg *regexp.Regexp, conditionContent string, logContent string) bool {
+							return strings.Contains(logContent, conditionContent)
+						},
 					}
 				case RelationOperatorStartwith:
-					p.Switch[i].Case.fieldConditionFields[key] = func(logContent string) bool {
-						return strings.HasPrefix(logContent, val)
+					p.Switch[i].Case.fieldConditionFields[key] = Field{
+						reg:              nil,
+						conditionContent: val,
+						apply: func(reg *regexp.Regexp, conditionContent string, logContent string) bool {
+							return strings.HasPrefix(logContent, conditionContent)
+						},
 					}
 				default:
-					p.Switch[i].Case.fieldConditionFields[key] = func(logContent string) bool {
-						return logContent == val
+					p.Switch[i].Case.fieldConditionFields[key] = Field{
+						reg:              nil,
+						conditionContent: val,
+						apply: func(reg *regexp.Regexp, conditionContent string, logContent string) bool {
+							return logContent == conditionContent
+						},
 					}
 				}
 			}
@@ -196,8 +218,8 @@ func (p *ProcessorFieldsWithCondition) isCaseMatch(log *protocol.Log, conditionC
 	if conditionCase.fieldConditionFields != nil {
 		matchedCount := 0
 		for _, cont := range log.Contents {
-			if fieldApply, ok := conditionCase.fieldConditionFields[cont.Key]; ok {
-				if fieldApply(cont.Value) {
+			if field, ok := conditionCase.fieldConditionFields[cont.Key]; ok {
+				if field.apply(field.reg, field.conditionContent, cont.Value) {
 					matchedCount++
 				}
 			}

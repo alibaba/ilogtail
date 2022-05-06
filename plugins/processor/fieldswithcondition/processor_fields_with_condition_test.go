@@ -591,3 +591,84 @@ func TestActionProcessOrderCase(t *testing.T) {
 	processor.ProcessLogs([]*protocol.Log{log2})
 	assert.Equal(t, 5, len(log2.Contents))
 }
+
+// Test multiple case1
+func TestMulti1Case(t *testing.T) {
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	jsonStr := `{
+		"DropIfNotMatchCondition": true,
+		"Switch":
+		[
+			{
+				"Case":
+				{
+					"FieldConditions":
+					{
+						"seq": "10",
+						"d": "10"
+					}
+				},
+				"Actions":
+				[
+					{
+						"type": "processor_add_fields",
+						"IgnoreIfExist": false,
+						"Fields":
+						{
+							"eventCode": "event_00001",
+							"name": "error_oom"
+						}
+					},
+					{
+						"type": "processor_drop",
+						"DropKeys":
+						[
+							"c"
+						]
+					}
+				]
+			},
+			{
+				"Case":
+				{
+					"FieldConditions":
+					{
+						"seq": "20",
+						"d": "10"
+					}
+				},
+				"Actions":
+				[
+					{
+						"type": "processor_add_fields",
+						"IgnoreIfExist": false,
+						"Fields":
+						{
+							"eventCode": "event_00002",
+							"name": "error_oom2"
+						}
+					}
+				]
+			}
+		]
+	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
+	err := processor.Init(ctx)
+	require.NoError(t, err)
+	log1 := &protocol.Log{Time: 0}
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "content", Value: `{"t1": "2022-05-06 12:50:08.571218122", "t2": "2022-05-06 12:50:08", "a":"b","c":2,"d":10, "seq": 20}`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "t1", Value: `2022-05-06 12:50:08.571218122`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "t2", Value: `2022-05-06 12:50:08`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "a", Value: `b`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "c", Value: `2`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "d", Value: `10`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "seq", Value: `20`})
+	processor.ProcessLogs([]*protocol.Log{log1})
+	assert.Equal(t, 9, len(log1.Contents))
+	assert.Equal(t, "eventCode", log1.Contents[7].Key)
+	assert.Equal(t, "event_00002", log1.Contents[7].Value)
+	assert.Equal(t, "name", log1.Contents[8].Key)
+	assert.Equal(t, "error_oom2", log1.Contents[8].Value)
+}
