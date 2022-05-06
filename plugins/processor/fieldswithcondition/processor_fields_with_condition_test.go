@@ -117,14 +117,22 @@ func TestSuccessCase(t *testing.T) {
 
 	assert.Equal(t, 3, len(log1.Contents))
 	assert.Equal(t, 3, len(log2.Contents))
-	assert.Equal(t, "eventcode", log1.Contents[1].Key)
-	assert.Equal(t, "c1", log1.Contents[1].Value)
-	assert.Equal(t, "cid", log1.Contents[2].Key)
-	assert.Equal(t, "c-1", log1.Contents[2].Value)
-	assert.Equal(t, "eventcode", log2.Contents[1].Key)
-	assert.Equal(t, "c2", log2.Contents[1].Value)
-	assert.Equal(t, "cid", log2.Contents[2].Key)
-	assert.Equal(t, "c-2", log2.Contents[2].Value)
+	for idx := range log1.Contents {
+		key := log1.Contents[idx].Key
+		if key == "eventcode" {
+			assert.Equal(t, "c1", log1.Contents[idx].Value)
+		} else if key == "cid" {
+			assert.Equal(t, "c-1", log1.Contents[idx].Value)
+		}
+	}
+	for idx := range log2.Contents {
+		key := log2.Contents[idx].Key
+		if key == "eventcode" {
+			assert.Equal(t, "c2", log2.Contents[idx].Value)
+		} else if key == "cid" {
+			assert.Equal(t, "c-2", log2.Contents[idx].Value)
+		}
+	}
 }
 
 // Relation value error，change value to equals
@@ -177,8 +185,12 @@ func TestRelationOperatorFail(t *testing.T) {
 	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "content", Value: value1})
 	processor.ProcessLogs([]*protocol.Log{log1})
 	assert.Equal(t, 2, len(log1.Contents))
-	assert.Equal(t, "eventcode", log1.Contents[1].Key)
-	assert.Equal(t, "c1", log1.Contents[1].Value)
+	for idx := range log1.Contents {
+		key := log1.Contents[idx].Key
+		if key == "eventcode" {
+			assert.Equal(t, "c1", log1.Contents[idx].Value)
+		}
+	}
 }
 
 // Test all relations (equals/startwith/regexp/contains)
@@ -276,17 +288,34 @@ func TestAllRelationsCase(t *testing.T) {
 	processor.ProcessLogs([]*protocol.Log{log1, log2, log3, log4})
 
 	assert.Equal(t, 2, len(log1.Contents))
-	assert.Equal(t, "eventcode", log1.Contents[1].Key)
-	assert.Equal(t, "c1", log1.Contents[1].Value)
 	assert.Equal(t, 2, len(log2.Contents))
-	assert.Equal(t, "eventcode", log2.Contents[1].Key)
-	assert.Equal(t, "c2", log2.Contents[1].Value)
 	assert.Equal(t, 2, len(log3.Contents))
-	assert.Equal(t, "eventcode", log3.Contents[1].Key)
-	assert.Equal(t, "c3", log3.Contents[1].Value)
 	assert.Equal(t, 2, len(log4.Contents))
-	assert.Equal(t, "eventcode", log4.Contents[1].Key)
-	assert.Equal(t, "c4", log4.Contents[1].Value)
+
+	for idx := range log1.Contents {
+		key := log1.Contents[idx].Key
+		if key == "eventcode" {
+			assert.Equal(t, "c1", log1.Contents[idx].Value)
+		}
+	}
+	for idx := range log2.Contents {
+		key := log2.Contents[idx].Key
+		if key == "eventcode" {
+			assert.Equal(t, "c2", log2.Contents[idx].Value)
+		}
+	}
+	for idx := range log3.Contents {
+		key := log3.Contents[idx].Key
+		if key == "eventcode" {
+			assert.Equal(t, "c3", log3.Contents[idx].Value)
+		}
+	}
+	for idx := range log4.Contents {
+		key := log4.Contents[idx].Key
+		if key == "eventcode" {
+			assert.Equal(t, "c4", log4.Contents[idx].Value)
+		}
+	}
 }
 
 // Test DropIfNotMatchCondition functionality
@@ -667,8 +696,12 @@ func TestMulti1Case(t *testing.T) {
 	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "seq", Value: `20`})
 	processor.ProcessLogs([]*protocol.Log{log1})
 	assert.Equal(t, 9, len(log1.Contents))
-	assert.Equal(t, "eventCode", log1.Contents[7].Key)
-	assert.Equal(t, "event_00002", log1.Contents[7].Value)
-	assert.Equal(t, "name", log1.Contents[8].Key)
-	assert.Equal(t, "error_oom2", log1.Contents[8].Value)
+	for idx := range log1.Contents {
+		key := log1.Contents[idx].Key
+		if key == "eventcode" {
+			assert.Equal(t, "event_00002", log1.Contents[idx].Value)
+		} else if key == "name" {
+			assert.Equal(t, "error_oom2", log1.Contents[idx].Value)
+		}
+	}
 }
