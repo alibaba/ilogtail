@@ -99,7 +99,7 @@ func newProcessor() (*ProcessorFieldsWithCondition, error) {
 	return &processor, err
 }
 
-//正常流程测试
+// Success Case
 func TestSuccessCase(t *testing.T) {
 	processor, err := newProcessor()
 	require.NoError(t, err)
@@ -126,7 +126,7 @@ func TestSuccessCase(t *testing.T) {
 	assert.Equal(t, "c-2", log2.Contents[2].Value)
 }
 
-//测试relation乱输入，变equals
+// Relation value error，change value to equals
 func TestRelationOperatorFail(t *testing.T) {
 	logger.ClearMemoryLog()
 	ctx := mock.NewEmptyContext("p", "l", "c")
@@ -180,7 +180,7 @@ func TestRelationOperatorFail(t *testing.T) {
 	assert.Equal(t, "c1", log1.Contents[1].Value)
 }
 
-//测试所有relation(equals/startwith/regexp/contains)
+// Test all relations (equals/startwith/regexp/contains)
 func TestAllRelationsCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -288,7 +288,7 @@ func TestAllRelationsCase(t *testing.T) {
 	assert.Equal(t, "c4", log4.Contents[1].Value)
 }
 
-//测试DropIfNotMatchCondition功能
+// Test DropIfNotMatchCondition functionality
 func TestNoMatchCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -334,7 +334,7 @@ func TestNoMatchCase(t *testing.T) {
 		"\\tOut of memory: Kill process "
 	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "content", Value: value1})
 	logArray := processor.ProcessLogs([]*protocol.Log{log1})
-	//丢弃测试
+	// Drop
 	assert.Equal(t, 0, len(logArray))
 
 	jsonStr = `{
@@ -375,11 +375,11 @@ func TestNoMatchCase(t *testing.T) {
 	err = processor.Init(ctx)
 	require.NoError(t, err)
 	logArray = processor.ProcessLogs([]*protocol.Log{log1})
-	//保留测试
+	// Retain
 	assert.Equal(t, 1, len(logArray))
 }
 
-//测试默认值
+// Test default value
 func TestOptinalDefaultCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -412,7 +412,7 @@ func TestOptinalDefaultCase(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, processor.DropIfNotMatchCondition)
 	for i := range processor.Switch {
-		// set default values
+		// Set default values
 		relationOpertor := processor.Switch[i].Case.RelationOperator
 		logicalOpertor := processor.Switch[i].Case.LogicalOperator
 		fieldConditions := processor.Switch[i].Case.FieldConditions
@@ -428,7 +428,7 @@ func TestOptinalDefaultCase(t *testing.T) {
 	}
 }
 
-//任意type错误创建失败
+// Type input error, Init error
 func TestActionTypeErrorCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -464,7 +464,7 @@ func TestActionTypeErrorCase(t *testing.T) {
 	})
 }
 
-//action的field没配，case空跑测试
+// No field in action, case run with nothing
 func TestActionNoFieldsCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -500,7 +500,7 @@ func TestActionNoFieldsCase(t *testing.T) {
 	assert.Equal(t, 1, len(log1.Contents))
 }
 
-//测试actions 执行顺序
+// Test actions process order
 func TestActionProcessOrderCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{

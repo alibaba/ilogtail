@@ -191,7 +191,7 @@ func (*ProcessorFieldsWithCondition) Description() string {
 	return "Processor to match multiple conditions, and if one of the conditions is met, the corresponding action is performed."
 }
 
-//match single case
+// Match single case
 func (p *ProcessorFieldsWithCondition) isCaseMatch(log *protocol.Log, conditionCase ConditionCase) bool {
 	if conditionCase.fieldConditionFields != nil {
 		matchedCount := 0
@@ -212,7 +212,7 @@ func (p *ProcessorFieldsWithCondition) isCaseMatch(log *protocol.Log, conditionC
 	return false
 }
 
-//prcess action
+// Process single action
 func (p *ProcessorFieldsWithCondition) processAction(log *protocol.Log, conditionAction ConditionAction) {
 	if conditionAction.Type == ActionAddFieldsType {
 		dict := make(map[string]bool)
@@ -238,7 +238,7 @@ func (p *ProcessorFieldsWithCondition) processAction(log *protocol.Log, conditio
 	}
 }
 
-//match different cases
+// Match different cases
 func (p *ProcessorFieldsWithCondition) MatchAndProcess(log *protocol.Log) bool {
 	if p.Switch != nil {
 		for _, condition := range p.Switch {
