@@ -99,6 +99,7 @@ func newProcessor() (*ProcessorFieldsWithCondition, error) {
 	return &processor, err
 }
 
+//正常流程测试
 func TestSuccessCase(t *testing.T) {
 	processor, err := newProcessor()
 	require.NoError(t, err)
@@ -125,7 +126,8 @@ func TestSuccessCase(t *testing.T) {
 	assert.Equal(t, "c-2", log2.Contents[2].Value)
 }
 
-func TestRegexFail(t *testing.T) {
+//测试relation乱输入，变equals
+func TestRelationOperatorFail(t *testing.T) {
 	logger.ClearMemoryLog()
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -136,7 +138,7 @@ func TestRegexFail(t *testing.T) {
 					"LogicalOperator":"and",
 					"RelationOperator":"test123",
 					"FieldConditions":{
-						"content": "/^%$*"
+						"content": "dummy"
 					}
 				},
 				"Actions":[
@@ -145,7 +147,6 @@ func TestRegexFail(t *testing.T) {
 						"IgnoreIfExist":false,
 						"Fields":{
 							"eventcode":"c1",
-							"cid":"c-1",
 							"test1.1":"test1.1",
 							"test1.2":"test1.2"
 						}
@@ -170,8 +171,16 @@ func TestRegexFail(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, 1, logger.GetMemoryLogCount())
 	assert.True(t, strings.Contains(memoryLog, "AlarmType:CONDITION_INIT_ALARM\tinit relationOpertor error"))
+	log1 := &protocol.Log{Time: 0}
+	value1 := "dummy"
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "content", Value: value1})
+	processor.ProcessLogs([]*protocol.Log{log1})
+	assert.Equal(t, 2, len(log1.Contents))
+	assert.Equal(t, "eventcode", log1.Contents[1].Key)
+	assert.Equal(t, "c1", log1.Contents[1].Value)
 }
 
+//测试所有relation(equals/startwith/regexp/contains)
 func TestAllRelationsCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -279,6 +288,7 @@ func TestAllRelationsCase(t *testing.T) {
 	assert.Equal(t, "c4", log4.Contents[1].Value)
 }
 
+//测试DropIfNotMatchCondition功能
 func TestNoMatchCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -369,6 +379,7 @@ func TestNoMatchCase(t *testing.T) {
 	assert.Equal(t, 1, len(logArray))
 }
 
+//测试默认值
 func TestOptinalDefaultCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -453,6 +464,7 @@ func TestActionTypeErrorCase(t *testing.T) {
 	})
 }
 
+//action的field没配，case空跑测试
 func TestActionNoFieldsCase(t *testing.T) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	jsonStr := `{
@@ -486,4 +498,95 @@ func TestActionNoFieldsCase(t *testing.T) {
 	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "content", Value: value1})
 	processor.ProcessLogs([]*protocol.Log{log1})
 	assert.Equal(t, 1, len(log1.Contents))
+}
+
+//测试actions 执行顺序
+func TestActionProcessOrderCase(t *testing.T) {
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	jsonStr := `{
+		"DropIfNotMatchCondition":true,
+		"Switch":[
+			{
+				"Case":{
+					"LogicalOperator":"and",
+					"RelationOperator":"equals",
+					"FieldConditions":{
+						"content": "dummy"
+					}
+				},
+				"Actions":[
+					{
+						"type":"processor_add_fields",
+						"IgnoreIfExist":true,
+						"Fields":{
+							"eventcode":"c1",
+							"cid":"c-1",
+							"test1.1":"test1.1",
+							"test1.2":"test1.2"
+						}
+					},
+					{
+						"type":"processor_drop",
+						"DropKeys":[
+							"test1.1",
+							"test1.2"
+						]
+					}
+				]
+			}
+		]
+	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
+	err := processor.Init(ctx)
+	require.NoError(t, err)
+	log1 := &protocol.Log{Time: 0}
+	value1 := "dummy"
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "content", Value: value1})
+	processor.ProcessLogs([]*protocol.Log{log1})
+	assert.Equal(t, 3, len(log1.Contents))
+
+	jsonStr = `{
+		"DropIfNotMatchCondition":true,
+		"Switch":[
+			{
+				"Case":{
+					"LogicalOperator":"and",
+					"RelationOperator":"equals",
+					"FieldConditions":{
+						"content": "dummy"
+					}
+				},
+				"Actions":[
+					{
+						"type":"processor_drop",
+						"DropKeys":[
+							"test1.1",
+							"test1.2"
+						]
+					},
+					{
+						"type":"processor_add_fields",
+						"IgnoreIfExist":true,
+						"Fields":{
+							"eventcode":"c1",
+							"cid":"c-1",
+							"test1.1":"test1.1",
+							"test1.2":"test1.2"
+						}
+					}
+				]
+			}
+		]
+	}
+	`
+	json.Unmarshal([]byte(jsonStr), &processor)
+	err = processor.Init(ctx)
+	require.NoError(t, err)
+	log2 := &protocol.Log{Time: 0}
+	value2 := "dummy"
+	log2.Contents = append(log2.Contents, &protocol.Log_Content{Key: "content", Value: value2})
+	processor.ProcessLogs([]*protocol.Log{log2})
+	assert.Equal(t, 5, len(log2.Contents))
 }
