@@ -15,6 +15,7 @@ package fieldswithcondition
 
 import (
 	"encoding/json"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -704,4 +705,78 @@ func TestMulti1Case(t *testing.T) {
 			assert.Equal(t, "error_oom2", log1.Contents[idx].Value)
 		}
 	}
+}
+
+// Test multiple case2
+func TestMulti2Case(t *testing.T) {
+	reg, _ := regexp.Compile("^10.*")
+	println(reg.MatchString("1"))
+
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	jsonStr := `{
+		"DropIfNotMatchCondition":true,
+		"Switch":[
+			{
+				"Actions":[
+					{
+						"Fields":{
+							"eventCode":"event_00001",
+							"name":"error_oom"
+						},
+						"IgnoreIfExist":false,
+						"type":"processor_add_fields"
+					},
+					{
+						"type":"processor_drop",
+						"DropKeys":[
+							"c"
+						]
+					}
+				],
+				"Case":{
+					"RelationOperator":"regexp",
+					"FieldConditions":{
+						"d":"^10.*",
+						"seq":"10"
+					},
+					"LogicalOperator":"and"
+				}
+			},
+			{
+				"Actions":[
+					{
+						"Fields":{
+							"eventCode":"event_00002",
+							"name":"error_oom2"
+						},
+						"IgnoreIfExist":false,
+						"type":"processor_add_fields"
+					}
+				],
+				"Case":{
+					"RelationOperator":"regexp",
+					"LogicalOperator":"or",
+					"FieldConditions":{
+						"d":"^2.*",
+						"seq":"20"
+					}
+				}
+			}
+		]
+	}
+	`
+	var processor ProcessorFieldsWithCondition
+	json.Unmarshal([]byte(jsonStr), &processor)
+	err := processor.Init(ctx)
+	require.NoError(t, err)
+	log1 := &protocol.Log{Time: 0}
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "content", Value: `{"t1": "2022-05-06 12:50:08.571218122", "t2": "2022-05-06 12:50:08", "a":"b","c":2,"d":1, "seq": 21}`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "t1", Value: `2022-05-06 12:50:08.571218122`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "t2", Value: `2022-05-06 12:50:08`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "a", Value: `b`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "c", Value: `2`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "d", Value: `1`})
+	log1.Contents = append(log1.Contents, &protocol.Log_Content{Key: "seq", Value: `21`})
+	processor.ProcessLogs([]*protocol.Log{log1})
+	assert.Equal(t, 7, len(log1.Contents))
 }
