@@ -1,0 +1,103 @@
+{
+    "inputs":
+    [
+        {
+            "type": "metric_debug_file",
+            "detail":
+            {
+                "InputFilePath": "/Users/zhouhongyi/Documents/ali_workspace2/ilogtail/main/json.log"
+            }
+        }
+    ],
+    "processors":
+    [
+        {
+            "type": "processor_split_log_string",
+            "detail":
+            {
+                "SplitKey": "content",
+                "SplitSep": ""
+            }
+        },
+        {
+            "type": "processor_json",
+            "detail":
+            {
+                "SourceKey": "content",
+                "ExpandConnector": "",
+                "ExpandDepth": 1
+            }
+        },
+        {
+            "type": "processor_fields_with_condition",
+            "detail":
+            {
+                "DropIfNotMatchCondition": true,
+                "Switch":
+                [
+                    {
+                        "Case":
+                        {
+                            "FieldConditions":
+                            {
+                                "seq": "10",
+                                "d": "10"
+                            }
+                        },
+                        "Actions":
+                        [
+                            {
+                                "type": "processor_add_fields",
+                                "IgnoreIfExist": false,
+                                "Fields":
+                                {
+                                    "eventCode": "event_00001",
+                                    "name": "error_oom"
+                                }
+                            },
+                            {
+                                "type": "processor_drop",
+                                "DropKeys":
+                                [
+                                    "c"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "Case":
+                        {
+                            "FieldConditions":
+                            {
+                                "seq": "20",
+                                "d": "10"
+                            }
+                        },
+                        "Actions":
+                        [
+                            {
+                                "type": "processor_add_fields",
+                                "IgnoreIfExist": false,
+                                "Fields":
+                                {
+                                    "eventCode": "event_00002",
+                                    "name": "error_oom2"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "flushers":
+    [
+        {
+            "type": "flusher_stdout",
+            "detail":
+            {
+                "OnlyStdout": true
+            }
+        }
+    ]
+}
