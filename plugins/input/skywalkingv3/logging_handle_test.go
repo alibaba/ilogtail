@@ -2,14 +2,16 @@ package skywalkingv3
 
 import (
 	"context"
+	"io"
+	"testing"
+	"time"
+
+	"google.golang.org/grpc/metadata"
+
 	v3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/common/v3"
 	logging "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/logging/v3"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
-	"google.golang.org/grpc/metadata"
-	"io"
-	"testing"
-	"time"
 )
 
 func TestJsonLogging(t *testing.T) {
@@ -37,7 +39,7 @@ func (m *MockRequest) Recv() (*logging.LogData, error) {
 		return nil, io.EOF
 	}
 
-	m.size -= 1
+	m.size--
 
 	tags := make([]*v3.KeyStringValuePair, 0)
 	tags = append(tags, &v3.KeyStringValuePair{Key: "test", Value: "test2"})

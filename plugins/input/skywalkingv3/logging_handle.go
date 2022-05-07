@@ -3,13 +3,14 @@ package skywalkingv3
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"strconv"
+	"strings"
+
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	v3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/common/v3"
 	loggingV3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/logging/v3"
-	"io"
-	"strconv"
-	"strings"
 )
 
 type loggingHandler struct {
@@ -29,28 +30,19 @@ func (l *loggingHandler) Collect(server loggingV3.LogReportService_CollectServer
 			return err
 		}
 
-		err = l.sendLogging(logging)
-		if err != nil {
-			return server.SendAndClose(&v3.Commands{})
-		}
+		l.sendLogging(logging)
 	}
 }
 
-func (l *loggingHandler) sendLogging(data *loggingV3.LogData) error {
+func (l *loggingHandler) sendLogging(data *loggingV3.LogData) {
 	if data == nil {
-		return nil
+		return
 	}
 
-	log, err := l.convertFormat(data)
-	if err != nil {
-		return nil
-	} else {
-		l.collector.AddRawLog(log)
-	}
-	return nil
+	l.collector.AddRawLog(l.convertFormat(data))
 }
 
-func (l *loggingHandler) convertFormat(data *loggingV3.LogData) (*protocol.Log, error) {
+func (l *loggingHandler) convertFormat(data *loggingV3.LogData) *protocol.Log {
 	r := &protocol.Log{
 		Time:     uint32(data.Timestamp / 1000),
 		Contents: make([]*protocol.Log_Content, 0),
@@ -67,7 +59,7 @@ func (l *loggingHandler) convertFormat(data *loggingV3.LogData) (*protocol.Log, 
 	r.Contents = append(r.Contents, &protocol.Log_Content{Key: "spanID", Value: fmt.Sprintf("%s.%d", data.TraceContext.TraceSegmentId, data.TraceContext.SpanId)})
 	r.Contents = append(r.Contents, &protocol.Log_Content{Key: "resource", Value: convertResource(data)})
 	r.Contents = append(r.Contents, &protocol.Log_Content{Key: "timeUnixNano", Value: strconv.FormatInt(data.Timestamp, 10)})
-	return r, nil
+	return r
 }
 
 func convertResource(data *loggingV3.LogData) string {
@@ -76,9 +68,9 @@ func convertResource(data *loggingV3.LogData) string {
 
 	if r, e := json.Marshal(m); e == nil {
 		return string(r)
-	} else {
-		return fmt.Sprintf("%v", m)
 	}
+
+	return fmt.Sprintf("%v", m)
 }
 
 func convertContent(body *loggingV3.LogDataBody) string {
@@ -102,7 +94,7 @@ func convertAttribute(data *loggingV3.LogData) string {
 	}
 	if r, e := json.Marshal(attribute); e == nil {
 		return string(r)
-	} else {
-		return fmt.Sprintf("%v", attribute)
 	}
+
+	return fmt.Sprintf("%v", attribute)
 }
