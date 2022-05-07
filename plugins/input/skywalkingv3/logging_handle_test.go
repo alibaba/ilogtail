@@ -16,11 +16,9 @@ package skywalkingv3
 
 import (
 	"context"
+	"google.golang.org/grpc/metadata"
 	"io"
 	"testing"
-	"time"
-
-	"google.golang.org/grpc/metadata"
 
 	v3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/common/v3"
 	logging "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/logging/v3"
@@ -58,7 +56,7 @@ func (m *MockRequest) Recv() (*logging.LogData, error) {
 	tags := make([]*v3.KeyStringValuePair, 0)
 	tags = append(tags, &v3.KeyStringValuePair{Key: "test", Value: "test2"})
 	return &logging.LogData{
-		Timestamp:       time.Now().UnixMilli(),
+		Timestamp:       1651902032613,
 		Service:         "test",
 		ServiceInstance: "123",
 		Endpoint:        "test",
