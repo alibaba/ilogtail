@@ -16,9 +16,10 @@ package skywalkingv3
 
 import (
 	"context"
-	"google.golang.org/grpc/metadata"
 	"io"
 	"testing"
+
+	"google.golang.org/grpc/metadata"
 
 	v3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/common/v3"
 	logging "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/logging/v3"
