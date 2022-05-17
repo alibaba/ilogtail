@@ -94,7 +94,7 @@ type LogFileReader struct {
 	foundFile      bool
 }
 
-func NewLogFileReader(checkpoint LogFileReaderCheckPoint, config LogFileReaderConfig, processor LogFileProcessor, context context.Context) (*LogFileReader, error) {
+func NewLogFileReader(context context.Context, checkpoint LogFileReaderCheckPoint, config LogFileReaderConfig, processor LogFileProcessor) (*LogFileReader, error) {
 	readWhenStart := false
 	foundFile := true
 	if checkpoint.State.IsEmpty() {
@@ -369,7 +369,7 @@ func (r *LogFileReader) Run() {
 	defer func() {
 		r.CloseFile("run done")
 		r.waitgroup.Done()
-		panicRecover(r.checkpoint.Path, r.logContext)
+		panicRecover(r.logContext, r.checkpoint.Path)
 	}()
 	lastReadTime := time.Now()
 	tracker := r.Config.Tracker

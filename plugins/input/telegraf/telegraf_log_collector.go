@@ -18,7 +18,6 @@ import (
 	"context"
 	"os"
 	"path"
-	"sync"
 
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -29,7 +28,6 @@ type LogCollector struct {
 	startChan chan struct{}
 	stopChan  chan struct{}
 	started   bool
-	once      sync.Once
 }
 
 const (
@@ -67,7 +65,7 @@ func newTelegrafLogReader(agentDirPath string, logPath string, drop bool) *helpe
 		}
 	}
 
-	reader, err := helper.NewLogFileReader(checkPoint, helper.DefaultLogFileReaderConfig, new(Processor), context.Background())
+	reader, err := helper.NewLogFileReader(context.Background(), checkPoint, helper.DefaultLogFileReaderConfig, new(Processor))
 	if err != nil {
 		logger.Error(context.Background(), TelegrafAlarmType, "path", checkPoint.Path, "create telegraf log reader error", err)
 		return nil

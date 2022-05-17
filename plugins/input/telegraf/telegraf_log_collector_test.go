@@ -15,9 +15,11 @@
 package telegraf
 
 import (
-	"fmt"
 	"github.com/alibaba/ilogtail/pkg/logger"
+
 	"github.com/stretchr/testify/assert"
+
+	"fmt"
 	"os"
 	"testing"
 	"time"
