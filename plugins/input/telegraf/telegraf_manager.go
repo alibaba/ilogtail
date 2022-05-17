@@ -54,6 +54,7 @@ type Manager struct {
 	telegrafPath     string
 	telegrafdPath    string
 	telegrafConfPath string
+	collector        *LogCollector
 }
 
 func (tm *Manager) RegisterConfig(c *Config) {
@@ -151,13 +152,11 @@ func (tm *Manager) initAgentDir() {
 
 func (tm *Manager) run() {
 	tm.initAgentDir()
-
 	for {
 		select {
 		case <-time.After(statusCheckInterval):
 		case <-tm.ch:
 		}
-
 		logger.Debugf(context.Background(), "start to check")
 		tm.check()
 		logger.Debugf(context.Background(), "check done")
@@ -193,6 +192,7 @@ func (tm *Manager) check() {
 			tm.loadedConfigs = make(map[string]*Config)
 		}
 		tm.stop()
+		tm.collector.TelegrafStop()
 		return
 	}
 
@@ -234,6 +234,7 @@ func (tm *Manager) check() {
 	} else {
 		tm.reload()
 	}
+	tm.collector.TelegrafStart()
 }
 
 func (tm *Manager) concatConfFilePath(name string) string {
@@ -336,18 +337,18 @@ var telegrafManager *Manager
 var once sync.Once
 
 func GetTelegrafManager(agentDirPath string) *Manager {
-	once.Do(
-		func() {
-			telegrafManager = &Manager{
-				configs:       make(map[string]*Config),
-				loadedConfigs: make(map[string]*Config),
-				ch:            make(chan struct{}, 1),
-				telegrafPath:  agentDirPath,
-			}
-			telegrafManager.telegrafdPath = path.Join(agentDirPath, "telegrafd")
-			telegrafManager.telegrafConfPath = path.Join(agentDirPath, "conf.d")
-			go telegrafManager.run()
-		},
-	)
+	once.Do(func() {
+		telegrafManager = &Manager{
+			configs:       make(map[string]*Config),
+			loadedConfigs: make(map[string]*Config),
+			ch:            make(chan struct{}, 1),
+			telegrafPath:  agentDirPath,
+			collector:     NewLogCollector(agentDirPath),
+		}
+		telegrafManager.telegrafdPath = path.Join(agentDirPath, "telegrafd")
+		telegrafManager.telegrafConfPath = path.Join(agentDirPath, "conf.d")
+		go telegrafManager.run()
+		go telegrafManager.collector.Run()
+	})
 	return telegrafManager
 }

@@ -34,3 +34,4 @@ your changes, such as:
 
 - [public] [both] [updated] add a new feature
 ## [Unreleased]
+- [public] [both] [added] Collect the Telegraf log when the service_telegraf plugin works.

@@ -109,7 +109,7 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 		CloseFileSec:     sds.CloseUnChangedSec,
 		Tracker:          sds.tracker,
 	}
-	reader, _ := helper.NewLogFileReader(checkpoint, config, processor, sds.context)
+	reader, _ := helper.NewLogFileReader(checkpoint, config, processor, sds.context.GetRuntimeContext())
 
 	return &DockerFileSyner{
 		dockerFileReader:    reader,
