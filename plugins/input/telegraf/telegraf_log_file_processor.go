@@ -16,7 +16,6 @@ package telegraf
 
 import (
 	"bytes"
-	"context"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -34,29 +33,29 @@ func (p *Processor) Process(fileBlock []byte, noChangeInterval time.Duration) in
 		originalLine := fileBlock[nowIndex : nextIndex+1]
 		separator := bytes.IndexByte(originalLine, ' ')
 		if separator == -1 {
-			logger.Warning(context.Background(), "TELEGRAF_ALARM", "illegal log", string(originalLine))
+			logger.Warning(telegrafManager.GetContext(), TelegrafAlarmType, "illegal log", string(originalLine))
 			continue
 		}
 		timePart := originalLine[0:separator]
 		thisLine := originalLine[separator+1:]
 		separator = bytes.IndexByte(thisLine, ' ')
 		if separator == -1 {
-			logger.Warning(context.Background(), "TELEGRAF_ALARM", "illegal log", string(originalLine))
+			logger.Warning(telegrafManager.GetContext(), TelegrafAlarmType, "illegal log", string(originalLine))
 			continue
 		}
 		levelPart := thisLine[0:separator]
 		thisLine = thisLine[separator+1:]
 		switch levelPart[0] {
 		case 'D':
-			logger.Debug(context.Background(), "time", string(timePart), "log", string(thisLine))
+			logger.Debug(telegrafManager.GetContext(), "time", string(timePart), "log", string(thisLine))
 		case 'I':
-			logger.Info(context.Background(), "time", string(timePart), "log", string(thisLine))
+			logger.Info(telegrafManager.GetContext(), "time", string(timePart), "log", string(thisLine))
 		case 'W':
-			logger.Warning(context.Background(), "TELEGRAF_ALARM", "time", string(timePart), "log", string(thisLine))
+			logger.Warning(telegrafManager.GetContext(), TelegrafAlarmType, "time", string(timePart), "log", string(thisLine))
 		case 'E':
-			logger.Error(context.Background(), "TELEGRAF_ALARM", "time", string(timePart), "log", string(thisLine))
+			logger.Error(telegrafManager.GetContext(), TelegrafAlarmType, "time", string(timePart), "log", string(thisLine))
 		default:
-			logger.Warning(context.Background(), "TELEGRAF_ALARM", "illegal log", string(originalLine))
+			logger.Warning(telegrafManager.GetContext(), TelegrafAlarmType, "illegal log", string(originalLine))
 		}
 		processedCount = nextIndex + 1
 		nowIndex = nextIndex + 1

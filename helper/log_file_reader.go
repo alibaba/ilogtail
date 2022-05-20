@@ -174,9 +174,11 @@ func (r *LogFileReader) CheckFileChange() bool {
 		}
 		r.foundFile = true
 	} else {
-		if os.IsNotExist(err) && r.foundFile {
-			logger.Warning(r.logContext, "STAT_FILE_ALARM", "stat file error, file", r.checkpoint.Path, "error", err.Error())
-			r.foundFile = false
+		if os.IsNotExist(err) {
+			if r.foundFile {
+				logger.Warning(r.logContext, "STAT_FILE_ALARM", "stat file error, file", r.checkpoint.Path, "error", err.Error())
+				r.foundFile = false
+			}
 		} else {
 			logger.Warning(r.logContext, "STAT_FILE_ALARM", "stat file error, file", r.checkpoint.Path, "error", err.Error())
 		}

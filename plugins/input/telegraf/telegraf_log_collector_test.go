@@ -73,6 +73,10 @@ func TestNewLogCollector(t *testing.T) {
 	time.Sleep(time.Second)
 	collector := NewLogCollector(".")
 	go collector.Run()
+	go func() {
+		time.Sleep(2 * time.Second)
+	}()
+
 	collector.TelegrafStart()
 
 	time.Sleep(time.Hour)

@@ -50,12 +50,12 @@ func (s *ServiceTelegraf) Collect(collector ilogtail.Collector) error {
 }
 
 func (s *ServiceTelegraf) Start(collector ilogtail.Collector) error {
-	s.tm.RegisterConfig(s.config)
+	s.tm.RegisterConfig(s.context, s.config)
 	return nil
 }
 
 func (s *ServiceTelegraf) Stop() error {
-	s.tm.UnregisterConfig(s.config)
+	s.tm.UnregisterConfig(s.context, s.config)
 	return nil
 }
 

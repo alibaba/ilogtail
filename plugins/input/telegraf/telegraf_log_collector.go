@@ -15,7 +15,6 @@
 package telegraf
 
 import (
-	"context"
 	"os"
 	"path"
 
@@ -58,16 +57,16 @@ func newTelegrafLogReader(agentDirPath string, logPath string, drop bool) *helpe
 	if drop {
 		info, err := os.Stat(checkPoint.Path)
 		if err != nil {
-			logger.Warning(context.Background(), TelegrafAlarmType, "stat log file error, path", checkPoint.Path, "error", err.Error())
+			logger.Warning(telegrafManager.GetContext(), TelegrafAlarmType, "stat log file error, path", checkPoint.Path, "error", err.Error())
 		} else {
 			checkPoint.Offset = info.Size()
 			checkPoint.State = helper.GetOSState(info)
 		}
 	}
 
-	reader, err := helper.NewLogFileReader(context.Background(), checkPoint, helper.DefaultLogFileReaderConfig, new(Processor))
+	reader, err := helper.NewLogFileReader(telegrafManager.GetContext(), checkPoint, helper.DefaultLogFileReaderConfig, new(Processor))
 	if err != nil {
-		logger.Error(context.Background(), TelegrafAlarmType, "path", checkPoint.Path, "create telegraf log reader error", err)
+		logger.Error(telegrafManager.GetContext(), TelegrafAlarmType, "path", checkPoint.Path, "create telegraf log reader error", err)
 		return nil
 	}
 	return reader
@@ -75,7 +74,7 @@ func newTelegrafLogReader(agentDirPath string, logPath string, drop bool) *helpe
 
 func (l *LogCollector) Run() {
 	for {
-		logger.Debug(context.Background(), "run telegraf collector")
+		logger.Debug(telegrafManager.GetContext(), "run telegraf collector")
 		select {
 		case <-l.startChan:
 			if !l.started {
@@ -83,14 +82,14 @@ func (l *LogCollector) Run() {
 					reader.Start()
 				}
 				l.started = true
-				logger.Info(context.Background(), "telegraf log collector started, count", len(l.readers))
+				logger.Info(telegrafManager.GetContext(), "telegraf log collector started, count", len(l.readers))
 			}
 		case <-l.stopChan:
 			if l.started {
 				for _, reader := range l.readers {
 					reader.Stop()
 				}
-				logger.Info(context.Background(), "telegraf log collector stopped, count", len(l.readers))
+				logger.Info(telegrafManager.GetContext(), "telegraf log collector stopped, count", len(l.readers))
 				l.started = false
 			}
 		}
@@ -98,11 +97,11 @@ func (l *LogCollector) Run() {
 }
 
 func (l *LogCollector) TelegrafStop() {
-	logger.Debug(context.Background(), "trigger collector stop")
+	logger.Debug(telegrafManager.GetContext(), "trigger collector stop")
 	l.stopChan <- struct{}{}
 }
 
 func (l *LogCollector) TelegrafStart() {
-	logger.Debug(context.Background(), "trigger collector start")
+	logger.Debug(telegrafManager.GetContext(), "trigger collector start")
 	l.startChan <- struct{}{}
 }
