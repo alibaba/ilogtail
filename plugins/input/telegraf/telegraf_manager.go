@@ -17,9 +17,6 @@ package telegraf
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -29,7 +26,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 var statusCheckInterval = time.Second * time.Duration(30)
@@ -74,9 +74,7 @@ func (b *BindingMeta) Add(prj, logstore, cfg string) {
 
 func (b *BindingMeta) Delete(prj, logstore, cfg string) {
 	change := false
-	if _, ok := b.Metas[prj][logstore][cfg]; ok {
-		delete(b.Metas[prj][logstore], cfg)
-	}
+	delete(b.Metas[prj][logstore], cfg)
 	if _, ok := b.Metas[prj][logstore]; ok && len(b.Metas[prj][logstore]) == 0 {
 		delete(b.Metas[prj], logstore)
 		change = true
