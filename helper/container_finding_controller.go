@@ -17,6 +17,8 @@ package helper
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -157,6 +159,24 @@ func (c *ContainerDiscoverManager) LogAlarm(err error, msg string) {
 func (c *ContainerDiscoverManager) Init(initTryTimes int) {
 	defer dockerCenterRecover()
 	logger.Info(context.Background(), "input", "param", "docker discover", c.enableDockerDiscover, "cri discover", c.enableCRIDiscover, "static discover", c.enableStaticDiscover)
+	listenLoopIntervalSec := 0
+	// Get env in the same order as in C Logtail
+	listenLoopIntervalStr := os.Getenv("docker_config_update_interval")
+	if len(listenLoopIntervalStr) > 0 {
+		listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
+	}
+	listenLoopIntervalStr = os.Getenv("ALIYUN_LOGTAIL_DOCKER_CONFIG_UPDATE_INTERVAL")
+	if len(listenLoopIntervalStr) > 0 {
+		listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
+	}
+	// Keep this env var for compatibility
+	listenLoopIntervalStr = os.Getenv("CONTAINERD_LISTEN_LOOP_INTERVAL")
+	if len(listenLoopIntervalStr) > 0 {
+		listenLoopIntervalSec, _ = strconv.Atoi(listenLoopIntervalStr)
+	}
+	if listenLoopIntervalSec > 0 {
+		DefaultSyncContainersPeriod = time.Second * time.Duration(listenLoopIntervalSec)
+	}
 	// @note config for Fetch All Interval
 	fetchAllSec := (int)(FetchAllInterval.Seconds())
 	if err := util.InitFromEnvInt("DOCKER_FETCH_ALL_INTERVAL", &fetchAllSec, fetchAllSec); err != nil {

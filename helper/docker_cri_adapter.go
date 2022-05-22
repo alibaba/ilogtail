@@ -233,7 +233,10 @@ func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
 
 	cw.dockerCenter.updateContainer(containerID, dockerContainer)
 	cw.containersLock.Lock()
-	cw.containers[containerID] = status
+	cw.containers[containerID] = innerContainerInfo{
+		status,
+		dockerContainer.ContainerInfo.State.Pid,
+	}
 	cw.containersLock.Unlock()
 	return nil
 }
@@ -293,14 +296,14 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 
 	if !foundInfo {
 		logger.Warningf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "can not find container info from CRI::ContainerStatus, containerId: %s", containerID)
-		return nil, fmt.Errorf("can not find container info from CRI::ContainerStatus, containerId: %s", c.GetId())
+		return nil, "", cri.ContainerState_CONTAINER_UNKNOWN, fmt.Errorf("can not find container info from CRI::ContainerStatus, containerId: %s", containerID)
 	}
 	// only check pid for container that is older than DefaultSyncContainersPeriod
 	// to give a chance to collect emphemeral containers
-	if time.Since(time.Unix(0, c.CreatedAt)) > DefaultSyncContainersPeriod {
+	if time.Since(time.Unix(0, status.GetStatus().GetCreatedAt())) > DefaultSyncContainersPeriod {
 		exist := ContainerProcessAlive(int(ci.Pid))
 		if !exist {
-			return nil, fmt.Errorf("find container %s pid %d was already stopped", c.GetId(), ci.Pid)
+			return nil, "", cri.ContainerState_CONTAINER_UNKNOWN, fmt.Errorf("find container %s pid %d was already stopped", containerID, ci.Pid)
 		}
 	}
 
@@ -401,11 +404,15 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 		if container.State == cri.ContainerState_CONTAINER_EXITED || container.State == cri.ContainerState_CONTAINER_UNKNOWN {
 			continue
 		}
-		cw.containers[container.GetId()] = container.State
+
 		dockerContainer, _, _, err := cw.createContainerInfo(container.GetId())
 		if err != nil {
 			logger.Debug(context.Background(), "Create container info from cri-runtime error", err)
 			continue
+		}
+		cw.containers[container.GetId()] = innerContainerInfo{
+			State: container.State,
+			Pid:   dockerContainer.ContainerInfo.State.Pid,
 		}
 		containerMap[container.GetId()] = dockerContainer
 
@@ -462,14 +469,14 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 		cw.containersLock.RLock()
 		oldState, ok := cw.containers[id]
 		cw.containersLock.RUnlock()
-		if !ok || oldState != container.State {
+		if !ok || oldState.State != container.State {
 			logger.Debug(context.Background(), "cri sync containers fetchOne", id)
 			if err := cw.fetchOne(id); err != nil {
 				logger.Errorf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "failed to createContainerInfo, containerId: %s, error: %v", id, err)
 				continue
 			}
-		}else if ok {
-			exist := ContainerProcessAlive(oldInfo.Pid)
+		} else if ok {
+			exist := ContainerProcessAlive(oldState.Pid)
 			if !exist {
 				delete(newContainers, id)
 			}
