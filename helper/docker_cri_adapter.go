@@ -448,7 +448,7 @@ func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
 
 	if logger.DebugFlag() {
 		bytes, _ := json.Marshal(dockerContainer)
-		logger.Debugf(context.Background(), "cri crate container info : %s", string(bytes))
+		logger.Debugf(context.Background(), "cri create container info : %s", string(bytes))
 	}
 
 	cw.dockerCenter.updateContainer(containerID, dockerContainer)
