@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build !linux
 // +build !linux
 
 package helper
@@ -36,7 +37,7 @@ func IsCRIRuntimeValid(_ string) bool {
 	return false
 }
 
-func lookupContainerRootfsAbsDir(_ *docker.Container) string {
+func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(_ *docker.Container) string {
 	return ""
 }
 
@@ -47,4 +48,8 @@ func NewCRIRuntimeWrapper(_ *DockerCenter) (*CRIRuntimeWrapper, error) {
 
 func (cw *CRIRuntimeWrapper) run() error {
 	return errUninplemented
+}
+
+func ContainerProcessAlive(pid int) bool {
+	return true
 }

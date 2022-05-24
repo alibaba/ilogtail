@@ -12,27 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !windows
-// +build !windows
+//go:build linux
+// +build linux
 
-package envconfig
+package helper
 
 import (
-	"errors"
-	"strings"
+	"testing"
+
+	docker "github.com/fsouza/go-dockerclient"
+
+	"github.com/stretchr/testify/require"
 )
 
-const invalidLogPath = "/invalid_log_path"
-
-func splitLogPathAndFilePattern(filePath string) (logPath string, filePattern string, err error) {
-	lastSeperatorPos := strings.LastIndexByte(filePath, '/')
-	if lastSeperatorPos <= 0 || len(filePath) < 2 || lastSeperatorPos == len(filePath)-1 {
-		logPath = invalidLogPath
-		filePattern = invalidFilePattern
-		err = errors.New("invalid Unix file path")
-	} else {
-		logPath = filePath[0 : lastSeperatorPos+1]
-		filePattern = filePath[lastSeperatorPos+1:]
+func TestLookupContainerRootfsAbsDir(t *testing.T) {
+	crirt := &CRIRuntimeWrapper{
+		dockerCenter:   nil,
+		client:         nil,
+		runtimeVersion: nil,
+		containers:     make(map[string]innerContainerInfo),
+		stopCh:         make(<-chan struct{}),
+		rootfsCache:    make(map[string]string),
 	}
-	return
+
+	container := docker.Container{
+		ID: "1234567890abcde",
+	}
+	dir := crirt.lookupContainerRootfsAbsDir(&container)
+	require.Equal(t, dir, "")
 }
