@@ -348,6 +348,8 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 	}
 
 	containerMap := make(map[string]*DockerInfoDetail)
+	cw.containersLock.Lock()
+	defer cw.containersLock.Unlock()
 	for _, container := range containersResp.Containers {
 		if container.State == cri.ContainerState_CONTAINER_EXITED || container.State == cri.ContainerState_CONTAINER_UNKNOWN {
 			continue
@@ -356,6 +358,10 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 		if err != nil {
 			logger.Debug(context.Background(), "Create container info from cri-runtime error", err)
 			continue
+		}
+		cw.containers[container.GetId()] = innerContainerInfo{
+			State: container.State,
+			Pid:   dockerContainer.ContainerInfo.State.Pid,
 		}
 		containerMap[container.GetId()] = dockerContainer
 
@@ -386,25 +392,27 @@ func (cw *CRIRuntimeWrapper) loopSyncContainers() {
 func (cw *CRIRuntimeWrapper) syncContainers() error {
 	ctx, cancel := getContextWithTimeout(time.Second * 20)
 	defer cancel()
+	logger.Debug(context.Background(), "cri sync containers", "begin")
 	containersResp, err := cw.client.ListContainers(ctx, &cri.ListContainersRequest{})
 	if err != nil {
 		return err
 	}
 
-	cw.containersLock.Lock()
-	defer cw.containersLock.Unlock()
-
-	oldContainers := cw.containers
-
 	newContainers := map[string]*cri.Container{}
-	for i := range containersResp.Containers {
+	for i, container := range containersResp.Containers {
+		if container.State == cri.ContainerState_CONTAINER_EXITED || container.State == cri.ContainerState_CONTAINER_UNKNOWN {
+			continue
+		}
 		id := containersResp.Containers[i].GetId()
 		newContainers[id] = containersResp.Containers[i]
 	}
 
 	// update container
 	for id, container := range newContainers {
-		if oldInfo, ok := oldContainers[id]; !ok || oldInfo.State != container.State {
+		cw.containersLock.RLock()
+		oldInfo, ok := cw.containers[id]
+		cw.containersLock.RUnlock()
+		if !ok || oldInfo.State != container.State {
 			if err := cw.fetchOne(id); err != nil {
 				logger.Errorf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "failed to createContainerInfo, containerId: %s, error: %v", id, err)
 				continue
@@ -417,6 +425,8 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 		}
 	}
 
+	cw.containersLock.Lock()
+	defer cw.containersLock.Unlock()
 	// delete container
 	for oldID := range cw.containers {
 		if _, ok := newContainers[oldID]; !ok {
@@ -429,6 +439,7 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 }
 
 func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
+	logger.Debug(context.Background(), "trigger fetchOne")
 	dockerContainer, sandboxID, status, err := cw.createContainerInfo(containerID)
 	if err != nil {
 		return err
@@ -442,11 +453,11 @@ func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
 
 	cw.dockerCenter.updateContainer(containerID, dockerContainer)
 	cw.containersLock.Lock()
+	defer cw.containersLock.Unlock()
 	cw.containers[containerID] = innerContainerInfo{
 		status,
 		dockerContainer.ContainerInfo.State.Pid,
 	}
-	cw.containersLock.Unlock()
 	return nil
 }
 
