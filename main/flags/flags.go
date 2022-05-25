@@ -45,6 +45,7 @@ var (
 	HTTPAddr         = flag.String("server", ":18689", "http server address.")
 	Doc              = flag.Bool("doc", false, "generate plugin docs")
 	DocPath          = flag.String("docpath", "./docs/en/plugins", "generate plugin docs")
+	HTTPLoadFlag     = flag.Bool("http-load", false, "export http endpoint for load plugin config.")
 )
 
 var (
@@ -131,4 +132,5 @@ func OverrideByEnv() {
 	_ = util.InitFromEnvBool("LOGTAIL_DEBUG_FLAG", HTTPProfFlag, *HTTPProfFlag)
 	_ = util.InitFromEnvBool("LOGTAIL_AUTO_PROF", AutoProfile, *AutoProfile)
 	_ = util.InitFromEnvBool("LOGTAIL_FORCE_COLLECT_SELF_TELEMETRY", ForceSelfCollect, *ForceSelfCollect)
+	_ = util.InitFromEnvBool("LOGTAIL_HTTP_LOAD_CONFIG", HTTPLoadFlag, *HTTPLoadFlag)
 }

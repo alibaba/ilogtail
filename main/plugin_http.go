@@ -176,6 +176,10 @@ func DumpMemInfo(seconds int) {
 // `net/http/pprof` package.
 func InitHTTPServer() {
 	once.Do(func() {
+		if *flags.HTTPLoadFlag {
+			handlers["/loadconfig"] = &handler{handlerFunc: HandleLoadConfig, description: "load new logtail plugin configuration"}
+			handlers["/holdon"] = &handler{handlerFunc: HandleHoldOn, description: "hold on logtail plugin process"}
+		}
 		if *flags.HTTPProfFlag {
 			handlers["/mem"] = &handler{handlerFunc: HandleMem, description: "dump mem info"}
 			handlers["/cpu"] = &handler{handlerFunc: HandleCPU, description: "dump cpu info, default 30 seconds"}

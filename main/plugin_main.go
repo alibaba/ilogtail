@@ -45,8 +45,6 @@ func main() {
 	fmt.Println("hostname : ", util.GetHostName())
 	fmt.Println("hostIP : ", util.GetIPAddress())
 	fmt.Printf("load config %s %s %s\n", *flags.GlobalConfig, *flags.PluginConfig, *flags.FlusherConfig)
-	handlers["/loadconfig"] = &handler{handlerFunc: HandleLoadConfig, description: "load new logtail plugin configuration"}
-	handlers["/holdon"] = &handler{handlerFunc: HandleHoldOn, description: "hold on logtail plugin process"}
 
 	globalCfg, pluginCfgs, err := flags.LoadConfig()
 	if err != nil {

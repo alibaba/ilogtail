@@ -21,8 +21,24 @@ COPY . .
 
 RUN make cgobuild
 
-FROM registry.cn-beijing.aliyuncs.com/log-service/logtail:v1.0.30.0-ceb294c-aliyun
+FROM centos
 
-RUN rm -f /usr/local/ilogtail/libPluginBase.so
+ARG HOST_OS=Unknown
+ARG VERSION=Unknown
 
-COPY --from=build /src/bin/libPluginBase.so /usr/local/ilogtail/libPluginBase.so
+WORKDIR /ilogtail
+
+# build
+COPY --from=build /src/bin/libPluginBase.so /ilogtail/
+COPY --from=build /src/docker/ilogtail_config.json /ilogtail/
+# todo build
+COPY --from=build /src/docker/ilogtail /ilogtail/
+COPY --from=build /src/pkg/logtail/libPluginAdapter.so /ilogtail/
+
+RUN chmod -R 755 /ilogtail/
+RUN mkdir /ilogtail/checkpoint
+
+ENV HOST_OS=$HOST_OS
+ENV LOGTAIL_VERSION=$VERSION
+
+ENTRYPOINT ["/ilogtail/ilogtail"]

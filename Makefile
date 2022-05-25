@@ -137,11 +137,11 @@ e2e-docs: clean
 
 # e2e test
 .PHONY: e2e
-e2e: clean gocdocker coveragedocker
+e2e: clean wholedocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh behavior $(TEST_SCOPE)
 
 .PHONY: e2e-core
-e2e-core: clean gocdocker coveragedocker
+e2e-core: clean wholedocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh core $(TEST_SCOPE)
 
 .PHONY: e2e-performance
