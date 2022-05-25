@@ -219,57 +219,6 @@ func NewCRIRuntimeWrapper(dockerCenter *DockerCenter) (*CRIRuntimeWrapper, error
 	}, nil
 }
 
-func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
-	dockerContainer, sandboxID, status, err := cw.createContainerInfo(containerID)
-	if err != nil {
-		return err
-	}
-	cw.wrapperK8sInfoByID(sandboxID, dockerContainer)
-
-	if logger.DebugFlag() {
-		bytes, _ := json.Marshal(dockerContainer)
-		logger.Debugf(context.Background(), "cri crate container info : %s", string(bytes))
-	}
-
-	cw.dockerCenter.updateContainer(containerID, dockerContainer)
-	cw.containersLock.Lock()
-	cw.containers[containerID] = innerContainerInfo{
-		status,
-		dockerContainer.ContainerInfo.State.Pid,
-	}
-	cw.containersLock.Unlock()
-	return nil
-}
-
-func (cw *CRIRuntimeWrapper) wrapperK8sInfoByID(sandboxID string, detail *DockerInfoDetail) {
-	ctx, cancel := getContextWithTimeout(time.Second * 10)
-	status, err := cw.client.PodSandboxStatus(ctx, &cri.PodSandboxStatusRequest{
-		PodSandboxId: sandboxID,
-		Verbose:      true,
-	})
-	cancel()
-	if err != nil {
-		logger.Debug(context.Background(), "fetchone cannot read k8s info from sandbox, sandboxID", sandboxID)
-		return
-	}
-	cw.wrapperK8sInfoByLabels(status.GetStatus().GetLabels(), detail)
-}
-
-func (cw *CRIRuntimeWrapper) wrapperK8sInfoByLabels(sandboxLabels map[string]string, detail *DockerInfoDetail) {
-	if detail.K8SInfo == nil || sandboxLabels == nil {
-		return
-	}
-	if detail.K8SInfo.Labels == nil {
-		detail.K8SInfo.Labels = make(map[string]string)
-	}
-	for k, v := range sandboxLabels {
-		if strings.HasPrefix(k, k8sInnerLabelPrefix) || strings.HasPrefix(k, k8sInnerAnnotationPrefix) {
-			continue
-		}
-		detail.K8SInfo.Labels[k] = v
-	}
-}
-
 // createContainerInfo convert cri container to docker spec to adapt the history logic.
 func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *DockerInfoDetail, sandboxID string, state cri.ContainerState, err error) {
 	ctx, cancel := getContextWithTimeout(time.Second * 10)
@@ -404,7 +353,6 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 		if container.State == cri.ContainerState_CONTAINER_EXITED || container.State == cri.ContainerState_CONTAINER_UNKNOWN {
 			continue
 		}
-
 		dockerContainer, _, _, err := cw.createContainerInfo(container.GetId())
 		if err != nil {
 			logger.Debug(context.Background(), "Create container info from cri-runtime error", err)
@@ -467,16 +415,15 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 	// update container
 	for id, container := range newContainers {
 		cw.containersLock.RLock()
-		oldState, ok := cw.containers[id]
+		oldInfo, ok := cw.containers[id]
 		cw.containersLock.RUnlock()
-		if !ok || oldState.State != container.State {
-			logger.Debug(context.Background(), "cri sync containers fetchOne", id)
+		if !ok || oldInfo.State != container.State {
 			if err := cw.fetchOne(id); err != nil {
 				logger.Errorf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "failed to createContainerInfo, containerId: %s, error: %v", id, err)
 				continue
 			}
 		} else if ok {
-			exist := ContainerProcessAlive(oldState.Pid)
+			exist := ContainerProcessAlive(oldInfo.Pid)
 			if !exist {
 				delete(newContainers, id)
 			}
@@ -495,6 +442,58 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 	}
 	logger.Debug(context.Background(), "cri sync containers", "done")
 	return nil
+}
+
+func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
+	logger.Debug(context.Background(), "trigger fetchOne")
+	dockerContainer, sandboxID, status, err := cw.createContainerInfo(containerID)
+	if err != nil {
+		return err
+	}
+	cw.wrapperK8sInfoByID(sandboxID, dockerContainer)
+
+	if logger.DebugFlag() {
+		bytes, _ := json.Marshal(dockerContainer)
+		logger.Debugf(context.Background(), "cri create container info : %s", string(bytes))
+	}
+
+	cw.dockerCenter.updateContainer(containerID, dockerContainer)
+	cw.containersLock.Lock()
+	defer cw.containersLock.Unlock()
+	cw.containers[containerID] = innerContainerInfo{
+		status,
+		dockerContainer.ContainerInfo.State.Pid,
+	}
+	return nil
+}
+
+func (cw *CRIRuntimeWrapper) wrapperK8sInfoByID(sandboxID string, detail *DockerInfoDetail) {
+	ctx, cancel := getContextWithTimeout(time.Second * 10)
+	status, err := cw.client.PodSandboxStatus(ctx, &cri.PodSandboxStatusRequest{
+		PodSandboxId: sandboxID,
+		Verbose:      true,
+	})
+	cancel()
+	if err != nil {
+		logger.Debug(context.Background(), "fetchone cannot read k8s info from sandbox, sandboxID", sandboxID)
+		return
+	}
+	cw.wrapperK8sInfoByLabels(status.GetStatus().GetLabels(), detail)
+}
+
+func (cw *CRIRuntimeWrapper) wrapperK8sInfoByLabels(sandboxLabels map[string]string, detail *DockerInfoDetail) {
+	if detail.K8SInfo == nil || sandboxLabels == nil {
+		return
+	}
+	if detail.K8SInfo.Labels == nil {
+		detail.K8SInfo.Labels = make(map[string]string)
+	}
+	for k, v := range sandboxLabels {
+		if strings.HasPrefix(k, k8sInnerLabelPrefix) || strings.HasPrefix(k, k8sInnerAnnotationPrefix) {
+			continue
+		}
+		detail.K8SInfo.Labels[k] = v
+	}
 }
 
 func (cw *CRIRuntimeWrapper) sweepCache() {
