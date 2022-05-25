@@ -374,6 +374,7 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 
 	for k := range cw.containers {
 		if _, ok := containerMap[k]; !ok {
+			cw.dockerCenter.markRemove(k)
 			delete(cw.containers, k)
 		}
 	}
