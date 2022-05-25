@@ -86,7 +86,7 @@ func TestInitAndCollect(t *testing.T) {
 
 	hasTcping := false
 	hasPing := false
-	hasDns := false
+	hasDNS := false
 
 	for _, log := range c.Logs {
 		fmt.Println(log)
@@ -96,40 +96,43 @@ func TestInitAndCollect(t *testing.T) {
 			} else if content.Key == "__name__" && content.Value == "ping_total" {
 				hasPing = true
 			} else if content.Key == "__name__" && content.Value == "dns_resolve_rt_ms" {
-				hasDns = true
+				hasDNS = true
 			}
 		}
 	}
 
 	assert.Equal(t, true, hasTcping)
 	assert.Equal(t, true, hasPing)
-	assert.Equal(t, true, hasDns)
+	assert.Equal(t, true, hasDNS)
 
 	fmt.Println("disable dns")
 	c = &test.MockMetricCollector{}
-	netPing.DisableDns = true
+	netPing.DisableDNS = true
 	netPing.Collect(c)
 
 	hasTcping = false
 	hasPing = false
-	hasDns = false
+	hasDNS = false
 
 	for _, log := range c.Logs {
 		fmt.Println(log)
 		for _, content := range log.Contents {
-			if content.Key == "__name__" && content.Value == "tcping_total" {
+
+			switch {
+			case content.Key == "__name__" && content.Value == "tcping_total":
 				hasTcping = true
-			} else if content.Key == "__name__" && content.Value == "ping_total" {
+			case content.Key == "__name__" && content.Value == "ping_total":
 				hasPing = true
-			} else if content.Key == "__name__" && content.Value == "dns_resolve_rt_ms" {
-				hasDns = true
+			case content.Key == "__name__" && content.Value == "dns_resolve_rt_ms":
+				hasDNS = true
 			}
+
 		}
 	}
 
 	assert.Equal(t, true, hasTcping)
 	assert.Equal(t, true, hasPing)
-	assert.Equal(t, false, hasDns)
+	assert.Equal(t, false, hasDNS)
 }
 
 func TestDoICMPing(t *testing.T) {
@@ -326,7 +329,7 @@ func TestDNSResolve(t *testing.T) {
 
 	netPing.Init(ctx)
 
-	netPing.evaluteDnsResolve("www.baidu.com")
+	netPing.evaluteDNSResolve("www.baidu.com")
 
 	result := <-netPing.resolveChannel
 	fmt.Println(result)

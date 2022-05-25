@@ -15,9 +15,10 @@
 package netping
 
 import (
+	"crypto/rand"
 	"fmt"
 	"math"
-	"math/rand"
+	"math/big"
 	"net"
 	"sync"
 	"time"
@@ -74,7 +75,7 @@ type NetPing struct {
 	ip              string
 	resolveHostMap  *sync.Map
 	resolveChannel  chan *ResolveResult
-	DisableDns      bool         `json:"disable_dns_metric" comment:"disable dns resolve metric, default is false"`
+	DisableDNS      bool         `json:"disable_dns_metric" comment:"disable dns resolve metric, default is false"`
 	TimeoutSeconds  int          `json:"timeout_seconds" comment:"the timeout of ping/tcping, unit is second,must large than or equal 1, less than  30, default is 5"`
 	IntervalSeconds int          `json:"interval_seconds" comment:"the interval of ping/tcping, unit is second,must large than or equal 5, less than 86400 and timeout_seconds, default is 60"`
 	ICMPConfigs     []ICMPConfig `json:"icmp" comment:"the icmping config list, example:  {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${REMOTE_HOST}\", \"count\" : 3}"`
@@ -146,7 +147,7 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 			m.hasConfig = true
 			m.resolveHostMap.Store(c.Target, "")
 
-			if !m.DisableDns {
+			if !m.DisableDNS {
 				m.resolveHostMap.Store(c.Target, "")
 			}
 		}
@@ -160,7 +161,7 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 			localTCPConfigs = append(localTCPConfigs, c)
 			m.hasConfig = true
 
-			if !m.DisableDns {
+			if !m.DisableDNS {
 				m.resolveHostMap.Store(c.Target, "")
 			}
 		}
@@ -182,7 +183,7 @@ func (m *NetPing) Description() string {
 	return "a icmp-ping/tcp-ping plugin for logtail"
 }
 
-func (m *NetPing) evaluteDnsResolve(host string) {
+func (m *NetPing) evaluteDNSResolve(host string) {
 	success := true
 	start := time.Now()
 	ips, err := net.LookupIP(host)
@@ -191,7 +192,12 @@ func (m *NetPing) evaluteDnsResolve(host string) {
 		success = false
 		m.resolveHostMap.Store(host, "")
 	} else {
-		m.resolveHostMap.Store(host, ips[rand.Intn(len(ips))].String())
+		var n int64 = 0
+		nBig, err := rand.Int(rand.Reader, big.NewInt(int64(len(ips))))
+		if err == nil {
+			n = nBig.Int64()
+		}
+		m.resolveHostMap.Store(host, ips[n].String())
 	}
 
 	var label helper.KeyValues
@@ -226,14 +232,14 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 	nowTs := time.Now()
 
 	// for dns resolve
-	if (len(m.ICMPConfigs) > 0 || len(m.TCPConfigs) > 0) && !m.DisableDns {
+	if (len(m.ICMPConfigs) > 0 || len(m.TCPConfigs) > 0) && !m.DisableDNS {
 		resolveCounter := 0
 		m.resolveHostMap.Range(
 			func(key, value interface{}) bool {
 				host := key.(string)
 				ip := net.ParseIP(host)
 				if ip == nil {
-					go m.evaluteDnsResolve(host)
+					go m.evaluteDNSResolve(host)
 					resolveCounter++
 				}
 				return true
@@ -243,8 +249,8 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 			result := <-m.resolveChannel
 			successCount := 0
 			if result.Success {
-				successCount += 1
-				helper.AddMetric(collector, "dns_resolve_rt_ms", nowTs, result.Label, float64(result.RTMs))
+				successCount++
+				helper.AddMetric(collector, "dns_resolve_rt_ms", nowTs, result.Label, result.RTMs)
 			}
 			helper.AddMetric(collector, "dns_resolve_success", nowTs, result.Label, float64(successCount))
 		}
