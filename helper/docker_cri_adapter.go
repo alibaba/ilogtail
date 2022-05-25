@@ -366,12 +366,18 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 		containerMap[container.GetId()] = dockerContainer
 
 		// append the pod labels to the k8s info.
-		if sandbox, ok := sandboxMap[container.PodSandboxId]; ok && dockerContainer.K8SInfo != nil {
+		if sandbox, ok := sandboxMap[container.PodSandboxId]; ok {
 			cw.wrapperK8sInfoByLabels(sandbox.GetLabels(), dockerContainer)
 		}
 		logger.Debug(context.Background(), "Create container info from cri-runtime success, info", *dockerContainer.ContainerInfo, "config", *dockerContainer.ContainerInfo.Config, "detail", *dockerContainer)
 	}
 	cw.dockerCenter.updateContainers(containerMap)
+
+	for k := range cw.containers {
+		if _, ok := containerMap[k]; !ok {
+			delete(cw.containers, k)
+		}
+	}
 	return nil
 }
 
