@@ -104,10 +104,6 @@ coveragedocker: clean
 basedocker: clean
 	./scripts/docker-build.sh $(VERSION) base $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
-.PHONY: wholedocker
-wholedocker: clean
-	./scripts/docker-build.sh $(VERSION) whole $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
-
 .PHONY: solib
 solib: clean
 	./scripts/docker-build.sh $(VERSION) lib "aliyun/ilogtail" false && ./scripts/solib.sh
@@ -121,7 +117,7 @@ gocdocker: clean
 vendor: clean
 	rm -rf vendor
 	$(GO) mod vendor
-	./external/sync_vendor.py
+	python3 ./external/sync_vendor.py
 
 .PHONY: check-dependency-licenses
 check-dependency-licenses: clean
@@ -137,15 +133,15 @@ e2e-docs: clean
 
 # e2e test
 .PHONY: e2e
-e2e: clean wholedocker
+e2e: clean gocdocker coveragedocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh behavior $(TEST_SCOPE)
 
 .PHONY: e2e-core
-e2e-core: clean wholedocker
+e2e-core: clean gocdocker coveragedocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh core $(TEST_SCOPE)
 
 .PHONY: e2e-performance
-e2e-performance: clean docker
+e2e-performance: clean docker gocdocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh performance $(TEST_SCOPE)
 
 # unit test

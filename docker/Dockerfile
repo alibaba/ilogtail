@@ -18,22 +18,28 @@ WORKDIR /src
 
 COPY . .
 
-RUN make build
+RUN make cgobuild
 
 FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/logtailplugin-base:1.16-goc
 
-ARG HOST_OS=Linux
+ARG HOST_OS=Unknown
+ARG VERSION=Unknown
 
-USER root
+WORKDIR /ilogtail
 
-WORKDIR /aliyun
+# build
+COPY --from=build /src/bin/libPluginBase.so /ilogtail/
+COPY --from=build /src/docker/ilogtail_config.json /ilogtail/
+# todo build
+COPY --from=build /src/docker/ilogtail /ilogtail/
+COPY --from=build /src/pkg/logtail/libPluginAdapter.so /ilogtail/
 
-COPY --from=build /src/bin/ilogtail .
-COPY --from=build /src/pkg/logtail/libPluginAdapter.so .
-
+RUN chmod -R 755 /ilogtail/
+RUN mkdir /ilogtail/checkpoint
 
 ENV HOST_OS=$HOST_OS
+ENV LOGTAIL_VERSION=$VERSION
 
 EXPOSE 18689
 
-ENTRYPOINT ["/aliyun/ilogtail"]
+ENTRYPOINT ["/ilogtail/ilogtail"]

@@ -23,7 +23,7 @@ var DemoCase = Case{
 	Ilogtail: Ilogtail{
 		LoadConfigWait: "5s",
 		CloseWait:      "5s",
-		Config: []LogtailpluginCfgs{
+		Config: []LogtailCfgs{
 			{
 				Name: "mock-metric-case",
 				Content: []string{

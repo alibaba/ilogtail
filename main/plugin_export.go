@@ -113,8 +113,8 @@ func HoldOn(exitFlag int) {
 	}
 	started = false
 	logger.Info(context.Background(), "Hold on", "success")
-	logger.Info(context.Background(), "logger", "close and recover")
 	if exitFlag != 0 {
+		logger.Info(context.Background(), "logger", "close and recover")
 		logger.Close()
 	}
 }

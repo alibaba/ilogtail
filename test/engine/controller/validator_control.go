@@ -17,6 +17,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"github.com/alibaba/ilogtail/test/engine/boot"
 	"io/ioutil"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -86,6 +87,7 @@ func (c *ValidatorController) Start() error {
 	go func() {
 		<-c.chain.Done()
 		logger.Info(context.Background(), "validator controller is closing....")
+		boot.CopyCoreLogs()
 		c.Clean()
 		c.flushSummaryReport()
 		c.chain.CancelChild()

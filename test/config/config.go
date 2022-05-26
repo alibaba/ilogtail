@@ -40,17 +40,19 @@ type (
 	}
 	// Ilogtail is the logtail plugin configuration to load the ilogtail context.
 	Ilogtail struct {
-		Config         []LogtailpluginCfgs    `mapstructure:"config" yaml:"config"`
+		Config         []LogtailCfgs          `mapstructure:"config" yaml:"config"`
 		LoadConfigWait string                 `mapstructure:"load_config_wait" yaml:"load_config_wait"`
 		CloseWait      string                 `mapstructure:"close_wait" yaml:"close_wait"` // wait interval for upstream process.
 		ENV            map[string]string      `mapstructure:"env" yaml:"env"`
 		DependsOn      map[string]interface{} `mapstructure:"depends_on" yaml:"depends_on"`
 	}
 
-	LogtailpluginCfgs struct {
-		Name    string   `mapstructure:"name" yaml:"name"`
-		Content []string `mapstructure:"content" yaml:"content"`
+	LogtailCfgs struct {
+		Name      string   `mapstructure:"name" yaml:"name"`
+		MixedMode bool     `mapstructure:"mixed_mode" yaml:"mixed_mode"`
+		Content   []string `mapstructure:"content" yaml:"content"`
 	}
+
 	Subscriber struct {
 		Name   string                 `mapstructure:"name" yaml:"name"`
 		Config map[string]interface{} `mapstructure:"config" yaml:"config"`
