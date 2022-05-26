@@ -192,7 +192,7 @@ func (m *NetPing) evaluteDNSResolve(host string) {
 		success = false
 		m.resolveHostMap.Store(host, "")
 	} else {
-		var n int64 = 0
+		var n int64
 		nBig, err := rand.Int(rand.Reader, big.NewInt(int64(len(ips))))
 		if err == nil {
 			n = nBig.Int64()
