@@ -91,11 +91,12 @@ func TestInitAndCollect(t *testing.T) {
 	for _, log := range c.Logs {
 		fmt.Println(log)
 		for _, content := range log.Contents {
-			if content.Key == "__name__" && content.Value == "tcping_total" {
+			switch {
+			case content.Key == "__name__" && content.Value == "tcping_total":
 				hasTcping = true
-			} else if content.Key == "__name__" && content.Value == "ping_total" {
+			case content.Key == "__name__" && content.Value == "ping_total":
 				hasPing = true
-			} else if content.Key == "__name__" && content.Value == "dns_resolve_rt_ms" {
+			case content.Key == "__name__" && content.Value == "dns_resolve_rt_ms":
 				hasDNS = true
 			}
 		}
