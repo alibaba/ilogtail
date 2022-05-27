@@ -30,6 +30,8 @@ func (l *LogtailController) Init(parent *CancelChain, fullCfg *config.Case) erro
 				return fmt.Errorf("cannot deserizlize %s config by json, content:%s", name, con)
 			}
 			if cfg.MixedMode {
+				content["category"] = E2ELogstoreName
+				content["project_name"] = E2EProjectName
 				logstoreCfg[name] = content
 			} else {
 				pluginCfg := make(map[string]interface{})

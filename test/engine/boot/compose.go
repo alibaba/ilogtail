@@ -256,7 +256,6 @@ func (c *ComposeBooter) getLogtailpluginConfig() map[string]interface{} {
 	f, _ := os.Create(config.CoverageFile)
 	_ = f.Close()
 	str := fmt.Sprintf(template, config.CoverageFile, config.FlusherFile, config.ConfigFile)
-	fmt.Println(str)
 	if err := yaml.Unmarshal([]byte(str), &cfg); err != nil {
 		panic(err)
 	}
@@ -272,11 +271,11 @@ func (c *ComposeBooter) getLogtailpluginConfig() map[string]interface{} {
 		"condition": "service_healthy",
 	}
 	ilogtail["depends_on"] = c.cfg.Ilogtail.DependsOn
-
-	volumes := ilogtail["volumes"].([]string)
-	for src, dest := range c.cfg.Ilogtail.MountFiles {
-		volumes = append(volumes, fmt.Sprintf("%s:%s", config.CaseHome+src, dest))
+	for _, m := range c.cfg.Ilogtail.MountFiles {
+		ilogtail["volumes"] = append(ilogtail["volumes"].([]interface{}), m)
 	}
+	bytes, _ := yaml.Marshal(cfg)
+	println(string(bytes))
 	return cfg
 }
 
