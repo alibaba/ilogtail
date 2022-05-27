@@ -45,6 +45,10 @@ func clean() {
 }
 
 func TestBootCompose(t *testing.T) {
+	defer os.Remove("./test.log")
+	os.Create("test.log")
+	config.FlusherFile = "./test.log"
+	config.ConfigFile = "./test.log"
 	createComposeFile()
 	defer clean()
 	path, _ := filepath.Abs(".")

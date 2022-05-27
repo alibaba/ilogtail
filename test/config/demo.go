@@ -31,6 +31,7 @@ var DemoCase = Case{
 				},
 			},
 		},
+		MountFiles: []string{},
 	},
 	SetUps: []SetUp{},
 	Retry: Retry{
