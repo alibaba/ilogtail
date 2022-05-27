@@ -45,6 +45,7 @@ type (
 		CloseWait      string                 `mapstructure:"close_wait" yaml:"close_wait"` // wait interval for upstream process.
 		ENV            map[string]string      `mapstructure:"env" yaml:"env"`
 		DependsOn      map[string]interface{} `mapstructure:"depends_on" yaml:"depends_on"`
+		MountFiles     map[string]string      `mapstructure:"mounts" yaml:"mounts"`
 	}
 
 	LogtailCfgs struct {

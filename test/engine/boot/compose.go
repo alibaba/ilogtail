@@ -273,6 +273,10 @@ func (c *ComposeBooter) getLogtailpluginConfig() map[string]interface{} {
 	}
 	ilogtail["depends_on"] = c.cfg.Ilogtail.DependsOn
 
+	volumes := ilogtail["volumes"].([]string)
+	for src, dest := range c.cfg.Ilogtail.MountFiles {
+		volumes = append(volumes, fmt.Sprintf("%s:%s", config.CaseHome+src, dest))
+	}
 	return cfg
 }
 
