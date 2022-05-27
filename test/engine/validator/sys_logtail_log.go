@@ -140,9 +140,8 @@ func (l *logtailLogValidator) Name() string {
 func (l *logtailLogValidator) GetFile() string {
 	if l.Main {
 		return l.logtailLog
-	} else {
-		return l.logtailPluginLog
 	}
+	return l.logtailPluginLog
 
 }
 

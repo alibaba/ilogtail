@@ -1,5 +1,0 @@
-package boot
-
-func GenerateConfig() {
-
-}

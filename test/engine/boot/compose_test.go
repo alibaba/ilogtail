@@ -45,8 +45,6 @@ func clean() {
 }
 
 func TestBootCompose(t *testing.T) {
-	defer os.Remove("./test.log")
-	config.LogtailPluginFile = "./test.log"
 	createComposeFile()
 	defer clean()
 	path, _ := filepath.Abs(".")

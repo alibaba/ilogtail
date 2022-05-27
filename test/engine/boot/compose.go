@@ -192,7 +192,7 @@ func (c *ComposeBooter) exec(id string, cmd []string) error {
 func (c *ComposeBooter) CopyCoreLogs() {
 	if c.logtailID != "" {
 		_ = os.Remove(config.LogDir)
-		_ = os.Mkdir(config.LogDir, 0755)
+		_ = os.Mkdir(config.LogDir, 0750)
 		cmd := exec.Command("docker", "cp", c.logtailID+":/ilogtail/ilogtail.LOG", config.LogDir)
 		output, err := cmd.CombinedOutput()
 		logger.Debugf(context.Background(), "\n%s", string(output))

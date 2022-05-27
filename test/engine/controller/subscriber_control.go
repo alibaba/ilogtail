@@ -16,11 +16,12 @@ package controller
 
 import (
 	"context"
+	"io/ioutil"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
 	"github.com/alibaba/ilogtail/test/engine/subscriber"
-	"io/ioutil"
 )
 
 var globalSubscriberChan <-chan *protocol.LogGroup

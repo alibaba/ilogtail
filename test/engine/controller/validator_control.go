@@ -17,12 +17,12 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"github.com/alibaba/ilogtail/test/engine/boot"
 	"io/ioutil"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/test/config"
+	"github.com/alibaba/ilogtail/test/engine/boot"
 	"github.com/alibaba/ilogtail/test/engine/validator"
 )
 

@@ -36,7 +36,7 @@ struct containerMeta{
 	char* image;
 };
 */
-import "C"
+import "C" //nolint:typecheck
 
 var initOnce sync.Once
 var started bool
