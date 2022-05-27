@@ -275,7 +275,10 @@ func (m *Mysql) Start(collector ilogtail.Collector) error {
 		case <-timer.C:
 			startTime := time.Now()
 			m.collectLatency.Begin()
-			_ = m.Collect(collector)
+			err = m.Collect(collector)
+			if err != nil {
+				logger.Error(m.context.GetRuntimeContext(), "MYSQL_QUERY_ALARM", "sql query error", err)
+			}
 			m.collectLatency.End()
 			endTime := time.Now()
 			if endTime.Sub(startTime) > time.Duration(m.IntervalMs)*time.Millisecond/2 {
