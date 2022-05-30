@@ -145,11 +145,6 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 		if c.Src == m.ip {
 			localICMPConfigs = append(localICMPConfigs, c)
 			m.hasConfig = true
-			m.resolveHostMap.Store(c.Target, "")
-
-			if !m.DisableDNS {
-				m.resolveHostMap.Store(c.Target, "")
-			}
 		}
 	}
 	m.ICMPConfigs = localICMPConfigs
@@ -160,10 +155,6 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 		if c.Src == m.ip {
 			localTCPConfigs = append(localTCPConfigs, c)
 			m.hasConfig = true
-
-			if !m.DisableDNS {
-				m.resolveHostMap.Store(c.Target, "")
-			}
 		}
 	}
 	m.TCPConfigs = localTCPConfigs
@@ -202,7 +193,7 @@ func (m *NetPing) evaluteDNSResolve(host string) {
 
 	var label helper.KeyValues
 	label.Append("target", host)
-	label.Append("src", m.hostname)
+	label.Append("src", m.ip)
 	label.Append("src_host", m.hostname)
 
 	m.resolveChannel <- &ResolveResult{

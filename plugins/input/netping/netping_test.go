@@ -333,7 +333,8 @@ func TestDNSResolve(t *testing.T) {
 	netPing.evaluteDNSResolve("www.baidu.com")
 
 	result := <-netPing.resolveChannel
-	fmt.Println(result)
+	resultBytes, _ := json.Marshal(result)
+	fmt.Println(string(resultBytes))
 
 	assert.Equal(t, true, result.Success)
 }
