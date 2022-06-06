@@ -269,7 +269,6 @@ func (m *Mysql) Start(collector ilogtail.Collector) error {
 
 	// first collect after 10 ms
 	timer := time.NewTimer(10 * time.Millisecond)
-	collectErrCount := 0
 	for {
 		select {
 		case <-timer.C:
@@ -277,11 +276,7 @@ func (m *Mysql) Start(collector ilogtail.Collector) error {
 			m.collectLatency.Begin()
 			err = m.Collect(collector)
 			if err != nil {
-				collectErrCount += 1
-				if collectErrCount%1000 == 0 {
-					logger.Error(m.context.GetRuntimeContext(), "MYSQL_QUERY_ALARM", "sql query error", err)
-					collectErrCount = 0
-				}
+				logger.Error(m.context.GetRuntimeContext(), "MYSQL_QUERY_ALARM", "sql query error", err)
 			}
 			m.collectLatency.End()
 			endTime := time.Now()
@@ -465,6 +460,7 @@ func init() {
 			MaxSyncSize:           10000,
 			DialTimeOutMs:         5000,
 			ReadTimeOutMs:         5000,
+			IntervalMs:            60000,
 			shutdown:              make(chan struct{}, 2),
 		}
 	}
