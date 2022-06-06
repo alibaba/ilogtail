@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -45,10 +46,13 @@ struct containerMeta{
 	char* image;
 	int k8sLabelsSize;
 	int containerLabelsSize;
+	int envSize;
 	char** k8sLabelsKey;
 	char** k8sLabelsVal;
 	char** containerLabelsKey;
 	char** containerLabelsVal;
+	char** envsKey;
+	char** envsVal;
 };
 */
 import "C"
@@ -191,6 +195,30 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 			returnStruct.containerLabelsKey = cContainerLabelsKey
 			returnStruct.containerLabelsVal = cContainerLabelsVal
 		}
+		returnStruct.envSize = C.int(len(detail.ContainerInfo.Config.Env))
+		if len(detail.ContainerInfo.Config.Env) > 0 {
+			cEnvsKey := C.makeCharArray(returnStruct.envSize)
+			cEnvsVal := C.makeCharArray(returnStruct.envSize)
+			count := 0
+			for _, env := range detail.ContainerInfo.Config.Env {
+				var envKey, envValue string
+				splitArray := strings.SplitN(env, "=", 2)
+				if len(splitArray) < 2 {
+					envKey = splitArray[0]
+				} else {
+					envKey = splitArray[0]
+					envValue = splitArray[1]
+				}
+
+				C.setArrayString(cEnvsKey, C.CString(envKey), C.int(count))
+				C.setArrayString(cEnvsVal, C.CString(envValue), C.int(count))
+				count++
+			}
+			returnStruct.envsKey = cEnvsKey
+			returnStruct.envsVal = cEnvsVal
+
+		}
+
 		return returnStruct
 	}
 
