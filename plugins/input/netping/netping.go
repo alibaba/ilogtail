@@ -37,9 +37,9 @@ import (
 )
 
 const (
-	PING_TYPE_ICMP    = "ping"
-	PING_TYPE_TCPING  = "tcping"
-	PING_TYPE_HTTPING = "httping"
+	PingTypeIcmp    = "ping"
+	PingTypeTcping  = "tcping"
+	PingTypeHttping = "httping"
 
 	DefaultIntervalSeconds = 60    // default interval
 	MinIntervalSeconds     = 5     // min interval seconds
@@ -256,22 +256,22 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 
 	counter := 0
 	if len(m.ICMPConfigs) > 0 {
-		for _, config := range m.ICMPConfigs {
-			go m.doICMPing(&config)
+		for i := range m.ICMPConfigs {
+			go m.doICMPing(&m.ICMPConfigs[i])
 			counter++
 		}
 	}
 
 	if len(m.TCPConfigs) > 0 {
-		for _, config := range m.TCPConfigs {
-			go m.doTCPing(&config)
+		for i := range m.TCPConfigs {
+			go m.doTCPing(&m.TCPConfigs[i])
 			counter++
 		}
 	}
 
 	if len(m.HTTPConfigs) > 0 {
-		for _, config := range m.HTTPConfigs {
-			go m.doHTTPing(&config)
+		for i := range m.HTTPConfigs {
+			go m.doHTTPing(&m.HTTPConfigs[i])
 			counter++
 		}
 	}
@@ -291,13 +291,13 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 		helper.AddMetric(collector, fmt.Sprintf("%s_success", result.Type), nowTs, result.Label, float64(result.Success))
 		helper.AddMetric(collector, fmt.Sprintf("%s_failed", result.Type), nowTs, result.Label, float64(result.Failed))
 
-		if (result.Type == PING_TYPE_ICMP || result.Type == PING_TYPE_TCPING) && result.Success > 0 {
+		if (result.Type == PingTypeIcmp || result.Type == PingTypeTcping) && result.Success > 0 {
 			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_min_ms", result.Type), nowTs, result.Label, result.MinRTTMs)
 			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_max_ms", result.Type), nowTs, result.Label, result.MaxRTTMs)
 			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_avg_ms", result.Type), nowTs, result.Label, result.AvgRTTMs)
 			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_total_ms", result.Type), nowTs, result.Label, result.TotalRTTMs)
 			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_stddev_ms", result.Type), nowTs, result.Label, result.StdDevRTTMs)
-		} else if result.Type == PING_TYPE_HTTPING && result.Success > 0 {
+		} else if result.Type == PingTypeHttping && result.Success > 0 {
 			helper.AddMetric(collector, fmt.Sprintf("%s_rt_ms", result.Type), nowTs, result.Label, float64(result.HTTPRTMs))
 			helper.AddMetric(collector, fmt.Sprintf("%s_response_size", result.Type), nowTs, result.Label, float64(result.HTTPRTMs))
 
@@ -367,7 +367,7 @@ func (m *NetPing) doICMPing(config *ICMPConfig) {
 		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_INIT_PING", err.Error())
 		m.resultChannel <- &Result{
 			Valid:  true,
-			Type:   PING_TYPE_ICMP,
+			Type:   PingTypeIcmp,
 			Total:  config.Count,
 			Failed: config.Count,
 			Label:  label.String(),
@@ -385,7 +385,7 @@ func (m *NetPing) doICMPing(config *ICMPConfig) {
 		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_RUN_PING", err.Error())
 		m.resultChannel <- &Result{
 			Valid:  true,
-			Type:   PING_TYPE_ICMP,
+			Type:   PingTypeIcmp,
 			Total:  config.Count,
 			Failed: config.Count,
 			Label:  label.String(),
@@ -402,7 +402,7 @@ func (m *NetPing) doICMPing(config *ICMPConfig) {
 	m.resultChannel <- &Result{
 		Valid:       true,
 		Label:       label.String(),
-		Type:        PING_TYPE_ICMP,
+		Type:        PingTypeIcmp,
 		Total:       pinger.Count,
 		Success:     stats.PacketsRecv,
 		Failed:      pinger.Count - stats.PacketsRecv,
@@ -481,7 +481,7 @@ func (m *NetPing) doTCPing(config *TCPConfig) {
 	m.resultChannel <- &Result{
 		Valid:       true,
 		Label:       label.String(),
-		Type:        PING_TYPE_TCPING,
+		Type:        PingTypeTcping,
 		Total:       config.Count,
 		Success:     len(rtts),
 		Failed:      failed,
@@ -532,7 +532,7 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 	if err != nil {
 		m.resultChannel <- &Result{
 			Valid:   true,
-			Type:    PING_TYPE_HTTPING,
+			Type:    PingTypeHttping,
 			Label:   label.String(),
 			Total:   1,
 			Success: 0,
@@ -546,7 +546,7 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 	if err != nil {
 		m.resultChannel <- &Result{
 			Valid:   true,
-			Type:    PING_TYPE_HTTPING,
+			Type:    PingTypeHttping,
 			Label:   label.String(),
 			Total:   1,
 			Success: 0,
@@ -562,7 +562,7 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 	if err != nil {
 		m.resultChannel <- &Result{
 			Valid:   true,
-			Type:    PING_TYPE_HTTPING,
+			Type:    PingTypeHttping,
 			Label:   label.String(),
 			Total:   1,
 			Success: 0,
@@ -603,7 +603,7 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 
 	m.resultChannel <- &Result{
 		Valid:            true,
-		Type:             PING_TYPE_HTTPING,
+		Type:             PingTypeHttping,
 		Label:            label.String(),
 		Total:            1,
 		Success:          successCount,
