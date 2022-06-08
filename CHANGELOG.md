@@ -34,4 +34,8 @@ your changes, such as:
 
 - [public] [both] [updated] add a new feature
 ## [Unreleased]
-[updated] update netping support dns resolve time and add hostname to labels , reduce min interval
+
+- [public] [both] [added] Collect the Telegraf log when the service_telegraf plugin works.
+- [public] [both] [updated] update netping support dns resolve time and add hostname to labels , reduce min interval
+- [public] [both] [fixed] remove unstable syslog unit test in CI and enhance the unit test of test engine
+
