@@ -163,6 +163,10 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 		if c.Src == m.ip {
 			localICMPConfigs = append(localICMPConfigs, c)
 			m.hasConfig = true
+
+			if c.Name == "" {
+				c.Name = fmt.Sprintf("%s -> %s", c.Src, c.Target)
+			}
 			if !m.DisableDNS {
 				m.resolveHostMap.Store(c.Target, "")
 			}
@@ -174,6 +178,9 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 	localTCPConfigs := make([]TCPConfig, 0)
 	for _, c := range m.TCPConfigs {
 		if c.Src == m.ip {
+			if c.Name == "" {
+				c.Name = fmt.Sprintf("%s -> %s:%d", c.Src, c.Target, c.Port)
+			}
 			localTCPConfigs = append(localTCPConfigs, c)
 			m.hasConfig = true
 			if !m.DisableDNS {
@@ -187,17 +194,33 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 	localHTTPConfigs := make([]HTTPConfig, 0)
 	for _, c := range m.HTTPConfigs {
 		if c.Src == m.ip {
+			if !strings.HasPrefix(c.Target, "http") {
+				// add default schema
+				c.Target = fmt.Sprintf("http://%s", c.Target)
+			}
+			u, err := url.Parse(c.Target)
+			if err != nil {
+				logger.Error(context.GetRuntimeContext(), "netping failed to parse httping target")
+				continue
+			}
+
 			if c.ExpectCode == 0 {
 				c.ExpectCode = 200
 			}
+
+			if c.Name == "" {
+				if u.Host == "" {
+					c.Name = fmt.Sprintf("%s -> %s", c.Src, c.Target)
+				} else if u.Port() == "" {
+					c.Name = fmt.Sprintf("%s -> %s://%s", c.Src, u.Scheme, u.Host)
+				} else {
+					c.Name = fmt.Sprintf("%s -> %s://%s:%s", c.Src, u.Scheme, u.Host, u.Port())
+				}
+			}
+
 			localHTTPConfigs = append(localHTTPConfigs, c)
 			m.hasConfig = true
 			if !m.DisableDNS {
-				u, err := url.Parse(c.Target)
-				if err != nil {
-					logger.Error(context.GetRuntimeContext(), "netping init")
-					continue
-				}
 				m.resolveHostMap.Store(u.Host, "")
 			}
 		}
@@ -299,10 +322,10 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_stddev_ms", result.Type), nowTs, result.Label, result.StdDevRTTMs)
 		} else if result.Type == PingTypeHttping && result.Success > 0 {
 			helper.AddMetric(collector, fmt.Sprintf("%s_rt_ms", result.Type), nowTs, result.Label, float64(result.HTTPRTMs))
-			helper.AddMetric(collector, fmt.Sprintf("%s_response_size", result.Type), nowTs, result.Label, float64(result.HTTPRTMs))
+			helper.AddMetric(collector, fmt.Sprintf("%s_response_bytes", result.Type), nowTs, result.Label, float64(result.HTTPRTMs))
 
 			if result.HasHTTPSCert {
-				helper.AddMetric(collector, fmt.Sprintf("%s_cert_ttl", result.Type), nowTs, result.HTTPSCertLabels, float64(result.HTTPSCertTTLDay))
+				helper.AddMetric(collector, fmt.Sprintf("%s_cert_ttl_days", result.Type), nowTs, result.HTTPSCertLabels, float64(result.HTTPSCertTTLDay))
 			}
 		}
 	}
@@ -516,7 +539,6 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 			}
 			target := m.getRealTarget(host)
 			if target != host {
-				fmt.Println("target:", target, "network:", network, "port:", port)
 				conn, err := dialer.DialContext(ctx, network, target+":"+port)
 				if err == nil {
 					return conn, nil
@@ -544,6 +566,7 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 	now := time.Now()
 	resp, err := httpClient.Do(req)
 	if err != nil {
+		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_RUN_HTTPING", err.Error())
 		m.resultChannel <- &Result{
 			Valid:   true,
 			Type:    PingTypeHttping,
@@ -583,21 +606,31 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 	}
 
 	label.Append("proto", resp.Proto)
+	label.Append("url_schema", resp.Request.URL.Scheme)
+	label.Append("url_host", resp.Request.URL.Host)
 	label.Append("code", fmt.Sprintf("%d", resp.StatusCode))
 	label.Append("codex", fmt.Sprintf("%dxx", resp.StatusCode/100))
 
-	var certLabel helper.KeyValues
 	var certTTLDay int
 	var hasCert bool
-	for _, v := range resp.TLS.PeerCertificates {
-		if len(v.DNSNames) > 0 {
-			// only check the leaf cert
-			certLabel.Append("subject_commmon_name", v.Subject.CommonName)
-			certLabel.Append("issuer_commmon_name", v.Issuer.CommonName)
+	var certLabel helper.KeyValues
 
-			certTTLDay = int(v.NotAfter.Sub(now).Hours() / 24)
-			hasCert = true
-			break
+	if resp.TLS != nil {
+		for _, v := range resp.TLS.PeerCertificates {
+			if len(v.DNSNames) > 0 {
+				// only check the leaf cert
+				certLabel.Append("name", config.Name)
+				certLabel.Append("src", config.Src)
+				certLabel.Append("url", config.Target)
+				certLabel.Append("src_host", m.hostname)
+				certLabel.Append("url_host", resp.Request.URL.Host)
+				certLabel.Append("subject_commmon_name", v.Subject.CommonName)
+				certLabel.Append("issuer_commmon_name", v.Issuer.CommonName)
+
+				certTTLDay = int(v.NotAfter.Sub(now).Hours() / 24)
+				hasCert = true
+				break
+			}
 		}
 	}
 
