@@ -209,11 +209,12 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 			}
 
 			if c.Name == "" {
-				if u.Host == "" {
+				switch {
+				case u.Host == "":
 					c.Name = fmt.Sprintf("%s -> %s", c.Src, c.Target)
-				} else if u.Port() == "" {
+				case u.Port() == "":
 					c.Name = fmt.Sprintf("%s -> %s://%s", c.Src, u.Scheme, u.Host)
-				} else {
+				default:
 					c.Name = fmt.Sprintf("%s -> %s://%s:%s", c.Src, u.Scheme, u.Host, u.Port())
 				}
 			}
