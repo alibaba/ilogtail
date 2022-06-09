@@ -161,12 +161,12 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 
 	for _, c := range m.ICMPConfigs {
 		if c.Src == m.ip {
-			localICMPConfigs = append(localICMPConfigs, c)
-			m.hasConfig = true
-
 			if c.Name == "" {
 				c.Name = fmt.Sprintf("%s -> %s", c.Src, c.Target)
 			}
+			localICMPConfigs = append(localICMPConfigs, c)
+			m.hasConfig = true
+
 			if !m.DisableDNS {
 				m.resolveHostMap.Store(c.Target, "")
 			}
@@ -204,6 +204,10 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 				continue
 			}
 
+			if c.Method == "" {
+				c.Method = "GET"
+			}
+
 			if c.ExpectCode == 0 {
 				c.ExpectCode = 200
 			}
@@ -212,17 +216,16 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 				switch {
 				case u.Host == "":
 					c.Name = fmt.Sprintf("%s -> %s", c.Src, c.Target)
-				case u.Port() == "":
-					c.Name = fmt.Sprintf("%s -> %s://%s", c.Src, u.Scheme, u.Host)
 				default:
-					c.Name = fmt.Sprintf("%s -> %s://%s:%s", c.Src, u.Scheme, u.Host, u.Port())
+					c.Name = fmt.Sprintf("%s -> %s://%s", c.Src, u.Scheme, u.Host)
 				}
 			}
 
 			localHTTPConfigs = append(localHTTPConfigs, c)
 			m.hasConfig = true
 			if !m.DisableDNS {
-				m.resolveHostMap.Store(u.Host, "")
+				realHost := strings.Split(u.Host, ":")
+				m.resolveHostMap.Store(realHost[0], "")
 			}
 		}
 	}
@@ -321,9 +324,11 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_avg_ms", result.Type), nowTs, result.Label, result.AvgRTTMs)
 			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_total_ms", result.Type), nowTs, result.Label, result.TotalRTTMs)
 			helper.AddMetric(collector, fmt.Sprintf("%s_rtt_stddev_ms", result.Type), nowTs, result.Label, result.StdDevRTTMs)
-		} else if result.Type == PingTypeHttping && result.Success > 0 {
-			helper.AddMetric(collector, fmt.Sprintf("%s_rt_ms", result.Type), nowTs, result.Label, float64(result.HTTPRTMs))
-			helper.AddMetric(collector, fmt.Sprintf("%s_response_bytes", result.Type), nowTs, result.Label, float64(result.HTTPRTMs))
+		} else if result.Type == PingTypeHttping {
+			if result.Success > 0 {
+				helper.AddMetric(collector, fmt.Sprintf("%s_rt_ms", result.Type), nowTs, result.Label, float64(result.HTTPRTMs))
+				helper.AddMetric(collector, fmt.Sprintf("%s_response_bytes", result.Type), nowTs, result.Label, float64(result.HTTPResponseSize))
+			}
 
 			if result.HasHTTPSCert {
 				helper.AddMetric(collector, fmt.Sprintf("%s_cert_ttl_days", result.Type), nowTs, result.HTTPSCertLabels, float64(result.HTTPSCertTTLDay))
@@ -352,7 +357,7 @@ func (m *NetPing) evaluteDNSResolve(host string) {
 	}
 
 	var label helper.KeyValues
-	label.Append("target", host)
+	label.Append("dns_name", host)
 	label.Append("src", m.ip)
 	label.Append("src_host", m.hostname)
 
@@ -524,6 +529,7 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 	label.Append("src", config.Src)
 	label.Append("url", config.Target)
 	label.Append("src_host", m.hostname)
+	label.Append("method", config.Method)
 	for k, v := range config.Labels {
 		label.Append(k, v)
 	}
