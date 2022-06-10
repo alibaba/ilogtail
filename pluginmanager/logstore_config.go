@@ -479,6 +479,23 @@ func (lc *LogstoreConfig) ProcessRawLogV2(rawLog []byte, packID string, topic st
 	return 0
 }
 
+func (lc *LogstoreConfig) ProcessLogs(logBytes [][]byte, packID string, topic string, tags []byte) int {
+	for _, logByte := range logBytes {
+		log := &protocol.Log{}
+		err := log.Unmarshal(logByte)
+		if err != nil {
+			logger.Debug(lc.Context.GetRuntimeContext(), "cannot process logs passed by core", "err", err)
+			continue
+		}
+		if len(topic) > 0 {
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
+		}
+		extractTags(tags, log)
+		lc.LogsChan <- log
+	}
+	return 0
+}
+
 func hasDockerStdoutInput(plugins map[string]interface{}) bool {
 	inputs, exists := plugins["inputs"]
 	if !exists {
@@ -588,16 +605,31 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		logger.Debug(contextImp.GetRuntimeContext(), "load plugin config", *logstoreC.GlobalConfig)
 	}
 
-	// If inputs is empty, it means that the source of this config may be file buffer
+	// If inputs is empty and contains the processor_split_log_string processor, it means that the source of this config may be file buffer
 	//   from logtail core. Because the buffer from logtail is big, we have to limit
 	//   queue size to control memory usage here.
 	logQueueSize := logstoreC.GlobalConfig.DefaultLogQueueSize
 	{
+		isRawLogTypeFunc := func(cfg []interface{}) bool {
+			for _, c := range cfg {
+				m, ok := c.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				if m["type"].(string) == "processor_split_log_string" {
+					return true
+				}
+			}
+			return false
+		}
 		config, exists := plugins["inputs"]
 		inputs, ok := config.([]interface{})
 		if !exists || !ok || len(inputs) == 0 {
-			logger.Infof(contextImp.GetRuntimeContext(), "no inputs in config %v, maybe file input, limit queue size", configName)
-			logQueueSize = 10
+			pcfgs, pok := plugins["processors"].([]interface{})
+			if pok && isRawLogTypeFunc(pcfgs) {
+				logger.Infof(contextImp.GetRuntimeContext(), "no inputs in config %v, maybe file input, limit queue size", configName)
+				logQueueSize = 10
+			}
 		}
 	}
 	logstoreC.LogsChan = make(chan *protocol.Log, logQueueSize)
