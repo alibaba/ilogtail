@@ -11,10 +11,10 @@ import (
 func newProcessor() (*ProcessorCSVDecoder, error) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	processor := &ProcessorCSVDecoder{
-		Seperator:         ",",
+		SplitSep:          ",",
 		PreserveRemained:  true,
 		KeepSrcIfParseErr: true,
-		DstKeys:           []string{"f1", "f2", "f3"},
+		SplitKeys:         []string{"f1", "f2", "f3"},
 	}
 	err := processor.Init(ctx)
 	return processor, err
