@@ -222,19 +222,8 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 		return returnStruct
 	}
 
-	detail, ok := helper.GetDockerCenterInstance().GetContainerDetail(containerID)
-	if ok {
-		return convertFunc(detail)
-	}
-
-	if manager := helper.GetContainerFindingManager(); manager != nil {
-		if err := manager.FetchOne(containerID); err != nil {
-			logger.Debugf(context.Background(), "cannot fetch container for %s, error is %v", containerID, err)
-			return nil
-		}
-	}
-	detail, ok = helper.GetDockerCenterInstance().GetContainerDetail(containerID)
-	if ok {
+	detail := helper.FetchContainerDetail(containerID)
+	if detail != nil {
 		return convertFunc(detail)
 	}
 	return nil
