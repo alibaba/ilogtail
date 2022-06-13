@@ -181,6 +181,7 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 			if c.Name == "" {
 				c.Name = fmt.Sprintf("%s -> %s:%d", c.Src, c.Target, c.Port)
 			}
+
 			localTCPConfigs = append(localTCPConfigs, c)
 			m.hasConfig = true
 			if !m.DisableDNS {
@@ -204,6 +205,11 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 				continue
 			}
 
+			if u.Host == "" {
+				logger.Error(context.GetRuntimeContext(), "netping failed to parse httping target, get empty host")
+				continue
+			}
+
 			if c.Method == "" {
 				c.Method = "GET"
 			}
@@ -213,12 +219,7 @@ func (m *NetPing) Init(context ilogtail.Context) (int, error) {
 			}
 
 			if c.Name == "" {
-				switch {
-				case u.Host == "":
-					c.Name = fmt.Sprintf("%s -> %s", c.Src, c.Target)
-				default:
-					c.Name = fmt.Sprintf("%s -> %s://%s", c.Src, u.Scheme, u.Host)
-				}
+				c.Name = fmt.Sprintf("%s -> %s://%s", c.Src, u.Scheme, u.Host)
 			}
 
 			localHTTPConfigs = append(localHTTPConfigs, c)
@@ -282,25 +283,19 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 	}
 
 	counter := 0
-	if len(m.ICMPConfigs) > 0 {
-		for i := range m.ICMPConfigs {
-			go m.doICMPing(&m.ICMPConfigs[i])
-			counter++
-		}
+	for i := range m.ICMPConfigs {
+		go m.doICMPing(&m.ICMPConfigs[i])
+		counter++
 	}
 
-	if len(m.TCPConfigs) > 0 {
-		for i := range m.TCPConfigs {
-			go m.doTCPing(&m.TCPConfigs[i])
-			counter++
-		}
+	for i := range m.TCPConfigs {
+		go m.doTCPing(&m.TCPConfigs[i])
+		counter++
 	}
 
-	if len(m.HTTPConfigs) > 0 {
-		for i := range m.HTTPConfigs {
-			go m.doHTTPing(&m.HTTPConfigs[i])
-			counter++
-		}
+	for i := range m.HTTPConfigs {
+		go m.doHTTPing(&m.HTTPConfigs[i])
+		counter++
 	}
 	if counter == 0 {
 		// nothing to do
@@ -342,9 +337,9 @@ func (m *NetPing) Collect(collector ilogtail.Collector) error {
 func (m *NetPing) evaluteDNSResolve(host string) {
 	success := true
 	start := time.Now()
-	ips, err := net.LookupIP(host)
+	ips, resolveErr := net.LookupIP(host)
 	rt := time.Since(start)
-	if err != nil {
+	if resolveErr != nil {
 		success = false
 		m.resolveHostMap.Store(host, "")
 	} else {
@@ -360,6 +355,9 @@ func (m *NetPing) evaluteDNSResolve(host string) {
 	label.Append("dns_name", host)
 	label.Append("src", m.ip)
 	label.Append("src_host", m.hostname)
+	if !success {
+		label.Append("err", resolveErr.Error())
+	}
 
 	m.resolveChannel <- &ResolveResult{
 		Success: success,
@@ -394,6 +392,7 @@ func (m *NetPing) doICMPing(config *ICMPConfig) {
 	pinger, err := goping.NewPinger(m.getRealTarget(config.Target))
 	if err != nil {
 		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_INIT_PING", err.Error())
+		label.Append("err", err.Error())
 		m.resultChannel <- &Result{
 			Valid:  true,
 			Type:   PingTypeIcmp,
@@ -412,6 +411,7 @@ func (m *NetPing) doICMPing(config *ICMPConfig) {
 	err = pinger.Run() // Blocks until finished or timeout.
 	if err != nil {
 		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_RUN_PING", err.Error())
+		label.Append("err", err.Error())
 		m.resultChannel <- &Result{
 			Valid:  true,
 			Type:   PingTypeIcmp,
@@ -470,16 +470,17 @@ func (m *NetPing) doTCPing(config *TCPConfig) {
 	for k, v := range config.Labels {
 		label.Append(k, v)
 	}
-
 	failed := 0
 	var minRTT, maxRTT, totalRTT time.Duration
 
 	rtts := []time.Duration{}
 
 	target := m.getRealTarget(config.Target)
+	var errorInfo error
 	for i := 0; i < config.Count; i++ {
 		rtt, err := evaluteTcping(target, config.Port, m.timeout)
 		if err != nil {
+			errorInfo = err
 			failed++
 			continue
 		}
@@ -492,6 +493,10 @@ func (m *NetPing) doTCPing(config *TCPConfig) {
 
 		totalRTT += rtt
 		rtts = append(rtts, rtt)
+	}
+
+	if errorInfo != nil {
+		label.Append("err", errorInfo.Error())
 	}
 
 	var avgRTT float64
@@ -559,6 +564,7 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 
 	req, err := http.NewRequestWithContext(ctx, strings.ToUpper(config.Method), config.Target, nil)
 	if err != nil {
+		label.Append("err", err.Error())
 		m.resultChannel <- &Result{
 			Valid:   true,
 			Type:    PingTypeHttping,
@@ -574,6 +580,7 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		logger.Error(m.context.GetRuntimeContext(), "FAIL_TO_RUN_HTTPING", err.Error())
+		label.Append("err", err.Error())
 		m.resultChannel <- &Result{
 			Valid:   true,
 			Type:    PingTypeHttping,
