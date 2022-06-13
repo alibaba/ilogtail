@@ -743,7 +743,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			continue
 		}
 
-		if pluginType != "global" {
+		if pluginType != "global" && pluginType != MixProcessModeFlag {
 			return nil, fmt.Errorf("error plugin name %s", pluginType)
 		}
 	}
