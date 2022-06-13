@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/alibaba/ilogtail"
@@ -13,13 +14,15 @@ import (
 )
 
 type ProcessorCSVDecoder struct {
-	SourceKey         string
-	IgnoreMissingKey  bool
-	SplitKeys         []string
-	SplitSep          string
-	TrimLeadingSpace  bool
-	PreserveRemained  bool
-	KeepSource        bool
+	SourceKey         string   `comment:"The source key containing the CSV record"`
+	NoKeyError        bool     `comment:"Optional. Whether to report error if no key in the log mathes the SourceKey, default to false"`
+	SplitKeys         []string `comment:"The keys matching the decoded CSV fields"`
+	SplitSep          string   `comment:"Optional. The Seperator, default to ,"`
+	TrimLeadingSpace  bool     `comment:"Optional. Whether to ignore the leading space in each CSV field, default to false"`
+	PreserveOthers    bool     `comment:"Optional. Whether to preserve the remaining record if #splitKeys < #CSV fields, default to false"`
+	ExpandOthers      bool     `comment:"Optional. Whether to decode the remaining record if #splitKeys < #CSV fields, default to false"`
+	ExpandKeyPrefix   string   `comment:"Required when ExpandOthers=true. The prefix of the keys for storing the remaing record fields"`
+	KeepSource        bool     `comment:"Optional. Whether to keep the source log content given successful decoding, default to false"`
 	KeepSrcIfParseErr bool
 
 	sep     rune
@@ -42,7 +45,7 @@ func (*ProcessorCSVDecoder) Description() string {
 
 func (p *ProcessorCSVDecoder) decodeCSV(log *protocol.Log, value string) bool {
 	if len(p.SplitKeys) == 0 {
-		if p.PreserveRemained {
+		if p.PreserveOthers {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "_decode_preserve_", Value: value})
 		}
 		return true
@@ -70,14 +73,20 @@ func (p *ProcessorCSVDecoder) decodeCSV(log *protocol.Log, value string) bool {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: p.SplitKeys[keyIndex], Value: record[keyIndex]})
 	}
 
-	if keyIndex < len(record) {
-		var b strings.Builder
-		w := csv.NewWriter(&b)
-		w.Comma = p.sep
-		w.Write(record[keyIndex:])
-		w.Flush()
-		remained := b.String()
-		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "_decode_preserve_", Value: remained[:len(remained)-1]})
+	if keyIndex < len(record) && p.PreserveOthers {
+		if p.ExpandOthers {
+			for ; keyIndex < len(record); keyIndex++ {
+				log.Contents = append(log.Contents, &protocol.Log_Content{Key: p.ExpandKeyPrefix + strconv.Itoa(keyIndex+1-len(p.SplitKeys)), Value: record[keyIndex]})
+			}
+		} else {
+			var b strings.Builder
+			w := csv.NewWriter(&b)
+			w.Comma = p.sep
+			w.Write(record[keyIndex:])
+			w.Flush()
+			remained := b.String()
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "_decode_preserve_", Value: remained[:len(remained)-1]})
+		}
 	}
 
 	if len(p.SplitKeys) != len(record) {
@@ -99,7 +108,7 @@ func (p *ProcessorCSVDecoder) ProcessLogs(logArray []*protocol.Log) []*protocol.
 				break
 			}
 		}
-		if !findKey && p.IgnoreMissingKey {
+		if !findKey && p.NoKeyError {
 			logger.Warning(p.context.GetRuntimeContext(), "DECODE_FIND_ALARM", "cannot find key", p.SourceKey)
 		}
 	}
@@ -111,10 +120,9 @@ func (p *ProcessorCSVDecoder) shouldKeepSrc(res bool) bool {
 }
 
 func init() {
-	ilogtail.Processors["processor_csv_decoder"] = func() ilogtail.Processor {
+	ilogtail.Processors["processor_csv"] = func() ilogtail.Processor {
 		return &ProcessorCSVDecoder{
 			SplitSep:          ",",
-			PreserveRemained:  true,
 			KeepSrcIfParseErr: true,
 		}
 	}
