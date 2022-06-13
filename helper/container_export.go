@@ -17,10 +17,12 @@ package helper
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	docker "github.com/fsouza/go-dockerclient"
 	"regexp"
 	"strings"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
+
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 func GetContainersLastUpdateTime() int64 {
