@@ -72,8 +72,11 @@ func TestProcessorCSVDecoder(t *testing.T) {
 			Convey("Then the decoding is valid", func() {
 				So(res, ShouldBeTrue)
 				So(len(log.Contents), ShouldEqual, 4)
+				So(log.Contents[1].Key, ShouldEqual, "f1")
 				So(log.Contents[1].Value, ShouldEqual, "12")
+				So(log.Contents[2].Key, ShouldEqual, "f2")
 				So(log.Contents[2].Value, ShouldEqual, "34")
+				So(log.Contents[3].Key, ShouldEqual, "f3")
 				So(log.Contents[3].Value, ShouldEqual, "56")
 			})
 		})
@@ -331,8 +334,11 @@ func TestProcessorCSVDecoder(t *testing.T) {
 				So(log.Contents[1].Value, ShouldEqual, "12")
 				So(log.Contents[2].Value, ShouldEqual, "34")
 				So(log.Contents[3].Value, ShouldEqual, "56")
+				So(log.Contents[4].Key, ShouldEqual, "expand_1")
 				So(log.Contents[4].Value, ShouldEqual, "normal")
+				So(log.Contents[5].Key, ShouldEqual, "expand_2")
 				So(log.Contents[5].Value, ShouldEqual, "\"quote\"")
+				So(log.Contents[6].Key, ShouldEqual, "expand_3")
 				So(log.Contents[6].Value, ShouldEqual, ",")
 
 			})
