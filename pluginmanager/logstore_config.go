@@ -38,6 +38,36 @@ var maxFlushOutTime = 5
 
 const MixProcessModeFlag = "mix_process_mode"
 
+type MixProcessMode int
+
+const (
+	normal MixProcessMode = iota
+	file
+	observer
+)
+
+// CheckMixProcessMode
+// When inputs plugins not exist, it means this LogConfig is a mixed process mode config.
+// And the default mix process mode is the file mode.
+func CheckMixProcessMode(pluginCfg map[string]interface{}) MixProcessMode {
+	config, exists := pluginCfg["inputs"]
+	inputs, ok := config.([]interface{})
+	if exists && ok && len(inputs) > 0 {
+		return normal
+	}
+	mixModeFlag, mixModeFlagOk := pluginCfg[MixProcessModeFlag]
+	if !mixModeFlagOk {
+		return file
+	}
+	s := mixModeFlag.(string)
+	switch {
+	case strings.EqualFold(s, "observer"):
+		return observer
+	default:
+		return file
+	}
+}
+
 type LogstoreStatistics struct {
 	CollecLatencytMetric ilogtail.LatencyMetric
 	RawLogMetric         ilogtail.CounterMetric
@@ -608,19 +638,11 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		logger.Debug(contextImp.GetRuntimeContext(), "load plugin config", *logstoreC.GlobalConfig)
 	}
 
-	// When inputs plugins not exist, it means this LogConfig is a mixed process mode config. The mixed process mode
-	// means the input data would be collected by the Cpp core part rather than the plugin part. Currently, there are
-	// 2 types of mixed process config, which are static file config and observer config. Because the transferred data
-	// of static file config is quite large, we have to limit queue size to control memory usage here.
 	logQueueSize := logstoreC.GlobalConfig.DefaultLogQueueSize
-	{
-		config, exists := plugins["inputs"]
-		inputs, ok := config.([]interface{})
-		_, mixModeOk := plugins[MixProcessModeFlag]
-		if !mixModeOk && (!exists || !ok || len(inputs) == 0) {
-			logger.Infof(contextImp.GetRuntimeContext(), "no inputs in config %v, maybe file input, limit queue size", configName)
-			logQueueSize = 10
-		}
+	// Because the transferred data of the file MixProcessMode is quite large, we have to limit queue size to control memory usage here.
+	if CheckMixProcessMode(plugins) == file {
+		logger.Infof(contextImp.GetRuntimeContext(), "no inputs in config %v, maybe file input, limit queue size", configName)
+		logQueueSize = 10
 	}
 	logstoreC.LogsChan = make(chan *protocol.Log, logQueueSize)
 	// loggroup chan size must >= flushout loggroups
