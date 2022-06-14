@@ -46,10 +46,10 @@ const (
 	observer
 )
 
-// CheckMixProcessMode
+// checkMixProcessMode
 // When inputs plugins not exist, it means this LogConfig is a mixed process mode config.
 // And the default mix process mode is the file mode.
-func CheckMixProcessMode(pluginCfg map[string]interface{}) mixProcessMode {
+func checkMixProcessMode(pluginCfg map[string]interface{}) mixProcessMode {
 	config, exists := pluginCfg["inputs"]
 	inputs, ok := config.([]interface{})
 	if exists && ok && len(inputs) > 0 {
@@ -640,7 +640,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 
 	logQueueSize := logstoreC.GlobalConfig.DefaultLogQueueSize
 	// Because the transferred data of the file MixProcessMode is quite large, we have to limit queue size to control memory usage here.
-	if CheckMixProcessMode(plugins) == file {
+	if checkMixProcessMode(plugins) == file {
 		logger.Infof(contextImp.GetRuntimeContext(), "no inputs in config %v, maybe file input, limit queue size", configName)
 		logQueueSize = 10
 	}
