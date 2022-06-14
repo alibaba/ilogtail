@@ -455,7 +455,7 @@ func (dc *DockerCenter) registerEventListener(c chan *docker.APIEvents) {
 	dc.eventChan = c
 }
 
-func (dc *DockerCenter) unRegisterEventListener(c chan *docker.APIEvents) {
+func (dc *DockerCenter) unRegisterEventListener(_ chan *docker.APIEvents) {
 	dc.eventChanLock.Lock()
 	defer dc.eventChanLock.Unlock()
 	dc.eventChan = nil
