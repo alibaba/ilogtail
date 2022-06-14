@@ -36,12 +36,12 @@ import (
 
 var maxFlushOutTime = 5
 
-const MixProcessModeFlag = "mix_process_mode"
+const mixProcessModeFlag = "mix_process_mode"
 
-type MixProcessMode int
+type mixProcessMode int
 
 const (
-	normal MixProcessMode = iota
+	normal mixProcessMode = iota
 	file
 	observer
 )
@@ -49,13 +49,13 @@ const (
 // CheckMixProcessMode
 // When inputs plugins not exist, it means this LogConfig is a mixed process mode config.
 // And the default mix process mode is the file mode.
-func CheckMixProcessMode(pluginCfg map[string]interface{}) MixProcessMode {
+func CheckMixProcessMode(pluginCfg map[string]interface{}) mixProcessMode {
 	config, exists := pluginCfg["inputs"]
 	inputs, ok := config.([]interface{})
 	if exists && ok && len(inputs) > 0 {
 		return normal
 	}
-	mixModeFlag, mixModeFlagOk := pluginCfg[MixProcessModeFlag]
+	mixModeFlag, mixModeFlagOk := pluginCfg[mixProcessModeFlag]
 	if !mixModeFlagOk {
 		return file
 	}
@@ -765,7 +765,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			continue
 		}
 
-		if pluginType != "global" && pluginType != MixProcessModeFlag {
+		if pluginType != "global" && pluginType != mixProcessModeFlag {
 			return nil, fmt.Errorf("error plugin name %s", pluginType)
 		}
 	}
