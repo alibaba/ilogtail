@@ -16,7 +16,7 @@
             }
         },
         {
-            "type":"processor_csv_decoder",
+            "type":"processor_csv",
             "detail":{
                 "SrcKey":"content",
                 "DstKeys":["f1", "f2", "f3"],
