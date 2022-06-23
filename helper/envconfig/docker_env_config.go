@@ -21,11 +21,15 @@ import (
 	"runtime"
 
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/helper/k8s_event"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
+
+//
+var K8sEventInitFlag = flag.Bool("ALICLOUD_LOG_K8S_EVENT_CONFIG", false, "alibaba log k8s event config flag, set true if you want to use it")
 
 // DockerConfigInitFlag alibaba log docker env config flag, set yes if you want to use it
 var DockerConfigInitFlag = flag.Bool("ALICLOUD_LOG_DOCKER_ENV_CONFIG", false, "alibaba log docker env config flag, set true if you want to use it")
@@ -103,6 +107,7 @@ func initSelfEnvConfig() {
 }
 
 func initConfig() {
+	_ = util.InitFromEnvBool("ALICLOUD_LOG_K8S_EVENT_CONFIG", K8sEventInitFlag, *K8sEventInitFlag)
 	_ = util.InitFromEnvBool("ALICLOUD_LOG_DOCKER_ENV_CONFIG", DockerConfigInitFlag, *DockerConfigInitFlag)
 	_ = util.InitFromEnvBool("ALICLOUD_LOG_ECS_FLAG", AliCloudECSFlag, *AliCloudECSFlag)
 	_ = util.InitFromEnvString("ALICLOUD_LOG_DOCKER_CONFIG_PREFIX", DockerConfigPrefix, *DockerConfigPrefix)
@@ -127,6 +132,10 @@ func initConfig() {
 		// init docker config
 		logger.Info(context.Background(), "init docker env config, ECS flag", *AliCloudECSFlag, "prefix", *DockerConfigPrefix, "project", *DefaultLogProject, "machine group", *DefaultLogMachineGroup, "id", *DefaultAccessKeyID)
 
+		if *K8sEventInitFlag {
+			k8s_event.Init()
+		}
+
 		_ = util.InitFromEnvBool("ALICLOUD_LOG_DOCKER_ENV_CONFIG_SELF", &selfEnvConfigFlag, false)
 		if selfEnvConfigFlag {
 			initSelfEnvConfig()
@@ -138,7 +147,6 @@ func initConfig() {
 			} else {
 				logger.Info(context.Background(), "init self env config failed", "")
 			}
-
 		}
 		go runDockerEnvConfig()
 	}
