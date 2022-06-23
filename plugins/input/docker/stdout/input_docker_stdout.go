@@ -109,7 +109,7 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 		CloseFileSec:     sds.CloseUnChangedSec,
 		Tracker:          sds.tracker,
 	}
-	reader, _ := helper.NewLogFileReader(checkpoint, config, processor, sds.context)
+	reader, _ := helper.NewLogFileReader(sds.context.GetRuntimeContext(), checkpoint, config, processor)
 
 	return &DockerFileSyner{
 		dockerFileReader:    reader,
@@ -160,7 +160,6 @@ type ServiceDockerStdout struct {
 
 	synerMap      map[string]*DockerFileSyner
 	checkpointMap map[string]helper.LogFileReaderCheckPoint
-	dockerCenter  *helper.DockerCenter
 	shutdown      chan struct {
 	}
 	waitGroup sync.WaitGroup
@@ -175,7 +174,7 @@ type ServiceDockerStdout struct {
 
 func (sds *ServiceDockerStdout) Init(context ilogtail.Context) (int, error) {
 	sds.context = context
-	sds.dockerCenter = helper.GetDockerCenterInstance()
+	helper.ContainerCenterInit()
 	sds.fullList = make(map[string]bool)
 	sds.matchList = make(map[string]*helper.DockerInfoDetail)
 	sds.synerMap = make(map[string]*DockerFileSyner)
@@ -247,7 +246,7 @@ func (sds *ServiceDockerStdout) Collect(ilogtail.Collector) error {
 }
 
 func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) error {
-	newUpdateTime := sds.dockerCenter.GetLastUpdateMapTime()
+	newUpdateTime := helper.GetContainersLastUpdateTime()
 	if sds.lastUpdateTime != 0 {
 		if sds.lastUpdateTime >= newUpdateTime {
 			return nil
@@ -255,7 +254,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 	}
 
 	var err error
-	newCount, delCount := sds.dockerCenter.GetAllAcceptedInfoV2(
+	newCount, delCount := helper.GetContainerByAcceptedInfoV2(
 		sds.fullList, sds.matchList,
 		sds.IncludeLabel, sds.ExcludeLabel,
 		sds.IncludeLabelRegex, sds.ExcludeLabelRegex,
