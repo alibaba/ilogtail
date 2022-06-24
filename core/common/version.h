@@ -19,6 +19,7 @@
 
 extern const char* const ILOGTAIL_VERSION;
 extern const char* const ILOGTAIL_UPDATE_SUFFIX;
+extern const char* const ILOGTAIL_GIT_HASH;
 
 #define ILOGTAIL_PREFIX "ilogtail_"
 #define ILOGTAIL_PIDFILE_SUFFIX ".pid"

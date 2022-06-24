@@ -24,6 +24,19 @@ option (ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT statically" ON)
 if (NOT DEFINED LOGTAIL_VERSION)
     set (LOGTAIL_VERSION "github-latest")
 endif ()
+message(STATUS "Version: ${LOGTAIL_VERSION}")
+
+# Extract Git commit information for tracing.
+# For a better solution see https://jonathanhamberg.com/post/cmake-embedding-git-hash/ but this is simple and easy.
+find_package(Git)
+# Error is just ignored and output will be empty at runtime.
+execute_process(COMMAND
+  "${GIT_EXECUTABLE}" log -1 --format=%H
+  WORKING_DIRECTORY "${FLB_ROOT}"
+  OUTPUT_VARIABLE FLB_GIT_HASH
+  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Git hash: ${LOGTAIL_GIT_HASH}")
+
 set (LOGTAIL_TARGET      "ilogtail")
 set (VERSION_CPP_FILE ${CMAKE_CURRENT_SOURCE_DIR}/common/Version.cpp)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/common/Version.cpp.in ${VERSION_CPP_FILE})

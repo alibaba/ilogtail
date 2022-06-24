@@ -46,7 +46,7 @@ iLogtail 为可观测场景而生，拥有的轻量级、高性能、自动化�
 
 ```shell
 # Build ilogtail and plugins
-VERSION=github-latest make all
+make all
 # Let's start with a simple config
 cp -a example_config/quick_start/* bin
 # Start ilogtail
@@ -61,8 +61,8 @@ cat stdout.log
 2.完整模式Docker启动
 
 ```shell
-VERSION=github-latest make wholedocker
-docker run -d --name ilogtail-ds -v core/example_config/user_yaml_config.d:/usr/local/ilogtail/user_yaml_config.d aliyun/ilogtail:github-latest
+make wholedocker
+docker run -d --name ilogtail-ds -v core/example_config/user_yaml_config.d:/usr/local/ilogtail/user_yaml_config.d aliyun/ilogtail:local-test
 ```
 
 3.完整模式K8s启动
