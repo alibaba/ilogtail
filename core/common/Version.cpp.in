@@ -1,0 +1,9 @@
+#include "version.h"
+
+const char *const ILOGTAIL_VERSION = "@LOGTAIL_VERSION@";
+
+#if defined(__linux__)
+const char *const ILOGTAIL_UPDATE_SUFFIX = "";
+#elif defined(_MSC_VER)
+const char *const ILOGTAIL_UPDATE_SUFFIX = ".update";
+#endif
