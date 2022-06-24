@@ -55,4 +55,4 @@ elif [ $OS_FLAG = 2 ]; then
   BUILDMODE=default
 fi
 
-go build -mod="$MOD" -buildmode="$BUILDMODE" -ldflags="$IDFLAGS" -o "$ROOTDIR"/bin/${NAME} "$ROOTDIR"/main
+go build -mod="$MOD" -buildmode="$BUILDMODE" -ldflags="$IDFLAGS" -o "$ROOTDIR"/bin/${NAME} "$ROOTDIR"/plugin_main

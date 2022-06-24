@@ -178,4 +178,4 @@ Fields\":{\"Content\":\"quickstart_input_1\"}}},{\"type\":\"metric_mock\",\"deta
 ### C API Configuration Reload
 
 The part of iLogtail-C will be open source soon, providing the function of compiling the iLogtail GO program in C-shared
-mode and using it in combination with the C program. API reference [plugin_export.go](../../../main/plugin_export.go).
+mode and using it in combination with the C program. API reference [plugin_export.go](../../../plugin_main/plugin_export.go).

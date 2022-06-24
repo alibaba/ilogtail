@@ -13,16 +13,25 @@
 # limitations under the License.
 
 
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/logtailplugin-base:1.16-goc as build
+FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/ilogtail-build-linux-amd64:latest as build
 
 WORKDIR /src
 
 COPY . .
 
+ARG HOST_OS=Linux
+ARG VERSION=github-latest
+
+RUN mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32
 RUN make cgobuild
 
 FROM registry.cn-beijing.aliyuncs.com/log-service/logtail:v1.0.30.0-ceb294c-aliyun
 
-RUN rm -f /usr/local/ilogtail/libPluginBase.so
+ARG HOST_OS=Linux
+ARG VERSION=github-latest
 
+RUN rm -f /usr/local/ilogtail/ilogtail /usr/local/ilogtai/ilogtail_1.* /usr/local/ilogtail/libPluginAdapter.so /usr/local/ilogtail/libPluginBase.so
+
+COPY --from=build /src/core/build/ilogtail /usr/local/ilogtail/ilogtail
+COPY --from=build /src/core/build/plugin/libPluginAdapter.so /usr/local/ilogtail/libPluginAdapter.so
 COPY --from=build /src/bin/libPluginBase.so /usr/local/ilogtail/libPluginBase.so

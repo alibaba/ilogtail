@@ -33,7 +33,7 @@ if [ -d "$ROOTDIR"/bin ]; then
 fi
 mkdir "$ROOTDIR"/bin
 
-cd "$ROOTDIR"/main
+cd "$ROOTDIR"/plugin_main
 pwd
 
 if uname -s | grep Linux; then

@@ -136,5 +136,5 @@ Fields\":{\"Content\":\"quickstart_input_1\"}}},{\"type\":\"metric_mock\",\"deta
 
 ### C API 配置变更
 
-iLogtail-C 部分即将开源，提供将iLogtail GO 程序以C-shared 模式编译，与C 程序结合使用的功能，对外开放API 参考 [plugin_export.go](../../../main/plugin_export.go)。
+iLogtail-C 部分即将开源，提供将iLogtail GO 程序以C-shared 模式编译，与C 程序结合使用的功能，对外开放API 参考 [plugin_export.go](../../../plugin_main/plugin_export.go)。
 

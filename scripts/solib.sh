@@ -13,15 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+VERSION=${1:-github-latest}
+REPOSITORY=${2:-aliyun/ilogtail}
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 
-if [ -d "$ROOTDIR"/bin ]; then
-  rm -rf "$ROOTDIR"/bin
-fi
+mkdir -p "$ROOTDIR"/bin
 
-mkdir "$ROOTDIR"/bin
-
-id=$(docker create aliyun/ilogtail:github-latest)
+id=$(docker create ${REPOSITORY}:${VERSION})
 echo "$id"
-docker cp "$id":/src/bin/libPluginBase.so "$ROOTDIR"/bin
+docker cp "$id":/src/bin/libPluginBase.so "${ROOTDIR}/bin/"
 docker rm -v "$id"

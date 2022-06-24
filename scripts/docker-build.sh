@@ -15,22 +15,15 @@
 # limitations under the License.
 
 
-VERSION=$1
+VERSION=${1:-github-latest}
 DOCKER_TYPE=$2
-REPOSITORY=$3
-PUSH=$4
-
-if [[ ! -n $REPOSITORY ]]; then
-  REPOSITORY="aliyun/ilogtail"
-fi
-
-if [[ ! -n $PUSH ]]; then
-  PUSH="false"
-fi
+REPOSITORY=${3:-aliyun/ilogtail}
+PUSH=${4:-false}
 
 HOST_OS=`uname -s`
 
 case $DOCKER_TYPE in
+core) DOCKERFILE=Dockerfile_core;;
 coverage) DOCKERFILE=Dockerfile_coverage;;
 base) DOCKERFILE=Dockerfile_base;;
 lib) DOCKERFILE=Dockerfile_lib;;
@@ -48,7 +41,7 @@ if [[ $PUSH = "true" ]]; then
     echo "COMMAND:"
     echo "docker push $REPOSITORY:$VERSION"
     if [[ $VERSION = "latest" ]]; then
-      echo "Current operation is so dangerous， you should push by yourself !!!"
+      echo "Current operation is so dangerous, you should push by yourself !!!"
     else
       docker push "$REPOSITORY:$VERSION"
     fi
