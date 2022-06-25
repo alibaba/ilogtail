@@ -15,7 +15,7 @@
 # limitations under the License.
 
 
-VERSION=${1:-github-latest}
+VERSION=${1:-1.1.0}
 DOCKER_TYPE=$2
 REPOSITORY=${3:-aliyun/ilogtail}
 PUSH=${4:-false}

@@ -20,7 +20,7 @@ WORKDIR /src
 COPY . .
 
 ARG HOST_OS=Linux
-ARG VERSION=github-latest
+ARG VERSION=1.1.0
 
 RUN mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32
 RUN make cgobuild
@@ -28,7 +28,7 @@ RUN make cgobuild
 FROM registry.cn-beijing.aliyuncs.com/log-service/logtail:v1.0.30.0-ceb294c-aliyun
 
 ARG HOST_OS=Linux
-ARG VERSION=github-latest
+ARG VERSION=1.1.0
 
 RUN rm -f /usr/local/ilogtail/ilogtail /usr/local/ilogtai/ilogtail_1.* /usr/local/ilogtail/libPluginAdapter.so /usr/local/ilogtail/libPluginBase.so
 

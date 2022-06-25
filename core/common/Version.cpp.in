@@ -1,7 +1,8 @@
 #include "version.h"
 
 const char *const ILOGTAIL_VERSION = "@LOGTAIL_VERSION@";
-const char* const ILOGTAIL_GIT_HASH = "@LOGTAIL_GIT_HASH@";;
+const char* const ILOGTAIL_GIT_HASH = "@LOGTAIL_GIT_HASH@";
+const char* const ILOGTAIL_BUILD_DATE = "@LOGTAIL_BUILD_DATE@";
 
 #if defined(__linux__)
 const char *const ILOGTAIL_UPDATE_SUFFIX = "";

@@ -15,7 +15,7 @@
 FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/logtailplugin-base:1.16-goc as build
 
 ARG HOST_OS=Linux
-ARG VERSION=github-latest
+ARG VERSION=1.1.0
 
 WORKDIR /src
 

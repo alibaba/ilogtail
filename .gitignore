@@ -29,6 +29,7 @@ core/log_pb/*.pb.*
 core/build/
 core/common/Version.cpp
 core/installer/public/
+!/Makefile
 !core/dependencies.cmake
 !core/utils.cmakels
 !core/libulogfs.a

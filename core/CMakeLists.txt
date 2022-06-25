@@ -22,7 +22,7 @@ option (ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT statically" ON)
 
 # Name/Version information.
 if (NOT DEFINED LOGTAIL_VERSION)
-    set (LOGTAIL_VERSION "github-latest")
+    set (LOGTAIL_VERSION "1.1.0")
 endif ()
 message(STATUS "Version: ${LOGTAIL_VERSION}")
 
@@ -33,9 +33,12 @@ find_package(Git)
 execute_process(COMMAND
   "${GIT_EXECUTABLE}" log -1 --format=%H
   WORKING_DIRECTORY "${FLB_ROOT}"
-  OUTPUT_VARIABLE FLB_GIT_HASH
+  OUTPUT_VARIABLE LOGTAIL_GIT_HASH
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 message(STATUS "Git hash: ${LOGTAIL_GIT_HASH}")
+
+string(TIMESTAMP LOGTAIL_BUILD_DATE "%Y%m%d")
+message(STATUS "Build date: ${LOGTAIL_BUILD_DATE}")
 
 set (LOGTAIL_TARGET      "ilogtail")
 set (VERSION_CPP_FILE ${CMAKE_CURRENT_SOURCE_DIR}/common/Version.cpp)

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION=${1:-github-latest}
+VERSION=${1:-1.1.0}
 REPOSITORY=${2:-aliyun/ilogtail}
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 

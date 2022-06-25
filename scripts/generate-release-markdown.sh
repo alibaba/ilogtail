@@ -12,7 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ROOTDIR=$(cd $(dirname $0) && cd ..&& pwd)
+set -ue
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 1.1.0(version) 11(milestone)" >&2
+    exit 1
+fi
+
+INITPWD=$PWD
+ROOTDIR=$(cd $(dirname $0) && cd .. && pwd)
 
 
 function createReleaseFile () {
@@ -71,7 +78,8 @@ function removeHistoryUnrelease () {
 }
 
 version=$1
-mileston=$2
-createReleaseFile $version $mileston
+milestone=$2
+createReleaseFile $version $milestone
 removeHistoryUnrelease
 
+scripts/update_version.sh $version
