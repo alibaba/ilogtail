@@ -56,6 +56,8 @@ clean:
 	rm -rf core-test
 	rm -rf e2e-engine-coverage.txt
 	rm -rf find_licenses
+	rm -rf gen_copy.sh
+	rm -rf gen_build.sh
 
 .PHONY: license
 license:  clean tools
@@ -79,11 +81,16 @@ lint-e2e: clean tools
 
 .PHONY: core
 core: clean
-	./scripts/docker-build.sh $(VERSION) core $(DOCKER_REPOSITORY) false && ./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) core
+	./scripts/build.sh core $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) build $(DOCKER_REPOSITORY) false && ./gen_copy.sh
 
 .PHONY: plugin
 plugin: clean
-	./scripts/docker-build.sh $(VERSION) plugin $(DOCKER_REPOSITORY) false && ./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) plugin
+	./scripts/build.sh plugin $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) build $(DOCKER_REPOSITORY) false && ./gen_copy.sh
+
+.PHONY: build
+build: clean
+	./scripts/build.sh all $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) build $(DOCKER_REPOSITORY) false && ./gen_copy.sh
+
 
 .PHONY: plugin_main
 plugin_main: clean
@@ -160,7 +167,4 @@ unittest_pluginmanager: clean
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 
 .PHONY: all
-all: clean
-	./scripts/docker-build.sh $(VERSION) core $(DOCKER_REPOSITORY) false && ./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) core
-	./scripts/docker-build.sh $(VERSION) plugin $(DOCKER_REPOSITORY) false && ./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) plugin
-	cp example_config/quick_start/ilogtail_config.json ./bin
+all: clean build

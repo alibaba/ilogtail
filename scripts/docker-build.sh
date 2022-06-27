@@ -25,24 +25,17 @@ ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 GEN_DOCKERFILE_HOME="gen_dockerfile_home"
 GEN_DOCKERFILE=$GEN_DOCKERFILE_HOME/Dockerfile
 
-case $DOCKER_TYPE in
-plugin) REPOSITORY=${REPOSITORY}-plugin;;
-core) REPOSITORY=${REPOSITORY}-core;;
-*) REPOSITORY=${REPOSITORY};;
-esac
-
 rm -rf $GEN_DOCKERFILE_HOME && mkdir $GEN_DOCKERFILE_HOME && touch $GEN_DOCKERFILE
 
-if [[ $DOCKER_TYPE = "core" || $DOCKER_TYPE = "plugin" || $DOCKER_TYPE = "plugin_base" || $DOCKER_TYPE = "goc" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_$DOCKER_TYPE > $GEN_DOCKERFILE;
+if [[ $DOCKER_TYPE = "goc" || $DOCKER_TYPE = "build" ]]; then
+    cat $ROOTDIR/docker/Dockerfile_$DOCKER_TYPE|grep -v "#" > $GEN_DOCKERFILE;
 elif [ $DOCKER_TYPE = "default" ]; then
-    cat $ROOTDIR/docker/Dockerfile_core > $GEN_DOCKERFILE;
-    cat $ROOTDIR/docker/Dockerfile_plugin >> $GEN_DOCKERFILE;
-    cat $ROOTDIR/docker/Dockerfile >> $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_build |grep -v "#" > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile |grep -v "#">> $GEN_DOCKERFILE;
 elif [ $DOCKER_TYPE = "e2e" ]; then
-    cat $ROOTDIR/docker/Dockerfile_core > $GEN_DOCKERFILE;
-    cat $ROOTDIR/docker/Dockerfile_plugin_coverage >> $GEN_DOCKERFILE;
-    cat $ROOTDIR/docker/Dockerfile >> $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_core |grep -v "#"> $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_plugin_coverage |grep -v "#">> $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile |grep -v "#">> $GEN_DOCKERFILE;
 fi
 
 echo "=============DOCKERFILE=================="
