@@ -12,14 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/logtailplugin-base:1.16-goc as build
-
-ARG HOST_OS=Linux
-ARG VERSION=1.1.0
-
-WORKDIR /src
-
-COPY . .
-
-RUN make cgobuild
-
+FROM bash
+COPY run.sh /run.sh
+RUN chmod 755 /run.sh
+RUN mkdir -p /root/test/a/b/c/d/
+CMD ["sh", "-c","/run.sh > /root/test/a/b/c/d/axxxxxxx.log"]

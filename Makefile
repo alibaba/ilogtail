@@ -13,7 +13,6 @@
 # limitations under the License.
 
 VERSION ?= 1.1.0
-DOCKER_TYPE ?= default
 DOCKER_PUSH ?= false
 DOCKER_REPOSITORY ?= aliyun/ilogtail
 
@@ -78,53 +77,48 @@ lint-pkg: clean tools
 lint-e2e: clean tools
 	cd test && pwd && $(GO_LINT) run -v --timeout 5m ./...
 
-.PHONY: build
-build: clean
-	./scripts/build.sh vendor default
+core: clean
+	./scripts/docker-build.sh $(VERSION) core $(DOCKER_REPOSITORY) false
+
+plugin: clean
+	./scripts/docker-build.sh $(VERSION) plugin $(DOCKER_REPOSITORY) false
+
+.PHONY: build_core
+build_core: clean core
+	./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) core
+
+.PHONY: build_plugin
+build_plugin: clean plugin
+	./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) plugin
+
+.PHONY: build_plugin_main
+build_plugin_main: clean
+	./scripts/plugin_build.sh vendor default
 	cp pkg/logtail/libPluginAdapter.so bin/libPluginAdapter.so
 	cp pkg/logtail/PluginAdapter.dll bin/PluginAdapter.dll
 
-.PHONY: cgobuild
-cgobuild: clean
-	./scripts/build.sh vendor c-shared
-
-.PHONY: gocbuild
-gocbuild: clean
-	./scripts/gocbuild.sh
+.PHONY: build
+build: clean core plugin
+	./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) core
+	./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) plugin
+	cp docker/ilogtail_config.json ./bin
 
 .PHONY: docker
 docker: clean
-	./scripts/docker-build.sh $(VERSION) $(DOCKER_TYPE) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+	./scripts/docker-build.sh $(VERSION) default $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
-# coveragedocker compile with goc to analysis the coverage in e2e testing
-.PHONY: coveragedocker
-coveragedocker: clean
-	./scripts/docker-build.sh $(VERSION) coverage $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+.PHONY: e2edocker
+e2edocker: clean
+	./scripts/docker-build.sh $(VERSION) e2e $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
-# provide base environment for ilogtail
-.PHONY: basedocker
-basedocker: clean
-	./scripts/docker-build.sh $(VERSION) base $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
-
-.PHONY: core
-core: clean
-	./scripts/docker-build.sh $(VERSION) core $(DOCKER_REPOSITORY) false && ./scripts/docker_cp_core.sh $(VERSION) $(DOCKER_REPOSITORY)
-
-.PHONY: wholedocker
-wholedocker: clean
-	./scripts/docker-build.sh $(VERSION) whole $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
-
-.PHONY: build_solib
-build_solib: clean
-	./scripts/docker-build.sh $(VERSION) lib $(DOCKER_REPOSITORY) false && ./scripts/solib.sh $(VERSION) $(DOCKER_REPOSITORY)
-
-.PHONY: solib
-solib: clean build_solib
+.PHONY: baseplugindocker
+baseplugindocker: clean
+	./scripts/docker-build.sh $(VERSION) plugin_base $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
 # provide a goc server for e2e testing
 .PHONY: gocdocker
 gocdocker: clean
-	docker build -t goc-server:latest  --no-cache . -f ./docker/Dockerfile_goc
+	./scripts/docker-build.sh latest goc goc-server false
 
 .PHONY: vendor
 vendor: clean
@@ -146,32 +140,31 @@ e2e-docs: clean
 
 # e2e test
 .PHONY: e2e
-e2e: clean gocdocker coveragedocker
+e2e: clean gocdocker e2edocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh behavior $(TEST_SCOPE)
 
 .PHONY: e2e-core
-e2e-core: clean gocdocker coveragedocker
+e2e-core: clean
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh core $(TEST_SCOPE)
 
 .PHONY: e2e-performance
-e2e-performance: clean docker
+e2e-performance: clean docker gocdocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh performance $(TEST_SCOPE)
 
-# unit test
-.PHONY: test-e2e-engine
-test-e2e-engine: clean gocdocker coveragedocker
+.PHONY: unittest_e2e_engine
+unittest_e2e_engine: clean gocdocker coveragedocker
 	cd test && go test  ./... -coverprofile=../e2e-engine-coverage.txt -covermode=atomic -tags docker_ready
 
-.PHONY: test
-test: clean
+.PHONY: unittest_plugin
+unittest_plugin: clean
 	cp pkg/logtail/libPluginAdapter.so ./plugin_main
 	cp pkg/logtail/PluginAdapter.dll ./plugin_main
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
 	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|(input\/prometheus)|(input\/syslog)"| grep -Ev "plugin_main|pluginmanager") -coverprofile .testCoverage.txt
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 
-.PHONY: core-test
-core-test: clean
+.PHONY: unittest_pluginmanager
+unittest_pluginmanager: clean
 	cp pkg/logtail/libPluginAdapter.so ./plugin_main
 	cp pkg/logtail/PluginAdapter.dll ./plugin_main
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
@@ -179,5 +172,4 @@ core-test: clean
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 
 .PHONY: all
-all: clean core build_solib
-    
+all: clean build

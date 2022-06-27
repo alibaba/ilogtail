@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Copyright 2021 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION=${1:-1.1.0}
-REPOSITORY=${2:-aliyun/ilogtail}
-ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
+version: '3.8'
 
-mkdir -p "$ROOTDIR"/bin
-
-id=$(docker create ${REPOSITORY}:${VERSION})
-echo "$id"
-docker cp "$id":/src/bin/libPluginBase.so "${ROOTDIR}/bin/"
-docker rm -v "$id"
+services:
+  container:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: container
+    volumes:
+      - ./a.log:/root/a.log
+    environment:
+      - STDOUT_SWITCH=true

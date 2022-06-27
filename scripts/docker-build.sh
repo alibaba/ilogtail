@@ -21,20 +21,37 @@ REPOSITORY=${3:-aliyun/ilogtail}
 PUSH=${4:-false}
 
 HOST_OS=`uname -s`
+ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
+GEN_DOCKERFILE_HOME="gen_dockerfile_home"
+GEN_DOCKERFILE=$GEN_DOCKERFILE_HOME/Dockerfile
 
 case $DOCKER_TYPE in
-core) DOCKERFILE=Dockerfile_core;;
-coverage) DOCKERFILE=Dockerfile_coverage;;
-base) DOCKERFILE=Dockerfile_base;;
-lib) DOCKERFILE=Dockerfile_lib;;
-whole) DOCKERFILE=Dockerfile_whole;;
-*) DOCKERFILE=Dockerfile;;
+plugin) REPOSITORY=${REPOSITORY}-plugin;;
+core) REPOSITORY=${REPOSITORY}-core;;
+*) REPOSITORY=${REPOSITORY};;
 esac
 
+rm -rf $GEN_DOCKERFILE_HOME && mkdir $GEN_DOCKERFILE_HOME && touch $GEN_DOCKERFILE
+
+if [[ $DOCKER_TYPE = "core" || $DOCKER_TYPE = "plugin" || $DOCKER_TYPE = "plugin_base" || $DOCKER_TYPE = "goc" ]]; then
+    cat $ROOTDIR/docker/Dockerfile_$DOCKER_TYPE > $GEN_DOCKERFILE;
+elif [ $DOCKER_TYPE = "default" ]; then
+    cat $ROOTDIR/docker/Dockerfile_core > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_plugin >> $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile >> $GEN_DOCKERFILE;
+elif [ $DOCKER_TYPE = "e2e" ]; then
+    cat $ROOTDIR/docker/Dockerfile_core > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_plugin_coverage >> $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile >> $GEN_DOCKERFILE;
+fi
+
+echo "=============DOCKERFILE=================="
+cat $GEN_DOCKERFILE
+echo "========================================="
 docker build --build-arg VERSION="$VERSION" \
  --build-arg HOST_OS="$HOST_OS" \
   -t "$REPOSITORY":"$VERSION" \
-  --no-cache . -f docker/$DOCKERFILE
+  --no-cache . -f $GEN_DOCKERFILE
 
 
 if [[ $PUSH = "true" ]]; then

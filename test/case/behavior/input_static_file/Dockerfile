@@ -12,27 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/logtailplugin-base:1.16-goc as build
-
-WORKDIR /src
-
-COPY . .
-
-RUN make gocbuild
-
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/logtailplugin-base:1.16-goc
-
-ARG HOST_OS=Linux
-
-USER root
-
-WORKDIR /aliyun
-
-COPY --from=build /src/bin/ilogtail .
-COPY --from=build /src/pkg/logtail/libPluginAdapter.so .
-
-ENV HOST_OS=$HOST_OS
-
-EXPOSE 18689
-
-ENTRYPOINT ["/aliyun/ilogtail"]
+FROM bash
+COPY run.sh /run.sh
+RUN chmod 755 /run.sh
+CMD ["sh", "-c","/run.sh >> /root/a.log"]
