@@ -1,7 +1,0 @@
-{
-  "default_access_key_id": "example_access_key_id",
-  "default_access_key": "example_access_key",
-  "logtail_sys_conf_dir": ".",
-  "check_point_filename": "checkpoint/logtail_check_point",
-  "domain_socket_address": "./logtail.sock"
-}

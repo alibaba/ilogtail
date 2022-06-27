@@ -20,7 +20,7 @@ ARG VERSION=1.1.0
 WORKDIR /ilogtail
 
 COPY --from=plugin /src/bin/libPluginBase.so /ilogtail/
-COPY --from=plugin /src/docker/ilogtail_config.json /ilogtail/
+COPY --from=plugin /src/example_config/quick_start/ilogtail_config.json /ilogtail/
 COPY --from=core /src/core/build/ilogtail /ilogtail/
 COPY --from=core /src/core/build/plugin/libPluginAdapter.so /ilogtail/
 

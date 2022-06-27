@@ -77,31 +77,19 @@ lint-pkg: clean tools
 lint-e2e: clean tools
 	cd test && pwd && $(GO_LINT) run -v --timeout 5m ./...
 
+.PHONY: core
 core: clean
-	./scripts/docker-build.sh $(VERSION) core $(DOCKER_REPOSITORY) false
+	./scripts/docker-build.sh $(VERSION) core $(DOCKER_REPOSITORY) false && ./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) core
 
+.PHONY: plugin
 plugin: clean
-	./scripts/docker-build.sh $(VERSION) plugin $(DOCKER_REPOSITORY) false
+	./scripts/docker-build.sh $(VERSION) plugin $(DOCKER_REPOSITORY) false && ./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) plugin
 
-.PHONY: build_core
-build_core: clean core
-	./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) core
-
-.PHONY: build_plugin
-build_plugin: clean plugin
-	./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) plugin
-
-.PHONY: build_plugin_main
-build_plugin_main: clean
+.PHONY: plugin_main
+plugin_main: clean
 	./scripts/plugin_build.sh vendor default
 	cp pkg/logtail/libPluginAdapter.so bin/libPluginAdapter.so
 	cp pkg/logtail/PluginAdapter.dll bin/PluginAdapter.dll
-
-.PHONY: build
-build: clean core plugin
-	./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) core
-	./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) plugin
-	cp docker/ilogtail_config.json ./bin
 
 .PHONY: docker
 docker: clean
@@ -172,4 +160,7 @@ unittest_pluginmanager: clean
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 
 .PHONY: all
-all: clean build
+all: clean
+	./scripts/docker-build.sh $(VERSION) core $(DOCKER_REPOSITORY) false && ./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) core
+	./scripts/docker-build.sh $(VERSION) plugin $(DOCKER_REPOSITORY) false && ./scripts/cp-docker-binary.sh $(VERSION) $(DOCKER_REPOSITORY) plugin
+	cp example_config/quick_start/ilogtail_config.json ./bin
