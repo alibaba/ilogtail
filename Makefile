@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+.DEFAULT_GOAL := all
 VERSION ?= 1.1.0
 DOCKER_PUSH ?= false
 DOCKER_REPOSITORY ?= aliyun/ilogtail
@@ -86,11 +87,6 @@ core: clean
 .PHONY: plugin
 plugin: clean
 	./scripts/build.sh plugin $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) build $(DOCKER_REPOSITORY) false && ./gen_copy.sh
-
-.PHONY: build
-build: clean
-	./scripts/build.sh all $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) build $(DOCKER_REPOSITORY) false && ./gen_copy.sh
-
 
 .PHONY: plugin_main
 plugin_main: clean
@@ -167,4 +163,5 @@ unittest_pluginmanager: clean
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 
 .PHONY: all
-all: clean build
+all: clean
+	./scripts/build.sh all $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) build $(DOCKER_REPOSITORY) false && ./gen_copy.sh
