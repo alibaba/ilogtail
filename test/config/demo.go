@@ -35,7 +35,7 @@ var DemoCase = Case{
 	},
 	SetUps: []SetUp{},
 	Retry: Retry{
-		Times:    1,
+		Times:    0,
 		Interval: "10s",
 	},
 	Verify: Verify{

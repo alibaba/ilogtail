@@ -56,7 +56,7 @@ verify:
             expect_equal_raw_log: true
             expect_minimum_log_num: 15
 retry:
-    times: 1
+    times: 0
     interval: 10s
 testing_interval: 16s
 coverage_packages:
