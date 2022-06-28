@@ -29,12 +29,8 @@ rm -rf $GEN_DOCKERFILE_HOME && mkdir $GEN_DOCKERFILE_HOME && touch $GEN_DOCKERFI
 
 if [[ $DOCKER_TYPE = "goc" || $DOCKER_TYPE = "build" ]]; then
     cat $ROOTDIR/docker/Dockerfile_$DOCKER_TYPE|grep -v "#" > $GEN_DOCKERFILE;
-elif [ $DOCKER_TYPE = "default" ]; then
+elif [[  $DOCKER_TYPE = "default" ]]; then
     cat $ROOTDIR/docker/Dockerfile_build |grep -v "#" > $GEN_DOCKERFILE;
-    cat $ROOTDIR/docker/Dockerfile |grep -v "#">> $GEN_DOCKERFILE;
-elif [ $DOCKER_TYPE = "e2e" ]; then
-    cat $ROOTDIR/docker/Dockerfile_core |grep -v "#"> $GEN_DOCKERFILE;
-    cat $ROOTDIR/docker/Dockerfile_plugin_coverage |grep -v "#">> $GEN_DOCKERFILE;
     cat $ROOTDIR/docker/Dockerfile |grep -v "#">> $GEN_DOCKERFILE;
 fi
 

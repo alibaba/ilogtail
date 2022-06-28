@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/logtailplugin-base:1.16-goc
+FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/ilogtail-build-linux-amd64:latest
 
 ARG HOST_OS=Linux
 ARG VERSION=1.1.0
 
 WORKDIR /ilogtail
 
-COPY --from=plugin /src/bin/libPluginBase.so /ilogtail/
-COPY --from=plugin /src/example_config/quick_start/ilogtail_config.json /ilogtail/
-COPY --from=core /src/core/build/ilogtail /ilogtail/
-COPY --from=core /src/core/build/plugin/libPluginAdapter.so /ilogtail/
+COPY --from=build /src/bin/libPluginBase.so /ilogtail/
+COPY --from=build /src/example_config/quick_start/ilogtail_config.json /ilogtail/
+COPY --from=build /src/core/build/ilogtail /ilogtail/
+COPY --from=build /src/core/build/plugin/libPluginAdapter.so /ilogtail/
 
 RUN chmod -R 755 /ilogtail/
 RUN mkdir /ilogtail/checkpoint

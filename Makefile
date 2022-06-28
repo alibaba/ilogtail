@@ -96,11 +96,11 @@ plugin_main: clean
 
 .PHONY: docker
 docker: clean
-	./scripts/docker-build.sh $(VERSION) default $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+	./scripts/build.sh all $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) default $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
 .PHONY: e2edocker
 e2edocker: clean
-	./scripts/docker-build.sh $(VERSION) e2e $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+	./scripts/build.sh e2e $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) default $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
 .PHONY: baseplugindocker
 baseplugindocker: clean
@@ -135,7 +135,7 @@ e2e: clean gocdocker e2edocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh behavior $(TEST_SCOPE)
 
 .PHONY: e2e-core
-e2e-core: clean
+e2e-core: clean gocdocker e2edocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh core $(TEST_SCOPE)
 
 .PHONY: e2e-performance
