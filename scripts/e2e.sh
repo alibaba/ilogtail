@@ -77,4 +77,6 @@ if [ $? = 0 ]; then
   echo "========================================="
   echo "All testing cases are passed"
   echo "========================================="
+else
+  exit 1
 fi

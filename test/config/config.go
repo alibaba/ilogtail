@@ -86,7 +86,7 @@ func GetDefaultCase() *Case {
 	return &Case{
 		TestingInterval: "60s",
 		Retry: Retry{
-			Times:    1,
+			Times:    0,
 			Interval: "10s",
 		},
 		Subscriber: Subscriber{

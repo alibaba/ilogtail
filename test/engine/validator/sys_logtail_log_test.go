@@ -43,7 +43,7 @@ func prepare() {
 }
 
 func clean() {
-	os.Remove(config.LogDir + "ilogtail_plugin.LOG")
+	_ = os.Remove(config.LogDir + "logtail_plugin.LOG")
 }
 
 func Test_logtailLogValidator_FetchResult(t *testing.T) {
