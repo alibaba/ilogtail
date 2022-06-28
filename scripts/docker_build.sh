@@ -30,7 +30,7 @@ HOST_OS=`uname -s`
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 GEN_DOCKERFILE=$GENERATE_HOME/Dockerfile
 
-rm -rf $GEN_DOCKERFILE_HOME && mkdir $GEN_DOCKERFILE_HOME && touch $GEN_DOCKERFILE
+rm -rf $GENERATE_HOME && mkdir $GENERATE_HOME && touch $GEN_DOCKERFILE
 
 if [[ $CATEGORY = "goc" || $CATEGORY = "build" ]]; then
     cat $ROOTDIR/docker/Dockerfile_$CATEGORY|grep -v "#" > $GEN_DOCKERFILE;
