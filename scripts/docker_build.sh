@@ -15,26 +15,37 @@
 # limitations under the License.
 
 
-VERSION=${1:-1.1.0}
-DOCKER_TYPE=$2
-REPOSITORY=${3:-aliyun/ilogtail}
-PUSH=${4:-false}
+# Currently, there are 3 supported docker categories, which are goc, build, and default.
+#
+# goc: build goc server with Dockerfile_doc
+# build: build core or plugin binary with Dockerfile_build
+# default: build ilogtail images.
+CATEGORY=$1
+GENERATE_HOME=$2
+VERSION=${3:-1.1.0}
+REPOSITORY=${4:-aliyun/ilogtail}
+PUSH=${5:-false}
 
 HOST_OS=`uname -s`
+ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
+GEN_DOCKERFILE=$GENERATE_HOME/Dockerfile
 
-case $DOCKER_TYPE in
-core) DOCKERFILE=Dockerfile_core;;
-coverage) DOCKERFILE=Dockerfile_coverage;;
-base) DOCKERFILE=Dockerfile_base;;
-lib) DOCKERFILE=Dockerfile_lib;;
-whole) DOCKERFILE=Dockerfile_whole;;
-*) DOCKERFILE=Dockerfile;;
-esac
+rm -rf $GENERATE_HOME && mkdir $GENERATE_HOME && touch $GEN_DOCKERFILE
 
+if [[ $CATEGORY = "goc" || $CATEGORY = "build" ]]; then
+    cat $ROOTDIR/docker/Dockerfile_$CATEGORY|grep -v "#" > $GEN_DOCKERFILE;
+elif [[  $CATEGORY = "default" ]]; then
+    cat $ROOTDIR/docker/Dockerfile_build |grep -v "#" > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_ilogtail_part |grep -v "#">> $GEN_DOCKERFILE;
+fi
+
+echo "=============DOCKERFILE=================="
+cat $GEN_DOCKERFILE
+echo "========================================="
 docker build --build-arg VERSION="$VERSION" \
  --build-arg HOST_OS="$HOST_OS" \
   -t "$REPOSITORY":"$VERSION" \
-  --no-cache . -f docker/$DOCKERFILE
+  --no-cache . -f $GEN_DOCKERFILE
 
 
 if [[ $PUSH = "true" ]]; then

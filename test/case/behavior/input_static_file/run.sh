@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # Copyright 2021 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-VERSION=${1:-1.1.0}
-REPOSITORY=${2:-aliyun/ilogtail}
-ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
-
-mkdir -p "$ROOTDIR"/bin
-
-id=$(docker create ${REPOSITORY}:${VERSION})
-echo "$id"
-docker cp "$id":/src/bin/libPluginBase.so "${ROOTDIR}/bin/"
-docker rm -v "$id"
+sleep 3
+for i in {1..1000} ; do
+  number=$((i+4))
+  echo $number"====="
+done
+sleep 3600

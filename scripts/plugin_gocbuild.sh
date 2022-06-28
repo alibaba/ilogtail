@@ -14,10 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-NAME=ilogtail
-IDFLAGS=''
-
-
+NAME=libPluginBase.so
 goc version
 if [ $? != 0 ]; then
     echo "==========================================================================================================="
@@ -37,7 +34,8 @@ cd "$ROOTDIR"/plugin_main
 pwd
 
 if uname -s | grep Linux; then
-  goc build '--buildflags=-mod=vendor -ldflags="-extldflags "-Wl,--wrap=memcpy""' --center=http://goc:7777 -o "$ROOTDIR"/bin/${NAME}
+  goc build '--buildflags=-mod=vendor -buildmode=c-shared -ldflags="-extldflags "-Wl,--wrap=memcpy""' --center=http://goc:7777 -o "$ROOTDIR"/bin/${NAME}
 else
-  goc build '--buildflags=-mod=vendor ' --center=http://goc:7777 -o "$ROOTDIR"/bin/${NAME}
+  echo "goc build only build a dynamic library in linux platform"
+  exit 1
 fi

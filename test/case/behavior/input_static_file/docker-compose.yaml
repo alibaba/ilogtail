@@ -12,28 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/logtailplugin-base:1.16-goc as build
+version: '3.8'
 
-WORKDIR /src
-
-COPY . .
-
-RUN make build
-
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/logtailplugin-base:1.16-goc
-
-ARG HOST_OS=Linux
-
-USER root
-
-WORKDIR /aliyun
-
-COPY --from=build /src/bin/ilogtail .
-COPY --from=build /src/pkg/logtail/libPluginAdapter.so .
-
-
-ENV HOST_OS=$HOST_OS
-
-EXPOSE 18689
-
-ENTRYPOINT ["/aliyun/ilogtail"]
+services:
+  container:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: container
+    volumes:
+      - ./a.log:/root/a.log
+    environment:
+      - STDOUT_SWITCH=true

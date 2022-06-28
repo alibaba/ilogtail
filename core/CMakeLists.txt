@@ -16,7 +16,7 @@ cmake_minimum_required (VERSION 2.8)
 project (logtail)
 
 # Options.
-option (BUILD_LOGTAIL_UT "Build unit test for Logtail" ON)
+option (BUILD_LOGTAIL_UT "Build unit test for Logtail" OFF)
 option (ENABLE_COMPATIBLE_MODE "Build Logtail in compatible mode (for low version Linux)" ON)
 option (ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT statically" ON)
 

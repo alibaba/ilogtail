@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.16
-
-RUN apt-get update && apt-get install -y libsystemd-dev
-RUN apt-get update && apt-get install -y iproute2
-RUN curl -s -L "https://github.com/qiniu/goc/releases/latest" | sed -nE 's!.*"([^"]*-linux-amd64.tar.gz)".*!https://github.com\1!p' | xargs -n 1 curl -L  | tar -zx && chmod +x goc && mv goc /usr/local/bin
-
+FROM bash
+COPY run.sh /run.sh
+RUN chmod 755 /run.sh
+CMD ["sh", "-c","/run.sh >> /root/a.log"]

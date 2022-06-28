@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright 2021 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,13 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/ilogtail-build-linux-amd64:latest as build
-
-WORKDIR /src
-
-COPY . .
-
-ARG HOST_OS=Linux
-ARG VERSION=1.1.0
-RUN mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32
+sleep 3
+for i in {1..1000} ; do
+  number=$((i+4))
+  echo $number"====="
+done
+sleep 3600

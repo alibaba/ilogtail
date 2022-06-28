@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/ilogtail-build-linux-amd64:latest as build
 
 WORKDIR /src
@@ -22,16 +21,4 @@ COPY . .
 ARG HOST_OS=Linux
 ARG VERSION=1.1.0
 
-RUN mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32
-RUN make cgobuild
-
-FROM registry.cn-beijing.aliyuncs.com/log-service/logtail:v1.0.30.0-ceb294c-aliyun
-
-ARG HOST_OS=Linux
-ARG VERSION=1.1.0
-
-RUN rm -f /usr/local/ilogtail/ilogtail /usr/local/ilogtai/ilogtail_1.* /usr/local/ilogtail/libPluginAdapter.so /usr/local/ilogtail/libPluginBase.so
-
-COPY --from=build /src/core/build/ilogtail /usr/local/ilogtail/ilogtail
-COPY --from=build /src/core/build/plugin/libPluginAdapter.so /usr/local/ilogtail/libPluginAdapter.so
-COPY --from=build /src/bin/libPluginBase.so /usr/local/ilogtail/libPluginBase.so
+RUN sh /src/generate_files/gen_build.sh

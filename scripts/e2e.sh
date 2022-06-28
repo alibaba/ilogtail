@@ -73,7 +73,7 @@ else
 fi
 
 if [ $? = 0 ]; then
-  sh "$ROOT_DIR"/scripts/e2e-coverage.sh "$TYPE"-test
+  sh "$ROOT_DIR"/scripts/e2e_coverage.sh "$TYPE"-test
   echo "========================================="
   echo "All testing cases are passed"
   echo "========================================="
