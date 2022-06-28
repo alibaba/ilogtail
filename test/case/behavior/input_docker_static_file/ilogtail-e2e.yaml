@@ -85,8 +85,8 @@ verify:
     - name: counter-check
       validator: sys_counter
       spec:
-#         expect_equal_processed_log: true
-#         expect_equal_flush_log: true
+        expect_equal_processed_log: true
+        expect_equal_flush_log: true
         expect_minimum_log_num: 1000
 testing_interval: 10s
 retry:

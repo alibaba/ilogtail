@@ -16,6 +16,7 @@
 VERSION ?= 1.1.0
 DOCKER_PUSH ?= false
 DOCKER_REPOSITORY ?= aliyun/ilogtail
+GENERATE_HOME ?= generate_files
 
 SCOPE ?= .
 BINARY = logtail-plugin
@@ -57,8 +58,7 @@ clean:
 	rm -rf core-test
 	rm -rf e2e-engine-coverage.txt
 	rm -rf find_licenses
-	rm -rf gen_copy.sh
-	rm -rf gen_build.sh
+	rm -rf $(GENERATE_HOME)
 
 .PHONY: license
 license:  clean tools
@@ -82,11 +82,15 @@ lint-e2e: clean tools
 
 .PHONY: core
 core: clean
-	./scripts/build.sh core $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) build $(DOCKER_REPOSITORY) false && ./gen_copy.sh
+	./scripts/gen_build_scripts.sh core $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY)
+	./scripts/docker_build.sh build $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
+	./$(GENERATE_HOME)/gen_copy_docker.sh
 
 .PHONY: plugin
 plugin: clean
-	./scripts/build.sh plugin $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) build $(DOCKER_REPOSITORY) false && ./gen_copy.sh
+	./scripts/gen_build_scripts.sh plugin $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY)
+	./scripts/docker_build.sh build $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
+	./$(GENERATE_HOME)/gen_copy_docker.sh
 
 .PHONY: plugin_main
 plugin_main: clean
@@ -96,20 +100,18 @@ plugin_main: clean
 
 .PHONY: docker
 docker: clean
-	./scripts/build.sh all $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) default $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+	./scripts/gen_build_scripts.sh all $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY)
+	./scripts/docker_build.sh default $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
 .PHONY: e2edocker
 e2edocker: clean
-	./scripts/build.sh e2e $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) default $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
-
-.PHONY: baseplugindocker
-baseplugindocker: clean
-	./scripts/docker-build.sh $(VERSION) plugin_base $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+	./scripts/gen_build_scripts.sh e2e $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY)
+	./scripts/docker_build.sh default $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
 
 # provide a goc server for e2e testing
 .PHONY: gocdocker
 gocdocker: clean
-	./scripts/docker-build.sh latest goc goc-server false
+	./scripts/docker_build.sh goc $(GENERATE_HOME) latest goc-server false
 
 .PHONY: vendor
 vendor: clean
@@ -164,4 +166,6 @@ unittest_pluginmanager: clean
 
 .PHONY: all
 all: clean
-	./scripts/build.sh all $(VERSION) $(DOCKER_REPOSITORY) && ./scripts/docker-build.sh $(VERSION) build $(DOCKER_REPOSITORY) false && ./gen_copy.sh
+	./scripts/gen_build_scripts.sh all $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY)
+	./scripts/docker_build.sh build $(GENERATE_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
+	./$(GENERATE_HOME)/gen_copy_docker.sh

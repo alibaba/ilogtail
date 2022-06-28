@@ -13,38 +13,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Currently, there are 4 supported categories, which are plugin, core, all and e2e.
+#
+# plugin: Only build Linux dynamic lib with Golang part.
+# core: Only build the CPP part.
+# all: Do the above plugin and core steps.
+# e2e: Build plugin dynamic lib with GOC and build the CPP part.
 export CATEGORY=$1
-export VERSION=${2:-1.1.0}
-export REPOSITORY=${3:-aliyun/ilogtail}
+GENERATE_HOME=$2
+export VERSION=${3:-1.1.0}
+export REPOSITORY=${4:-aliyun/ilogtail}
 
-BUILD_SCRIPT_FILE=gen_build.sh
-COPY_SCRIPT_FILE=gen_copy.sh
-
-BINDIR=$ROOTDIR/bin
+BUILD_SCRIPT_FILE=$GENERATE_HOME/gen_build.sh
+COPY_SCRIPT_FILE=$GENERATE_HOME/gen_copy_docker.sh
 
 function generateBuildScript() {
   rm -rf $BUILD_SCRIPT_FILE && touch $BUILD_SCRIPT_FILE && chmod 755 $BUILD_SCRIPT_FILE
   if [ $CATEGORY = "plugin" ]; then
-    echo './scripts/plugin_build.sh vendor c-shared' >> gen_build.sh;
+    echo './scripts/plugin_build.sh vendor c-shared' >> $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "core" ]; then
-    echo 'mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32' >> gen_build.sh;
+    echo 'mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32' >>  $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "all" ]; then
-    echo './scripts/plugin_build.sh vendor c-shared && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32' >> gen_build.sh;
+    echo './scripts/plugin_build.sh vendor c-shared && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32' >> $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "e2e" ]; then
-    echo './scripts/plugin_gocbuild.sh && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32' >> gen_build.sh;
+    echo './scripts/plugin_gocbuild.sh && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32' >> $BUILD_SCRIPT_FILE;
   fi
 }
 
-
-
 function generateCopyScript() {
   rm -rf $COPY_SCRIPT_FILE && touch $COPY_SCRIPT_FILE && chmod 755 $COPY_SCRIPT_FILE
-  echo 'BINDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)/bin/' >> $COPY_SCRIPT_FILE
+  echo 'BINDIR=$(cd $(dirname "${BASH_SOURCE[0]}")&& cd .. && pwd)/bin/' >> $COPY_SCRIPT_FILE
   echo 'rm -rf $BINDIR && mkdir $BINDIR' >> $COPY_SCRIPT_FILE
   echo "id=\$(docker create ${REPOSITORY}:${VERSION})" >> $COPY_SCRIPT_FILE
 
   if [ $CATEGORY = "plugin" ]; then
-    echo ' docker cp "$id":/src/bin/libPluginBase.so $BINDIR'  >> $COPY_SCRIPT_FILE;
+    echo 'docker cp "$id":/src/bin/libPluginBase.so $BINDIR'  >> $COPY_SCRIPT_FILE;
   elif [ $CATEGORY = "core" ]; then
     echo 'docker cp "$id":/src/core/build/ilogtail $BINDIR'  >> $COPY_SCRIPT_FILE;
     echo 'docker cp "$id":/src/core/build/plugin/libPluginAdapter.so $BINDIR'  >> $COPY_SCRIPT_FILE;
@@ -56,8 +59,7 @@ function generateCopyScript() {
   echo 'docker rm -v "$id"' >> $COPY_SCRIPT_FILE;
 }
 
-
-
+mkdir $GENERATE_HOME
 generateBuildScript
 generateCopyScript
 
