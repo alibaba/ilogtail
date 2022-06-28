@@ -106,8 +106,8 @@ docker: clean
 
 .PHONY: e2edocker
 e2edocker: clean
-	./scripts/gen_build_scripts.sh e2e $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY)
-	./scripts/docker_build.sh default $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
+	./scripts/gen_build_scripts.sh e2e $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY)
+	./scripts/docker_build.sh default $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
 
 # provide a goc server for e2e testing
 .PHONY: gocdocker
