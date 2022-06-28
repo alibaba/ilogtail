@@ -16,6 +16,7 @@
 VERSION ?= 1.1.0
 DOCKER_PUSH ?= false
 DOCKER_REPOSITORY ?= aliyun/ilogtail
+BUILD_REPOSITORY ?= aliyun/ilogtail_build
 GENERATED_HOME ?= generated_files
 
 SCOPE ?= .
@@ -82,14 +83,14 @@ lint-e2e: clean tools
 
 .PHONY: core
 core: clean
-	./scripts/gen_build_scripts.sh core $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY)
-	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
+	./scripts/gen_build_scripts.sh core $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY)
+	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
 	./$(GENERATED_HOME)/gen_copy_docker.sh
 
 .PHONY: plugin
 plugin: clean
-	./scripts/gen_build_scripts.sh plugin $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY)
-	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
+	./scripts/gen_build_scripts.sh plugin $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY)
+	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
 	./$(GENERATED_HOME)/gen_copy_docker.sh
 
 .PHONY: plugin_main
@@ -105,8 +106,8 @@ docker: clean
 
 .PHONY: e2edocker
 e2edocker: clean
-	./scripts/gen_build_scripts.sh e2e $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY)
-	./scripts/docker_build.sh default $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
+	./scripts/gen_build_scripts.sh e2e $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY)
+	./scripts/docker_build.sh default $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
 
 # provide a goc server for e2e testing
 .PHONY: gocdocker
@@ -166,6 +167,6 @@ unittest_pluginmanager: clean
 
 .PHONY: all
 all: clean
-	./scripts/gen_build_scripts.sh all $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY)
-	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
+	./scripts/gen_build_scripts.sh all $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY)
+	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
 	./$(GENERATED_HOME)/gen_copy_docker.sh
