@@ -62,7 +62,7 @@ cat stdout.log
 
 ```shell
 make wholedocker
-docker run -d --name ilogtail-ds -v core/example_config/user_yaml_config.d:/usr/local/ilogtail/user_yaml_config.d aliyun/ilogtail:local-test
+docker run -d --name ilogtail-ds -v core/example_config/user_yaml_config.d:/usr/local/ilogtail/user_yaml_config.d aliyun/ilogtail:local-build
 ```
 
 3.完整模式K8s启动

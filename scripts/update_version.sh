@@ -40,6 +40,8 @@ sed -i "s/image: aliyun\\/ilogtail:.*/image: aliyun\\/ilogtail:$version/g" test/
 
 # Docs
 sed -i "s/aliyun\\/ilogtail:[^\` ]*/aliyun\\/ilogtail:$version/g" \
+    README-cn.md \
+    README.md \
     docs/zh/setup/README.md \
     docs/en/setup/README.md \
     docs/zh/guides/How-to-do-manual-test.md \

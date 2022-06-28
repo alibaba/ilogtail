@@ -20,23 +20,23 @@
 # all: Do the above plugin and core steps.
 # e2e: Build plugin dynamic lib with GOC and build the CPP part.
 export CATEGORY=$1
-GENERATE_HOME=$2
+GENERATED_HOME=$2
 export VERSION=${3:-1.1.0}
 export REPOSITORY=${4:-aliyun/ilogtail}
 
-BUILD_SCRIPT_FILE=$GENERATE_HOME/gen_build.sh
-COPY_SCRIPT_FILE=$GENERATE_HOME/gen_copy_docker.sh
+BUILD_SCRIPT_FILE=$GENERATED_HOME/gen_build.sh
+COPY_SCRIPT_FILE=$GENERATED_HOME/gen_copy_docker.sh
 
 function generateBuildScript() {
   rm -rf $BUILD_SCRIPT_FILE && touch $BUILD_SCRIPT_FILE && chmod 755 $BUILD_SCRIPT_FILE
   if [ $CATEGORY = "plugin" ]; then
     echo './scripts/plugin_build.sh vendor c-shared' >> $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "core" ]; then
-    echo 'mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32' >>  $BUILD_SCRIPT_FILE;
+    echo 'mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj$(nproc)' >>  $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "all" ]; then
-    echo './scripts/plugin_build.sh vendor c-shared && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32' >> $BUILD_SCRIPT_FILE;
+    echo './scripts/plugin_build.sh vendor c-shared && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj$(nproc)' >> $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "e2e" ]; then
-    echo './scripts/plugin_gocbuild.sh && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj32' >> $BUILD_SCRIPT_FILE;
+    echo './scripts/plugin_gocbuild.sh && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj$(nproc)' >> $BUILD_SCRIPT_FILE;
   fi
 }
 
@@ -59,7 +59,7 @@ function generateCopyScript() {
   echo 'docker rm -v "$id"' >> $COPY_SCRIPT_FILE;
 }
 
-mkdir $GENERATE_HOME
+mkdir $GENERATED_HOME
 generateBuildScript
 generateCopyScript
 

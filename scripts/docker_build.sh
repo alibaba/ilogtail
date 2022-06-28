@@ -21,16 +21,16 @@
 # build: build core or plugin binary with Dockerfile_build
 # default: build ilogtail images.
 CATEGORY=$1
-GENERATE_HOME=$2
+GENERATED_HOME=$2
 VERSION=${3:-1.1.0}
 REPOSITORY=${4:-aliyun/ilogtail}
 PUSH=${5:-false}
 
 HOST_OS=`uname -s`
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
-GEN_DOCKERFILE=$GENERATE_HOME/Dockerfile
+GEN_DOCKERFILE=$GENERATED_HOME/Dockerfile
 
-rm -rf $GENERATE_HOME && mkdir $GENERATE_HOME && touch $GEN_DOCKERFILE
+rm -rf $GENERATED_HOME && mkdir $GENERATED_HOME && touch $GEN_DOCKERFILE
 
 if [[ $CATEGORY = "goc" || $CATEGORY = "build" ]]; then
     cat $ROOTDIR/docker/Dockerfile_$CATEGORY|grep -v "#" > $GEN_DOCKERFILE;
