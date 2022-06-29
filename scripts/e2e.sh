@@ -28,6 +28,8 @@ function run() {
       exit 1
   fi
 }
+docker version
+docker-compose version
 
 # There are 2 kinds of test, which are e2e and performance.
 TYPE=$1

@@ -138,7 +138,7 @@ e2e: clean gocdocker e2edocker
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh behavior $(TEST_SCOPE)
 
 .PHONY: e2e-core
-e2e-core: clean gocdocker e2edocker
+e2e-core: clean
 	TEST_DEBUG=$(TEST_DEBUG) TEST_PROFILE=$(TEST_PROFILE)  ./scripts/e2e.sh core $(TEST_SCOPE)
 
 .PHONY: e2e-performance
