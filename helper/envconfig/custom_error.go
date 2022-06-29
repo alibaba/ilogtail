@@ -1,9 +1,9 @@
-package k8s_event
+package envconfig
 
 import (
+	"context"
 	"encoding/json"
 	"regexp"
-	"context"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
@@ -76,3 +76,39 @@ func CustomErrorFromPopError(popError error) *CustomError {
 	}
 }
 
+func GetAnnotationByError(projectInfo map[string]string, customError *CustomError) map[string]string {
+	if len(customError.Code) > 0 {
+		projectInfo["code"] = customError.Code
+	}
+	if len(customError.Message) > 0 {
+		projectInfo["message"] = customError.Message
+	}
+	if len(customError.RequestId) > 0 {
+		projectInfo["requestId"] = customError.RequestId
+	}
+	return projectInfo
+}
+
+func GetAnnotationByObject(config *AliyunLogConfigSpec, project, logstore, product, configName string, rawConfig bool) map[string]string {
+	annotations := make(map[string]string)
+	if len(project) > 0 {
+		annotations["project"] = project
+	}
+	if len(logstore) > 0 {
+		annotations["logstore"] = logstore
+	}
+	if len(product) > 0 {
+		annotations["productCode"] = product
+	}
+	if len(configName) > 0 {
+		annotations["configName"] = configName
+	}
+
+	if rawConfig {
+		jsonStr, err := json.Marshal(config)
+		if err == nil {
+			annotations["logtailConfig"] = string(jsonStr)
+		}
+	}
+	return annotations
+}
