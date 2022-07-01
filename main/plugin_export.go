@@ -209,7 +209,7 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 		}
 	}
 
-	returnStruct.envSize = C.int(len(meta.ContainerLabels))
+	returnStruct.envSize = C.int(len(meta.Env))
 	if len(meta.Env) > 0 {
 		returnStruct.envsKey = C.makeCharArray(returnStruct.envSize)
 		returnStruct.envsVal = C.makeCharArray(returnStruct.envSize)
