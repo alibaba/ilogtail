@@ -123,7 +123,6 @@ func ProcessRawLogV2(configName string, rawLog []byte, packId string, topic stri
 
 //export ProcessLog
 func ProcessLog(configName string, logBytes []byte, packId string, topic string, tags []byte) int {
-	logger.Debug(context.Background(), "ProcessLog triggered")
 	config, exists := pluginmanager.LogtailConfig[configName]
 	if !exists {
 		logger.Debug(context.Background(), "ProcessLog not found", configName)
@@ -170,15 +169,15 @@ func CtlCmd(configName string, cmdId int, cmdDetail string) {
 //export GetContainerMeta
 func GetContainerMeta(containerID string) *C.struct_containerMeta {
 	logger.Init()
-	logger.Debug(context.Background(), "get meta", containerID)
 	meta := helper.GetContainerMeta(containerID)
 	if meta == nil {
 		logger.Debug(context.Background(), "get meta", "")
 		return nil
 	}
-	bytes, _ := json.Marshal(meta)
-	logger.Debug(context.Background(), "get meta", string(bytes))
-	logger.Flush()
+	if logger.DebugFlag() {
+		bytes, _ := json.Marshal(meta)
+		logger.Debug(context.Background(), "get meta", string(bytes))
+	}
 	returnStruct := (*C.struct_containerMeta)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_containerMeta{}))))
 	returnStruct.podName = C.CString(meta.PodName)
 	returnStruct.k8sNamespace = C.CString(meta.K8sNamespace)
