@@ -33,6 +33,9 @@ void ProfileSender::SendToProfileProject(const std::string& region, sls_logs::Lo
         SendRunningStatus(logGroup);
     }
 
+    // Opensource is not necessary to synchronize data with SLS
+    Sender::Instance()->RestLastSenderTime();
+    ConfigManager::GetInstance()->RestLastConfigTime();
     return;
 }
 
@@ -45,8 +48,8 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
     }
 
     std::string region = "cn-shanghai";
-    std::string project = "logtail-opensource";
-    std::string logstore = "logtail-online";
+    std::string project = "ilogtail-community-edition";
+    std::string logstore = "ilogtail-online";
     std::string endpoint = region + ".log.aliyuncs.com";
 
     Json::Value logtailStatus;

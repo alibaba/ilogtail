@@ -15,7 +15,6 @@
 # limitations under the License.
 
 function os() {
-
   if uname -s | grep Darwin; then
     return 2
   elif uname -s | grep Linux; then
@@ -25,8 +24,9 @@ function os() {
   fi
 }
 
-MOD=$1
-BUILDMODE=$2
+MOD=${1:-vendor}
+BUILDMODE=${2:-default}
+OUT_DIR=${3:-output}
 NAME=ilogtail
 IDFLAGS=''
 
@@ -34,7 +34,7 @@ os
 OS_FLAG=$?
 
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
-mkdir "$ROOTDIR"/bin
+mkdir -p "$ROOTDIR"/bin
 
 if [ $OS_FLAG = 1 ]; then
   IDFLAGS='-extldflags "-Wl,--wrap=memcpy"'
@@ -51,4 +51,4 @@ elif [ $OS_FLAG = 2 ]; then
   BUILDMODE=default
 fi
 
-go build -mod="$MOD" -buildmode="$BUILDMODE" -ldflags="$IDFLAGS" -o "$ROOTDIR"/bin/${NAME} "$ROOTDIR"/plugin_main
+go build -mod="$MOD" -buildmode="$BUILDMODE" -ldflags="$IDFLAGS" -o "$ROOTDIR/$OUT_DIR/${NAME}" "$ROOTDIR"/plugin_main
