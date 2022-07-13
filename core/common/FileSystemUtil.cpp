@@ -109,7 +109,7 @@ void TrimLastSeperator(std::string& path) {
     }
 }
 
-bool ReadFileContent(const std::string& fileName, std::string& content) {
+bool ReadFileContent(const std::string& fileName, std::string& content, uint32_t maxFileSize) {
     FILE* pFile = fopen(fileName.c_str(), "r");
     if (pFile == NULL) {
         APSARA_LOG_DEBUG(sLogger, ("open file fail", fileName)("errno", strerror(errno)));
@@ -117,8 +117,8 @@ bool ReadFileContent(const std::string& fileName, std::string& content) {
     }
 
     content.clear();
-    char* buffer = new char[8192];
-    uint32_t readBytes = fread(buffer, 1, 8192, pFile);
+    char* buffer = new char[maxFileSize];
+    uint32_t readBytes = fread(buffer, 1, maxFileSize, pFile);
     if (readBytes > 0) {
         content.append(buffer, readBytes);
         delete[] buffer;
@@ -350,7 +350,9 @@ namespace fsutil {
 #endif
     }
 
-    Dir::~Dir() { Close(); }
+    Dir::~Dir() {
+        Close();
+    }
 
 #if defined(_MSC_VER)
     // Invalid entry is returned if fileName starts with ., such as ., .., hidden files.
@@ -518,9 +520,11 @@ namespace fsutil {
 #endif
     }
 
-    PathStat::PathStat() {}
+    PathStat::PathStat() {
+    }
 
-    PathStat::~PathStat() {}
+    PathStat::~PathStat() {
+    }
 
     bool PathStat::stat(const std::string& path, PathStat& ps) {
         ps.mPath = path;
@@ -639,7 +643,9 @@ namespace fsutil {
     }
 #endif
 
-    time_t PathStat::GetMtime() const { return mRawStat.st_mtime; }
+    time_t PathStat::GetMtime() const {
+        return mRawStat.st_mtime;
+    }
 
     void PathStat::GetLastWriteTime(int64_t& sec, int64_t& nsec) const {
 #if defined(__linux__)
@@ -672,7 +678,9 @@ namespace fsutil {
 #endif
     }
 
-    int64_t PathStat::GetFileSize() const { return mRawStat.st_size; }
+    int64_t PathStat::GetFileSize() const {
+        return mRawStat.st_size;
+    }
 
 } // namespace fsutil
 
