@@ -31,11 +31,11 @@ type ProcessorCSVDecoder struct {
 	SourceKey        string   `comment:"The source key containing the CSV record"`
 	NoKeyError       bool     `comment:"Optional. Whether to report error if no key in the log mathes the SourceKey, default to false"`
 	SplitKeys        []string `comment:"The keys matching the decoded CSV fields"`
-	SplitSep         string   `comment:"Optional. The Seperator, default to ,"`
+	SplitSep         string   `comment:"Optional. The Separator, default to ,"`
 	TrimLeadingSpace bool     `comment:"Optional. Whether to ignore the leading space in each CSV field, default to false"`
 	PreserveOthers   bool     `comment:"Optional. Whether to preserve the remaining record if #splitKeys < #CSV fields, default to false"`
 	ExpandOthers     bool     `comment:"Optional. Whether to decode the remaining record if #splitKeys < #CSV fields, default to false"`
-	ExpandKeyPrefix  string   `comment:"Required when ExpandOthers=true. The prefix of the keys for storing the remaing record fields"`
+	ExpandKeyPrefix  string   `comment:"Required when ExpandOthers=true. The prefix of the keys for storing the remaining record fields"`
 	KeepSource       bool     `comment:"Optional. Whether to keep the source log content given successful decoding, default to false"`
 
 	sep     rune
@@ -45,7 +45,7 @@ type ProcessorCSVDecoder struct {
 func (p *ProcessorCSVDecoder) Init(context ilogtail.Context) error {
 	sepRunes := []rune(p.SplitSep)
 	if len(sepRunes) != 1 {
-		return fmt.Errorf("invalid seperator: %s", p.SplitSep)
+		return fmt.Errorf("invalid separator: %s", p.SplitSep)
 	}
 	p.sep = sepRunes[0]
 	p.context = context
@@ -95,7 +95,7 @@ func (p *ProcessorCSVDecoder) decodeCSV(log *protocol.Log, value string) bool {
 			var b strings.Builder
 			w := csv.NewWriter(&b)
 			w.Comma = p.sep
-			w.Write(record[keyIndex:])
+			_ = w.Write(record[keyIndex:])
 			w.Flush()
 			remained := b.String()
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "_decode_preserve_", Value: remained[:len(remained)-1]})
