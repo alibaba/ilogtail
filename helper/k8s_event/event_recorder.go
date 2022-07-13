@@ -1,7 +1,10 @@
 package k8s_event
 
 import (
-	"github.com/golang/glog"
+	//"github.com/golang/glog"
+	"context"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -10,7 +13,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	restclient "k8s.io/client-go/rest"
-	clientcmd "k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
 	ref "k8s.io/client-go/tools/reference"
 )
@@ -23,9 +25,9 @@ type EventRecorder struct {
 var eventRecorder = &EventRecorder{}
 
 func SetEventRecorder(kubeclientset *kubernetes.Clientset, module string) {
-	glog.V(4).Info("Creating event broadcaster")
+	//glog.V(4).Info("Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(glog.Infof)
+	//eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: Logtail})
 
@@ -36,9 +38,10 @@ func SetEventRecorder(kubeclientset *kubernetes.Clientset, module string) {
 func Init() {
 	var cfg *restclient.Config
 
-	//cfg, err := restclient.InClusterConfig()
+	cfg, err := restclient.InClusterConfig()
+	logger.Info(context.Background(), "init event_revorder", "")
 
-	cfg, err := clientcmd.BuildConfigFromFlags("", "/root/.kube/config")
+	//cfg, err := clientcmd.BuildConfigFromFlags("", "/root/.kube/config")
 	if err != nil {
 		//logger.Error("INIT_ALARM", "Error building kubeconfig: %s", err.Error())
 		panic(nil)

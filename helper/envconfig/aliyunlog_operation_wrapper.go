@@ -194,12 +194,16 @@ func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, pr
 	annotations := GetAnnotationByObject(config, project, logstore, product, config.LogtailConfig.ConfigName, false)
 
 	if err != nil {
-		customErr := CustomErrorFromPopError(err)
-		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProductLogStore, k8s_event.CreateProductLogStoreAlarm, fmt.Sprintf("create product log failed, error: %s", err.Error()))
+		if k8s_event.GetEventRecorder() != nil {
+			customErr := CustomErrorFromPopError(err)
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProductLogStore, k8s_event.CreateProductLogStoreAlarm, fmt.Sprintf("create product log failed, error: %s", err.Error()))
+		}
 		logger.Warning(context.Background(), "CREATE_PRODUCT_ALARM", "create product error, error", err)
 		return err
 	}
-	k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProductLogStore, "create product log success")
+	if k8s_event.GetEventRecorder() != nil {
+		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProductLogStore, "create product log success")
+	}
 
 	o.addLogstoreCache(project, logstore)
 	return nil
@@ -264,11 +268,15 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec, pr
 	}
 	annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, false)
 	if err != nil {
-		customErr := CustomErrorFromSlsSDKError(err)
-		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateLogstore, k8s_event.UpdateConfigAlarm, fmt.Sprintf("create logstore failed, error: %s", err.Error()))
+		if k8s_event.GetEventRecorder() != nil {
+			customErr := CustomErrorFromSlsSDKError(err)
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateLogstore, k8s_event.UpdateConfigAlarm, fmt.Sprintf("create logstore failed, error: %s", err.Error()))
+		}
 		return err
 	} else {
-		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateLogstore, "create logstore success")
+		if k8s_event.GetEventRecorder() != nil {
+			k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateLogstore, "create logstore success")
+		}
 	}
 
 	// after create logstore success, wait 1 sec
@@ -323,10 +331,14 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 	}
 	annotations := GetAnnotationByObject(config, project, logstore, "", configName, false)
 	if err != nil {
-		customErr := CustomErrorFromSlsSDKError(err)
-		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProject, k8s_event.UpdateConfigAlarm, fmt.Sprintf("create project failed, error: %s", err.Error()))
+		if k8s_event.GetEventRecorder() != nil {
+			customErr := CustomErrorFromSlsSDKError(err)
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProject, k8s_event.UpdateConfigAlarm, fmt.Sprintf("create project failed, error: %s", err.Error()))
+		}
 	} else {
-		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProject, "create project success")
+		if k8s_event.GetEventRecorder() != nil {
+			k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProject, "create project success")
+		}
 	}
 	return err
 }
@@ -514,10 +526,14 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 
 						annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
 						if err != nil {
-							customErr := CustomErrorFromSlsSDKError(err)
-							k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, k8s_event.UpdateConfigAlarm, fmt.Sprintf("update config failed, error: %s", err.Error()))
+							if k8s_event.GetEventRecorder() != nil {
+								customErr := CustomErrorFromSlsSDKError(err)
+								k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, k8s_event.UpdateConfigAlarm, fmt.Sprintf("update config failed, error: %s", err.Error()))
+							}
 						} else {
-							k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
+							if k8s_event.GetEventRecorder() != nil {
+								k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
+							}
 						}
 
 					} else {
@@ -545,6 +561,17 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 			err = o.logClient.CreateConfig(project, aliyunLogConfig)
 			if err == nil {
 				break
+			}
+		}
+		annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
+		if err != nil {
+			if k8s_event.GetEventRecorder() != nil {
+				customErr := CustomErrorFromSlsSDKError(err)
+				k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, k8s_event.UpdateConfigAlarm, fmt.Sprintf("update config failed, error: %s", err.Error()))
+			}
+		} else {
+			if k8s_event.GetEventRecorder() != nil {
+				k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
 			}
 		}
 	}
