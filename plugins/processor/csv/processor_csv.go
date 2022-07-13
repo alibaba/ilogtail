@@ -28,16 +28,15 @@ import (
 )
 
 type ProcessorCSVDecoder struct {
-	SourceKey         string   `comment:"The source key containing the CSV record"`
-	NoKeyError        bool     `comment:"Optional. Whether to report error if no key in the log mathes the SourceKey, default to false"`
-	SplitKeys         []string `comment:"The keys matching the decoded CSV fields"`
-	SplitSep          string   `comment:"Optional. The Seperator, default to ,"`
-	TrimLeadingSpace  bool     `comment:"Optional. Whether to ignore the leading space in each CSV field, default to false"`
-	PreserveOthers    bool     `comment:"Optional. Whether to preserve the remaining record if #splitKeys < #CSV fields, default to false"`
-	ExpandOthers      bool     `comment:"Optional. Whether to decode the remaining record if #splitKeys < #CSV fields, default to false"`
-	ExpandKeyPrefix   string   `comment:"Required when ExpandOthers=true. The prefix of the keys for storing the remaing record fields"`
-	KeepSource        bool     `comment:"Optional. Whether to keep the source log content given successful decoding, default to false"`
-	KeepSrcIfParseErr bool
+	SourceKey        string   `comment:"The source key containing the CSV record"`
+	NoKeyError       bool     `comment:"Optional. Whether to report error if no key in the log mathes the SourceKey, default to false"`
+	SplitKeys        []string `comment:"The keys matching the decoded CSV fields"`
+	SplitSep         string   `comment:"Optional. The Seperator, default to ,"`
+	TrimLeadingSpace bool     `comment:"Optional. Whether to ignore the leading space in each CSV field, default to false"`
+	PreserveOthers   bool     `comment:"Optional. Whether to preserve the remaining record if #splitKeys < #CSV fields, default to false"`
+	ExpandOthers     bool     `comment:"Optional. Whether to decode the remaining record if #splitKeys < #CSV fields, default to false"`
+	ExpandKeyPrefix  string   `comment:"Required when ExpandOthers=true. The prefix of the keys for storing the remaing record fields"`
+	KeepSource       bool     `comment:"Optional. Whether to keep the source log content given successful decoding, default to false"`
 
 	sep     rune
 	context ilogtail.Context
@@ -130,14 +129,13 @@ func (p *ProcessorCSVDecoder) ProcessLogs(logArray []*protocol.Log) []*protocol.
 }
 
 func (p *ProcessorCSVDecoder) shouldKeepSrc(res bool) bool {
-	return p.KeepSource || (p.KeepSrcIfParseErr && !res)
+	return p.KeepSource || !res
 }
 
 func init() {
 	ilogtail.Processors["processor_csv"] = func() ilogtail.Processor {
 		return &ProcessorCSVDecoder{
-			SplitSep:          ",",
-			KeepSrcIfParseErr: true,
+			SplitSep: ",",
 		}
 	}
 }
