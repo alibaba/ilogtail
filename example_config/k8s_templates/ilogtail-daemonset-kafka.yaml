@@ -102,18 +102,6 @@ spec:
             value: "1"
           - name: mem_usage_limit
             value: "512"
-          - name: default_access_key_id
-            valueFrom:
-              secretKeyRef:
-                name: ilogtail-secret
-                key: access_key_id
-                optional: true
-          - name: default_access_key
-            valueFrom:
-              secretKeyRef:
-                name: ilogtail-secret
-                key: access_key
-                optional: true
         image: >-
           sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:1.1.0
         imagePullPolicy: IfNotPresent
