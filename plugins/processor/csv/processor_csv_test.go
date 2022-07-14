@@ -17,9 +17,10 @@ package csv
 import (
 	"testing"
 
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func newProcessor() (*ProcessorCSVDecoder, error) {
