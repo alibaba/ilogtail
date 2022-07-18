@@ -34,8 +34,8 @@ your changes, such as:
 
 - [public] [both] [updated] add a new feature
 ## [Unreleased]
-
-- [public] [both] [added] Collect the Telegraf log when the service_telegraf plugin works.
-- [public] [both] [updated] update netping support dns resolve time and add hostname to labels , reduce min interval
-- [public] [both] [fixed] remove unstable syslog unit test in CI and enhance the unit test of test engine
-
+- [public] [both] [updated] change CGO ProcessLogs API to ProcessLog
+- [public] [both] [fixed] fixed GetContainerMeta data race problem
+- [public] [both] [added] add cpp core source code
+- [public] [fixed] netping plugin fix httping for dns resolve
+- [public] [both] [added] Decode the CSV record in the log.
