@@ -17,20 +17,44 @@
 set -ue
 set -o pipefail
 
-[[ $# -ne 1 && $# -ne 2 ]] && {
-    echo "Usage: $0 version [latest]"
+usage() {
+    echo "Usage: $0 package|image version [latest]"
     exit 1
+}
+
+[[ $# -ne 2 && $# -ne 3 ]] && {
+    usage
 } || :
 
-VERSION=$1
+VERSION=$2
 
-# upgrade version to latest
-[[ $# -eq 2 ]] && {
-    ossutil64 cp oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz oss://ilogtail-community-edition/latest/ilogtail-latest.linux-amd64.tar.gz
-    ossutil64 cp oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz.sha256 oss://ilogtail-community-edition/latest/ilogtail-latest.linux-amd64.tar.gz.sha256
-    exit
-} || :
+upload_package() {
+    # upgrade version to latest
+    [[ $# -eq 3 && $3 == "latest" ]] && {
+        ossutil64 cp oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz oss://ilogtail-community-edition/latest/ilogtail-latest.linux-amd64.tar.gz
+        ossutil64 cp oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz.sha256 oss://ilogtail-community-edition/latest/ilogtail-latest.linux-amd64.tar.gz.sha256
+        exit
+    } || :
 
-sha256sum ilogtail-$VERSION.tar.gz > ilogtail-$VERSION.tar.gz.sha256
-ossutil64 cp ilogtail-$VERSION.tar.gz oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz
-ossutil64 cp ilogtail-$VERSION.tar.gz.sha256 oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz.sha256
+    sha256sum ilogtail-$VERSION.tar.gz > ilogtail-$VERSION.tar.gz.sha256
+    ossutil64 cp ilogtail-$VERSION.tar.gz oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz
+    ossutil64 cp ilogtail-$VERSION.tar.gz.sha256 oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz.sha256
+}
+
+upload_image() {
+    # upgrade version to latest
+    [[ $# -eq 3 && $3 == "latest" ]] && {
+        docker tag sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:$VERSION sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:latest
+        docker push sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:latest
+        exit
+    } || :
+
+    docker tag aliyun/ilogtail:$VERSION 
+    docker push sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail:$VERSION
+}
+
+[[ $1 == "package" ]] && {
+    upload_package
+} || [[ $1 == "image" ]] && {
+    upload_image
+} || usage
