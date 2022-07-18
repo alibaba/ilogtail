@@ -100,13 +100,8 @@ plugin_main: clean
 	cp pkg/logtail/PluginAdapter.dll bin/PluginAdapter.dll
 
 .PHONY: plugin_local
-plugin_main:
+plugin_local:
 	./scripts/plugin_build.sh vendor c-shared $(OUT_DIR)
-
-.PHONY: docker
-docker: clean
-	./scripts/gen_build_scripts.sh all $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(OUT_DIR)
-	./scripts/docker_build.sh production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
 .PHONY: e2edocker
 e2edocker: clean
@@ -178,3 +173,10 @@ all: clean
 .PHONY: dist
 dist: all
 	./scripts/dist.sh $(OUT_DIR) $(DIST_DIR)
+
+.PHONY: docker
+docker:
+ifeq (,$(wildcard ilogtail-$(VERSION).tar.gz))
+$(error Please run `make dist` first!)
+endif
+	./scripts/docker_build.sh production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)

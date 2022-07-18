@@ -13,17 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -ue
+set -o pipefail
+
 # Currently, there are 4 supported categories, which are plugin, core, all and e2e.
 #
 # plugin: Only build Linux dynamic lib with Golang part.
 # core: Only build the CPP part.
 # all: Do the above plugin and core steps.
 # e2e: Build plugin dynamic lib with GOC and build the CPP part.
-export CATEGORY=$1
+CATEGORY=$1
 GENERATED_HOME=$2
-export VERSION=${3:-1.1.0}
-export REPOSITORY=${4:-aliyun/ilogtail}
-export OUT_DIR=${5:-output}
+VERSION=${3:-1.1.0}
+REPOSITORY=${4:-aliyun/ilogtail}
+OUT_DIR=${5:-output}
 
 BUILD_SCRIPT_FILE=$GENERATED_HOME/gen_build.sh
 COPY_SCRIPT_FILE=$GENERATED_HOME/gen_copy_docker.sh
@@ -62,11 +65,6 @@ function generateCopyScript() {
   echo 'docker rm -v "$id"' >> $COPY_SCRIPT_FILE;
 }
 
-mkdir $GENERATED_HOME
+mkdir -p $GENERATED_HOME
 generateBuildScript
 generateCopyScript
-
-
-
-
-

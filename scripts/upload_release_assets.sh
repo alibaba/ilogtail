@@ -17,12 +17,20 @@
 set -ue
 set -o pipefail
 
-[[ $# -ne 2 ]] && {
-    echo "Usage: $0 version"
+[[ $# -ne 1 && $# -ne 2 ]] && {
+    echo "Usage: $0 version [latest]"
+    exit 1
 } || :
 
-export VERSION=$1
-make dist
+VERSION=$1
+
+# upgrade version to latest
+[[ $# -eq 2 ]] && {
+    ossutil64 cp oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz oss://ilogtail-community-edition/latest/ilogtail-latest.linux-amd64.tar.gz
+    ossutil64 cp oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz.sha256 oss://ilogtail-community-edition/latest/ilogtail-latest.linux-amd64.tar.gz.sha256
+    exit
+} || :
+
 sha256sum ilogtail-$VERSION.tar.gz > ilogtail-$VERSION.tar.gz.sha256
 ossutil64 cp ilogtail-$VERSION.tar.gz oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz
 ossutil64 cp ilogtail-$VERSION.tar.gz.sha256 oss://ilogtail-community-edition/$VERSION/ilogtail-$VERSION.linux-amd64.tar.gz.sha256
