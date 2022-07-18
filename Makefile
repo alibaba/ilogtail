@@ -175,7 +175,7 @@ dist: all
 	./scripts/dist.sh $(OUT_DIR) $(DIST_DIR)
 
 ilogtail-$(VERSION).tar.gz:
-	@echo 'ilogtail-$(VERSION) does not exist! Please run `make dist` first!'
+	@echo 'ilogtail-$(VERSION) does not exist! Please download or run `make dist` first!'
 	@false
 
 .PHONY: docker
