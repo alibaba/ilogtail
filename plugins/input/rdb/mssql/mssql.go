@@ -23,7 +23,7 @@ import (
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/alibaba/ilogtail/plugins/input/rdb/rdb"
+	"github.com/alibaba/ilogtail/plugins/input/rdb"
 )
 
 var msColumnResolverFuncMap map[string]rdb.ColumnResolverFunc = map[string]rdb.ColumnResolverFunc{
