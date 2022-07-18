@@ -174,9 +174,10 @@ all: clean
 dist: all
 	./scripts/dist.sh $(OUT_DIR) $(DIST_DIR)
 
+ilogtail-$(VERSION).tar.gz:
+	@echo 'ilogtail-$(VERSION) does not exist! Please run `make dist` first!'
+	@false
+
 .PHONY: docker
-docker:
-ifeq (,$(wildcard ilogtail-$(VERSION).tar.gz))
-$(error Please run `make dist` first!)
-endif
+docker: ilogtail-$(VERSION).tar.gz
 	./scripts/docker_build.sh production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
