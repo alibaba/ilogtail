@@ -27,8 +27,6 @@
 #include <ostream>
 
 namespace logtail {
-// Currently, only on thread access the map.
-extern std::unordered_map<uint32_t, uint32_t> DropEventsAggregatorMap;
 
 template <typename T>
 inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const T& value) {
