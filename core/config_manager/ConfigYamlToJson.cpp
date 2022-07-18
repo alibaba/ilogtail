@@ -89,6 +89,12 @@ string ConfigYamlToJson::GetTransforKey(const string yamlKey) {
 }
 
 Json::Value ConfigYamlToJson::ParseScalar(const YAML::Node& node) {
+    if(node.Tag() == "!") {
+        string s;
+        if (YAML::convert<string>::decode(node, s))
+            return s;
+    }
+    
     int i;
     if (YAML::convert<int>::decode(node, i))
         return i;
