@@ -179,8 +179,7 @@ inline ServiceCategory DetectRemoteServiceCategory(ProtocolType protocolType) {
             return ServiceCategory::Server;
         }
         case ProtocolType_DNS: {
-            // todo change to dns
-            return ServiceCategory::MQ;
+            return ServiceCategory::DNS;
         }
         default: {
             return ServiceCategory::Unknown;
