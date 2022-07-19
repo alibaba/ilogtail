@@ -32,7 +32,7 @@ BUILD_SCRIPT_FILE=$GENERATED_HOME/gen_build.sh
 COPY_SCRIPT_FILE=$GENERATED_HOME/gen_copy_docker.sh
 
 function generateBuildScript() {
-  rm -rf $BUILD_SCRIPT_FILE && echo -e "#!/bin/bash\nset -ue\nset -o pipefail" > $BUILD_SCRIPT_FILE && chmod 755 $BUILD_SCRIPT_FILE
+  rm -rf $BUILD_SCRIPT_FILE && echo -e "#!/bin/bash\nset -ue\nset -o pipefail\n" > $BUILD_SCRIPT_FILE && chmod 755 $BUILD_SCRIPT_FILE
   if [ $CATEGORY = "plugin" ]; then
     echo './scripts/plugin_build.sh vendor c-shared '${OUT_DIR} >> $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "core" ]; then
@@ -45,7 +45,7 @@ function generateBuildScript() {
 }
 
 function generateCopyScript() {
-  rm -rf $COPY_SCRIPT_FILE && echo -e "#!/bin/bash\nset -ue\nset -o pipefail" > $COPY_SCRIPT_FILE && chmod 755 $COPY_SCRIPT_FILE
+  rm -rf $COPY_SCRIPT_FILE && echo -e "#!/bin/bash\nset -ue\nset -o pipefail\n" > $COPY_SCRIPT_FILE && chmod 755 $COPY_SCRIPT_FILE
   echo 'BINDIR=$(cd $(dirname "${BASH_SOURCE[0]}")&& cd .. && pwd)/'${OUT_DIR}'/' >> $COPY_SCRIPT_FILE
   echo 'rm -rf $BINDIR && mkdir $BINDIR' >> $COPY_SCRIPT_FILE
   echo "id=\$(docker create ${REPOSITORY}:${VERSION})" >> $COPY_SCRIPT_FILE
