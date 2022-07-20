@@ -117,6 +117,27 @@ struct NetworkConfig {
         mFlushNetlinkInterval = 10;
         mSaveToDisk = false;
         mDropUnixSocket = true;
+        boost::regex emptyRegex;
+        mIncludeCmdRegex = emptyRegex;
+        mExcludeCmdRegex = emptyRegex;
+        mIncludeContainerNameRegex = emptyRegex;
+        mExcludeContainerNameRegex = emptyRegex;
+        mIncludePodNameRegex = emptyRegex;
+        mExcludePodNameRegex = emptyRegex;
+        mIncludeNamespaceNameRegex = emptyRegex;
+        mExcludeNamespaceNameRegex = emptyRegex;
+        mIncludeContainerLabels.clear();
+        mExcludeContainerLabels.clear();
+        mIncludeK8sLabels.clear();
+        mExcludeK8sLabels.clear();
+        mIncludeEnvs.clear();
+        mExcludeEnvs.clear();
+        mTags.clear();
+        mProtocolAggCfg.clear();
+        mDropUnixSocket = true;
+        mDropLocalConnections = true;
+        mDropUnknownSocket = true;
+        mProtocolProcessFlag = -1;
     }
 
     bool IsLegalProtocol(ProtocolType type) const {
