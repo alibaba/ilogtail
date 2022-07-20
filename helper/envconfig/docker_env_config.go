@@ -29,7 +29,7 @@ import (
 )
 
 //
-var K8sEventInitFlag = flag.Bool("ALICLOUD_LOG_K8S_EVENT_CONFIG", false, "alibaba log k8s event config flag, set true if you want to use it")
+var K8sFlag = flag.Bool("ALICLOUD_LOG_K8S_FLAG", false, "alibaba log k8s event config flag, set true if you want to use it")
 
 // DockerConfigInitFlag is the alibaba log docker env config flag, set yes if you want to use it. And it is also a special flag to control enable go part in ilogtail. If you just want to
 // enable logtail plugin and off the env config, set the env called ALICLOUD_LOG_PLUGIN_ENV_CONFIG with false.
@@ -109,7 +109,7 @@ func initSelfEnvConfig() {
 }
 
 func initConfig() {
-	_ = util.InitFromEnvBool("ALICLOUD_LOG_K8S_EVENT_CONFIG", K8sEventInitFlag, *K8sEventInitFlag)
+	_ = util.InitFromEnvBool("ALICLOUD_LOG_K8S_FLAG", K8sFlag, *K8sFlag)
 	_ = util.InitFromEnvBool("ALICLOUD_LOG_DOCKER_ENV_CONFIG", DockerConfigInitFlag, *DockerConfigInitFlag)
 	_ = util.InitFromEnvBool("ALICLOUD_LOG_ECS_FLAG", AliCloudECSFlag, *AliCloudECSFlag)
 	_ = util.InitFromEnvString("ALICLOUD_LOG_DOCKER_CONFIG_PREFIX", DockerConfigPrefix, *DockerConfigPrefix)
@@ -135,7 +135,7 @@ func initConfig() {
 		// init docker config
 		logger.Info(context.Background(), "init docker env config, ECS flag", *AliCloudECSFlag, "prefix", *DockerConfigPrefix, "project", *DefaultLogProject, "machine group", *DefaultLogMachineGroup, "id", *DefaultAccessKeyID)
 
-		if *K8sEventInitFlag {
+		if *K8sFlag {
 			k8s_event.Init()
 		}
 
