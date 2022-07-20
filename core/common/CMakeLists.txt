@@ -31,7 +31,6 @@ elseif (UNIX)
     file(GLOB PICOHTTPPARSER_SOURCE_FILES protocol/picohttpparser/*.c protocol/picohttpparser/*.h)
     list(APPEND LIB_SOURCE_FILES ${PICOHTTPPARSER_SOURCE_FILES})
 endif ()
-
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
     file(GLOB XX_HASH_SOURCE_FILES xxhash/*.c xxhash/*.h)
 else ()

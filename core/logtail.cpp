@@ -269,7 +269,7 @@ void do_worker_process() {
     appInfoJson["logtail_version"] = Json::Value(std::string(ILOGTAIL_VERSION) + " Community Edition");
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
 #define STRINGIFY(x) #x
-#define VERSION_STR(A,B,C) "GCC " STRINGIFY(A) "." STRINGIFY(B) "." STRINGIFY(C)
+#define VERSION_STR(A, B, C) "GCC " STRINGIFY(A) "." STRINGIFY(B) "." STRINGIFY(C)
 #define ILOGTAIL_COMPILER VERSION_STR(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
     appInfoJson["compiler"] = Json::Value(ILOGTAIL_COMPILER);
     appInfoJson["build_date"] = Json::Value(ILOGTAIL_BUILD_DATE);
@@ -288,7 +288,8 @@ void do_worker_process() {
 }
 
 int main(int argc, char** argv) {
-    gflags::SetUsageMessage(std::string("The Lightweight Collector of SLS in Alibaba Cloud\nUsage: ./ilogtail [OPTION]"));
+    gflags::SetUsageMessage(
+        std::string("The Lightweight Collector of SLS in Alibaba Cloud\nUsage: ./ilogtail [OPTION]"));
     gflags::SetVersionString(std::string(ILOGTAIL_VERSION) + " Community Edition");
     google::ParseCommandLineFlags(&argc, &argv, true);
     // check addr config
