@@ -89,10 +89,11 @@ string ConfigYamlToJson::GetTransforKey(const string yamlKey) {
 }
 
 Json::Value ConfigYamlToJson::ParseScalar(const YAML::Node& node) {
+    // yaml-cpp automatically discards quotes in quoted values, 
+    // so to differentiate strings and integer for purely-digits value, 
+    // we can tell from node.Tag(), which will return "!" for quoted values and "?" for others
     if(node.Tag() == "!") {
-        string s;
-        if (YAML::convert<string>::decode(node, s))
-            return s;
+        return node.as<std::string>();
     }
     
     int i;
