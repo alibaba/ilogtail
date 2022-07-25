@@ -50,6 +50,11 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileConfigMap["ExcludeContainerLabel"] = "docker_exclude_label";
     mFileConfigMap["IncludeEnv"] = "docker_include_env";
     mFileConfigMap["ExcludeEnv"] = "docker_exclude_env";
+    // deprecated
+    mFileConfigMap["DockerIncludeLabel"] = "docker_include_label";
+    mFileConfigMap["DockerExcludeLabel"] = "docker_exclude_label";
+    mFileConfigMap["DockerIncludeEnv"] = "docker_include_env";
+    mFileConfigMap["DockerExcludeEnv"] = "docker_exclude_env";
 
     // params specific to accelerate processors
     mFileConfigMap["DiscardUnmatch"] = "discard_unmatch";
