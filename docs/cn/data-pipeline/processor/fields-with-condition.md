@@ -1,7 +1,7 @@
 # 条件字段处理
 
 ## 简介
-`processor_fields_with_condition`插件支持根据日志部分字段的取值，动态进行字段扩展或删除。
+`processor_fields_with_condition`插件支持根据日志部分字段的取值，动态进行字段扩展或删除。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/processor/fieldswithcondition/processor_fields_with_condition.go)
 
 ### 条件判断
 * 支持多字段取值比较。
@@ -22,6 +22,7 @@
 
 | 参数                     | 类型      | 是否必选 | 说明                                                |
 | ---------------------- | ------- | ---- | ------------------------------------------------- |
+| Type    | String | 是       | 插件类型，固定为`processor_fields_with_condition`      |
 | DropIfNotMatchCondition | Boolean  | 否 | 当条均件不满足时，日志是被丢弃（true）还是被保留（false），默认保留（false）。|
 | Switch | Array，类型为Condition | 是 | 切换行动的条件。 |
 
@@ -97,7 +98,7 @@ flushers:
 ```
 
 * 输出
-```
+```json
 {
   "Index":"1",
   "a":"b",

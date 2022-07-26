@@ -9,6 +9,11 @@
 | `service_kafka`    | SLS官方 | -                                                 | 将Kafka数据输入到iLogtail |
 | `metric_input_example`  | SLS官方 | -                                                 | MetricInput示例插件  |
 | `service_input_example` | SLS官方 | -                                                 | ServiceInput示例插件 |
+| `service_syslog` | SLS官方 | -                                                 | 采集syslog数据 |
+| `metric_debug_file` | SLS官方 | -                                                 | 用于调试的读取文件内容的插件 |
+| `metric_mock` | SLS官方 | -                                                 | 生成metric模拟数据的插件 |
+| `service_mock` | SLS官方 | -                                                 | 生成service模拟数据的插件 |
+| `service_journal` | SLS官方 | -                                                 | 从原始的二进制文件中采集Linux系统的Journal（systemd）日志 |
 
 
 ## 处理
