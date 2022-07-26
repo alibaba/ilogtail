@@ -22,6 +22,7 @@ iLogtail Core使用C++ 语言实现，当前使用GCC 4.8.x，使用其他版本
 
 推荐插件
 [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
+[Doxygen Documentation Generator](https://marketplace.visualstudio.com/items?itemName=cschlosser.doxdocgen)
 [Markdown Preview Enhanced](https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced)
 [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
 [YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
