@@ -1,7 +1,7 @@
 # ServiceInput示例插件
 
 ## 简介
-`service_input_example` 可作为编写`ServiceInput`类插件的参考示例样例，可以在指定端口接收模拟HTTP请求。
+`service_input_example` 可作为编写`ServiceInput`类插件的参考示例样例，可以在指定端口接收模拟HTTP请求。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/example/service_example.go)
 
 ## 配置参数
 | 参数    | 类型   | 是否必选 | 说明                                         |
@@ -28,7 +28,7 @@ curl --header "test:val123" http://127.0.0.1:19000/data
 ```
 
 * 输出
-```
+```json
 {
 	"test":"val123",
 	"__time__":"1658495321"
