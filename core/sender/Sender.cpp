@@ -1928,6 +1928,55 @@ bool Sender::Send(const std::string& projectName,
         projectName, sourceId, logGroup, config, mergeType, logGroupSize, defaultRegion, filename, context);
 }
 
+int Sender::SendDirectly(std::vector<sls_logs::Log>& logs, Config* config) {
+    uint32_t nowTime = time(NULL);
+    const size_t maxCount = INT32_FLAG(merge_log_count_limit) / 4;
+    for (size_t beginIndex = 0; beginIndex < logs.size(); beginIndex += maxCount) {
+        size_t endIndex = beginIndex + maxCount;
+        if (endIndex > logs.size()) {
+            endIndex = logs.size();
+        }
+        sls_logs::LogGroup logGroup;
+        sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
+        logTagPtr->set_key(LOG_RESERVED_KEY_HOSTNAME);
+        logTagPtr->set_value(LogFileProfiler::mHostname.substr(0, 99));
+        string userDefinedId = ConfigManager::GetInstance()->GetUserDefinedIdSet();
+        if (userDefinedId.size() > 0) {
+            logTagPtr = logGroup.add_logtags();
+            logTagPtr->set_key(LOG_RESERVED_KEY_USER_DEFINED_ID);
+            logTagPtr->set_value(userDefinedId.substr(0, 99));
+        }
+        logGroup.set_category(config->mCategory);
+        logGroup.set_source(LogFileProfiler::mIpAddr);
+        if (!config->mGroupTopic.empty()) {
+            logGroup.set_topic(config->mGroupTopic);
+        }
+        for (size_t i = beginIndex; i < endIndex; ++i) {
+            sls_logs::Log* log = logGroup.add_logs();
+            log->mutable_contents()->CopyFrom(*(logs[i].mutable_contents()));
+            log->set_time(nowTime);
+        }
+        if (!Send(config->mProjectName,
+                  "",
+                  logGroup,
+                  config,
+                  config->mMergeType,
+                  (uint32_t)((endIndex - beginIndex) * 1024))) {
+            LogtailAlarm::GetInstance()->SendAlarm(DISCARD_DATA_ALARM,
+                                                   "push observer data into batch map fail",
+                                                   config->mProjectName,
+                                                   config->mCategory,
+                                                   config->mRegion);
+            LOG_ERROR(sLogger,
+                      ("push observer data into batch map fail, discard logs",
+                       logGroup.logs_size())("project", config->mProjectName)("logstore", config->mCategory));
+            return -1;
+        }
+    }
+    return 0;
+}
+
+
 bool Sender::SendInstantly(sls_logs::LogGroup& logGroup,
                            const std::string& aliuid,
                            const std::string& region,

@@ -39,6 +39,10 @@
 #include "app_config/AppConfig.h"
 #include "event_handler/LogInput.h"
 #include "plugin/LogtailPlugin.h"
+#if defined(__linux__)
+#include "observer/network/NetworkObserver.h"
+#endif
+
 
 using namespace std;
 using namespace sls_logs;
@@ -264,6 +268,9 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
                  GetTimeStamp(ConfigManager::GetInstance()->GetLastConfigGetTime(), "%Y-%m-%d %H:%M:%S"));
     UpdateMetric("config_prefer_real_ip", BOOL_FLAG(send_prefer_real_ip));
     UpdateMetric("plugin_enabled", LogtailPlugin::GetInstance()->IsPluginOpened());
+#if defined(__linux__)
+    UpdateMetric("observer_enabled", NetworkConfig::GetInstance()->mEnabled);
+#endif
     UpdateMetric("env_config", ConfigManager::GetInstance()->IsEnvConfig());
     const std::vector<sls_logs::LogTag>& envTags = AppConfig::GetInstance()->GetEnvTags();
     if (!envTags.empty()) {
