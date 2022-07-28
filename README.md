@@ -53,6 +53,8 @@ cd output
 # Now, ilogtail is collecting data from output/simple.log and outputing the result to stdout
 ```
 
+ HEAD
+
 ## Documentation
 
 Our official **User Manual** is located here:
