@@ -4,13 +4,13 @@
 `metric_mock` 插件是用于模拟采集Metric类型输入数据的插件，可以通过调整参数获取不同的模拟输入。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/mock/input_mock.go)
 
 ## 配置参数
-| 参数          | 类型      | 是否必选 | 说明                                                                                         |
-| ----------- | ------- | ---- | ------------------------------------------------------------------------------------------ |
-| Type    | String | 是       | 插件类型，固定为`metric_mock`      |
-| Tags        | Map，其中tagKey和tagValue为String类型  | 否    | <p>可以按需求给mock数据添加tag。</p><p>默认取值：空。</p> |
-| Fields     | Map，其中fieldKey和fieldValue为String类型  | 否    | <p>可以按需求给mock数据添加字段。</p><p>默认取值：空。</p>  |
-| Index | Long  | 否   | <p>生成的mock数据的开始编号（从下一个编号开始）。</p><p>默认取值：0。</p>  |
-| OpenPrometheusPattern    | Boolean | 否    | <p>是否生成Prometheus样式的mock数据。</p><p>默认取值：否。</p>  |
+| 参数 | 默认值 | 说明 |
+| - | - | - |
+| Type | String，无默认值（必填） | 插件类型，固定为`metric_mock`。 |
+| Tags | Map，其中tagKey和tagValue为String类型，`{}` | 可以按需求给mock数据添加tag。 |
+| Fields | Map，其中fieldKey和fieldValue为String类型，`{}` | 可以按需求给mock数据添加字段。 |
+| Index | Long，`0` | 生成的mock数据的开始编号（从下一个编号开始）。 |
+| OpenPrometheusPattern | Boolean，`false` | 是否生成Prometheus样式的mock数据。 |
 
 ## 样例
 
