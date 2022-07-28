@@ -35,18 +35,22 @@ type SubscriberController struct {
 func (c *SubscriberController) Init(parent *CancelChain, cfg *config.Case) error {
 	logger.Info(context.Background(), "subscriber controller is initializing....")
 	c.chain = WithCancelChain(parent)
-	c.defaultSub, _ = subscriber.New("grpc", map[string]interface{}{
-		"address": ":8000",
-	})
-	defaultSubscriberChan = c.defaultSub.SubscribeChan()
-	if cfg.Subscriber.Name != "" {
-		s, err := subscriber.New(cfg.Subscriber.Name, cfg.Subscriber.Config)
-		if err != nil {
-			return err
+	if cfg.Subscriber.Name == "grpc" {
+		c.defaultSub, _ = subscriber.New(cfg.Subscriber.Name, cfg.Subscriber.Config)
+	} else {
+		c.defaultSub, _ = subscriber.New("grpc", map[string]interface{}{
+			"address": ":8000",
+		})
+		if cfg.Subscriber.Name != "" {
+			s, err := subscriber.New(cfg.Subscriber.Name, cfg.Subscriber.Config)
+			if err != nil {
+				return err
+			}
+			c.optSub = s
+			optSubscriberChan = c.optSub.SubscribeChan()
 		}
-		c.optSub = s
-		optSubscriberChan = c.optSub.SubscribeChan()
 	}
+	defaultSubscriberChan = c.defaultSub.SubscribeChan()
 	return WriteDefaultFlusherConfig(c.defaultSub.FlusherConfig())
 }
 
