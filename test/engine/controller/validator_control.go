@@ -94,14 +94,14 @@ func (c *ValidatorController) Start() error {
 		validator.CloseCounter()
 	}()
 	go func() {
-		for group := range globalSubscriberChan {
-			projectMatch, staticMatch := staticLogCheck(group.Logs[0])
+		for group := range defaultSubscriberChan {
+			_, staticMatch := staticLogCheck(group.Logs[0])
 
 			switch {
 			case staticMatch:
-				if !projectMatch {
-					continue
-				}
+				// if !projectMatch {
+				// 	continue
+				// }
 				validator.GetCounterChan() <- group
 			case alarmLogCheck(group.Logs[0]):
 				validator.GetAlarmLogChan() <- group
@@ -118,6 +118,21 @@ func (c *ValidatorController) Start() error {
 			}
 		}
 	}()
+	if optSubscriberChan != nil {
+		go func() {
+			for group := range optSubscriberChan {
+				for _, log := range group.Logs {
+					logger.Debugf(context.Background(), "%s", log.String())
+				}
+				for _, v := range c.logValidators {
+					c.addLogReport(v.Name(), v.Valid(group))
+				}
+				for _, v := range c.sysValidators {
+					v.Valid(group)
+				}
+			}
+		}()
+	}
 	return nil
 }
 

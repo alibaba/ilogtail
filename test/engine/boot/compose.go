@@ -39,7 +39,7 @@ import (
 const (
 	composeCategory = "docker-compose"
 	finalFileName   = "testcase-compose.yaml"
-	identifier      = "ilogtail-e2e"
+	identifier      = "e2e"
 	template        = `version: '3.8'
 services:
   goc:
@@ -54,12 +54,13 @@ services:
       timeout: 5s
       interval: 1s
       retries: 10
-  ilogtail:
+  ilogtailC:
     image: aliyun/ilogtail:1.1.0
     hostname: ilogtail
     volumes:
       - %s:/ilogtail/default_flusher.json
-      - %s:/ilogtail/user_local_config.json
+      - %s:/ilogtail/user_config.d
+      - %s:/ilogtail/user_yaml_config.d
       - /:/logtail_host
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
@@ -115,7 +116,7 @@ func (c *ComposeBooter) Start() error {
 	c.cli = cli
 
 	list, err := cli.ContainerList(context.Background(), types.ContainerListOptions{
-		Filters: filters.NewArgs(filters.Arg("name", "ilogtail-e2e_ilogtail")),
+		Filters: filters.NewArgs(filters.Arg("name", "e2e-ilogtailC")),
 	})
 	if len(list) != 1 {
 		logger.Errorf(context.Background(), "LOGTAIL_COMPOSE_ALARM", "logtail container size is not equal 1, got %d count", len(list))
@@ -256,12 +257,12 @@ func (c *ComposeBooter) getLogtailpluginConfig() map[string]interface{} {
 	cfg := make(map[string]interface{})
 	f, _ := os.Create(config.CoverageFile)
 	_ = f.Close()
-	str := fmt.Sprintf(template, config.CoverageFile, config.FlusherFile, config.ConfigFile)
+	str := fmt.Sprintf(template, config.CoverageFile, config.FlusherFile, config.ConfigJSONFileDir, config.ConfigYamlFileDir)
 	if err := yaml.Unmarshal([]byte(str), &cfg); err != nil {
 		panic(err)
 	}
 	services := cfg["services"].(map[string]interface{})
-	ilogtail := services["ilogtail"].(map[string]interface{})
+	ilogtail := services["ilogtailC"].(map[string]interface{})
 	if len(envs) > 0 {
 		ilogtail["environment"] = envs
 	}
@@ -301,7 +302,7 @@ func registerDockerNetMapping(wrappers []*StrategyWrapper) error {
 func withExposedService(compose testcontainers.DockerCompose) (wrappers []*StrategyWrapper) {
 	localCompose := compose.(*testcontainers.LocalDockerCompose)
 	for serv, rawCfg := range localCompose.Services {
-		cfg := rawCfg.(map[interface{}]interface{})
+		cfg := rawCfg.(map[string]interface{})
 		rawPorts, ok := cfg["ports"]
 		if !ok {
 			continue
