@@ -7,7 +7,7 @@
 ## 采集配置
 iLogtail 的采集配置全面兼容Prometheus[配置文件](https://prometheus.io/docs/prometheus/latest/configuration/configuration/)（以下介绍为1.0.30版本+）。
 
-| 参数 | 描述 | 类型，默认值 |
+| 参数 | 描述 | 默认值 |
 | --- | --- | --- |
 | Yaml | yaml格式的采集配置 |  |
 | ConfigFilePath | 采集配置文件路径，当Yaml参数生效时，此字段被忽略。 |  |
