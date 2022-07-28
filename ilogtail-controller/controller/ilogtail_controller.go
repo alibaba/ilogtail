@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/alibaba/ilogtail/ilogtail-controller/controller/manager"
-	"github.com/alibaba/ilogtail/ilogtail-controller/controller/message"
+	"github.com/alibaba/ilogtail/ilogtail-controller/controller/service"
 )
 
 func main() {
 	manager.InitManager()
-	message.MessageMain()
+	service.MessageMain()
 	//	manager.Jsontest()
 	//  manager.LeveldbTest()
 	//	config.ConfigGroupTest()

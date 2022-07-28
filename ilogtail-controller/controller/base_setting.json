@@ -1,4 +1,5 @@
 {
-    "store_mode":"1",
-    "run_mode":"0"
+    "store_mode":"leveldb",
+    "run_mode":"cluster",
+    "port":"8899"
 }
