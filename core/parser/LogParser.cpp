@@ -109,8 +109,12 @@ LogParser::ApsaraEasyReadLogTimeParser(const char* buffer, string& timeStr, time
         lastLogTime = mktime(&tm);
         // if the time is valid (strptime not return NULL), the date value size must be 19 ,like '2013-09-11 03:11:05'
         timeStr = string(buffer + beg_index + 1, 19);
-
-        microTime = (int64_t)lastLogTime * 1000000 + GetApsaraLogMicroTime(buffer);
+        microTime = GetApsaraLogMicroTime(buffer);
+        if (microTime > 0) {
+             timeStr += ".";
+             timeStr += to_string(microTime);
+        }
+        microTime += (int64_t)lastLogTime * 1000000;
         return lastLogTime;
     }
 }
