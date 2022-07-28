@@ -26,17 +26,17 @@
 | 参数 | 类型，默认值 | 说明 |
 | - | - | - |
 | Type    | String，无默认值（必填） | 插件类型，固定为`service_journal`      |
-| JournalPaths	| Array，value为String，无默认值（必填） | Journal日志路径，建议直接填写Journal日志所在文件夹，例如`/var/log/journal`。 |
+| JournalPaths	| Array，其中value为String，无默认值（必填） | Journal日志路径，建议直接填写Journal日志所在文件夹，例如`/var/log/journal`。 |
 | SeekPosition	| String，`tail` | 首次采集方式，为head则采集所有数据，为tail则只采集配置应用后新的数据。 |
 | Kernel	| Boolean，`true` | 为false时则不采集内核日志。 |
-| Units	| Array，value为String，`[]` | 指定采集的Unit列表，为空时则全部采集。 |
+| Units	| Array，其中value为String，`[]` | 指定采集的Unit列表，为空时则全部采集。 |
 | ParseSyslogFacility	| Boolean，`false` | 是否解析syslog日志的facility字段。 |
 | ParsePriority	| Boolean，`false` | 是否解析Priority字段。|
 | UseJournalEventTime | Boolean，`false` | 是否使用Journal日志中的字段作为日志时间，即使用采集时间作为日志时间（实时日志采集一般相差3秒以内）。|
 | CursorFlushPeriodMs | Integer，`5000` | 日志读取检查点的刷新时间。 |
 | CursorSeekFallback | String，`SeekPositionTail` | 日志读取检查点回退的位置。 |
-| Identifiers | Array，value为String，`[]` | syslog标识符，可以添加到监视器。 |
-| MatchPatterns | Array，value为String，`[]` | 匹配规则，可以添加到监视器。 |
+| Identifiers | Array，其中value为String，`[]` | syslog标识符，可以添加到监视器。 |
+| MatchPatterns | Array，其中value为String，`[]` | 匹配规则，可以添加到监视器。 |
 
 ParsePriority映射关系表如下：
 ```go

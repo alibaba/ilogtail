@@ -24,14 +24,14 @@
 | - | - | - |
 | Type    | String，无默认值（必填） | 插件类型，固定为`processor_fields_with_condition`      |
 | DropIfNotMatchCondition | Boolean，`false`| 当条均件不满足时，日志是被丢弃（true）还是被保留（false）。|
-| Switch | Array，value为Condition，无默认值（必填） | 切换行动的条件。 |
+| Switch | Array，其中value为Condition，无默认值（必填） | 切换行动的条件。 |
 
 ### `Condition`类型说明
 
 | 参数 | 类型，默认值 | 说明 |
 | - | - | - |
 | Case | ConditionCase，无默认值（必填） | 日志数据满足的条件。|
-| Actions | Array，value为ConditionAction，无默认值（必填） | 满足条件时执行的动作。 |
+| Actions | Array，其中value为ConditionAction，无默认值（必填） | 满足条件时执行的动作。 |
 
 ### `ConditionCase`类型说明
 
@@ -48,7 +48,7 @@
 | type | String，无默认值（必填） |  行动类型，可选值是`processor_add_fields`/`processor_drop`。|
 | IgnoreIfExist | Boolean，`false` | 当相同的键存在时是否要忽略。 |
 | Fields | Map，其中fieldKey和fieldValue为String类型，无默认值（必填） | 附加字段的键值对。 |
-| DropKeys | Array，value为String，无默认值（必填） | 丢弃字段。 |
+| DropKeys | Array，其中value为String，无默认值（必填） | 丢弃字段。 |
 
 ## 样例
 
