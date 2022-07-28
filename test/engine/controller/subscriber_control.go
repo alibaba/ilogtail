@@ -59,14 +59,9 @@ func (c *SubscriberController) Start() error {
 		c.chain.CancelChild()
 	}()
 	if c.optSub != nil {
-		if err := c.optSub.Start(); err != nil {
-			return err
-		}
+		return c.optSub.Start()
 	}
-	if err := c.defaultSub.Start(); err != nil {
-		return err
-	}
-	return nil
+	return c.defaultSub.Start()
 }
 
 func (c *SubscriberController) CancelChain() *CancelChain {
