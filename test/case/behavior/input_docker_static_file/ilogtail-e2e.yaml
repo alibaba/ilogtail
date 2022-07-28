@@ -27,9 +27,6 @@ ilogtail:
               ContainerInfo:
                 IncludeEnv:
                   STDOUT_SWITCH: "true"
-          # flushers:
-          #   - Type: flusher_grpc
-          #     Address: host.docker.internal:8000
       content:
         - '{
                        "enable": true,
@@ -104,5 +101,3 @@ testing_interval: 10s
 retry:
   times: 0
   interval: 10s
-
-  

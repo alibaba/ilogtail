@@ -17,15 +17,12 @@ boot:
 ilogtail:
   config:
     - name: nginx-case
-      # detail:
-      #   - inputs:
-      #       - Type: metric_nginx_status
-      #         IntervalMs: 1000
-      #         Urls:
-      #           - http://nginx/nginx_status
-      #     # flushers:
-      #     #   - Type: flusher_grpc
-      #     #     Address: host.docker.internal:8000
+      detail:
+        - inputs:
+            - Type: metric_nginx_status
+              IntervalMs: 1000
+              Urls:
+                - http://nginx/nginx_status
       content:
         - '{"inputs":[{"type":"metric_nginx_status","detail":{"IntervalMs":1000,"Urls":["http://nginx/nginx_status"]}}]}'
   close_wait: 5s
