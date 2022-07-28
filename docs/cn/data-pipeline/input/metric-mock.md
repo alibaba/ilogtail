@@ -4,7 +4,7 @@
 `metric_mock` 插件是用于模拟采集Metric类型输入数据的插件，可以通过调整参数获取不同的模拟输入。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/mock/input_mock.go)
 
 ## 配置参数
-| 参数 | 默认值 | 说明 |
+| 参数 | 类型，默认值 | 说明 |
 | - | - | - |
 | Type | String，无默认值（必填） | 插件类型，固定为`metric_mock`。 |
 | Tags | Map，其中tagKey和tagValue为String类型，`{}` | 可以按需求给mock数据添加tag。 |

@@ -8,13 +8,13 @@ iLogtail目前采集配置全面兼容Telegraf[配置文件](https://github.com/
 
 1. service_telegraf 控制插件的具体参数配置：
 
-    | 参数 | 描述 | 默认值 |
+    | 参数 | 描述 | 类型，默认值 |
     | --- | --- | --- |
     | Detail | yaml格式的Telegraf采集配置 |  |
 
 2. service_http_server 采集插件的具体参数配置：
 
-   | 参数 | 描述 | 默认值 |
+   | 参数 | 描述 | 类型，默认值 |
    | --- | --- | --- |
    | Format | 数据格式，对于Telegraf Agent，设置参数为influx。 |  |
    | Address | 监听地址 |  |
