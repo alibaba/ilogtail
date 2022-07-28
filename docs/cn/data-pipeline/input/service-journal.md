@@ -23,20 +23,20 @@
 
 
 ## 配置参数
-| 参数          | 类型      | 是否必选 | 说明                                                                                         |
-| ----------- | ------- | ---- | ------------------------------------------------------------------------------------------ |
-| Type    | String | 是       | 插件类型，固定为`service_journal`      |
-| JournalPaths	| Array，类型为String |	是	| Journal日志路径，建议直接填写Journal日志所在文件夹，例如`/var/log/journal`。 |
-| SeekPosition	| String | 否 | 首次采集方式，为head则采集所有数据，为tail则只采集配置应用后新的数据，默认为tail。 |
-| Kernel	| Boolean	| 否 | 为false时则不采集内核日志，默认为true。 |
-| Units	| Array，类型为String | 否 | 指定采集的Unit列表，为空时则全部采集，默认为空。 |
-| ParseSyslogFacility	| Boolean |	否	| 是否解析syslog日志的facility字段，默认为false。|
-| ParsePriority	| Boolean	| 否	| 是否解析Priority字段，默认为false。|
-| UseJournalEventTime | Boolean	| 否 | 是否使用Journal日志中的字段作为日志时间，默认为false，即使用采集时间作为日志时间（实时日志采集一般相差3秒以内）。|
-| CursorFlushPeriodMs | Integer | 否 | 日志读取检查点的刷新时间。默认值为5000。 |
-| CursorSeekFallback | String | 否 | 日志读取检查点回退的位置，默认值为`SeekPositionTail`。 |
-| Identifiers  | Array，类型为String | 否 | syslog标识符，可以添加到监视器。默认为空。 |
-| MatchPatterns | Array，类型为String | 否 | 匹配规则，可以添加到监视器。默认为空。 |
+| 参数 | 类型，默认值 | 说明 |
+| - | - | - |
+| Type    | String，无默认值（必填） | 插件类型，固定为`service_journal`      |
+| JournalPaths	| Array，其中value为String，无默认值（必填） | Journal日志路径，建议直接填写Journal日志所在文件夹，例如`/var/log/journal`。 |
+| SeekPosition	| String，`tail` | 首次采集方式，为head则采集所有数据，为tail则只采集配置应用后新的数据。 |
+| Kernel	| Boolean，`true` | 为false时则不采集内核日志。 |
+| Units	| Array，其中value为String，`[]` | 指定采集的Unit列表，为空时则全部采集。 |
+| ParseSyslogFacility	| Boolean，`false` | 是否解析syslog日志的facility字段。 |
+| ParsePriority	| Boolean，`false` | 是否解析Priority字段。|
+| UseJournalEventTime | Boolean，`false` | 是否使用Journal日志中的字段作为日志时间，即使用采集时间作为日志时间（实时日志采集一般相差3秒以内）。|
+| CursorFlushPeriodMs | Integer，`5000` | 日志读取检查点的刷新时间。 |
+| CursorSeekFallback | String，`SeekPositionTail` | 日志读取检查点回退的位置。 |
+| Identifiers | Array，其中value为String，`[]` | syslog标识符，可以添加到监视器。 |
+| MatchPatterns | Array，其中value为String，`[]` | 匹配规则，可以添加到监视器。 |
 
 ParsePriority映射关系表如下：
 ```go

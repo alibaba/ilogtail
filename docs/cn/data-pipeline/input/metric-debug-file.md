@@ -4,11 +4,11 @@
 `metric_debug_file` 插件是一个用于调试的插件，它可以读取指定文件的内容，并将其与指定的名称绑定在一起成为一个字段，用于Metric模拟输入。（注：该插件由于一些原因，暂时无法直接使用）[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/debugfile/input_debug_file.go)
 
 ## 配置参数
-| 参数          | 类型      | 是否必选 | 说明                                                                                         |
-| ----------- | ------- | ---- | ------------------------------------------------------------------------------------------ |
-| Type    | String | 是       | 插件类型，固定为`metric_debug_file`      |
-| InputFilePath | String  | 是 | 要读入的文件路径。 |
-| FieldName | String  | 否 | <p>生成的字段的字段名。</p><p>默认取值：content。</p>  |
+| 参数 | 类型，默认值 | 说明 |
+| - | - | - |
+| Type | String，无默认值（必填） | 插件类型，固定为`metric_debug_file`。 |
+| InputFilePath | String，无默认值（必填） | 要读入的文件路径。 |
+| FieldName | String，`content` | 生成的字段的字段名。 |
 
 ## 样例
 

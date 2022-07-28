@@ -4,15 +4,15 @@
 `service_mock` 插件是用于模拟采集Service类型输入数据的插件，可以通过调整参数获取不同的模拟输入。[源代码](https://github.com/alibaba/ilogtail/blob/main/plugins/input/mockd/input_mockd.go)
 
 ## 配置参数
-| 参数          | 类型      | 是否必选 | 说明                                                                                         |
-| ----------- | ------- | ---- | ------------------------------------------------------------------------------------------ |
-| Type    | String | 是       | 插件类型，固定为`service_mock`      |
-| Tags        | Map，其中tagKey和tagValue为String类型  | 否    | <p>可以按需求给mock数据添加tag。</p><p>默认取值：空。</p> |
-| Fields     | Map，其中fieldKey和fieldValue为String类型  | 否    | <p>可以按需求给mock数据添加字段。</p><p>默认取值：空。</p>  |
-| File | String  | 否 | 指定一个文件并读取，在Fields中添加一个key为content、值为文件内容的字段。  |
-| Index | Long  | 否   | <p>生成的mock数据的开始编号（从下一个编号开始）。</p><p>默认取值：0。</p>  |
-| LogsPerSecond | Integer | 否 |  <p>每秒生产的日志数量。</p><p>默认取值：0。</p>  |
-| MaxLogCount | Integer | 否 |  <p>最大生产的日志总数，若为0则没有上限。</p><p>默认取值：0。</p>  |
+| 参数 | 类型，默认值 | 说明 |
+| - | - | - |
+| Type | String，无默认值（必填） | 插件类型，固定为`service_mock` |
+| Tags | Map，其中tagKey和tagValue为String类型，`{}` | 可以按需求给mock数据添加tag。 |
+| Fields | Map，其中fieldKey和fieldValue为String类型，`{}` | 可以按需求给mock数据添加字段。 |
+| File | String，`nil` | 指定一个文件并读取，在Fields中添加一个key为content、值为文件内容的字段。 |
+| Index | Long，`0` | 生成的mock数据的开始编号（从下一个编号开始）。 |
+| LogsPerSecond | Integer，`0` | 每秒生产的日志数量。 |
+| MaxLogCount | Integer，`0` | 最大生产的日志总数，若为0则没有上限。 |
 
 ## 样例
 
