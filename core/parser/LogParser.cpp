@@ -728,6 +728,7 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
     sprintf(s_micro, "%lld", logTime_in_micro);
 #endif
     AddLog(logPtr, "microtime", string(s_micro), logGroupSize);
+    AddLog(logPtr, "rawtime", timeStr, logGroupSize);
     return true;
 }
 
