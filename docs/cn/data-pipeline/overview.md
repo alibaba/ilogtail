@@ -7,6 +7,7 @@
 | `file_log`              | SLS官方 | [`messixukejia`](https://github.com/messixukejia) | 文本采集             |
 | `metric_meta_host`      | SLS官方 | -                                                 | 主机Meta数据         |
 | `service_kafka`    | SLS官方 | -                                                 | 将Kafka数据输入到iLogtail |
+| `service_canal`    | SLS官方 | -                                                 | 将MySQL Binlog输入到iLogtail |
 | `metric_input_example`  | SLS官方 | -                                                 | MetricInput示例插件  |
 | `service_input_example` | SLS官方 | -                                                 | ServiceInput示例插件 |
 
@@ -15,6 +16,7 @@
 
 | 名称                        | 提供方  | 贡献者 | 简介                                       |
 | --------------------------- | ------- | ------ | ------------------------------------------ |
+| `processor_filter_regex`    | SLS官方 | -      | 过滤日志。 |
 | `processor_split_log_regex` | SLS官方 | -      | 实现多行日志（例如Java程序日志）的采集     |
 | `processor_regex`           | SLS官方 | -      | 通过正则匹配的模式实现文本日志的字段提取。 |
 | `processor_json`            | SLS官方 | -      | 实现对Json格式日志的解析。                 |
