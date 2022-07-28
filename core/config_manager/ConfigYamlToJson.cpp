@@ -64,7 +64,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
     // params specific to regex accelerate processor
     mFileConfigMap["Keys"] = "keys";
     mFileConfigMap["Regex"] = "regex";
-    mFileConfigMap["LogBeginRegex"] = "log_begin_reg";    
+    mFileConfigMap["LogBeginRegex"] = "log_begin_reg";
     // params specific to delimiter accelerate processor
     mFileConfigMap["Separator"] = "delimiter_separator";
     mFileConfigMap["Quote"] = "delimiter_quote";
@@ -72,7 +72,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileConfigMap["AcceptNoEnoughKeys"] = "accept_no_enough_keys";
     // params specific to delimiter and json accelerate processors
     mFileConfigMap["TimeKey"] = "time_key";
-    
+
     mFileConfigMap["ProjectName"] = "project_name";
     mFileConfigMap["LogstoreName"] = "category";
     mFileConfigMap["Endpoint"] = "defaultEndpoint";
@@ -127,13 +127,13 @@ string ConfigYamlToJson::GetTransforK8sKey(const string yamlKey) {
 }
 
 Json::Value ConfigYamlToJson::ParseScalar(const YAML::Node& node) {
-    // yaml-cpp automatically discards quotes in quoted values, 
-    // so to differentiate strings and integer for purely-digits value, 
+    // yaml-cpp automatically discards quotes in quoted values,
+    // so to differentiate strings and integer for purely-digits value,
     // we can tell from node.Tag(), which will return "!" for quoted values and "?" for others
-    if(node.Tag() == "!") {
+    if (node.Tag() == "!") {
         return node.as<std::string>();
     }
-    
+
     int i;
     if (YAML::convert<int>::decode(node, i))
         return i;
@@ -145,7 +145,7 @@ Json::Value ConfigYamlToJson::ParseScalar(const YAML::Node& node) {
     bool b;
     if (YAML::convert<bool>::decode(node, b))
         return b;
-    
+
     string s;
     if (YAML::convert<string>::decode(node, s))
         return s;
@@ -289,10 +289,11 @@ bool ConfigYamlToJson::CheckPluginConfig(const string configName, const YAML::No
                 return false;
             }
             if (flusherPluginsInfo.size() > 1) {
-                LOG_ERROR(sLogger,
-                          ("CheckPluginConfig failed", "accelerateProcessor must only be used with flusher_sls plugin.")(
-                              "config_name", configName)("flusher_plugin_size", flusherPluginsInfo.size())(
-                              "accelerate_processor", workMode.mAccelerateProcessorPluginType));
+                LOG_ERROR(
+                    sLogger,
+                    ("CheckPluginConfig failed", "accelerateProcessor must only be used with flusher_sls plugin.")(
+                        "config_name", configName)("flusher_plugin_size", flusherPluginsInfo.size())(
+                        "accelerate_processor", workMode.mAccelerateProcessorPluginType));
                 return false;
             }
             if (flusherPluginsInfo.size() != 0 && flusherPluginsInfo.find("flusher_sls") == flusherPluginsInfo.end()) {
@@ -484,13 +485,13 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForFileMode(const YAML::Node& yaml
                 for (auto&& node : it->second) {
                     keys += node.as<std::string>() + ",";
                 }
-                userJsonConfig[key][0] = keys.substr(0, keys.size()-1);
+                userJsonConfig[key][0] = keys.substr(0, keys.size() - 1);
             } else if (0 != key.size()) {
                 userJsonConfig[key] = ChangeYamlToJson(it->second);
             }
         }
 
-        if(0 == it->first.as<std::string>().compare("ContainerInfo")) {
+        if (0 == it->first.as<std::string>().compare("ContainerInfo")) {
             for (YAML::const_iterator iter = it->second.begin(); iter != it->second.end(); ++iter) {
                 string key = GetTransforK8sKey(iter->first.as<std::string>());
                 if (0 != key.size()) {
