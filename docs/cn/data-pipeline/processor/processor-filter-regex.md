@@ -18,17 +18,15 @@
 
 * 输入
 
-```
+```bash
 echo '{"ip": "10.**.**.**", "method": "POST", "brower": "aliyun-sdk-java"}' >> /home/test-log/proccessor-filter-regex.log
 echo '{"ip": "10.**.**.**", "method": "POST", "brower": "chrome"}' >> /home/test-log/proccessor-filter-regex.log
 echo '{"ip": "192.168.**.**", "method": "POST", "brower": "aliyun-sls-ilogtail"}' >> /home/test-log/proccessor-filter-regex.log
 ```
-```
-```
 
 * 采集配置
 
-```
+```yaml
 enable: true
 inputs:
   - Type: file_log
@@ -57,7 +55,7 @@ flushers:
 
 * 输出
 
-```
+```json
 {
   "__tag__:__path__": "/home/test-log/proccessor-filter-regex.log",
   "__time__": "1658837955",
