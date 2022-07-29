@@ -3,6 +3,7 @@ module github.com/alibaba/ilogtail
 go 1.13
 
 require (
+	github.com/ClickHouse/clickhouse-go v1.5.4
 	github.com/Shopify/sarama v1.28.0
 	github.com/StackExchange/wmi v0.0.0-20181212234831-e0a55b97c705 // indirect
 	github.com/VictoriaMetrics/VictoriaMetrics v1.58.0
