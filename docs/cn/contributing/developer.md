@@ -2,7 +2,7 @@
 
 ## 社区角色
 
-iLogtail 社区包含 Maintainer、Committer、Contributor 三种角色，每种角色的标准定义如下。
+iLogtail 社区包含 Maintainer、Committer、Contributor、User 等角色，每种角色的标准定义如下。
 
 * Maintainer：是对 iLogtail 项目的演进和发展做出显著贡献的个人。需要具备以下的标准：
   * 完成多个关键模块或者工程的设计与开发，是项目的核心开发人员；
@@ -18,6 +18,8 @@ iLogtail 社区包含 Maintainer、Committer、Contributor 三种角色，每种
 * Contributor：是对 iLogtail 项目有贡献的个人。需要具备以下的标准：
   * 提交过 PR 并被合并，包括不限于文档、代码、案例等；
   * 在 iLogtail 开源社区参与相关问题讨论，并能积极回复。
+
+* User：通过使用 iLogtail 社区版构建自己的业务架构的开发者。
 
 ## 如何成为 Contributor 及 Committer？
 
