@@ -20,6 +20,7 @@ iLogtail 自从开源以来，受到了很多社区同学的关注。社区的�
 创建 Issue ，请按照如下原则给 Issue 打上对应标签。
 * 全新特性开发，对应 label: feature request。
 * 现有功能完善，对应 label: enhancement。
+* 希望社区参与贡献，对应 label: community。
 * 修复 bug，对应 label: bug。
 * 核心功能开发或变更，对应 label: core。
 * 文档补充、完善（document），对应 label: documentation。
