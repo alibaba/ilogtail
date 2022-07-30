@@ -11,11 +11,12 @@ assignees: ''
 A clear and concise description of what the bug is, ideally within 20 words.
 
 **iLogtail Running Environment**
-- ilogtail version:
+Please provide the following information:
 
+- ilogtail version:
+  
 - Yaml configuration:
 
 - ilogtail.LOG:
 
 - logtail_plugin.LOG:
-
