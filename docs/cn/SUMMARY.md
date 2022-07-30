@@ -101,6 +101,11 @@
   * [检查文件许可证](developer-guide/code-check/check-license.md)
   * [检查依赖包许可证](developer-guide/code-check/check-dependency-license.md)
 
+## 贡献指南 <a href="#controbuting-guide" id="controbuting-guide"></a>
+
+* [如何贡献](contributing/CONTRIBUTING.md)
+* [开发团队](contributing/developer.md)
+
 ## 性能测试 <a href="#benchmark" id="benchmark"></a>
 
 * [容器场景iLogtail与Filebeat性能对比测试](benchmark/performance-compare-with-filebeat.md)
