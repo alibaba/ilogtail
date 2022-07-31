@@ -105,8 +105,8 @@
 
 ## 贡献指南 <a href="#controbuting-guide" id="controbuting-guide"></a>
 
-* [如何贡献](contributing/CONTRIBUTING.md)
-* [开发团队](contributing/developer.md)
+* [贡献指南](contributing/CONTRIBUTING.md)
+* [开发者](contributing/developer.md)
 
 ## 性能测试 <a href="#benchmark" id="benchmark"></a>
 

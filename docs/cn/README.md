@@ -51,32 +51,10 @@ cd output
 
 如果你对细节感兴趣，请参见文档[编译](https://ilogtail.gitbook.io/ilogtail-docs/installation/sources/build)。
 
-## 文档
-
-**官方用户手册**地址如下：
-
-* [文档首页](https://ilogtail.gitbook.io/ilogtail-docs/about/readme)
-
-* [下载](https://ilogtail.gitbook.io/ilogtail-docs/installation/release-notes)
-
-* [安装](https://ilogtail.gitbook.io/ilogtail-docs/installation/quick-start)
-
-* [配置](https://ilogtail.gitbook.io/ilogtail-docs/configuration/)
-
-* [所有插件](https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/overview)
-
-* [使用入门](https://ilogtail.gitbook.io/ilogtail-docs/getting-started/)
-
-* [开发指南](https://ilogtail.gitbook.io/ilogtail-docs/developer-guide/)
-
-* [性能测试](https://ilogtail.gitbook.io/ilogtail-docs/benchmark/)
-
 ## 贡献
 
-* [修复和报告错误](https://github.com/alibaba/ilogtail/issues)
-* [改进文档](https://github.com/alibaba/ilogtail/labels/documentation)
-* [审查代码和功能提案](https://github.com/alibaba/ilogtail/pulls)
-* [贡献插件](./docs/zh/guides/README.md)
+* [贡献指南](./contributing/CONTRIBUTING.md)
+* [开发者](./contributing/developer.md)
 
 ## 我们的用户
 
@@ -97,4 +75,3 @@ cd output
 * 微信公众号：日志服务
 * 哔哩哔哩：[阿里云SLS](https://space.bilibili.com/630680534?from=search\&seid=2845737427240690794\&spm\_id\_from=333.337.0.0)
 * 知乎：[阿里云日志服务](https://www.zhihu.com/people/a-li-yun-ri-zhi-fu-wu)
-
