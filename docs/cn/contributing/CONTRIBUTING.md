@@ -4,6 +4,10 @@
 
 iLogtail 自从开源以来，受到了很多社区同学的关注。社区的每一个 Issue、每一个 pull request (PR)，都是在为 iLogtail 的发展添砖加瓦。衷心地希望越来越多的社区同学能参与到 iLogtail 项目中来，跟我们一起把 iLogtail 做好。
 
+## 行为准则
+
+参与 iLogtail 社区贡献，请阅读并同意遵守[阿里巴巴开源行为准则](https://github.com/alibaba/community/blob/master/CODE_OF_CONDUCT_zh.md)，共同营造一个开放透明且友好的开源社区环境。
+
 ## 贡献流程
 
 我们随时欢迎任何贡献，无论是简单的错别字修正，BUG 修复还是增加新功能，包括但不限于代码、文档、案例等任何形式的社区互动。我们也同样重视与其它开源项目的结合，欢迎在这方面做出贡献。
