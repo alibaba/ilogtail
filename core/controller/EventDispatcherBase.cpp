@@ -43,7 +43,7 @@
 #include "common/TimeUtil.h"
 #ifdef __linux__
 #include "streamlog/StreamLogManager.h"
-#include "network/NetworkObserver.h"
+#include "ObserverManager.h"
 #endif
 #include "app_config/AppConfig.h"
 #include "event_handler/EventHandler.h"
@@ -1127,12 +1127,11 @@ void EventDispatcherBase::UpdateConfig() {
         ConfigManager::GetInstance()->StartUpdateConfig();
     if (ConfigManager::GetInstance()->IsUpdateConfig() == false)
         return;
-    LOG_INFO(sLogger, ("main thread", "start update config"));
 #if defined(__linux__)
     if (mStreamLogManagerPtr != NULL) {
         ((StreamLogManager*)mStreamLogManagerPtr)->ShutdownConfigUsage();
     }
-    NetworkObserver::GetInstance()->HoldOn(false);
+    ObserverManager::GetInstance()->HoldOn(false);
 #endif
     LOG_INFO(sLogger, ("main thread", "start update config"));
     LogInput::GetInstance()->HoldOn();
@@ -1150,10 +1149,10 @@ void EventDispatcherBase::UpdateConfig() {
         LogInput::GetInstance()->Resume(true);
         LogtailPlugin::GetInstance()->Resume();
 #if defined(__linux__)
-        NetworkObserver::GetInstance()->Resume();
         if (mStreamLogManagerPtr != NULL) {
             ((StreamLogManager*)mStreamLogManagerPtr)->StartupConfigUsage();
         }
+        ObserverManager::GetInstance()->Resume();
 #endif
         ConfigManager::GetInstance()->FinishUpdateConfig();
         return;
@@ -1181,10 +1180,10 @@ void EventDispatcherBase::UpdateConfig() {
     LogInput::GetInstance()->Resume(true);
 
 #if defined(__linux__)
-    NetworkObserver::GetInstance()->Resume();
     if (mStreamLogManagerPtr != NULL) {
         ((StreamLogManager*)mStreamLogManagerPtr)->StartupConfigUsage();
     }
+    ObserverManager::GetInstance()->Resume();
 #endif
 
     ConfigManager::GetInstance()->FinishUpdateConfig();
@@ -1225,7 +1224,7 @@ void EventDispatcherBase::ExitProcess() {
     // exit logtail plugin
     LogtailPlugin::GetInstance()->HoldOn(true);
 #if defined(__linux__)
-    NetworkObserver::GetInstance()->HoldOn(true);
+    ObserverManager::GetInstance()->HoldOn(true);
 #endif
 
     bool logProcessFlushFlag = false;

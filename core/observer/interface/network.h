@@ -108,14 +108,14 @@ struct NetStatisticsBase {
         ProtocolMatched += o.ProtocolMatched;
         ProtocolUnMatched += o.ProtocolUnMatched;
     }
-    int64_t SendBytes;
-    int64_t RecvBytes;
-    int64_t SendPackets;
-    int64_t RecvPackets;
-    int32_t ProtocolMatched;
-    int32_t ProtocolUnMatched;
-    bool ProtocolParseDisabled; // 是否被Disable协议解析
-    ProtocolType LastInferedProtocolType; // 上一次成功推测的协议类型
+    int64_t SendBytes{0};
+    int64_t RecvBytes{0};
+    int64_t SendPackets{0};
+    int64_t RecvPackets{0};
+    int32_t ProtocolMatched{0};
+    int32_t ProtocolUnMatched{0};
+    bool ProtocolParseDisabled{false}; // 是否被Disable协议解析
+    ProtocolType LastInferedProtocolType{ProtocolType_None}; // 上一次成功推测的协议类型
 };
 
 struct NetStatisticsTCP {
@@ -128,15 +128,15 @@ struct NetStatisticsTCP {
         SendZeroWinCount += o.SendZeroWinCount;
         RecvZeroWinCount += o.RecvZeroWinCount;
     }
-    struct NetStatisticsBase Base;
-    int64_t SendTotalLatency;
-    int64_t RecvTotalLatency;
+    struct NetStatisticsBase Base {};
+    int64_t SendTotalLatency{0};
+    int64_t RecvTotalLatency{0};
 
-    int64_t SendRetranCount;
-    int64_t RecvRetranCount;
+    int64_t SendRetranCount{0};
+    int64_t RecvRetranCount{0};
 
-    int64_t SendZeroWinCount;
-    int64_t RecvZeroWinCount;
+    int64_t SendZeroWinCount{0};
+    int64_t RecvZeroWinCount{0};
 };
 
 // BPF_HASH(net_statistics_map, NetStatisticsKey, NetStatistics, 131072);

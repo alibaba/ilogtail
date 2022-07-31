@@ -294,7 +294,11 @@ void ConfigManagerBase::MappingPluginConfig(const Json::Value& configValue, Conf
 // LoadSingleUserConfig constructs new Config object according to @value, and insert it into
 // mNameConfigMap with name @logName.
 void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const Json::Value& rawValue, bool localFlag) {
-    static const std::string MIX_PROCESS_MOD = "mix_process_mode";
+    // MIX_PROCESS_MODE used to tag the config using CGO interface to process logs.
+    // Different value maybe means different optimizing strategies, such as adjust the size of channel between goroutines.
+    // But because of historical compatibility, the raw logs would not transfer this flag. The golang part should retain no flag
+    // scenario as the default flag.
+    static const std::string MIX_PROCESS_MODE = "mix_process_mode";
     Config* config = NULL;
     string projectName, category, errorMessage;
     LOG_DEBUG(sLogger, ("message", "load single user config")("json", rawValue.toStyledString()));
@@ -436,7 +440,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                             && (observerConfigJson["processors"].isObject()
                                 || observerConfigJson["processors"].isArray())) {
                             config->mPluginProcessFlag = true;
-                            SetNotFoundJsonMember(observerConfigJson, MIX_PROCESS_MOD, "observer");
+                            SetNotFoundJsonMember(observerConfigJson, MIX_PROCESS_MODE, "observer");
                             config->mPluginConfig = observerConfigJson.toStyledString();
                         }
                     } else {

@@ -45,7 +45,7 @@
 #include "profiler/LogIntegrity.h"
 #include "profiler/LogLineCount.h"
 #include "app_config/AppConfig.h"
-#include "observer/network/NetworkObserver.h"
+#include "ObserverManager.h"
 using namespace logtail;
 
 #ifdef ENABLE_COMPATIBLE_MODE
@@ -252,7 +252,7 @@ void do_worker_process() {
     if (pPlugin->LoadPluginBase()) {
         pPlugin->Resume();
     }
-    NetworkObserver::GetInstance()->Reload();
+    ObserverManager::GetInstance()->Reload();
     CheckPointManager::Instance()->LoadCheckPoint();
 
     // added by xianzhi(bowen.gbw@antfin.com)

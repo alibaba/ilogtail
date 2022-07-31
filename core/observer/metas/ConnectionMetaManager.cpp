@@ -362,14 +362,10 @@ bool ExtractDiagMsg(const inet_diag_msg& msg,
                                       .Addr = SockAddressDetail{
                                           .IPV6 = {((uint64_t*)msg.id.idiag_src)[0], ((uint64_t*)msg.id.idiag_src)[1]},
                                       }};
-        //            memcpy(&info->localAddr.Addr.IPV6[0], msg.id.idiag_src, sizeof(uint64_t));
-        //            memcpy(&info->localAddr.Addr.IPV6[1], msg.id.idiag_src + 2, sizeof(uint64_t));
         info->remoteAddr = SockAddress{.Type = SockAddressType_IPV6,
                                        .Addr = SockAddressDetail{
                                            .IPV6 = {((uint64_t*)msg.id.idiag_dst)[0], ((uint64_t*)msg.id.idiag_dst)[1]},
                                        }};
-        //            memcpy(&info->remoteAddr.Addr.IPV6[0], msg.id.idiag_dst, sizeof(uint64_t));
-        //            memcpy(&info->remoteAddr.Addr.IPV6[1], msg.id.idiag_dst+2, sizeof(uint64_t));
     }
     infos.insert(std::make_pair(inode, info));
     return true;

@@ -84,23 +84,13 @@ struct MergedNetStatisticsKeyEqual {
 typedef std::unordered_map<NetStatisticsKey, NetStatisticsTCP, MergedNetStatisticsKeyHash, MergedNetStatisticsKeyEqual>
     MergedNetStatisticsHashMap;
 
-/**
- * @brief Get the New Net StatisticsTCP object
- *
- * @return NetStatisticsTCP
- */
-inline NetStatisticsTCP GetNewNetStatisticsTCP() {
-    char buf[sizeof(NetStatisticsTCP)] = {'0'};
-    return *(NetStatisticsTCP*)buf;
-}
-
 struct NetStaticticsMap {
     NetStatisticsTCP& GetStatisticsItem(const NetStatisticsKey& key) {
         auto findRst = mHashMap.find(key);
         if (findRst != mHashMap.end()) {
             return findRst->second;
         }
-        static NetStatisticsTCP sNewTcp = GetNewNetStatisticsTCP();
+        static NetStatisticsTCP sNewTcp;
         auto insertIter = mHashMap.insert(std::make_pair(key, sNewTcp));
         return insertIter.first->second;
     }

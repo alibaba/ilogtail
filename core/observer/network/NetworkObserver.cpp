@@ -26,6 +26,8 @@
 #include "metas/ConnectionMetaManager.h"
 #include "Sender.h"
 #include "LogtailPlugin.h"
+#include "Constants.h"
+#include "LogFileProfiler.h"
 
 DEFINE_FLAG_INT64(sls_observer_network_ebpf_connection_gc_interval,
                   "SLS Observer NetWork connection gc interval seconds",
@@ -35,6 +37,7 @@ DEFINE_FLAG_INT64(sls_observer_network_max_save_size,
                   1024LL * 1024LL * 1024LL);
 DEFINE_FLAG_STRING(sls_observer_network_save_filename, "SLS Observer NetWork save disk's file name", "ebpf.dump");
 
+DECLARE_FLAG_INT32(merge_log_count_limit);
 
 namespace logtail {
 
@@ -493,20 +496,69 @@ void NetworkObserver::EventLoop() {
 }
 
 void NetworkObserver::BindSender() {
-    if (this->mConfig->mLastApplyedConfig->mPluginProcessFlag) {
-        this->mSenderFunc = SendToPluginProcessed;
-    } else {
-        this->mSenderFunc
-            = std::bind(&Sender::SendDirectly, Sender::Instance(), std::placeholders::_1, std::placeholders::_2);
-    }
+    mSenderFunc = this->mConfig->mLastApplyedConfig->mPluginProcessFlag ? OutputPluginProcess : OutputDirectly;
 }
 
-int NetworkObserver::SendToPluginProcessed(std::vector<sls_logs::Log>& logs, Config* cfg) {
-    auto sPlugin = LogtailPlugin::GetInstance();
-    uint32_t nowTime = time(NULL);
+inline void NetworkObserver::StartEventLoop() {
+    if (!mEventLoopThread) {
+        mEventLoopThread = CreateThread([this]() { EventLoop(); });
+    }
+}
+int NetworkObserver::OutputPluginProcess(std::vector<sls_logs::Log>& logs, Config* config) {
+    static auto sPlugin = LogtailPlugin::GetInstance();
+    uint32_t nowTime = time(nullptr);
     for (auto& item : logs) {
         item.set_time(nowTime);
-        sPlugin->ProcessLog(cfg->mConfigName, item, "", cfg->mGroupTopic, "");
+        sPlugin->ProcessLog(config->mConfigName, item, "", config->mGroupTopic, "");
+    }
+    return 0;
+}
+
+int NetworkObserver::OutputDirectly(std::vector<sls_logs::Log>& logs, Config* config) {
+    static auto sSenderInstance = Sender::Instance();
+    uint32_t nowTime = time(nullptr);
+    const size_t maxCount = INT32_FLAG(merge_log_count_limit) / 4;
+    for (size_t beginIndex = 0; beginIndex < logs.size(); beginIndex += maxCount) {
+        size_t endIndex = beginIndex + maxCount;
+        if (endIndex > logs.size()) {
+            endIndex = logs.size();
+        }
+        sls_logs::LogGroup logGroup;
+        sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
+        logTagPtr->set_key(LOG_RESERVED_KEY_HOSTNAME);
+        logTagPtr->set_value(LogFileProfiler::mHostname.substr(0, 99));
+        std::string userDefinedId = ConfigManager::GetInstance()->GetUserDefinedIdSet();
+        if (!userDefinedId.empty()) {
+            logTagPtr = logGroup.add_logtags();
+            logTagPtr->set_key(LOG_RESERVED_KEY_USER_DEFINED_ID);
+            logTagPtr->set_value(userDefinedId.substr(0, 99));
+        }
+        logGroup.set_category(config->mCategory);
+        logGroup.set_source(LogFileProfiler::mIpAddr);
+        if (!config->mGroupTopic.empty()) {
+            logGroup.set_topic(config->mGroupTopic);
+        }
+        for (size_t i = beginIndex; i < endIndex; ++i) {
+            sls_logs::Log* log = logGroup.add_logs();
+            log->mutable_contents()->CopyFrom(*(logs[i].mutable_contents()));
+            log->set_time(nowTime);
+        }
+        if (!sSenderInstance->Send(config->mProjectName,
+                                   "",
+                                   logGroup,
+                                   config,
+                                   config->mMergeType,
+                                   (uint32_t)((endIndex - beginIndex) * 1024))) {
+            LogtailAlarm::GetInstance()->SendAlarm(DISCARD_DATA_ALARM,
+                                                   "push observer data into batch map fail",
+                                                   config->mProjectName,
+                                                   config->mCategory,
+                                                   config->mRegion);
+            LOG_ERROR(sLogger,
+                      ("push observer data into batch map fail, discard logs",
+                       logGroup.logs_size())("project", config->mProjectName)("logstore", config->mCategory));
+            return -1;
+        }
     }
     return 0;
 }

@@ -25,11 +25,10 @@
 #include "common/Thread.h"
 #include "common/Lock.h"
 #include "common/TimeUtil.h"
-#include "common/StringPiece.h"
+#include "common/StringPieceUnittest.h"
 #include "metas/ContainerProcessGroup.h"
 #include "ConnectionObserver.h"
 #include "metas/ConnectionMetaManager.h"
-
 
 namespace logtail {
 class ProcessObserver;
@@ -39,26 +38,11 @@ class EBPFWrapper;
 
 class NetworkObserver {
 public:
-    NetworkObserver() {
-        mLastGCTimeNs = mLastFlushTimeNs = GetCurrentTimeInNanoSeconds();
-        mConfig = NetworkConfig::GetInstance();
-        mNetworkStatistic = NetworkStatistic::GetInstance();
-        mServiceMetaManager = ServiceMetaManager::GetInstance();
-    }
-
-    ~NetworkObserver();
-
     static NetworkObserver* GetInstance() {
-        static NetworkObserver* sObserver = new NetworkObserver();
+        static auto* sObserver = new NetworkObserver();
         return sObserver;
     }
 
-    void EventLoop();
-
-    /**
-     * @brief do not used yet.
-     *
-     */
     void Stop() {
         if (mEventLoopThread) {
             mEventLoopThread->Wait(100);
@@ -71,55 +55,87 @@ public:
 
     void Reload();
 
-    void BindSender();
-
-    static int SendToPluginProcessed(std::vector<sls_logs::Log>& logs, Config* cfg);
-
-
-    void OnProcessDestroyed(uint32_t pid, const char* command, size_t len);
-
-    ProcessObserver* GetProcess(PacketEventHeader* header, bool create = true);
-
-    int OnPacketEventStringPiece(StringPiece sp) { return OnPacketEvent((void*)sp.c_str(), sp.size()); }
-
-    int OnPacketEvent(void* event, size_t len);
-
-    /**
-     * @brief FlushOut 其实和NetworkObserver没啥关系，直接从ContainerProcessGroupManager就可以获取所有的Aggregator和Meta
-     *
-     * @param allData
-     */
-    void FlushOutMetrics(std::vector<sls_logs::Log>& allData);
-
-    /**
-     * @brief 输出4层的统计信息
-     *
-     * @param allData
-     */
-    void FlushOutStatistics(std::vector<sls_logs::Log>& allData);
-
-    /**
-     * @brief 复用FlushOutMetrics的能力
-     *
-     * @return std::string
-     */
-    std::string FlushToString() {
-        std::vector<sls_logs::Log> allData;
-        FlushOutMetrics(allData);
-        std::string rst;
-        for (auto& log : allData) {
-            rst.append(log.DebugString()).append("\n");
-        }
-        return rst;
+private:
+    NetworkObserver() {
+        mLastGCTimeNs = mLastFlushTimeNs = GetCurrentTimeInNanoSeconds();
+        mConfig = NetworkConfig::GetInstance();
+        mNetworkStatistic = NetworkStatistic::GetInstance();
+        mServiceMetaManager = ServiceMetaManager::GetInstance();
     }
+    ~NetworkObserver();
 
-    void SetUpSender(const std::function<int(std::vector<sls_logs::Log>&, Config*)>& senderFunc) {
-        mSenderFunc = senderFunc;
-    }
+    void EventLoop();
+
 
     void GarbageCollection(uint64_t nowTimeNs);
 
     uint32_t EBPFConnectionGC(uint64_t nowTimeNs);
+
+    /**
+     * @brief Get or create a new process observer to process network packet.
+     * @param header the network packet meta data.
+     * @param create  whether create new process obj when not found
+     * @return ProcessObserver allocated in heap.
+     */
+    ProcessObserver* GetProcess(PacketEventHeader* header, bool create = true);
+
+    /**
+     * @brief BindSender bind different output ways, such as sls or plugins output ways.
+     */
+    void BindSender();
+    static int OutputPluginProcess(std::vector<sls_logs::Log>& logs, Config* cfg);
+    static int OutputDirectly(std::vector<sls_logs::Log>& logs, Config* cfg);
+
+    /**
+     * @brief Process bytes by different protocol processors.
+     * @param sp network transfer bytes.
+     * @return -1 means illegal arguments and 0 means success.
+     */
+    int OnPacketEventStringPiece(StringPiece sp) { return OnPacketEvent((void*)sp.c_str(), sp.size()); }
+
+    int OnPacketEvent(void* event, size_t len);
+
+    void OnProcessDestroyed(uint32_t pid, const char* command, size_t len);
+
+    /**
+     * @brief Output layer 4 statistics
+     * @param allData allData stores all observer logs
+     */
+    void FlushOutStatistics(std::vector<sls_logs::Log>& allData);
+    /**
+     * @brief Read logs from ContainerProcessGroupManager
+     * @param allData allData stores all observer protocol logs
+     */
+    void FlushOutMetrics(std::vector<sls_logs::Log>& allData);
+
+    void FlushStatistics(NetStaticticsMap& map, std::vector<sls_logs::Log>& logs);
+
+    void ReloadSource();
+
+    // create a still running thread to process observer data.
+    void StartEventLoop();
+
+    std::unordered_map<uint32_t, ProcessObserver*> mAllProcesses;
+    std::function<int(std::vector<sls_logs::Log>&, Config*)> mSenderFunc;
+    ThreadPtr mEventLoopThread;
+    ReadWriteLock mEventLoopThreadRWL;
+    uint64_t mLastGCTimeNs = 0;
+    uint64_t mLastFlushTimeNs = 0;
+    uint64_t mLastEbpfGCTimeNs = 0;
+    uint64_t mLastFlushMetaTimeNs = 0;
+    uint64_t mLastFlushNetlinkTimeNs = 0;
+    uint64_t mLastProbeDisableProcessNs = 0;
+    uint64_t mLastCleanAllDisableProcessNs = 0;
+    FILE* mDumpFilePtr = nullptr;
+    FILE* mReplayFilePtr = nullptr;
+    int64_t mDumpSize = 0;
+
+    // don't delete following pointer, the lifecycles of them may be over current instance.
+    NetworkStatistic* mNetworkStatistic;
+    ServiceMetaManager* mServiceMetaManager;
+    PCAPWrapper* mPCAPWrapper = nullptr;
+    EBPFWrapper* mEBPFWrapper = nullptr;
+    NetworkConfig* mConfig;
 
     friend class NetworkObserverUnittest;
     friend class PCAPWrapperUnittest;
@@ -130,41 +146,6 @@ public:
     friend class ProtocolMySqlUnittest;
     friend class ProtocolRedisUnittest;
     friend class ProtocolPgSqlUnittest;
-
-protected:
-    void StartEventLoop() {
-        if (!mEventLoopThread) {
-            mEventLoopThread = CreateThread([this]() { EventLoop(); });
-        }
-    }
-
-    void ReloadSource();
-
-    void FlushStatistics(NetStaticticsMap& map, std::vector<sls_logs::Log>& logs);
-
-protected:
-    // key : pid << 32 | sockHash
-    std::unordered_map<uint32_t, ProcessObserver*> mAllProcesses;
-    NetworkConfig* mConfig;
-    NetworkStatistic* mNetworkStatistic;
-    ServiceMetaManager* mServiceMetaManager;
-
-    std::function<int(std::vector<sls_logs::Log>&, Config*)> mSenderFunc;
-
-    ThreadPtr mEventLoopThread;
-    ReadWriteLock mEventLoopThreadRWL;
-    uint64_t mLastGCTimeNs = 0;
-    uint64_t mLastFlushTimeNs = 0;
-    uint64_t mLastEbpfGCTimeNs = 0;
-    uint64_t mLastFlushMetaTimeNs = 0;
-    uint64_t mLastFlushNetlinkTimeNs = 0;
-    uint64_t mLastProbeDisableProcessNs = 0;
-    uint64_t mLastCleanAllDisableProcessNs = 0;
-    PCAPWrapper* mPCAPWrapper = NULL;
-    EBPFWrapper* mEBPFWrapper = NULL;
-    FILE* mDumpFilePtr = NULL;
-    FILE* mReplayFilePtr = NULL;
-    int64_t mDumpSize = 0;
 };
 
 } // namespace logtail

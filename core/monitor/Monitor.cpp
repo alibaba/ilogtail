@@ -19,7 +19,6 @@
 #elif defined(_MSC_VER)
 #include <Psapi.h>
 #endif
-#include <functional>
 #include <fstream>
 #include "common/Constants.h"
 #include "common/ExceptionBase.h"
@@ -27,7 +26,6 @@
 #include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
 #include "common/RuntimeUtil.h"
-#include "common/DevInode.h"
 #include "common/GlobalPara.h"
 #include "common/version.h"
 #include "log_pb/sls_logs.pb.h"
@@ -40,7 +38,7 @@
 #include "event_handler/LogInput.h"
 #include "plugin/LogtailPlugin.h"
 #if defined(__linux__)
-#include "observer/network/NetworkObserver.h"
+#include "ObserverManager.h"
 #endif
 
 
@@ -269,7 +267,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     UpdateMetric("config_prefer_real_ip", BOOL_FLAG(send_prefer_real_ip));
     UpdateMetric("plugin_enabled", LogtailPlugin::GetInstance()->IsPluginOpened());
 #if defined(__linux__)
-    UpdateMetric("observer_enabled", NetworkConfig::GetInstance()->mEnabled);
+    UpdateMetric("observer_enabled", ObserverManager::GetInstance()->Status());
 #endif
     UpdateMetric("env_config", ConfigManager::GetInstance()->IsEnvConfig());
     const std::vector<sls_logs::LogTag>& envTags = AppConfig::GetInstance()->GetEnvTags();

@@ -335,8 +335,6 @@ public:
               const std::string& filename = "",
               const LogGroupContext& context = LogGroupContext());
 
-    int SendDirectly(std::vector<sls_logs::Log>& logs, Config* config);
-
     //bool LoadConfig(const Json::Value& secondary);
 
     // added by xianzhi(bowen.gbw@antfin.com)
