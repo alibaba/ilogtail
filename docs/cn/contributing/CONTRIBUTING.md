@@ -26,21 +26,7 @@ iLogtail 自从开源以来，受到了很多社区同学的关注。社区的�
 
 我们使用 GitHub [Issues](https://github.com/alibaba/ilogtail/issues) 以及 [Pull Requests](https://github.com/alibaba/ilogtail/pulls) 来管理/追踪需求或者问题。如果您希望开发新的特性、功能完善，或者发现了代码的 BUG，或者文档的增加、完善，或者希望提建议等，都可以创建一个 Issue；也可以认领我们发布出来的一些 Issue。新建的 Issue 请按照模板规范填写内容，以便我们更好地理解您需求。
 
-创建 Issue ，请按照如下原则给 Issue 打上对应标签，方便我们进行标签管理。
-
-* 全新特性开发，对应 label: feature request。
-* 现有功能完善，对应 label: enhancement。
-* 修复 bug，对应 label: bug。
-* 测试框架或测试用例补充，对应 label: test。
-* 文档补充、完善（document），对应 label: documentation。
-* 案例类，对应 label: awesome ilogtail。
-* 回答、解决问题，对应 label: question。我们建议优先提到 [Discussions](https://github.com/alibaba/ilogtail/discussions) 中讨论。
-
-以下为附加标签：
-
-* 希望社区参与贡献，对应 label: community。
-* 核心功能开发或变更，对应 label: core。
-
+创建 Issue ，请按照如下原则给 Issue 打上对应[标签](#标签)，方便我们进行标签管理。
 
 #### 设计交流
 
@@ -64,9 +50,27 @@ iLogtail 自从开源以来，受到了很多社区同学的关注。社区的�
 
 注意一个 PR 尽量不要过于大，如果的确需要有大的变更，可以将其按功能拆分成多个单独的 PR。
 
-若您是初次提交 PR，请先签署 CLA（PR 页面会有自动回复指引）。在提交 PR 后，系统会运行持续集成，请确保所有的 CI 均为 pass 状态。一切就绪后，我们会为 PR 分配一个或多个 reviewer，review通过后即可合入 main。
+若您是初次提交 PR，请先签署 CLA（PR 页面会有自动回复指引）。在提交 PR 后，系统会运行持续集成，请确保所有的 CI 均为 pass 状态。一切就绪后，请给该 PR 打上 review request [标签](#标签)。我们会为 PR 分配一个或多个 reviewer，review通过后即可合入 main。
 
 在合并 PR 的时候，请把多余的提交记录都 squash 成一个，保证最终的提交信息的简练、规范。
+
+#### 标签
+
+我们使用标签来进行 Issue、PR、Discussion 的管理。您可以根据实际情况打上对应的标签。
+
+* 全新特性开发，对应 label: feature request。
+* 现有功能完善，对应 label: enhancement。
+* 修复 bug，对应 label: bug。
+* 测试框架或测试用例补充，对应 label: test。
+* 文档补充、完善（document），对应 label: documentation。
+* 案例类，对应 label: awesome ilogtail。
+* 发起的 PR 已具备 Review 条件，对应 label: review request。
+* 回答、解决问题，对应 label: question。我们建议优先提到 [Discussions](https://github.com/alibaba/ilogtail/discussions) 中讨论。
+
+以下为附加标签：
+
+* 希望社区参与贡献，对应 label: community。
+* 核心功能开发或变更，对应 label: core。
 
 #### Code review
 
