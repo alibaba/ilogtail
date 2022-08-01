@@ -286,52 +286,60 @@ void LogParserUnittest::TestApsaraEasyReadLogTimeParser() {
     uint32_t dateTime = 0;
     time_t lastTime = 0;
     string lastStr;
-    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
+    string rawStr;
+
+    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, rawStr, lastTime, microTime);
     APSARA_TEST_EQUAL(dateTime, 1378972170);
     APSARA_TEST_EQUAL(microTime, 1378972170425093);
+    APSARA_TEST_EQUAL(rawStr, "1378972170425093");
     APSARA_TEST_EQUAL(lastTime, 0);
 
     buffer = "[1378972171093]\tA:B";
     microTime = 0;
     dateTime = 0;
-    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
+    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, rawStr, lastTime, microTime);
     APSARA_TEST_EQUAL(dateTime, 1378972171);
     APSARA_TEST_EQUAL(microTime, 1378972171093000);
+    APSARA_TEST_EQUAL(rawStr, "1378972171093");
     APSARA_TEST_EQUAL(lastTime, 0);
 
     buffer = "[1378972172]\tA:B";
     microTime = 0;
     dateTime = 0;
-    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
+    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, rawStr, lastTime, microTime);
     APSARA_TEST_EQUAL(dateTime, 1378972172);
     APSARA_TEST_EQUAL(microTime, 1378972172000000);
+    APSARA_TEST_EQUAL(rawStr, "1378972172");
     APSARA_TEST_EQUAL(lastTime, 0);
 
     buffer = "[2013-09-12 22:18:28.819129]\tA:B";
     microTime = 0;
     dateTime = 0;
-    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
+    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, rawStr, lastTime, microTime);
     APSARA_TEST_EQUAL(dateTime, 1378995508);
     APSARA_TEST_EQUAL(microTime, 1378995508819129);
     APSARA_TEST_EQUAL(dateTime, lastTime);
+    APSARA_TEST_EQUAL(rawStr, "2013-09-12 22:18:28.819129");
     APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:28");
 
     buffer = "[2013-09-12 22:18:28.819139]\tA:B";
     microTime = 0;
     dateTime = 0;
-    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
+    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, rawStr, lastTime, microTime);
     APSARA_TEST_EQUAL(dateTime, 1378995508);
     APSARA_TEST_EQUAL(microTime, 1378995508819139);
     APSARA_TEST_EQUAL(dateTime, lastTime);
+    APSARA_TEST_EQUAL(rawStr, "2013-09-12 22:18:28.819139");
     APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:28");
 
     buffer = "[2013-09-12 22:18:29.819139]\tA:B";
     microTime = 0;
     dateTime = 0;
-    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
+    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, rawStr, lastTime, microTime);
     APSARA_TEST_EQUAL(dateTime, 1378995509);
     APSARA_TEST_EQUAL(microTime, 1378995509819139);
     APSARA_TEST_EQUAL(dateTime, lastTime);
+    APSARA_TEST_EQUAL(rawStr, "2013-09-12 22:18:29.819139");
     APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:29");
     LOG_INFO(sLogger, ("TestApsaraEasyReadLogTimeParser() end", time(NULL)));
 }
