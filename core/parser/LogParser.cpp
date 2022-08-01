@@ -62,7 +62,8 @@ bool LogParser::IsPrefixString(const char* all, const string& prefix) {
     return true;
 }
 
-time_t LogParser::ApsaraEasyReadLogTimeParser(const char* buffer, string& timeStr, string& rawTimeStr, time_t& lastLogTime, int64_t& microTime) {
+time_t
+LogParser::ApsaraEasyReadLogTimeParser(const char* buffer, string& timeStr, string& rawTimeStr, time_t& lastLogTime, int64_t& microTime) {
     int beg_index = 0;
     if (buffer[beg_index] != '[') {
         return 0;
