@@ -31,10 +31,10 @@ iLogtail 自从开源以来，受到了很多社区同学的关注。社区的�
 * 全新特性开发，对应 label: feature request。
 * 现有功能完善，对应 label: enhancement。
 * 修复 bug，对应 label: bug。
-* 文档补充、完善（document），对应 label: documentation。
-* 回答、解决问题，对应 label: question。我们建议优先提到 [Discussions](https://github.com/alibaba/ilogtail/discussions) 中讨论。
-* 案例类，对应 label: awesome ilogtail。
 * 测试框架或测试用例补充，对应 label: test。
+* 文档补充、完善（document），对应 label: documentation。
+* 案例类，对应 label: awesome ilogtail。
+* 回答、解决问题，对应 label: question。我们建议优先提到 [Discussions](https://github.com/alibaba/ilogtail/discussions) 中讨论。
 
 以下为附加标签：
 
