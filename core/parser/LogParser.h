@@ -47,7 +47,7 @@ public:
     static const char* UNMATCH_LOG_KEY;
 
     static time_t
-    ApsaraEasyReadLogTimeParser(const char* buffer, std::string& timeStr, time_t& lastLogTime, int64_t& microTime);
+    ApsaraEasyReadLogTimeParser(const char* buffer, std::string& timeStr, std::string& rawTimeStr, time_t& lastLogTime, int64_t& microTime);
     static bool ApsaraEasyReadLogLineParser(const char* buffer,
                                             sls_logs::LogGroup& logGroup,
                                             bool discardUnmatch,
