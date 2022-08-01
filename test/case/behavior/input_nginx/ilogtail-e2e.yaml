@@ -23,8 +23,6 @@ ilogtail:
               IntervalMs: 1000
               Urls:
                 - http://nginx/nginx_status
-      content:
-        - '{"inputs":[{"type":"metric_nginx_status","detail":{"IntervalMs":1000,"Urls":["http://nginx/nginx_status"]}}]}'
   close_wait: 5s
   depends_on:
     nginx:

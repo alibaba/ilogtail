@@ -27,9 +27,6 @@ ilogtail:
               Fields:
                 content: xxxxxx
                 time: 2017.09.12 20:55:36
-      content:
-        - '{"inputs":[{"type":"metric_mock","detail":{"IntervalMs": 1000,"Tags":{"tag1":"aaaa","tag2":"bbb"},"Fields":{"content":"xxxxx","time":"2017.09.12 20:55:36"}}}]}'
-  close_wait: 5s
 verify:
   log_rules:
     - name: fields-check

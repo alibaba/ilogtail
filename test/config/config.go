@@ -90,13 +90,6 @@ func GetDefaultCase() *Case {
 			Times:    0,
 			Interval: "10s",
 		},
-		// Subscriber: Subscriber{
-		// 	Name: "grpc",
-		// 	Config: map[string]interface{}{
-		// 		"address": ":8000",
-		// 		"network": "tcp",
-		// 	},
-		// },
 		Ilogtail: Ilogtail{
 			CloseWait:      "10s",
 			LoadConfigWait: "5s",

@@ -99,9 +99,6 @@ func (c *ValidatorController) Start() error {
 
 			switch {
 			case staticMatch:
-				// if !projectMatch {
-				// 	continue
-				// }
 				validator.GetCounterChan() <- group
 			case alarmLogCheck(group.Logs[0]):
 				validator.GetAlarmLogChan() <- group

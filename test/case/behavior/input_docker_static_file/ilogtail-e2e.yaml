@@ -27,60 +27,6 @@ ilogtail:
               ContainerInfo:
                 IncludeEnv:
                   STDOUT_SWITCH: "true"
-      content:
-        - '{
-                       "enable": true,
-                       "docker_file" : true,
-                       "file_pattern": "a*.log",
-                       "keys": [
-                           "content"
-                       ],
-                       "log_begin_reg": ".*",
-                       "log_path": "/root/test",
-                       "log_type": "common_reg_log",
-                       "max_depth": 10,
-                       "plugin": {
-                           "global": {
-                               "DefaultLogQueueSize": 10
-                           },
-                           "processors": [
-                               {
-                                   "detail": {
-                                       "SplitKey": "content"
-                                   },
-                                   "type": "processor_split_log_string"
-                               }
-                           ]
-                       },
-                       "regex": [
-                           "(.*)"
-                       ],
-                       "advanced" : 
-                                 {
-                                   "k8s" : 
-                                   {
-                                     "ExcludeContainerLabel" : {},
-                                     "ExcludeEnv" : {},
-                                     "ExcludeK8sLabel" : {},
-                                     "ExternalEnvTag" : {},
-                                     "ExternalK8sLabelTag" : {},
-                                     "IncludeContainerLabel" : {},
-                                     "IncludeEnv" : {
-                                     "STDOUT_SWITCH":"true"
-                                     },
-                                     "IncludeK8sLabel" : {},
-                                     "K8sContainerRegex" : "",
-                                     "K8sNamespaceRegex" : "",
-                                     "K8sPodRegex" : ""
-                                   },
-                                   "tail_size_kb" : 1024
-                                 },
-                                 "docker_exclude_env" : {},
-                                 "docker_exclude_label" : {},
-                                 "docker_include_env" : {},
-                                 "docker_include_label" : {}
-                               
-                   }'
   close_wait: 5s
 verify:
   log_rules:

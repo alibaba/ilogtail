@@ -41,8 +41,12 @@ func (l *LogtailController) Init(parent *CancelChain, fullCfg *config.Case) erro
 	if len(fullCfg.Ilogtail.Config) == 1 {
 		cfg := fullCfg.Ilogtail.Config[0]
 		if len(cfg.Detail) != 0 {
-			_ = os.Remove(config.ConfigYamlFileDir)
-			_ = os.Mkdir(config.ConfigYamlFileDir, 0750)
+			if err := os.Remove(config.ConfigYamlFileDir); err != nil {
+				return err
+			}
+			if err := os.Mkdir(config.ConfigYamlFileDir, 0750); err != nil {
+				return err
+			}
 			for idx, detail := range cfg.Detail {
 				name := cfg.Name + "_" + strconv.Itoa(idx) + ".yaml"
 				if _, ok := detail["inputs"]; !ok {
