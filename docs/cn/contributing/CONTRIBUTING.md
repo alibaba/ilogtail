@@ -26,7 +26,7 @@ iLogtail 自从开源以来，受到了很多社区同学的关注。社区的�
 
 我们使用 GitHub [Issues](https://github.com/alibaba/ilogtail/issues) 以及 [Pull Requests](https://github.com/alibaba/ilogtail/pulls) 来管理/追踪需求或者问题。如果您希望开发新的特性、功能完善，或者发现了代码的 BUG，或者文档的增加、完善，或者希望提建议等，都可以创建一个 Issue；也可以认领我们发布出来的一些 Issue。新建的 Issue 请按照模板规范填写内容，以便我们更好地理解您需求。
 
-创建 Issue ，请按照如下原则给 Issue 打上对应[标签](#标签)，方便我们进行标签管理。
+创建 Issue 时，需要您打上对应[标签](#标签)，方便我们进行分类管理。
 
 #### 设计交流
 
