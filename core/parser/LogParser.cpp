@@ -62,12 +62,19 @@ bool LogParser::IsPrefixString(const char* all, const string& prefix) {
     return true;
 }
 
-time_t
-LogParser::ApsaraEasyReadLogTimeParser(const char* buffer, string& timeStr, time_t& lastLogTime, int64_t& microTime) {
+time_t LogParser::ApsaraEasyReadLogTimeParser(const char* buffer, string& timeStr, string& rawTimeStr, time_t& lastLogTime, int64_t& microTime) {
     int beg_index = 0;
     if (buffer[beg_index] != '[') {
         return 0;
     }
+    int endIndex = 0;
+    while (buffer[endIndex]) {
+        if (buffer[endIndex] == ']') {
+            break;
+        }
+        endIndex++;
+    }
+    rawTimeStr = string(buffer + beg_index + 1, endIndex - 1);
     int curTime = 0;
     if (buffer[1] == '1') // for normal time, e.g 1378882630, starts with '1'
     {
@@ -109,12 +116,7 @@ LogParser::ApsaraEasyReadLogTimeParser(const char* buffer, string& timeStr, time
         lastLogTime = mktime(&tm);
         // if the time is valid (strptime not return NULL), the date value size must be 19 ,like '2013-09-11 03:11:05'
         timeStr = string(buffer + beg_index + 1, 19);
-        microTime = GetApsaraLogMicroTime(buffer);
-        if (microTime > 0) {
-             timeStr += ".";
-             timeStr += to_string(microTime);
-        }
-        microTime += (int64_t)lastLogTime * 1000000;
+        microTime = (int64_t)lastLogTime * 1000000 + GetApsaraLogMicroTime(buffer);
         return lastLogTime;
     }
 }
@@ -654,7 +656,8 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
                                             ParseLogError& error,
                                             uint32_t& logGroupSize) {
     int64_t logTime_in_micro = 0;
-    time_t logTime = LogParser::ApsaraEasyReadLogTimeParser(buffer, timeStr, lastLogTime, logTime_in_micro);
+    string rawTimeStr = "";
+    time_t logTime = LogParser::ApsaraEasyReadLogTimeParser(buffer, timeStr, rawTimeStr, lastLogTime, logTime_in_micro);
     if (logTime <= 0) // this case will handle empty apsara log line
     {
         string bufOut(buffer);
@@ -732,7 +735,7 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
     sprintf(s_micro, "%lld", logTime_in_micro);
 #endif
     AddLog(logPtr, "microtime", string(s_micro), logGroupSize);
-    AddLog(logPtr, "rawtime", timeStr, logGroupSize);
+    AddLog(logPtr, "rawtime", rawTimeStr, logGroupSize);
     return true;
 }
 
