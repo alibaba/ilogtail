@@ -179,7 +179,17 @@ retry:
 
 由于不需要外部依赖，处理插件的集成测试并不是必须的，但也推荐您完成该项测试。为了完成测试，iLogtail为您提供了数据模拟输入插件`metric_mock`和`service_mock`，利用该插件可以直接在ilogtail中生成你所需的数据而无需外部输入。
 
-同输入插件测试场景一样，在该场景下，iLogtail默认使用grpc协议将从输入接收到的数据直接发送至日志订阅器，然后订阅器再将数据发送至验证器进行验证，典型配置示例如下（以`metric_mock`输入插件为例)：
+同输入插件测试场景一样，在该场景下，iLogtail默认使用grpc协议将从输入接收到的数据直接发送至日志订阅器，然后订阅器再将数据发送至验证器进行验证，整体测试架构如下图所示：
+<div align="center">
+    <img src="./processors_test_framework.jpg" width = "200"/>
+</div>
+
+其中，iLogtail容器的内部结构如下图所示：
+<div align="center">
+    <img src="./processors_ilogtail.jpg" width = "500"/>
+</div>
+
+处理插件测试的典型配置示例如下（以`metric_mock`输入插件为例)：
 
 ```yaml
 boot:
