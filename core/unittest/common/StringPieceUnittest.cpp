@@ -15,7 +15,7 @@
 #include "unittest/Unittest.h"
 #include "common/FileSystemUtil.h"
 #include "app_config/AppConfig.h"
-#include "StringPieceUnittest.h"
+#include "StringPiece.h"
 
 namespace logtail {
 

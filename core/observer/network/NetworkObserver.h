@@ -25,7 +25,7 @@
 #include "common/Thread.h"
 #include "common/Lock.h"
 #include "common/TimeUtil.h"
-#include "common/StringPieceUnittest.h"
+#include "common/StringPiece.h"
 #include "metas/ContainerProcessGroup.h"
 #include "ConnectionObserver.h"
 #include "metas/ConnectionMetaManager.h"

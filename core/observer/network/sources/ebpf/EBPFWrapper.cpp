@@ -557,7 +557,7 @@ void EBPFWrapper::OnData(struct conn_data_event_t* event) {
         return;
     }
     // convert data event to PacketEvent
-    PacketEventHeader* header = (PacketEventHeader*)(&mPacketDataBuffer.at(0));
+    auto* header = (PacketEventHeader*)(&mPacketDataBuffer.at(0));
     SocketCategory socketCategory = ConvertDataToPacketHeader(event, header);
     EBPF_CONNECTION_FILTER(socketCategory, header->DstAddr, event->attr.conn_id, event->attr.addr);
     header->TimeNano = event->attr.ts + mDeltaTimeNs;
