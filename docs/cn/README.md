@@ -68,9 +68,9 @@ cd output
 
 您可以通过[Github Issues](https://github.com/alibaba/ilogtail/issues) 报告bug、提出建议或参与讨论，或通过以下方式联系我们：
 
-* 交流群请扫描
-<img src="https://cdn.nlark.com/yuque/0/2022/png/22119025/1659441830266-5f238a9e-5c66-4e98-aceb-40659c81cbca.png?x-oss-process=image%2Fresize%2Cw_1500%2Climit_0" style="width: 80%; height: 80%" />
-
 * 微信公众号：日志服务
 * 哔哩哔哩：[阿里云SLS](https://space.bilibili.com/630680534?from=search\&seid=2845737427240690794\&spm\_id\_from=333.337.0.0)
 * 知乎：[阿里云日志服务](https://www.zhihu.com/people/a-li-yun-ri-zhi-fu-wu)
+* 交流群请扫描
+
+<img src="https://cdn.nlark.com/yuque/0/2022/png/22119025/1659441830266-5f238a9e-5c66-4e98-aceb-40659c81cbca.png?x-oss-process=image%2Fresize%2Cw_1500%2Climit_0" style="width: 50%; height: 50%" />
