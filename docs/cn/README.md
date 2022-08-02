@@ -66,7 +66,7 @@ cd output
 
 ## 联系我们
 
-您可以通过[Github Issues](https://github.com/alibaba/ilogtail/issues) 报告bug、提出建议或参与讨论，或通过以下方式联系我们：
+您可以通过[Github Issues](https://github.com/alibaba/ilogtail/issues) 或 [Github Discussions](https://github.com/alibaba/ilogtail/discussions) 报告bug、提出建议或参与讨论。也可以通过以下方式联系我们：
 
 * 微信公众号：日志服务
 * 哔哩哔哩：[阿里云SLS](https://space.bilibili.com/630680534?from=search\&seid=2845737427240690794\&spm\_id\_from=333.337.0.0)
