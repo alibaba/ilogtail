@@ -44,6 +44,7 @@
   * [MetricInput示例插件](data-pipeline/input/metric-example.md)
   * [主机Meta数据](data-pipeline/input/metric-meta-host.md)
   * [Mock数据-Metric](data-pipeline/input/metric-mock.md)
+  * [MySQL Binlog](data-pipeline/input/service-canal.md)
   * [ServiceInput示例插件](data-pipeline/input/service-example.md)
   * [Journal数据](data-pipeline/input/service-journal.md)
   * [Kafka](data-pipeline/input/service-kafka.md)
@@ -54,6 +55,7 @@
   * [原始数据](data-pipeline/processor/default.md)
   * [丢弃字段](data-pipeline/processor/processor-drop.md)
   * [条件字段处理](data-pipeline/processor/fields-with-condition.md)
+  * [日志过滤](data-pipeline/processor/processor-filter-regex.md)
   * [Json](data-pipeline/processor/json.md)
   * [正则](data-pipeline/processor/regex.md)
   * [重命名字段](data-pipeline/processor/processor-rename.md)
@@ -97,9 +99,14 @@
   * [单元测试](developer-guide/test/unit-test.md)
   * [E2E测试](developer-guide/test/e2e-test.md)
 * [代码检查](developer-guide/code-check/README.md)
-  * [检查代码风格](developer-guide/code-check/check-codestyle.md)
+  * [检查代码规范](developer-guide/code-check/check-codestyle.md)
   * [检查文件许可证](developer-guide/code-check/check-license.md)
   * [检查依赖包许可证](developer-guide/code-check/check-dependency-license.md)
+
+## 贡献指南 <a href="#controbuting-guide" id="controbuting-guide"></a>
+
+* [贡献指南](contributing/CONTRIBUTING.md)
+* [开发者](contributing/developer.md)
 
 ## 性能测试 <a href="#benchmark" id="benchmark"></a>
 
