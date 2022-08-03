@@ -57,10 +57,18 @@ public:
     void SetStartWorkerStatus(const std::string& result, const std::string& message) override;
 
 private:
+    ThreadPtr mCheckUpdateThreadPtr;
+    
     ConfigManager();
     virtual ~ConfigManager(); // no copy
     ConfigManager(const ConfigManager&);
     ConfigManager& operator=(const ConfigManager&);
+
+    // See ConfigManager::InitUpdateConfig.
+    bool CheckUpdateThread(bool configExistFlag);
+
+    // Set @configSuccessFlag to true if update successfully.
+    void GetRemoteConfigUpdate(bool& configSuccessFlag);
 
     /**
      * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map

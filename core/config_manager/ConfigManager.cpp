@@ -65,6 +65,9 @@ DEFINE_FLAG_STRING(logtail_profile_access_key, "default user's LogtailAccessKey"
 DEFINE_FLAG_STRING(default_access_key_id, "", "");
 DEFINE_FLAG_STRING(default_access_key, "", "");
 
+DEFINE_FLAG_INT32(local_config_update_interval, "second", 5);
+DEFINE_FLAG_INT32(remote_config_update_interval, "second", 15);
+
 namespace logtail {
 void ConfigManager::CleanUnusedUserAK() {
 }
@@ -116,8 +119,61 @@ bool ConfigManager::UpdateAccessKey(const std::string& aliuid,
     return true;
 }
 
+// CheckUpdateThread is the routine of thread this->mCheckUpdateThreadPtr, created in function InitUpdateConfig.
+//
+// Its main job is to check whether there are config updates by calling GetLocalConfigUpdate.
+// If any, it retrieves the updated data and stores it in mLocalYamlConfigDirMap,
+// which EventDispatcher's Dispatch thread (main thread of Logtail) uses to perform the actual update.
+//
+// Synchronization between these two threads is implemented by value of mUpdateStat (with memory barrier):
+// - mUpdateStat == NORMAL means nothing changed, shared datas are accessed by mCheckUpdateThreadPtr.
+// - mUpdateStat == UPDATE_CONFIG, it means something changed and shared datas are available.
+//   In this situation, GetConfigUpdate will stop checkiing (IsUpdate()==true), and dispatcher thread
+//   will access shared datas to apply updates.
+bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
+    usleep((rand() % 10) * 100 * 1000);
+    int32_t lastCheckLocalTime = 0;
+    int32_t lastCheckRemoteTime = 0;
+    int32_t checkLocalInterval = INT32_FLAG(local_config_update_interval); // 5 seconds
+    int32_t checkRemoteInterval = INT32_FLAG(remote_config_update_interval); // 15 seconds
+    while (mThreadIsRunning) {
+        int32_t curTime = time(NULL);
+
+        if (curTime - lastCheckRemoteTime >= checkRemoteInterval) {
+            bool configSuccessFlag = false;
+            GetRemoteConfigUpdate(configSuccessFlag);
+
+            if (!IsUpdate() && LoadMountPaths()) {
+                StartUpdateConfig();
+            }
+            lastCheckRemoteTime = curTime;
+        }
+
+        if (curTime - lastCheckLocalTime >= checkLocalInterval) {
+            if (!IsUpdate() && GetLocalConfigUpdate()) {
+                StartUpdateConfig();
+            }
+            if (!IsUpdate() && LoadMountPaths()) {
+                StartUpdateConfig();
+            }
+            lastCheckLocalTime = curTime;
+        }
+
+        if (mThreadIsRunning)
+            sleep(1);
+        else
+            break;
+    }
+    return true;
+}
+
 void ConfigManager::InitUpdateConfig(bool configExistFlag) {
     ConfigManagerBase::InitUpdateConfig(configExistFlag);
+
+    mCheckUpdateThreadPtr = CreateThread([this, configExistFlag]() { CheckUpdateThread(configExistFlag); });
+}
+
+void ConfigManager::GetRemoteConfigUpdate(bool& configSuccessFlag) {
 }
 
 bool ConfigManager::GetRegionStatus(const string& region) {
