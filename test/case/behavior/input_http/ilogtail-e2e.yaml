@@ -18,7 +18,7 @@ ilogtail:
   config:
     - name: http-case
       content:
-        - '{"inputs":[{"type":"metric_http","detail":{"IntervalMs":1000,"Addresses":["http://www.aliyun.com"],"IncludeBody":true}}],"processors":[{"type":"processor_anchor","detail":{"SourceKey":"content","NoAnchorError":true,"Anchors":[{"Start":"","Stop":"","FieldName":"body","FieldType":"json","ExpondJson":true}]}}]}'
+        - '{"inputs":[{"type":"metric_http","detail":{"IntervalMs":1000,"Addresses":["http://www.google.com"],"IncludeBody":true}}],"processors":[{"type":"processor_anchor","detail":{"SourceKey":"content","NoAnchorError":true,"Anchors":[{"Start":"","Stop":"","FieldName":"body","FieldType":"json","ExpondJson":true}]}}]}'
   close_wait: 5s
 verify:
   log_rules:
