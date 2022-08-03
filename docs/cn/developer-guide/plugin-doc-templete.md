@@ -42,16 +42,16 @@
 1. 在代码块附上`bash`、`json`、`yaml`等标签可以更加美观。
 2. 根据具体插件差异，可以有多组样例，每组样例也并不一定要有输入。
 
+#### 参考
+
+可用于参考的`service_journal`插件文档 [service-journal.md](https://github.com/alibaba/ilogtail/blob/main/docs/cn/data-pipeline/input/service-journal.md) 。
+
 ### 汇总页
 
 文档完成后，需要修改`docs/cn/data-pipline`中的`overview.md`和`docs/cn`中的`SUMMARY.md`。
 
 1. `overview.md`里所有的插件按英文名字典序升序排列，添加的时候注意插入的位置。
 2. `SUMMARY.md`中的插件顺序与`overview.md`保持一致，并附上链接。
-
-### 参考
-
-可用于参考的`service_journal`插件文档 [service-journal.md](https://github.com/alibaba/ilogtail/blob/main/docs/cn/data-pipeline/input/service-journal.md) 。
 
 ## 文档模版
 
