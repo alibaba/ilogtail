@@ -67,8 +67,7 @@ private:
     // See ConfigManager::InitUpdateConfig.
     bool CheckUpdateThread(bool configExistFlag);
 
-    // Set @configSuccessFlag to true if update successfully.
-    void GetRemoteConfigUpdate(bool& configSuccessFlag);
+    void GetRemoteConfigUpdate();
 
     /**
      * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map

@@ -65,8 +65,7 @@ DEFINE_FLAG_STRING(logtail_profile_access_key, "default user's LogtailAccessKey"
 DEFINE_FLAG_STRING(default_access_key_id, "", "");
 DEFINE_FLAG_STRING(default_access_key, "", "");
 
-DEFINE_FLAG_INT32(local_config_update_interval, "second", 5);
-DEFINE_FLAG_INT32(remote_config_update_interval, "second", 15);
+DEFINE_FLAG_INT32(config_update_interval, "second", 10);
 
 namespace logtail {
 void ConfigManager::CleanUnusedUserAK() {
@@ -78,6 +77,11 @@ ConfigManager::ConfigManager() {
 }
 
 ConfigManager::~ConfigManager() {
+    try {
+        if (mCheckUpdateThreadPtr.get() != NULL)
+            mCheckUpdateThreadPtr->GetValue(100);
+    } catch (...) {
+    }
 }
 
 // LoadConfig loads config by @configName.
@@ -132,31 +136,19 @@ bool ConfigManager::UpdateAccessKey(const std::string& aliuid,
 //   will access shared datas to apply updates.
 bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
     usleep((rand() % 10) * 100 * 1000);
-    int32_t lastCheckLocalTime = 0;
-    int32_t lastCheckRemoteTime = 0;
-    int32_t checkLocalInterval = INT32_FLAG(local_config_update_interval); // 5 seconds
-    int32_t checkRemoteInterval = INT32_FLAG(remote_config_update_interval); // 15 seconds
+    int32_t lastCheckTime = 0;
+    int32_t checkInterval = INT32_FLAG(config_update_interval); // 10 seconds
     while (mThreadIsRunning) {
         int32_t curTime = time(NULL);
 
-        if (curTime - lastCheckRemoteTime >= checkRemoteInterval) {
-            bool configSuccessFlag = false;
-            GetRemoteConfigUpdate(configSuccessFlag);
+        if (curTime - lastCheckTime >= checkInterval) {
+            GetRemoteConfigUpdate();
 
-            if (!IsUpdate() && LoadMountPaths()) {
-                StartUpdateConfig();
-            }
-            lastCheckRemoteTime = curTime;
-        }
-
-        if (curTime - lastCheckLocalTime >= checkLocalInterval) {
             if (!IsUpdate() && GetLocalConfigUpdate()) {
                 StartUpdateConfig();
             }
-            if (!IsUpdate() && LoadMountPaths()) {
-                StartUpdateConfig();
-            }
-            lastCheckLocalTime = curTime;
+
+            lastCheckTime = curTime;
         }
 
         if (mThreadIsRunning)
@@ -173,7 +165,7 @@ void ConfigManager::InitUpdateConfig(bool configExistFlag) {
     mCheckUpdateThreadPtr = CreateThread([this, configExistFlag]() { CheckUpdateThread(configExistFlag); });
 }
 
-void ConfigManager::GetRemoteConfigUpdate(bool& configSuccessFlag) {
+void ConfigManager::GetRemoteConfigUpdate() {
 }
 
 bool ConfigManager::GetRegionStatus(const string& region) {
