@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -79,7 +78,7 @@ func Load(path string, profile bool) (*Case, error) {
 
 func load(path string) (*Case, error) {
 	logger.Infof(context.Background(), "load config from: %s", path)
-	content, err := ioutil.ReadFile(filepath.Clean(path))
+	content, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -153,7 +153,7 @@ func (c *ValidatorController) flushSummaryReport() {
 		c.addSysReport(sysValidator.Name(), result)
 	}
 	bytes, _ := json.MarshalIndent(c.report, "", "\t")
-	_ = ioutil.WriteFile(config.ReportFile, bytes, 0600)
+	_ = os.WriteFile(config.ReportFile, bytes, 0600)
 }
 
 // staticLogCheck checks the log contents to find the static logs of the e2e test case.

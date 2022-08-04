@@ -17,7 +17,6 @@ package boot
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -223,7 +222,7 @@ func (c *ComposeBooter) createComposeFile() error {
 			return err
 		}
 	} else {
-		if bytes, err = ioutil.ReadFile(config.CaseHome + config.DockerComposeFileName); err != nil {
+		if bytes, err = os.ReadFile(config.CaseHome + config.DockerComposeFileName); err != nil {
 			return err
 		}
 	}
@@ -245,7 +244,7 @@ func (c *ComposeBooter) createComposeFile() error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(config.CaseHome+finalFileName, yml, 0600)
+	return os.WriteFile(config.CaseHome+finalFileName, yml, 0600)
 }
 
 // getLogtailpluginConfig find the docker compose configuration of the ilogtail.

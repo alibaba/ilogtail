@@ -16,7 +16,7 @@ package controller
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -73,7 +73,7 @@ func (c *SubscriberController) CancelChain() *CancelChain {
 }
 
 func WriteDefaultFlusherConfig(cfg string) error {
-	return ioutil.WriteFile(config.FlusherFile, []byte(cfg), 0600)
+	return os.WriteFile(config.FlusherFile, []byte(cfg), 0600)
 }
 
 func (c *SubscriberController) Clean() {
