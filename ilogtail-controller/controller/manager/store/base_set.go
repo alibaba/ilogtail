@@ -11,7 +11,7 @@ const BaseSettingFile string = "./base_setting.json"
 type baseSetting struct {
 	RunMode   string `json:"run_mode"`   // "cluster" cluster mode, "alone" stand-alone mode
 	StoreMode string `json:"store_mode"` // "file" file mode, "leveldb" leveldb mode
-	Port      string `json:"port"`       //
+	Port      string `json:"port"`       // port
 }
 
 var myBaseSetting *baseSetting

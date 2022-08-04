@@ -26,43 +26,10 @@ func machineRegister(c *gin.Context) {
 	}
 }
 
-func addConfigToMachine(c *gin.Context) {
-	// 声明接收的变量
-	var mc MACO
-	// Bind()默认解析并绑定form格式
-	// 根据请求头中content-type自动推断
-	if err := c.Bind(&mc); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	for _, m := range mc.Machines {
-		for _, co := range mc.Configs {
-			ip, status := manager.AddConfigToMachine(m, co)
-			c.JSON(status, gin.H{"target": ip})
-		}
-	}
+func machineState(c *gin.Context) {
+
 }
 
-func delConfigFromMachine(c *gin.Context) {
-	// 声明接收的变量
-	var mc MACO
-	// Bind()默认解析并绑定form格式
-	// 根据请求头中content-type自动推断
-	if err := c.Bind(&mc); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	for _, m := range mc.Machines {
-		for _, co := range mc.Configs {
-			ip, status := manager.DelConfigFromMachine(m, co)
-			c.JSON(status, gin.H{"target": ip})
-		}
-	}
-	c.JSON(http.StatusOK, gin.H{"status": "200"})
-}
+func machineConfigList(c *gin.Context) {
 
-func getMachineList(c *gin.Context) {
-	queryTime := time.Now().Format("2006-01-02 15:04:05")
-	data := manager.GetMachineList(queryTime)
-	c.JSON(http.StatusOK, data)
 }
