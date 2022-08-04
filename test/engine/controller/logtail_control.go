@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -41,7 +40,9 @@ func (l *LogtailController) Init(parent *CancelChain, fullCfg *config.Case) erro
 	if len(fullCfg.Ilogtail.Config) == 1 {
 		cfg := fullCfg.Ilogtail.Config[0]
 		if len(cfg.Detail) != 0 {
-			if err := os.Remove(config.ConfigYamlFileDir); err != nil {
+			if _, err := os.Stat(config.ConfigYamlFileDir); err == nil {
+				_ = os.Remove(config.ConfigYamlFileDir)
+			} else if !os.IsNotExist(err) {
 				return err
 			}
 			if err := os.Mkdir(config.ConfigYamlFileDir, 0750); err != nil {
@@ -97,7 +98,7 @@ func (l *LogtailController) Init(parent *CancelChain, fullCfg *config.Case) erro
 	})
 	_ = os.Remove(config.ConfigJSONFileDir)
 	_ = os.Mkdir(config.ConfigJSONFileDir, 0750)
-	return ioutil.WriteFile(filepath.Join(config.ConfigJSONFileDir, "config.json"), bytes, 0600)
+	return os.WriteFile(filepath.Join(config.ConfigJSONFileDir, "config.json"), bytes, 0600)
 }
 
 func (l *LogtailController) Start() error {
