@@ -30,17 +30,15 @@ verify:
           - _address_
           - _result_
           - _http_response_code_
-          - _response_match_
           - _response_time_ms_
     - name: kv-check
       validator: log_content_kv_regex
       spec:
         expect_key_value_regex:
-          _address_: "http://www.aliyun.com"
+          _address_: "http://www.google.com"
           _method_: "GET"
-          _result_: "invalid_body"
-          _http_response_code_: "301"
-          _response_match_: "no"
+          _result_: "success"
+          _http_response_code_: "200"
   system_rules:
     - name: counter-check
       validator: sys_counter

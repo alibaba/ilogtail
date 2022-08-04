@@ -17,7 +17,6 @@ boot:
 ilogtail:
   config:
     - name: static-file-case
-      mixed_mode: true
       detail:
         - inputs: 
             - Type: file_log
