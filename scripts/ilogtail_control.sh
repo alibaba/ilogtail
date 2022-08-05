@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# If you want to investigate in the container, you may set env
+# PORT_CHECK_INTERVAL=3600 to keep it running when ilogtail exits.
+
 set -ue
 set -o pipefail
 
@@ -22,12 +25,12 @@ ilogtail_dir=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 bin_file="$ilogtail_dir/ilogtail"
 pid_file="$ilogtail_dir/ilogtail.pid"
 kill_timeout=10
-port=7953
+port=${HTTP_PROBE_PORT:-7953}
+port_initial_delay_sec=${PORT_INITIAL_DELAY_SEC:-3}
+port_check_interval=${PORT_CHECK_INTERVAL:-3}
+port_retry_count=${PORT_RETRY_COUNT:-3}
+port_retry_interval=${PORT_RETRY_INTERVAL:-1}
 exit_flag=0
-port_initial_delay_sec=3
-port_retry_count=3
-port_retry_interval=10
-
 
 load_pid() {
     [[ -f "$pid_file" ]] && cat "$pid_file" || :
@@ -74,6 +77,7 @@ check_liveness_by_pid() {
 check_liveness_by_port() {
     # check if port is open
     for ((i=0; $i<$port_retry_count; i+=1)); do
+        [[ $exit_flag -eq 0 ]] || return 0  # exit on signal
         curl localhost:$port &>/dev/null && return 0 || sleep $port_retry_interval
     done
     return 1
@@ -87,7 +91,7 @@ block_on_check_liveness_by_port() {
             echo "ilogtail exited unexpectedly"
             exit 1
         }
-        sleep $port_retry_interval
+        sleep $port_check_interval
     done
 }
 
