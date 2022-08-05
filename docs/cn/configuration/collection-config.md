@@ -31,6 +31,6 @@ flushers:
     OnlyStdout: true
 ```
 
-目前，iLogtail支持本地配置文件热加载，即在修改`user_yaml_config.d`中已有的配置或增加新的配置文件后，无需重启iLogtail即可生效，生效最长等待时间约为10秒。
+目前，iLogtail支持本地配置文件热加载，即在修改`user_yaml_config.d`中已有的配置或增加新的配置文件后，无需重启iLogtail即可生效，生效最长等待时间默认约为10秒。
 
 **注意：热加载功能仅限社区版，商业版暂不支持配置文件热加载。**

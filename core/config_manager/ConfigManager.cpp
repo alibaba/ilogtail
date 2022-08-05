@@ -137,17 +137,14 @@ bool ConfigManager::UpdateAccessKey(const std::string& aliuid,
 bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
     usleep((rand() % 10) * 100 * 1000);
     int32_t lastCheckTime = 0;
-    int32_t checkInterval = INT32_FLAG(config_update_interval); // 10 seconds
+    int32_t checkInterval = INT32_FLAG(config_update_interval);
     while (mThreadIsRunning) {
         int32_t curTime = time(NULL);
 
         if (curTime - lastCheckTime >= checkInterval) {
-            GetRemoteConfigUpdate();
-
             if (!IsUpdate() && GetLocalConfigUpdate()) {
                 StartUpdateConfig();
             }
-
             lastCheckTime = curTime;
         }
 
