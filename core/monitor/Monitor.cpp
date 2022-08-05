@@ -39,6 +39,7 @@
 #include "app_config/AppConfig.h"
 #include "event_handler/LogInput.h"
 #include "plugin/LogtailPlugin.h"
+#include "sdk/Common.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -220,32 +221,27 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
         _exit(1);
     }
 
+    // the unique id of current instance
+    std::string id = sdk::Base64Enconde(LogFileProfiler::mHostname + LogFileProfiler::mIpAddr + ILOGTAIL_VERSION + GetProcessExecutionDir());
+
     // Collect status information to send.
     LogGroup logGroup;
     logGroup.set_category(category);
     logGroup.set_source(LogFileProfiler::mIpAddr);
     Log* logPtr = logGroup.add_logs();
     logPtr->set_time(AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? curTime + GetTimeDelta() : curTime);
-    // CPU usage of Logtail process.
+    // CPU & memory usage of Logtail process.
     AddLogContent(logPtr, "cpu", mCpuStat.mCpuUsage);
-#if defined(__linux__) // TODO: Remove this if auto scale is available on Windows.
-    // CPU usage of system.
-    AddLogContent(logPtr, "os_cpu", mOsCpuStatForScale.mOsCpuUsage);
-#endif
-    // Memory usage of Logtail process.
     AddLogContent(logPtr, "mem", mMemStat.mRss);
-    // The version, uuid of Logtail.
+    // The version of Logtail.
     AddLogContent(logPtr, "version", ILOGTAIL_VERSION);
-    AddLogContent(logPtr, "uuid", ConfigManager::GetInstance()->GetUUID());
     // User defined id, aliuids.
     AddLogContent(logPtr, "user_defined_id", ConfigManager::GetInstance()->GetUserDefinedIdSet());
     AddLogContent(logPtr, "aliuids", ConfigManager::GetInstance()->GetAliuidSet());
     AddLogContent(logPtr, "projects", ConfigManager::GetInstance()->GetAllProjectsSet());
-    AddLogContent(logPtr, "instance_id", ConfigManager::GetInstance()->GetInstanceId());
     AddLogContent(logPtr, "syslog_open", AppConfig::GetInstance()->GetOpenStreamLog());
+    AddLogContent(logPtr, "instance_key", id);
     // Host informations.
-    AddLogContent(logPtr, "ip", LogFileProfiler::mIpAddr);
-    AddLogContent(logPtr, "hostname", LogFileProfiler::mHostname);
     AddLogContent(logPtr, "os", OS_NAME);
     AddLogContent(logPtr, "os_detail", LogFileProfiler::mOsDetail);
     AddLogContent(logPtr, "user", LogFileProfiler::mUsername);
