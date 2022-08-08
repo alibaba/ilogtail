@@ -1,4 +1,4 @@
-# Copyright 2021 iLogtail Authors
+# Copyright 2022 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,5 +38,5 @@ verify:
     - name: counter-check
       validator: sys_counter
       spec:
-        expect_received_minimum_log_num: 10
+        expect_received_minimum_log_num:1 10
 testing_interval: 20s
