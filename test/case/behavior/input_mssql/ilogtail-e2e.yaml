@@ -36,6 +36,6 @@ verify:
     - name: counter-check
       validator: sys_counter
       spec:
-        log_minimum_number: 100
+        expect_received_minimum_log_num: 3
 
 testing_interval: 10s
