@@ -10,7 +10,7 @@
 | `mem_usage_limit`       | Int    | <p></p><p>内存使用阈值。</p><p><strong>警告</strong> <code>mem_usage_limit</code>为软限制，实际<code>iLogtail</code>占用的内存可能超过限制值，超限5分钟后将触发熔断保护，Logtail自动重启。</p>                                                                                      |
 | `default_access_key_id` | String | 写入`SLS`的`access_id`，需要具备写入权限。                                                                                                                                                                                                                |
 | `default_access_key`    | String | 写入`SLS`的`access_key`，需要具备写入权限。                                                                                                                                                                                                                 |
-| `config_update_interval`    | Int | 本地配置热加载的更新间隔，单位为秒。<br>**注意：热加载功能仅限社区版，商业版暂不支持配置文件热加载。**                                                                                                                                                                                                                 |
+| `config_update_interval`    | Int | 本地配置热加载的更新间隔，单位为秒。<br>**注意：此参数仅对社区版有效。**                                                                                                                                                                                                                 |
 
 ## 典型配置
 
@@ -19,7 +19,6 @@
     "default_access_key_id": "",
     "default_access_key": "",
     "cpu_usage_limit" : 0.4,
-    "mem_usage_limit" : 384,
-    "config_update_interval": 10
+    "mem_usage_limit" : 384
 }
 ```

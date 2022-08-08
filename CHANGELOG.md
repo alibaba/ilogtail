@@ -46,3 +46,4 @@ your changes, such as:
 - [public] [both] [added] Add support for accelerate processor
 - [public] [both] [updated] Improve file_log plugin
 - [public] [linux] [added] Add support for local config hot reloading
+- [public] [both] [fixed] fix yaml parsing problem for purely-digit values
