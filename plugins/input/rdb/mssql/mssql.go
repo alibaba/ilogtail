@@ -83,7 +83,7 @@ func (m *Mssql) dsnConfig() string {
 		m.Port = 1433
 	}
 
-	conn := fmt.Sprintf("server=%s;port=%d;database=%s;user id=%s;password=%s;dial timeout=%s;connection timeout=%s",
+	conn := fmt.Sprintf("server=%s;port=%d;database=%s;user id=%s;password=%s;dial timeout=%s;connection timeout=%s;encrypt=disable",
 		m.Address,
 		m.Port,
 		m.DataBase,
