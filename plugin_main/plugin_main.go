@@ -29,6 +29,7 @@ import (
 	"github.com/alibaba/ilogtail/plugin_main/flags"
 	_ "github.com/alibaba/ilogtail/plugin_main/wrapmemcpy"
 	_ "github.com/alibaba/ilogtail/plugins/all"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 // main export http control method in pure GO.
