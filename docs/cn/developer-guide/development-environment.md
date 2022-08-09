@@ -2,6 +2,15 @@
 
 虽然[源代码编译](docs/cn/installation/sources/build.md)已经提供了方便的iLogtail编译方法，但却不适合开发场景。因为开发过程中需要不断进行编译调试，重复全量编译的速度太慢，因此需要构建支持增量编译开发环境。
 
+## 进程结构
+iLogtail为了支持插件系统，引入了 libPluginAdaptor 和 libPluginBase（以下简称 adaptor 和 base）这两个动态库，它们与 iLogtail 之间的关系如下：<br />
+iLogtail 动态依赖于这两个动态库（即 binary 中不依赖），在初始化时，iLogtail 会尝试使用动态库接口（如 dlopen）动态加载它们，获取所需的符号。<br />
+Adaptor 充当一个中间层，iLogtail 和 base 均依赖它，iLogtail 向 adaptor 注册回调，adpator 将这些回调记录下来以接口的形式暴露给 base 使用。<br />
+Base 是插件系统的主体，它包含插件系统所必须的采集、处理、聚合以及输出（向 iLogtail 递交可以视为其中一种）等功能。<br />
+因此，完整的iLogtail包含ilogtail、libPluginAdaptor.so 和 libPluginBase.so 3个二进制文件。
+
+![image.png](https://sls-opensource.oss-us-west-1.aliyuncs.com/ilogtail/ilogtail-adapter-cgo.png)
+
 ## 目录结构 <a name="iKc61"></a>
 
 iLogtail的大致目录结构如下：
@@ -64,7 +73,7 @@ go install ...
 
 ### 1. 安装插件  <a name="zpMpx"></a>
 
-在VS Code的Marketplace中搜索“Remote Development”安装插件。<br />![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2022/png/31056853/1659940035893-bcb86ace-c6b2-453a-909f-9b906d1cfd2a.png#clientId=ufd0bf718-58d2-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=294&id=u32714f5f&margin=%5Bobject%20Object%5D&name=image.png&originHeight=646&originWidth=1166&originalType=binary&ratio=1&rotation=0&showTitle=false&size=123767&status=done&style=none&taskId=ud54f4874-76fb-4eca-babb-87d152e8edc&title=&width=529.9999885125596)
+在VS Code的Marketplace中搜索“Remote Development”安装插件。<br />![image.png](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/developer-guide/development-environment/vscode-remote-development-plugin.png)
 
 ### 2. 创建镜像开发环境配置  <a name="S3QyX"></a>
 
@@ -87,7 +96,7 @@ go install ...
 
 ```
 
-其中，image指定了ilogtail的开发镜像地址，customizations.vscode.extensions指定了开发环境的插件。部分插件介绍如下，开发者也可以按照自己的习惯进行修改。
+其中，image指定了ilogtail的开发镜像地址，customizations.vscode.extensions指定了开发环境的插件。部分插件介绍如下，开发者也可以按照自己的习惯进行修改，[欢迎讨论](https://github.com/alibaba/ilogtail/discussions/299)。
 
 | **插件名** | **用途** |
 | --- | --- |
@@ -98,11 +107,11 @@ go install ...
 
 ### 3. 在容器中打开代码库  <a name="Rsqu1"></a>
 
-使用Shift + Command + P（Mac）或Ctrl + Shift + P（Win）打开命令面板，输入`reopen`，选择`Remote-Containers: Reopen in Container`。<br />![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2022/png/31056853/1659944991094-2683623d-3165-4953-8fa6-82f2c56917fe.png#clientId=ufd0bf718-58d2-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=63&id=u8227ef4a&margin=%5Bobject%20Object%5D&name=image.png&originHeight=138&originWidth=1462&originalType=binary&ratio=1&rotation=0&showTitle=false&size=23045&status=done&style=none&taskId=u1700aba5-6086-4215-bc8a-3831e5f5433&title=&width=664.54544014182)<br />或者若出现如下图提示，则可以直接点击在容器中重新打开。<br />![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2022/png/31056853/1659944851808-4ca87b97-d43e-41e7-ae30-7a1dfd6c279e.png#clientId=ufd0bf718-58d2-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=116&id=u675ad794&margin=%5Bobject%20Object%5D&name=image.png&originHeight=256&originWidth=1078&originalType=binary&ratio=1&rotation=0&showTitle=false&size=46758&status=done&style=none&taskId=u6671f647-4606-4a48-b2c4-24017be97d9&title=&width=489.99998937953626)<br />首次打开时会比较慢，因为要下载编译镜像并安装插件，后面再次打开时速度会很快。按照提示进行镜像Build。<br />完成上述步骤后，我们已经可以使用VS Code进行代码编辑，并在其中进行代码编译。<br />注：如果以前拉取过编译镜像，可能需要触发`Remote-Containers: Rebuild Container Without Cache`重新构建。
+使用Shift + Command + P（Mac）或Ctrl + Shift + P（Win）打开命令面板，输入`reopen`，选择`Remote-Containers: Reopen in Container`。<br />![image.png](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/developer-guide/development-environment/reopen-in-palette.png)<br />或者若出现如下图提示，则可以直接点击在容器中重新打开。<br />![image.png](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/developer-guide/development-environment/reopen-in-tip.png)<br />首次打开时会比较慢，因为要下载编译镜像并安装插件，后面再次打开时速度会很快。按照提示进行镜像Build。<br />完成上述步骤后，我们已经可以使用VS Code进行代码编辑，并在其中进行代码编译。<br />注：如果以前拉取过编译镜像，可能需要触发`Remote-Containers: Rebuild Container Without Cache`重新构建。
 
 ### 4. 在容器中进行编译  <a name="wEf4T"></a>
 
-打开新Terminal（找不到的可以在命令面板中打Terminal，选择新开一个）<br />![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2022/png/31056853/1659947544982-af9008df-6bd4-4808-a42d-5cfd3f6346c0.png#clientId=ufd0bf718-58d2-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=45&id=uc3163db1&margin=%5Bobject%20Object%5D&name=image.png&originHeight=100&originWidth=2006&originalType=binary&ratio=1&rotation=0&showTitle=false&size=17267&status=done&style=none&taskId=ub288fe27-af01-40e2-8c6b-5197bc3e734&title=&width=911.8181620550554)
+打开新Terminal（找不到的可以在命令面板中打Terminal，选择新开一个）<br />![image.png](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/developer-guide/development-environment/terminal.png)
 
 - 编译Go插件
 
@@ -111,7 +120,7 @@ make vendor       # 若需要更新插件库
 make plugin_local # 每次更新插件代码后从这里开始
 ```
 
-![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2022/png/31056853/1659947113467-9b3c3209-bec1-4bc6-ad4a-462dea33d63c.png#clientId=ufd0bf718-58d2-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=103&id=u8fdb824d&margin=%5Bobject%20Object%5D&name=image.png&originHeight=226&originWidth=1370&originalType=binary&ratio=1&rotation=0&showTitle=false&size=59631&status=done&style=none&taskId=u92534890-1de4-4cf1-b66f-d585a12f643&title=&width=622.7272592300229)<br />如果只是对插件代码进行了修改，则只需要执行最后一行命令即可增量编译。
+![image.png](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/developer-guide/development-environment/go-compile-result.png)<br />如果只是对插件代码进行了修改，则只需要执行最后一行命令即可增量编译。
 
 - 编译C++代码
 
@@ -122,7 +131,20 @@ cmake ..            # 若增删文件，修改CMakeLists.txt后需要重新执�
 make -sj$(nproc)    # 每次更新core代码后从这里开始
 ```
 
-![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2022/png/31056853/1659947164487-8266486b-1ed6-4224-896c-54839d20d2fb.png#clientId=ufd0bf718-58d2-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=84&id=u525bebe2&margin=%5Bobject%20Object%5D&name=image.png&originHeight=184&originWidth=1788&originalType=binary&ratio=1&rotation=0&showTitle=false&size=103041&status=done&style=none&taskId=ub8a6ef23-0526-4d99-8fa0-95f9ccb73b7&title=&width=812.7272551118839)![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2022/png/31056853/1659947380788-d9b7da88-1b01-4ddc-b56b-19a02251d106.png#clientId=ufd0bf718-58d2-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=108&id=uaa665a65&margin=%5Bobject%20Object%5D&name=image.png&originHeight=238&originWidth=2298&originalType=binary&ratio=1&rotation=0&showTitle=false&size=101069&status=done&style=none&taskId=u82aca763-5818-46a9-bb29-d3064979c9e&title=&width=1044.545431905542)<br />如果只是对core代码进行了修改，则只需要执行最后一行命令即可增量编译。<br />默认的编译开关没有打开UT，如果需要编译UT，可以打开开关。替换上述第2行为
+![image.png](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/developer-guide/development-environment/c%2B%2B-compiling.png)<br />![image.png](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/developer-guide/development-environment/c%2B%2B-compile-result.png)
+
+
+如果只是对core代码进行了修改，则只需要执行最后一行命令即可增量编译。
+
+默认的编译选项代码可能被优化，若需要Debug建议修改CMAKE_BUILD_TYPE开关。替换上述第2行为
+
+```bash
+cmake -D CMAKE_BUILD_TYPE=Debug ..
+```
+
+同理，若需要明确需要代码优化，则将上面的Debug改为Release。
+
+默认的编译开关没有打开UT，如果需要编译UT，需要增加BUILD_LOGTAIL_UT开关。替换上述第2行为
 
 ```bash
 cmake -DBUILD_LOGTAIL_UT=ON ..
@@ -134,7 +156,7 @@ cmake -DBUILD_LOGTAIL_UT=ON ..
 
 ### 5. 获取编译产出  <a name="X0fef"></a>
 
-由于VS Code是直接将代码库目录挂载到镜像内的，因此主机上可以直接访问镜像内的编译产出。<br />![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2022/png/31056853/1659947451606-ef5928fa-303f-40d3-bed2-5eb4f79292c3.png#clientId=ufd0bf718-58d2-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=139&id=uefcdb9e2&margin=%5Bobject%20Object%5D&name=image.png&originHeight=306&originWidth=2268&originalType=binary&ratio=1&rotation=0&showTitle=false&size=103664&status=done&style=none&taskId=u85b814c6-2d10-4fbe-b643-58ad2f20b0b&title=&width=1030.9090685647386)<br />目前，镜像使用的是root用户权限，因此在主机上可能需要执行`sudo chown -R $USER .`来修复一下权限。
+由于VS Code是直接将代码库目录挂载到镜像内的，因此主机上可以直接访问镜像内的编译产出。<br />![image.png](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/developer-guide/development-environment/artifacts-on-host.png)<br />目前，镜像使用的是root用户权限，因此在主机上可能需要执行`sudo chown -R $USER .`来修复一下权限。
 
 可以将C++核心的构建结果拷贝到`./output`目录组装出完整的构建结果。
 
@@ -177,3 +199,40 @@ docker exec -it ilogtail-build bash
 ### 4. 在容器内编译
 
 后续步骤均与VS Code的操作步骤相同。
+
+## 使用编译产出
+
+在主机上，编译的后的产出可以直接替换对应的文件使用。而对于容器场景，虽然在编译镜像内没有制作镜像能力，但通过下面的方法可以在不制作新镜像的情况下实现快速测试。
+
+### 1. 修改官方镜像entrypoint
+
+基于官方镜像包进行调试，首先用bash覆盖官方镜像的entrypoint，避免杀死ilogtail后容器直接退出。
+- docker：指定CMD
+
+```bash
+docker run -it --name docker_ilogtail -v /:/logtail_host:ro -v /var/run:/var/run aliyun/ilogtail:<VERSION> bash
+```
+
+- k8s：用command覆盖entrypoint
+
+```yaml
+   command:
+        - sleep
+        - 'infinity'
+  # 删除livenessProbe，要不然会因为探测不到端口重启
+```
+
+### 2. 将自己编的二进制文件、so，替换到容器里
+
+由于ilogtail容器挂载了主机目录，因此将需要替换掉文件放到主机目录上容器内就能访问。
+
+```bash
+# 将开发机上编译的so scp到container所在node上
+scp libPluginBase.so <user>@<node>:/home/<user>
+```
+
+主机的根路径在ilogtail容器中位于/logtail_host，找到对应目录进行copy即可。
+
+```bash
+cp /logtail_host/home/<user>/libPluginBase.so /usr/local/ilogtail
+```
