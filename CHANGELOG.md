@@ -36,10 +36,9 @@ your changes, such as:
 ## [Unreleased]
 - [public] [both] [updated] change CGO ProcessLogs API to ProcessLog
 - [public] [both] [fixed] fixed GetContainerMeta data race problem
-- [public] [both] [added] add cpp core source code
-- [public] [both] [fixed] netping plugin fix httping for dns resolve
 - [public] [both] [updates] kubernetes meta plugin add resource reference for collecting Service meta
 - [public] [both] [added] Decode the CSV record in the log.
 - [public] [both] [fixed] fix yaml parsing for purely digits value
 - [public] [both] [added] Add support for accelerate processor
 - [public] [both] [updated] Improve file_log plugin
+- [public] [both] [added] Add liveness probe for k8s deployment
