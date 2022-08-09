@@ -20,6 +20,7 @@ import (
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input/rdb"
+	_ "github.com/jackc/pgx/v4/stdlib"
 
 	"net/url"
 	"strconv"

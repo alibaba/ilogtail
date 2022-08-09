@@ -43,3 +43,5 @@ your changes, such as:
 - [public] [both] [fixed] fix yaml parsing for purely digits value
 - [public] [both] [added] Add support for accelerate processor
 - [public] [both] [updated] Improve file_log plugin
+- [public] [both] [added] Add support for PostgreSQL input
+- [public] [both] [added] Add support for SqlServer input
