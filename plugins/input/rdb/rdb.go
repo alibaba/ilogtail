@@ -40,8 +40,6 @@ type CheckPoint struct {
 }
 
 type Rdb struct {
-	DefaultCharset        string
-	ColumnsCharset        map[string]string
 	ColumnsHash           map[string]string
 	ConnectionRetryTime   int
 	ConnectionRetryWaitMs int
@@ -52,7 +50,6 @@ type Rdb struct {
 	User                  string
 	Password              string
 	PasswordPath          string
-	Location              string
 	DialTimeOutMs         int
 	ReadTimeOutMs         int
 	Limit                 bool
@@ -67,9 +64,6 @@ type Rdb struct {
 	CheckPointStart       string
 	CheckPointSavePerPage bool
 	IntervalMs            int
-	SSLCA                 string
-	SSLCert               string
-	SSLKey                string
 
 	// inner params
 	checkpointColumnIndex int
@@ -259,7 +253,7 @@ func (m *Rdb) Collect(collector ilogtail.Collector, columnResolverFuncMap map[st
 			}
 			select {
 			case <-m.Shutdown:
-				// repush a object and break
+				// repush an object and break
 				m.Shutdown <- struct{}{}
 				logger.Info(m.Context.GetRuntimeContext(), "syn sql success, data count", rowCount, "offset", startOffset, "pagesize", m.PageSize)
 				break ForBlock

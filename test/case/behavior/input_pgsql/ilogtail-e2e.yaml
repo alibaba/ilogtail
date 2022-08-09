@@ -17,8 +17,23 @@ boot:
 ilogtail:
   config:
     - name: input-pgsql-case
-      content:
-        - '{"inputs":[{"detail":{"Address":"pgsql","CheckPoint":true,"CheckPointColumn":"id","CheckPointColumnType":"int","CheckPointSavePerPage":true,"CheckPointStart":"0","DataBase":"postgres","IntervalMs":1000,"Limit":true,"MaxSyncSize":100,"PageSize":100,"Password":"postgres","StateMent":"select * from specialalarmtest where id > $1","User":"postgres"},"type":"service_pgsql"}]}'
+      detail:
+        - inputs:
+          - Type: service_pgsql
+            Address: pgsql
+            CheckPoint: true
+            CheckPointColumn: id
+            CheckPointColumnType: int
+            CheckPointSavePerPage: true
+            CheckPointStart: "0"
+            Database: postgres
+            IntervalMs: 1000
+            Limit: true
+            MaxSyncSize: 100
+            PageSize: 100
+            User: postgres
+            Password: postgres
+            StateMent: "select * from specialalarmtest where id > $1"
   close_wait: 5s
   depends_on:
     pgsql:

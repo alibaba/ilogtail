@@ -17,8 +17,23 @@ boot:
 ilogtail:
   config:
     - name: input-mssql-case
-      content:
-        - '{"inputs":[{"detail":{"Address":"mssql","CheckPoint":true,"CheckPointColumn":"id","CheckPointColumnType":"int","CheckPointSavePerPage":true,"CheckPointStart":"0","DataBase":"LogtailTest","IntervalMs":1000,"Limit":true,"MaxSyncSize":100,"PageSize":100,"Password":"MSsqlpa#1word","StateMent":"select * from LogtailTestTable where id > ? ORDER BY id","User":"sa"},"type":"service_mssql"}]}'
+      detail:
+        - inputs:
+          - Type: service_mssql
+            Address: mssql
+            CheckPoint: true
+            CheckPointColumn: id
+            CheckPointColumnType: int
+            CheckPointSavePerPage: true
+            CheckPointStart: "0"
+            Database: LogtailTest
+            IntervalMs: 1000
+            Limit: true
+            MaxSyncSize: 100
+            PageSize: 100
+            User: sa
+            Password: MSsqlpa#1word
+            StateMent: "select * from LogtailTestTable where id > ? ORDER BY id"
   close_wait: 5s
   depends_on:
     setup:
