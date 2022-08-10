@@ -19,6 +19,7 @@
 #elif defined(_MSC_VER)
 #include <Psapi.h>
 #endif
+#include <functional>
 #include <fstream>
 #include "common/Constants.h"
 #include "common/ExceptionBase.h"
@@ -26,6 +27,7 @@
 #include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
 #include "common/RuntimeUtil.h"
+#include "common/DevInode.h"
 #include "common/GlobalPara.h"
 #include "common/version.h"
 #include "log_pb/sls_logs.pb.h"
@@ -40,7 +42,7 @@
 #if defined(__linux__)
 #include "ObserverManager.h"
 #endif
-
+#include "sdk/Common.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -222,6 +224,9 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
         _exit(1);
     }
 
+    // the unique id of current instance
+    std::string id = sdk::Base64Enconde(LogFileProfiler::mHostname + LogFileProfiler::mIpAddr + ILOGTAIL_VERSION + GetProcessExecutionDir());
+
     // Collect status information to send.
     LogGroup logGroup;
     logGroup.set_category(category);
@@ -244,6 +249,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "aliuids", ConfigManager::GetInstance()->GetAliuidSet());
     AddLogContent(logPtr, "projects", ConfigManager::GetInstance()->GetAllProjectsSet());
     AddLogContent(logPtr, "instance_id", ConfigManager::GetInstance()->GetInstanceId());
+    AddLogContent(logPtr, "instance_key", id);
     AddLogContent(logPtr, "syslog_open", AppConfig::GetInstance()->GetOpenStreamLog());
     // Host informations.
     AddLogContent(logPtr, "ip", LogFileProfiler::mIpAddr);
