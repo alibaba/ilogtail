@@ -373,14 +373,14 @@ public:
     bool GarbageCollection(uint64_t expireTimeNs) {
         while (mHeadRequestsIdx <= mTailRequestsIdx) {
             if (this->GetReqFront()->TimeNano < expireTimeNs) {
-                mHeadRequestsIdx++;
+                ++mHeadRequestsIdx;
                 continue;
             }
             break;
         }
         while (mHeadResponsesIdx <= mTailResponsesIdx) {
             if (this->GetRespFront()->TimeNano < expireTimeNs) {
-                mHeadResponsesIdx++;
+                ++mHeadResponsesIdx;
                 continue;
             }
             break;
@@ -410,7 +410,7 @@ private:
         // pop illegal nodes with sequence when the timeNano of them is less than the front request node.
         while (true) {
             if (resp != nullptr && resp->TimeNano < req->TimeNano) {
-                this->mHeadResponsesIdx++;
+                ++this->mHeadResponsesIdx;
                 resp = this->GetRespFront();
                 continue;
             }
@@ -424,8 +424,8 @@ private:
         if (this->mConvertEventFunc != nullptr && this->mConvertEventFunc(req, resp, event)) {
             success = this->mAggregators->AddEvent(&event);
         }
-        this->mHeadRequestsIdx++;
-        this->mHeadResponsesIdx++;
+        ++this->mHeadRequestsIdx;
+        ++this->mHeadResponsesIdx;
         return success;
     }
 
@@ -437,7 +437,7 @@ private:
         }
         // pop the resp node when the timeNano before the first req node.
         if (resp->TimeNano < req->TimeNano) {
-            this->mHeadResponsesIdx++;
+            ++this->mHeadResponsesIdx;
             return true;
         }
         // try to find the most matching req node, that means they are having the most closing timeNano.
@@ -446,7 +446,7 @@ private:
             if (this->GetReqByIndex(idx)->TimeNano > resp->TimeNano) {
                 break;
             }
-            idx++;
+            ++idx;
         }
         this->mHeadRequestsIdx = idx - 1;
         req = this->GetReqFront();
@@ -461,15 +461,15 @@ private:
                           "head_resp", this->mHeadRequestsIdx)("tail_resp", this->mTailResponsesIdx));
             success = this->mAggregators->AddEvent(&event);
         }
-        this->mHeadRequestsIdx++;
-        this->mHeadResponsesIdx++;
+        ++this->mHeadRequestsIdx;
+        ++this->mHeadResponsesIdx;
         return success;
     }
 
     reqType* GetReqPos() {
-        this->mTailRequestsIdx++;
+        ++this->mTailRequestsIdx;
         if (mTailRequestsIdx - mHeadRequestsIdx == capacity) {
-            mHeadRequestsIdx++;
+            ++mHeadRequestsIdx;
         }
         return this->mRequests[mTailRequestsIdx & (capacity - 1)];
     }
@@ -482,9 +482,9 @@ private:
     }
 
     respType* GetRespPos() {
-        this->mTailResponsesIdx++;
+        ++this->mTailResponsesIdx;
         if (mTailResponsesIdx - mHeadResponsesIdx == capacity) {
-            mHeadResponsesIdx++;
+            ++mHeadResponsesIdx;
         }
         return this->mResponses[mTailResponsesIdx & (capacity - 1)];
     }

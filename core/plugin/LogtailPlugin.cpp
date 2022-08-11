@@ -483,19 +483,19 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
                 std::string key, value;
                 key.assign(innerMeta->containerLabelsKey[i]);
                 value.assign(innerMeta->containerLabelsVal[i]);
-                meta.containerLabels.insert(std::make_pair(key, value));
+                meta.containerLabels.insert(std::make_pair(std::move(key), std::move(key)));
             }
             for (int i = 0; i < innerMeta->k8sLabelsSize; ++i) {
                 std::string key, value;
                 key.assign(innerMeta->k8sLabelsKey[i]);
                 value.assign(innerMeta->k8sLabelsVal[i]);
-                meta.k8sLabels.insert(std::make_pair(key, value));
+                meta.k8sLabels.insert(std::make_pair(std::move(key), std::move(key)));
             }
             for (int i = 0; i < innerMeta->envSize; ++i) {
                 std::string key, value;
                 key.assign(innerMeta->envsKey[i]);
                 value.assign(innerMeta->envsVal[i]);
-                meta.envs.insert(std::make_pair(key, value));
+                meta.envs.insert(std::make_pair(std::move(key), std::move(key)));
             }
             free(innerMeta->containerName);
             free(innerMeta->image);

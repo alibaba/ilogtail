@@ -264,7 +264,10 @@ ProcessMetaPtr ContainerProcessGroupManager::GetProcessMeta(uint32_t pid) {
                               ("getMeta get container meta for pid", pid)("id", containerID)("meta",
                                                                                              containerMeta.ToString()));
                 }
-                ProcessMetaPtr meta(new ProcessMeta);
+                ProcessMetaPtr meta = mProcessMetaMap.find(pids[i]) == mProcessMetaMap.end()
+                    ? std::make_shared<ProcessMeta>()
+                    : mProcessMetaMap[pids[i]];
+                meta->Clear();
                 meta->PID = pids[i];
                 meta->Container.ContainerID = containerID;
                 meta->Pod.PodUUID = podID;

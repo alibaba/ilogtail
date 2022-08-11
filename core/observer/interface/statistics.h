@@ -99,14 +99,12 @@ struct ConnectionMetaStatistic {
 
     void FlushMetrics() {
         static auto sMonitor = LogtailMonitor::Instance();
-        static auto sInstance = GetInstance();
-        sMonitor->UpdateMetric("observer_connmeta_socket_get_count", sInstance->mGetSocketInfoCount);
-        sMonitor->UpdateMetric("observer_connmeta_socket_get_fail_count", sInstance->mGetSocketInfoFailCount);
-        sMonitor->UpdateMetric("observer_connmeta_socket_create_prober_count", sInstance->mGetNetlinkProberCount);
-        sMonitor->UpdateMetric("observer_connmeta_socket_create_prober_fail_count",
-                               sInstance->mGetNetlinkProberFailCount);
-        sMonitor->UpdateMetric("observer_connmeta_socket_fetch_netlink_count", sInstance->mFetchNetlinkCount);
-        sInstance->doClear();
+        sMonitor->UpdateMetric("observer_connmeta_socket_get_count", mGetSocketInfoCount);
+        sMonitor->UpdateMetric("observer_connmeta_socket_get_fail_count", mGetSocketInfoFailCount);
+        sMonitor->UpdateMetric("observer_connmeta_socket_create_prober_count", mGetNetlinkProberCount);
+        sMonitor->UpdateMetric("observer_connmeta_socket_create_prober_fail_count", mGetNetlinkProberFailCount);
+        sMonitor->UpdateMetric("observer_connmeta_socket_fetch_netlink_count", mFetchNetlinkCount);
+        doClear();
     }
 
     friend std::ostream& operator<<(std::ostream& os, const ConnectionMetaStatistic& statistic) {

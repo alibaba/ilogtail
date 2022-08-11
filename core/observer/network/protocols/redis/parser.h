@@ -60,7 +60,7 @@ public:
     RedisProtocolParser(RedisProtocolEventAggregator* aggregator, PacketEventHeader* header)
         : mCache(aggregator), mKey(header) {
         mCache.BindConvertFunc([&](RedisRequestInfo* req, RedisResponseInfo* resp, RedisProtocolEvent& event) {
-            event.Info.LatencyNs = req->TimeNano - resp->TimeNano;
+            event.Info.LatencyNs = resp->TimeNano - req->TimeNano;
             if (event.Info.LatencyNs < 0) {
                 event.Info.LatencyNs = 0;
             }
