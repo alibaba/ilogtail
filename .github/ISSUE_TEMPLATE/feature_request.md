@@ -1,8 +1,8 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: New feature request
 title: "[FEATURE]:"
-labels: ''
+labels: 'feature request'
 assignees: ''
 
 ---
@@ -18,7 +18,8 @@ A clear and concise description of what you want to achieve and implement. For e
 **Additional comments**
 Add any other context or screenshots about the feature request here. 
 For example, the ideal input and output logs.
-> The logs is supposed to have the following contents, e.g.,
-> ```
+> The logs are supposed to have the following contents, e.g.,
+>
+> ```json
 > {"_target_":"127.0.0.1","_field_":"DISMAN-EXPRESSION-MIB::sysUpTimeInstance","_oid_":".1.3.6.1.2.1.1.3.0","_type_":"TimeTicks","_content_":"10423593"}
 > ```

@@ -13,36 +13,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -ue
+set -o pipefail
+
 # Currently, there are 4 supported categories, which are plugin, core, all and e2e.
 #
 # plugin: Only build Linux dynamic lib with Golang part.
 # core: Only build the CPP part.
 # all: Do the above plugin and core steps.
 # e2e: Build plugin dynamic lib with GOC and build the CPP part.
-export CATEGORY=$1
+CATEGORY=$1
 GENERATED_HOME=$2
-export VERSION=${3:-1.1.0}
-export REPOSITORY=${4:-aliyun/ilogtail}
-export OUT_DIR=${5:-output}
+VERSION=${3:-1.1.0}
+REPOSITORY=${4:-aliyun/ilogtail}
+OUT_DIR=${5:-output}
 
 BUILD_SCRIPT_FILE=$GENERATED_HOME/gen_build.sh
 COPY_SCRIPT_FILE=$GENERATED_HOME/gen_copy_docker.sh
 
 function generateBuildScript() {
-  rm -rf $BUILD_SCRIPT_FILE && touch $BUILD_SCRIPT_FILE && chmod 755 $BUILD_SCRIPT_FILE
+  rm -rf $BUILD_SCRIPT_FILE && echo -e "#!/bin/bash\nset -ue\nset -o pipefail\n" > $BUILD_SCRIPT_FILE && chmod 755 $BUILD_SCRIPT_FILE
   if [ $CATEGORY = "plugin" ]; then
     echo './scripts/plugin_build.sh vendor c-shared '${OUT_DIR} >> $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "core" ]; then
-    echo "mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj\$(nproc)" >>  $BUILD_SCRIPT_FILE;
+    echo "mkdir -p core/build && cd core/build && cmake -D CMAKE_BUILD_TYPE=Release -D LOGTAIL_VERSION=${VERSION} .. && make -sj\$(nproc)" >>  $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "all" ]; then
-    echo "./scripts/plugin_build.sh vendor c-shared ${OUT_DIR} && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj\$(nproc)" >> $BUILD_SCRIPT_FILE;
+    echo "./scripts/plugin_build.sh vendor c-shared ${OUT_DIR} && mkdir -p core/build && cd core/build && cmake -D CMAKE_BUILD_TYPE=Release -D LOGTAIL_VERSION=${VERSION} .. && make -sj\$(nproc)" >> $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "e2e" ]; then
     echo "./scripts/plugin_gocbuild.sh ${OUT_DIR} && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj\$(nproc)" >> $BUILD_SCRIPT_FILE;
   fi
 }
 
 function generateCopyScript() {
-  rm -rf $COPY_SCRIPT_FILE && touch $COPY_SCRIPT_FILE && chmod 755 $COPY_SCRIPT_FILE
+  rm -rf $COPY_SCRIPT_FILE && echo -e "#!/bin/bash\nset -ue\nset -o pipefail\n" > $COPY_SCRIPT_FILE && chmod 755 $COPY_SCRIPT_FILE
   echo 'BINDIR=$(cd $(dirname "${BASH_SOURCE[0]}")&& cd .. && pwd)/'${OUT_DIR}'/' >> $COPY_SCRIPT_FILE
   echo 'rm -rf $BINDIR && mkdir $BINDIR' >> $COPY_SCRIPT_FILE
   echo "id=\$(docker create ${REPOSITORY}:${VERSION})" >> $COPY_SCRIPT_FILE
@@ -62,11 +65,6 @@ function generateCopyScript() {
   echo 'docker rm -v "$id"' >> $COPY_SCRIPT_FILE;
 }
 
-mkdir $GENERATED_HOME
+mkdir -p $GENERATED_HOME
 generateBuildScript
 generateCopyScript
-
-
-
-
-
