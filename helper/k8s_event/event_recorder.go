@@ -1,7 +1,6 @@
 package k8s_event
 
 import (
-	//"github.com/golang/glog"
 	"context"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -23,11 +22,11 @@ type EventRecorder struct {
 }
 
 var eventRecorder = &EventRecorder{}
+var nodeIp string
 
 func SetEventRecorder(kubeclientset *kubernetes.Clientset, module string) {
-	//glog.V(4).Info("Creating event broadcaster")
+	logger.Info(context.Background(), "Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
-	//eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: Logtail})
 
@@ -35,16 +34,15 @@ func SetEventRecorder(kubeclientset *kubernetes.Clientset, module string) {
 	eventRecorder.define = *NewEventDefine(module)
 }
 
-func Init() {
+func Init(nodeIpStr string) {
 	var cfg *restclient.Config
 
 	cfg, err := restclient.InClusterConfig()
 	logger.Info(context.Background(), "init event_revorder", "")
-
+	nodeIp = nodeIpStr
 	//cfg, err := clientcmd.BuildConfigFromFlags("", "/root/.kube/config")
 	if err != nil {
-		//logger.Error("INIT_ALARM", "Error building kubeconfig: %s", err.Error())
-		panic(nil)
+		logger.Error(context.Background(), "INIT_ALARM", "Error create EventRecorder: %s", err.Error())
 	}
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	SetEventRecorder(kubeClient, "logtail")
@@ -89,13 +87,17 @@ func (e *EventRecorder) SendErrorEventWithAnnotation(object runtime.Object, anno
 }
 
 func (e *EventRecorder) GetObject() runtime.Object {
-	testPod := &v1.Pod{
+	podName := "logtail-ds"
+	if len(nodeIp) > 0 {
+		podName = podName + "-" + nodeIp
+	}
+	fakePod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "logtail-ds",
+			Name:      podName,
 			Namespace: "kube-system",
 		},
 	}
-	ref, err := ref.GetReference(scheme.Scheme, testPod)
+	ref, err := ref.GetReference(scheme.Scheme, fakePod)
 	if err == nil {
 		return ref
 	} else {

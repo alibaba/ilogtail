@@ -136,7 +136,9 @@ func initConfig() {
 		logger.Info(context.Background(), "init docker env config, ECS flag", *AliCloudECSFlag, "prefix", *DockerConfigPrefix, "project", *DefaultLogProject, "machine group", *DefaultLogMachineGroup, "id", *DefaultAccessKeyID)
 
 		if *K8sFlag {
-			k8s_event.Init()
+			nodeIp := ""
+			_ = util.InitFromEnvString("_node_ip_", &nodeIp, nodeIp)
+			k8s_event.Init(nodeIp)
 		}
 
 		_ = util.InitFromEnvBool("ALICLOUD_LOG_DOCKER_ENV_CONFIG_SELF", &selfEnvConfigFlag, false)

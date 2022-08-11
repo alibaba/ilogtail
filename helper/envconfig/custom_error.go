@@ -15,6 +15,8 @@ type CustomError struct {
 	RawError  error
 }
 
+var popErrorRegex = `[\s\S]*ErrorCode: (.*)[\s\S]*RequestId: (.*)[\s\S]*Message: (.*)`
+
 func (e *CustomError) CustomError() string {
 	err, _ := json.Marshal(e)
 	return string(err)
@@ -57,7 +59,7 @@ func CustomErrorFromSlsSDKError(slsSDKError error) *CustomError {
 }
 
 func CustomErrorFromPopError(popError error) *CustomError {
-	compileRegex := regexp.MustCompile(`[\s\S]*ErrorCode: (.*)[\s\S]*RequestId: (.*)[\s\S]*Message: (.*)`)
+	compileRegex := regexp.MustCompile(popErrorRegex)
 	matchArr := compileRegex.FindStringSubmatch(popError.Error())
 	if len(matchArr) == 0 {
 		return &CustomError{
