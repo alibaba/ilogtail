@@ -39,6 +39,10 @@
 #include "app_config/AppConfig.h"
 #include "event_handler/LogInput.h"
 #include "plugin/LogtailPlugin.h"
+#if defined(__linux__)
+#include "ObserverManager.h"
+#endif
+#include "sdk/Common.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -220,6 +224,9 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
         _exit(1);
     }
 
+    // the unique id of current instance
+    std::string id = sdk::Base64Enconde(LogFileProfiler::mHostname + LogFileProfiler::mIpAddr + ILOGTAIL_VERSION + GetProcessExecutionDir());
+
     // Collect status information to send.
     LogGroup logGroup;
     logGroup.set_category(category);
@@ -242,6 +249,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "aliuids", ConfigManager::GetInstance()->GetAliuidSet());
     AddLogContent(logPtr, "projects", ConfigManager::GetInstance()->GetAllProjectsSet());
     AddLogContent(logPtr, "instance_id", ConfigManager::GetInstance()->GetInstanceId());
+    AddLogContent(logPtr, "instance_key", id);
     AddLogContent(logPtr, "syslog_open", AppConfig::GetInstance()->GetOpenStreamLog());
     // Host informations.
     AddLogContent(logPtr, "ip", LogFileProfiler::mIpAddr);
@@ -264,6 +272,9 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
                  GetTimeStamp(ConfigManager::GetInstance()->GetLastConfigGetTime(), "%Y-%m-%d %H:%M:%S"));
     UpdateMetric("config_prefer_real_ip", BOOL_FLAG(send_prefer_real_ip));
     UpdateMetric("plugin_enabled", LogtailPlugin::GetInstance()->IsPluginOpened());
+#if defined(__linux__)
+    UpdateMetric("observer_enabled", ObserverManager::GetInstance()->Status());
+#endif
     UpdateMetric("env_config", ConfigManager::GetInstance()->IsEnvConfig());
     const std::vector<sls_logs::LogTag>& envTags = AppConfig::GetInstance()->GetEnvTags();
     if (!envTags.empty()) {
