@@ -1,4 +1,4 @@
-package k8s_event
+package eventrecorder
 
 import (
 	"context"
@@ -22,7 +22,10 @@ type EventRecorder struct {
 }
 
 var eventRecorder = &EventRecorder{}
-var nodeIp string
+var nodeIP string
+var nodeName string
+var podName string
+var podNamespace string
 
 func SetEventRecorder(kubeclientset *kubernetes.Clientset, module string) {
 	logger.Info(context.Background(), "Creating event broadcaster")
@@ -34,22 +37,33 @@ func SetEventRecorder(kubeclientset *kubernetes.Clientset, module string) {
 	eventRecorder.define = *NewEventDefine(module)
 }
 
-func Init(nodeIpStr string) {
+func Init(nodeIPStr, nodeNameStr, podNameStr, podNamespaceStr string) {
 	var cfg *restclient.Config
 
 	cfg, err := restclient.InClusterConfig()
 	logger.Info(context.Background(), "init event_revorder", "")
-	nodeIp = nodeIpStr
-	//cfg, err := clientcmd.BuildConfigFromFlags("", "/root/.kube/config")
+
+	nodeIP = nodeIPStr
+	nodeName = nodeNameStr
+	podName = podNameStr
+	podNamespace = podNamespaceStr
 	if err != nil {
 		logger.Error(context.Background(), "INIT_ALARM", "Error create EventRecorder: %s", err.Error())
+		return
 	}
 	kubeClient, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		logger.Error(context.Background(), "INIT_ALARM", "Error create EventRecorder: %s", err.Error())
+		return
+	}
 	SetEventRecorder(kubeClient, "logtail")
 }
 
 func GetEventRecorder() *EventRecorder {
-	return eventRecorder
+	if eventRecorder.recorder != nil {
+		return eventRecorder
+	}
+	return nil
 }
 
 func (e *EventRecorder) SendNormalEvent(object runtime.Object, action Action, message string) {
@@ -73,6 +87,12 @@ func (e *EventRecorder) SendNormalEventWithAnnotation(object runtime.Object, ann
 	if message == "" {
 		message = "success"
 	}
+	if len(nodeIP) > 0 {
+		annotations["nodeIP"] = nodeIP
+	}
+	if len(nodeName) > 0 {
+		annotations["nodeName"] = nodeName
+	}
 	e.recorder.AnnotatedEventf(object, annotations, corev1.EventTypeNormal, e.define.getInfoAction(action), message)
 }
 
@@ -83,24 +103,43 @@ func (e *EventRecorder) SendErrorEventWithAnnotation(object runtime.Object, anno
 	if alarm == "" {
 		alarm = "Fail"
 	}
+	if len(nodeIP) > 0 {
+		annotations["nodeIP"] = nodeIP
+	}
+	if len(nodeName) > 0 {
+		annotations["nodeName"] = nodeName
+	}
+	if alarm == "" {
+		alarm = CommonAlarm
+	}
 	e.recorder.AnnotatedEventf(object, annotations, corev1.EventTypeWarning, e.define.getErrorAction(action, alarm), message)
 }
 
 func (e *EventRecorder) GetObject() runtime.Object {
-	podName := "logtail-ds"
-	if len(nodeIp) > 0 {
-		podName = podName + "-" + nodeIp
+	currPodName := "logtail-ds"
+	if len(podName) > 0 {
+		currPodName = podName
+	} else {
+		if len(nodeIP) > 0 {
+			currPodName = currPodName + "-" + nodeIP
+		}
 	}
-	fakePod := &v1.Pod{
+
+	currPodNamespace := "kube-system"
+	if len(podNamespace) > 0 {
+		currPodNamespace = podNamespace
+	}
+
+	podInfo := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      podName,
-			Namespace: "kube-system",
+			Name:      currPodName,
+			Namespace: currPodNamespace,
 		},
 	}
-	ref, err := ref.GetReference(scheme.Scheme, fakePod)
+
+	ref, err := ref.GetReference(scheme.Scheme, podInfo)
 	if err == nil {
 		return ref
-	} else {
-		return nil
 	}
+	return nil
 }

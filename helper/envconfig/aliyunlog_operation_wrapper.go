@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/helper/k8s_event"
+	k8s_event "github.com/alibaba/ilogtail/helper/eventrecorder"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
 
@@ -196,12 +196,11 @@ func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, pr
 	if err != nil {
 		if k8s_event.GetEventRecorder() != nil {
 			customErr := CustomErrorFromPopError(err)
-			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProductLogStore, k8s_event.CreateProductLogStoreAlarm, fmt.Sprintf("create product log failed, error: %s", err.Error()))
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProductLogStore, "", fmt.Sprintf("create product log failed, error: %s", err.Error()))
 		}
 		logger.Warning(context.Background(), "CREATE_PRODUCT_ALARM", "create product error, error", err)
 		return err
-	}
-	if k8s_event.GetEventRecorder() != nil {
+	} else if k8s_event.GetEventRecorder() != nil {
 		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProductLogStore, "create product log success")
 	}
 
@@ -270,13 +269,11 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec, pr
 	if err != nil {
 		if k8s_event.GetEventRecorder() != nil {
 			customErr := CustomErrorFromSlsSDKError(err)
-			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateLogstore, k8s_event.UpdateConfigAlarm, fmt.Sprintf("create logstore failed, error: %s", err.Error()))
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateLogstore, "", fmt.Sprintf("create logstore failed, error: %s", err.Error()))
 		}
 		return err
-	} else {
-		if k8s_event.GetEventRecorder() != nil {
-			k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateLogstore, "create logstore success")
-		}
+	} else if k8s_event.GetEventRecorder() != nil {
+		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateLogstore, "create logstore success")
 	}
 
 	// after create logstore success, wait 1 sec
@@ -333,12 +330,10 @@ func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, pro
 	if err != nil {
 		if k8s_event.GetEventRecorder() != nil {
 			customErr := CustomErrorFromSlsSDKError(err)
-			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProject, k8s_event.UpdateConfigAlarm, fmt.Sprintf("create project failed, error: %s", err.Error()))
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProject, "", fmt.Sprintf("create project failed, error: %s", err.Error()))
 		}
-	} else {
-		if k8s_event.GetEventRecorder() != nil {
-			k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProject, "create project success")
-		}
+	} else if k8s_event.GetEventRecorder() != nil {
+		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProject, "create project success")
 	}
 	return err
 }
@@ -528,7 +523,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 						if err != nil {
 							if k8s_event.GetEventRecorder() != nil {
 								customErr := CustomErrorFromSlsSDKError(err)
-								k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, k8s_event.UpdateConfigAlarm, fmt.Sprintf("update config failed, error: %s", err.Error()))
+								k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
 							}
 						} else {
 							if k8s_event.GetEventRecorder() != nil {
@@ -567,12 +562,10 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		if err != nil {
 			if k8s_event.GetEventRecorder() != nil {
 				customErr := CustomErrorFromSlsSDKError(err)
-				k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, k8s_event.UpdateConfigAlarm, fmt.Sprintf("update config failed, error: %s", err.Error()))
+				k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
 			}
-		} else {
-			if k8s_event.GetEventRecorder() != nil {
-				k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
-			}
+		} else if k8s_event.GetEventRecorder() != nil {
+			k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
 		}
 	}
 	if err != nil {

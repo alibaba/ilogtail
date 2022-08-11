@@ -21,7 +21,7 @@ import (
 	"runtime"
 
 	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/helper/k8s_event"
+	k8s_event "github.com/alibaba/ilogtail/helper/eventrecorder"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
 
@@ -136,9 +136,16 @@ func initConfig() {
 		logger.Info(context.Background(), "init docker env config, ECS flag", *AliCloudECSFlag, "prefix", *DockerConfigPrefix, "project", *DefaultLogProject, "machine group", *DefaultLogMachineGroup, "id", *DefaultAccessKeyID)
 
 		if *K8sFlag {
-			nodeIp := ""
-			_ = util.InitFromEnvString("_node_ip_", &nodeIp, nodeIp)
-			k8s_event.Init(nodeIp)
+			logger.Info(context.Background(), "init event_recorder", "")
+			nodeIP := ""
+			nodeName := ""
+			podName := ""
+			podNamespace := ""
+			_ = util.InitFromEnvString("_node_ip_", &nodeIP, nodeIP)
+			_ = util.InitFromEnvString("_node_name_", &nodeName, nodeName)
+			_ = util.InitFromEnvString("_pod_name_", &podName, podName)
+			_ = util.InitFromEnvString("_pod_namespace_", &podNamespace, podNamespace)
+			k8s_event.Init(nodeIP, nodeName, podName, podNamespace)
 		}
 
 		_ = util.InitFromEnvBool("ALICLOUD_LOG_DOCKER_ENV_CONFIG_SELF", &selfEnvConfigFlag, false)

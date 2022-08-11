@@ -10,7 +10,7 @@ import (
 
 type CustomError struct {
 	Code      string
-	RequestId string
+	RequestID string
 	Message   string
 	RawError  error
 }
@@ -25,13 +25,13 @@ func (e *CustomError) CustomError() string {
 func CustomErrorNew(code string, requestId string, msg string) *CustomError {
 	return &CustomError{
 		Code:      code,
-		RequestId: requestId,
+		RequestID: requestId,
 		Message:   msg,
 	}
 }
 
 type SDKError struct {
-	HttpCode     int    `json:"httpCode"`
+	HTTPCode     int    `json:"httpCode"`
 	ErrorCode    string `json:"errorCode"`
 	ErrorMessage string `json:"errorMessage"`
 	RequestID    string `json:"requestID"`
@@ -44,14 +44,14 @@ func CustomErrorFromSlsSDKError(slsSDKError error) *CustomError {
 		logger.Error(context.Background(), "unmarshal json fail : ", err.Error())
 		return &CustomError{
 			Code:      "SDKError",
-			RequestId: "",
+			RequestID: "",
 			Message:   slsSDKError.Error(),
 			RawError:  slsSDKError,
 		}
 	} else {
 		return &CustomError{
 			Code:      sdkError.ErrorCode,
-			RequestId: sdkError.RequestID,
+			RequestID: sdkError.RequestID,
 			Message:   sdkError.ErrorMessage,
 			RawError:  slsSDKError,
 		}
@@ -64,7 +64,7 @@ func CustomErrorFromPopError(popError error) *CustomError {
 	if len(matchArr) == 0 {
 		return &CustomError{
 			Code:      "PopError",
-			RequestId: "",
+			RequestID: "",
 			Message:   popError.Error(),
 			RawError:  popError,
 		}
@@ -72,7 +72,7 @@ func CustomErrorFromPopError(popError error) *CustomError {
 
 	return &CustomError{
 		Code:      matchArr[1],
-		RequestId: matchArr[2],
+		RequestID: matchArr[2],
 		Message:   matchArr[3],
 		RawError:  popError,
 	}
@@ -85,8 +85,8 @@ func GetAnnotationByError(projectInfo map[string]string, customError *CustomErro
 	if len(customError.Message) > 0 {
 		projectInfo["message"] = customError.Message
 	}
-	if len(customError.RequestId) > 0 {
-		projectInfo["requestId"] = customError.RequestId
+	if len(customError.RequestID) > 0 {
+		projectInfo["requestId"] = customError.RequestID
 	}
 	return projectInfo
 }
