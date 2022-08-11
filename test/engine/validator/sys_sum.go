@@ -16,11 +16,12 @@ package validator
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/alibaba/ilogtail/pkg/doc"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/mitchellh/mapstructure"
-	"strconv"
 )
 
 const sumSystemValidatorName = "sys_sum_checker"
@@ -71,7 +72,7 @@ func (s *sumSystemValidator) FetchResult() (reports []*Report) {
 	if s.ExpectReceivedMinimumNum > s.sum {
 		reports = append(reports, &Report{Validator: sumSystemValidatorName, Name: "log_field_sum_number", Want: strconv.Itoa(s.ExpectReceivedMinimumNum), Got: strconv.Itoa(s.sum)})
 	}
-	return nil
+	return
 }
 
 func (s *sumSystemValidator) Name() string {
