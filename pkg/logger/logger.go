@@ -167,6 +167,10 @@ func Info(ctx context.Context, kvPairs ...interface{}) {
 	}
 }
 
+func InfoF(format string, kvPairs ...interface{}) {
+	logtailLogger.Info(generateLog(kvPairs...))
+}
+
 func Infof(ctx context.Context, format string, params ...interface{}) {
 	ltCtx, ok := ctx.Value(pkg.LogTailMeta).(*pkg.LogtailContextMeta)
 	if ok {

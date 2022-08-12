@@ -45,6 +45,7 @@ func SetEventRecorder(kubeclientset *kubernetes.Clientset, module string) {
 	logger.Info(context.Background(), "Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
+	eventBroadcaster.StartLogging(logger.InfoF)
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: Logtail})
 
 	eventRecorder.recorder = recorder
