@@ -17,7 +17,7 @@ package eventrecorder
 import (
 	"context"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
+	logger "github.com/alibaba/ilogtail/pkg/logger"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,7 +45,6 @@ func SetEventRecorder(kubeclientset *kubernetes.Clientset, module string) {
 	logger.Info(context.Background(), "Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
-	eventBroadcaster.StartLogging(logger.InfoF)
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: Logtail})
 
 	eventRecorder.recorder = recorder
