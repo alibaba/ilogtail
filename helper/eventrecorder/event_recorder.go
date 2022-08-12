@@ -133,10 +133,8 @@ func (e *EventRecorder) GetObject() runtime.Object {
 	currPodName := "logtail-ds"
 	if len(podName) > 0 {
 		currPodName = podName
-	} else {
-		if len(nodeIP) > 0 {
-			currPodName = currPodName + "-" + nodeIP
-		}
+	} else if len(nodeIP) > 0 {
+		currPodName = currPodName + "-" + nodeIP
 	}
 
 	currPodNamespace := "kube-system"

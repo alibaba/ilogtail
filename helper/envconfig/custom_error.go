@@ -36,10 +36,10 @@ func (e *CustomError) CustomError() string {
 	return string(err)
 }
 
-func CustomErrorNew(code string, requestId string, msg string) *CustomError {
+func CustomErrorNew(code string, requestID string, msg string) *CustomError {
 	return &CustomError{
 		Code:      code,
-		RequestID: requestId,
+		RequestID: requestID,
 		Message:   msg,
 	}
 }
@@ -62,13 +62,12 @@ func CustomErrorFromSlsSDKError(slsSDKError error) *CustomError {
 			Message:   slsSDKError.Error(),
 			RawError:  slsSDKError,
 		}
-	} else {
-		return &CustomError{
-			Code:      sdkError.ErrorCode,
-			RequestID: sdkError.RequestID,
-			Message:   sdkError.ErrorMessage,
-			RawError:  slsSDKError,
-		}
+	}
+	return &CustomError{
+		Code:      sdkError.ErrorCode,
+		RequestID: sdkError.RequestID,
+		Message:   sdkError.ErrorMessage,
+		RawError:  slsSDKError,
 	}
 }
 
