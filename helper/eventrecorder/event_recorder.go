@@ -17,7 +17,6 @@ package eventrecorder
 import (
 	"context"
 
-	logger "github.com/alibaba/ilogtail/pkg/logger"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,6 +27,8 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	ref "k8s.io/client-go/tools/reference"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type EventRecorder struct {
