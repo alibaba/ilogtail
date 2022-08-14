@@ -26,10 +26,12 @@
 
 using namespace std;
 
+DEFINE_FLAG_BOOL(send_status_profile, "", true);
+
 namespace logtail {
 
 void ProfileSender::SendToProfileProject(const std::string& region, sls_logs::LogGroup& logGroup) {
-    if (0 == logGroup.category().compare("logtail_status_profile")) {
+    if (0 == logGroup.category().compare("logtail_status_profile") && BOOL_FLAG(send_status_profile)) {
         SendRunningStatus(logGroup);
     }
 
