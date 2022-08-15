@@ -35,7 +35,6 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
-
 - [public] [both] [updated] change CGO ProcessLogs API to ProcessLog
 - [public] [both] [fixed] fixed GetContainerMeta data race problem
 - [public] [both] [updates] kubernetes meta plugin add resource reference for collecting Service meta
@@ -43,8 +42,8 @@ your changes, such as:
 - [public] [both] [fixed] fix yaml parsing for purely digits value
 - [public] [both] [added] Add support for accelerate processor
 - [public] [both] [updated] Improve file_log plugin
-- [public] [both] [added] Add support for PostgreSQL input
-- [public] [both] [added] Add support for SqlServer input
 - [public] [both] [added] Add liveness probe for k8s deployment
 - [public] [linux] [added] Add support for local config hot reloading
 - [public] [both] [fixed] fix yaml parsing problem for purely-digit values
+- [public] [both] [added] Add support for PostgreSQL input
+- [public] [both] [added] Add support for SqlServer input

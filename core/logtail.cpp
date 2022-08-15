@@ -45,6 +45,7 @@
 #include "profiler/LogIntegrity.h"
 #include "profiler/LogLineCount.h"
 #include "app_config/AppConfig.h"
+#include "ObserverManager.h"
 using namespace logtail;
 
 #ifdef ENABLE_COMPATIBLE_MODE
@@ -209,7 +210,7 @@ void do_worker_process() {
     // mNameCoonfigMap is empty, configExistFlag is false
     bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();
 
-    //set max open file limit
+    // set max open file limit
     struct rlimit rlimMaxOpenFiles;
     rlimMaxOpenFiles.rlim_cur = rlimMaxOpenFiles.rlim_max = INT32_FLAG(max_open_files_limit);
     if (0 != setrlimit(RLIMIT_NOFILE, &rlimMaxOpenFiles)) {
@@ -253,6 +254,7 @@ void do_worker_process() {
     if (pPlugin->LoadPluginBase()) {
         pPlugin->Resume();
     }
+    ObserverManager::GetInstance()->Reload();
     CheckPointManager::Instance()->LoadCheckPoint();
 
     // added by xianzhi(bowen.gbw@antfin.com)

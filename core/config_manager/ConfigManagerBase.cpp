@@ -294,6 +294,11 @@ void ConfigManagerBase::MappingPluginConfig(const Json::Value& configValue, Conf
 // LoadSingleUserConfig constructs new Config object according to @value, and insert it into
 // mNameConfigMap with name @logName.
 void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const Json::Value& rawValue, bool localFlag) {
+    // MIX_PROCESS_MODE used to tag the config using CGO interface to process logs.
+    // Different value maybe means different optimizing strategies, such as adjust the size of channel between
+    // goroutines. But because of historical compatibility, the raw logs would not transfer this flag. The golang part
+    // should retain no flag scenario as the default flag.
+    static const std::string MIX_PROCESS_MODE = "mix_process_mode";
     Config* config = NULL;
     string projectName, category, errorMessage;
     LOG_DEBUG(sLogger, ("message", "load single user config")("json", rawValue.toStyledString()));
@@ -422,8 +427,32 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
                 LOG_DEBUG(sLogger, ("load plugin config ", logName)("config", pluginConfig));
-                config->mPluginConfig = pluginConfig;
-
+                if (pluginConfig.find("\"observer_ilogtail_") != string::npos) {
+                    Json::Value observerConfigJson;
+                    Json::Reader jsonReader;
+                    if (jsonReader.parse(pluginConfig, observerConfigJson) && observerConfigJson.isMember("inputs")) {
+                        if (observerConfigJson["inputs"].isObject() || observerConfigJson["inputs"].isArray()) {
+                            config->mObserverConfig = observerConfigJson["inputs"].toStyledString();
+                            config->mObserverFlag = true;
+                            observerConfigJson.removeMember("inputs");
+                        }
+                        if (observerConfigJson.isMember("processors")
+                            && (observerConfigJson["processors"].isObject()
+                                || observerConfigJson["processors"].isArray())) {
+                            config->mPluginProcessFlag = true;
+                            SetNotFoundJsonMember(observerConfigJson, MIX_PROCESS_MODE, "observer");
+                            config->mPluginConfig = observerConfigJson.toStyledString();
+                        }
+                    } else {
+                        LOG_WARNING(sLogger,
+                                    ("observer config is not a legal JSON object",
+                                     logName)("project", projectName)("logstore", category));
+                    }
+                } else {
+                    config->mPluginConfig = pluginConfig;
+                }
+                LOG_DEBUG(sLogger,
+                          ("load plugin config ", logName)("config", pluginConfig)("observer", config->mObserverFlag));
             } else if (logType == STREAM_LOG) {
                 config = new Config("",
                                     "",
@@ -1067,9 +1096,9 @@ ConfigManagerBase::ConfigManagerBase() {
               STRING_FLAG(logtail_profile_access_key_id),
               STRING_FLAG(logtail_profile_access_key));
     srand(time(NULL));
-    CorrectionLogtailSysConfDir(); //first create dir then rewrite system-uuid file in GetSystemUUID
+    CorrectionLogtailSysConfDir(); // first create dir then rewrite system-uuid file in GetSystemUUID
     // use a thread to get uuid, work around for CalculateDmiUUID hang
-    //mUUID = CalculateDmiUUID();
+    // mUUID = CalculateDmiUUID();
     mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
     ReloadMappingConfig();
 }
@@ -1345,7 +1374,7 @@ bool ConfigManagerBase::RegisterHandlersWithinDepth(const std::string& path, Con
             if (!(EventDispatcher::GetInstance()->RegisterEventHandler(item.c_str(), config, mSharedHandler))) {
                 // break;// fail early, do not try to register others
                 result = false;
-            } else //sub dir will not be registered if parent dir fails
+            } else // sub dir will not be registered if parent dir fails
                 RegisterHandlersWithinDepth(item, config, depth - 1);
         }
     }
@@ -2060,6 +2089,15 @@ void ConfigManagerBase::GetAllPluginConfig(std::vector<Config*>& configVec) {
     }
 }
 
+void ConfigManagerBase::GetAllObserverConfig(std::vector<Config*>& configVec) {
+    unordered_map<string, Config*>::iterator itr = mNameConfigMap.begin();
+    for (; itr != mNameConfigMap.end(); ++itr) {
+        if (itr->second->mObserverFlag && !itr->second->mObserverConfig.empty()) {
+            configVec.push_back(itr->second);
+        }
+    }
+}
+
 std::vector<Config*> ConfigManagerBase::GetMatchedConfigs(const std::function<bool(Config*)>& condition) {
     std::vector<Config*> configs;
     for (auto& iter : mNameConfigMap) {
@@ -2108,7 +2146,7 @@ void ConfigManagerBase::GetSensitiveKeys(const Json::Value& value, Config* pConf
                                                        pConfig->GetProjectName(),
                                                        pConfig->GetCategory());
                 break;
-                //throw ExceptionBase(string("The sensitive key type is invalid : ") + type);
+                // throw ExceptionBase(string("The sensitive key type is invalid : ") + type);
             }
 
 
@@ -2125,7 +2163,7 @@ void ConfigManagerBase::GetSensitiveKeys(const Json::Value& value, Config* pConf
                                                            pConfig->GetProjectName(),
                                                            pConfig->GetCategory());
                     break;
-                    //throw ExceptionBase(string("The sensitive key config is invalid : ") + key);
+                    // throw ExceptionBase(string("The sensitive key config is invalid : ") + key);
                 }
             } else {
                 opt = SensitiveWordCastOption::MD5_OPTION;
@@ -2143,7 +2181,7 @@ void ConfigManagerBase::GetSensitiveKeys(const Json::Value& value, Config* pConf
                                                        pConfig->GetProjectName(),
                                                        pConfig->GetCategory());
                 break;
-                //throw ExceptionBase(string("The sensitive regex is invalid, ") + errorMsg);
+                // throw ExceptionBase(string("The sensitive regex is invalid, ") + errorMsg);
             }
             SensitiveWordCastOption sensOpt;
             sensOpt.key = key;
@@ -2162,7 +2200,7 @@ void ConfigManagerBase::GetSensitiveKeys(const Json::Value& value, Config* pConf
                                                    "The sensitive key config is invalid",
                                                    pConfig->GetProjectName(),
                                                    pConfig->GetCategory());
-            //throw ExceptionBase(string("The sensitive key config is invalid, config : ") + pConfig->mConfigName);
+            // throw ExceptionBase(string("The sensitive key config is invalid, config : ") + pConfig->mConfigName);
         }
     }
 }
@@ -2313,6 +2351,9 @@ bool ConfigManagerBase::GetLocalYamlConfigDirUpdate() {
             localYamlConfigMTimeMap[fullPath] = buf.GetMtime();
         }
     }
+    if (mLocalYamlConfigMTimeMap.size() != localYamlConfigMTimeMap.size()) {
+        updateFlag = true;
+    }
     mLocalYamlConfigMTimeMap = localYamlConfigMTimeMap;
 
     if (updateFlag) {
@@ -2444,7 +2485,7 @@ void ConfigManagerBase::DeleteHandlers() {
     mHandlersToDelete.clear();
 }
 
-//find config domain socket data, find postfix like "_category"
+// find config domain socket data, find postfix like "_category"
 Config* ConfigManagerBase::FindDSConfigByCategory(const std::string& dsCtegory) {
     for (unordered_map<std::string, Config*>::iterator iter = mNameConfigMap.begin(); iter != mNameConfigMap.end();
          ++iter) {
@@ -2608,7 +2649,8 @@ bool ConfigManagerBase::IsUpdateContainerPaths() {
     }
     mDockerContainerPathCmdLock.unlock();
 
-    /********** qps limit : only update docker config INT32_FLAG(max_docker_config_update_times) times in 3 minutes ********/
+    /********** qps limit : only update docker config INT32_FLAG(max_docker_config_update_times) times in 3 minutes
+     * ********/
     static int32_t s_lastUpdateTime = 0;
     static int32_t s_lastUpdateCount = 0;
     if (!rst) {
@@ -2630,7 +2672,8 @@ bool ConfigManagerBase::IsUpdateContainerPaths() {
         s_lastUpdateTime = nowTime;
         return rst;
     }
-    // return false if s_lastUpdateCount >= INT32_FLAG(max_docker_config_update_times) and last update time is in same window
+    // return false if s_lastUpdateCount >= INT32_FLAG(max_docker_config_update_times) and last update time is in same
+    // window
     return false;
     /************************************************************************************************************************/
 }

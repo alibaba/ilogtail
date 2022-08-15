@@ -41,6 +41,7 @@ std::string GetTimeStamp(time_t tm, const std::string& format = "%Y%m%d%H%M%S");
 // Get current time in us or ms.
 uint64_t GetCurrentTimeInMicroSeconds();
 uint64_t GetCurrentTimeInMilliSeconds();
+uint64_t GetCurrentTimeInNanoSeconds();
 
 // Get offset between current time zone and UTC in seconds.
 // For example, for UTC+8, returns 8*60*60.

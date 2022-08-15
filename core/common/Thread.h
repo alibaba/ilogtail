@@ -24,7 +24,8 @@
 namespace logtail {
 
 class Thread {
-    std::thread thread_;
+    // do not use std::thread, this has a bug before GCC8.0. More details: https://zhuanlan.zhihu.com/p/59554240
+    boost::thread thread_;
 
 public:
     template <class Function, class... Args>

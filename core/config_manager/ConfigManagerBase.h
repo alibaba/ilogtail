@@ -138,7 +138,8 @@ protected:
     std::vector<DockerContainerPathCmd*> mDockerContainerStoppedCmdVec;
 
     /**
-     * @brief mAllDockerContainerPathMap. when config update, we dump all config's std::vector<DockerContainerPath> to mAllDockerContainerPathMap. And reset to config when LoadSingleUserConfig
+     * @brief mAllDockerContainerPathMap. when config update, we dump all config's std::vector<DockerContainerPath> to
+     * mAllDockerContainerPathMap. And reset to config when LoadSingleUserConfig
      */
     std::unordered_map<std::string, std::shared_ptr<std::vector<DockerContainerPath>>> mAllDockerContainerPathMap;
 
@@ -205,9 +206,9 @@ public:
 
     /**
      * @brief Load all name config in @jsonRoot to mNameConfigMap
-     * 
-     * @param jsonRoot 
-     * @param localFlag 
+     *
+     * @param jsonRoot
+     * @param localFlag
      * @return true always return true
      * @return false never return false
      */
@@ -275,7 +276,7 @@ public:
 
     /**
      * @brief Reload aliuid/user_defined_id from disk&env
-     * 
+     *
      */
     void ReloadLogtailSysConf();
     void CorrectionAliuidFile(const Json::Value& aliuidArray);
@@ -283,6 +284,7 @@ public:
     void CorrectionLogtailSysConfDir();
 
     void GetAllPluginConfig(std::vector<Config*>& configVec);
+    void GetAllObserverConfig(std::vector<Config*>& configVec);
 
     // Get all configs that match condition.
     std::vector<Config*> GetMatchedConfigs(const std::function<bool(Config*)>& condition);
@@ -358,7 +360,7 @@ public:
 
     /**
      * @brief Load configs from file and dir in SysConfDir
-     * 
+     *
      * @return true config changed
      * @return false no update
      */
@@ -449,21 +451,21 @@ private:
 
     /**
      * @brief Load user_local_config.json from sys_conf_dir
-     * 
+     *
      * @return true config changed
      * @return false no update
      */
     bool GetLocalConfigFileUpdate();
     /**
      * @brief Load *.json from user_config.d
-     * 
+     *
      * @return true config changed
      * @return false no update
      */
     bool GetLocalConfigDirUpdate();
     /**
      * @brief Load *.yaml from user_yaml_config.d
-     * 
+     *
      * @return true config changed
      * @return false no update
      */
@@ -471,10 +473,10 @@ private:
 
     /**
      * @brief Load a single data collection config and insert it into mNameConfigMap with name @name.
-     * 
+     *
      * @param name config name
      * @param value config json value
-     * @param localFlag 
+     * @param localFlag
      */
     void LoadSingleUserConfig(const std::string& name, const Json::Value& value, bool localFlag = false);
     bool CheckRegFormat(const std::string& regStr);

@@ -16,6 +16,7 @@
 
 #pragma once
 #include <string>
+#include <unordered_set>
 
 namespace logtail {
 
@@ -24,7 +25,10 @@ std::string GetUsername();
 std::string GetHostName();
 std::string GetHostIpByHostName();
 std::string GetHostIpByInterface(const std::string& intf);
+uint32_t GetHostIpValueByInterface(const std::string& intf);
 std::string GetHostIp(const std::string& intf = "");
+void GetAllPids(std::unordered_set<int32_t>& pids);
+bool GetKernelInfo(std::string& kernelRelease, int64_t& kernelVersion);
 
 // GetAnyAvailableIP walks through all interfaces (AF_INET) to find an available IP.
 // Priority:

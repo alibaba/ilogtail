@@ -43,6 +43,7 @@
 #include "common/TimeUtil.h"
 #ifdef __linux__
 #include "streamlog/StreamLogManager.h"
+#include "ObserverManager.h"
 #endif
 #include "app_config/AppConfig.h"
 #include "event_handler/EventHandler.h"
@@ -367,8 +368,8 @@ void EventDispatcherBase::AddExistedFileEvents(const char* path, int wd) {
         string item = PathJoin(path, entName);
 
         // move to AddExistedCheckPointFileEvents
-        //CheckPointPtr checkPointSharePtr;
-        //if (CheckPointManager::Instance()->GetCheckPoint(item, checkPointSharePtr))
+        // CheckPointPtr checkPointSharePtr;
+        // if (CheckPointManager::Instance()->GetCheckPoint(item, checkPointSharePtr))
         //{
         //    if (checkPointSharePtr->mInode == NO_BLOCK_INODE || checkPointSharePtr->mInode == GetFileInode(item))
         //    {
@@ -697,7 +698,7 @@ void EventDispatcherBase::RemoveOneToOneMapEntry(int wd) {
     mWdDirInfoMap.erase(itr);
 }
 
-//add timeout propagation and process logic
+// add timeout propagation and process logic
 bool EventDispatcherBase::Dispatch() {
     mMainThreadRunning = true;
 #if defined(_MSC_VER)
@@ -903,7 +904,7 @@ void EventDispatcherBase::CheckSymbolicLink() {
     for (vector<string>::iterator dirIter = dirToCheck.begin(); dirIter != dirToCheck.end(); ++dirIter) {
         string path = *dirIter;
         fsutil::PathStat lstatBuf;
-        if (!fsutil::PathStat::lstat(path, lstatBuf)) //check path itself
+        if (!fsutil::PathStat::lstat(path, lstatBuf)) // check path itself
         {
             // when "a" was removed, there will be no inotify event
             LOG_WARNING(sLogger, ("path not exist, remove inotify monitor", path));
@@ -921,7 +922,8 @@ void EventDispatcherBase::CheckSymbolicLink() {
                 mBrokenLinkSet.insert(path);
             } else if (statBuf.IsDir()) {
                 // when "c" or "b" was removed, a will be put into broken link set
-                // then the directory "c" or "b" be created with no IN_CRETATE event, should add inotify monitor for "a" again
+                // then the directory "c" or "b" be created with no IN_CRETATE event, should add inotify monitor for "a"
+                // again
                 if (mBrokenLinkSet.find(path) != mBrokenLinkSet.end()) {
                     mBrokenLinkSet.erase(path);
                 }
@@ -977,7 +979,7 @@ void EventDispatcherBase::UnregisterEventHandler(const char* path) {
         fsutil::PathStat lstatBuf;
         if (fsutil::PathStat::lstat(path, lstatBuf)) // TODO: Need review, might be a bug.
         {
-            //path(symbolic link) existed, the dir it refrence to is deleted
+            // path(symbolic link) existed, the dir it refrence to is deleted
             mBrokenLinkSet.insert(path);
         }
     }
@@ -1034,8 +1036,8 @@ bool EventDispatcherBase::IsRegistered(int wd, std::string& path) {
 }
 
 void EventDispatcherBase::HandleTimeout() {
-    //increment each watcher's timeout account, if bound meets,
-    //call timeout handler
+    // increment each watcher's timeout account, if bound meets,
+    // call timeout handler
     vector<string*> sources;
     vector<EventHandler*> handlers;
 
@@ -1044,10 +1046,10 @@ void EventDispatcherBase::HandleTimeout() {
     for (; itr != mWdUpdateTimeMap.end(); ++itr) {
         if (curTime - (itr->second) >= INT32_FLAG(timeout_interval)) {
             // add to vector then batch process to avoid possible iterator change problem
-            //mHandler may remove what itr points to, thus change the layout of the map container
-            //what follows may not work
-            //Event ev(source, string(), EVENT_TIMEOUT);
-            //mTimoutHandler->Handle(ev);
+            // mHandler may remove what itr points to, thus change the layout of the map container
+            // what follows may not work
+            // Event ev(source, string(), EVENT_TIMEOUT);
+            // mTimoutHandler->Handle(ev);
             sources.push_back(&(mWdDirInfoMap[itr->first]->mPath));
         }
     }
@@ -1130,6 +1132,7 @@ void EventDispatcherBase::UpdateConfig() {
     if (mStreamLogManagerPtr != NULL) {
         ((StreamLogManager*)mStreamLogManagerPtr)->ShutdownConfigUsage();
     }
+    ObserverManager::GetInstance()->HoldOn(false);
 #endif
     LOG_INFO(sLogger, ("main thread", "start update config"));
     LogInput::GetInstance()->HoldOn();
@@ -1150,6 +1153,7 @@ void EventDispatcherBase::UpdateConfig() {
         if (mStreamLogManagerPtr != NULL) {
             ((StreamLogManager*)mStreamLogManagerPtr)->StartupConfigUsage();
         }
+        ObserverManager::GetInstance()->Resume();
 #endif
         ConfigManager::GetInstance()->FinishUpdateConfig();
         return;
@@ -1161,9 +1165,9 @@ void EventDispatcherBase::UpdateConfig() {
     ConfigManager::GetInstance()->SaveDockerConfig();
     // do not delete check point, when config update too short and we can't create all readers
     // if we remove checkpoint here, logtail will lost checkpoint
-    //CheckPointManager::Instance()->RemoveAllCheckPoint();
+    // CheckPointManager::Instance()->RemoveAllCheckPoint();
     DumpAllHandlersMeta(true);
-    //CheckPointManager::Instance()->PrintStatus();
+    // CheckPointManager::Instance()->PrintStatus();
     if (ConfigManager::GetInstance()->GetConfigRemoveFlag()) {
         CheckPointManager::Instance()->DumpCheckPointToLocal();
         ConfigManager::GetInstance()->SetConfigRemoveFlag(false);
@@ -1180,6 +1184,7 @@ void EventDispatcherBase::UpdateConfig() {
     if (mStreamLogManagerPtr != NULL) {
         ((StreamLogManager*)mStreamLogManagerPtr)->StartupConfigUsage();
     }
+    ObserverManager::GetInstance()->Resume();
 #endif
 
     ConfigManager::GetInstance()->FinishUpdateConfig();
@@ -1219,6 +1224,9 @@ void EventDispatcherBase::ExitProcess() {
     Sender::Instance()->SetQueueUrgent();
     // exit logtail plugin
     LogtailPlugin::GetInstance()->HoldOn(true);
+#if defined(__linux__)
+    ObserverManager::GetInstance()->HoldOn(true);
+#endif
 
     bool logProcessFlushFlag = false;
 
@@ -1514,7 +1522,7 @@ bool EventDispatcherBase::ReadDSPacket(int eventFd) {
                         }
                     }
                     Config* config = ConfigManager::GetInstance()->FindDSConfigByCategory(logGroup.category());
-                    MetricSender::SendMetric(logGroup); //Sender::Send() will erase log group
+                    MetricSender::SendMetric(logGroup); // Sender::Send() will erase log group
                     if (config != NULL) {
                         LogFileProfiler::GetInstance()->AddProfilingData(config->mConfigName,
                                                                          config->mRegion,
@@ -1632,7 +1640,7 @@ bool EventDispatcherBase::AddStreamLogTcpSocketToEpoll() {
 #ifdef APSARA_UNIT_TEST_MAIN
 void EventDispatcherBase::CleanEnviroments() {
     mMainThreadRunning = false;
-    sleep(2); //INT32_FLAG(ilogtail_epoll_time_out) + 1
+    sleep(2); // INT32_FLAG(ilogtail_epoll_time_out) + 1
     mPathWdMap.clear();
     for (MapType<int, DirInfo*>::Type::iterator iter = mWdDirInfoMap.begin(); iter != mWdDirInfoMap.end(); ++iter)
         delete iter->second;

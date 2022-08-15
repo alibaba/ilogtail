@@ -79,7 +79,7 @@ int64_t FTell(FILE* stream);
 void TrimLastSeperator(std::string& path);
 
 // ReadFileContent reads all content of @fileName to @content.
-bool ReadFileContent(const std::string& fileName, std::string& content);
+bool ReadFileContent(const std::string& fileName, std::string& content, uint32_t maxFileSize = 8192);
 
 // OverwriteFile overwrides @fileName with @content.
 bool OverwriteFile(const std::string& fileName, const std::string& content);
@@ -246,7 +246,9 @@ namespace fsutil {
         int64_t GetFileSize() const;
 
         // GetMode returns st_mode.
-        int GetMode() const { return static_cast<int>(mRawStat.st_mode); }
+        int GetMode() const {
+            return static_cast<int>(mRawStat.st_mode);
+        }
     };
 
 } // namespace fsutil

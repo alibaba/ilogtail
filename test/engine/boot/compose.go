@@ -54,14 +54,17 @@ services:
       interval: 1s
       retries: 10
   ilogtailC:
-    image: aliyun/ilogtail:1.1.0
+    image: aliyun/ilogtail:1.1.1
     hostname: ilogtail
+    privileged: true
+    pid: host
     volumes:
       - %s:/ilogtail/default_flusher.json
       - %s:/ilogtail/user_config.d
       - %s:/ilogtail/user_yaml_config.d
       - /:/logtail_host
       - /var/run/docker.sock:/var/run/docker.sock
+      - /sys/:/sys/
     ports:
       - 18689:18689
     environment:
