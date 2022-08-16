@@ -441,7 +441,7 @@ NetLinkBinder::NetLinkBinder(uint32_t pid, const std::string& procPath) {
     } else {
         LOG_DEBUG(sLogger, ("open pid net ns", "success")("path", pidNsPath));
     }
-    int res = glibc::g_glibc_setns_func(this->mFd, 0);
+    int res = glibc::g_setns_func(this->mFd, 0);
     if (res != 0) {
         LOG_DEBUG(sLogger, ("netlink status", "fail")("reason", "set ns fail")("path", pidNsPath));
         this->Close();
@@ -455,7 +455,7 @@ NetLinkBinder::NetLinkBinder(uint32_t pid, const std::string& procPath) {
 
 void NetLinkBinder::Close() {
     if (this->success && mOrgFd >= 0) {
-        int res = glibc::g_glibc_setns_func(this->mOrgFd, 0);
+        int res = glibc::g_setns_func(this->mOrgFd, 0);
         if (res != 0) {
             LOG_ERROR(sLogger, ("netlink status", "unknown")("reason", "recover netlink net ns fail"));
         } else {

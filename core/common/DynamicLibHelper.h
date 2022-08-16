@@ -31,7 +31,7 @@ typedef int (*glibc_setns_func)(int __fd, int __nstype);
 namespace glibc {
     // setns function first appear in kernel 3 and glibc 1.14.
     typedef int (*glibc_setns_func)(int __fd, int __nstype);
-    extern glibc_setns_func g_glibc_setns_func;
+    extern glibc_setns_func g_setns_func;
     extern DynamicLibLoader* g_loader;
     bool LoadGlibcFunc();
     bool LoadSuccess();

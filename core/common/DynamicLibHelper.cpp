@@ -24,7 +24,7 @@
 namespace logtail {
 
 namespace glibc {
-    glibc_setns_func g_glibc_setns_func = nullptr;
+    glibc_setns_func g_setns_func = nullptr;
     DynamicLibLoader* g_loader = nullptr;
 } // namespace glibc
 
