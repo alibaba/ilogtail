@@ -2,8 +2,6 @@
 
 ## 代码架构
 
-![架构图](docs/Architecture.jpg)
-
 各模块在源代码中对应的位置：
 
 * [controller/user](controller/user): 用户接口层
