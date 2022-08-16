@@ -445,6 +445,7 @@ void NetworkObserver::EventLoop() {
         }
         if (nowTimeNs - mLastFlushNetlinkTimeNs >= mConfig->mFlushNetlinkInterval * 1000ULL * 1000ULL * 1000ULL) {
             mLastFlushNetlinkTimeNs = nowTimeNs;
+            ConnectionMetaManager::GetInstance()->Init();
             ConnectionMetaManager::GetInstance()->GarbageCollection();
         }
 
