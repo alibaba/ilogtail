@@ -333,7 +333,7 @@ void NetworkObserver::ReloadSource() {
 }
 
 void NetworkObserver::Reload() {
-    if (glibc::LoadGlibcFunc()) {
+    if (!glibc::LoadGlibcFunc()) {
         LOG_ERROR(sLogger, ("observer depends on glibc1.14", "load glibc func fail"));
         return;
     }
