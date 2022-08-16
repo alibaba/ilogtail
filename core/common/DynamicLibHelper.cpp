@@ -114,17 +114,17 @@ bool glibc::LoadGlibcFunc() {
             LOG_ERROR(sLogger, ("load glibc method", "failed")("method", "setns")("error", loadErr));
             return false;
         }
-        g_glibc_setns_func = glibc_setns_func(setNsFunc);
+        g_setns_func = glibc_setns_func(setNsFunc);
         LOG_INFO(sLogger, ("load glibc dynamic library", "success"));
     }
-    return g_glibc_setns_func != nullptr;
+    return g_setns_func != nullptr;
 }
 
 bool glibc::LoadSuccess() {
     if (g_loader == nullptr) {
         return LoadGlibcFunc();
     }
-    return g_glibc_setns_func != nullptr;
+    return g_setns_func != nullptr;
 }
 
 } // namespace logtail
