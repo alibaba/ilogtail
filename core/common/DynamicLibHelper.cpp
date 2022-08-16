@@ -120,11 +120,4 @@ bool glibc::LoadGlibcFunc() {
     return g_setns_func != nullptr;
 }
 
-bool glibc::LoadSuccess() {
-    if (g_loader == nullptr) {
-        return LoadGlibcFunc();
-    }
-    return g_setns_func != nullptr;
-}
-
 } // namespace logtail

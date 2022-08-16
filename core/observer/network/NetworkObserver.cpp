@@ -326,7 +326,7 @@ void NetworkObserver::ReloadSource() {
         }
         mEBPFWrapper = NULL;
     }
-    success = success && glibc::LoadSuccess();
+    success = success && glibc::LoadGlibcFunc();
     if (success) {
         ContainerProcessGroupManager::GetInstance()->ResetFilterProcessMeta();
     }

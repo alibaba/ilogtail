@@ -34,7 +34,6 @@ namespace glibc {
     extern glibc_setns_func g_setns_func;
     extern DynamicLibLoader* g_loader;
     bool LoadGlibcFunc();
-    bool LoadSuccess();
 
 } // namespace glibc
 

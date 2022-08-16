@@ -90,7 +90,7 @@ public:
         std::cout << sizeof(sockaddr_in) << std::endl;
         std::cout << sizeof(sockaddr_in6) << std::endl;
         std::cout << "==============" << std::endl;
-        APSARA_TEST_TRUE(logtail::glibc::LoadSuccess());
+        APSARA_TEST_TRUE(logtail::glibc::LoadGlibcFunc());
         auto instance = ConnectionMetaManager::GetInstance();
         APSARA_TEST_TRUE(instance->Init("/proc/"));
         auto info = instance->GetConnectionInfo(48064, 6);
