@@ -18,7 +18,7 @@ var mySetting *setting
 
 var setOnce sync.Once
 
-var settingFile string = "./conf/setting.json"
+var settingFile string = "./setting/setting.json"
 
 /*
 Change setting file's path

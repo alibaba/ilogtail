@@ -2,5 +2,7 @@ package istore
 
 type IStore interface {
 	GetMode() string // store mode
-	GetConfigs() IConfig
+	Config() IConfig
+	MachineGroup() IMachineGroup
+	Machine() IMachine
 }

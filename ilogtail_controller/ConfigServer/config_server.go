@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
-
-	conf "github.com/alibaba/ilogtail/ilogtail_controller/ConfigServer/setting"
+	"github.com/alibaba/ilogtail/ilogtail_controller/ConfigServer/router"
 )
 
 func main() {
-	fmt.Println(conf.GetSetting())
+	router.InitRouter()
 }
