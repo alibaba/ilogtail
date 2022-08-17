@@ -18,5 +18,7 @@ func (l *LeveldbStore) MachineGroup() istore.IMachineGroup {
 }
 
 func (l *LeveldbStore) Machine() istore.IMachine {
-	return new(LeveldbMachine)
+	leveldbMachine := new(LeveldbMachine)
+	go leveldbMachine.update()
+	return leveldbMachine
 }

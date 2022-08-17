@@ -3,6 +3,7 @@ package leveldb
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/alibaba/ilogtail/ilogtail_controller/ConfigServer/model"
 	"github.com/alibaba/ilogtail/ilogtail_controller/ConfigServer/setting"
@@ -10,6 +11,32 @@ import (
 )
 
 type LeveldbMachine struct {
+	batch *leveldb.Batch
+}
+
+func (l *LeveldbMachine) update() {
+	ticker := time.NewTicker(5 * time.Second)
+
+	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	l.batch = new(leveldb.Batch)
+	for {
+		select {
+		case <-ticker.C:
+			err = db.Write(l.batch, nil)
+			if err != nil {
+				panic(err)
+			}
+			break
+		default:
+
+		}
+	}
+
 }
 
 func (l *LeveldbMachine) Get(machineId string) *model.Machine {
@@ -27,47 +54,20 @@ func (l *LeveldbMachine) Get(machineId string) *model.Machine {
 }
 
 func (l *LeveldbMachine) Add(machine *model.Machine) {
-	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
 	key := l.generateKey(machine.Id)
 	value := l.generateValue(machine)
-	err = db.Put(key, value, nil)
-	if err != nil {
-		panic(err)
-	}
+	l.batch.Put(key, value)
 }
 
 func (l *LeveldbMachine) Mod(machine *model.Machine) {
-	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
 	key := l.generateKey(machine.Id)
 	value := l.generateValue(machine)
-	err = db.Put(key, value, nil)
-	if err != nil {
-		panic(err)
-	}
+	l.batch.Put(key, value)
 }
 
 func (l *LeveldbMachine) Delete(machineId string) {
-	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
 	key := l.generateKey(machineId)
-	err = db.Delete(key, nil)
-	if err != nil {
-		panic(err)
-	}
+	l.batch.Delete(key)
 }
 
 func (l *LeveldbMachine) GetAll() []*model.Machine {
