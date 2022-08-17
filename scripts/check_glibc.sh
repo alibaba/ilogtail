@@ -24,16 +24,28 @@ BIN="${ROOTDIR}/${OUT_DIR}/ilogtail"
 
 # check if the symbols in ilogtail are compatible with GLIBC_2.5
 awk_script=$(cat <<- EOF
+BEGIN {
+  delete bad_syms[0]
+}
 NF>0 && \$(NF-1)~"GLIBC_" {
   sec=\$(NF-1);
   split(sec, a, "_");
   split(a[2], a, ".");
   ver=a[1]*1000+a[2];
   if (ver > 2005) {
-    print "The following symbols are not compatible with GLIBC_2.5"
-    print \$0
-    exit 1
+    bad_syms[length(bad_syms)]=\$0
   }
+}
+END {
+  if (length(bad_syms) == 0) {
+    exit 0
+  }
+  print "\033[0;31mError: The following symbols are not compatible with GLIBC_2.5"
+  for (i in bad_syms) {
+    print bad_syms[i]
+    printf("\033[0m")
+  }
+  exit 1
 }
 EOF
 )
