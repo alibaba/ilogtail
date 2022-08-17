@@ -47,7 +47,7 @@ iLogtail 自从开源以来，受到了很多社区同学的关注。社区的�
   * 将变更 push 到远程个人分支。
 * 向 iLogtail main 分支创建一个 [pull request (PR)](https://github.com/alibaba/ilogtail/pulls)，在进行较大的变更的时候请确保 PR 有一个对应的 Issue，并进行关联。
   * 发起 PR 前请进行如下规范性检查：[代码/文档风格](../developer-guide/codestyle.md)、[编码规范](../developer-guide/code-check/check-codestyle.md)、[依赖包许可证](../developer-guide/code-check/check-dependency-license.md)、[文件许可证](../developer-guide/code-check/check-license.md)。
-  * 为了更好的进行版本管理，对于一些独立的特性或者关键BUG修复，需要提交[Changelog](https://github.com/alibaba/ilogtail/blob/main/CHANGELOG.md).
+  * 为了更好的进行版本管理，对于一些独立的特性或者关键BUG修复，请提交[Changelog](https://github.com/alibaba/ilogtail/blob/main/CHANGELOG.md).
 
 注意一个 PR 尽量不要过于大，如果的确需要有大的变更，可以将其按功能拆分成多个单独的 PR。
 
