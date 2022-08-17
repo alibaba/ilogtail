@@ -56,6 +56,21 @@ func (l *LeveldbConfig) Mod(config *model.Config) {
 	}
 }
 
+func (l *LeveldbConfig) Has(configName string) bool {
+	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	key := l.generateKey(configName)
+	ok, err := db.Has(key, nil)
+	if err != nil {
+		panic(err)
+	}
+	return ok
+}
+
 func (l *LeveldbConfig) Delete(configName string) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {

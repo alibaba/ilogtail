@@ -7,6 +7,6 @@ type MachineGroup struct {
 	AppliedConfigs []string `json:"applied_configs"`
 }
 
-func NewMachineGroup(name string) *MachineGroup {
-	return &MachineGroup{name, "", "default", []string{}}
+func NewMachineGroup(name string, description string, tag string) *MachineGroup {
+	return &MachineGroup{name, description, tag, []string{}}
 }

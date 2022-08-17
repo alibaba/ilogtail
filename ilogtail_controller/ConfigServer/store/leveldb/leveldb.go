@@ -19,6 +19,6 @@ func (l *LeveldbStore) MachineGroup() istore.IMachineGroup {
 
 func (l *LeveldbStore) Machine() istore.IMachine {
 	leveldbMachine := new(LeveldbMachine)
-	go leveldbMachine.update()
+	go leveldbMachine.update() // create a go routine to batch store ilogtail info
 	return leveldbMachine
 }

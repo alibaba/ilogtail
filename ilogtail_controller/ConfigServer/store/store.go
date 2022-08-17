@@ -8,6 +8,9 @@ import (
 	"github.com/alibaba/ilogtail/ilogtail_controller/ConfigServer/store/leveldb"
 )
 
+/*
+Store Factory
+*/
 func newStore(storeType string) istore.IStore {
 	switch storeType {
 	case "leveldb":
@@ -21,6 +24,9 @@ var myStore istore.IStore
 
 var storeOnce sync.Once
 
+/*
+Create a singleton of store
+*/
 func GetStore() istore.IStore {
 	storeOnce.Do(func() {
 		myStore = newStore(setting.GetSetting().StoreMode)

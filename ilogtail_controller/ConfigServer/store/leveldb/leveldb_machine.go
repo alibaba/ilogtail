@@ -14,8 +14,11 @@ type LeveldbMachine struct {
 	batch *leveldb.Batch
 }
 
+/*
+	Batch refresh ilogtail data per 3 seconds
+*/
 func (l *LeveldbMachine) update() {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(3 * time.Second)
 
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
@@ -36,7 +39,6 @@ func (l *LeveldbMachine) update() {
 
 		}
 	}
-
 }
 
 func (l *LeveldbMachine) Get(machineId string) *model.Machine {
@@ -63,6 +65,21 @@ func (l *LeveldbMachine) Mod(machine *model.Machine) {
 	key := l.generateKey(machine.Id)
 	value := l.generateValue(machine)
 	l.batch.Put(key, value)
+}
+
+func (l *LeveldbMachine) Has(machineId string) bool {
+	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	key := l.generateKey(machineId)
+	ok, err := db.Has(key, nil)
+	if err != nil {
+		panic(err)
+	}
+	return ok
 }
 
 func (l *LeveldbMachine) Delete(machineId string) {

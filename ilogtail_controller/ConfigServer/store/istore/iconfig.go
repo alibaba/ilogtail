@@ -6,6 +6,7 @@ type IConfig interface {
 	Get(entityKey string) *model.Config
 	Add(entity *model.Config)
 	Mod(entity *model.Config)
+	Has(entityKey string) bool
 	Delete(entityKey string)
 	GetAll() []*model.Config
 }

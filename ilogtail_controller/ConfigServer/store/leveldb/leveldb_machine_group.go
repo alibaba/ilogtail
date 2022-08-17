@@ -56,6 +56,21 @@ func (l *LeveldbMachineGroup) Mod(machineGroup *model.MachineGroup) {
 	}
 }
 
+func (l *LeveldbMachineGroup) Has(machineGroupName string) bool {
+	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	key := l.generateKey(machineGroupName)
+	ok, err := db.Has(key, nil)
+	if err != nil {
+		panic(err)
+	}
+	return ok
+}
+
 func (l *LeveldbMachineGroup) Delete(machineGroupName string) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
