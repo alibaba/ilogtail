@@ -15,6 +15,7 @@
 * [common](common): 通用函数
 * [router](router): 路由管理
 * [setting](setting): 本地设置
+* [model](model): 数据结构
 * [docs](docs): 文档资料
 
 整体流程大约是：

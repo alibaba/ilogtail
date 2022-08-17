@@ -1,1 +1,6 @@
-{"store_mode":"leveldb","identity":"master","port":"8899"}
+{
+    "store_mode": "leveldb",
+    "identity": "master",
+    "port": "8899",
+    "leveldb_path":"./LEVELDB"
+}

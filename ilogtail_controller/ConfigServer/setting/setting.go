@@ -8,9 +8,10 @@ import (
 )
 
 type setting struct {
-	StoreMode string `json:"store_mode"` // "leveldb" "mysql"
-	Identity  string `json:"identity"`   // "master" "slave"
-	Port      string `json:"port"`       // "8899"
+	StoreMode        string `json:"store_mode"`   // "leveldb" "mysql"
+	Identity         string `json:"identity"`     // "master" "slave"
+	Port             string `json:"port"`         // "8899"
+	LeveldbStorePath string `json:"leveldb_path"` //"./LEVELDB"
 }
 
 var mySetting *setting
