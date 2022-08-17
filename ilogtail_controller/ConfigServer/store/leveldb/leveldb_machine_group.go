@@ -12,83 +12,94 @@ import (
 type LeveldbMachineGroup struct {
 }
 
-func (l *LeveldbMachineGroup) Get(machineGroupName string) *model.MachineGroup {
+func (l *LeveldbMachineGroup) Get(machineGroupName string) (*model.MachineGroup, error) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer db.Close()
 
 	data, err := db.Get([]byte(l.generateKey(machineGroupName)), nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return l.parseValue(data)
+	return l.parseValue(data), nil
 }
 
-func (l *LeveldbMachineGroup) Add(machineGroup *model.MachineGroup) {
+func (l *LeveldbMachineGroup) Add(machineGroup *model.MachineGroup) error {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
 	key := l.generateKey(machineGroup.Name)
-	value := l.generateValue(machineGroup)
+	value, err := l.generateValue(machineGroup)
+	if err != nil {
+		return err
+	}
+
 	err = db.Put(key, value, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
-func (l *LeveldbMachineGroup) Mod(machineGroup *model.MachineGroup) {
+func (l *LeveldbMachineGroup) Mod(machineGroup *model.MachineGroup) error {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
 	key := l.generateKey(machineGroup.Name)
-	value := l.generateValue(machineGroup)
+	value, err := l.generateValue(machineGroup)
+	if err != nil {
+		return err
+	}
+
 	err = db.Put(key, value, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
-func (l *LeveldbMachineGroup) Has(machineGroupName string) bool {
+func (l *LeveldbMachineGroup) Has(machineGroupName string) (bool, error) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 	defer db.Close()
 
 	key := l.generateKey(machineGroupName)
 	ok, err := db.Has(key, nil)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
-	return ok
+	return ok, nil
 }
 
-func (l *LeveldbMachineGroup) Delete(machineGroupName string) {
+func (l *LeveldbMachineGroup) Delete(machineGroupName string) error {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
 	key := l.generateKey(machineGroupName)
 	err = db.Delete(key, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
-func (l *LeveldbMachineGroup) GetAll() []*model.MachineGroup {
+func (l *LeveldbMachineGroup) GetAll() ([]*model.MachineGroup, error) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer db.Close()
 
@@ -105,21 +116,21 @@ func (l *LeveldbMachineGroup) GetAll() []*model.MachineGroup {
 	iter.Release()
 	err = iter.Error()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return ans
+	return ans, nil
 }
 
 func (l *LeveldbMachineGroup) generateKey(machineGroupName string) []byte {
 	return []byte("MACHINEGROUP:" + machineGroupName)
 }
 
-func (l *LeveldbMachineGroup) generateValue(machineGroup *model.MachineGroup) []byte {
+func (l *LeveldbMachineGroup) generateValue(machineGroup *model.MachineGroup) ([]byte, error) {
 	value, err := json.Marshal(machineGroup)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return value
+	return value, nil
 }
 
 func (l *LeveldbMachineGroup) parseKey(key []byte) string {

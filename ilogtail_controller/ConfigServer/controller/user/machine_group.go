@@ -1,8 +1,7 @@
 package user
 
 import (
-	"net/http"
-
+	"github.com/alibaba/ilogtail/ilogtail_controller/ConfigServer/common"
 	"github.com/alibaba/ilogtail/ilogtail_controller/ConfigServer/model"
 	"github.com/alibaba/ilogtail/ilogtail_controller/ConfigServer/store"
 	"github.com/gin-gonic/gin"
@@ -15,12 +14,15 @@ func CreateMachineGroup(c *gin.Context) {
 
 	myMachineGroups := store.GetStore().MachineGroup()
 
-	if myMachineGroups.Has(groupName) {
-		c.String(400, "Machine group already exists.")
+	ok, err := myMachineGroups.Has(groupName)
+	if err != nil {
+		c.JSON(500, common.Error(common.InternalServerError, err.Error()))
+	} else if ok {
+		c.JSON(400, common.Error(common.MachineGroupAlreadyExist, ""))
 	} else {
 		machineGroup := model.NewMachineGroup(groupName, description, groupTag)
 		myMachineGroups.Add(machineGroup)
-		c.String(http.StatusOK, "Add machine group success")
+		c.JSON(200, common.Accept("Add machine group success"))
 	}
 }
 

@@ -12,83 +12,94 @@ import (
 type LeveldbConfig struct {
 }
 
-func (l *LeveldbConfig) Get(configName string) *model.Config {
+func (l *LeveldbConfig) Get(configName string) (*model.Config, error) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer db.Close()
 
 	data, err := db.Get([]byte(l.generateKey(configName)), nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return l.parseValue(data)
+	return l.parseValue(data), nil
 }
 
-func (l *LeveldbConfig) Add(config *model.Config) {
+func (l *LeveldbConfig) Add(config *model.Config) error {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
 	key := l.generateKey(config.Name)
-	value := l.generateValue(config)
+	value, err := l.generateValue(config)
+	if err != nil {
+		return err
+	}
+
 	err = db.Put(key, value, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
-func (l *LeveldbConfig) Mod(config *model.Config) {
+func (l *LeveldbConfig) Mod(config *model.Config) error {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
 	key := l.generateKey(config.Name)
-	value := l.generateValue(config)
+	value, err := l.generateValue(config)
+	if err != nil {
+		return err
+	}
+
 	err = db.Put(key, value, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
-func (l *LeveldbConfig) Has(configName string) bool {
+func (l *LeveldbConfig) Has(configName string) (bool, error) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 	defer db.Close()
 
 	key := l.generateKey(configName)
 	ok, err := db.Has(key, nil)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
-	return ok
+	return ok, nil
 }
 
-func (l *LeveldbConfig) Delete(configName string) {
+func (l *LeveldbConfig) Delete(configName string) error {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
 	key := l.generateKey(configName)
 	err = db.Delete(key, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
-func (l *LeveldbConfig) GetAll() []*model.Config {
+func (l *LeveldbConfig) GetAll() ([]*model.Config, error) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer db.Close()
 
@@ -105,21 +116,21 @@ func (l *LeveldbConfig) GetAll() []*model.Config {
 	iter.Release()
 	err = iter.Error()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return ans
+	return ans, nil
 }
 
 func (l *LeveldbConfig) generateKey(configName string) []byte {
 	return []byte("CONFIG:" + configName)
 }
 
-func (l *LeveldbConfig) generateValue(config *model.Config) []byte {
+func (l *LeveldbConfig) generateValue(config *model.Config) ([]byte, error) {
 	value, err := json.Marshal(config)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return value
+	return value, nil
 }
 
 func (l *LeveldbConfig) parseKey(key []byte) string {

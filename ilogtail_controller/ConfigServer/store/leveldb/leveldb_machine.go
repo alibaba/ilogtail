@@ -2,6 +2,7 @@ package leveldb
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -18,6 +19,10 @@ type LeveldbMachine struct {
 	Batch refresh ilogtail data per 3 seconds
 */
 func (l *LeveldbMachine) update() {
+	defer func() {
+		fmt.Println(recover())
+	}()
+
 	ticker := time.NewTicker(3 * time.Second)
 
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
@@ -35,62 +40,69 @@ func (l *LeveldbMachine) update() {
 				panic(err)
 			}
 			break
-		default:
-
 		}
 	}
 }
 
-func (l *LeveldbMachine) Get(machineId string) *model.Machine {
+func (l *LeveldbMachine) Get(machineId string) (*model.Machine, error) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer db.Close()
 
 	data, err := db.Get([]byte(l.generateKey(machineId)), nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return l.parseValue(data)
+	return l.parseValue(data), nil
 }
 
-func (l *LeveldbMachine) Add(machine *model.Machine) {
+func (l *LeveldbMachine) Add(machine *model.Machine) error {
 	key := l.generateKey(machine.Id)
-	value := l.generateValue(machine)
+	value, err := l.generateValue(machine)
+	if err != nil {
+		return err
+	}
 	l.batch.Put(key, value)
+	return nil
 }
 
-func (l *LeveldbMachine) Mod(machine *model.Machine) {
+func (l *LeveldbMachine) Mod(machine *model.Machine) error {
 	key := l.generateKey(machine.Id)
-	value := l.generateValue(machine)
+	value, err := l.generateValue(machine)
+	if err != nil {
+		return err
+	}
 	l.batch.Put(key, value)
+	return nil
 }
 
-func (l *LeveldbMachine) Has(machineId string) bool {
+func (l *LeveldbMachine) Has(machineId string) (bool, error) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 	defer db.Close()
 
 	key := l.generateKey(machineId)
 	ok, err := db.Has(key, nil)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
-	return ok
+	return ok, nil
 }
 
-func (l *LeveldbMachine) Delete(machineId string) {
+func (l *LeveldbMachine) Delete(machineId string) error {
 	key := l.generateKey(machineId)
 	l.batch.Delete(key)
+	return nil
 }
 
-func (l *LeveldbMachine) GetAll() []*model.Machine {
+func (l *LeveldbMachine) GetAll() ([]*model.Machine, error) {
 	db, err := leveldb.OpenFile(setting.GetSetting().LeveldbStorePath, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer db.Close()
 
@@ -107,21 +119,21 @@ func (l *LeveldbMachine) GetAll() []*model.Machine {
 	iter.Release()
 	err = iter.Error()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return ans
+	return ans, nil
 }
 
 func (l *LeveldbMachine) generateKey(machineId string) []byte {
 	return []byte("MACHINE:" + machineId)
 }
 
-func (l *LeveldbMachine) generateValue(machine *model.Machine) []byte {
+func (l *LeveldbMachine) generateValue(machine *model.Machine) ([]byte, error) {
 	value, err := json.Marshal(machine)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return value
+	return value, nil
 }
 
 func (l *LeveldbMachine) parseKey(key []byte) string {

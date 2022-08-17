@@ -18,21 +18,26 @@ func TestConfigStore(t *testing.T) {
 
 	myConfigs := GetStore().Config()
 
-	t.Log("ALL CONFIGS:", myConfigs.GetAll())
+	value1, _ := myConfigs.GetAll()
+	t.Log("ALL CONFIGS:", value1)
 
 	config := model.NewConfig("111", "1111", 1, "111")
 	myConfigs.Add(config)
 
-	t.Log("CONFIG 111:", myConfigs.Get("111"))
+	value2, _ := myConfigs.Get("111")
+	t.Log("CONFIG 111:", value2)
 
 	config.Description = "test"
 	myConfigs.Mod(config)
-	t.Log("CONFIG 111:", myConfigs.Get("111"))
+	value2, _ = myConfigs.Get("111")
+	t.Log("CONFIG 111:", value2)
 
-	t.Log("ALL CONFIGS:", myConfigs.GetAll())
+	value1, _ = myConfigs.GetAll()
+	t.Log("ALL CONFIGS:", value1)
 
 	myConfigs.Delete("111")
 
-	t.Log("ALL CONFIGS:", myConfigs.GetAll())
+	value1, _ = myConfigs.GetAll()
+	t.Log("ALL CONFIGS:", value1)
 
 }
