@@ -204,7 +204,6 @@ public:
     std::vector<std::string> mFileNameBlacklist;
     bool mObserverFlag = false; // network observer config flag
     std::string mObserverConfig; // network observer config detail
-    
 
     Config() {
         mSimpleLogFlag = false;
