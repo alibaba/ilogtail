@@ -544,28 +544,28 @@ bool LogParser::WholeLineModeParser(
 
 int32_t LogParser::GetApsaraLogMicroTime(const char* buffer) {
     int begIndex = 0;
-	char tmp [6];   
+    char tmp [6];   
     while (buffer[begIndex]) {
         if (buffer[begIndex] == '.') {
             begIndex++;
             break;
         }
         begIndex++;
-    }
-	int index = 0;
-	while(buffer[begIndex + index] && index <6) {
+    }   
+    int index = 0;
+    while(buffer[begIndex + index] && index <6) {
         if (buffer[begIndex + index] == ']'){
             break;
         }
-		tmp[index] = buffer[begIndex + index];
-		index ++;
-	}
-	if (index < 6) {
-		for (int i = index; i < 6; i ++) {
-			tmp[i] = '0';
-		}
-	}
-	char* endPtr;
+        tmp[index] = buffer[begIndex + index];
+        index ++;
+    }
+    if (index < 6) {
+        for (int i = index; i < 6; i ++) {
+            tmp[i] = '0';
+        }
+    }
+    char* endPtr;
     return strtol(tmp, &endPtr, 10);
 }
 
