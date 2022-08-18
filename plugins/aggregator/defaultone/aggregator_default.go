@@ -15,6 +15,7 @@
 package defaultone
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/alibaba/ilogtail"
@@ -28,48 +29,120 @@ const (
 )
 
 // AggregatorDefault is the default aggregator in plugin system.
-//
-// It has two usages:
-// 1. If there is no specific aggregator in plugin config, it will be added.
-// 2. Other aggregators can use it as base aggregator.
-//
-// For inner usage, note about following information.
-// There is a quick flush design in AggregatorDefault, which is implemented
-// in Add method (search p.queue.Add in current file). Therefore, not all
-// LogGroups are returned through Flush method.
-// If you want to do some operations (such as adding tags) on LogGroups returned
-// by AggregatorDefault in your own aggregator, you should do some extra works,
-// just see the sample code in doc.go.
+// If there is no specific aggregator in plugin config, it will be added.
 type AggregatorDefault struct {
 	MaxLogGroupCount int    // the maximum log group count to trigger flush operation
 	MaxLogCount      int    // the maximum log in a log group
-	PackFlag         bool   // whether to add config name as a tag
 	Topic            string // the output topic
 
-	pack            string
-	defaultLogGroup []*protocol.LogGroup
-	packID          int64
-	logstore        string
 	Lock            *sync.Mutex
+	logGroupPool    map[string][]*protocol.LogGroup
+	nowLogGroupSize map[string]int
+	packID          map[string]int64
+	defaultPack     string
 	context         ilogtail.Context
 	queue           ilogtail.LogGroupQueue
-	nowLoggroupSize int
 }
 
 // Init method would be trigger before working.
 // 1. context store the metadata of this Logstore config
 // 2. que is a transfer channel for flushing LogGroup when reaches the maximum in the cache.
 func (p *AggregatorDefault) Init(context ilogtail.Context, que ilogtail.LogGroupQueue) (int, error) {
+	p.defaultPack = util.NewPackIDPrefix(context.GetConfigName())
 	p.context = context
 	p.queue = que
-	if p.PackFlag {
-		p.pack = util.NewPackIDPrefix(context.GetConfigName())
-	}
 	return 0, nil
 }
 
 func (*AggregatorDefault) Description() string {
 	return "default aggregator for logtail"
+}
+
+// Add adds @log with @ctx to aggregator.
+func (p *AggregatorDefault) Add(log *protocol.Log, ctx map[string]interface{}) error {
+	p.Lock.Lock()
+	defer p.Lock.Unlock()
+
+	source := p.defaultPack
+	if _, ok := ctx["source"]; ok {
+		source = ctx["source"].(string)
+		if !strings.HasSuffix(source, "-") {
+			source += "-"
+		}
+	}
+
+	logGroupList := p.logGroupPool[source]
+	if len(logGroupList) == 0 {
+		logGroupList = append(logGroupList, p.newLogGroup(source))
+	}
+	nowLogGroup := logGroupList[len(logGroupList)-1]
+
+	logSize := p.evaluateLogSize(log)
+	// When current log group is full (log count or no more capacity for current log),
+	// allocate a new log group.
+	if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSize[source]+logSize > MaxLogGroupSize {
+		// The number of log group exceeds limit, make a quick flush.
+		if len(logGroupList) == p.MaxLogGroupCount {
+			// Quick flush to avoid becoming bottleneck when large logs come.
+			if err := p.queue.Add(logGroupList[0]); err == nil {
+				// add success, remove head log group
+				logGroupList = logGroupList[1:]
+			} else {
+				return err
+			}
+		}
+		// New log group, reset size.
+		logGroupList = append(logGroupList, p.newLogGroup(source))
+		nowLogGroup = logGroupList[len(logGroupList)-1]
+	}
+
+	// add log size
+	p.nowLogGroupSize[source] += logSize
+	nowLogGroup.Logs = append(nowLogGroup.Logs, log)
+	p.logGroupPool[source] = logGroupList
+	return nil
+}
+
+// Flush ...
+func (p *AggregatorDefault) Flush() (ret []*protocol.LogGroup) {
+	p.Lock.Lock()
+	defer p.Lock.Unlock()
+	for pack, logGroupList := range p.logGroupPool {
+		if len(logGroupList) == 0 {
+			continue
+		}
+		ret = append(ret, logGroupList[0:len(logGroupList)-1]...)
+		// check if last is empty
+		if len(logGroupList[len(logGroupList)-1].Logs) != 0 {
+			ret = append(ret, logGroupList[len(logGroupList)-1])
+		}
+		p.logGroupPool[pack] = make([]*protocol.LogGroup, 0, p.MaxLogGroupCount)
+		p.nowLogGroupSize[pack] = 0
+	}
+	return
+}
+
+// Reset ...
+func (p *AggregatorDefault) Reset() {
+	p.Lock.Lock()
+	defer p.Lock.Unlock()
+	p.logGroupPool = make(map[string][]*protocol.LogGroup)
+}
+
+func (p *AggregatorDefault) newLogGroup(pack string) *protocol.LogGroup {
+	logGroup := &protocol.LogGroup{
+		Logs:  make([]*protocol.Log, 0, p.MaxLogCount),
+		Topic: p.Topic,
+	}
+	// addPackID adds __pack_id__ into logGroup.LogTags if it is not existing at last.
+	if len(logGroup.LogTags) == 0 || logGroup.LogTags[len(logGroup.LogTags)-1].GetKey() != util.PackIDTagKey {
+		id := p.packID[pack]
+		logGroup.LogTags = append(logGroup.LogTags, util.NewLogTagForPackID(pack, &id))
+		p.packID[pack] = id
+	}
+	p.nowLogGroupSize[pack] = 0
+
+	return logGroup
 }
 
 func (*AggregatorDefault) evaluateLogSize(log *protocol.Log) int {
@@ -80,129 +153,14 @@ func (*AggregatorDefault) evaluateLogSize(log *protocol.Log) int {
 	return logSize
 }
 
-// Add adds @log to aggregator.
-// It uses defaultLogGroup to store log groups which contain logs as following:
-// defaultLogGroup => [LG1: log1->log2->log3] -> [LG2: log1->log2->log3] -> ..
-// The last log group is set as nowLogGroup, @log will be appended to nowLogGroup
-// if the size and log count of the log group don't exceed limits (MaxLogCount and
-// MAX_LOG_GROUP_SIZE).
-// When nowLogGroup exceeds limits, Add creates a new log group and switch nowLogGroup
-// to it, then append @log to it.
-// When the count of log group reaches MaxLogGroupCount, the first log group will
-// be popped from defaultLogGroup list and add to queue (after adding pack_id tag).
-// Add returns any error encountered, nil means success.
-//
-// @return error. **For inner usage, must handle this error!!!!**
-func (p *AggregatorDefault) Add(log *protocol.Log) error {
-	p.Lock.Lock()
-	defer p.Lock.Unlock()
-	if len(p.defaultLogGroup) == 0 {
-		p.nowLoggroupSize = 0
-		p.defaultLogGroup = append(p.defaultLogGroup, &protocol.LogGroup{
-			Logs: make([]*protocol.Log, 0, p.MaxLogCount),
-		})
-	}
-	nowLogGroup := p.defaultLogGroup[len(p.defaultLogGroup)-1]
-	logSize := p.evaluateLogSize(log)
-
-	// When current log group is full (log count or no more capacity for current log),
-	// allocate a new log group.
-	if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLoggroupSize+logSize > MaxLogGroupSize {
-		// The number of log group exceeds limit, make a quick flush.
-		if len(p.defaultLogGroup) == p.MaxLogGroupCount {
-			// try to send
-			p.addPackID(p.defaultLogGroup[0])
-			p.defaultLogGroup[0].Category = p.logstore
-			if len(p.Topic) > 0 {
-				p.defaultLogGroup[0].Topic = p.Topic
-			}
-
-			// Quick flush to avoid becoming bottleneck when large logs come.
-			if err := p.queue.Add(p.defaultLogGroup[0]); err == nil {
-				// add success, remove head log group
-				p.defaultLogGroup = p.defaultLogGroup[1:]
-			} else {
-				return err
-			}
-		}
-		// New log group, reset size.
-		p.nowLoggroupSize = 0
-		p.defaultLogGroup = append(p.defaultLogGroup, &protocol.LogGroup{
-			Logs: make([]*protocol.Log, 0, p.MaxLogCount),
-		})
-		nowLogGroup = p.defaultLogGroup[len(p.defaultLogGroup)-1]
-	}
-
-	// add log size
-	p.nowLoggroupSize += logSize
-	nowLogGroup.Logs = append(nowLogGroup.Logs, log)
-	return nil
-}
-
-// addPackID adds __pack_id__ into logGroup.LogTags if it is not existing at last.
-func (p *AggregatorDefault) addPackID(logGroup *protocol.LogGroup) {
-	if !p.PackFlag {
-		return
-	}
-	if len(logGroup.LogTags) == 0 || logGroup.LogTags[len(logGroup.LogTags)-1].GetKey() != util.PackIDTagKey {
-		logGroup.LogTags = append(logGroup.LogTags, util.NewLogTagForPackID(p.pack, &p.packID))
-	}
-}
-
-// Flush ...
-func (p *AggregatorDefault) Flush() []*protocol.LogGroup {
-	p.Lock.Lock()
-	if len(p.defaultLogGroup) == 0 {
-		p.Lock.Unlock()
-		return nil
-	}
-	p.nowLoggroupSize = 0
-	logGroupList := p.defaultLogGroup
-	p.defaultLogGroup = make([]*protocol.LogGroup, 0, p.MaxLogGroupCount)
-	p.Lock.Unlock()
-
-	for i, logGroup := range logGroupList {
-		// check if last is empty
-		if len(logGroup.Logs) == 0 {
-			logGroupList = logGroupList[0:i]
-			break
-		}
-		p.addPackID(logGroup)
-		logGroup.Category = p.logstore
-		if len(p.Topic) > 0 {
-			logGroup.Topic = p.Topic
-		}
-	}
-	return logGroupList
-}
-
-// Reset ...
-func (p *AggregatorDefault) Reset() {
-	p.Lock.Lock()
-	defer p.Lock.Unlock()
-	p.defaultLogGroup = make([]*protocol.LogGroup, 0)
-}
-
-// InitInner initializes instance for other aggregators.
-func (p *AggregatorDefault) InitInner(packFlag bool, packString string, lock *sync.Mutex, logstore string, topic string, maxLogCount int, maxLoggroupCount int) {
-	p.PackFlag = packFlag
-	p.MaxLogCount = maxLogCount
-	p.MaxLogGroupCount = maxLoggroupCount
-	p.Lock = lock
-	p.Topic = topic
-	p.logstore = logstore
-	if p.PackFlag {
-		p.pack = util.NewPackIDPrefix(packString)
-	}
-}
-
 // NewAggregatorDefault create a default aggregator with default value.
 func NewAggregatorDefault() *AggregatorDefault {
 	return &AggregatorDefault{
-		defaultLogGroup:  make([]*protocol.LogGroup, 0),
 		MaxLogGroupCount: 4,
 		MaxLogCount:      MaxLogCount,
-		PackFlag:         true,
+		logGroupPool:     make(map[string][]*protocol.LogGroup),
+		nowLogGroupSize:  make(map[string]int),
+		packID:           make(map[string]int64),
 		Lock:             &sync.Mutex{},
 	}
 }
