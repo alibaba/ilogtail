@@ -202,6 +202,9 @@ public:
     // File name only, */? is supported too, such as 100*.log. It is similar to
     // mFilePattern, but works in reversed way.
     std::vector<std::string> mFileNameBlacklist;
+    bool mObserverFlag = false; // network observer config flag
+    std::string mObserverConfig; // network observer config detail
+    
 
     Config() {
         mSimpleLogFlag = false;
