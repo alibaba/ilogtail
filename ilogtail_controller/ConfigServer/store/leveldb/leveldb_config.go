@@ -106,8 +106,7 @@ func (l *LeveldbConfig) GetAll() ([]*model.Config, error) {
 	ans := []*model.Config{}
 	iter := db.NewIterator(nil, nil)
 	for iter.Next() {
-		key := l.parseKey(iter.Key())
-		keyMap := strings.Split(string(key), ":")
+		keyMap := strings.Split(string(iter.Key()), ":")
 		if strings.Compare(keyMap[0], "CONFIG") == 0 {
 			value := l.parseValue(iter.Value())
 			ans = append(ans, value)

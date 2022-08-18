@@ -21,3 +21,10 @@
 整体流程大约是：
 
 用户/ilogtail --> 路由（router） --> 接口（controller） --> 管理器（service） --> 存储（store）
+
+## 调试相关
+
+``` bash
+go build
+nohup ./ConfigServer > stdout.log 2> stderr.log &
+```

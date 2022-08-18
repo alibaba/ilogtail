@@ -109,8 +109,7 @@ func (l *LeveldbMachine) GetAll() ([]*model.Machine, error) {
 	ans := []*model.Machine{}
 	iter := db.NewIterator(nil, nil)
 	for iter.Next() {
-		key := l.parseKey(iter.Key())
-		keyMap := strings.Split(string(key), ":")
+		keyMap := strings.Split(string(iter.Key()), ":")
 		if strings.Compare(keyMap[0], "MACHINE") == 0 {
 			value := l.parseValue(iter.Value())
 			ans = append(ans, value)

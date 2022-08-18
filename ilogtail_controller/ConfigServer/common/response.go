@@ -15,7 +15,8 @@ const (
 )
 
 type Response struct {
-	Message string `json:"message"`
+	Message string                 `json:"message"`
+	Data    map[string]interface{} `json:"data"`
 }
 
 type ErrorResponse struct {
@@ -23,8 +24,8 @@ type ErrorResponse struct {
 	ErrorMessage string `json:"errorMessage"`
 }
 
-func Accept(msg string) Response {
-	return Response{msg}
+func Accept(msg string, data map[string]interface{}) Response {
+	return Response{msg, data}
 }
 
 func Error(code string, msg string) ErrorResponse {

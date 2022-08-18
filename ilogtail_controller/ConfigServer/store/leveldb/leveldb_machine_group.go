@@ -106,8 +106,7 @@ func (l *LeveldbMachineGroup) GetAll() ([]*model.MachineGroup, error) {
 	ans := []*model.MachineGroup{}
 	iter := db.NewIterator(nil, nil)
 	for iter.Next() {
-		key := l.parseKey(iter.Key())
-		keyMap := strings.Split(string(key), ":")
+		keyMap := strings.Split(string(iter.Key()), ":")
 		if strings.Compare(keyMap[0], "MACHINEGROUP") == 0 {
 			value := l.parseValue(iter.Value())
 			ans = append(ans, value)
