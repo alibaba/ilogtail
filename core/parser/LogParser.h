@@ -19,6 +19,7 @@
 #include <boost/regex.hpp>
 #include <vector>
 #include "common/TimeUtil.h"
+#include "config_manager/ConfigManager.h"
 
 namespace sls_logs {
 class LogGroup;
@@ -126,7 +127,7 @@ public:
                              const std::string& logPath,
                              ParseLogError& error);
 
-    static void AdjustLogTime(sls_logs::Log* logPtr, int logTimeZoneOffsetSecond, int localTimeZoneOffsetSecond);
+    static void AdjustLogTime(const Config* config, sls_logs::Log* logPtr, int logTimeZoneOffsetSecond, int localTimeZoneOffsetSecond);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogParserUnittest;

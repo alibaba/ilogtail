@@ -22,9 +22,11 @@
 #include "common/LogtailCommonFlags.h"
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
+#include "config/LogType.h"
 #include "profiler/LogFileProfiler.h"
 #include "profiler/LogtailAlarm.h"
 #include "app_config/AppConfig.h"
+#include "config_manager/ConfigManager.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -542,6 +544,7 @@ bool LogParser::WholeLineModeParser(
 
 int32_t LogParser::GetApsaraLogMicroTime(const char* buffer) {
     int begIndex = 0;
+	char tmp [6];   
     while (buffer[begIndex]) {
         if (buffer[begIndex] == '.') {
             begIndex++;
@@ -549,9 +552,23 @@ int32_t LogParser::GetApsaraLogMicroTime(const char* buffer) {
         }
         begIndex++;
     }
-    char* endPtr;
-    return strtol(buffer + begIndex, &endPtr, 10);
+	int index = 0;
+	while(buffer[begIndex + index] && index <6) {
+        if (buffer[begIndex + index] == ']'){
+            break;
+        }
+		tmp[index] = buffer[begIndex + index];
+		index ++;
+	}
+	if (index < 6) {
+		for (int i = index; i < 6; i ++) {
+			tmp[i] = '0';
+		}
+	}
+	char* endPtr;
+    return strtol(tmp, &endPtr, 10);
 }
+
 
 static int32_t FindBaseFields(const char* buffer, int32_t beginIndexArray[], int32_t endIndexArray[]) {
     int32_t baseFieldNum = 0;
@@ -738,7 +755,23 @@ void LogParser::AddLog(Log* logPtr, const string& key, const string& value, uint
     logGroupSize += key.size() + value.size() + 5;
 }
 
-void LogParser::AdjustLogTime(sls_logs::Log* logPtr, int mLogTimeZoneOffsetSecond, int timeZoneOffsetSecond) {
+
+void LogParser::AdjustLogTime(const Config* config, sls_logs::Log* logPtr, int mLogTimeZoneOffsetSecond, int timeZoneOffsetSecond) {
+    if (config->mLogType == APSARA_LOG && config->mAdvancedConfig.mAdjustApsaraMicroTimezone) {
+        for (int32_t conIdx = 0; conIdx < logPtr->contents_size(); ++conIdx) {  
+            sls_logs::Log_Content* pContent = logPtr->mutable_contents(conIdx);
+            const string& key = pContent->key();
+            if ("microtime" == key) {
+                string* pVal = pContent->mutable_value();
+                string originMicroTime = pVal->substr((size_t)0);
+                char* endPtr;
+                double result = (double)strtol(originMicroTime.c_str(), &endPtr, 10)/(double)1000000;
+                long new_microtime = (result - mLogTimeZoneOffsetSecond + timeZoneOffsetSecond)*1000000;
+                pContent->set_value(std::to_string(new_microtime));
+                break;
+            }
+        }
+    }
     logPtr->set_time(logPtr->time() - mLogTimeZoneOffsetSecond + timeZoneOffsetSecond);
 }
 

@@ -196,7 +196,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
     LogstoreFeedBackKey logstoreKey = 0;
     static int32_t lastMergeTime = 0;
     static atomic_int s_processCount{0};
-    static atomic_long s_processBytes{0};
+    static atomic_int s_processBytes{0};
     static atomic_int s_processLines{0};
     // only thread 0 update metric
     int32_t lastUpdateMetricTime = time(NULL);
@@ -425,7 +425,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                             }
                             if (config->mTimeZoneAdjust) {
                                 LogParser::AdjustLogTime(
-                                    logPtr, config->mLogTimeZoneOffsetSecond, localTimeZoneOffsetSecond);
+                                    config, logPtr, config->mLogTimeZoneOffsetSecond, localTimeZoneOffsetSecond);
                             }
                             if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
                                 logPtr->set_time(logPtr->time() + GetTimeDelta());

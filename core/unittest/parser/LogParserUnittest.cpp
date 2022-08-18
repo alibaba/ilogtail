@@ -253,6 +253,7 @@ public:
 public:
     void TestApsaraEasyReadLogTimeParser();
     void TestApsaraEasyReadLogLineParser();
+    void TestAdjustLogTime();
     void TestRegexLogLineParser();
     void TestLogTimeRegexParser();
     void TestParseTimestampNotInSeconds();
@@ -278,6 +279,7 @@ APSARA_UNIT_TEST_CASE(LogParserUnittest, TestLogTimeRegexParser, 3);
 APSARA_UNIT_TEST_CASE(LogParserUnittest, TestParseTimestampNotInSeconds, 4);
 APSARA_UNIT_TEST_CASE(LogParserUnittest, TestRegexLogLineParserWithTimeIndex, 5);
 APSARA_UNIT_TEST_CASE(LogParserUnittest, TestLogParserParseLogTime, 6);
+APSARA_UNIT_TEST_CASE(LogParserUnittest, TestAdjustLogTime, 7);
 
 void LogParserUnittest::TestApsaraEasyReadLogTimeParser() {
     LOG_INFO(sLogger, ("TestApsaraEasyReadLogTimeParser() begin", time(NULL)));
@@ -334,6 +336,88 @@ void LogParserUnittest::TestApsaraEasyReadLogTimeParser() {
     APSARA_TEST_EQUAL(dateTime, lastTime);
     APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:29");
     LOG_INFO(sLogger, ("TestApsaraEasyReadLogTimeParser() end", time(NULL)));
+
+
+    buffer = "[2013-09-12 22:18:29.819]\tA:B";
+    microTime = 0;
+    dateTime = 0;
+    dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
+    APSARA_TEST_EQUAL(dateTime, 1378995509);
+    APSARA_TEST_EQUAL(microTime, 1378995509819139);
+    APSARA_TEST_EQUAL(dateTime, lastTime);
+    APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:29");
+    LOG_INFO(sLogger, ("TestApsaraEasyReadLogTimeParser() end", time(NULL)));
+}
+
+void LogParserUnittest::TestAdjustLogTime() {
+    LOG_INFO(sLogger, ("TestAdjustLogTime() begin", time(NULL)));
+    Config* config = new Config("", "", APSARA_LOG, "", "", "1000000_proj", false, 2, -1, "category");
+    config->mAdvancedConfig.mAdjustApsaraMicroTimezone = true;
+
+    {
+        LogGroup logGroup;
+        string timeStr = "";
+        time_t lastLogTime = 0;
+        ParseLogError error;
+        uint32_t logGroupSize = 0;
+        string logLine = "[2013-09-12 22:18:28.819139]\tA:B";
+        const char* pLogLine = logLine.c_str();
+        bool ret = LogParser::ApsaraEasyReadLogLineParser(
+            pLogLine, logGroup, true, timeStr, lastLogTime, "", "", "", "", error, logGroupSize);
+        APSARA_TEST_EQUAL(logGroup.logs_size(), 1);
+        sls_logs::Log* logPtr = logGroup.mutable_logs(0);    
+        const Log& firstLog = logGroup.logs(0);
+        LogParser::AdjustLogTime(config, logPtr, 3600*8, 0);
+        for (int32_t conIdx = 0; conIdx < logPtr->contents_size(); ++conIdx) {  
+            if ("microtime"==firstLog.contents(conIdx).key()) {
+                APSARA_TEST_EQUAL(firstLog.contents(conIdx).value(), "1378966708819139");
+            }
+        }
+    }
+    
+    {
+        LogGroup logGroup;
+        string timeStr = "";
+        time_t lastLogTime = 0;
+        ParseLogError error;
+        uint32_t logGroupSize = 0;
+        string logLine = "[2013-09-12 22:18:28.819]\tA:B";
+        const char* pLogLine = logLine.c_str();
+        bool ret = LogParser::ApsaraEasyReadLogLineParser(
+            pLogLine, logGroup, true, timeStr, lastLogTime, "", "", "", "", error, logGroupSize);
+        APSARA_TEST_EQUAL(logGroup.logs_size(), 1);
+        sls_logs::Log* logPtr = logGroup.mutable_logs(0);    
+        const Log& firstLog = logGroup.logs(0);
+        LogParser::AdjustLogTime(config, logPtr, 3600*8, 0);
+        for (int32_t conIdx = 0; conIdx < logPtr->contents_size(); ++conIdx) {  
+            if ("microtime"==firstLog.contents(conIdx).key()) {
+                APSARA_TEST_EQUAL(firstLog.contents(conIdx).value(), "1378966708819000");
+            }
+        }
+    }
+
+    {
+        LogGroup logGroup;
+        string timeStr = "";
+        time_t lastLogTime = 0;
+        ParseLogError error;
+        uint32_t logGroupSize = 0;
+        string logLine = "[2013-09-12 22:18:28.8191390]\tA:B";
+        const char* pLogLine = logLine.c_str();
+        bool ret = LogParser::ApsaraEasyReadLogLineParser(
+            pLogLine, logGroup, true, timeStr, lastLogTime, "", "", "", "", error, logGroupSize);
+        APSARA_TEST_EQUAL(logGroup.logs_size(), 1);
+        sls_logs::Log* logPtr = logGroup.mutable_logs(0);    
+        const Log& firstLog = logGroup.logs(0);
+        LogParser::AdjustLogTime(config, logPtr, 3600*8, 0);
+        for (int32_t conIdx = 0; conIdx < logPtr->contents_size(); ++conIdx) {  
+            if ("microtime"==firstLog.contents(conIdx).key()) {
+                APSARA_TEST_EQUAL(firstLog.contents(conIdx).value(), "1378966708819139");
+            }
+        }
+    }
+    
+    LOG_INFO(sLogger, ("TestAdjustLogTime() end", time(NULL)));
 }
 
 void LogParserUnittest::TestApsaraEasyReadLogLineParser() {
@@ -509,8 +593,9 @@ void LogParserUnittest::TestRegexLogLineParser() {
     APSARA_TEST_EQUAL(ConfigManager::GetInstance()->ParseTimeZoneOffsetSecond("GMTx04:30", logTZSecond), false);
     APSARA_TEST_EQUAL(ConfigManager::GetInstance()->ParseTimeZoneOffsetSecond("GMT-04:3", logTZSecond), false);
 
+    Config* config = new Config("", "", REGEX_LOG, "", "", "1000000_proj", false, 2, -1, "category");
 
-    LogParser::AdjustLogTime(logGroup.mutable_logs(2), hawaiiTimeZoneOffsetSecond, localOffset);
+    LogParser::AdjustLogTime(config, logGroup.mutable_logs(2), hawaiiTimeZoneOffsetSecond, localOffset);
     APSARA_TEST_EQUAL(thirdLog.time(), thirdLogTime + (localOffset - hawaiiTimeZoneOffsetSecond));
 
     LOG_INFO(sLogger,

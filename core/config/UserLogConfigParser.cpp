@@ -194,6 +194,13 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
             LOG_INFO(sLogger, ("message", "enable root path collection"));
         }
     }
+
+    // support extract partial fields in DELIMITER_LOG mode
+    if (cfg.mLogType == APSARA_LOG) {
+        if (advancedVal.isMember("adjust_apsara_micro_timezone") && advancedVal["adjust_apsara_micro_timezone"].isBool()) {
+            cfg.mAdvancedConfig.mAdjustApsaraMicroTimezone = GetBoolValue(advancedVal, "adjust_apsara_micro_timezone");
+        }
+    }
 }
 
 // Configurations:
