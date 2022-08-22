@@ -136,7 +136,7 @@ func (p *AggregatorDefault) Flush() []*protocol.LogGroup {
 	}
 
 	curTime := time.Now()
-	if len(p.packIDMap) > p.ContextPresevationTolerance && time.Now().Sub(p.lastCleanPackIDMapTime) > p.packIDMapCleanInterval {
+	if len(p.packIDMap) > p.ContextPresevationTolerance && time.Since(p.lastCleanPackIDMapTime) > p.packIDMapCleanInterval {
 		if len(p.packIDMap) > PackIDMapLenThresh {
 			p.packIDTimeout = BigPackIDTimeout
 		} else {
