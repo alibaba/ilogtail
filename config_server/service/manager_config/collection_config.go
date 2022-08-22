@@ -8,11 +8,11 @@ import (
 
 func CreateConfig(name string, info string, description string) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.LABEL_CONFIG, name)
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, name)
 	if err != nil { // has err
 		return true, err
 	} else if ok {
-		value, err := s.Get(common.LABEL_CONFIG, name)
+		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, name)
 		if err != nil { // has err
 			return true, err
 		}
@@ -25,7 +25,7 @@ func CreateConfig(name string, info string, description string) (bool, error) {
 			config.Description = description
 			config.DelTag = false
 			config.AppliedMachineGroup = []string{}
-			err = s.Update(common.LABEL_CONFIG, config.Name, config)
+			err = s.Update(common.TYPE_COLLECTION_CONFIG, config.Name, config)
 			if err != nil { // has err
 				return false, err
 			}
@@ -40,7 +40,7 @@ func CreateConfig(name string, info string, description string) (bool, error) {
 		config.DelTag = false
 		config.AppliedMachineGroup = []string{}
 
-		err = s.Add(common.LABEL_CONFIG, config.Name, config)
+		err = s.Add(common.TYPE_COLLECTION_CONFIG, config.Name, config)
 		if err != nil { // has err
 			return false, err
 		}
@@ -50,13 +50,13 @@ func CreateConfig(name string, info string, description string) (bool, error) {
 
 func UpdateConfig(name string, info string, description string) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.LABEL_CONFIG, name)
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, name)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		value, err := s.Get(common.LABEL_CONFIG, name)
+		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, name)
 		if err != nil {
 			return true, err
 		}
@@ -68,7 +68,7 @@ func UpdateConfig(name string, info string, description string) (bool, error) {
 			config.Content = info
 			config.Version++
 			config.Description = description
-			err = s.Update(common.LABEL_CONFIG, name, config)
+			err = s.Update(common.TYPE_COLLECTION_CONFIG, name, config)
 			if err != nil {
 				return true, err
 			}
@@ -79,13 +79,13 @@ func UpdateConfig(name string, info string, description string) (bool, error) {
 
 func DeleteConfig(name string) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.LABEL_CONFIG, name)
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, name)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		value, err := s.Get(common.LABEL_CONFIG, name)
+		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, name)
 		if err != nil {
 			return true, err
 		}
@@ -96,7 +96,7 @@ func DeleteConfig(name string) (bool, error) {
 		} else {
 			config.DelTag = true
 			config.Version++
-			err = s.Update(common.LABEL_CONFIG, name, config)
+			err = s.Update(common.TYPE_COLLECTION_CONFIG, name, config)
 			if err != nil {
 				return true, err
 			}
@@ -107,13 +107,13 @@ func DeleteConfig(name string) (bool, error) {
 
 func GetConfig(name string) (*model.Config, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.LABEL_CONFIG, name)
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, name)
 	if err != nil {
 		return nil, err
 	} else if !ok {
 		return nil, nil
 	} else {
-		config, err := s.Get(common.LABEL_CONFIG, name)
+		config, err := s.Get(common.TYPE_COLLECTION_CONFIG, name)
 		if config.(*model.Config).DelTag == true {
 			return nil, nil
 		}
@@ -126,7 +126,7 @@ func GetConfig(name string) (*model.Config, error) {
 
 func ListAllConfigs() ([]model.Config, error) {
 	s := store.GetStore()
-	configList, err := s.GetAll(common.LABEL_CONFIG)
+	configList, err := s.GetAll(common.TYPE_COLLECTION_CONFIG)
 	if err != nil {
 		return nil, err
 	} else {

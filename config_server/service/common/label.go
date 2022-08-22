@@ -1,8 +1,8 @@
 package common
 
 const (
-	LABEL_ALARM        string = "ALARM"
-	LABEL_CONFIG       string = "CONFIG"
-	LABEL_MACHINE      string = "MACHINE"
-	LABEL_MACHINEGROUP string = "MACHINEGROUP"
+	TYPE_AGENT_ALARM       string = "AGENT_ALARM"
+	TYPE_COLLECTION_CONFIG string = "COLLECTION_CONFIG"
+	TYPE_MACHINE           string = "MACHINE"
+	TYPE_MACHINEGROUP      string = "MACHINEGROUP"
 )

@@ -1,6 +1,6 @@
 package model
 
-type Alarm struct {
+type AgentAlarm struct {
 	MachineId    string `json:"machine_id"`
 	Time         string `json:"time"`
 	AlarmType    string `json:"alarm_type"`

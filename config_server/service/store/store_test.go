@@ -19,27 +19,27 @@ func TestConfigStore(t *testing.T) {
 
 	s := GetStore()
 
-	value1, _ := s.GetAll(common.LABEL_CONFIG)
-	t.Log("ALL CONFIGS:", value1)
+	value1, _ := s.GetAll(common.TYPE_COLLECTION_CONFIG)
+	t.Log("ALL COLLECTION_CONFIGS:", value1)
 
 	config := model.NewConfig("111", "1111", 1, "111")
-	s.Add(common.LABEL_CONFIG, config.Name, config)
+	s.Add(common.TYPE_COLLECTION_CONFIG, config.Name, config)
 
-	value2, _ := s.Get(common.LABEL_CONFIG, "111")
-	t.Log("CONFIG 111:", value2)
+	value2, _ := s.Get(common.TYPE_COLLECTION_CONFIG, "111")
+	t.Log("COLLECTION_CONFIG 111:", value2)
 
 	config.Description = "test"
-	s.Update(common.LABEL_CONFIG, config.Name, config)
-	value2, _ = s.Get(common.LABEL_CONFIG, "111")
-	t.Log("CONFIG 111:", value2)
+	s.Update(common.TYPE_COLLECTION_CONFIG, config.Name, config)
+	value2, _ = s.Get(common.TYPE_COLLECTION_CONFIG, "111")
+	t.Log("COLLECTION_CONFIG 111:", value2)
 
-	value1, _ = s.GetAll(common.LABEL_CONFIG)
-	t.Log("ALL CONFIGS:", value1)
+	value1, _ = s.GetAll(common.TYPE_COLLECTION_CONFIG)
+	t.Log("ALL COLLECTION_CONFIGS:", value1)
 
-	//	s.Delete(common.LABEL_CONFIG, "111")
+	//	s.Delete(common.TYPE_COLLECTION_CONFIG, "111")
 
-	//	value1, _ = s.GetAll(common.LABEL_CONFIG)
-	//	t.Log("ALL CONFIGS:", value1)
+	//	value1, _ = s.GetAll(common.TYPE_COLLECTION_CONFIG)
+	//	t.Log("ALL COLLECTION_CONFIGS:", value1)
 
 }
 

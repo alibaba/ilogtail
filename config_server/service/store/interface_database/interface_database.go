@@ -25,6 +25,14 @@ type Database interface {
 	CheckAll() // for test
 }
 
+// batch
+
+const (
+	OPT_ADD    string = "ADD"
+	OPT_DELETE string = "DELETE"
+	OPT_UPDATE string = "UPDATE"
+)
+
 type (
 	data struct {
 		Opt   string
@@ -39,15 +47,15 @@ type (
 )
 
 func (b *Batch) Add(table string, entityKey string, entity interface{}) {
-	b.datas.Push(data{"A", table, entityKey, entity})
+	b.datas.Push(data{OPT_ADD, table, entityKey, entity})
 }
 
 func (b *Batch) Update(table string, entityKey string, entity interface{}) {
-	b.datas.Push(data{"U", table, entityKey, entity})
+	b.datas.Push(data{OPT_UPDATE, table, entityKey, entity})
 }
 
 func (b *Batch) Delete(table string, entityKey string) {
-	b.datas.Push(data{"D", table, entityKey, nil})
+	b.datas.Push(data{OPT_DELETE, table, entityKey, nil})
 }
 
 func (b *Batch) Empty() bool {

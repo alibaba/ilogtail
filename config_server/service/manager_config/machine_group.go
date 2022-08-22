@@ -12,7 +12,7 @@ func CreateMachineGroup(name string, tag string, description string) (bool, erro
 	}
 
 	s := store.GetStore()
-	ok, err := s.Has(common.LABEL_MACHINEGROUP, name)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, name)
 	if err != nil {
 		return true, err
 	} else if ok {
@@ -24,7 +24,7 @@ func CreateMachineGroup(name string, tag string, description string) (bool, erro
 		machineGroup.Description = description
 		machineGroup.AppliedConfigs = []string{}
 
-		err = s.Add(common.LABEL_MACHINEGROUP, machineGroup.Name, machineGroup)
+		err = s.Add(common.TYPE_MACHINEGROUP, machineGroup.Name, machineGroup)
 		if err != nil {
 			return false, err
 		}
@@ -38,13 +38,13 @@ func UpdateMachineGroup(name string, tag string, description string) (bool, erro
 	}
 
 	s := store.GetStore()
-	ok, err := s.Has(common.LABEL_MACHINEGROUP, name)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, name)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		value, err := s.Get(common.LABEL_MACHINEGROUP, name)
+		value, err := s.Get(common.TYPE_MACHINEGROUP, name)
 		if err != nil {
 			return true, err
 		}
@@ -52,8 +52,9 @@ func UpdateMachineGroup(name string, tag string, description string) (bool, erro
 
 		machineGroup.Tag = tag
 		machineGroup.Description = description
+		machineGroup.Version++
 
-		err = s.Update(common.LABEL_MACHINEGROUP, name, machineGroup)
+		err = s.Update(common.TYPE_MACHINEGROUP, name, machineGroup)
 		if err != nil {
 			return true, err
 		}
@@ -63,13 +64,13 @@ func UpdateMachineGroup(name string, tag string, description string) (bool, erro
 
 func DeleteMachineGroup(name string) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.LABEL_MACHINEGROUP, name)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, name)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		err = s.Delete(common.LABEL_MACHINEGROUP, name)
+		err = s.Delete(common.TYPE_MACHINEGROUP, name)
 		if err != nil {
 			return true, err
 		}
@@ -79,13 +80,13 @@ func DeleteMachineGroup(name string) (bool, error) {
 
 func GetMachineGroup(name string) (*model.MachineGroup, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.LABEL_MACHINEGROUP, name)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, name)
 	if err != nil {
 		return nil, err
 	} else if !ok {
 		return nil, nil
 	} else {
-		machineGroup, err := s.Get(common.LABEL_MACHINEGROUP, name)
+		machineGroup, err := s.Get(common.TYPE_MACHINEGROUP, name)
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +96,7 @@ func GetMachineGroup(name string) (*model.MachineGroup, error) {
 
 func GetAllMachineGroup() ([]model.MachineGroup, error) {
 	s := store.GetStore()
-	machineGroupList, err := s.GetAll(common.LABEL_MACHINEGROUP)
+	machineGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
 	if err != nil {
 		return nil, err
 	} else {

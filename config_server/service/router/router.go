@@ -38,8 +38,6 @@ func initUserRouter(router *gin.Engine) {
 		userGroup.GET("/GetAppliedConfigs", user.GetAppliedConfigs)
 		userGroup.GET("/GetAppliedMachineGroups", user.GetAppliedMachineGroups)
 		userGroup.GET("/ListMachines", user.ListMachines)
-
-		userGroup.GET("/ListAllMachines", user.ListAllMachines)
 	}
 }
 

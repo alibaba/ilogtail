@@ -11,11 +11,11 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-var content = []string{
-	common.LABEL_ALARM,
-	common.LABEL_CONFIG,
-	common.LABEL_MACHINE,
-	common.LABEL_MACHINEGROUP,
+var dbPath = []string{
+	common.TYPE_AGENT_ALARM,
+	common.TYPE_COLLECTION_CONFIG,
+	common.TYPE_MACHINE,
+	common.TYPE_MACHINEGROUP,
 }
 
 type LeveldbStore struct {
@@ -24,7 +24,7 @@ type LeveldbStore struct {
 
 func (l *LeveldbStore) Connect() error {
 	var err error
-	for _, c := range content {
+	for _, c := range dbPath {
 		l.db[c], err = leveldb.OpenFile(setting.GetSetting().LeveldbStorePath+"/"+c, nil)
 		if err != nil {
 			return err
@@ -131,9 +131,9 @@ func (l *LeveldbStore) WriteBatch(batch *database.Batch) error {
 			leveldbBatch[data.Table] = new(leveldb.Batch)
 		}
 
-		if data.Opt == "D" {
+		if data.Opt == database.OPT_DELETE {
 			leveldbBatch[data.Table].Delete(key)
-		} else {
+		} else if data.Opt == database.OPT_ADD || data.Opt == database.OPT_UPDATE {
 			value, err := generateValue(data.Value)
 			if err != nil {
 				*batch = batchTemp
@@ -173,18 +173,17 @@ func parseKey(key []byte) string {
 func parseValue(table string, data []byte) interface{} {
 	var ans interface{}
 	switch table {
-	case common.LABEL_CONFIG:
+	case common.TYPE_COLLECTION_CONFIG:
 		ans = new(model.Config)
 		break
-	case common.LABEL_MACHINE:
+	case common.TYPE_MACHINE:
 		ans = new(model.Machine)
 		break
-	case common.LABEL_MACHINEGROUP:
+	case common.TYPE_MACHINEGROUP:
 		ans = new(model.MachineGroup)
 		break
 	}
 	json.Unmarshal(data, ans)
-	fmt.Println(ans)
 	return ans
 }
 
