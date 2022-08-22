@@ -289,13 +289,7 @@ func (lc *LogstoreConfig) processInternal() {
 				return
 			}
 		case logCtx = <-lc.LogsChan:
-			// listLen := len(lc.LogsChan) + 1
-			// logs := make([]*protocol.Log, listLen)
-			logs := make([]*protocol.Log, 1)
-			logs[0] = logCtx.Log
-			// for i := 1; i < listLen; i++ {
-			// 	logs[i] = <-lc.LogsChan
-			// }
+			logs := []*protocol.Log{logCtx.Log}
 			lc.Statistics.RawLogMetric.Add(int64(len(logs)))
 			for _, processor := range lc.ProcessorPlugins {
 				logs = processor.Processor.ProcessLogs(logs)

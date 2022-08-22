@@ -74,9 +74,8 @@ func ReadFirstBlock(line string) string {
 // ReadLinesOffsetN reads contents from file and splits them by new line.
 // The offset tells at which line number to start.
 // The count determines the number of lines to read (starting from offset):
-//
-//	n >= 0: at most n lines
-//	n < 0: whole file
+// n >= 0: at most n lines
+// n < 0: whole file
 func ReadLinesOffsetN(filename string, offset uint, n int) ([]string, error) {
 	f, err := os.Open(filepath.Clean(filename))
 	if err != nil {

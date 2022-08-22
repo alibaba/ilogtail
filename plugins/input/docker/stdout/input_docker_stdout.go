@@ -70,7 +70,7 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 		}
 	}
 
-	source := util.NewPackIDPrefix(info.ContainerInfo.ID)
+	source := util.NewPackIDPrefix(info.ContainerInfo.ID + sds.context.GetConfigName())
 	tags := info.GetExternalTags(sds.ExternalEnvTag, sds.ExternalK8sLabelTag)
 
 	processor := NewDockerStdoutProcessor(reg, time.Duration(sds.BeginLineTimeoutMs)*time.Millisecond, sds.BeginLineCheckLength, sds.MaxLogSize, sds.Stdout, sds.Stderr, sds.context, sds.collector, tags, source)

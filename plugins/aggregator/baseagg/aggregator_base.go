@@ -65,7 +65,7 @@ func (p *AggregatorBase) Init(context ilogtail.Context, que ilogtail.LogGroupQue
 }
 
 func (*AggregatorBase) Description() string {
-	return "default aggregator for logtail"
+	return "base aggregator for logtail"
 }
 
 func (*AggregatorBase) evaluateLogSize(log *protocol.Log) int {

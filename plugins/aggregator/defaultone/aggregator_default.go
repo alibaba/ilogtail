@@ -17,6 +17,7 @@ package defaultone
 import (
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -24,24 +25,37 @@ import (
 )
 
 const (
-	MaxLogCount     = 1024
-	MaxLogGroupSize = 3 * 1024 * 1024
+	MaxLogCount        = 1024
+	MaxLogGroupSize    = 3 * 1024 * 1024
+	SmallPackIDTimeout = time.Duration(24*30) * time.Hour
+	BigPackIDTimeout   = time.Duration(24) * time.Hour
+	PackIDMapLenThresh = 100000
 )
+
+type LogPackSeqInfo struct {
+	seq            *int64
+	lastUpdateTime time.Time
+}
 
 // AggregatorDefault is the default aggregator in plugin system.
 // If there is no specific aggregator in plugin config, it will be added.
 type AggregatorDefault struct {
-	MaxLogGroupCount int    // the maximum log group count to trigger flush operation
-	MaxLogCount      int    // the maximum log in a log group
-	Topic            string // the output topic
+	MaxLogGroupCount            int    // the maximum log group count to trigger flush operation
+	MaxLogCount                 int    // the maximum log in a log group
+	Topic                       string // the output topic
+	ContextPresevationTolerance int
 
-	Lock            *sync.Mutex
-	logGroupPool    map[string][]*protocol.LogGroup
-	nowLogGroupSize map[string]int
-	packID          map[string]int64
-	defaultPack     string
-	context         ilogtail.Context
-	queue           ilogtail.LogGroupQueue
+	Lock               *sync.Mutex
+	logGroupPoolMap    map[string][]*protocol.LogGroup
+	nowLogGroupSizeMap map[string]int
+	packIDMap          map[string]*LogPackSeqInfo
+	defaultPack        string
+	context            ilogtail.Context
+	queue              ilogtail.LogGroupQueue
+
+	packIDMapCleanInterval time.Duration
+	packIDTimeout          time.Duration
+	lastCleanPackIDMapTime time.Time
 }
 
 // Init method would be trigger before working.
@@ -51,6 +65,7 @@ func (p *AggregatorDefault) Init(context ilogtail.Context, que ilogtail.LogGroup
 	p.defaultPack = util.NewPackIDPrefix(context.GetConfigName())
 	p.context = context
 	p.queue = que
+	p.lastCleanPackIDMapTime = time.Now()
 	return 0, nil
 }
 
@@ -71,7 +86,10 @@ func (p *AggregatorDefault) Add(log *protocol.Log, ctx map[string]interface{}) e
 		}
 	}
 
-	logGroupList := p.logGroupPool[source]
+	logGroupList := p.logGroupPoolMap[source]
+	if logGroupList == nil {
+		logGroupList = make([]*protocol.LogGroup, 0, p.MaxLogGroupCount)
+	}
 	if len(logGroupList) == 0 {
 		logGroupList = append(logGroupList, p.newLogGroup(source))
 	}
@@ -80,7 +98,7 @@ func (p *AggregatorDefault) Add(log *protocol.Log, ctx map[string]interface{}) e
 	logSize := p.evaluateLogSize(log)
 	// When current log group is full (log count or no more capacity for current log),
 	// allocate a new log group.
-	if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSize[source]+logSize > MaxLogGroupSize {
+	if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSizeMap[source]+logSize > MaxLogGroupSize {
 		// The number of log group exceeds limit, make a quick flush.
 		if len(logGroupList) == p.MaxLogGroupCount {
 			// Quick flush to avoid becoming bottleneck when large logs come.
@@ -97,36 +115,49 @@ func (p *AggregatorDefault) Add(log *protocol.Log, ctx map[string]interface{}) e
 	}
 
 	// add log size
-	p.nowLogGroupSize[source] += logSize
+	p.nowLogGroupSizeMap[source] += logSize
 	nowLogGroup.Logs = append(nowLogGroup.Logs, log)
-	p.logGroupPool[source] = logGroupList
+	p.logGroupPoolMap[source] = logGroupList
 	return nil
 }
 
 // Flush ...
-func (p *AggregatorDefault) Flush() (ret []*protocol.LogGroup) {
+func (p *AggregatorDefault) Flush() []*protocol.LogGroup {
 	p.Lock.Lock()
 	defer p.Lock.Unlock()
-	for pack, logGroupList := range p.logGroupPool {
+	var ret []*protocol.LogGroup
+	for pack, logGroupList := range p.logGroupPoolMap {
 		if len(logGroupList) == 0 {
 			continue
 		}
-		ret = append(ret, logGroupList[0:len(logGroupList)-1]...)
-		// check if last is empty
-		if len(logGroupList[len(logGroupList)-1].Logs) != 0 {
-			ret = append(ret, logGroupList[len(logGroupList)-1])
-		}
-		p.logGroupPool[pack] = make([]*protocol.LogGroup, 0, p.MaxLogGroupCount)
-		p.nowLogGroupSize[pack] = 0
+		ret = append(ret, logGroupList...)
+		delete(p.logGroupPoolMap, pack)
+		delete(p.nowLogGroupSizeMap, pack)
 	}
-	return
+
+	curTime := time.Now()
+	if len(p.packIDMap) > p.ContextPresevationTolerance && time.Now().Sub(p.lastCleanPackIDMapTime) > p.packIDMapCleanInterval {
+		if len(p.packIDMap) > PackIDMapLenThresh {
+			p.packIDTimeout = BigPackIDTimeout
+		} else {
+			p.packIDTimeout = SmallPackIDTimeout
+		}
+		for k, v := range p.packIDMap {
+			if curTime.Sub(v.lastUpdateTime) > p.packIDTimeout {
+				delete(p.packIDMap, k)
+			}
+		}
+		p.lastCleanPackIDMapTime = curTime
+	}
+
+	return ret
 }
 
 // Reset ...
 func (p *AggregatorDefault) Reset() {
 	p.Lock.Lock()
 	defer p.Lock.Unlock()
-	p.logGroupPool = make(map[string][]*protocol.LogGroup)
+	p.logGroupPoolMap = make(map[string][]*protocol.LogGroup)
 }
 
 func (p *AggregatorDefault) newLogGroup(pack string) *protocol.LogGroup {
@@ -134,13 +165,10 @@ func (p *AggregatorDefault) newLogGroup(pack string) *protocol.LogGroup {
 		Logs:  make([]*protocol.Log, 0, p.MaxLogCount),
 		Topic: p.Topic,
 	}
-	// addPackID adds __pack_id__ into logGroup.LogTags if it is not existing at last.
-	if len(logGroup.LogTags) == 0 || logGroup.LogTags[len(logGroup.LogTags)-1].GetKey() != util.PackIDTagKey {
-		id := p.packID[pack]
-		logGroup.LogTags = append(logGroup.LogTags, util.NewLogTagForPackID(pack, &id))
-		p.packID[pack] = id
-	}
-	p.nowLogGroupSize[pack] = 0
+	info := p.packIDMap[pack]
+	logGroup.LogTags = append(logGroup.LogTags, util.NewLogTagForPackID(pack, info.seq))
+	info.lastUpdateTime = time.Now()
+	p.packIDMap[pack] = info
 
 	return logGroup
 }
@@ -156,12 +184,14 @@ func (*AggregatorDefault) evaluateLogSize(log *protocol.Log) int {
 // NewAggregatorDefault create a default aggregator with default value.
 func NewAggregatorDefault() *AggregatorDefault {
 	return &AggregatorDefault{
-		MaxLogGroupCount: 4,
-		MaxLogCount:      MaxLogCount,
-		logGroupPool:     make(map[string][]*protocol.LogGroup),
-		nowLogGroupSize:  make(map[string]int),
-		packID:           make(map[string]int64),
-		Lock:             &sync.Mutex{},
+		MaxLogGroupCount:            4,
+		MaxLogCount:                 MaxLogCount,
+		ContextPresevationTolerance: 10,
+		logGroupPoolMap:             make(map[string][]*protocol.LogGroup),
+		nowLogGroupSizeMap:          make(map[string]int),
+		packIDMap:                   make(map[string]*LogPackSeqInfo),
+		packIDMapCleanInterval:      time.Duration(600) * time.Second,
+		Lock:                        &sync.Mutex{},
 	}
 }
 
