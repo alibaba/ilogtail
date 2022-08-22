@@ -17,7 +17,6 @@ package telegraf
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/ilogtail/helper"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -27,6 +26,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"

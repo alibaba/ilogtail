@@ -378,6 +378,8 @@ github.com/google/uuid
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
 github.com/googleapis/gnostic/openapiv2
+# github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1
+github.com/gopherjs/gopherjs/js
 # github.com/gosnmp/gosnmp v1.31.0
 github.com/gosnmp/gosnmp
 # github.com/hashicorp/go-uuid v1.0.2
@@ -444,6 +446,8 @@ github.com/joeshaw/multierror
 github.com/josharian/intern
 # github.com/json-iterator/go v1.1.10
 github.com/json-iterator/go
+# github.com/jtolds/gls v4.20.0+incompatible
+github.com/jtolds/gls
 # github.com/juju/errors v0.0.0-20170703010042-c7d06af17c68
 github.com/juju/errors
 # github.com/klauspost/compress v1.11.13
@@ -481,6 +485,8 @@ github.com/modern-go/concurrent
 github.com/modern-go/reflect2
 # github.com/morikuni/aec v1.0.0
 github.com/morikuni/aec
+# github.com/narqo/go-dogstatsd-parser v0.2.0
+github.com/narqo/go-dogstatsd-parser
 # github.com/opencontainers/go-digest v1.0.0
 github.com/opencontainers/go-digest
 github.com/opencontainers/go-digest/digestset
@@ -566,6 +572,15 @@ github.com/siddontang/go-mysql/packet
 github.com/siddontang/go-mysql/replication
 # github.com/sirupsen/logrus v1.7.0
 github.com/sirupsen/logrus
+# github.com/smartystreets/assertions v1.2.0
+github.com/smartystreets/assertions
+github.com/smartystreets/assertions/internal/go-diff/diffmatchpatch
+github.com/smartystreets/assertions/internal/go-render/render
+github.com/smartystreets/assertions/internal/oglematchers
+# github.com/smartystreets/goconvey v1.7.2
+github.com/smartystreets/goconvey/convey
+github.com/smartystreets/goconvey/convey/gotest
+github.com/smartystreets/goconvey/convey/reporting
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.7.0

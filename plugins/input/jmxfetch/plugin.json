@@ -1,0 +1,27 @@
+{
+  "inputs": [
+	{
+	  "type": "service_jmx",
+	  "detail": {
+		"StaticInstances": [
+		  {
+			"Port": 1617,
+			"Host": "127.0.0.1",
+			"Tags": {
+			  "a": "b"
+			}
+		  }
+		]
+	  }
+	}
+  ],
+  "flushers": [
+	{
+	  "type": "flusher_stdout",
+	  "detail": {
+	  }
+	}
+  ]
+}
+
+

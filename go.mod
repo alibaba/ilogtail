@@ -56,6 +56,7 @@ require (
 	github.com/mailru/easyjson v0.7.7
 	github.com/mindprince/gonvml v0.0.0-20180514031326-b364b296c732
 	github.com/moby/sys/symlink v0.1.0 // indirect
+	github.com/narqo/go-dogstatsd-parser v0.2.0 // indirect
 	github.com/onsi/ginkgo v1.15.0 // indirect
 	github.com/onsi/gomega v1.10.5 // indirect
 	github.com/opencontainers/selinux v1.8.0 // indirect
@@ -87,6 +88,7 @@ require (
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/birkirb/loggers.v1 v1.0.3 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.20.4
 	k8s.io/apimachinery v0.20.4
