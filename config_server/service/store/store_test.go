@@ -3,9 +3,9 @@ package store
 import (
 	"testing"
 
-	"github.com/alibaba/ilogtail/config_server/config_server_service/common"
-	"github.com/alibaba/ilogtail/config_server/config_server_service/model"
-	"github.com/alibaba/ilogtail/config_server/config_server_service/setting"
+	"github.com/alibaba/ilogtail/config_server/service/common"
+	"github.com/alibaba/ilogtail/config_server/service/model"
+	"github.com/alibaba/ilogtail/config_server/service/setting"
 )
 
 func TestLoadStore(t *testing.T) {
@@ -29,7 +29,7 @@ func TestConfigStore(t *testing.T) {
 	t.Log("CONFIG 111:", value2)
 
 	config.Description = "test"
-	s.Mod(common.LABEL_CONFIG, config.Name, config)
+	s.Update(common.LABEL_CONFIG, config.Name, config)
 	value2, _ = s.Get(common.LABEL_CONFIG, "111")
 	t.Log("CONFIG 111:", value2)
 

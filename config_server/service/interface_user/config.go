@@ -3,8 +3,8 @@ package user
 import (
 	"fmt"
 
-	"github.com/alibaba/ilogtail/config_server/config_server_service/common"
-	configmanager "github.com/alibaba/ilogtail/config_server/config_server_service/config_manager"
+	"github.com/alibaba/ilogtail/config_server/service/common"
+	configmanager "github.com/alibaba/ilogtail/config_server/service/manager_config"
 	"github.com/gin-gonic/gin"
 )
 

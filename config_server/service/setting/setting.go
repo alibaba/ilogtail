@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/alibaba/ilogtail/config_server/config_server_service/common"
+	"github.com/alibaba/ilogtail/config_server/service/common"
 )
 
 type setting struct {

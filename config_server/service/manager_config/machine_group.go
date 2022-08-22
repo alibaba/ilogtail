@@ -1,9 +1,9 @@
 package configmanager
 
 import (
-	"github.com/alibaba/ilogtail/config_server/config_server_service/common"
-	"github.com/alibaba/ilogtail/config_server/config_server_service/model"
-	"github.com/alibaba/ilogtail/config_server/config_server_service/store"
+	"github.com/alibaba/ilogtail/config_server/service/common"
+	"github.com/alibaba/ilogtail/config_server/service/model"
+	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
 func CreateMachineGroup(name string, tag string, description string) (bool, error) {
@@ -53,7 +53,7 @@ func UpdateMachineGroup(name string, tag string, description string) (bool, erro
 		machineGroup.Tag = tag
 		machineGroup.Description = description
 
-		err = s.Mod(common.LABEL_MACHINEGROUP, name, machineGroup)
+		err = s.Update(common.LABEL_MACHINEGROUP, name, machineGroup)
 		if err != nil {
 			return true, err
 		}

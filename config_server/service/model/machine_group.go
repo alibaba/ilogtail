@@ -5,8 +5,9 @@ type MachineGroup struct {
 	Description    string   `json:"description"`
 	Tag            string   `json:"tag"`
 	AppliedConfigs []string `json:"applied_configs"`
+	Version        int      `json:"version"`
 }
 
 func NewMachineGroup(name string, description string, tag string) *MachineGroup {
-	return &MachineGroup{name, description, tag, []string{}}
+	return &MachineGroup{name, description, tag, []string{}, 0}
 }

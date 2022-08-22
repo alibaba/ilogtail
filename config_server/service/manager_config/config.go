@@ -1,9 +1,9 @@
 package configmanager
 
 import (
-	"github.com/alibaba/ilogtail/config_server/config_server_service/common"
-	"github.com/alibaba/ilogtail/config_server/config_server_service/model"
-	"github.com/alibaba/ilogtail/config_server/config_server_service/store"
+	"github.com/alibaba/ilogtail/config_server/service/common"
+	"github.com/alibaba/ilogtail/config_server/service/model"
+	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
 func CreateConfig(name string, info string, description string) (bool, error) {
@@ -25,7 +25,7 @@ func CreateConfig(name string, info string, description string) (bool, error) {
 			config.Description = description
 			config.DelTag = false
 			config.AppliedMachineGroup = []string{}
-			err = s.Mod(common.LABEL_CONFIG, config.Name, config)
+			err = s.Update(common.LABEL_CONFIG, config.Name, config)
 			if err != nil { // has err
 				return false, err
 			}
@@ -68,7 +68,7 @@ func UpdateConfig(name string, info string, description string) (bool, error) {
 			config.Content = info
 			config.Version++
 			config.Description = description
-			err = s.Mod(common.LABEL_CONFIG, name, config)
+			err = s.Update(common.LABEL_CONFIG, name, config)
 			if err != nil {
 				return true, err
 			}
@@ -96,7 +96,7 @@ func DeleteConfig(name string) (bool, error) {
 		} else {
 			config.DelTag = true
 			config.Version++
-			err = s.Mod(common.LABEL_CONFIG, name, config)
+			err = s.Update(common.LABEL_CONFIG, name, config)
 			if err != nil {
 				return true, err
 			}

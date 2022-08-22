@@ -1,4 +1,4 @@
-module github.com/alibaba/ilogtail/config_server/config_server_service
+module github.com/alibaba/ilogtail/config_server/service
 
 go 1.13
 

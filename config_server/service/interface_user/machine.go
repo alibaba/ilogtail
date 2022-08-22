@@ -1,8 +1,8 @@
 package user
 
 import (
-	agentmanager "github.com/alibaba/ilogtail/config_server/config_server_service/agent_manager"
-	"github.com/alibaba/ilogtail/config_server/config_server_service/common"
+	"github.com/alibaba/ilogtail/config_server/service/common"
+	agentmanager "github.com/alibaba/ilogtail/config_server/service/manager_agent"
 	"github.com/gin-gonic/gin"
 )
 

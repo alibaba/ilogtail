@@ -4,10 +4,10 @@
 
 各模块在源代码中对应的位置：
 
-* [controller/user](controller/user): 用户接口层
-* [controller/agent](controller/agent): agent 接口层
-* [config_manager](service/config_manager): 配置管理器
-* [agent_manager](service/agent_manager): agent 管理器
+* [interface_user](interface_user): 用户接口层
+* [interface_agent](interface_agent): agent 接口层
+* [manager_config](manager_config): 配置管理器
+* [manager_agent](manager_agent): agent 管理器
 * [store](store): 存储适配层
 
 其他源代码：
@@ -20,7 +20,7 @@
 
 整体流程大约是：
 
-发送（用户/agent） --> 路由（router） --> 接口（controller user/agent） --> 管理器（config_manager/agent_manager） --> 存储（store）
+用户/agent发起 API 请求 --> 路由（router） --> 接口（user/agent interface） --> 管理器（config/agent manager） --> 存储（store）
 
 ## 调试相关
 

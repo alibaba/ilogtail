@@ -6,4 +6,5 @@ type Machine struct {
 	Tag       map[string]string `json:"tags"`
 	State     string            `json:"state"`
 	Heartbeat string            `json:"heartbeat"`
+	Version   int               `json:"version"`
 }

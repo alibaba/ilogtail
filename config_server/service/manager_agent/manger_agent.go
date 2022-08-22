@@ -1,9 +1,9 @@
 package agentmanager
 
 import (
-	"github.com/alibaba/ilogtail/config_server/config_server_service/common"
-	"github.com/alibaba/ilogtail/config_server/config_server_service/model"
-	"github.com/alibaba/ilogtail/config_server/config_server_service/store"
+	"github.com/alibaba/ilogtail/config_server/service/common"
+	"github.com/alibaba/ilogtail/config_server/service/model"
+	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
 func GetAllMachine() ([]model.Machine, error) {
