@@ -7,7 +7,7 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/model"
 	"github.com/alibaba/ilogtail/config_server/service/setting"
-	"github.com/alibaba/ilogtail/config_server/service/store/database"
+	database "github.com/alibaba/ilogtail/config_server/service/store/interface_database"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 

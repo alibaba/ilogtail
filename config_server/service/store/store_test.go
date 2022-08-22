@@ -9,13 +9,13 @@ import (
 )
 
 func TestLoadStore(t *testing.T) {
-	setting.SetSettingPath("./../setting/setting.json")
+	setting.SetSettingPath("./../example/setting.json")
 
 	t.Log(GetStore().GetMode())
 }
 
 func TestConfigStore(t *testing.T) {
-	setting.SetSettingPath("./../setting/setting.json")
+	setting.SetSettingPath("./../example/setting.json")
 
 	s := GetStore()
 
@@ -44,7 +44,7 @@ func TestConfigStore(t *testing.T) {
 }
 
 func TestAll(t *testing.T) {
-	setting.SetSettingPath("./../setting/setting.json")
+	setting.SetSettingPath("./../example/setting.json")
 
 	s := GetStore()
 

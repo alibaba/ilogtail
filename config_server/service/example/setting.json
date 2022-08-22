@@ -1,0 +1,7 @@
+{
+    "ip":"127.0.0.1",
+    "store_mode": "leveldb",
+    "identity": "master",
+    "port": "8899",
+    "leveldb_path": "./DB"
+}

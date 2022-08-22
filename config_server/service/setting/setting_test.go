@@ -3,12 +3,12 @@ package setting
 import "testing"
 
 func TestGetSetting(t *testing.T) {
-	SetSettingPath("./setting.json")
+	SetSettingPath("./../example/setting.json")
 	t.Log(GetSetting())
 }
 
 func TestUpdateSetting(t *testing.T) {
-	SetSettingPath("./setting.json")
+	SetSettingPath("./../example/setting.json")
 
 	t.Log(GetSetting())
 
