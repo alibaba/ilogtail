@@ -2,6 +2,8 @@
 
 ## <img alt="Junior Developer" width="100" height="100" src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/contributing/achievement/Jr.Dev.png" style="vertical-align: middle;"/> <span style="vertical-align: middle;">Junior Developer</span>
 
+成功提交1次任意 PR，并被社区接受。
+
 - Cheng Zhang([@shabicheng](https://github.com/shabicheng))
 - Goclis Yao([@Goclis](https://github.com/Goclis))
 - Runqi Lin([@linrunqi08](https://github.com/linrunqi08))
@@ -23,6 +25,8 @@
 
 ## <img alt="Senior Developer" width="100" height="100" src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/contributing/achievement/Sr.Dev.png" style="vertical-align: middle;"/> <span style="vertical-align: middle;">Senior Developer</span>
 
+解决至少10个 PR，并被社区接受（统计commit对应PR数量）。
+
 - Kejia Xu([@messixukejia](https://github.com/messixukejia))
 - Tao Yu([@yyuuttaaoo](https://github.com/yyuuttaaoo))
 - Jiapeng Liu([@EvanLjp](https://github.com/EvanLjp))
@@ -30,20 +34,28 @@
 
 ## <img alt="Junior Developer" width="100" height="100" src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/contributing/achievement/Jr.Amb.png" style="vertical-align: middle;"/> <span style="vertical-align: middle;">Junior Ambassador</span>
 
+为iLogtail做出至少1次宣传。
+
 - Tao Yu([@yyuuttaaoo](https://github.com/yyuuttaaoo))
 
 ## <img alt="Senior Developer" width="100" height="100" src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/contributing/achievement/Sr.Amb.png" style="vertical-align: middle;"/> <span style="vertical-align: middle;">Senior Ambassador</span>
+
+为iLogtail做出至少5次宣传（统计awesome ilogtail tag的issue）。
 
 - Kejia Xu([@messixukejia](https://github.com/messixukejia))
 - Cheng Zhang([@shabicheng](https://github.com/shabicheng))
 
 ## <img alt="Junior Moderator" width="100" height="100" src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/contributing/achievement/Jr.Mod.png" style="vertical-align: middle;"/> <span style="vertical-align: middle;">Junior Moderator</span>
 
+在论坛中回答问题，并获得至少1个被接受答案。
+
 - Kejia Xu([@messixukejia](https://github.com/messixukejia))
 - Tao Yu([@yyuuttaaoo](https://github.com/yyuuttaaoo))
 - Haoxiang Zhang([@henryzhx8](https://github.com/henryzhx8))
 
 ## <img alt="Senior Moderator" width="100" height="100" src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/contributing/achievement/Sr.Mod.png" style="vertical-align: middle;"/> <span style="vertical-align: middle;">Senior Moderator</span>
+
+在论坛中回答问题，并获得至少10个被接受答案（统计accepted的answer数量）。
 
 ## 证书展示
 
