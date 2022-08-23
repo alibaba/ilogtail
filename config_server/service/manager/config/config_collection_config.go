@@ -9,8 +9,8 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func CreateConfig(configName string, info string, description string) (bool, error) {
-	config, ok := store.GetMemory().ConfigList[configName]
+func (c *ConfigManager) CreateConfig(configName string, info string, description string) (bool, error) {
+	config, ok := c.ConfigList[configName]
 	if ok {
 		if config.DelTag == false { // exsit
 			return true, nil
@@ -20,7 +20,7 @@ func CreateConfig(configName string, info string, description string) (bool, err
 			config.Description = description
 			config.DelTag = false
 
-			store.GetMemory().ConfigList[configName] = config
+			c.ConfigList[configName] = config
 			return false, nil
 		}
 	} else { // doesn't exist
@@ -31,13 +31,13 @@ func CreateConfig(configName string, info string, description string) (bool, err
 		config.Description = description
 		config.DelTag = false
 
-		store.GetMemory().ConfigList[configName] = config
+		c.ConfigList[configName] = config
 		return false, nil
 	}
 }
 
-func UpdateConfig(configName string, info string, description string) (bool, error) {
-	config, ok := store.GetMemory().ConfigList[configName]
+func (c *ConfigManager) UpdateConfig(configName string, info string, description string) (bool, error) {
+	config, ok := c.ConfigList[configName]
 	if !ok {
 		return false, nil
 	} else {
@@ -48,14 +48,14 @@ func UpdateConfig(configName string, info string, description string) (bool, err
 			config.Version = config.Version + 1
 			config.Description = description
 
-			store.GetMemory().ConfigList[configName] = config
+			c.ConfigList[configName] = config
 			return true, nil
 		}
 	}
 }
 
-func DeleteConfig(configName string) (bool, error) {
-	config, ok := store.GetMemory().ConfigList[configName]
+func (c *ConfigManager) DeleteConfig(configName string) (bool, error) {
+	config, ok := c.ConfigList[configName]
 	if !ok {
 		return false, nil
 	} else {
@@ -65,14 +65,14 @@ func DeleteConfig(configName string) (bool, error) {
 			config.DelTag = true
 			config.Version = config.Version + 1
 
-			store.GetMemory().ConfigList[configName] = config
+			c.ConfigList[configName] = config
 			return true, nil
 		}
 	}
 }
 
-func GetConfig(configName string) (*model.Config, error) {
-	config, ok := store.GetMemory().ConfigList[configName]
+func (c *ConfigManager) GetConfig(configName string) (*model.Config, error) {
+	config, ok := c.ConfigList[configName]
 	if !ok {
 		return nil, nil
 	} else {
@@ -83,8 +83,8 @@ func GetConfig(configName string) (*model.Config, error) {
 	}
 }
 
-func ListAllConfigs() ([]model.Config, error) {
-	configList := store.GetMemory().ConfigList
+func (c *ConfigManager) ListAllConfigs() ([]model.Config, error) {
+	configList := c.ConfigList
 	ans := make([]model.Config, 0)
 	for _, config := range configList {
 		if config.DelTag == false {
@@ -94,7 +94,7 @@ func ListAllConfigs() ([]model.Config, error) {
 	return ans, nil
 }
 
-func updateConfig() {
+func (c *ConfigManager) UpdateConfigList() {
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 
@@ -103,7 +103,7 @@ func updateConfig() {
 		b := store.CreateBacth()
 
 		// push
-		for k, v := range store.GetMemory().ConfigList {
+		for k, v := range c.ConfigList {
 			ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, k)
 			if err != nil {
 				log.Println(err)
@@ -136,17 +136,13 @@ func updateConfig() {
 			log.Println(err)
 			continue
 		} else {
-			for k := range store.GetMemory().ConfigList {
-				delete(store.GetMemory().ConfigList, k)
+			for k := range c.ConfigList {
+				delete(c.ConfigList, k)
 			}
 
 			for _, config := range configList {
-				store.GetMemory().ConfigList[config.(*model.Config).Name] = config.(*model.Config)
+				c.ConfigList[config.(*model.Config).Name] = config.(*model.Config)
 			}
 		}
 	}
-}
-
-func init() {
-	go updateConfig()
 }

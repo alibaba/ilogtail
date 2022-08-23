@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
-	configmanager "github.com/alibaba/ilogtail/config_server/service/manager_config"
+	"github.com/alibaba/ilogtail/config_server/service/manager"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,7 +23,7 @@ func CreateConfig(c *gin.Context) {
 		return
 	}
 
-	exist, err := configmanager.CreateConfig(configName, configInfo, description)
+	exist, err := manager.ConfigManager().CreateConfig(configName, configInfo, description)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -49,7 +49,7 @@ func UpdateConfig(c *gin.Context) {
 		return
 	}
 
-	exist, err := configmanager.UpdateConfig(configName, configInfo, description)
+	exist, err := manager.ConfigManager().UpdateConfig(configName, configInfo, description)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -67,7 +67,7 @@ func DeleteConfig(c *gin.Context) {
 		return
 	}
 
-	exist, err := configmanager.DeleteConfig(configName)
+	exist, err := manager.ConfigManager().DeleteConfig(configName)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -85,7 +85,7 @@ func GetConfig(c *gin.Context) {
 		return
 	}
 
-	config, err := configmanager.GetConfig(configName)
+	config, err := manager.ConfigManager().GetConfig(configName)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -97,7 +97,7 @@ func GetConfig(c *gin.Context) {
 }
 
 func ListAllConfigs(c *gin.Context) {
-	configList, err := configmanager.ListAllConfigs()
+	configList, err := manager.ConfigManager().ListAllConfigs()
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))

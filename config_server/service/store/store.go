@@ -1,6 +1,7 @@
 package store
 
 import (
+	"github.com/alibaba/ilogtail/config_server/service/setting"
 	database "github.com/alibaba/ilogtail/config_server/service/store/interface_database"
 	"github.com/alibaba/ilogtail/config_server/service/store/leveldb"
 )
@@ -32,4 +33,14 @@ func GetStore() database.Database {
 
 func CreateBacth() *database.Batch {
 	return new(database.Batch)
+}
+
+// init
+
+func init() {
+	myStore = newStore(setting.GetSetting().StoreMode)
+	err := myStore.Connect()
+	if err != nil {
+		panic(err)
+	}
 }

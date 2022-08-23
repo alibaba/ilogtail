@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
-	agentmanager "github.com/alibaba/ilogtail/config_server/service/manager_agent"
+	"github.com/alibaba/ilogtail/config_server/service/manager"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,7 +16,7 @@ func HeartBeat(c *gin.Context) {
 		return
 	}
 
-	err := agentmanager.HeartBeat(instance_id, c.ClientIP(), tags)
+	err := manager.AgentManager().HeartBeat(instance_id, c.ClientIP(), tags)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -33,7 +33,7 @@ func RunningStatus(c *gin.Context) {
 		return
 	}
 
-	err := agentmanager.RunningStatus(instance_id, status)
+	err := manager.AgentManager().RunningStatus(instance_id, status)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))

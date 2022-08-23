@@ -10,37 +10,26 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-const (
-	opt_heartbeat string = "HEARTBEAT"
-	opt_alarm     string = "ALARM"
-	opt_status    string = "STATUS"
-)
-
-type agentMessage struct {
-	Opt  string
-	Data interface{}
-}
-
-func HeartBeat(id string, ip string, tags map[string]string) error {
+func (a *AgentManager) HeartBeat(id string, ip string, tags map[string]string) error {
 	queryTime := strconv.FormatInt(time.Now().Unix(), 10)
 	machine := new(model.Machine)
 	machine.MachineId = id
 	machine.Ip = ip
 	machine.Heartbeat = queryTime
 	machine.Tag = tags
-	store.GetMemory().AgentMessageQueue.Push(agentMessage{opt_heartbeat, machine})
+	a.AgentMessageQueue.Push(agentMessage{opt_heartbeat, machine})
 	return nil
 }
 
-func RunningStatus(id string, status map[string]string) error {
+func (a *AgentManager) RunningStatus(id string, status map[string]string) error {
 	machineStatus := new(model.AgentStatus)
 	machineStatus.MachineId = id
 	machineStatus.Status = status
-	store.GetMemory().AgentMessageQueue.Push(agentMessage{opt_status, machineStatus})
+	a.AgentMessageQueue.Push(agentMessage{opt_status, machineStatus})
 	return nil
 }
 
-func updateAgentMessage() {
+func (a *AgentManager) UpdateAgentMessage() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
@@ -48,8 +37,8 @@ func updateAgentMessage() {
 		s := store.GetStore()
 		b := store.CreateBacth()
 
-		for !store.GetMemory().AgentMessageQueue.Empty() {
-			msg := store.GetMemory().AgentMessageQueue.Pop().(agentMessage)
+		for !a.AgentMessageQueue.Empty() {
+			msg := a.AgentMessageQueue.Pop().(agentMessage)
 			switch msg.Opt {
 			case opt_heartbeat:
 				b.Update(common.TYPE_MACHINE, msg.Data.(*model.Machine).MachineId, msg.Data.(*model.Machine))
@@ -68,8 +57,4 @@ func updateAgentMessage() {
 			continue
 		}
 	}
-}
-
-func init() {
-	go updateAgentMessage()
 }

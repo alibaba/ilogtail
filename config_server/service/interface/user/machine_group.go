@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
-	agentmanager "github.com/alibaba/ilogtail/config_server/service/manager_agent"
-	configmanager "github.com/alibaba/ilogtail/config_server/service/manager_config"
+	"github.com/alibaba/ilogtail/config_server/service/manager"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +18,7 @@ func CreateMachineGroup(c *gin.Context) {
 		return
 	}
 
-	exist, err := configmanager.CreateMachineGroup(groupName, groupTag, description)
+	exist, err := manager.ConfigManager().CreateMachineGroup(groupName, groupTag, description)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -40,7 +39,7 @@ func UpdateMachineGroup(c *gin.Context) {
 		return
 	}
 
-	exist, err := configmanager.UpdateMachineGroup(groupName, groupTag, description)
+	exist, err := manager.ConfigManager().UpdateMachineGroup(groupName, groupTag, description)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -58,7 +57,7 @@ func DeleteMachineGroup(c *gin.Context) {
 		return
 	}
 
-	exist, err := configmanager.DeleteMachineGroup(groupName)
+	exist, err := manager.ConfigManager().DeleteMachineGroup(groupName)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -76,7 +75,7 @@ func GetMachineGroup(c *gin.Context) {
 		return
 	}
 
-	machineGroup, err := configmanager.GetMachineGroup(groupName)
+	machineGroup, err := manager.ConfigManager().GetMachineGroup(groupName)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -88,7 +87,7 @@ func GetMachineGroup(c *gin.Context) {
 }
 
 func ListMachineGroups(c *gin.Context) {
-	machineGroupList, err := configmanager.GetAllMachineGroup()
+	machineGroupList, err := manager.ConfigManager().GetAllMachineGroup()
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
@@ -105,7 +104,7 @@ func ListMachines(c *gin.Context) {
 		return
 	}
 
-	machineList, err := agentmanager.GetMachineList(groupName)
+	machineList, err := manager.AgentManager().GetMachineList(groupName)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))

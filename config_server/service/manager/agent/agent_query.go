@@ -9,7 +9,7 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func GetMachineList(groupName string) ([]model.Machine, error) {
+func (a *AgentManager) GetMachineList(groupName string) ([]model.Machine, error) {
 	nowTime := time.Now()
 	ans := make([]model.Machine, 0)
 	s := store.GetStore()

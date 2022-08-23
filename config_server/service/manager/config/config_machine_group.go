@@ -6,7 +6,7 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func CreateMachineGroup(groupName string, tag string, description string) (bool, error) {
+func (c *ConfigManager) CreateMachineGroup(groupName string, tag string, description string) (bool, error) {
 	if tag == "" {
 		tag = "default"
 	}
@@ -32,7 +32,7 @@ func CreateMachineGroup(groupName string, tag string, description string) (bool,
 	}
 }
 
-func UpdateMachineGroup(groupName string, tag string, description string) (bool, error) {
+func (c *ConfigManager) UpdateMachineGroup(groupName string, tag string, description string) (bool, error) {
 	if tag == "" {
 		tag = "default"
 	}
@@ -62,7 +62,7 @@ func UpdateMachineGroup(groupName string, tag string, description string) (bool,
 	}
 }
 
-func DeleteMachineGroup(groupName string) (bool, error) {
+func (c *ConfigManager) DeleteMachineGroup(groupName string) (bool, error) {
 	s := store.GetStore()
 	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
@@ -78,7 +78,7 @@ func DeleteMachineGroup(groupName string) (bool, error) {
 	}
 }
 
-func GetMachineGroup(groupName string) (*model.MachineGroup, error) {
+func (c *ConfigManager) GetMachineGroup(groupName string) (*model.MachineGroup, error) {
 	s := store.GetStore()
 	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
@@ -94,7 +94,7 @@ func GetMachineGroup(groupName string) (*model.MachineGroup, error) {
 	}
 }
 
-func GetAllMachineGroup() ([]model.MachineGroup, error) {
+func (c *ConfigManager) GetAllMachineGroup() ([]model.MachineGroup, error) {
 	s := store.GetStore()
 	machineGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
 	if err != nil {

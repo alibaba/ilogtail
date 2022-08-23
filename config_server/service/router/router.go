@@ -1,8 +1,8 @@
 package router
 
 import (
-	agent "github.com/alibaba/ilogtail/config_server/service/interface_agent"
-	user "github.com/alibaba/ilogtail/config_server/service/interface_user"
+	"github.com/alibaba/ilogtail/config_server/service/interface/agent"
+	"github.com/alibaba/ilogtail/config_server/service/interface/user"
 	"github.com/alibaba/ilogtail/config_server/service/setting"
 	"github.com/gin-gonic/gin"
 )
