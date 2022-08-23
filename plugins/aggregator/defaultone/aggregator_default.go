@@ -33,7 +33,7 @@ const (
 )
 
 type LogPackSeqInfo struct {
-	seq            *int64
+	seq            int64
 	lastUpdateTime time.Time
 }
 
@@ -166,7 +166,12 @@ func (p *AggregatorDefault) newLogGroup(pack string) *protocol.LogGroup {
 		Topic: p.Topic,
 	}
 	info := p.packIDMap[pack]
-	logGroup.LogTags = append(logGroup.LogTags, util.NewLogTagForPackID(pack, info.seq))
+	if info == nil {
+		info = &LogPackSeqInfo{
+			seq: 1,
+		}
+	}
+	logGroup.LogTags = append(logGroup.LogTags, util.NewLogTagForPackID(pack, &info.seq))
 	info.lastUpdateTime = time.Now()
 	p.packIDMap[pack] = info
 

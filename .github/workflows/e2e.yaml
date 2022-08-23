@@ -49,7 +49,7 @@ jobs:
         run: uname -r
 
       - name: E2E Test
-        run: make e2e
+        run: TEST_DEBUG=true make e2e
 
       - name: UnitTest E2e Engine
         if: matrix.runner == 'ubuntu'
