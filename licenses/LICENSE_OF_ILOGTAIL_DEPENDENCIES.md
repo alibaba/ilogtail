@@ -105,6 +105,7 @@ When distributed in a binary form, Logtailplugin may contain portions of the fol
 - [gopkg.in/inf.v0](https://pkg.go.dev/gopkg.in/inf.v0?tab=licenses)
 
 ## MIT licenses
+- [github.com/narqo/go-dogstatsd-parser](https://pkg.go.dev/github.com/narqo/go-dogstatsd-parser?tab=licenses)
 - [sigs.k8s.io/yaml](https://pkg.go.dev/sigs.k8s.io/yaml?tab=licenses)
 - [github.com/Azure/go-ansiterm](https://pkg.go.dev/github.com/Azure/go-ansiterm?tab=licenses)
 - [github.com/BurntSushi/toml](https://pkg.go.dev/github.com/BurntSushi/toml?tab=licenses)
