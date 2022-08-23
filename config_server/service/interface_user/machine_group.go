@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
+	agentmanager "github.com/alibaba/ilogtail/config_server/service/manager_agent"
 	configmanager "github.com/alibaba/ilogtail/config_server/service/manager_config"
 	"github.com/gin-gonic/gin"
 )
@@ -96,7 +97,23 @@ func ListMachineGroups(c *gin.Context) {
 	}
 }
 
+// only default
 func ListMachines(c *gin.Context) {
+	groupName := c.Query("groupName")
+	if groupName == "" {
+		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "groupName")))
+		return
+	}
+
+	machineList, err := agentmanager.GetMachineList(groupName)
+
+	if err != nil {
+		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+	} else if machineList == nil {
+		c.JSON(common.ErrorResponse(common.MachineGroupNotExist, fmt.Sprintf("Machine group %s doesn't exist.", groupName)))
+	} else {
+		c.JSON(common.AcceptResponse(common.Accept, "Get machine list success", gin.H{"machineList": machineList}))
+	}
 }
 
 func ApplyConfigToMachineGroup(c *gin.Context) {

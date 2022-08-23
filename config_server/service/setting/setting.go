@@ -12,7 +12,7 @@ type setting struct {
 	StoreMode        string `json:"store_mode"`   // "leveldb" "mysql"
 	Identity         string `json:"identity"`     // "master" "slave"
 	Port             string `json:"port"`         // "8899"
-	LeveldbStorePath string `json:"leveldb_path"` // "./LEVELDB"
+	LeveldbStorePath string `json:"leveldb_path"` // "./DB"
 }
 
 var mySetting *setting
@@ -32,22 +32,6 @@ func SetSettingPath(path string) {
 Create a singleton of setting
 */
 func GetSetting() setting {
-	setOnce.Do(func() {
-		mySetting = new(setting)
-		common.ReadJson(settingFile, mySetting)
-		if mySetting.Ip == "" {
-			mySetting.Ip = "127.0.0.1"
-		}
-		if mySetting.Port == "" {
-			mySetting.Port = "8899"
-		}
-		if mySetting.Identity == "" {
-			mySetting.Identity = "master"
-		}
-		if mySetting.StoreMode == "" {
-			panic("Please set store mode")
-		}
-	})
 	return *mySetting
 }
 
@@ -75,4 +59,21 @@ func UpdateSetting(tagMap map[string]interface{}) {
 		}
 	}
 	common.WriteJson(settingFile, mySetting)
+}
+
+func init() {
+	mySetting = new(setting)
+	common.ReadJson(settingFile, mySetting)
+	if mySetting.Ip == "" {
+		mySetting.Ip = "127.0.0.1"
+	}
+	if mySetting.Port == "" {
+		mySetting.Port = "8899"
+	}
+	if mySetting.Identity == "" {
+		mySetting.Identity = "master"
+	}
+	if mySetting.StoreMode == "" {
+		panic("Please set store mode")
+	}
 }

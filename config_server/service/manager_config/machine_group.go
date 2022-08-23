@@ -6,20 +6,20 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func CreateMachineGroup(name string, tag string, description string) (bool, error) {
+func CreateMachineGroup(groupName string, tag string, description string) (bool, error) {
 	if tag == "" {
 		tag = "default"
 	}
 
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, name)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
 		return true, err
 	} else if ok {
 		return true, nil
 	} else {
 		machineGroup := new(model.MachineGroup)
-		machineGroup.Name = name
+		machineGroup.Name = groupName
 		machineGroup.Tag = tag
 		machineGroup.Description = description
 		machineGroup.AppliedConfigs = []string{}
@@ -32,19 +32,19 @@ func CreateMachineGroup(name string, tag string, description string) (bool, erro
 	}
 }
 
-func UpdateMachineGroup(name string, tag string, description string) (bool, error) {
+func UpdateMachineGroup(groupName string, tag string, description string) (bool, error) {
 	if tag == "" {
 		tag = "default"
 	}
 
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, name)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		value, err := s.Get(common.TYPE_MACHINEGROUP, name)
+		value, err := s.Get(common.TYPE_MACHINEGROUP, groupName)
 		if err != nil {
 			return true, err
 		}
@@ -54,7 +54,7 @@ func UpdateMachineGroup(name string, tag string, description string) (bool, erro
 		machineGroup.Description = description
 		machineGroup.Version++
 
-		err = s.Update(common.TYPE_MACHINEGROUP, name, machineGroup)
+		err = s.Update(common.TYPE_MACHINEGROUP, groupName, machineGroup)
 		if err != nil {
 			return true, err
 		}
@@ -62,15 +62,15 @@ func UpdateMachineGroup(name string, tag string, description string) (bool, erro
 	}
 }
 
-func DeleteMachineGroup(name string) (bool, error) {
+func DeleteMachineGroup(groupName string) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, name)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		err = s.Delete(common.TYPE_MACHINEGROUP, name)
+		err = s.Delete(common.TYPE_MACHINEGROUP, groupName)
 		if err != nil {
 			return true, err
 		}
@@ -78,15 +78,15 @@ func DeleteMachineGroup(name string) (bool, error) {
 	}
 }
 
-func GetMachineGroup(name string) (*model.MachineGroup, error) {
+func GetMachineGroup(groupName string) (*model.MachineGroup, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, name)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
 		return nil, err
 	} else if !ok {
 		return nil, nil
 	} else {
-		machineGroup, err := s.Get(common.TYPE_MACHINEGROUP, name)
+		machineGroup, err := s.Get(common.TYPE_MACHINEGROUP, groupName)
 		if err != nil {
 			return nil, err
 		}

@@ -19,10 +19,9 @@ type Database interface {
 	Has(table string, entityKey string) (bool, error)
 	Delete(table string, entityKey string) error
 	GetAll(table string) ([]interface{}, error)
+	Count(table string) (int, error)
 
 	WriteBatch(batch *Batch) error
-
-	CheckAll() // for test
 }
 
 // batch

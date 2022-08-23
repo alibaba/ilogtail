@@ -42,11 +42,3 @@ func TestConfigStore(t *testing.T) {
 	//	t.Log("ALL COLLECTION_CONFIGS:", value1)
 
 }
-
-func TestAll(t *testing.T) {
-	setting.SetSettingPath("./../example/setting.json")
-
-	s := GetStore()
-
-	s.CheckAll()
-}

@@ -2,7 +2,6 @@ package leveldb
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/model"
@@ -13,6 +12,7 @@ import (
 
 var dbPath = []string{
 	common.TYPE_AGENT_ALARM,
+	common.TYPE_AGENT_STATUS,
 	common.TYPE_COLLECTION_CONFIG,
 	common.TYPE_MACHINE,
 	common.TYPE_MACHINEGROUP,
@@ -23,6 +23,8 @@ type LeveldbStore struct {
 }
 
 func (l *LeveldbStore) Connect() error {
+	l.db = make(map[string]*leveldb.DB)
+
 	var err error
 	for _, c := range dbPath {
 		l.db[c], err = leveldb.OpenFile(setting.GetSetting().LeveldbStorePath+"/"+c, nil)
@@ -106,7 +108,6 @@ func (l *LeveldbStore) GetAll(table string) ([]interface{}, error) {
 	ans := make([]interface{}, 0)
 
 	iter := l.db[table].NewIterator(nil, nil)
-	iter.Next()
 	for iter.Next() {
 		ans = append(ans, parseValue(table, iter.Value()))
 	}
@@ -119,9 +120,25 @@ func (l *LeveldbStore) GetAll(table string) ([]interface{}, error) {
 	return ans, nil
 }
 
+func (l *LeveldbStore) Count(table string) (int, error) {
+	var ans int = 0
+
+	iter := l.db[table].NewIterator(nil, nil)
+	for iter.Next() {
+		ans = ans + 1
+	}
+
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		return 0, err
+	}
+	return ans, nil
+}
+
 func (l *LeveldbStore) WriteBatch(batch *database.Batch) error {
 	batchTemp := *batch
-	var leveldbBatch map[string]*leveldb.Batch
+	var leveldbBatch map[string]*leveldb.Batch = make(map[string]*leveldb.Batch)
 
 	for !batch.Empty() {
 		data := batch.Pop()
@@ -185,15 +202,4 @@ func parseValue(table string, data []byte) interface{} {
 	}
 	json.Unmarshal(data, ans)
 	return ans
-}
-
-func (l *LeveldbStore) CheckAll() {
-	for t, db := range l.db {
-		fmt.Println("Table:", t)
-		iter := db.NewIterator(nil, nil)
-		for iter.Next() {
-			fmt.Println(string(iter.Key()), ":", string(iter.Value()))
-		}
-		iter.Release()
-	}
 }
