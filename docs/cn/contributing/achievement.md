@@ -72,7 +72,7 @@
 ## 证书展示
 
 您可以在GitHub的个人档案档案中展示所获得的证书，向您的小伙伴展示您所取得的成就。就像这样：
-![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2022/png/31056853/1661223137520-e1386e61-e8d1-43cc-8b96-99671d55c86d.png#clientId=ue2dfd8b2-eb5d-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=396&id=uea45a304&margin=%5Bobject%20Object%5D&name=image.png&originHeight=872&originWidth=1990&originalType=binary&ratio=1&rotation=0&showTitle=false&size=241982&status=done&style=none&taskId=u5d88022a-f8b7-4591-8580-5aa0a495451&title=&width=904.5454349399603)
+![image](https://user-images.githubusercontent.com/1827594/186176496-6f434cea-a78a-4117-9476-4c882b90185a.png)
 全部6种徽章的代码如下，请自行裁剪：
 
 ```html
