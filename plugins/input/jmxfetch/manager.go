@@ -216,7 +216,7 @@ func (m *Manager) run() {
 	stopFunc := func() {
 		m.Lock()
 		defer m.Unlock()
-		if m.server != nil && m.server.CollectorsNum() == 0 {
+		if m.server != nil && len(m.collectors) == 0 {
 			logger.Info(m.managerMeta.GetContext(), "stop jmxfetch process")
 			m.stopServer()
 			m.stop()

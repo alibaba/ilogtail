@@ -37,21 +37,19 @@ type SharedUDPServer struct {
 }
 
 func NewSharedUDPServer(context ilogtail.Context, format, addr, dispatchKey string, maxBufferSize int) (*SharedUDPServer, error) {
-	creator := ilogtail.ServiceInputs["service_udp_server"]
-	s := creator().(*UDPServer)
-	s.Format = format
-	s.Address = addr
-	s.MaxBufferSize = maxBufferSize
-	if _, err := s.Init(context); err != nil {
+	server := ilogtail.ServiceInputs["service_udp_server"]().(*UDPServer)
+	server.Format = format
+	server.Address = addr
+	server.MaxBufferSize = maxBufferSize
+	if _, err := server.Init(context); err != nil {
 		return nil, err
 	}
-	server := &SharedUDPServer{
+	return &SharedUDPServer{
 		dispatchKey: dispatchKey,
-		collectors:  map[string]ilogtail.Collector{},
 		lastLog:     time.Now(),
-		udp:         s,
-	}
-	return server, nil
+		udp:         server,
+		collectors:  make(map[string]ilogtail.Collector),
+	}, nil
 }
 
 func (s *SharedUDPServer) IsRunning() bool {
@@ -80,31 +78,19 @@ func (s *SharedUDPServer) RegisterCollectors(key string, collector ilogtail.Coll
 	s.collectors[key] = collector
 }
 
-func (s *SharedUDPServer) CollectorsNum() int {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	return len(s.collectors)
-}
-
-func (s *SharedUDPServer) Contains(key string) bool {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	_, ok := s.collectors[key]
-	return ok
-}
-
 func (s *SharedUDPServer) dispatcher(logs []*protocol.Log) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 	for _, log := range logs {
 		if logger.DebugFlag() {
 			logger.Debug(context.Background(), "log", log.String())
 		}
 		tag := s.cutDispatchTag(log)
 		if tag == "" {
+			s.logErr("dispatcher tag is empty")
 			continue
 		}
-		s.lock.RLock()
 		collector, ok := s.collectors[tag]
-		s.lock.RUnlock()
 		if !ok {
 			s.logErr("collector not exist for " + tag)
 			continue
@@ -114,7 +100,6 @@ func (s *SharedUDPServer) dispatcher(logs []*protocol.Log) {
 }
 
 func (s *SharedUDPServer) logErr(errStr string) {
-
 	if time.Since(s.lastLog).Seconds() > 10 {
 		logger.Error(s.udp.context.GetRuntimeContext(), "MULTI_HTTP_SERVER_ALARM", "not exist dispatch key", errStr)
 		s.lastLog = time.Now()
@@ -138,10 +123,10 @@ func (s *SharedUDPServer) cutDispatchTag(log *protocol.Log) (tag string) {
 			offset := strings.Index(str, "|")
 			if offset == -1 {
 				tag = str
-				//content.Value = content.Value[:startIdx-1]
+				content.Value = content.Value[:startIdx-1]
 			} else {
 				tag = str[:offset]
-				//content.Value = content.Value[:startIdx] + content.Value[endIdx+offset+1:]
+				content.Value = content.Value[:startIdx] + content.Value[endIdx+offset+1:]
 			}
 			break
 		}
