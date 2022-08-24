@@ -41,16 +41,31 @@ var manager *Manager
 
 const dispatchKey = "jmxfetch_ilogtail"
 
-type Cfg struct {
-	include   []*Filter
-	instances map[string]*InstanceInner
-	change    bool
+func GetJmxFetchManager(agentDirPath string) *Manager {
+	once.Do(func() {
+		manager = createManager(agentDirPath)
+		// don't init the collector with struct because the collector depends on the bindMeta.
+		util.RegisterAlarm("jmxfetch", manager.managerMeta.GetAlarm())
+		if manager.autoInstall() || manager.manualInstall() {
+			manager.initSuccess = manager.initConfDir()
+		}
+		if manager.initSuccess {
+			go manager.run()
+			logger.Info(manager.managerMeta.GetContext(), "init jmxfetch manager success")
+		}
+	})
+	return manager
 }
 
-func NewCfg(filters []*Filter) *Cfg {
-	return &Cfg{
-		instances: map[string]*InstanceInner{},
-		include:   filters,
+func createManager(agentDirPath string) *Manager {
+	return &Manager{
+		jmxFetchPath:     agentDirPath,
+		jmxfetchdPath:    path.Join(agentDirPath, scriptsName),
+		jmxfetchConfPath: path.Join(agentDirPath, "conf.d"),
+		allLoadedCfgs:    make(map[string]*Cfg),
+		collectors:       make(map[string]ilogtail.Collector),
+		managerMeta:      helper.NewmanagerMeta("jmxfetch"),
+		stopChan:         make(chan struct{}),
 	}
 }
 
@@ -63,21 +78,24 @@ type Manager struct {
 	managerMeta      *helper.ManagerMeta
 	stopChan         chan struct{}
 	uniqueCollectors string
-
-	server      *udpserver.SharedUDPServer
-	javaPath    string
-	initSuccess bool
+	server           *udpserver.SharedUDPServer
+	javaPath         string
+	initSuccess      bool
+	port             int
 	sync.Mutex
-	port int
 }
 
-func (m *Manager) RegisterCollector(key string, collector ilogtail.Collector, filters []*Filter) {
+func (m *Manager) RegisterCollector(ctx ilogtail.Context, key string, collector ilogtail.Collector, filters []*Filter) {
 	if !m.initSuccess {
 		return
 	}
 	logger.Debug(m.managerMeta.GetContext(), "register collector", key)
 	m.Lock()
 	defer m.Unlock()
+	ltCtx, ok := ctx.GetRuntimeContext().Value(pkg.LogTailMeta).(*pkg.LogtailContextMeta)
+	if ok {
+		m.managerMeta.Add(ltCtx.GetProject(), ltCtx.GetLogStore(), ltCtx.GetConfigName())
+	}
 	if _, ok := m.allLoadedCfgs[key]; !ok {
 		m.allLoadedCfgs[key] = NewCfg(filters)
 	}
@@ -105,18 +123,13 @@ func (m *Manager) ConfigJavaHome(javaHome string) {
 	m.javaPath = javaHome
 }
 
-func (m *Manager) Register(ctx ilogtail.Context, key string, configs map[string]*InstanceInner) {
-	logger.Debug(m.managerMeta.GetContext(), "register config111", len(configs))
+func (m *Manager) Register(key string, configs map[string]*InstanceInner) {
 	if !m.initSuccess {
 		return
 	}
 	logger.Debug(m.managerMeta.GetContext(), "register config", len(configs))
 	m.Lock()
 	defer m.Unlock()
-	ltCtx, ok := ctx.GetRuntimeContext().Value(pkg.LogTailMeta).(*pkg.LogtailContextMeta)
-	if ok {
-		m.managerMeta.Add(ltCtx.GetProject(), ltCtx.GetLogStore(), ltCtx.GetConfigName())
-	}
 	var todoAddCfgs, todoDeleteCfgs bool
 	cfg, ok := m.allLoadedCfgs[key]
 	if !ok {
@@ -124,15 +137,13 @@ func (m *Manager) Register(ctx ilogtail.Context, key string, configs map[string]
 		return
 	}
 	for key := range cfg.instances {
-		_, ok := configs[key]
-		if !ok {
+		if _, ok := configs[key]; !ok {
 			todoDeleteCfgs = true
 			delete(cfg.instances, key)
 		}
 	}
 	for key := range configs {
-		_, ok := cfg.instances[key]
-		if !ok {
+		if _, ok := cfg.instances[key]; !ok {
 			todoAddCfgs = true
 			cfg.instances[key] = configs[key]
 		}
@@ -151,7 +162,6 @@ func (m *Manager) startServer() {
 		if err := m.server.Start(); err != nil {
 			logger.Error(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "start jmx server err", err)
 		} else {
-			logger.Info(m.managerMeta.GetContext(), "start jmxfetch server goroutine success")
 			p, err := m.checkJavaPath(m.javaPath)
 			if err != nil {
 				logger.Error(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "java path", m.javaPath, "err", err)
@@ -202,8 +212,8 @@ func (m *Manager) run() {
 		sort.Strings(temp)
 		uniq := strings.Join(temp, ",")
 		if m.uniqueCollectors != uniq {
-			m.stopServer()
 			m.stop()
+			m.stopServer()
 			m.startServer()
 			for key, collector := range m.collectors {
 				m.server.RegisterCollectors(key, collector)
@@ -218,8 +228,8 @@ func (m *Manager) run() {
 		defer m.Unlock()
 		if m.server != nil && len(m.collectors) == 0 {
 			logger.Info(m.managerMeta.GetContext(), "stop jmxfetch process")
-			m.stopServer()
 			m.stop()
+			m.stopServer()
 		}
 	}
 
@@ -249,13 +259,10 @@ func (m *Manager) updateFiles(key string, userCfg *Cfg) {
 	if len(userCfg.include) != 0 {
 		fiterCfg := make([]map[string]*Filter, 0, 16)
 		for _, filter := range userCfg.include {
-			fiterCfg = append(fiterCfg, map[string]*Filter{
-				"include": filter,
-			})
+			fiterCfg = append(fiterCfg, map[string]*Filter{"include": filter})
 		}
 		initCfg["conf"] = fiterCfg
 	}
-
 	var instances []*InstanceInner
 	for k := range userCfg.instances {
 		instances = append(instances, userCfg.instances[k])
@@ -374,32 +381,4 @@ func (m *Manager) initConfDir() bool {
 		return false
 	}
 	return true
-}
-
-func GetJmxFetchManager(agentDirPath string) *Manager {
-	once.Do(func() {
-		manager = createManager(agentDirPath)
-		// don't init the collector with struct because the collector depends on the bindMeta.
-		util.RegisterAlarm("jmxfetch", manager.managerMeta.GetAlarm())
-		if manager.autoInstall() || manager.manualInstall() {
-			manager.initSuccess = manager.initConfDir()
-		}
-		if manager.initSuccess {
-			logger.Info(manager.managerMeta.GetContext(), "init jmxfetch manager success")
-			go manager.run()
-		}
-	})
-	return manager
-}
-
-func createManager(agentDirPath string) *Manager {
-	return &Manager{
-		managerMeta:      helper.NewmanagerMeta("jmxfetch"),
-		jmxFetchPath:     agentDirPath,
-		jmxfetchConfPath: path.Join(agentDirPath, "conf.d"),
-		jmxfetchdPath:    path.Join(agentDirPath, scriptsName),
-		stopChan:         make(chan struct{}, 1),
-		allLoadedCfgs:    make(map[string]*Cfg),
-		collectors:       make(map[string]ilogtail.Collector),
-	}
 }

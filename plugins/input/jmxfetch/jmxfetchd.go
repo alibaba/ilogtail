@@ -31,8 +31,7 @@ func (m *Manager) installScripts(javaPath string) error {
 	for key := range m.allLoadedCfgs {
 		yamls = append(yamls, key+".yaml")
 	}
-	scripts := fmt.Sprintf(scriptsTemplate, javaPath, strings.Join(yamls, ","),
-		"0.0.0.0", m.port)
+	scripts := fmt.Sprintf(scriptsTemplate, javaPath, strings.Join(yamls, ","), "0.0.0.0", m.port)
 	err := ioutil.WriteFile(m.jmxfetchdPath, []byte(scripts), 0755) //nolint: gosec
 	if err != nil {
 		return fmt.Errorf("cannot crate jmxfetchd scripts: %v", err)
@@ -103,7 +102,7 @@ do_start() {
 }
 
 start() {
-    c=$(pgrep -l -f "$JAR" | wc -l)
+    c=$(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"  | wc -l)
     trace_log "start $c"
     if [ $c -eq 0 ]; then
         do_start
@@ -115,7 +114,7 @@ start() {
 
 stop() {
     sig=$1
-    ppids=($(pgrep -l -f "$JAR" | awk '{print $1}'))
+    ppids=($(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"  | awk '{print $2}'))
     trace_log "stop with $sig, ppids: $ppids"
     for ppid in ${ppids[*]}; do
         kill $sig $ppid
