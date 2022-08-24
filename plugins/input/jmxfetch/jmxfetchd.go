@@ -27,7 +27,12 @@ import (
 const scriptsName = "jmxfetchd"
 
 func (m *Manager) installScripts(javaPath string) error {
-	scripts := fmt.Sprintf(scriptsTemplate, javaPath, "0.0.0.0", m.port)
+	var yamls []string
+	for key := range m.allLoadedCfgs {
+		yamls = append(yamls, key+".yaml")
+	}
+	scripts := fmt.Sprintf(scriptsTemplate, javaPath, strings.Join(yamls, ","),
+		"0.0.0.0", m.port)
 	err := ioutil.WriteFile(m.jmxfetchdPath, []byte(scripts), 0755) //nolint: gosec
 	if err != nil {
 		return fmt.Errorf("cannot crate jmxfetchd scripts: %v", err)
@@ -37,6 +42,10 @@ func (m *Manager) installScripts(javaPath string) error {
 
 func (m *Manager) start() {
 	_, _ = m.execJmxfetchd("start", false)
+}
+
+func (m *Manager) reload() {
+	_, _ = m.execJmxfetchd("reload", false)
 }
 
 func (m *Manager) stop() {
@@ -68,6 +77,7 @@ var scriptsTemplate = `
 
 CURRENT_DIR=$(dirname "$0")
 JAVA_CMD=%s
+CHECKERS=%s
 JAR="ilogtail_jmxfetch.jar"
 REPORTER="statsd:%s:%d" 
 
@@ -86,10 +96,10 @@ trace_log() {
 }
 
 do_start() {
-    rm -rf telegraf*.log
+    rm -rf start.log
     trace_log "do_start"
     touch $start_log_file
-    $JAVA_CMD -jar $JAR collect -D "$CURRENT_DIR"/conf.d -c "config.yaml" -r $REPORTER > $start_log_file 2>&1 &
+    $JAVA_CMD -jar $JAR collect -D "$CURRENT_DIR"/conf.d -c "$CHECKERS" -r $REPORTER > $start_log_file 2>&1 &
 }
 
 start() {
@@ -118,7 +128,7 @@ force_stop() {
 }
 
 status() {
-    c=$(pgrep -l -f "$JAR" | wc -l)
+    c=$(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"  | wc -l)
     if [ $c -eq 1 ]; then
         val="running"
     elif [ $c -eq 0 ]; then
@@ -132,7 +142,7 @@ status() {
 }
 
 reload() {
-    c=$(pgrep -l -f "$JAR" | wc -l)
+    c=$(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR" | wc -l)
     trace_log "reload $c"
     if [ $c -eq 0 ]; then
         do_start

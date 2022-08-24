@@ -26,14 +26,14 @@ import (
 )
 
 type UDPServer struct {
-	Format        string
-	Address       string
-	MaxBufferSize int
+	Format         string
+	Address        string
+	MaxBufferSize  int
+	ReadTimeoutSec int
 
 	context   ilogtail.Context
 	d         decoder.Decoder
 	udp       *net.UDPAddr
-	close     chan struct{}
 	conn      *net.UDPConn
 	collector ilogtail.Collector
 }
@@ -79,7 +79,9 @@ func (u *UDPServer) Description() string {
 
 func (u *UDPServer) Start(collector ilogtail.Collector) error {
 	u.collector = collector
-	return u.doStart(u.dispatcher)
+	err := u.doStart(u.dispatcher)
+	logger.Infof(u.context.GetRuntimeContext(), "start udp server, status", err == nil)
+	return err
 }
 
 func (u *UDPServer) doStart(dispatchFunc func(logs []*protocol.Log)) error {
@@ -91,36 +93,34 @@ func (u *UDPServer) doStart(dispatchFunc func(logs []*protocol.Log)) error {
 	}
 	go func() {
 		buf := make([]byte, u.MaxBufferSize)
+		defer func() {
+			logger.Debug(u.context.GetRuntimeContext(), "release udp read goroutine")
+		}()
 		for {
-			select {
-			case <-u.close:
-				_ = u.conn.Close()
-				return
-			default:
-				n, _, err := u.conn.ReadFromUDP(buf)
-				if err != nil {
-					// https://github.com/golang/go/issues/4373
-					// ignore net: errClosing error as it will occur during shutdown
-					if strings.HasSuffix(err.Error(), "use of closed network connection") {
-						return
-					}
-					logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "read record err", err)
+			n, _, err := u.conn.ReadFromUDP(buf)
+			if err != nil {
+				// https://github.com/golang/go/issues/4373
+				// ignore net: errClosing error as it will occur during shutdown
+				if strings.HasSuffix(err.Error(), "use of closed network connection") {
 					return
 				}
-				logs, err := u.d.Decode(buf[:n], nil)
-				if err != nil {
-					logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "decode record err", err)
-				}
-				dispatchFunc(logs)
+				logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "read record err", err)
+				return
 			}
+			logs, err := u.d.Decode(buf[:n], nil)
+			if err != nil {
+				logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "decode record err", err)
+			}
+			dispatchFunc(logs)
 		}
 	}()
 	return nil
 }
 
 func (u *UDPServer) Stop() error {
-	u.close <- struct{}{}
+	_ = u.conn.Close()
 	u.conn = nil
+	logger.Infof(u.context.GetRuntimeContext(), "stop udp server, success")
 	return nil
 }
 
@@ -133,7 +133,8 @@ func (u *UDPServer) dispatcher(logs []*protocol.Log) {
 func init() {
 	ilogtail.ServiceInputs["service_udp_server"] = func() ilogtail.ServiceInput {
 		return &UDPServer{
-			MaxBufferSize: 65535,
+			MaxBufferSize:  65535,
+			ReadTimeoutSec: 2,
 		}
 	}
 }

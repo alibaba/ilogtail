@@ -31,28 +31,31 @@ import (
 )
 
 type Instance struct {
-	Port int32
-	Host string
-	Tags map[string]string
+	Port              int32
+	Host              string
+	User              string
+	Password          string
+	Tags              map[string]string
+	NewGcMetrics      string
+	DefaultJvmMetrics string
 }
 
+type Filter struct {
+	Domain    string `yaml:"domain,omitempty"`
+	BeanRegex string `yaml:"bean_regex,omitempty"`
+	Type      string `yaml:"type,omitempty"`
+	Attribute map[string]struct {
+		MetricType string `yaml:"metric_type,omitempty"`
+		Alias      string `yaml:"alias,omitempty"`
+	} `yaml:"attribute,omitempty"`
+}
 type InstanceInner struct {
-	Port int32    `yaml:"port"`
-	Host string   `yaml:"host"`
-	Tags []string `yaml:"tags"`
-}
-
-func NewInstanceInner(port int32, host string, tags map[string]string) *InstanceInner {
-	tagsArr := make([]string, 0, len(tags))
-	for k, v := range tags {
-		tagsArr = append(tagsArr, k+":"+v)
-	}
-	sort.Strings(tagsArr)
-	return &InstanceInner{
-		Port: port,
-		Host: host,
-		Tags: tagsArr,
-	}
+	Port              int32    `yaml:"port,omitempty"`
+	Host              string   `yaml:"host,omitempty"`
+	User              string   `yaml:"user,omitempty"`
+	Password          string   `yaml:"password,omitempty"`
+	Tags              []string `yaml:"tags,omitempty"`
+	DefaultJvmMetrics bool     `yaml:"collect_default_jvm_metrics"`
 }
 
 func (i *InstanceInner) Hash() string {
@@ -65,19 +68,40 @@ func (i *InstanceInner) Hash() string {
 	return hashStrBuilder.String()
 }
 
+func NewInstanceInner(port int32, host, user, passowrd string, tags map[string]string, defaultJvmMetrics bool) *InstanceInner {
+	tagsArr := make([]string, 0, len(tags))
+	for k, v := range tags {
+		tagsArr = append(tagsArr, k+":"+v)
+	}
+	sort.Strings(tagsArr)
+	return &InstanceInner{
+		Port:              port,
+		Host:              host,
+		User:              user,
+		Password:          passowrd,
+		Tags:              tagsArr,
+		DefaultJvmMetrics: defaultJvmMetrics,
+	}
+}
+
 type Jmx struct {
-	DiscoveryMode         bool // support container discovery
-	IncludeEnv            map[string]string
-	ExcludeEnv            map[string]string
-	IncludeContainerLabel map[string]string
-	ExcludeContainerLabel map[string]string
-	IncludeK8sLabel       map[string]string
-	ExcludeK8sLabel       map[string]string
-	K8sNamespaceRegex     string
-	K8sPodRegex           string
-	K8sContainerRegex     string
-	StaticInstances       []Instance
-	JDKPath               string
+	DiscoveryMode            bool // support container discovery
+	DiscoveryUser            string
+	DiscoveryPassword        string
+	IncludeEnv               map[string]string
+	ExcludeEnv               map[string]string
+	IncludeContainerLabel    map[string]string
+	ExcludeContainerLabel    map[string]string
+	IncludeK8sLabel          map[string]string
+	ExcludeK8sLabel          map[string]string
+	K8sNamespaceRegex        string
+	K8sPodRegex              string
+	K8sContainerRegex        string
+	JDKPath                  string
+	StaticInstances          []Instance
+	Filters                  []*Filter
+	NewGcMetrics             bool
+	CollectDefaultJvmMetrics bool
 
 	includeContainerLabelRegex map[string]*regexp.Regexp
 	excludeContainerLabelRegex map[string]*regexp.Regexp
@@ -93,6 +117,7 @@ type Jmx struct {
 func (m *Jmx) Init(context ilogtail.Context) (int, error) {
 	m.context = context
 	m.key = m.context.GetProject() + m.context.GetLogstore() + m.context.GetConfigName()
+	helper.ReplaceInvalidChars(&m.key)
 	if m.JDKPath != "" {
 		abs, err := filepath.Abs(filepath.Clean(m.JDKPath))
 		if err != nil {
@@ -107,6 +132,7 @@ func (m *Jmx) Init(context ilogtail.Context) (int, error) {
 			return 0, err
 		}
 	}
+	GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jvm")).ConfigJavaHome(m.JDKPath)
 	if m.DiscoveryMode {
 		var err error
 		m.IncludeEnv, m.includeEnvRegex, err = helper.SplitRegexFromMap(m.IncludeEnv)
@@ -138,16 +164,16 @@ func (m *Jmx) Description() string {
 }
 
 func (m *Jmx) Start(collector ilogtail.Collector) error {
-	GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jmxfetch")).RegisterCollector(m.key, collector)
+	GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jvm")).RegisterCollector(m.key, collector, m.Filters)
 
 	if !m.DiscoveryMode {
 		logger.Infof(m.context.GetRuntimeContext(), "find %d static jmx configs", len(m.StaticInstances))
 		for i := range m.StaticInstances {
 			m.StaticInstances[i].Tags[dispatchKey] = m.key
-			inner := NewInstanceInner(m.StaticInstances[i].Port, m.StaticInstances[i].Host, m.StaticInstances[i].Tags)
+			inner := NewInstanceInner(m.StaticInstances[i].Port, m.StaticInstances[i].Host, m.StaticInstances[i].User, m.StaticInstances[i].Password, m.StaticInstances[i].Tags, m.CollectDefaultJvmMetrics)
 			m.instances[inner.Hash()] = inner
 		}
-		GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jmxfetch")).Register(m.context, m.instances, m.JDKPath)
+		GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jvm")).Register(m.context, m.key, m.instances)
 		return nil
 	}
 	go func() {
@@ -157,6 +183,7 @@ func (m *Jmx) Start(collector ilogtail.Collector) error {
 			case <-ticker.C:
 				m.UpdateContainerCfg()
 			case <-m.stopChan:
+				ticker.Stop()
 				return
 			}
 		}
@@ -167,8 +194,7 @@ func (m *Jmx) Start(collector ilogtail.Collector) error {
 func (m *Jmx) Stop() error {
 	logger.Infof(m.context.GetRuntimeContext(), "stopping")
 	close(m.stopChan)
-	GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jmxfetch")).UnRegister(m.context, m.instances)
-	GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jmxfetch")).UnregisterCollector(m.key)
+	GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jvm")).UnregisterCollector(m.key)
 	return nil
 }
 
@@ -208,20 +234,22 @@ func (m *Jmx) UpdateContainerCfg() {
 				}
 			}
 		}
-		inner := NewInstanceInner(port, detail.ContainerIP, tags)
+		inner := NewInstanceInner(port, detail.ContainerIP, m.DiscoveryUser, m.DiscoveryPassword, tags, m.CollectDefaultJvmMetrics)
 		m.instances[inner.Hash()] = inner
 	}
 	logger.Infof(m.context.GetRuntimeContext(), "find %d dynamic jmx configs", len(m.instances))
-	GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jmxfetch")).Register(nil, m.instances, m.JDKPath)
+	GetJmxFetchManager(path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jvm")).Register(m.context, m.key, m.instances)
 }
 
 func init() {
 	ilogtail.ServiceInputs["service_jmx"] = func() ilogtail.ServiceInput {
 		return &Jmx{
-			DiscoveryMode:   false,
-			StaticInstances: []Instance{},
-			instances:       map[string]*InstanceInner{},
-			stopChan:        make(chan struct{}),
+			DiscoveryMode:            false,
+			StaticInstances:          []Instance{},
+			NewGcMetrics:             true,
+			CollectDefaultJvmMetrics: true,
+			instances:                map[string]*InstanceInner{},
+			stopChan:                 make(chan struct{}),
 		}
 	}
 }

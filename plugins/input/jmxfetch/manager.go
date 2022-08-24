@@ -20,7 +20,9 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -31,7 +33,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input/udpserver"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -40,99 +41,139 @@ var manager *Manager
 
 const dispatchKey = "jmxfetch_ilogtail"
 
-type CfgInstance struct {
-	Host string   `json:"host" yaml:"host"`
-	Port int      `json:"port" yaml:"port"`
-	Name string   `json:"name" yaml:"name"`
-	Tags []string `json:"tags" yaml:"tags"`
+type Cfg struct {
+	include   []*Filter
+	instances map[string]*InstanceInner
+	change    bool
+}
+
+func NewCfg(filters []*Filter) *Cfg {
+	return &Cfg{
+		instances: map[string]*InstanceInner{},
+		include:   filters,
+	}
 }
 
 type Manager struct {
-	loadedConfigs    map[string]*InstanceInner
 	jmxFetchPath     string
 	jmxfetchdPath    string
 	jmxfetchConfPath string
+	allLoadedCfgs    map[string]*Cfg
+	collectors       map[string]ilogtail.Collector
 	managerMeta      *helper.ManagerMeta
-	server           *udpserver.SharedUDPServer
+	stopChan         chan struct{}
+	uniqueCollectors string
 
-	stopChan     chan struct{}
-	javaPath     string
-	configChange bool
+	server      *udpserver.SharedUDPServer
+	javaPath    string
+	initSuccess bool
 	sync.Mutex
 	port int
 }
 
-func (m *Manager) RegisterCollector(key string, collector ilogtail.Collector) {
-	m.server.RegisterCollectors(key, collector)
+func (m *Manager) RegisterCollector(key string, collector ilogtail.Collector, filters []*Filter) {
+	if !m.initSuccess {
+		return
+	}
+	logger.Debug(m.managerMeta.GetContext(), "register collector", key)
+	m.Lock()
+	defer m.Unlock()
+	if _, ok := m.allLoadedCfgs[key]; !ok {
+		m.allLoadedCfgs[key] = NewCfg(filters)
+	}
+	m.collectors[key] = collector
 }
 
 func (m *Manager) UnregisterCollector(key string) {
-	m.server.UnregisterCollectors(key)
-}
-
-func (m *Manager) UnRegister(ctx ilogtail.Context, configs map[string]*InstanceInner) {
+	if !m.initSuccess {
+		return
+	}
+	logger.Debug(m.managerMeta.GetContext(), "unregister collector", key)
 	m.Lock()
 	defer m.Unlock()
-	ltCtx, ok := ctx.GetRuntimeContext().Value(pkg.LogTailMeta).(*pkg.LogtailContextMeta)
-	if ok {
-		m.managerMeta.Delete(ltCtx.GetProject(), ltCtx.GetLogStore(), ltCtx.GetConfigName())
-	}
-	var todoDeleteCfgs bool
-	for key := range m.loadedConfigs {
-		_, ok := configs[key]
-		if ok {
-			todoDeleteCfgs = true
-			delete(m.loadedConfigs, key)
-		}
-	}
-	logger.Infof(m.managerMeta.GetContext(), "loaded config after unregister: %d", len(m.loadedConfigs))
-	if len(m.loadedConfigs) == 0 {
+	delete(m.allLoadedCfgs, key)
+	delete(m.collectors, key)
+	if len(m.collectors) == 0 {
 		m.stopChan <- struct{}{}
 	}
-	m.configChange = m.configChange || todoDeleteCfgs
 }
 
-func (m *Manager) Register(ctx ilogtail.Context, configs map[string]*InstanceInner, javaPath string) {
+// ConfigJavaHome would select the random jdk path if configured many diff paths.
+func (m *Manager) ConfigJavaHome(javaHome string) {
+	m.Lock()
+	defer m.Unlock()
+	m.javaPath = javaHome
+}
+
+func (m *Manager) Register(ctx ilogtail.Context, key string, configs map[string]*InstanceInner) {
+	logger.Debug(m.managerMeta.GetContext(), "register config111", len(configs))
+	if !m.initSuccess {
+		return
+	}
+	logger.Debug(m.managerMeta.GetContext(), "register config", len(configs))
 	m.Lock()
 	defer m.Unlock()
 	ltCtx, ok := ctx.GetRuntimeContext().Value(pkg.LogTailMeta).(*pkg.LogtailContextMeta)
 	if ok {
 		m.managerMeta.Add(ltCtx.GetProject(), ltCtx.GetLogStore(), ltCtx.GetConfigName())
 	}
-
-	if m.javaPath == "" {
-		p, err := m.checkJavaPath(javaPath)
-		if err != nil {
-			logger.Error(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "java path", javaPath, "err", err)
-			return
-		}
-		logger.Infof(m.managerMeta.GetContext(), "find jdk path: %s", p)
-		err = m.installScripts(p)
-		if err != nil {
-			logger.Error(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "jmxfetch script install fail", err)
-			return
-		}
-		logger.Info(m.managerMeta.GetContext(), "install jmx scripts success")
-		m.javaPath = p
-	}
-
 	var todoAddCfgs, todoDeleteCfgs bool
-	for key := range m.loadedConfigs {
+	cfg, ok := m.allLoadedCfgs[key]
+	if !ok {
+		logger.Error(m.managerMeta.GetContext(), "JMX_ALARM", "cannot find instance key", key)
+		return
+	}
+	for key := range cfg.instances {
 		_, ok := configs[key]
 		if !ok {
 			todoDeleteCfgs = true
-			delete(m.loadedConfigs, key)
+			delete(cfg.instances, key)
 		}
 	}
 	for key := range configs {
-		_, ok := m.loadedConfigs[key]
+		_, ok := cfg.instances[key]
 		if !ok {
 			todoAddCfgs = true
-			m.loadedConfigs[key] = configs[key]
+			cfg.instances[key] = configs[key]
 		}
 	}
-	logger.Infof(m.managerMeta.GetContext(), "loaded config after register: %d", len(m.loadedConfigs))
-	m.configChange = m.configChange || todoDeleteCfgs || todoAddCfgs
+	logger.Infof(m.managerMeta.GetContext(), "loaded %s instances after register: %d", key, len(cfg.instances))
+	cfg.change = cfg.change || todoDeleteCfgs || todoAddCfgs
+}
+
+func (m *Manager) startServer() {
+	logger.Info(m.managerMeta.GetContext(), "start", "server")
+	if m.server == nil {
+		m.port, _ = helper.GetFreePort()
+		m.server, _ = udpserver.NewSharedUDPServer(mock.NewEmptyContext("", "", "jmxfetchserver"), "statsd", ":"+strconv.Itoa(m.port), dispatchKey, 65535)
+	}
+	if !m.server.IsRunning() {
+		if err := m.server.Start(); err != nil {
+			logger.Error(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "start jmx server err", err)
+		} else {
+			logger.Info(m.managerMeta.GetContext(), "start jmxfetch server goroutine success")
+			p, err := m.checkJavaPath(m.javaPath)
+			if err != nil {
+				logger.Error(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "java path", m.javaPath, "err", err)
+				return
+			}
+			logger.Infof(m.managerMeta.GetContext(), "find jdk path: %s", p)
+			err = m.installScripts(p)
+			if err != nil {
+				logger.Error(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "jmxfetch script install fail", err)
+				return
+			}
+			logger.Info(m.managerMeta.GetContext(), "install jmx scripts success")
+		}
+	}
+}
+
+func (m *Manager) stopServer() {
+	if m.server != nil && m.server.IsRunning() {
+		logger.Info(m.managerMeta.GetContext(), "stop jmxfetch server goroutine")
+		_ = m.server.Stop()
+		m.server = nil
+	}
 }
 
 func (m *Manager) run() {
@@ -142,33 +183,43 @@ func (m *Manager) run() {
 	updateFunc := func() {
 		m.Lock()
 		defer m.Unlock()
-		if m.configChange {
-			m.updateFiles()
-			m.configChange = false
+		for key, cfg := range m.allLoadedCfgs {
+			if cfg.change {
+				logger.Info(m.managerMeta.GetContext(), "update config", key)
+				m.updateFiles(key, cfg)
+				cfg.change = false
+			}
 		}
+
 	}
 	startFunc := func() {
 		m.Lock()
 		defer m.Unlock()
-		if len(m.loadedConfigs) > 0 {
-			if !m.server.IsRunning() {
-				if err := m.server.Start(); err != nil {
-					logger.Error(m.managerMeta.GetContext(), "JMX_ALARM", "start jmx server err", err)
-				}
+		var temp []string
+		for s := range m.allLoadedCfgs {
+			temp = append(temp, s)
+		}
+		sort.Strings(temp)
+		uniq := strings.Join(temp, ",")
+		if m.uniqueCollectors != uniq {
+			m.stopServer()
+			m.stop()
+			m.startServer()
+			for key, collector := range m.collectors {
+				m.server.RegisterCollectors(key, collector)
 			}
 			m.start()
+			m.uniqueCollectors = uniq
 		}
 	}
 
 	stopFunc := func() {
 		m.Lock()
 		defer m.Unlock()
-		if len(m.loadedConfigs) == 0 {
-			if m.server.IsRunning() {
-				_ = m.server.Stop()
-			}
+		if m.server != nil && m.server.CollectorsNum() == 0 {
+			logger.Info(m.managerMeta.GetContext(), "stop jmxfetch process")
+			m.stopServer()
 			m.stop()
-			m.javaPath = ""
 		}
 	}
 
@@ -184,18 +235,30 @@ func (m *Manager) run() {
 	}
 }
 
-func (m *Manager) updateFiles() {
-	if len(m.loadedConfigs) == 0 {
+// updateFiles update config.yaml, and don't need to start again because datadog jmxfetch support hot reload config.
+func (m *Manager) updateFiles(key string, userCfg *Cfg) {
+	if len(userCfg.instances) == 0 {
 		return
 	}
 	cfg := make(map[string]interface{})
-	cfg["init_config"] = map[string]interface{}{
-		"is_jmx":                  true,
-		"collect_default_metrics": true,
+	initCfg := map[string]interface{}{
+		"is_jmx": true,
 	}
+	cfg["init_config"] = initCfg
+
+	if len(userCfg.include) != 0 {
+		fiterCfg := make([]map[string]*Filter, 0, 16)
+		for _, filter := range userCfg.include {
+			fiterCfg = append(fiterCfg, map[string]*Filter{
+				"include": filter,
+			})
+		}
+		initCfg["conf"] = fiterCfg
+	}
+
 	var instances []*InstanceInner
-	for k := range m.loadedConfigs {
-		instances = append(instances, m.loadedConfigs[k])
+	for k := range userCfg.instances {
+		instances = append(instances, userCfg.instances[k])
 	}
 	cfg["instances"] = instances
 	bytes, err := yaml.Marshal(cfg)
@@ -203,7 +266,7 @@ func (m *Manager) updateFiles() {
 		logger.Error(m.managerMeta.GetContext(), "JMXFETCH_CONFIG_ALARM", "cannot convert to yaml bytes", err)
 		return
 	}
-	cfgPath := path.Join(m.jmxfetchConfPath, "config.yaml")
+	cfgPath := path.Join(m.jmxfetchConfPath, key+".yaml")
 	logger.Debug(m.managerMeta.GetContext(), "write files", string(bytes), "path", cfgPath)
 	err = ioutil.WriteFile(cfgPath, bytes, 0600)
 	if err != nil {
@@ -211,81 +274,132 @@ func (m *Manager) updateFiles() {
 	}
 }
 
+// checkJavaPath detect java path by following sequences.
+// configured > /etc/ilogtail/jvm/jdk > detect java home
 func (m *Manager) checkJavaPath(javaPath string) (string, error) {
 	if javaPath == "" {
-		cmd := exec.Command("which", "java")
-		bytes, err := util.CombinedOutputTimeout(cmd, time.Second)
-		logger.Debugf(m.managerMeta.GetContext(), "detect java path: %s", string(bytes))
-		if err != nil {
-			return "", fmt.Errorf("java path is illegal: %v", err)
+		jdkHome := path.Join(m.jmxFetchPath, "jdk/bin/java")
+		exists, _ := util.PathExists(jdkHome)
+		logger.Info(m.managerMeta.GetContext(), "default java path", jdkHome, "exist", exists)
+		if !exists {
+			cmd := exec.Command("which", "java")
+			bytes, err := util.CombinedOutputTimeout(cmd, time.Second)
+			logger.Info(m.managerMeta.GetContext(), "detect user default java path", string(bytes[:len(bytes)-1]))
+			if err != nil && !strings.Contains(err.Error(), "no child process") {
+				return "", fmt.Errorf("java path is illegal: %v", err)
+			}
+			javaPath = string(bytes[:len(bytes)-1]) // remove \n
+		} else {
+			javaPath = jdkHome
 		}
-		// remove \n
-		javaPath = string(bytes[:len(bytes)-1])
 	}
 	cmd := exec.Command(javaPath, "-version") //nolint:gosec
-	if _, err := util.CombinedOutputTimeout(cmd, time.Second); err != nil {
+	logger.Debug(m.managerMeta.GetContext(), "try detect java cmd", cmd.String())
+	if _, err := util.CombinedOutputTimeout(cmd, time.Second); err != nil && !strings.Contains(err.Error(), "no child process") {
 		return "", fmt.Errorf("java cmd is illegal: %v", err)
 	}
 	return javaPath, nil
 }
 
-func (m *Manager) initAgentDir() {
+// autoInstall returns true if agent has been installed.
+func (m *Manager) autoInstall() bool {
+	if exist, err := util.PathExists(m.jmxfetchdPath); err != nil {
+		logger.Warningf(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "stat path %v err when install: %v", m.jmxfetchdPath, err)
+		return false
+	} else if exist {
+		return true
+	}
+	scriptPath := path.Join(m.jmxFetchPath, "install.sh")
+	if exist, err := util.PathExists(scriptPath); err != nil || !exist {
+		logger.Warningf(m.managerMeta.GetContext(), "JMXFETCH_ALARM",
+			"can not find install script %v, maybe stat error: %v", scriptPath, err)
+		return false
+	}
+	cmd := exec.Command(scriptPath) //nolint:gosec
+	output, err := cmd.CombinedOutput()
+	if err != nil && !strings.Contains(err.Error(), "no child process") {
+		logger.Warningf(m.managerMeta.GetContext(), "JMXFETCH_ALARM",
+			"install agent error, output: %v, error: %v", string(output), err)
+		return false
+	}
+	logger.Infof(m.managerMeta.GetContext(), "install agent done, output: %v", string(output))
+	exist, err := util.PathExists(m.jmxFetchPath)
+	return exist && err == nil
+}
+
+// manualInstall returns true if agent has been installed.
+func (m *Manager) manualInstall() bool {
 	logger.Infof(m.managerMeta.GetContext(), "init jmxfetch path: %s", m.jmxFetchPath)
 	if exist, err := util.PathExists(m.jmxFetchPath); !exist {
 		if err != nil {
 			logger.Warningf(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "create conf dir error, path %v, err: %v", m.jmxFetchPath, err)
-			return
+			return false
 		}
 		err = os.MkdirAll(m.jmxFetchPath, 0750)
 		if err != nil {
 			logger.Warningf(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "create conf dir error, path %v, err: %v", m.jmxFetchPath, err)
 		}
 	}
+	return true
+}
+
+func (m *Manager) initConfDir() bool {
 	if exist, err := util.PathExists(m.jmxfetchConfPath); !exist {
 		if err != nil {
 			logger.Warningf(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "create conf dir error, path %v, err: %v", m.jmxfetchConfPath, err)
-			return
+			return false
 		}
 		err = os.MkdirAll(m.jmxfetchConfPath, 0750)
 		if err != nil {
 			logger.Warningf(m.managerMeta.GetContext(), "JMXFETCH_ALARM", "create conf dir error, path %v, err: %v", m.jmxfetchConfPath, err)
+			return false
+		}
+		return true
+	}
+	// Clean config files (outdated) in conf directory.
+	if files, err := ioutil.ReadDir(m.jmxfetchConfPath); err == nil {
+		for _, f := range files {
+			filePath := path.Join(m.jmxfetchConfPath, f.Name())
+			if err = os.Remove(filePath); err == nil {
+				logger.Infof(m.managerMeta.GetContext(), "delete outdated agent config file: %v", filePath)
+			} else {
+				logger.Warningf(m.managerMeta.GetContext(), "deleted outdated agent config file err, path: %v, err: %v",
+					filePath, err)
+				return false
+			}
 		}
 	} else {
-		// Clean config files (outdated) in conf directory.
-		if files, err := ioutil.ReadDir(m.jmxfetchConfPath); err == nil {
-			for _, f := range files {
-				filePath := path.Join(m.jmxfetchConfPath, f.Name())
-				if err = os.Remove(filePath); err == nil {
-					logger.Infof(m.managerMeta.GetContext(), "delete outdated agent config file: %v", filePath)
-				} else {
-					logger.Warningf(m.managerMeta.GetContext(), "deleted outdated agent config file err, path: %v, err: %v",
-						filePath, err)
-				}
-			}
-		} else {
-			logger.Warningf(m.managerMeta.GetContext(), "JMXFETCH_ALARM",
-				"clean conf dir error, path %v, err: %v", m.jmxfetchConfPath, err)
-		}
+		logger.Warningf(m.managerMeta.GetContext(), "JMXFETCH_ALARM",
+			"clean conf dir error, path %v, err: %v", m.jmxfetchConfPath, err)
+		return false
 	}
+	return true
 }
 
 func GetJmxFetchManager(agentDirPath string) *Manager {
 	once.Do(func() {
-		manager = &Manager{
-			loadedConfigs:    make(map[string]*InstanceInner),
-			managerMeta:      helper.NewmanagerMeta("jmxfetch"),
-			jmxFetchPath:     agentDirPath,
-			jmxfetchConfPath: path.Join(agentDirPath, "conf.d"),
-			jmxfetchdPath:    path.Join(agentDirPath, scriptsName),
-			stopChan:         make(chan struct{}),
-		}
+		manager = createManager(agentDirPath)
 		// don't init the collector with struct because the collector depends on the bindMeta.
 		util.RegisterAlarm("jmxfetch", manager.managerMeta.GetAlarm())
-		manager.initAgentDir()
-
-		manager.port, _ = helper.GetFreePort()
-		manager.server, _ = udpserver.NewSharedUDPServer(mock.NewEmptyContext("", "", "jmxfetchserver"), "statsd", ":"+strconv.Itoa(manager.port), dispatchKey, 65535)
-		go manager.run()
+		if manager.autoInstall() || manager.manualInstall() {
+			manager.initSuccess = manager.initConfDir()
+		}
+		if manager.initSuccess {
+			logger.Info(manager.managerMeta.GetContext(), "init jmxfetch manager success")
+			go manager.run()
+		}
 	})
 	return manager
+}
+
+func createManager(agentDirPath string) *Manager {
+	return &Manager{
+		managerMeta:      helper.NewmanagerMeta("jmxfetch"),
+		jmxFetchPath:     agentDirPath,
+		jmxfetchConfPath: path.Join(agentDirPath, "conf.d"),
+		jmxfetchdPath:    path.Join(agentDirPath, scriptsName),
+		stopChan:         make(chan struct{}, 1),
+		allLoadedCfgs:    make(map[string]*Cfg),
+		collectors:       make(map[string]ilogtail.Collector),
+	}
 }

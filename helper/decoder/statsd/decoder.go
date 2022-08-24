@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -57,7 +58,9 @@ func parseLabels(metric *dogstatsd.Metric) (labelsValue string) {
 		if labelCount != 0 {
 			builder.WriteByte('|')
 		}
-		builder.WriteString(string(label.Name))
+		k := string(label.Name)
+		helper.ReplaceInvalidChars(&k)
+		builder.WriteString(k)
 		builder.WriteString("#$#")
 		builder.WriteString(string(label.Value))
 		labelCount++
@@ -72,9 +75,6 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 		if len(part) == 0 {
 			continue
 		}
-		if logger.DebugFlag() {
-			logger.Debug(context.Background(), "got statsd line", string(part))
-		}
 		m, err := dogstatsd.Parse(string(part))
 		if err != nil {
 			logger.Debug(context.Background(), "parse statsd error", err)
@@ -84,6 +84,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 			}
 			continue
 		}
+		helper.ReplaceInvalidChars(&m.Name)
 		log := &protocol.Log{
 			Time: uint32(now.Unix()),
 			Contents: []*protocol.Log_Content{

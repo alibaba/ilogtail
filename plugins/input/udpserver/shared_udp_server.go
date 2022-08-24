@@ -37,11 +37,11 @@ type SharedUDPServer struct {
 }
 
 func NewSharedUDPServer(context ilogtail.Context, format, addr, dispatchKey string, maxBufferSize int) (*SharedUDPServer, error) {
-	s := &UDPServer{
-		Format:        format,
-		Address:       addr,
-		MaxBufferSize: maxBufferSize,
-	}
+	creator := ilogtail.ServiceInputs["service_udp_server"]
+	s := creator().(*UDPServer)
+	s.Format = format
+	s.Address = addr
+	s.MaxBufferSize = maxBufferSize
 	if _, err := s.Init(context); err != nil {
 		return nil, err
 	}
@@ -59,10 +59,12 @@ func (s *SharedUDPServer) IsRunning() bool {
 }
 
 func (s *SharedUDPServer) Start() error {
+	logger.Infof(s.udp.context.GetRuntimeContext(), "start shared udp server")
 	return s.udp.doStart(s.dispatcher)
 }
 
 func (s *SharedUDPServer) Stop() error {
+	logger.Infof(s.udp.context.GetRuntimeContext(), "stop shared udp server")
 	return s.udp.Stop()
 }
 
@@ -76,6 +78,19 @@ func (s *SharedUDPServer) RegisterCollectors(key string, collector ilogtail.Coll
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.collectors[key] = collector
+}
+
+func (s *SharedUDPServer) CollectorsNum() int {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	return len(s.collectors)
+}
+
+func (s *SharedUDPServer) Contains(key string) bool {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	_, ok := s.collectors[key]
+	return ok
 }
 
 func (s *SharedUDPServer) dispatcher(logs []*protocol.Log) {
@@ -123,10 +138,10 @@ func (s *SharedUDPServer) cutDispatchTag(log *protocol.Log) (tag string) {
 			offset := strings.Index(str, "|")
 			if offset == -1 {
 				tag = str
-				content.Value = content.Value[:startIdx-1]
+				//content.Value = content.Value[:startIdx-1]
 			} else {
 				tag = str[:offset]
-				content.Value = content.Value[:startIdx] + content.Value[endIdx+offset+1:]
+				//content.Value = content.Value[:startIdx] + content.Value[endIdx+offset+1:]
 			}
 			break
 		}

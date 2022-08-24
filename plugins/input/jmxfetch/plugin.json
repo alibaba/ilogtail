@@ -1,7 +1,6 @@
 {
   "inputs": [
 	{
-	  "type": "service_jmx",
 	  "detail": {
 		"StaticInstances": [
 		  {
@@ -11,17 +10,23 @@
 			  "a": "b"
 			}
 		  }
+		],
+		"Filters": [
+		  {
+			"Domain": "java.lang",
+			"BeanRegex": "java.lang:name=G1.*",
+			"Attribute": {
+			  "CollectionUsageThresholdCount":{
+				"MetricType": "gauge",
+				"Alias": "jvm.g1_usage"
+			  }
+			}
+		  }
+		  
+		  
 		]
-	  }
-	}
-  ],
-  "flushers": [
-	{
-	  "type": "flusher_stdout",
-	  "detail": {
-	  }
+	  },
+	  "type": "service_jmx"
 	}
   ]
 }
-
-
