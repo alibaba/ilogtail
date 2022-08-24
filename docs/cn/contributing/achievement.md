@@ -72,7 +72,9 @@
 ## 证书展示
 
 您可以在GitHub的个人档案档案中展示所获得的证书，向您的小伙伴展示您所取得的成就。就像这样：
+
 ![image](https://user-images.githubusercontent.com/1827594/186176496-6f434cea-a78a-4117-9476-4c882b90185a.png)
+
 全部6种徽章的代码如下，请自行裁剪：
 
 ```html
