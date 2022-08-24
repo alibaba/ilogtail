@@ -78,7 +78,6 @@ func (b *ManagerMeta) UpdateAlarm() {
 	var prjSlice, logstoresSlice []string
 	for prj, logstores := range b.Metas {
 		for logstore := range logstores {
-
 			logstoresSlice = append(logstoresSlice, logstore)
 		}
 		prjSlice = append(prjSlice, prj)
@@ -94,5 +93,4 @@ func (b *ManagerMeta) GetAlarm() *util.Alarm {
 
 func (b *ManagerMeta) GetContext() context.Context {
 	return b.ctx
-
 }
