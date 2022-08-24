@@ -26,10 +26,9 @@ import (
 )
 
 type UDPServer struct {
-	Format         string
-	Address        string
-	MaxBufferSize  int
-	ReadTimeoutSec int
+	Format        string
+	Address       string
+	MaxBufferSize int
 
 	context   ilogtail.Context
 	decoder   decoder.Decoder
@@ -109,9 +108,10 @@ func (u *UDPServer) doStart(dispatchFunc func(logs []*protocol.Log)) error {
 			}
 			logs, err := u.decoder.Decode(buf[:n], nil)
 			if err != nil {
-				logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "decode record err", err)
+				logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "decode record err,some logs would be dropped", err)
+			} else {
+				dispatchFunc(logs)
 			}
-			dispatchFunc(logs)
 		}
 	}()
 	return nil
@@ -133,8 +133,7 @@ func (u *UDPServer) dispatcher(logs []*protocol.Log) {
 func init() {
 	ilogtail.ServiceInputs["service_udp_server"] = func() ilogtail.ServiceInput {
 		return &UDPServer{
-			MaxBufferSize:  65535,
-			ReadTimeoutSec: 2,
+			MaxBufferSize: 65535,
 		}
 	}
 }
