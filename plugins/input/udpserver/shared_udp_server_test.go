@@ -57,7 +57,7 @@ func TestSharedUDPServer_cutDispatchTag(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &SharedUDPServer{
-				DispatchKey: tt.dispatchKey,
+				dispatchKey: tt.dispatchKey,
 				lastLog:     time.Now(),
 			}
 			log := &protocol.Log{

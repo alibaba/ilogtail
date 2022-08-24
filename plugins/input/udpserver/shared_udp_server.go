@@ -29,7 +29,7 @@ const labelName = "__labels__"
 
 // SharedUDPServer used for multi configs, such as using in JMX fetcher
 type SharedUDPServer struct {
-	DispatchKey string
+	dispatchKey string
 	lastLog     time.Time
 	udp         *UDPServer
 	collectors  map[string]ilogtail.Collector
@@ -46,7 +46,7 @@ func NewSharedUDPServer(context ilogtail.Context, format, addr, dispatchKey stri
 		return nil, err
 	}
 	server := &SharedUDPServer{
-		DispatchKey: dispatchKey,
+		dispatchKey: dispatchKey,
 		collectors:  map[string]ilogtail.Collector{},
 		lastLog:     time.Now(),
 		udp:         s,
@@ -124,12 +124,12 @@ func (s *SharedUDPServer) logErr(errStr string) {
 func (s *SharedUDPServer) cutDispatchTag(log *protocol.Log) (tag string) {
 	for _, content := range log.Contents {
 		if content.Key == "__labels__" {
-			startIdx := strings.Index(content.Value, s.DispatchKey)
+			startIdx := strings.Index(content.Value, s.dispatchKey)
 			if startIdx == -1 {
 				s.logErr("dispatch key not exist")
 				break
 			}
-			endIdx := startIdx + len(s.DispatchKey) + len("#$#")
+			endIdx := startIdx + len(s.dispatchKey) + len("#$#")
 			if endIdx >= len(content.Value) {
 				s.logErr("dispatch key over range")
 				break
