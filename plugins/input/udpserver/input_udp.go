@@ -32,8 +32,8 @@ type UDPServer struct {
 	ReadTimeoutSec int
 
 	context   ilogtail.Context
-	d         decoder.Decoder
-	udp       *net.UDPAddr
+	decoder   decoder.Decoder
+	addr      *net.UDPAddr
 	conn      *net.UDPConn
 	collector ilogtail.Collector
 }
@@ -41,7 +41,7 @@ type UDPServer struct {
 func (u *UDPServer) Init(context ilogtail.Context) (int, error) {
 	u.context = context
 	var err error
-	if u.d, err = decoder.GetDecoder(u.Format); err != nil {
+	if u.decoder, err = decoder.GetDecoder(u.Format); err != nil {
 		return 0, err
 	}
 
@@ -65,7 +65,7 @@ func (u *UDPServer) Init(context ilogtail.Context) (int, error) {
 		logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "illegal port", portStr, "err", err)
 	}
 
-	u.udp = &net.UDPAddr{
+	u.addr = &net.UDPAddr{
 		IP:   ip.IP,
 		Port: port,
 		Zone: ip.Zone,
@@ -86,7 +86,7 @@ func (u *UDPServer) Start(collector ilogtail.Collector) error {
 
 func (u *UDPServer) doStart(dispatchFunc func(logs []*protocol.Log)) error {
 	var err error
-	u.conn, err = net.ListenUDP("udp", u.udp)
+	u.conn, err = net.ListenUDP("udp", u.addr)
 	if err != nil {
 		logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "start udp server err", err)
 		return err
@@ -107,7 +107,7 @@ func (u *UDPServer) doStart(dispatchFunc func(logs []*protocol.Log)) error {
 				logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "read record err", err)
 				return
 			}
-			logs, err := u.d.Decode(buf[:n], nil)
+			logs, err := u.decoder.Decode(buf[:n], nil)
 			if err != nil {
 				logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "decode record err", err)
 			}
