@@ -7,7 +7,7 @@
 ## 前提
 
 1. Linux 内核 4.19+
-2. 下载libebpf.so 动态链接库，此代码后续被CoolBpf 开源。
+2. 下载libebpf.so 动态链接库放到iLogtail 的运行路径，此代码后续被CoolBpf 开源。
    - `wget https://logtail-release-us-west-1.oss-us-west-1.aliyuncs.com/kubernetes/libebpf.so`
 
 ## 配置参数
