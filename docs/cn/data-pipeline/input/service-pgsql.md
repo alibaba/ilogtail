@@ -72,18 +72,15 @@ inputs:
       Password: xxxxx 
       StateMent: "select * from specialalarmtest where id > $1"
 flushers:
-  - Type: flusher_kafka
-    Brokers:
-      - localhost:9092
-    Topic: access-log
+  - Type: flusher_stdout
+    OnlyStdout: true
 ```
 
 * 输出
 
 ```json
-{"Time":1661408673,"Contents":[{"Key":"id","Value":"1"},{"Key":"time","Value":"2022-08-25T06:01:07.276901Z"},{"Key":"alarmtype","Value":"NO_ALARM"},{"Key":"ip","Value":"10.10.***.***"},{"Key":"count","Value":"0"}]}
-{"Time":1661408673,"Contents":[{"Key":"id","Value":"2"},{"Key":"time","Value":"2022-08-25T06:01:07.277624Z"},{"Key":"alarmtype","Value":"NO_ALARM"},{"Key":"ip","Value":"10.10.***.***"},{"Key":"count","Value":"1"}]}
-{"Time":1661408673,"Contents":[{"Key":"id","Value":"3"},{"Key":"time","Value":"2022-08-25T06:01:07.278072Z"},{"Key":"alarmtype","Value":"NO_ALARM"},{"Key":"ip","Value":"10.10.***.***"},{"Key":"count","Value":"2"}]}
-{"Time":1661408673,"Contents":[{"Key":"id","Value":"4"},{"Key":"time","Value":"2022-08-25T06:01:07.278494Z"},{"Key":"alarmtype","Value":"NO_ALARM"},{"Key":"ip","Value":"10.10.***.***"},{"Key":"count","Value":"3"}]}
-
+{"id":"1","time":"2022-08-25T06:01:07.276901Z","alarmtype":"NO_ALARM","ip":"10.10.***.***","count":"0","__time__":"1661416452"}
+{"id":"2","time":"2022-08-25T06:01:07.277624Z","alarmtype":"NO_ALARM","ip":"10.10.***.***","count":"1","__time__":"1661416452"}
+{"id":"3","time":"2022-08-25T06:01:07.278072Z","alarmtype":"NO_ALARM","ip":"10.10.***.***","count":"2","__time__":"1661416452"}
+{"id":"4","time":"2022-08-25T06:01:07.278494Z","alarmtype":"NO_ALARM","ip":"10.10.***.***","count":"3","__time__":"1661416452"}
 ```

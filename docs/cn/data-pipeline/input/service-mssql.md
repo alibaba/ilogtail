@@ -62,7 +62,6 @@ GO
 ```
 
 
-
 * 采集配置
 
 ```yaml
@@ -84,18 +83,15 @@ inputs:
     Password: xxxxx
     StateMent: "select * from LogtailTestTable where id > ? order by id"
 flushers:
-  - Type: flusher_kafka
-    Brokers:
-      - localhost:9092
-    Topic: mssql-result
+  - Type: flusher_stdout
+    OnlyStdout: true
 ```
 
 * 输出
 
 ```json
-{"Time":1661410468,"Contents":[{"Key":"id","Value":"1"},{"Key":"name","Value":"banana"},{"Key":"quantity","Value":"1"}]}
-{"Time":1661410468,"Contents":[{"Key":"id","Value":"2"},{"Key":"name","Value":"banana"},{"Key":"quantity","Value":"2"}]}
-{"Time":1661410468,"Contents":[{"Key":"id","Value":"3"},{"Key":"name","Value":"banana"},{"Key":"quantity","Value":"3"}]}
-{"Time":1661410468,"Contents":[{"Key":"id","Value":"4"},{"Key":"name","Value":"banana"},{"Key":"quantity","Value":"4"}]}
-
+{"id":"1","name":"banana","quantity":"1","__time__":"1661416452"}
+{"id":"2","name":"banana","quantity":"2","__time__":"1661416452"}
+{"id":"3","name":"banana","quantity":"3","__time__":"1661416452"}
+{"id":"4","name":"banana","quantity":"4","__time__":"1661416452"}
 ```
