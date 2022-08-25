@@ -46,3 +46,4 @@ your changes, such as:
 - [public] [both] [added] Add liveness probe for k8s deployment
 - [public] [linux] [added] Add support for local config hot reloading
 - [public] [both] [fixed] fix yaml parsing problem for purely-digit values
+- [public] [both] [added] Add k8s event when control sls resource
