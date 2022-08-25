@@ -19,6 +19,7 @@ func ConfigManager() *configManager.ConfigManager {
 
 func init() {
 	myAgentManager = new(agentManager.AgentManager)
+	myAgentManager.AgentMessageList.Init()
 	go myAgentManager.UpdateAgentMessage()
 
 	myConfigManager = new(configManager.ConfigManager)

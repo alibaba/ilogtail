@@ -4,10 +4,10 @@
 
 各模块在源代码中对应的位置：
 
-* [interface_user](interface_user): 用户接口层
-* [interface_agent](interface_agent): agent 接口层
-* [manager_config](manager_config): 配置管理器
-* [manager_agent](manager_agent): agent 管理器
+* [interface/user](interface/user): 用户接口层
+* [interface/agent](interface/agent): agent 接口层
+* [manager/config](manager/config): 配置管理器
+* [manager/agent](manager/agent): agent 管理器
 * [store](store): 存储适配层
 
 其他源代码：

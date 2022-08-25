@@ -107,4 +107,19 @@ func ListAllConfigs(c *gin.Context) {
 }
 
 func GetAppliedMachineGroups(c *gin.Context) {
+	configName := c.Query("configName")
+	if configName == "" {
+		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "configName")))
+		return
+	}
+
+	machineGroupList, configExist, err := manager.ConfigManager().GetAppliedMachineGroups(configName)
+
+	if err != nil {
+		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+	} else if !configExist {
+		c.JSON(common.ErrorResponse(common.ConfigNotExist, fmt.Sprintf("Config %s doesn't exist.", configName)))
+	} else {
+		c.JSON(common.AcceptResponse(common.Accept, "Get group list success", gin.H{"groupList": machineGroupList}))
+	}
 }

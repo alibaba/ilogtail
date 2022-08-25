@@ -199,6 +199,12 @@ func parseValue(table string, data []byte) interface{} {
 	case common.TYPE_MACHINEGROUP:
 		ans = new(model.MachineGroup)
 		break
+	case common.TYPE_AGENT_ALARM:
+		ans = new(model.AgentAlarm)
+		break
+	case common.TYPE_AGENT_STATUS:
+		ans = new(model.AgentStatus)
+		break
 	}
 	json.Unmarshal(data, ans)
 	return ans
