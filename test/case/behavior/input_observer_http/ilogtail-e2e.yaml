@@ -17,8 +17,6 @@ boot:
 ilogtail:
   config:
     - name: observer-http-case
-      mixed_mode: true
-      content:
       detail:
         - inputs:
             - Type: observer_ilogtail_network
@@ -28,7 +26,7 @@ ilogtail:
                 IncludeProtocols: [ "HTTP" ]
               EBPF:
                 Enabled: true
-        - processors:
+          processors:
             - Type: processor_default
   close_wait: 5s
 verify:
