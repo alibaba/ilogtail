@@ -15,6 +15,8 @@
 | `service_journal`<br>Journal数据 | SLS官方 | 从原始的二进制文件中采集Linux系统的Journal（systemd）日志。 |
 | `service_kafka`<br>Kafka | SLS官方 | 将Kafka数据输入到iLogtail。 |
 | `service_mock`<br>Mock数据-Service | SLS官方 | 生成service模拟数据的插件。 |
+| `service_mssql`<br>SqlServer查询数据| SLS官方 | 将Sql Server数据输入到iLogtail。 |
+| `service_pgsql`<br>PostgreSQL查询数据| SLS官方 | 将PostgresSQL数据输入到iLogtail。 |
 | `service_syslog`<br>Syslog数据 | SLS官方 | 采集syslog数据。 |
 
 ## 处理
