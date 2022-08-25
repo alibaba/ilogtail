@@ -297,16 +297,26 @@ public:
     void SetCloseUnusedInterval(int32_t interval) { mCloseUnusedInterval = interval; }
 
     void SetPreciseTimestampConfig(
-        bool enabled, const std::string& key, TimeStampUnit unit, bool tzAdjust = false, int logTzOffsetSecond = 0) {
+        bool enabled, const std::string& key, TimeStampUnit unit) {
         mPreciseTimestampConfig.enabled = enabled;
         mPreciseTimestampConfig.key = key;
         mPreciseTimestampConfig.unit = unit;
+    }
 
-        if (tzAdjust) {
-            mPreciseTimestampConfig.tzOffsetSecond = logTzOffsetSecond - GetLocalTimeZoneOffsetSecond();
+    void SetTzAdjust(bool tzAdjust = false) {
+        mTzAdjust = tzAdjust;
+    }
+
+    void SetTzOffsetSecond(int logTzOffsetSecond = 0) {
+        if (mTzAdjust) {
+            mTzOffsetSecond = logTzOffsetSecond - GetLocalTimeZoneOffsetSecond();
         } else {
-            mPreciseTimestampConfig.tzOffsetSecond = 0;
+            mTzOffsetSecond = 0;
         }
+    }
+
+    void SetAdjustApsaraMicroTimezone(bool adjustApsaraMicroTimezone = false) {
+        mAdjustApsaraMicroTimezone = adjustApsaraMicroTimezone;
     }
 
 protected:
@@ -383,6 +393,10 @@ protected:
     int32_t mCloseUnusedInterval;
 
     PreciseTimestampConfig mPreciseTimestampConfig;
+
+    int32_t mTzOffsetSecond;
+    bool mTzAdjust;
+    bool mAdjustApsaraMicroTimezone;
 
 private:
     // Initialized when the exactly once feature is enabled.

@@ -59,7 +59,9 @@ public:
                                             const std::string& region,
                                             const std::string& logPath,
                                             ParseLogError& error,
-                                            uint32_t& logGroupSize);
+                                            uint32_t& logGroupSize, 
+                                            bool mTzAdjust,
+                                            int32_t mTzOffsetSecond);
     static time_t ApsaraEasyParseLogTimeParser(const char* buffer);
 
     static bool WholeLineModeParser(const char* buffer,
@@ -127,7 +129,7 @@ public:
                              const std::string& logPath,
                              ParseLogError& error);
 
-    static void AdjustLogTime(const Config* config, sls_logs::Log* logPtr, int logTimeZoneOffsetSecond, int localTimeZoneOffsetSecond);
+    static void AdjustLogTime(sls_logs::Log* logPtr, int logTimeZoneOffsetSecond, int localTimeZoneOffsetSecond);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogParserUnittest;

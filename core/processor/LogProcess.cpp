@@ -425,7 +425,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                             }
                             if (config->mTimeZoneAdjust) {
                                 LogParser::AdjustLogTime(
-                                    config, logPtr, config->mLogTimeZoneOffsetSecond, localTimeZoneOffsetSecond);
+                                    logPtr, config->mLogTimeZoneOffsetSecond, localTimeZoneOffsetSecond);
                             }
                             if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
                                 logPtr->set_time(logPtr->time() + GetTimeDelta());

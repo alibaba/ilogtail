@@ -665,7 +665,10 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
                                             const string& region,
                                             const string& logPath,
                                             ParseLogError& error,
-                                            uint32_t& logGroupSize) {
+                                            uint32_t& logGroupSize,                                             
+                                            bool mTzAdjust,
+                                            int32_t mTzOffsetSecond, 
+                                            bool mAdjustApsaraMicroTimezone) {
     int64_t logTime_in_micro = 0;
     time_t logTime = LogParser::ApsaraEasyReadLogTimeParser(buffer, timeStr, lastLogTime, logTime_in_micro);
     if (logTime <= 0) // this case will handle empty apsara log line
@@ -738,6 +741,9 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
             }
         } while (buffer[index]);
     }
+    if (mTzAdjust && mAdjustApsaraMicroTimezone) {
+        logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)mTzOffsetSecond * (int64_t) 1000000;
+    }
     char s_micro[20] = {0};
 #if defined(__linux__)
     sprintf(s_micro, "%ld", logTime_in_micro);
@@ -756,22 +762,7 @@ void LogParser::AddLog(Log* logPtr, const string& key, const string& value, uint
 }
 
 
-void LogParser::AdjustLogTime(const Config* config, sls_logs::Log* logPtr, int mLogTimeZoneOffsetSecond, int timeZoneOffsetSecond) {
-    if (config->mLogType == APSARA_LOG && config->mAdvancedConfig.mAdjustApsaraMicroTimezone) {
-        for (int32_t conIdx = 0; conIdx < logPtr->contents_size(); ++conIdx) {  
-            sls_logs::Log_Content* pContent = logPtr->mutable_contents(conIdx);
-            const string& key = pContent->key();
-            if ("microtime" == key) {
-                string* pVal = pContent->mutable_value();
-                string originMicroTime = pVal->substr((size_t)0);
-                char* endPtr;
-                double result = (double)strtol(originMicroTime.c_str(), &endPtr, 10)/(double)1000000;
-                long new_microtime = (result - mLogTimeZoneOffsetSecond + timeZoneOffsetSecond)*1000000;
-                pContent->set_value(std::to_string(new_microtime));
-                break;
-            }
-        }
-    }
+void LogParser::AdjustLogTime(sls_logs::Log* logPtr, int mLogTimeZoneOffsetSecond, int timeZoneOffsetSecond) {
     logPtr->set_time(logPtr->time() - mLogTimeZoneOffsetSecond + timeZoneOffsetSecond);
 }
 

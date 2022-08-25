@@ -1928,7 +1928,10 @@ bool ApsaraLogFileReader::ParseLogLine(const char* buffer,
                                                   mRegion,
                                                   mLogPath,
                                                   error,
-                                                  logGroupSize);
+                                                  logGroupSize,
+                                                  mTzAdjust,
+                                                  mTzOffsetSecond, 
+                                                  mAdjustApsaraMicroTimezone);
 }
 
 } // namespace logtail
