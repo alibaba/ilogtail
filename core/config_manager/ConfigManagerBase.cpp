@@ -2350,6 +2350,9 @@ bool ConfigManagerBase::GetLocalYamlConfigDirUpdate() {
             localYamlConfigMTimeMap[fullPath] = buf.GetMtime();
         }
     }
+    if (mLocalYamlConfigMTimeMap.size() != localYamlConfigMTimeMap.size()) {
+        updateFlag = true;
+    }
     mLocalYamlConfigMTimeMap = localYamlConfigMTimeMap;
 
     if (updateFlag) {
