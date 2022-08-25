@@ -36,14 +36,5 @@ your changes, such as:
 
 ## [Unreleased]
 
-- [public] [both] [updated] change CGO ProcessLogs API to ProcessLog
-- [public] [both] [fixed] fixed GetContainerMeta data race problem
-- [public] [both] [updates] kubernetes meta plugin add resource reference for collecting Service meta
-- [public] [both] [added] Decode the CSV record in the log.
-- [public] [both] [fixed] fix yaml parsing for purely digits value
-- [public] [both] [added] Add support for accelerate processor
-- [public] [both] [updated] Improve file_log plugin
-- [public] [both] [added] Add liveness probe for k8s deployment
-- [public] [linux] [added] Add support for local config hot reloading
-- [public] [both] [fixed] fix yaml parsing problem for purely-digit values
+- [public] [both] [added] Add k8s event when control sls resource
 - [public] [both] [fixed] fix timezone process for microtime in Apsara mode

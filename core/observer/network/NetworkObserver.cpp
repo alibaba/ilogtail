@@ -117,7 +117,8 @@ void NetworkObserver::GarbageCollection(uint64_t nowTimeNs) {
                                                                                                           iter->first));
             static ContainerProcessGroupManager* containerProcessGroupManager
                 = ContainerProcessGroupManager::GetInstance();
-            // @note we must us iter->first as pid (not processMeta->Pid), because processMeta may belong to other pid in the same container
+            // @note we must us iter->first as pid (not processMeta->Pid), because processMeta may belong to other pid
+            // in the same container
             containerProcessGroupManager->OnProcessDestroy(observer->GetProcessMeta().get(), iter->first);
             mServiceMetaManager->OnProcessDestroy(iter->first);
             delete observer;
@@ -332,6 +333,10 @@ void NetworkObserver::ReloadSource() {
 }
 
 void NetworkObserver::Reload() {
+    if (!glibc::LoadGlibcFunc()) {
+        LOG_ERROR(sLogger, ("observer depends on glibc1.14", "load glibc func fail"));
+        return;
+    }
     std::vector<Config*> allObserverConfigs;
     ConfigManager::GetInstance()->GetAllObserverConfig(allObserverConfigs);
     mConfig->BeginLoadConfig();
