@@ -26,6 +26,8 @@
 
 using namespace std;
 
+DEFINE_FLAG_BOOL(send_running_status, "", true);
+
 namespace logtail {
 
 void ProfileSender::SendToProfileProject(const std::string& region, sls_logs::LogGroup& logGroup) {
@@ -40,6 +42,10 @@ void ProfileSender::SendToProfileProject(const std::string& region, sls_logs::Lo
 }
 
 void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
+    if (!BOOL_FLAG(send_running_status)) {
+        return;
+    }
+
     static int controlFeq = 0;
 
     // every 12 hours
@@ -54,7 +60,8 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
 
     Json::Value logtailStatus;
     logtailStatus["__topic__"] = "logtail_status_profile";
-    unordered_set<std::string> selectedFields({"cpu", "mem", "version", "instance_key", "os", "os_detail", "load", "status", "metric_json"});
+    unordered_set<std::string> selectedFields(
+        {"cpu", "mem", "version", "instance_key", "os", "os_detail", "load", "status", "metric_json"});
     Json::Value status;
     const sls_logs::Log& log = logGroup.logs(0);
     for (int32_t conIdx = 0; conIdx < log.contents_size(); ++conIdx) {
