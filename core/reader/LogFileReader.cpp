@@ -1835,7 +1835,9 @@ bool CommonRegLogFileReader::ParseLogLine(const char* buffer,
                                                 mRegion,
                                                 mLogPath,
                                                 error,
-                                                logGroupSize);
+                                                logGroupSize,
+                                                mTzAdjust,
+                                                mTzOffsetSecond);
         } else {
             // if "time" field not exist in user config or timeformat empty, set current system time for logs
             if (format.mIsWholeLineMode) {

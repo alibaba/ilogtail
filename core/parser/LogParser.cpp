@@ -158,7 +158,9 @@ static bool StdRegexLogLineParser(const char* buffer,
                                   const string& region,
                                   const string& logPath,
                                   ParseLogError& error,
-                                  uint32_t& logGroupSize) {
+                                  uint32_t& logGroupSize,
+                                  bool mTzAdjust,
+                                  int32_t mTzOffsetSecond) {
     std::regex stdReg;
     std::string exception;
     try {
@@ -233,7 +235,9 @@ static bool StdRegexLogLineParser(const char* buffer,
                                         category,
                                         region,
                                         logPath,
-                                        error)) {
+                                        error,
+                                        mTzAdjust,
+                                        mTzOffsetSecond)) {
         parseSuccess = false;
         if (error == PARSE_LOG_HISTORY_ERROR)
             return false;
@@ -274,7 +278,9 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                                    const string& region,
                                    const string& logPath,
                                    ParseLogError& error,
-                                   uint32_t& logGroupSize) {
+                                   uint32_t& logGroupSize,
+                                   bool mTzAdjust,
+                                   int32_t mTzOffsetSecond) {
     boost::match_results<const char*> what;
     string exception;
     uint64_t preciseTimestamp = 0;
@@ -297,7 +303,9 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                                      region,
                                      logPath,
                                      error,
-                                     logGroupSize);
+                                     logGroupSize,
+                                     mTzAdjust,
+                                     mTzOffsetSecond);
 #endif
 
         if (!exception.empty()) {
@@ -356,7 +364,9 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                              category,
                              region,
                              logPath,
-                             error)) {
+                             error,
+                             mTzAdjust,
+                             mTzOffsetSecond)) {
         parseSuccess = false;
         if (error == PARSE_LOG_HISTORY_ERROR)
             return false;
@@ -471,7 +481,9 @@ bool LogParser::ParseLogTime(const char* buffer,
                              const string& category,
                              const string& region,
                              const string& logPath,
-                             ParseLogError& error) {
+                             ParseLogError& error,                                             
+                             bool mTzAdjust,
+                             int32_t mTzOffsetSecond) {
     if (IsPrefixString(curTimeStr, timeStr) == false) {
         struct tm tm;
         memset(&tm, 0, sizeof(tm));
@@ -508,12 +520,12 @@ bool LogParser::ParseLogTime(const char* buffer,
         timeStr = ConvertToTimeStamp(logTime, timeFormat);
 
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(logTime, strptimeResult, preciseTimestampConfig);
+            preciseTimestamp = GetPreciseTimestamp(logTime, strptimeResult, preciseTimestampConfig, mTzAdjust, mTzOffsetSecond);
         }
     } else {
         if (preciseTimestampConfig.enabled) {
             preciseTimestamp
-                = GetPreciseTimestamp(logTime, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig);
+                = GetPreciseTimestamp(logTime, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, mTzAdjust, mTzOffsetSecond);
         }
     }
 

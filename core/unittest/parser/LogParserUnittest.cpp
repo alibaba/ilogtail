@@ -524,7 +524,9 @@ void LogParserUnittest::TestRegexLogLineParser() {
                                          "",
                                          "",
                                          error,
-                                         logGroupSize);
+                                         logGroupSize,
+                                         false,
+                                         0);
     APSARA_TEST_EQUAL(flag, true);
     const Log& secondLog = logGroup.logs(1);
     APSARA_TEST_EQUAL(secondLog.contents_size(), 3);
@@ -560,7 +562,9 @@ void LogParserUnittest::TestRegexLogLineParser() {
                                          "",
                                          "",
                                          error,
-                                         logGroupSize);
+                                         logGroupSize,
+                                         false,
+                                         0);
     APSARA_TEST_EQUAL(flag, true);
     const Log& thirdLog = logGroup.logs(2);
     APSARA_TEST_EQUAL(thirdLog.contents_size(), 3);
@@ -615,7 +619,9 @@ void LogParserUnittest::TestRegexLogLineParser() {
                                          "",
                                          "",
                                          error,
-                                         logGroupSize);
+                                         logGroupSize,
+                                         false,
+                                         0);
     APSARA_TEST_EQUAL(flag, false);
     LOG_INFO(sLogger, ("TestRegexLogLineParser() end", time(NULL)));
 }
@@ -643,26 +649,26 @@ void LogParserUnittest::TestLogTimeRegexParser() {
 
     std::string timeFormat("%Y-%m-%d %H:%M:%S");
     time_t logTime = -1;
-    bool flag = LogFileReader::ParseLogTime(logBufferRight, &reg2, logTime, timeFormat);
+    bool flag = LogFileReader::ParseLogTime(logBufferRight, &reg2, logTime, timeFormat, false, 0);
     APSARA_TEST_EQUAL(flag, true);
     APSARA_TEST_EQUAL(logTime, 1530734462);
 
     logTime = -1;
-    flag = LogFileReader::ParseLogTime(logBufferWrong, &reg1, logTime, timeFormat);
+    flag = LogFileReader::ParseLogTime(logBufferWrong, &reg1, logTime, timeFormat, false, 0);
     APSARA_TEST_EQUAL(flag, false);
     APSARA_TEST_EQUAL(logTime, -1);
 
-    flag = LogFileReader::ParseLogTime(logBufferRight, &reg2, logTime, timeFormat);
+    flag = LogFileReader::ParseLogTime(logBufferRight, &reg2, logTime, timeFormat, false, 0);
     APSARA_TEST_EQUAL(flag, true);
     APSARA_TEST_EQUAL(logTime, 1530734462); // 2018-07-05 04:01:02 unix time: 1530734462
 
     logTime = -1;
-    flag = LogFileReader::ParseLogTime(logBufferRight, &reg1, logTime, timeFormat);
+    flag = LogFileReader::ParseLogTime(logBufferRight, &reg1, logTime, timeFormat, false, 0);
     APSARA_TEST_EQUAL(flag, true);
     APSARA_TEST_EQUAL(logTime, 1530734462); // 2018-07-05 04:01:02 unix time: 1530734462
 
     logTime = -1;
-    flag = LogFileReader::ParseLogTime(logBufferRight2, &reg1, logTime, timeFormat);
+    flag = LogFileReader::ParseLogTime(logBufferRight2, &reg1, logTime, timeFormat, false, 0);
     APSARA_TEST_EQUAL(flag, true);
     APSARA_TEST_EQUAL(logTime, 1533645038); // 2018-08-07 20:30:38 unix time: 1533645038
 
@@ -719,7 +725,9 @@ void LogParserUnittest::TestParseTimestampNotInSeconds() {
                                            "",
                                            "",
                                            "",
-                                           error);
+                                           error, 
+                                           false, 
+                                           0);
         LOG_INFO(sLogger,
                  ("Case", i)("ret", ret)(outTimeStr, outTime)("preciseTimestamp", preciseTimestamp)("error", error));
         EXPECT_TRUE(ret);
@@ -743,7 +751,9 @@ void LogParserUnittest::TestParseTimestampNotInSeconds() {
                                        "",
                                        "",
                                        "",
-                                       error);
+                                       error, 
+                                       false, 
+                                       0);
     LOG_INFO(sLogger, ("Bad case", ret)("error", error));
     EXPECT_FALSE(ret);
 #if defined(_MSC_VER)
@@ -802,7 +812,9 @@ void LogParserUnittest::TestRegexLogLineParserWithTimeIndex() {
                                               "",
                                               "",
                                               error,
-                                              logGroupSize);
+                                              logGroupSize,
+                                              false,
+                                              0);
     APSARA_TEST_EQUAL(flag, true);
     const Log& log = logGroup.logs(0);
     APSARA_TEST_EQUAL(log.time(), myLogTime);
@@ -863,7 +875,9 @@ void LogParserUnittest::TestLogParserParseLogTime() {
                                            "",
                                            "",
                                            "",
-                                           error);
+                                           error,
+                                           false, 
+                                           0);
         LOG_INFO(sLogger,
                  ("Case", i)("InputTimeStr", c.inputTimeStr)("FormatStr", c.fmtStr)("ret", ret)(outTimeStr, outTime)(
                      "preciseTimestamp", preciseTimestamp)("error", error));

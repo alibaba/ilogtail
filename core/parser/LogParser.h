@@ -91,7 +91,9 @@ public:
                                    const std::string& region,
                                    const std::string& logPath,
                                    ParseLogError& error,
-                                   uint32_t& logGroupSize);
+                                   uint32_t& logGroupSize,
+                                   bool mTzAdjust,
+                                   int32_t mTzOffsetSecond);
     // RegexLogLineParser with specified log time.
     static bool RegexLogLineParser(const char* buffer,
                                    const boost::regex& reg,
@@ -128,7 +130,9 @@ public:
                              const std::string& category,
                              const std::string& region,
                              const std::string& logPath,
-                             ParseLogError& error);
+                             ParseLogError& error,
+                             bool mTzAdjust,
+                             int32_t mTzOffsetSecond);
 
     static void AdjustLogTime(sls_logs::Log* logPtr, int logTimeZoneOffsetSecond, int localTimeZoneOffsetSecond);
 
