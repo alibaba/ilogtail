@@ -343,7 +343,7 @@ void LogParserUnittest::TestApsaraEasyReadLogTimeParser() {
     dateTime = 0;
     dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
     APSARA_TEST_EQUAL(dateTime, 1378995509);
-    APSARA_TEST_EQUAL(microTime, 1378995509819139);
+    APSARA_TEST_EQUAL(microTime, 1378995509819000);
     APSARA_TEST_EQUAL(dateTime, lastTime);
     APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:29");
     LOG_INFO(sLogger, ("TestApsaraEasyReadLogTimeParser() end", time(NULL)));
