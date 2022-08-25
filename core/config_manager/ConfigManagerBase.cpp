@@ -325,7 +325,7 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
     }
 
     ScopedSpinLock lock(mPluginStatsLock);
-    for(auto it = stats.begin(); it != stats.end(); ++it) {
+    for (auto it = stats.begin(); it != stats.end(); ++it) {
         for (auto item = it->second.begin(); item != it->second.end(); ++item) {
             mPluginStats[it->first][*item] += 1;
         }
@@ -1062,7 +1062,6 @@ bool ConfigManagerBase::LoadAllConfig() {
                                                                                      mNameConfigMap.size()));
         }
     }
-    cout << GeneratePluginStatString() << endl;
     return rst;
 }
 
