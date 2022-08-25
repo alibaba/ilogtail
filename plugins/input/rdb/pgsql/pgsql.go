@@ -115,7 +115,7 @@ func init() {
 				Driver:                "pgx",
 				Address:               "127.0.0.1",
 				User:                  "root",
-				MaxSyncSize:           10000,
+				MaxSyncSize:           0,
 				DialTimeOutMs:         5000,
 				ReadTimeOutMs:         5000,
 				Port:                  5432,

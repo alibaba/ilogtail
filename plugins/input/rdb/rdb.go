@@ -208,7 +208,7 @@ func (m *Rdb) Start(collector ilogtail.Collector, connStr string, rdbFunc RdbFun
 			} else {
 				timer.Reset(time.Duration(m.IntervalMs)*time.Millisecond - endTime.Sub(startTime))
 			}
-			logger.Info(m.Context.GetRuntimeContext(), "sql collect done, start", startTime, "end", endTime, "intervalMs", m.IntervalMs)
+			logger.Debug(m.Context.GetRuntimeContext(), "sql collect done, start", startTime, "end", endTime, "intervalMs", m.IntervalMs)
 		case <-m.Shutdown:
 			m.SaveCheckPoint(collector)
 			logger.Info(m.Context.GetRuntimeContext(), "recv shutdown signal", "start to exit")
