@@ -61,7 +61,8 @@ public:
                                             ParseLogError& error,
                                             uint32_t& logGroupSize, 
                                             bool mTzAdjust,
-                                            int32_t mTzOffsetSecond);
+                                            int32_t mTzOffsetSecond, 
+                                            bool mAdjustApsaraMicroTimezone);
     static time_t ApsaraEasyParseLogTimeParser(const char* buffer);
 
     static bool WholeLineModeParser(const char* buffer,
