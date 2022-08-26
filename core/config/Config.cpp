@@ -596,8 +596,7 @@ LogFileReader* Config::CreateLogFileReader(const std::string& dir,
         reader->SetPreciseTimestampConfig(mAdvancedConfig.mEnablePreciseTimestamp,
                                           mAdvancedConfig.mPreciseTimestampKey,
                                           mAdvancedConfig.mPreciseTimestampUnit);
-        reader->SetTzAdjust(mTimeZoneAdjust);
-        reader->SetTzOffsetSecond(mLogTimeZoneOffsetSecond);
+        reader->SetTzOffsetSecond(mTimeZoneAdjust, mLogTimeZoneOffsetSecond);
         reader->SetAdjustApsaraMicroTimezone(mAdvancedConfig.mAdjustApsaraMicroTimezone);
         
         if (mDockerFileFlag) {

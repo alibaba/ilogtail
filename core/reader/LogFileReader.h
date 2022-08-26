@@ -303,12 +303,8 @@ public:
         mPreciseTimestampConfig.unit = unit;
     }
 
-    void SetTzAdjust(bool tzAdjust = false) {
-        mTzAdjust = tzAdjust;
-    }
-
-    void SetTzOffsetSecond(int logTzOffsetSecond = 0) {
-        if (mTzAdjust) {
+    void SetTzOffsetSecond(bool tzAdjust = false, int logTzOffsetSecond = 0) {
+        if (tzAdjust) {
             mTzOffsetSecond = logTzOffsetSecond - GetLocalTimeZoneOffsetSecond();
         } else {
             mTzOffsetSecond = 0;
@@ -395,7 +391,6 @@ protected:
     PreciseTimestampConfig mPreciseTimestampConfig;
 
     int32_t mTzOffsetSecond;
-    bool mTzAdjust;
     bool mAdjustApsaraMicroTimezone;
 
 private:
