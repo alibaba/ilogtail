@@ -4,6 +4,7 @@ import (
 	agentManager "github.com/alibaba/ilogtail/config_server/service/manager/agent"
 	configManager "github.com/alibaba/ilogtail/config_server/service/manager/config"
 	"github.com/alibaba/ilogtail/config_server/service/model"
+	"github.com/alibaba/ilogtail/config_server/service/setting"
 )
 
 var myAgentManager *agentManager.AgentManager
@@ -20,9 +21,9 @@ func ConfigManager() *configManager.ConfigManager {
 func init() {
 	myAgentManager = new(agentManager.AgentManager)
 	myAgentManager.AgentMessageList.Init()
-	go myAgentManager.UpdateAgentMessage()
+	go myAgentManager.UpdateAgentMessage(setting.GetSetting().AgentUpdateInterval)
 
 	myConfigManager = new(configManager.ConfigManager)
 	myConfigManager.ConfigList = make(map[string]*model.Config)
-	go myConfigManager.UpdateConfigList()
+	go myConfigManager.UpdateConfigList(setting.GetSetting().ConfigSyncInterval)
 }

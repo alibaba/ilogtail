@@ -32,7 +32,7 @@ func (a *AgentManager) RunningStatus(id string, status map[string]string) error 
 func (a *AgentManager) Alarm(id string, alarmType string, alarmMessage string) error {
 	queryTime := strconv.FormatInt(time.Now().Unix(), 10)
 	alarm := new(model.AgentAlarm)
-	alarm.MachineId = queryTime + ":" + id
+	alarm.MachineId = generateAlarmKey(queryTime, id)
 	alarm.Time = queryTime
 	alarm.AlarmType = alarmType
 	alarm.AlarmMessage = alarmMessage
@@ -40,48 +40,84 @@ func (a *AgentManager) Alarm(id string, alarmType string, alarmMessage string) e
 	return nil
 }
 
-func (a *AgentManager) UpdateAgentMessage() {
-	ticker := time.NewTicker(1 * time.Second)
+func (a *AgentManager) UpdateAgentMessage(interval int) {
+	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		s := store.GetStore()
-		b := store.CreateBacth()
-
-		for k, v := range a.AgentMessageList.Alarm {
-			b.Update(common.TYPE_AGENT_ALARM, k, v)
-		}
-		for k, v := range a.AgentMessageList.Heartbeat {
-			b.Update(common.TYPE_MACHINE, k, v)
-		}
-		for k, v := range a.AgentMessageList.Status {
-			b.Update(common.TYPE_AGENT_STATUS, k, v)
-		}
-
-		alarmCount, err := s.Count(common.TYPE_AGENT_ALARM)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		if alarmCount > 10000 {
-			alarmList, err := s.GetAll(common.TYPE_AGENT_ALARM)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			for i, v := range alarmList {
-				if i > 5000 {
-					break
-				}
-				b.Delete(common.TYPE_AGENT_ALARM, v.(*model.AgentAlarm).Time+":"+v.(*model.AgentAlarm).MachineId)
-			}
-		}
-
-		err = s.WriteBatch(b)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		a.AgentMessageList.Init()
+		go a.batchAddAlarm()
+		go a.batchUpdateAgentMessage()
+		go a.checkAlarmSize()
 	}
+}
+
+func (a *AgentManager) batchAddAlarm() {
+	s := store.GetStore()
+	b := store.CreateBacth()
+
+	for k, v := range a.AgentMessageList.Alarm {
+		b.Add(common.TYPE_AGENT_ALARM, k, v)
+	}
+
+	err := s.WriteBatch(b)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	a.AgentMessageList.Alarm = make(map[string]*model.AgentAlarm, 0)
+}
+
+func (a *AgentManager) checkAlarmSize() {
+	s := store.GetStore()
+	b := store.CreateBacth()
+
+	alarmCount, err := s.Count(common.TYPE_AGENT_ALARM)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if alarmCount > 10000 {
+		alarmList, err := s.GetAll(common.TYPE_AGENT_ALARM)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		for i, v := range alarmList {
+			if i > 5000 {
+				break
+			}
+			b.Delete(common.TYPE_AGENT_ALARM, generateAlarmKey(v.(*model.AgentAlarm).Time, v.(*model.AgentAlarm).MachineId))
+		}
+	}
+
+	err = s.WriteBatch(b)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func (a *AgentManager) batchUpdateAgentMessage() {
+	s := store.GetStore()
+	b := store.CreateBacth()
+
+	for k, v := range a.AgentMessageList.Heartbeat {
+		b.Update(common.TYPE_MACHINE, k, v)
+	}
+	for k, v := range a.AgentMessageList.Status {
+		b.Update(common.TYPE_AGENT_STATUS, k, v)
+	}
+
+	err := s.WriteBatch(b)
+	if err != nil {
+		log.Println(err)
+	}
+
+	a.AgentMessageList.Status = make(map[string]*model.AgentStatus, 0)
+	a.AgentMessageList.Heartbeat = make(map[string]*model.Machine, 0)
+}
+
+func generateAlarmKey(queryTime string, machineId string) string {
+	return queryTime + ":" + machineId
 }

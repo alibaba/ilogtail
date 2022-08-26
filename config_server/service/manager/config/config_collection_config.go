@@ -95,8 +95,8 @@ func (c *ConfigManager) ListAllConfigs() ([]model.Config, error) {
 	return ans, nil
 }
 
-func (c *ConfigManager) UpdateConfigList() {
-	ticker := time.NewTicker(3 * time.Second)
+func (c *ConfigManager) UpdateConfigList(interval int) {
+	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {

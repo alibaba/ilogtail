@@ -8,11 +8,12 @@ import (
 )
 
 type setting struct {
-	Ip               string `json:"ip"`           // "127.0.0.1"
-	StoreMode        string `json:"store_mode"`   // "leveldb" "mysql"
-	Identity         string `json:"identity"`     // "master" "slave"
-	Port             string `json:"port"`         // "8899"
-	LeveldbStorePath string `json:"leveldb_path"` // "./DB"
+	Ip                  string `json:"ip"`                    // default: "127.0.0.1"
+	StoreMode           string `json:"store_mode"`            // support "leveldb", "mysql"
+	Port                string `json:"port"`                  // default: "8899"
+	DbPath              string `json:"db_path"`               // default: "./DB"
+	AgentUpdateInterval int    `json:"agent_update_interval"` // default: 1s
+	ConfigSyncInterval  int    `json:"config_sync_interval"`  // default: 3s
 }
 
 var mySetting *setting
@@ -70,10 +71,13 @@ func init() {
 	if mySetting.Port == "" {
 		mySetting.Port = "8899"
 	}
-	if mySetting.Identity == "" {
-		mySetting.Identity = "master"
-	}
 	if mySetting.StoreMode == "" {
 		panic("Please set store mode")
+	}
+	if mySetting.AgentUpdateInterval == 0 {
+		mySetting.AgentUpdateInterval = 1
+	}
+	if mySetting.ConfigSyncInterval == 0 {
+		mySetting.ConfigSyncInterval = 3
 	}
 }

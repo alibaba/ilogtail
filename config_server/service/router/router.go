@@ -10,9 +10,7 @@ import (
 func InitRouter() {
 	router := gin.Default()
 
-	if setting.GetSetting().Identity == "master" {
-		initUserRouter(router)
-	}
+	initUserRouter(router)
 	initAgentRouter(router)
 
 	router.Run(setting.GetSetting().Ip + ":" + setting.GetSetting().Port)

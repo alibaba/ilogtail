@@ -27,7 +27,7 @@ func (l *LeveldbStore) Connect() error {
 
 	var err error
 	for _, c := range dbPath {
-		l.db[c], err = leveldb.OpenFile(setting.GetSetting().LeveldbStorePath+"/"+c, nil)
+		l.db[c], err = leveldb.OpenFile(setting.GetSetting().DbPath+"/"+c, nil)
 		if err != nil {
 			return err
 		}
