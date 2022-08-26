@@ -118,7 +118,6 @@ bool JsonLogFileReader::ParseLogLine(const char* buffer,
                                          mRegion,
                                          mLogPath,
                                          error,
-                                         mTzAdjust,
                                          mTzOffsetSecond)) {
                 parseSuccess = false;
                 if (error == PARSE_LOG_HISTORY_ERROR)

@@ -261,12 +261,8 @@ void UpdateTimeDelta(time_t serverTime) {
 uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
                              const char* preciseTimeSuffix,
                              const PreciseTimestampConfig& preciseTimestampConfig,
-                             bool mTzAdjust,
-                             int32_t mTzOffsetSecond) {
-    uint64_t adjustSecondTimestamp = secondTimestamp;
-    if (mTzAdjust) {
-        adjustSecondTimestamp = adjustSecondTimestamp - mTzOffsetSecond;
-    }
+                             int32_t tzOffsetSecond) {
+    uint64_t adjustSecondTimestamp = secondTimestamp  - tzOffsetSecond;
     if (!preciseTimestampConfig.enabled) {
         return adjustSecondTimestamp;
     }

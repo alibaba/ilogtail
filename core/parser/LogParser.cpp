@@ -159,8 +159,7 @@ static bool StdRegexLogLineParser(const char* buffer,
                                   const string& logPath,
                                   ParseLogError& error,
                                   uint32_t& logGroupSize,
-                                  bool mTzAdjust,
-                                  int32_t mTzOffsetSecond) {
+                                  int32_t tzOffsetSecond) {
     std::regex stdReg;
     std::string exception;
     try {
@@ -236,8 +235,7 @@ static bool StdRegexLogLineParser(const char* buffer,
                                         region,
                                         logPath,
                                         error,
-                                        mTzAdjust,
-                                        mTzOffsetSecond)) {
+                                        tzOffsetSecond)) {
         parseSuccess = false;
         if (error == PARSE_LOG_HISTORY_ERROR)
             return false;
@@ -279,8 +277,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                                    const string& logPath,
                                    ParseLogError& error,
                                    uint32_t& logGroupSize,
-                                   bool mTzAdjust,
-                                   int32_t mTzOffsetSecond) {
+                                   int32_t tzOffsetSecond) {
     boost::match_results<const char*> what;
     string exception;
     uint64_t preciseTimestamp = 0;
@@ -304,8 +301,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                                      logPath,
                                      error,
                                      logGroupSize,
-                                     mTzAdjust,
-                                     mTzOffsetSecond);
+                                     tzOffsetSecond);
 #endif
 
         if (!exception.empty()) {
@@ -365,8 +361,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                              region,
                              logPath,
                              error,
-                             mTzAdjust,
-                             mTzOffsetSecond)) {
+                             tzOffsetSecond)) {
         parseSuccess = false;
         if (error == PARSE_LOG_HISTORY_ERROR)
             return false;
@@ -482,8 +477,7 @@ bool LogParser::ParseLogTime(const char* buffer,
                              const string& region,
                              const string& logPath,
                              ParseLogError& error,                                             
-                             bool mTzAdjust,
-                             int32_t mTzOffsetSecond) {
+                             int32_t tzOffsetSecond) {
     if (IsPrefixString(curTimeStr, timeStr) == false) {
         struct tm tm;
         memset(&tm, 0, sizeof(tm));
@@ -520,12 +514,12 @@ bool LogParser::ParseLogTime(const char* buffer,
         timeStr = ConvertToTimeStamp(logTime, timeFormat);
 
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(logTime, strptimeResult, preciseTimestampConfig, mTzAdjust, mTzOffsetSecond);
+            preciseTimestamp = GetPreciseTimestamp(logTime, strptimeResult, preciseTimestampConfig, tzOffsetSecond);
         }
     } else {
         if (preciseTimestampConfig.enabled) {
             preciseTimestamp
-                = GetPreciseTimestamp(logTime, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, mTzAdjust, mTzOffsetSecond);
+                = GetPreciseTimestamp(logTime, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, tzOffsetSecond);
         }
     }
 
@@ -678,9 +672,8 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
                                             const string& logPath,
                                             ParseLogError& error,
                                             uint32_t& logGroupSize,                                             
-                                            bool mTzAdjust,
-                                            int32_t mTzOffsetSecond, 
-                                            bool mAdjustApsaraMicroTimezone) {
+                                            int32_t tzOffsetSecond, 
+                                            bool adjustApsaraMicroTimezone) {
     int64_t logTime_in_micro = 0;
     time_t logTime = LogParser::ApsaraEasyReadLogTimeParser(buffer, timeStr, lastLogTime, logTime_in_micro);
     if (logTime <= 0) // this case will handle empty apsara log line
@@ -753,8 +746,8 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
             }
         } while (buffer[index]);
     }
-    if (mTzAdjust && mAdjustApsaraMicroTimezone) {
-        logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)mTzOffsetSecond * (int64_t) 1000000;
+    if (adjustApsaraMicroTimezone) {
+        logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)tzOffsetSecond * (int64_t) 1000000;
     }
     char s_micro[20] = {0};
 #if defined(__linux__)
