@@ -60,6 +60,8 @@ clean:
 	rm -rf e2e-engine-coverage.txt
 	rm -rf find_licenses
 	rm -rf $(GENERATED_HOME)
+	rm -rf core/log_pb/*.pb.*
+	rm -rf core/common/Version.cpp
 
 .PHONY: license
 license:  clean tools
@@ -67,7 +69,7 @@ license:  clean tools
 
 .PHONY: check-license
 check-license: clean tools
-	./scripts/package_license.sh check $(SCOPE) > $(LICENSE_COVERAGE_FILE)
+	./scripts/package_license.sh check $(SCOPE) | tee $(LICENSE_COVERAGE_FILE)
 
 .PHONY: lint
 lint: clean tools
