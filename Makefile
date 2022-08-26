@@ -60,8 +60,6 @@ clean:
 	rm -rf e2e-engine-coverage.txt
 	rm -rf find_licenses
 	rm -rf $(GENERATED_HOME)
-	rm -rf core/log_pb/*.pb.*
-	rm -rf core/common/Version.cpp
 
 .PHONY: license
 license:  clean tools
