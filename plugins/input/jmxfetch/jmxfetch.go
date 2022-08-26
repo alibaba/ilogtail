@@ -133,7 +133,7 @@ func (m *Jmx) Description() string {
 }
 
 func (m *Jmx) Start(collector ilogtail.Collector) error {
-	GetJmxFetchManager(m.jvmHome).RegisterCollector(m.key, collector, m.Filters)
+	GetJmxFetchManager(m.jvmHome).RegisterCollector(m.context, m.key, collector, m.Filters)
 
 	if !m.DiscoveryMode {
 		logger.Infof(m.context.GetRuntimeContext(), "find %d static jmx configs", len(m.StaticInstances))
@@ -143,7 +143,7 @@ func (m *Jmx) Start(collector ilogtail.Collector) error {
 				m.StaticInstances[i].Password, m.StaticInstances[i].Tags, m.CollectDefaultJvmMetrics)
 			m.instances[inner.Hash()] = inner
 		}
-		GetJmxFetchManager(m.jvmHome).Register(m.context, m.key, m.instances)
+		GetJmxFetchManager(m.jvmHome).Register(m.key, m.instances)
 		return nil
 	}
 	go func() {
@@ -217,7 +217,7 @@ func (m *Jmx) UpdateContainerCfg() {
 		m.instances[inner.Hash()] = inner
 	}
 	logger.Infof(m.context.GetRuntimeContext(), "find %d dynamic jmx configs", len(m.instances))
-	GetJmxFetchManager(m.jvmHome).Register(m.context, m.key, m.instances)
+	GetJmxFetchManager(m.jvmHome).Register(m.key, m.instances)
 }
 
 func init() {
