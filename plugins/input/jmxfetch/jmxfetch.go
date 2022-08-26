@@ -36,14 +36,19 @@ type Instance struct {
 	Password string
 	Tags     map[string]string
 }
+
+type Attribute struct {
+	Name       string
+	MetricType string
+	Alias      string
+}
+
 type Filter struct {
-	Domain    string `yaml:"domain,omitempty"`
-	BeanRegex string `yaml:"bean_regex,omitempty"`
-	Type      string `yaml:"type,omitempty"`
-	Attribute map[string]struct {
-		MetricType string `yaml:"metric_type,omitempty"`
-		Alias      string `yaml:"alias,omitempty"`
-	} `yaml:"attribute,omitempty"`
+	Domain    string
+	BeanRegex string
+	Type      string
+	Name      string
+	Attribute []*Attribute
 }
 
 type Jmx struct {
@@ -77,6 +82,7 @@ type Jmx struct {
 	context                    ilogtail.Context
 	stopChan                   chan struct{}
 	instances                  map[string]*InstanceInner
+	filters                    []*FilterInner
 	key                        string // uniq key for binding collector
 	jvmHome                    string
 }
@@ -86,7 +92,9 @@ func (m *Jmx) Init(context ilogtail.Context) (int, error) {
 	m.key = m.context.GetProject() + m.context.GetLogstore() + m.context.GetConfigName()
 	helper.ReplaceInvalidChars(&m.key)
 	m.jvmHome = path.Join(pluginmanager.LogtailGlobalConfig.LogtailSysConfDir, "jvm")
-
+	for _, f := range m.Filters {
+		m.filters = append(m.filters, NewFilterInner(f))
+	}
 	if m.JDKPath != "" {
 		abs, err := filepath.Abs(filepath.Clean(m.JDKPath))
 		if err != nil {
@@ -133,7 +141,7 @@ func (m *Jmx) Description() string {
 }
 
 func (m *Jmx) Start(collector ilogtail.Collector) error {
-	GetJmxFetchManager(m.jvmHome).RegisterCollector(m.context, m.key, collector, m.Filters)
+	GetJmxFetchManager(m.jvmHome).RegisterCollector(m.context, m.key, collector, m.filters)
 
 	if !m.DiscoveryMode {
 		logger.Infof(m.context.GetRuntimeContext(), "find %d static jmx configs", len(m.StaticInstances))

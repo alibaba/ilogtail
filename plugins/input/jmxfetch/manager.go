@@ -85,7 +85,7 @@ type Manager struct {
 	sync.Mutex
 }
 
-func (m *Manager) RegisterCollector(ctx ilogtail.Context, key string, collector ilogtail.Collector, filters []*Filter) {
+func (m *Manager) RegisterCollector(ctx ilogtail.Context, key string, collector ilogtail.Collector, filters []*FilterInner) {
 	if !m.initSuccess {
 		return
 	}
@@ -257,9 +257,9 @@ func (m *Manager) updateFiles(key string, userCfg *Cfg) {
 	cfg["init_config"] = initCfg
 
 	if len(userCfg.include) != 0 {
-		fiterCfg := make([]map[string]*Filter, 0, 16)
+		fiterCfg := make([]map[string]*FilterInner, 0, 16)
 		for _, filter := range userCfg.include {
-			fiterCfg = append(fiterCfg, map[string]*Filter{"include": filter})
+			fiterCfg = append(fiterCfg, map[string]*FilterInner{"include": filter})
 		}
 		initCfg["conf"] = fiterCfg
 	}

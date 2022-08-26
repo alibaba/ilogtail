@@ -55,13 +55,57 @@ func NewInstanceInner(port int32, host, user, passowrd string, tags map[string]s
 	}
 }
 
+type FilterInner struct {
+	Domain    string      `yaml:"domain,omitempty"`
+	BeanRegex string      `yaml:"bean_regex,omitempty"`
+	Type      string      `yaml:"type,omitempty"`
+	Name      string      `yaml:"name"`
+	Attribute interface{} `yaml:"attribute,omitempty"`
+}
+
+func NewFilterInner(filter *Filter) *FilterInner {
+	f := &FilterInner{
+		Domain:    filter.Domain,
+		BeanRegex: filter.BeanRegex,
+		Type:      filter.Type,
+		Name:      filter.Name,
+	}
+
+	if len(filter.Attribute) > 0 {
+		listMode := false
+		for _, attribute := range filter.Attribute {
+			if attribute.MetricType == "" || attribute.Alias == "" {
+				listMode = true
+				break
+			}
+		}
+		if listMode {
+			var names []string
+			for _, attribute := range filter.Attribute {
+				names = append(names, attribute.Name)
+			}
+			f.Attribute = names
+		} else {
+			attrubutes := make(map[string]map[string]string)
+			for _, attribute := range filter.Attribute {
+				attrubutes[attribute.Name] = map[string]string{
+					"metric_type": attribute.MetricType,
+					"alias":       attribute.Alias,
+				}
+			}
+			f.Attribute = attrubutes
+		}
+	}
+	return f
+}
+
 type Cfg struct {
-	include   []*Filter
+	include   []*FilterInner
 	instances map[string]*InstanceInner
 	change    bool
 }
 
-func NewCfg(filters []*Filter) *Cfg {
+func NewCfg(filters []*FilterInner) *Cfg {
 	return &Cfg{
 		instances: map[string]*InstanceInner{},
 		include:   filters,
