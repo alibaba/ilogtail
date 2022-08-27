@@ -59,7 +59,7 @@ type FilterInner struct {
 	Domain    string      `yaml:"domain,omitempty"`
 	BeanRegex string      `yaml:"bean_regex,omitempty"`
 	Type      string      `yaml:"type,omitempty"`
-	Name      string      `yaml:"name"`
+	Name      string      `yaml:"name,omitempty"`
 	Attribute interface{} `yaml:"attribute,omitempty"`
 }
 

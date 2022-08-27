@@ -30,6 +30,7 @@ var expectCfg = `init_config:
       domain: kafka.producer
       bean_regex: kafka\.producer:type=producer-metrics,client-id=.*
       type: "111"
+      name: ""
       attribute:
         response-rate:
           metric_type: gauge
@@ -40,13 +41,14 @@ instances:
   host: 127.0.0.1
   tags:
   - a:b
+  collect_default_jvm_metrics: false
 `
 
 func TestManager_Register_static_config(t *testing.T) {
 	m := createManager("test")
 	m.initSuccess = true
 	go m.run()
-	m.RegisterCollector("test1", &test.MockMetricCollector{}, []*Filter{
+	m.RegisterCollector(mock.NewEmptyContext("", "", "11"), "test1", &test.MockMetricCollector{}, []*FilterInner{
 		{
 			Domain:    "kafka.producer",
 			BeanRegex: "kafka\\.producer:type=producer-metrics,client-id=.*",
@@ -62,7 +64,7 @@ func TestManager_Register_static_config(t *testing.T) {
 			},
 		},
 	})
-	m.Register(mock.NewEmptyContext("", "", ""), "test1", map[string]*InstanceInner{
+	m.Register("test1", map[string]*InstanceInner{
 		"11111": {
 			Port: 123,
 			Host: "127.0.0.1",
@@ -83,7 +85,7 @@ func TestManager_RegisterCollector_And_Start_Stop(t *testing.T) {
 	m := createManager("test")
 	m.initSuccess = true
 	go m.run()
-	m.RegisterCollector("test1", &test.MockMetricCollector{}, []*Filter{
+	m.RegisterCollector(mock.NewEmptyContext("", "", "11"), "test1", &test.MockMetricCollector{}, []*FilterInner{
 		{
 			Domain:    "kafka.producer",
 			BeanRegex: "kafka\\.producer:type=producer-metrics,client-id=.*",
