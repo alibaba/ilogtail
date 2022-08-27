@@ -43,6 +43,7 @@ func (m *Manager) start() {
 	_, _ = m.execJmxfetchd("start", false)
 }
 
+//nolint:unused
 func (m *Manager) reload() {
 	_, _ = m.execJmxfetchd("reload", false)
 }
