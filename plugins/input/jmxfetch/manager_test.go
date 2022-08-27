@@ -21,6 +21,7 @@ import (
 
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
+
 	"github.com/stretchr/testify/assert"
 )
 
