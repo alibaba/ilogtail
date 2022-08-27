@@ -26,6 +26,8 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg"
@@ -33,7 +35,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input/udpserver"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
-	"gopkg.in/yaml.v2"
 )
 
 var once sync.Once
