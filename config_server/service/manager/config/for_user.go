@@ -1,3 +1,17 @@
+// Copyright 2022 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package configmanager
 
 import (
@@ -9,10 +23,175 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func (c *ConfigManager) CreateMachineGroup(groupName string, tag string, description string) (bool, error) {
-	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
-	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
+func (c *ConfigManager) CreateConfig(configName string, info string, description string) (bool, error) {
+	s := store.GetStore()
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, configName)
 
+	if err != nil {
+		return false, err
+	} else if ok {
+		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, configName)
+		if err != nil {
+			return true, err
+		}
+		config := value.(*model.Config)
+
+		if config.DelTag == false { // exsit
+			return true, nil
+		} else { // exist but has delete tag
+			config.Content = info
+			config.Version = config.Version + 1
+			config.Description = description
+			config.DelTag = false
+
+			err = s.Update(common.TYPE_COLLECTION_CONFIG, configName, config)
+			if err != nil {
+				return false, err
+			}
+			return false, nil
+		}
+	} else { // doesn't exist
+		config := new(model.Config)
+		config.Name = configName
+		config.Content = info
+		config.Version = 0
+		config.Description = description
+		config.DelTag = false
+
+		err = s.Add(common.TYPE_COLLECTION_CONFIG, configName, config)
+		if err != nil {
+			return false, err
+		}
+		return false, nil
+	}
+}
+
+func (c *ConfigManager) UpdateConfig(configName string, info string, description string) (bool, error) {
+	s := store.GetStore()
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, configName)
+
+	if err != nil {
+		return false, err
+	} else if !ok {
+		return false, nil
+	} else {
+		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, configName)
+		if err != nil {
+			return false, err
+		}
+		config := value.(*model.Config)
+
+		if config.DelTag == true {
+			return false, nil
+		} else {
+			config.Content = info
+			config.Version = config.Version + 1
+			config.Description = description
+
+			err = s.Update(common.TYPE_COLLECTION_CONFIG, configName, config)
+			if err != nil {
+				return true, err
+			}
+			return true, nil
+		}
+	}
+}
+
+func (c *ConfigManager) DeleteConfig(configName string) (bool, error) {
+	s := store.GetStore()
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, configName)
+
+	if err != nil {
+		return false, err
+	} else if !ok {
+		return false, nil
+	} else {
+		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, configName)
+		if err != nil {
+			return false, err
+		}
+		config := value.(*model.Config)
+
+		if config.DelTag == true {
+			return false, nil
+		} else {
+			config.DelTag = true
+			config.Version = config.Version + 1
+
+			err = s.Update(common.TYPE_COLLECTION_CONFIG, configName, config)
+			if err != nil {
+				return true, err
+			}
+			return true, nil
+		}
+	}
+}
+
+func (c *ConfigManager) GetConfig(configName string) (*model.Config, error) {
+	s := store.GetStore()
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, configName)
+
+	if err != nil {
+		return nil, err
+	} else if !ok {
+		return nil, nil
+	} else {
+		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, configName)
+		if err != nil {
+			return nil, err
+		}
+		config := value.(*model.Config)
+
+		if config.DelTag == true {
+			return nil, nil
+		}
+		return config, nil
+	}
+}
+
+func (c *ConfigManager) ListAllConfigs() ([]model.Config, error) {
+	s := store.GetStore()
+	configs, err := s.GetAll(common.TYPE_COLLECTION_CONFIG)
+
+	if err != nil {
+		return nil, err
+	} else {
+		ans := make([]model.Config, 0)
+		for _, value := range configs {
+			config := value.(*model.Config)
+			if config.DelTag == false {
+				ans = append(ans, *config)
+			}
+		}
+		return ans, nil
+	}
+}
+
+func (c *ConfigManager) GetAppliedMachineGroups(configName string) ([]string, bool, error) {
+	ans := make([]string, 0)
+
+	config, err := c.GetConfig(configName)
+	if err != nil {
+		return nil, false, err
+	}
+	if config == nil {
+		return nil, false, nil
+	}
+
+	machineGroupList, err := c.GetAllMachineGroup()
+	if err != nil {
+		return nil, true, err
+	}
+
+	for _, g := range machineGroupList {
+		if _, ok := g.AppliedConfigs[configName]; ok {
+			ans = append(ans, g.Name)
+		}
+	}
+	return ans, true, nil
+}
+
+func (c *ConfigManager) CreateMachineGroup(groupName string, tag string, description string) (bool, error) {
 	if tag == "" {
 		tag = "default"
 	}
@@ -39,9 +218,6 @@ func (c *ConfigManager) CreateMachineGroup(groupName string, tag string, descrip
 }
 
 func (c *ConfigManager) UpdateMachineGroup(groupName string, tag string, description string) (bool, error) {
-	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
-	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
-
 	if tag == "" {
 		tag = "default"
 	}
@@ -72,9 +248,6 @@ func (c *ConfigManager) UpdateMachineGroup(groupName string, tag string, descrip
 }
 
 func (c *ConfigManager) DeleteMachineGroup(groupName string) (bool, error) {
-	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
-	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
-
 	s := store.GetStore()
 	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
@@ -91,9 +264,6 @@ func (c *ConfigManager) DeleteMachineGroup(groupName string) (bool, error) {
 }
 
 func (c *ConfigManager) GetMachineGroup(groupName string) (*model.MachineGroup, error) {
-	common.Mutex().RLock(common.TYPE_MACHINEGROUP)
-	defer common.Mutex().RUnlock(common.TYPE_MACHINEGROUP)
-
 	s := store.GetStore()
 	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
@@ -108,11 +278,7 @@ func (c *ConfigManager) GetMachineGroup(groupName string) (*model.MachineGroup, 
 		return machineGroup.(*model.MachineGroup), nil
 	}
 }
-
 func (c *ConfigManager) GetAllMachineGroup() ([]model.MachineGroup, error) {
-	common.Mutex().RLock(common.TYPE_MACHINEGROUP)
-	defer common.Mutex().RUnlock(common.TYPE_MACHINEGROUP)
-
 	s := store.GetStore()
 	machineGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
 	if err != nil {
@@ -131,16 +297,12 @@ func (a *ConfigManager) GetMachineList(groupName string) ([]model.Machine, error
 	ans := make([]model.Machine, 0)
 	s := store.GetStore()
 
-	common.Mutex().RLock(common.TYPE_MACHINE)
-	defer common.Mutex().RUnlock(common.TYPE_MACHINE)
 	if groupName == "default" {
 		machineList, err := s.GetAll(common.TYPE_MACHINE)
 		if err != nil {
 			return nil, err
 		}
 
-		common.Mutex().RLock(common.TYPE_AGENT_STATUS)
-		defer common.Mutex().RUnlock(common.TYPE_AGENT_STATUS)
 		for _, v := range machineList {
 			machine := v.(*model.Machine)
 
@@ -209,8 +371,6 @@ func (c *ConfigManager) ApplyConfigToMachineGroup(groupName string, configName s
 	}
 	machineGroup.AppliedConfigs[config.Name] = time.Now().Unix()
 
-	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
-	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
 	err = store.GetStore().Update(common.TYPE_MACHINEGROUP, groupName, machineGroup)
 	if err != nil {
 		return true, true, false, err
@@ -240,8 +400,6 @@ func (c *ConfigManager) RemoveConfigFromMachineGroup(groupName string, configNam
 	}
 	delete(machineGroup.AppliedConfigs, config.Name)
 
-	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
-	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
 	err = store.GetStore().Update(common.TYPE_MACHINEGROUP, groupName, machineGroup)
 	if err != nil {
 		return true, true, true, err

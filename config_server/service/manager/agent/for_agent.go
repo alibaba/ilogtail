@@ -1,3 +1,17 @@
+// Copyright 2022 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package agentmanager
 
 import (
@@ -57,17 +71,14 @@ func (a *AgentManager) UpdateAgentMessage(interval int) {
 }
 
 func (a *AgentManager) batchAddAlarm() {
-	common.Mutex().Lock(common.TYPE_AGENT_ALARM)
-	defer common.Mutex().Unlock(common.TYPE_AGENT_ALARM)
-	common.Mutex().Lock("AgentMessageList")
-	defer common.Mutex().Unlock("AgentMessageList")
-
 	s := store.GetStore()
 	b := store.CreateBacth()
 
+	a.AgentMessageList.Mutex.RLock()
 	for k, v := range a.AgentMessageList.Alarm {
 		b.Add(common.TYPE_AGENT_ALARM, k, v)
 	}
+	a.AgentMessageList.Mutex.RUnlock()
 
 	err := s.WriteBatch(b)
 	if err != nil {
@@ -75,15 +86,14 @@ func (a *AgentManager) batchAddAlarm() {
 		return
 	}
 
+	a.AgentMessageList.Mutex.Lock()
 	a.AgentMessageList.Alarm = make(map[string]*model.AgentAlarm, 0)
+	a.AgentMessageList.Mutex.Unlock()
 
 	wg.Done()
 }
 
 func (a *AgentManager) releaseAlarm() {
-	common.Mutex().Lock(common.TYPE_AGENT_ALARM)
-	defer common.Mutex().Unlock(common.TYPE_AGENT_ALARM)
-
 	s := store.GetStore()
 	b := store.CreateBacth()
 
@@ -116,30 +126,27 @@ func (a *AgentManager) releaseAlarm() {
 }
 
 func (a *AgentManager) batchUpdateAgentMessage() {
-	common.Mutex().Lock(common.TYPE_MACHINE)
-	defer common.Mutex().Unlock(common.TYPE_MACHINE)
-	common.Mutex().Lock(common.TYPE_AGENT_STATUS)
-	defer common.Mutex().Unlock(common.TYPE_AGENT_STATUS)
-	common.Mutex().Lock("AgentMessageList")
-	defer common.Mutex().Unlock("AgentMessageList")
-
 	s := store.GetStore()
 	b := store.CreateBacth()
 
+	a.AgentMessageList.Mutex.RLock()
 	for k, v := range a.AgentMessageList.Heartbeat {
 		b.Update(common.TYPE_MACHINE, k, v)
 	}
 	for k, v := range a.AgentMessageList.Status {
 		b.Update(common.TYPE_AGENT_STATUS, k, v)
 	}
+	a.AgentMessageList.Mutex.RUnlock()
 
 	err := s.WriteBatch(b)
 	if err != nil {
 		log.Println(err)
 	}
 
+	a.AgentMessageList.Mutex.Lock()
 	a.AgentMessageList.Status = make(map[string]*model.AgentStatus, 0)
 	a.AgentMessageList.Heartbeat = make(map[string]*model.Machine, 0)
+	a.AgentMessageList.Mutex.Unlock()
 
 	wg.Done()
 }
