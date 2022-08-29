@@ -24,7 +24,7 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func (c *ConfigManager) UpdateConfigList(interval int) {
+func (c *ConfigManager) updateConfigList(interval int) {
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 

@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"github.com/alibaba/ilogtail/config_server/service/model"
+	"github.com/alibaba/ilogtail/config_server/service/setting"
 )
 
 type ConfigManager struct {
@@ -25,7 +26,13 @@ type ConfigManager struct {
 	ConfigListMutex *sync.RWMutex
 }
 
+func (c *ConfigManager) Init() {
+	c.ConfigList = make(map[string]*model.Config)
+	go c.updateConfigList(setting.GetSetting().ConfigSyncInterval)
+}
+
 // for agent checking config list
+
 type CheckResult struct {
 	ConfigName string       `json:"config_name"`
 	Msg        string       `json:"message"`

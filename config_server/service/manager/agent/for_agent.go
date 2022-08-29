@@ -57,7 +57,7 @@ func (a *AgentManager) Alarm(id string, alarmType string, alarmMessage string) e
 
 var wg sync.WaitGroup
 
-func (a *AgentManager) UpdateAgentMessage(interval int) {
+func (a *AgentManager) updateAgentMessage(interval int) {
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 

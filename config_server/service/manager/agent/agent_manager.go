@@ -18,11 +18,19 @@ import (
 	"sync"
 
 	"github.com/alibaba/ilogtail/config_server/service/model"
+	"github.com/alibaba/ilogtail/config_server/service/setting"
 )
 
 type AgentManager struct {
 	AgentMessageList agentMessageList
 }
+
+func (a *AgentManager) Init() {
+	a.AgentMessageList.Clear()
+	go a.updateAgentMessage(setting.GetSetting().AgentUpdateInterval)
+}
+
+// batch write message from agent to databse
 
 const (
 	opt_heartbeat string = "HEARTBEAT"
@@ -30,7 +38,6 @@ const (
 	opt_status    string = "STATUS"
 )
 
-// batch write message from agent to databse
 type agentMessageList struct {
 	Alarm     map[string]*model.AgentAlarm
 	Heartbeat map[string]*model.Machine
@@ -38,7 +45,7 @@ type agentMessageList struct {
 	Mutex     sync.RWMutex
 }
 
-func (a *agentMessageList) Init() {
+func (a *agentMessageList) Clear() {
 	a.Alarm = make(map[string]*model.AgentAlarm, 0)
 	a.Heartbeat = make(map[string]*model.Machine, 0)
 	a.Status = make(map[string]*model.AgentStatus, 0)
