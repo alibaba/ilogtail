@@ -74,21 +74,18 @@ func (a *AgentManager) batchAddAlarm() {
 	s := store.GetStore()
 	b := store.CreateBacth()
 
-	a.AgentMessageList.Mutex.RLock()
+	a.AgentMessageList.Mutex.Lock()
 	for k, v := range a.AgentMessageList.Alarm {
 		b.Add(common.TYPE_AGENT_ALARM, k, v)
 	}
-	a.AgentMessageList.Mutex.RUnlock()
+	a.AgentMessageList.Alarm = make(map[string]*model.AgentAlarm, 0)
+	a.AgentMessageList.Mutex.Unlock()
 
 	err := s.WriteBatch(b)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-
-	a.AgentMessageList.Mutex.Lock()
-	a.AgentMessageList.Alarm = make(map[string]*model.AgentAlarm, 0)
-	a.AgentMessageList.Mutex.Unlock()
 
 	wg.Done()
 }
@@ -129,24 +126,21 @@ func (a *AgentManager) batchUpdateAgentMessage() {
 	s := store.GetStore()
 	b := store.CreateBacth()
 
-	a.AgentMessageList.Mutex.RLock()
+	a.AgentMessageList.Mutex.Lock()
 	for k, v := range a.AgentMessageList.Heartbeat {
 		b.Update(common.TYPE_MACHINE, k, v)
 	}
+	a.AgentMessageList.Heartbeat = make(map[string]*model.Machine, 0)
 	for k, v := range a.AgentMessageList.Status {
 		b.Update(common.TYPE_AGENT_STATUS, k, v)
 	}
-	a.AgentMessageList.Mutex.RUnlock()
+	a.AgentMessageList.Status = make(map[string]*model.AgentStatus, 0)
+	a.AgentMessageList.Mutex.Unlock()
 
 	err := s.WriteBatch(b)
 	if err != nil {
 		log.Println(err)
 	}
-
-	a.AgentMessageList.Mutex.Lock()
-	a.AgentMessageList.Status = make(map[string]*model.AgentStatus, 0)
-	a.AgentMessageList.Heartbeat = make(map[string]*model.Machine, 0)
-	a.AgentMessageList.Mutex.Unlock()
 
 	wg.Done()
 }
