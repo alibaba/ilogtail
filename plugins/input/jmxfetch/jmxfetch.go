@@ -62,17 +62,18 @@ type Jmx struct {
 	ExcludeContainerLabel map[string]string
 	IncludeK8sLabel       map[string]string
 	ExcludeK8sLabel       map[string]string
-	CollectK8sLabels      []string
+	ExternalEnvTag        map[string]string
+	ExternalK8sLabelTag   map[string]string
 	K8sNamespaceRegex     string
 	K8sPodRegex           string
 	K8sContainerRegex     string
 	// static instances
 	StaticInstances []*Instance
 	// common config
-	JDKPath                  string
-	Filters                  []*Filter
-	NewGcMetrics             bool
-	CollectDefaultJvmMetrics bool
+	JDKPath           string
+	Filters           []*Filter
+	NewGcMetrics      bool
+	DefaultJvmMetrics bool
 
 	includeContainerLabelRegex map[string]*regexp.Regexp
 	excludeContainerLabelRegex map[string]*regexp.Regexp
@@ -148,7 +149,7 @@ func (m *Jmx) Start(collector ilogtail.Collector) error {
 		for i := range m.StaticInstances {
 			m.StaticInstances[i].Tags[dispatchKey] = m.key
 			inner := NewInstanceInner(m.StaticInstances[i].Port, m.StaticInstances[i].Host, m.StaticInstances[i].User,
-				m.StaticInstances[i].Password, m.StaticInstances[i].Tags, m.CollectDefaultJvmMetrics)
+				m.StaticInstances[i].Password, m.StaticInstances[i].Tags, m.DefaultJvmMetrics)
 			m.instances[inner.Hash()] = inner
 		}
 		GetJmxFetchManager(m.jvmHome).Register(m.key, m.instances)
@@ -205,14 +206,12 @@ func (m *Jmx) UpdateContainerCfg() {
 			tags["pod"] = detail.K8SInfo.Pod
 		}
 
-		for _, label := range m.CollectK8sLabels {
-			val, ok := detail.K8SInfo.Labels[label]
-			if ok {
-				tags[label] = val
-			}
+		externalTags := detail.GetExternalTags(m.ExternalEnvTag, m.ExternalK8sLabelTag)
+		for k, v := range externalTags {
+			tags[k] = v
 		}
 
-		if val := detail.GetEnv("JMX_TAGS"); val != "" {
+		if val := detail.GetEnv("ILOGTAIL_JMX_TAGS"); val != "" {
 			parts := strings.Split(val, ",")
 			for _, part := range parts {
 				t := strings.Split(part, "=")
@@ -221,7 +220,7 @@ func (m *Jmx) UpdateContainerCfg() {
 				}
 			}
 		}
-		inner := NewInstanceInner(port, detail.ContainerIP, m.DiscoveryUser, m.DiscoveryPassword, tags, m.CollectDefaultJvmMetrics)
+		inner := NewInstanceInner(port, detail.ContainerIP, m.DiscoveryUser, m.DiscoveryPassword, tags, m.DefaultJvmMetrics)
 		m.instances[inner.Hash()] = inner
 	}
 	logger.Infof(m.context.GetRuntimeContext(), "find %d dynamic jmx configs", len(m.instances))
@@ -231,11 +230,11 @@ func (m *Jmx) UpdateContainerCfg() {
 func init() {
 	ilogtail.ServiceInputs["service_jmx"] = func() ilogtail.ServiceInput {
 		return &Jmx{
-			DiscoveryMode:            false,
-			NewGcMetrics:             true,
-			CollectDefaultJvmMetrics: true,
-			instances:                map[string]*InstanceInner{},
-			stopChan:                 make(chan struct{}),
+			DiscoveryMode:     false,
+			NewGcMetrics:      true,
+			DefaultJvmMetrics: true,
+			instances:         map[string]*InstanceInner{},
+			stopChan:          make(chan struct{}),
 		}
 	}
 }

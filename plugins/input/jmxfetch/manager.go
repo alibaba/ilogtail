@@ -221,6 +221,9 @@ func (m *Manager) run() {
 			}
 			m.start()
 			m.uniqueCollectors = uniq
+		} else {
+			m.startServer()
+			m.start()
 		}
 	}
 
