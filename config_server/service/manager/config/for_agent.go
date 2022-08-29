@@ -45,7 +45,7 @@ func (c *ConfigManager) updateConfigList(interval int) {
 	}
 }
 
-func (c *ConfigManager) GetConfigUpdates(id string, configs map[string]string) ([]CheckResult, bool, bool, error) {
+func (c *ConfigManager) PullConfigUpdates(id string, configs map[string]string) ([]CheckResult, bool, bool, error) {
 	ans := make([]CheckResult, 0)
 	s := store.GetStore()
 
