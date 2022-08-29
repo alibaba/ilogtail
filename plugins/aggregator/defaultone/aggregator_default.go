@@ -86,12 +86,17 @@ func (p *AggregatorDefault) Add(log *protocol.Log, ctx map[string]interface{}) e
 		}
 	}
 
+	topic := p.Topic
+	if _, ok := ctx["topic"]; ok {
+		topic = ctx["topic"].(string)
+	}
+
 	logGroupList := p.logGroupPoolMap[source]
 	if logGroupList == nil {
 		logGroupList = make([]*protocol.LogGroup, 0, p.MaxLogGroupCount)
 	}
 	if len(logGroupList) == 0 {
-		logGroupList = append(logGroupList, p.newLogGroup(source))
+		logGroupList = append(logGroupList, p.newLogGroup(source, topic))
 	}
 	nowLogGroup := logGroupList[len(logGroupList)-1]
 
@@ -110,7 +115,7 @@ func (p *AggregatorDefault) Add(log *protocol.Log, ctx map[string]interface{}) e
 			}
 		}
 		// New log group, reset size.
-		logGroupList = append(logGroupList, p.newLogGroup(source))
+		logGroupList = append(logGroupList, p.newLogGroup(source, topic))
 		nowLogGroup = logGroupList[len(logGroupList)-1]
 	}
 
@@ -160,10 +165,10 @@ func (p *AggregatorDefault) Reset() {
 	p.logGroupPoolMap = make(map[string][]*protocol.LogGroup)
 }
 
-func (p *AggregatorDefault) newLogGroup(pack string) *protocol.LogGroup {
+func (p *AggregatorDefault) newLogGroup(pack string, topic string) *protocol.LogGroup {
 	logGroup := &protocol.LogGroup{
 		Logs:  make([]*protocol.Log, 0, p.MaxLogCount),
-		Topic: p.Topic,
+		Topic: topic,
 	}
 	info := p.packIDMap[pack]
 	if info == nil {

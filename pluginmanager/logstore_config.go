@@ -506,7 +506,7 @@ func (lc *LogstoreConfig) ProcessRawLogV2(rawLog []byte, packID string, topic st
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
 	extractTags(tags, log)
-	lc.LogsChan <- &ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID}}
+	lc.LogsChan <- &ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}}
 	return 0
 }
 
