@@ -180,7 +180,7 @@ curl --request GET \
 
 ```bash
 curl --request POST \
-  --url http://127.0.01:8899/Agent/CheckConfigList \
+  --url http://127.0.01:8899/Agent/GetConfigUpdates \
   --form instance_id=ilogtail-1 \
   --form 'configs[old_config]=0'
 ```

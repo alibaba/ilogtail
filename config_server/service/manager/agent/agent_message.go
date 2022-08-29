@@ -3,6 +3,7 @@ package agentmanager
 import (
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
@@ -40,18 +41,27 @@ func (a *AgentManager) Alarm(id string, alarmType string, alarmMessage string) e
 	return nil
 }
 
+var wg sync.WaitGroup
+
 func (a *AgentManager) UpdateAgentMessage(interval int) {
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
+		wg.Add(3)
 		go a.batchAddAlarm()
 		go a.batchUpdateAgentMessage()
-		go a.checkAlarmSize()
+		go a.releaseAlarm()
+		wg.Wait()
 	}
 }
 
 func (a *AgentManager) batchAddAlarm() {
+	common.Mutex().Lock(common.TYPE_AGENT_ALARM)
+	defer common.Mutex().Unlock(common.TYPE_AGENT_ALARM)
+	common.Mutex().Lock("AgentMessageList")
+	defer common.Mutex().Unlock("AgentMessageList")
+
 	s := store.GetStore()
 	b := store.CreateBacth()
 
@@ -66,9 +76,14 @@ func (a *AgentManager) batchAddAlarm() {
 	}
 
 	a.AgentMessageList.Alarm = make(map[string]*model.AgentAlarm, 0)
+
+	wg.Done()
 }
 
-func (a *AgentManager) checkAlarmSize() {
+func (a *AgentManager) releaseAlarm() {
+	common.Mutex().Lock(common.TYPE_AGENT_ALARM)
+	defer common.Mutex().Unlock(common.TYPE_AGENT_ALARM)
+
 	s := store.GetStore()
 	b := store.CreateBacth()
 
@@ -96,9 +111,18 @@ func (a *AgentManager) checkAlarmSize() {
 		log.Println(err)
 		return
 	}
+
+	wg.Done()
 }
 
 func (a *AgentManager) batchUpdateAgentMessage() {
+	common.Mutex().Lock(common.TYPE_MACHINE)
+	defer common.Mutex().Unlock(common.TYPE_MACHINE)
+	common.Mutex().Lock(common.TYPE_AGENT_STATUS)
+	defer common.Mutex().Unlock(common.TYPE_AGENT_STATUS)
+	common.Mutex().Lock("AgentMessageList")
+	defer common.Mutex().Unlock("AgentMessageList")
+
 	s := store.GetStore()
 	b := store.CreateBacth()
 
@@ -116,6 +140,8 @@ func (a *AgentManager) batchUpdateAgentMessage() {
 
 	a.AgentMessageList.Status = make(map[string]*model.AgentStatus, 0)
 	a.AgentMessageList.Heartbeat = make(map[string]*model.Machine, 0)
+
+	wg.Done()
 }
 
 func generateAlarmKey(queryTime string, machineId string) string {

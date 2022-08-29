@@ -10,6 +10,9 @@ import (
 )
 
 func (c *ConfigManager) CreateMachineGroup(groupName string, tag string, description string) (bool, error) {
+	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
+	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
+
 	if tag == "" {
 		tag = "default"
 	}
@@ -36,6 +39,9 @@ func (c *ConfigManager) CreateMachineGroup(groupName string, tag string, descrip
 }
 
 func (c *ConfigManager) UpdateMachineGroup(groupName string, tag string, description string) (bool, error) {
+	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
+	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
+
 	if tag == "" {
 		tag = "default"
 	}
@@ -66,6 +72,9 @@ func (c *ConfigManager) UpdateMachineGroup(groupName string, tag string, descrip
 }
 
 func (c *ConfigManager) DeleteMachineGroup(groupName string) (bool, error) {
+	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
+	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
+
 	s := store.GetStore()
 	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
@@ -82,6 +91,9 @@ func (c *ConfigManager) DeleteMachineGroup(groupName string) (bool, error) {
 }
 
 func (c *ConfigManager) GetMachineGroup(groupName string) (*model.MachineGroup, error) {
+	common.Mutex().RLock(common.TYPE_MACHINEGROUP)
+	defer common.Mutex().RUnlock(common.TYPE_MACHINEGROUP)
+
 	s := store.GetStore()
 	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
 	if err != nil {
@@ -98,6 +110,9 @@ func (c *ConfigManager) GetMachineGroup(groupName string) (*model.MachineGroup, 
 }
 
 func (c *ConfigManager) GetAllMachineGroup() ([]model.MachineGroup, error) {
+	common.Mutex().RLock(common.TYPE_MACHINEGROUP)
+	defer common.Mutex().RUnlock(common.TYPE_MACHINEGROUP)
+
 	s := store.GetStore()
 	machineGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
 	if err != nil {
@@ -116,12 +131,16 @@ func (a *ConfigManager) GetMachineList(groupName string) ([]model.Machine, error
 	ans := make([]model.Machine, 0)
 	s := store.GetStore()
 
+	common.Mutex().RLock(common.TYPE_MACHINE)
+	defer common.Mutex().RUnlock(common.TYPE_MACHINE)
 	if groupName == "default" {
 		machineList, err := s.GetAll(common.TYPE_MACHINE)
 		if err != nil {
 			return nil, err
 		}
 
+		common.Mutex().RLock(common.TYPE_AGENT_STATUS)
+		defer common.Mutex().RUnlock(common.TYPE_AGENT_STATUS)
 		for _, v := range machineList {
 			machine := v.(*model.Machine)
 
@@ -190,6 +209,8 @@ func (c *ConfigManager) ApplyConfigToMachineGroup(groupName string, configName s
 	}
 	machineGroup.AppliedConfigs[config.Name] = time.Now().Unix()
 
+	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
+	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
 	err = store.GetStore().Update(common.TYPE_MACHINEGROUP, groupName, machineGroup)
 	if err != nil {
 		return true, true, false, err
@@ -219,6 +240,8 @@ func (c *ConfigManager) RemoveConfigFromMachineGroup(groupName string, configNam
 	}
 	delete(machineGroup.AppliedConfigs, config.Name)
 
+	common.Mutex().Lock(common.TYPE_MACHINEGROUP)
+	defer common.Mutex().Unlock(common.TYPE_MACHINEGROUP)
 	err = store.GetStore().Update(common.TYPE_MACHINEGROUP, groupName, machineGroup)
 	if err != nil {
 		return true, true, true, err

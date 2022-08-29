@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CheckConfigList(c *gin.Context) {
+func GetConfigUpdates(c *gin.Context) {
 	id := c.PostForm("instance_id")
 	configs := c.PostFormMap("configs")
 	if id == "" {
@@ -19,7 +19,7 @@ func CheckConfigList(c *gin.Context) {
 		configs = make(map[string]string)
 	}
 
-	result, configExist, machineExist, err := manager.ConfigManager().CheckConfigList(id, configs)
+	result, configExist, machineExist, err := manager.ConfigManager().GetConfigUpdates(id, configs)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))

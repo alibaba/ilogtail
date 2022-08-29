@@ -46,6 +46,6 @@ func initAgentRouter(router *gin.Engine) {
 		agentGroup.POST("/RunningStatus", agent.RunningStatus)
 		agentGroup.POST("/Alarm", agent.Alarm)
 
-		agentGroup.POST("/CheckConfigList", agent.CheckConfigList)
+		agentGroup.POST("/GetConfigUpdates", agent.GetConfigUpdates)
 	}
 }

@@ -1,6 +1,7 @@
 package agentmanager
 
 import (
+	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/model"
 )
 
@@ -28,6 +29,9 @@ func (a *agentMessageList) Init() {
 }
 
 func (a *agentMessageList) Push(opt string, data interface{}) {
+	common.Mutex().Lock("AgentMessageList")
+	defer common.Mutex().Unlock("AgentMessageList")
+
 	switch opt {
 	case opt_alarm:
 		k := data.(*model.AgentAlarm).MachineId
