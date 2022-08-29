@@ -31,7 +31,6 @@ var expectCfg = `init_config:
       domain: kafka.producer
       bean_regex: kafka\.producer:type=producer-metrics,client-id=.*
       type: "111"
-      name: ""
       attribute:
         response-rate:
           metric_type: gauge
@@ -48,6 +47,8 @@ instances:
 func TestManager_Register_static_config(t *testing.T) {
 	m := createManager("test")
 	m.initSuccess = true
+	m.manualInstall()
+	m.initConfDir()
 	go m.run()
 	m.RegisterCollector(mock.NewEmptyContext("", "", "11"), "test1", &test.MockMetricCollector{}, []*FilterInner{
 		{
@@ -78,13 +79,11 @@ func TestManager_Register_static_config(t *testing.T) {
 	assert.Equal(t, string(bytes), expectCfg)
 }
 
-func TestManager_Register_append_config(t *testing.T) {
-
-}
-
 func TestManager_RegisterCollector_And_Start_Stop(t *testing.T) {
 	m := createManager("test")
 	m.initSuccess = true
+	m.manualInstall()
+	m.initConfDir()
 	go m.run()
 	m.RegisterCollector(mock.NewEmptyContext("", "", "11"), "test1", &test.MockMetricCollector{}, []*FilterInner{
 		{
