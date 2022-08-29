@@ -295,8 +295,10 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
     if (config.isMember("plugin")) {
         Json::Value::Members mem = config["plugin"].getMemberNames();
         for (auto it = mem.begin(); it != mem.end(); ++it) {
-            for (int i = 0; i < config["plugin"][*it].size(); ++i) {
-                stats[*it].insert(config["plugin"][*it][i]["type"].asString());
+            if (*it != "global") {
+                for (int i = 0; i < config["plugin"][*it].size(); ++i) {
+                    stats[*it].insert(config["plugin"][*it][i]["type"].asString());
+                }
             }
         }
         if (!config["plugin"].isMember("inputs")) {
