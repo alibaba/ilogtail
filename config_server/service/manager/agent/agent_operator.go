@@ -47,7 +47,7 @@ func (a *AgentManager) RunningStatus(id string, status map[string]string) error 
 func (a *AgentManager) Alarm(id string, alarmType string, alarmMessage string) error {
 	queryTime := strconv.FormatInt(time.Now().Unix(), 10)
 	alarm := new(model.AgentAlarm)
-	alarm.MachineId = generateAlarmKey(queryTime, id)
+	alarm.AlarmKey = generateAlarmKey(queryTime, id)
 	alarm.Time = queryTime
 	alarm.AlarmType = alarmType
 	alarm.AlarmMessage = alarmMessage
@@ -109,7 +109,7 @@ func (a *AgentManager) releaseAlarm() {
 			if i > 5000 {
 				break
 			}
-			b.Delete(common.TYPE_AGENT_ALARM, generateAlarmKey(v.(*model.AgentAlarm).Time, v.(*model.AgentAlarm).MachineId))
+			b.Delete(common.TYPE_AGENT_ALARM, generateAlarmKey(v.(*model.AgentAlarm).Time, v.(*model.AgentAlarm).AlarmKey))
 		}
 	}
 

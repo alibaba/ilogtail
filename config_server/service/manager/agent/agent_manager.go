@@ -57,7 +57,7 @@ func (a *agentMessageList) Push(opt string, data interface{}) {
 
 	switch opt {
 	case opt_alarm:
-		k := data.(*model.AgentAlarm).MachineId
+		k := data.(*model.AgentAlarm).AlarmKey
 		v := data.(*model.AgentAlarm)
 		a.Alarm[k] = v
 		break

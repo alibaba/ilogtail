@@ -24,7 +24,7 @@ type Machine struct {
 }
 
 type AgentAlarm struct {
-	MachineId    string `json:"instance_id"`
+	AlarmKey     string `json:"alarm_key"`
 	Time         string `json:"time"`
 	AlarmType    string `json:"alarm_type"`
 	AlarmMessage string `json:"alarm_message"`
