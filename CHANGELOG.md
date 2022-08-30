@@ -35,3 +35,6 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+
+- [public] [both] [fixed] fix log context lost in plugin system bug
+- [public] [both] [fixed] restore "__topic__" field in plugin system
