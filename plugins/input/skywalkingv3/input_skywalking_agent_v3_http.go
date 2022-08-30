@@ -21,6 +21,7 @@ import (
 	v3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/language/agent/v3"
 	loggingV3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/logging/v3"
 	management "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/management/v3"
+	"google.golang.org/protobuf/encoding/protojson"
 	"net/http"
 	"time"
 
@@ -107,8 +108,20 @@ func registerPerfData(handler *perDataHandler) func(http.ResponseWriter, *http.R
 
 func registerErrorLogsHandler(handler errorLogsHandler) func(http.ResponseWriter, *http.Request) {
 	return registerHandler(func(request *http.Request) (interface{}, error) {
-		var loggingData []*v3.BrowserErrorLog
-		return loggingData, json.NewDecoder(request.Body).Decode(loggingData)
+		loggingData := make([]*v3.BrowserErrorLog, 0)
+		dec := json.NewDecoder(request.Body)
+		for dec.Token(); dec.More(); {
+			var result map[string]interface{}
+			dec.Decode(&result)
+
+			d, _ := json.Marshal(result)
+			log := &v3.BrowserErrorLog{}
+			if e := protojson.Unmarshal(d, log); e != nil {
+				continue
+			}
+			loggingData = append(loggingData, log)
+		}
+		return loggingData, nil
 	}, func(parameter interface{}) (interface{}, error) {
 		return handler.collectorErrorLogs(parameter.([]*v3.BrowserErrorLog))
 	})
@@ -169,10 +182,22 @@ func registerTraceSegmentHandler(handler traceSegmentHandler) func(writer http.R
 
 func registerTraceSegmentsHandler(handler traceSegmentsHandler) func(writer http.ResponseWriter, request *http.Request) {
 	return registerHandler(func(request *http.Request) (interface{}, error) {
-		var traceSegments []*v3.SegmentObject
-		return traceSegments, json.NewDecoder(request.Body).Decode(traceSegments)
+		segments := make([]*v3.SegmentObject, 0)
+		dec := json.NewDecoder(request.Body)
+		for dec.Token(); dec.More(); {
+			var result map[string]interface{}
+			dec.Decode(&result)
+
+			d, _ := json.Marshal(result)
+			segment := &v3.SegmentObject{}
+			if e := protojson.Unmarshal(d, segment); e != nil {
+				continue
+			}
+			segments = append(segments, segment)
+		}
+		return segments, nil
 	}, func(data interface{}) (interface{}, error) {
-		return handler.collectorSegments(data.([]v3.SegmentObject))
+		return handler.collectorSegments(data.([]*v3.SegmentObject))
 	})
 }
 

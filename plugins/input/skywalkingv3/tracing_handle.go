@@ -37,13 +37,13 @@ type traceSegmentHandler interface {
 }
 
 type traceSegmentsHandler interface {
-	collectorSegments(segment []skywalking.SegmentObject) (result interface{}, e error)
+	collectorSegments(segment []*skywalking.SegmentObject) (result interface{}, e error)
 }
 
-func (h *TracingHandler) collectorSegments(segments []skywalking.SegmentObject) (result interface{}, e error) {
+func (h *TracingHandler) collectorSegments(segments []*skywalking.SegmentObject) (result interface{}, e error) {
 	defer panicRecover()
 	for _, segment := range segments {
-		if e = h.collectSegment(&segment, h.compIDMessagingSystemMapping); e != nil {
+		if e = h.collectSegment(segment, h.compIDMessagingSystemMapping); e != nil {
 			return e, nil
 		}
 	}
