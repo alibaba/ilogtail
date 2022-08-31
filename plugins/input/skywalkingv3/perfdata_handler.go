@@ -10,11 +10,11 @@ type perfDataHandler interface {
 	collectorPerfData(logs *agent.BrowserPerfData) (*v3.Commands, error)
 }
 
-type perDataHandler struct {
+type perfDataHandlerImpl struct {
 	context   ilogtail.Context
 	collector ilogtail.Collector
 }
 
-func (p perDataHandler) collectorPerfData(perfData *agent.BrowserPerfData) (*v3.Commands, error) {
+func (p perfDataHandlerImpl) collectorPerfData(perfData *agent.BrowserPerfData) (*v3.Commands, error) {
 	return &v3.Commands{}, nil
 }

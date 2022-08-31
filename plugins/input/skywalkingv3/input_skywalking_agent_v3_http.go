@@ -86,7 +86,7 @@ func (s *SkywalkingHTTPServerInput) Start(collector ilogtail.Collector) error {
 	mux.HandleFunc("/v3/events", s.registerEventHandler())
 	mux.HandleFunc("/browser/errorLog", s.registerErrorLogHandler(loggingHandler))
 	mux.HandleFunc("/browser/errorLogs", s.registerErrorLogsHandler(loggingHandler))
-	mux.HandleFunc("/browser/perfData", s.registerPerfData(&perDataHandler{s.context, collector}))
+	mux.HandleFunc("/browser/perfData", s.registerPerfData(&perfDataHandlerImpl{s.context, collector}))
 	if s.Address == "" {
 		s.Address = "0.0.0.0:12800"
 	}
@@ -99,7 +99,7 @@ func (s *SkywalkingHTTPServerInput) Start(collector ilogtail.Collector) error {
 	return s.server.ListenAndServe()
 }
 
-func (s *SkywalkingHTTPServerInput) registerPerfData(handler *perDataHandler) func(http.ResponseWriter, *http.Request) {
+func (s *SkywalkingHTTPServerInput) registerPerfData(handler perfDataHandler) func(http.ResponseWriter, *http.Request) {
 	return s.registerHandler(func(request *http.Request) (interface{}, error) {
 		var browserPerfData *v3.BrowserPerfData
 		return browserPerfData, json.NewDecoder(request.Body).Decode(browserPerfData)
