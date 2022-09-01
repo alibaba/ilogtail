@@ -36,5 +36,10 @@ your changes, such as:
 
 ## [Unreleased]
 
+- [public] [both] [added] Add support for PostgreSQL input
+- [public] [both] [added] Add support for SqlServer input
+- [public] [both] [added] Add k8s event when control sls resource
+- [public] [both] [updated] Remove chmod and use inherited file permissions on target platform
+- [public] [both] [fixed] fix timezone process for microtime in Apsara mode
 - [public] [both] [fixed] fix log context lost in plugin system bug
 - [public] [both] [fixed] restore "__topic__" field in plugin system
