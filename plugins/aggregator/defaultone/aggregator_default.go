@@ -44,8 +44,9 @@ type AggregatorDefault struct {
 	MaxLogCount                 int    // the maximum log in a log group
 	Topic                       string // the output topic
 	ContextPresevationTolerance int
+	PackFlag                    bool // whether to add config name as a tag
 
-	Lock               *sync.Mutex
+	lock               *sync.Mutex
 	logGroupPoolMap    map[string][]*protocol.LogGroup
 	nowLogGroupSizeMap map[string]int
 	packIDMap          map[string]*LogPackSeqInfo
@@ -75,8 +76,8 @@ func (*AggregatorDefault) Description() string {
 
 // Add adds @log with @ctx to aggregator.
 func (p *AggregatorDefault) Add(log *protocol.Log, ctx map[string]interface{}) error {
-	p.Lock.Lock()
-	defer p.Lock.Unlock()
+	p.lock.Lock()
+	defer p.lock.Unlock()
 
 	source := p.defaultPack
 	if _, ok := ctx["source"]; ok {
@@ -128,8 +129,8 @@ func (p *AggregatorDefault) Add(log *protocol.Log, ctx map[string]interface{}) e
 
 // Flush ...
 func (p *AggregatorDefault) Flush() []*protocol.LogGroup {
-	p.Lock.Lock()
-	defer p.Lock.Unlock()
+	p.lock.Lock()
+	defer p.lock.Unlock()
 	var ret []*protocol.LogGroup
 	for pack, logGroupList := range p.logGroupPoolMap {
 		if len(logGroupList) == 0 {
@@ -160,8 +161,8 @@ func (p *AggregatorDefault) Flush() []*protocol.LogGroup {
 
 // Reset ...
 func (p *AggregatorDefault) Reset() {
-	p.Lock.Lock()
-	defer p.Lock.Unlock()
+	p.lock.Lock()
+	defer p.lock.Unlock()
 	p.logGroupPoolMap = make(map[string][]*protocol.LogGroup)
 }
 
@@ -176,7 +177,9 @@ func (p *AggregatorDefault) newLogGroup(pack string, topic string) *protocol.Log
 			seq: 1,
 		}
 	}
-	logGroup.LogTags = append(logGroup.LogTags, util.NewLogTagForPackID(pack, &info.seq))
+	if p.PackFlag {
+		logGroup.LogTags = append(logGroup.LogTags, util.NewLogTagForPackID(pack, &info.seq))
+	}
 	info.lastUpdateTime = time.Now()
 	p.packIDMap[pack] = info
 
@@ -197,11 +200,12 @@ func NewAggregatorDefault() *AggregatorDefault {
 		MaxLogGroupCount:            4,
 		MaxLogCount:                 MaxLogCount,
 		ContextPresevationTolerance: 10,
+		PackFlag:                    true,
 		logGroupPoolMap:             make(map[string][]*protocol.LogGroup),
 		nowLogGroupSizeMap:          make(map[string]int),
 		packIDMap:                   make(map[string]*LogPackSeqInfo),
 		packIDMapCleanInterval:      time.Duration(600) * time.Second,
-		Lock:                        &sync.Mutex{},
+		lock:                        &sync.Mutex{},
 	}
 }
 
