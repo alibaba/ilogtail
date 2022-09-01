@@ -105,7 +105,7 @@ func (c *contextLogValidator) Valid(group *protocol.LogGroup) (res []*Report) {
 		return
 	}
 
-	if packIDNo != ctxInfo.packSeq+1 {
+	if int(packIDNo) != ctxInfo.packSeq+1 {
 		logger.Debugf(context.Background(), "expect the %dth pack for pack id prefix %s, got %d instead", ctxInfo.packSeq+1, packIDComponents[0], packIDNo)
 		res = append(res, &Report{Validator: fieldsLogValidatorName, Name: "pack_id_no", Want: fmt.Sprintf("%d", ctxInfo.packSeq+1), Got: packIDComponents[1]})
 		return
