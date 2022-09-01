@@ -456,7 +456,7 @@ func (lc *LogstoreConfig) ProcessRawLog(rawLog []byte, packID string, topic stri
 	log := &protocol.Log{}
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: rawStringKey, Value: string(rawLog)})
 	logger.Debug(context.Background(), "Process raw log ", packID, topic, len(rawLog))
-	lc.LogsChan <- &ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID}}
+	lc.LogsChan <- &ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}}
 	return 0
 }
 
@@ -522,7 +522,7 @@ func (lc *LogstoreConfig) ProcessLog(logByte []byte, packID string, topic string
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
 	extractTags(tags, log)
-	lc.LogsChan <- &ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID}}
+	lc.LogsChan <- &ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}}
 	return 0
 }
 

@@ -98,7 +98,7 @@ func (c *contextLogValidator) Valid(group *protocol.LogGroup) (res []*Report) {
 		}
 	}
 
-	packIDNo, err := strconv.Atoi(packIDComponents[1])
+	packIDNo, err := strconv.ParseInt(packIDComponents[1], 16, 0)
 	if err != nil {
 		logger.Debugf(context.Background(), "packIdNo is not valid: %s", packIDNo)
 		res = append(res, &Report{Validator: fieldsLogValidatorName, Name: "pack_id_no", Want: "number", Got: packIDComponents[1]})
