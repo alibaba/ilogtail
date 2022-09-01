@@ -19,15 +19,10 @@
 
 ---
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: ilogtail
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ilogtail-user-cm
-  namespace: ilogtail
+  namespace: default
 data:
   json_log.yaml: |
     enable: true
@@ -51,16 +46,13 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: file-log-demo
-  namespace: ilogtail
+  namespace: default
 spec:
   template:
     metadata:
       labels:
         k8s-app: file-log-demo
     spec:
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
       restartPolicy: Never
       containers:
         - name: log-demo
@@ -101,19 +93,17 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              cpu: 1000m
-              memory: 1Gi
+              cpu: 100m
+              memory: 512Mi
             requests:
-              cpu: 400m
-              memory: 384Mi
+              cpu: 10m
+              memory: 30Mi
           volumeMounts:
             - mountPath: /usr/local/ilogtail/checkpoint
               name: checkpoint
             - mountPath: /usr/local/ilogtail/user_yaml_config.d
               name: user-config
               readOnly: true
-      dnsPolicy: ClusterFirst
-      hostNetwork: true
       volumes:
         - hostPath:
             path: /var/lib/ilogtail-file-log-demo/checkpoint
