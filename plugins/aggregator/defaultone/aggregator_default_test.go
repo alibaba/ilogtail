@@ -55,10 +55,10 @@ func TestAggregatorDefault(t *testing.T) {
 
 		Convey("When no quick flush happens", func() {
 			logNo := make([]int, len(packIDPrefix))
-			generateLogs(agg, 1000, logNo)
+			generateLogs(agg, 1000, true, logNo)
 			logGroups := que.PopAll()
 			logGroups = append(logGroups, agg.Flush()...)
-			generateLogs(agg, 2000, logNo)
+			generateLogs(agg, 2000, true, logNo)
 			logGroups = append(logGroups, que.PopAll()...)
 			logGroups = append(logGroups, agg.Flush()...)
 
@@ -69,7 +69,7 @@ func TestAggregatorDefault(t *testing.T) {
 
 		Convey("When quick flush happens", func() {
 			logNo := make([]int, len(packIDPrefix))
-			generateLogs(agg, 50000, logNo)
+			generateLogs(agg, 50000, true, logNo)
 			logGroups := que.PopAll()
 			logGroups = append(logGroups, agg.Flush()...)
 
@@ -77,17 +77,75 @@ func TestAggregatorDefault(t *testing.T) {
 				checkResult(logGroups, 50000)
 			})
 		})
+
+		Convey("When no source information is provided", func() {
+			logNo := make([]int, len(packIDPrefix))
+			generateLogs(agg, 20000, false, logNo)
+			logGroups := que.PopAll()
+			logGroups = append(logGroups, agg.Flush()...)
+
+			Convey("Then each logGroup will contain logs from different source", func() {
+				logSum := 0
+				for _, logGroup := range logGroups {
+					packIDTagFound := false
+					for _, tag := range logGroup.LogTags {
+						if tag.GetKey() == "__pack_id__" {
+							packIDTagFound = true
+							break
+						}
+					}
+					So(packIDTagFound, ShouldBeTrue)
+
+					logSum += len(logGroup.Logs)
+				}
+				So(logSum, ShouldEqual, 20000)
+			})
+		})
+	})
+
+	Convey("Given an aggregator without packID", t, func() {
+		agg, que, err := newAggregatorDefault()
+		So(err, ShouldBeNil)
+		agg.PackFlag = false
+
+		Convey("When logs are added", func() {
+			logNo := make([]int, len(packIDPrefix))
+			generateLogs(agg, 20000, true, logNo)
+			logGroups := que.PopAll()
+			logGroups = append(logGroups, agg.Flush()...)
+
+			Convey("Then each logGroup will contain logs from different source", func() {
+				logSum := 0
+				for _, logGroup := range logGroups {
+					packIDTagFound := false
+					for _, tag := range logGroup.LogTags {
+						if tag.GetKey() == "__pack_id__" {
+							packIDTagFound = true
+							break
+						}
+					}
+					So(packIDTagFound, ShouldBeFalse)
+
+					logSum += len(logGroup.Logs)
+				}
+				So(logSum, ShouldEqual, 20000)
+			})
+		})
 	})
 }
 
-func generateLogs(agg *AggregatorDefault, logNum int, logNo []int) {
+func generateLogs(agg *AggregatorDefault, logNum int, withCtx bool, logNo []int) {
 	for i := 0; i < logNum; i++ {
 		index := rand.Intn(len(packIDPrefix))
 		log := &protocol.Log{Time: uint32(time.Now().Unix())}
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: "This log comes from source " + fmt.Sprintf("%d", index)})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "no", Value: fmt.Sprintf("%d", logNo[index]+1)})
-		ctx := map[string]interface{}{"source": packIDPrefix[index] + "-"}
-		agg.Add(log, ctx)
+		if withCtx {
+			ctx := map[string]interface{}{"source": packIDPrefix[index] + "-"}
+			agg.Add(log, ctx)
+		} else {
+			agg.Add(log, nil)
+		}
 		logNo[index]++
 		time.Sleep(time.Duration(1) * time.Microsecond)
 	}
