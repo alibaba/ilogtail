@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # Copyright 2021 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GO_ADDLICENSE=$(go env GOPATH)/bin/addlicense
-OPERATION=$1
-SCOPE=$2
+version: '3.8'
 
-command="$GO_ADDLICENSE -v -c \"iLogtail Authors\""
-if [ "$OPERATION" = "check" ]; then
-  command=$command"  -check"
-fi
-command+=' -ignore "**/.idea/**" -ignore "**/vendor/**" -ignore "**/protocol/**" -ignore "**/oldtest/**"'
-command+=' -ignore "**/internal/**" -ignore "**/diagnose/**" -ignore "**/external/**" -ignore "**/*.html"'
-command+=' -ignore "**/core/log_pb/*.pb.*" -ignore "core/common/Version.cpp"'
-command+=" $SCOPE"
-eval "$command"
-
+services:
+  container_1:
+    build:
+      context: .
+      dockerfile: Dockerfile_1
+    hostname: container_1
+    environment:
+      - STDOUT_SWITCH=true
+  container_2:
+    build:
+      context: .
+      dockerfile: Dockerfile_2
+    hostname: container_2
+    environment:
+      - STDOUT_SWITCH=true

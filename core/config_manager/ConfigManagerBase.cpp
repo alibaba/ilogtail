@@ -137,10 +137,9 @@ ParseConfResult ParseConfig(const std::string& configName, Json::Value& jsonRoot
 
     ifstream is;
     is.open(fullPath.c_str());
-    if (!is.good())
+    if (!is.good()) {
         return CONFIG_NOT_EXIST;
-
-    Chmod(fullPath.c_str(), 0644);
+    }
     std::string buffer((std::istreambuf_iterator<char>(is)), (std::istreambuf_iterator<char>()));
     if (!IsValidJson(buffer.c_str(), buffer.length())) {
         return CONFIG_INVALID_FORMAT;
@@ -289,6 +288,65 @@ void ConfigManagerBase::MappingPluginConfig(const Json::Value& configValue, Conf
     pluginJson[kGlobalFiledName] = global;
     config->mPluginConfig = pluginJson.toStyledString();
     LOG_INFO(sLogger, ("docker file config", config->mPluginConfig));
+}
+
+void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
+    std::unordered_map<std::string, std::unordered_set<std::string>> stats;
+    if (config.isMember("plugin")) {
+        Json::Value::Members mem = config["plugin"].getMemberNames();
+        for (auto it = mem.begin(); it != mem.end(); ++it) {
+            if (*it == "inputs" || *it == "processors" || *it == "flushers") {
+                for (int i = 0; i < config["plugin"][*it].size(); ++i) {
+                    stats[*it].insert(config["plugin"][*it][i]["type"].asString());
+                }
+            }
+        }
+        if (!config["plugin"].isMember("inputs")) {
+            stats["inputs"].insert("file_log");
+        }
+        if (!config["plugin"].isMember("flushers")) {
+            stats["flushers"].insert("flusher_sls");
+        }
+    } else {
+        std::string logType = config["log_type"].asString(), processor;
+        if (logType == "common_reg_log") {
+            processor = "processor_regex_accelerate";
+        } else if (logType == "json_log") {
+            processor = "processor_json_accelerate";
+        } else if (logType == "delimiter_log") {
+            processor = "processor_delimiter_accelerate";
+        } else if (logType == "apsara_log") {
+            processor = "processor_apsara_accelerate";
+        } else {
+            processor = "processor_stream_accelerate";
+        }
+        stats["inputs"].insert("file_log");
+        stats["processors"].insert(processor);
+        stats["flushers"].insert("flusher_sls");
+    }
+
+    ScopedSpinLock lock(mPluginStatsLock);
+    for (auto it = stats.begin(); it != stats.end(); ++it) {
+        for (auto item = it->second.begin(); item != it->second.end(); ++item) {
+            mPluginStats[it->first][*item] += 1;
+        }
+    }
+}
+
+std::string ConfigManagerBase::GeneratePluginStatString() {
+    Json::Value rootValue;
+    ScopedSpinLock lock(mPluginStatsLock);
+    for (auto iter = mPluginStats.begin(); iter != mPluginStats.end(); ++iter) {
+        for (auto item = iter->second.begin(); item != iter->second.end(); ++item) {
+            rootValue[iter->first][item->first] = Json::Value(item->second);
+        }
+    }
+    return rootValue.toStyledString();
+}
+
+void ConfigManagerBase::ClearPluginStats() {
+    ScopedSpinLock lock(mPluginStatsLock);
+    mPluginStats.clear();
 }
 
 // LoadSingleUserConfig constructs new Config object according to @value, and insert it into
@@ -887,6 +945,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             }
             InsertProject(config->mProjectName);
             InsertRegion(config->mRegion);
+            UpdatePluginStats(rawValue);
         }
     } catch (const ExceptionBase& e) {
         LOG_ERROR(sLogger, ("failed to parse config logname", logName)("Reason", e.GetExceptionMessage()));
@@ -982,6 +1041,7 @@ LogFilterRule* ConfigManagerBase::GetFilterFule(const Json::Value& filterKeys, c
 }
 
 bool ConfigManagerBase::LoadAllConfig() {
+    ClearPluginStats();
     bool rst = true;
     rst &= LoadJsonConfig(GetConfigJson());
     LOG_DEBUG(sLogger, ("load remote server config", rst)("now config count", mNameConfigMap.size()));
@@ -1449,7 +1509,7 @@ Config* ConfigManagerBase::FindBestMatch(const string& path, const string& name)
     bool acceptMultiConfig = AppConfig::GetInstance()->IsAcceptMultiConfig();
     {
         ScopedSpinLock cachedLock(mCacheFileConfigMapLock);
-        std::unordered_map<string, std::pair<Config*, int32_t> >::iterator iter
+        std::unordered_map<string, std::pair<Config*, int32_t>>::iterator iter
             = mCacheFileConfigMap.find(cachedFileKey);
         if (iter != mCacheFileConfigMap.end()) {
             // if need report alarm, do not return, just continue to find all match and send alarm
@@ -2435,14 +2495,6 @@ bool ConfigManagerBase::DumpConfigToLocal(std::string fileName, const Json::Valu
     }
     fout << configJson.toStyledString();
     fout.close();
-    // chmod to 644
-#if defined(__linux__)
-    if (chmod(fileName.c_str(), S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH) != 0) {
-        LOG_ERROR(sLogger, ("change config file mode error", fileName)("error", ErrnoToString(GetErrno())));
-        return false;
-    }
-    // TODO: Should Windows do this?
-#endif
     return true;
 }
 

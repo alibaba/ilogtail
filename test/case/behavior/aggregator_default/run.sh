@@ -13,18 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-GO_ADDLICENSE=$(go env GOPATH)/bin/addlicense
-OPERATION=$1
-SCOPE=$2
-
-command="$GO_ADDLICENSE -v -c \"iLogtail Authors\""
-if [ "$OPERATION" = "check" ]; then
-  command=$command"  -check"
-fi
-command+=' -ignore "**/.idea/**" -ignore "**/vendor/**" -ignore "**/protocol/**" -ignore "**/oldtest/**"'
-command+=' -ignore "**/internal/**" -ignore "**/diagnose/**" -ignore "**/external/**" -ignore "**/*.html"'
-command+=' -ignore "**/core/log_pb/*.pb.*" -ignore "core/common/Version.cpp"'
-command+=" $SCOPE"
-eval "$command"
-
+sleep 3
+for i in {1..100} ; do
+  echo "$i|This is file $FILE"
+  sleep 0.1
+done
+sleep 3600
