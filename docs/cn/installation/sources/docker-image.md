@@ -10,7 +10,7 @@
 
 制作镜像分为2步：
 
-1. 准备ilogtail-<VERSION>.tar.gz
+1. 代码库根目录准备ilogtail-<VERSION>.tar.gz
    若使用已发布版本，可以从[iLogtail发布记录](../release-notes.md)下载压缩包。
    若要使用本地最新代码构建，则执行如下命令`make dist`。
 2. 将iLogtail发行版的tar包安装到base镜像中。
