@@ -94,6 +94,10 @@ iLogtail 自从开源以来，受到了很多社区同学的关注。社区的�
 
 我们也欢迎您分享任何关于 iLogtail 的使用案例。我们在知乎建立了专栏 [iLogtail社区](https://www.zhihu.com/column/c_1533139823409270785)，欢迎大家投稿，分享 iLogtail 的使用案例。
 
+1. 在知乎写文章，例如[一文搞懂 SAE 日志采集架构](https://zhuanlan.zhihu.com/p/557591446)。
+2. 推荐自己的文章到“iLogtail社区”专栏。
+3. GitHub上提交一个label为awesome ilogtail的issue。
+
 ### 参与社区讨论
 
 如果您在使用 iLogtail 中遇到任何问题，欢迎到 [Discussions](https://github.com/alibaba/ilogtail/discussions) 进行交流互动。也欢迎在这里帮助其他使用者解答一些使用中的问题。
