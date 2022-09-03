@@ -63,7 +63,7 @@ jobs:
             BUILD_LOGTAIL_UT: ON
             ENABLE_COMPATIBLE_MODE: ON
             ENABLE_STATIC_LINK_CRT: ON
-        run: export make dist && scripts/check_glibc.sh && make docker
+        run: make dist && scripts/check_glibc.sh && make docker
 
   result:
     runs-on: ubuntu-latest
