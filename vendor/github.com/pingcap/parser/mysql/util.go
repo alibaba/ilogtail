@@ -11,9 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !windows || !386
-// +build !windows !386
-
 package mysql
 
 type lengthAndDecimal struct {
