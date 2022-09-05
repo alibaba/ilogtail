@@ -80,11 +80,11 @@ message GetAgentGroupResponse {
 // API: /User/ListAgentGroups/ 
 
 message AgentGroup {
-	string Name = 1;
-	string Description = 2;
-	string Tag = 3;
-	map<string, int64> AppliedConfigs = 4;
-	int32 Version = 5;
+    string Name = 1;
+    string Description = 2;
+    string Tag = 3;
+    map<string, int64> AppliedConfigs = 4;
+    int32 Version = 5;
 }
 
 message ListAgentGroupsResponse {
@@ -178,10 +178,10 @@ message GetConfigResponse {
 // API: /User/ListConfigs/
 
 message Config {
-	string Name = 1;
-	string Content = 2;
-	int32 Version = 3;
-	string Description = 4;
+    string Name = 1;
+    string Content = 2;
+    int32 Version = 3;
+    string Description = 4;
 }
 
 message ListConfigsResponse {
@@ -278,18 +278,18 @@ message ListAgentsRequest {
 }
 
 message Agent {
-	string AgentId = 1;
-	string Ip = 2;
-	string State = 3;
-	string Region = 4;
-	int64 StartUpTime = 5;
-	string Env = 6;  
-	string Version = 7;
-	string ConnectState = 8;
-	string Heartbeat = 9;
-	map<string, string> Tag = 10;
-	map<string, string> Status = 11;
-	map<string, string> Progress = 12;
+    string AgentId = 1;
+    string Ip = 2;
+    string State = 3;
+    string Region = 4;
+    int64 StartUpTime = 5;
+    string Env = 6;  
+    string Version = 7;
+    string ConnectState = 8;
+    string Heartbeat = 9;
+    map<string, string> Tag = 10;
+    map<string, string> Status = 11;
+    map<string, string> Progress = 12;
 }
 
 message ListAgentsResponse {

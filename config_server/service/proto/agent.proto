@@ -31,7 +31,7 @@ message HeartBeatResponse {
 message RunningStatisticsRequest {
     string AgentId = 1;
     map<string, string> Status = 2;
-	map<string, string> Progress = 3;
+    map<string, string> Progress = 3;
 }
 
 message RunningStatisticsResponse {
@@ -72,8 +72,8 @@ message AgentGetConfigListRequest {
 }
 
 message ConfigUpdateInfo {
-	string ConfigName = 1;
-	string Msg = 2;
+    string ConfigName = 1;
+    string Msg = 2;
     int32 Version = 3;
     string Content = 4;
 }
