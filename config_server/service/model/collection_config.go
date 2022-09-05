@@ -15,11 +15,11 @@
 package model
 
 type Config struct {
-	Name        string `json:"name"`
-	Content     string `json:"content"`
-	Version     int    `json:"version"`
-	Description string `json:"description"`
-	DelTag      bool   `json:"delete_tag"`
+	Name        string `json:"Name"`
+	Content     string `json:"Content"`
+	Version     int    `json:"Version"`
+	Description string `json:"Description"`
+	DelTag      bool   `json:"DelTag"`
 }
 
 func NewConfig(name string, content string, version int, description string) *Config {

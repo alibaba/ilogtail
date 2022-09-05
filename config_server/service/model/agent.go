@@ -15,29 +15,29 @@
 package model
 
 type Agent struct {
-	AgentId      string            `json:"instance_id"`
-	Ip           string            `json:"ip"`
-	State        string            `json:"state"`
-	Region       string            `json:"region"`
-	StartUpAt    int64             `json:"startup_at"`
-	Env          string            `json:"env"`
-	Version      string            `json:"version"`
-	ConnectState string            `json:"connect_state"`
-	Heartbeat    string            `json:"heartbeat"`
-	Tag          map[string]string `json:"tags"`
-	Status       map[string]string `json:"status"`
-	Progress     map[string]string `json:"progress"`
+	AgentId      string            `json:"AgentId"`
+	Ip           string            `json:"Ip"`
+	State        string            `json:"State"`
+	Region       string            `json:"Region"`
+	StartUpTime  int64             `json:"StartUpTime"`
+	Env          string            `json:"Env"`
+	Version      string            `json:"Version"`
+	ConnectState string            `json:"ConnectState"`
+	Heartbeat    string            `json:"Heartbeat"`
+	Tag          map[string]string `json:"Tag"`
+	Status       map[string]string `json:"Status"`
+	Progress     map[string]string `json:"Progress"`
 }
 
 type AgentAlarm struct {
-	AlarmKey     string `json:"alarm_key"`
-	AlarmTime    string `json:"alarm_time"`
-	AlarmType    string `json:"alarm_type"`
-	AlarmMessage string `json:"alarm_message"`
+	AlarmKey     string `json:"AlarmKey"`
+	AlarmTime    string `json:"AlarmTime"`
+	AlarmType    string `json:"AlarmType"`
+	AlarmMessage string `json:"AlarmMessage"`
 }
 
 type AgentStatus struct {
-	AgentId  string            `json:"instance_id"`
-	Status   map[string]string `json:"status"`
-	Progress map[string]string `json:"progress"`
+	AgentId  string            `json:"AgentId"`
+	Status   map[string]string `json:"Status"`
+	Progress map[string]string `json:"Progress"`
 }

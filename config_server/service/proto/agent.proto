@@ -1,0 +1,92 @@
+syntax = "proto3";
+package proto;
+option go_package = ".;proto";
+
+// API: /agent/HeartBeat/
+
+message HeartBeatRequest {
+    string AgentId = 1;
+    string Tags = 2;
+    string State = 3;
+    string Ip = 4;
+    string Region = 5;
+    int64 StartupTime = 6;
+    string Env = 7;
+    string Version = 8;
+}
+
+message HeartBeatResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /agent/RunningStatistics/
+
+message RunningStatisticsRequest {
+    string AgentId = 1;
+    map<string, string> Status = 2;
+	map<string, string> Progress = 3;
+}
+
+message RunningStatisticsResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /agent/Alarm/
+
+message AlarmRequest {
+    string AgentId = 1;
+    string AlarmType = 2;
+    string AlarmMessage = 3;
+}
+
+message AlarmResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /agent/GetConfigList/
+
+message AgentGetConfigListRequest {
+    string AgentId = 1;
+    map<string, int64> Configs = 2;
+}
+
+message ConfigUpdateInfo {
+	string ConfigName = 1;
+	string Msg = 2;
+    int32 Version = 3;
+    string Content = 4;
+}
+
+message AgentGetConfigListResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+
+    repeated ConfigUpdateInfo ConfigUpdateInfoList = 5;
+}

@@ -181,7 +181,7 @@ curl --request GET \
 ```bash
 curl --request POST \
   --url http://127.0.01:8899/Agent/GetConfigUpdates \
-  --form instance_id=ilogtail-1 \
+  --form AgentId=ilogtail-1 \
   --form 'configs[old_config]=0'
 ```
 
@@ -189,8 +189,8 @@ curl --request POST \
 
 ```bash
 curl --request POST \
-  --url 'http://127.0.01:8899/Agent/HeartBeat?instance_id=ilogtail-1' \
-  --form instance_id=ilogtail-1 \
+  --url 'http://127.0.01:8899/Agent/HeartBeat?AgentId=ilogtail-1' \
+  --form AgentId=ilogtail-1 \
   --form 'tags[env]=pre' \
   --form 'tags[app]=nginx'
 ```
@@ -200,7 +200,7 @@ curl --request POST \
 ```bash
 curl --request POST \
   --url http://127.0.01:8899/Agent/RunningStatus \
-  --form instance_id=ilogtail-1 \
+  --form AgentId=ilogtail-1 \
   --form 'status[os]=Linux'
 ```
 
@@ -209,7 +209,7 @@ curl --request POST \
 ```bash
 curl --request POST \
   --url http://127.0.01:8899/Agent/Alarm \
-  --form instance_id=ilogtail-1 \
+  --form AgentId=ilogtail-1 \
   --form alarm_type=UnknownType \
   --form alarm_message=message
 ```

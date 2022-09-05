@@ -23,10 +23,10 @@ import (
 )
 
 func PullConfigUpdates(c *gin.Context) {
-	id := c.PostForm("instance_id")
+	id := c.PostForm("AgentId")
 	configs := c.PostFormMap("configs")
 	if id == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "instance_id")))
+		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "AgentId")))
 		return
 	}
 	if configs == nil {

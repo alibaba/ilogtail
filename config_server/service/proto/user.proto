@@ -1,0 +1,306 @@
+syntax = "proto3";
+package proto;
+option go_package = ".;proto";
+
+// API: /User/CreateAgentGroup
+
+message CreateAgentGroupRequest {
+    string GroupName = 1;
+    string GroupTag = 2;
+    string Description = 3;
+}
+
+message CreateAgentGroupResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /User/UpdateAgentGroup
+
+message UpdateAgentGroupRequest {
+    string GroupName = 1;
+    string GroupTag = 2;
+    string Description = 3;
+}
+
+message UpdateAgentGroupResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /User/DeleteAgentGroup/
+
+message DeleteAgentGroupRequest {
+    string GroupName = 1;
+}
+
+message DeleteAgentGroupResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /User/GetAgentGroup/
+
+message GetAgentGroupRequest {
+    string GroupName = 1;
+}
+
+message GetAgentGroupResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+
+    string GroupTag = 5;
+    string Description = 6;
+}
+
+// API: /User/ListAgentGroups/ 
+
+message AgentGroup {
+	string Name = 1;
+	string Description = 2;
+	string Tag = 3;
+	map<string, int64> AppliedConfigs = 4;
+	int32 Version = 5;
+}
+
+message ListAgentGroupsResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+
+    repeated AgentGroup AgentGroupList = 5;
+}
+
+// API: /User/CreateConfig/
+
+message CreateConfigRequest {
+    string ConfigName = 1;
+    string ConfigInfo = 2;
+    string Description = 3;
+}
+
+message CreateConfigResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /User/UpdateConfig/
+
+message UpdateConfigRequest {
+    string ConfigName = 1;
+    string ConfigInfo = 2;
+    string Description = 3;
+}
+
+message UpdateConfigResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /User/DeleteConfig/
+
+message DeleteConfigRequest {
+    string ConfigName = 1;
+}
+
+message DeleteConfigResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: User/GetConfig/
+
+message GetConfigRequest {
+    string ConfigName = 1;
+}
+
+message GetConfigResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+
+    string ConfigInfo = 5;
+    string Description = 6;
+}
+
+// API: /User/ListConfigs/
+
+message Config {
+	string Name = 1;
+	string Content = 2;
+	int32 Version = 3;
+	string Description = 4;
+}
+
+message ListConfigsResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+
+    repeated Config ConfigList = 5;
+}
+
+// API: /User/ApplyConfigToAgentGroup/
+
+message ApplyConfigToAgentGroupRequest {
+    string GroupName = 1;
+    string ConfigName = 2;
+}
+
+message ApplyConfigToAgentGroupResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /User/RemoveConfigFromAgentGroup/
+
+message RemoveConfigFromAgentGroupRequest {
+    string GroupName = 1;
+    string ConfigName = 2;
+}
+
+message RemoveConfigFromAgentGroupResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+}
+
+// API: /User/GetAppliedConfigs/
+
+message GetAppliedConfigsRequest {
+    string GroupName = 1;
+}
+
+message GetAppliedConfigsResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+
+    repeated string ConfigList = 5;
+}
+
+// API: /User/GetAppliedAgentGroups/
+
+message GetAppliedAgentGroupsRequest {
+    string ConfigName = 1;
+}
+
+message GetAppliedAgentGroupsResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+
+    repeated string GroupList = 5;
+}
+
+// API: /User/ListAgents/
+
+message ListAgentsRequest {
+    string GroupName = 1;
+}
+
+message Agent {
+	string AgentId = 1;
+	string Ip = 2;
+	string State = 3;
+	string Region = 4;
+	int64 StartUpTime = 5;
+	string Env = 6;  
+	string Version = 7;
+	string ConnectState = 8;
+	string Heartbeat = 9;
+	map<string, string> Tag = 10;
+	map<string, string> Status = 11;
+	map<string, string> Progress = 12;
+}
+
+message ListAgentsResponse {
+    oneof ResponseCode {
+        string Code = 1;
+        string ErrorCode = 2;
+    }
+    oneof ResponseMessage {
+        string Message = 3;
+        string ErrorMessage = 4;
+    }
+
+    repeated Agent AgentList = 5;
+}

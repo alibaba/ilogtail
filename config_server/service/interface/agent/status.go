@@ -23,10 +23,10 @@ import (
 )
 
 func HeartBeat(c *gin.Context) {
-	id := c.PostForm("instance_id")
+	id := c.PostForm("AgentId")
 	tags := c.PostFormMap("tags")
 	if id == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "instance_id")))
+		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "AgentId")))
 		return
 	}
 
@@ -40,10 +40,10 @@ func HeartBeat(c *gin.Context) {
 }
 
 func RunningStatus(c *gin.Context) {
-	id := c.PostForm("instance_id")
+	id := c.PostForm("AgentId")
 	status := c.PostFormMap("status")
 	if id == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "instance_id")))
+		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "AgentId")))
 		return
 	}
 
@@ -57,11 +57,11 @@ func RunningStatus(c *gin.Context) {
 }
 
 func Alarm(c *gin.Context) {
-	id := c.PostForm("instance_id")
+	id := c.PostForm("AgentId")
 	alarmType := c.PostForm("alarm_type")
 	alarmMessage := c.PostForm("alarm_message")
 	if id == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "instance_id")))
+		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "AgentId")))
 		return
 	}
 

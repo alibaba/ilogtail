@@ -15,11 +15,11 @@
 package model
 
 type AgentGroup struct {
-	Name           string           `json:"name"`
-	Description    string           `json:"description"`
-	Tag            string           `json:"tag"`
-	AppliedConfigs map[string]int64 `json:"applied_configs"`
-	Version        int              `json:"version"`
+	Name           string           `json:"Name"`
+	Description    string           `json:"Description"`
+	Tag            string           `json:"Tag"`
+	AppliedConfigs map[string]int64 `json:"AppliedConfigs"`
+	Version        int              `json:"Version"`
 }
 
 func NewAgentGroup(name string, description string, tag string) *AgentGroup {
