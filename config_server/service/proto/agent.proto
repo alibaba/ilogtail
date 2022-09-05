@@ -2,7 +2,7 @@ syntax = "proto3";
 package proto;
 option go_package = ".;proto";
 
-// API: /agent/HeartBeat/
+// API: /Agent/HeartBeat/
 
 message HeartBeatRequest {
     string AgentId = 1;
@@ -26,7 +26,7 @@ message HeartBeatResponse {
     }
 }
 
-// API: /agent/RunningStatistics/
+// API: /Agent/RunningStatistics/
 
 message RunningStatisticsRequest {
     string AgentId = 1;
@@ -45,7 +45,7 @@ message RunningStatisticsResponse {
     }
 }
 
-// API: /agent/Alarm/
+// API: /Agent/Alarm/
 
 message AlarmRequest {
     string AgentId = 1;
@@ -64,7 +64,7 @@ message AlarmResponse {
     }
 }
 
-// API: /agent/GetConfigList/
+// API: /Agent/GetConfigList/
 
 message AgentGetConfigListRequest {
     string AgentId = 1;
