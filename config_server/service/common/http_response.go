@@ -20,18 +20,18 @@ type httpStatus struct {
 }
 
 var (
-	Accept                   httpStatus = httpStatus{200, "Accept"}
-	BadRequest               httpStatus = httpStatus{400, "BadRequest"}
-	ConfigAlreadyExist       httpStatus = httpStatus{400, "ConfigAlreadyExist"}
-	ConfigNotExist           httpStatus = httpStatus{404, "ConfigNotExist"}
-	InternalServerError      httpStatus = httpStatus{500, "InternalServerError"}
-	InvalidParameter         httpStatus = httpStatus{400, "InvalidParameter"}
-	MachineAlreadyExist      httpStatus = httpStatus{400, "MachineAlreadyExist"}
-	MachineGroupAlreadyExist httpStatus = httpStatus{400, "MachineGroupAlreadyExist"}
-	MachineGroupNotExist     httpStatus = httpStatus{404, "MachineGroupNotExist"}
-	MachineNotExist          httpStatus = httpStatus{404, "MachineNotExist"}
-	RequestTimeout           httpStatus = httpStatus{500, "RequestTimeout"}
-	ServerBusy               httpStatus = httpStatus{503, "ServerBusy"}
+	Accept                 httpStatus = httpStatus{200, "Accept"}
+	BadRequest             httpStatus = httpStatus{400, "BadRequest"}
+	ConfigAlreadyExist     httpStatus = httpStatus{400, "ConfigAlreadyExist"}
+	ConfigNotExist         httpStatus = httpStatus{404, "ConfigNotExist"}
+	InternalServerError    httpStatus = httpStatus{500, "InternalServerError"}
+	InvalidParameter       httpStatus = httpStatus{400, "InvalidParameter"}
+	AgentAlreadyExist      httpStatus = httpStatus{400, "AgentAlreadyExist"}
+	AgentGroupAlreadyExist httpStatus = httpStatus{400, "AgentGroupAlreadyExist"}
+	AgentGroupNotExist     httpStatus = httpStatus{404, "AgentGroupNotExist"}
+	AgentNotExist          httpStatus = httpStatus{404, "AgentNotExist"}
+	RequestTimeout         httpStatus = httpStatus{500, "RequestTimeout"}
+	ServerBusy             httpStatus = httpStatus{503, "ServerBusy"}
 )
 
 type Response struct {

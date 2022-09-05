@@ -208,10 +208,10 @@ func parseValue(table string, data []byte) interface{} {
 		ans = new(model.Config)
 		break
 	case common.TYPE_MACHINE:
-		ans = new(model.Machine)
+		ans = new(model.Agent)
 		break
 	case common.TYPE_MACHINEGROUP:
-		ans = new(model.MachineGroup)
+		ans = new(model.AgentGroup)
 		break
 	case common.TYPE_AGENT_ALARM:
 		ans = new(model.AgentAlarm)

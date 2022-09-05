@@ -49,7 +49,7 @@ func (c *ConfigManager) PullConfigUpdates(id string, configs map[string]string) 
 	ans := make([]CheckResult, 0)
 	s := store.GetStore()
 
-	// get machine's tag
+	// get agent's tag
 	ok, err := s.Has(common.TYPE_MACHINE, id)
 	if err != nil {
 		return nil, false, false, err
@@ -61,18 +61,18 @@ func (c *ConfigManager) PullConfigUpdates(id string, configs map[string]string) 
 	if err != nil {
 		return nil, false, false, err
 	}
-	machine := value.(*model.Machine)
+	agent := value.(*model.Agent)
 
-	// get all configs connected to machine group whose tag is same as machine's
+	// get all configs connected to agent group whose tag is same as agent's
 	configList := make(map[string]interface{})
-	machineGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
+	agentGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
 	if err != nil {
 		return nil, false, true, err
 	}
 
-	for _, machineGroup := range machineGroupList {
-		if _, ok := machine.Tag[machineGroup.(*model.MachineGroup).Tag]; ok || machineGroup.(*model.MachineGroup).Tag == "default" {
-			for k := range machineGroup.(*model.MachineGroup).AppliedConfigs {
+	for _, agentGroup := range agentGroupList {
+		if _, ok := agent.Tag[agentGroup.(*model.AgentGroup).Tag]; ok || agentGroup.(*model.AgentGroup).Tag == "default" {
+			for k := range agentGroup.(*model.AgentGroup).AppliedConfigs {
 				configList[k] = nil
 			}
 		}

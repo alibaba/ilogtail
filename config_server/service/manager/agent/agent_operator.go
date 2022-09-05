@@ -27,20 +27,20 @@ import (
 
 func (a *AgentManager) HeartBeat(id string, ip string, tags map[string]string) error {
 	queryTime := strconv.FormatInt(time.Now().Unix(), 10)
-	machine := new(model.Machine)
-	machine.MachineId = id
-	machine.Ip = ip
-	machine.Heartbeat = queryTime
-	machine.Tag = tags
-	a.AgentMessageList.Push(opt_heartbeat, machine)
+	agent := new(model.Agent)
+	agent.AgentId = id
+	agent.Ip = ip
+	agent.Heartbeat = queryTime
+	agent.Tag = tags
+	a.AgentMessageList.Push(opt_heartbeat, agent)
 	return nil
 }
 
 func (a *AgentManager) RunningStatus(id string, status map[string]string) error {
-	machineStatus := new(model.AgentStatus)
-	machineStatus.MachineId = id
-	machineStatus.Status = status
-	a.AgentMessageList.Push(opt_status, machineStatus)
+	agentStatus := new(model.AgentStatus)
+	agentStatus.AgentId = id
+	agentStatus.Status = status
+	a.AgentMessageList.Push(opt_status, agentStatus)
 	return nil
 }
 
@@ -48,7 +48,7 @@ func (a *AgentManager) Alarm(id string, alarmType string, alarmMessage string) e
 	queryTime := strconv.FormatInt(time.Now().Unix(), 10)
 	alarm := new(model.AgentAlarm)
 	alarm.AlarmKey = generateAlarmKey(queryTime, id)
-	alarm.Time = queryTime
+	alarm.AlarmTime = queryTime
 	alarm.AlarmType = alarmType
 	alarm.AlarmMessage = alarmMessage
 	a.AgentMessageList.Push(opt_alarm, alarm)
@@ -109,7 +109,7 @@ func (a *AgentManager) releaseAlarm() {
 			if i > 5000 {
 				break
 			}
-			b.Delete(common.TYPE_AGENT_ALARM, generateAlarmKey(v.(*model.AgentAlarm).Time, v.(*model.AgentAlarm).AlarmKey))
+			b.Delete(common.TYPE_AGENT_ALARM, generateAlarmKey(v.(*model.AgentAlarm).AlarmTime, v.(*model.AgentAlarm).AlarmKey))
 		}
 	}
 
@@ -130,7 +130,7 @@ func (a *AgentManager) batchUpdateAgentMessage() {
 	for k, v := range a.AgentMessageList.Heartbeat {
 		b.Update(common.TYPE_MACHINE, k, v)
 	}
-	a.AgentMessageList.Heartbeat = make(map[string]*model.Machine, 0)
+	a.AgentMessageList.Heartbeat = make(map[string]*model.Agent, 0)
 	for k, v := range a.AgentMessageList.Status {
 		b.Update(common.TYPE_AGENT_STATUS, k, v)
 	}
@@ -145,6 +145,6 @@ func (a *AgentManager) batchUpdateAgentMessage() {
 	wg.Done()
 }
 
-func generateAlarmKey(queryTime string, machineId string) string {
-	return queryTime + ":" + machineId
+func generateAlarmKey(queryTime string, agentId string) string {
+	return queryTime + ":" + agentId
 }

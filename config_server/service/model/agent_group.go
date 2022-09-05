@@ -14,23 +14,14 @@
 
 package model
 
-type Machine struct {
-	MachineId string            `json:"instance_id"`
-	Ip        string            `json:"ip"`
-	State     string            `json:"state"`
-	Heartbeat string            `json:"heartbeat"`
-	Tag       map[string]string `json:"tags"`
-	Status    map[string]string `json:"status"`
+type AgentGroup struct {
+	Name           string           `json:"name"`
+	Description    string           `json:"description"`
+	Tag            string           `json:"tag"`
+	AppliedConfigs map[string]int64 `json:"applied_configs"`
+	Version        int              `json:"version"`
 }
 
-type AgentAlarm struct {
-	AlarmKey     string `json:"alarm_key"`
-	Time         string `json:"time"`
-	AlarmType    string `json:"alarm_type"`
-	AlarmMessage string `json:"alarm_message"`
-}
-
-type AgentStatus struct {
-	MachineId string            `json:"instance_id"`
-	Status    map[string]string `json:"status"`
+func NewAgentGroup(name string, description string, tag string) *AgentGroup {
+	return &AgentGroup{name, description, tag, map[string]int64{}, 0}
 }

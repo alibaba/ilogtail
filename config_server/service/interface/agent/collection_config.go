@@ -33,12 +33,12 @@ func PullConfigUpdates(c *gin.Context) {
 		configs = make(map[string]string)
 	}
 
-	result, configExist, machineExist, err := manager.ConfigManager().PullConfigUpdates(id, configs)
+	result, configExist, agentExist, err := manager.ConfigManager().PullConfigUpdates(id, configs)
 
 	if err != nil {
 		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
-	} else if !machineExist {
-		c.JSON(common.ErrorResponse(common.MachineNotExist, fmt.Sprintf("Machine %s doesn't exist.", id)))
+	} else if !agentExist {
+		c.JSON(common.ErrorResponse(common.AgentNotExist, fmt.Sprintf("Agent %s doesn't exist.", id)))
 	} else if !configExist {
 		c.JSON(common.ErrorResponse(common.ConfigNotExist, fmt.Sprintf("Find config failed.")))
 	} else {

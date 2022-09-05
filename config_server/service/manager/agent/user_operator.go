@@ -20,7 +20,7 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func (a *AgentManager) GetMachine(id string) (*model.Machine, error) {
+func (a *AgentManager) GetAgent(id string) (*model.Agent, error) {
 	s := store.GetStore()
 	ok, err := s.Has(common.TYPE_MACHINE, id)
 	if err != nil {
@@ -28,10 +28,10 @@ func (a *AgentManager) GetMachine(id string) (*model.Machine, error) {
 	} else if !ok {
 		return nil, nil
 	} else {
-		machine, err := s.Get(common.TYPE_MACHINE, id)
+		agent, err := s.Get(common.TYPE_MACHINE, id)
 		if err != nil {
 			return nil, err
 		}
-		return machine.(*model.Machine), nil
+		return agent.(*model.Agent), nil
 	}
 }
