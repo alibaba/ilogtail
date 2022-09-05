@@ -1,92 +1,86 @@
 syntax = "proto3";
-package proto;
-option go_package = ".;proto";
+package configserver.proto;
+option go_package = ".;configserver.proto";
 
 // API: /Agent/HeartBeat/
 
 message HeartBeatRequest {
-    string AgentId = 1;
-    string Tags = 2;
-    string State = 3;
-    string Ip = 4;
-    string Region = 5;
-    int64 StartupTime = 6;
-    string Env = 7;
-    string Version = 8;
+    string request_id = 1;
+    string agent_id = 2;
+    string agent_version = 3;
+    string ip = 4;
+    map<string, string> tags = 5;
+    string running_status = 6;
+    int64 startup_time = 7;
 }
 
 message HeartBeatResponse {
-    oneof ResponseCode {
-        string Code = 1;
-        string ErrorCode = 2;
-    }
-    oneof ResponseMessage {
-        string Message = 3;
-        string ErrorMessage = 4;
-    }
+    string response_id = 1;
+    string code = 2;
+    string message = 3;
 }
 
 // API: /Agent/RunningStatistics/
 
+message RunningStatistics {
+    float cpu = 1;
+    int64 memory = 2;
+    map<string, string> extras = 100;
+}
+
 message RunningStatisticsRequest {
-    string AgentId = 1;
-    map<string, string> Status = 2;
-    map<string, string> Progress = 3;
+    string request_id = 1;
+    string agent_id = 2;
+    RunningStatistics running_details = 3;
 }
 
 message RunningStatisticsResponse {
-    oneof ResponseCode {
-        string Code = 1;
-        string ErrorCode = 2;
-    }
-    oneof ResponseMessage {
-        string Message = 3;
-        string ErrorMessage = 4;
-    }
+    string response_id = 1;
+    string code = 2;
+    string message = 3;
 }
 
 // API: /Agent/Alarm/
 
 message AlarmRequest {
-    string AgentId = 1;
-    string AlarmType = 2;
-    string AlarmMessage = 3;
+    string request_id = 1;
+    string agent_id = 2;
+    string type = 3;
+    string detail = 4;
 }
 
 message AlarmResponse {
-    oneof ResponseCode {
-        string Code = 1;
-        string ErrorCode = 2;
-    }
-    oneof ResponseMessage {
-        string Message = 3;
-        string ErrorMessage = 4;
-    }
+    string response_id = 1;
+    string code = 2;
+    string message = 3;
 }
 
 // API: /Agent/GetConfigList/
 
 message AgentGetConfigListRequest {
-    string AgentId = 1;
-    map<string, int64> Configs = 2;
+    string request_id = 1;
+    string agent_id = 2;
+    map<string, int64> config_versions = 3;
 }
 
 message ConfigUpdateInfo {
-    string ConfigName = 1;
-    string Msg = 2;
-    int32 Version = 3;
-    string Content = 4;
+    enum UpdateStatus {
+        SAME = 0;
+        NEW = 1;
+        DELETED = 2;
+        MODIFIED = 3;
+    }
+
+    string config_name = 1;
+    UpdateStatus update_status = 2;
+    int32 config_version = 3;
+    string content = 4;
 }
 
 message AgentGetConfigListResponse {
-    oneof ResponseCode {
-        string Code = 1;
-        string ErrorCode = 2;
-    }
-    oneof ResponseMessage {
-        string Message = 3;
-        string ErrorMessage = 4;
-    }
+    string response_id = 1;
+    string code = 2;
+    string message = 3;
 
-    repeated ConfigUpdateInfo ConfigUpdateInfoList = 5;
+    repeated ConfigUpdateInfo config_update_infos = 4;
 }
