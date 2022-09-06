@@ -1,6 +1,6 @@
 syntax = "proto3";
 package configserver.proto;
-option go_package = ".;configserver.proto";
+option go_package = ".;configserver_proto";
 
 message AgentGroupTag {
     string name = 1;
@@ -224,13 +224,12 @@ message Agent {
     string agent_id = 1;
     string ip = 2;
     string version = 3;
-    repeated string tags = 4;
-    string state = 5;
-    int64 startup_time = 6;
-    int64 latest_heartbeat_time = 7;
+    string running_status = 4;
+    int64 startup_time = 5;
+    int64 latest_heartbeat_time = 6;
 
-    map<string, string> tags = 8;
-    map<string, string> running_details = 9;
+    map<string, string> tags = 7;
+    map<string, string> running_details = 8;
 }
 
 message ListAgentsResponse {

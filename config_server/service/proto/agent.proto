@@ -1,6 +1,6 @@
 syntax = "proto3";
 package configserver.proto;
-option go_package = ".;configserver.proto";
+option go_package = ".;configserver_proto";
 
 // API: /Agent/HeartBeat/
 
@@ -73,7 +73,7 @@ message ConfigUpdateInfo {
 
     string config_name = 1;
     UpdateStatus update_status = 2;
-    int32 config_version = 3;
+    int64 config_version = 3;
     string content = 4;
 }
 
