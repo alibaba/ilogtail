@@ -26,10 +26,10 @@ import (
 
 var dbPath = []string{
 	common.TYPE_AGENT_ALARM,
-	common.TYPE_AGENT_STATUS,
 	common.TYPE_COLLECTION_CONFIG,
 	common.TYPE_MACHINE,
 	common.TYPE_MACHINEGROUP,
+	common.TYPE_RUNNING_STATISTICS,
 }
 
 type LeveldbStore struct {
@@ -216,8 +216,8 @@ func parseValue(table string, data []byte) interface{} {
 	case common.TYPE_AGENT_ALARM:
 		ans = new(model.AgentAlarm)
 		break
-	case common.TYPE_AGENT_STATUS:
-		ans = new(model.AgentStatus)
+	case common.TYPE_RUNNING_STATISTICS:
+		ans = new(model.RunningStatistics)
 		break
 	}
 	json.Unmarshal(data, ans)

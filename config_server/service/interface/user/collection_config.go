@@ -19,121 +19,230 @@ import (
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/manager"
+	proto "github.com/alibaba/ilogtail/config_server/service/proto"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func CreateConfig(c *gin.Context) {
-	configName := c.PostForm("configName")
-	configInfo := c.PostForm("configInfo")
-	description := c.PostForm("description")
+	req := proto.CreateConfigRequest{}
+	res := &proto.CreateConfigResponse{}
 
-	if configName == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "configName")))
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	res.ResponseId = req.RequestId
+
+	if req.ConfigDetail.ConfigName == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "ConfigName")
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	if req.ConfigDetail.Content == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "Content")
+		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
 
-	if configInfo == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "configInfo")))
-		return
-	}
-
-	exist, err := manager.ConfigManager().CreateConfig(configName, configInfo, description)
+	exist, err := manager.ConfigManager().CreateConfig(req.ConfigDetail)
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else if exist {
-		c.JSON(common.ErrorResponse(common.ConfigAlreadyExist, fmt.Sprintf("Config %s already exists.", configName)))
+		res.Code = common.ConfigAlreadyExist.Code
+		res.Message = fmt.Sprintf("Config %s already exists.", req.ConfigDetail.ConfigName)
+		c.ProtoBuf(common.ConfigAlreadyExist.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Add config success", nil))
+		res.Code = common.Accept.Code
+		res.Message = "Add config success"
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }
 
 func UpdateConfig(c *gin.Context) {
-	configName := c.PostForm("configName")
-	configInfo := c.PostForm("configInfo")
-	description := c.PostForm("description")
+	req := proto.UpdateConfigRequest{}
+	res := &proto.UpdateConfigResponse{}
 
-	if configName == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "configName")))
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	res.ResponseId = req.RequestId
+
+	if req.ConfigDetail.ConfigName == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "ConfigName")
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	if req.ConfigDetail.Content == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "Content")
+		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
 
-	if configInfo == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "configInfo")))
-		return
-	}
-
-	exist, err := manager.ConfigManager().UpdateConfig(configName, configInfo, description)
+	exist, err := manager.ConfigManager().UpdateConfig(req.ConfigDetail)
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else if !exist {
-		c.JSON(common.ErrorResponse(common.ConfigNotExist, fmt.Sprintf("Config %s doesn't exist.", configName)))
+		res.Code = common.ConfigNotExist.Code
+		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigDetail.ConfigName)
+		c.ProtoBuf(common.ConfigNotExist.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Update config success", nil))
+		res.Code = common.Accept.Code
+		res.Message = "Update config success"
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }
 
 func DeleteConfig(c *gin.Context) {
-	configName := c.Query("configName")
-	if configName == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "configName")))
+	req := proto.DeleteConfigRequest{}
+	res := &proto.DeleteConfigResponse{}
+
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	res.ResponseId = req.RequestId
+
+	if req.ConfigName == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "ConfigName")
+		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
 
-	exist, err := manager.ConfigManager().DeleteConfig(configName)
+	exist, err := manager.ConfigManager().DeleteConfig(req.ConfigName)
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else if !exist {
-		c.JSON(common.ErrorResponse(common.ConfigNotExist, fmt.Sprintf("Config %s doesn't exist.", configName)))
+		res.Code = common.ConfigNotExist.Code
+		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigName)
+		c.ProtoBuf(common.ConfigNotExist.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Delete config success", nil))
+		res.Code = common.Accept.Code
+		res.Message = "Delete config success"
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }
 
 func GetConfig(c *gin.Context) {
-	configName := c.Query("configName")
-	if configName == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "configName")))
+	req := proto.GetConfigRequest{}
+	res := &proto.GetConfigResponse{}
+
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	res.ResponseId = req.RequestId
+
+	if req.ConfigName == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "ConfigName")
+		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
 
-	config, err := manager.ConfigManager().GetConfig(configName)
+	config, err := manager.ConfigManager().GetConfig(req.ConfigName)
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else if config == nil {
-		c.JSON(common.ErrorResponse(common.ConfigNotExist, fmt.Sprintf("Config %s doesn't exist.", configName)))
+		res.Code = common.ConfigNotExist.Code
+		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigName)
+		c.ProtoBuf(common.ConfigNotExist.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Get config success", gin.H{"config": config}))
+		res.Code = common.Accept.Code
+		res.Message = "Get config success"
+		res.ConfigDetail = config.ToProto()
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }
 
 func ListAllConfigs(c *gin.Context) {
+	req := proto.ListConfigsRequest{}
+	res := &proto.ListConfigsResponse{}
+
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	res.ResponseId = req.RequestId
+
 	configList, err := manager.ConfigManager().ListAllConfigs()
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Get config list success", gin.H{"configList": configList}))
+		res.Code = common.Accept.Code
+		res.Message = "Get config list success"
+		res.ConfigDetails = make([]*proto.Config, 0)
+		for _, v := range configList {
+			res.ConfigDetails = append(res.ConfigDetails, v.ToProto())
+		}
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }
 
 func GetAppliedAgentGroups(c *gin.Context) {
-	configName := c.Query("configName")
-	if configName == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "configName")))
+	req := proto.GetAppliedAgentGroupsRequest{}
+	res := &proto.GetAppliedAgentGroupsResponse{}
+
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	res.ResponseId = req.RequestId
+
+	if req.ConfigName == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "ConfigName")
+		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
 
-	agentGroupList, configExist, err := manager.ConfigManager().GetAppliedAgentGroups(configName)
+	agentGroupList, configExist, err := manager.ConfigManager().GetAppliedAgentGroups(req.ConfigName)
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else if !configExist {
-		c.JSON(common.ErrorResponse(common.ConfigNotExist, fmt.Sprintf("Config %s doesn't exist.", configName)))
+		res.Code = common.ConfigNotExist.Code
+		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigName)
+		c.ProtoBuf(common.ConfigNotExist.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Get group list success", gin.H{"groupList": agentGroupList}))
+		res.Code = common.Accept.Code
+		res.Message = "Get group list success"
+		res.AgentGroupNames = agentGroupList
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }

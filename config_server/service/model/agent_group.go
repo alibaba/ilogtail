@@ -14,14 +14,42 @@
 
 package model
 
+import proto "github.com/alibaba/ilogtail/config_server/service/proto"
+
+type AgentGroupTag struct {
+	Name  string `json:"Name"`
+	Value string `json:"Value"`
+}
+
 type AgentGroup struct {
 	Name           string           `json:"Name"`
 	Description    string           `json:"Description"`
-	Tag            string           `json:"Tag"`
+	Tags           []AgentGroupTag  `json:"Tags"`
 	AppliedConfigs map[string]int64 `json:"AppliedConfigs"`
-	Version        int              `json:"Version"`
 }
 
-func NewAgentGroup(name string, description string, tag string) *AgentGroup {
-	return &AgentGroup{name, description, tag, map[string]int64{}, 0}
+func (a *AgentGroup) ToProto() *proto.AgentGroup {
+	pa := new(proto.AgentGroup)
+	pa.GroupName = a.Name
+	pa.Description = a.Description
+	pa.Tags = make([]*proto.AgentGroupTag, 0)
+	for _, v := range a.Tags {
+		tag := new(proto.AgentGroupTag)
+		tag.Name = v.Name
+		tag.Value = v.Value
+		pa.Tags = append(pa.Tags, tag)
+	}
+	return pa
+}
+
+func (a *AgentGroup) ParseProto(pa *proto.AgentGroup) {
+	a.Name = pa.GroupName
+	a.Description = pa.Description
+	a.Tags = make([]AgentGroupTag, 0)
+	for _, v := range pa.Tags {
+		tag := new(AgentGroupTag)
+		tag.Name = v.Name
+		tag.Value = v.Value
+		a.Tags = append(a.Tags, *tag)
+	}
 }

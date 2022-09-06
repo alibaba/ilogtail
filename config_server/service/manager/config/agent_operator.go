@@ -16,11 +16,11 @@ package configmanager
 
 import (
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/model"
+	proto "github.com/alibaba/ilogtail/config_server/service/proto"
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
@@ -45,8 +45,8 @@ func (c *ConfigManager) updateConfigList(interval int) {
 	}
 }
 
-func (c *ConfigManager) PullConfigUpdates(id string, configs map[string]string) ([]CheckResult, bool, bool, error) {
-	ans := make([]CheckResult, 0)
+func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*proto.ConfigUpdateInfo, bool, bool, error) {
+	ans := make([]*proto.ConfigUpdateInfo, 0)
 	s := store.GetStore()
 
 	// get agent's tag
@@ -71,7 +71,16 @@ func (c *ConfigManager) PullConfigUpdates(id string, configs map[string]string) 
 	}
 
 	for _, agentGroup := range agentGroupList {
-		if _, ok := agent.Tag[agentGroup.(*model.AgentGroup).Tag]; ok || agentGroup.(*model.AgentGroup).Tag == "default" {
+		match := func() bool {
+			for _, v := range agentGroup.(*model.AgentGroup).Tags {
+				_, ok := agent.Tags[v.Name]
+				if ok && agent.Tags[v.Name] == v.Value {
+					return true
+				}
+			}
+			return false
+		}()
+		if match || agentGroup.(*model.AgentGroup).Name == "Default" {
 			for k := range agentGroup.(*model.AgentGroup).AppliedConfigs {
 				configList[k] = nil
 			}
@@ -81,9 +90,9 @@ func (c *ConfigManager) PullConfigUpdates(id string, configs map[string]string) 
 	// comp config info
 	for k := range configs {
 		if _, ok := configList[k]; !ok {
-			var result CheckResult
+			result := new(proto.ConfigUpdateInfo)
 			result.ConfigName = k
-			result.Msg = "delete"
+			result.UpdateStatus = proto.ConfigUpdateInfo_DELETED
 			ans = append(ans, result)
 		}
 	}
@@ -97,25 +106,24 @@ func (c *ConfigManager) PullConfigUpdates(id string, configs map[string]string) 
 			return nil, false, true, nil
 		}
 
-		var result CheckResult
+		result := new(proto.ConfigUpdateInfo)
 
 		if _, ok := configs[k]; !ok {
 			result.ConfigName = k
-			result.Msg = "create"
-			result.Data = *config
+			result.UpdateStatus = proto.ConfigUpdateInfo_NEW
+			result.ConfigVersion = config.Version
+			result.Content = config.Content
 		} else {
-			ver, err := strconv.Atoi(configs[k])
-			if err != nil {
-				return nil, true, true, err
-			}
+			ver := configs[k]
 
 			if ver < config.Version {
 				result.ConfigName = k
-				result.Msg = "change"
-				result.Data = *config
+				result.UpdateStatus = proto.ConfigUpdateInfo_MODIFIED
+				result.ConfigVersion = config.Version
+				result.Content = config.Content
 			} else {
 				result.ConfigName = k
-				result.Msg = "same"
+				result.UpdateStatus = proto.ConfigUpdateInfo_SAME
 			}
 		}
 		ans = append(ans, result)

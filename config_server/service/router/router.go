@@ -47,7 +47,7 @@ func initUserRouter(router *gin.Engine) {
 
 		userGroup.PUT("/ApplyConfigToAgentGroup", user.ApplyConfigToAgentGroup)
 		userGroup.DELETE("/RemoveConfigFromAgentGroup", user.RemoveConfigFromAgentGroup)
-		userGroup.GET("/GetAppliedConfigs", user.GetAppliedConfigs)
+		userGroup.GET("/GetAppliedConfigsForAgentGroup", user.GetAppliedConfigsForAgentGroup)
 		userGroup.GET("/GetAppliedAgentGroups", user.GetAppliedAgentGroups)
 		userGroup.GET("/ListAgents", user.ListAgents)
 	}
@@ -57,9 +57,9 @@ func initAgentRouter(router *gin.Engine) {
 	agentGroup := router.Group("/Agent")
 	{
 		agentGroup.POST("/HeartBeat", agent.HeartBeat)
-		agentGroup.POST("/RunningStatus", agent.RunningStatus)
+		agentGroup.POST("/RunningStatistics", agent.RunningStatistics)
 		agentGroup.POST("/Alarm", agent.Alarm)
 
-		agentGroup.POST("/PullConfigUpdates", agent.PullConfigUpdates)
+		agentGroup.POST("/GetConfigList", agent.GetConfigList)
 	}
 }

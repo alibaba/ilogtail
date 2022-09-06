@@ -19,29 +19,51 @@ import (
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/manager"
+	proto "github.com/alibaba/ilogtail/config_server/service/proto"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
-func PullConfigUpdates(c *gin.Context) {
-	id := c.PostForm("AgentId")
-	configs := c.PostFormMap("configs")
-	if id == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "AgentId")))
+func GetConfigList(c *gin.Context) {
+	req := proto.AgentGetConfigListRequest{}
+	res := &proto.AgentGetConfigListResponse{}
+
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
-	if configs == nil {
-		configs = make(map[string]string)
+	res.ResponseId = req.RequestId
+
+	if req.AgentId == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "AgentId")
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	if req.ConfigVersions == nil {
+		req.ConfigVersions = make(map[string]int64)
 	}
 
-	result, configExist, agentExist, err := manager.ConfigManager().PullConfigUpdates(id, configs)
+	result, configExist, agentExist, err := manager.ConfigManager().GetConfigList(req.AgentId, req.ConfigVersions)
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else if !agentExist {
-		c.JSON(common.ErrorResponse(common.AgentNotExist, fmt.Sprintf("Agent %s doesn't exist.", id)))
+		res.Code = common.AgentNotExist.Code
+		res.Message = fmt.Sprintf("Agent %s doesn't exist.", req.AgentId)
+		c.ProtoBuf(common.AgentNotExist.Status, res)
 	} else if !configExist {
-		c.JSON(common.ErrorResponse(common.ConfigNotExist, fmt.Sprintf("Find config failed.")))
+		res.Code = common.ConfigNotExist.Code
+		res.Message = fmt.Sprintf("Find config failed.")
+		c.ProtoBuf(common.ConfigNotExist.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Check config success", gin.H{"config_check_result": result}))
+		res.Code = common.Accept.Code
+		res.Message = "Check config success"
+		res.ConfigUpdateInfos = result
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }

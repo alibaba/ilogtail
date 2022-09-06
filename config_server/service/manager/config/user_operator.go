@@ -15,36 +15,35 @@
 package configmanager
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/model"
+	proto "github.com/alibaba/ilogtail/config_server/service/proto"
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func (c *ConfigManager) CreateConfig(configName string, info string, description string) (bool, error) {
+func (c *ConfigManager) CreateConfig(pconfig *proto.Config) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, configName)
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, pconfig.ConfigName)
 
 	if err != nil {
 		return false, err
 	} else if ok {
-		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, configName)
+		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, pconfig.ConfigName)
 		if err != nil {
 			return true, err
 		}
 		config := value.(*model.Config)
 
-		if config.DelTag == false { // exsit
+		if !config.DelTag { // exsit
 			return true, nil
 		} else { // exist but has delete tag
-			config.Content = info
+			config.ParseProto(pconfig)
 			config.Version = config.Version + 1
-			config.Description = description
 			config.DelTag = false
 
-			err = s.Update(common.TYPE_COLLECTION_CONFIG, configName, config)
+			err = s.Update(common.TYPE_COLLECTION_CONFIG, config.Name, config)
 			if err != nil {
 				return false, err
 			}
@@ -52,13 +51,11 @@ func (c *ConfigManager) CreateConfig(configName string, info string, description
 		}
 	} else { // doesn't exist
 		config := new(model.Config)
-		config.Name = configName
-		config.Content = info
+		config.ParseProto(pconfig)
 		config.Version = 0
-		config.Description = description
 		config.DelTag = false
 
-		err = s.Add(common.TYPE_COLLECTION_CONFIG, configName, config)
+		err = s.Add(common.TYPE_COLLECTION_CONFIG, config.Name, config)
 		if err != nil {
 			return false, err
 		}
@@ -66,29 +63,28 @@ func (c *ConfigManager) CreateConfig(configName string, info string, description
 	}
 }
 
-func (c *ConfigManager) UpdateConfig(configName string, info string, description string) (bool, error) {
+func (c *ConfigManager) UpdateConfig(pconfig *proto.Config) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, configName)
+	ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, pconfig.ConfigName)
 
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, configName)
+		value, err := s.Get(common.TYPE_COLLECTION_CONFIG, pconfig.ConfigName)
 		if err != nil {
 			return false, err
 		}
 		config := value.(*model.Config)
 
-		if config.DelTag == true {
+		if !config.DelTag {
 			return false, nil
 		} else {
-			config.Content = info
+			config.ParseProto(pconfig)
 			config.Version = config.Version + 1
-			config.Description = description
 
-			err = s.Update(common.TYPE_COLLECTION_CONFIG, configName, config)
+			err = s.Update(common.TYPE_COLLECTION_CONFIG, config.Name, config)
 			if err != nil {
 				return true, err
 			}
@@ -191,22 +187,16 @@ func (c *ConfigManager) GetAppliedAgentGroups(configName string) ([]string, bool
 	return ans, true, nil
 }
 
-func (c *ConfigManager) CreateAgentGroup(groupName string, tag string, description string) (bool, error) {
-	if tag == "" {
-		tag = "default"
-	}
-
+func (c *ConfigManager) CreateAgentGroup(group *proto.AgentGroup) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, group.GroupName)
 	if err != nil {
 		return true, err
 	} else if ok {
 		return true, nil
 	} else {
 		agentGroup := new(model.AgentGroup)
-		agentGroup.Name = groupName
-		agentGroup.Tag = tag
-		agentGroup.Description = description
+		agentGroup.ParseProto(group)
 		agentGroup.AppliedConfigs = make(map[string]int64, 0)
 
 		err = s.Add(common.TYPE_MACHINEGROUP, agentGroup.Name, agentGroup)
@@ -217,29 +207,23 @@ func (c *ConfigManager) CreateAgentGroup(groupName string, tag string, descripti
 	}
 }
 
-func (c *ConfigManager) UpdateAgentGroup(groupName string, tag string, description string) (bool, error) {
-	if tag == "" {
-		tag = "default"
-	}
-
+func (c *ConfigManager) UpdateAgentGroup(group *proto.AgentGroup) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
+	ok, err := s.Has(common.TYPE_MACHINEGROUP, group.GroupName)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		value, err := s.Get(common.TYPE_MACHINEGROUP, groupName)
+		value, err := s.Get(common.TYPE_MACHINEGROUP, group.GroupName)
 		if err != nil {
 			return true, err
 		}
 		agentGroup := value.(*model.AgentGroup)
 
-		agentGroup.Tag = tag
-		agentGroup.Description = description
-		agentGroup.Version++
+		agentGroup.ParseProto(group)
 
-		err = s.Update(common.TYPE_MACHINEGROUP, groupName, agentGroup)
+		err = s.Update(common.TYPE_MACHINEGROUP, group.GroupName, agentGroup)
 		if err != nil {
 			return true, err
 		}
@@ -278,6 +262,7 @@ func (c *ConfigManager) GetAgentGroup(groupName string) (*model.AgentGroup, erro
 		return agentGroup.(*model.AgentGroup), nil
 	}
 }
+
 func (c *ConfigManager) GetAllAgentGroup() ([]model.AgentGroup, error) {
 	s := store.GetStore()
 	agentGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
@@ -293,7 +278,6 @@ func (c *ConfigManager) GetAllAgentGroup() ([]model.AgentGroup, error) {
 }
 
 func (a *ConfigManager) GetAgentList(groupName string) ([]model.Agent, error) {
-	nowTime := time.Now()
 	ans := make([]model.Agent, 0)
 	s := store.GetStore()
 
@@ -306,34 +290,20 @@ func (a *ConfigManager) GetAgentList(groupName string) ([]model.Agent, error) {
 		for _, v := range agentList {
 			agent := v.(*model.Agent)
 
-			ok, err := s.Has(common.TYPE_AGENT_STATUS, agent.AgentId)
+			ok, err := s.Has(common.TYPE_RUNNING_STATISTICS, agent.AgentId)
 			if err != nil {
 				return nil, err
 			}
 			if ok {
-				status, err := s.Get(common.TYPE_AGENT_STATUS, agent.AgentId)
+				status, err := s.Get(common.TYPE_RUNNING_STATISTICS, agent.AgentId)
 				if err != nil {
 					return nil, err
 				}
 				if status != nil {
-					agent.Status = status.(*model.AgentStatus).Status
+					agent.AddRunningDetails(status.(*model.RunningStatistics))
 				}
 			} else {
-				agent.Status = make(map[string]string, 0)
-			}
-
-			heartbeatTime, err := strconv.ParseInt(agent.Heartbeat, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-
-			preHeart := nowTime.Sub(time.Unix(heartbeatTime, 0))
-			if preHeart.Seconds() < 15 {
-				agent.ConnectState = "good"
-			} else if preHeart.Seconds() < 60 {
-				agent.ConnectState = "bad"
-			} else {
-				agent.ConnectState = "lost"
+				agent.RunningDetails = make(map[string]string, 0)
 			}
 
 			ans = append(ans, *agent)
@@ -407,7 +377,7 @@ func (c *ConfigManager) RemoveConfigFromAgentGroup(groupName string, configName 
 	return true, true, true, nil
 }
 
-func (c *ConfigManager) GetAppliedConfigs(groupName string) ([]string, bool, error) {
+func (c *ConfigManager) GetAppliedConfigsForAgentGroup(groupName string) ([]string, bool, error) {
 	ans := make([]string, 0)
 
 	agentGroup, err := c.GetAgentGroup(groupName)

@@ -14,19 +14,58 @@
 
 package model
 
+import (
+	"fmt"
+	"strconv"
+
+	proto "github.com/alibaba/ilogtail/config_server/service/proto"
+)
+
 type Agent struct {
-	AgentId      string            `json:"AgentId"`
-	Ip           string            `json:"Ip"`
-	State        string            `json:"State"`
-	Region       string            `json:"Region"`
-	StartUpTime  int64             `json:"StartUpTime"`
-	Env          string            `json:"Env"`
-	Version      string            `json:"Version"`
-	ConnectState string            `json:"ConnectState"`
-	Heartbeat    string            `json:"Heartbeat"`
-	Tag          map[string]string `json:"Tag"`
-	Status       map[string]string `json:"Status"`
-	Progress     map[string]string `json:"Progress"`
+	AgentId             string            `json:"AgentId"`
+	Ip                  string            `json:"Ip"`
+	Version             string            `json:"Version"`
+	RunningStatus       string            `json:"RunningStatus"`
+	StartupTime         int64             `json:"StartupTime"`
+	LatestHeartbeatTime int64             `json:"LatestHeartbeatTime"`
+	Tags                map[string]string `json:"Tags"`
+	RunningDetails      map[string]string `json:"RunningDetails"`
+}
+
+func (a *Agent) ToProto() *proto.Agent {
+	pa := new(proto.Agent)
+	pa.AgentId = a.AgentId
+	pa.Ip = a.Ip
+	pa.Version = a.Version
+	pa.RunningStatus = a.RunningStatus
+	pa.StartupTime = a.StartupTime
+	pa.LatestHeartbeatTime = a.LatestHeartbeatTime
+	pa.Tags = a.Tags
+	pa.RunningDetails = a.RunningDetails
+	return pa
+}
+
+func (a *Agent) ParseProto(pa *proto.Agent) {
+	a.AgentId = pa.AgentId
+	a.Ip = pa.Ip
+	a.Version = pa.Version
+	a.RunningStatus = pa.RunningStatus
+	a.StartupTime = pa.StartupTime
+	a.LatestHeartbeatTime = pa.LatestHeartbeatTime
+	a.Tags = pa.Tags
+	a.RunningDetails = pa.RunningDetails
+}
+
+func (a *Agent) AddRunningDetails(d *RunningStatistics) {
+	if a.AgentId != d.AgentId {
+		return
+	}
+
+	a.RunningDetails["Cpu"] = fmt.Sprintf("%f", d.Cpu)
+	a.RunningDetails["Memory"] = strconv.FormatInt(d.Memory, 10)
+	for k, v := range d.Extras {
+		a.RunningDetails[k] = v
+	}
 }
 
 type AgentAlarm struct {
@@ -36,8 +75,23 @@ type AgentAlarm struct {
 	AlarmMessage string `json:"AlarmMessage"`
 }
 
-type AgentStatus struct {
-	AgentId  string            `json:"AgentId"`
-	Status   map[string]string `json:"Status"`
-	Progress map[string]string `json:"Progress"`
+type RunningStatistics struct {
+	AgentId string            `json:"AgentId"`
+	Cpu     float32           `json:"Cpu"`
+	Memory  int64             `json:"Memory"`
+	Extras  map[string]string `json:"Extras"`
+}
+
+func (r *RunningStatistics) ToProto() *proto.RunningStatistics {
+	pr := new(proto.RunningStatistics)
+	pr.Cpu = r.Cpu
+	pr.Memory = r.Memory
+	pr.Extras = r.Extras
+	return pr
+}
+
+func (r *RunningStatistics) ParseProto(pr *proto.RunningStatistics) {
+	r.Cpu = pr.Cpu
+	r.Memory = pr.Memory
+	r.Extras = pr.Extras
 }

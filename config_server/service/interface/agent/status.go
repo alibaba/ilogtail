@@ -19,57 +19,103 @@ import (
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/manager"
+	proto "github.com/alibaba/ilogtail/config_server/service/proto"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func HeartBeat(c *gin.Context) {
-	id := c.PostForm("AgentId")
-	tags := c.PostFormMap("tags")
-	if id == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "AgentId")))
+	req := proto.HeartBeatRequest{}
+	res := &proto.HeartBeatResponse{}
+
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	res.ResponseId = req.RequestId
+
+	if req.AgentId == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "AgentId")
+		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
 
-	err := manager.AgentManager().HeartBeat(id, c.ClientIP(), tags)
+	err = manager.AgentManager().HeartBeat(req.AgentId, req.AgentVersion, req.Ip, req.Tags, req.AgentVersion, req.StartupTime)
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Heartbeat success", nil))
+		res.Code = common.Accept.Code
+		res.Message = "Send heartbeat success"
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }
 
-func RunningStatus(c *gin.Context) {
-	id := c.PostForm("AgentId")
-	status := c.PostFormMap("status")
-	if id == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "AgentId")))
+func RunningStatistics(c *gin.Context) {
+	req := proto.RunningStatisticsRequest{}
+	res := &proto.RunningStatisticsResponse{}
+
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	res.ResponseId = req.RequestId
+
+	if req.AgentId == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "AgentId")
+		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
 
-	err := manager.AgentManager().RunningStatus(id, status)
+	err = manager.AgentManager().RunningStatistics(req.AgentId, req.RunningDetails)
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Send status success", nil))
+		res.Code = common.Accept.Code
+		res.Message = "Send running status success"
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }
 
 func Alarm(c *gin.Context) {
-	id := c.PostForm("AgentId")
-	alarmType := c.PostForm("alarm_type")
-	alarmMessage := c.PostForm("alarm_message")
-	if id == "" {
-		c.JSON(common.ErrorResponse(common.BadRequest, fmt.Sprintf("Need parameter %s.", "AgentId")))
+	req := proto.AlarmRequest{}
+	res := &proto.AlarmResponse{}
+
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
+	if err != nil {
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+	res.ResponseId = req.RequestId
+
+	if req.AgentId == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "AgentId")
+		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
 
-	err := manager.AgentManager().Alarm(id, alarmType, alarmMessage)
+	err = manager.AgentManager().Alarm(req.AgentId, req.Type, req.Detail)
 
 	if err != nil {
-		c.JSON(common.ErrorResponse(common.InternalServerError, err.Error()))
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		c.ProtoBuf(common.InternalServerError.Status, res)
 	} else {
-		c.JSON(common.AcceptResponse(common.Accept, "Alarm success", nil))
+		res.Code = common.Accept.Code
+		res.Message = "Alarm success"
+		c.ProtoBuf(common.Accept.Status, res)
 	}
 }

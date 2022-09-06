@@ -22,24 +22,28 @@ import (
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/model"
+	proto "github.com/alibaba/ilogtail/config_server/service/proto"
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func (a *AgentManager) HeartBeat(id string, ip string, tags map[string]string) error {
-	queryTime := strconv.FormatInt(time.Now().Unix(), 10)
+func (a *AgentManager) HeartBeat(id string, version string, ip string, tags map[string]string, runningStatus string, startupTime int64) error {
+	queryTime := time.Now().Unix()
 	agent := new(model.Agent)
 	agent.AgentId = id
+	agent.Version = version
 	agent.Ip = ip
-	agent.Heartbeat = queryTime
-	agent.Tag = tags
+	agent.Tags = tags
+	agent.RunningStatus = runningStatus
+	agent.StartupTime = startupTime
+	agent.LatestHeartbeatTime = queryTime
+
 	a.AgentMessageList.Push(opt_heartbeat, agent)
 	return nil
 }
 
-func (a *AgentManager) RunningStatus(id string, status map[string]string) error {
-	agentStatus := new(model.AgentStatus)
-	agentStatus.AgentId = id
-	agentStatus.Status = status
+func (a *AgentManager) RunningStatistics(id string, status *proto.RunningStatistics) error {
+	agentStatus := new(model.RunningStatistics)
+	agentStatus.ParseProto(status)
 	a.AgentMessageList.Push(opt_status, agentStatus)
 	return nil
 }
@@ -132,9 +136,9 @@ func (a *AgentManager) batchUpdateAgentMessage() {
 	}
 	a.AgentMessageList.Heartbeat = make(map[string]*model.Agent, 0)
 	for k, v := range a.AgentMessageList.Status {
-		b.Update(common.TYPE_AGENT_STATUS, k, v)
+		b.Update(common.TYPE_RUNNING_STATISTICS, k, v)
 	}
-	a.AgentMessageList.Status = make(map[string]*model.AgentStatus, 0)
+	a.AgentMessageList.Status = make(map[string]*model.RunningStatistics, 0)
 	a.AgentMessageList.Mutex.Unlock()
 
 	err := s.WriteBatch(b)

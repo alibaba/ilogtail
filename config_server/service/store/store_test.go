@@ -36,7 +36,12 @@ func TestConfigStore(t *testing.T) {
 	value1, _ := s.GetAll(common.TYPE_COLLECTION_CONFIG)
 	t.Log("ALL COLLECTION_CONFIGS:", value1)
 
-	config := model.NewConfig("111", "1111", 1, "111")
+	config := new(model.Config)
+	config.Name = "111"
+	config.Content = "1111"
+	config.Version = 1
+	config.Description = "111"
+	config.DelTag = false
 	s.Add(common.TYPE_COLLECTION_CONFIG, config.Name, config)
 
 	value2, _ := s.Get(common.TYPE_COLLECTION_CONFIG, "111")

@@ -14,14 +14,26 @@
 
 package model
 
+import proto "github.com/alibaba/ilogtail/config_server/service/proto"
+
 type Config struct {
 	Name        string `json:"Name"`
 	Content     string `json:"Content"`
-	Version     int    `json:"Version"`
+	Version     int64  `json:"Version"`
 	Description string `json:"Description"`
 	DelTag      bool   `json:"DelTag"`
 }
 
-func NewConfig(name string, content string, version int, description string) *Config {
-	return &Config{name, content, version, description, false}
+func (c *Config) ToProto() *proto.Config {
+	pc := new(proto.Config)
+	pc.ConfigName = c.Name
+	pc.Description = c.Description
+	pc.Content = c.Content
+	return pc
+}
+
+func (c *Config) ParseProto(pc *proto.Config) {
+	c.Name = pc.ConfigName
+	c.Description = pc.Description
+	c.Content = pc.Content
 }

@@ -15,8 +15,8 @@
 package common
 
 type httpStatus struct {
-	status int
-	code   string
+	Status int
+	Code   string
 }
 
 var (
@@ -33,22 +33,3 @@ var (
 	RequestTimeout         httpStatus = httpStatus{500, "RequestTimeout"}
 	ServerBusy             httpStatus = httpStatus{503, "ServerBusy"}
 )
-
-type Response struct {
-	Code    string                 `json:"code"`
-	Message string                 `json:"message"`
-	Data    map[string]interface{} `json:"data"`
-}
-
-type Error struct {
-	ErrorCode    string `json:"errorCode"`
-	ErrorMessage string `json:"errorMessage"`
-}
-
-func AcceptResponse(s httpStatus, msg string, data map[string]interface{}) (int, Response) {
-	return s.status, Response{s.code, msg, data}
-}
-
-func ErrorResponse(s httpStatus, msg string) (int, Error) {
-	return s.status, Error{s.code, msg}
-}

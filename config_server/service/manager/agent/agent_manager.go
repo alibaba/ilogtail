@@ -41,14 +41,14 @@ const (
 type agentMessageList struct {
 	Alarm     map[string]*model.AgentAlarm
 	Heartbeat map[string]*model.Agent
-	Status    map[string]*model.AgentStatus
+	Status    map[string]*model.RunningStatistics
 	Mutex     sync.RWMutex
 }
 
 func (a *agentMessageList) Clear() {
 	a.Alarm = make(map[string]*model.AgentAlarm, 0)
 	a.Heartbeat = make(map[string]*model.Agent, 0)
-	a.Status = make(map[string]*model.AgentStatus, 0)
+	a.Status = make(map[string]*model.RunningStatistics, 0)
 }
 
 func (a *agentMessageList) Push(opt string, data interface{}) {
@@ -57,19 +57,10 @@ func (a *agentMessageList) Push(opt string, data interface{}) {
 
 	switch opt {
 	case opt_alarm:
-		k := data.(*model.AgentAlarm).AlarmKey
-		v := data.(*model.AgentAlarm)
-		a.Alarm[k] = v
-		break
+		a.Alarm[data.(*model.AgentAlarm).AlarmKey] = data.(*model.AgentAlarm)
 	case opt_heartbeat:
-		k := data.(*model.Agent).AgentId
-		v := data.(*model.Agent)
-		a.Heartbeat[k] = v
-		break
+		a.Heartbeat[data.(*model.Agent).AgentId] = data.(*model.Agent)
 	case opt_status:
-		k := data.(*model.AgentStatus).AgentId
-		v := data.(*model.AgentStatus)
-		a.Status[k] = v
-		break
+		a.Status[data.(*model.RunningStatistics).AgentId] = data.(*model.RunningStatistics)
 	}
 }
