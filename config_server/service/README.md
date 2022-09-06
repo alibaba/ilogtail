@@ -16,6 +16,7 @@
 * [router](router): 路由管理
 * [setting](setting): 本地设置
 * [model](model): 数据结构
+* [proto](protocol): Protocol Buffer 规范
 * [docs](docs): 文档资料
 
 整体流程：
@@ -31,7 +32,7 @@ go build -o ConfigServer
 nohup ./ConfigServer > stdout.log 2> stderr.log &
 ```
 
-## 调试
+## 调试（暂时失效）
 
 有多种方式可以调试 API
 
