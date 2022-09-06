@@ -64,7 +64,7 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 	agent := value.(*model.Agent)
 
 	// get all configs connected to agent group whose tag is same as agent's
-	configList := make(map[string]interface{})
+	configList := make(map[string]*model.Config)
 	agentGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
 	if err != nil {
 		return nil, false, true, err
@@ -82,7 +82,16 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 		}()
 		if match || agentGroup.(*model.AgentGroup).Name == "Default" {
 			for k := range agentGroup.(*model.AgentGroup).AppliedConfigs {
-				configList[k] = nil
+				config, err := c.GetConfig(k)
+				if err != nil {
+					return nil, false, true, err
+				}
+				if config == nil {
+					return nil, false, true, nil
+				}
+				if config.AgentType == agent.AgentType {
+					configList[k] = config
+				}
 			}
 		}
 	}
@@ -97,15 +106,7 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 		}
 	}
 
-	for k := range configList {
-		config, err := c.GetConfig(k)
-		if err != nil {
-			return nil, false, true, err
-		}
-		if config == nil {
-			return nil, false, true, nil
-		}
-
+	for k, config := range configList {
 		result := new(proto.ConfigUpdateInfo)
 
 		if _, ok := configs[k]; !ok {

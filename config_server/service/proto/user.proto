@@ -15,8 +15,9 @@ message AgentGroup {
 
 message Config {
     string config_name = 1;
-    string description = 2;
-    string content = 3;
+    string agent_type = 2;
+    string description = 3;
+    string content = 4;
 }
 
 // API: /User/CreateAgentGroup
@@ -222,14 +223,15 @@ message ListAgentsRequest {
 
 message Agent {
     string agent_id = 1;
-    string ip = 2;
-    string version = 3;
-    string running_status = 4;
-    int64 startup_time = 5;
-    int64 latest_heartbeat_time = 6;
+    string agent_type = 2;
+    string ip = 3;
+    string version = 4;
+    string running_status = 5;
+    int64 startup_time = 6;
+    int64 latest_heartbeat_time = 7;
 
-    map<string, string> tags = 7;
-    map<string, string> running_details = 8;
+    map<string, string> tags = 8;
+    map<string, string> running_details = 9;
 }
 
 message ListAgentsResponse {

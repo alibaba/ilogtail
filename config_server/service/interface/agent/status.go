@@ -43,7 +43,7 @@ func HeartBeat(c *gin.Context) {
 		return
 	}
 
-	err = manager.AgentManager().HeartBeat(req.AgentId, req.AgentVersion, req.Ip, req.Tags, req.AgentVersion, req.StartupTime)
+	err = manager.AgentManager().HeartBeat(req.AgentId, req.AgentType, req.AgentVersion, req.Ip, req.Tags, req.AgentVersion, req.StartupTime)
 
 	if err != nil {
 		res.Code = common.InternalServerError.Code

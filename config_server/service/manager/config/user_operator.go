@@ -108,7 +108,7 @@ func (c *ConfigManager) DeleteConfig(configName string) (bool, error) {
 		}
 		config := value.(*model.Config)
 
-		if config.DelTag == true {
+		if !config.DelTag {
 			return false, nil
 		} else {
 			config.DelTag = true
@@ -138,7 +138,7 @@ func (c *ConfigManager) GetConfig(configName string) (*model.Config, error) {
 		}
 		config := value.(*model.Config)
 
-		if config.DelTag == true {
+		if !config.DelTag {
 			return nil, nil
 		}
 		return config, nil
@@ -155,7 +155,7 @@ func (c *ConfigManager) ListAllConfigs() ([]model.Config, error) {
 		ans := make([]model.Config, 0)
 		for _, value := range configs {
 			config := value.(*model.Config)
-			if config.DelTag == false {
+			if !config.DelTag {
 				ans = append(ans, *config)
 			}
 		}

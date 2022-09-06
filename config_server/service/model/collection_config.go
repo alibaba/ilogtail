@@ -18,6 +18,7 @@ import proto "github.com/alibaba/ilogtail/config_server/service/proto"
 
 type Config struct {
 	Name        string `json:"Name"`
+	AgentType   string `json:"AgentType"`
 	Content     string `json:"Content"`
 	Version     int64  `json:"Version"`
 	Description string `json:"Description"`
@@ -27,6 +28,7 @@ type Config struct {
 func (c *Config) ToProto() *proto.Config {
 	pc := new(proto.Config)
 	pc.ConfigName = c.Name
+	pc.AgentType = c.AgentType
 	pc.Description = c.Description
 	pc.Content = c.Content
 	return pc
@@ -34,6 +36,7 @@ func (c *Config) ToProto() *proto.Config {
 
 func (c *Config) ParseProto(pc *proto.Config) {
 	c.Name = pc.ConfigName
+	c.AgentType = pc.AgentType
 	c.Description = pc.Description
 	c.Content = pc.Content
 }

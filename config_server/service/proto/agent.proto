@@ -7,11 +7,12 @@ option go_package = ".;configserver_proto";
 message HeartBeatRequest {
     string request_id = 1;
     string agent_id = 2;
-    string agent_version = 3;
-    string ip = 4;
-    map<string, string> tags = 5;
-    string running_status = 6;
-    int64 startup_time = 7;
+    string agent_type = 3;
+    string agent_version = 4;
+    string ip = 5;
+    map<string, string> tags = 6;
+    string running_status = 7;
+    int64 startup_time = 8;
 }
 
 message HeartBeatResponse {

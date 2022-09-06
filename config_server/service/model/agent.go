@@ -23,6 +23,7 @@ import (
 
 type Agent struct {
 	AgentId             string            `json:"AgentId"`
+	AgentType           string            `json:"AgentType"`
 	Ip                  string            `json:"Ip"`
 	Version             string            `json:"Version"`
 	RunningStatus       string            `json:"RunningStatus"`
@@ -35,6 +36,7 @@ type Agent struct {
 func (a *Agent) ToProto() *proto.Agent {
 	pa := new(proto.Agent)
 	pa.AgentId = a.AgentId
+	pa.AgentType = a.AgentType
 	pa.Ip = a.Ip
 	pa.Version = a.Version
 	pa.RunningStatus = a.RunningStatus
@@ -47,6 +49,7 @@ func (a *Agent) ToProto() *proto.Agent {
 
 func (a *Agent) ParseProto(pa *proto.Agent) {
 	a.AgentId = pa.AgentId
+	a.AgentType = pa.AgentType
 	a.Ip = pa.Ip
 	a.Version = pa.Version
 	a.RunningStatus = pa.RunningStatus

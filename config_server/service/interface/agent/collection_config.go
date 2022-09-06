@@ -58,7 +58,7 @@ func GetConfigList(c *gin.Context) {
 		c.ProtoBuf(common.AgentNotExist.Status, res)
 	} else if !configExist {
 		res.Code = common.ConfigNotExist.Code
-		res.Message = fmt.Sprintf("Find config failed.")
+		res.Message = "Find config failed."
 		c.ProtoBuf(common.ConfigNotExist.Status, res)
 	} else {
 		res.Code = common.Accept.Code

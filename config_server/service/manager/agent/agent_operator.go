@@ -26,10 +26,11 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func (a *AgentManager) HeartBeat(id string, version string, ip string, tags map[string]string, runningStatus string, startupTime int64) error {
+func (a *AgentManager) HeartBeat(id string, agentType string, version string, ip string, tags map[string]string, runningStatus string, startupTime int64) error {
 	queryTime := time.Now().Unix()
 	agent := new(model.Agent)
 	agent.AgentId = id
+	agent.AgentType = agentType
 	agent.Version = version
 	agent.Ip = ip
 	agent.Tags = tags
