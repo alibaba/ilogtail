@@ -92,43 +92,6 @@ func BenchmarkGrokTest(b *testing.B) {
 	}
 }
 
-// goos: linux
-// goarch: amd64
-// pkg: github.com/alibaba/ilogtail/plugins/processor/regex
-// cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-// BenchmarkRegexpTest
-// BenchmarkRegexpTest/original10
-// BenchmarkRegexpTest/original10-6         	  110100	     11092 ns/op	     253 B/op	       2 allocs/op
-// BenchmarkRegexpTest/new10-6              	  106592	     10424 ns/op	     253 B/op	       2 allocs/op
-// BenchmarkRegexpTest/original100-6        	      37	  28913435 ns/op	   12500 B/op	      13 allocs/op
-// BenchmarkRegexpTest/new100-6             	      40	  27906572 ns/op	   11699 B/op	      12 allocs/op
-// BenchmarkRegexpTest/original1000-6       	       1	56747915620 ns/op	33597184 B/op	    4031 allocs/op
-// BenchmarkRegexpTest/new1000-6					   1	61395055880 ns/op	33597088 B/op	    4030 allocs/op
-/*
-// same test on processor_regex
-func BenchmarkRegexpTest(b *testing.B) {
-	for _, param := range params {
-		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
-			pattern, log := param.mockFunc(param.num, param.separator, param.separatorReg)
-			processor := ilogtail.Processors["processor_regex"]().(*ProcessorRegex)
-			processor.Keys = []string{"test"}
-			processor.Regex = pattern
-			processor.Init(mock.NewEmptyContext("p", "l", "c"))
-
-			var Logs protocol.Log
-			Logs.Contents = make([]*protocol.Log_Content, 0)
-
-			b.ReportAllocs()
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				processor.processRegex(&Logs, &log)
-			}
-			b.StopTimer()
-		})
-	}
-}
-*/
-
 func mockData(num int, separator, separatorReg string) (string, string) {
 	line := "dfasdfjlksdfhjaklsdfjhsdf4861238423904ljfaslkdfasjkdfhlasdjfkl3"
 	reg := "(\\w+)"
