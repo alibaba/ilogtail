@@ -20,14 +20,16 @@ import (
 	"github.com/dlclark/regexp2"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
-	"github.com/pingcap/check"
-	"github.com/stretchr/testify/require"
 )
+
+/*
+PASS
+coverage: 92.8% of statements
+ok      github.com/alibaba/ilogtail/plugins/processor/grok      0.221s
+*/
 
 func newProcessor() (*ProcessorGrok, error) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
@@ -39,9 +41,9 @@ func newProcessor() (*ProcessorGrok, error) {
 		TimeoutMilliSeconds: 0,
 		IgnoreParseFailure:  true,
 		KeepSource:          true,
-		NoKeyError:          false,
-		NoMatchError:        false,
-		TimeoutError:        false,
+		NoKeyError:          true,
+		NoMatchError:        true,
+		TimeoutError:        true,
 	}
 	err := processor.Init(ctx)
 	return processor, err
@@ -109,146 +111,260 @@ func TestProcessorGrokParse(t *testing.T) {
 	Convey("Test parse logs whith one Grok Pattern in Match", t, func() {
 		processor, err := newProcessor()
 		So(err, ShouldBeNil)
+		processor.Match = []string{
+			"%{WORD:word1} %{NUMBER:request_time} %{WORD:word2}",
+		}
+		err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
+		So(err, ShouldBeNil)
 
-		Convey("A single log in english.", func() {
-			processor.Match = []string{
-				"%{WORD:word1} %{NUMBER:request_time} %{WORD:word2}",
-			}
-			err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
-			So(err, ShouldBeNil)
+		Convey("A single log which is in english.", func() {
+			record := "begin 123.456 end"
+			log := &protocol.Log{Time: 0}
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
+			res := processor.processGrok(log, &record)
 
+			So(res, ShouldEqual, parseSuccess)
+			So(len(log.Contents), ShouldEqual, 4)
+			So(log.Contents[1].Value, ShouldEqual, "begin")
+			So(log.Contents[2].Value, ShouldEqual, "123.456")
+			So(log.Contents[3].Value, ShouldEqual, "end")
 		})
 
+		Convey("A single log which is empty.", func() {
+			record := ""
+			log := &protocol.Log{Time: 0}
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
+			res := processor.processGrok(log, &record)
+
+			So(res, ShouldEqual, matchFail)
+			So(len(log.Contents), ShouldEqual, 1)
+		})
+
+		Convey("A single log which has escape character.", func() {
+			record := "begin 123.456 end\n"
+			log := &protocol.Log{Time: 0}
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
+			res := processor.processGrok(log, &record)
+
+			So(res, ShouldEqual, parseSuccess)
+			So(len(log.Contents), ShouldEqual, 4)
+			So(log.Contents[1].Value, ShouldEqual, "begin")
+			So(log.Contents[2].Value, ShouldEqual, "123.456")
+			So(log.Contents[3].Value, ShouldEqual, "end")
+		})
+
+		processor.Match = []string{
+			"%{WORD:english-word} %{GREEDYDATA:message}",
+		}
+		err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
+		So(err, ShouldBeNil)
+		Convey("A single log which has special character.", func() {
+			record := "hello こんにちは"
+			log := &protocol.Log{Time: 0}
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
+			res := processor.processGrok(log, &record)
+
+			So(res, ShouldEqual, parseSuccess)
+			So(len(log.Contents), ShouldEqual, 3)
+			So(log.Contents[1].Value, ShouldEqual, "hello")
+			So(log.Contents[2].Value, ShouldEqual, "こんにちは")
+		})
+
+		processor.Match = []string{
+			"%{WORD:english-word} %{GREEDYDATA:message} (?P<message2>.*)",
+		}
+		err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
+		So(err, ShouldBeNil)
+		Convey("Grok Pattern with grok expression and regex expression.", func() {
+			record := "hello こんにちは 你好"
+			log := &protocol.Log{Time: 0}
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
+			res := processor.processGrok(log, &record)
+
+			So(res, ShouldEqual, parseSuccess)
+			So(len(log.Contents), ShouldEqual, 4)
+			So(log.Contents[1].Value, ShouldEqual, "hello")
+			So(log.Contents[2].Value, ShouldEqual, "こんにちは")
+			So(log.Contents[3].Value, ShouldEqual, "你好")
+		})
 	})
 
-	Convey("Test parse logs whith multiple Grok Patterns in Match", t, func() {
+	Convey("Test parse logs whith multiple Grok Patterns in Match and test some settings", t, func() {
+		processor, err := newProcessor()
+		So(err, ShouldBeNil)
+		processor.CustomPatterns = map[string]string{
+			"HTTP": "%{IP:client} %{WORD:method} %{URIPATHPARAM:request} %{NUMBER:bytes} %{NUMBER:duration}",
+		}
+		processor.Match = []string{
+			"%{HTTP}",
+			"%{WORD:word1} %{NUMBER:request_time} %{WORD:word2}",
+			"%{YEAR:year} %{MONTH:month} %{MONTHDAY:day} %{QUOTEDSTRING:motto}",
+		}
+		err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
+		So(err, ShouldBeNil)
 
+		Convey("Parse logs whith multiple Grok Patterns.", func() {
+			log1 := `begin 123.456 end`
+			logPb1 := test.CreateLogs("content", log1)
+			log2 := `2019 June 24 "I am iron man"`
+			logPb2 := test.CreateLogs("content", log2)
+			log3 := `WRONG LOG`
+			logPb3 := test.CreateLogs("content", log3)
+			log4 := `10.0.0.0 GET /index.html 15824 0.043`
+			logPb4 := test.CreateLogs("content", log4)
+			logArray := make([]*protocol.Log, 4)
+			logArray[0] = logPb1
+			logArray[1] = logPb2
+			logArray[2] = logPb3
+			logArray[3] = logPb4
+
+			outLogs := processor.ProcessLogs(logArray)
+
+			So(len(outLogs), ShouldEqual, 4)
+
+			So(len(outLogs[0].Contents), ShouldEqual, 4)
+			So(outLogs[0].Contents[1].GetKey(), ShouldEqual, "word1")
+			So(outLogs[0].Contents[1].GetValue(), ShouldEqual, "begin")
+			So(outLogs[0].Contents[2].GetKey(), ShouldEqual, "request_time")
+			So(outLogs[0].Contents[2].GetValue(), ShouldEqual, "123.456")
+			So(outLogs[0].Contents[3].GetKey(), ShouldEqual, "word2")
+			So(outLogs[0].Contents[3].GetValue(), ShouldEqual, "end")
+
+			So(len(outLogs[1].Contents), ShouldEqual, 5)
+			So(outLogs[1].Contents[1].GetKey(), ShouldEqual, "year")
+			So(outLogs[1].Contents[1].GetValue(), ShouldEqual, "2019")
+			So(outLogs[1].Contents[2].GetKey(), ShouldEqual, "month")
+			So(outLogs[1].Contents[2].GetValue(), ShouldEqual, "June")
+			So(outLogs[1].Contents[3].GetKey(), ShouldEqual, "day")
+			So(outLogs[1].Contents[3].GetValue(), ShouldEqual, "24")
+			So(outLogs[1].Contents[4].GetKey(), ShouldEqual, "motto")
+			So(outLogs[1].Contents[4].GetValue(), ShouldEqual, "\"I am iron man\"")
+
+			So(len(outLogs[2].Contents), ShouldEqual, 1)
+
+			So(len(outLogs[3].Contents), ShouldEqual, 6)
+			So(outLogs[3].Contents[1].GetKey(), ShouldEqual, "client")
+			So(outLogs[3].Contents[1].GetValue(), ShouldEqual, "10.0.0.0")
+			So(outLogs[3].Contents[2].GetKey(), ShouldEqual, "method")
+			So(outLogs[3].Contents[2].GetValue(), ShouldEqual, "GET")
+			So(outLogs[3].Contents[3].GetKey(), ShouldEqual, "request")
+			So(outLogs[3].Contents[3].GetValue(), ShouldEqual, "/index.html")
+			So(outLogs[3].Contents[4].GetKey(), ShouldEqual, "bytes")
+			So(outLogs[3].Contents[4].GetValue(), ShouldEqual, "15824")
+			So(outLogs[3].Contents[5].GetKey(), ShouldEqual, "duration")
+			So(outLogs[3].Contents[5].GetValue(), ShouldEqual, "0.043")
+		})
+
+		Convey("Test IgnoreParseFailure.", func() {
+			processor.IgnoreParseFailure = false
+			log1 := `begin 123.456 end`
+			logPb1 := test.CreateLogs("content", log1)
+			log2 := `2019 June 24 "I am iron man"`
+			logPb2 := test.CreateLogs("content", log2)
+			log3 := `WRONG LOG`
+			logPb3 := test.CreateLogs("content", log3)
+			log4 := `10.0.0.0 GET /index.html 15824 0.043`
+			logPb4 := test.CreateLogs("content", log4)
+			logArray := make([]*protocol.Log, 4)
+			logArray[0] = logPb1
+			logArray[1] = logPb2
+			logArray[2] = logPb3
+			logArray[3] = logPb4
+
+			outLogs := processor.ProcessLogs(logArray)
+
+			So(len(outLogs), ShouldEqual, 4)
+
+			So(len(outLogs[2].Contents), ShouldEqual, 0)
+		})
+
+		Convey("Test KeepSource.", func() {
+			processor.IgnoreParseFailure = true
+			processor.KeepSource = false
+
+			log1 := `begin 123.456 end`
+			logPb1 := test.CreateLogs("content", log1)
+			log2 := `2019 June 24 "I am iron man"`
+			logPb2 := test.CreateLogs("content", log2)
+			log3 := `WRONG LOG`
+			logPb3 := test.CreateLogs("content", log3)
+			log4 := `10.0.0.0 GET /index.html 15824 0.043`
+			logPb4 := test.CreateLogs("content", log4)
+			logArray := make([]*protocol.Log, 4)
+			logArray[0] = logPb1
+			logArray[1] = logPb2
+			logArray[2] = logPb3
+			logArray[3] = logPb4
+
+			outLogs := processor.ProcessLogs(logArray)
+
+			So(len(outLogs), ShouldEqual, 4)
+
+			So(len(outLogs[0].Contents), ShouldEqual, 3)
+			So(outLogs[0].Contents[0].GetKey(), ShouldEqual, "word1")
+			So(outLogs[0].Contents[0].GetValue(), ShouldEqual, "begin")
+			So(outLogs[0].Contents[1].GetKey(), ShouldEqual, "request_time")
+			So(outLogs[0].Contents[1].GetValue(), ShouldEqual, "123.456")
+			So(outLogs[0].Contents[2].GetKey(), ShouldEqual, "word2")
+			So(outLogs[0].Contents[2].GetValue(), ShouldEqual, "end")
+
+			So(len(outLogs[1].Contents), ShouldEqual, 4)
+			So(outLogs[1].Contents[0].GetKey(), ShouldEqual, "year")
+			So(outLogs[1].Contents[0].GetValue(), ShouldEqual, "2019")
+			So(outLogs[1].Contents[1].GetKey(), ShouldEqual, "month")
+			So(outLogs[1].Contents[1].GetValue(), ShouldEqual, "June")
+			So(outLogs[1].Contents[2].GetKey(), ShouldEqual, "day")
+			So(outLogs[1].Contents[2].GetValue(), ShouldEqual, "24")
+			So(outLogs[1].Contents[3].GetKey(), ShouldEqual, "motto")
+			So(outLogs[1].Contents[3].GetValue(), ShouldEqual, "\"I am iron man\"")
+
+			So(len(outLogs[2].Contents), ShouldEqual, 1)
+
+			So(len(outLogs[3].Contents), ShouldEqual, 5)
+			So(outLogs[3].Contents[0].GetKey(), ShouldEqual, "client")
+			So(outLogs[3].Contents[0].GetValue(), ShouldEqual, "10.0.0.0")
+			So(outLogs[3].Contents[1].GetKey(), ShouldEqual, "method")
+			So(outLogs[3].Contents[1].GetValue(), ShouldEqual, "GET")
+			So(outLogs[3].Contents[2].GetKey(), ShouldEqual, "request")
+			So(outLogs[3].Contents[2].GetValue(), ShouldEqual, "/index.html")
+			So(outLogs[3].Contents[3].GetKey(), ShouldEqual, "bytes")
+			So(outLogs[3].Contents[3].GetValue(), ShouldEqual, "15824")
+			So(outLogs[3].Contents[4].GetKey(), ShouldEqual, "duration")
+			So(outLogs[3].Contents[4].GetValue(), ShouldEqual, "0.043")
+		})
 	})
 }
 
 func TestProcessorGrokError(t *testing.T) {
-	Convey("", t, func() {
+	Convey("Test init error", t, func() {
+		processor, err := newProcessor()
+		So(err, ShouldBeNil)
+
+		Convey("Load Grok Patterns from path error.", func() {
+			processor.CustomPatternDir = []string{"./no_exist_path"}
+			err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Load Grok Pattern from CustomPatterns which has grammar error.", func() {
+			processor.CustomPatternDir = []string{}
+			processor.CustomPatterns = map[string]string{"TEST": "%{IP:client} ("}
+			processor.Match = []string{"%{TEST}"}
+			err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Load Grok Patterns from CustomPatterns which have circular references error.", func() {
+			processor.CustomPatternDir = []string{}
+			processor.CustomPatterns = map[string]string{
+				"A": "%{B:b}",
+				"B": "%{A:a}",
+			}
+			err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldNotBeNil)
+		})
+
 	})
-}
-
-var _ = check.Suite(&processorTestSuite{})
-
-func Test(t *testing.T) {
-	logger.InitTestLogger()
-	check.TestingT(t)
-}
-
-type processorTestSuite struct {
-	processor ilogtail.Processor
-}
-
-func (s *processorTestSuite) SetUpTest(c *check.C) {
-	s.processor = ilogtail.Processors["processor_grok"]()
-}
-
-func (s *processorTestSuite) TestCustomPatterns(c *check.C) {
-	processor, _ := s.processor.(*ProcessorGrok)
-	c.Assert(processor.Init(mock.NewEmptyContext("p", "l", "c")), check.IsNil)
-	processor.CustomPatterns = map[string]string{"HTTP": "%{IP:client} %{WORD:method} %{URIPATHPARAM:request} %{NUMBER:bytes} %{NUMBER:duration}"}
-	processor.Match = []string{"%{HTTP}"}
-	processor.CustomPatternDir = []string{"./patterns"}
-	c.Assert(processor.Init(mock.NewEmptyContext("p", "l", "c")), check.IsNil)
-	//	c.Assert(ans["%{HTTP}"], check.Equals, processor.compiledPatterns[0].String())
-}
-
-func (s *processorTestSuite) TestCustomPatternDirs(c *check.C) {
-	processor, _ := s.processor.(*ProcessorGrok)
-	processor.CustomPatternDir = []string{"./patterns"}
-	require.NoError(c, s.processor.Init(mock.NewEmptyContext("p", "l", "c")))
-	c.Assert(ans["SLB_URI"], check.Equals, processor.processedPatterns["ELB_URI"])
-}
-
-func (s *processorTestSuite) TestMatch(c *check.C) {
-	processor, _ := s.processor.(*ProcessorGrok)
-	processor.Match = []string{"%{WORD:word1} %{NUMBER:request_time} %{WORD:word2}"}
-	processor.KeepSource = true
-	require.NoError(c, s.processor.Init(mock.NewEmptyContext("p", "l", "c")))
-
-	log := `begin 123.456 end`
-	logPb := test.CreateLogs("content", log)
-	logArray := make([]*protocol.Log, 1)
-	logArray[0] = logPb
-
-	outLogs := s.processor.ProcessLogs(logArray)
-	c.Assert(len(outLogs), check.Equals, 1)
-	c.Assert(len(outLogs[0].Contents), check.Equals, 4)
-	c.Assert(outLogs[0].Contents[0].GetValue(), check.Equals, log)
-	c.Assert(outLogs[0].Contents[1].GetValue(), check.Equals, "begin")
-	c.Assert(outLogs[0].Contents[2].GetValue(), check.Equals, "123.456")
-	c.Assert(outLogs[0].Contents[3].GetValue(), check.Equals, "end")
-	c.Assert(outLogs[0].Contents[0].GetKey(), check.Equals, "content")
-	c.Assert(outLogs[0].Contents[1].GetKey(), check.Equals, "word1")
-	c.Assert(outLogs[0].Contents[2].GetKey(), check.Equals, "request_time")
-	c.Assert(outLogs[0].Contents[3].GetKey(), check.Equals, "word2")
-}
-
-func (s *processorTestSuite) TestMultMatch(c *check.C) {
-	processor, _ := s.processor.(*ProcessorGrok)
-	processor.CustomPatterns = map[string]string{
-		"HTTP": "%{IP:client} %{WORD:method} %{URIPATHPARAM:request} %{NUMBER:bytes} %{NUMBER:duration}",
-	}
-	processor.Match = []string{
-		"%{HTTP}",
-		"%{WORD:word1} %{NUMBER:request_time} %{WORD:word2}",
-		"%{YEAR:year} %{MONTH:month} %{MONTHDAY:day} %{QUOTEDSTRING:motto}",
-	}
-	processor.KeepSource = false
-	processor.IgnoreParseFailure = false
-	require.NoError(c, s.processor.Init(mock.NewEmptyContext("p", "l", "c")))
-
-	log1 := `begin 123.456 end`
-	logPb1 := test.CreateLogs("content", log1)
-	log2 := `2019 June 24 "I am iron man"`
-	logPb2 := test.CreateLogs("content", log2)
-	log3 := `WRONG LOG`
-	logPb3 := test.CreateLogs("content", log3)
-	log4 := `10.0.0.0 GET /index.html 15824 0.043`
-	logPb4 := test.CreateLogs("content", log4)
-	logArray := make([]*protocol.Log, 4)
-	logArray[0] = logPb1
-	logArray[1] = logPb2
-	logArray[2] = logPb3
-	logArray[3] = logPb4
-
-	outLogs := s.processor.ProcessLogs(logArray)
-	c.Assert(len(outLogs), check.Equals, 4)
-
-	c.Assert(len(outLogs[0].Contents), check.Equals, 3)
-	c.Assert(outLogs[0].Contents[0].GetKey(), check.Equals, "word1")
-	c.Assert(outLogs[0].Contents[0].GetValue(), check.Equals, "begin")
-	c.Assert(outLogs[0].Contents[1].GetKey(), check.Equals, "request_time")
-	c.Assert(outLogs[0].Contents[1].GetValue(), check.Equals, "123.456")
-	c.Assert(outLogs[0].Contents[2].GetKey(), check.Equals, "word2")
-	c.Assert(outLogs[0].Contents[2].GetValue(), check.Equals, "end")
-
-	c.Assert(len(outLogs[1].Contents), check.Equals, 4)
-	c.Assert(outLogs[1].Contents[0].GetKey(), check.Equals, "year")
-	c.Assert(outLogs[1].Contents[0].GetValue(), check.Equals, "2019")
-	c.Assert(outLogs[1].Contents[1].GetKey(), check.Equals, "month")
-	c.Assert(outLogs[1].Contents[1].GetValue(), check.Equals, "June")
-	c.Assert(outLogs[1].Contents[2].GetKey(), check.Equals, "day")
-	c.Assert(outLogs[1].Contents[2].GetValue(), check.Equals, "24")
-	c.Assert(outLogs[1].Contents[3].GetKey(), check.Equals, "motto")
-	c.Assert(outLogs[1].Contents[3].GetValue(), check.Equals, "\"I am iron man\"")
-
-	c.Assert(len(outLogs[2].Contents), check.Equals, 0)
-
-	c.Assert(len(outLogs[3].Contents), check.Equals, 5)
-	c.Assert(outLogs[3].Contents[0].GetKey(), check.Equals, "client")
-	c.Assert(outLogs[3].Contents[0].GetValue(), check.Equals, "10.0.0.0")
-	c.Assert(outLogs[3].Contents[1].GetKey(), check.Equals, "method")
-	c.Assert(outLogs[3].Contents[1].GetValue(), check.Equals, "GET")
-	c.Assert(outLogs[3].Contents[2].GetKey(), check.Equals, "request")
-	c.Assert(outLogs[3].Contents[2].GetValue(), check.Equals, "/index.html")
-	c.Assert(outLogs[3].Contents[3].GetKey(), check.Equals, "bytes")
-	c.Assert(outLogs[3].Contents[3].GetValue(), check.Equals, "15824")
-	c.Assert(outLogs[3].Contents[4].GetKey(), check.Equals, "duration")
-	c.Assert(outLogs[3].Contents[4].GetValue(), check.Equals, "0.043")
 }
 
 var ans = map[string]string{
