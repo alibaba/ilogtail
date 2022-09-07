@@ -81,7 +81,7 @@ void LogtailPlugin::LoadConfig() {
                     LOG_WARNING(
                         sLogger,
                         ("msg", "load plugin error")("project", pConfig->mProjectName)("logstore", pConfig->mCategory)(
-                            "config", pConfig->mConfigName)("config", pConfig->mPluginConfig)("result", loadRst));
+                            "config", pConfig->mConfigName)("content", pConfig->mPluginConfig)("result", loadRst));
                     LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                            "load plugin config error, invalid config: "
                                                                + pConfig->mConfigName
