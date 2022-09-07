@@ -28,19 +28,42 @@ VERSION=${3:-1.1.1}
 REPOSITORY=${4:-aliyun/ilogtail}
 OUT_DIR=${5:-output}
 
+BUILD_LOGTAIL_UT=${BUILD_LOGTAIL_UT:-OFF}
+ENABLE_COMPATIBLE_MODE=${ENABLE_COMPATIBLE_MODE:-OFF}
+ENABLE_STATIC_LINK_CRT=${ENABLE_STATIC_LINK_CRT:-OFF}
+
 BUILD_SCRIPT_FILE=$GENERATED_HOME/gen_build.sh
 COPY_SCRIPT_FILE=$GENERATED_HOME/gen_copy_docker.sh
 
+
 function generateBuildScript() {
-  rm -rf $BUILD_SCRIPT_FILE && echo -e "#!/bin/bash\nset -ue\nset -o pipefail\n" > $BUILD_SCRIPT_FILE && chmod 755 $BUILD_SCRIPT_FILE
+  rm -rf $BUILD_SCRIPT_FILE
+  cat > $BUILD_SCRIPT_FILE <<- EOF
+#!/bin/bash
+set -xue
+set -o pipefail
+
+function ramAvail () {
+  local ramavail=\$(cat /proc/meminfo | grep -i 'MemAvailable' | grep -o '[[:digit:]]*')
+  echo \$ramavail
+}
+
+nproc=\$(nproc)
+ram_size=\$(ramAvail)
+ram_limit_nproc=\$((ram_size / 1024 / 768))
+[[ \$ram_limit_nproc -ge \$nproc ]] || nproc=\$ram_limit_nproc
+[[ \$nproc -gt 0 ]] || nproc=1
+
+EOF
+  chmod 755 $BUILD_SCRIPT_FILE
   if [ $CATEGORY = "plugin" ]; then
-    echo './scripts/plugin_build.sh vendor c-shared '${OUT_DIR} >> $BUILD_SCRIPT_FILE;
+    echo "mkdir -p core/build && cd core/build && cmake -D CMAKE_BUILD_TYPE=Release -D LOGTAIL_VERSION=${VERSION} .. && cd plugin && make -s PluginAdapter && cd ../../.. && ./scripts/plugin_build.sh vendor c-shared ${OUT_DIR}" >> $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "core" ]; then
-    echo "mkdir -p core/build && cd core/build && cmake -D CMAKE_BUILD_TYPE=Release -D LOGTAIL_VERSION=${VERSION} .. && make -sj\$(nproc)" >>  $BUILD_SCRIPT_FILE;
+    echo "mkdir -p core/build && cd core/build && cmake -DCMAKE_BUILD_TYPE=Release -DLOGTAIL_VERSION=${VERSION} -DBUILD_LOGTAIL_UT=${BUILD_LOGTAIL_UT} -DENABLE_COMPATIBLE_MODE=${ENABLE_COMPATIBLE_MODE} -DENABLE_STATIC_LINK_CRT=${ENABLE_STATIC_LINK_CRT} .. && make -sj\$nproc" >>  $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "all" ]; then
-    echo "./scripts/plugin_build.sh vendor c-shared ${OUT_DIR} && mkdir -p core/build && cd core/build && cmake -D CMAKE_BUILD_TYPE=Release -D LOGTAIL_VERSION=${VERSION} .. && make -sj\$(nproc)" >> $BUILD_SCRIPT_FILE;
+    echo "mkdir -p core/build && cd core/build && cmake -DCMAKE_BUILD_TYPE=Release -DLOGTAIL_VERSION=${VERSION} -DBUILD_LOGTAIL_UT=${BUILD_LOGTAIL_UT} -DENABLE_COMPATIBLE_MODE=${ENABLE_COMPATIBLE_MODE} -DENABLE_STATIC_LINK_CRT=${ENABLE_STATIC_LINK_CRT} .. && make -sj\$nproc && cd - && ./scripts/plugin_build.sh vendor c-shared ${OUT_DIR}" >> $BUILD_SCRIPT_FILE;
   elif [ $CATEGORY = "e2e" ]; then
-    echo "./scripts/plugin_gocbuild.sh ${OUT_DIR} && mkdir -p core/build && cd core/build && cmake -D LOGTAIL_VERSION=${VERSION} .. && make -sj\$(nproc)" >> $BUILD_SCRIPT_FILE;
+    echo "mkdir -p core/build && cd core/build && cmake -DLOGTAIL_VERSION=${VERSION} -DBUILD_LOGTAIL_UT=${BUILD_LOGTAIL_UT} -DENABLE_COMPATIBLE_MODE=${ENABLE_COMPATIBLE_MODE} -DENABLE_STATIC_LINK_CRT=${ENABLE_STATIC_LINK_CRT} .. && make -sj\$nproc && cd - && ./scripts/plugin_gocbuild.sh ${OUT_DIR}" >> $BUILD_SCRIPT_FILE;
   fi
 }
 
