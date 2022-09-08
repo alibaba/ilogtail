@@ -69,7 +69,7 @@ func TestProcessorGrokInit(t *testing.T) {
 		})
 
 		Convey("Load Grok Patterns from CustomPatternDir, then compile all of them.", func() {
-			processor.CustomPatternDir = []string{"./patterns"}
+			processor.CustomPatternDir = []string{"./test_patterns"}
 			err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
 			So(err, ShouldBeNil)
 
@@ -95,7 +95,7 @@ func TestProcessorGrokInit(t *testing.T) {
 		})
 
 		Convey("Load Grok Patterns from multiple sources and let some patterns conflict with others, test coverage loading.", func() {
-			processor.CustomPatternDir = []string{"./patterns"}
+			processor.CustomPatternDir = []string{"./test_patterns"}
 			processor.CustomPatterns = map[string]string{"DATA": "%{IP:client} %{WORD:method} %{URIPATHPARAM:request} %{NUMBER:bytes} %{NUMBER:duration}"} // DATA was difined in processor_grok_default_patterns.go and ./patterns/grok-pattern
 			err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
 			So(err, ShouldBeNil)
