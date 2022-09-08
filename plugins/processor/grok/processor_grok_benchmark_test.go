@@ -1,8 +1,14 @@
 package grok
 
 import (
+	"encoding/binary"
+	"math/rand"
+	"net"
+	"regexp"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -15,86 +21,73 @@ type MockParam struct {
 	num          int
 	separator    string
 	separatorReg string
-	mockFunc     func(int, string, string) (string, string)
+	mockFunc1    func(int, string, string) (string, string)
+	mockFunc2    func(int, string, string) []*protocol.Log
 }
 
-var params = []MockParam{
-	{"original", 10, " ", "\\s", mockData},
-	{"new", 10, "\n", "\n", mockDataSingleLine},
-	{"original", 100, " ", "\\s", mockData},
-	{"new", 100, "\n", "\n", mockDataSingleLine},
-	{"original", 1000, " ", "\\s", mockData},
-	{"new", 1000, "\n", "\n", mockDataSingleLine},
-}
+// Compare regexp2 with regexp
 
-// goos: linux
-// goarch: amd64
-// pkg: github.com/alibaba/ilogtail/plugins/processor/grok
-// cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-// BenchmarkTest/original10-6         	  102200	     11067 ns/op	    5792 B/op	      28 allocs/op
-// BenchmarkTest/new10-6				  109221	     10764 ns/op	    5792 B/op	      28 allocs/op
-// BenchmarkTest/original100-6			    9826	    101980 ns/op	   53928 B/op	     209 allocs/op
-// BenchmarkTest/new100-6             	   10000	    103381 ns/op	   53928 B/op	     209 allocs/op
-// BenchmarkTest/original1000-6       	    1032	   1050481 ns/op	  526327 B/op	    2909 allocs/op
-// BenchmarkTest/new1000-6            	    1184	   1026559 ns/op	  526275 B/op	    2909 allocs/op
-func BenchmarkTest(b *testing.B) {
-	for _, param := range params {
-		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
-			pattern, log := param.mockFunc(param.num, param.separator, param.separatorReg)
-			reg := regexp2.MustCompile(pattern, regexp2.RE2)
-			b.ReportAllocs()
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				m, _ := reg.FindStringMatch(log)
-				for m != nil {
-					gps := m.Groups()
-					for i := range gps {
-						if _, err := strconv.ParseInt(gps[i].Name, 10, 32); err != nil && gps[i].Capture.String() != "" {
-						}
-					}
-					m, _ = reg.FindNextMatch(m)
-				}
-			}
-			b.StopTimer()
-		})
+var (
+	expression  string = "((\\{.*?\\})?((cpu_load.*\\.avg\\.60)|(cpu_util.*\\.avg\\.60)|(memory_free.*\\.avg\\.60)|(memory_usage.*\\.avg\\.60)|(periodictask:.+)|(thrift\\..*dropped_conns\\.count\\.60)|(thrift\\..*killed_tasks\\.count\\.60)|(thrift\\..*num_calls\\.sum\\.60)|(thrift\\..*num_exceptions\\.sum\\.60)|(thrift\\..*num_processed\\.sum\\.60)|(thrift\\..*process_delay\\.p99\\.60)|(thrift\\..*process_time\\.p99\\.60)|(thrift\\..*queue_timeouts\\.count\\.60)|(thrift\\..*rejected_conns\\.count\\.60)|(thrift\\..*server_overloaded\\.count\\.60)|(thrift\\..*time_process_us\\.avg\\.60)|(thrift\\..*timeout_tasks\\.count\\.60)|(thrift\\.accepted_connections\\.count\\.60)|(thrift\\.active_requests\\.avg\\.60)|(thrift\\.adaptive_ideal_rtt_us)|(thrift\\.adaptive_min_concurrency)|(thrift\\.adaptive_sampled_rtt_us)|(thrift\\.admission_control\\..*)|(thrift\\.eventbase_busy_time\\.p99.60)|(thrift\\.eventbase_idle_time\\.p99.60)|(thrift\\.max_requests)|(thrift\\.num_active_requests)|(thrift\\.num_busy_pool_workers)|(thrift\\.num_idle_pool_workers)|(thrift\\.queued_requests)|(thrift\\.queued_requests\\.avg\\.60)|(thrift\\.queuelag.*\\.sum\\.60)|(thrift\\.queues\\..*\\.60)|(thrift\\.received_requests\\.count\\.60)|(thrift\\.server_load)))"
+	testStrings        = []string{
+		"system.cpu-idle",
+		"system.cpu-iowait",
+		"system.cpu-nice",
+		"system.cpu-sys",
+		"system.cpu-softirq",
+		"system.cpu-hardirq",
+		"system.cpu-user",
+		"system.cpu-busy-pct",
+		"system.cpu-util-pct",
+		"system.load-1",
+		"system.load-5",
+		"system.uptime",
+		"system.mem_free",
+		"system.mem_free_nobuffer_nocache",
+		"system.mem_used",
+		"system.mem-util-pct",
+		"system.mem_slab",
+		"system.mem_anon",
+		"system.mem_kernel",
+		"system.mem_total",
+		"system.n_eth-rxbyt_s",
+		"system.n_eth-txbyt_s",
+		"system.n_eth-util-pct",
+		"system.n_eth-rxpck_s",
+		"system.n_eth-txpck_s",
+		"system.n_eth-rxerr_s",
+		"system.n_eth-txerr_s",
+		"system.rx_errors",
+		"system.tx_errors",
+		"system.net.tcp.attempt_fails_per_s",
+		"system.net.tcp.estab_rsts_per_s",
+		"system.net.tcp.rsts_per_s",
+		"system.net.tcp.rxmits_per_s",
+		"system.net.tcp.socket_count",
+		"system.net.tcp.socket_time_wait_count",
+		"system.net.tcp6.socket_count",
+		"system.net.udp.error_drop_per_s",
+		"system.connection_count_estab",
+		"system.connection_count_total",
+		"system.swap_free",
+		"system.swap_used",
+		"system.swap_pagein_per_s",
+		"system.swap_pageout_per_s",
 	}
+)
+
+var params1 = []MockParam{
+	{"original", 10, " ", "\\s", mockData1, nil},
+	{"new", 10, "\n", "\n", mockDataSingleLine1, nil},
+	{"original", 100, " ", "\\s", mockData1, nil},
+	{"new", 100, "\n", "\n", mockDataSingleLine1, nil},
+	{"original", 1000, " ", "\\s", mockData1, nil},
+	{"new", 1000, "\n", "\n", mockDataSingleLine1, nil},
 }
 
-// goos: linux
-// goarch: amd64
-// pkg: github.com/alibaba/ilogtail/plugins/processor/grok
-// cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-// BenchmarkGrokTest/original10-6         	   57016	     19545 ns/op	    7544 B/op	      36 allocs/op
-// BenchmarkGrokTest/new10-6              	   53883	     20073 ns/op	    7546 B/op	      36 allocs/op
-// BenchmarkGrokTest/original100-6        	    6636	    188088 ns/op	   67190 B/op	     216 allocs/op
-// BenchmarkGrokTest/new100-6             	    6690	    175370 ns/op	   67190 B/op	     216 allocs/op
-// BenchmarkGrokTest/original1000-6       	     684	   1763691 ns/op	  654911 B/op	    2016 allocs/op
-// BenchmarkGrokTest/new1000-6            	     631	   1758877 ns/op	  654963 B/op	    2016 allocs/op
-func BenchmarkGrokTest(b *testing.B) {
-	for _, param := range params {
-		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
-			pattern, log := param.mockFunc(param.num, param.separator, param.separatorReg)
-			processor := ilogtail.Processors["processor_grok"]().(*ProcessorGrok)
-			processor.CustomPatterns = map[string]string{"MYDATA": pattern}
-			processor.Match = []string{"%{MYDATA:data}"}
-			processor.Init(mock.NewEmptyContext("p", "l", "c"))
-
-			var Logs protocol.Log
-			Logs.Contents = make([]*protocol.Log_Content, 0)
-
-			b.ReportAllocs()
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				processor.processGrok(&Logs, &log)
-			}
-			b.StopTimer()
-		})
-	}
-}
-
-func mockData(num int, separator, separatorReg string) (string, string) {
-	line := "dfasdfjlksdfhjaklsdfjhsdf4861238423904ljfaslkdfasjkdfhlasdjfkl3"
-	reg := "(\\w+)"
+func mockData1(num int, separator, separatorReg string) (string, string) {
+	line := strings.Join(testStrings, " ")
+	reg := expression
 	var res, pattern string
 	for i := 0; i < num; i++ {
 		res += line
@@ -107,7 +100,234 @@ func mockData(num int, separator, separatorReg string) (string, string) {
 	return pattern, res
 }
 
-func mockDataSingleLine(num int, separator, separatorReg string) (string, string) {
-	pattern, log := mockData(num, separator, separatorReg)
+func mockDataSingleLine1(num int, separator, separatorReg string) (string, string) {
+	pattern, log := mockData1(num, separator, separatorReg)
 	return "(?s)" + pattern, log
+}
+
+// goos: linux
+// goarch: amd64
+// pkg: github.com/alibaba/ilogtail/plugins/processor/grok
+// cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+// BenchmarkRegexpTest/original10	         	     132	   8299248 ns/op	    8124 B/op	       1 allocs/op
+// BenchmarkRegexpTest/new10	              	     133	   8113802 ns/op	    8061 B/op	       1 allocs/op
+// BenchmarkRegexpTest/original100	        	      13	  87498876 ns/op	  665907 B/op	      11 allocs/op
+// BenchmarkRegexpTest/new100					      13	  82544698 ns/op	  665840 B/op	      11 allocs/op
+// BenchmarkRegexpTest/original1000				       2	 825507343 ns/op	41835420 B/op	      75 allocs/op
+// BenchmarkRegexpTest/new1000					       2	 908423302 ns/op	41835420 B/op	      75 allocs/op
+
+func BenchmarkRegexpTest(b *testing.B) {
+	for _, param := range params1 {
+		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
+			pattern, log := param.mockFunc1(param.num, param.separator, param.separatorReg)
+			reg := regexp.MustCompile(pattern)
+			b.ReportAllocs()
+
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				reg.MatchString(log)
+			}
+			b.StopTimer()
+		})
+	}
+}
+
+// goos: linux
+// goarch: amd64
+// pkg: github.com/alibaba/ilogtail/plugins/processor/grok
+// cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+// BenchmarkRegexp2Test/original10         	     258	   4511419 ns/op	   41901 B/op	       1 allocs/op
+// BenchmarkRegexp2Test/new10              	     254	   4608836 ns/op	   41915 B/op	       1 allocs/op
+// BenchmarkRegexp2Test/original100        	      27	  44154612 ns/op	  461814 B/op	       1 allocs/op
+// BenchmarkRegexp2Test/new100             	      26	  45141461 ns/op	  465082 B/op	       1 allocs/op
+// BenchmarkRegexp2Test/original1000			   3	 457185115 ns/op	11299752 B/op	       4 allocs/op
+// BenchmarkRegexp2Test/new1000	           	       3	 431996927 ns/op	11299754 B/op	       4 allocs/op
+
+func BenchmarkRegexp2Test(b *testing.B) {
+	for _, param := range params1 {
+		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
+			pattern, log := param.mockFunc1(param.num, param.separator, param.separatorReg)
+			reg := regexp2.MustCompile(pattern, regexp2.RE2)
+			b.ReportAllocs()
+
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				reg.MatchString(log)
+			}
+			b.StopTimer()
+		})
+	}
+}
+
+// Test multiple matchs performance
+
+type IPv4Int uint32
+
+func (i IPv4Int) ip() net.IP {
+	ip := make(net.IP, net.IPv6len)
+	copy(ip, net.IPv4zero)
+	binary.BigEndian.PutUint32(ip.To4(), uint32(i))
+	return ip.To16()
+}
+
+func RandomIpv4Int() uint32 {
+	return rand.New(rand.NewSource(time.Now().UnixNano())).Uint32()
+}
+
+var params2 = []MockParam{
+	{"original", 10, " ", "\\s", nil, mockData2},
+	{"original", 100, " ", "\\s", nil, mockData2},
+	{"original", 1000, " ", "\\s", nil, mockData2},
+	{"original", 10000, " ", "\\s", nil, mockData2},
+}
+
+func mockData2(num int, separator, separatorReg string) []*protocol.Log {
+	Logs := []*protocol.Log{}
+
+	for i := 0; i < num; i++ {
+		log := new(protocol.Log)
+		log.Contents = make([]*protocol.Log_Content, 1)
+		log.Contents[0] = &protocol.Log_Content{Key: "content", Value: IPv4Int(RandomIpv4Int()).ip().String()}
+		Logs = append(Logs, log)
+	}
+	return Logs
+}
+
+// goos: linux
+// goarch: amd64
+// pkg: github.com/alibaba/ilogtail/plugins/processor/grok
+// cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+// BenchmarkGrokMatchOneTest/original10         	   10000	    159030 ns/op	    8822 B/op	     150 allocs/op
+// BenchmarkGrokMatchOneTest/original100        	    4135	   2668691 ns/op	   87894 B/op	    1500 allocs/op
+// BenchmarkGrokMatchOneTest/original1000			     454	   3532302 ns/op	  865847 B/op	   15019 allocs/op
+// BenchmarkGrokMatchOneTest/original10000      	      57	  23169730 ns/op	 8656781 B/op	  151052 allocs/op
+func BenchmarkGrokMatchOneTest(b *testing.B) {
+	for _, param := range params2 {
+		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
+			Logs := param.mockFunc2(param.num, param.separator, param.separatorReg)
+			processor := ilogtail.Processors["processor_grok"]().(*ProcessorGrok)
+			processor.Match = []string{
+				"%{IPV4:ipv4}",
+			}
+			processor.Init(mock.NewEmptyContext("p", "l", "c"))
+
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				processor.ProcessLogs(Logs)
+			}
+			b.StopTimer()
+			for _, log := range Logs {
+				if log.Contents[1].Key != "ipv4" {
+					b.Log("Parse error")
+				}
+			}
+		})
+	}
+}
+
+// goos: linux
+// goarch: amd64
+// pkg: github.com/alibaba/ilogtail/plugins/processor/grok
+// cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+// BenchmarkGrokMatchTwoTest/original10         	   10000	    180911 ns/op	   15934 B/op	     250 allocs/op
+// BenchmarkGrokMatchTwoTest/original100        	    2132	   1203559 ns/op	  159395 B/op	    2500 allocs/op
+// BenchmarkGrokMatchTwoTest/original1000			     252	   5713273 ns/op	 1580173 B/op	   25031 allocs/op
+// BenchmarkGrokMatchTwoTest/original10000      	      25	  54394004 ns/op	15839277 B/op	  252001 allocs/op
+func BenchmarkGrokMatchTwoTest(b *testing.B) {
+	for _, param := range params2 {
+		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
+			Logs := param.mockFunc2(param.num, param.separator, param.separatorReg)
+			processor := ilogtail.Processors["processor_grok"]().(*ProcessorGrok)
+			processor.Match = []string{
+				"%{BASE10NUM}",
+				"%{IPV4:ipv4}",
+			}
+			processor.Init(mock.NewEmptyContext("p", "l", "c"))
+
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				processor.ProcessLogs(Logs)
+			}
+			b.StopTimer()
+			for _, log := range Logs {
+				if log.Contents[1].Key != "ipv4" {
+					b.Log("Parse error")
+				}
+			}
+		})
+	}
+}
+
+// goos: linux
+// goarch: amd64
+// pkg: github.com/alibaba/ilogtail/plugins/processor/grok
+// cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+// BenchmarkGrokMatchThreeTest/original10         	   10000	    216708 ns/op	   23199 B/op	     350 allocs/op
+// BenchmarkGrokMatchThreeTest/original100        	    1388	   1068029 ns/op	  231260 B/op	    3500 allocs/op
+// BenchmarkGrokMatchThreeTest/original1000       	     130	   8479269 ns/op	 2311385 B/op	   35061 allocs/op
+// BenchmarkGrokMatchThreeTest/original10000		      13	  84163120 ns/op	22991749 B/op	  353079 allocs/op
+func BenchmarkGrokMatchThreeTest(b *testing.B) {
+	for _, param := range params2 {
+		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
+			Logs := param.mockFunc2(param.num, param.separator, param.separatorReg)
+			processor := ilogtail.Processors["processor_grok"]().(*ProcessorGrok)
+			processor.Match = []string{
+				"%{BASE16FLOAT}",
+				"%{BASE10NUM}",
+				"%{IPV4:ipv4}",
+			}
+			processor.Init(mock.NewEmptyContext("p", "l", "c"))
+
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				processor.ProcessLogs(Logs)
+			}
+			b.StopTimer()
+			for _, log := range Logs {
+				if log.Contents[1].Key != "ipv4" {
+					b.Log("Parse error")
+				}
+			}
+		})
+	}
+}
+
+// goos: linux
+// goarch: amd64
+// pkg: github.com/alibaba/ilogtail/plugins/processor/grok
+// cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+// BenchmarkGrokMatchFiveTest/original10			    4166	    275679 ns/op	   24108 B/op	     370 allocs/op
+// BenchmarkGrokMatchFiveTest/original100        	     505	   2379337 ns/op	  241500 B/op	    3701 allocs/op
+// BenchmarkGrokMatchFiveTest/original1000			      43	  24029462 ns/op	 2427019 B/op	   37140 allocs/op
+// BenchmarkGrokMatchFiveTest/original10000      	       5	 240189537 ns/op	24249364 B/op	  376009 allocs/op
+func BenchmarkGrokMatchFiveTest(b *testing.B) {
+	for _, param := range params2 {
+		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
+			Logs := param.mockFunc2(param.num, param.separator, param.separatorReg)
+			processor := ilogtail.Processors["processor_grok"]().(*ProcessorGrok)
+			processor.Match = []string{
+				"%{IPV6}",
+				"%{MAC}",
+				"%{BASE16FLOAT}",
+				"%{BASE10NUM}",
+				"%{IPV4:ipv4}",
+			}
+			processor.Init(mock.NewEmptyContext("p", "l", "c"))
+
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				processor.ProcessLogs(Logs)
+			}
+			b.StopTimer()
+			for _, log := range Logs {
+				if log.Contents[1].Key != "ipv4" {
+					b.Log("Parse error")
+				}
+			}
+		})
+	}
 }
