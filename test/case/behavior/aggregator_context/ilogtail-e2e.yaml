@@ -30,6 +30,8 @@ ilogtail:
               SourceKey: content
               SplitSep: "|"
               SplitKeys: ["no", "content"]
+          aggregators:
+            - Type: aggregator_context
   close_wait: 5s
 verify:
   log_rules:
