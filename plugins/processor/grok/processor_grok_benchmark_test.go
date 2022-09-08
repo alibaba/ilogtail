@@ -26,7 +26,9 @@ type MockParam struct {
 	mockFunc2    func(int, string, string) []*protocol.Log
 }
 
-// Compare regexp2 with regexp
+/*
+	Compare regexp2 with regexp
+*/
 
 var (
 	expression  = "((\\{.*?\\})?((cpu_load.*\\.avg\\.60)|(cpu_util.*\\.avg\\.60)|(memory_free.*\\.avg\\.60)|(memory_usage.*\\.avg\\.60)|(periodictask:.+)|(thrift\\..*dropped_conns\\.count\\.60)|(thrift\\..*killed_tasks\\.count\\.60)|(thrift\\..*num_calls\\.sum\\.60)|(thrift\\..*num_exceptions\\.sum\\.60)|(thrift\\..*num_processed\\.sum\\.60)|(thrift\\..*process_delay\\.p99\\.60)|(thrift\\..*process_time\\.p99\\.60)|(thrift\\..*queue_timeouts\\.count\\.60)|(thrift\\..*rejected_conns\\.count\\.60)|(thrift\\..*server_overloaded\\.count\\.60)|(thrift\\..*time_process_us\\.avg\\.60)|(thrift\\..*timeout_tasks\\.count\\.60)|(thrift\\.accepted_connections\\.count\\.60)|(thrift\\.active_requests\\.avg\\.60)|(thrift\\.adaptive_ideal_rtt_us)|(thrift\\.adaptive_min_concurrency)|(thrift\\.adaptive_sampled_rtt_us)|(thrift\\.admission_control\\..*)|(thrift\\.eventbase_busy_time\\.p99.60)|(thrift\\.eventbase_idle_time\\.p99.60)|(thrift\\.max_requests)|(thrift\\.num_active_requests)|(thrift\\.num_busy_pool_workers)|(thrift\\.num_idle_pool_workers)|(thrift\\.queued_requests)|(thrift\\.queued_requests\\.avg\\.60)|(thrift\\.queuelag.*\\.sum\\.60)|(thrift\\.queues\\..*\\.60)|(thrift\\.received_requests\\.count\\.60)|(thrift\\.server_load)))"
@@ -160,7 +162,9 @@ func BenchmarkRegexp2Test(b *testing.B) {
 	}
 }
 
-// Test multiple matchs performance
+/*
+	Test multiple matchs performance
+*/
 
 type IPv4Int uint32
 
