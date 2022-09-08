@@ -24,13 +24,13 @@ import (
 func InitRouter() {
 	router := gin.Default()
 
-	initUserRouter(router)
-	initAgentRouter(router)
+	InitUserRouter(router)
+	InitAgentRouter(router)
 
 	router.Run(setting.GetSetting().Ip + ":" + setting.GetSetting().Port)
 }
 
-func initUserRouter(router *gin.Engine) {
+func InitUserRouter(router *gin.Engine) {
 	userGroup := router.Group("/User")
 	{
 		userGroup.POST("/CreateAgentGroup", user.CreateAgentGroup)
@@ -53,7 +53,7 @@ func initUserRouter(router *gin.Engine) {
 	}
 }
 
-func initAgentRouter(router *gin.Engine) {
+func InitAgentRouter(router *gin.Engine) {
 	agentGroup := router.Group("/Agent")
 	{
 		agentGroup.POST("/HeartBeat", agent.HeartBeat)

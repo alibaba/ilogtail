@@ -22,13 +22,13 @@ import (
 
 func (a *AgentManager) GetAgent(id string) (*model.Agent, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINE, id)
+	ok, err := s.Has(common.TYPE_AGENT, id)
 	if err != nil {
 		return nil, err
 	} else if !ok {
 		return nil, nil
 	} else {
-		agent, err := s.Get(common.TYPE_MACHINE, id)
+		agent, err := s.Get(common.TYPE_AGENT, id)
 		if err != nil {
 			return nil, err
 		}

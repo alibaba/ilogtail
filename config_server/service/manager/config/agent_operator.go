@@ -50,14 +50,14 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 	s := store.GetStore()
 
 	// get agent's tag
-	ok, err := s.Has(common.TYPE_MACHINE, id)
+	ok, err := s.Has(common.TYPE_AGENT, id)
 	if err != nil {
 		return nil, false, false, err
 	} else if !ok {
 		return nil, false, false, nil
 	}
 
-	value, err := s.Get(common.TYPE_MACHINE, id)
+	value, err := s.Get(common.TYPE_AGENT, id)
 	if err != nil {
 		return nil, false, false, err
 	}
@@ -65,7 +65,7 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 
 	// get all configs connected to agent group whose tag is same as agent's
 	configList := make(map[string]*model.Config)
-	agentGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
+	agentGroupList, err := s.GetAll(common.TYPE_AGENTGROUP)
 	if err != nil {
 		return nil, false, true, err
 	}

@@ -133,7 +133,7 @@ func (a *AgentManager) batchUpdateAgentMessage() {
 
 	a.AgentMessageList.Mutex.Lock()
 	for k, v := range a.AgentMessageList.Heartbeat {
-		b.Update(common.TYPE_MACHINE, k, v)
+		b.Update(common.TYPE_AGENT, k, v)
 	}
 	a.AgentMessageList.Heartbeat = make(map[string]*model.Agent, 0)
 	for k, v := range a.AgentMessageList.Status {

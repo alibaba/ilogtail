@@ -27,8 +27,8 @@ import (
 var dbPath = []string{
 	common.TYPE_AGENT_ALARM,
 	common.TYPE_COLLECTION_CONFIG,
-	common.TYPE_MACHINE,
-	common.TYPE_MACHINEGROUP,
+	common.TYPE_AGENT,
+	common.TYPE_AGENTGROUP,
 	common.TYPE_RUNNING_STATISTICS,
 }
 
@@ -207,10 +207,10 @@ func parseValue(table string, data []byte) interface{} {
 	case common.TYPE_COLLECTION_CONFIG:
 		ans = new(model.Config)
 		break
-	case common.TYPE_MACHINE:
+	case common.TYPE_AGENT:
 		ans = new(model.Agent)
 		break
-	case common.TYPE_MACHINEGROUP:
+	case common.TYPE_AGENTGROUP:
 		ans = new(model.AgentGroup)
 		break
 	case common.TYPE_AGENT_ALARM:

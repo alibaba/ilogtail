@@ -1,7 +1,7 @@
 // Copyright 2022 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
+// you may not use q file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 //      http://www.apache.org/licenses/LICENSE-2.0
@@ -33,52 +33,52 @@ func NewQueue() *Queue {
 	return &Queue{nil, nil, 0}
 }
 
-func (this *Queue) Len() int {
-	return this.length
+func (q *Queue) Len() int {
+	return q.length
 }
 
-func (this *Queue) Empty() bool {
-	return this.length == 0
+func (q *Queue) Empty() bool {
+	return q.length == 0
 }
 
-func (this *Queue) Front() interface{} {
-	if this.top == nil {
+func (q *Queue) Front() interface{} {
+	if q.top == nil {
 		return nil
 	}
-	return this.top.value
+	return q.top.value
 }
 
-func (this *Queue) Push(v interface{}) {
+func (q *Queue) Push(v interface{}) {
 	n := &node{nil, nil, v}
-	if this.length == 0 {
-		this.top = n
-		this.rear = this.top
+	if q.length == 0 {
+		q.top = n
+		q.rear = q.top
 	} else {
-		n.pre = this.rear
-		this.rear.next = n
-		this.rear = n
+		n.pre = q.rear
+		q.rear.next = n
+		q.rear = n
 	}
-	this.length++
+	q.length++
 }
 
-func (this *Queue) Pop() interface{} {
-	if this.length == 0 {
+func (q *Queue) Pop() interface{} {
+	if q.length == 0 {
 		return nil
 	}
-	n := this.top
-	if this.top.next == nil {
-		this.top = nil
+	n := q.top
+	if q.top.next == nil {
+		q.top = nil
 	} else {
-		this.top = this.top.next
-		this.top.pre.next = nil
-		this.top.pre = nil
+		q.top = q.top.next
+		q.top.pre.next = nil
+		q.top.pre = nil
 	}
-	this.length--
+	q.length--
 	return n.value
 }
 
-func (this *Queue) Clear() {
-	for !this.Empty() {
-		this.Pop()
+func (q *Queue) Clear() {
+	for !q.Empty() {
+		q.Pop()
 	}
 }

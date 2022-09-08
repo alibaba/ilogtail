@@ -189,7 +189,7 @@ func (c *ConfigManager) GetAppliedAgentGroups(configName string) ([]string, bool
 
 func (c *ConfigManager) CreateAgentGroup(group *proto.AgentGroup) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, group.GroupName)
+	ok, err := s.Has(common.TYPE_AGENTGROUP, group.GroupName)
 	if err != nil {
 		return true, err
 	} else if ok {
@@ -199,7 +199,7 @@ func (c *ConfigManager) CreateAgentGroup(group *proto.AgentGroup) (bool, error) 
 		agentGroup.ParseProto(group)
 		agentGroup.AppliedConfigs = make(map[string]int64, 0)
 
-		err = s.Add(common.TYPE_MACHINEGROUP, agentGroup.Name, agentGroup)
+		err = s.Add(common.TYPE_AGENTGROUP, agentGroup.Name, agentGroup)
 		if err != nil {
 			return false, err
 		}
@@ -209,13 +209,13 @@ func (c *ConfigManager) CreateAgentGroup(group *proto.AgentGroup) (bool, error) 
 
 func (c *ConfigManager) UpdateAgentGroup(group *proto.AgentGroup) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, group.GroupName)
+	ok, err := s.Has(common.TYPE_AGENTGROUP, group.GroupName)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		value, err := s.Get(common.TYPE_MACHINEGROUP, group.GroupName)
+		value, err := s.Get(common.TYPE_AGENTGROUP, group.GroupName)
 		if err != nil {
 			return true, err
 		}
@@ -223,7 +223,7 @@ func (c *ConfigManager) UpdateAgentGroup(group *proto.AgentGroup) (bool, error) 
 
 		agentGroup.ParseProto(group)
 
-		err = s.Update(common.TYPE_MACHINEGROUP, group.GroupName, agentGroup)
+		err = s.Update(common.TYPE_AGENTGROUP, group.GroupName, agentGroup)
 		if err != nil {
 			return true, err
 		}
@@ -233,13 +233,13 @@ func (c *ConfigManager) UpdateAgentGroup(group *proto.AgentGroup) (bool, error) 
 
 func (c *ConfigManager) DeleteAgentGroup(groupName string) (bool, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
+	ok, err := s.Has(common.TYPE_AGENTGROUP, groupName)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, nil
 	} else {
-		err = s.Delete(common.TYPE_MACHINEGROUP, groupName)
+		err = s.Delete(common.TYPE_AGENTGROUP, groupName)
 		if err != nil {
 			return true, err
 		}
@@ -249,13 +249,13 @@ func (c *ConfigManager) DeleteAgentGroup(groupName string) (bool, error) {
 
 func (c *ConfigManager) GetAgentGroup(groupName string) (*model.AgentGroup, error) {
 	s := store.GetStore()
-	ok, err := s.Has(common.TYPE_MACHINEGROUP, groupName)
+	ok, err := s.Has(common.TYPE_AGENTGROUP, groupName)
 	if err != nil {
 		return nil, err
 	} else if !ok {
 		return nil, nil
 	} else {
-		agentGroup, err := s.Get(common.TYPE_MACHINEGROUP, groupName)
+		agentGroup, err := s.Get(common.TYPE_AGENTGROUP, groupName)
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +265,7 @@ func (c *ConfigManager) GetAgentGroup(groupName string) (*model.AgentGroup, erro
 
 func (c *ConfigManager) GetAllAgentGroup() ([]model.AgentGroup, error) {
 	s := store.GetStore()
-	agentGroupList, err := s.GetAll(common.TYPE_MACHINEGROUP)
+	agentGroupList, err := s.GetAll(common.TYPE_AGENTGROUP)
 	if err != nil {
 		return nil, err
 	} else {
@@ -282,7 +282,7 @@ func (a *ConfigManager) GetAgentList(groupName string) ([]model.Agent, error) {
 	s := store.GetStore()
 
 	if groupName == "default" {
-		agentList, err := s.GetAll(common.TYPE_MACHINE)
+		agentList, err := s.GetAll(common.TYPE_AGENT)
 		if err != nil {
 			return nil, err
 		}
@@ -341,7 +341,7 @@ func (c *ConfigManager) ApplyConfigToAgentGroup(groupName string, configName str
 	}
 	agentGroup.AppliedConfigs[config.Name] = time.Now().Unix()
 
-	err = store.GetStore().Update(common.TYPE_MACHINEGROUP, groupName, agentGroup)
+	err = store.GetStore().Update(common.TYPE_AGENTGROUP, groupName, agentGroup)
 	if err != nil {
 		return true, true, false, err
 	}
@@ -370,7 +370,7 @@ func (c *ConfigManager) RemoveConfigFromAgentGroup(groupName string, configName 
 	}
 	delete(agentGroup.AppliedConfigs, config.Name)
 
-	err = store.GetStore().Update(common.TYPE_MACHINEGROUP, groupName, agentGroup)
+	err = store.GetStore().Update(common.TYPE_AGENTGROUP, groupName, agentGroup)
 	if err != nil {
 		return true, true, true, err
 	}

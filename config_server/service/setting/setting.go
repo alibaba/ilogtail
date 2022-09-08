@@ -16,7 +16,6 @@ package setting
 
 import (
 	"reflect"
-	"sync"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 )
@@ -32,16 +31,7 @@ type setting struct {
 
 var mySetting *setting
 
-var setOnce sync.Once
-
 var settingFile string = "./setting/setting.json"
-
-/*
-Change setting file's path
-*/
-func SetSettingPath(path string) {
-	settingFile = path
-}
 
 /*
 Create a singleton of setting
@@ -56,9 +46,8 @@ For example, if the value of map is {store_mode:"mysql"},
 this function will change "mySetting's StoreMode" to "mysql".
 */
 func UpdateSetting(tagMap map[string]interface{}) {
-	t := reflect.TypeOf(mySetting)
 	v := reflect.ValueOf(mySetting).Elem()
-	t = v.Type()
+	t := v.Type()
 
 	fieldNum := v.NumField()
 	for i := 0; i < fieldNum; i++ {
@@ -78,7 +67,10 @@ func UpdateSetting(tagMap map[string]interface{}) {
 
 func init() {
 	mySetting = new(setting)
-	common.ReadJson(settingFile, mySetting)
+	err := common.ReadJson(settingFile, mySetting)
+	if err != nil {
+		panic(err)
+	}
 	if mySetting.Ip == "" {
 		mySetting.Ip = "127.0.0.1"
 	}
