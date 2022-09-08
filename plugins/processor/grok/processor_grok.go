@@ -294,7 +294,7 @@ func (p *ProcessorGrok) denormalizePattern(pattern string) (string, error) {
 	return pattern, nil
 }
 
-// create alias for pattern's name
+// create alias for pattern's name, because regexg capture group name cannot contain punctuation marks except '_'
 func (p *ProcessorGrok) aliasizePatternName(name string) string {
 	alias := symbolic.ReplaceAllString(name, "_")
 	p.aliases[alias] = name
