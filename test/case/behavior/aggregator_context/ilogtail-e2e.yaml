@@ -47,10 +47,10 @@ ilogtail:
                             "QuoteFlag": true,
                             "SplitSep": "|",
                             "Quote":"\"",
-                            "SplitKeys": {
+                            "SplitKeys": [
                               "no",
                               "content"
-                            }
+                            ]
                           }
                       }
                   ],
