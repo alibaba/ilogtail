@@ -185,8 +185,7 @@ func (p *ProcessorGrok) addPatternsFromPath(path string) error {
 
 	var filePatterns = map[string]string{}
 	for _, fileName := range files {
-		fileName = filepath.Join("", filepath.Clean(fileName))
-		file, err := os.Open(fileName)
+		file, err := os.Open(filepath.Clean(fileName))
 		if err != nil {
 			return errors.New("Cannot open file " + fileName + ", reason:" + err.Error())
 		}
