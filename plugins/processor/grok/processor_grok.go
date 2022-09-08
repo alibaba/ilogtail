@@ -144,7 +144,8 @@ func (p *ProcessorGrok) processGrok(log *protocol.Log, val *string) string {
 		for m != nil {
 			gps := m.Groups()
 			for i := range gps {
-				if _, err := strconv.ParseInt(gps[i].Name, 10, 32); err != nil && gps[i].Capture.String() != "" {
+				_, err = strconv.ParseInt(gps[i].Name, 10, 32)
+				if err != nil && gps[i].Capture.String() != "" {
 					name := p.nameToAlias(gps[i].Name)
 					names = append(names, name)
 					captures = append(captures, gps[i].Capture.String())
@@ -166,16 +167,15 @@ func (p *ProcessorGrok) processGrok(log *protocol.Log, val *string) string {
 	}
 	if !findMatch {
 		return matchFail
-	} else {
-		return parseSuccess
 	}
+	return parseSuccess
 }
 
 // Add patterns from path to processor_grok
 func (p *ProcessorGrok) addPatternsFromPath(path string) error {
 	if fi, err := os.Stat(path); err == nil {
 		if fi.IsDir() {
-			path = path + "/*"
+			path += "/*"
 		}
 	} else {
 		return errors.New("invalid path :" + path)
@@ -185,6 +185,7 @@ func (p *ProcessorGrok) addPatternsFromPath(path string) error {
 
 	var filePatterns = map[string]string{}
 	for _, fileName := range files {
+		fileName = filepath.Join("", filepath.Clean(fileName))
 		file, err := os.Open(fileName)
 		if err != nil {
 			return errors.New("Cannot open file " + fileName + ", reason:" + err.Error())
@@ -264,10 +265,9 @@ func (p *ProcessorGrok) denormalizePattern(pattern string) (string, error) {
 		}
 		names := strings.Split(values[1], ":")
 
-		syntax, semantic, alias := names[0], names[0], names[0]
+		syntax, alias := names[0], names[0]
 		if len(names) > 1 {
-			semantic = names[1]
-			alias = p.aliasizePatternName(semantic)
+			alias = p.aliasizePatternName(names[0])
 		}
 
 		storedPattern, ok := p.processedPatterns[syntax]
@@ -288,7 +288,7 @@ func (p *ProcessorGrok) denormalizePattern(pattern string) (string, error) {
 			buffer.WriteString(")")
 		}
 
-		pattern = strings.Replace(pattern, values[0], buffer.String(), -1)
+		pattern = strings.ReplaceAll(pattern, values[0], buffer.String())
 	}
 
 	return pattern, nil

@@ -50,14 +50,14 @@ func newProcessor() (*ProcessorGrok, error) {
 }
 
 func TestProcessorGrokInit(t *testing.T) {
-	Convey("Test load Grok Patterns from diferent single sources, determine if they can be parsed properly as correct regular expressions.", t, func() {
+	Convey("Test load Grok Patterns from different single sources, determine if they can be parsed properly as correct regular expressions.", t, func() {
 		processor, err := newProcessor()
 		So(err, ShouldBeNil)
 
 		Convey("Load Grok Patterns from processor_grok_default_patterns.go, then compile all of them.", func() {
 
 			for k, v := range processor.processedPatterns {
-				_, err := regexp2.Compile(v, regexp2.RE2)
+				_, err = regexp2.Compile(v, regexp2.RE2)
 				if err != nil {
 					t.Log(k, v)
 				}
@@ -75,7 +75,7 @@ func TestProcessorGrokInit(t *testing.T) {
 
 			So(processor.processedPatterns["ELB_URI"], ShouldEqual, ans["SLB_URI"])
 			for k, v := range processor.processedPatterns {
-				_, err := regexp2.Compile(v, regexp2.RE2)
+				_, err = regexp2.Compile(v, regexp2.RE2)
 				if err != nil {
 					t.Log(k, v)
 				}
@@ -90,7 +90,7 @@ func TestProcessorGrokInit(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			So(processor.processedPatterns["HTTP"], ShouldEqual, ans["%{HTTP}"])
-			_, err := regexp2.Compile(processor.processedPatterns["Http"], regexp2.RE2)
+			_, err = regexp2.Compile(processor.processedPatterns["Http"], regexp2.RE2)
 			So(err, ShouldBeNil)
 		})
 
@@ -108,7 +108,7 @@ func TestProcessorGrokInit(t *testing.T) {
 }
 
 func TestProcessorGrokParse(t *testing.T) {
-	Convey("Test parse logs whith one Grok Pattern in Match", t, func() {
+	Convey("Test parse logs with one Grok Pattern in Match", t, func() {
 		processor, err := newProcessor()
 		So(err, ShouldBeNil)
 		processor.Match = []string{
@@ -189,7 +189,7 @@ func TestProcessorGrokParse(t *testing.T) {
 		})
 	})
 
-	Convey("Test parse logs whith multiple Grok Patterns in Match and test some settings", t, func() {
+	Convey("Test parse logs with multiple Grok Patterns in Match and test some settings", t, func() {
 		processor, err := newProcessor()
 		So(err, ShouldBeNil)
 		processor.CustomPatterns = map[string]string{
@@ -203,7 +203,7 @@ func TestProcessorGrokParse(t *testing.T) {
 		err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
 		So(err, ShouldBeNil)
 
-		Convey("Parse logs whith multiple Grok Patterns.", func() {
+		Convey("Parse logs with multiple Grok Patterns.", func() {
 			log1 := `begin 123.456 end`
 			logPb1 := test.CreateLogs("content", log1)
 			log2 := `2019 June 24 "I am iron man"`
