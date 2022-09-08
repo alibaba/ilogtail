@@ -30,8 +30,8 @@ import (
 var packIDPrefix = [3]string{"ABCDEFGHIJKLMNOP", "ALOEJDMGNYTDEWS", "VDSRGHUKMLQETGVD"}
 
 var (
-	shortLog = "This is shor log. This log comes from source "
-	longLog  = "This is long log. " + strings.Repeat("This is long log. ", 200) + "This log comes from source "
+	shortLog = "This is short log. This log comes from source "
+	longLog  = strings.Repeat("This is long log. ", 200) + "This log comes from source "
 )
 
 type SliceQueue struct {
