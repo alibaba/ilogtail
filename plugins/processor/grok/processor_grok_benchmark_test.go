@@ -109,12 +109,12 @@ func mockDataSingleLine1(num int, separator, separatorReg string) (string, strin
 // goarch: amd64
 // pkg: github.com/alibaba/ilogtail/plugins/processor/grok
 // cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-// BenchmarkRegexpTest/original10	         	     132	   8299248 ns/op	    8124 B/op	       1 allocs/op
-// BenchmarkRegexpTest/new10	              	     133	   8113802 ns/op	    8061 B/op	       1 allocs/op
-// BenchmarkRegexpTest/original100	        	      13	  87498876 ns/op	  665907 B/op	      11 allocs/op
-// BenchmarkRegexpTest/new100					      13	  82544698 ns/op	  665840 B/op	      11 allocs/op
-// BenchmarkRegexpTest/original1000				       2	 825507343 ns/op	41835420 B/op	      75 allocs/op
-// BenchmarkRegexpTest/new1000					       2	 908423302 ns/op	41835420 B/op	      75 allocs/op
+// BenchmarkRegexpTest/original10                    132	   8299248 ns/op	    8124 B/op	       1 allocs/op
+// BenchmarkRegexpTest/new10                         133	   8113802 ns/op	    8061 B/op	       1 allocs/op
+// BenchmarkRegexpTest/original100                    13	  87498876 ns/op	  665907 B/op	      11 allocs/op
+// BenchmarkRegexpTest/new100                         13	  82544698 ns/op	  665840 B/op	      11 allocs/op
+// BenchmarkRegexpTest/original1000                    2	 825507343 ns/op	41835420 B/op	      75 allocs/op
+// BenchmarkRegexpTest/new1000                         2	 908423302 ns/op	41835420 B/op	      75 allocs/op
 
 func BenchmarkRegexpTest(b *testing.B) {
 	for _, param := range params1 {
@@ -136,12 +136,12 @@ func BenchmarkRegexpTest(b *testing.B) {
 // goarch: amd64
 // pkg: github.com/alibaba/ilogtail/plugins/processor/grok
 // cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-// BenchmarkRegexp2Test/original10         	     258	   4511419 ns/op	   41901 B/op	       1 allocs/op
-// BenchmarkRegexp2Test/new10              	     254	   4608836 ns/op	   41915 B/op	       1 allocs/op
-// BenchmarkRegexp2Test/original100        	      27	  44154612 ns/op	  461814 B/op	       1 allocs/op
-// BenchmarkRegexp2Test/new100             	      26	  45141461 ns/op	  465082 B/op	       1 allocs/op
-// BenchmarkRegexp2Test/original1000			   3	 457185115 ns/op	11299752 B/op	       4 allocs/op
-// BenchmarkRegexp2Test/new1000	           	       3	 431996927 ns/op	11299754 B/op	       4 allocs/op
+// BenchmarkRegexp2Test/original10               258	   4511419 ns/op	   41901 B/op	       1 allocs/op
+// BenchmarkRegexp2Test/new10                    254	   4608836 ns/op	   41915 B/op	       1 allocs/op
+// BenchmarkRegexp2Test/original100               27	  44154612 ns/op	  461814 B/op	       1 allocs/op
+// BenchmarkRegexp2Test/new100                    26	  45141461 ns/op	  465082 B/op	       1 allocs/op
+// BenchmarkRegexp2Test/original1000               3	 457185115 ns/op	11299752 B/op	       4 allocs/op
+// BenchmarkRegexp2Test/new1000	                   3	 431996927 ns/op	11299754 B/op	       4 allocs/op
 
 func BenchmarkRegexp2Test(b *testing.B) {
 	for _, param := range params1 {
@@ -197,10 +197,10 @@ func mockData2(num int, separator, separatorReg string) []*protocol.Log {
 // goarch: amd64
 // pkg: github.com/alibaba/ilogtail/plugins/processor/grok
 // cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-// BenchmarkGrokMatchOneTest/original10         	   10000	    159030 ns/op	    8822 B/op	     150 allocs/op
-// BenchmarkGrokMatchOneTest/original100        	    4135	   2668691 ns/op	   87894 B/op	    1500 allocs/op
-// BenchmarkGrokMatchOneTest/original1000			     454	   3532302 ns/op	  865847 B/op	   15019 allocs/op
-// BenchmarkGrokMatchOneTest/original10000      	      57	  23169730 ns/op	 8656781 B/op	  151052 allocs/op
+// BenchmarkGrokMatchOneTest/original10                10000	    159030 ns/op	    8822 B/op	     150 allocs/op
+// BenchmarkGrokMatchOneTest/original100                4135	   2668691 ns/op	   87894 B/op	    1500 allocs/op
+// BenchmarkGrokMatchOneTest/original1000                454	   3532302 ns/op	  865847 B/op	   15019 allocs/op
+// BenchmarkGrokMatchOneTest/original10000                57	  23169730 ns/op	 8656781 B/op	  151052 allocs/op
 func BenchmarkGrokMatchOneTest(b *testing.B) {
 	for _, param := range params2 {
 		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
@@ -230,10 +230,10 @@ func BenchmarkGrokMatchOneTest(b *testing.B) {
 // goarch: amd64
 // pkg: github.com/alibaba/ilogtail/plugins/processor/grok
 // cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-// BenchmarkGrokMatchTwoTest/original10         	   10000	    180911 ns/op	   15934 B/op	     250 allocs/op
-// BenchmarkGrokMatchTwoTest/original100        	    2132	   1203559 ns/op	  159395 B/op	    2500 allocs/op
-// BenchmarkGrokMatchTwoTest/original1000			     252	   5713273 ns/op	 1580173 B/op	   25031 allocs/op
-// BenchmarkGrokMatchTwoTest/original10000      	      25	  54394004 ns/op	15839277 B/op	  252001 allocs/op
+// BenchmarkGrokMatchTwoTest/original10                10000	    180911 ns/op	   15934 B/op	     250 allocs/op
+// BenchmarkGrokMatchTwoTest/original100                2132	   1203559 ns/op	  159395 B/op	    2500 allocs/op
+// BenchmarkGrokMatchTwoTest/original1000                252	   5713273 ns/op	 1580173 B/op	   25031 allocs/op
+// BenchmarkGrokMatchTwoTest/original10000                25	  54394004 ns/op	15839277 B/op	  252001 allocs/op
 func BenchmarkGrokMatchTwoTest(b *testing.B) {
 	for _, param := range params2 {
 		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
@@ -264,10 +264,10 @@ func BenchmarkGrokMatchTwoTest(b *testing.B) {
 // goarch: amd64
 // pkg: github.com/alibaba/ilogtail/plugins/processor/grok
 // cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-// BenchmarkGrokMatchThreeTest/original10         	   10000	    216708 ns/op	   23199 B/op	     350 allocs/op
-// BenchmarkGrokMatchThreeTest/original100        	    1388	   1068029 ns/op	  231260 B/op	    3500 allocs/op
-// BenchmarkGrokMatchThreeTest/original1000       	     130	   8479269 ns/op	 2311385 B/op	   35061 allocs/op
-// BenchmarkGrokMatchThreeTest/original10000		      13	  84163120 ns/op	22991749 B/op	  353079 allocs/op
+// BenchmarkGrokMatchThreeTest/original10              10000	    216708 ns/op	   23199 B/op	     350 allocs/op
+// BenchmarkGrokMatchThreeTest/original100              1388	   1068029 ns/op	  231260 B/op	    3500 allocs/op
+// BenchmarkGrokMatchThreeTest/original1000              130	   8479269 ns/op	 2311385 B/op	   35061 allocs/op
+// BenchmarkGrokMatchThreeTest/original10000              13	  84163120 ns/op	22991749 B/op	  353079 allocs/op
 func BenchmarkGrokMatchThreeTest(b *testing.B) {
 	for _, param := range params2 {
 		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
@@ -299,10 +299,10 @@ func BenchmarkGrokMatchThreeTest(b *testing.B) {
 // goarch: amd64
 // pkg: github.com/alibaba/ilogtail/plugins/processor/grok
 // cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
-// BenchmarkGrokMatchFiveTest/original10			    4166	    275679 ns/op	   24108 B/op	     370 allocs/op
-// BenchmarkGrokMatchFiveTest/original100        	     505	   2379337 ns/op	  241500 B/op	    3701 allocs/op
-// BenchmarkGrokMatchFiveTest/original1000			      43	  24029462 ns/op	 2427019 B/op	   37140 allocs/op
-// BenchmarkGrokMatchFiveTest/original10000      	       5	 240189537 ns/op	24249364 B/op	  376009 allocs/op
+// BenchmarkGrokMatchFiveTest/original10                4166	    275679 ns/op	   24108 B/op	     370 allocs/op
+// BenchmarkGrokMatchFiveTest/original100                505	   2379337 ns/op	  241500 B/op	    3701 allocs/op
+// BenchmarkGrokMatchFiveTest/original1000                43	  24029462 ns/op	 2427019 B/op	   37140 allocs/op
+// BenchmarkGrokMatchFiveTest/original10000                5	 240189537 ns/op	24249364 B/op	  376009 allocs/op
 func BenchmarkGrokMatchFiveTest(b *testing.B) {
 	for _, param := range params2 {
 		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
