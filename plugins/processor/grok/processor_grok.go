@@ -267,7 +267,7 @@ func (p *ProcessorGrok) denormalizePattern(pattern string) (string, error) {
 
 		syntax, alias := names[0], names[0]
 		if len(names) > 1 {
-			alias = p.aliasizePatternName(names[0])
+			alias = p.aliasizePatternName(names[1])
 		}
 
 		storedPattern, ok := p.processedPatterns[syntax]
