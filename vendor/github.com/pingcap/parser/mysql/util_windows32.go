@@ -11,8 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !windows || !386
-// +build !windows !386
+//go:build 386 && windows
+// +build 386,windows
 
 package mysql
 
@@ -44,8 +44,8 @@ var defaultLengthAndDecimal = map[byte]lengthAndDecimal{
 	TypeTinyBlob:   {255, 0},
 	TypeBlob:       {65535, 0},
 	TypeMediumBlob: {16777215, 0},
-	TypeLongBlob:   {4294967295, 0},
-	TypeJSON:       {4294967295, 0},
+	TypeLongBlob:   {2147483647, 0},
+	TypeJSON:       {2147483647, 0},
 	TypeNull:       {0, 0},
 	TypeSet:        {-1, 0},
 	TypeEnum:       {-1, 0},

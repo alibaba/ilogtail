@@ -122,7 +122,9 @@ type ioStatusBlock struct {
 
 // UpdateFileHandle - changes file deletion semantic at windows to posix-like.
 func UpdateFileHandle(path string) error {
-	handle, err := windows.Open(path, windows.GENERIC_READ|windows.DELETE, windows.FILE_SHARE_READ|windows.FILE_SHARE_DELETE)
+	var mode int64
+	mode = windows.GENERIC_READ | windows.DELETE
+	handle, err := windows.Open(path, int(mode), windows.FILE_SHARE_READ|windows.FILE_SHARE_DELETE)
 	if err != nil {
 		return err
 	}

@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !windows || !386
-// +build !windows !386
+//go:build windows && 386
+// +build windows,386
 
 package parser
 
@@ -1160,7 +1160,7 @@ yynewstate:
 					QBName:   model.NewCIStr(yyS[yypt-3].ident),
 				}
 			} else {
-				yylex.AppendError(ErrWarnMemoryQuotaOverflow.GenWithStackByArgs(math.MaxInt64))
+				yylex.AppendError(ErrWarnMemoryQuotaOverflow.GenWithStackByArgs(math.MaxInt32))
 				parser.lastErrorAsWarn()
 				parser.yyVAL.hint = nil
 			}

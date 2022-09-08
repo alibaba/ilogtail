@@ -11,8 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !386 || !windows
-// +build !386 !windows
+//go:build 386 && windows
+// +build 386,windows
 
 package mysql
 
@@ -310,7 +310,7 @@ var DefaultLengthOfTimeFraction = map[int]int{
 
 // SQLMode is the type for MySQL sql_mode.
 // See https://dev.mysql.com/doc/refman/5.7/en/sql-mode.html
-type SQLMode int
+type SQLMode int64
 
 // HasNoZeroDateMode detects if 'NO_ZERO_DATE' mode is set in SQLMode
 func (m SQLMode) HasNoZeroDateMode() bool {
