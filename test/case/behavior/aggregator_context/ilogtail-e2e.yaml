@@ -30,6 +30,8 @@ ilogtail:
                   "log_path": "/root/test",
                   "log_type": "delimiter_log",
                   "max_depth": 10,
+                  "delimiter_separator":"|",
+                  "delimiter_quote": "\u0001",
                   "plugin": {
                       "global": {
                           "DefaultLogQueueSize": 10
