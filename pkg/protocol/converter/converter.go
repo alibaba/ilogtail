@@ -15,9 +15,19 @@
 package protocol
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
+
+	sls "github.com/alibaba/ilogtail/pkg/protocol/sls"
+)
+
+const (
+	protocolSingle = "single"
+)
+
+const (
+	encodingJSON     = "json"
+	encodingProtobuf = "protobuf"
 )
 
 var tagConversionMap = map[string]string{
@@ -35,28 +45,20 @@ var tagConversionMap = map[string]string{
 }
 
 var supportedEncodingMap = map[string]map[string]bool{
-	"single": {
-		"json":     true,
-		"protobuf": false,
-	},
-	"batch": {
-		"json":     true,
-		"protobuf": false,
-	},
-	"otlp": {
-		"json":     true,
-		"protobuf": true,
+	protocolSingle: {
+		encodingJSON:     true,
+		encodingProtobuf: false,
 	},
 }
 
 type Converter struct {
-	Protocol          string
-	Encoding          string
-	TagRenameMap      map[string]string
-	ProtoKeyRenameMap map[string]string
+	Protocol             string
+	Encoding             string
+	TagKeyRenameMap      map[string]string
+	ProtocolKeyRenameMap map[string]string
 }
 
-func NewConverter(protocol, encoding string, keyRenameMap, tagRenameMap map[string]string) (*Converter, error) {
+func NewConverter(protocol, encoding string, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
 	enc, ok := supportedEncodingMap[protocol]
 	if !ok {
 		return nil, fmt.Errorf("unsupported protocol: %s", protocol)
@@ -65,79 +67,37 @@ func NewConverter(protocol, encoding string, keyRenameMap, tagRenameMap map[stri
 		return nil, fmt.Errorf("unsupported encoding: %s for protocol %s", encoding, protocol)
 	}
 	return &Converter{
-		Protocol:          protocol,
-		Encoding:          encoding,
-		TagRenameMap:      tagRenameMap,
-		ProtoKeyRenameMap: keyRenameMap,
+		Protocol:             protocol,
+		Encoding:             encoding,
+		TagKeyRenameMap:      tagKeyRenameMap,
+		ProtocolKeyRenameMap: protocolKeyRenameMap,
 	}, nil
 }
 
-func (c *Converter) Do(logGroup *LogGroup) ([][]byte, error) {
-	b, _, err := c.DoWithSelectedFields(logGroup, nil)
-	return b, err
+func (c *Converter) Do(logGroup *sls.LogGroup) (logs [][]byte, err error) {
+	logs, _, err = c.DoWithSelectedFields(logGroup, nil)
+	return
 }
 
-func (c *Converter) DoWithSelectedFields(logGroup *LogGroup, targetFields []string) ([][]byte, [][]string, error) {
+func (c *Converter) DoWithSelectedFields(logGroup *sls.LogGroup, targetFields []string) (logs [][]byte, values [][]string, err error) {
 	switch c.Protocol {
-	case "single":
+	case protocolSingle:
 		return c.ConvertToSingleLogs(logGroup, targetFields)
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
 	}
 }
 
-func (c *Converter) ConvertToSingleLogs(logGroup *LogGroup, targetFields []string) ([][]byte, [][]string, error) {
-	marshaledLogs, desiredValues := make([][]byte, len(logGroup.Logs)), make([][]string, len(logGroup.Logs))
-	for i, log := range logGroup.Logs {
-		contents, tags := c.convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic)
-
-		desiredValue, err := findTargetValues(targetFields, contents, tags, c.TagRenameMap)
-		if err != nil {
-			return nil, nil, err
-		}
-		desiredValues[i] = desiredValue
-
-		singleLog := make(map[string]interface{}, 3)
-		if newKey, ok := c.ProtoKeyRenameMap["time"]; ok {
-			singleLog[newKey] = log.Time
-		} else {
-			singleLog["time"] = log.Time
-		}
-		if newKey, ok := c.ProtoKeyRenameMap["contents"]; ok {
-			singleLog[newKey] = contents
-		} else {
-			singleLog["contents"] = contents
-		}
-		if newKey, ok := c.ProtoKeyRenameMap["tags"]; ok {
-			singleLog[newKey] = tags
-		} else {
-			singleLog["tags"] = tags
-		}
-
-		switch c.Encoding {
-		case "json":
-			b, err := json.Marshal(singleLog)
-			if err != nil {
-				return nil, nil, fmt.Errorf("unable to marshal log: %v", singleLog)
-			}
-			marshaledLogs[i] = b
-		default:
-			return nil, nil, fmt.Errorf("unsupported encoding format: %s", c.Encoding)
-		}
-	}
-	return marshaledLogs, desiredValues, nil
-}
-
-func (c *Converter) convertLogToMap(log *Log, logTags []*LogTag, src, topic string) (map[string]string, map[string]string) {
+func convertLogToMap(log *sls.Log, logTags []*sls.LogTag, src, topic string, tagKeyRenameMap map[string]string) (map[string]string, map[string]string) {
 	contents, tags := make(map[string]string), make(map[string]string, 13)
 	inK8s := false
 	for _, logContent := range log.Contents {
-		if logContent.Key == "__tag__:__user_defined_id__" || logContent.Key == "__log_topic__" {
+		if logContent.Key == "__tag__:__user_defined_id__" {
 			continue
 		}
 		if strings.HasPrefix(logContent.Key, "__tag__") {
 			if defaultTag, ok := tagConversionMap[logContent.Key[8:]]; ok {
-				if newTag, ok := c.TagRenameMap[defaultTag]; ok {
+				if newTag, ok := tagKeyRenameMap[defaultTag]; ok {
 					tags[newTag] = logContent.Value
 				} else {
 					tags[defaultTag] = logContent.Value
@@ -146,14 +106,18 @@ func (c *Converter) convertLogToMap(log *Log, logTags []*LogTag, src, topic stri
 					inK8s = true
 				}
 			} else {
-				if newTag, ok := c.TagRenameMap[logContent.Key[8:]]; ok {
+				if newTag, ok := tagKeyRenameMap[logContent.Key[8:]]; ok {
 					tags[newTag] = logContent.Value
 				} else {
 					tags[logContent.Key[8:]] = logContent.Value
 				}
 			}
 		} else {
-			contents[logContent.Key] = logContent.Value
+			if logContent.Key == "__log_topic__" {
+				tags["log.topic"] = logContent.Value
+			} else {
+				contents[logContent.Key] = logContent.Value
+			}
 		}
 	}
 	for _, logTag := range logTags {
@@ -161,7 +125,7 @@ func (c *Converter) convertLogToMap(log *Log, logTags []*LogTag, src, topic stri
 			continue
 		}
 		if defaultTag, ok := tagConversionMap[logTag.Key]; ok {
-			if newTag, ok := c.TagRenameMap[defaultTag]; ok {
+			if newTag, ok := tagKeyRenameMap[defaultTag]; ok {
 				tags[newTag] = logTag.Value
 			} else {
 				tags[defaultTag] = logTag.Value
@@ -170,7 +134,7 @@ func (c *Converter) convertLogToMap(log *Log, logTags []*LogTag, src, topic stri
 				inK8s = true
 			}
 		} else {
-			if newTag, ok := c.TagRenameMap[logTag.Key]; ok {
+			if newTag, ok := tagKeyRenameMap[logTag.Key]; ok {
 				tags[newTag] = logTag.Value
 			} else {
 				tags[logTag.Key] = logTag.Value
@@ -199,7 +163,7 @@ func (c *Converter) convertLogToMap(log *Log, logTags []*LogTag, src, topic stri
 	return contents, tags
 }
 
-func findTargetValues(targetFields []string, contents, tags, tagRenameMap map[string]string) ([]string, error) {
+func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map[string]string) ([]string, error) {
 	if len(targetFields) == 0 {
 		return nil, nil
 	}
@@ -214,7 +178,7 @@ func findTargetValues(targetFields []string, contents, tags, tagRenameMap map[st
 		case strings.HasPrefix(field, "tag."):
 			if value, ok := tags[field[4:]]; ok {
 				desiredValue[i] = value
-			} else if value, ok := tagRenameMap[field[4:]]; ok {
+			} else if value, ok := tagKeyRenameMap[field[4:]]; ok {
 				desiredValue[i] = tags[value]
 			}
 		default:

@@ -38,7 +38,7 @@ import (
 	"unicode"
 	"unsafe"
 
-	"github.com/alibaba/ilogtail/pkg/protocol"
+	sls "github.com/alibaba/ilogtail/pkg/protocol/sls"
 )
 
 const alphanum string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -357,8 +357,8 @@ func NewPackIDPrefix(text string) string {
 	return fmt.Sprintf("%X-", h.Sum64())
 }
 
-func NewLogTagForPackID(prefix string, seqNum *int64) *protocol.LogTag {
-	tag := &protocol.LogTag{
+func NewLogTagForPackID(prefix string, seqNum *int64) *sls.LogTag {
+	tag := &sls.LogTag{
 		Key:   PackIDTagKey,
 		Value: fmt.Sprintf("%s%X", prefix, atomic.LoadInt64(seqNum)),
 	}
@@ -422,8 +422,8 @@ type HistogramData struct {
 }
 
 // ToMetricLogs ..
-func (hd *HistogramData) ToMetricLogs(name string, timeMs int64, labels Labels) []*protocol.Log {
-	logs := make([]*protocol.Log, 0, len(hd.Buckets)+2)
+func (hd *HistogramData) ToMetricLogs(name string, timeMs int64, labels Labels) []*sls.Log {
+	logs := make([]*sls.Log, 0, len(hd.Buckets)+2)
 	sort.Sort(labels)
 	for _, v := range hd.Buckets {
 		newLabels := make(Labels, len(labels), len(labels)+1)
@@ -438,12 +438,12 @@ func (hd *HistogramData) ToMetricLogs(name string, timeMs int64, labels Labels) 
 }
 
 // NewMetricLog caller must sort labels
-func NewMetricLog(name string, timeMs int64, value string, labels []Label) *protocol.Log {
+func NewMetricLog(name string, timeMs int64, value string, labels []Label) *sls.Log {
 	strTime := strconv.FormatInt(timeMs, 10)
-	metric := &protocol.Log{Time: uint32(timeMs / 1000)}
-	metric.Contents = []*protocol.Log_Content{}
-	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__name__", Value: name})
-	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__time_nano__", Value: strTime})
+	metric := &sls.Log{Time: uint32(timeMs / 1000)}
+	metric.Contents = []*sls.Log_Content{}
+	metric.Contents = append(metric.Contents, &sls.Log_Content{Key: "__name__", Value: name})
+	metric.Contents = append(metric.Contents, &sls.Log_Content{Key: "__time_nano__", Value: strTime})
 
 	builder := strings.Builder{}
 	for index, l := range labels {
@@ -455,9 +455,9 @@ func NewMetricLog(name string, timeMs int64, value string, labels []Label) *prot
 		builder.WriteString(l.Value)
 
 	}
-	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__labels__", Value: builder.String()})
+	metric.Contents = append(metric.Contents, &sls.Log_Content{Key: "__labels__", Value: builder.String()})
 
-	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__value__", Value: value})
+	metric.Contents = append(metric.Contents, &sls.Log_Content{Key: "__value__", Value: value})
 	return metric
 }
 

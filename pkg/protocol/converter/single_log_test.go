@@ -19,6 +19,8 @@ import (
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
+
+	sls "github.com/alibaba/ilogtail/pkg/protocol/sls"
 )
 
 func TestConvertToSimple(t *testing.T) {
@@ -30,22 +32,23 @@ func TestConvertToSimple(t *testing.T) {
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
-			logs := make([]*Log, 2)
+			logs := make([]*sls.Log, 2)
 			for i := 0; i < 2; i++ {
-				logs[i] = &Log{
+				logs[i] = &sls.Log{
 					Time: time[i],
-					Contents: []*Log_Content{
+					Contents: []*sls.Log_Content{
 						{Key: "method", Value: method[i]},
 						{Key: "status", Value: status[i]},
 						{Key: "__tag__:__path__", Value: "/root/test/origin/example.log"},
+						{Key: "__log_topic__", Value: "file"},
 					},
 				}
 			}
-			tags := []*LogTag{
+			tags := []*sls.LogTag{
 				{Key: "__hostname__", Value: "alje834hgf"},
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
 			}
-			logGroup := &LogGroup{
+			logGroup := &sls.LogGroup{
 				Logs:     logs,
 				Category: "test",
 				Topic:    "file",
@@ -81,11 +84,11 @@ func TestConvertToSimple(t *testing.T) {
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
-			logs := make([]*Log, 2)
+			logs := make([]*sls.Log, 2)
 			for i := 0; i < 2; i++ {
-				logs[i] = &Log{
+				logs[i] = &sls.Log{
 					Time: time[i],
-					Contents: []*Log_Content{
+					Contents: []*sls.Log_Content{
 						{Key: "method", Value: method[i]},
 						{Key: "status", Value: status[i]},
 						{Key: "__tag__:__user_defined_id__", Value: "machine"},
@@ -93,14 +96,15 @@ func TestConvertToSimple(t *testing.T) {
 						{Key: "__tag__:_container_name_", Value: "container"},
 						{Key: "__tag__:_container_ip_", Value: "172.10.0.45"},
 						{Key: "__tag__:_image_name_", Value: "image"},
+						{Key: "__log_topic__", Value: "file"},
 					},
 				}
 			}
-			tags := []*LogTag{
+			tags := []*sls.LogTag{
 				{Key: "__hostname__", Value: "alje834hgf"},
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
 			}
-			logGroup := &LogGroup{
+			logGroup := &sls.LogGroup{
 				Logs:     logs,
 				Category: "test",
 				Topic:    "file",
@@ -139,11 +143,11 @@ func TestConvertToSimple(t *testing.T) {
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
-			logs := make([]*Log, 2)
+			logs := make([]*sls.Log, 2)
 			for i := 0; i < 2; i++ {
-				logs[i] = &Log{
+				logs[i] = &sls.Log{
 					Time: time[i],
-					Contents: []*Log_Content{
+					Contents: []*sls.Log_Content{
 						{Key: "method", Value: method[i]},
 						{Key: "status", Value: status[i]},
 						{Key: "__tag__:__user_defined_id__", Value: "machine"},
@@ -157,14 +161,15 @@ func TestConvertToSimple(t *testing.T) {
 						{Key: "__tag__:_container_ip_", Value: "172.10.0.45"},
 						{Key: "__tag__:_image_name_", Value: "image"},
 						{Key: "__tag__:label", Value: "tag"},
+						{Key: "__log_topic__", Value: "file"},
 					},
 				}
 			}
-			tags := []*LogTag{
+			tags := []*sls.LogTag{
 				{Key: "__hostname__", Value: "alje834hgf"},
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
 			}
-			logGroup := &LogGroup{
+			logGroup := &sls.LogGroup{
 				Logs:     logs,
 				Category: "test",
 				Topic:    "file",
@@ -209,11 +214,11 @@ func TestConvertToSimple(t *testing.T) {
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
-			logs := make([]*Log, 2)
+			logs := make([]*sls.Log, 2)
 			for i := 0; i < 2; i++ {
-				logs[i] = &Log{
+				logs[i] = &sls.Log{
 					Time: time[i],
-					Contents: []*Log_Content{
+					Contents: []*sls.Log_Content{
 						{Key: "method", Value: method[i]},
 						{Key: "status", Value: status[i]},
 						{Key: "__tag__:__user_defined_id__", Value: "machine"},
@@ -223,14 +228,15 @@ func TestConvertToSimple(t *testing.T) {
 						{Key: "__tag__:_namespace_", Value: "default"},
 						{Key: "__tag__:_pod_name_", Value: "container"},
 						{Key: "__tag__:_pod_ip_", Value: "172.10.0.45"},
+						{Key: "__log_topic__", Value: "file"},
 					},
 				}
 			}
-			tags := []*LogTag{
+			tags := []*sls.LogTag{
 				{Key: "__hostname__", Value: "alje834hgf"},
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
 			}
-			logGroup := &LogGroup{
+			logGroup := &sls.LogGroup{
 				Logs:     logs,
 				Category: "test",
 				Topic:    "file",
@@ -267,26 +273,27 @@ func TestConvertToSimple(t *testing.T) {
 			})
 		})
 
-		Convey("When the topic is null", func() {
+		Convey("When the topic is null but __log_topic__ is not", func() {
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
-			logs := make([]*Log, 2)
+			logs := make([]*sls.Log, 2)
 			for i := 0; i < 2; i++ {
-				logs[i] = &Log{
+				logs[i] = &sls.Log{
 					Time: time[i],
-					Contents: []*Log_Content{
+					Contents: []*sls.Log_Content{
 						{Key: "method", Value: method[i]},
 						{Key: "status", Value: status[i]},
 						{Key: "__tag__:__path__", Value: "/root/test/origin/example.log"},
+						{Key: "__log_topic__", Value: "file"},
 					},
 				}
 			}
-			tags := []*LogTag{
+			tags := []*sls.LogTag{
 				{Key: "__hostname__", Value: "alje834hgf"},
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
 			}
-			logGroup := &LogGroup{
+			logGroup := &sls.LogGroup{
 				Logs:     logs,
 				Category: "test",
 				Topic:    "",
@@ -294,7 +301,58 @@ func TestConvertToSimple(t *testing.T) {
 				LogTags:  tags,
 			}
 
-			Convey("Then the converted log does not include key \"log.topic\"", func() {
+			Convey("Then the converted log should be valid", func() {
+				b, err := c.Do(logGroup)
+				So(err, ShouldBeNil)
+
+				for _, s := range b {
+					unmarshaledLog := make(map[string]interface{})
+					err = json.Unmarshal(s, &unmarshaledLog)
+					So(err, ShouldBeNil)
+					So(unmarshaledLog, ShouldHaveLength, 3)
+					So(unmarshaledLog, ShouldContainKey, "time")
+					So(unmarshaledLog, ShouldContainKey, "contents")
+					So(unmarshaledLog, ShouldContainKey, "tags")
+					So(unmarshaledLog["contents"], ShouldHaveLength, 2)
+					So(unmarshaledLog["contents"], ShouldContainKey, "method")
+					So(unmarshaledLog["contents"], ShouldContainKey, "status")
+					So(unmarshaledLog["tags"], ShouldHaveLength, 4)
+					So(unmarshaledLog["tags"], ShouldContainKey, "log.file.path")
+					So(unmarshaledLog["tags"], ShouldContainKey, "host.name")
+					So(unmarshaledLog["tags"], ShouldContainKey, "host.ip")
+					So(unmarshaledLog["tags"], ShouldContainKey, "log.topic")
+				}
+			})
+		})
+
+		Convey("When the topic and __log_topic__ are null", func() {
+			time := []uint32{1662434209, 1662434487}
+			method := []string{"PUT", "GET"}
+			status := []string{"200", "404"}
+			logs := make([]*sls.Log, 2)
+			for i := 0; i < 2; i++ {
+				logs[i] = &sls.Log{
+					Time: time[i],
+					Contents: []*sls.Log_Content{
+						{Key: "method", Value: method[i]},
+						{Key: "status", Value: status[i]},
+						{Key: "__tag__:__path__", Value: "/root/test/origin/example.log"},
+					},
+				}
+			}
+			tags := []*sls.LogTag{
+				{Key: "__hostname__", Value: "alje834hgf"},
+				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
+			}
+			logGroup := &sls.LogGroup{
+				Logs:     logs,
+				Category: "test",
+				Topic:    "",
+				Source:   "172.10.0.56",
+				LogTags:  tags,
+			}
+
+			Convey("Then the converted log should be valid", func() {
 				b, err := c.Do(logGroup)
 				So(err, ShouldBeNil)
 
@@ -322,17 +380,17 @@ func TestConvertToSimple(t *testing.T) {
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
-			logs := make([]*Log, 2)
+			logs := make([]*sls.Log, 2)
 			for i := 0; i < 2; i++ {
-				logs[i] = &Log{
+				logs[i] = &sls.Log{
 					Time: time[i],
-					Contents: []*Log_Content{
+					Contents: []*sls.Log_Content{
 						{Key: "method", Value: method[i]},
 						{Key: "status", Value: status[i]},
 					},
 				}
 			}
-			tags := []*LogTag{
+			tags := []*sls.LogTag{
 				{Key: "__user_defined_id__", Value: "machine"},
 				{Key: "__hostname__", Value: "alje834hgf"},
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
@@ -347,7 +405,7 @@ func TestConvertToSimple(t *testing.T) {
 				{Key: "_image_name_", Value: "image"},
 				{Key: "label", Value: "tag"},
 			}
-			logGroup := &LogGroup{
+			logGroup := &sls.LogGroup{
 				Logs:     logs,
 				Category: "test",
 				Topic:    "topic",
@@ -408,11 +466,11 @@ func TestConvertToSimple(t *testing.T) {
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
-			logs := make([]*Log, 2)
+			logs := make([]*sls.Log, 2)
 			for i := 0; i < 2; i++ {
-				logs[i] = &Log{
+				logs[i] = &sls.Log{
 					Time: time[i],
-					Contents: []*Log_Content{
+					Contents: []*sls.Log_Content{
 						{Key: "method", Value: method[i]},
 						{Key: "status", Value: status[i]},
 						{Key: "__tag__:__user_defined_id__", Value: "machine"},
@@ -426,15 +484,16 @@ func TestConvertToSimple(t *testing.T) {
 						{Key: "__tag__:_container_ip_", Value: "172.10.0.45"},
 						{Key: "__tag__:_image_name_", Value: "image"},
 						{Key: "__tag__:label", Value: "tag"},
+						{Key: "__log_topic__", Value: "file"},
 					},
 				}
 			}
-			tags := []*LogTag{
+			tags := []*sls.LogTag{
 				{Key: "__hostname__", Value: "alje834hgf"},
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
 				{Key: "env", Value: "K8S"},
 			}
-			logGroup := &LogGroup{
+			logGroup := &sls.LogGroup{
 				Logs:     logs,
 				Category: "test",
 				Topic:    "file",
@@ -513,66 +572,21 @@ func TestConvertToSimple(t *testing.T) {
 		}
 
 		Convey("When performing conversion", func() {
-			logs := []*Log{
+			logs := []*sls.Log{
 				{
 					Time: 1662434209,
-					Contents: []*Log_Content{
+					Contents: []*sls.Log_Content{
 						{Key: "method", Value: "PUT"},
 					},
 				},
 			}
-			tags := []*LogTag{
+			tags := []*sls.LogTag{
 				{Key: "__hostname__", Value: "alje834hgf"},
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
 				{Key: "__path__", Value: "/root/test/origin/example.log"},
+				{Key: "__log_topic__", Value: "file"},
 			}
-			logGroup := &LogGroup{
-				Logs:     logs,
-				Category: "test",
-				Topic:    "topic",
-				Source:   "172.10.0.56",
-				LogTags:  tags,
-			}
-
-			_, err := c.Do(logGroup)
-
-			Convey("Then error should be returned", func() {
-				So(err, ShouldNotBeNil)
-			})
-		})
-	})
-}
-
-func TestInvalidProtocol(t *testing.T) {
-	Convey("When constructing converter with invalid protocol", t, func() {
-		_, err := NewConverter("xml", "pb", nil, nil)
-
-		Convey("Then error should be returned", func() {
-			So(err, ShouldNotBeNil)
-		})
-	})
-
-	Convey("Given a converter with unsupported protocol", t, func() {
-		c := &Converter{
-			Protocol: "xml",
-			Encoding: "pb",
-		}
-
-		Convey("When performing conversion", func() {
-			logs := []*Log{
-				{
-					Time: 1662434209,
-					Contents: []*Log_Content{
-						{Key: "method", Value: "PUT"},
-					},
-				},
-			}
-			tags := []*LogTag{
-				{Key: "__hostname__", Value: "alje834hgf"},
-				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
-				{Key: "__path__", Value: "/root/test/origin/example.log"},
-			}
-			logGroup := &LogGroup{
+			logGroup := &sls.LogGroup{
 				Logs:     logs,
 				Category: "test",
 				Topic:    "topic",
