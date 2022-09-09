@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	sls "github.com/alibaba/ilogtail/pkg/protocol/sls"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 var GlobalAlarm *Alarm
@@ -40,7 +40,7 @@ func DeleteAlarm(key string) {
 	delete(RegisterAlarms, key)
 }
 
-func RegisterAlarmsSerializeToPb(logGroup *sls.LogGroup) {
+func RegisterAlarmsSerializeToPb(logGroup *protocol.LogGroup) {
 	regMu.Lock()
 	defer regMu.Unlock()
 	for _, alarm := range RegisterAlarms {
@@ -90,20 +90,20 @@ func (p *Alarm) Record(alarmType, message string) {
 	mu.Unlock()
 }
 
-func (p *Alarm) SerializeToPb(logGroup *sls.LogGroup) {
+func (p *Alarm) SerializeToPb(logGroup *protocol.LogGroup) {
 	nowTime := (uint32)(time.Now().Unix())
 	mu.Lock()
 	for alarmType, item := range p.AlarmMap {
 		if item.Count == 0 {
 			continue
 		}
-		log := &sls.Log{}
-		log.Contents = append(log.Contents, &sls.Log_Content{Key: "project_name", Value: p.Project})
-		log.Contents = append(log.Contents, &sls.Log_Content{Key: "category", Value: p.Logstore})
-		log.Contents = append(log.Contents, &sls.Log_Content{Key: "alarm_type", Value: alarmType})
-		log.Contents = append(log.Contents, &sls.Log_Content{Key: "alarm_count", Value: strconv.Itoa(item.Count)})
-		log.Contents = append(log.Contents, &sls.Log_Content{Key: "alarm_message", Value: item.Message})
-		log.Contents = append(log.Contents, &sls.Log_Content{Key: "ip", Value: GetIPAddress()})
+		log := &protocol.Log{}
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "project_name", Value: p.Project})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "category", Value: p.Logstore})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "alarm_type", Value: alarmType})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "alarm_count", Value: strconv.Itoa(item.Count)})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "alarm_message", Value: item.Message})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
 		log.Time = nowTime
 		logGroup.Logs = append(logGroup.Logs, log)
 		// clear after serialize

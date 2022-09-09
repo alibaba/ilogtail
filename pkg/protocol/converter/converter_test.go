@@ -19,7 +19,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	sls "github.com/alibaba/ilogtail/pkg/protocol/sls"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 func TestInvalidProtocol(t *testing.T) {
@@ -38,21 +38,21 @@ func TestInvalidProtocol(t *testing.T) {
 		}
 
 		Convey("When performing conversion", func() {
-			logs := []*sls.Log{
+			logs := []*protocol.Log{
 				{
 					Time: 1662434209,
-					Contents: []*sls.Log_Content{
+					Contents: []*protocol.Log_Content{
 						{Key: "method", Value: "PUT"},
 					},
 				},
 			}
-			tags := []*sls.LogTag{
+			tags := []*protocol.LogTag{
 				{Key: "__hostname__", Value: "alje834hgf"},
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
 				{Key: "__path__", Value: "/root/test/origin/example.log"},
 				{Key: "__log_topic__", Value: "file"},
 			}
-			logGroup := &sls.LogGroup{
+			logGroup := &protocol.LogGroup{
 				Logs:     logs,
 				Category: "test",
 				Topic:    "topic",

@@ -18,10 +18,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sls "github.com/alibaba/ilogtail/pkg/protocol/sls"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-func (c *Converter) ConvertToSingleLogs(logGroup *sls.LogGroup, targetFields []string) ([][]byte, [][]string, error) {
+func (c *Converter) ConvertToSingleLogs(logGroup *protocol.LogGroup, targetFields []string) ([][]byte, [][]string, error) {
 	marshaledLogs, desiredValues := make([][]byte, len(logGroup.Logs)), make([][]string, len(logGroup.Logs))
 	for i, log := range logGroup.Logs {
 		contents, tags := convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic, c.TagKeyRenameMap)

@@ -18,14 +18,14 @@ import (
 	"fmt"
 	"time"
 
-	sls "github.com/alibaba/ilogtail/pkg/protocol/sls"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-func CreateLog(t time.Time, configTag map[string]string, logTags map[string]string, fields map[string]string) (*sls.Log, error) {
-	var slsLog sls.Log
-	slsLog.Contents = make([]*sls.Log_Content, 0, len(configTag)+len(logTags)+len(fields))
+func CreateLog(t time.Time, configTag map[string]string, logTags map[string]string, fields map[string]string) (*protocol.Log, error) {
+	var slsLog protocol.Log
+	slsLog.Contents = make([]*protocol.Log_Content, 0, len(configTag)+len(logTags)+len(fields))
 	for key, val := range configTag {
-		cont := &sls.Log_Content{
+		cont := &protocol.Log_Content{
 			Key:   key,
 			Value: val,
 		}
@@ -33,7 +33,7 @@ func CreateLog(t time.Time, configTag map[string]string, logTags map[string]stri
 	}
 
 	for key, val := range logTags {
-		cont := &sls.Log_Content{
+		cont := &protocol.Log_Content{
 			Key:   key,
 			Value: val,
 		}
@@ -41,7 +41,7 @@ func CreateLog(t time.Time, configTag map[string]string, logTags map[string]stri
 	}
 
 	for key, val := range fields {
-		cont := &sls.Log_Content{
+		cont := &protocol.Log_Content{
 			Key:   key,
 			Value: val,
 		}
@@ -52,12 +52,12 @@ func CreateLog(t time.Time, configTag map[string]string, logTags map[string]stri
 	return &slsLog, nil
 }
 
-func CreateLogByArray(t time.Time, configTag map[string]string, logTags map[string]string, columns []string, values []string) (*sls.Log, error) {
-	var slsLog sls.Log
-	slsLog.Contents = make([]*sls.Log_Content, 0, len(configTag)+len(logTags)+len(columns))
+func CreateLogByArray(t time.Time, configTag map[string]string, logTags map[string]string, columns []string, values []string) (*protocol.Log, error) {
+	var slsLog protocol.Log
+	slsLog.Contents = make([]*protocol.Log_Content, 0, len(configTag)+len(logTags)+len(columns))
 
 	for key, val := range configTag {
-		cont := &sls.Log_Content{
+		cont := &protocol.Log_Content{
 			Key:   key,
 			Value: val,
 		}
@@ -65,7 +65,7 @@ func CreateLogByArray(t time.Time, configTag map[string]string, logTags map[stri
 	}
 
 	for key, val := range logTags {
-		cont := &sls.Log_Content{
+		cont := &protocol.Log_Content{
 			Key:   key,
 			Value: val,
 		}
@@ -77,7 +77,7 @@ func CreateLogByArray(t time.Time, configTag map[string]string, logTags map[stri
 	}
 
 	for index := range columns {
-		cont := &sls.Log_Content{
+		cont := &protocol.Log_Content{
 			Key:   columns[index],
 			Value: values[index],
 		}

@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	sls "github.com/alibaba/ilogtail/pkg/protocol/sls"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 const (
@@ -74,12 +74,12 @@ func NewConverter(protocol, encoding string, tagKeyRenameMap, protocolKeyRenameM
 	}, nil
 }
 
-func (c *Converter) Do(logGroup *sls.LogGroup) (logs [][]byte, err error) {
+func (c *Converter) Do(logGroup *protocol.LogGroup) (logs [][]byte, err error) {
 	logs, _, err = c.DoWithSelectedFields(logGroup, nil)
 	return
 }
 
-func (c *Converter) DoWithSelectedFields(logGroup *sls.LogGroup, targetFields []string) (logs [][]byte, values [][]string, err error) {
+func (c *Converter) DoWithSelectedFields(logGroup *protocol.LogGroup, targetFields []string) (logs [][]byte, values [][]string, err error) {
 	switch c.Protocol {
 	case protocolSingle:
 		return c.ConvertToSingleLogs(logGroup, targetFields)
@@ -88,7 +88,7 @@ func (c *Converter) DoWithSelectedFields(logGroup *sls.LogGroup, targetFields []
 	}
 }
 
-func convertLogToMap(log *sls.Log, logTags []*sls.LogTag, src, topic string, tagKeyRenameMap map[string]string) (map[string]string, map[string]string) {
+func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic string, tagKeyRenameMap map[string]string) (map[string]string, map[string]string) {
 	contents, tags := make(map[string]string), make(map[string]string, 13)
 	inK8s := false
 	for _, logContent := range log.Contents {
