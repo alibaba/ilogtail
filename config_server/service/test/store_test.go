@@ -32,15 +32,9 @@ func TestStore(t *testing.T) {
 	Convey("Test store's CURD, take config as example.", t, func() {
 		s := store.GetStore()
 
-		Convey("First, there is no config in store.", func() {
-			configs, err := s.GetAll(common.TYPE_COLLECTION_CONFIG)
-			So(err, ShouldBeNil)
-			So(configs, ShouldBeEmpty)
-		})
-
-		Convey("Second, add a config named config-1 to store.", func() {
+		Convey("First, add a config named config-test to store.", func() {
 			config := new(model.Config)
-			config.Name = "config-1"
+			config.Name = "config-test"
 			config.AgentType = "iLogtail"
 			config.Content = "test"
 			config.Version = 1
@@ -48,33 +42,27 @@ func TestStore(t *testing.T) {
 			config.DelTag = false
 			s.Add(common.TYPE_COLLECTION_CONFIG, config.Name, config)
 
-			value, err := s.Get(common.TYPE_COLLECTION_CONFIG, "config-1")
+			value, err := s.Get(common.TYPE_COLLECTION_CONFIG, "config-test")
 			So(err, ShouldBeNil)
-			So(value.(*model.Config), ShouldResemble, &model.Config{Name: "config-1", AgentType: "iLogtail", Content: "test", Version: 1, Description: "", DelTag: false})
+			So(value.(*model.Config), ShouldResemble, &model.Config{Name: "config-test", AgentType: "iLogtail", Content: "test", Version: 1, Description: "", DelTag: false})
 		})
 
-		Convey("Third, update config-1's content.", func() {
-			value, err := s.Get(common.TYPE_COLLECTION_CONFIG, "config-1")
+		Convey("Second, update config-test's content.", func() {
+			value, err := s.Get(common.TYPE_COLLECTION_CONFIG, "config-test")
 			So(err, ShouldBeNil)
 			config := value.(*model.Config)
 			config.Description = "test"
 			s.Update(common.TYPE_COLLECTION_CONFIG, config.Name, config)
 
-			value, err = s.Get(common.TYPE_COLLECTION_CONFIG, "config-1")
+			value, err = s.Get(common.TYPE_COLLECTION_CONFIG, "config-test")
 			So(err, ShouldBeNil)
-			So(value.(*model.Config), ShouldResemble, &model.Config{Name: "config-1", AgentType: "iLogtail", Content: "test", Version: 1, Description: "test", DelTag: false})
+			So(value.(*model.Config), ShouldResemble, &model.Config{Name: "config-test", AgentType: "iLogtail", Content: "test", Version: 1, Description: "test", DelTag: false})
 		})
 
-		Convey("Fourth, delete config-1.", func() {
-			s.Delete(common.TYPE_COLLECTION_CONFIG, "config-1")
-			_, err := s.Get(common.TYPE_COLLECTION_CONFIG, "config-1")
+		Convey("Third, delete config-test.", func() {
+			s.Delete(common.TYPE_COLLECTION_CONFIG, "config-test")
+			_, err := s.Get(common.TYPE_COLLECTION_CONFIG, "config-test")
 			So(err, ShouldNotBeNil)
-		})
-
-		Convey("Fifth, there is no config in store.", func() {
-			configs, err := s.GetAll(common.TYPE_COLLECTION_CONFIG)
-			So(err, ShouldBeNil)
-			So(configs, ShouldBeEmpty)
 		})
 	})
 }

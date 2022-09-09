@@ -80,7 +80,7 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 			}
 			return false
 		}()
-		if match || agentGroup.(*model.AgentGroup).Name == "Default" {
+		if match || agentGroup.(*model.AgentGroup).Name == "default" {
 			for k := range agentGroup.(*model.AgentGroup).AppliedConfigs {
 				config, err := c.GetConfig(k)
 				if err != nil {

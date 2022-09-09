@@ -62,7 +62,7 @@ func GetConfigList(c *gin.Context) {
 		c.ProtoBuf(common.ConfigNotExist.Status, res)
 	} else {
 		res.Code = common.Accept.Code
-		res.Message = "Check config success"
+		res.Message = "Get config update infos success"
 		res.ConfigUpdateInfos = result
 		c.ProtoBuf(common.Accept.Status, res)
 	}

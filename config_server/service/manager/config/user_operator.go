@@ -78,7 +78,7 @@ func (c *ConfigManager) UpdateConfig(pconfig *proto.Config) (bool, error) {
 		}
 		config := value.(*model.Config)
 
-		if !config.DelTag {
+		if config.DelTag {
 			return false, nil
 		} else {
 			config.ParseProto(pconfig)
@@ -108,7 +108,7 @@ func (c *ConfigManager) DeleteConfig(configName string) (bool, error) {
 		}
 		config := value.(*model.Config)
 
-		if !config.DelTag {
+		if config.DelTag {
 			return false, nil
 		} else {
 			config.DelTag = true
@@ -138,7 +138,7 @@ func (c *ConfigManager) GetConfig(configName string) (*model.Config, error) {
 		}
 		config := value.(*model.Config)
 
-		if !config.DelTag {
+		if config.DelTag {
 			return nil, nil
 		}
 		return config, nil

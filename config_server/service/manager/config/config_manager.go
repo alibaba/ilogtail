@@ -28,5 +28,6 @@ type ConfigManager struct {
 
 func (c *ConfigManager) Init() {
 	c.ConfigList = make(map[string]*model.Config)
+	c.ConfigListMutex = new(sync.RWMutex)
 	go c.updateConfigList(setting.GetSetting().ConfigSyncInterval)
 }
