@@ -30,10 +30,6 @@ func NewConverter(protocol, encoding string, tagKeyRenameMap, protocolKeyRenameM
 
 其中，`protocol`字段和`encoding`的可选取值为见附录。
 
-| 协议名 | 标识 |
-| ------ | ------ |
-| 单条协议 | protocolSingle |
-
 ## 转换方法
 
 `Converter`结构支持如下两种方法：
