@@ -90,6 +90,9 @@
 * [日志协议](developer-guide/log-protocol/README.md)
   * [协议转换](developer-guide/log-protocol/converter.md)
   * [增加新的日志协议](developer-guide/log-protocol/How-to-add-new-protocol.md)
+  * [自定义协议](developer-guide/log-protocol)
+    * [sls协议](developer-guide/log-protocol/customized-protocol/sls.md)
+    * [单条协议](developer-guide/log-protocol/customized-protocol/single.md)
 * [代码风格](developer-guide/codestyle.md)
 
 * [数据结构](developer-guide/data-structure.md)
