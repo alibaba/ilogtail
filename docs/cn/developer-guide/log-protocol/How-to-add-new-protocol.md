@@ -19,7 +19,7 @@
 2. 在`./pkg/protocol/converter`目录下新建一个以`<protocol>_log.go`命名的文件，并在该文件中实现下列函数：
 
     ```Go
-    func (c *Converter) ConvertToXXXLogs(logGroup *sls.LogGroup, targetFields []string) (logs [][]byte, values [][]string, err error)
+    func (c *Converter) ConvertToXXXProtocol(logGroup *sls.LogGroup, targetFields []string) (logs [][]byte, values [][]string, err error)
     ```
 
     其中，函数名中的“XXX”为协议名（可缩写），参数中的`logGroup`为sls日志组，`targetFields`为需要提取值的字段名，返回值中的`logs`为代表每条日志的字节数组，`values`为每条日志或日志组tag中`targetFields`字段对应的值，`err`为返回的错误。
@@ -47,6 +47,6 @@
     - 新增`protocolXXX`常量，“XXX”为协议名，常量的值也为协议名
     - 如果协议支持新的编码方式，则新增`encodingXXX`常量，“XXX”为编码方式，常量的值也为编码方式
     - 在`supportedEncodingMap`中，增加该协议支持的编码类型
-    - 在`c.DoWithSelectedFields`方法的`switch`语句中新增一个`case`子句，`case`名为协议名，子句内容为`return c.ConvertToXXXLogs(logGroup, targetFields)`，其中涉及的函数即为第2步中编写的函数
+    - 在`c.DoWithSelectedFields`方法的`switch`语句中新增一个`case`子句，`case`名为协议名，子句内容为`return c.ConvertToXXXProtocol(logGroup, targetFields)`，其中涉及的函数即为第2步中编写的函数
 
 4. 在`./doc/cn/developer-guide/log-protocol/converter.md`的附录和`README.md`中增加协议相关内容。如果是自定义协议，还需要在`./doc/cn/developer-guide/log-protocol/customized-protocol`文件夹下新增`<protocol>.md`文件描述具体的协议形式。

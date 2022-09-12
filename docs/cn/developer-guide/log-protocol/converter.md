@@ -43,7 +43,9 @@ func (c *Converter) DoWithSelectedFields(logGroup *sls.LogGroup, targetFields []
 各方法的用法如下：
 
 - `Do`：给定日志组`logGroup`，根据`Converter`中设定的参数，将日志组中的各条日志分别转换为字节数组，并将结果组装在一个`logs`数组中；
-- `DoWithSelectedFields`：在完成和`Do`方法一致的日志转换基础上，在各条日志或日志组tag中找到`targetFields`数组中指定字段的值，结果保存于`values`数组中。如果需要获取被重命名tag字段的值，则在`targetFields`中包含更名前和更名后的字段均可。
+- `DoWithSelectedFields`：在完成和`Do`方法一致的日志转换基础上，在各条日志及日志组tag中找到`targetFields`数组中指定字段的值，将结果保存于`values`数组中。`targetFields`中各字符串的的格式要求如下：
+  - 如果需要获取某个日志字段的值，则字符串的命名方式为“content.XXX"，其中XXX为该字段的键名；
+  - 如果需要获取某个日志tag的值，则字符串的命名方式为“tag.XXX"，其中XXX为该字段的键名。
 
 ## 使用步骤
 

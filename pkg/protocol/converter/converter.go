@@ -30,18 +30,43 @@ const (
 	encodingProtobuf = "protobuf"
 )
 
+const (
+	tagPrefix           = "__tag__:"
+	targetContentPrefix = "content."
+	targetTagPrefix     = "tag."
+)
+
+const (
+	tagHostIP                = "host.ip"
+	tagLogTopic              = "log.topic"
+	tagLogFilePath           = "log.file.path"
+	tagHostname              = "host.name"
+	tagK8sNodeIP             = "k8s.node.ip"
+	tagK8sNodeName           = "k8s.node.name"
+	tagK8sNamespace          = "k8s.namespace.name"
+	tagK8sPodName            = "k8s.pod.name"
+	tagK8sPodIP              = "k8s.pod.ip"
+	tagK8sPodUID             = "k8s.pod.uid"
+	tagContainerName         = "container.name"
+	tagContainerIP           = "container.ip"
+	tagContainerImageName    = "container.image.name"
+	tagK8sContainerName      = "k8s.container.name"
+	tagK8sContainerIP        = "k8s.container.ip"
+	tagK8sContainerImageName = "k8s.container.image.name"
+)
+
 var tagConversionMap = map[string]string{
-	"__path__":         "log.file.path",
-	"__hostname__":     "host.name",
-	"_node_ip_":        "k8s.node.ip",
-	"_node_name_":      "k8s.node.name",
-	"_namespace_":      "k8s.namespace.name",
-	"_pod_name_":       "k8s.pod.name",
-	"_pod_ip_":         "k8s.pod.ip",
-	"_pod_uid_":        "k8s.pod.uid",
-	"_container_name_": "container.name",
-	"_container_ip_":   "container.ip",
-	"_image_name_":     "container.image.name",
+	"__path__":         tagLogFilePath,
+	"__hostname__":     tagHostname,
+	"_node_ip_":        tagK8sNodeIP,
+	"_node_name_":      tagK8sNodeName,
+	"_namespace_":      tagK8sNamespace,
+	"_pod_name_":       tagK8sPodName,
+	"_pod_ip_":         tagK8sPodIP,
+	"_pod_uid_":        tagK8sPodUID,
+	"_container_name_": tagContainerName,
+	"_container_ip_":   tagContainerIP,
+	"_image_name_":     tagContainerImageName,
 }
 
 var supportedEncodingMap = map[string]map[string]bool{
@@ -82,21 +107,21 @@ func (c *Converter) Do(logGroup *protocol.LogGroup) (logs [][]byte, err error) {
 func (c *Converter) DoWithSelectedFields(logGroup *protocol.LogGroup, targetFields []string) (logs [][]byte, values [][]string, err error) {
 	switch c.Protocol {
 	case protocolSingle:
-		return c.ConvertToSingleLogs(logGroup, targetFields)
+		return c.ConvertToSingleProtocol(logGroup, targetFields)
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
 	}
 }
 
 func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic string, tagKeyRenameMap map[string]string) (map[string]string, map[string]string) {
-	contents, tags := make(map[string]string), make(map[string]string, 13)
+	contents, tags := make(map[string]string), make(map[string]string, len(tagConversionMap)+2) // the 2 extra tags comes from src and topic
 	inK8s := false
 	for _, logContent := range log.Contents {
-		if logContent.Key == "__tag__:__user_defined_id__" {
+		if logContent.Key == tagPrefix+"__user_defined_id__" {
 			continue
 		}
-		if strings.HasPrefix(logContent.Key, "__tag__") {
-			if defaultTag, ok := tagConversionMap[logContent.Key[8:]]; ok {
+		if strings.HasPrefix(logContent.Key, tagPrefix) {
+			if defaultTag, ok := tagConversionMap[logContent.Key[len(tagPrefix):]]; ok {
 				if newTag, ok := tagKeyRenameMap[defaultTag]; ok {
 					tags[newTag] = logContent.Value
 				} else {
@@ -109,12 +134,12 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 				if newTag, ok := tagKeyRenameMap[logContent.Key[8:]]; ok {
 					tags[newTag] = logContent.Value
 				} else {
-					tags[logContent.Key[8:]] = logContent.Value
+					tags[logContent.Key[len(tagPrefix):]] = logContent.Value
 				}
 			}
 		} else {
 			if logContent.Key == "__log_topic__" {
-				tags["log.topic"] = logContent.Value
+				tags[tagLogTopic] = logContent.Value
 			} else {
 				contents[logContent.Key] = logContent.Value
 			}
@@ -141,9 +166,9 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 			}
 		}
 	}
-	tags["host.ip"] = src
+	tags[tagHostIP] = src
 	if topic != "" {
-		tags["log.topic"] = topic
+		tags[tagLogTopic] = topic
 	}
 
 	if inK8s {
@@ -171,12 +196,12 @@ func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map
 	desiredValue := make([]string, len(targetFields))
 	for i, field := range targetFields {
 		switch {
-		case strings.HasPrefix(field, "content."):
-			if value, ok := contents[field[8:]]; ok {
+		case strings.HasPrefix(field, targetContentPrefix):
+			if value, ok := contents[field[len(targetContentPrefix):]]; ok {
 				desiredValue[i] = value
 			}
-		case strings.HasPrefix(field, "tag."):
-			if value, ok := tags[field[4:]]; ok {
+		case strings.HasPrefix(field, targetTagPrefix):
+			if value, ok := tags[field[len(targetTagPrefix):]]; ok {
 				desiredValue[i] = value
 			} else if value, ok := tagKeyRenameMap[field[4:]]; ok {
 				desiredValue[i] = tags[value]
