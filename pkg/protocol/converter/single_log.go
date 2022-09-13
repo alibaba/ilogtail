@@ -39,28 +39,28 @@ func (c *Converter) ConvertToSingleProtocol(logGroup *protocol.LogGroup, targetF
 		}
 		desiredValues[i] = desiredValue
 
-		singleLog := make(map[string]interface{}, numProtocolKeys)
+		customSingleLog := make(map[string]interface{}, numProtocolKeys)
 		if newKey, ok := c.ProtocolKeyRenameMap[protocolKeyTime]; ok {
-			singleLog[newKey] = log.Time
+			customSingleLog[newKey] = log.Time
 		} else {
-			singleLog[protocolKeyTime] = log.Time
+			customSingleLog[protocolKeyTime] = log.Time
 		}
 		if newKey, ok := c.ProtocolKeyRenameMap[protocolKeyContent]; ok {
-			singleLog[newKey] = contents
+			customSingleLog[newKey] = contents
 		} else {
-			singleLog[protocolKeyContent] = contents
+			customSingleLog[protocolKeyContent] = contents
 		}
 		if newKey, ok := c.ProtocolKeyRenameMap[protocolKeyTag]; ok {
-			singleLog[newKey] = tags
+			customSingleLog[newKey] = tags
 		} else {
-			singleLog[protocolKeyTag] = tags
+			customSingleLog[protocolKeyTag] = tags
 		}
 
 		switch c.Encoding {
 		case encodingJSON:
-			b, err := json.Marshal(singleLog)
+			b, err := json.Marshal(customSingleLog)
 			if err != nil {
-				return nil, nil, fmt.Errorf("unable to marshal log: %v", singleLog)
+				return nil, nil, fmt.Errorf("unable to marshal log: %v", customSingleLog)
 			}
 			marshaledLogs[i] = b
 		default:

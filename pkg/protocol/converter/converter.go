@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	protocolSingle = "single"
+	protocolCustomSingle = "custom_single"
 )
 
 const (
@@ -79,7 +79,7 @@ var specialTagConversionMap = map[string]string{
 }
 
 var supportedEncodingMap = map[string]map[string]bool{
-	protocolSingle: {
+	protocolCustomSingle: {
 		encodingJSON:     true,
 		encodingProtobuf: false,
 	},
@@ -117,7 +117,7 @@ func (c *Converter) Do(logGroup *protocol.LogGroup) (logs [][]byte, err error) {
 
 func (c *Converter) DoWithSelectedFields(logGroup *protocol.LogGroup, targetFields []string) (logs [][]byte, values [][]string, err error) {
 	switch c.Protocol {
-	case protocolSingle:
+	case protocolCustomSingle:
 		return c.ConvertToSingleProtocol(logGroup, targetFields)
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)

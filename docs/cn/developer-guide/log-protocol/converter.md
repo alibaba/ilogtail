@@ -82,7 +82,7 @@ func (c *Converter) DoWithSelectedFields(logGroup *sls.LogGroup, targetFields []
 假设需要将日志从sls协议转换为单条协议，编码方式选择“json”，同时将tag中的host.name键更名为hostname，将协议中的time键更名为@timestamp，则创建`Converter`的代码如下：
 
 ```Go
-c, err := protocol.NewConverter(protocolSingle, encodingJSON, map[string]string{"host.name":"hostname"}, map[string]string{"time", "@timestamp"})
+c, err := protocol.NewConverter(protocolCustomSingle, encodingJSON, map[string]string{"host.name":"hostname"}, map[string]string{"time", "@timestamp"})
 ```
 
 ## 附录
@@ -91,7 +91,7 @@ c, err := protocol.NewConverter(protocolSingle, encodingJSON, map[string]string{
 
     | 协议名 | 标识 |
     | ------ | ------ |
-    | 单条协议 | protocolSingle |
+    | 单条协议 | protocolCustomSingle |
 
 - 可选编码方式
 
