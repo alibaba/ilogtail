@@ -43,7 +43,7 @@ func InitUserRouter(router *gin.Engine) {
 		userGroup.PUT("/UpdateConfig", user.UpdateConfig)
 		userGroup.DELETE("/DeleteConfig", user.DeleteConfig)
 		userGroup.GET("/GetConfig", user.GetConfig)
-		userGroup.GET("/ListAllConfigs", user.ListAllConfigs)
+		userGroup.GET("/ListConfigs", user.ListConfigs)
 
 		userGroup.PUT("/ApplyConfigToAgentGroup", user.ApplyConfigToAgentGroup)
 		userGroup.DELETE("/RemoveConfigFromAgentGroup", user.RemoveConfigFromAgentGroup)

@@ -118,7 +118,7 @@ func TestInterface(t *testing.T) {
 			So(res.StatusCode, ShouldEqual, 200)
 			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
 			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Send running status success")
+			So(resBody.Message, ShouldEqual, "Send running statistics success")
 		})
 
 		// wait for write to memory
@@ -469,7 +469,7 @@ func TestInterface(t *testing.T) {
 			So(checkResBody.Message, ShouldEqual, "Config config-1 doesn't exist.")
 		})
 
-		Convey("Test ListAllConfigs.", func() {
+		Convey("Test ListConfigs.", func() {
 			// data
 			reqBody := configserverproto.ListConfigsRequest{}
 			reqBody.RequestId = "1"
@@ -477,7 +477,7 @@ func TestInterface(t *testing.T) {
 
 			// request
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/User/ListAllConfigs", bytes.NewBuffer(reqBodyByte))
+			req, _ := http.NewRequest("GET", "/User/ListConfigs", bytes.NewBuffer(reqBodyByte))
 			r.ServeHTTP(w, req)
 
 			// response

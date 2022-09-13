@@ -15,6 +15,7 @@
 package configmanager
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -45,21 +46,27 @@ func (c *ConfigManager) updateConfigList(interval int) {
 	}
 }
 
-func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*proto.ConfigUpdateInfo, bool, bool, error) {
+func (c *ConfigManager) GetConfigList(req *proto.AgentGetConfigListRequest, res *proto.AgentGetConfigListResponse) (int, *proto.AgentGetConfigListResponse) {
 	ans := make([]*proto.ConfigUpdateInfo, 0)
 	s := store.GetStore()
 
 	// get agent's tag
-	ok, err := s.Has(common.TYPE_AGENT, id)
+	ok, err := s.Has(common.TYPE_AGENT, req.AgentId)
 	if err != nil {
-		return nil, false, false, err
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		return common.InternalServerError.Status, res
 	} else if !ok {
-		return nil, false, false, nil
+		res.Code = common.AgentNotExist.Code
+		res.Message = fmt.Sprintf("Agent %s doesn't exist.", req.AgentId)
+		return common.AgentNotExist.Status, res
 	}
 
-	value, err := s.Get(common.TYPE_AGENT, id)
+	value, err := s.Get(common.TYPE_AGENT, req.AgentId)
 	if err != nil {
-		return nil, false, false, err
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		return common.InternalServerError.Status, res
 	}
 	agent := value.(*model.Agent)
 
@@ -67,7 +74,9 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 	configList := make(map[string]*model.Config)
 	agentGroupList, err := s.GetAll(common.TYPE_AGENTGROUP)
 	if err != nil {
-		return nil, false, true, err
+		res.Code = common.InternalServerError.Code
+		res.Message = err.Error()
+		return common.InternalServerError.Status, res
 	}
 
 	for _, agentGroup := range agentGroupList {
@@ -82,14 +91,31 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 		}()
 		if match || agentGroup.(*model.AgentGroup).Name == "default" {
 			for k := range agentGroup.(*model.AgentGroup).AppliedConfigs {
-				config, err := c.GetConfig(k)
+				// Check if config k exist
+				ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, k)
 				if err != nil {
-					return nil, false, true, err
-				}
-				if config == nil {
-					return nil, false, true, nil
-				}
-				if config.AgentType == agent.AgentType {
+					res.Code = common.InternalServerError.Code
+					res.Message = err.Error()
+					return common.InternalServerError.Status, res
+				} else if !ok {
+					res.Code = common.ConfigNotExist.Code
+					res.Message = fmt.Sprintf("Config %s doesn't exist.", k)
+					return common.ConfigNotExist.Status, res
+				} else {
+					value, err := s.Get(common.TYPE_COLLECTION_CONFIG, k)
+					if err != nil {
+						res.Code = common.InternalServerError.Code
+						res.Message = err.Error()
+						return common.InternalServerError.Status, res
+					}
+					config := value.(*model.Config)
+
+					if config.DelTag {
+						res.Code = common.ConfigNotExist.Code
+						res.Message = fmt.Sprintf("Config %s doesn't exist.", k)
+						return common.ConfigNotExist.Status, res
+					}
+
 					configList[k] = config
 				}
 			}
@@ -97,7 +123,7 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 	}
 
 	// comp config info
-	for k := range configs {
+	for k := range req.ConfigVersions {
 		if _, ok := configList[k]; !ok {
 			result := new(proto.ConfigUpdateInfo)
 			result.ConfigName = k
@@ -109,13 +135,13 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 	for k, config := range configList {
 		result := new(proto.ConfigUpdateInfo)
 
-		if _, ok := configs[k]; !ok {
+		if _, ok := req.ConfigVersions[k]; !ok {
 			result.ConfigName = k
 			result.UpdateStatus = proto.ConfigUpdateInfo_NEW
 			result.ConfigVersion = config.Version
 			result.Content = config.Content
 		} else {
-			ver := configs[k]
+			ver := req.ConfigVersions[k]
 
 			if ver < config.Version {
 				result.ConfigName = k
@@ -130,5 +156,8 @@ func (c *ConfigManager) GetConfigList(id string, configs map[string]int64) ([]*p
 		ans = append(ans, result)
 	}
 
-	return ans, true, true, nil
+	res.Code = common.Accept.Code
+	res.Message = "Get config update infos success"
+	res.ConfigUpdateInfos = ans
+	return common.Accept.Status, res
 }

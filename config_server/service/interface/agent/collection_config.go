@@ -46,24 +46,5 @@ func GetConfigList(c *gin.Context) {
 		req.ConfigVersions = make(map[string]int64)
 	}
 
-	result, configExist, agentExist, err := manager.ConfigManager().GetConfigList(req.AgentId, req.ConfigVersions)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if !agentExist {
-		res.Code = common.AgentNotExist.Code
-		res.Message = fmt.Sprintf("Agent %s doesn't exist.", req.AgentId)
-		c.ProtoBuf(common.AgentNotExist.Status, res)
-	} else if !configExist {
-		res.Code = common.ConfigNotExist.Code
-		res.Message = "Find config failed."
-		c.ProtoBuf(common.ConfigNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Get config update infos success"
-		res.ConfigUpdateInfos = result
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().GetConfigList(&req, res))
 }

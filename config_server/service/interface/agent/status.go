@@ -43,17 +43,7 @@ func HeartBeat(c *gin.Context) {
 		return
 	}
 
-	err = manager.AgentManager().HeartBeat(req.AgentId, req.AgentType, req.AgentVersion, req.Ip, req.Tags, req.RunningStatus, req.StartupTime)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Send heartbeat success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.AgentManager().HeartBeat(&req, res))
 }
 
 func RunningStatistics(c *gin.Context) {
@@ -75,17 +65,7 @@ func RunningStatistics(c *gin.Context) {
 		return
 	}
 
-	err = manager.AgentManager().RunningStatistics(req.AgentId, req.RunningDetails)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Send running status success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.AgentManager().RunningStatistics(&req, res))
 }
 
 func Alarm(c *gin.Context) {
@@ -107,15 +87,5 @@ func Alarm(c *gin.Context) {
 		return
 	}
 
-	err = manager.AgentManager().Alarm(req.AgentId, req.Type, req.Detail)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Alarm success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.AgentManager().Alarm(&req, res))
 }

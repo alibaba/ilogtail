@@ -43,21 +43,7 @@ func CreateAgentGroup(c *gin.Context) {
 		return
 	}
 
-	exist, err := manager.ConfigManager().CreateAgentGroup(req.AgentGroup)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if exist {
-		res.Code = common.AgentGroupAlreadyExist.Code
-		res.Message = fmt.Sprintf("Agent group %s already exists.", req.AgentGroup.GroupName)
-		c.ProtoBuf(common.AgentGroupAlreadyExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Add agent group success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().CreateAgentGroup(&req, res))
 }
 
 func UpdateAgentGroup(c *gin.Context) {
@@ -79,21 +65,7 @@ func UpdateAgentGroup(c *gin.Context) {
 		return
 	}
 
-	exist, err := manager.ConfigManager().UpdateAgentGroup(req.AgentGroup)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if !exist {
-		res.Code = common.AgentGroupNotExist.Code
-		res.Message = fmt.Sprintf("Agent group %s doesn't exist.", req.AgentGroup.GroupName)
-		c.ProtoBuf(common.AgentGroupNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Update agent group success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().UpdateAgentGroup(&req, res))
 }
 
 func DeleteAgentGroup(c *gin.Context) {
@@ -115,21 +87,7 @@ func DeleteAgentGroup(c *gin.Context) {
 		return
 	}
 
-	exist, err := manager.ConfigManager().DeleteAgentGroup(req.GroupName)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if !exist {
-		res.Code = common.AgentGroupNotExist.Code
-		res.Message = fmt.Sprintf("Agent group %s doesn't exist.", req.GroupName)
-		c.ProtoBuf(common.AgentGroupNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Delete agent group success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().DeleteAgentGroup(&req, res))
 }
 
 func GetAgentGroup(c *gin.Context) {
@@ -151,22 +109,7 @@ func GetAgentGroup(c *gin.Context) {
 		return
 	}
 
-	agentGroup, err := manager.ConfigManager().GetAgentGroup(req.GroupName)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if agentGroup == nil {
-		res.Code = common.AgentGroupNotExist.Code
-		res.Message = fmt.Sprintf("Agent group %s doesn't exist.", req.GroupName)
-		c.ProtoBuf(common.AgentGroupNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Get agent group success"
-		res.AgentGroup = agentGroup.ToProto()
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().GetAgentGroup(&req, res))
 }
 
 func ListAgentGroups(c *gin.Context) {
@@ -181,24 +124,9 @@ func ListAgentGroups(c *gin.Context) {
 	}
 	res.ResponseId = req.RequestId
 
-	agentGroupList, err := manager.ConfigManager().GetAllAgentGroup()
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Get agent group list success"
-		res.AgentGroups = []*proto.AgentGroup{}
-		for _, v := range agentGroupList {
-			res.AgentGroups = append(res.AgentGroups, v.ToProto())
-		}
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().ListAgentGroups(&req, res))
 }
 
-// only default
 func ListAgents(c *gin.Context) {
 	req := proto.ListAgentsRequest{}
 	res := &proto.ListAgentsResponse{}
@@ -218,25 +146,29 @@ func ListAgents(c *gin.Context) {
 		return
 	}
 
-	agentList, err := manager.ConfigManager().GetAgentList(req.GroupName)
+	c.ProtoBuf(manager.ConfigManager().ListAgents(&req, res))
+}
 
+func GetAppliedConfigsForAgentGroup(c *gin.Context) {
+	req := proto.GetAppliedConfigsForAgentGroupRequest{}
+	res := &proto.GetAppliedConfigsForAgentGroupResponse{}
+
+	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
 	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if agentList == nil {
-		res.Code = common.AgentGroupNotExist.Code
-		res.Message = fmt.Sprintf("Agent group %s doesn't exist.", req.GroupName)
-		c.ProtoBuf(common.AgentGroupNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Get agent list success"
-		res.Agents = []*proto.Agent{}
-		for _, v := range agentList {
-			res.Agents = append(res.Agents, v.ToProto())
-		}
-		c.ProtoBuf(common.Accept.Status, res)
+		res.Code = common.BadRequest.Code
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
 	}
+	res.ResponseId = req.RequestId
+
+	if req.GroupName == "" {
+		res.Code = common.BadRequest.Code
+		res.Message = fmt.Sprintf("Need parameter %s.", "GroupName")
+		c.ProtoBuf(common.BadRequest.Status, res)
+		return
+	}
+
+	c.ProtoBuf(manager.ConfigManager().GetAppliedConfigsForAgentGroup(&req, res))
 }
 
 func ApplyConfigToAgentGroup(c *gin.Context) {
@@ -264,29 +196,7 @@ func ApplyConfigToAgentGroup(c *gin.Context) {
 		return
 	}
 
-	groupExist, configExist, hasConfig, err := manager.ConfigManager().ApplyConfigToAgentGroup(req.GroupName, req.ConfigName)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if !groupExist {
-		res.Code = common.AgentGroupNotExist.Code
-		res.Message = fmt.Sprintf("Agent group %s doesn't exist.", req.GroupName)
-		c.ProtoBuf(common.AgentGroupNotExist.Status, res)
-	} else if !configExist {
-		res.Code = common.ConfigNotExist.Code
-		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigName)
-		c.ProtoBuf(common.ConfigNotExist.Status, res)
-	} else if hasConfig {
-		res.Code = common.ConfigAlreadyExist.Code
-		res.Message = fmt.Sprintf("Agent group %s already has config %s.", req.GroupName, req.ConfigName)
-		c.ProtoBuf(common.ConfigAlreadyExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Add config to agent group success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().ApplyConfigToAgentGroup(&req, res))
 }
 
 func RemoveConfigFromAgentGroup(c *gin.Context) {
@@ -314,68 +224,5 @@ func RemoveConfigFromAgentGroup(c *gin.Context) {
 		return
 	}
 
-	groupExist, configExist, hasConfig, err := manager.ConfigManager().RemoveConfigFromAgentGroup(req.GroupName, req.ConfigName)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if !groupExist {
-		res.Code = common.AgentGroupNotExist.Code
-		res.Message = fmt.Sprintf("Agent group %s doesn't exist.", req.GroupName)
-		c.ProtoBuf(common.AgentGroupNotExist.Status, res)
-	} else if !configExist {
-		res.Code = common.ConfigNotExist.Code
-		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigName)
-		c.ProtoBuf(common.ConfigNotExist.Status, res)
-	} else if !hasConfig {
-		res.Code = common.ConfigNotExist.Code
-		res.Message = fmt.Sprintf("Agent group %s doesn't have config %s.", req.GroupName, req.ConfigName)
-		c.ProtoBuf(common.ConfigNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Remove config from agent group success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
-}
-
-func GetAppliedConfigsForAgentGroup(c *gin.Context) {
-	req := proto.GetAppliedConfigsForAgentGroupRequest{}
-	res := &proto.GetAppliedConfigsForAgentGroupResponse{}
-
-	err := c.ShouldBindBodyWith(&req, binding.ProtoBuf)
-	if err != nil {
-		res.Code = common.BadRequest.Code
-		c.ProtoBuf(common.BadRequest.Status, res)
-		return
-	}
-	res.ResponseId = req.RequestId
-
-	if req.GroupName == "" {
-		res.Code = common.BadRequest.Code
-		res.Message = fmt.Sprintf("Need parameter %s.", "GroupName")
-		c.ProtoBuf(common.BadRequest.Status, res)
-		return
-	}
-
-	configList, groupExist, err := manager.ConfigManager().GetAppliedConfigsForAgentGroup(req.GroupName)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if !groupExist {
-		res.Code = common.AgentGroupNotExist.Code
-		res.Message = fmt.Sprintf("Agent group %s doesn't exist.", req.GroupName)
-		c.ProtoBuf(common.AgentGroupNotExist.Status, res)
-	} else if configList == nil {
-		res.Code = common.ConfigNotExist.Code
-		res.Message = fmt.Sprintf("Can't find some configs in agent group %s.", req.GroupName)
-		c.ProtoBuf(common.ConfigNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Get agent group's applied configs success"
-		res.ConfigNames = configList
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().RemoveConfigFromAgentGroup(&req, res))
 }

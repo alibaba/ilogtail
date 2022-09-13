@@ -42,6 +42,7 @@ func CreateConfig(c *gin.Context) {
 		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
+
 	if req.ConfigDetail.Content == "" {
 		res.Code = common.BadRequest.Code
 		res.Message = fmt.Sprintf("Need parameter %s.", "Content")
@@ -49,21 +50,7 @@ func CreateConfig(c *gin.Context) {
 		return
 	}
 
-	exist, err := manager.ConfigManager().CreateConfig(req.ConfigDetail)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if exist {
-		res.Code = common.ConfigAlreadyExist.Code
-		res.Message = fmt.Sprintf("Config %s already exists.", req.ConfigDetail.ConfigName)
-		c.ProtoBuf(common.ConfigAlreadyExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Add config success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().CreateConfig(&req, res))
 }
 
 func UpdateConfig(c *gin.Context) {
@@ -84,6 +71,7 @@ func UpdateConfig(c *gin.Context) {
 		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
+
 	if req.ConfigDetail.Content == "" {
 		res.Code = common.BadRequest.Code
 		res.Message = fmt.Sprintf("Need parameter %s.", "Content")
@@ -91,21 +79,7 @@ func UpdateConfig(c *gin.Context) {
 		return
 	}
 
-	exist, err := manager.ConfigManager().UpdateConfig(req.ConfigDetail)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if !exist {
-		res.Code = common.ConfigNotExist.Code
-		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigDetail.ConfigName)
-		c.ProtoBuf(common.ConfigNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Update config success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().UpdateConfig(&req, res))
 }
 
 func DeleteConfig(c *gin.Context) {
@@ -127,21 +101,7 @@ func DeleteConfig(c *gin.Context) {
 		return
 	}
 
-	exist, err := manager.ConfigManager().DeleteConfig(req.ConfigName)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if !exist {
-		res.Code = common.ConfigNotExist.Code
-		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigName)
-		c.ProtoBuf(common.ConfigNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Delete config success"
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().DeleteConfig(&req, res))
 }
 
 func GetConfig(c *gin.Context) {
@@ -163,25 +123,10 @@ func GetConfig(c *gin.Context) {
 		return
 	}
 
-	config, err := manager.ConfigManager().GetConfig(req.ConfigName)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if config == nil {
-		res.Code = common.ConfigNotExist.Code
-		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigName)
-		c.ProtoBuf(common.ConfigNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Get config success"
-		res.ConfigDetail = config.ToProto()
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().GetConfig(&req, res))
 }
 
-func ListAllConfigs(c *gin.Context) {
+func ListConfigs(c *gin.Context) {
 	req := proto.ListConfigsRequest{}
 	res := &proto.ListConfigsResponse{}
 
@@ -193,21 +138,7 @@ func ListAllConfigs(c *gin.Context) {
 	}
 	res.ResponseId = req.RequestId
 
-	configList, err := manager.ConfigManager().ListAllConfigs()
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Get config list success"
-		res.ConfigDetails = make([]*proto.Config, 0)
-		for _, v := range configList {
-			res.ConfigDetails = append(res.ConfigDetails, v.ToProto())
-		}
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().ListConfigs(&req, res))
 }
 
 func GetAppliedAgentGroups(c *gin.Context) {
@@ -229,20 +160,5 @@ func GetAppliedAgentGroups(c *gin.Context) {
 		return
 	}
 
-	agentGroupList, configExist, err := manager.ConfigManager().GetAppliedAgentGroups(req.ConfigName)
-
-	if err != nil {
-		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
-		c.ProtoBuf(common.InternalServerError.Status, res)
-	} else if !configExist {
-		res.Code = common.ConfigNotExist.Code
-		res.Message = fmt.Sprintf("Config %s doesn't exist.", req.ConfigName)
-		c.ProtoBuf(common.ConfigNotExist.Status, res)
-	} else {
-		res.Code = common.Accept.Code
-		res.Message = "Get group list success"
-		res.AgentGroupNames = agentGroupList
-		c.ProtoBuf(common.Accept.Status, res)
-	}
+	c.ProtoBuf(manager.ConfigManager().GetAppliedAgentGroups(&req, res))
 }

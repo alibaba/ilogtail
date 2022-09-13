@@ -26,38 +26,47 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
-func (a *AgentManager) HeartBeat(id string, agentType string, version string, ip string, tags map[string]string, runningStatus string, startupTime int64) error {
+func (a *AgentManager) HeartBeat(req *proto.HeartBeatRequest, res *proto.HeartBeatResponse) (int, *proto.HeartBeatResponse) {
 	queryTime := time.Now().Unix()
 	agent := new(model.Agent)
-	agent.AgentId = id
-	agent.AgentType = agentType
-	agent.Version = version
-	agent.Ip = ip
-	agent.Tags = tags
-	agent.RunningStatus = runningStatus
-	agent.StartupTime = startupTime
+	agent.AgentId = req.AgentId
+	agent.AgentType = req.AgentType
+	agent.Version = req.AgentVersion
+	agent.Ip = req.Ip
+	agent.Tags = req.Tags
+	agent.RunningStatus = req.RunningStatus
+	agent.StartupTime = req.StartupTime
 	agent.LatestHeartbeatTime = queryTime
 
 	a.AgentMessageList.Push(opt_heartbeat, agent)
-	return nil
+
+	res.Code = common.Accept.Code
+	res.Message = "Send heartbeat success"
+	return common.Accept.Status, res
 }
 
-func (a *AgentManager) RunningStatistics(id string, status *proto.RunningStatistics) error {
+func (a *AgentManager) RunningStatistics(req *proto.RunningStatisticsRequest, res *proto.RunningStatisticsResponse) (int, *proto.RunningStatisticsResponse) {
 	agentStatus := new(model.RunningStatistics)
-	agentStatus.ParseProto(status)
+	agentStatus.ParseProto(req.RunningDetails)
 	a.AgentMessageList.Push(opt_status, agentStatus)
-	return nil
+
+	res.Code = common.Accept.Code
+	res.Message = "Send running statistics success"
+	return common.Accept.Status, res
 }
 
-func (a *AgentManager) Alarm(id string, alarmType string, alarmMessage string) error {
+func (a *AgentManager) Alarm(req *proto.AlarmRequest, res *proto.AlarmResponse) (int, *proto.AlarmResponse) {
 	queryTime := strconv.FormatInt(time.Now().Unix(), 10)
 	alarm := new(model.AgentAlarm)
-	alarm.AlarmKey = generateAlarmKey(queryTime, id)
+	alarm.AlarmKey = generateAlarmKey(queryTime, req.AgentId)
 	alarm.AlarmTime = queryTime
-	alarm.AlarmType = alarmType
-	alarm.AlarmMessage = alarmMessage
+	alarm.AlarmType = req.Type
+	alarm.AlarmMessage = req.Detail
 	a.AgentMessageList.Push(opt_alarm, alarm)
-	return nil
+
+	res.Code = common.Accept.Code
+	res.Message = "Alarm success"
+	return common.Accept.Status, res
 }
 
 var wg sync.WaitGroup
