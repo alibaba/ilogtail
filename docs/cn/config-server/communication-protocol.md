@@ -91,7 +91,7 @@ ip 和 port 为 ConfigServer 的 ip 和接收端口，默认为127.0.0.1和8899�
 | 参数 | 类型 | 说明 |
 | - | - | - |
 | config_name | string | Config 的唯一标识 |
-| update_status | enum | Config 的更新状态，共有4种：SAME（一致）、NEW（新增）、DELETED（删除）、MODIFIED（修改） |
+| update_status | enum | Config 的更新状态，共有4种：<br>SAME：一致<br>NEW：新增<br>DELETED：删除<br>MODIFIED：修改 |
 | config_version | int64 | Config 的版本号 |
 | content | string | Config 的详细数据 |
 

@@ -50,7 +50,13 @@ ConfigServer 就是这样的一款可观测 Agent 管控工具，目前支持：
 
 ## 运行
 
-### 启动后端服务器
+ConfigServer 分为 UI 和 Service 两部分，可以分别独立运行。
+
+### Service
+
+Service 为分布式的结构，支持多地部署，负责与采集 Agent 和用户/ui 通信，实现了管控的核心能力。
+
+#### 启动
 
 从 GitHub 下载 ilogtail 源码，进入 ConfigServer 后端目录下，编译运行代码。
 
@@ -60,4 +66,30 @@ go build -o ConfigServer
 nohup ./ConfigServer > stdout.log 2> stderr.log &
 ```
 
-### 启动可视化界面
+#### 配置选项
+
+配置文件为 `config_server/service/seeting/setting.json`。可配置项如下：
+
+* `ip`：Service 服务启动的 ip 地址，默认为 `127.0.0.1`。
+* `port`：Service 服务启动的端口，默认为 `8899`。
+* `store_mode`：数据持久化的工具，默认为 `leveldb`。当前仅支持基于 leveldb 的单机数据持久化。
+* `db_path`：数据持久化的存储地址或数据库连接字符串，默认为 `./DB`。
+* `agent_update_interval`：将采集 Agent 上报的数据批量写入存储的时间间隔，单位为秒，默认为 `1` 秒。
+* `config_sync_interval`：Service 从存储同步采集 Config 的时间间隔，单位为秒，默认为 `3` 秒。
+
+配置样例：
+
+```json
+{
+    "ip":"127.0.0.1",
+    "store_mode": "leveldb",
+    "port": "8899",
+    "db_path": "./DB",
+    "agent_update_interval": 1,
+    "config_sync_interval": 3
+}
+```
+
+### UI
+
+UI 为一个 Web 可视化界面，与 Service 链接，方便用户对采集 Agent 进行管理。
