@@ -17,8 +17,10 @@ package configmanager
 import (
 	"sync"
 
+	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/model"
 	"github.com/alibaba/ilogtail/config_server/service/setting"
+	"github.com/alibaba/ilogtail/config_server/service/store"
 )
 
 type ConfigManager struct {
@@ -30,4 +32,23 @@ func (c *ConfigManager) Init() {
 	c.ConfigList = make(map[string]*model.Config)
 	c.ConfigListMutex = new(sync.RWMutex)
 	go c.updateConfigList(setting.GetSetting().ConfigSyncInterval)
+
+	s := store.GetStore()
+	ok, hasErr := s.Has(common.TypeAgentGROUP, "default")
+	if hasErr != nil {
+		panic(hasErr)
+	}
+	if ok {
+		return
+	}
+	agentGroup := new(model.AgentGroup)
+	agentGroup.Name = "default"
+	agentGroup.Tags = make([]model.AgentGroupTag, 0)
+	agentGroup.AppliedConfigs = map[string]int64{}
+	agentGroup.Description = "Default agent group, include all Agents."
+
+	addErr := s.Add(common.TypeAgentGROUP, agentGroup.Name, agentGroup)
+	if addErr != nil {
+		panic(addErr)
+	}
 }

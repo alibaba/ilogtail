@@ -358,6 +358,13 @@ func (c *ConfigManager) UpdateAgentGroup(req *proto.UpdateAgentGroupRequest, res
 
 func (c *ConfigManager) DeleteAgentGroup(req *proto.DeleteAgentGroupRequest, res *proto.DeleteAgentGroupResponse) (int, *proto.DeleteAgentGroupResponse) {
 	s := store.GetStore()
+
+	if req.GroupName == "default" {
+		res.Code = common.BadRequest.Code
+		res.Message = "Cannot delete agent group 'default'"
+		return common.BadRequest.Status, res
+	}
+
 	ok, hasErr := s.Has(common.TypeAgentGROUP, req.GroupName)
 	if hasErr != nil {
 		res.Code = common.InternalServerError.Code
