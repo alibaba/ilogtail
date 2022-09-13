@@ -17,11 +17,12 @@ package agent
 import (
 	"fmt"
 
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/manager"
 	proto "github.com/alibaba/ilogtail/config_server/service/proto"
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 )
 
 func HeartBeat(c *gin.Context) {
@@ -38,7 +39,7 @@ func HeartBeat(c *gin.Context) {
 
 	if req.AgentId == "" {
 		res.Code = common.BadRequest.Code
-		res.Message = fmt.Sprintf("Need parameter %s.", "AgentId")
+		res.Message = fmt.Sprintf("Need parameter %s.", "AgentID")
 		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
@@ -60,7 +61,7 @@ func RunningStatistics(c *gin.Context) {
 
 	if req.AgentId == "" {
 		res.Code = common.BadRequest.Code
-		res.Message = fmt.Sprintf("Need parameter %s.", "AgentId")
+		res.Message = fmt.Sprintf("Need parameter %s.", "AgentID")
 		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}
@@ -82,7 +83,7 @@ func Alarm(c *gin.Context) {
 
 	if req.AgentId == "" {
 		res.Code = common.BadRequest.Code
-		res.Message = fmt.Sprintf("Need parameter %s.", "AgentId")
+		res.Message = fmt.Sprintf("Need parameter %s.", "AgentID")
 		c.ProtoBuf(common.BadRequest.Status, res)
 		return
 	}

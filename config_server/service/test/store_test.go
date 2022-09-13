@@ -40,29 +40,29 @@ func TestStore(t *testing.T) {
 			config.Version = 1
 			config.Description = ""
 			config.DelTag = false
-			s.Add(common.TYPE_COLLECTION_CONFIG, config.Name, config)
+			s.Add(common.TypeCollectionConfig, config.Name, config)
 
-			value, err := s.Get(common.TYPE_COLLECTION_CONFIG, "config-test")
-			So(err, ShouldBeNil)
+			value, getErr := s.Get(common.TypeCollectionConfig, "config-test")
+			So(getErr, ShouldBeNil)
 			So(value.(*model.Config), ShouldResemble, &model.Config{Name: "config-test", AgentType: "iLogtail", Content: "test", Version: 1, Description: "", DelTag: false})
 		})
 
 		Convey("Second, update config-test's content.", func() {
-			value, err := s.Get(common.TYPE_COLLECTION_CONFIG, "config-test")
-			So(err, ShouldBeNil)
+			value, getErr := s.Get(common.TypeCollectionConfig, "config-test")
+			So(getErr, ShouldBeNil)
 			config := value.(*model.Config)
 			config.Description = "test"
-			s.Update(common.TYPE_COLLECTION_CONFIG, config.Name, config)
+			s.Update(common.TypeCollectionConfig, config.Name, config)
 
-			value, err = s.Get(common.TYPE_COLLECTION_CONFIG, "config-test")
-			So(err, ShouldBeNil)
+			value, getErr = s.Get(common.TypeCollectionConfig, "config-test")
+			So(getErr, ShouldBeNil)
 			So(value.(*model.Config), ShouldResemble, &model.Config{Name: "config-test", AgentType: "iLogtail", Content: "test", Version: 1, Description: "test", DelTag: false})
 		})
 
 		Convey("Third, delete config-test.", func() {
-			s.Delete(common.TYPE_COLLECTION_CONFIG, "config-test")
-			_, err := s.Get(common.TYPE_COLLECTION_CONFIG, "config-test")
-			So(err, ShouldNotBeNil)
+			s.Delete(common.TypeCollectionConfig, "config-test")
+			_, getErr := s.Get(common.TypeCollectionConfig, "config-test")
+			So(getErr, ShouldNotBeNil)
 		})
 	})
 }

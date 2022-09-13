@@ -28,7 +28,7 @@ Store Factory
 func newStore(storeType string) database.Database {
 	switch storeType {
 	case "leveldb":
-		return new(leveldb.LeveldbStore)
+		return new(leveldb.Store)
 	default:
 		panic("Wrong store type.")
 	}

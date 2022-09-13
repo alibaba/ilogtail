@@ -15,9 +15,9 @@
 package common
 
 const (
-	TYPE_AGENT_ALARM        string = "AGENT_ALARM"
-	TYPE_COLLECTION_CONFIG  string = "COLLECTION_CONFIG"
-	TYPE_AGENT              string = "AGENT"
-	TYPE_AGENTGROUP         string = "AGENTGROUP"
-	TYPE_RUNNING_STATISTICS string = "RUNNING_STATISTICS"
+	TypeAgentAlarm        string = "AGENT_ALARM"
+	TypeCollectionConfig  string = "COLLECTION_CONFIG"
+	TypeAgent             string = "AGENT"
+	TypeAgentGROUP        string = "AGENTGROUP"
+	TypeRunningStatistics string = "RUNNING_STATISTICS"
 )

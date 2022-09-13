@@ -22,9 +22,9 @@ import (
 )
 
 type Agent struct {
-	AgentId             string            `json:"AgentId"`
+	AgentID             string            `json:"AgentID"`
 	AgentType           string            `json:"AgentType"`
-	Ip                  string            `json:"Ip"`
+	IP                  string            `json:"IP"`
 	Version             string            `json:"Version"`
 	RunningStatus       string            `json:"RunningStatus"`
 	StartupTime         int64             `json:"StartupTime"`
@@ -35,9 +35,9 @@ type Agent struct {
 
 func (a *Agent) ToProto() *proto.Agent {
 	pa := new(proto.Agent)
-	pa.AgentId = a.AgentId
+	pa.AgentId = a.AgentID
 	pa.AgentType = a.AgentType
-	pa.Ip = a.Ip
+	pa.Ip = a.IP
 	pa.Version = a.Version
 	pa.RunningStatus = a.RunningStatus
 	pa.StartupTime = a.StartupTime
@@ -48,9 +48,9 @@ func (a *Agent) ToProto() *proto.Agent {
 }
 
 func (a *Agent) ParseProto(pa *proto.Agent) {
-	a.AgentId = pa.AgentId
+	a.AgentID = pa.AgentId
 	a.AgentType = pa.AgentType
-	a.Ip = pa.Ip
+	a.IP = pa.Ip
 	a.Version = pa.Version
 	a.RunningStatus = pa.RunningStatus
 	a.StartupTime = pa.StartupTime
@@ -60,11 +60,11 @@ func (a *Agent) ParseProto(pa *proto.Agent) {
 }
 
 func (a *Agent) AddRunningDetails(d *RunningStatistics) {
-	if a.AgentId != d.AgentId {
+	if a.AgentID != d.AgentID {
 		return
 	}
 
-	a.RunningDetails["Cpu"] = fmt.Sprintf("%f", d.Cpu)
+	a.RunningDetails["CPU"] = fmt.Sprintf("%f", d.CPU)
 	a.RunningDetails["Memory"] = strconv.FormatInt(d.Memory, 10)
 	for k, v := range d.Extras {
 		a.RunningDetails[k] = v
@@ -79,22 +79,22 @@ type AgentAlarm struct {
 }
 
 type RunningStatistics struct {
-	AgentId string            `json:"AgentId"`
-	Cpu     float32           `json:"Cpu"`
+	AgentID string            `json:"AgentID"`
+	CPU     float32           `json:"CPU"`
 	Memory  int64             `json:"Memory"`
 	Extras  map[string]string `json:"Extras"`
 }
 
 func (r *RunningStatistics) ToProto() *proto.RunningStatistics {
 	pr := new(proto.RunningStatistics)
-	pr.Cpu = r.Cpu
+	pr.Cpu = r.CPU
 	pr.Memory = r.Memory
 	pr.Extras = r.Extras
 	return pr
 }
 
 func (r *RunningStatistics) ParseProto(pr *proto.RunningStatistics) {
-	r.Cpu = pr.Cpu
+	r.CPU = pr.Cpu
 	r.Memory = pr.Memory
 	r.Extras = pr.Extras
 }

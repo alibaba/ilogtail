@@ -16,39 +16,49 @@ package common
 
 import (
 	"encoding/json"
+	"log"
 	"os"
+	"path/filepath"
 )
 
-func ReadJson(filePath string, ptr interface{}) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return err
+func ReadJSON(path string, ptr interface{}) error {
+	file, openErr := os.Open(filepath.Clean(path))
+	if openErr != nil {
+		return openErr
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			log.Println("Error closing file: " + closeErr.Error())
+		}
+	}()
 
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&ptr)
-	if err != nil {
-		return err
+	decoderErr := decoder.Decode(&ptr)
+	if decoderErr != nil {
+		return decoderErr
 	}
 	return nil
 }
 
-func WriteJson(filePath string, data interface{}) error {
-	dataString, err := json.Marshal(data)
-	if err != nil {
-		return err
+func WriteJSON(path string, data interface{}) error {
+	dataString, marshalErr := json.Marshal(data)
+	if marshalErr != nil {
+		return marshalErr
 	}
 
-	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_TRUNC, os.ModeAppend)
-	if err != nil {
-		return err
+	file, openErr := os.OpenFile(filepath.Clean(path), os.O_RDWR|os.O_TRUNC, os.ModeAppend)
+	if openErr != nil {
+		return openErr
 	}
 
-	_, err = file.WriteString(string(dataString))
-	if err != nil {
-		return err
+	_, writeErr := file.WriteString(string(dataString))
+	if writeErr != nil {
+		return writeErr
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			log.Println("Error closing file: " + closeErr.Error())
+		}
+	}()
 	return nil
 }

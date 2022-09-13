@@ -743,7 +743,7 @@ func TestInterface(t *testing.T) {
 		})
 	})
 
-	Convey("Test agent recieve data.", t, func() {
+	Convey("Test agent receive data.", t, func() {
 		Convey("Create an agent group.", func() {
 			// data
 			reqBody := configserverproto.CreateAgentGroupRequest{}

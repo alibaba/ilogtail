@@ -15,10 +15,11 @@
 package router
 
 import (
+	"github.com/gin-gonic/gin"
+
 	"github.com/alibaba/ilogtail/config_server/service/interface/agent"
 	"github.com/alibaba/ilogtail/config_server/service/interface/user"
 	"github.com/alibaba/ilogtail/config_server/service/setting"
-	"github.com/gin-gonic/gin"
 )
 
 func InitRouter() {
@@ -27,7 +28,10 @@ func InitRouter() {
 	InitUserRouter(router)
 	InitAgentRouter(router)
 
-	router.Run(setting.GetSetting().Ip + ":" + setting.GetSetting().Port)
+	err := router.Run(setting.GetSetting().IP + ":" + setting.GetSetting().Port)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func InitUserRouter(router *gin.Engine) {

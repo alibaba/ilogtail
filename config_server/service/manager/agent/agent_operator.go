@@ -29,16 +29,16 @@ import (
 func (a *AgentManager) HeartBeat(req *proto.HeartBeatRequest, res *proto.HeartBeatResponse) (int, *proto.HeartBeatResponse) {
 	queryTime := time.Now().Unix()
 	agent := new(model.Agent)
-	agent.AgentId = req.AgentId
+	agent.AgentID = req.AgentId
 	agent.AgentType = req.AgentType
 	agent.Version = req.AgentVersion
-	agent.Ip = req.Ip
+	agent.IP = req.Ip
 	agent.Tags = req.Tags
 	agent.RunningStatus = req.RunningStatus
 	agent.StartupTime = req.StartupTime
 	agent.LatestHeartbeatTime = queryTime
 
-	a.AgentMessageList.Push(opt_heartbeat, agent)
+	a.AgentMessageList.Push(optHeartbeat, agent)
 
 	res.Code = common.Accept.Code
 	res.Message = "Send heartbeat success"
@@ -48,7 +48,7 @@ func (a *AgentManager) HeartBeat(req *proto.HeartBeatRequest, res *proto.HeartBe
 func (a *AgentManager) RunningStatistics(req *proto.RunningStatisticsRequest, res *proto.RunningStatisticsResponse) (int, *proto.RunningStatisticsResponse) {
 	agentStatus := new(model.RunningStatistics)
 	agentStatus.ParseProto(req.RunningDetails)
-	a.AgentMessageList.Push(opt_status, agentStatus)
+	a.AgentMessageList.Push(optStatistics, agentStatus)
 
 	res.Code = common.Accept.Code
 	res.Message = "Send running statistics success"
@@ -62,7 +62,7 @@ func (a *AgentManager) Alarm(req *proto.AlarmRequest, res *proto.AlarmResponse) 
 	alarm.AlarmTime = queryTime
 	alarm.AlarmType = req.Type
 	alarm.AlarmMessage = req.Detail
-	a.AgentMessageList.Push(opt_alarm, alarm)
+	a.AgentMessageList.Push(optAlarm, alarm)
 
 	res.Code = common.Accept.Code
 	res.Message = "Alarm success"
@@ -90,14 +90,14 @@ func (a *AgentManager) batchAddAlarm() {
 
 	a.AgentMessageList.Mutex.Lock()
 	for k, v := range a.AgentMessageList.Alarm {
-		b.Add(common.TYPE_AGENT_ALARM, k, v)
+		b.Add(common.TypeAgentAlarm, k, v)
 	}
 	a.AgentMessageList.Alarm = make(map[string]*model.AgentAlarm, 0)
 	a.AgentMessageList.Mutex.Unlock()
 
-	err := s.WriteBatch(b)
-	if err != nil {
-		log.Println(err)
+	writeBatchErr := s.WriteBatch(b)
+	if writeBatchErr != nil {
+		log.Println(writeBatchErr)
 		return
 	}
 
@@ -108,28 +108,28 @@ func (a *AgentManager) releaseAlarm() {
 	s := store.GetStore()
 	b := store.CreateBacth()
 
-	alarmCount, err := s.Count(common.TYPE_AGENT_ALARM)
-	if err != nil {
-		log.Println(err)
+	alarmCount, countErr := s.Count(common.TypeAgentAlarm)
+	if countErr != nil {
+		log.Println(countErr)
 		return
 	}
 	if alarmCount > 10000 {
-		alarmList, err := s.GetAll(common.TYPE_AGENT_ALARM)
-		if err != nil {
-			log.Println(err)
+		alarmList, getAllErr := s.GetAll(common.TypeAgentAlarm)
+		if getAllErr != nil {
+			log.Println(getAllErr)
 			return
 		}
 		for i, v := range alarmList {
 			if i > 5000 {
 				break
 			}
-			b.Delete(common.TYPE_AGENT_ALARM, generateAlarmKey(v.(*model.AgentAlarm).AlarmTime, v.(*model.AgentAlarm).AlarmKey))
+			b.Delete(common.TypeAgentAlarm, generateAlarmKey(v.(*model.AgentAlarm).AlarmTime, v.(*model.AgentAlarm).AlarmKey))
 		}
 	}
 
-	err = s.WriteBatch(b)
-	if err != nil {
-		log.Println(err)
+	writeBatchErr := s.WriteBatch(b)
+	if writeBatchErr != nil {
+		log.Println(writeBatchErr)
 		return
 	}
 
@@ -142,23 +142,23 @@ func (a *AgentManager) batchUpdateAgentMessage() {
 
 	a.AgentMessageList.Mutex.Lock()
 	for k, v := range a.AgentMessageList.Heartbeat {
-		b.Update(common.TYPE_AGENT, k, v)
+		b.Update(common.TypeAgent, k, v)
 	}
 	a.AgentMessageList.Heartbeat = make(map[string]*model.Agent, 0)
-	for k, v := range a.AgentMessageList.Status {
-		b.Update(common.TYPE_RUNNING_STATISTICS, k, v)
+	for k, v := range a.AgentMessageList.Statistics {
+		b.Update(common.TypeRunningStatistics, k, v)
 	}
-	a.AgentMessageList.Status = make(map[string]*model.RunningStatistics, 0)
+	a.AgentMessageList.Statistics = make(map[string]*model.RunningStatistics, 0)
 	a.AgentMessageList.Mutex.Unlock()
 
-	err := s.WriteBatch(b)
-	if err != nil {
-		log.Println(err)
+	writeBatchErr := s.WriteBatch(b)
+	if writeBatchErr != nil {
+		log.Println(writeBatchErr)
 	}
 
 	wg.Done()
 }
 
-func generateAlarmKey(queryTime string, agentId string) string {
-	return queryTime + ":" + agentId
+func generateAlarmKey(queryTime string, agentID string) string {
+	return queryTime + ":" + agentID
 }

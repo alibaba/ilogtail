@@ -20,16 +20,16 @@ type httpStatus struct {
 }
 
 var (
-	Accept                 httpStatus = httpStatus{200, "Accept"}
-	BadRequest             httpStatus = httpStatus{400, "BadRequest"}
-	ConfigAlreadyExist     httpStatus = httpStatus{400, "ConfigAlreadyExist"}
-	ConfigNotExist         httpStatus = httpStatus{404, "ConfigNotExist"}
-	InternalServerError    httpStatus = httpStatus{500, "InternalServerError"}
-	InvalidParameter       httpStatus = httpStatus{400, "InvalidParameter"}
-	AgentAlreadyExist      httpStatus = httpStatus{400, "AgentAlreadyExist"}
-	AgentGroupAlreadyExist httpStatus = httpStatus{400, "AgentGroupAlreadyExist"}
-	AgentGroupNotExist     httpStatus = httpStatus{404, "AgentGroupNotExist"}
-	AgentNotExist          httpStatus = httpStatus{404, "AgentNotExist"}
-	RequestTimeout         httpStatus = httpStatus{500, "RequestTimeout"}
-	ServerBusy             httpStatus = httpStatus{503, "ServerBusy"}
+	Accept                 = httpStatus{200, "Accept"}
+	BadRequest             = httpStatus{400, "BadRequest"}
+	ConfigAlreadyExist     = httpStatus{400, "ConfigAlreadyExist"}
+	ConfigNotExist         = httpStatus{404, "ConfigNotExist"}
+	InternalServerError    = httpStatus{500, "InternalServerError"}
+	InvalidParameter       = httpStatus{400, "InvalidParameter"}
+	AgentAlreadyExist      = httpStatus{400, "AgentAlreadyExist"}
+	AgentGroupAlreadyExist = httpStatus{400, "AgentGroupAlreadyExist"}
+	AgentGroupNotExist     = httpStatus{404, "AgentGroupNotExist"}
+	AgentNotExist          = httpStatus{404, "AgentNotExist"}
+	RequestTimeout         = httpStatus{500, "RequestTimeout"}
+	ServerBusy             = httpStatus{503, "ServerBusy"}
 )

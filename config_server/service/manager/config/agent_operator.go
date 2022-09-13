@@ -31,9 +31,9 @@ func (c *ConfigManager) updateConfigList(interval int) {
 
 	for range ticker.C {
 		s := store.GetStore()
-		configList, err := s.GetAll(common.TYPE_COLLECTION_CONFIG)
-		if err != nil {
-			log.Println(err)
+		configList, getAllErr := s.GetAll(common.TypeCollectionConfig)
+		if getAllErr != nil {
+			log.Println(getAllErr)
 			continue
 		} else {
 			c.ConfigListMutex.Lock()
@@ -51,10 +51,10 @@ func (c *ConfigManager) GetConfigList(req *proto.AgentGetConfigListRequest, res 
 	s := store.GetStore()
 
 	// get agent's tag
-	ok, err := s.Has(common.TYPE_AGENT, req.AgentId)
-	if err != nil {
+	ok, hasErr := s.Has(common.TypeAgent, req.AgentId)
+	if hasErr != nil {
 		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
+		res.Message = hasErr.Error()
 		return common.InternalServerError.Status, res
 	} else if !ok {
 		res.Code = common.AgentNotExist.Code
@@ -62,20 +62,20 @@ func (c *ConfigManager) GetConfigList(req *proto.AgentGetConfigListRequest, res 
 		return common.AgentNotExist.Status, res
 	}
 
-	value, err := s.Get(common.TYPE_AGENT, req.AgentId)
-	if err != nil {
+	value, getErr := s.Get(common.TypeAgent, req.AgentId)
+	if getErr != nil {
 		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
+		res.Message = getErr.Error()
 		return common.InternalServerError.Status, res
 	}
 	agent := value.(*model.Agent)
 
 	// get all configs connected to agent group whose tag is same as agent's
 	configList := make(map[string]*model.Config)
-	agentGroupList, err := s.GetAll(common.TYPE_AGENTGROUP)
-	if err != nil {
+	agentGroupList, getAllErr := s.GetAll(common.TypeAgentGROUP)
+	if getAllErr != nil {
 		res.Code = common.InternalServerError.Code
-		res.Message = err.Error()
+		res.Message = getAllErr.Error()
 		return common.InternalServerError.Status, res
 	}
 
@@ -92,32 +92,33 @@ func (c *ConfigManager) GetConfigList(req *proto.AgentGetConfigListRequest, res 
 		if match || agentGroup.(*model.AgentGroup).Name == "default" {
 			for k := range agentGroup.(*model.AgentGroup).AppliedConfigs {
 				// Check if config k exist
-				ok, err := s.Has(common.TYPE_COLLECTION_CONFIG, k)
-				if err != nil {
+				ok, hasErr := s.Has(common.TypeCollectionConfig, k)
+				if hasErr != nil {
 					res.Code = common.InternalServerError.Code
-					res.Message = err.Error()
+					res.Message = hasErr.Error()
 					return common.InternalServerError.Status, res
-				} else if !ok {
+				}
+				if !ok {
 					res.Code = common.ConfigNotExist.Code
 					res.Message = fmt.Sprintf("Config %s doesn't exist.", k)
 					return common.ConfigNotExist.Status, res
-				} else {
-					value, err := s.Get(common.TYPE_COLLECTION_CONFIG, k)
-					if err != nil {
-						res.Code = common.InternalServerError.Code
-						res.Message = err.Error()
-						return common.InternalServerError.Status, res
-					}
-					config := value.(*model.Config)
-
-					if config.DelTag {
-						res.Code = common.ConfigNotExist.Code
-						res.Message = fmt.Sprintf("Config %s doesn't exist.", k)
-						return common.ConfigNotExist.Status, res
-					}
-
-					configList[k] = config
 				}
+
+				value, getErr := s.Get(common.TypeCollectionConfig, k)
+				if getErr != nil {
+					res.Code = common.InternalServerError.Code
+					res.Message = getErr.Error()
+					return common.InternalServerError.Status, res
+				}
+				config := value.(*model.Config)
+
+				if config.DelTag {
+					res.Code = common.ConfigNotExist.Code
+					res.Message = fmt.Sprintf("Config %s doesn't exist.", k)
+					return common.ConfigNotExist.Status, res
+				}
+
+				configList[k] = config
 			}
 		}
 	}

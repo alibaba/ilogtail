@@ -15,13 +15,14 @@
 package setting
 
 import (
+	"log"
 	"reflect"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 )
 
-type setting struct {
-	Ip                  string `json:"ip"`                    // default: "127.0.0.1"
+type Setting struct {
+	IP                  string `json:"ip"`                    // default: "127.0.0.1"
 	StoreMode           string `json:"store_mode"`            // support "leveldb", "mysql"
 	Port                string `json:"port"`                  // default: "8899"
 	DbPath              string `json:"db_path"`               // default: "./DB"
@@ -29,14 +30,14 @@ type setting struct {
 	ConfigSyncInterval  int    `json:"config_sync_interval"`  // default: 3s
 }
 
-var mySetting *setting
+var mySetting *Setting
 
-var settingFile string = "./setting/setting.json"
+var settingFile = "./setting/setting.json"
 
 /*
 Create a singleton of setting
 */
-func GetSetting() setting {
+func GetSetting() Setting {
 	return *mySetting
 }
 
@@ -62,17 +63,20 @@ func UpdateSetting(tagMap map[string]interface{}) {
 			}
 		}
 	}
-	common.WriteJson(settingFile, mySetting)
+	err := common.WriteJSON(settingFile, mySetting)
+	if err != nil {
+		log.Println(err.Error())
+	}
 }
 
 func init() {
-	mySetting = new(setting)
-	err := common.ReadJson(settingFile, mySetting)
+	mySetting = new(Setting)
+	err := common.ReadJSON(settingFile, mySetting)
 	if err != nil {
 		panic(err)
 	}
-	if mySetting.Ip == "" {
-		mySetting.Ip = "127.0.0.1"
+	if mySetting.IP == "" {
+		mySetting.IP = "127.0.0.1"
 	}
 	if mySetting.Port == "" {
 		mySetting.Port = "8899"

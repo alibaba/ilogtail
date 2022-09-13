@@ -41,13 +41,13 @@ type Database interface {
 // batch
 
 const (
-	OPT_ADD    string = "ADD"
-	OPT_DELETE string = "DELETE"
-	OPT_UPDATE string = "UPDATE"
+	OptAdd    string = "ADD"
+	OptDelete string = "DELETE"
+	OptUpdate string = "UPDATE"
 )
 
 type (
-	data struct {
+	Data struct {
 		Opt   string
 		Table string
 		Key   string
@@ -60,21 +60,21 @@ type (
 )
 
 func (b *Batch) Add(table string, entityKey string, entity interface{}) {
-	b.datas.Push(data{OPT_ADD, table, entityKey, entity})
+	b.datas.Push(Data{OptAdd, table, entityKey, entity})
 }
 
 func (b *Batch) Update(table string, entityKey string, entity interface{}) {
-	b.datas.Push(data{OPT_UPDATE, table, entityKey, entity})
+	b.datas.Push(Data{OptUpdate, table, entityKey, entity})
 }
 
 func (b *Batch) Delete(table string, entityKey string) {
-	b.datas.Push(data{OPT_DELETE, table, entityKey, nil})
+	b.datas.Push(Data{OptDelete, table, entityKey, nil})
 }
 
 func (b *Batch) Empty() bool {
 	return b.datas.Empty()
 }
 
-func (b *Batch) Pop() data {
-	return b.datas.Pop().(data)
+func (b *Batch) Pop() Data {
+	return b.datas.Pop().(Data)
 }

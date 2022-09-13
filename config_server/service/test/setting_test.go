@@ -17,8 +17,9 @@ package test
 import (
 	"testing"
 
-	"github.com/alibaba/ilogtail/config_server/service/setting"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/alibaba/ilogtail/config_server/service/setting"
 )
 
 func TestSetting(t *testing.T) {

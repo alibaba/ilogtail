@@ -16,27 +16,29 @@ package leveldb
 
 import (
 	"encoding/json"
+	"log"
+
+	"github.com/syndtr/goleveldb/leveldb"
 
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/model"
 	"github.com/alibaba/ilogtail/config_server/service/setting"
 	database "github.com/alibaba/ilogtail/config_server/service/store/interface_database"
-	"github.com/syndtr/goleveldb/leveldb"
 )
 
 var dbPath = []string{
-	common.TYPE_AGENT_ALARM,
-	common.TYPE_COLLECTION_CONFIG,
-	common.TYPE_AGENT,
-	common.TYPE_AGENTGROUP,
-	common.TYPE_RUNNING_STATISTICS,
+	common.TypeAgentAlarm,
+	common.TypeCollectionConfig,
+	common.TypeAgent,
+	common.TypeAgentGROUP,
+	common.TypeRunningStatistics,
 }
 
-type LeveldbStore struct {
+type Store struct {
 	db map[string]*leveldb.DB
 }
 
-func (l *LeveldbStore) Connect() error {
+func (l *Store) Connect() error {
 	l.db = make(map[string]*leveldb.DB)
 
 	var err error
@@ -50,11 +52,11 @@ func (l *LeveldbStore) Connect() error {
 	return nil
 }
 
-func (l *LeveldbStore) GetMode() string {
+func (l *Store) GetMode() string {
 	return "leveldb"
 }
 
-func (l *LeveldbStore) Close() error {
+func (l *Store) Close() error {
 	for _, db := range l.db {
 		err := db.Close()
 		if err != nil {
@@ -64,15 +66,15 @@ func (l *LeveldbStore) Close() error {
 	return nil
 }
 
-func (l *LeveldbStore) Get(table string, entityKey string) (interface{}, error) {
-	value, err := l.db[table].Get([]byte(generateKey(entityKey)), nil)
+func (l *Store) Get(table string, entityKey string) (interface{}, error) {
+	value, err := l.db[table].Get(generateKey(entityKey), nil)
 	if err != nil {
 		return nil, err
 	}
 	return parseValue(table, value), nil
 }
 
-func (l *LeveldbStore) Add(table string, entityKey string, entity interface{}) error {
+func (l *Store) Add(table string, entityKey string, entity interface{}) error {
 	key := generateKey(entityKey)
 	value, err := generateValue(entity)
 	if err != nil {
@@ -86,7 +88,7 @@ func (l *LeveldbStore) Add(table string, entityKey string, entity interface{}) e
 	return nil
 }
 
-func (l *LeveldbStore) Update(table string, entityKey string, entity interface{}) error {
+func (l *Store) Update(table string, entityKey string, entity interface{}) error {
 	key := generateKey(entityKey)
 	value, err := generateValue(entity)
 	if err != nil {
@@ -100,7 +102,7 @@ func (l *LeveldbStore) Update(table string, entityKey string, entity interface{}
 	return nil
 }
 
-func (l *LeveldbStore) Has(table string, entityKey string) (bool, error) {
+func (l *Store) Has(table string, entityKey string) (bool, error) {
 	key := generateKey(entityKey)
 	ok, err := l.db[table].Has(key, nil)
 	if err != nil {
@@ -109,7 +111,7 @@ func (l *LeveldbStore) Has(table string, entityKey string) (bool, error) {
 	return ok, nil
 }
 
-func (l *LeveldbStore) Delete(table string, entityKey string) error {
+func (l *Store) Delete(table string, entityKey string) error {
 	key := generateKey(entityKey)
 	err := l.db[table].Delete(key, nil)
 	if err != nil {
@@ -118,7 +120,7 @@ func (l *LeveldbStore) Delete(table string, entityKey string) error {
 	return nil
 }
 
-func (l *LeveldbStore) GetAll(table string) ([]interface{}, error) {
+func (l *Store) GetAll(table string) ([]interface{}, error) {
 	ans := make([]interface{}, 0)
 
 	iter := l.db[table].NewIterator(nil, nil)
@@ -134,12 +136,12 @@ func (l *LeveldbStore) GetAll(table string) ([]interface{}, error) {
 	return ans, nil
 }
 
-func (l *LeveldbStore) Count(table string) (int, error) {
-	var ans int = 0
+func (l *Store) Count(table string) (int, error) {
+	var ans int
 
 	iter := l.db[table].NewIterator(nil, nil)
 	for iter.Next() {
-		ans = ans + 1
+		ans++
 	}
 
 	iter.Release()
@@ -150,7 +152,7 @@ func (l *LeveldbStore) Count(table string) (int, error) {
 	return ans, nil
 }
 
-func (l *LeveldbStore) WriteBatch(batch *database.Batch) error {
+func (l *Store) WriteBatch(batch *database.Batch) error {
 	batchTemp := *batch
 	var leveldbBatch map[string]*leveldb.Batch = make(map[string]*leveldb.Batch)
 
@@ -162,9 +164,9 @@ func (l *LeveldbStore) WriteBatch(batch *database.Batch) error {
 			leveldbBatch[data.Table] = new(leveldb.Batch)
 		}
 
-		if data.Opt == database.OPT_DELETE {
+		if data.Opt == database.OptDelete {
 			leveldbBatch[data.Table].Delete(key)
-		} else if data.Opt == database.OPT_ADD || data.Opt == database.OPT_UPDATE {
+		} else if data.Opt == database.OptAdd || data.Opt == database.OptUpdate {
 			value, err := generateValue(data.Value)
 			if err != nil {
 				*batch = batchTemp
@@ -197,29 +199,23 @@ func generateValue(entity interface{}) ([]byte, error) {
 	return value, nil
 }
 
-func parseKey(key []byte) string {
-	return string(key)
-}
-
 func parseValue(table string, data []byte) interface{} {
 	var ans interface{}
 	switch table {
-	case common.TYPE_COLLECTION_CONFIG:
+	case common.TypeCollectionConfig:
 		ans = new(model.Config)
-		break
-	case common.TYPE_AGENT:
+	case common.TypeAgent:
 		ans = new(model.Agent)
-		break
-	case common.TYPE_AGENTGROUP:
+	case common.TypeAgentGROUP:
 		ans = new(model.AgentGroup)
-		break
-	case common.TYPE_AGENT_ALARM:
+	case common.TypeAgentAlarm:
 		ans = new(model.AgentAlarm)
-		break
-	case common.TYPE_RUNNING_STATISTICS:
+	case common.TypeRunningStatistics:
 		ans = new(model.RunningStatistics)
-		break
 	}
-	json.Unmarshal(data, ans)
+	err := json.Unmarshal(data, ans)
+	if err != nil {
+		log.Println(err.Error())
+	}
 	return ans
 }
