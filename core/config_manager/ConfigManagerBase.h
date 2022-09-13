@@ -434,6 +434,8 @@ public:
 
     virtual void SetStartWorkerStatus(const std::string& result, const std::string& message) = 0;
 
+    virtual std::string CheckPluginFlusher(Json::Value& configJson) = 0;
+
 private:
     // no copy
     ConfigManagerBase(const ConfigManagerBase&);
