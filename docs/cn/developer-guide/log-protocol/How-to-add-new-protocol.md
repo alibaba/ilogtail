@@ -49,4 +49,4 @@
     - 在`supportedEncodingMap`中，增加该协议支持的编码类型
     - 在`c.DoWithSelectedFields`方法的`switch`语句中新增一个`case`子句，`case`名为协议名，子句内容为`return c.ConvertToXXXProtocol(logGroup, targetFields)`，其中涉及的函数即为第2步中编写的函数
 
-4. 在`./doc/cn/developer-guide/log-protocol/converter.md`的附录和`README.md`中增加协议相关内容。如果是自定义协议，还需要在`./doc/cn/developer-guide/log-protocol/customized-protocol`文件夹下新增`<protocol>.md`文件描述具体的协议形式。
+4. 在`./doc/cn/developer-guide/log-protocol/converter.md`的附录、`README.md`中增加协议相关内容，并在`./doc/cn/developer-guide/log-protocol/protocol-spec`文件夹下新增`<protocol>.md`文件描述具体的协议形式。
