@@ -15,10 +15,12 @@
 package protocol
 
 import (
+	"flag"
 	"fmt"
 	"strings"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 const (
@@ -69,12 +71,21 @@ var tagConversionMap = map[string]string{
 	"_image_name_":     tagContainerImageName,
 }
 
+// When in k8s, the following tags should be renamed to k8s-specific names.
+var specialTagConversionMap = map[string]string{
+	"_container_name_": tagK8sContainerName,
+	"_container_ip_":   tagK8sContainerIP,
+	"_image_name_":     tagK8sContainerImageName,
+}
+
 var supportedEncodingMap = map[string]map[string]bool{
 	protocolSingle: {
 		encodingJSON:     true,
 		encodingProtobuf: false,
 	},
 }
+
+var inK8s = flag.Bool("ALICLOUD_LOG_K8S_FLAG", false, "alibaba log k8s event config flag, set true if you want to use it")
 
 type Converter struct {
 	Protocol             string
@@ -115,23 +126,29 @@ func (c *Converter) DoWithSelectedFields(logGroup *protocol.LogGroup, targetFiel
 
 func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic string, tagKeyRenameMap map[string]string) (map[string]string, map[string]string) {
 	contents, tags := make(map[string]string), make(map[string]string, len(tagConversionMap)+2) // the 2 extra tags comes from src and topic
-	inK8s := false
 	for _, logContent := range log.Contents {
 		if logContent.Key == tagPrefix+"__user_defined_id__" {
 			continue
 		}
 		if strings.HasPrefix(logContent.Key, tagPrefix) {
+			if *inK8s {
+				if defaultTag, ok := specialTagConversionMap[logContent.Key[len(tagPrefix):]]; ok {
+					if newTag, ok := tagKeyRenameMap[defaultTag]; ok {
+						tags[newTag] = logContent.Value
+					} else {
+						tags[defaultTag] = logContent.Value
+					}
+					continue
+				}
+			}
 			if defaultTag, ok := tagConversionMap[logContent.Key[len(tagPrefix):]]; ok {
 				if newTag, ok := tagKeyRenameMap[defaultTag]; ok {
 					tags[newTag] = logContent.Value
 				} else {
 					tags[defaultTag] = logContent.Value
 				}
-				if logContent.Key == "__tag__:_pod_uid_" {
-					inK8s = true
-				}
 			} else {
-				if newTag, ok := tagKeyRenameMap[logContent.Key[8:]]; ok {
+				if newTag, ok := tagKeyRenameMap[logContent.Key[len(tagPrefix):]]; ok {
 					tags[newTag] = logContent.Value
 				} else {
 					tags[logContent.Key[len(tagPrefix):]] = logContent.Value
@@ -149,14 +166,21 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 		if logTag.Key == "__user_defined_id__" || logTag.Key == "__pack_id__" {
 			continue
 		}
+		if *inK8s {
+			if defaultTag, ok := specialTagConversionMap[logTag.Key]; ok {
+				if newTag, ok := tagKeyRenameMap[defaultTag]; ok {
+					tags[newTag] = logTag.Value
+				} else {
+					tags[defaultTag] = logTag.Value
+				}
+				continue
+			}
+		}
 		if defaultTag, ok := tagConversionMap[logTag.Key]; ok {
 			if newTag, ok := tagKeyRenameMap[defaultTag]; ok {
 				tags[newTag] = logTag.Value
 			} else {
 				tags[defaultTag] = logTag.Value
-			}
-			if logTag.Key == "_pod_uid_" {
-				inK8s = true
 			}
 		} else {
 			if newTag, ok := tagKeyRenameMap[logTag.Key]; ok {
@@ -166,25 +190,12 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 			}
 		}
 	}
+
 	tags[tagHostIP] = src
 	if topic != "" {
 		tags[tagLogTopic] = topic
 	}
 
-	if inK8s {
-		if v, ok := tags["container.name"]; ok {
-			tags["k8s.container.name"] = v
-			delete(tags, "container.name")
-		}
-		if v, ok := tags["container.ip"]; ok {
-			tags["k8s.container.ip"] = v
-			delete(tags, "container.ip")
-		}
-		if v, ok := tags["container.image.name"]; ok {
-			tags["k8s.container.image.name"] = v
-			delete(tags, "container.image.name")
-		}
-	}
 	return contents, tags
 }
 
@@ -203,7 +214,7 @@ func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map
 		case strings.HasPrefix(field, targetTagPrefix):
 			if value, ok := tags[field[len(targetTagPrefix):]]; ok {
 				desiredValue[i] = value
-			} else if value, ok := tagKeyRenameMap[field[4:]]; ok {
+			} else if value, ok := tagKeyRenameMap[field[len(targetTagPrefix):]]; ok {
 				desiredValue[i] = tags[value]
 			}
 		default:
@@ -211,4 +222,8 @@ func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map
 		}
 	}
 	return desiredValue, nil
+}
+
+func init() {
+	_ = util.InitFromEnvBool("ALICLOUD_LOG_K8S_FLAG", inK8s, *inK8s)
 }

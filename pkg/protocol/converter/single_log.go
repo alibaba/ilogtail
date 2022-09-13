@@ -21,6 +21,13 @@ import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
+const (
+	protocolKeyTime    = "time"
+	protocolKeyContent = "contents"
+	protocolKeyTag     = "tags"
+	numProtocolKeys    = 3
+)
+
 func (c *Converter) ConvertToSingleProtocol(logGroup *protocol.LogGroup, targetFields []string) ([][]byte, [][]string, error) {
 	marshaledLogs, desiredValues := make([][]byte, len(logGroup.Logs)), make([][]string, len(logGroup.Logs))
 	for i, log := range logGroup.Logs {
@@ -32,21 +39,21 @@ func (c *Converter) ConvertToSingleProtocol(logGroup *protocol.LogGroup, targetF
 		}
 		desiredValues[i] = desiredValue
 
-		singleLog := make(map[string]interface{}, 3)
-		if newKey, ok := c.ProtocolKeyRenameMap["time"]; ok {
+		singleLog := make(map[string]interface{}, numProtocolKeys)
+		if newKey, ok := c.ProtocolKeyRenameMap[protocolKeyTime]; ok {
 			singleLog[newKey] = log.Time
 		} else {
-			singleLog["time"] = log.Time
+			singleLog[protocolKeyTime] = log.Time
 		}
-		if newKey, ok := c.ProtocolKeyRenameMap["contents"]; ok {
+		if newKey, ok := c.ProtocolKeyRenameMap[protocolKeyContent]; ok {
 			singleLog[newKey] = contents
 		} else {
-			singleLog["contents"] = contents
+			singleLog[protocolKeyContent] = contents
 		}
-		if newKey, ok := c.ProtocolKeyRenameMap["tags"]; ok {
+		if newKey, ok := c.ProtocolKeyRenameMap[protocolKeyTag]; ok {
 			singleLog[newKey] = tags
 		} else {
-			singleLog["tags"] = tags
+			singleLog[protocolKeyTag] = tags
 		}
 
 		switch c.Encoding {

@@ -140,6 +140,7 @@ func TestConvertToSimple(t *testing.T) {
 		})
 
 		Convey("When the logGroup is generated from k8s daemonset environment", func() {
+			*inK8s = true
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
@@ -377,6 +378,7 @@ func TestConvertToSimple(t *testing.T) {
 		})
 
 		Convey("When the log is standardized", func() {
+			*inK8s = true
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
@@ -454,15 +456,16 @@ func TestConvertToSimple(t *testing.T) {
 			"label":       "tag",
 			"env":         "env_tag",
 		}
-		protoKeyRenameMap := map[string]string{
+		protocolKeyRenameMap := map[string]string{
 			"time":     "@timestamp",
 			"contents": "values",
 			"tags":     "annos",
 		}
-		c, err := NewConverter("single", "json", protoKeyRenameMap, keyRenameMap)
+		c, err := NewConverter("single", "json", keyRenameMap, protocolKeyRenameMap)
 		So(err, ShouldBeNil)
 
 		Convey("When the logGroup is generated from k8s daemonset environment", func() {
+			*inK8s = true
 			time := []uint32{1662434209, 1662434487}
 			method := []string{"PUT", "GET"}
 			status := []string{"200", "404"}
