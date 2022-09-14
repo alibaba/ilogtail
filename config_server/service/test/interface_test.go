@@ -15,922 +15,1284 @@
 package test
 
 import (
-	"bytes"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	. "github.com/smartystreets/goconvey/convey"
-	"google.golang.org/protobuf/proto"
 
+	"github.com/alibaba/ilogtail/config_server/service/common"
 	configserverproto "github.com/alibaba/ilogtail/config_server/service/proto"
 	"github.com/alibaba/ilogtail/config_server/service/router"
 )
 
-func TestInterface(t *testing.T) {
+func TestBaseAgentGroup(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	router.InitUserRouter(r)
+
+	var requestID int
+
+	Convey("Test delete AgentGroup.", t, func() {
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete default. ")
+		{
+			status, res := DeleteAgentGroup(r, "default", fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.BadRequest.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.BadRequest.Code)
+			So(res.Message, ShouldEqual, "Cannot delete agent group 'default'")
+
+			requestID++
+		}
+	})
+}
+
+func TestBaseConfig(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	router.InitUserRouter(r)
+
+	var requestID int
+
+	Convey("Test create Config.", t, func() {
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-1. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-1"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
+
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-1. ")
+		{
+			configName := "config-1"
+
+			status, res := GetConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config success")
+			So(res.ConfigDetail.ConfigName, ShouldEqual, configName)
+			So(res.ConfigDetail.AgentType, ShouldEqual, "ilogtail")
+			So(res.ConfigDetail.Content, ShouldEqual, "Content for test")
+			So(res.ConfigDetail.Description, ShouldEqual, "Description for test")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-1. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-1"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
+
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.ConfigAlreadyExist.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.ConfigAlreadyExist.Code)
+			So(res.Message, ShouldEqual, fmt.Sprintf("Config %s already exists.", config.ConfigName))
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get all configs. ")
+		{
+			status, res := ListConfigs(r, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config list success")
+			So(len(res.ConfigDetails), ShouldEqual, 1)
+			So(res.ConfigDetails[0].ConfigName, ShouldEqual, "config-1")
+			So(res.ConfigDetails[0].AgentType, ShouldEqual, "ilogtail")
+			So(res.ConfigDetails[0].Content, ShouldEqual, "Content for test")
+			So(res.ConfigDetails[0].Description, ShouldEqual, "Description for test")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-2. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-2"
+			config.AgentType = "ilogtail"
+			config.Description = "Description for test"
+
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.BadRequest.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.BadRequest.Code)
+			So(res.Message, ShouldEqual, fmt.Sprintf("Need parameter %s.", "Content"))
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-2. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-2"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
+
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-2. ")
+		{
+			configName := "config-2"
+
+			status, res := GetConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config success")
+			So(res.ConfigDetail.ConfigName, ShouldEqual, configName)
+			So(res.ConfigDetail.AgentType, ShouldEqual, "ilogtail")
+			So(res.ConfigDetail.Content, ShouldEqual, "Content for test")
+			So(res.ConfigDetail.Description, ShouldEqual, "Description for test")
+
+			requestID++
+		}
+	})
+
+	Convey("Test update Config.", t, func() {
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test update config-1. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-1"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test-updated"
+			config.Description = "Description for test-updated"
+
+			status, res := UpdateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Update config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-1. ")
+		{
+			configName := "config-1"
+
+			status, res := GetConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config success")
+			So(res.ConfigDetail.ConfigName, ShouldEqual, configName)
+			So(res.ConfigDetail.AgentType, ShouldEqual, "ilogtail")
+			So(res.ConfigDetail.Content, ShouldEqual, "Content for test-updated")
+			So(res.ConfigDetail.Description, ShouldEqual, "Description for test-updated")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test update config-2. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-2"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test-updated"
+			config.Description = "Description for test-updated"
+
+			status, res := UpdateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Update config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-2. ")
+		{
+			configName := "config-2"
+
+			status, res := GetConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config success")
+			So(res.ConfigDetail.ConfigName, ShouldEqual, configName)
+			So(res.ConfigDetail.AgentType, ShouldEqual, "ilogtail")
+			So(res.ConfigDetail.Content, ShouldEqual, "Content for test-updated")
+			So(res.ConfigDetail.Description, ShouldEqual, "Description for test-updated")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test update config-3. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-3"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test-updated"
+			config.Description = "Description for test-updated"
+
+			status, res := UpdateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.ConfigNotExist.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.ConfigNotExist.Code)
+			So(res.Message, ShouldEqual, fmt.Sprintf("Config %s doesn't exist.", config.ConfigName))
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get all configs. ")
+		{
+			status, res := ListConfigs(r, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config list success")
+			So(len(res.ConfigDetails), ShouldEqual, 2)
+			So(res.ConfigDetails[0].ConfigName, ShouldEqual, "config-1")
+			So(res.ConfigDetails[0].AgentType, ShouldEqual, "ilogtail")
+			So(res.ConfigDetails[0].Content, ShouldEqual, "Content for test-updated")
+			So(res.ConfigDetails[0].Description, ShouldEqual, "Description for test-updated")
+			So(res.ConfigDetails[1].ConfigName, ShouldEqual, "config-2")
+			So(res.ConfigDetails[1].AgentType, ShouldEqual, "ilogtail")
+			So(res.ConfigDetails[1].Content, ShouldEqual, "Content for test-updated")
+			So(res.ConfigDetails[1].Description, ShouldEqual, "Description for test-updated")
+
+			requestID++
+		}
+	})
+
+	Convey("Test delete Config.", t, func() {
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-1. ")
+		{
+			configName := "config-1"
+
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Delete config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-1. ")
+		{
+			configName := "config-1"
+
+			status, res := GetConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.ConfigNotExist.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.ConfigNotExist.Code)
+			So(res.Message, ShouldEqual, fmt.Sprintf("Config %s doesn't exist.", configName))
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-1. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-1"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
+
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-1. ")
+		{
+			configName := "config-1"
+
+			status, res := GetConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config success")
+			So(res.ConfigDetail.ConfigName, ShouldEqual, configName)
+			So(res.ConfigDetail.AgentType, ShouldEqual, "ilogtail")
+			So(res.ConfigDetail.Content, ShouldEqual, "Content for test")
+			So(res.ConfigDetail.Description, ShouldEqual, "Description for test")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-1. ")
+		{
+			configName := "config-1"
+
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Delete config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-1. ")
+		{
+			configName := "config-1"
+
+			status, res := GetConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.ConfigNotExist.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.ConfigNotExist.Code)
+			So(res.Message, ShouldEqual, fmt.Sprintf("Config %s doesn't exist.", configName))
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-2. ")
+		{
+			configName := "config-2"
+
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Delete config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-2. ")
+		{
+			configName := "config-2"
+
+			status, res := GetConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.ConfigNotExist.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.ConfigNotExist.Code)
+			So(res.Message, ShouldEqual, fmt.Sprintf("Config %s doesn't exist.", configName))
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get all configs. ")
+		{
+			status, res := ListConfigs(r, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config list success")
+			So(len(res.ConfigDetails), ShouldEqual, 0)
+
+			requestID++
+		}
+	})
+}
+
+func TestOperationsBetweenConfigAndAgentGroup(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	router.InitUserRouter(r)
+
+	var requestID int
+
+	Convey("Test apply.", t, func() {
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-1. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-1"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
+
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-2. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-2"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
+
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test apply config-1 to default. ")
+		{
+			configName := "config-1"
+			groupName := "default"
+
+			status, res := ApplyConfigToAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config to agent group success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get default's Configs. ")
+		{
+			groupName := "default"
+
+			status, res := GetAppliedConfigsForAgentGroup(r, groupName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get agent group's applied configs success")
+			So(len(res.ConfigNames), ShouldEqual, 1)
+			So(res.ConfigNames[0], ShouldEqual, "config-1")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-1's AgentGroups. ")
+		{
+			configName := "config-1"
+
+			status, res := GetAppliedAgentGroups(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get group list success")
+			So(len(res.AgentGroupNames), ShouldEqual, 1)
+			So(res.AgentGroupNames[0], ShouldEqual, "default")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get config-3's AgentGroups. ")
+		{
+			configName := "config-3"
+
+			status, res := GetAppliedAgentGroups(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.ConfigNotExist.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.ConfigNotExist.Code)
+			So(res.Message, ShouldEqual, fmt.Sprintf("Config %s doesn't exist.", configName))
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test apply config-2 to default. ")
+		{
+			configName := "config-2"
+			groupName := "default"
+
+			status, res := ApplyConfigToAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config to agent group success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get default's Configs. ")
+		{
+			groupName := "default"
+
+			status, res := GetAppliedConfigsForAgentGroup(r, groupName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get agent group's applied configs success")
+			So(len(res.ConfigNames), ShouldEqual, 2)
+			So(res.ConfigNames, ShouldContain, "config-1")
+			So(res.ConfigNames, ShouldContain, "config-2")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-1. ")
+		{
+			configName := "config-1"
+
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.InternalServerError.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.InternalServerError.Code)
+			So(res.Message, ShouldEqual, fmt.Sprintf("Config %s was applied to some agent groups, cannot be deleted.", configName))
+
+			requestID++
+		}
+	})
+
+	Convey("Test remove.", t, func() {
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-2. ")
+		{
+			configName := "config-2"
+
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.InternalServerError.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.InternalServerError.Code)
+			So(res.Message, ShouldEqual, fmt.Sprintf("Config %s was applied to some agent groups, cannot be deleted.", configName))
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test remove config-2 from default. ")
+		{
+			configName := "config-2"
+			groupName := "default"
+
+			status, res := RemoveConfigFromAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Remove config from agent group success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get default's Configs. ")
+		{
+			groupName := "default"
+
+			status, res := GetAppliedConfigsForAgentGroup(r, groupName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get agent group's applied configs success")
+			So(len(res.ConfigNames), ShouldEqual, 1)
+			So(res.ConfigNames[0], ShouldEqual, "config-1")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-2. ")
+		{
+			configName := "config-2"
+
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Delete config success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test remove config-1 from default. ")
+		{
+			configName := "config-1"
+			groupName := "default"
+
+			status, res := RemoveConfigFromAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Remove config from agent group success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get default's Configs. ")
+		{
+			groupName := "default"
+
+			status, res := GetAppliedConfigsForAgentGroup(r, groupName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get agent group's applied configs success")
+			So(len(res.ConfigNames), ShouldEqual, 0)
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-1. ")
+		{
+			configName := "config-1"
+
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Delete config success")
+
+			requestID++
+		}
+	})
+}
+
+func TestAgentSendMessage(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	router.InitAgentRouter(r)
 	router.InitUserRouter(r)
 
-	Convey("Test agent send data.", t, func() {
-		Convey("Test /Agent/Heartbeat.", func() {
-			// data
-			reqBody := configserverproto.HeartBeatRequest{}
-			reqBody.RequestId = "0"
-			reqBody.AgentId = "ilogtail-1"
-			reqBody.AgentType = "ilogtail"
-			reqBody.AgentVersion = "1.1.1"
-			reqBody.Ip = "127.0.0.1"
-			reqBody.RunningStatus = "good"
-			reqBody.StartupTime = 100
-			reqBody.Tags = map[string]string{}
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+	var requestID int
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/Agent/HeartBeat", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+	Convey("Test Agent send message.", t, func() {
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test ilogtail-1 send Heartbeat. ")
+		{
+			agent := new(configserverproto.Agent)
+			agent.AgentId = "ilogtail-1"
+			agent.AgentType = "ilogtail"
+			agent.Version = "1.1.1"
+			agent.Ip = "127.0.0.1"
+			agent.RunningStatus = "good"
+			agent.StartupTime = 100
+			agent.Tags = map[string]string{}
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.HeartBeatResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := HeartBeat(r, agent, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Send heartbeat success")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Send heartbeat success")
 
-		Convey("Test /Agent/Alarm.", func() {
-			// data
-			reqBody := configserverproto.AlarmRequest{}
-			reqBody.RequestId = "1"
-			reqBody.AgentId = "ilogtail-1"
-			reqBody.Type = "test"
-			reqBody.Detail = "test alarm"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/Agent/Alarm", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test ilogtail-1 send RunningStatistics. ")
+		{
+			agentID := "ilogtail-1"
+			runningStatistics := &configserverproto.RunningStatistics{Cpu: 0, Memory: 0, Extras: map[string]string{}}
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.AlarmResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := RunningStatistics(r, agentID, runningStatistics, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Alarm success")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Send running statistics success")
 
-		Convey("Test /Agent/RunningStatistics.", func() {
-			// data
-			reqBody := configserverproto.RunningStatisticsRequest{}
-			reqBody.RequestId = "1"
-			reqBody.AgentId = "ilogtail-1"
-			reqBody.RunningDetails = &configserverproto.RunningStatistics{Cpu: 0, Memory: 0, Extras: map[string]string{}}
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/Agent/RunningStatistics", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test ilogtail-1 send Alarm. ")
+		{
+			agentID := "ilogtail-1"
+			alarmType := "test"
+			alarmDetail := "test"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.RunningStatisticsResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := Alarm(r, agentID, alarmType, alarmDetail, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Send running statistics success")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Alarm success")
 
-		// wait for write to memory
-		time.Sleep(time.Second * 5)
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Sleep 1s. ")
+		{
+			time.Sleep(time.Second * 1)
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test ilogtail-2 send Heartbeat. ")
+		{
+			agent := new(configserverproto.Agent)
+			agent.AgentId = "ilogtail-2"
+			agent.AgentType = "ilogtail"
+			agent.Version = "1.1.0"
+			agent.Ip = "127.0.0.1"
+			agent.RunningStatus = "good"
+			agent.StartupTime = 200
+			agent.Tags = map[string]string{}
+
+			status, res := HeartBeat(r, agent, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Send heartbeat success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test ilogtail-2 send RunningStatistics. ")
+		{
+			agentID := "ilogtail-2"
+			runningStatistics := &configserverproto.RunningStatistics{Cpu: 100, Memory: 100, Extras: map[string]string{}}
+
+			status, res := RunningStatistics(r, agentID, runningStatistics, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Send running statistics success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test ilogtail-2 send Alarm. ")
+		{
+			agentID := "ilogtail-2"
+			alarmType := "test"
+			alarmDetail := "test"
+
+			status, res := Alarm(r, agentID, alarmType, alarmDetail, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Alarm success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Sleep 1s. ")
+		{
+			time.Sleep(time.Second * 1)
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test ilogtail-1 send Heartbeat. ")
+		{
+			agent := new(configserverproto.Agent)
+			agent.AgentId = "ilogtail-1"
+			agent.AgentType = "ilogtail"
+			agent.Version = "1.1.1"
+			agent.Ip = "127.0.0.1"
+			agent.RunningStatus = "good"
+			agent.StartupTime = 100
+			agent.Tags = map[string]string{}
+
+			status, res := HeartBeat(r, agent, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Send heartbeat success")
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Sleep 2s, wait for writing agent info to store. ")
+		{
+			time.Sleep(time.Second * 2)
+
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get default's Agents. ")
+		{
+			groupName := "default"
+
+			status, res := ListAgents(r, groupName, fmt.Sprint(requestID))
+
+			// check
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get agent list success")
+			So(len(res.Agents), ShouldEqual, 2)
+
+			var agent1, agent2 int
+			if res.Agents[0].AgentId == "ilogtail-1" {
+				agent1 = 0
+				agent2 = 1
+			} else {
+				agent1 = 1
+				agent2 = 0
+			}
+
+			So(res.Agents[agent1].LatestHeartbeatTime, ShouldBeGreaterThan, res.Agents[agent2].LatestHeartbeatTime)
+
+			requestID++
+		}
 	})
+}
 
-	Convey("Test agent group's CURD.", t, func() {
-		Convey("Test CreateAgentGroup.", func() {
-			// data
-			reqBody := configserverproto.CreateAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.AgentGroup = new(configserverproto.AgentGroup)
-			reqBody.AgentGroup.GroupName = "default"
-			reqBody.AgentGroup.Tags = make([]*configserverproto.AgentGroupTag, 0)
-			reqBody.AgentGroup.Description = "test"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+func TestAgentGetConfig(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	router.InitAgentRouter(r)
+	router.InitUserRouter(r)
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/User/CreateAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+	var requestID int
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.CreateAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+	Convey("Test Agent get config.", t, func() {
+		agent := new(configserverproto.Agent)
+		agent.AgentId = "ilogtail-1"
+		agent.AgentType = "ilogtail"
+		agent.Version = "1.1.1"
+		agent.Ip = "127.0.0.1"
+		agent.RunningStatus = "good"
+		agent.StartupTime = 100
+		agent.Tags = map[string]string{}
 
-			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Add agent group success")
+		configVersions := map[string]int64{}
 
-			// check data
-			checkReqBody := configserverproto.GetAgentGroupRequest{}
-			checkReqBody.RequestId = "2"
-			checkReqBody.GroupName = "default"
-			checkReqBodyByte, _ := proto.Marshal(&checkReqBody)
-
-			// check request
-			w = httptest.NewRecorder()
-			checkReq, _ := http.NewRequest("GET", "/User/GetAgentGroup", bytes.NewBuffer(checkReqBodyByte))
-			r.ServeHTTP(w, checkReq)
-
-			// check response
-			checkRes := w.Result()
-			checkResBodyByte, _ := ioutil.ReadAll(checkRes.Body)
-			checkResBody := new(configserverproto.GetAgentGroupResponse)
-			proto.Unmarshal(checkResBodyByte, checkResBody)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test ilogtail-1 send Heartbeat. ")
+		{
+			status, res := HeartBeat(r, agent, fmt.Sprint(requestID))
 
 			// check
-			So(checkRes.StatusCode, ShouldEqual, 200)
-			So(checkResBody.ResponseId, ShouldEqual, checkReqBody.RequestId)
-			So(checkResBody.Code, ShouldEqual, "Accept")
-			So(checkResBody.Message, ShouldEqual, "Get agent group success")
-			So(checkResBody.AgentGroup.GroupName, ShouldEqual, "default")
-			So(checkResBody.AgentGroup.Tags, ShouldBeEmpty)
-			So(checkResBody.AgentGroup.Description, ShouldEqual, "test")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Send heartbeat success")
 
-		Convey("Test UpdateAgentGroup.", func() {
-			// data
-			reqBody := configserverproto.UpdateAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.AgentGroup = new(configserverproto.AgentGroup)
-			reqBody.AgentGroup.GroupName = "default"
-			reqBody.AgentGroup.Tags = make([]*configserverproto.AgentGroupTag, 0)
-			reqBody.AgentGroup.Description = "test-updated"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("PUT", "/User/UpdateAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Sleep 2s, wait for writing agent info to store. ")
+		{
+			time.Sleep(time.Second * 2)
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.UpdateAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			requestID++
+		}
+
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-1. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-1"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
+
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Update agent group success")
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config success")
 
-			// check data
-			checkReqBody := configserverproto.GetAgentGroupRequest{}
-			checkReqBody.RequestId = "2"
-			checkReqBody.GroupName = "default"
-			checkReqBodyByte, _ := proto.Marshal(&checkReqBody)
+			requestID++
+		}
 
-			// check request
-			w = httptest.NewRecorder()
-			checkReq, _ := http.NewRequest("GET", "/User/GetAgentGroup", bytes.NewBuffer(checkReqBodyByte))
-			r.ServeHTTP(w, checkReq)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-2. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-2"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
 
-			// check response
-			checkRes := w.Result()
-			checkResBodyByte, _ := ioutil.ReadAll(checkRes.Body)
-			checkResBody := new(configserverproto.GetAgentGroupResponse)
-			proto.Unmarshal(checkResBodyByte, checkResBody)
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
 
 			// check
-			So(checkRes.StatusCode, ShouldEqual, 200)
-			So(checkResBody.ResponseId, ShouldEqual, checkReqBody.RequestId)
-			So(checkResBody.Code, ShouldEqual, "Accept")
-			So(checkResBody.Message, ShouldEqual, "Get agent group success")
-			So(checkResBody.AgentGroup.GroupName, ShouldEqual, "default")
-			So(checkResBody.AgentGroup.Tags, ShouldBeEmpty)
-			So(checkResBody.AgentGroup.Description, ShouldEqual, "test-updated")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config success")
 
-		Convey("Test DeleteAgentGroup.", func() {
-			// data
-			reqBody := configserverproto.DeleteAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.GroupName = "default"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", "/User/DeleteAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-3. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-3"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.DeleteAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Delete agent group success")
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config success")
 
-			// check data
-			checkReqBody := configserverproto.GetAgentGroupRequest{}
-			checkReqBody.RequestId = "2"
-			checkReqBody.GroupName = "default"
-			checkReqBodyByte, _ := proto.Marshal(&checkReqBody)
+			requestID++
+		}
 
-			// check request
-			w = httptest.NewRecorder()
-			checkReq, _ := http.NewRequest("GET", "/User/GetAgentGroup", bytes.NewBuffer(checkReqBodyByte))
-			r.ServeHTTP(w, checkReq)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test create config-4. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-4"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test"
+			config.Description = "Description for test"
 
-			// check response
-			checkRes := w.Result()
-			checkResBodyByte, _ := ioutil.ReadAll(checkRes.Body)
-			checkResBody := new(configserverproto.GetAgentGroupResponse)
-			proto.Unmarshal(checkResBodyByte, checkResBody)
+			status, res := CreateConfig(r, config, fmt.Sprint(requestID))
 
 			// check
-			So(checkRes.StatusCode, ShouldEqual, 404)
-			So(checkResBody.ResponseId, ShouldEqual, checkReqBody.RequestId)
-			So(checkResBody.Code, ShouldEqual, "AgentGroupNotExist")
-			So(checkResBody.Message, ShouldEqual, "Agent group default doesn't exist.")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config success")
 
-		Convey("Test ListAgentGroups.", func() {
-			// data
-			reqBody := configserverproto.ListAgentGroupsRequest{}
-			reqBody.RequestId = "1"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/User/ListAgentGroups", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test apply config-1 to default. ")
+		{
+			configName := "config-1"
+			groupName := "default"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.ListAgentGroupsResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := ApplyConfigToAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Get agent group list success")
-			So(resBody.AgentGroups, ShouldBeEmpty)
-		})
-	})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config to agent group success")
 
-	Convey("Test collection config's CURD.", t, func() {
-		Convey("Test CreateConfig.", func() {
-			// data
-			reqBody := configserverproto.CreateConfigRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigDetail = new(configserverproto.Config)
-			reqBody.ConfigDetail.ConfigName = "config-1"
-			reqBody.ConfigDetail.AgentType = "ilogtail"
-			reqBody.ConfigDetail.Content = "test"
-			reqBody.ConfigDetail.Description = "test"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/User/CreateConfig", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test apply config-2 to default. ")
+		{
+			configName := "config-2"
+			groupName := "default"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.CreateConfigResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := ApplyConfigToAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Add config success")
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config to agent group success")
 
-			// check data
-			checkReqBody := configserverproto.GetConfigRequest{}
-			checkReqBody.RequestId = "2"
-			checkReqBody.ConfigName = "config-1"
-			checkReqBodyByte, _ := proto.Marshal(&checkReqBody)
+			requestID++
+		}
 
-			// check request
-			w = httptest.NewRecorder()
-			checkReq, _ := http.NewRequest("GET", "/User/GetConfig", bytes.NewBuffer(checkReqBodyByte))
-			r.ServeHTTP(w, checkReq)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test apply config-3 to default. ")
+		{
+			configName := "config-3"
+			groupName := "default"
 
-			// check response
-			checkRes := w.Result()
-			checkResBodyByte, _ := ioutil.ReadAll(checkRes.Body)
-			checkResBody := new(configserverproto.GetConfigResponse)
-			proto.Unmarshal(checkResBodyByte, checkResBody)
+			status, res := ApplyConfigToAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
 
 			// check
-			So(checkRes.StatusCode, ShouldEqual, 200)
-			So(checkResBody.ResponseId, ShouldEqual, checkReqBody.RequestId)
-			So(checkResBody.Code, ShouldEqual, "Accept")
-			So(checkResBody.Message, ShouldEqual, "Get config success")
-			So(checkResBody.ConfigDetail.ConfigName, ShouldEqual, "config-1")
-			So(checkResBody.ConfigDetail.AgentType, ShouldEqual, "ilogtail")
-			So(checkResBody.ConfigDetail.Content, ShouldEqual, "test")
-			So(checkResBody.ConfigDetail.Description, ShouldEqual, "test")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config to agent group success")
 
-		Convey("Test UpdateConfig.", func() {
-			// data
-			reqBody := configserverproto.UpdateConfigRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigDetail = new(configserverproto.Config)
-			reqBody.ConfigDetail.ConfigName = "config-1"
-			reqBody.ConfigDetail.AgentType = "ilogtail"
-			reqBody.ConfigDetail.Content = "test-updated"
-			reqBody.ConfigDetail.Description = "test-updated"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("PUT", "/User/UpdateConfig", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.UpdateConfigResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get ilogtail-1's configs. ")
+		{
+			status, res := GetConfigList(r, agent.AgentId, configVersions, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Update config success")
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config update infos success")
 
-			// check data
-			checkReqBody := configserverproto.GetConfigRequest{}
-			checkReqBody.RequestId = "2"
-			checkReqBody.ConfigName = "config-1"
-			checkReqBodyByte, _ := proto.Marshal(&checkReqBody)
+			for _, info := range res.ConfigUpdateInfos {
+				configVersions[info.ConfigName] = info.ConfigVersion
+				switch info.ConfigName {
+				case "config-1":
+					So(info.UpdateStatus.String(), ShouldEqual, "NEW")
+				case "config-2":
+					So(info.UpdateStatus.String(), ShouldEqual, "NEW")
+				case "config-3":
+					So(info.UpdateStatus.String(), ShouldEqual, "NEW")
+				}
+			}
 
-			// check request
-			w = httptest.NewRecorder()
-			checkReq, _ := http.NewRequest("GET", "/User/GetConfig", bytes.NewBuffer(checkReqBodyByte))
-			r.ServeHTTP(w, checkReq)
+			requestID++
+		}
 
-			// check response
-			checkRes := w.Result()
-			checkResBodyByte, _ := ioutil.ReadAll(checkRes.Body)
-			checkResBody := new(configserverproto.GetConfigResponse)
-			proto.Unmarshal(checkResBodyByte, checkResBody)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test apply config-4 to default. ")
+		{
+			configName := "config-4"
+			groupName := "default"
 
-			// check
-			So(checkRes.StatusCode, ShouldEqual, 200)
-			So(checkResBody.ResponseId, ShouldEqual, checkReqBody.RequestId)
-			So(checkResBody.Code, ShouldEqual, "Accept")
-			So(checkResBody.Message, ShouldEqual, "Get config success")
-			So(checkResBody.ConfigDetail.ConfigName, ShouldEqual, "config-1")
-			So(checkResBody.ConfigDetail.AgentType, ShouldEqual, "ilogtail")
-			So(checkResBody.ConfigDetail.Content, ShouldEqual, "test-updated")
-			So(checkResBody.ConfigDetail.Description, ShouldEqual, "test-updated")
-		})
-
-		Convey("Test DeleteConfig.", func() {
-			// data
-			reqBody := configserverproto.DeleteConfigRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigName = "config-1"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", "/User/DeleteConfig", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.DeleteConfigResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := ApplyConfigToAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Delete config success")
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Add config to agent group success")
 
-			// check data
-			checkReqBody := configserverproto.GetConfigRequest{}
-			checkReqBody.RequestId = "2"
-			checkReqBody.ConfigName = "config-1"
-			checkReqBodyByte, _ := proto.Marshal(&checkReqBody)
+			requestID++
+		}
 
-			// check request
-			w = httptest.NewRecorder()
-			checkReq, _ := http.NewRequest("GET", "/User/GetConfig", bytes.NewBuffer(checkReqBodyByte))
-			r.ServeHTTP(w, checkReq)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test remove config-1 from default. ")
+		{
+			configName := "config-1"
+			groupName := "default"
 
-			// check response
-			checkRes := w.Result()
-			checkResBodyByte, _ := ioutil.ReadAll(checkRes.Body)
-			checkResBody := new(configserverproto.GetConfigResponse)
-			proto.Unmarshal(checkResBodyByte, checkResBody)
+			status, res := RemoveConfigFromAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
 
 			// check
-			So(checkRes.StatusCode, ShouldEqual, 404)
-			So(checkResBody.ResponseId, ShouldEqual, checkReqBody.RequestId)
-			So(checkResBody.Code, ShouldEqual, "ConfigNotExist")
-			So(checkResBody.Message, ShouldEqual, "Config config-1 doesn't exist.")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Remove config from agent group success")
 
-		Convey("Test ListConfigs.", func() {
-			// data
-			reqBody := configserverproto.ListConfigsRequest{}
-			reqBody.RequestId = "1"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/User/ListConfigs", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test update config-2. ")
+		{
+			config := &configserverproto.Config{}
+			config.ConfigName = "config-2"
+			config.AgentType = "ilogtail"
+			config.Content = "Content for test-updated"
+			config.Description = "Description for test-updated"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.ListConfigsResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := UpdateConfig(r, config, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Get config list success")
-			So(resBody.ConfigDetails, ShouldBeEmpty)
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Update config success")
 
-	})
+			requestID++
+		}
 
-	Convey("Test operations between collection config and agent group.", t, func() {
-		Convey("Create an agent group.", func() {
-			// data
-			reqBody := configserverproto.CreateAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.AgentGroup = new(configserverproto.AgentGroup)
-			reqBody.AgentGroup.GroupName = "default"
-			reqBody.AgentGroup.Tags = make([]*configserverproto.AgentGroupTag, 0)
-			reqBody.AgentGroup.Description = "test"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/User/CreateAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.CreateAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test get ilogtail-1's configs. ")
+		{
+			status, res := GetConfigList(r, agent.AgentId, configVersions, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Add agent group success")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Get config update infos success")
 
-		Convey("Create a config.", func() {
-			// data
-			reqBody := configserverproto.CreateConfigRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigDetail = new(configserverproto.Config)
-			reqBody.ConfigDetail.ConfigName = "config-1"
-			reqBody.ConfigDetail.AgentType = "ilogtail"
-			reqBody.ConfigDetail.Content = "test"
-			reqBody.ConfigDetail.Description = "test"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			configVersions = map[string]int64{}
+			for _, info := range res.ConfigUpdateInfos {
+				configVersions[info.ConfigName] = info.ConfigVersion
+				switch info.ConfigName {
+				case "config-1":
+					So(info.UpdateStatus.String(), ShouldEqual, "DELETED")
+				case "config-2":
+					So(info.UpdateStatus.String(), ShouldEqual, "MODIFIED")
+				case "config-3":
+					So(info.UpdateStatus.String(), ShouldEqual, "SAME")
+				case "config-4":
+					So(info.UpdateStatus.String(), ShouldEqual, "NEW")
+				}
+			}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/User/CreateConfig", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+			requestID++
+		}
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.CreateConfigResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test remove config-2 from default. ")
+		{
+			configName := "config-2"
+			groupName := "default"
 
-			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Add config success")
-		})
-
-		Convey("Test ApplyConfigToAgentGroup.", func() {
-			// data
-			reqBody := configserverproto.ApplyConfigToAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigName = "config-1"
-			reqBody.GroupName = "default"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("PUT", "/User/ApplyConfigToAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.ApplyConfigToAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := RemoveConfigFromAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Add config to agent group success")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Remove config from agent group success")
 
-		Convey("Test GetAppliedConfigsForAgentGroup.", func() {
-			// data
-			reqBody := configserverproto.GetAppliedConfigsForAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.GroupName = "default"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/User/GetAppliedConfigsForAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test remove config-3 from default. ")
+		{
+			configName := "config-3"
+			groupName := "default"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.GetAppliedConfigsForAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := RemoveConfigFromAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Get agent group's applied configs success")
-			So(len(resBody.ConfigNames), ShouldEqual, 1)
-			So(resBody.ConfigNames[0], ShouldEqual, "config-1")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Remove config from agent group success")
 
-		Convey("Test GetAppliedAgentGroups.", func() {
-			// data
-			reqBody := configserverproto.GetAppliedAgentGroupsRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigName = "config-1"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/User/GetAppliedAgentGroups", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test remove config-4 from default. ")
+		{
+			configName := "config-4"
+			groupName := "default"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.GetAppliedAgentGroupsResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := RemoveConfigFromAgentGroup(r, configName, groupName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Get group list success")
-			So(len(resBody.AgentGroupNames), ShouldEqual, 1)
-			So(resBody.AgentGroupNames[0], ShouldEqual, "default")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Remove config from agent group success")
 
-		Convey("Test ListAgents.", func() {
-			// data
-			reqBody := configserverproto.ListAgentsRequest{}
-			reqBody.RequestId = "1"
-			reqBody.GroupName = "default"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/User/ListAgents", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-1. ")
+		{
+			configName := "config-1"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.ListAgentsResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Get agent list success")
-			So(len(resBody.Agents), ShouldEqual, 1)
-			So(resBody.Agents[0].AgentId, ShouldEqual, "ilogtail-1")
-			So(resBody.Agents[0].AgentType, ShouldEqual, "ilogtail")
-			So(resBody.Agents[0].Ip, ShouldEqual, "127.0.0.1")
-			So(resBody.Agents[0].StartupTime, ShouldEqual, 100)
-			So(resBody.Agents[0].RunningStatus, ShouldEqual, "good")
-			So(resBody.Agents[0].Version, ShouldEqual, "1.1.1")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Delete config success")
 
-		Convey("Test RemoveConfigFromAgentGroup.", func() {
-			// data
-			reqBody := configserverproto.RemoveConfigFromAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigName = "config-1"
-			reqBody.GroupName = "default"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", "/User/RemoveConfigFromAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-2. ")
+		{
+			configName := "config-2"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.RemoveConfigFromAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Remove config from agent group success")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Delete config success")
 
-		Convey("Delet agent group.", func() {
-			// data
-			reqBody := configserverproto.DeleteAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.GroupName = "default"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", "/User/DeleteAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-3. ")
+		{
+			configName := "config-3"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.DeleteAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Delete agent group success")
-		})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Delete config success")
 
-		Convey("Delete config.", func() {
-			// data
-			reqBody := configserverproto.DeleteConfigRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigName = "config-1"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
+			requestID++
+		}
 
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", "/User/DeleteConfig", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
+		fmt.Print("\n\t" + fmt.Sprint(requestID) + ":Test delete config-4. ")
+		{
+			configName := "config-4"
 
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.DeleteConfigResponse)
-			proto.Unmarshal(resBodyByte, resBody)
+			status, res := DeleteConfig(r, configName, fmt.Sprint(requestID))
 
 			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Delete config success")
-		})
-	})
+			So(status, ShouldEqual, common.Accept.Status)
+			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
+			So(res.Code, ShouldEqual, common.Accept.Code)
+			So(res.Message, ShouldEqual, "Delete config success")
 
-	Convey("Test agent receive data.", t, func() {
-		Convey("Create an agent group.", func() {
-			// data
-			reqBody := configserverproto.CreateAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.AgentGroup = new(configserverproto.AgentGroup)
-			reqBody.AgentGroup.GroupName = "default"
-			reqBody.AgentGroup.Tags = make([]*configserverproto.AgentGroupTag, 0)
-			reqBody.AgentGroup.Description = "test"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/User/CreateAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.CreateAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
-
-			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Add agent group success")
-		})
-
-		Convey("Create a config.", func() {
-			// data
-			reqBody := configserverproto.CreateConfigRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigDetail = new(configserverproto.Config)
-			reqBody.ConfigDetail.ConfigName = "config-1"
-			reqBody.ConfigDetail.AgentType = "ilogtail"
-			reqBody.ConfigDetail.Content = "test"
-			reqBody.ConfigDetail.Description = "test"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/User/CreateConfig", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.CreateConfigResponse)
-			proto.Unmarshal(resBodyByte, resBody)
-
-			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Add config success")
-		})
-
-		Convey("Apply config to agent group.", func() {
-			// data
-			reqBody := configserverproto.ApplyConfigToAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigName = "config-1"
-			reqBody.GroupName = "default"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("PUT", "/User/ApplyConfigToAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.ApplyConfigToAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
-
-			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Add config to agent group success")
-		})
-
-		Convey("Test /Agent/GetConfigList.", func() {
-			// data
-			reqBody := configserverproto.AgentGetConfigListRequest{}
-			reqBody.RequestId = "1"
-			reqBody.AgentId = "ilogtail-1"
-			reqBody.ConfigVersions = map[string]int64{}
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/Agent/GetConfigList", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.AgentGetConfigListResponse)
-			proto.Unmarshal(resBodyByte, resBody)
-
-			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Get config update infos success")
-			So(len(resBody.ConfigUpdateInfos), ShouldEqual, 1)
-			So(resBody.ConfigUpdateInfos[0].ConfigName, ShouldEqual, "config-1")
-			So(resBody.ConfigUpdateInfos[0].UpdateStatus, ShouldEqual, configserverproto.ConfigUpdateInfo_NEW)
-			So(resBody.ConfigUpdateInfos[0].Content, ShouldEqual, "test")
-		})
-
-		Convey("Remove config from agent group.", func() {
-			// data
-			reqBody := configserverproto.RemoveConfigFromAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigName = "config-1"
-			reqBody.GroupName = "default"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", "/User/RemoveConfigFromAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.RemoveConfigFromAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
-
-			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Remove config from agent group success")
-		})
-
-		Convey("Delet agent group.", func() {
-			// data
-			reqBody := configserverproto.DeleteAgentGroupRequest{}
-			reqBody.RequestId = "1"
-			reqBody.GroupName = "default"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", "/User/DeleteAgentGroup", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.DeleteAgentGroupResponse)
-			proto.Unmarshal(resBodyByte, resBody)
-
-			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Delete agent group success")
-		})
-
-		Convey("Delete config.", func() {
-			// data
-			reqBody := configserverproto.DeleteConfigRequest{}
-			reqBody.RequestId = "1"
-			reqBody.ConfigName = "config-1"
-			reqBodyByte, _ := proto.Marshal(&reqBody)
-
-			// request
-			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", "/User/DeleteConfig", bytes.NewBuffer(reqBodyByte))
-			r.ServeHTTP(w, req)
-
-			// response
-			res := w.Result()
-			resBodyByte, _ := ioutil.ReadAll(res.Body)
-			resBody := new(configserverproto.DeleteConfigResponse)
-			proto.Unmarshal(resBodyByte, resBody)
-
-			// check
-			So(res.StatusCode, ShouldEqual, 200)
-			So(resBody.ResponseId, ShouldEqual, reqBody.RequestId)
-			So(resBody.Code, ShouldEqual, "Accept")
-			So(resBody.Message, ShouldEqual, "Delete config success")
-		})
+			requestID++
+		}
 	})
 }
