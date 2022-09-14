@@ -31,7 +31,7 @@ type Processor struct {
 
 func NewProcessor() *Processor {
 	p := new(Processor)
-	p.reg = regexp.MustCompile("^\\d{4}-\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}")
+	p.reg = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}`)
 	return p
 }
 
