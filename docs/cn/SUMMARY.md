@@ -52,12 +52,15 @@
   * [SqlServer 查询数据](data-pipeline/input/service-mssql.md)
   * [PostgreSQL 查询数据](data-pipeline/input/service-pgsql.md)
   * [Syslog数据](data-pipeline/input/service-syslog.md)
+  * [GPU数据](data-pipeline/input/service-gpu.md)
+  * [eBPF网络调用数据](data-pipeline/input/metric-observer.md)
 * [处理](data-pipeline/processor/README.md)
   * [添加字段](data-pipeline/processor/processor-add-fields.md)
   * [原始数据](data-pipeline/processor/default.md)
   * [丢弃字段](data-pipeline/processor/processor-drop.md)
   * [条件字段处理](data-pipeline/processor/fields-with-condition.md)
   * [日志过滤](data-pipeline/processor/processor-filter-regex.md)
+  * [Grok](data-pipeline/processor/processor-grok.md)
   * [Json](data-pipeline/processor/json.md)
   * [正则](data-pipeline/processor/regex.md)
   * [重命名字段](data-pipeline/processor/processor-rename.md)
@@ -86,7 +89,14 @@
 ## 开发者指南 <a href="#developer-guide" id="developer-guide"></a>
 
 * [开发环境](developer-guide/development-environment.md)
+* [日志协议](developer-guide/log-protocol/README.md)
+  * [协议转换](developer-guide/log-protocol/converter.md)
+  * [增加新的日志协议](developer-guide/log-protocol/How-to-add-new-protocol.md)
+  * [协议](developer-guide/log-protocol)
+    * [sls协议](developer-guide/log-protocol/protocol-spec/sls.md)
+    * [单条协议](developer-guide/log-protocol/protocol-spec/single.md)
 * [代码风格](developer-guide/codestyle.md)
+
 * [数据结构](developer-guide/data-structure.md)
 * [插件开发](developer-guide/plugin-development/README.md)
   * [Checkpoint接口](developer-guide/plugin-development/checkpoint-api.md)
@@ -114,6 +124,12 @@
 ## 性能测试 <a href="#benchmark" id="benchmark"></a>
 
 * [容器场景iLogtail与Filebeat性能对比测试](benchmark/performance-compare-with-filebeat.md)
+
+## 管控工具 <a href="#config-server" id="config-server"></a>
+
+* [使用介绍](config-server/quick-start.md)
+* [通信协议](config-server/communication-protocol.md)
+* [开发指南](config-server/developer-guide.md)
 
 ## Awesome iLogtail <a href="#awesome-ilogtail" id="awesome-ilogtail"></a>
 

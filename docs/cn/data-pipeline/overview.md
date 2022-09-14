@@ -2,23 +2,24 @@
 
 ## 输入
 
-| 名称                                              | 提供方                                                       | 简介                                                                                 |
-| ------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `file_log`<br> 文本日志                           | SLS官方<br>[`messixukejia`](https://github.com/messixukejia) | 文本采集。                                                                           |
-| `input_docker_stdout`<br>容器标准输出             | SLS官方                                                      | 从容器标准输出/标准错误流中采集日志。                                                |
-| `metric_debug_file`<br>文本日志（debug）          | SLS官方                                                      | 用于调试的读取文件内容的插件。                                                       |
-| `metric_input_example`<br>MetricInput示例插件     | SLS官方                                                      | MetricInput示例插件。                                                                |
-| `metric_meta_host`<br>主机Meta数据                | SLS官方                                                      | 主机Meta数据。                                                                       |
-| `metric_mock`<br>Mock数据-Metric                  | SLS官方                                                      | 生成metric模拟数据的插件。                                                           |
-| `service_canal`<br>MySQL Binlog                   | SLS官方                                                      | 将MySQL Binlog输入到iLogtail。                                                       |
-| `service_input_example`<br>ServiceInput示例插件   | SLS官方                                                      | ServiceInput示例插件。                                                               |
-| `service_journal`<br>Journal数据                  | SLS官方                                                      | 从原始的二进制文件中采集Linux系统的Journal（systemd）日志。                          |
-| `service_kafka`<br>Kafka                          | SLS官方                                                      | 将Kafka数据输入到iLogtail。                                                          |
-| `service_mock`<br>Mock数据-Service                | SLS官方                                                      | 生成service模拟数据的插件。                                                          |
-| `service_mssql`<br>SqlServer查询数据              | SLS官方                                                      | 将Sql Server数据输入到iLogtail。                                                     |
-| `service_pgsql`<br>PostgreSQL查询数据             | SLS官方                                                      | 将PostgresSQL数据输入到iLogtail。                                                    |
-| `service_syslog`<br>Syslog数据                    | SLS官方                                                      | 采集syslog数据。                                                                     |
-| `observer_ilogtail_network`<br>无侵入网络调用数据 | SLS官方                                                      | 支持从网络系统调用中收集四层网络调用，并借助网络解析模块，可以观测七层网络调用细节。 |
+| 名称                                          | 提供方                                                       | 简介                                        |
+|---------------------------------------------| ------------------------------------------------------------ |-------------------------------------------|
+| `file_log`<br> 文本日志                         | SLS官方<br>[`messixukejia`](https://github.com/messixukejia) | 文本采集。                                     |
+| `input_docker_stdout`<br>容器标准输出             | SLS官方                                                      | 从容器标准输出/标准错误流中采集日志。                       |
+| `metric_debug_file`<br>文本日志（debug）          | SLS官方                                                      | 用于调试的读取文件内容的插件。                           |
+| `metric_input_example`<br>MetricInput示例插件   | SLS官方                                                      | MetricInput示例插件。                          |
+| `metric_meta_host`<br>主机Meta数据              | SLS官方                                                      | 主机Meta数据。                                 |
+| `metric_mock`<br>Mock数据-Metric              | SLS官方                                                      | 生成metric模拟数据的插件。                          |
+| `service_canal`<br>MySQL Binlog             | SLS官方                                                      | 将MySQL Binlog输入到iLogtail。                 |
+| `service_input_example`<br>ServiceInput示例插件 | SLS官方                                                      | ServiceInput示例插件。                         |
+| `service_journal`<br>Journal数据              | SLS官方                                                      | 从原始的二进制文件中采集Linux系统的Journal（systemd）日志。   |
+| `service_kafka`<br>Kafka                    | SLS官方                                                      | 将Kafka数据输入到iLogtail。                      |
+| `service_mock`<br>Mock数据-Service            | SLS官方                                                      | 生成service模拟数据的插件。                         |
+| `service_mssql`<br>SqlServer查询数据            | SLS官方                                                      | 将Sql Server数据输入到iLogtail。                 |
+| `service_pgsql`<br>PostgreSQL查询数据           | SLS官方                                                      | 将PostgresSQL数据输入到iLogtail。                |
+| `service_syslog`<br>Syslog数据                | SLS官方                                                      | 采集syslog数据。                               |
+| `service_gpu_metric`<br>GPU数据               | SLS官方                                                      | 支持手机英伟达GPU指标。                             |
+| `observer_ilogtail_network`<br>无侵入网络调用数据    | SLS官方                                                      | 支持从网络系统调用中收集四层网络调用，并借助网络解析模块，可以观测七层网络调用细节。 |
 
 ## 处理
 
@@ -29,6 +30,7 @@
 | `processor_drop`<br>丢弃字段                       | SLS官方                                             | 丢弃字段。                                       |
 | `processor_fields_with_conditions`<br>条件字段处理 | 社区<br>[`pj1987111`](https://github.com/pj1987111) | 根据日志部分字段的取值，动态进行字段扩展或删除。 |
 | `processor_filter_regex`<br>日志过滤               | SLS官方                                             | 通过正则匹配过滤日志。                           |
+| `processor_grok`<br>Grok                          ｜ SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 通过 Grok 语法对数据进行处理              |
 | `processor_json`<br>Json                           | SLS官方                                             | 实现对Json格式日志的解析。                       |
 | `processor_regex`<br>正则                          | SLS官方                                             | 通过正则匹配的模式实现文本日志的字段提取。       |
 | `processor_rename`<br>重命名字段                   | SLS官方                                             | 重命名字段。                                     |

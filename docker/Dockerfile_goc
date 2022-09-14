@@ -14,6 +14,6 @@
 
 # goc server is only for e2e test to analysis code coverage.
 
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/ilogtail-build-linux-amd64:latest
+FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/ilogtail-build-linux:latest
 
 ENTRYPOINT ["goc","server"]
