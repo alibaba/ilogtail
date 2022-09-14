@@ -266,13 +266,15 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 		sds.K8sFilter)
 	sds.lastUpdateTime = newUpdateTime
 	if !firstStart && newCount == 0 && delCount == 0 {
+		logger.Debugf(sds.context.GetRuntimeContext(), "update match list, firstStart: %v, new: %v, delete: %v",
+			firstStart, newCount, delCount)
 		return nil
 	}
-	logger.Infof(sds.context.GetRuntimeContext(), "update match list, first: %v, new: %v, delete: %v",
+	logger.Infof(sds.context.GetRuntimeContext(), "update match list, firstStart: %v, new: %v, delete: %v",
 		firstStart, newCount, delCount)
 
 	dockerInfos := sds.matchList
-	logger.Debug(sds.context.GetRuntimeContext(), "flush all", len(dockerInfos))
+	logger.Debug(sds.context.GetRuntimeContext(), "match list length", len(dockerInfos))
 	sds.avgInstanceMetric.Add(int64(len(dockerInfos)))
 	for id, info := range dockerInfos {
 		if !logDriverSupported(info.ContainerInfo) {
