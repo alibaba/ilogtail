@@ -46,10 +46,13 @@ instances:
 
 func TestManager_Register_static_config(t *testing.T) {
 	m := createManager("test")
+	manager = m
 	m.initSuccess = true
 	m.manualInstall()
 	m.initConfDir()
+	m.collector = NewLogCollector("test")
 	go m.run()
+	go m.collector.Run()
 	m.RegisterCollector(mock.NewEmptyContext("", "", "11"), "test1", &test.MockMetricCollector{}, []*FilterInner{
 		{
 			Domain:    "kafka.producer",
