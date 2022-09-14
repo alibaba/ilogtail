@@ -40,16 +40,18 @@ func (m *Manager) installScripts(javaPath string) error {
 }
 
 func (m *Manager) start() {
+	logger.Debug(m.managerMeta.GetContext(), "start jmxfetchd")
 	_, _ = m.execJmxfetchd("start", false)
 }
 
 //nolint:unused
 func (m *Manager) reload() {
+	logger.Debug(m.managerMeta.GetContext(), "reload jmxfetchd")
 	_, _ = m.execJmxfetchd("reload", false)
 }
 
 func (m *Manager) stop() {
-	logger.Infof(m.managerMeta.GetContext(), "don't find any configs, stop jmxfetch")
+	logger.Debug(m.managerMeta.GetContext(), "stop jmxfetchd")
 	if exist, _ := util.PathExists(m.jmxfetchdPath); !exist {
 		return
 	}
