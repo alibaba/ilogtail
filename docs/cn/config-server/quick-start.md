@@ -15,7 +15,7 @@ ConfigServer 就是这样的一款可观测 Agent 管控工具，目前支持：
 
 * 采集 Agent：数据采集器。可以是 iLogtail，或者其他的采集器。
 * 采集配置：一个数据采集 Pipeline，对应一组独立的数据采集配置。
-* AgentGroup：可以将相同属性的Agent划分为一个组，只需要绑定采集配置到 AgentGroup 即可在组内所有 Agent 生效。
+* AgentGroup：可以将相同属性的Agent划分为一个组，只需要绑定采集配置到 AgentGroup 即可在组内所有 Agent 生效。目前仅支持单 AgentGroup（即默认的 AgentGroup `default`）。
 * ConfigServer：采集配置管控的服务端。
 
 ## 功能描述
