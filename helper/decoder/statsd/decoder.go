@@ -28,7 +28,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
-	"github.com/narqo/go-dogstatsd-parser"
+	dogstatsd "github.com/narqo/go-dogstatsd-parser"
 	"github.com/prometheus/common/model"
 )
 
