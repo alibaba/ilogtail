@@ -65,8 +65,8 @@ protected:
     std::unordered_map<std::string, Json::Value> mLocalConfigDirMap;
     std::unordered_map<std::string, YAML::Node> mYamlConfigDirMap;
 
-    std::unordered_map<std::string, int32_t> mServerYamlConfigVersionMap; // the key is config name
-    std::unordered_map<std::string, int64_t> mYamlConfigMTimeMap; // the key is config name
+    std::unordered_map<std::string, int32_t> mServerYamlConfigVersionMap; // the key is config name.
+    std::unordered_map<std::string, int64_t> mYamlConfigMTimeMap; // the key is config name.
     SpinLock mPluginStatsLock;
     std::unordered_map<std::string, std::unordered_map<std::string, int>> mPluginStats;
 
