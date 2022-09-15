@@ -59,6 +59,9 @@ DEFINE_FLAG_INT32(skip_first_modify_time, "second ", 5 * 60);
 DEFINE_FLAG_INT32(max_reader_open_files, "max fd count that reader can open max", 100000);
 DEFINE_FLAG_INT32(truncate_pos_skip_bytes, "skip more xx bytes when truncate", 0);
 DEFINE_FLAG_INT32(max_fix_pos_bytes, "", 128 * 1024);
+DEFINE_FLAG_INT32(force_release_deleted_file_fd_timeout,
+                  "force release fd if file is deleted after specified seconds, no matter read to end or not",
+                  -1);
 
 namespace logtail {
 
@@ -93,6 +96,21 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
     checkPointPtr->mLastUpdateTime = mLastEventTime;
     CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
 }
+
+void LogFileReader::SetFileDeleted(bool flag) {
+    mFileDeleted = flag;
+    if (flag) {
+        mDeletedTime = time(NULL);
+    }
+}
+
+void LogFileReader::SetContainerStopped() {
+    if (!mContainerStopped) {
+        mContainerStopped = true;
+        mContainerStoppedTime = time(NULL);
+    }
+}
+
 void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t eoConcurrency) {
     string buffer = LogFileProfiler::mIpAddr + "_" + mLogPath + "_" + CalculateRandomUUID();
     uint64_t cityHash = CityHash64(buffer.c_str(), buffer.size());
@@ -1000,7 +1018,17 @@ bool LogFileReader::UpdateFilePtr() {
     mLastUpdateTime = time(NULL);
     if (mLogFileOp.IsOpen() == false) {
         // we may have mislabeled the deleted flag and then closed fd. Correct it here.
-        SetFileDeleted(false);
+        if (IsFileDeleted() && IsReadToEnd()) {
+            LogtailAlarm::GetInstance()->SendAlarm(OPEN_LOGFILE_FAIL_ALARM,
+                                                   string("Cancel deleted flag unexpectedly. Reopen read to end file: ")
+                                                       + mLogPath,
+                                                   mProjectName,
+                                                   mCategory,
+                                                   mRegion);
+        }
+        if (INT32_FLAG(force_release_deleted_file_fd_timeout) < 0) {
+            SetFileDeleted(false);
+        }
         if (GloablFileDescriptorManager::GetInstance()->GetOpenedFilePtrSize() > INT32_FLAG(max_reader_open_files)) {
             LOG_ERROR(sLogger,
                       ("log file reader fd limit, too many open files",
@@ -1934,7 +1962,7 @@ bool ApsaraLogFileReader::ParseLogLine(const char* buffer,
                                                   mLogPath,
                                                   error,
                                                   logGroupSize,
-                                                  mTzOffsetSecond, 
+                                                  mTzOffsetSecond,
                                                   mAdjustApsaraMicroTimezone);
 }
 

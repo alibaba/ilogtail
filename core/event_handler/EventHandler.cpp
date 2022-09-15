@@ -453,7 +453,9 @@ void ModifyHandler::Handle(const Event& event) {
             // only set when reader array size is 1
             if (readerArray.size() == (size_t)1) {
                 readerArray[0]->SetFileDeleted(true);
-                if (readerArray[0]->IsReadToEnd()) {
+                if (readerArray[0]->IsReadToEnd()
+                    || (INT32_FLAG(force_release_deleted_file_fd_timeout) >= 0 &&
+                        time(NULL) - reader->GetDeleteStoppedTime() > INT32_FLAG(force_release_deleted_file_fd_timeout)) {
                     // release fd as quick as possible
                     readerArray[0]->CloseFilePtr();
                 }
@@ -464,7 +466,9 @@ void ModifyHandler::Handle(const Event& event) {
             LogFileReaderPtrArray& readerArray = pair.second;
             for (auto& reader : readerArray) {
                 reader->SetContainerStopped();
-                if (reader->IsReadToEnd()) {
+                if (reader->IsReadToEnd()
+                    || (INT32_FLAG(force_release_deleted_file_fd_timeout) >= 0 &&
+                        time(NULL) - reader->GetContainerStoppedTime() > INT32_FLAG(force_release_deleted_file_fd_timeout)) {
                     // release fd as quick as possible
                     reader->CloseFilePtr();
                 }
@@ -637,6 +641,13 @@ void ModifyHandler::Handle(const Event& event) {
             return;
         }
 
+        time_t now = time(NULL);
+        if (INT32_FLAG(force_release_deleted_file_fd_timeout) >= 0 &&
+            (now - reader->GetDeletedTime() > INT32_FLAG(force_release_deleted_file_fd_timeout) ||
+                now - reader->GetContainerStoppedTime() > INT32_FLAG(force_release_deleted_file_fd_timeout)) {
+            reader->CloseFilePtr();
+            return;
+        }
         bool hasMoreData;
         do {
             if (!LogProcess::GetInstance()->IsValidToReadLog(reader->GetLogstoreKey())) {
