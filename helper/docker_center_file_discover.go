@@ -294,9 +294,7 @@ func tryReadStaticContainerInfo() ([]*docker.Container, []string, bool, error) {
 	if staticDockerContainerError == nil {
 		staticDockerContainers = newStaticDockerContainer
 	}
-	if err == nil {
-		staticDockerContainerLastStat = osStat
-	}
+	staticDockerContainerLastStat = osStat
 
 	logger.Info(context.Background(), "static docker container info file changed or last read error, last", staticDockerContainerLastStat,
 		"now", osStat, "removed ids", removedIDs, "error", staticDockerContainerError)

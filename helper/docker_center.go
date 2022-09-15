@@ -954,8 +954,8 @@ func (dc *DockerCenter) updateContainer(id string, container *DockerInfoDetail) 
 		}
 	}
 	if logger.DebugFlag() {
-		//bytes, _ := json.Marshal(container)
-		//logger.Debug(context.Background(), "update container info", string(bytes))
+		// bytes, _ := json.Marshal(container)
+		// logger.Debug(context.Background(), "update container info", string(bytes))
 		logger.Debugf(context.Background(), "Update one container: id=%v name=%v created=%v status=%v detail=%+v",
 			container.ContainerInfo.ID, container.ContainerInfo.Name, container.ContainerInfo.Created.Format(time.RFC3339Nano), container.ContainerInfo.State.Status, container.ContainerInfo)
 	}
