@@ -19,7 +19,6 @@ import (
 	"os"
 	"sync"
 	"testing"
-	"time"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"

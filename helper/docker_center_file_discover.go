@@ -76,7 +76,7 @@ type staticContainerInfo struct {
 }
 
 func staticContainerInfoToStandard(staticInfo *staticContainerInfo, stat fs.FileInfo) *docker.Container {
-	created, err := time.Parse("2022-02-22T07:08:10.097732378Z", staticInfo.Created)
+	created, err := time.Parse(time.RFC3339Nano, staticInfo.Created)
 	if err != nil {
 		created = stat.ModTime()
 	}
