@@ -47,5 +47,5 @@ your changes, such as:
 - [public] [both] [added] add support for log protocol conversion
 - [public] [both] [updated] Bump Go version to 1.8
 - [public] [both] [updated] Static container discovery reports container stop events
-- [public] [both] [fixed] CRI container discovery detects exited containers created during polling interval
+- [public] [both] [fixed] CRI container discovery detects exited containers which created during polling interval
 - [public] [both] [updated] Faster container file handle release after container stopped

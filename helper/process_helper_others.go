@@ -17,13 +17,6 @@
 
 package helper
 
-import (
-	"errors"
-	"runtime"
-
-	docker "github.com/fsouza/go-dockerclient"
-)
-
 func ContainerProcessAlive(pid int) bool {
 	return true
 }
