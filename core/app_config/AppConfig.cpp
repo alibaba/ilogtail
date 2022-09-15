@@ -34,6 +34,8 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
             mBindInterface.clear();
         LOG_INFO(sLogger, ("bind_interface", mBindInterface));
     }
+
+    // configserver path
 }
 
 } // namespace logtail

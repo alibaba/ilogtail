@@ -163,6 +163,7 @@ void ConfigManager::InitUpdateConfig(bool configExistFlag) {
 }
 
 void ConfigManager::GetRemoteConfigUpdate() {
+    // pull config from configserver
 }
 
 bool ConfigManager::GetRegionStatus(const string& region) {

@@ -35,6 +35,8 @@ void ProfileSender::SendToProfileProject(const std::string& region, sls_logs::Lo
         SendRunningStatus(logGroup);
     }
 
+    // Send message to configserver
+
     // Opensource is not necessary to synchronize data with SLS
     Sender::Instance()->RestLastSenderTime();
     ConfigManager::GetInstance()->RestLastConfigTime();
