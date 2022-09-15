@@ -119,6 +119,33 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		p.nowLogGroupSizeMap[source] = 0
 		logGroupList = append(logGroupList, p.newLogGroup(source, topic))
 		nowLogGroup = logGroupList[len(logGroupList)-1]
+
+		// if p.logGroupPoolMap[source] == nil {
+		// 	p.logGroupPoolMap[source] = make([]*protocol.LogGroup, 0, p.MaxLogGroupCount)
+		// }
+		// if len(p.logGroupPoolMap[source]) == 0 {
+		// 	p.logGroupPoolMap[source] = append(p.logGroupPoolMap[source], p.newLogGroup(source, topic))
+		// }
+		// nowLogGroup := p.logGroupPoolMap[source][len(p.logGroupPoolMap[source])-1]
+
+		// logSize := p.evaluateLogSize(log)
+		// // When current log group is full (log count or no more capacity for current log),
+		// // allocate a new log group.
+		// if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSizeMap[source]+logSize > MaxLogGroupSize {
+		// 	// The number of log group exceeds limit, make a quick flush.
+		// 	if len(p.logGroupPoolMap[source]) == p.MaxLogGroupCount {
+		// 		// Quick flush to avoid becoming bottleneck when large logs come.
+		// 		if err := p.queue.Add(p.logGroupPoolMap[source][0]); err == nil {
+		// 			// add success, remove head log group
+		// 			p.logGroupPoolMap[source] = p.logGroupPoolMap[source][1:]
+		// 		} else {
+		// 			return err
+		// 		}
+		// 	}
+		// 	// New log group, reset size.
+		// 	p.nowLogGroupSizeMap[source] = 0
+		// 	p.logGroupPoolMap[source] = append(p.logGroupPoolMap[source], p.newLogGroup(source, topic))
+		// 	nowLogGroup = p.logGroupPoolMap[source][len(p.logGroupPoolMap[source])-1]
 	}
 
 	// add log size
@@ -168,8 +195,10 @@ func (p *AggregatorContext) Reset() {
 }
 
 func (p *AggregatorContext) newLogGroup(pack string, topic string) *protocol.LogGroup {
+	// logGroup := p.f1(topic)
 	logGroup := &protocol.LogGroup{
-		Logs:  make([]*protocol.Log, 0, p.MaxLogCount),
+		// Logs:  make([]*protocol.Log, 0, p.MaxLogCount),
+		Logs:  make([]*protocol.Log, 0, 256),
 		Topic: topic,
 	}
 	info := p.packIDMap[pack]
@@ -187,6 +216,13 @@ func (p *AggregatorContext) newLogGroup(pack string, topic string) *protocol.Log
 	return logGroup
 }
 
+// func (p *AggregatorContext) f1(topic string) *protocol.LogGroup {
+// 	return &protocol.LogGroup{
+// 		Logs:  make([]*protocol.Log, 0, 128),
+// 		Topic: topic,
+// 	}
+// }
+
 func (*AggregatorContext) evaluateLogSize(log *protocol.Log) int {
 	var logSize = 6
 	for _, logC := range log.Contents {
@@ -195,8 +231,8 @@ func (*AggregatorContext) evaluateLogSize(log *protocol.Log) int {
 	return logSize
 }
 
-// NewAggregatorDefault create a default aggregator with default value.
-func NewAggregatorDefault() *AggregatorContext {
+// NewAggregatorContext create a default aggregator with default value.
+func NewAggregatorContext() *AggregatorContext {
 	return &AggregatorContext{
 		MaxLogGroupCount:            4,
 		MaxLogCount:                 MaxLogCount,
@@ -213,6 +249,6 @@ func NewAggregatorDefault() *AggregatorContext {
 // Register the plugin to the Aggregators array.
 func init() {
 	ilogtail.Aggregators["aggregator_context"] = func() ilogtail.Aggregator {
-		return NewAggregatorDefault()
+		return NewAggregatorContext()
 	}
 }
