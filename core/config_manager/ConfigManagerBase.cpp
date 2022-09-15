@@ -2369,7 +2369,7 @@ bool ConfigManagerBase::GetYamlConfigDirUpdate() {
     std::vector<std::string> filepathes;
     std::unordered_map<std::string, int64_t> yamlConfigMTimeMap;
     static std::string localConfigDirPath = AppConfig::GetInstance()->GetLocalUserYamlConfigDirPath();
-    static std::string serverConfigDirPath = localConfigDirPath + "remote_config.d" + PATH_SEPARATOR;
+    static std::string serverConfigDirPath = localConfigDirPath + "remote_config" + PATH_SEPARATOR;
 
     updateFlag |= CheckYamlDirConfigUpdate(localConfigDirPath, false, filepathes, yamlConfigMTimeMap);
     updateFlag |= CheckYamlDirConfigUpdate(serverConfigDirPath, true, filepathes, yamlConfigMTimeMap);
