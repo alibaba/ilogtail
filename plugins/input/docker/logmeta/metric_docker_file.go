@@ -73,6 +73,7 @@ type InputDockerFile struct {
 	ExcludeEnvRegex   map[string]*regexp.Regexp
 	K8sFilter         *helper.K8SFilter
 
+	FlushIntervalMs      int `comment:"the interval of container discovery, and the timeunit is millisecond. Default value is 3000."`
 	lastPathMappingCache map[string]string
 	context              ilogtail.Context
 	lastClearTime        time.Time
@@ -177,7 +178,7 @@ func (idf *InputDockerFile) Init(context ilogtail.Context) (int, error) {
 	}
 	idf.K8sFilter, err = helper.CreateK8SFilter(idf.K8sNamespaceRegex, idf.K8sPodRegex, idf.K8sContainerRegex, idf.IncludeK8sLabel, idf.ExcludeK8sLabel)
 
-	return 3000, err
+	return idf.FlushIntervalMs, err
 }
 
 func (idf *InputDockerFile) Description() string {
@@ -347,6 +348,8 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 
 func init() {
 	ilogtail.MetricInputs["metric_docker_file"] = func() ilogtail.MetricInput {
-		return &InputDockerFile{}
+		return &InputDockerFile{
+			FlushIntervalMs: 3000,
+		}
 	}
 }
