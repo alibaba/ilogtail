@@ -49,3 +49,5 @@ your changes, such as:
 - [public] [both] [updated] Static container discovery reports container stop events
 - [public] [both] [fixed] CRI container discovery detects exited containers which created during polling interval
 - [public] [both] [updated] Faster container file handle release after container stopped
+- [public] [both] [added] add jmxfetch plugin to auto collect JMX beans metrics
+>>>>>>> main

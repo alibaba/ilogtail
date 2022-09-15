@@ -417,6 +417,7 @@ func (cw *CRIRuntimeWrapper) loopSyncContainers() {
 	for {
 		select {
 		case <-cw.stopCh:
+			ticker.Stop()
 			return
 		case <-ticker.C:
 			if err := cw.syncContainers(); err != nil {

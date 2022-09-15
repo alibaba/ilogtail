@@ -60,6 +60,7 @@
   * [丢弃字段](data-pipeline/processor/processor-drop.md)
   * [条件字段处理](data-pipeline/processor/fields-with-condition.md)
   * [日志过滤](data-pipeline/processor/processor-filter-regex.md)
+  * [Grok](data-pipeline/processor/processor-grok.md)
   * [Json](data-pipeline/processor/json.md)
   * [正则](data-pipeline/processor/regex.md)
   * [重命名字段](data-pipeline/processor/processor-rename.md)
@@ -123,6 +124,12 @@
 ## 性能测试 <a href="#benchmark" id="benchmark"></a>
 
 * [容器场景iLogtail与Filebeat性能对比测试](benchmark/performance-compare-with-filebeat.md)
+
+## 管控工具 <a href="#config-server" id="config-server"></a>
+
+* [使用介绍](config-server/quick-start.md)
+* [通信协议](config-server/communication-protocol.md)
+* [开发指南](config-server/developer-guide.md)
 
 ## Awesome iLogtail <a href="#awesome-ilogtail" id="awesome-ilogtail"></a>
 
