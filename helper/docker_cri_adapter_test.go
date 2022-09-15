@@ -30,7 +30,7 @@ func TestLookupContainerRootfsAbsDir(t *testing.T) {
 		dockerCenter:   nil,
 		client:         nil,
 		runtimeVersion: nil,
-		containers:     make(map[string]innerContainerInfo),
+		containers:     make(map[string]*innerContainerInfo),
 		stopCh:         make(<-chan struct{}),
 		rootfsCache:    make(map[string]string),
 	}

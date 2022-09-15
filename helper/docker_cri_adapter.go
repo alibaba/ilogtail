@@ -361,13 +361,15 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 	for i, container := range containersResp.Containers {
 		logger.Debugf(context.Background(), "CRIRuntime ListContainers [%v]: %+v", i, container)
 		allContainerMap[container.GetId()] = true
-		if container.State == cri.ContainerState_CONTAINER_RUNNING {
+		switch container.State {
+		case cri.ContainerState_CONTAINER_RUNNING:
 			runningMap[container.GetId()] = true
-		} else if container.State == cri.ContainerState_CONTAINER_EXITED {
+		case cri.ContainerState_CONTAINER_EXITED:
 			runningMap[container.GetId()] = false
-		} else {
+		default:
 			continue
 		}
+
 		dockerContainer, _, _, err := cw.createContainerInfo(container.GetId())
 		if dockerContainer.ContainerInfo.State.Status != ContainerStatusRunning {
 			continue
@@ -460,10 +462,8 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 				(oldInfo.State == container.State && oldInfo.Name == container.Metadata.Name && oldInfo.Status == status) { // no state change
 				continue
 			}
-		} else {
-			if inHistory {
-				continue
-			}
+		} else if inHistory {
+			continue
 		}
 		if err := cw.fetchOne(id); err != nil {
 			logger.Errorf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "failed to createContainerInfo, containerId: %s, error: %v", id, err)
@@ -491,8 +491,8 @@ func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
 	cw.wrapperK8sInfoByID(sandboxID, dockerContainer)
 
 	if logger.DebugFlag() {
-		//bytes, _ := json.Marshal(dockerContainer)
-		//logger.Debugf(context.Background(), "Create container info: %s", string(bytes))
+		// bytes, _ := json.Marshal(dockerContainer)
+		// logger.Debugf(context.Background(), "Create container info: %s", string(bytes))
 		logger.Debugf(context.Background(), "Create container info: id=%v name=%v created=%v status=%v detail=%+v",
 			containerID, dockerContainer.ContainerInfo.Name, dockerContainer.ContainerInfo.Created.Format(time.RFC3339Nano), dockerContainer.ContainerInfo.State.Status, dockerContainer.ContainerInfo)
 	}
