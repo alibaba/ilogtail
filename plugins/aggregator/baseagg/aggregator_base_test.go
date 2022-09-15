@@ -41,17 +41,17 @@ func (q *SliceQueue) PopAll() []*protocol.LogGroup {
 	return q.logGroups
 }
 
-func newAggregatorBase() (*AggregatorBase, *SliceQueue, error) {
+func newAggregatorBase() (*AggregatorBase, error) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	que := NewSliceQueue()
 	agg := NewAggregatorBase()
 	_, err := agg.Init(ctx, que)
-	return agg, que, err
+	return agg, err
 }
 
 // common situation: 10 log sources, 10 logs per second per file, medium log
 func BenchmarkAdd(b *testing.B) {
-	agg, _, _ := newAggregatorBase()
+	agg, _ := newAggregatorBase()
 	log := &protocol.Log{
 		Time:     uint32(time.Now().Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
@@ -81,7 +81,7 @@ func BenchmarkLogSource100(b *testing.B) {
 }
 
 func benchmarkLogSource(b *testing.B, num int) {
-	agg, _, _ := newAggregatorBase()
+	agg, _ := newAggregatorBase()
 	log := &protocol.Log{
 		Time:     uint32(time.Now().Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
@@ -112,7 +112,7 @@ func BenchmarkLogProducinfPace1000(b *testing.B) {
 }
 
 func benchmarkLogProducingPace(b *testing.B, num int) {
-	agg, _, _ := newAggregatorBase()
+	agg, _ := newAggregatorBase()
 	log := &protocol.Log{
 		Time:     uint32(time.Now().Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
@@ -141,7 +141,7 @@ func BenchmarkLogLengthLong(b *testing.B) {
 }
 
 func benchmarkLogLength(b *testing.B, len string) {
-	agg, _, _ := newAggregatorBase()
+	agg, _ := newAggregatorBase()
 	var value string
 	switch len {
 	case "short":
