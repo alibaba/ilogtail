@@ -113,9 +113,10 @@ void LogFileReader::SetContainerStopped() {
 
 bool LogFileReader::ShouldForceReleaseDeletedFileFd() {
     time_t now = time(NULL);
-    return INT32_FLAG(force_release_deleted_file_fd_timeout) >= 0 && (
-        IsFileDeleted() && now - GetDeletedTime() >= INT32_FLAG(force_release_deleted_file_fd_timeout) ||
-        IsContainerStopped() && now - GetContainerStoppedTime() >= INT32_FLAG(force_release_deleted_file_fd_timeout));
+    return INT32_FLAG(force_release_deleted_file_fd_timeout) >= 0
+        && (IsFileDeleted() && now - GetDeletedTime() >= INT32_FLAG(force_release_deleted_file_fd_timeout)
+            || IsContainerStopped()
+                && now - GetContainerStoppedTime() >= INT32_FLAG(force_release_deleted_file_fd_timeout));
 }
 
 void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t eoConcurrency) {
@@ -929,7 +930,9 @@ void LogFileReader::skipCheckpointRelayHole() {
 
 bool LogFileReader::ReadLog(LogBuffer*& logBuffer) {
     if (mLogFileOp.IsOpen() == false) {
-        LOG_ERROR(sLogger, ("unknow error, log file not open", mLogPath));
+        if (!ShouldForceReleaseDeletedFileFd()) {
+            LOG_ERROR(sLogger, ("unknow error, log file not open", mLogPath));
+        }
         return false;
     }
     if (AppConfig::GetInstance()->IsInputFlowControl())

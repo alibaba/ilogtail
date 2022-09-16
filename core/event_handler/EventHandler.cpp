@@ -453,8 +453,7 @@ void ModifyHandler::Handle(const Event& event) {
             // only set when reader array size is 1
             if (readerArray.size() == (size_t)1) {
                 readerArray[0]->SetFileDeleted(true);
-                if (readerArray[0]->IsReadToEnd()
-                    || readerArray[0]->ShouldForceReleaseDeletedFileFd()) {
+                if (readerArray[0]->IsReadToEnd() || readerArray[0]->ShouldForceReleaseDeletedFileFd()) {
                     // release fd as quick as possible
                     readerArray[0]->CloseFilePtr();
                 }
@@ -465,8 +464,7 @@ void ModifyHandler::Handle(const Event& event) {
             LogFileReaderPtrArray& readerArray = pair.second;
             for (auto& reader : readerArray) {
                 reader->SetContainerStopped();
-                if (reader->IsReadToEnd()
-                    || reader->ShouldForceReleaseDeletedFileFd()) {
+                if (reader->IsReadToEnd() || reader->ShouldForceReleaseDeletedFileFd()) {
                     // release fd as quick as possible
                     reader->CloseFilePtr();
                 }
@@ -641,7 +639,6 @@ void ModifyHandler::Handle(const Event& event) {
 
         if (reader->ShouldForceReleaseDeletedFileFd()) {
             reader->CloseFilePtr();
-            return;
         }
         bool hasMoreData;
         do {
@@ -801,7 +798,7 @@ void ModifyHandler::HandleTimeOut() {
         if (readerArray.size() == 1) {
             LogFileReaderPtrArray::iterator iter = readerArray.begin();
             // We don't care about container stop here.
-            // Because delete event should come after fd is released and Read will finally return IsFileDeleted true. 
+            // Because delete event should come after fd is released and Read will finally return IsFileDeleted true.
             if ((*iter)->IsFileDeleted()
                 && nowTime - (*iter)->GetDeletedTime() > INT32_FLAG(logreader_filedeleted_remove_interval)) {
                 actioned = true;
