@@ -2429,7 +2429,7 @@ bool ConfigManagerBase::CheckYamlDirConfigUpdate(const std::string& configDirPat
     }
 
     fsutil::Entry ent;
-    std::unordered_map<std::string, int> serverYamlConfigVersionMap;
+    std::unordered_map<std::string, int64_t> serverYamlConfigVersionMap;
     while (ent = configDir.ReadNext()) {
         if (!ent.IsRegFile()) {
             continue;
