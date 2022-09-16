@@ -454,8 +454,7 @@ void ModifyHandler::Handle(const Event& event) {
             if (readerArray.size() == (size_t)1) {
                 readerArray[0]->SetFileDeleted(true);
                 if (readerArray[0]->IsReadToEnd()
-                    || (INT32_FLAG(force_release_deleted_file_fd_timeout) >= 0 &&
-                        time(NULL) - reader->GetDeleteStoppedTime() > INT32_FLAG(force_release_deleted_file_fd_timeout)) {
+                    || readerArray[0]->ShouldForceReleaseDeletedFileFd()) {
                     // release fd as quick as possible
                     readerArray[0]->CloseFilePtr();
                 }
@@ -467,8 +466,7 @@ void ModifyHandler::Handle(const Event& event) {
             for (auto& reader : readerArray) {
                 reader->SetContainerStopped();
                 if (reader->IsReadToEnd()
-                    || (INT32_FLAG(force_release_deleted_file_fd_timeout) >= 0 &&
-                        time(NULL) - reader->GetContainerStoppedTime() > INT32_FLAG(force_release_deleted_file_fd_timeout)) {
+                    || reader->ShouldForceReleaseDeletedFileFd()) {
                     // release fd as quick as possible
                     reader->CloseFilePtr();
                 }
@@ -634,17 +632,14 @@ void ModifyHandler::Handle(const Event& event) {
         if (recreateReaderFlag) {
             readerArrayPtr->pop_front();
             mDevInodeReaderMap.erase(reader->GetDevInode());
-            // delete this reader, donot insert into rotator reader map
+            // delete this reader, do not insert into rotator reader map
             // repush this event and wait for create reader
             Event* ev = new Event(event);
             LogInput::GetInstance()->PushEventQueue(ev);
             return;
         }
 
-        time_t now = time(NULL);
-        if (INT32_FLAG(force_release_deleted_file_fd_timeout) >= 0 &&
-            (now - reader->GetDeletedTime() > INT32_FLAG(force_release_deleted_file_fd_timeout) ||
-                now - reader->GetContainerStoppedTime() > INT32_FLAG(force_release_deleted_file_fd_timeout)) {
+        if (reader->ShouldForceReleaseDeletedFileFd()) {
             reader->CloseFilePtr();
             return;
         }
@@ -805,6 +800,8 @@ void ModifyHandler::HandleTimeOut() {
 
         if (readerArray.size() == 1) {
             LogFileReaderPtrArray::iterator iter = readerArray.begin();
+            // We don't care about container stop here.
+            // Because delete event should come after fd is released and Read will finally return IsFileDeleted true. 
             if ((*iter)->IsFileDeleted()
                 && nowTime - (*iter)->GetDeletedTime() > INT32_FLAG(logreader_filedeleted_remove_interval)) {
                 actioned = true;

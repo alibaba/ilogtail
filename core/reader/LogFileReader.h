@@ -42,8 +42,6 @@ class DevInode;
 typedef std::shared_ptr<LogFileReader> LogFileReaderPtr;
 typedef std::deque<LogFileReaderPtr> LogFileReaderPtrArray;
 
-DECLARE_FLAG_INT32(force_release_deleted_file_fd_timeout)
-
 class LogFileReader {
 public:
     enum FileCompareResult {
@@ -161,12 +159,13 @@ public:
 
     time_t GetDeletedTime() const { return mDeletedTime; }
 
-
     bool IsContainerStopped() const { return mContainerStopped; }
 
     void SetContainerStopped();
 
     time_t GetContainerStoppedTime() const { return mContainerStoppedTime; }
+
+    bool ShouldForceReleaseDeletedFileFd();
 
     void SetPluginFlag(bool flag) { mPluginFlag = flag; }
 
