@@ -1028,10 +1028,11 @@ bool LogFileReader::UpdateFilePtr() {
     mLastUpdateTime = time(NULL);
     if (mLogFileOp.IsOpen() == false) {
         // we may have mislabeled the deleted flag and then closed fd. Correct it here.
-        if (IsFileDeleted() && IsReadToEnd()) {
+        if (IsFileDeleted()) {
             LogtailAlarm::GetInstance()->SendAlarm(OPEN_LOGFILE_FAIL_ALARM,
-                                                   string("Cancel deleted flag unexpectedly. Reopen read to end file: ")
-                                                       + mLogPath,
+                                                   "Cancel deleted flag. IsReadToEnd:"
+                                                       + std::to_string(mLogFileOp.IsReadToEnd())
+                                                       + ". Reopen file: " + mLogPath,
                                                    mProjectName,
                                                    mCategory,
                                                    mRegion);
