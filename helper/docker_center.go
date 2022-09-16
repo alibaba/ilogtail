@@ -634,6 +634,8 @@ func SetEnvConfigPrefix(prefix string) {
 }
 
 func (dc *DockerCenter) readStaticConfig(forceFlush bool) {
+	staticDockerContainerLock.Lock()
+	defer staticDockerContainerLock.Unlock()
 	containerInfo, removedIDs, changed, err := tryReadStaticContainerInfo()
 	if err != nil {
 		logger.Warning(context.Background(), "READ_STATIC_CONFIG_ALARM", "read static container info error", err)
@@ -642,13 +644,20 @@ func (dc *DockerCenter) readStaticConfig(forceFlush bool) {
 		dc.initStaticContainerInfoSuccess = true
 		forceFlush = true
 	}
-	if forceFlush || changed {
+
+	if forceFlush {
+		containerMap := make(map[string]*DockerInfoDetail)
+		for _, info := range containerInfo {
+			dockerInfoDetail := dockerCenterInstance.CreateInfoDetail(info, envConfigPrefix, false)
+			containerMap[info.ID] = dockerInfoDetail
+		}
+		dockerCenterInstance.updateContainers(containerMap)
+	} else if changed {
 		logger.Info(context.Background(), "read static container info success, count", len(containerInfo), "removed", removedIDs)
 		for _, info := range containerInfo {
 			dockerInfoDetail := dockerCenterInstance.CreateInfoDetail(info, envConfigPrefix, false)
 			dockerCenterInstance.updateContainer(info.ID, dockerInfoDetail)
 		}
-		dc.mergeK8sInfo()
 	}
 
 	if len(removedIDs) > 0 {

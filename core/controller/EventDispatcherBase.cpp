@@ -580,8 +580,7 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
     return ValidateCheckpointResult::kDevInodeNotFound;
 }
 
-void EventDispatcherBase::/* *|CURSOR_MARCADOR|* */
-AddExistedCheckPointFileEvents() {
+void EventDispatcherBase::AddExistedCheckPointFileEvents() {
     // All checkpoint will be add into event queue or be deleted
     // This operation will delete not existed file's check point
     std::map<DevInode, SplitedFilePath> cachePathDevInodeMap;

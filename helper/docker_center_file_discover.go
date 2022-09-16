@@ -268,9 +268,6 @@ func tryReadStaticContainerInfo() ([]*docker.Container, []string, bool, error) {
 		return nil, nil, false, nil
 	}
 
-	staticDockerContainerLock.Lock()
-	defer staticDockerContainerLock.Unlock()
-
 	statusChanged := false
 	for _, container := range staticDockerContainers {
 		if container.State.Status == ContainerStatusRunning && !ContainerProcessAlive(container.State.Pid) {
