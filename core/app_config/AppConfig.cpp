@@ -36,6 +36,19 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
     }
 
     // configserver path
+    if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isString()) {
+        mConfigServerAddress = TrimString(confJson["logtail_configserver_address"].asString());
+        LOG_INFO(sLogger, ("ilogtail_configserver_address", mConfigServerAddress));
+    }
+
+    // tags for configserver
+    if (confJson.isMember("ilogtail_tags") && confJson["ilogtail_tags"].isObject()) {
+        Json::Value::Members members = confJson["ilogtail_tags"].getMemberNames();
+        for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
+            mConfigServerTags.insert(pair<string, string>(*it, confJson["ilogtail_tags"][*it].asString()));
+        }
+        LOG_INFO(sLogger, ("ilogtail_configserver_address", mConfigServerTags));
+    }
 }
 
 } // namespace logtail

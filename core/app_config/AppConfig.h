@@ -17,12 +17,18 @@
 #pragma once
 #include "AppConfigBase.h"
 #include <vector>
+#include <map>
 #include "common/util.h"
 
 namespace logtail {
 class AppConfig : public AppConfigBase {
 private:
     void LoadAddrConfig(const Json::Value& confJson) override;
+
+protected:
+    std::string mConfigServerAddress;
+    std::int32_t mConfigServerPort;
+    std::map<std::string, std::string> mConfigServerTags;
 
 public:
     AppConfig();
@@ -42,6 +48,9 @@ public:
     bool IsDataServerPrivateCloud() const { return false; }
 
     const std::string& GetBindInterface() const { return mBindInterface; }
+    const std::string& GetConfigServerAddress() const { return mConfigServerAddress; }
+    const std::int32_t& GetConfigServerPort() const { return mConfigServerPort; }
+    const std::map<std::string, std::string>& GetConfigServerTags() const { return mConfigServerTags; }
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;

@@ -48,6 +48,9 @@
 #include "profiler/LogFileProfiler.h"
 #include "profiler/LogIntegrity.h"
 #include "profiler/LogLineCount.h"
+#include "sdk/Common.h"
+#include "sdk/CurlImp.h"
+#include "sdk/Exception.h"
 #include "app_config/AppConfig.h"
 #include "checkpoint/CheckPointManager.h"
 #include "event_handler/EventHandler.h"
@@ -144,6 +147,7 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
         if (curTime - lastCheckTime >= checkInterval) {
             if (!IsUpdate() && GetLocalConfigUpdate()) {
                 StartUpdateConfig();
+                GetRemoteConfigUpdate();
             }
             lastCheckTime = curTime;
         }
@@ -163,7 +167,136 @@ void ConfigManager::InitUpdateConfig(bool configExistFlag) {
 }
 
 void ConfigManager::GetRemoteConfigUpdate() {
-    // pull config from configserver
+    configserver::proto::AgentGetConfigListRequest GetConfigUpdateInfoRequest;
+    string requestId = string("get-config-update-infos-request").append("_").append(GetInstanceId().append("_").append(to_string(time(NULL))));
+    GetConfigUpdateInfoRequest.set_request_id(requestId);
+    GetConfigUpdateInfoRequest.set_agent_id(GetInstanceId());
+    (*GetConfigUpdateInfoRequest.mutable_tags()) = google::protobuf::Map<string, string>(
+        AppConfig::GetInstance()->GetConfigServerTags().begin(), AppConfig::GetInstance()->GetConfigServerTags().end()
+    );
+    (*GetConfigUpdateInfoRequest.mutable_config_versions()) = google::protobuf::Map<string, google::protobuf::int64>(
+//        mServerYamlConfigVersionMap.begin(), mServerYamlConfigVersionMap.end()
+    );
+
+    string operation = sdk::CONFIGSERVERAGENT;
+    operation.append("/").append("GetConfigList");
+    map<string, string> httpHeader;
+    httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
+    string reqBody;
+    GetConfigUpdateInfoRequest.SerializeToString(&reqBody);
+    sdk::HttpMessage httpResponse;
+
+    sdk::CurlClient client;
+    try {
+        client.Send(sdk::HTTP_POST,
+                    AppConfig::GetInstance()->GetConfigServerAddress(),
+                    AppConfig::GetInstance()->GetConfigServerPort(),
+                    operation,
+                    "",
+                    httpHeader,
+                    reqBody,
+                    INT32_FLAG(sls_client_send_timeout),
+                    httpResponse,
+                    "",
+                    false
+        );
+
+        configserver::proto::AgentGetConfigListResponse GetConfigUpdateInfoResponse;
+        GetConfigUpdateInfoResponse.ParseFromString(httpResponse.content);
+
+        if (0 != strcmp(GetConfigUpdateInfoResponse.response_id().c_str(), requestId.c_str())) return;
+
+        UpdateRemoteConfig(GetConfigUpdateInfoResponse.config_update_infos());
+
+        LOG_DEBUG(sLogger,
+                  ("GetConfigUpdateInfos","success")
+                  ("reqBody", reqBody)
+                  ("requestId", GetConfigUpdateInfoResponse.response_id())
+                  ("statusCode", GetConfigUpdateInfoResponse.code()));
+    } catch (const sdk::LOGException& e) {
+        LOG_DEBUG(sLogger,
+                  ("GetConfigUpdateInfos", "fail")
+                  ("reqBody", reqBody)
+                  ("errCode", e.GetErrorCode())
+                  ("errMsg", e.GetMessage()));
+    }
+}
+
+void ConfigManager::UpdateRemoteConfig(google::protobuf::RepeatedPtrField<configserver::proto::ConfigUpdateInfo> configUpdateInfos) {
+    map<string, configserver::proto::ConfigUpdateInfo> ConfigUpdateInfoMap;
+    for (int i = 0; i < configUpdateInfos.size(); i++) {
+        ConfigUpdateInfoMap[configUpdateInfos[i].config_name()] = configUpdateInfos[i];
+    }
+
+    static string serverConfigDirPath = AppConfig::GetInstance()->GetLocalUserYamlConfigDirPath() + "remote_config" + PATH_SEPARATOR;
+
+    fsutil::Dir configDir(serverConfigDirPath);
+
+    if (!configDir.Open()) {
+        int savedErrno = GetErrno();
+        if (fsutil::Dir::IsEACCES(savedErrno) || fsutil::Dir::IsENOTDIR(savedErrno)
+            || fsutil::Dir::IsENOENT(savedErrno)) {
+            LOG_DEBUG(sLogger, ("invalid yaml conf dir", serverConfigDirPath)("error", ErrnoToString(savedErrno)));
+            if (!Mkdir(serverConfigDirPath.c_str())) {
+                savedErrno = errno;
+                if (!IsEEXIST(savedErrno)) {
+                    LOG_ERROR(sLogger, ("create conf yaml dir failed", serverConfigDirPath)("error", strerror(savedErrno)));
+                }
+            }
+        }
+    }
+    if (!configDir.Open()) {
+        return;
+    }
+    
+    fsutil::Entry ent;
+    while (ent = configDir.ReadNext()) {
+        if (!ent.IsRegFile()) {
+            continue;
+        }
+
+        string flName = ent.Name();
+        if (!EndWith(flName, ".yaml")) {
+            continue;
+        }
+
+        vector<string> tokens = SplitString(flName, "@");
+        if (tokens.size() != 2) {
+            LOG_INFO(sLogger, ("invalid server yaml config filename", flName));
+            continue;
+        }
+        const string configName = tokens.at(0);
+        const int version = stoi(tokens.at(1));
+
+        if (ConfigUpdateInfoMap.find(configName) != ConfigUpdateInfoMap.end()) {
+            switch (ConfigUpdateInfoMap[configName].update_status()) {
+            case configserver::proto::ConfigUpdateInfo_UpdateStatus::ConfigUpdateInfo_UpdateStatus_SAME: 
+                ConfigUpdateInfoMap.erase(configName);
+                break;
+            case configserver::proto::ConfigUpdateInfo_UpdateStatus::ConfigUpdateInfo_UpdateStatus_DELETED: 
+                remove(flName.c_str());
+                ConfigUpdateInfoMap.erase(configName);
+                break;
+            case configserver::proto::ConfigUpdateInfo_UpdateStatus::ConfigUpdateInfo_UpdateStatus_MODIFIED: 
+                remove(flName.c_str());
+                break;
+            case configserver::proto::ConfigUpdateInfo_UpdateStatus::ConfigUpdateInfo_UpdateStatus_NEW: 
+                remove(flName.c_str());
+                break;
+            default:
+                break;
+            }
+        } else {
+            remove(flName.c_str());
+        }
+    }
+
+    for (map<string, configserver::proto::ConfigUpdateInfo>::iterator it = ConfigUpdateInfoMap.begin(); it != ConfigUpdateInfoMap.end(); it++) {
+        string fullPath = serverConfigDirPath + it->second.config_name() + "@" + to_string(it->second.config_version()) + ".yaml";
+        ofstream outfile(fullPath);
+        outfile << it->second.content();
+        outfile.close();
+    }
 }
 
 bool ConfigManager::GetRegionStatus(const string& region) {
