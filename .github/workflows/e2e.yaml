@@ -53,6 +53,8 @@ jobs:
       - name: E2E Test
         run: TEST_DEBUG=true make e2e
 
+      - name: Test
+        run: ls -AFlh ./behavior-test/report/input_canal_yaml
       - name: UnitTest E2e Engine
         if: matrix.runner == 'ubuntu'
         run: make unittest_e2e_engine
