@@ -189,7 +189,7 @@ void ConfigManager::GetRemoteConfigUpdate() {
     sdk::CurlClient client;
     try {
         client.Send(sdk::HTTP_POST,
-                    AppConfig::GetInstance()->GetConfigServerAddress(),
+                    AppConfig::GetInstance()->GetConfigServerHost(),
                     AppConfig::GetInstance()->GetConfigServerPort(),
                     operation,
                     "",

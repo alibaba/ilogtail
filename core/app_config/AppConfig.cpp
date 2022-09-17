@@ -37,8 +37,11 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
 
     // configserver path
     if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isString()) {
-        mConfigServerAddress = TrimString(confJson["logtail_configserver_address"].asString());
-        LOG_INFO(sLogger, ("ilogtail_configserver_address", mConfigServerAddress));
+        vector<string> ConfigServerAddress = SplitString(TrimString(confJson["logtail_configserver_address"].asString()), ":");
+        mConfigServerHost = ConfigServerAddress[0];
+        mConfigServerPort = atoi(ConfigServerAddress[1].c_str());
+        LOG_INFO(sLogger, ("ilogtail_configserver_host", mConfigServerHost));
+        LOG_INFO(sLogger, ("ilogtail_configserver_port", mConfigServerHost));
     }
 
     // tags for configserver

@@ -26,7 +26,7 @@ private:
     void LoadAddrConfig(const Json::Value& confJson) override;
 
 protected:
-    std::string mConfigServerAddress;
+    std::string mConfigServerHost;
     std::int32_t mConfigServerPort;
     std::map<std::string, std::string> mConfigServerTags;
 
@@ -48,7 +48,7 @@ public:
     bool IsDataServerPrivateCloud() const { return false; }
 
     const std::string& GetBindInterface() const { return mBindInterface; }
-    const std::string& GetConfigServerAddress() const { return mConfigServerAddress; }
+    const std::string& GetConfigServerHost() const { return mConfigServerHost; }
     const std::int32_t& GetConfigServerPort() const { return mConfigServerPort; }
     const std::map<std::string, std::string>& GetConfigServerTags() const { return mConfigServerTags; }
 
