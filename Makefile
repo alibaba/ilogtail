@@ -54,9 +54,9 @@ tools:
 clean:
 	rm -rf $(LICENSE_COVERAGE_FILE)
 	rm -rf $(OUT_DIR) $(DIST_DIR)
-	rm -rf behavior-test
-	rm -rf performance-test
-	rm -rf core-test
+	sudo rm -rf behavior-test
+	sudo rm -rf performance-test
+	sudo rm -rf core-test
 	rm -rf e2e-engine-coverage.txt
 	rm -rf find_licenses
 	rm -rf $(GENERATED_HOME)
