@@ -175,7 +175,7 @@ void ConfigManager::GetRemoteConfigUpdate() {
         AppConfig::GetInstance()->GetConfigServerTags().begin(), AppConfig::GetInstance()->GetConfigServerTags().end()
     );
     (*GetConfigUpdateInfoRequest.mutable_config_versions()) = google::protobuf::Map<string, google::protobuf::int64>(
-//        mServerYamlConfigVersionMap.begin(), mServerYamlConfigVersionMap.end()
+        mServerYamlConfigVersionMap.begin(), mServerYamlConfigVersionMap.end()
     );
 
     string operation = sdk::CONFIGSERVERAGENT;

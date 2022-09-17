@@ -36,6 +36,10 @@ public:
 
 private:
     void SendRunningStatus(sls_logs::LogGroup& logGroup);
+
+    // To config server
+    void SendHeartbeat(sls_logs::LogGroup& logGroup);
+    void SendRunningStatistics(sls_logs::LogGroup& logGroup);
 };
 
 } // namespace logtail
