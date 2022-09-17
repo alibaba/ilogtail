@@ -266,7 +266,6 @@ void ConfigManager::UpdateRemoteConfig(google::protobuf::RepeatedPtrField<config
             continue;
         }
         const string configName = tokens.at(0);
-        const int version = stoi(tokens.at(1));
 
         if (ConfigUpdateInfoMap.find(configName) != ConfigUpdateInfoMap.end()) {
             switch (ConfigUpdateInfoMap[configName].update_status()) {

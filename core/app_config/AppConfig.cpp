@@ -50,7 +50,8 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
         for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
             mConfigServerTags.insert(pair<string, string>(*it, confJson["ilogtail_tags"][*it].asString()));
         }
-        LOG_INFO(sLogger, ("ilogtail_configserver_address", mConfigServerTags));
+
+        LOG_INFO(sLogger, ("ilogtail_configserver_tags", confJson["ilogtail_tags"].toStyledString()));
     }
 }
 
