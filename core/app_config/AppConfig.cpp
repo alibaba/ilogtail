@@ -36,12 +36,14 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
     }
 
     // configserver path
-    if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isString()) {
-        vector<string> ConfigServerAddress = SplitString(TrimString(confJson["logtail_configserver_address"].asString()), ":");
-        mConfigServerHost = ConfigServerAddress[0];
-        mConfigServerPort = atoi(ConfigServerAddress[1].c_str());
-        LOG_INFO(sLogger, ("ilogtail_configserver_host", mConfigServerHost));
-        LOG_INFO(sLogger, ("ilogtail_configserver_port", mConfigServerHost));
+    if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isObject()) {
+        Json::Value::Members members = confJson["ilogtail_configserver_address"].getMemberNames();
+        for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
+            vector<string> configServerAddress = SplitString(TrimString(confJson["ilogtail_configserver_address"][*it].asString()), ":");
+            mConfigServerAddress.push_back(ConfigServerAddress(configServerAddress[0], atoi(configServerAddress[1].c_str())));
+        }
+
+        LOG_INFO(sLogger, ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
     }
 
     // tags for configserver
