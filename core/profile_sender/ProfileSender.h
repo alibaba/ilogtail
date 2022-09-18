@@ -16,6 +16,7 @@
 
 #pragma once
 #include "log_pb/sls_logs.pb.h"
+#include "config_server_pb/agent.pb.h"
 #include <string>
 #include <vector>
 
@@ -25,6 +26,7 @@ class ProfileSender {
 public:
     ProfileSender() {}
     void SendToProfileProject(const std::string& region, sls_logs::LogGroup& logGroup);
+    void SendToConfigServer(sls_logs::LogGroup& logGroup);
     bool SendInstantly(sls_logs::LogGroup& logGroup,
                        const std::string& aliuid,
                        const std::string& region,

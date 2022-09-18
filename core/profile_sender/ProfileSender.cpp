@@ -19,6 +19,7 @@
 #include "sender/Sender.h"
 #include "sdk/Common.h"
 #include "sdk/Client.h"
+#include "sdk/CurlImp.h"
 #include "sdk/Exception.h"
 #include "common/CompressTools.h"
 #include "common/LogtailCommonFlags.h"
@@ -34,8 +35,6 @@ void ProfileSender::SendToProfileProject(const std::string& region, sls_logs::Lo
     if (0 == logGroup.category().compare("logtail_status_profile")) {
         SendRunningStatus(logGroup);
     }
-
-    // Send message to configserver
 
     // Opensource is not necessary to synchronize data with SLS
     Sender::Instance()->RestLastSenderTime();
@@ -99,6 +98,89 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
                   ("SendToProfileProject", "fail")("logBody", logBody)("errCode", e.GetErrorCode())("errMsg",
                                                                                                     e.GetMessage()));
     }
+}
+
+void ProfileSender::SendToConfigServer(sls_logs::LogGroup& logGroup) {
+    if (0 == logGroup.category().compare("logtail_status_profile")) {
+        SendHeartbeat(logGroup);
+        SendRunningStatistics(logGroup);
+    }
+
+    // Opensource is not necessary to synchronize data with SLS
+    Sender::Instance()->RestLastSenderTime();
+    ConfigManager::GetInstance()->RestLastConfigTime();
+    return;
+}
+
+void ProfileSender::SendHeartbeat(sls_logs::LogGroup& logGroup) {
+    static int controlFeq = 0;
+
+    // every 10 seconds
+    if (0 == logGroup.logs_size() || 0 != controlFeq++ % (10)) {
+        return;
+    }
+
+    configserver::proto::HeartBeatRequest heartBeatReq;
+    std::string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
+    heartBeatReq.set_request_id(requestID);
+    heartBeatReq.set_agent_type("iLogtail");
+    heartBeatReq.set_startup_time(0);
+
+    Json::Value logtailStatus;
+    logtailStatus["__topic__"] = "logtail_status_profile";
+    unordered_set<std::string> selectedFields(
+        {"version", "instance_key", "status", "ip"});
+    const sls_logs::Log& log = logGroup.logs(0);
+    for (int32_t conIdx = 0; conIdx < log.contents_size(); ++conIdx) {
+        const sls_logs::Log_Content& content = log.contents(conIdx);
+        const string& key = content.key();
+        const string& value = content.value();
+        if (selectedFields.find(key) != selectedFields.end()) {
+            if (0 == key.compare("instance_key")) heartBeatReq.set_agent_id(value);
+            if (0 == key.compare("version")) heartBeatReq.set_agent_version(value);
+            if (0 == key.compare("ip")) heartBeatReq.set_ip(value);
+            if (0 == key.compare("status")) heartBeatReq.set_running_status(value);
+        }
+    }
+
+    AppConfig::ConfigServerAddress configServerAddress = AppConfig::GetInstance()->GetConfigServerAddress();
+    string operation = sdk::CONFIGSERVERAGENT;
+    operation.append("/").append("HeartBeat");
+    map<string, string> httpHeader;
+    httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
+    std::string reqBody;
+    heartBeatReq.SerializeToString(&reqBody);
+    sdk::HttpMessage httpResponse;
+
+    sdk::CurlClient client;
+    try {
+        client.Send(sdk::HTTP_POST,
+                    configServerAddress.host,
+                    configServerAddress.port,
+                    operation,
+                    "",
+                    httpHeader,
+                    reqBody,
+                    INT32_FLAG(sls_client_send_timeout),
+                    httpResponse,
+                    "",
+                    false
+        );
+        configserver::proto::HeartBeatResponse heartBeatResp;
+        heartBeatResp.ParseFromString(httpResponse.content);
+
+        if (0 != strcmp(heartBeatResp.response_id().c_str(), requestID.c_str())) return;
+
+        LOG_DEBUG(sLogger, ("SendHeartBeat","success")("reqBody", reqBody)
+                  ("requestId", heartBeatResp.response_id())("statusCode", heartBeatResp.code()));
+    } catch (const sdk::LOGException& e) {
+        LOG_ERROR(sLogger, ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
+        LOG_DEBUG(sLogger, ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
+    }
+}
+
+void ProfileSender::SendRunningStatistics(sls_logs::LogGroup& logGroup) {
+    
 }
 
 bool ProfileSender::SendInstantly(sls_logs::LogGroup& logGroup,

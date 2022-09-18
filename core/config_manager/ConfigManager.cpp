@@ -168,8 +168,8 @@ void ConfigManager::InitUpdateConfig(bool configExistFlag) {
 
 void ConfigManager::GetRemoteConfigUpdate() {
     configserver::proto::AgentGetConfigListRequest configUpdateReq;
-    string requestId = sdk::Base64Enconde(GetInstanceId().append("_").append(to_string(time(NULL)))); 
-    configUpdateReq.set_request_id(requestId);
+    string requestID = sdk::Base64Enconde(GetInstanceId().append("_").append(to_string(time(NULL)))); 
+    configUpdateReq.set_request_id(requestID);
     configUpdateReq.set_agent_id(GetInstanceId());
     (*configUpdateReq.mutable_tags()) = google::protobuf::Map<string, string>(
         AppConfig::GetInstance()->GetConfigServerTags().begin(), AppConfig::GetInstance()->GetConfigServerTags().end()
@@ -205,7 +205,7 @@ void ConfigManager::GetRemoteConfigUpdate() {
         configserver::proto::AgentGetConfigListResponse configUpdateResp;
         configUpdateResp.ParseFromString(httpResponse.content);
 
-        if (0 != strcmp(configUpdateResp.response_id().c_str(), requestId.c_str())) return;
+        if (0 != strcmp(configUpdateResp.response_id().c_str(), requestID.c_str())) return;
 
         UpdateRemoteConfig(configUpdateResp.config_update_infos());
 
@@ -221,11 +221,15 @@ void ConfigManager::UpdateRemoteConfig(google::protobuf::RepeatedPtrField<config
     static string serverConfigDirPath = AppConfig::GetInstance()->GetLocalUserYamlConfigDirPath() + "remote_config" + PATH_SEPARATOR;
 
     for (int i = 0; i < configUpdateInfos.size(); i++) {
-        string oldConfigPath = serverConfigDirPath + configUpdateInfos[i].config_name() + "@" 
-                            + to_string(mServerYamlConfigVersionMap[configUpdateInfos[i].config_name()]) + ".yaml";
-        string newConfigPath = serverConfigDirPath + configUpdateInfos[i].config_name() + "@" 
-                            + to_string(configUpdateInfos[i].config_version()) + ".yaml";
+        string configName = configUpdateInfos[i].config_name();
+        string oldConfigPath, newConfigPath;
         ofstream newConfig;
+        
+        if (mServerYamlConfigVersionMap.find(configName) != mServerYamlConfigVersionMap.end()) {
+            oldConfigPath = serverConfigDirPath + configName + "@" + to_string(mServerYamlConfigVersionMap[configName]) + ".yaml";
+        }
+        newConfigPath = serverConfigDirPath + configName + "@" + to_string(configUpdateInfos[i].config_version()) + ".yaml";
+        
         switch (configUpdateInfos[i].update_status()) {
             case configserver::proto::ConfigUpdateInfo_UpdateStatus::ConfigUpdateInfo_UpdateStatus_SAME: 
                 break;
