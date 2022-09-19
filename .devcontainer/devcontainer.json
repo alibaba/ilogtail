@@ -5,7 +5,7 @@
       "USERNAME": "${localEnv:USER}"
     }
   },
-  "initializeCommand": "echo -e \"USERNAME=$USER\nUSER_UID=$(id -u $USER)\nGROUPNAME=$(id -gn $USER)\nGROUP_GID=$(id -g $USER)\" > .devcontainer/.env",
+  "initializeCommand": ".devcontainer/gen_env.sh",
   "customizations": {
     "vscode": {
       "extensions": [
