@@ -21,7 +21,7 @@ EXTERNAL_DIR=${1:-external}
 VENDOR_DIR=${2:-vendor}
 ROOT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 
-mkdir -p "${ROOT_DIR}/${VENDOR_DIR}/"
-mkdir -p "${ROOT_DIR}/${VENDOR_DIR}/github.com"
-cp -r "${ROOT_DIR}/${EXTERNAL_DIR}/README.md" "${ROOT_DIR}/${VENDOR_DIR}/"
-cp -r "${ROOT_DIR}/${EXTERNAL_DIR}/github.com" "${ROOT_DIR}/${VENDOR_DIR}/"
+for dir in $(ls $EXTERNAL_DIR)
+do
+  cp -r "${ROOT_DIR}/${EXTERNAL_DIR}/${dir}" "${ROOT_DIR}/${VENDOR_DIR}/"
+done
