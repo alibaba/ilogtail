@@ -18,8 +18,8 @@ US_REGION="logtail-release-us-west-1.oss-us-west-1.aliyuncs.com"
 CN_REGION="logtail-release-cn-beijing.oss-cn-beijing.aliyuncs.com"
 REGION=$US_REGION
 
-us_rtt=$(ping -c 1 -W 1 $US_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}'|awk -F '.' '{print $1}')
-cn_rtt=$(ping -c 1 -W 1 $CN_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}'|awk -F '.' '{print $1}')
+us_rtt=$(ping -c 3 -W 1 $US_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}'|awk -F '.' '{print $1}')
+cn_rtt=$(ping -c 3 -W 1 $CN_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}'|awk -F '.' '{print $1}')
 
 if [[ "$us_rtt" -gt "$cn_rtt" ]]; then
   REGION=$CN_REGION
