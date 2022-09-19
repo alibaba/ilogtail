@@ -21,4 +21,4 @@ COPY . .
 ARG HOST_OS=Linux
 ARG VERSION=1.1.2
 
-RUN sh generated_files/gen_build.sh
+RUN sudo chown -R $(whoami) /src /opt/logtail && sh generated_files/gen_build.sh

@@ -24,10 +24,9 @@ COPY --from=build /src/example_config/quick_start/ilogtail_config.json /ilogtail
 COPY --from=build /src/core/build/ilogtail /ilogtail/
 COPY --from=build /src/core/build/plugin/libPluginAdapter.so /ilogtail/
 
-RUN curl --connect-timeout 5 -m 10 https://logtail-release-us-west-1.oss-us-west-1.aliyuncs.com/kubernetes/libebpf.so -o  /ilogtail/libebpf.so
-RUN chmod -R 755 /ilogtail/
+RUN sudo chown -R $(whoami) /ilogtail && curl --connect-timeout 5 -m 10 https://logtail-release-us-west-1.oss-us-west-1.aliyuncs.com/kubernetes/libebpf.so -o /ilogtail/libebpf.so
 RUN mkdir /ilogtail/checkpoint
-RUN yum install -y iproute
+RUN sudo yum install -y iproute
 
 ENV HOST_OS=$HOST_OS
 ENV LOGTAIL_VERSION=$VERSION
