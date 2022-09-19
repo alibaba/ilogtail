@@ -40,8 +40,9 @@ cn_rtt=$(ping -c 3 -W 1 $CN_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{p
 us_rtt=$(ping -c 3 -W 1 $US_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}' | awk -F '.' '{print $1}') || us_rtt=99999
 REG_REGION=$CN_REGION
 if [[ "$us_rtt" -lt "$cn_rtt" ]]; then
-  REG_REGION=$US_REGION
+    REG_REGION=$US_REGION
 fi
+echo "cn_rtt=$cn_rtt us_rtt=$us_rtt REG_REGION=$REG_REGION"
 
 mkdir -p $GENERATED_HOME
 rm -rf $GEN_DOCKERFILE
