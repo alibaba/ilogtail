@@ -14,7 +14,7 @@ COPY --from=dep-build goc /usr/local/bin
 COPY --from=dep-build ilogtail-deps.linux-arm64 /opt/logtail/deps
 
 ARG USERNAME=admin
-ARG USER_UID=1000
+ARG USER_UID=500
 ARG GROUPNAME=$USERNAME
 ARG GROUP_GID=$USER_UID
 
@@ -25,6 +25,7 @@ RUN if getent passwd $USERNAME; then userdel -f $USERNAME; fi && \
     useradd --uid $USER_UID --gid $GROUP_GID -m $USERNAME && \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME && \
-    chown -R admin:admin /root/go /opt/logtail
+    chown -R $USERNAME:$GROUPNAME $(eval echo ~$USERNAME) && \
+    chmod 755 $(eval echo ~$USERNAME)
 
 USER $USERNAME
