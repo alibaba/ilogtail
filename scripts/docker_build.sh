@@ -33,17 +33,27 @@ HOST_OS=`uname -s`
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 GEN_DOCKERFILE=$GENERATED_HOME/Dockerfile
 
+# automatically replace registery address to the fastest mirror
+CN_REGION=sls-opensource-registry.cn-shanghai.cr.aliyuncs.com
+US_REGION=sls-opensource-registry.us-east-1.cr.aliyuncs.com
+cn_rtt=$(ping -c 3 -W 1 $CN_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}'|awk -F '.' '{print $1}')
+us_rtt=$(ping -c 3 -W 1 $US_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}'|awk -F '.' '{print $1}')
+REG_REGION=$CN_REGION
+if [[ "$us_rtt" -lt "$cn_rtt" ]]; then
+      REGION=$US_REGION
+fi
+
 mkdir -p $GENERATED_HOME
 rm -rf $GEN_DOCKERFILE
 touch $GEN_DOCKERFILE
 
 if [[ $CATEGORY = "goc" || $CATEGORY = "build" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_$CATEGORY|grep -v "#" > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_$CATEGORY | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" > $GEN_DOCKERFILE;
 elif [[  $CATEGORY = "development" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_build |grep -v "#" > $GEN_DOCKERFILE;
-    cat $ROOTDIR/docker/Dockerfile_development_part |grep -v "#">> $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_build | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_development_part |grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" >> $GEN_DOCKERFILE;
 elif [[  $CATEGORY = "production" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_production |grep -v "#"> $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_production |grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" > $GEN_DOCKERFILE;
 fi
 
 echo "=============DOCKERFILE=================="
