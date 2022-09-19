@@ -35,6 +35,7 @@ require (
 	github.com/knz/strtime v0.0.0-20181018220328-af2256ee352c
 	github.com/mailru/easyjson v0.7.7
 	github.com/mindprince/gonvml v0.0.0-20180514031326-b364b296c732
+	github.com/narqo/go-dogstatsd-parser v0.2.0
 	github.com/oschwald/geoip2-golang v1.1.0
 	github.com/paulbellamy/ratecounter v0.2.1-0.20170719102518-a803f0e4f071
 	github.com/pierrec/lz4 v2.6.0+incompatible
@@ -49,12 +50,13 @@ require (
 	github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.0
 	github.com/syndtr/goleveldb v0.0.0-20170725064836-b89cc31ef797
+	go.opentelemetry.io/collector/pdata v0.60.0
 	go.uber.org/atomic v1.7.0
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
-	google.golang.org/grpc v1.43.0
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/grpc v1.49.0
+	google.golang.org/protobuf v1.28.1
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.22.5
 	k8s.io/apimachinery v0.22.5
@@ -73,7 +75,6 @@ require (
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/sys/signal v0.6.0 // indirect
-	github.com/narqo/go-dogstatsd-parser v0.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	github.com/prometheus/client_golang v1.11.1 // indirect
 	github.com/stefanberger/go-pkcs11uri v0.0.0-20201008174630-78d3cae3a980 // indirect
@@ -201,7 +202,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiserver v0.22.5 // indirect
 	k8s.io/klog/v2 v2.30.0 // indirect
