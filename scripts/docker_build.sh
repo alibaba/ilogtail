@@ -36,8 +36,8 @@ GEN_DOCKERFILE=$GENERATED_HOME/Dockerfile
 # automatically replace registery address to the fastest mirror
 CN_REGION=sls-opensource-registry.cn-shanghai.cr.aliyuncs.com
 US_REGION=sls-opensource-registry.us-east-1.cr.aliyuncs.com
-cn_rtt=$(ping -c 3 -W 1 $CN_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}'|awk -F '.' '{print $1}')
-us_rtt=$(ping -c 3 -W 1 $US_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}'|awk -F '.' '{print $1}')
+cn_rtt=$(ping -c 3 -W 1 $CN_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}' | awk -F '.' '{print $1}') || cn_rtt=99999
+us_rtt=$(ping -c 3 -W 1 $US_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}' | awk -F '.' '{print $1}') || us_rtt=99999
 REG_REGION=$CN_REGION
 if [[ "$us_rtt" -lt "$cn_rtt" ]]; then
       REGION=$US_REGION
