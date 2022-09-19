@@ -1,4 +1,4 @@
-FROM sls-registry.cn-beijing.cr.aliyuncs.com/sls-microservices/ilogtail-build-linux-amd64:admin
+FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:latest
 
 ARG USERNAME=admin
 USER root
