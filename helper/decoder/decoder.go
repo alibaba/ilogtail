@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/helper/decoder/influxdb"
+	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
 	"github.com/alibaba/ilogtail/helper/decoder/prometheus"
 	"github.com/alibaba/ilogtail/helper/decoder/sls"
 	"github.com/alibaba/ilogtail/helper/decoder/statsd"
@@ -49,6 +50,8 @@ func GetDecoder(format string) (Decoder, error) {
 		return &statsd.Decoder{
 			Time: time.Now(),
 		}, nil
+	case "otlpmetric":
+		return &opentelemetry.Decoder{}, nil
 	}
 	return nil, errDecoderNotFound
 }
