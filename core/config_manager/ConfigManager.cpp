@@ -87,8 +87,8 @@ ConfigManager::~ConfigManager() {
     } catch (...) {
     }
     try {
-        if (mSendToConfigServerThreadPtr.get() != NULL)
-            mSendToConfigServerThreadPtr->GetValue(100);
+        if (mSendMessageToConfigServerThreadPtr.get() != NULL)
+            mSendMessageToConfigServerThreadPtr->GetValue(100);
     } catch (...) {
     }
 }
@@ -166,10 +166,10 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
     return true;
 }
 
-// SendToConfigServerThread is the routine of thread this->mSendToConfigServerThreadPtr, created in function InitUpdateConfig.
+// SendMessageToConfigServerThread is the routine of thread this->mSendMessageToConfigServerThreadPtr, created in function InitUpdateConfig.
 //
 // Its main job is to send some information likes heartbeat to onfigServer.
-void ConfigManager::SendToConfigServerThread() {
+void ConfigManager::SendMessageToConfigServerThread() {
     usleep((rand() % 10) * 100 * 1000);
     int32_t lastCheckTime = 0;
     int32_t checkInterval = INT32_FLAG(heartbeat_interval);
@@ -192,7 +192,7 @@ void ConfigManager::InitUpdateConfig(bool configExistFlag) {
     ConfigManagerBase::InitUpdateConfig(configExistFlag);
 
     mCheckUpdateThreadPtr = CreateThread([this, configExistFlag]() { CheckUpdateThread(configExistFlag); });
-    mSendToConfigServerThreadPtr = CreateThread([this]() { SendToConfigServerThread(); });
+    mSendMessageToConfigServerThreadPtr = CreateThread([this]() { SendMessageToConfigServerThread(); });
 }
 
 void ConfigManager::GetRemoteConfigUpdate() {
@@ -249,19 +249,20 @@ void ConfigManager::GetRemoteConfigUpdate() {
 void ConfigManager::UpdateRemoteConfig(google::protobuf::RepeatedPtrField<configserver::proto::ConfigUpdateInfo> configUpdateInfos) {
     static string serverConfigDirPath = AppConfig::GetInstance()->GetLocalUserYamlConfigDirPath() + "remote_config" + PATH_SEPARATOR;
 
+    string configName, oldConfigPath, newConfigPath;
+    ofstream newConfig;
+
     for (int i = 0; i < configUpdateInfos.size(); i++) {
-        string configName = configUpdateInfos[i].config_name();
-        string oldConfigPath, newConfigPath;
-        ofstream newConfig;
+        if (configserver::proto::ConfigUpdateInfo_UpdateStatus::ConfigUpdateInfo_UpdateStatus_SAME == configUpdateInfos[i].update_status()) continue;
+
+        configName = configUpdateInfos[i].config_name();
         
-        if (mServerYamlConfigVersionMap.find(configName) != mServerYamlConfigVersionMap.end()) {
+        if (configserver::proto::ConfigUpdateInfo_UpdateStatus::ConfigUpdateInfo_UpdateStatus_NEW != configUpdateInfos[i].update_status()) {
             oldConfigPath = serverConfigDirPath + configName + "@" + to_string(mServerYamlConfigVersionMap[configName]) + ".yaml";
         }
         newConfigPath = serverConfigDirPath + configName + "@" + to_string(configUpdateInfos[i].config_version()) + ".yaml";
         
         switch (configUpdateInfos[i].update_status()) {
-            case configserver::proto::ConfigUpdateInfo_UpdateStatus::ConfigUpdateInfo_UpdateStatus_SAME: 
-                break;
             case configserver::proto::ConfigUpdateInfo_UpdateStatus::ConfigUpdateInfo_UpdateStatus_DELETED: 
                 remove(oldConfigPath.c_str());
                 break;
@@ -291,6 +292,9 @@ void ConfigManager::SendHeartbeat() {
     heartBeatReq.set_agent_version(ILOGTAIL_VERSION);
     heartBeatReq.set_ip(LogFileProfiler::mIpAddr);
     heartBeatReq.set_running_status("");
+    (*heartBeatReq.mutable_tags()) = google::protobuf::Map<std::string, std::string>(
+        AppConfig::GetInstance()->GetConfigServerTags().begin(), AppConfig::GetInstance()->GetConfigServerTags().end()
+    );
     heartBeatReq.set_startup_time(0);
 
     AppConfig::ConfigServerAddress configServerAddress = AppConfig::GetInstance()->GetConfigServerAddress();

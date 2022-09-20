@@ -59,8 +59,8 @@ public:
     void SetStartWorkerStatus(const std::string& result, const std::string& message) override;
 
 private:
-    ThreadPtr mSendToConfigServerThreadPtr;
     ThreadPtr mCheckUpdateThreadPtr;
+    ThreadPtr mSendMessageToConfigServerThreadPtr;
 
     ConfigManager();
     virtual ~ConfigManager(); // no copy
@@ -70,7 +70,7 @@ private:
     // See ConfigManager::InitUpdateConfig.
     bool CheckUpdateThread(bool configExistFlag);
 
-    void SendToConfigServerThread();
+    void SendMessageToConfigServerThread();
 
     void GetRemoteConfigUpdate();
 

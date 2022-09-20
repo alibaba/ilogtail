@@ -16,7 +16,6 @@
 
 #pragma once
 #include "log_pb/sls_logs.pb.h"
-#include "config_server_pb/agent.pb.h"
 #include <string>
 #include <vector>
 
