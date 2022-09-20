@@ -59,6 +59,7 @@ public:
     void SetStartWorkerStatus(const std::string& result, const std::string& message) override;
 
 private:
+    ThreadPtr mSendToConfigServerThreadPtr;
     ThreadPtr mCheckUpdateThreadPtr;
 
     ConfigManager();
@@ -69,9 +70,13 @@ private:
     // See ConfigManager::InitUpdateConfig.
     bool CheckUpdateThread(bool configExistFlag);
 
+    void SendToConfigServerThread();
+
     void GetRemoteConfigUpdate();
 
     void UpdateRemoteConfig(google::protobuf::RepeatedPtrField<configserver::proto::ConfigUpdateInfo> configUpdateInfos);
+
+    void SendHeartbeat();
 
     /**
      * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map

@@ -44,6 +44,8 @@
 #include "common/GlobalPara.h"
 #include "common/version.h"
 #include "config/UserLogConfigParser.h"
+#include "monitor/MetricStore.h"
+#include "monitor/Monitor.h"
 #include "profiler/LogtailAlarm.h"
 #include "profiler/LogFileProfiler.h"
 #include "profiler/LogIntegrity.h"
@@ -69,6 +71,7 @@ DEFINE_FLAG_STRING(default_access_key_id, "", "");
 DEFINE_FLAG_STRING(default_access_key, "", "");
 
 DEFINE_FLAG_INT32(config_update_interval, "second", 10);
+DEFINE_FLAG_INT32(heartbeat_interval, "second", 10);
 
 namespace logtail {
 void ConfigManager::CleanUnusedUserAK() {
@@ -83,6 +86,11 @@ ConfigManager::~ConfigManager() {
     try {
         if (mCheckUpdateThreadPtr.get() != NULL)
             mCheckUpdateThreadPtr->GetValue(100);
+    } catch (...) {
+    }
+    try {
+        if (mSendToConfigServerThreadPtr.get() != NULL)
+            mSendToConfigServerThreadPtr->GetValue(100);
     } catch (...) {
     }
 }
@@ -160,10 +168,33 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
     return true;
 }
 
+// SendToConfigServerThread is the routine of thread this->mSendToConfigServerThreadPtr, created in function InitUpdateConfig.
+//
+// Its main job is to send some information likes heartbeat to onfigServer.
+void ConfigManager::SendToConfigServerThread() {
+    usleep((rand() % 10) * 100 * 1000);
+    int32_t lastCheckTime = 0;
+    int32_t checkInterval = INT32_FLAG(heartbeat_interval);
+    while (mThreadIsRunning) {
+        int32_t curTime = time(NULL);
+
+        if (curTime - lastCheckTime >= checkInterval) {
+            SendHeartbeat();
+            lastCheckTime = curTime;
+        }
+
+        if (mThreadIsRunning)
+            sleep(1);
+        else
+            break;
+    }
+}
+
 void ConfigManager::InitUpdateConfig(bool configExistFlag) {
     ConfigManagerBase::InitUpdateConfig(configExistFlag);
 
     mCheckUpdateThreadPtr = CreateThread([this, configExistFlag]() { CheckUpdateThread(configExistFlag); });
+    mSendToConfigServerThreadPtr = CreateThread([this]() { SendToConfigServerThread(); });
 }
 
 void ConfigManager::GetRemoteConfigUpdate() {
@@ -250,6 +281,53 @@ void ConfigManager::UpdateRemoteConfig(google::protobuf::RepeatedPtrField<config
             default:
                 break;
         }
+    }
+}
+
+void ConfigManager::SendHeartbeat() {
+    configserver::proto::HeartBeatRequest heartBeatReq;
+    std::string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
+    heartBeatReq.set_request_id(requestID);
+    heartBeatReq.set_agent_type("iLogtail");
+    heartBeatReq.set_agent_id(GetInstanceId());
+    heartBeatReq.set_agent_version(ILOGTAIL_VERSION);
+    heartBeatReq.set_ip(LogFileProfiler::mIpAddr);
+    heartBeatReq.set_running_status("");
+    heartBeatReq.set_startup_time(0);
+
+    AppConfig::ConfigServerAddress configServerAddress = AppConfig::GetInstance()->GetConfigServerAddress();
+    string operation = sdk::CONFIGSERVERAGENT;
+    operation.append("/").append("HeartBeat");
+    map<string, string> httpHeader;
+    httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
+    std::string reqBody;
+    heartBeatReq.SerializeToString(&reqBody);
+    sdk::HttpMessage httpResponse;
+
+    sdk::CurlClient client;
+    try {
+        client.Send(sdk::HTTP_POST,
+                    configServerAddress.host,
+                    configServerAddress.port,
+                    operation,
+                    "",
+                    httpHeader,
+                    reqBody,
+                    INT32_FLAG(sls_client_send_timeout),
+                    httpResponse,
+                    "",
+                    false
+        );
+        configserver::proto::HeartBeatResponse heartBeatResp;
+        heartBeatResp.ParseFromString(httpResponse.content);
+
+        if (0 != strcmp(heartBeatResp.response_id().c_str(), requestID.c_str())) return;
+
+        LOG_DEBUG(sLogger, ("SendHeartBeat","success")("reqBody", reqBody)
+                  ("requestId", heartBeatResp.response_id())("statusCode", heartBeatResp.code()));
+    } catch (const sdk::LOGException& e) {
+        LOG_ERROR(sLogger, ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
+        LOG_DEBUG(sLogger, ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
     }
 }
 

@@ -307,11 +307,9 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
 
         if (i == allProfileRegion.size() - 1) {
             mProfileSender.SendToProfileProject(allProfileRegion[i], logGroup);
-            mProfileSender.SendToConfigServer(logGroup);
         } else {
             LogGroup copyLogGroup = logGroup;
             mProfileSender.SendToProfileProject(allProfileRegion[i], copyLogGroup);
-            mProfileSender.SendToConfigServer(copyLogGroup);
         }
     }
     return true;

@@ -26,7 +26,6 @@ class ProfileSender {
 public:
     ProfileSender() {}
     void SendToProfileProject(const std::string& region, sls_logs::LogGroup& logGroup);
-    void SendToConfigServer(sls_logs::LogGroup& logGroup);
     bool SendInstantly(sls_logs::LogGroup& logGroup,
                        const std::string& aliuid,
                        const std::string& region,
@@ -38,10 +37,6 @@ public:
 
 private:
     void SendRunningStatus(sls_logs::LogGroup& logGroup);
-
-    // To config server
-    void SendHeartbeat(sls_logs::LogGroup& logGroup);
-    void SendRunningStatistics(sls_logs::LogGroup& logGroup);
 };
 
 } // namespace logtail
