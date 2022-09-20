@@ -18,7 +18,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/grpchelper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	otlpv1 "go.opentelemetry.io/proto/otlp/collector/logs/v1"
@@ -27,14 +26,15 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 )
 
 type FlusherOTLPLog struct {
-	GrpcConfig *grpchelper.ClientConfig `json:"grpc"`
+	GrpcConfig *helper.GrpcClientConfig `json:"grpc"`
 
 	metadata  metadata.MD
 	context   ilogtail.Context
-	conn      *grpc.ClientConn
+	grpcConn  *grpc.ClientConn
 	logClient otlpv1.LogsServiceClient
 }
 
@@ -45,7 +45,18 @@ func (f *FlusherOTLPLog) Description() string {
 func (f *FlusherOTLPLog) Init(context ilogtail.Context) error {
 	f.context = context
 
-	f.logClient = otlpv1.NewLogsServiceClient(f.conn)
+	opts, err := f.GrpcConfig.GetOptions()
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlplog flusher fail, error", err)
+		return err
+	}
+
+	if f.grpcConn, err = grpc.DialContext(f.context.GetRuntimeContext(), f.GrpcConfig.GetEndpoint(), opts...); err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlplog flusher fail, error", err)
+		return err
+	}
+	f.metadata = metadata.New(f.GrpcConfig.Headers)
+	f.logClient = otlpv1.NewLogsServiceClient(f.grpcConn)
 	return nil
 }
 
@@ -82,7 +93,7 @@ func (f *FlusherOTLPLog) flushWithRetry(request *otlpv1.ExportLogsServiceRequest
 		if err == nil {
 			return
 		}
-		retry := grpchelper.GetRetryInfo(err)
+		retry := helper.GetRetryInfo(err)
 		if retry == nil || retryNum >= f.GrpcConfig.Retry.MaxCount {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, error", err)
 			return
@@ -112,12 +123,12 @@ func (f *FlusherOTLPLog) SetUrgent(flag bool) {
 
 // IsReady is ready to flush
 func (f *FlusherOTLPLog) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
-	return f.conn != nil && f.conn.GetState() == connectivity.Ready
+	return f.grpcConn != nil && f.grpcConn.GetState() == connectivity.Ready
 }
 
 // Stop ...
 func (f *FlusherOTLPLog) Stop() error {
-	err := f.conn.Close()
+	err := f.grpcConn.Close()
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlplog flusher fail, error", err)
 	}

@@ -101,7 +101,6 @@ github.com/VictoriaMetrics/metricsql/binaryop
 ## explicit; go 1.18
 github.com/alibaba/ilogtail/pkg
 github.com/alibaba/ilogtail/pkg/doc
-github.com/alibaba/ilogtail/pkg/grpchelper
 github.com/alibaba/ilogtail/pkg/logger
 github.com/alibaba/ilogtail/pkg/logger/test
 github.com/alibaba/ilogtail/pkg/logtail
@@ -488,7 +487,7 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
-# github.com/golang/snappy v0.0.3
+# github.com/golang/snappy v0.0.4
 ## explicit
 github.com/golang/snappy
 # github.com/google/go-cmp v0.5.8
@@ -639,13 +638,15 @@ github.com/jtolds/gls
 github.com/juju/errors
 # github.com/juju/testing v0.0.0-20200608005635-e4eedbc6f7aa
 ## explicit; go 1.14
-# github.com/klauspost/compress v1.11.13
-## explicit; go 1.13
+# github.com/klauspost/compress v1.15.9
+## explicit; go 1.16
+github.com/klauspost/compress
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/gzip
 github.com/klauspost/compress/huff0
-github.com/klauspost/compress/snappy
+github.com/klauspost/compress/internal/cpuinfo
+github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zlib
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
@@ -699,6 +700,10 @@ github.com/modern-go/reflect2
 # github.com/morikuni/aec v1.0.0
 ## explicit
 github.com/morikuni/aec
+# github.com/mostynb/go-grpc-compression v1.1.17
+## explicit; go 1.11
+github.com/mostynb/go-grpc-compression/snappy
+github.com/mostynb/go-grpc-compression/zstd
 # github.com/narqo/go-dogstatsd-parser v0.2.0
 ## explicit
 github.com/narqo/go-dogstatsd-parser
@@ -1040,6 +1045,7 @@ google.golang.org/grpc/connectivity
 google.golang.org/grpc/credentials
 google.golang.org/grpc/credentials/insecure
 google.golang.org/grpc/encoding
+google.golang.org/grpc/encoding/gzip
 google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/grpclog
 google.golang.org/grpc/health/grpc_health_v1
