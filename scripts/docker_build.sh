@@ -36,13 +36,13 @@ GEN_DOCKERFILE=$GENERATED_HOME/Dockerfile
 # automatically replace registery address to the fastest mirror
 CN_REGION=sls-opensource-registry.cn-shanghai.cr.aliyuncs.com
 US_REGION=sls-opensource-registry.us-east-1.cr.aliyuncs.com
-cn_rtt=$(ping -c 3 -W 1 $CN_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}' | awk -F '.' '{print $1}') || cn_rtt=99999
-us_rtt=$(ping -c 3 -W 1 $US_REGION | grep rtt | awk '{print $4}' | awk -F'/' '{print $2}' | awk -F '.' '{print $1}') || us_rtt=99999
+cn_time_connect=$(curl -o /dev/null -s -m 3 -w "%{time_total}" https://$CN_REGION) || cn_time_connect=9999
+us_time_connect=$(curl -o /dev/null -s -m 4 -w "%{time_total}" https://$US_REGION) || us_time_connect=9999
 REG_REGION=$CN_REGION
-if [[ "$us_rtt" -lt "$cn_rtt" ]]; then
+if (( $(echo "$us_time_connect < $cn_time_connect" | bc) )); then
     REG_REGION=$US_REGION
 fi
-echo "cn_rtt=$cn_rtt us_rtt=$us_rtt REG_REGION=$REG_REGION"
+echo "cn_time_connect=$cn_time_connect us_time_connect=$us_time_connect REG_REGION=$REG_REGION"
 
 mkdir -p $GENERATED_HOME
 rm -rf $GEN_DOCKERFILE

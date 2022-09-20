@@ -19,18 +19,21 @@ ARG VERSION=1.1.2
 
 WORKDIR /ilogtail
 
+COPY --from=build /src/core/build/ilogtail /ilogtail/
+COPY ./scripts/download_ebpflib.sh /tmp/
+
+RUN sudo chown -R $(whoami) /ilogtail && \
+    sudo chmod 755 /ilogtail/ilogtail && \
+    mkdir /ilogtail/checkpoint && \
+    if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /ilogtail; fi && \
+    sudo rm /tmp/download_ebpflib.sh
+
 COPY --from=build /src/output/libPluginBase.so /ilogtail/
 COPY --from=build /src/example_config/quick_start/ilogtail_config.json /ilogtail/
-COPY --from=build /src/core/build/ilogtail /ilogtail/
 COPY --from=build /src/core/build/plugin/libPluginAdapter.so /ilogtail/
-
-RUN sudo chown -R $(whoami) /ilogtail && curl --connect-timeout 5 -m 10 https://logtail-release-us-west-1.oss-us-west-1.aliyuncs.com/kubernetes/libebpf.so -o /ilogtail/libebpf.so
-RUN mkdir /ilogtail/checkpoint
-RUN sudo yum install -y iproute
 
 ENV HOST_OS=$HOST_OS
 ENV LOGTAIL_VERSION=$VERSION
-
 
 EXPOSE 18689
 
