@@ -44,8 +44,6 @@
 #include "common/GlobalPara.h"
 #include "common/version.h"
 #include "config/UserLogConfigParser.h"
-#include "monitor/MetricStore.h"
-#include "monitor/Monitor.h"
 #include "profiler/LogtailAlarm.h"
 #include "profiler/LogFileProfiler.h"
 #include "profiler/LogIntegrity.h"
