@@ -21,7 +21,7 @@ EXTERNAL_DIR=${1:-external}
 VENDOR_DIR=${2:-vendor}
 ROOT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 
-for dir in $(ls $EXTERNAL_DIR)
+for dir in $(ls $ROOT_DIR/$EXTERNAL_DIR)
 do
   cp -r "${ROOT_DIR}/${EXTERNAL_DIR}/${dir}" "${ROOT_DIR}/${VENDOR_DIR}/"
 done

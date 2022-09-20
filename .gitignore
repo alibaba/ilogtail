@@ -56,4 +56,3 @@ e2e-test
 .testCoverage.txt
 plugin_main/*.dll
 plugin_main/*.so
-plugins/**/test/
