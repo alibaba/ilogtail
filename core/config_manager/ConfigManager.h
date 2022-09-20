@@ -60,7 +60,6 @@ public:
 
 private:
     ThreadPtr mCheckUpdateThreadPtr;
-    ThreadPtr mSendMessageToConfigServerThreadPtr;
 
     ConfigManager();
     virtual ~ConfigManager(); // no copy
@@ -70,13 +69,11 @@ private:
     // See ConfigManager::InitUpdateConfig.
     bool CheckUpdateThread(bool configExistFlag);
 
-    void SendMessageToConfigServerThread();
-
-    void GetRemoteConfigUpdate();
+    void GetRemoteConfigUpdate(AppConfig::ConfigServerAddress configServerAddress);
 
     void UpdateRemoteConfig(google::protobuf::RepeatedPtrField<configserver::proto::ConfigUpdateInfo> configUpdateInfos);
 
-    void SendHeartbeat();
+    void SendHeartbeat(AppConfig::ConfigServerAddress configServerAddress);
 
     /**
      * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map

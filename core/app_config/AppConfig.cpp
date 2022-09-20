@@ -57,4 +57,10 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
     }
 }
 
+const AppConfig::ConfigServerAddress& AppConfig::GetConfigServerAddress() const {
+    if (0 == mConfigServerAddress.size()) return AppConfig::ConfigServerAddress("", -1);
+    std::random_device rd; 
+    return mConfigServerAddress[rd()%mConfigServerAddress.size()];
+}
+
 } // namespace logtail

@@ -86,11 +86,6 @@ ConfigManager::~ConfigManager() {
             mCheckUpdateThreadPtr->GetValue(100);
     } catch (...) {
     }
-    try {
-        if (mSendMessageToConfigServerThreadPtr.get() != NULL)
-            mSendMessageToConfigServerThreadPtr->GetValue(100);
-    } catch (...) {
-    }
 }
 
 // LoadConfig loads config by @configName.
@@ -149,9 +144,13 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
     int32_t checkInterval = INT32_FLAG(config_update_interval);
     while (mThreadIsRunning) {
         int32_t curTime = time(NULL);
-
+        
         if (curTime - lastCheckTime >= checkInterval) {
-            GetRemoteConfigUpdate();
+            AppConfig::ConfigServerAddress configServerAddress = AppConfig::GetInstance()->GetConfigServerAddress();
+            if ("" != configServerAddress.host) {
+                SendHeartbeat(configServerAddress);
+                GetRemoteConfigUpdate(configServerAddress);
+            }
             if (!IsUpdate() && GetLocalConfigUpdate()) {
                 StartUpdateConfig();
             }
@@ -166,36 +165,13 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
     return true;
 }
 
-// SendMessageToConfigServerThread is the routine of thread this->mSendMessageToConfigServerThreadPtr, created in function InitUpdateConfig.
-//
-// Its main job is to send some information likes heartbeat to onfigServer.
-void ConfigManager::SendMessageToConfigServerThread() {
-    usleep((rand() % 10) * 100 * 1000);
-    int32_t lastCheckTime = 0;
-    int32_t checkInterval = INT32_FLAG(heartbeat_interval);
-    while (mThreadIsRunning) {
-        int32_t curTime = time(NULL);
-
-        if (curTime - lastCheckTime >= checkInterval) {
-            SendHeartbeat();
-            lastCheckTime = curTime;
-        }
-
-        if (mThreadIsRunning)
-            sleep(1);
-        else
-            break;
-    }
-}
-
 void ConfigManager::InitUpdateConfig(bool configExistFlag) {
     ConfigManagerBase::InitUpdateConfig(configExistFlag);
 
     mCheckUpdateThreadPtr = CreateThread([this, configExistFlag]() { CheckUpdateThread(configExistFlag); });
-    mSendMessageToConfigServerThreadPtr = CreateThread([this]() { SendMessageToConfigServerThread(); });
 }
 
-void ConfigManager::GetRemoteConfigUpdate() {
+void ConfigManager::GetRemoteConfigUpdate(AppConfig::ConfigServerAddress configServerAddress) {
     configserver::proto::AgentGetConfigListRequest configUpdateReq;
     string requestID = sdk::Base64Enconde(GetInstanceId().append("_").append(to_string(time(NULL)))); 
     configUpdateReq.set_request_id(requestID);
@@ -207,7 +183,6 @@ void ConfigManager::GetRemoteConfigUpdate() {
         mServerYamlConfigVersionMap.begin(), mServerYamlConfigVersionMap.end()
     );
 
-    AppConfig::ConfigServerAddress configServerAddress = AppConfig::GetInstance()->GetConfigServerAddress();
     string operation = sdk::CONFIGSERVERAGENT;
     operation.append("/").append("GetConfigList");
     map<string, string> httpHeader;
@@ -283,7 +258,7 @@ void ConfigManager::UpdateRemoteConfig(google::protobuf::RepeatedPtrField<config
     }
 }
 
-void ConfigManager::SendHeartbeat() {
+void ConfigManager::SendHeartbeat(AppConfig::ConfigServerAddress configServerAddress) {
     configserver::proto::HeartBeatRequest heartBeatReq;
     std::string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
     heartBeatReq.set_request_id(requestID);
@@ -297,7 +272,6 @@ void ConfigManager::SendHeartbeat() {
     );
     heartBeatReq.set_startup_time(0);
 
-    AppConfig::ConfigServerAddress configServerAddress = AppConfig::GetInstance()->GetConfigServerAddress();
     string operation = sdk::CONFIGSERVERAGENT;
     operation.append("/").append("HeartBeat");
     map<string, string> httpHeader;
