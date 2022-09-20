@@ -100,9 +100,7 @@ func (f *FlusherOTLPLog) flushWithRetry(request *otlpv1.ExportLogsServiceRequest
 		}
 		logger.Warning(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, will retry...")
 		retryNum++
-		select {
-		case <-time.After(retry.ShouldDelay(f.GrpcConfig.Retry.DefaultDelay)):
-		}
+		_ = <-time.After(retry.ShouldDelay(f.GrpcConfig.Retry.DefaultDelay))
 	}
 }
 
