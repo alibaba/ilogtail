@@ -15,17 +15,27 @@
 package otlplog
 
 import (
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg/grpc_config"
+	"context"
+	"time"
+
+	"github.com/alibaba/ilogtail/pkg/grpchelper"
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	otlpClient "go.opentelemetry.io/proto/otlp/collector/logs/v1"
+	otlpv1 "go.opentelemetry.io/proto/otlp/collector/logs/v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/metadata"
+
+	"github.com/alibaba/ilogtail"
 )
 
 type FlusherOTLPLog struct {
-	GrpcConfig *grpc_config.GrpcClientConfig `json:"grpc"`
+	GrpcConfig *grpchelper.ClientConfig `json:"grpc"`
 
+	metadata  metadata.MD
 	context   ilogtail.Context
-	logClient *otlpClient.LogsServiceClient
+	conn      *grpc.ClientConn
+	logClient otlpv1.LogsServiceClient
 }
 
 func (f *FlusherOTLPLog) Description() string {
@@ -34,12 +44,67 @@ func (f *FlusherOTLPLog) Description() string {
 
 func (f *FlusherOTLPLog) Init(context ilogtail.Context) error {
 	f.context = context
+
+	f.logClient = otlpv1.NewLogsServiceClient(f.conn)
 	return nil
 }
 
 func (f *FlusherOTLPLog) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
-
+	for _, logGroup := range logGroupList {
+		dataList, err := f.convert(logGroup)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "convert sls logGroup to otlplog fail, error", err)
+			return err
+		}
+		for _, data := range dataList {
+			if request, ok := data.(*otlpv1.ExportLogsServiceRequest); ok {
+				if !f.GrpcConfig.Retry.Enable {
+					f.flush(request)
+				} else {
+					f.flushWithRetry(request)
+				}
+			}
+		}
+	}
 	return nil
+}
+
+func (f *FlusherOTLPLog) flush(request *otlpv1.ExportLogsServiceRequest) {
+	if _, err := f.logClient.Export(f.enhanceContext(f.context.GetRuntimeContext()), request); err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, error", err)
+	}
+}
+
+func (f *FlusherOTLPLog) flushWithRetry(request *otlpv1.ExportLogsServiceRequest) {
+	var retryNum = 0
+	for {
+		_, err := f.logClient.Export(f.enhanceContext(f.context.GetRuntimeContext()), request)
+		if err == nil {
+			return
+		}
+		retry := grpchelper.GetRetryInfo(err)
+		if retry == nil || retryNum >= f.GrpcConfig.Retry.MaxCount {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, error", err)
+			return
+		}
+		logger.Warning(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, will retry...")
+		retryNum++
+		select {
+		case <-time.After(retry.ShouldDelay(f.GrpcConfig.Retry.DefaultDelay)):
+		}
+	}
+}
+
+// append metadata to context. refer to https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/otlpexporter/otlp.go#L121
+func (f *FlusherOTLPLog) enhanceContext(ctx context.Context) context.Context {
+	if f.metadata.Len() > 0 {
+		return metadata.NewOutgoingContext(ctx, f.metadata)
+	}
+	return ctx
+}
+
+func (f *FlusherOTLPLog) convert(logGroup *protocol.LogGroup) ([]interface{}, error) {
+	return nil, nil
 }
 
 func (f *FlusherOTLPLog) SetUrgent(flag bool) {
@@ -47,12 +112,16 @@ func (f *FlusherOTLPLog) SetUrgent(flag bool) {
 
 // IsReady is ready to flush
 func (f *FlusherOTLPLog) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
-	return true
+	return f.conn != nil && f.conn.GetState() == connectivity.Ready
 }
 
 // Stop ...
 func (f *FlusherOTLPLog) Stop() error {
-	return nil
+	err := f.conn.Close()
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlplog flusher fail, error", err)
+	}
+	return err
 }
 
 func init() {

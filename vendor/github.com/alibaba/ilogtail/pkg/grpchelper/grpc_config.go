@@ -1,6 +1,10 @@
-package grpc_config
+package grpchelper
 
-type GrpcClientConfig struct {
+import (
+	"time"
+)
+
+type ClientConfig struct {
 	Endpoint string
 
 	// The compression key for supported compression types within collector.
@@ -17,11 +21,20 @@ type GrpcClientConfig struct {
 	// (https://github.com/grpc/grpc/blob/master/doc/wait-for-ready.md)
 	WaitForReady bool
 
-	// ReadBufferSize for gRPC client. See grpc.WithReadBufferSize.
+	// ReadBufferSize for gRPC client. See grpchelper.WithReadBufferSize.
 	// (https://godoc.org/google.golang.org/grpc#WithReadBufferSize).
 	ReadBufferSize int
 
-	// WriteBufferSize for gRPC gRPC. See grpc.WithWriteBufferSize.
+	// WriteBufferSize for gRPC gRPC. See grpchelper.WithWriteBufferSize.
 	// (https://godoc.org/google.golang.org/grpc#WithWriteBufferSize).
 	WriteBufferSize int
+
+	// Send retry setting
+	Retry RetryConfig `json:"retry"`
+}
+
+type RetryConfig struct {
+	Enable       bool
+	MaxCount     int           `json:"max_count"`
+	DefaultDelay time.Duration `json:"default_delay"`
 }

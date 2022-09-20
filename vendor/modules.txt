@@ -101,7 +101,7 @@ github.com/VictoriaMetrics/metricsql/binaryop
 ## explicit; go 1.18
 github.com/alibaba/ilogtail/pkg
 github.com/alibaba/ilogtail/pkg/doc
-github.com/alibaba/ilogtail/pkg/grpc_config
+github.com/alibaba/ilogtail/pkg/grpchelper
 github.com/alibaba/ilogtail/pkg/logger
 github.com/alibaba/ilogtail/pkg/logger/test
 github.com/alibaba/ilogtail/pkg/logtail
@@ -1022,6 +1022,7 @@ google.golang.org/appengine/urlfetch
 # google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
 ## explicit; go 1.11
 google.golang.org/genproto/googleapis/api/httpbody
+google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
 google.golang.org/genproto/protobuf/field_mask
 # google.golang.org/grpc v1.43.0
