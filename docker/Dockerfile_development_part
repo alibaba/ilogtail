@@ -17,16 +17,17 @@ FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edit
 ARG HOST_OS=Linux
 ARG VERSION=1.1.2
 
+USER root
 WORKDIR /ilogtail
 
 COPY --from=build /src/core/build/ilogtail /ilogtail/
 COPY ./scripts/download_ebpflib.sh /tmp/
 
-RUN sudo chown -R $(whoami) /ilogtail && \
-    sudo chmod 755 /ilogtail/ilogtail && \
+RUN chown -R $(whoami) /ilogtail && \
+    chmod 755 /ilogtail/ilogtail && \
     mkdir /ilogtail/checkpoint && \
     if [ `uname -m` = "x86_64" ]; then /tmp/download_ebpflib.sh /ilogtail; fi && \
-    sudo rm /tmp/download_ebpflib.sh
+    rm /tmp/download_ebpflib.sh
 
 COPY --from=build /src/output/libPluginBase.so /ilogtail/
 COPY --from=build /src/example_config/quick_start/ilogtail_config.json /ilogtail/
