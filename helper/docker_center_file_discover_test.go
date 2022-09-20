@@ -39,6 +39,11 @@ var staticDockerConfig = `[
 {
     "ID" : "123abc",
     "Name" : "xxx_info",
+	"Created": "2022-09-16T12:55:14.930245185+08:00",
+	"State": {
+		"Pid": 9908,
+		"Status": "running"
+	},
     "HostName" : "app-online",
     "IP" : "192.168.1.1",
     "Image" : "centos:latest",
@@ -76,6 +81,11 @@ var staticDockerConfig2 = `[
 {
     "ID" : "123abc-2",
     "Name" : "xxx_info",
+	"Created": "2022-09-16T12:56:14.000000000+08:00",
+	"State": {
+		"Pid": 9909,
+		"Status": "running"
+	},
     "Image" : "centos:latest",
     "LogPath" : "/var/lib/docker/xxxx/1.log",
     "Labels" : {
@@ -107,8 +117,59 @@ var staticDockerConfig2 = `[
 ]
 `
 
+func TestTryReadStaticContainerInfo(t *testing.T) {
+	defer os.Remove("./static_container.json")
+	defer os.Unsetenv(staticContainerInfoPathEnvKey)
+	ioutil.WriteFile("./static_container.json", []byte(staticDockerConfig), os.ModePerm)
+	os.Setenv(staticContainerInfoPathEnvKey, "./static_container.json")
+	containerInfo, removedIDs, changed, err := tryReadStaticContainerInfo()
+	require.Nil(t, err)
+	require.Len(t, containerInfo, 1)
+	require.Empty(t, removedIDs)
+	require.True(t, changed)
+	loc, _ := time.LoadLocation("PRC")
+	info := containerInfo[0]
+	require.Equal(t, "123abc", info.ID)
+	require.Equal(t, "xxx_info", info.Name)
+	require.Equal(t, time.Date(2022, 9, 16, 12, 55, 14, 930245185, loc).UnixNano(), info.Created.UnixNano())
+	require.Equal(t, "/var/lib/docker/xxxx/0.log", info.LogPath)
+	require.Equal(t, "b", info.Config.Labels["a"])
+	require.Equal(t, "centos:latest", info.Config.Image)
+	require.Contains(t, info.Config.Env, "x=y")
+	require.Equal(t, "app-online", info.Config.Hostname)
+	require.Equal(t, "json-file", info.HostConfig.LogConfig.Type)
+	require.Equal(t, "/apsarapangu/disk12/docker/overlay/b6ff04a15c7ec040b3ef0857cb091d1c74de27d4d5daf32884a842055e9fbb6d/upper", info.GraphDriver.Data["UpperDir"])
+	require.Equal(t, "192.168.1.1", info.NetworkSettings.IPAddress)
+	require.Equal(t, ContainerStatusExited, info.State.Status)
+	require.Equal(t, 9908, info.State.Pid)
+
+	ioutil.WriteFile("./static_container.json", []byte(staticDockerConfig2), os.ModePerm)
+
+	containerInfo, removedIDs, changed, err = tryReadStaticContainerInfo()
+	require.Nil(t, err)
+	require.Len(t, containerInfo, 1)
+	require.Len(t, removedIDs, 1)
+	require.True(t, changed)
+
+	require.Equal(t, "123abc", removedIDs[0])
+	info = containerInfo[0]
+	require.Equal(t, "123abc-2", info.ID)
+	require.Equal(t, "xxx_info", info.Name)
+	require.Equal(t, time.Date(2022, 9, 16, 12, 56, 14, 0, loc).UnixNano(), info.Created.UnixNano())
+	require.Equal(t, "/var/lib/docker/xxxx/1.log", info.LogPath)
+	require.Equal(t, 9909, info.State.Pid)
+
+	containerInfo, removedIDs, changed, err = tryReadStaticContainerInfo()
+	require.Nil(t, err)
+	require.Len(t, containerInfo, 1)
+	require.Len(t, removedIDs, 0)
+	require.False(t, changed)
+}
+
 func TestLoadStaticContainerConfig(t *testing.T) {
 	resetDockerCenter()
+	defer os.Remove("./static_container.json")
+	defer os.Unsetenv(staticContainerInfoPathEnvKey)
 	ioutil.WriteFile("./static_container.json", []byte(staticDockerConfig), os.ModePerm)
 	os.Setenv(staticContainerInfoPathEnvKey, "./static_container.json")
 	instance := getDockerCenterInstance()
@@ -118,24 +179,6 @@ func TestLoadStaticContainerConfig(t *testing.T) {
 		require.Equal(t, id, "123abc")
 		require.Equal(t, info.ContainerIP, "192.168.1.1")
 	}
-
-	ioutil.WriteFile("./static_container.json", []byte(staticDockerConfig2), os.ModePerm)
-
-	time.Sleep(time.Second * 2)
-
-	allInfo = instance.containerMap
-	require.Equal(t, len(allInfo), 2)
-	newInfo, ok := allInfo["123abc-2"]
-	require.Equal(t, ok, true)
-	require.Equal(t, newInfo.ContainerIP != "", true)
-	require.Equal(t, newInfo.ContainerInfo.Config.Hostname != "", true)
-	require.Equal(t, newInfo.ContainerInfo.LogPath, "/var/lib/docker/xxxx/1.log")
-
-	for key, val := range allInfo {
-		fmt.Printf("%s %v %v %v %v \n", key, *val, *val.ContainerInfo, *val.ContainerInfo.Config, *val.ContainerInfo.NetworkSettings)
-	}
-	os.Unsetenv(staticContainerInfoPathEnvKey)
-	os.Remove("./static_container.json")
 }
 
 func checkSameDevInode(t *testing.T, oldname, newname string) {
