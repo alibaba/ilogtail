@@ -196,12 +196,12 @@ func checkSameDevInode(t *testing.T, oldname, newname string) {
 
 func TestScanContainerdFilesAndReLink(t *testing.T) {
 	dir, _ := os.Getwd()
-    defer func() {
-        _ = os.Remove(filepath.Join(dir, "0.log"))
-        _ = os.Remove(filepath.Join(dir, "99.log"))
-        _ = os.Remove(filepath.Join(dir, "100.log"))
-        _ = os.Remove(filepath.Join(dir, "101.log"))
-    }()
+	defer func() {
+		_ = os.Remove(filepath.Join(dir, "0.log"))
+		_ = os.Remove(filepath.Join(dir, "99.log"))
+		_ = os.Remove(filepath.Join(dir, "100.log"))
+		_ = os.Remove(filepath.Join(dir, "101.log"))
+	}()
 	fmt.Printf("working dir : %s \n", dir)
 
 	logName := filepath.Join(dir, "stdout.log")
