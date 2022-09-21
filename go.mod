@@ -35,7 +35,6 @@ require (
 	github.com/knz/strtime v0.0.0-20181018220328-af2256ee352c
 	github.com/mailru/easyjson v0.7.7
 	github.com/mindprince/gonvml v0.0.0-20180514031326-b364b296c732
-	github.com/mostynb/go-grpc-compression v1.1.17
 	github.com/narqo/go-dogstatsd-parser v0.2.0
 	github.com/oschwald/geoip2-golang v1.1.0
 	github.com/paulbellamy/ratecounter v0.2.1-0.20170719102518-a803f0e4f071
@@ -71,6 +70,7 @@ require (
 	github.com/cilium/ebpf v0.7.0 // indirect
 	github.com/containerd/nri v0.1.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
+	github.com/frankban/quicktest v1.14.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/intel/goresctrl v0.2.0 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect

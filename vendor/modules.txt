@@ -105,6 +105,7 @@ github.com/alibaba/ilogtail/pkg/logger
 github.com/alibaba/ilogtail/pkg/logger/test
 github.com/alibaba/ilogtail/pkg/logtail
 github.com/alibaba/ilogtail/pkg/protocol
+github.com/alibaba/ilogtail/pkg/protocol/converter
 github.com/alibaba/ilogtail/pkg/signals
 github.com/alibaba/ilogtail/pkg/util
 # github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20181127062202-5462e9f9dc05
@@ -422,6 +423,8 @@ github.com/elastic/go-lumber/server/v2
 ## explicit
 github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
+# github.com/frankban/quicktest v1.14.0
+## explicit; go 1.13
 # github.com/fsnotify/fsnotify v1.4.9
 ## explicit; go 1.13
 github.com/fsnotify/fsnotify
@@ -700,10 +703,6 @@ github.com/modern-go/reflect2
 # github.com/morikuni/aec v1.0.0
 ## explicit
 github.com/morikuni/aec
-# github.com/mostynb/go-grpc-compression v1.1.17
-## explicit; go 1.11
-github.com/mostynb/go-grpc-compression/snappy
-github.com/mostynb/go-grpc-compression/zstd
 # github.com/narqo/go-dogstatsd-parser v0.2.0
 ## explicit
 github.com/narqo/go-dogstatsd-parser
@@ -1045,7 +1044,6 @@ google.golang.org/grpc/connectivity
 google.golang.org/grpc/credentials
 google.golang.org/grpc/credentials/insecure
 google.golang.org/grpc/encoding
-google.golang.org/grpc/encoding/gzip
 google.golang.org/grpc/encoding/proto
 google.golang.org/grpc/grpclog
 google.golang.org/grpc/health/grpc_health_v1

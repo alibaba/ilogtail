@@ -19,12 +19,14 @@ import (
 	"time"
 
 	otlpv1 "go.opentelemetry.io/proto/otlp/collector/logs/v1"
+	logv1 "go.opentelemetry.io/proto/otlp/logs/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
@@ -33,6 +35,7 @@ import (
 type FlusherOTLPLog struct {
 	GrpcConfig *helper.GrpcClientConfig `json:"grpc"`
 
+	converter *converter.Converter
 	metadata  metadata.MD
 	context   ilogtail.Context
 	grpcConn  *grpc.ClientConn
@@ -62,21 +65,20 @@ func (f *FlusherOTLPLog) Init(context ilogtail.Context) error {
 }
 
 func (f *FlusherOTLPLog) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+	resourceLogs := make([]*logv1.ResourceLogs, 0)
 	for _, logGroup := range logGroupList {
-		dataList, err := f.convert(logGroup)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "convert sls logGroup to otlplog fail, error", err)
-			return err
+		c, _ := f.converter.Do(logGroup)
+		if log, ok := c.(*logv1.ResourceLogs); ok {
+			resourceLogs = append(resourceLogs, log)
 		}
-		for _, data := range dataList {
-			if request, ok := data.(*otlpv1.ExportLogsServiceRequest); ok {
-				if !f.GrpcConfig.Retry.Enable {
-					f.flush(request)
-				} else {
-					f.flushWithRetry(request)
-				}
-			}
-		}
+	}
+	request := &otlpv1.ExportLogsServiceRequest{
+		ResourceLogs: resourceLogs,
+	}
+	if !f.GrpcConfig.Retry.Enable {
+		f.flush(request)
+	} else {
+		f.flushWithRetry(request)
 	}
 	return nil
 }
