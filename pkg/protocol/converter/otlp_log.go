@@ -33,9 +33,15 @@ func (c *Converter) ConvertToOtlpLogs(logGroup *protocol.LogGroup, targetFields 
 	}
 	logs := make([]*logv1.LogRecord, len(logGroup.Logs))
 	for _, log := range logGroup.Logs {
+		contents, tags := convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic, c.TagKeyRenameMap)
+		logAttrs := make([]*commonv1.KeyValue, len(tags))
+		for k, v := range tags {
+			logAttrs = append(logAttrs, c.convertToOtlpKeyValue(k, v))
+		}
 		logs = append(logs, &logv1.LogRecord{
 			TimeUnixNano: uint64(log.Time) * uint64(time.Second),
-			//Body:
+			Body:         &commonv1.AnyValue{Value: &commonv1.AnyValue_StringValue{StringValue: contents["content"]}},
+			Attributes:   logAttrs,
 		})
 	}
 	instrumentLogs := []*logv1.InstrumentationLibraryLogs{{

@@ -23,13 +23,13 @@ import (
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
-type ProtocolType string
+type Type string
 
 type Encoding string
 
 const (
-	ProtocolCustomSingle ProtocolType = "custom_single"
-	ProtocolOtlpLog      ProtocolType = "otlp_log"
+	ProtocolCustomSingle Type = "custom_single"
+	ProtocolOtlpLog      Type = "otlp_log"
 )
 
 const (
@@ -84,7 +84,7 @@ var specialTagConversionMap = map[string]string{
 	"_image_name_":     tagK8sContainerImageName,
 }
 
-var supportedEncodingMap = map[ProtocolType]map[Encoding]bool{
+var supportedEncodingMap = map[Type]map[Encoding]bool{
 	ProtocolCustomSingle: {
 		EncodingJSON:     true,
 		EncodingProtobuf: false,
@@ -97,13 +97,13 @@ var supportedEncodingMap = map[ProtocolType]map[Encoding]bool{
 var inK8s = flag.Bool("ALICLOUD_LOG_K8S_FLAG", false, "alibaba log k8s event config flag, set true if you want to use it")
 
 type Converter struct {
-	Protocol             ProtocolType
+	Protocol             Type
 	Encoding             Encoding
 	TagKeyRenameMap      map[string]string
 	ProtocolKeyRenameMap map[string]string
 }
 
-func NewConverter(protocol ProtocolType, encoding Encoding, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
+func NewConverter(protocol Type, encoding Encoding, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
 	enc, ok := supportedEncodingMap[protocol]
 	if !ok {
 		return nil, fmt.Errorf("unsupported protocol: %s", protocol)
