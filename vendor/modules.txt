@@ -907,9 +907,9 @@ go.opentelemetry.io/collector/pdata/internal/data/protogen/trace/v1
 go.opentelemetry.io/collector/pdata/internal/json
 go.opentelemetry.io/collector/pdata/internal/otlp
 go.opentelemetry.io/collector/pdata/pcommon
-go.opentelemetry.io/collector/pdata/pmetric
-go.opentelemetry.io/collector/pdata/pmetric/internal/pmetricjson
-go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp
+go.opentelemetry.io/collector/pdata/plog
+go.opentelemetry.io/collector/pdata/plog/internal/plogjson
+go.opentelemetry.io/collector/pdata/plog/plogotlp
 # go.uber.org/atomic v1.7.0
 ## explicit; go 1.13
 go.uber.org/atomic

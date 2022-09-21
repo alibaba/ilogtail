@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pmetric // import "go.opentelemetry.io/collector/pdata/pmetric"
+package plog // import "go.opentelemetry.io/collector/pdata/plog"
 
 import (
 	"go.opentelemetry.io/collector/pdata/internal"
-	otlpmetrics "go.opentelemetry.io/collector/pdata/internal/data/protogen/metrics/v1"
+	otlplogs "go.opentelemetry.io/collector/pdata/internal/data/protogen/logs/v1"
 )
 
 // NewProtoMarshaler returns a MarshalSizer.
-// Marshals to OTLP binary protobuf bytes and calculates the size of the marshaled Metrics.
+// Marshals to OTLP binary protobuf bytes and calculates the size of the marshaled Logs.
 func NewProtoMarshaler() MarshalSizer {
 	return newPbMarshaler()
 }
@@ -33,13 +33,13 @@ func newPbMarshaler() *pbMarshaler {
 
 var _ Sizer = (*pbMarshaler)(nil)
 
-func (e *pbMarshaler) MarshalMetrics(md Metrics) ([]byte, error) {
-	pb := internal.MetricsToProto(internal.Metrics(md))
+func (e *pbMarshaler) MarshalLogs(ld Logs) ([]byte, error) {
+	pb := internal.LogsToProto(internal.Logs(ld))
 	return pb.Marshal()
 }
 
-func (e *pbMarshaler) MetricsSize(md Metrics) int {
-	pb := internal.MetricsToProto(internal.Metrics(md))
+func (e *pbMarshaler) LogsSize(ld Logs) int {
+	pb := internal.LogsToProto(internal.Logs(ld))
 	return pb.Size()
 }
 
@@ -54,8 +54,8 @@ func newPbUnmarshaler() *pbUnmarshaler {
 	return &pbUnmarshaler{}
 }
 
-func (d *pbUnmarshaler) UnmarshalMetrics(buf []byte) (Metrics, error) {
-	pb := otlpmetrics.MetricsData{}
+func (d *pbUnmarshaler) UnmarshalLogs(buf []byte) (Logs, error) {
+	pb := otlplogs.LogsData{}
 	err := pb.Unmarshal(buf)
-	return Metrics(internal.MetricsFromProto(pb)), err
+	return Logs(internal.LogsFromProto(pb)), err
 }

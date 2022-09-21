@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pmetric // import "go.opentelemetry.io/collector/pdata/pmetric"
+package plog // import "go.opentelemetry.io/collector/pdata/plog"
 
 // Deprecated: [v0.60.0] use MarshalSizer.
 type MarshalerSizer = MarshalSizer
@@ -23,22 +23,23 @@ type MarshalSizer interface {
 	Sizer
 }
 
-// Marshaler marshals pmetric.Metrics into bytes.
+// Marshaler marshals pdata.Logs into bytes.
 type Marshaler interface {
-	// MarshalMetrics the given pmetric.Metrics into bytes.
+	// MarshalLogs the given pdata.Logs into bytes.
 	// If the error is not nil, the returned bytes slice cannot be used.
-	MarshalMetrics(md Metrics) ([]byte, error)
+	MarshalLogs(ld Logs) ([]byte, error)
 }
 
-// Unmarshaler unmarshalls bytes into pmetric.Metrics.
+// Unmarshaler unmarshalls bytes into pdata.Logs.
 type Unmarshaler interface {
-	// UnmarshalMetrics the given bytes into pmetric.Metrics.
-	// If the error is not nil, the returned pmetric.Metrics cannot be used.
-	UnmarshalMetrics(buf []byte) (Metrics, error)
+	// UnmarshalLogs the given bytes into pdata.Logs.
+	// If the error is not nil, the returned pdata.Logs cannot be used.
+	UnmarshalLogs(buf []byte) (Logs, error)
 }
 
-// Sizer is an optional interface implemented by the Marshaler, that calculates the size of a marshaled Metrics.
+// Sizer is an optional interface implemented by the Marshaler,
+// that calculates the size of a marshaled Logs.
 type Sizer interface {
-	// MetricsSize returns the size in bytes of a marshaled Metrics.
-	MetricsSize(md Metrics) int
+	// LogsSize returns the size in bytes of a marshaled Logs.
+	LogsSize(ld Logs) int
 }

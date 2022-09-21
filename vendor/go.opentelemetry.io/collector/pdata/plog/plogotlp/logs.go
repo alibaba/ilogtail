@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pmetricotlp // import "go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
+package plogotlp // import "go.opentelemetry.io/collector/pdata/plog/plogotlp"
 
 import (
 	"bytes"
@@ -22,10 +22,10 @@ import (
 	"google.golang.org/grpc"
 
 	"go.opentelemetry.io/collector/pdata/internal"
-	otlpcollectormetrics "go.opentelemetry.io/collector/pdata/internal/data/protogen/collector/metrics/v1"
+	otlpcollectorlog "go.opentelemetry.io/collector/pdata/internal/data/protogen/collector/logs/v1"
 	"go.opentelemetry.io/collector/pdata/internal/otlp"
-	"go.opentelemetry.io/collector/pdata/pmetric"
-	"go.opentelemetry.io/collector/pdata/pmetric/internal/pmetricjson"
+	"go.opentelemetry.io/collector/pdata/plog"
+	"go.opentelemetry.io/collector/pdata/plog/internal/plogjson"
 )
 
 var jsonMarshaler = &jsonpb.Marshaler{}
@@ -33,110 +33,114 @@ var jsonUnmarshaler = &jsonpb.Unmarshaler{}
 
 // Response represents the response for gRPC/HTTP client/server.
 type Response struct {
-	orig *otlpcollectormetrics.ExportMetricsServiceResponse
+	orig *otlpcollectorlog.ExportLogsServiceResponse
 }
 
 // NewResponse returns an empty Response.
 func NewResponse() Response {
-	return Response{orig: &otlpcollectormetrics.ExportMetricsServiceResponse{}}
+	return Response{orig: &otlpcollectorlog.ExportLogsServiceResponse{}}
 }
 
 // MarshalProto marshals Response into proto bytes.
-func (mr Response) MarshalProto() ([]byte, error) {
-	return mr.orig.Marshal()
+func (lr Response) MarshalProto() ([]byte, error) {
+	return lr.orig.Marshal()
 }
 
 // UnmarshalProto unmarshalls Response from proto bytes.
-func (mr Response) UnmarshalProto(data []byte) error {
-	return mr.orig.Unmarshal(data)
+func (lr Response) UnmarshalProto(data []byte) error {
+	return lr.orig.Unmarshal(data)
 }
 
 // MarshalJSON marshals Response into JSON bytes.
-func (mr Response) MarshalJSON() ([]byte, error) {
+func (lr Response) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
-	if err := jsonMarshaler.Marshal(&buf, mr.orig); err != nil {
+	if err := jsonMarshaler.Marshal(&buf, lr.orig); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
 // UnmarshalJSON unmarshalls Response from JSON bytes.
-func (mr Response) UnmarshalJSON(data []byte) error {
-	return jsonUnmarshaler.Unmarshal(bytes.NewReader(data), mr.orig)
+func (lr Response) UnmarshalJSON(data []byte) error {
+	return jsonUnmarshaler.Unmarshal(bytes.NewReader(data), lr.orig)
 }
 
 // Request represents the request for gRPC/HTTP client/server.
-// It's a wrapper for pmetric.Metrics data.
+// It's a wrapper for plog.Logs data.
 type Request struct {
-	orig *otlpcollectormetrics.ExportMetricsServiceRequest
+	orig *otlpcollectorlog.ExportLogsServiceRequest
 }
 
 // NewRequest returns an empty Request.
 func NewRequest() Request {
-	return Request{orig: &otlpcollectormetrics.ExportMetricsServiceRequest{}}
+	return Request{orig: &otlpcollectorlog.ExportLogsServiceRequest{}}
 }
 
-// NewRequestFromMetrics returns a Request from pmetric.Metrics.
-// Because Request is a wrapper for pmetric.Metrics,
-// any changes to the provided Metrics struct will be reflected in the Request and vice versa.
-func NewRequestFromMetrics(md pmetric.Metrics) Request {
-	return Request{orig: internal.GetOrigMetrics(internal.Metrics(md))}
+// NewRequestFromLogs returns a Request from plog.Logs.
+// Because Request is a wrapper for plog.Logs,
+// any changes to the provided Logs struct will be reflected in the Request and vice versa.
+func NewRequestFromLogs(ld plog.Logs) Request {
+	return Request{orig: internal.GetOrigLogs(internal.Logs(ld))}
 }
 
 // MarshalProto marshals Request into proto bytes.
-func (mr Request) MarshalProto() ([]byte, error) {
-	return mr.orig.Marshal()
+func (lr Request) MarshalProto() ([]byte, error) {
+	return lr.orig.Marshal()
 }
 
 // UnmarshalProto unmarshalls Request from proto bytes.
-func (mr Request) UnmarshalProto(data []byte) error {
-	return mr.orig.Unmarshal(data)
+func (lr Request) UnmarshalProto(data []byte) error {
+	if err := lr.orig.Unmarshal(data); err != nil {
+		return err
+	}
+	otlp.MigrateLogs(lr.orig.ResourceLogs)
+	return nil
 }
 
 // MarshalJSON marshals Request into JSON bytes.
-func (mr Request) MarshalJSON() ([]byte, error) {
+func (lr Request) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
-	if err := jsonMarshaler.Marshal(&buf, mr.orig); err != nil {
+	if err := jsonMarshaler.Marshal(&buf, lr.orig); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
 // UnmarshalJSON unmarshalls Request from JSON bytes.
-func (mr Request) UnmarshalJSON(data []byte) error {
-	return pmetricjson.UnmarshalExportMetricsServiceRequest(data, mr.orig)
+func (lr Request) UnmarshalJSON(data []byte) error {
+	return plogjson.UnmarshalExportLogsServiceRequest(data, lr.orig)
 }
 
-func (mr Request) Metrics() pmetric.Metrics {
-	return pmetric.Metrics(internal.NewMetrics(mr.orig))
+func (lr Request) Logs() plog.Logs {
+	return plog.Logs(internal.NewLogs(lr.orig))
 }
 
-// Client is the client API for OTLP-GRPC Metrics service.
+// Client is the client API for OTLP-GRPC Logs service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type Client interface {
-	// Export pmetric.Metrics to the server.
+	// Export plog.Logs to the server.
 	//
 	// For performance reasons, it is recommended to keep this RPC
 	// alive for the entire life of the application.
 	Export(ctx context.Context, request Request, opts ...grpc.CallOption) (Response, error)
 }
 
-type metricsClient struct {
-	rawClient otlpcollectormetrics.MetricsServiceClient
+type logsClient struct {
+	rawClient otlpcollectorlog.LogsServiceClient
 }
 
 // NewClient returns a new Client connected using the given connection.
 func NewClient(cc *grpc.ClientConn) Client {
-	return &metricsClient{rawClient: otlpcollectormetrics.NewMetricsServiceClient(cc)}
+	return &logsClient{rawClient: otlpcollectorlog.NewLogsServiceClient(cc)}
 }
 
-func (c *metricsClient) Export(ctx context.Context, request Request, opts ...grpc.CallOption) (Response, error) {
+func (c *logsClient) Export(ctx context.Context, request Request, opts ...grpc.CallOption) (Response, error) {
 	rsp, err := c.rawClient.Export(ctx, request.orig, opts...)
 	return Response{orig: rsp}, err
 }
 
-// Server is the server API for OTLP gRPC MetricsService service.
+// Server is the server API for OTLP gRPC LogsService service.
 type Server interface {
 	// Export is called every time a new request is received.
 	//
@@ -147,15 +151,15 @@ type Server interface {
 
 // RegisterServer registers the Server to the grpc.Server.
 func RegisterServer(s *grpc.Server, srv Server) {
-	otlpcollectormetrics.RegisterMetricsServiceServer(s, &rawMetricsServer{srv: srv})
+	otlpcollectorlog.RegisterLogsServiceServer(s, &rawLogsServer{srv: srv})
 }
 
-type rawMetricsServer struct {
+type rawLogsServer struct {
 	srv Server
 }
 
-func (s rawMetricsServer) Export(ctx context.Context, request *otlpcollectormetrics.ExportMetricsServiceRequest) (*otlpcollectormetrics.ExportMetricsServiceResponse, error) {
-	otlp.MigrateMetrics(request.ResourceMetrics)
+func (s rawLogsServer) Export(ctx context.Context, request *otlpcollectorlog.ExportLogsServiceRequest) (*otlpcollectorlog.ExportLogsServiceResponse, error) {
+	otlp.MigrateLogs(request.ResourceLogs)
 	rsp, err := s.srv.Export(ctx, Request{orig: request})
 	return rsp.orig, err
 }
