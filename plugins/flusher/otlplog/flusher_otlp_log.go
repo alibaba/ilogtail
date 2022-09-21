@@ -18,12 +18,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 	otlpv1 "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
@@ -100,7 +101,7 @@ func (f *FlusherOTLPLog) flushWithRetry(request *otlpv1.ExportLogsServiceRequest
 		}
 		logger.Warning(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, will retry...")
 		retryNum++
-		_ = <-time.After(retry.ShouldDelay(f.GrpcConfig.Retry.DefaultDelay))
+		<-time.After(retry.ShouldDelay(f.GrpcConfig.Retry.DefaultDelay))
 	}
 }
 
@@ -113,6 +114,7 @@ func (f *FlusherOTLPLog) enhanceContext(ctx context.Context) context.Context {
 }
 
 func (f *FlusherOTLPLog) convert(logGroup *protocol.LogGroup) ([]interface{}, error) {
+
 	return nil, nil
 }
 
