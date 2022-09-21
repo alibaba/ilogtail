@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -140,7 +141,11 @@ func TestTryReadStaticContainerInfo(t *testing.T) {
 	require.Equal(t, "json-file", info.HostConfig.LogConfig.Type)
 	require.Equal(t, "/apsarapangu/disk12/docker/overlay/b6ff04a15c7ec040b3ef0857cb091d1c74de27d4d5daf32884a842055e9fbb6d/upper", info.GraphDriver.Data["UpperDir"])
 	require.Equal(t, "192.168.1.1", info.NetworkSettings.IPAddress)
-	require.Equal(t, ContainerStatusExited, info.State.Status)
+	if runtime.GOOS == "linux" {
+		require.Equal(t, ContainerStatusExited, info.State.Status)
+	} else {
+		require.Equal(t, ContainerStatusRunning, info.State.Status)
+	}
 	require.Equal(t, 999999999908, info.State.Pid)
 
 	ioutil.WriteFile("./static_container.json", []byte(staticDockerConfig2), os.ModePerm)

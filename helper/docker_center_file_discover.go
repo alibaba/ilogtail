@@ -95,15 +95,11 @@ func staticContainerInfoToStandard(staticInfo *staticContainerInfo, stat fs.File
 	}
 
 	status := staticInfo.State.Status
-	logger.Info(context.Background(), "read status from file", status)
 	if status != ContainerStatusExited {
-		logger.Info(context.Background(), "in", "status != ContainerStatusExited")
 		if !ContainerProcessAlive(staticInfo.State.Pid) {
-			logger.Info(context.Background(), "in", "!ContainerProcessAlive(staticInfo.State.Pid)")
 			status = ContainerStatusExited
 		}
 	}
-	logger.Info(context.Background(), "fixed status after detect", status)
 
 	dockerContainer := &docker.Container{
 		ID:      staticInfo.ID,

@@ -20,7 +20,6 @@ package helper
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -28,9 +27,7 @@ import (
 
 func ContainerProcessAlive(pid int) bool {
 	procStatPath := GetMountedFilePath(fmt.Sprintf("/proc/%d/stat", pid))
-	logger.Info(context.Background(), "ContainerProcessAlive", procStatPath)
 	exist, err := util.PathExists(procStatPath)
-	logger.Info(context.Background(), strconv.FormatBool(exist), err)
 	if err != nil {
 		logger.Error(context.Background(), "DETECT_CONTAINER_ALARM", "stat container proc path", procStatPath, "error", err)
 	} else if !exist {
