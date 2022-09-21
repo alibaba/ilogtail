@@ -41,7 +41,7 @@ var staticDockerConfig = `[
     "Name" : "xxx_info",
 	"Created": "2022-09-16T12:55:14.930245185+08:00",
 	"State": {
-		"Pid": 9908,
+		"Pid": 999999999908,
 		"Status": "running"
 	},
     "HostName" : "app-online",
@@ -83,7 +83,7 @@ var staticDockerConfig2 = `[
     "Name" : "xxx_info",
 	"Created": "2022-09-16T12:56:14.000000000+08:00",
 	"State": {
-		"Pid": 9909,
+		"Pid": 999999999909,
 		"Status": "running"
 	},
     "Image" : "centos:latest",
@@ -141,7 +141,7 @@ func TestTryReadStaticContainerInfo(t *testing.T) {
 	require.Equal(t, "/apsarapangu/disk12/docker/overlay/b6ff04a15c7ec040b3ef0857cb091d1c74de27d4d5daf32884a842055e9fbb6d/upper", info.GraphDriver.Data["UpperDir"])
 	require.Equal(t, "192.168.1.1", info.NetworkSettings.IPAddress)
 	require.Equal(t, ContainerStatusExited, info.State.Status)
-	require.Equal(t, 9908, info.State.Pid)
+	require.Equal(t, 999999999908, info.State.Pid)
 
 	ioutil.WriteFile("./static_container.json", []byte(staticDockerConfig2), os.ModePerm)
 
@@ -157,7 +157,7 @@ func TestTryReadStaticContainerInfo(t *testing.T) {
 	require.Equal(t, "xxx_info", info.Name)
 	require.Equal(t, time.Date(2022, 9, 16, 12, 56, 14, 0, loc).UnixNano(), info.Created.UnixNano())
 	require.Equal(t, "/var/lib/docker/xxxx/1.log", info.LogPath)
-	require.Equal(t, 9909, info.State.Pid)
+	require.Equal(t, 999999999909, info.State.Pid)
 
 	containerInfo, removedIDs, changed, err = tryReadStaticContainerInfo()
 	require.Nil(t, err)
@@ -196,10 +196,12 @@ func checkSameDevInode(t *testing.T, oldname, newname string) {
 
 func TestScanContainerdFilesAndReLink(t *testing.T) {
 	dir, _ := os.Getwd()
-	_ = os.Remove(filepath.Join(dir, "0.log"))
-	_ = os.Remove(filepath.Join(dir, "99.log"))
-	_ = os.Remove(filepath.Join(dir, "100.log"))
-	_ = os.Remove(filepath.Join(dir, "101.log"))
+    defer func() {
+        _ = os.Remove(filepath.Join(dir, "0.log"))
+        _ = os.Remove(filepath.Join(dir, "99.log"))
+        _ = os.Remove(filepath.Join(dir, "100.log"))
+        _ = os.Remove(filepath.Join(dir, "101.log"))
+    }()
 	fmt.Printf("working dir : %s \n", dir)
 
 	logName := filepath.Join(dir, "stdout.log")
