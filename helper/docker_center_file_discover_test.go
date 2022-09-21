@@ -174,10 +174,10 @@ func TestLoadStaticContainerConfig(t *testing.T) {
 	os.Setenv(staticContainerInfoPathEnvKey, "./static_container.json")
 	instance := getDockerCenterInstance()
 	allInfo := instance.containerMap
-	require.Equal(t, len(allInfo), 1)
+	require.Equal(t, 1, len(allInfo))
 	for id, info := range allInfo {
-		require.Equal(t, id, "123abc")
-		require.Equal(t, info.ContainerIP, "192.168.1.1")
+		require.Equal(t, "123abc", id)
+		require.Equal(t, "192.168.1.1", info.ContainerIP)
 	}
 }
 
