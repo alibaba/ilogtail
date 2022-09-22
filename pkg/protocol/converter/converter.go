@@ -15,27 +15,22 @@
 package protocol
 
 import (
-	"flag"
 	"fmt"
 	"strings"
 
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/util"
-)
-
-type Type string
-
-type Encoding string
-
-const (
-	ProtocolCustomSingle Type = "custom_single"
-	ProtocolOtlpLog      Type = "otlp_log"
 )
 
 const (
-	EncodingNone     Encoding = "none"
-	EncodingJSON     Encoding = "json"
-	EncodingProtobuf Encoding = "protobuf"
+	ProtocolCustomSingle = "custom_single"
+	ProtocolOtlpLog      = "otlp_log"
+)
+
+const (
+	EncodingNone     = "none"
+	EncodingJSON     = "json"
+	EncodingProtobuf = "protobuf"
 )
 
 const (
@@ -84,7 +79,7 @@ var specialTagConversionMap = map[string]string{
 	"_image_name_":     tagK8sContainerImageName,
 }
 
-var supportedEncodingMap = map[Type]map[Encoding]bool{
+var supportedEncodingMap = map[string]map[string]bool{
 	ProtocolCustomSingle: {
 		EncodingJSON:     true,
 		EncodingProtobuf: false,
@@ -94,16 +89,14 @@ var supportedEncodingMap = map[Type]map[Encoding]bool{
 	},
 }
 
-var inK8s = flag.Bool("ALICLOUD_LOG_K8S_FLAG", false, "alibaba log k8s event config flag, set true if you want to use it")
-
 type Converter struct {
-	Protocol             Type
-	Encoding             Encoding
+	Protocol             string
+	Encoding             string
 	TagKeyRenameMap      map[string]string
 	ProtocolKeyRenameMap map[string]string
 }
 
-func NewConverter(protocol Type, encoding Encoding, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
+func NewConverter(protocol, encoding string, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
 	enc, ok := supportedEncodingMap[protocol]
 	if !ok {
 		return nil, fmt.Errorf("unsupported protocol: %s", protocol)
@@ -161,13 +154,13 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 			var tagName string
 			if strings.HasPrefix(logContent.Key, tagPrefix) {
 				tagName = logContent.Key[len(tagPrefix):]
-				if _, ok := specialTagConversionMap[tagName]; *inK8s && ok {
+				if _, ok := specialTagConversionMap[tagName]; *flags.K8sFlag && ok {
 					tagName = specialTagConversionMap[tagName]
 				} else if _, ok := tagConversionMap[tagName]; ok {
 					tagName = tagConversionMap[tagName]
 				}
 			} else {
-				if _, ok := specialTagConversionMap[logContent.Key]; *inK8s && ok {
+				if _, ok := specialTagConversionMap[logContent.Key]; *flags.K8sFlag && ok {
 					tagName = specialTagConversionMap[logContent.Key]
 				} else if _, ok := tagConversionMap[logContent.Key]; ok {
 					tagName = tagConversionMap[logContent.Key]
@@ -191,7 +184,7 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 		}
 
 		tagName := logTag.Key
-		if _, ok := specialTagConversionMap[logTag.Key]; *inK8s && ok {
+		if _, ok := specialTagConversionMap[logTag.Key]; *flags.K8sFlag && ok {
 			tagName = specialTagConversionMap[logTag.Key]
 		} else if _, ok := tagConversionMap[logTag.Key]; ok {
 			tagName = tagConversionMap[logTag.Key]
@@ -234,8 +227,4 @@ func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map
 		}
 	}
 	return desiredValue, nil
-}
-
-func init() {
-	_ = util.InitFromEnvBool("ALICLOUD_LOG_K8S_FLAG", inK8s, *inK8s)
 }

@@ -101,6 +101,7 @@ github.com/VictoriaMetrics/metricsql/binaryop
 ## explicit; go 1.18
 github.com/alibaba/ilogtail/pkg
 github.com/alibaba/ilogtail/pkg/doc
+github.com/alibaba/ilogtail/pkg/flags
 github.com/alibaba/ilogtail/pkg/logger
 github.com/alibaba/ilogtail/pkg/logger/test
 github.com/alibaba/ilogtail/pkg/logtail

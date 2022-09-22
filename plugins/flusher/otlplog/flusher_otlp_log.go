@@ -48,19 +48,27 @@ func (f *FlusherOTLPLog) Description() string {
 
 func (f *FlusherOTLPLog) Init(context ilogtail.Context) error {
 	f.context = context
+	logger.Info(f.context.GetRuntimeContext(), "otlplog flusher init", "initializing")
+	convert, err := converter.NewConverter(converter.ProtocolOtlpLog, converter.EncodingNone, map[string]string{}, map[string]string{})
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp_log converter fail, error", err)
+		return err
+	}
+	f.converter = convert
 
 	opts, err := f.GrpcConfig.GetOptions()
 	if err != nil {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlplog flusher fail, error", err)
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init gRPC client options fail, error", err)
 		return err
 	}
-
+	logger.Info(f.context.GetRuntimeContext(), "otlplog flusher init", "initializing gRPC conn", "endpoint", f.GrpcConfig.GetEndpoint())
 	if f.grpcConn, err = grpc.DialContext(f.context.GetRuntimeContext(), f.GrpcConfig.GetEndpoint(), opts...); err != nil {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlplog flusher fail, error", err)
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlplog gRPC conn fail, error", err)
 		return err
 	}
 	f.metadata = metadata.New(f.GrpcConfig.Headers)
 	f.logClient = otlpv1.NewLogsServiceClient(f.grpcConn)
+	logger.Info(f.context.GetRuntimeContext(), "otlplog flusher init", "initialized")
 	return nil
 }
 
@@ -125,7 +133,11 @@ func (f *FlusherOTLPLog) SetUrgent(flag bool) {
 
 // IsReady is ready to flush
 func (f *FlusherOTLPLog) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
-	return f.grpcConn != nil && f.grpcConn.GetState() == connectivity.Ready
+	ready := f.grpcConn != nil && f.grpcConn.GetState() == connectivity.Ready
+	if !ready {
+		logger.Warning(f.context.GetRuntimeContext(), "FLUSHER_READY_ALARM", "otlplog flusher is not ready. status", f.grpcConn.GetState())
+	}
+	return ready
 }
 
 // Stop ...

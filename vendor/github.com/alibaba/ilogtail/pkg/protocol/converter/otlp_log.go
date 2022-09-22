@@ -31,22 +31,28 @@ func (c *Converter) ConvertToOtlpLogs(logGroup *protocol.LogGroup, targetFields 
 	for _, t := range logGroup.LogTags {
 		attrs = append(attrs, c.convertToOtlpKeyValue(t.Key, t.Value))
 	}
-	logs := make([]*logv1.LogRecord, len(logGroup.Logs))
+	logRecords := make([]*logv1.LogRecord, len(logGroup.Logs))
 	for _, log := range logGroup.Logs {
-		logs = append(logs, &logv1.LogRecord{
+		contents, tags := convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic, c.TagKeyRenameMap)
+		logAttrs := make([]*commonv1.KeyValue, len(tags))
+		for k, v := range tags {
+			logAttrs = append(logAttrs, c.convertToOtlpKeyValue(k, v))
+		}
+		logRecords = append(logRecords, &logv1.LogRecord{
 			TimeUnixNano: uint64(log.Time) * uint64(time.Second),
-			//Body:
+			Body:         &commonv1.AnyValue{Value: &commonv1.AnyValue_StringValue{StringValue: contents["content"]}},
+			Attributes:   logAttrs,
 		})
 	}
-	instrumentLogs := []*logv1.InstrumentationLibraryLogs{{
-		InstrumentationLibrary: &commonv1.InstrumentationLibrary{},
-		Logs:                   logs,
+	instrumentLogs := []*logv1.ScopeLogs{{
+		Scope:      &commonv1.InstrumentationScope{},
+		LogRecords: logRecords,
 	}}
 	return &logv1.ResourceLogs{
 		Resource: &resourcev1.Resource{
 			Attributes: attrs,
 		},
-		InstrumentationLibraryLogs: instrumentLogs,
+		ScopeLogs: instrumentLogs,
 	}, desiredValues, nil
 }
 
