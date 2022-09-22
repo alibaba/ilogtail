@@ -15,6 +15,7 @@
 package opentelemetry
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -38,8 +39,8 @@ type Decoder struct {
 
 // Decode impl
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
-	reqUri := req.RequestURI
-	if "/v1/logs" == reqUri {
+	reqURI := req.RequestURI
+	if "/v1/logs" == reqURI {
 		otlpLogReq := plogotlp.NewRequest()
 		switch req.Header.Get("Content-Type") {
 		case pbContentType:
@@ -62,38 +63,62 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 }
 
 func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.Request) (logs []*protocol.Log, err error) {
-	rls := otlpLogReq.Logs().ResourceLogs()
-	for i := 0; i < rls.Len(); i++ {
-		rl := rls.At(i)
-		// buf.logEntry("Resource SchemaURL: %s", rl.SchemaUrl())
-		// buf.logAttributes("Resource attributes", rl.Resource().Attributes())
-		ills := rl.ScopeLogs()
-		for j := 0; j < ills.Len(); j++ {
-			ils := ills.At(j)
-			//buf.logEntry("ScopeLogs SchemaURL: %s", ils.SchemaUrl())
-			//buf.logInstrumentationScope(ils.Scope())
+	resLogs := otlpLogReq.Logs().ResourceLogs()
+	for i := 0; i < resLogs.Len(); i++ {
+		resourceLog := resLogs.At(i)
+		sLogs := resourceLog.ScopeLogs()
+		for j := 0; j < sLogs.Len(); j++ {
+			scopeLog := sLogs.At(j)
+			lRecords := scopeLog.LogRecords()
+			for k := 0; k < lRecords.Len(); k++ {
+				logRecord := lRecords.At(k)
 
-			logRecords := ils.LogRecords()
-			for k := 0; k < logRecords.Len(); k++ {
-				lr := logRecords.At(k)
-				// buf.logEntry("ObservedTimestamp: %s", lr.ObservedTimestamp())
-				// buf.logEntry("Timestamp: %s", lr.Timestamp())
-				// buf.logEntry("Severity: %s", lr.SeverityText())
-
-				log := &protocol.Log{
-					Time: uint32(lr.Timestamp().AsTime().Unix()),
-					Contents: []*protocol.Log_Content{
-						{
-							Key:   "timestamp",
-							Value: lr.Timestamp().String(),
-						},
-						{
-							Key:   "body",
-							Value: attributeValueToString(lr.Body()),
-						},
+				protoContents := []*protocol.Log_Content{
+					{
+						Key:   "time_unix_nano",
+						Value: logRecord.Timestamp().String(),
+					},
+					{
+						Key:   "observed_time_unix_nano",
+						Value: logRecord.ObservedTimestamp().String(),
+					},
+					{
+						Key:   "severity_number",
+						Value: logRecord.SeverityNumber().String(),
+					},
+					{
+						Key:   "severity_text",
+						Value: logRecord.SeverityText(),
+					},
+					{
+						Key:   "content",
+						Value: attributeValueToString(logRecord.Body()),
 					},
 				}
-				logs = append(logs, log)
+
+				if logRecord.Attributes().Len() != 0 {
+					d, _ := json.Marshal(logRecord.Attributes().AsRaw())
+
+					protoContents = append(protoContents, &protocol.Log_Content{
+						Key:   "attributes",
+						Value: string(d),
+					})
+				}
+
+				if resourceLog.Resource().Attributes().Len() != 0 {
+					d, _ := json.Marshal(resourceLog.Resource().Attributes().AsRaw())
+
+					protoContents = append(protoContents, &protocol.Log_Content{
+						Key:   "resources",
+						Value: string(d),
+					})
+				}
+
+				protoLog := &protocol.Log{
+					Time:     uint32(logRecord.Timestamp().AsTime().Unix()),
+					Contents: protoContents,
+				}
+				logs = append(logs, protoLog)
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Uber Technologies, Inc.
+// Copyright (c) 2016-2022 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,7 @@
 // THE SOFTWARE.
 
 // Package observer provides a zapcore.Core that keeps an in-memory,
-// encoding-agnostic repesentation of log entries. It's useful for
+// encoding-agnostic representation of log entries. It's useful for
 // applications that want to unit test their log output without tying their
 // tests to a particular output encoding.
 package observer // import "go.uber.org/zap/zaptest/observer"
@@ -29,6 +29,7 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap/internal"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -50,9 +51,7 @@ func (o *ObservedLogs) Len() int {
 func (o *ObservedLogs) All() []LoggedEntry {
 	o.mu.RLock()
 	ret := make([]LoggedEntry, len(o.logs))
-	for i := range o.logs {
-		ret[i] = o.logs[i]
-	}
+	copy(ret, o.logs)
 	o.mu.RUnlock()
 	return ret
 }
@@ -78,23 +77,30 @@ func (o *ObservedLogs) AllUntimed() []LoggedEntry {
 	return ret
 }
 
+// FilterLevelExact filters entries to those logged at exactly the given level.
+func (o *ObservedLogs) FilterLevelExact(level zapcore.Level) *ObservedLogs {
+	return o.Filter(func(e LoggedEntry) bool {
+		return e.Level == level
+	})
+}
+
 // FilterMessage filters entries to those that have the specified message.
 func (o *ObservedLogs) FilterMessage(msg string) *ObservedLogs {
-	return o.filter(func(e LoggedEntry) bool {
+	return o.Filter(func(e LoggedEntry) bool {
 		return e.Message == msg
 	})
 }
 
 // FilterMessageSnippet filters entries to those that have a message containing the specified snippet.
 func (o *ObservedLogs) FilterMessageSnippet(snippet string) *ObservedLogs {
-	return o.filter(func(e LoggedEntry) bool {
+	return o.Filter(func(e LoggedEntry) bool {
 		return strings.Contains(e.Message, snippet)
 	})
 }
 
 // FilterField filters entries to those that have the specified field.
 func (o *ObservedLogs) FilterField(field zapcore.Field) *ObservedLogs {
-	return o.filter(func(e LoggedEntry) bool {
+	return o.Filter(func(e LoggedEntry) bool {
 		for _, ctxField := range e.Context {
 			if ctxField.Equals(field) {
 				return true
@@ -106,7 +112,7 @@ func (o *ObservedLogs) FilterField(field zapcore.Field) *ObservedLogs {
 
 // FilterFieldKey filters entries to those that have the specified key.
 func (o *ObservedLogs) FilterFieldKey(key string) *ObservedLogs {
-	return o.filter(func(e LoggedEntry) bool {
+	return o.Filter(func(e LoggedEntry) bool {
 		for _, ctxField := range e.Context {
 			if ctxField.Key == key {
 				return true
@@ -116,13 +122,15 @@ func (o *ObservedLogs) FilterFieldKey(key string) *ObservedLogs {
 	})
 }
 
-func (o *ObservedLogs) filter(match func(LoggedEntry) bool) *ObservedLogs {
+// Filter returns a copy of this ObservedLogs containing only those entries
+// for which the provided function returns true.
+func (o *ObservedLogs) Filter(keep func(LoggedEntry) bool) *ObservedLogs {
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
 	var filtered []LoggedEntry
 	for _, entry := range o.logs {
-		if match(entry) {
+		if keep(entry) {
 			filtered = append(filtered, entry)
 		}
 	}
@@ -149,6 +157,15 @@ type contextObserver struct {
 	zapcore.LevelEnabler
 	logs    *ObservedLogs
 	context []zapcore.Field
+}
+
+var (
+	_ zapcore.Core            = (*contextObserver)(nil)
+	_ internal.LeveledEnabler = (*contextObserver)(nil)
+)
+
+func (co *contextObserver) Level() zapcore.Level {
+	return zapcore.LevelOf(co.LevelEnabler)
 }
 
 func (co *contextObserver) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
