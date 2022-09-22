@@ -43,9 +43,9 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20201126102027-b0a155152ca3
 	github.com/pingcap/parser v0.0.0-20210415081931-48e7f467fd74
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/common v0.37.0
-	github.com/prometheus/procfs v0.8.0
-	github.com/shirou/gopsutil v3.21.1+incompatible
+	github.com/prometheus/common v0.30.0
+	github.com/prometheus/procfs v0.7.3
+	github.com/shirou/gopsutil v3.21.3+incompatible
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
 	github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba
 	github.com/sirupsen/logrus v1.9.0
@@ -78,12 +78,11 @@ require (
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/sys/signal v0.6.0 // indirect
-	github.com/onsi/ginkgo/v2 v2.1.4 // indirect
-	github.com/onsi/gomega v1.20.0 // indirect
-	github.com/pelletier/go-toml v1.9.5 // indirect
-	github.com/prometheus/client_golang v1.13.0 // indirect
-	github.com/rogpeppe/go-internal v1.8.1 // indirect
+	github.com/pelletier/go-toml v1.9.3 // indirect
+	github.com/prometheus/client_golang v1.11.1 // indirect
 	github.com/stefanberger/go-pkcs11uri v0.0.0-20201008174630-78d3cae3a980 // indirect
+	github.com/tklauser/go-sysconf v0.3.10 // indirect
+	github.com/tklauser/numcpus v0.4.0 // indirect
 	github.com/vishvananda/netlink v1.1.1-0.20210330154013-f5de75959ad5 // indirect
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
