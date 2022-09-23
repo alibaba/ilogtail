@@ -15,6 +15,7 @@
 package opentelemetry
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -22,16 +23,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var textFormat = `{"resourceMetrics":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"unknown_service:ilogtail.test"}},{"key":"telemetry.sdk.language","value":{"stringValue":"go"}},{"key":"telemetry.sdk.name","value":{"stringValue":"opentelemetry"}},{"key":"telemetry.sdk.version","value":{"stringValue":"1.10.0"}}]},"scopeMetrics":[{"scope":{"name":"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc_test"},"metrics":[{"name":"an_important_metric","description":"Measures the cumulative epicness of the app","sum":{"dataPoints":[{"startTimeUnixNano":"1663059119009537363","timeUnixNano":"1663059119009885985","asDouble":10}],"aggregationTemporality":"AGGREGATION_TEMPORALITY_CUMULATIVE","isMonotonic":true}}]}],"schemaUrl":"https://opentelemetry.io/schemas/1.12.0"}]}`
+var textFormat = `{"resourceLogs":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"OtlpExporterExample"}},{"key":"telemetry.sdk.language","value":{"stringValue":"java"}},{"key":"telemetry.sdk.name","value":{"stringValue":"opentelemetry"}},{"key":"telemetry.sdk.version","value":{"stringValue":"1.18.0"}}]},"scopeLogs":[{"scope":{"name":"io.opentelemetry.example"},"logRecords":[{"timeUnixNano":"1663904182348000000","severityNumber":9,"severityText":"INFO","body":{"stringValue":"log body1"},"attributes":[{"key":"k1","value":{"stringValue":"v1"}},{"key":"k2","value":{"stringValue":"v2"}}],"traceId":"","spanId":""},{"timeUnixNano":"1663904182348000000","severityNumber":9,"severityText":"INFO","body":{"stringValue":"log body2"},"attributes":[{"key":"k1","value":{"stringValue":"v1"}},{"key":"k2","value":{"stringValue":"v2"}}],"traceId":"","spanId":""}]}]}]}`
 
 func TestNormal(t *testing.T) {
 	httpReq, _ := http.NewRequest("Post", "", nil)
 	httpReq.Header.Set("Content-Type", jsonContentType)
+	httpReq.RequestURI = "/v1/logs"
 	decoder := &Decoder{}
 
-	// otlp_req := pmetricotlp.NewRequest()
-	// data, err := otlp_req.MarshalJSON()
 	logs, err := decoder.Decode([]byte(textFormat), httpReq)
-	fmt.Println(logs)
 	assert.Nil(t, err)
+	assert.Equal(t, len(logs), 2)
+	log := logs[1]
+	assert.Equal(t, int(log.Time), 1663904182)
+	data, _ := json.Marshal(logs)
+	fmt.Printf(string(data))
 }

@@ -17,14 +17,11 @@ package opentelemetry
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 )
 
@@ -63,6 +60,8 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 }
 
 func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.Request) (logs []*protocol.Log, err error) {
+	//data, _ := json.Marshal(otlpLogReq)
+	//fmt.Printf(string(data))
 	resLogs := otlpLogReq.Logs().ResourceLogs()
 	for i := 0; i < resLogs.Len(); i++ {
 		resourceLog := resLogs.At(i)
@@ -76,15 +75,11 @@ func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.Request) (logs []*protoco
 				protoContents := []*protocol.Log_Content{
 					{
 						Key:   "time_unix_nano",
-						Value: logRecord.Timestamp().String(),
-					},
-					{
-						Key:   "observed_time_unix_nano",
-						Value: logRecord.ObservedTimestamp().String(),
+						Value: strconv.FormatInt(logRecord.Timestamp().AsTime().UnixNano(), 10),
 					},
 					{
 						Key:   "severity_number",
-						Value: logRecord.SeverityNumber().String(),
+						Value: strconv.FormatInt(int64(logRecord.SeverityNumber()), 10),
 					},
 					{
 						Key:   "severity_text",
@@ -92,7 +87,7 @@ func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.Request) (logs []*protoco
 					},
 					{
 						Key:   "content",
-						Value: attributeValueToString(logRecord.Body()),
+						Value: logRecord.Body().AsString(),
 					},
 				}
 
@@ -128,50 +123,4 @@ func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.Request) (logs []*protoco
 
 func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {
 	return common.CollectBody(res, req, maxBodySize)
-}
-
-func attributeValueToString(v pcommon.Value) string {
-	switch v.Type() {
-	case pcommon.ValueTypeString:
-		return v.StringVal()
-	case pcommon.ValueTypeBool:
-		return strconv.FormatBool(v.BoolVal())
-	case pcommon.ValueTypeDouble:
-		return strconv.FormatFloat(v.DoubleVal(), 'f', -1, 64)
-	case pcommon.ValueTypeInt:
-		return strconv.FormatInt(v.IntVal(), 10)
-	case pcommon.ValueTypeSlice:
-		return sliceToString(v.SliceVal())
-	case pcommon.ValueTypeMap:
-		return mapToString(v.MapVal())
-	default:
-		return fmt.Sprintf("<Unknown OpenTelemetry attribute value type %q>", v.Type())
-	}
-}
-
-func sliceToString(s pcommon.Slice) string {
-	var b strings.Builder
-	b.WriteByte('[')
-	for i := 0; i < s.Len(); i++ {
-		if i < s.Len()-1 {
-			fmt.Fprintf(&b, "%s, ", attributeValueToString(s.At(i)))
-		} else {
-			b.WriteString(attributeValueToString(s.At(i)))
-		}
-	}
-
-	b.WriteByte(']')
-	return b.String()
-}
-
-func mapToString(m pcommon.Map) string {
-	var b strings.Builder
-	b.WriteString("{\n")
-
-	m.Sort().Range(func(k string, v pcommon.Value) bool {
-		fmt.Fprintf(&b, "     -> %s: %s(%s)\n", k, v.Type(), v.AsString())
-		return true
-	})
-	b.WriteByte('}')
-	return b.String()
 }
