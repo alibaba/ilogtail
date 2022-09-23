@@ -35,7 +35,7 @@ func (c *Converter) ConvertToOtlpLogsV1(logGroup *protocol.LogGroup, targetField
 	for _, t := range logGroup.LogTags {
 		attrs = append(attrs, c.convertToOtlpKeyValue(t.Key, t.Value))
 	}
-	logRecords := make([]*logv1.LogRecord, len(logGroup.Logs))
+	logRecords := make([]*logv1.LogRecord, 0)
 	for i, log := range logGroup.Logs {
 		contents, tags := convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic, c.TagKeyRenameMap)
 		desiredValue, err := findTargetValues(targetFields, contents, tags, c.TagKeyRenameMap)
@@ -44,7 +44,12 @@ func (c *Converter) ConvertToOtlpLogsV1(logGroup *protocol.LogGroup, targetField
 		}
 		desiredValues[i] = desiredValue
 
-		logAttrs := make([]*commonv1.KeyValue, len(tags))
+		logAttrs := make([]*commonv1.KeyValue, 0)
+		for k, v := range contents {
+			if k != bodyKey {
+				logAttrs = append(logAttrs, c.convertToOtlpKeyValue(k, v))
+			}
+		}
 		for k, v := range tags {
 			logAttrs = append(logAttrs, c.convertToOtlpKeyValue(k, v))
 		}
