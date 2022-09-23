@@ -1,4 +1,4 @@
-# Copyright 2021 iLogtail Authors
+# Copyright 2022 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# goc server is only for e2e test to analysis code coverage.
+cmake_minimum_required(VERSION 2.8)
+project(log_file_reader_unittest)
 
-FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:latest as build
-
-USER root
-ENTRYPOINT ["goc","server"]
+add_executable(log_file_reader_deleted_file_unittest DeletedFileUnittest.cpp)
+target_link_libraries(log_file_reader_deleted_file_unittest unittest_base)
