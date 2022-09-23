@@ -57,7 +57,7 @@ func (p *ServiceStaticPrometheus) Init(context ilogtail.Context) (int, error) {
 	if env != "" && num != -1 {
 		p.clusterReplicas, _ = strconv.Atoi(env)
 		p.clusterNum = num
-		promscrape.ConfigMemberInfo(p.clusterReplicas, p.clusterNum)
+		promscrape.ConfigMemberInfo(p.clusterReplicas, p.clusterNum) // nolint:typecheck
 	}
 	libLoggerOnce.Do(func() {
 		if f := flag.Lookup("loggerOutput"); f != nil {
