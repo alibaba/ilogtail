@@ -37,14 +37,12 @@ type LogPackSeqInfo struct {
 	lastUpdateTime time.Time
 }
 
-// AggregatorContext is the default aggregator in plugin system.
-// If there is no specific aggregator in plugin config, it will be added.
 type AggregatorContext struct {
-	MaxLogGroupCount            int    // the maximum log group count to trigger flush operation
-	MaxLogCount                 int    // the maximum log in a log group
-	Topic                       string // the output topic
-	ContextPresevationTolerance int
-	PackFlag                    bool // whether to add config name as a tag
+	MaxLogGroupCount                 int    // the maximum log group count per source to trigger flush operation
+	MaxLogCount                      int    // the maximum log in a log group
+	Topic                            string // the output topic
+	ContextPreservationToleranceSize int    // the maximum number of log source per config where logGroupPoolMap will not be cleared periodically
+	PackFlag                         bool   // whether to add __pack_id__ as a tag
 
 	lock               *sync.Mutex
 	logGroupPoolMap    map[string][]*protocol.LogGroup
@@ -71,7 +69,7 @@ func (p *AggregatorContext) Init(context ilogtail.Context, que ilogtail.LogGroup
 }
 
 func (*AggregatorContext) Description() string {
-	return "default aggregator for logtail"
+	return "context aggregator for logtail"
 }
 
 // Add adds @log with @ctx to aggregator.
@@ -119,33 +117,6 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		p.nowLogGroupSizeMap[source] = 0
 		logGroupList = append(logGroupList, p.newLogGroup(source, topic))
 		nowLogGroup = logGroupList[len(logGroupList)-1]
-
-		// if p.logGroupPoolMap[source] == nil {
-		// 	p.logGroupPoolMap[source] = make([]*protocol.LogGroup, 0, p.MaxLogGroupCount)
-		// }
-		// if len(p.logGroupPoolMap[source]) == 0 {
-		// 	p.logGroupPoolMap[source] = append(p.logGroupPoolMap[source], p.newLogGroup(source, topic))
-		// }
-		// nowLogGroup := p.logGroupPoolMap[source][len(p.logGroupPoolMap[source])-1]
-
-		// logSize := p.evaluateLogSize(log)
-		// // When current log group is full (log count or no more capacity for current log),
-		// // allocate a new log group.
-		// if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSizeMap[source]+logSize > MaxLogGroupSize {
-		// 	// The number of log group exceeds limit, make a quick flush.
-		// 	if len(p.logGroupPoolMap[source]) == p.MaxLogGroupCount {
-		// 		// Quick flush to avoid becoming bottleneck when large logs come.
-		// 		if err := p.queue.Add(p.logGroupPoolMap[source][0]); err == nil {
-		// 			// add success, remove head log group
-		// 			p.logGroupPoolMap[source] = p.logGroupPoolMap[source][1:]
-		// 		} else {
-		// 			return err
-		// 		}
-		// 	}
-		// 	// New log group, reset size.
-		// 	p.nowLogGroupSizeMap[source] = 0
-		// 	p.logGroupPoolMap[source] = append(p.logGroupPoolMap[source], p.newLogGroup(source, topic))
-		// 	nowLogGroup = p.logGroupPoolMap[source][len(p.logGroupPoolMap[source])-1]
 	}
 
 	// add log size
@@ -170,7 +141,7 @@ func (p *AggregatorContext) Flush() []*protocol.LogGroup {
 	}
 
 	curTime := time.Now()
-	if len(p.packIDMap) > p.ContextPresevationTolerance && time.Since(p.lastCleanPackIDMapTime) > p.packIDMapCleanInterval {
+	if len(p.packIDMap) > p.ContextPreservationToleranceSize && time.Since(p.lastCleanPackIDMapTime) > p.packIDMapCleanInterval {
 		if len(p.packIDMap) > PackIDMapLenThresh {
 			p.packIDTimeout = BigPackIDTimeout
 		} else {
@@ -195,10 +166,8 @@ func (p *AggregatorContext) Reset() {
 }
 
 func (p *AggregatorContext) newLogGroup(pack string, topic string) *protocol.LogGroup {
-	// logGroup := p.f1(topic)
 	logGroup := &protocol.LogGroup{
-		// Logs:  make([]*protocol.Log, 0, p.MaxLogCount),
-		Logs:  make([]*protocol.Log, 0, 256),
+		Logs:  make([]*protocol.Log, 0, p.MaxLogCount),
 		Topic: topic,
 	}
 	info := p.packIDMap[pack]
@@ -216,13 +185,6 @@ func (p *AggregatorContext) newLogGroup(pack string, topic string) *protocol.Log
 	return logGroup
 }
 
-// func (p *AggregatorContext) f1(topic string) *protocol.LogGroup {
-// 	return &protocol.LogGroup{
-// 		Logs:  make([]*protocol.Log, 0, 128),
-// 		Topic: topic,
-// 	}
-// }
-
 func (*AggregatorContext) evaluateLogSize(log *protocol.Log) int {
 	var logSize = 6
 	for _, logC := range log.Contents {
@@ -234,15 +196,15 @@ func (*AggregatorContext) evaluateLogSize(log *protocol.Log) int {
 // NewAggregatorContext create a default aggregator with default value.
 func NewAggregatorContext() *AggregatorContext {
 	return &AggregatorContext{
-		MaxLogGroupCount:            4,
-		MaxLogCount:                 MaxLogCount,
-		ContextPresevationTolerance: 10,
-		PackFlag:                    true,
-		logGroupPoolMap:             make(map[string][]*protocol.LogGroup),
-		nowLogGroupSizeMap:          make(map[string]int),
-		packIDMap:                   make(map[string]*LogPackSeqInfo),
-		packIDMapCleanInterval:      time.Duration(600) * time.Second,
-		lock:                        &sync.Mutex{},
+		MaxLogGroupCount:                 2,
+		MaxLogCount:                      MaxLogCount,
+		ContextPreservationToleranceSize: 10,
+		PackFlag:                         true,
+		logGroupPoolMap:                  make(map[string][]*protocol.LogGroup),
+		nowLogGroupSizeMap:               make(map[string]int),
+		packIDMap:                        make(map[string]*LogPackSeqInfo),
+		packIDMapCleanInterval:           time.Duration(600) * time.Second,
+		lock:                             &sync.Mutex{},
 	}
 }
 
