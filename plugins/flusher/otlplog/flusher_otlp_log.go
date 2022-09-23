@@ -123,11 +123,6 @@ func (f *FlusherOTLPLog) enhanceContext(ctx context.Context) context.Context {
 	return ctx
 }
 
-func (f *FlusherOTLPLog) convert(logGroup *protocol.LogGroup) ([]interface{}, error) {
-
-	return nil, nil
-}
-
 func (f *FlusherOTLPLog) SetUrgent(flag bool) {
 }
 
