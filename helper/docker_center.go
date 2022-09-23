@@ -1059,7 +1059,7 @@ func (dc *DockerCenter) cleanTimeoutContainer() {
 	hasDelete := false
 	for key, container := range dc.containerMap {
 		// Comfirm to delete:
-		// 1. If the container's update time is newer than the time of last success fetch all.
+		// 1. The container is marked deleted for a while.
 		// 2. The time of last success fetch all is too old.
 		if container.IsTimeout() {
 			logger.Debugf(context.Background(), "delete container: id=%v name=%v created=%v status=%v detail=%+v",
