@@ -50,7 +50,7 @@ func GetDecoder(format string) (Decoder, error) {
 		return &statsd.Decoder{
 			Time: time.Now(),
 		}, nil
-	case "otlplog":
+	case "otlp_logv1":
 		return &opentelemetry.Decoder{}, nil
 	}
 	return nil, errDecoderNotFound
