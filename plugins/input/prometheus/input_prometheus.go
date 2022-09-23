@@ -46,12 +46,12 @@ type ServiceStaticPrometheus struct {
 	shutdown        chan struct{}
 	waitGroup       sync.WaitGroup
 	context         ilogtail.Context
-	clusterMode     bool
 	clusterReplicas int
 	clusterNum      int
 }
 
 func (p *ServiceStaticPrometheus) Init(context ilogtail.Context) (int, error) {
+	// check running with cluster mode
 	env := os.Getenv("ILOGTAIL_PROMETHEUS_CLUSTER_REPLICAS")
 	num := helper.ExtractStatefulSetNum(os.Getenv("POD_NAME"))
 	if env != "" && num != -1 {
