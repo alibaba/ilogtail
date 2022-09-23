@@ -1,9 +1,10 @@
-# Copyright 2018 The Prometheus Authors
+# Copyright 2022 iLogtail Authors
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -11,21 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include Makefile.common
+cmake_minimum_required(VERSION 2.8)
+project(log_file_reader_unittest)
 
-%/.unpacked: %.ttar
-	@echo ">> extracting fixtures"
-	./ttar -C $(dir $*) -x -f $*.ttar
-	touch $@
-
-fixtures: fixtures/.unpacked
-
-update_fixtures:
-	rm -vf fixtures/.unpacked
-	./ttar -c -f fixtures.ttar fixtures/
-
-.PHONY: build
-build:
-
-.PHONY: test
-test: fixtures/.unpacked common-test
+add_executable(log_file_reader_deleted_file_unittest DeletedFileUnittest.cpp)
+target_link_libraries(log_file_reader_deleted_file_unittest unittest_base)
