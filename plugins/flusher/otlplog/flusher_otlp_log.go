@@ -16,6 +16,7 @@ package otlplog
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	otlpv1 "go.opentelemetry.io/proto/otlp/collector/logs/v1"
@@ -32,8 +33,13 @@ import (
 	"github.com/alibaba/ilogtail/helper"
 )
 
+type Version string
+
+var v1 Version = "v1"
+
 type FlusherOTLPLog struct {
 	GrpcConfig *helper.GrpcClientConfig `json:"grpc"`
+	Version    Version                  `json:"version"`
 
 	converter *converter.Converter
 	metadata  metadata.MD
@@ -49,7 +55,7 @@ func (f *FlusherOTLPLog) Description() string {
 func (f *FlusherOTLPLog) Init(context ilogtail.Context) error {
 	f.context = context
 	logger.Info(f.context.GetRuntimeContext(), "otlplog flusher init", "initializing")
-	convert, err := converter.NewConverter(converter.ProtocolOtlpLog, converter.EncodingNone, map[string]string{}, map[string]string{})
+	convert, err := f.getConverter()
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp_log converter fail, error", err)
 		return err
@@ -70,6 +76,15 @@ func (f *FlusherOTLPLog) Init(context ilogtail.Context) error {
 	f.logClient = otlpv1.NewLogsServiceClient(f.grpcConn)
 	logger.Info(f.context.GetRuntimeContext(), "otlplog flusher init", "initialized")
 	return nil
+}
+
+func (f *FlusherOTLPLog) getConverter() (*converter.Converter, error) {
+	switch f.Version {
+	case v1:
+		return converter.NewConverter(converter.ProtocolOtlpLogV1, converter.EncodingNone, nil, nil)
+	default:
+		return nil, fmt.Errorf("unsupported otlp log protocol version : %s", f.Version)
+	}
 }
 
 func (f *FlusherOTLPLog) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
@@ -146,6 +161,6 @@ func (f *FlusherOTLPLog) Stop() error {
 
 func init() {
 	ilogtail.Flushers["flusher_otlp_log"] = func() ilogtail.Flusher {
-		return &FlusherOTLPLog{}
+		return &FlusherOTLPLog{Version: v1}
 	}
 }

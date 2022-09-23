@@ -18,9 +18,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/alibaba/ilogtail/pkg/flags"
 	. "github.com/smartystreets/goconvey/convey"
 
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 

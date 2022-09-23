@@ -24,25 +24,38 @@ import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-func (c *Converter) ConvertToOtlpLogs(logGroup *protocol.LogGroup, targetFields []string) (*logv1.ResourceLogs, [][]string, error) {
+var (
+	bodyKey = "content"
+)
+
+func (c *Converter) ConvertToOtlpLogsV1(logGroup *protocol.LogGroup, targetFields []string) (*logv1.ResourceLogs, [][]string, error) {
 	desiredValues := make([][]string, len(logGroup.Logs))
 	attrs := make([]*commonv1.KeyValue, 0)
-	attrs = append(attrs, c.convertToOtlpKeyValue("source", logGroup.Source), c.convertToOtlpKeyValue("topic", logGroup.Topic), c.convertToOtlpKeyValue("machine_uuid", logGroup.MachineUUID))
+	attrs = append(attrs, c.convertToOtlpKeyValue("source", logGroup.GetSource()), c.convertToOtlpKeyValue("topic", logGroup.GetTopic()), c.convertToOtlpKeyValue("machine_uuid", logGroup.GetMachineUUID()))
 	for _, t := range logGroup.LogTags {
 		attrs = append(attrs, c.convertToOtlpKeyValue(t.Key, t.Value))
 	}
 	logRecords := make([]*logv1.LogRecord, len(logGroup.Logs))
-	for _, log := range logGroup.Logs {
+	for i, log := range logGroup.Logs {
 		contents, tags := convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic, c.TagKeyRenameMap)
+		desiredValue, err := findTargetValues(targetFields, contents, tags, c.TagKeyRenameMap)
+		if err != nil {
+			return nil, nil, err
+		}
+		desiredValues[i] = desiredValue
+
 		logAttrs := make([]*commonv1.KeyValue, len(tags))
 		for k, v := range tags {
 			logAttrs = append(logAttrs, c.convertToOtlpKeyValue(k, v))
 		}
-		logRecords = append(logRecords, &logv1.LogRecord{
+		logRecord := &logv1.LogRecord{
 			TimeUnixNano: uint64(log.Time) * uint64(time.Second),
-			Body:         &commonv1.AnyValue{Value: &commonv1.AnyValue_StringValue{StringValue: contents["content"]}},
 			Attributes:   logAttrs,
-		})
+		}
+		if body, has := contents[bodyKey]; has {
+			logRecord.Body = &commonv1.AnyValue{Value: &commonv1.AnyValue_StringValue{StringValue: body}}
+		}
+		logRecords = append(logRecords, logRecord)
 	}
 	instrumentLogs := []*logv1.ScopeLogs{{
 		Scope:      &commonv1.InstrumentationScope{},
