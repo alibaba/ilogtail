@@ -32,12 +32,12 @@ const (
 
 // Decoder impl
 type Decoder struct {
+	Format string
 }
 
 // Decode impl
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
-	reqURI := req.RequestURI
-	if "/v1/logs" == reqURI {
+	if common.ProtocolOTLPLogV1 == d.Format {
 		otlpLogReq := plogotlp.NewRequest()
 		switch req.Header.Get("Content-Type") {
 		case pbContentType:

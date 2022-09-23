@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/decoder/influxdb"
 	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
 	"github.com/alibaba/ilogtail/helper/decoder/prometheus"
@@ -40,18 +41,18 @@ var errDecoderNotFound = errors.New("no such decoder")
 // GetDecoder return a new decoder for specific format
 func GetDecoder(format string) (Decoder, error) {
 	switch strings.TrimSpace(strings.ToLower(format)) {
-	case "sls":
+	case common.ProtocolSLS:
 		return &sls.Decoder{}, nil
-	case "prometheus":
+	case common.ProtocolPrometheus:
 		return &prometheus.Decoder{}, nil
-	case "influx", "influxdb":
+	case common.ProtocolInflux, common.ProtocolInfluxdb:
 		return &influxdb.Decoder{}, nil
-	case "statsd":
+	case common.ProtocolStatsd:
 		return &statsd.Decoder{
 			Time: time.Now(),
 		}, nil
-	case "otlp_logv1":
-		return &opentelemetry.Decoder{}, nil
+	case common.ProtocolOTLPLogV1:
+		return &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, nil
 	}
 	return nil, errDecoderNotFound
 }

@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,8 +29,7 @@ var textFormat = `{"resourceLogs":[{"resource":{"attributes":[{"key":"service.na
 func TestNormal(t *testing.T) {
 	httpReq, _ := http.NewRequest("Post", "", nil)
 	httpReq.Header.Set("Content-Type", jsonContentType)
-	httpReq.RequestURI = "/v1/logs"
-	decoder := &Decoder{}
+	decoder := &Decoder{Format: common.ProtocolOTLPLogV1}
 
 	logs, err := decoder.Decode([]byte(textFormat), httpReq)
 	assert.Nil(t, err)
