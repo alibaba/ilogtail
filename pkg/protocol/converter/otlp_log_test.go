@@ -57,7 +57,7 @@ func TestNewConvertToOtlpLogs(t *testing.T) {
 				convey.Convey("Then the LogRecords should be valid", func() {
 					for _, scope := range resourceLogs.ScopeLogs {
 						convey.So(2, convey.ShouldEqual, len(scope.LogRecords))
-						for i, _ := range scope.LogRecords {
+						for i := range scope.LogRecords {
 							convey.So(logs[i].Contents[4].Value, convey.ShouldEqual, scope.LogRecords[i].Body.GetStringValue())
 						}
 					}

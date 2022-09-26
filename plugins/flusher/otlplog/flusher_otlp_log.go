@@ -52,8 +52,8 @@ func (f *FlusherOTLPLog) Description() string {
 	return "OTLP Log flusher for logtail"
 }
 
-func (f *FlusherOTLPLog) Init(context ilogtail.Context) error {
-	f.context = context
+func (f *FlusherOTLPLog) Init(ctx ilogtail.Context) error {
+	f.context = ctx
 	logger.Info(f.context.GetRuntimeContext(), "otlplog flusher init", "initializing")
 	convert, err := f.getConverter()
 	if err != nil {
@@ -62,13 +62,22 @@ func (f *FlusherOTLPLog) Init(context ilogtail.Context) error {
 	}
 	f.converter = convert
 
+	if f.GrpcConfig == nil {
+		err = fmt.Errorf("GrpcConfig cannit be nil")
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp_log converter fail, error", err)
+		return err
+	}
+
 	opts, err := f.GrpcConfig.GetOptions()
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init gRPC client options fail, error", err)
 		return err
 	}
 	logger.Info(f.context.GetRuntimeContext(), "otlplog flusher init", "initializing gRPC conn", "endpoint", f.GrpcConfig.GetEndpoint())
-	if f.grpcConn, err = grpc.DialContext(f.context.GetRuntimeContext(), f.GrpcConfig.GetEndpoint(), opts...); err != nil {
+	timeout, canal := context.WithTimeout(context.Background(), f.GrpcConfig.GetTimeout())
+	defer canal()
+
+	if f.grpcConn, err = grpc.DialContext(timeout, f.GrpcConfig.GetEndpoint(), opts...); err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlplog gRPC conn fail, error", err)
 		return err
 	}
@@ -88,6 +97,14 @@ func (f *FlusherOTLPLog) getConverter() (*converter.Converter, error) {
 }
 
 func (f *FlusherOTLPLog) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+	request := f.convertLogGroupToRequest(logGroupList)
+	if !f.GrpcConfig.Retry.Enable {
+		return f.flush(request)
+	}
+	return f.flushWithRetry(request)
+}
+
+func (f *FlusherOTLPLog) convertLogGroupToRequest(logGroupList []*protocol.LogGroup) *otlpv1.ExportLogsServiceRequest {
 	resourceLogs := make([]*logv1.ResourceLogs, 0)
 	for _, logGroup := range logGroupList {
 		c, _ := f.converter.Do(logGroup)
@@ -95,34 +112,34 @@ func (f *FlusherOTLPLog) Flush(projectName string, logstoreName string, configNa
 			resourceLogs = append(resourceLogs, log)
 		}
 	}
-	request := &otlpv1.ExportLogsServiceRequest{
+	return &otlpv1.ExportLogsServiceRequest{
 		ResourceLogs: resourceLogs,
 	}
-	if !f.GrpcConfig.Retry.Enable {
-		f.flush(request)
-	} else {
-		f.flushWithRetry(request)
+}
+
+func (f *FlusherOTLPLog) flush(request *otlpv1.ExportLogsServiceRequest) error {
+	timeout, canal := context.WithTimeout(f.withMetadata(), f.GrpcConfig.GetTimeout())
+	defer canal()
+	if _, err := f.logClient.Export(timeout, request); err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, error", err)
+		return err
 	}
 	return nil
 }
 
-func (f *FlusherOTLPLog) flush(request *otlpv1.ExportLogsServiceRequest) {
-	if _, err := f.logClient.Export(f.enhanceContext(f.context.GetRuntimeContext()), request); err != nil {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, error", err)
-	}
-}
-
-func (f *FlusherOTLPLog) flushWithRetry(request *otlpv1.ExportLogsServiceRequest) {
+func (f *FlusherOTLPLog) flushWithRetry(request *otlpv1.ExportLogsServiceRequest) error {
 	var retryNum = 0
+	timeout, canal := context.WithTimeout(f.withMetadata(), f.GrpcConfig.GetTimeout())
+	defer canal()
 	for {
-		_, err := f.logClient.Export(f.enhanceContext(f.context.GetRuntimeContext()), request)
+		_, err := f.logClient.Export(timeout, request)
 		if err == nil {
-			return
+			return nil
 		}
 		retry := helper.GetRetryInfo(err)
 		if retry == nil || retryNum >= f.GrpcConfig.Retry.MaxCount {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, error", err)
-			return
+			return err
 		}
 		logger.Warning(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlplog server fail, will retry...")
 		retryNum++
@@ -130,12 +147,12 @@ func (f *FlusherOTLPLog) flushWithRetry(request *otlpv1.ExportLogsServiceRequest
 	}
 }
 
-// append metadata to context. refer to https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/otlpexporter/otlp.go#L121
-func (f *FlusherOTLPLog) enhanceContext(ctx context.Context) context.Context {
+// append withMetadata to context. refer to https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/otlpexporter/otlp.go#L121
+func (f *FlusherOTLPLog) withMetadata() context.Context {
 	if f.metadata.Len() > 0 {
-		return metadata.NewOutgoingContext(ctx, f.metadata)
+		return metadata.NewOutgoingContext(context.Background(), f.metadata)
 	}
-	return ctx
+	return context.Background()
 }
 
 func (f *FlusherOTLPLog) SetUrgent(flag bool) {

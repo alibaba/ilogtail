@@ -25,7 +25,8 @@ import (
 )
 
 var (
-	bodyKey = "content"
+	bodyKey  = "content"
+	levelKey = "level"
 )
 
 func (c *Converter) ConvertToOtlpLogsV1(logGroup *protocol.LogGroup, targetFields []string) (*logv1.ResourceLogs, [][]string, error) {
@@ -54,12 +55,19 @@ func (c *Converter) ConvertToOtlpLogsV1(logGroup *protocol.LogGroup, targetField
 			logAttrs = append(logAttrs, c.convertToOtlpKeyValue(k, v))
 		}
 		logRecord := &logv1.LogRecord{
-			TimeUnixNano: uint64(log.Time) * uint64(time.Second),
-			Attributes:   logAttrs,
+			TimeUnixNano:         uint64(log.Time) * uint64(time.Second),
+			ObservedTimeUnixNano: uint64(log.Time) * uint64(time.Second),
+			Attributes:           logAttrs,
 		}
 		if body, has := contents[bodyKey]; has {
 			logRecord.Body = &commonv1.AnyValue{Value: &commonv1.AnyValue_StringValue{StringValue: body}}
 		}
+		if level, has := contents[levelKey]; has {
+			logRecord.SeverityText = level
+		} else if level, has = tags[level]; has {
+			logRecord.SeverityText = level
+		}
+
 		logRecords = append(logRecords, logRecord)
 	}
 	instrumentLogs := []*logv1.ScopeLogs{{
