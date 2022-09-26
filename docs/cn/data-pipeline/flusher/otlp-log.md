@@ -28,5 +28,9 @@ inputs:
 flushers:
   - Type: flusher_otlp_log
     Grpc:
-        
+      Endpoint: http://192.168.xx.xx:8176
+      Headers:
+        X-AppKey: 8bc8f787-b0b2-4f26-89c6-d3950a090fef
+      Retry:
+        MaxCount: 3
 ```
