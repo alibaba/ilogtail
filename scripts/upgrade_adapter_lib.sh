@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright 2021 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:latest as build
+set -ue
+set -o pipefail
 
-WORKDIR /src
+OS_FLAG=0
+function os() {
+  if uname -s | grep Darwin; then
+    OS_FLAG=2
+  elif uname -s | grep Linux; then
+    OS_FLAG=1
+  else
+    OS_FLAG=3
+  fi
+}
 
-COPY . .
+os
 
-ARG HOST_OS=Linux
-ARG VERSION=1.2.0
+ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
+SOURCEDIR="core/build/plugin"
+[[ $# -eq 2 ]] && SOURCEDIR="$1" || :
 
-RUN sudo chown -R $(whoami) /src /opt/logtail && sh generated_files/gen_build.sh
+if [ $OS_FLAG = 1 ]; then
+  cp ${ROOTDIR}/core/build/plugin/libPluginAdapter.so ${ROOTDIR}/pkg/logtail/libPluginAdapter.so
+  cp ${ROOTDIR}/core/build/plugin/libPluginAdapter.so ${ROOTDIR}/vendor/github.com/alibaba/ilogtail/pkg/logtail/libPluginAdapter.so
+fi

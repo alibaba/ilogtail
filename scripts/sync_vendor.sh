@@ -1,4 +1,5 @@
-# Copyright 2021 iLogtail Authors
+#!/bin/sh
+# Copyright 2022 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# goc server is only for e2e test to analysis code coverage.
+set -ue
+set -o pipefail
 
-FROM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux:latest as build
+# intialize variables
+EXTERNAL_DIR=${1:-external}
+VENDOR_DIR=${2:-vendor}
+ROOT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
 
-USER root
-ENTRYPOINT ["goc","server"]
+for dir in $(ls $ROOT_DIR/$EXTERNAL_DIR)
+do
+  cp -r "${ROOT_DIR}/${EXTERNAL_DIR}/${dir}" "${ROOT_DIR}/${VENDOR_DIR}/"
+done

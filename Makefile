@@ -13,7 +13,7 @@
 # limitations under the License.
 
 .DEFAULT_GOAL := all
-VERSION ?= 1.1.2
+VERSION ?= 1.2.0
 DOCKER_PUSH ?= false
 DOCKER_REPOSITORY ?= aliyun/ilogtail
 BUILD_REPOSITORY ?= aliyun/ilogtail_build
@@ -44,6 +44,8 @@ GO_BUILD_FLAGS = -v
 LICENSE_COVERAGE_FILE=license_coverage.txt
 OUT_DIR = output
 DIST_DIR = ilogtail-$(VERSION)
+VENDOR_DIR = vendor
+EXTERNAL_DIR = external
 
 .PHONY: tools
 tools:
@@ -60,6 +62,10 @@ clean:
 	rm -rf e2e-engine-coverage.txt
 	rm -rf find_licenses
 	rm -rf $(GENERATED_HOME)
+	rm -rf .testCoverage.txt
+	rm -rf .coretestCoverage.txt
+	rm -rf plugin_main/*.dll
+	rm -rf plugin_main/*.so
 
 .PHONY: license
 license:  clean tools
@@ -93,6 +99,10 @@ plugin: clean
 	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
 	./$(GENERATED_HOME)/gen_copy_docker.sh
 
+.PHONY: upgrade_adapter_lib
+upgrade_adapter_lib:
+	./scripts/upgrade_adapter_lib.sh ${OUT_DIR}
+
 .PHONY: plugin_main
 plugin_main: clean
 	./scripts/plugin_build.sh vendor default $(OUT_DIR)
@@ -117,7 +127,7 @@ gocdocker: clean
 vendor: clean
 	rm -rf vendor
 	$(GO) mod vendor
-	python3 ./external/sync_vendor.py
+	./scripts/sync_vendor.sh $(EXTERNAL_DIR) $(VENDOR_DIR)
 
 .PHONY: check-dependency-licenses
 check-dependency-licenses: clean
@@ -155,6 +165,7 @@ unittest_plugin: clean
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
 	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|(input\/prometheus)|(input\/syslog)"| grep -Ev "plugin_main|pluginmanager") -coverprofile .testCoverage.txt
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
+	rm -rf plugins/input/jmxfetch/test/
 
 .PHONY: unittest_pluginmanager
 unittest_pluginmanager: clean
