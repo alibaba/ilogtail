@@ -25,7 +25,8 @@ import (
 )
 
 var (
-	bodyKey = "content"
+	bodyKey  = "content"
+	levelKey = "level"
 )
 
 func (c *Converter) ConvertToOtlpLogsV1(logGroup *protocol.LogGroup, targetFields []string) (*logv1.ResourceLogs, [][]string, error) {
@@ -35,7 +36,7 @@ func (c *Converter) ConvertToOtlpLogsV1(logGroup *protocol.LogGroup, targetField
 	for _, t := range logGroup.LogTags {
 		attrs = append(attrs, c.convertToOtlpKeyValue(t.Key, t.Value))
 	}
-	logRecords := make([]*logv1.LogRecord, len(logGroup.Logs))
+	logRecords := make([]*logv1.LogRecord, 0)
 	for i, log := range logGroup.Logs {
 		contents, tags := convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic, c.TagKeyRenameMap)
 		desiredValue, err := findTargetValues(targetFields, contents, tags, c.TagKeyRenameMap)
@@ -44,17 +45,29 @@ func (c *Converter) ConvertToOtlpLogsV1(logGroup *protocol.LogGroup, targetField
 		}
 		desiredValues[i] = desiredValue
 
-		logAttrs := make([]*commonv1.KeyValue, len(tags))
+		logAttrs := make([]*commonv1.KeyValue, 0)
+		for k, v := range contents {
+			if k != bodyKey {
+				logAttrs = append(logAttrs, c.convertToOtlpKeyValue(k, v))
+			}
+		}
 		for k, v := range tags {
 			logAttrs = append(logAttrs, c.convertToOtlpKeyValue(k, v))
 		}
 		logRecord := &logv1.LogRecord{
-			TimeUnixNano: uint64(log.Time) * uint64(time.Second),
-			Attributes:   logAttrs,
+			TimeUnixNano:         uint64(log.Time) * uint64(time.Second),
+			ObservedTimeUnixNano: uint64(log.Time) * uint64(time.Second),
+			Attributes:           logAttrs,
 		}
 		if body, has := contents[bodyKey]; has {
 			logRecord.Body = &commonv1.AnyValue{Value: &commonv1.AnyValue_StringValue{StringValue: body}}
 		}
+		if level, has := contents[levelKey]; has {
+			logRecord.SeverityText = level
+		} else if level, has = tags[level]; has {
+			logRecord.SeverityText = level
+		}
+
 		logRecords = append(logRecords, logRecord)
 	}
 	instrumentLogs := []*logv1.ScopeLogs{{

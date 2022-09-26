@@ -56,15 +56,15 @@ type GrpcClientConfig struct {
 	WriteBufferSize int
 
 	// Send retry setting
-	Retry RetryConfig `json:"retry"`
+	Retry RetryConfig `json:"Retry"`
 
-	Timeout time.Duration `json:"timeout"`
+	Timeout time.Duration `json:"Timeout"`
 }
 
 type RetryConfig struct {
 	Enable       bool
-	MaxCount     int           `json:"max_count"`
-	DefaultDelay time.Duration `json:"default_delay"`
+	MaxCount     int           `json:"MaxCount"`
+	DefaultDelay time.Duration `json:"DefaultDelay"`
 }
 
 // GetOptions maps GrpcClientConfig to a slice of dial options for gRPC.

@@ -38,8 +38,8 @@ type Version string
 var v1 Version = "v1"
 
 type FlusherOTLPLog struct {
-	GrpcConfig *helper.GrpcClientConfig `json:"grpc"`
-	Version    Version                  `json:"version"`
+	GrpcConfig *helper.GrpcClientConfig `json:"Grpc"`
+	Version    Version                  `json:"Version"`
 
 	converter *converter.Converter
 	metadata  metadata.MD
