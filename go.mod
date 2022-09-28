@@ -40,8 +40,6 @@ require (
 	github.com/paulbellamy/ratecounter v0.2.1-0.20170719102518-a803f0e4f071
 	github.com/pierrec/lz4 v2.6.0+incompatible
 	github.com/pingcap/check v0.0.0-20200212061837-5e12011dc712
-	github.com/pingcap/errors v0.11.5-0.20201126102027-b0a155152ca3
-	github.com/pingcap/parser v0.0.0-20210415081931-48e7f467fd74
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/common v0.30.0
 	github.com/prometheus/procfs v0.7.3
@@ -74,7 +72,10 @@ require (
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/sys/signal v0.6.0 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
+	github.com/pingcap/errors v0.11.5-0.20201126102027-b0a155152ca3 // indirect
+	github.com/pingcap/parser v0.0.0-20210415081931-48e7f467fd74 // indirect
 	github.com/prometheus/client_golang v1.11.1 // indirect
+	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/stefanberger/go-pkcs11uri v0.0.0-20201008174630-78d3cae3a980 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/tklauser/numcpus v0.4.0 // indirect
@@ -82,7 +83,6 @@ require (
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	k8s.io/component-base v0.22.5 // indirect
-	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 )
 
 require (
@@ -219,6 +219,7 @@ replace (
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner => ./external/github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner
 	github.com/elastic/beats/v7 => ./external/github.com/elastic/beats/v7
 	github.com/jeromer/syslogparser => ./external/github.com/jeromer/syslogparser
+	github.com/pingcap/parser => github.com/iLogtail/parser v1.0.1
 	github.com/satori/go.uuid => github.com/satori/go.uuid v1.2.0
 	github.com/siddontang/go-mysql => github.com/iLogtail/go-mysql v1.0.0
 )
