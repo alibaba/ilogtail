@@ -60,8 +60,6 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 }
 
 func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.Request) (logs []*protocol.Log, err error) {
-	//data, _ := json.Marshal(otlpLogReq)
-	//fmt.Printf(string(data))
 	resLogs := otlpLogReq.Logs().ResourceLogs()
 	for i := 0; i < resLogs.Len(); i++ {
 		resourceLog := resLogs.At(i)

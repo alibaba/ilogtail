@@ -37,5 +37,5 @@ func TestNormal(t *testing.T) {
 	log := logs[1]
 	assert.Equal(t, int(log.Time), 1663904182)
 	data, _ := json.Marshal(logs)
-	fmt.Printf(string(data))
+	fmt.Printf("%s\n", string(data))
 }
