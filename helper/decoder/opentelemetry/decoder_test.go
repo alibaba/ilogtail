@@ -20,8 +20,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/alibaba/ilogtail/helper/decoder/common"
 )
 
 var textFormat = `{"resourceLogs":[{"resource":{"attributes":[{"key":"service.name","value":{"stringValue":"OtlpExporterExample"}},{"key":"telemetry.sdk.language","value":{"stringValue":"java"}},{"key":"telemetry.sdk.name","value":{"stringValue":"opentelemetry"}},{"key":"telemetry.sdk.version","value":{"stringValue":"1.18.0"}}]},"scopeLogs":[{"scope":{"name":"io.opentelemetry.example"},"logRecords":[{"timeUnixNano":"1663904182348000000","severityNumber":9,"severityText":"INFO","body":{"stringValue":"log body1"},"attributes":[{"key":"k1","value":{"stringValue":"v1"}},{"key":"k2","value":{"stringValue":"v2"}}],"traceId":"","spanId":""},{"timeUnixNano":"1663904182348000000","severityNumber":9,"severityText":"INFO","body":{"stringValue":"log body2"},"attributes":[{"key":"k1","value":{"stringValue":"v1"}},{"key":"k2","value":{"stringValue":"v2"}}],"traceId":"","spanId":""}]}]}]}`
