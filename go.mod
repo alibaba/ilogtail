@@ -46,7 +46,6 @@ require (
 	github.com/prometheus/common v0.30.0
 	github.com/prometheus/procfs v0.7.3
 	github.com/shirou/gopsutil v3.21.3+incompatible
-	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
 	github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/goconvey v1.7.2
@@ -83,6 +82,7 @@ require (
 	github.com/vishvananda/netns v0.0.0-20210104183010-2eb08e3e575f // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	k8s.io/component-base v0.22.5 // indirect
+	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 )
 
 require (
@@ -220,4 +220,5 @@ replace (
 	github.com/elastic/beats/v7 => ./external/github.com/elastic/beats/v7
 	github.com/jeromer/syslogparser => ./external/github.com/jeromer/syslogparser
 	github.com/satori/go.uuid => github.com/satori/go.uuid v1.2.0
+	github.com/siddontang/go-mysql => github.com/iLogtail/go-mysql v1.0.0
 )

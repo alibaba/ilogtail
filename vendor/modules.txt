@@ -804,7 +804,7 @@ github.com/siddontang/go/hack
 ## explicit
 github.com/siddontang/go-log/log
 github.com/siddontang/go-log/loggers
-# github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba
+# github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba => github.com/iLogtail/go-mysql v1.0.0
 ## explicit
 github.com/siddontang/go-mysql/client
 github.com/siddontang/go-mysql/mysql
@@ -1490,3 +1490,4 @@ sigs.k8s.io/yaml
 # github.com/elastic/beats/v7 => ./external/github.com/elastic/beats/v7
 # github.com/jeromer/syslogparser => ./external/github.com/jeromer/syslogparser
 # github.com/satori/go.uuid => github.com/satori/go.uuid v1.2.0
+# github.com/siddontang/go-mysql => github.com/iLogtail/go-mysql v1.0.0
