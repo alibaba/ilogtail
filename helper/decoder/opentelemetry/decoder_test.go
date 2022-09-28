@@ -37,6 +37,15 @@ func TestNormal(t *testing.T) {
 	assert.Equal(t, len(logs), 2)
 	log := logs[1]
 	assert.Equal(t, int(log.Time), 1663904182)
+	for _, cont := range log.Contents {
+		if cont.Key == "attributes" {
+			assert.NotEmpty(t, cont.Value)
+		} else if cont.Key == "resources" {
+			assert.NotEmpty(t, cont.Value)
+		}
+	}
 	data, _ := json.Marshal(logs)
 	fmt.Printf("%s\n", string(data))
+	data = []byte("")
+	fmt.Printf("empty = [%s]\n", string(data))
 }

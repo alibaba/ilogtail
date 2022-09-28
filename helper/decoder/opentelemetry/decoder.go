@@ -91,21 +91,21 @@ func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.Request) (logs []*protoco
 				}
 
 				if logRecord.Attributes().Len() != 0 {
-					d, _ := json.Marshal(logRecord.Attributes().AsRaw())
-
-					protoContents = append(protoContents, &protocol.Log_Content{
-						Key:   "attributes",
-						Value: string(d),
-					})
+					if d, err := json.Marshal(logRecord.Attributes().AsRaw()); err == nil {
+						protoContents = append(protoContents, &protocol.Log_Content{
+							Key:   "attributes",
+							Value: string(d),
+						})
+					}
 				}
 
 				if resourceLog.Resource().Attributes().Len() != 0 {
-					d, _ := json.Marshal(resourceLog.Resource().Attributes().AsRaw())
-
-					protoContents = append(protoContents, &protocol.Log_Content{
-						Key:   "resources",
-						Value: string(d),
-					})
+					if d, err := json.Marshal(resourceLog.Resource().Attributes().AsRaw()); err == nil {
+						protoContents = append(protoContents, &protocol.Log_Content{
+							Key:   "resources",
+							Value: string(d),
+						})
+					}
 				}
 
 				protoLog := &protocol.Log{
