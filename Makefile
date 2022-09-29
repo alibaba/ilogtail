@@ -106,13 +106,13 @@ upgrade_adapter_lib:
 
 .PHONY: plugin_main
 plugin_main: clean
-	./scripts/plugin_build.sh vendor default $(OUT_DIR)
+	./scripts/plugin_build.sh mod default $(OUT_DIR)
 	cp pkg/logtail/libPluginAdapter.so $(OUT_DIR)/libPluginAdapter.so
 	cp pkg/logtail/PluginAdapter.dll $(OUT_DIR)/PluginAdapter.dll
 
 .PHONY: plugin_local
 plugin_local:
-	./scripts/plugin_build.sh vendor c-shared $(OUT_DIR)
+	./scripts/plugin_build.sh mod c-shared $(OUT_DIR)
 
 .PHONY: e2edocker
 e2edocker: clean
