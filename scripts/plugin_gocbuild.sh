@@ -35,7 +35,8 @@ cd "$ROOTDIR"/plugin_main
 pwd
 
 if uname -s | grep Linux; then
-  goc build '--buildflags=-mod=mod -buildmode=c-shared -ldflags="-extldflags "-Wl,--wrap=memcpy""' --center=http://goc:7777 -o "$ROOTDIR/$OUT_DIR/${NAME}"
+  go mod download
+  goc build '--buildflags=-mod=mod -buildmode=c-shared -ldflags="-extldflags "-Wl,--wrap=memcpy""' --center=http://goc:7777 -o "$ROOTDIR/$OUT_DIR/${NAME}" --debug
 else
   echo "goc build only build a dynamic library in linux platform"
   exit 1
