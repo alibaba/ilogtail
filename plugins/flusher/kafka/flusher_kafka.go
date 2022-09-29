@@ -15,12 +15,8 @@
 package kafka
 
 import (
-	cryptorand "crypto/rand"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"math"
-	"math/big"
 	"strings"
 	"time"
 
@@ -29,82 +25,18 @@ import (
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 )
 
 type FlusherKafka struct {
-	context   ilogtail.Context
-	converter *converter.Converter
-	// The list of kafka brokers
-	Brokers []string
-	// The name of the kafka topic
-	Topic string
-	// Kafka protocol version
-	Version Version
-	// The number of seconds to wait for responses from the Kafka brokers before timing out.
-	// The default is 30 (seconds).
-	Timeout time.Duration
-	// The username for connecting to Kafka.
-	SASLUsername string
-	// The password for connecting to Kafka.
-	SASLPassword string
-
-	// The SASL mechanism to use when connecting to Kafka
-	// example: Sasl.SaslMechanism: SCRAM-SHA-256
-	Sasl SaslConfig
-	// Kafka output broker event partitioning strategy.
-	// Must be one of random, round_robin, or hash. By default the random partitioner is used
+	context         ilogtail.Context
+	Brokers         []string
+	SASLUsername    string
+	SASLPassword    string
+	Topic           string
 	PartitionerType string
-	// Kafka metadata update settings.
-	Metadata metaConfig
-	// The keep-alive period for an active network connection.
-	// If 0s, keep-alives are disabled. The default is 0 seconds.
-	KeepAlive time.Duration
-	// The maximum number of messages the producer will send in a single
-	MaxMessageBytes *int
-	// RequiredAcks Number of acknowledgements required to assume that a message has been sent.
-	//   0 -> NoResponse.  doesn't send any response
-	//   1 -> WaitForLocal. waits for only the local commit to succeed before responding ( default )
-	//   -1 -> WaitForAll. waits for all in-sync replicas to commit before responding.
-	RequiredACKs *int
-	// The maximum duration a broker will wait for number of required ACKs.
-	// The default is 10s.
-	BrokerTimeout time.Duration
-	// Compression Codec used to produce messages
-	// The options are: 'none', 'gzip', 'snappy', 'lz4', and 'zstd'
-	Compression string
-	// Sets the compression level used by gzip. Setting this value to 0 disables compression.
-	// The compression level must be in the range of 1 (best speed) to 9 (best compression)
-	// The default value is 4.
-	CompressionLevel int
-
-	// The maximum number of events to bulk in a single Kafka request. The default is 2048.
-	BulkMaxSize int
-
-	// Duration to wait before sending bulk Kafka request. 0 is no delay. The default is 0.
-	BulkFlushFrequency time.Duration
-
-	MaxRetries int
-	// A header is a key-value pair, and multiple headers can be included with the same key.
-	// Only string values are supported
-	Headers []header
-
-	Backoff backoffConfig
-	// Per Kafka broker number of messages buffered in output pipeline. The default is 256
-	ChanBufferSize int
-	// Rename one or more fields from tags.
-	TagFieldsRename map[string]string
-	// Rename one or more fields, The protocol field options can only be: contents, tags, time
-	ProtocolFieldsRename map[string]string
-	// Kafka data writing mode, when FlusherMode=0, the log data written is a key value pair,
-	// for example: {"Time":1658828611,"Contents":[{"Key":"content","Value":"hello "}]}.
-	// When FlusherMode=1, the log data field written is horizontally expanded.
-	// for example: {"contents":{"level":"INFO","message":"hello",},"tags":{"host.name":"master"},"time":1664364993}
-	// For more convenient data processing, it is recommended to set flusherMode=1
-	FlusherMode int
-	HashKeys    []string
-	HashOnce    bool
-	ClientID    string
+	HashKeys        []string
+	HashOnce        bool
+	ClientID        string
 
 	isTerminal chan bool
 	producer   sarama.AsyncProducer
@@ -113,76 +45,8 @@ type FlusherKafka struct {
 	flusher    FlusherFunc
 }
 
-type backoffConfig struct {
-	// The number of seconds to wait before trying to republish to Kafka after a network error.
-	// After a successful publish, the backoff timer is reset. The default is 1s.
-	Init time.Duration
-	// The maximum number of seconds to wait before attempting to republish to Kafka after a network error.
-	// The default is 60s.
-	Max time.Duration
-}
-
-type header struct {
-	Key   string
-	Value string
-}
-
-type metaConfig struct {
-	Retry metaRetryConfig
-	// Metadata refresh interval. Defaults to 10 minutes.
-	RefreshFrequency time.Duration
-	// Strategy to use when fetching metadata,
-	// when this option is true, the client will maintain a full set of metadata for all the available topics
-	// if this option is set to false it will only refresh the metadata for the configured topics. The default is false.
-	Full bool
-}
-
-type metaRetryConfig struct {
-	// The total number of times to retry a metadata request when the
-	// cluster is in the middle of a leader election or at startup (default 3).
-	Max int
-	// How long to wait for leader election to occur before retrying
-	// default 250ms
-	Backoff time.Duration
-}
-
 type FlusherFunc func(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
 
-// NewKafkaFlush Kafka flusher default config
-func NewKafkaFlush() *FlusherKafka {
-	return &FlusherKafka{
-		Brokers:            nil,
-		ClientID:           "LogtailPlugin",
-		PartitionerType:    "random",
-		Timeout:            30 * time.Second,
-		BulkMaxSize:        2048,
-		BulkFlushFrequency: 0,
-		Metadata: metaConfig{
-			Retry: metaRetryConfig{
-				Max:     3,
-				Backoff: 250 * time.Millisecond,
-			},
-			RefreshFrequency: 10 * time.Minute,
-			Full:             false,
-		},
-		KeepAlive:        0,
-		MaxMessageBytes:  nil, // use library default
-		RequiredACKs:     nil, // use library default
-		BrokerTimeout:    10 * time.Second,
-		Compression:      "none",
-		CompressionLevel: 4,
-		Version:          "1.0.0",
-		MaxRetries:       3,
-		Headers:          nil,
-		Backoff: backoffConfig{
-			Init: 1 * time.Second,
-			Max:  60 * time.Second,
-		},
-		ChanBufferSize: 256,
-		SASLUsername:   "",
-		SASLPassword:   "",
-	}
-}
 func (k *FlusherKafka) Init(context ilogtail.Context) error {
 	k.context = context
 	if k.Brokers == nil || len(k.Brokers) == 0 {
@@ -190,20 +54,37 @@ func (k *FlusherKafka) Init(context ilogtail.Context) error {
 		logger.Error(k.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init kafka flusher fail, error", err)
 		return err
 	}
-	convert, err := k.getConverter()
-	if err != nil {
-		logger.Error(k.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init kafka flusher converter fail, error", err)
-		return err
+	config := sarama.NewConfig()
+	if len(k.SASLUsername) == 0 {
+		logger.Warning(k.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "SASL information is not set, access Kafka server without authentication")
+	} else {
+		config.Net.SASL.Enable = true
+		config.Net.SASL.User = k.SASLUsername
+		config.Net.SASL.Password = k.SASLPassword
 	}
-	k.converter = convert
-
-	saramaConfig, err := newSaramaConfig(k)
-	if err != nil {
-		logger.Error(k.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init kafka flusher fail, error", err)
-		return err
+	config.ClientID = k.ClientID
+	config.Producer.Return.Successes = true
+	// config.Producer.RequiredAcks = sarama.WaitForAll
+	partitioner := sarama.NewRandomPartitioner
+	switch k.PartitionerType {
+	case "roundrobin":
+		partitioner = sarama.NewRoundRobinPartitioner
+	case "hash":
+		partitioner = sarama.NewHashPartitioner
+		k.hashKeyMap = make(map[string]struct{})
+		k.hashKey = ""
+		for _, key := range k.HashKeys {
+			k.hashKeyMap[key] = struct{}{}
+		}
+		k.flusher = k.HashFlush
+	case "random":
+		partitioner = sarama.NewRandomPartitioner
+	default:
+		logger.Error(k.context.GetRuntimeContext(), "INVALID_KAFKA_PARTITIONER", "invalid PartitionerType, use RandomPartitioner instead, type", k.PartitionerType)
 	}
-
-	producer, err := sarama.NewAsyncProducer(k.Brokers, saramaConfig)
+	config.Producer.Partitioner = partitioner
+	config.Producer.Timeout = 5 * time.Second
+	producer, err := sarama.NewAsyncProducer(k.Brokers, config)
 	if err != nil {
 		logger.Error(k.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init kafka flusher fail, error", err)
 		return err
@@ -241,28 +122,16 @@ func (k *FlusherKafka) Flush(projectName string, logstoreName string, configName
 
 func (k *FlusherKafka) NormalFlush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
-		switch k.FlusherMode {
-		case 1:
-			for _, log := range logGroup.Logs {
-				convertedLog, topic, err := k.converter.ConvertToKafkaSingleLog(logGroup, log, k.Topic)
-				if err != nil {
-					logger.Error(k.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush kafka convert log and format topic fail, error", err)
-				}
-				m := &sarama.ProducerMessage{
-					Topic: *topic,
-					Value: sarama.ByteEncoder(convertedLog),
-				}
-				k.producer.Input() <- m
+		logger.Debug(k.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
+
+		for _, log := range logGroup.Logs {
+			buf, _ := json.Marshal(log)
+			logger.Debug(k.context.GetRuntimeContext(), string(buf))
+			m := &sarama.ProducerMessage{
+				Topic: k.Topic,
+				Value: sarama.ByteEncoder(buf),
 			}
-		default:
-			for _, log := range logGroup.Logs {
-				buf, _ := json.Marshal(log)
-				m := &sarama.ProducerMessage{
-					Topic: k.Topic,
-					Value: sarama.ByteEncoder(buf),
-				}
-				k.producer.Input() <- m
-			}
+			k.producer.Input() <- m
 		}
 	}
 	return nil
@@ -271,47 +140,24 @@ func (k *FlusherKafka) NormalFlush(projectName string, logstoreName string, conf
 func (k *FlusherKafka) HashFlush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		logger.Debug(k.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
-		switch k.FlusherMode {
-		case 1:
-			for _, log := range logGroup.Logs {
-				convertedLog, topic, err := k.converter.ConvertToKafkaSingleLog(logGroup, log, k.Topic)
-				if err != nil {
-					logger.Error(k.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush kafka convert log and format topic fail, error", err)
-				}
-				m := &sarama.ProducerMessage{
-					Topic: *topic,
-					Value: sarama.ByteEncoder(convertedLog),
-				}
-				// set key when partition type is hash
-				if k.HashOnce {
-					if len(k.hashKey) == 0 {
-						k.hashKey = k.hashPartitionKey(log, logstoreName)
-					}
-					m.Key = k.hashKey
-				} else {
-					m.Key = k.hashPartitionKey(log, logstoreName)
-				}
-				k.producer.Input() <- m
+
+		for _, log := range logGroup.Logs {
+			buf, _ := json.Marshal(log)
+			logger.Debug(k.context.GetRuntimeContext(), string(buf))
+			m := &sarama.ProducerMessage{
+				Topic: k.Topic,
+				Value: sarama.ByteEncoder(buf),
 			}
-		default:
-			for _, log := range logGroup.Logs {
-				buf, _ := json.Marshal(log)
-				logger.Debug(k.context.GetRuntimeContext(), string(buf))
-				m := &sarama.ProducerMessage{
-					Topic: k.Topic,
-					Value: sarama.ByteEncoder(buf),
+			// set key when partition type is hash
+			if k.HashOnce {
+				if len(k.hashKey) == 0 {
+					k.hashKey = k.hashPartitionKey(log, logstoreName)
 				}
-				// set key when partition type is hash
-				if k.HashOnce {
-					if len(k.hashKey) == 0 {
-						k.hashKey = k.hashPartitionKey(log, logstoreName)
-					}
-					m.Key = k.hashKey
-				} else {
-					m.Key = k.hashPartitionKey(log, logstoreName)
-				}
-				k.producer.Input() <- m
+				m.Key = k.hashKey
+			} else {
+				m.Key = k.hashPartitionKey(log, logstoreName)
 			}
+			k.producer.Input() <- m
 		}
 	}
 
@@ -347,174 +193,12 @@ func (k *FlusherKafka) Stop() error {
 	return err
 }
 
-func newSaramaConfig(config *FlusherKafka) (*sarama.Config, error) {
-	partitioner, err := makePartitioner(config)
-	if err != nil {
-		return nil, err
-	}
-
-	k := sarama.NewConfig()
-
-	// configure network level properties
-	timeout := config.Timeout
-	k.Net.DialTimeout = timeout
-	k.Net.ReadTimeout = timeout
-	k.Net.WriteTimeout = timeout
-	k.Net.KeepAlive = config.KeepAlive
-	k.Producer.Timeout = config.BrokerTimeout
-	k.Producer.CompressionLevel = config.CompressionLevel
-
-	if config.SASLUsername != "" {
-		k.Net.SASL.Enable = true
-		k.Net.SASL.User = config.SASLUsername
-		k.Net.SASL.Password = config.SASLPassword
-		config.Sasl.ConfigureSarama(k)
-	}
-
-	// configure metadata update properties
-	k.Metadata.Retry.Max = config.Metadata.Retry.Max
-	k.Metadata.Retry.Backoff = config.Metadata.Retry.Backoff
-	k.Metadata.RefreshFrequency = config.Metadata.RefreshFrequency
-	k.Metadata.Full = config.Metadata.Full
-
-	// configure producer API properties
-	if config.MaxMessageBytes != nil {
-		k.Producer.MaxMessageBytes = *config.MaxMessageBytes
-	}
-	if config.RequiredACKs != nil {
-		k.Producer.RequiredAcks = sarama.RequiredAcks(*config.RequiredACKs)
-	}
-
-	compressionMode, err := saramaProducerCompressionCodec(strings.ToLower(config.Compression))
-	if err != nil {
-		return nil, err
-	}
-	k.Producer.Compression = compressionMode
-
-	k.Producer.Return.Successes = true // enable return channel for signaling
-	k.Producer.Return.Errors = true
-
-	retryMax := config.MaxRetries
-	if retryMax < 0 {
-		retryMax = 1000
-	}
-	k.Producer.Retry.Max = retryMax
-	k.Producer.Retry.BackoffFunc = makeBackoffFunc(config.Backoff)
-
-	// configure per broker go channel buffering
-	k.ChannelBufferSize = config.ChanBufferSize
-
-	// configure bulk size
-	k.Producer.Flush.MaxMessages = config.BulkMaxSize
-	if config.BulkFlushFrequency > 0 {
-		k.Producer.Flush.Frequency = config.BulkFlushFrequency
-	}
-
-	// configure client ID
-	k.ClientID = config.ClientID
-
-	version, ok := config.Version.Get()
-	if !ok {
-		return nil, fmt.Errorf("unknown/unsupported kafka version: %v", config.Version)
-	}
-	k.Version = version
-
-	k.Producer.Partitioner = partitioner
-
-	if err := k.Validate(); err != nil {
-		logger.Error(config.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "Invalid kafka configuration, error", err)
-		return nil, err
-	}
-	return k, nil
-}
-
-// makeBackoffFunc returns a stateless implementation of exponential-backoff-with-jitter. It is conceptually
-// equivalent to the stateful implementation used by other outputs, EqualJitterBackoff.
-func makeBackoffFunc(cfg backoffConfig) func(retries, maxRetries int) time.Duration {
-	maxBackoffRetries := int(math.Ceil(math.Log2(float64(cfg.Max) / float64(cfg.Init))))
-	return func(retries, _ int) time.Duration {
-		// compute 'base' duration for exponential backoff
-		dur := cfg.Max
-		if retries < maxBackoffRetries {
-			dur = time.Duration(uint64(cfg.Init) * uint64(1<<retries))
-		}
-		// apply about equaly distributed jitter in second half of the interval, such that the wait
-		// time falls into the interval [dur/2, dur]
-		limit := int64(dur / 2)
-		jitter, _ := cryptorand.Int(cryptorand.Reader, big.NewInt(limit+1))
-		return time.Duration(limit + jitter.Int64())
-	}
-}
-
-func (k *FlusherKafka) Validate() error {
-	if len(k.Brokers) == 0 {
-		return errors.New("no hosts configured")
-	}
-
-	if _, err := saramaProducerCompressionCodec(strings.ToLower(k.Compression)); err != nil {
-		return err
-	}
-
-	if err := k.Version.Validate(); err != nil {
-		return err
-	}
-
-	if k.SASLUsername != "" && k.SASLPassword == "" {
-		return fmt.Errorf("password must be set when username is configured")
-	}
-
-	if k.Compression == "gzip" {
-		lvl := k.CompressionLevel
-		if lvl != sarama.CompressionLevelDefault && !(0 <= lvl && lvl <= 9) {
-			return fmt.Errorf("compression_level must be between 0 and 9")
-		}
-	}
-	return nil
-}
-
-func makePartitioner(k *FlusherKafka) (partitioner sarama.PartitionerConstructor, err error) {
-	switch k.PartitionerType {
-	case "roundrobin":
-		partitioner = sarama.NewRoundRobinPartitioner
-	case "hash":
-		partitioner = sarama.NewHashPartitioner
-		k.hashKeyMap = make(map[string]struct{})
-		k.hashKey = ""
-		for _, key := range k.HashKeys {
-			k.hashKeyMap[key] = struct{}{}
-		}
-	case "random":
-		partitioner = sarama.NewRandomPartitioner
-	default:
-		return nil, fmt.Errorf("invalid PartitionerType,configured value %v", k.PartitionerType)
-	}
-	return partitioner, nil
-}
-
-func saramaProducerCompressionCodec(compression string) (sarama.CompressionCodec, error) {
-	switch compression {
-	case "none":
-		return sarama.CompressionNone, nil
-	case "gzip":
-		return sarama.CompressionGZIP, nil
-	case "snappy":
-		return sarama.CompressionSnappy, nil
-	case "lz4":
-		return sarama.CompressionLZ4, nil
-	case "zstd":
-		return sarama.CompressionZSTD, nil
-	default:
-		return sarama.CompressionNone, fmt.Errorf("producer.compression should be one of 'none', 'gzip', 'snappy', 'lz4', or 'zstd'. configured value %v", compression)
-	}
-}
-
-func (k *FlusherKafka) getConverter() (*converter.Converter, error) {
-	return converter.NewConverter("custom_single", "json", k.TagFieldsRename, k.ProtocolFieldsRename)
-}
-
 func init() {
 	ilogtail.Flushers["flusher_kafka"] = func() ilogtail.Flusher {
-		f := NewKafkaFlush()
+		f := &FlusherKafka{
+			ClientID:        "LogtailPlugin",
+			PartitionerType: "random",
+		}
 		f.flusher = f.NormalFlush
 		return f
 	}

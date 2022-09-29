@@ -1,3 +1,17 @@
+// Copyright 2022 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package protocol
 
 import (
@@ -11,13 +25,11 @@ import (
 
 func (c *Converter) ConvertToKafkaSingleLog(logGroup *protocol.LogGroup, log *protocol.Log, topic string) ([]byte, *string, error) {
 	var marshaledLogs []byte
-	var targets *string
 	contents, tags := convertLogToMap(log, logGroup.LogTags, logGroup.Source, logGroup.Topic, c.TagKeyRenameMap)
-	target, err := formatTopic(contents, tags, c.TagKeyRenameMap, topic)
+	actualTopic, err := formatTopic(contents, tags, c.TagKeyRenameMap, topic)
 	if err != nil {
 		return nil, nil, err
 	}
-	targets = target
 	customSingleLog := make(map[string]interface{}, numProtocolKeys)
 	if newKey, ok := c.ProtocolKeyRenameMap[protocolKeyTime]; ok {
 		customSingleLog[newKey] = log.Time
@@ -45,7 +57,7 @@ func (c *Converter) ConvertToKafkaSingleLog(logGroup *protocol.LogGroup, log *pr
 		return nil, nil, fmt.Errorf("unsupported encoding format: %s", c.Encoding)
 	}
 
-	return marshaledLogs, targets, nil
+	return marshaledLogs, actualTopic, nil
 }
 
 // formatTopic return topic dynamically by using a format string
