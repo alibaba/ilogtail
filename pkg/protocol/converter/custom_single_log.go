@@ -69,7 +69,7 @@ func (c *Converter) ConvertToSingleProtocolStream(logGroup *protocol.LogGroup, t
 	marshaledLogs := make([][]byte, len(logGroup.Logs))
 	for i, log := range convertedLogs {
 		switch c.Encoding {
-		case encodingJSON:
+		case EncodingJSON:
 			b, err := json.Marshal(log)
 			if err != nil {
 				return nil, nil, fmt.Errorf("unable to marshal log: %v", log)

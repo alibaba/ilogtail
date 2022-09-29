@@ -15,21 +15,22 @@
 package protocol
 
 import (
-	"flag"
 	"fmt"
 	"strings"
 
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 const (
-	protocolCustomSingle = "custom_single"
+	ProtocolCustomSingle = "custom_single"
+	ProtocolOtlpLogV1    = "otlp_log_v1"
 )
 
 const (
-	encodingJSON     = "json"
-	encodingProtobuf = "protobuf"
+	EncodingNone     = "none"
+	EncodingJSON     = "json"
+	EncodingProtobuf = "protobuf"
 )
 
 const (
@@ -79,13 +80,14 @@ var specialTagConversionMap = map[string]string{
 }
 
 var supportedEncodingMap = map[string]map[string]bool{
-	protocolCustomSingle: {
-		encodingJSON:     true,
-		encodingProtobuf: false,
+	ProtocolCustomSingle: {
+		EncodingJSON:     true,
+		EncodingProtobuf: false,
+	},
+	ProtocolOtlpLogV1: {
+		EncodingNone: true,
 	},
 }
-
-var inK8s = flag.Bool("ALICLOUD_LOG_K8S_FLAG", false, "alibaba log k8s event config flag, set true if you want to use it")
 
 type Converter struct {
 	Protocol             string
@@ -117,8 +119,10 @@ func (c *Converter) Do(logGroup *protocol.LogGroup) (logs interface{}, err error
 
 func (c *Converter) DoWithSelectedFields(logGroup *protocol.LogGroup, targetFields []string) (logs interface{}, values [][]string, err error) {
 	switch c.Protocol {
-	case protocolCustomSingle:
+	case ProtocolCustomSingle:
 		return c.ConvertToSingleProtocolLogs(logGroup, targetFields)
+	case ProtocolOtlpLogV1:
+		return c.ConvertToOtlpLogsV1(logGroup, targetFields)
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
 	}
@@ -131,7 +135,7 @@ func (c *Converter) ToByteStream(logGroup *protocol.LogGroup) (stream [][]byte, 
 
 func (c *Converter) ToByteStreamWithSelectedFields(logGroup *protocol.LogGroup, targetFields []string) (stream [][]byte, values [][]string, err error) {
 	switch c.Protocol {
-	case protocolCustomSingle:
+	case ProtocolCustomSingle:
 		return c.ConvertToSingleProtocolStream(logGroup, targetFields)
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
@@ -150,13 +154,13 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 			var tagName string
 			if strings.HasPrefix(logContent.Key, tagPrefix) {
 				tagName = logContent.Key[len(tagPrefix):]
-				if _, ok := specialTagConversionMap[tagName]; *inK8s && ok {
+				if _, ok := specialTagConversionMap[tagName]; *flags.K8sFlag && ok {
 					tagName = specialTagConversionMap[tagName]
 				} else if _, ok := tagConversionMap[tagName]; ok {
 					tagName = tagConversionMap[tagName]
 				}
 			} else {
-				if _, ok := specialTagConversionMap[logContent.Key]; *inK8s && ok {
+				if _, ok := specialTagConversionMap[logContent.Key]; *flags.K8sFlag && ok {
 					tagName = specialTagConversionMap[logContent.Key]
 				} else if _, ok := tagConversionMap[logContent.Key]; ok {
 					tagName = tagConversionMap[logContent.Key]
@@ -180,7 +184,7 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 		}
 
 		tagName := logTag.Key
-		if _, ok := specialTagConversionMap[logTag.Key]; *inK8s && ok {
+		if _, ok := specialTagConversionMap[logTag.Key]; *flags.K8sFlag && ok {
 			tagName = specialTagConversionMap[logTag.Key]
 		} else if _, ok := tagConversionMap[logTag.Key]; ok {
 			tagName = tagConversionMap[logTag.Key]
@@ -223,8 +227,4 @@ func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map
 		}
 	}
 	return desiredValue, nil
-}
-
-func init() {
-	_ = util.InitFromEnvBool("ALICLOUD_LOG_K8S_FLAG", inK8s, *inK8s)
 }
