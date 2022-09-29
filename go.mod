@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/Shopify/sarama v1.28.0
 	github.com/VictoriaMetrics/VictoriaMetrics v1.58.0
-	github.com/VictoriaMetrics/metrics v1.17.2
 	github.com/alibaba/ilogtail/pkg v0.0.0
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner v0.0.0
 	github.com/aliyun/aliyun-log-go-sdk v0.1.12
@@ -61,6 +60,7 @@ require (
 )
 
 require (
+	github.com/VictoriaMetrics/metrics v1.17.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cilium/ebpf v0.7.0 // indirect
@@ -215,6 +215,8 @@ require (
 )
 
 replace (
+	github.com/VictoriaMetrics/VictoriaMetrics => github.com/iLogtail/VictoriaMetrics v1.0.0
+	github.com/VictoriaMetrics/metrics => github.com/iLogtail/metrics v1.0.1
 	github.com/alibaba/ilogtail/pkg => ./pkg
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner => ./external/github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner
 	github.com/elastic/beats/v7 => ./external/github.com/elastic/beats/v7

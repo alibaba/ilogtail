@@ -52,7 +52,7 @@ github.com/Shopify/sarama
 # github.com/StackExchange/wmi v0.0.0-20181212234831-e0a55b97c705
 ## explicit
 github.com/StackExchange/wmi
-# github.com/VictoriaMetrics/VictoriaMetrics v1.58.0
+# github.com/VictoriaMetrics/VictoriaMetrics v1.58.0 => github.com/iLogtail/VictoriaMetrics v1.0.0
 ## explicit; go 1.14
 github.com/VictoriaMetrics/VictoriaMetrics/lib/buildinfo
 github.com/VictoriaMetrics/VictoriaMetrics/lib/bytesutil
@@ -90,7 +90,7 @@ github.com/VictoriaMetrics/VictoriaMetrics/lib/timerpool
 github.com/VictoriaMetrics/fasthttp
 github.com/VictoriaMetrics/fasthttp/fasthttputil
 github.com/VictoriaMetrics/fasthttp/stackless
-# github.com/VictoriaMetrics/metrics v1.17.2
+# github.com/VictoriaMetrics/metrics v1.17.2 => github.com/iLogtail/metrics v1.0.1
 ## explicit; go 1.12
 github.com/VictoriaMetrics/metrics
 # github.com/VictoriaMetrics/metricsql v0.14.0
@@ -1485,6 +1485,8 @@ sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0
 ## explicit; go 1.12
 sigs.k8s.io/yaml
+# github.com/VictoriaMetrics/VictoriaMetrics => github.com/iLogtail/VictoriaMetrics v1.0.0
+# github.com/VictoriaMetrics/metrics => github.com/iLogtail/metrics v1.0.1
 # github.com/alibaba/ilogtail/pkg => ./pkg
 # github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner => ./external/github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner
 # github.com/elastic/beats/v7 => ./external/github.com/elastic/beats/v7
