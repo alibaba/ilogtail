@@ -44,7 +44,6 @@ GO_BUILD_FLAGS = -v
 LICENSE_COVERAGE_FILE=license_coverage.txt
 OUT_DIR = output
 DIST_DIR = ilogtail-$(VERSION)
-VENDOR_DIR = vendor
 EXTERNAL_DIR = external
 
 .PHONY: tools
@@ -123,12 +122,6 @@ e2edocker: clean
 .PHONY: gocdocker
 gocdocker: clean
 	./scripts/docker_build.sh goc $(GENERATED_HOME) latest goc-server false
-
-.PHONY: vendor
-vendor: clean
-	rm -rf vendor
-	$(GO) mod vendor
-	./scripts/sync_vendor.sh $(EXTERNAL_DIR) $(VENDOR_DIR)
 
 .PHONY: check-dependency-licenses
 check-dependency-licenses: clean
