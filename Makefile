@@ -123,6 +123,11 @@ e2edocker: clean
 gocdocker: clean
 	./scripts/docker_build.sh goc $(GENERATED_HOME) latest goc-server false
 
+.PHONY: vendor
+vendor: clean
+	rm -rf vendor
+	$(GO) mod vendor
+	
 .PHONY: check-dependency-licenses
 check-dependency-licenses: clean
 	./scripts/dependency_licenses.sh plugin_main LICENSE_OF_ILOGTAIL_DEPENDENCIES.md && ./scripts/dependency_licenses.sh test LICENSE_OF_TESTENGINE_DEPENDENCIES.md
