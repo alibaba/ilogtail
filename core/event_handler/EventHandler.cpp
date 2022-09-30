@@ -417,9 +417,9 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(
     readerPtr->SetReaderArray(&readerArray);
     mDevInodeReaderMap[devInode] = readerPtr;
 
-    LOG_DEBUG(
-        sLogger,
-        ("create reader ", PathJoin(path, name))(ToString(devInode.inode), readerArray.size())("this", (uint64_t)this));
+    LOG_DEBUG(sLogger,
+              ("create reader name", PathJoin(path, name))("inode", ToString(devInode.inode))(
+                  "readerArraySize", readerArray.size())("handlerAddress", (uint64_t)this));
     return readerPtr;
 }
 
@@ -646,10 +646,10 @@ void ModifyHandler::Handle(const Event& event) {
                 static int32_t s_lastOutPutTime = 0;
                 int32_t curTime = time(NULL);
                 if (curTime - s_lastOutPutTime > 600) {
-                    s_lastOutPutTime = time(NULL);
-                    LOG_INFO(sLogger,
-                             ("logprocess queue is full, put modify event to event queue again",
-                              reader->GetLogPath())(reader->GetProjectName(), reader->GetCategory()));
+                    s_lastOutPutTime = curTime;
+                    LOG_WARNING(sLogger,
+                                ("logprocess queue is full, put modify event to event queue again",
+                                 reader->GetLogPath())(reader->GetProjectName(), reader->GetCategory()));
 
                     LogtailAlarm::GetInstance()->SendAlarm(
                         PROCESS_QUEUE_BUSY_ALARM,
@@ -755,7 +755,7 @@ void ModifyHandler::Handle(const Event& event) {
     }
     // if a file is created, and dev inode cannot found(this means it's a new file), create reader for this file, then
     // insert reader into mDevInodeReaderMap
-    else if (event.IsCreate()) {
+    else if (event.IsCreate() || event.IsMoveTo()) {
         if (!devInode.IsValid()) {
             return;
         }
@@ -766,8 +766,17 @@ void ModifyHandler::Handle(const Event& event) {
                 if (readerPtr.get() == NULL) {
                     return;
                 }
-            } else {
-                return;
+                if (readerPtr->GetFileSize() > 0) {
+                    Event* ev = new Event(event.GetSource(),
+                                          event.GetObject(),
+                                          EVENT_MODIFY,
+                                          event.GetWd(),
+                                          event.GetCookie(),
+                                          event.GetDev(),
+                                          event.GetInode());
+                    ev->SetConfigName(mConfigName);
+                    LogInput::GetInstance()->PushEventQueue(ev);
+                }
             }
         }
     }
