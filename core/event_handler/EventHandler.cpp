@@ -243,9 +243,9 @@ void CreateModifyHandler::Handle(const Event& event) {
         if (!event.GetConfigName().empty()) {
             Config* pConfig = ConfigManager::GetInstance()->FindConfigByName(event.GetConfigName());
             if (pConfig != NULL) {
-                LOG_DEBUG(
-                    sLogger,
-                    ("Process event with existed config", event.GetConfigName())(event.GetSource(), event.GetObject()));
+                LOG_DEBUG(sLogger,
+                          ("Process event with existed config", event.GetConfigName())("Source", event.GetSource())(
+                              "Object", event.GetObject())("Dev", event.GetDev())("Inode", event.GetInode()));
                 GetOrCreateModifyHandler(pConfig->mConfigName, pConfig)->Handle(event);
             } else {
                 // if event is delete
@@ -434,7 +434,8 @@ void ModifyHandler::Handle(const Event& event) {
     DevInode devInode(event.GetDev(), event.GetInode());
     string logPath(path);
     logPath.append(PATH_SEPARATOR).append(name);
-    if (!devInode.IsValid() && (event.IsModify() || event.IsCreate())) {
+    // devInode is known to be invalid for inotify events
+    if (!devInode.IsValid() && (event.IsModify() || event.IsCreate() || event.IsMoveTo())) {
         devInode = GetFileDevInode(logPath);
         if (!devInode.IsValid()) {
             // call stat failed, but we should try to find reader because the log file may be moved to another name
