@@ -62,9 +62,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -119,9 +119,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -185,9 +185,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -253,9 +253,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -312,9 +312,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -373,9 +373,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -433,9 +433,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -485,9 +485,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -547,9 +547,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -636,9 +636,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "@timestamp")
@@ -670,15 +670,15 @@ func TestConvertToSimple(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(values, ShouldHaveLength, 2)
 				So(values[0], ShouldHaveLength, 4)
-				So(values[0][0], ShouldEqual, "PUT")
-				So(values[0][1], ShouldEqual, "alje834hgf")
-				So(values[0][2], ShouldEqual, "172.10.1.19")
-				So(values[0][3], ShouldBeEmpty)
+				So(values[0]["content.method"], ShouldEqual, "PUT")
+				So(values[0]["tag.host.name"], ShouldEqual, "alje834hgf")
+				So(values[0]["tag.ip"], ShouldEqual, "172.10.1.19")
+				So(values[0]["content.unknown"], ShouldBeEmpty)
 				So(values[1], ShouldHaveLength, 4)
-				So(values[1][0], ShouldEqual, "GET")
-				So(values[1][1], ShouldEqual, "alje834hgf")
-				So(values[1][2], ShouldEqual, "172.10.1.19")
-				So(values[1][3], ShouldBeEmpty)
+				So(values[1]["content.method"], ShouldEqual, "GET")
+				So(values[1]["tag.host.name"], ShouldEqual, "alje834hgf")
+				So(values[1]["tag.ip"], ShouldEqual, "172.10.1.19")
+				So(values[1]["content.unknown"], ShouldBeEmpty)
 			})
 
 			Convey("Then error should be returned given invalid target field", func() {
@@ -742,9 +742,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
@@ -810,9 +810,9 @@ func TestConvertToSimple(t *testing.T) {
 				b, err := c.ToByteStream(logGroup)
 				So(err, ShouldBeNil)
 
-				for _, s := range b {
+				for _, s := range b.([]interface{}) {
 					unmarshaledLog := make(map[string]interface{})
-					err = json.Unmarshal(s, &unmarshaledLog)
+					err = json.Unmarshal(s.([]byte), &unmarshaledLog)
 					So(err, ShouldBeNil)
 					So(unmarshaledLog, ShouldHaveLength, 3)
 					So(unmarshaledLog, ShouldContainKey, "time")
