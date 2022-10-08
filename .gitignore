@@ -13,6 +13,7 @@
 /pluginmanager/checkpoint/
 *.prof
 /plugin_main/checkpoint/*
+/main/checkpoint/*
 *.LOG
 *.LOG.*
 *.test
