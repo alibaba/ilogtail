@@ -27,14 +27,46 @@ import (
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/main/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/alibaba/ilogtail/plugin_main/flags"
 	"github.com/alibaba/ilogtail/plugins/input"
 )
 
 var maxFlushOutTime = 5
+
+const mixProcessModeFlag = "mix_process_mode"
+
+type mixProcessMode int
+
+const (
+	normal mixProcessMode = iota
+	file
+	observer
+)
+
+// checkMixProcessMode
+// When inputs plugins not exist, it means this LogConfig is a mixed process mode config.
+// And the default mix process mode is the file mode.
+func checkMixProcessMode(pluginCfg map[string]interface{}) mixProcessMode {
+	config, exists := pluginCfg["inputs"]
+	inputs, ok := config.([]interface{})
+	if exists && ok && len(inputs) > 0 {
+		return normal
+	}
+	mixModeFlag, mixModeFlagOk := pluginCfg[mixProcessModeFlag]
+	if !mixModeFlagOk {
+		return file
+	}
+	s := mixModeFlag.(string)
+	switch {
+	case strings.EqualFold(s, "observer"):
+		return observer
+	default:
+		return file
+	}
+}
 
 type LogstoreStatistics struct {
 	CollecLatencytMetric ilogtail.LatencyMetric
@@ -61,7 +93,7 @@ type LogstoreConfig struct {
 	//   is offered in configuration, see build-in StatisticsConfig and AlarmConfig.
 	GlobalConfig *GlobalConfig
 
-	LogsChan      chan *protocol.Log
+	LogsChan      chan *ilogtail.LogWithContext
 	LogGroupsChan chan *protocol.LogGroup
 
 	processWaitSema   sync.WaitGroup
@@ -101,12 +133,12 @@ func (p *LogstoreStatistics) Init(context ilogtail.Context) {
 
 // Start initializes plugin instances in config and starts them.
 // Procedures:
-// 1. Start flusher goroutine and push FlushOutLogGroups inherited from last config
-//   instance to LogGroupsChan, so that they can be flushed to flushers.
-// 2. Start aggregators, allocate new goroutine for each one.
-// 3. Start processor goroutine to process logs from LogsChan.
-// 4. Start inputs (including metrics and services), just like aggregator, each input
-//   has its own goroutine.
+//  1. Start flusher goroutine and push FlushOutLogGroups inherited from last config
+//     instance to LogGroupsChan, so that they can be flushed to flushers.
+//  2. Start aggregators, allocate new goroutine for each one.
+//  3. Start processor goroutine to process logs from LogsChan.
+//  4. Start inputs (including metrics and services), just like aggregator, each input
+//     has its own goroutine.
 func (lc *LogstoreConfig) Start() {
 	lc.FlushOutFlag = false
 	logger.Info(lc.Context.GetRuntimeContext(), "config start", "begin")
@@ -239,26 +271,25 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 // processInternal is the routine of processors.
 // Each LogstoreConfig has its own goroutine for this routine.
 // When log is ready (passed through LogsChan), we will try to get
-//   all available logs from the channel, and pass them together to processors.
+//
+//	all available logs from the channel, and pass them together to processors.
+//
 // All processors of the config share same gogroutine, logs are passed to them
-//   one by one, just like logs -> p1 -> p2 -> p3 -> logsGoToNextStep.
+//
+//	one by one, just like logs -> p1 -> p2 -> p3 -> logsGoToNextStep.
+//
 // It returns when processShutdown is closed.
 func (lc *LogstoreConfig) processInternal() {
 	defer panicRecover(lc.ConfigName)
-	var log *protocol.Log
+	var logCtx *ilogtail.LogWithContext
 	for {
 		select {
 		case <-lc.processShutdown:
 			if len(lc.LogsChan) == 0 {
 				return
 			}
-		case log = <-lc.LogsChan:
-			listLen := len(lc.LogsChan) + 1
-			logs := make([]*protocol.Log, listLen)
-			logs[0] = log
-			for i := 1; i < listLen; i++ {
-				logs[i] = <-lc.LogsChan
-			}
+		case logCtx = <-lc.LogsChan:
+			logs := []*protocol.Log{logCtx.Log}
 			lc.Statistics.RawLogMetric.Add(int64(len(logs)))
 			for _, processor := range lc.ProcessorPlugins {
 				logs = processor.Processor.ProcessLogs(logs)
@@ -279,7 +310,7 @@ func (lc *LogstoreConfig) processInternal() {
 							l.Time = nowTime
 						}
 						for tryCount := 1; true; tryCount++ {
-							err := aggregator.Aggregator.Add(l)
+							err := aggregator.Aggregator.Add(l, logCtx.Context)
 							if err == nil {
 								break
 							}
@@ -425,7 +456,7 @@ func (lc *LogstoreConfig) ProcessRawLog(rawLog []byte, packID string, topic stri
 	log := &protocol.Log{}
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: rawStringKey, Value: string(rawLog)})
 	logger.Debug(context.Background(), "Process raw log ", packID, topic, len(rawLog))
-	lc.LogsChan <- log
+	lc.LogsChan <- &ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}}
 	return 0
 }
 
@@ -475,7 +506,23 @@ func (lc *LogstoreConfig) ProcessRawLogV2(rawLog []byte, packID string, topic st
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
 	extractTags(tags, log)
-	lc.LogsChan <- log
+	lc.LogsChan <- &ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}}
+	return 0
+}
+
+func (lc *LogstoreConfig) ProcessLog(logByte []byte, packID string, topic string, tags []byte) int {
+	log := &protocol.Log{}
+	err := log.Unmarshal(logByte)
+	if err != nil {
+		logger.Error(lc.Context.GetRuntimeContext(), "WRONG_PROTOBUF_ALARM",
+			"cannot process logs passed by core, err", err)
+		return -1
+	}
+	if len(topic) > 0 {
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
+	}
+	extractTags(tags, log)
+	lc.LogsChan <- &ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}}
 	return 0
 }
 
@@ -588,19 +635,13 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		logger.Debug(contextImp.GetRuntimeContext(), "load plugin config", *logstoreC.GlobalConfig)
 	}
 
-	// If inputs is empty, it means that the source of this config may be file buffer
-	//   from logtail core. Because the buffer from logtail is big, we have to limit
-	//   queue size to control memory usage here.
 	logQueueSize := logstoreC.GlobalConfig.DefaultLogQueueSize
-	{
-		config, exists := plugins["inputs"]
-		inputs, ok := config.([]interface{})
-		if !exists || !ok || len(inputs) == 0 {
-			logger.Infof(contextImp.GetRuntimeContext(), "no inputs in config %v, maybe file input, limit queue size", configName)
-			logQueueSize = 10
-		}
+	// Because the transferred data of the file MixProcessMode is quite large, we have to limit queue size to control memory usage here.
+	if checkMixProcessMode(plugins) == file {
+		logger.Infof(contextImp.GetRuntimeContext(), "no inputs in config %v, maybe file input, limit queue size", configName)
+		logQueueSize = 10
 	}
-	logstoreC.LogsChan = make(chan *protocol.Log, logQueueSize)
+	logstoreC.LogsChan = make(chan *ilogtail.LogWithContext, logQueueSize)
 	// loggroup chan size must >= flushout loggroups
 	logGroupSize := logstoreC.GlobalConfig.DefaultLogGroupQueueSize
 	if logGroupSize < len(logstoreC.FlushOutLogGroups) {
@@ -721,7 +762,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			continue
 		}
 
-		if pluginType != "global" {
+		if pluginType != "global" && pluginType != mixProcessModeFlag {
 			return nil, fmt.Errorf("error plugin name %s", pluginType)
 		}
 	}

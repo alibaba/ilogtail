@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        go-version: [ 1.16 ]
+        go-version: [ 1.18 ]
         runner: [ ubuntu ]
       fail-fast: true
     steps:
@@ -40,8 +40,22 @@ jobs:
         with:
           submodules: true
 
+      - name: Update Docker-compose to v2
+        run: |
+          curl -SL https://github.com/docker/compose/releases/download/v2.7.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Kernel version
+        run: uname -r
+      - name: Docker version
+        run: docker --version
+
       - name: E2E Test
-        run: make e2e
+        run: TEST_DEBUG=true make e2e
+
+      - name: UnitTest E2e Engine
+        if: matrix.runner == 'ubuntu'
+        run: sudo make unittest_e2e_engine
 
   result:
     runs-on: ubuntu-latest

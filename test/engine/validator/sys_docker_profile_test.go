@@ -17,7 +17,7 @@ package validator
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 	"time"
 
@@ -51,7 +51,7 @@ func createDockerContainer(cli *client.Client, t *testing.T) string {
 		assert.NoError(t, errPull)
 		defer pull.Close()
 		// download of docker image finishes at EOF of the pull request
-		_, errPull = ioutil.ReadAll(pull)
+		_, errPull = io.ReadAll(pull)
 		assert.NoError(t, errPull)
 	}
 
@@ -77,7 +77,7 @@ func Test_dockerProfileValidator_FetchProfile(t *testing.T) {
 
 	// test cpu
 	v := &dockerProfileSystemValidator{
-		ExpectEverySecondMaximumCPU: 10.0,
+		ExpectEverySecondMaximumCPU: 0.1,
 		cli:                         cli,
 		containerID:                 ID,
 		cancel:                      make(chan struct{}),
@@ -93,7 +93,7 @@ func Test_dockerProfileValidator_FetchProfile(t *testing.T) {
 	}
 
 	// test mem
-	limit := "100K"
+	limit := "1k"
 	v = &dockerProfileSystemValidator{
 		ExpectEverySecondMaximumMem: limit,
 		cli:                         cli,

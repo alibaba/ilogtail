@@ -23,6 +23,7 @@ import (
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input"
 
 	docker "github.com/fsouza/go-dockerclient"
@@ -69,8 +70,10 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 		}
 	}
 
+	source := util.NewPackIDPrefix(info.ContainerInfo.ID + sds.context.GetConfigName())
 	tags := info.GetExternalTags(sds.ExternalEnvTag, sds.ExternalK8sLabelTag)
-	processor := NewDockerStdoutProcessor(reg, time.Duration(sds.BeginLineTimeoutMs)*time.Millisecond, sds.BeginLineCheckLength, sds.MaxLogSize, sds.Stdout, sds.Stderr, sds.context, sds.collector, tags)
+
+	processor := NewDockerStdoutProcessor(reg, time.Duration(sds.BeginLineTimeoutMs)*time.Millisecond, sds.BeginLineCheckLength, sds.MaxLogSize, sds.Stdout, sds.Stderr, sds.context, sds.collector, tags, source)
 
 	checkpoint, ok := checkpointMap[info.ContainerInfo.ID]
 	if !ok {
@@ -109,7 +112,7 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 		CloseFileSec:     sds.CloseUnChangedSec,
 		Tracker:          sds.tracker,
 	}
-	reader, _ := helper.NewLogFileReader(checkpoint, config, processor, sds.context)
+	reader, _ := helper.NewLogFileReader(sds.context.GetRuntimeContext(), checkpoint, config, processor)
 
 	return &DockerFileSyner{
 		dockerFileReader:    reader,
@@ -119,8 +122,8 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 }
 
 type ServiceDockerStdout struct {
-	IncludeLabel          map[string]string `comment:"include container label for selector. [Deprecated： use IncludeContainerLabel and IncludeK8sLabel instead]"`
-	ExcludeLabel          map[string]string `comment:"exclude container label for selector. [Deprecated： use ExcludeContainerLabel and ExcludeK8sLabel instead]"`
+	IncludeLabel          map[string]string `comment:"include container label for selector. [Deprecated: use IncludeContainerLabel and IncludeK8sLabel instead]"`
+	ExcludeLabel          map[string]string `comment:"exclude container label for selector. [Deprecated: use ExcludeContainerLabel and ExcludeK8sLabel instead]"`
 	IncludeEnv            map[string]string `comment:"the container would be selected when it is matched by any environment rules. Furthermore, the regular expression starts with '^' is supported as the env value, such as 'ENVA:^DE.*$'' would hit all containers having any envs starts with DE."`
 	ExcludeEnv            map[string]string `comment:"the container would be excluded when it is matched by any environment rules. Furthermore, the regular expression starts with '^' is supported as the env value, such as 'ENVA:^DE.*$'' would hit all containers having any envs starts with DE."`
 	IncludeContainerLabel map[string]string `comment:"the container would be selected when it is matched by any container labels. Furthermore, the regular expression starts with '^' is supported as the label value, such as 'LABEL:^DE.*$'' would hit all containers having any labels starts with DE."`
@@ -129,9 +132,9 @@ type ServiceDockerStdout struct {
 	ExcludeK8sLabel       map[string]string `comment:"the container of pod would be excluded when it is matched by any exclude k8s label rules. Furthermore, the regular expression starts with '^' is supported as the value to exclude pods."`
 	ExternalEnvTag        map[string]string `comment:"extract the env value as the log tags for one container, such as the value of ENVA would be appended to the 'taga' of log tags when configured 'ENVA:taga' pair."`
 	ExternalK8sLabelTag   map[string]string `comment:"extract the pod label value as the log tags for one container, such as the value of LABELA would be appended to the 'taga' of log tags when configured 'LABELA:taga' pair."`
-	FlushIntervalMs       int               `comment:"the interval of container discovery，and the timeunit is millisecond. Default value is 3000."`
-	ReadIntervalMs        int               `comment:"the interval of read stdout log，and the timeunit is millisecond. Default value is 1000."`
-	SaveCheckPointSec     int               `comment:"the interval of save checkpoint，and the timeunit is second. Default value is 60."`
+	FlushIntervalMs       int               `comment:"the interval of container discovery, and the timeunit is millisecond. Default value is 3000."`
+	ReadIntervalMs        int               `comment:"the interval of read stdout log, and the timeunit is millisecond. Default value is 1000."`
+	SaveCheckPointSec     int               `comment:"the interval of save checkpoint, and the timeunit is second. Default value is 60."`
 	BeginLineRegex        string            `comment:"the regular expression of begin line for the multi line log."`
 	BeginLineTimeoutMs    int               `comment:"the maximum timeout milliseconds for begin line match. Default value is 3000."`
 	BeginLineCheckLength  int               `comment:"the prefix length of log line to match the first line. Default value is 10240."`
@@ -160,7 +163,6 @@ type ServiceDockerStdout struct {
 
 	synerMap      map[string]*DockerFileSyner
 	checkpointMap map[string]helper.LogFileReaderCheckPoint
-	dockerCenter  *helper.DockerCenter
 	shutdown      chan struct {
 	}
 	waitGroup sync.WaitGroup
@@ -175,7 +177,7 @@ type ServiceDockerStdout struct {
 
 func (sds *ServiceDockerStdout) Init(context ilogtail.Context) (int, error) {
 	sds.context = context
-	sds.dockerCenter = helper.GetDockerCenterInstance()
+	helper.ContainerCenterInit()
 	sds.fullList = make(map[string]bool)
 	sds.matchList = make(map[string]*helper.DockerInfoDetail)
 	sds.synerMap = make(map[string]*DockerFileSyner)
@@ -247,7 +249,7 @@ func (sds *ServiceDockerStdout) Collect(ilogtail.Collector) error {
 }
 
 func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) error {
-	newUpdateTime := sds.dockerCenter.GetLastUpdateMapTime()
+	newUpdateTime := helper.GetContainersLastUpdateTime()
 	if sds.lastUpdateTime != 0 {
 		if sds.lastUpdateTime >= newUpdateTime {
 			return nil
@@ -255,7 +257,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 	}
 
 	var err error
-	newCount, delCount := sds.dockerCenter.GetAllAcceptedInfoV2(
+	newCount, delCount := helper.GetContainerByAcceptedInfoV2(
 		sds.fullList, sds.matchList,
 		sds.IncludeLabel, sds.ExcludeLabel,
 		sds.IncludeLabelRegex, sds.ExcludeLabelRegex,
@@ -264,13 +266,15 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 		sds.K8sFilter)
 	sds.lastUpdateTime = newUpdateTime
 	if !firstStart && newCount == 0 && delCount == 0 {
+		logger.Debugf(sds.context.GetRuntimeContext(), "update match list, firstStart: %v, new: %v, delete: %v",
+			firstStart, newCount, delCount)
 		return nil
 	}
-	logger.Infof(sds.context.GetRuntimeContext(), "update match list, first: %v, new: %v, delete: %v",
+	logger.Infof(sds.context.GetRuntimeContext(), "update match list, firstStart: %v, new: %v, delete: %v",
 		firstStart, newCount, delCount)
 
 	dockerInfos := sds.matchList
-	logger.Debug(sds.context.GetRuntimeContext(), "flush all", len(dockerInfos))
+	logger.Debug(sds.context.GetRuntimeContext(), "match list length", len(dockerInfos))
 	sds.avgInstanceMetric.Add(int64(len(dockerInfos)))
 	for id, info := range dockerInfos {
 		if !logDriverSupported(info.ContainerInfo) {

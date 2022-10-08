@@ -39,7 +39,7 @@ const (
 	asyncPattern = `
 <seelog type="asynctimer" asyncinterval="500000" minlevel="%s" >
  <outputs formatid="common">
-	 <rollingfile type="size" filename="%slogtail_plugin.LOG" maxsize="2097152" maxrolls="10"/>
+	 <rollingfile type="size" filename="%slogtail_plugin.LOG" maxsize="20000000" maxrolls="10"/>
 	 %s
      %s
  </outputs>
@@ -51,7 +51,7 @@ const (
 	syncPattern = `
 <seelog type="sync" minlevel="%s" >
  <outputs formatid="common">
-	 <rollingfile type="size" filename="%slogtail_plugin.LOG" maxsize="2097152" maxrolls="10"/>
+	 <rollingfile type="size" filename="%slogtail_plugin.LOG" maxsize="20000000" maxrolls="10"/>
 	 %s
 	 %s
  </outputs>
@@ -256,14 +256,14 @@ func setLogConf(logConfig string) {
 		logConfigContent := generateDefaultConfig()
 		_ = ioutil.WriteFile(path, []byte(logConfigContent), os.ModePerm)
 	}
-	fmt.Printf("load log config %s \n", path)
+	fmt.Fprintf(os.Stderr, "load log config %s \n", path)
 	logger, err := seelog.LoggerFromConfigAsFile(path)
 	if err != nil {
-		fmt.Println("init logger error", err)
+		fmt.Fprintln(os.Stderr, "init logger error", err)
 		return
 	}
 	if err := logger.SetAdditionalStackDepth(1); err != nil {
-		fmt.Printf("cannot set logger stack depth: %v\n", err)
+		fmt.Fprintf(os.Stderr, "cannot set logger stack depth: %v\n", err)
 		return
 	}
 	logtailLogger = logger

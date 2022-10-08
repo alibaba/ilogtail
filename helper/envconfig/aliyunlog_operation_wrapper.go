@@ -21,6 +21,8 @@ import (
 	"sync"
 	"time"
 
+	k8s_event "github.com/alibaba/ilogtail/helper/eventrecorder"
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
 
@@ -83,7 +85,7 @@ func addNecessaryInputConfigField(inputConfigDetail map[string]interface{}) map[
 func createAliyunLogOperationWrapper(endpoint, project, accessKeyID, accessKeySecret, stsToken string, shutdown <-chan struct{}) (*operationWrapper, error) {
 	var clientInterface aliyunlog.ClientInterface
 	var err error
-	if *AliCloudECSFlag {
+	if *flags.AliCloudECSFlag {
 		// use UpdateTokenFunction to update token
 		clientInterface, err = aliyunlog.CreateTokenAutoUpdateClient(endpoint, UpdateTokenFunction, shutdown)
 		if err != nil {
@@ -99,7 +101,7 @@ func createAliyunLogOperationWrapper(endpoint, project, accessKeyID, accessKeySe
 	logger.Info(context.Background(), "init aliyun log operation wrapper", "begin")
 	// retry when make project fail
 	for i := 0; i < 1; i++ {
-		err = wrapper.makesureProjectExist(project)
+		err = wrapper.makesureProjectExist(nil, project)
 		if err == nil {
 			break
 		}
@@ -109,7 +111,7 @@ func createAliyunLogOperationWrapper(endpoint, project, accessKeyID, accessKeySe
 
 	// retry when make project fail
 	for i := 0; i < 3; i++ {
-		err = wrapper.makesureMachineGroupExist(project, *DefaultLogMachineGroup)
+		err = wrapper.makesureMachineGroupExist(project, *flags.DefaultLogMachineGroup)
 		if err == nil {
 			break
 		}
@@ -129,7 +131,7 @@ func (o *operationWrapper) logstoreCacheExists(project, logstore string) bool {
 	o.lock.RLock()
 	defer o.lock.RUnlock()
 	if lastUpdateTime, ok := o.logstoreCacheMap[project+"@@"+logstore]; ok {
-		if time.Since(lastUpdateTime) < time.Second*time.Duration(*LogResourceCacheExpireSec) {
+		if time.Since(lastUpdateTime) < time.Second*time.Duration(*flags.LogResourceCacheExpireSec) {
 			return true
 		}
 	}
@@ -147,7 +149,7 @@ func (o *operationWrapper) configCacheExists(project, config string) bool {
 	o.lock.RLock()
 	defer o.lock.RUnlock()
 	if lastUpdateTime, ok := o.configCacheMap[project+"@@"+config]; ok {
-		if time.Since(lastUpdateTime) < time.Second*time.Duration(*LogResourceCacheExpireSec) {
+		if time.Since(lastUpdateTime) < time.Second*time.Duration(*flags.LogResourceCacheExpireSec) {
 			return true
 		}
 	}
@@ -186,18 +188,28 @@ func (o *operationWrapper) retryCreateIndex(project, logstore string) {
 	}
 }
 
-func (o *operationWrapper) createProductLogstore(project, logstore, product, lang string) error {
+func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, project, logstore, product, lang string) error {
 	logger.Info(context.Background(), "begin to create product logstore, project", project, "logstore", logstore, "product", product, "lang", lang)
-	err := CreateProductLogstore(*DefaultRegion, project, logstore, product, lang)
+	err := CreateProductLogstore(*flags.DefaultRegion, project, logstore, product, lang)
+
+	annotations := GetAnnotationByObject(config, project, logstore, product, config.LogtailConfig.ConfigName, false)
+
 	if err != nil {
+		if k8s_event.GetEventRecorder() != nil {
+			customErr := CustomErrorFromPopError(err)
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProductLogStore, "", fmt.Sprintf("create product log failed, error: %s", err.Error()))
+		}
 		logger.Warning(context.Background(), "CREATE_PRODUCT_ALARM", "create product error, error", err)
 		return err
+	} else if k8s_event.GetEventRecorder() != nil {
+		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProductLogStore, "create product log success")
 	}
+
 	o.addLogstoreCache(project, logstore)
 	return nil
 }
 
-func (o *operationWrapper) makesureLogstoreExist(project, logstore string, shardCount, lifeCycle int, product, lang string) error {
+func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec, project, logstore string, shardCount, lifeCycle int, product, lang string) error {
 	if o.logstoreCacheExists(project, logstore) {
 		return nil
 	}
@@ -206,22 +218,22 @@ func (o *operationWrapper) makesureLogstoreExist(project, logstore string, shard
 		if len(lang) == 0 {
 			lang = "cn"
 		}
-		return o.createProductLogstore(project, logstore, product, lang)
+		return o.createProductLogstore(config, project, logstore, product, lang)
 	}
 
 	// @note hardcode for k8s audit, eg audit-cfc281c9c4ca548638a1aaa765d8f220d
 	if strings.HasPrefix(logstore, "audit-") && len(logstore) == 39 {
-		return o.createProductLogstore(project, logstore, "k8s-audit", "cn")
+		return o.createProductLogstore(config, project, logstore, "k8s-audit", "cn")
 	}
 
 	if project != o.project {
-		if err := o.makesureProjectExist(project); err != nil {
+		if err := o.makesureProjectExist(config, project); err != nil {
 			return err
 		}
 	}
 	ok := false
 	var err error
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		if ok, err = o.logClient.CheckLogstoreExist(project, logstore); err != nil {
 			time.Sleep(time.Millisecond * 100)
 		} else {
@@ -244,7 +256,7 @@ func (o *operationWrapper) makesureLogstoreExist(project, logstore string, shard
 	if shardCount > 10 {
 		shardCount = 10
 	}
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		err = o.logClient.CreateLogStore(project, logstore, ttl, shardCount, true, 32)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
@@ -254,15 +266,23 @@ func (o *operationWrapper) makesureLogstoreExist(project, logstore string, shard
 			break
 		}
 	}
+	annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, false)
 	if err != nil {
+		if k8s_event.GetEventRecorder() != nil {
+			customErr := CustomErrorFromSlsSDKError(err)
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateLogstore, "", fmt.Sprintf("create logstore failed, error: %s", err.Error()))
+		}
 		return err
+	} else if k8s_event.GetEventRecorder() != nil {
+		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateLogstore, "create logstore success")
 	}
+
 	// after create logstore success, wait 1 sec
 	time.Sleep(time.Second)
 	// use default k8s index
 	index := createDefaultK8SIndex()
 	// create index, create index do not return error
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		err = o.logClient.CreateIndex(project, logstore, *index)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
@@ -279,11 +299,11 @@ func (o *operationWrapper) makesureLogstoreExist(project, logstore string, shard
 	return nil
 }
 
-func (o *operationWrapper) makesureProjectExist(project string) error {
+func (o *operationWrapper) makesureProjectExist(config *AliyunLogConfigSpec, project string) error {
 	ok := false
 	var err error
 
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		if ok, err = o.logClient.CheckProjectExist(project); err != nil {
 			time.Sleep(time.Millisecond * 1000)
 		} else {
@@ -293,13 +313,28 @@ func (o *operationWrapper) makesureProjectExist(project string) error {
 	if ok {
 		return nil
 	}
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		_, err = o.logClient.CreateProject(project, "k8s log project, created by alibaba cloud log controller")
 		if err != nil {
 			time.Sleep(time.Millisecond * 1000)
 		} else {
 			break
 		}
+	}
+	configName := ""
+	logstore := ""
+	if config != nil {
+		configName = config.LogtailConfig.ConfigName
+		logstore = config.Logstore
+	}
+	annotations := GetAnnotationByObject(config, project, logstore, "", configName, false)
+	if err != nil {
+		if k8s_event.GetEventRecorder() != nil {
+			customErr := CustomErrorFromSlsSDKError(err)
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.CreateProject, "", fmt.Sprintf("create project failed, error: %s", err.Error()))
+		}
+	} else if k8s_event.GetEventRecorder() != nil {
+		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateProject, "create project success")
 	}
 	return err
 }
@@ -308,7 +343,7 @@ func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup strin
 	ok := false
 	var err error
 
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		if ok, err = o.logClient.CheckMachineGroupExist(project, machineGroup); err != nil {
 			time.Sleep(time.Millisecond * 100)
 		} else {
@@ -323,7 +358,7 @@ func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup strin
 		MachineIDType: aliyunlog.MachineIDTypeUserDefined,
 		MachineIDList: []string{machineGroup},
 	}
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		err = o.logClient.CreateMachineGroup(project, m)
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
@@ -342,7 +377,7 @@ func (o *operationWrapper) resetToken(accessKeyID, accessKeySecret, stsToken str
 // nolint:unused
 func (o *operationWrapper) deleteConfig(checkpoint *configCheckPoint) error {
 	var err error
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		err = o.logClient.DeleteConfig(checkpoint.ProjectName, checkpoint.ConfigName)
 		if err == nil {
 			o.removeConfigCache(checkpoint.ProjectName, checkpoint.ConfigName)
@@ -399,7 +434,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	if config.LifeCycle != nil {
 		lifeCycle = int(*config.LifeCycle)
 	}
-	err := o.makesureLogstoreExist(project, logstore, shardCount, lifeCycle, config.ProductCode, config.ProductLang)
+	err := o.makesureLogstoreExist(config, project, logstore, shardCount, lifeCycle, config.ProductCode, config.ProductLang)
 	if err != nil {
 		return fmt.Errorf("Create logconfig error when update config, config : %s, error : %s", config.LogtailConfig.ConfigName, err.Error())
 	}
@@ -436,7 +471,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	// }
 
 	var serverConfig *aliyunlog.LogConfig
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		serverConfig, err = o.logClient.GetConfig(project, config.LogtailConfig.ConfigName)
 		if err != nil {
 			if slsErr, ok := err.(*aliyunlog.Error); ok {
@@ -478,12 +513,25 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 						}
 						serverConfig.InputDetail = configDetail
 						// update config
-						for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+						for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 							err = o.logClient.UpdateConfig(project, serverConfig)
 							if err == nil {
 								break
 							}
 						}
+
+						annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
+						if err != nil {
+							if k8s_event.GetEventRecorder() != nil {
+								customErr := CustomErrorFromSlsSDKError(err)
+								k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
+							}
+						} else {
+							if k8s_event.GetEventRecorder() != nil {
+								k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
+							}
+						}
+
 					} else {
 						logger.Info(context.Background(), "file config not changed", "skip update")
 					}
@@ -494,7 +542,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 				logger.Info(context.Background(), "config input type change from", serverConfig.InputType,
 					"to", config.LogtailConfig.InputType, "force update")
 				// update config
-				for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+				for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 					err = o.logClient.UpdateConfig(project, aliyunLogConfig)
 					if err == nil {
 						break
@@ -505,11 +553,20 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		}
 
 	} else {
-		for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+		for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 			err = o.logClient.CreateConfig(project, aliyunLogConfig)
 			if err == nil {
 				break
 			}
+		}
+		annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
+		if err != nil {
+			if k8s_event.GetEventRecorder() != nil {
+				customErr := CustomErrorFromSlsSDKError(err)
+				k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, customErr), k8s_event.UpdateConfig, "", fmt.Sprintf("update config failed, error: %s", err.Error()))
+			}
+		} else if k8s_event.GetEventRecorder() != nil {
+			k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.UpdateConfig, "update config success")
 		}
 	}
 	if err != nil {
@@ -522,12 +579,12 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	if len(config.MachineGroups) > 0 {
 		machineGroup = config.MachineGroups[0]
 	} else {
-		machineGroup = *DefaultLogMachineGroup
+		machineGroup = *flags.DefaultLogMachineGroup
 	}
 	_ = o.makesureMachineGroupExist(project, machineGroup)
 	if ok {
 		var machineGroups []string
-		for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+		for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 			machineGroups, err = o.logClient.GetAppliedMachineGroups(project, config.LogtailConfig.ConfigName)
 			if err == nil {
 				break
@@ -545,7 +602,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		}
 	}
 	// apply config to the machine group
-	for i := 0; i < *LogOperationMaxRetryTimes; i++ {
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		err = o.logClient.ApplyConfigToMachineGroup(project, config.LogtailConfig.ConfigName, machineGroup)
 		if err == nil {
 			break

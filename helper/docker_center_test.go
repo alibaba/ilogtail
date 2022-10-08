@@ -19,7 +19,6 @@ import (
 	"os"
 	"sync"
 	"testing"
-	"time"
 
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +55,7 @@ func resetDockerCenter() {
 func TestGetIpByHost_1(t *testing.T) {
 	hostFileName := "./tmp_TestGetIpByHost.txt"
 	ioutil.WriteFile(hostFileName, []byte(hostFileContent1), 0x777)
-	ip := GetIPByHosts(hostFileName, "8be13ee0dd9e")
+	ip := getIPByHosts(hostFileName, "8be13ee0dd9e")
 	if ip != "192.168.5.3" {
 		t.Errorf("GetIpByHosts = %v, want %v", ip, "192.168.5.3")
 	}
@@ -66,7 +65,7 @@ func TestGetIpByHost_1(t *testing.T) {
 func TestGetIpByHost_2(t *testing.T) {
 	hostFileName := "./tmp_TestGetIpByHost.txt"
 	ioutil.WriteFile(hostFileName, []byte(hostFileContent2), 0x777)
-	ip := GetIPByHosts(hostFileName, "nginx-5fd7568b67-4sh8c")
+	ip := getIPByHosts(hostFileName, "nginx-5fd7568b67-4sh8c")
 	if ip != "172.20.4.5" {
 		t.Errorf("GetIpByHosts = %v, want %v", ip, "172.20.4.5")
 	}
@@ -75,7 +74,7 @@ func TestGetIpByHost_2(t *testing.T) {
 
 func TestGetAllAcceptedInfoV2(t *testing.T) {
 	resetDockerCenter()
-	dc := GetDockerCenterInstance()
+	dc := getDockerCenterInstance()
 
 	newContainer := func(id string) *DockerInfoDetail {
 		return dc.CreateInfoDetail(&docker.Container{
@@ -94,7 +93,7 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 			"c1": newContainer("c1"),
 		})
 
-		newCount, delCount := dc.GetAllAcceptedInfoV2(
+		newCount, delCount := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil)
@@ -110,7 +109,7 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 	{
 		dc.updateContainer("c2", newContainer("c2"))
 
-		newCount, delCount := dc.GetAllAcceptedInfoV2(
+		newCount, delCount := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil)
@@ -126,10 +125,9 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 
 	// Delete container.
 	{
-		ContainerInfoDeletedTimeout = time.Second
 		delete(dc.containerMap, "c1")
 
-		newCount, delCount := dc.GetAllAcceptedInfoV2(
+		newCount, delCount := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil)
@@ -143,14 +141,13 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 
 	// New and Delete container.
 	{
-		ContainerInfoDeletedTimeout = time.Second
 		dc.updateContainers(map[string]*DockerInfoDetail{
 			"c3": newContainer("c3"),
 			"c4": newContainer("c4"),
 		})
 		delete(dc.containerMap, "c2")
 
-		newCount, delCount := dc.GetAllAcceptedInfoV2(
+		newCount, delCount := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil)
@@ -168,7 +165,7 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 	fullList = make(map[string]bool)
 	matchList = make(map[string]*DockerInfoDetail)
 	{
-		newCount, delCount := dc.GetAllAcceptedInfoV2(
+		newCount, delCount := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			map[string]string{
@@ -185,10 +182,9 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 
 	// Delete unmatched container.
 	{
-		ContainerInfoDeletedTimeout = time.Second
 		delete(dc.containerMap, "c3")
 
-		newCount, delCount := dc.GetAllAcceptedInfoV2(
+		newCount, delCount := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			map[string]string{

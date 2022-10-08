@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,8 +40,11 @@ var (
 	ReportFile        string
 	PprofDir          string
 	ProfileFlag       bool
-	LogtailPluginFile string
 	CoverageFile      string
+	FlusherFile       string
+	ConfigYamlFileDir string
+	ConfigJSONFileDir string
+	LogDir            string
 )
 
 // Load E2E engine config and define the global variables.
@@ -62,17 +64,21 @@ func Load(path string, profile bool) (*Case, error) {
 	reportDir := root + "/report/"
 	_ = os.Mkdir(reportDir, 0750)
 	EngineLogFile = reportDir + CaseName + "_engine.log"
-	LogtailPluginFile = reportDir + CaseName + "_ilogtail.log"
 	CoverageFile = reportDir + CaseName + "_coverage.out"
 	ReportFile = reportDir + CaseName + "_report.json"
 	PprofDir = reportDir + CaseName + "_pprof"
+	LogDir = reportDir + CaseName + "_log"
 	ProfileFlag = profile
+
+	FlusherFile = reportDir + CaseName + "default_flusher.json"
+	ConfigYamlFileDir = reportDir + CaseName + "_yaml"
+	ConfigJSONFileDir = reportDir + CaseName + "_json"
 	return c, nil
 }
 
 func load(path string) (*Case, error) {
 	logger.Infof(context.Background(), "load config from: %s", path)
-	content, err := ioutil.ReadFile(filepath.Clean(path))
+	content, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, err
 	}

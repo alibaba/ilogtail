@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/urfave/cli/v2"
 
@@ -56,6 +57,14 @@ var (
 		},
 		Action: func(c *cli.Context) error {
 			defer func() {
+				if err := recover(); err != nil {
+					trace := make([]byte, 2048)
+					runtime.Stack(trace, true)
+					logger.Error(context.Background(), "PLUGIN_RUNTIME_ALARM", "panicked", err, "stack", string(trace))
+					logger.Flush()
+					_ = os.Rename(util.GetCurrentBinaryPath()+"logtail_plugin.LOG", config.EngineLogFile)
+					os.Exit(1)
+				}
 				_ = os.Rename(util.GetCurrentBinaryPath()+"logtail_plugin.LOG", config.EngineLogFile)
 			}()
 			configPath := c.String("config")
@@ -77,6 +86,7 @@ var (
 			}
 			if err := controller.Start(cfg); err != nil {
 				logger.Error(context.Background(), "CONTROLLER_ALARM", "err", err)
+				logger.Flush()
 				os.Exit(1)
 			}
 			return nil

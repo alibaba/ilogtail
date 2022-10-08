@@ -23,7 +23,7 @@ var DemoCase = Case{
 	Ilogtail: Ilogtail{
 		LoadConfigWait: "5s",
 		CloseWait:      "5s",
-		Config: []LogtailpluginCfgs{
+		Config: []LogtailCfgs{
 			{
 				Name: "mock-metric-case",
 				Content: []string{
@@ -31,10 +31,11 @@ var DemoCase = Case{
 				},
 			},
 		},
+		MountFiles: []string{},
 	},
 	SetUps: []SetUp{},
 	Retry: Retry{
-		Times:    1,
+		Times:    0,
 		Interval: "10s",
 	},
 	Verify: Verify{
@@ -52,10 +53,10 @@ var DemoCase = Case{
 				Name:      "counter-check",
 				Validator: "sys_counter",
 				Spec: map[string]interface{}{
-					"expect_equal_raw_log":       true,
-					"expect_equal_processed_log": true,
-					"expect_equal_flush_log":     true,
-					"expect_minimum_log_num":     15,
+					"expect_equal_raw_log":            true,
+					"expect_equal_processed_log":      true,
+					"expect_equal_flush_log":          true,
+					"expect_received_minimum_log_num": 15,
 				},
 			},
 		},

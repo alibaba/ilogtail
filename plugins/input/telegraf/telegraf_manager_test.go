@@ -125,12 +125,12 @@ func TestRegisterAndUnregister(t *testing.T) {
 		Name:   "config",
 		Detail: defaultConfigDetail,
 	}
-	inst.RegisterConfig(c)
+	inst.RegisterConfig(nil, c)
 	time.Sleep(time.Millisecond * time.Duration(500))
 	require.True(t, inst.isRunning())
 	require.True(t, isPathExists(path.Join(inst.telegrafConfPath, c.Name+".conf")))
 
-	inst.UnregisterConfig(c)
+	inst.UnregisterConfig(nil, c)
 	time.Sleep(time.Millisecond * time.Duration(500))
 	require.False(t, inst.isRunning())
 	require.False(t, isPathExists(path.Join(inst.telegrafConfPath, c.Name+".conf")))
@@ -148,7 +148,7 @@ func TestUpdateConfig(t *testing.T) {
 		Name:   "config",
 		Detail: defaultConfigDetail,
 	}
-	inst.RegisterConfig(c)
+	inst.RegisterConfig(nil, c)
 	time.Sleep(time.Millisecond * time.Duration(500))
 	require.True(t, inst.isRunning())
 
@@ -159,7 +159,7 @@ func TestUpdateConfig(t *testing.T) {
 		Name:   c.Name,
 		Detail: defaultConfigDetail + "\n",
 	}
-	inst.RegisterConfig(c2)
+	inst.RegisterConfig(nil, c2)
 	time.Sleep(time.Millisecond * time.Duration(500))
 	require.True(t, inst.isRunning())
 
@@ -172,7 +172,7 @@ func TestUpdateConfig(t *testing.T) {
 	require.Equal(t, loadedC.Detail, c2.Detail)
 	inst.mu.Unlock()
 
-	inst.UnregisterConfig(c2)
+	inst.UnregisterConfig(nil, c2)
 	time.Sleep(time.Millisecond * time.Duration(500))
 	require.False(t, inst.isRunning())
 }
@@ -189,7 +189,7 @@ func TestMultipleConfig(t *testing.T) {
 		Name:   "config",
 		Detail: defaultConfigDetail,
 	}
-	inst.RegisterConfig(c)
+	inst.RegisterConfig(nil, c)
 	time.Sleep(time.Millisecond * time.Duration(500))
 	require.True(t, inst.isRunning())
 	require.True(t, isPathExists(path.Join(inst.telegrafConfPath, c.Name+".conf")))
@@ -198,7 +198,7 @@ func TestMultipleConfig(t *testing.T) {
 		Name:   c.Name + "2",
 		Detail: defaultConfigDetail + "\n",
 	}
-	inst.RegisterConfig(c2)
+	inst.RegisterConfig(nil, c2)
 	time.Sleep(time.Millisecond * time.Duration(500))
 	require.True(t, inst.isRunning())
 	require.True(t, isPathExists(path.Join(inst.telegrafConfPath, c2.Name+".conf")))
@@ -215,8 +215,8 @@ func TestMultipleConfig(t *testing.T) {
 	}
 	inst.mu.Unlock()
 
-	inst.UnregisterConfig(c)
-	inst.UnregisterConfig(c2)
+	inst.UnregisterConfig(nil, c)
+	inst.UnregisterConfig(nil, c2)
 	time.Sleep(time.Millisecond * time.Duration(500))
 	require.False(t, inst.isRunning())
 	require.False(t, isPathExists(path.Join(inst.telegrafConfPath, c.Name+".conf")))
@@ -259,7 +259,7 @@ func TestOverwriteConfigFile(t *testing.T) {
 		Name:   "config",
 		Detail: defaultConfigDetail,
 	}
-	inst.RegisterConfig(c)
+	inst.RegisterConfig(nil, c)
 	time.Sleep(time.Millisecond * time.Duration(500))
 	require.True(t, isPathExists(inst.telegrafConfPath))
 }

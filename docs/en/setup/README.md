@@ -15,22 +15,22 @@ Please debug in the corresponding environment. More details please see [here](..
 
 ### Local start
 
-Execute the `make build` command in the root directory, and you will get the `bin/ilogtail` executable file. Use the
+Execute the `make plugin_main` command in the root directory, and you will get the `output/ilogtail` executable file. Use the
 following command to quickly start the iLogtail program.
 
 ```shell
 # The default startup behavior is to use the metric_mock plugin to mock data and print the data to the logs.
- ./bin/ilogtail --logger-console=true --logger-retain=false
+ ./output/ilogtail --logger-console=true --logger-retain=false
 ```
 
 ### Docker start
 
-Execute the `make docker` command in the root directory, and you will get the `aliyun/ilogtail:github-latest` image. Use the
+Execute the `make docker` command in the root directory, and you will get the `aliyun/ilogtail:1.1.0` image. Use the
 following command to quickly start the docker program. The behavior of the image is the same as the above program. The
 log output is in `/aliyun/logtail_plugin.LOG `File.
 
 ```shell
-make docker && docker run aliyun/ilogtail:github-latest 
+make docker && docker run aliyun/ilogtail:1.1.0
 ```
 
 ## Configuration
@@ -143,7 +143,7 @@ The following is a very simple example configuration file (plugin.quickstart.jso
 }
 ```
 
-Execute `./bin/ilogtail --plugin=plugin.quickstart.json`, after a period of time, use ctrl+c to interrupt the operation.
+Execute `./output/ilogtail --plugin=plugin.quickstart.json`, after a period of time, use ctrl+c to interrupt the operation.
 By checking the directory, you will find that two files, quickstart_1.stdout and quickstart_2.stdout, are generated, and
 their contents are the same.
 
@@ -155,7 +155,7 @@ running independently, port 18689 is enabled by default for monitoring configura
 Next, we will use the HTTP mode to re-load the static configuration example in the section **Specified configuration
 file mode startup**.
 
-1. First we start the iLogtail program: `./bin/ilogtail`
+1. First we start the iLogtail program: `./output/ilogtail`
 2. Use the following command to reload the configuration.
 
 ```shell
@@ -178,4 +178,4 @@ Fields\":{\"Content\":\"quickstart_input_1\"}}},{\"type\":\"metric_mock\",\"deta
 ### C API Configuration Reload
 
 The part of iLogtail-C will be open source soon, providing the function of compiling the iLogtail GO program in C-shared
-mode and using it in combination with the C program. API reference [plugin_export.go](../../../main/plugin_export.go).
+mode and using it in combination with the C program. API reference [plugin_export.go](../../../plugin_main/plugin_export.go).
