@@ -29,24 +29,24 @@ Common structure means which are referenced by the most other structures.
 
 ### DB metric data structure
 
-ÒÒ| Column | Type | Meaning | Required column |
+| Column          | Type               | Meaning                                                               | Required column |
 |-----------------|--------------------|-----------------------------------------------------------------------|-----------------|
-| time | int | timestamp for aggregation | true |
-| type | int | 0 means L7 DB metrics, 1 means L7 RPC metrics, and 2 means L4 metrics | true |
-| conn_id | string | each aggregation belongs to one unique connection id | true |
-| interval_ns | int | unit is nano seconds | true |
-| local_info | `Local Info` Json | local information | true |
-| remote_info | `Remote Info` Json | remote information | true |
-| role | int | 0 means client, 1 means server | true |
-| protocol | string | L7 detect protocol | true |
-| query_cmd | string | DB query command，such as select, insert and etc. | true |
-| query | string | DB query statement. | true |
-| status | int | the query result, 0 means failure, 1 means success. | true |
-| latency_ns | int | the total invoke cost ns | true |
-| tdigest_latency | string | base64 tdigest data for compute Pxx | true |
-| count | int | the total invoke cost | true |
-| req_bytes | int | the total requst bytes | true |
-| resp_bytes | int | the total response bytes | true |
+| time            | int                | timestamp for aggregation                                             | true            |
+| type            | int                | 0 means L7 DB metrics, 1 means L7 RPC metrics, and 2 means L4 metrics | true            |
+| conn_id         | string             | each aggregation belongs to one unique connection id                  | true            |
+| interval_ns     | int                | unit is nano seconds                                                  | true            |
+| local_info      | `Local Info` Json  | local information                                                     | true            |
+| remote_info     | `Remote Info` Json | remote information                                                    | true            |
+| role            | int                | 0 means client, 1 means server                                        | true            |
+| protocol        | string             | L7 detect protocol                                                    | true            |
+| query_cmd       | string             | DB query command，such as select, insert and etc.                      | true            |
+| query           | string             | DB query statement.                                                   | true            |
+| status          | int                | the query result, 0 means failure, 1 means success.                   | true            |
+| latency_ns      | int                | the total invoke cost ns                                              | true            |
+| tdigest_latency | string             | base64 tdigest data for compute Pxx                                   | true            |
+| count           | int                | the total invoke cost                                                 | true            |
+| req_bytes       | int                | the total requst bytes                                                | true            |
+| resp_bytes      | int                | the total response bytes                                              | true            |
 
 ### Request metric data structure
 
