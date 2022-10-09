@@ -75,7 +75,7 @@ Request metric works in RPC, DNS or MQ transfer.
 | req_bytes       | int                | the total requst bytes                                                | true            |
 | resp_bytes      | int                | the total response bytes                                              | true            |
 
-## Layer 4 data structure
+## Layer 4 metrics data structure
 
 | Column       | Type               | Meaning                                                               | Required column |
 |--------------|--------------------|-----------------------------------------------------------------------|-----------------|
