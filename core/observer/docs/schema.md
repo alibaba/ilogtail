@@ -41,6 +41,7 @@ Common structure means which are referenced by the most other structures.
 | protocol        | string             | L7 detect protocol                                                    | true            |
 | query_cmd       | string             | DB query command，such as select, insert and etc.                      | true            |
 | query           | string             | DB query statement.                                                   | true            |
+| extra           | json               | extra message for feature.                                            | true            |
 | status          | int                | the query result, 0 means failure, 1 means success.                   | true            |
 | latency_ns      | int                | the total invoke cost ns                                              | true            |
 | tdigest_latency | string             | base64 tdigest data for compute Pxx                                   | true            |
@@ -67,6 +68,7 @@ Request metric works in RPC, DNS or MQ transfer.
 | req_resource    | string             | request specific resource, such HTTP path or RPC method.              | true            |
 | resp_code       | int                | response code, currently only works in HTTP.                          | true            |
 | resp_status     | int                | response status, 0 means success, non-zero means failure.             | true            |
+| extra           | json               | extra message for feature.                                            | true            |
 | latency_ns      | int                | the total invoke cost ns                                              | true            |
 | tdigest_latency | string             | base64 tdigest data for compute Pxx                                   | true            |
 | count           | int                | the total invoke cost                                                 | true            |
@@ -85,6 +87,7 @@ Request metric works in RPC, DNS or MQ transfer.
 | remote_info  | `Remote Info` Json | remote information                                                    | true            |
 | role         | int                | 0 means client, 1 means server                                        | true            |
 | conn_type    | int                | 0 means TCP, and 1 means UDP.                                         | true            |
+| extra        | json               | extra message for feature.                                            | true            |
 | recv_bytes   | int                | the total receive bytes                                               | true            |
 | send_bytes   | int                | the total send bytes                                                  | true            |
 | recv_packets | int                | the total receive packets                                             | true            |
