@@ -130,6 +130,24 @@ func Compile(in string, vc VariableCompiler) (StringFormatter, error) {
 	return compile(ctx, in)
 }
 
+func CompileKeys(in string) ([]string, error) {
+	keys := make([]string, 0)
+	lexerChan := makeLexer(in)
+	defer lexerChan.Finish()
+	// parse format string
+	elements, err := parse(lexerChan)
+	if err != nil {
+		return nil, err
+	}
+	for i := range elements {
+		var ele = elements[i]
+		if s, ok := ele.(variableElement); ok {
+			keys = append(keys, s.field)
+		}
+	}
+	return keys, err
+}
+
 func compile(ctx *compileCtx, in string) (StringFormatter, error) {
 	lexerChan := makeLexer(in)
 	defer lexerChan.Finish()
