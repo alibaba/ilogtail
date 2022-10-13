@@ -96,15 +96,8 @@ type FlusherKafka struct {
 	Backoff backoffConfig
 	// Per Kafka broker number of messages buffered in output pipeline. The default is 256
 	ChanBufferSize int
-	// Rename one or more fields from tags.
-	TagFieldsRename map[string]string
-	// Rename one or more fields, The protocol field options can only be: contents, tags, time
-	ProtocolFieldsRename map[string]string
-	// Convert protocol, default value: custom_single
-	Protocol string
-	// Convert encoding, default value:json
-	// The options are: 'json'
-	Encoding string
+	// ilogtail data convert config
+	Convert convertConfig
 
 	HashKeys []string
 	HashOnce bool
@@ -151,6 +144,18 @@ type metaRetryConfig struct {
 	Backoff time.Duration
 }
 
+type convertConfig struct {
+	// Rename one or more fields from tags.
+	TagFieldsRename map[string]string
+	// Rename one or more fields, The protocol field options can only be: contents, tags, time
+	ProtocolFieldsRename map[string]string
+	// Convert protocol, default value: custom_single
+	Protocol string
+	// Convert encoding, default value:json
+	// The options are: 'json'
+	Encoding string
+}
+
 type FlusherFunc func(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
 
 // NewFlusherKafka Kafka flusher default config
@@ -190,8 +195,10 @@ func NewFlusherKafka() *FlusherKafka {
 				Password: "",
 			},
 		},
-		Protocol: converter.ProtocolCustomSingle,
-		Encoding: converter.EncodingJSON,
+		Convert: convertConfig{
+			Protocol: converter.ProtocolCustomSingle,
+			Encoding: converter.EncodingJSON,
+		},
 	}
 }
 func (k *FlusherKafka) Init(context ilogtail.Context) error {
@@ -201,6 +208,16 @@ func (k *FlusherKafka) Init(context ilogtail.Context) error {
 		logger.Error(k.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init kafka flusher fail, error", err)
 		return err
 	}
+
+	// Set default value while not set
+	if k.Convert.Encoding == "" {
+		k.converter.Encoding = converter.EncodingJSON
+	}
+
+	if k.Convert.Protocol == "" {
+		k.Convert.Protocol = converter.ProtocolCustomSingle
+	}
+
 	convert, err := k.getConverter()
 	if err != nil {
 		logger.Error(k.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init kafka flusher converter fail, error", err)
@@ -208,13 +225,13 @@ func (k *FlusherKafka) Init(context ilogtail.Context) error {
 	}
 	k.converter = convert
 
-	// Obtain target keys from dynamic topic
-	targetKeys, err := fmtstr.CompileKeys(k.Topic)
+	// Obtain topic keys from dynamic topic expression
+	topicKeys, err := fmtstr.CompileKeys(k.Topic)
 	if err != nil {
 		logger.Error(k.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init kafka flusher fail, error", err)
 		return err
 	}
-	k.topicKeys = targetKeys
+	k.topicKeys = topicKeys
 
 	saramaConfig, err := newSaramaConfig(k)
 	if err != nil {
@@ -323,8 +340,11 @@ func (k *FlusherKafka) hashPartitionKey(log []byte, defaultKey string) sarama.St
 	}
 	// Obtain renamed contents name
 	contentFieldName := ContentsFieldDefaultName
-	if _, ok := k.ProtocolFieldsRename[ContentsFieldDefaultName]; ok {
-		contentFieldName = k.ProtocolFieldsRename[ContentsFieldDefaultName]
+	// default content prefix
+	contentPrefix := "content"
+	if _, ok := k.Convert.ProtocolFieldsRename[ContentsFieldDefaultName]; ok {
+		contentFieldName = k.Convert.ProtocolFieldsRename[ContentsFieldDefaultName]
+		contentPrefix = contentFieldName
 	}
 	var hashData []string
 	for key, value := range logMap {
@@ -334,7 +354,7 @@ func (k *FlusherKafka) hashPartitionKey(log []byte, defaultKey string) sarama.St
 		}
 		logContent := value.(map[string]interface{})
 		for contentKey, contentValue := range logContent {
-			if _, ok := k.hashKeyMap[contentKey]; ok {
+			if _, ok := k.hashKeyMap[contentPrefix+"."+contentKey]; ok {
 				hashData = append(hashData, contentValue.(string))
 			}
 		}
@@ -524,7 +544,9 @@ func saramaProducerCompressionCodec(compression string) (sarama.CompressionCodec
 }
 
 func (k *FlusherKafka) getConverter() (*converter.Converter, error) {
-	return converter.NewConverter(k.Protocol, k.Encoding, k.TagFieldsRename, k.ProtocolFieldsRename)
+	logger.Debug(k.context.GetRuntimeContext(), "[ilogtail data convert config] Protocol", k.Convert.Protocol,
+		"Encoding", k.Convert.Encoding, "TagFieldsRename", k.Convert.TagFieldsRename, "ProtocolFieldsRename", k.Convert.ProtocolFieldsRename)
+	return converter.NewConverter(k.Convert.Protocol, k.Convert.Encoding, k.Convert.TagFieldsRename, k.Convert.ProtocolFieldsRename)
 }
 
 func init() {
