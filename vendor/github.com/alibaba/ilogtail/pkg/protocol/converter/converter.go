@@ -35,7 +35,9 @@ const (
 
 const (
 	tagPrefix             = "__tag__:"
+
 	targetContentPrefix = "content."
+
 	targetTagPrefix       = "tag."
 )
 
@@ -214,6 +216,7 @@ func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map
 		switch {
 		case strings.HasPrefix(field, targetContentPrefix):
 			if value, ok := contents[field[len(targetContentPrefix):]]; ok {
+
 				desiredValue[field] = value
 			}
 		case strings.HasPrefix(field, targetTagPrefix):
