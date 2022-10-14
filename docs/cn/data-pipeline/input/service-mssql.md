@@ -1,4 +1,4 @@
-# Canal
+# MS SQL Server导入插件
 
 ## 简介
 
