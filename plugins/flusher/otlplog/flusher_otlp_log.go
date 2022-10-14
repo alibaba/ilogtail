@@ -178,7 +178,7 @@ func (f *FlusherOTLPLog) IsReady(projectName string, logstoreName string, logsto
 			ready = false
 			break
 		}
-		timeout, canal := context.WithTimeout(context.Background(), f.GrpcConfig.Timeout)
+		timeout, canal := context.WithTimeout(context.Background(), f.GrpcConfig.GetTimeout())
 		defer canal()
 		_ = f.grpcConn.WaitForStateChange(timeout, state)
 		state = f.grpcConn.GetState()

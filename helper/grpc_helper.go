@@ -58,7 +58,7 @@ type GrpcClientConfig struct {
 	// Send retry setting
 	Retry RetryConfig `json:"Retry"`
 
-	Timeout time.Duration `json:"Timeout"`
+	Timeout int `json:"Timeout"`
 }
 
 type RetryConfig struct {
@@ -113,9 +113,9 @@ func (cfg *GrpcClientConfig) GetEndpoint() string {
 
 func (cfg *GrpcClientConfig) GetTimeout() time.Duration {
 	if cfg.Timeout <= 0 {
-		return 5 * time.Second
+		return 5000 * time.Millisecond
 	}
-	return cfg.Timeout
+	return time.Duration(cfg.Timeout) * time.Millisecond
 }
 
 // RetryInfo Handle retry for grpc. Refer to https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/otlpexporter/otlp.go#L121

@@ -85,7 +85,7 @@ func Test_Flusher_Flush_Timeout(t *testing.T) {
 		logCtx := mock.NewEmptyContext("p", "l", "c")
 
 		convey.Convey("When FlusherOTLPLog init", func() {
-			f := &FlusherOTLPLog{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: ":8176", WaitForReady: true, Timeout: time.Second * 1}}
+			f := &FlusherOTLPLog{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: ":8176", WaitForReady: true, Timeout: 1000}}
 			err := f.Init(logCtx)
 			convey.So(err, convey.ShouldBeNil)
 
