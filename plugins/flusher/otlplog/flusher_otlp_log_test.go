@@ -34,7 +34,7 @@ func (t *TestOtlpLogService) Export(ctx context.Context, request *otlpv1.ExportL
 
 func Test_Flusher_Init(t *testing.T) {
 	convey.Convey("When init grpc service", t, func() {
-		_, server := newTestGrpcService(t, ":8080", time.Nanosecond)
+		_, server := newTestGrpcService(t, ":18176", time.Nanosecond)
 		defer func() {
 			server.Stop()
 		}()
@@ -50,14 +50,14 @@ func Test_Flusher_Init(t *testing.T) {
 
 func Test_Flusher_Flush(t *testing.T) {
 	convey.Convey("When init grpc service", t, func() {
-		service, server := newTestGrpcService(t, ":8176", time.Nanosecond*0)
+		service, server := newTestGrpcService(t, ":18176", time.Nanosecond*0)
 		defer func() {
 			server.Stop()
 		}()
 		logCtx := mock.NewEmptyContext("p", "l", "c")
 
 		convey.Convey("When FlusherOTLPLog init", func() {
-			f := &FlusherOTLPLog{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: ":8176", WaitForReady: true}}
+			f := &FlusherOTLPLog{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: ":18176", WaitForReady: true}}
 			err := f.Init(logCtx)
 			convey.So(err, convey.ShouldBeNil)
 
