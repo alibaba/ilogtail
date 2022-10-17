@@ -332,6 +332,7 @@ func (k *FlusherKafka) HashFlush(projectName string, logstoreName string, config
 }
 
 func (k *FlusherKafka) hashPartitionKey(log []byte, defaultKey string) sarama.StringEncoder {
+	// In the next version, this function needs to be optimized
 	// log map contains time,contents,tags
 	logMap := make(map[string]interface{})
 	err := json.Unmarshal(log, &logMap)
