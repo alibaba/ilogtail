@@ -195,12 +195,16 @@ void CheckPointManager::LoadFileCheckPoint(const Json::Value& root) {
         // use inode comparison instead
         try {
             int64_t offset = StringTo<int64_t>(meta["offset"].asString());
+            int64_t logicalOffset = 0;
             DevInode devInode;
             uint32_t sigSize = 0;
             uint64_t sigHash = 0;
             string filePath = meta["file_name"].asString();
             string realFilePath;
             int32_t fileOpenFlag = 0; // default, we close file ptr
+            if(meta.isMember("logical_offset")){
+                logicalOffset = meta["logical_offset"].asUInt64();
+            }
             if (meta.isMember("real_file_name")) {
                 realFilePath = meta["real_file_name"].asString();
             }
@@ -244,7 +248,7 @@ void CheckPointManager::LoadFileCheckPoint(const Json::Value& root) {
                 // No need to check if the config still matches the file here.
                 configName = meta["config_name"].asString();
                 CheckPoint* ptr = new CheckPoint(
-                    filePath, offset, sigSize, sigHash, devInode, configName, realFilePath, fileOpenFlag);
+                    filePath, logicalOffset, offset, sigSize, sigHash, devInode, configName, realFilePath, fileOpenFlag);
                 ptr->mLastUpdateTime = update_time;
                 AddCheckPoint(ptr);
             } else {
@@ -268,6 +272,7 @@ void CheckPointManager::LoadFileCheckPoint(const Json::Value& root) {
                 }
                 for (size_t i = 0; i < allConfig.size(); ++i) {
                     CheckPoint* ptr = new CheckPoint(filePath,
+                                                     logicalOffset,
                                                      offset,
                                                      sigSize,
                                                      sigHash,
@@ -311,6 +316,7 @@ bool CheckPointManager::DumpCheckPointToLocal() {
             leaf["file_name"] = Json::Value(checkPointPtr->mFileName);
             leaf["real_file_name"] = Json::Value(checkPointPtr->mRealFileName);
             leaf["offset"] = Json::Value(ToString(checkPointPtr->mOffset));
+            leaf["logical_offset"] = Json::Value(Json::UInt64(checkPointPtr->mLogicalOffset));
             leaf["sig_size"] = Json::Value(Json::UInt(checkPointPtr->mSignatureSize));
             leaf["sig_hash"] = Json::Value(Json::UInt64(checkPointPtr->mSignatureHash));
             leaf["update_time"] = Json::Value(checkPointPtr->mLastUpdateTime);

@@ -385,6 +385,7 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(
         if (readerArray.size() > 0 && !readerPtr->IsFromCheckPoint()) {
             LOG_DEBUG(sLogger, ("file rotate, reset new reader pos", PathJoin(path, name)));
             readerPtr->ResetLastFilePos();
+            readerPtr->ResetLogicalOffset();
         }
     } else {
         backFlag = false;

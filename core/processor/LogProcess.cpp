@@ -316,6 +316,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                         .append(TAG_SEPARATOR)
                         .append(logPath.substr(0, 511));
 
+                    passingTags.append(TAG_DELIMITER)
+                        .append(TAG_PREFIX)
+                        .append(LOG_RESERVED_KEY_LOGICAL_OFFSET)
+                        .append(TAG_SEPARATOR)
+                        .append(std::to_string(logBuffer->logicalOffset));
+
                     std::string userDefinedId = ConfigManager::GetInstance()->GetUserDefinedIdSet();
                     if (!userDefinedId.empty()) {
                         passingTags.append(TAG_DELIMITER)

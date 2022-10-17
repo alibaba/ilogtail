@@ -131,7 +131,9 @@ public:
 
     int64_t GetLastFilePos() const { return mLastFilePos; }
 
-    void ResetLastFilePos() { mLastFilePos = 0; }
+    void ResetLastFilePos() { mLastFilePos = 0;}
+
+    void ResetLogicalOffset() { mLogicalOffset = 0;}
 
     bool NeedSkipFirstModify() const { return mSkipFirstModify; }
 
@@ -382,6 +384,8 @@ protected:
 
     int32_t mTzOffsetSecond;
     bool mAdjustApsaraMicroTimezone;
+    // logical read offset, for log backend order feature.
+    int64_t mLogicalOffset = 0;
 
 private:
     // Initialized when the exactly once feature is enabled.
@@ -522,6 +526,8 @@ struct LogBuffer {
     RangeCheckpointPtr exactlyOnceCheckpoint;
     // Current buffer's offset in file, for log position meta feature.
     uint64_t beginOffset;
+    // Current buffer's logical read offset, for log backend order feature.
+    int64_t logicalOffset;
 
     LogBuffer(char* buf,
               int32_t size,

@@ -619,6 +619,7 @@ void EventDispatcherBase::AddExistedCheckPointFileEvents() {
             auto& cpt = cptPair.second;
             auto v1Cpt = std::make_shared<CheckPoint>(cpt.log_path(),
                                                       0,
+                                                      0,
                                                       cpt.sig_size(),
                                                       cpt.sig_hash(),
                                                       DevInode(cpt.dev(), cpt.inode()),

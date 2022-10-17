@@ -85,6 +85,7 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
         }
     }
     CheckPoint* checkPointPtr = new CheckPoint(mLogPath,
+                                               mLogicalOffset,
                                                mLastFilePos,
                                                mLastFileSignatureSize,
                                                mLastFileSignatureHash,
@@ -136,6 +137,7 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
             mLastFileSignatureSize = checkPointPtr->mSignatureSize;
             mRealLogPath = checkPointPtr->mRealFileName;
             mLastEventTime = checkPointPtr->mLastUpdateTime;
+            mLogicalOffset = checkPointPtr->mLogicalOffset;
             LOG_DEBUG(sLogger,
                       ("init reader by checkpoint", mLogPath)(mRealLogPath, mLastFilePos)("config", mConfigName));
             // check if we should skip first modify
@@ -406,6 +408,7 @@ LogFileReader::LogFileReader(const string& projectName,
     mTailLimit = tailLimit;
     mLastFilePos = 0;
     mLastFileSize = 0;
+    mLogicalOffset = 0;
     mLogBeginRegPtr = NULL;
     mDiscardUnmatch = discardUnmatch;
     mLastUpdateTime = time(NULL);
@@ -446,6 +449,7 @@ LogFileReader::LogFileReader(const std::string& projectName,
     mTailLimit = tailLimit;
     mLastFilePos = 0;
     mLastFileSize = 0;
+    mLogicalOffset = 0;
     const std::string lowerConfig = ToLowerCaseString(topicFormat);
     if (lowerConfig == "none" || lowerConfig == "default" || lowerConfig == "customized") {
         // For customized, it will be set through SetTopicName.
@@ -495,6 +499,7 @@ void LogFileReader::SetDockerPath(const std::string& dockerBasePath, size_t dock
 void LogFileReader::SetReadFromBeginning() {
     mLastFilePos = 0;
     mLastReadPos = 0;
+    mLogicalOffset = 0;
     LOG_DEBUG(sLogger, ("begin to read file", mLogPath)("start offset", mLastFilePos));
     mFirstWatched = false;
 }
@@ -690,6 +695,7 @@ bool LogFileReader::CheckForFirstOpen(FileReadPolicy policy) {
     if (op.IsOpen() == false) {
         mLastFilePos = 0;
         mLastReadPos = 0;
+        mLogicalOffset = 0;
         LOG_DEBUG(sLogger, ("begin to read file", mLogPath)("start offset", mLastFilePos));
         auto error = GetErrno();
         if (fsutil::Dir::IsENOENT(error))
@@ -717,6 +723,7 @@ bool LogFileReader::CheckForFirstOpen(FileReadPolicy policy) {
     } else if (policy == BACKWARD_TO_BEGINNING) {
         mLastFilePos = 0;
         mLastReadPos = 0;
+        mLogicalOffset = 0;
     } else {
         LOG_ERROR(sLogger, ("invalid file read policy for file", mLogPath));
         return false;
@@ -970,6 +977,7 @@ bool LogFileReader::ReadLog(LogBuffer*& logBuffer) {
         } else {
             logBuffer->beginOffset = beginOffset;
         }
+        logBuffer->logicalOffset = mLogicalOffset++;
     } else {
         // if size == 0 and pointers below is not NULL(memory allocated in GetRawData),
         // then we should delete pointers in case of memory leak
@@ -1213,6 +1221,7 @@ bool LogFileReader::CheckFileSignatureAndOffset(int64_t& fileSize) {
     if (!sigCheckRst) {
         LOG_INFO(sLogger, ("Check file truncate by signature, read from begin", mLogPath));
         mLastFilePos = 0;
+        mLogicalOffset = 0;
         if (mEOOption) {
             updatePrimaryCheckpointSignature();
         }
@@ -1760,6 +1769,7 @@ LogFileReader::~LogFileReader() {
         delete mLogBeginRegPtr;
         mLogBeginRegPtr = NULL;
     }
+    mLogicalOffset = 0;
     LOG_DEBUG(sLogger, ("Delete LogFileReader ", mLogPath));
     CloseFilePtr();
 

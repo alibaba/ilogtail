@@ -34,6 +34,7 @@ extern const std::string LOG_RESERVED_KEY_TRUNCATE_INFO;
 extern const std::string LOG_RESERVED_KEY_ALIPAY_ZONE;
 extern const std::string LOG_RESERVED_KEY_INODE;
 extern const std::string LOG_RESERVED_KEY_FILE_OFFSET;
+extern const std::string LOG_RESERVED_KEY_LOGICAL_OFFSET;
 
 extern const char* SLS_EMPTY_STR_FOR_INDEX;
 

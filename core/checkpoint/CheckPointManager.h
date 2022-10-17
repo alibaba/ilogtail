@@ -38,16 +38,18 @@ public:
     std::string mFileName;
     std::string mRealFileName;
     int64_t mOffset;
+    int64_t mLogicalOffset;
     uint32_t mSignatureSize;
     uint64_t mSignatureHash;
     int32_t mLastUpdateTime;
     DevInode mDevInode;
     int32_t mFileOpenFlag;
     std::string mConfigName;
-
+  
     CheckPoint() {}
 
     CheckPoint(const std::string& filename,
+               int64_t logicalOffset,
                int64_t offset,
                uint32_t signatureSize,
                uint64_t signatureHash,
@@ -58,6 +60,7 @@ public:
         : mFileName(filename),
           mRealFileName(realFileName),
           mOffset(offset),
+          mLogicalOffset(logicalOffset),
           mSignatureSize(signatureSize),
           mSignatureHash(signatureHash),
           mLastUpdateTime(0),

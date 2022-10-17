@@ -573,6 +573,7 @@ void ConfigUpdatorUnittest::TestCheckPointManager() {
                           "tmp" + PS + "apsara.log.2",
                           PS + "apsara" + PS + "tmp" + PS + "log.3",
                           PS + "apsara" + PS + "tmp" + PS + "log.3"};
+    int64_t logicalOffsets[] = {1001, 1002, 1003, 1004};
     int64_t offsets[] = {100, 10000, 200000, 200000};
     uint64_t devs[] = {34, 56, 98, 98};
     uint64_t inodes[] = {100, 2006, 3000008, 3000008};
@@ -630,7 +631,7 @@ void ConfigUpdatorUnittest::TestCheckPointManager() {
     // case 2 : add filecheckpoint
     for (int i = 0; i < 4; ++i) {
         CheckPoint* checkPointPtr = new CheckPoint(
-            filenames[i], offsets[i], sigSizes[i], sigHashs[i], DevInode(devs[i], inodes[i]), configs[i]);
+            filenames[i], logicalOffsets[i], offsets[i], sigSizes[i], sigHashs[i], DevInode(devs[i], inodes[i]), configs[i]);
         checkpointManager->AddCheckPoint(checkPointPtr);
     }
     // timeout checkpoint
@@ -1913,7 +1914,7 @@ void ConfigUpdatorUnittest::TestCheckPointSaveInterval() {
 
     for (int i = 0; i < 3; ++i) {
         CheckPoint* checkPointPtr = new CheckPoint(
-            filenames[i], offsets[i], sigSizes[i], sigHashs[i], DevInode(devs[i], inodes[i]), configs[i]);
+            filenames[i], logicalOffsets[i], offsets[i], sigSizes[i], sigHashs[i], DevInode(devs[i], inodes[i]), configs[i]);
         CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
     }
 
@@ -2000,7 +2001,7 @@ void ConfigUpdatorUnittest::TestCheckPointUserDefinedFilePath() {
     }
     for (int i = 0; i < 3; ++i) {
         CheckPoint* checkPointPtr = new CheckPoint(
-            filenames[i], offsets[i], sigSizes[i], sigHashs[i], DevInode(devs[i], inodes[i]), configs[i]);
+            filenames[i], logicalOffsets[i], offsets[i], sigSizes[i], sigHashs[i], DevInode(devs[i], inodes[i]), configs[i]);
         CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
     }
 
@@ -2086,7 +2087,7 @@ void ConfigUpdatorUnittest::TestCheckPointLoadDefaultFile() {
     }
     for (int i = 0; i < 3; ++i) {
         CheckPoint* checkPointPtr = new CheckPoint(
-            filenames[i], offsets[i], sigSizes[i], sigHashs[i], DevInode(devs[i], inodes[i]), configs[i]);
+            filenames[i], logicalOffsets[i], offsets[i], sigSizes[i], sigHashs[i], DevInode(devs[i], inodes[i]), configs[i]);
         CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
     }
     bfs::remove(STRING_FLAG(check_point_filename));
