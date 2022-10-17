@@ -146,7 +146,6 @@ func (*FlusherStdout) IsReady(projectName string, logstoreName string, logstoreK
 // Stop ...
 func (p *FlusherStdout) Stop() error {
 	if p.outLogger != nil {
-		p.outLogger.Flush()
 		p.outLogger.Close()
 	}
 	return nil
