@@ -124,6 +124,8 @@ When distributed in a binary form, Logtailplugin may contain portions of the fol
 - [google.golang.org/protobuf](https://pkg.go.dev/google.golang.org/protobuf?tab=licenses)
 - [gopkg.in/inf.v0](https://pkg.go.dev/gopkg.in/inf.v0?tab=licenses)
 - [github.com/miekg/pkcs11](https://pkg.go.dev/github.com/miekg/pkcs11?tab=licenses)
+- [github.com/cznic/mathutil](https://pkg.go.dev/github.com/cznic/mathutil?tab=licenses)
+- [github.com/remyoudompheng/bigfft](https://pkg.go.dev/github.com/remyoudompheng/bigfft?tab=licenses)
 
 ## MIT licenses
 
