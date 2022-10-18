@@ -220,12 +220,12 @@ require (
 
 replace (
 	github.com/VictoriaMetrics/VictoriaMetrics => github.com/iLogtail/VictoriaMetrics v1.0.0
-	github.com/VictoriaMetrics/metrics => github.com/iLogtail/metrics v1.0.1
+	github.com/VictoriaMetrics/metrics => github.com/iLogtail/metrics v1.0.0
 	github.com/alibaba/ilogtail/pkg => ./pkg
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner => ./external/github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner
 	github.com/elastic/beats/v7 => ./external/github.com/elastic/beats/v7
 	github.com/jeromer/syslogparser => ./external/github.com/jeromer/syslogparser
-	github.com/pingcap/parser => github.com/iLogtail/parser v1.0.1
+	github.com/pingcap/parser => github.com/iLogtail/parser v1.0.0
 	github.com/satori/go.uuid => github.com/satori/go.uuid v1.2.0
 	github.com/siddontang/go-mysql => github.com/iLogtail/go-mysql v1.0.0
 )
