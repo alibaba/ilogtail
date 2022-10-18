@@ -70,7 +70,7 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 			if len(strArray) == 0 {
 				return destArray
 			}
-			var offset int64 = 0
+			var offset int64
 			for i := 0; i < len(strArray)-1; i++ {
 				if len(strArray[i]) == 0 {
 					continue
