@@ -16,6 +16,7 @@ package logstring
 
 import (
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
@@ -69,16 +70,21 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 			if len(strArray) == 0 {
 				return destArray
 			}
+			var offset int64 = 0
 			for i := 0; i < len(strArray)-1; i++ {
 				if len(strArray[i]) == 0 {
 					continue
 				}
 				copyLog := protocol.CloneLog(newLog)
 				copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{Key: destCont.Key, Value: strArray[i]})
+				helper.ReviseFileOffset(copyLog, offset)
+				offset += int64(len(strArray[i]))
 				destArray = append(destArray, copyLog)
 			}
-			if (len(strArray[len(strArray)-1])) > 0 {
-				newLog.Contents = append(newLog.Contents, &protocol.Log_Content{Key: destCont.Key, Value: strArray[len(strArray)-1]})
+			newLogCont := strArray[len(strArray)-1]
+			if (len(newLogCont)) > 0 {
+				newLog.Contents = append(newLog.Contents, &protocol.Log_Content{Key: destCont.Key, Value: newLogCont})
+				helper.ReviseFileOffset(newLog, offset)
 				destArray = append(destArray, newLog)
 			}
 		} else {
