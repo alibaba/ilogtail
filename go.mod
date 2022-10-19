@@ -68,7 +68,6 @@ require (
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cilium/ebpf v0.7.0 // indirect
 	github.com/containerd/nri v0.1.0 // indirect
-	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/frankban/quicktest v1.14.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
@@ -81,7 +80,6 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20210425183316-da1aaba5fb63 // indirect
 	github.com/pingcap/parser v0.0.0-20210415081931-48e7f467fd74 // indirect
 	github.com/prometheus/client_golang v1.11.1 // indirect
-	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/stefanberger/go-pkcs11uri v0.0.0-20201008174630-78d3cae3a980 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
@@ -224,13 +222,13 @@ require (
 )
 
 replace (
-	github.com/VictoriaMetrics/VictoriaMetrics => github.com/iLogtail/VictoriaMetrics v1.0.0
-	github.com/VictoriaMetrics/metrics => github.com/iLogtail/metrics v1.0.0
+	github.com/VictoriaMetrics/VictoriaMetrics => github.com/iLogtail/VictoriaMetrics v1.58.0-ilogtail
+	github.com/VictoriaMetrics/metrics => github.com/iLogtail/metrics v1.17.2-ilogtail
 	github.com/alibaba/ilogtail/pkg => ./pkg
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner => ./external/github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner
 	github.com/elastic/beats/v7 => ./external/github.com/elastic/beats/v7
 	github.com/jeromer/syslogparser => ./external/github.com/jeromer/syslogparser
-	github.com/pingcap/parser => github.com/iLogtail/parser v1.0.0
+	github.com/pingcap/parser => github.com/iLogtail/parser v0.0.0-20210415081931-48e7f467fd74-ilogtail
 	github.com/satori/go.uuid => github.com/satori/go.uuid v1.2.0
-	github.com/siddontang/go-mysql => github.com/iLogtail/go-mysql v1.0.0
+	github.com/siddontang/go-mysql => github.com/iLogtail/go-mysql v0.0.0-20180725024449-535abe8f2eba-ilogtail
 )
