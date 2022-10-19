@@ -78,11 +78,11 @@ Request metric works in RPC, DNS or MQ transfer.
 
 | Column        | Type               | Meaning                                                               | Required column |
 |---------------|--------------------|-----------------------------------------------------------------------|-----------------|
-| __time__      | int                | timestamp for aggregation                                             | true            |
-| _local_addr_  | string             | local address                                                         | true            |
-| _local_port_  | int                | local port                                                            | true            |
-| _remote_addr_ | string             | remote address                                                        | true            |
-| _remote_port_ | int                | remote port                                                           | true            |
+| `__time__`      | int                | timestamp for aggregation                                             | true            |
+| `_local_addr`_  | string             | local address                                                         | true            |
+| `_local_port`_  | int                | local port                                                            | true            |
+| `_remote_addr`_ | string             | remote address                                                        | true            |
+| `_remote_port`_ | int                | remote port                                                           | true            |
 | type          | int                | 0 means L7 DB metrics, 1 means L7 RPC metrics, and 2 means L4 metrics | true            |
 | local_info    | `Local Info` Json  | local information                                                     | true            |
 | remote_info   | `Remote Info` Json | remote information                                                    | true            |

@@ -28,20 +28,6 @@
 
 namespace logtail {
 
-template <typename T>
-inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const T& value) {
-    auto content = log->add_contents();
-    content->set_key(key);
-    content->set_value(std::to_string(value));
-}
-
-template <>
-inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const std::string& value) {
-    auto content = log->add_contents();
-    content->set_key(key);
-    content->set_value(value);
-}
-
 struct CommonAggKey {
     CommonAggKey() = default;
     CommonAggKey(PacketEventHeader* header)

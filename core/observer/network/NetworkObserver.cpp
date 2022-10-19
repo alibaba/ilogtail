@@ -152,9 +152,7 @@ void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, 
     for (auto iter = mergedMap.begin(); iter != mergedMap.end() && lastSize < allData.size(); ++iter) {
         sls_logs::Log* log = &allData[lastSize];
         log->mutable_contents()->Reserve(16);
-        auto content = log->add_contents();
-        content->set_key("type");
-        content->set_value(std::to_string(static_cast<int>(ObserverMetricsType::L4_METRICS)));
+
         Json::Value root;
         Json::StreamWriterBuilder builder;
         builder["indentation"] = ""; // If you want whitespace-less output
@@ -175,12 +173,9 @@ void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, 
                 root[item.first] = item.second;
             }
         }
-        content = log->add_contents();
-        content->set_key(observer::kLocalInfo);
-        content->set_value(Json::writeString(builder, root));
-        content = log->add_contents();
-        content->set_key(observer::kInterval);
-        content->set_value(std::to_string(this->mConfig->mFlushOutInterval));
+        AddAnyLogContent(log, observer::kType, static_cast<int>(ObserverMetricsType::L4_METRICS));
+        AddAnyLogContent(log, observer::kLocalInfo, Json::writeString(builder, root));
+        AddAnyLogContent(log, observer::kInterval, this->mConfig->mFlushOutInterval);
         iter->first.ToPB(log);
         iter->second.ToPB(log);
         mNetworkStatistic->mInputBytes += iter->second.Base.RecvBytes;

@@ -9,6 +9,7 @@ namespace observer {
     std::string kLocalInfo = "local_info";
     std::string kRemoteInfo = "remote_info";
     std::string kRole = "role";
+    std::string kType = "type";
     // ection label keys
     std::string kConnId = "conn_id";
     std::string kConnType = "conn_type";
