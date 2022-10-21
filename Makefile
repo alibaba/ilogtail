@@ -47,7 +47,6 @@ LICENSE_COVERAGE_FILE=license_coverage.txt
 OUT_DIR = output
 DIST_DIR = dist
 PACKAGE_DIR = ilogtail-$(VERSION)
-DIST_DIR = ilogtail-$(VERSION)
 EXTERNAL_DIR = external
 
 .PHONY: tools
