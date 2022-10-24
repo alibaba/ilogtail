@@ -8,13 +8,22 @@ import (
 
 var FileOffsetKey = "__tag__:__file_offset__"
 
-func ReviseFileOffset(log *protocol.Log, offset int64) {
-	for _, cont := range log.Contents {
-		if cont.Key == FileOffsetKey {
+func ReviseFileOffset(log *protocol.Log, offset int64, enableMeta bool) {
+	if enableMeta {
+		cont := GetFileOffsetTag(log)
+		if cont != nil {
 			if beginOffset, err := strconv.ParseInt(cont.Value, 10, 64); err == nil {
 				cont.Value = strconv.FormatInt(beginOffset+offset, 10)
 			}
-			return
 		}
 	}
+}
+
+func GetFileOffsetTag(log *protocol.Log) *protocol.Log_Content {
+	for _, cont := range log.Contents {
+		if cont.Key == FileOffsetKey {
+			return cont
+		}
+	}
+	return nil
 }

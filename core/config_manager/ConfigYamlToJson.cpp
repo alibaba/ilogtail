@@ -406,7 +406,9 @@ bool ConfigYamlToJson::GeneratePluginStatistics(const string pluginCategory,
     return true;
 }
 
-bool ConfigYamlToJson::FillupMustMultiLinesSplitProcessor(const WorkMode& workMode, Json::Value& splitProcessor) {
+bool ConfigYamlToJson::FillupMustMultiLinesSplitProcessor(const WorkMode& workMode,
+                                                          Json::Value& splitProcessor,
+                                                          Json::Value& userJsonConfig) {
     if (!workMode.mIsFileMode || workMode.mHasAccelerateProcessor) {
         return false;
     }
@@ -418,6 +420,9 @@ bool ConfigYamlToJson::FillupMustMultiLinesSplitProcessor(const WorkMode& workMo
     Json::Value pluginDetails;
     if (0 == workMode.mInputPluginType.compare(INPUT_FILE_LOG)) {
         pluginDetails["SplitKey"] = "content";
+        if (userJsonConfig["advanced"] && userJsonConfig["advanced"]["enable_log_position_meta"]) {
+            pluginDetails["EnableLogPositionMeta"] = userJsonConfig["advanced"]["enable_log_position_meta"];
+        }
         splitProcessor["detail"] = pluginDetails;
         splitProcessor["type"] = PROCESSOR_SPLIT_LINE_LOG_USING_SEP;
     }
@@ -455,7 +460,7 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForPluginCategory(const string con
 
     if (0 == pluginCategory.compare(PLUGIN_CATEGORY_PROCESSORS)) {
         Json::Value splitProcessor;
-        if (FillupMustMultiLinesSplitProcessor(workMode, splitProcessor))
+        if (FillupMustMultiLinesSplitProcessor(workMode, splitProcessor, userJsonConfig))
             plugins.append(splitProcessor);
     }
 

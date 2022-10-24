@@ -25,10 +25,11 @@ import (
 )
 
 type ProcessorSplit struct {
-	SplitKey       string
-	SplitSep       string
-	PreserveOthers bool
-	NoKeyError     bool
+	SplitKey              string
+	SplitSep              string
+	PreserveOthers        bool
+	NoKeyError            bool
+	EnableLogPositionMeta bool
 
 	context ilogtail.Context
 }
@@ -77,14 +78,14 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 				}
 				copyLog := protocol.CloneLog(newLog)
 				copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{Key: destCont.Key, Value: strArray[i]})
-				helper.ReviseFileOffset(copyLog, offset)
+				helper.ReviseFileOffset(copyLog, offset, p.EnableLogPositionMeta)
 				offset += int64(len(strArray[i]) + len(p.SplitSep))
 				destArray = append(destArray, copyLog)
 			}
 			newLogCont := strArray[len(strArray)-1]
 			if (len(newLogCont)) > 0 {
 				newLog.Contents = append(newLog.Contents, &protocol.Log_Content{Key: destCont.Key, Value: newLogCont})
-				helper.ReviseFileOffset(newLog, offset)
+				helper.ReviseFileOffset(newLog, offset, p.EnableLogPositionMeta)
 				destArray = append(destArray, newLog)
 			}
 		} else {

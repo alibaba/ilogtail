@@ -29,21 +29,12 @@ func TestReviseFileOffset(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ReviseFileOffset(tt.log, 101)
-			cont := getFileOffsetTag(tt.log)
+			ReviseFileOffset(tt.log, 101, true)
+			cont := GetFileOffsetTag(tt.log)
 			assert.True(t, cont != nil)
 			off, err := strconv.ParseInt(cont.Value, 10, 64)
 			assert.True(t, err == nil)
 			assert.Equal(t, tt.want, off)
 		})
 	}
-}
-
-func getFileOffsetTag(log *protocol.Log) *protocol.Log_Content {
-	for _, cont := range log.Contents {
-		if cont.Key == FileOffsetKey {
-			return cont
-		}
-	}
-	return nil
 }

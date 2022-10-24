@@ -25,10 +25,11 @@ import (
 )
 
 type ProcessorSplitRegex struct {
-	SplitKey       string
-	SplitRegex     string
-	PreserveOthers bool
-	NoKeyError     bool
+	SplitKey              string
+	SplitRegex            string
+	PreserveOthers        bool
+	NoKeyError            bool
+	EnableLogPositionMeta bool
 
 	context ilogtail.Context
 	regex   *regexp.Regexp
@@ -65,7 +66,7 @@ func (p *ProcessorSplitRegex) SplitLog(logArray []*protocol.Log, rawLog *protoco
 				copyLog := protocol.CloneLog(rawLog)
 				copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{
 					Key: cont.GetKey(), Value: valueStr[lastLineIndex:lastCheckIndex]})
-				helper.ReviseFileOffset(copyLog, int64(lastLineIndex))
+				helper.ReviseFileOffset(copyLog, int64(lastLineIndex), p.EnableLogPositionMeta)
 				logArray = append(logArray, copyLog)
 				lastLineIndex = lastCheckIndex
 			}
@@ -81,7 +82,7 @@ func (p *ProcessorSplitRegex) SplitLog(logArray []*protocol.Log, rawLog *protoco
 			copyLog := protocol.CloneLog(rawLog)
 			copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{
 				Key: cont.GetKey(), Value: valueStr[lastLineIndex:lastCheckIndex]})
-			helper.ReviseFileOffset(copyLog, int64(lastLineIndex))
+			helper.ReviseFileOffset(copyLog, int64(lastLineIndex), p.EnableLogPositionMeta)
 			logArray = append(logArray, copyLog)
 			lastLineIndex = lastCheckIndex
 		}
@@ -91,7 +92,7 @@ func (p *ProcessorSplitRegex) SplitLog(logArray []*protocol.Log, rawLog *protoco
 	if lastLineIndex < len(valueStr) {
 		rawLog.Contents = append(rawLog.Contents, &protocol.Log_Content{
 			Key: cont.GetKey(), Value: valueStr[lastLineIndex:]})
-		helper.ReviseFileOffset(rawLog, int64(lastLineIndex))
+		helper.ReviseFileOffset(rawLog, int64(lastLineIndex), p.EnableLogPositionMeta)
 		logArray = append(logArray, rawLog)
 	}
 	return logArray

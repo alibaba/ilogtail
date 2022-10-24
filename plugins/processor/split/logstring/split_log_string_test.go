@@ -213,25 +213,53 @@ func (s *processorTestSuite) TestNoKeyAlarmAndPreserve(c *check.C) {
 }
 
 func (s *processorTestSuite) TestEnableLogPositionMeta(c *check.C) {
-	var log = "xxxx\nyyyy\nzzzz\n"
-	logPb := test.CreateLogs("content", log, helper.FileOffsetKey, "1000")
-	logArray := make([]*protocol.Log, 1)
-	logArray[0] = logPb
-	outLogs := s.processor.ProcessLogs(logArray)
-	c.Assert(len(outLogs), check.Equals, 3)
-	for i := 0; i < len(outLogs); i++ {
-		cont := getFileOffsetTag(outLogs[i])
-		c.Assert(cont, check.NotNil)
-		off, _ := strconv.ParseInt(cont.Value, 10, 64)
-		c.Assert(off, check.Equals, int64(1000+i*5))
-	}
-}
 
-func getFileOffsetTag(log *protocol.Log) *protocol.Log_Content {
-	for _, cont := range log.Contents {
-		if cont.Key == helper.FileOffsetKey {
-			return cont
+	{
+		processor, _ := s.processor.(*ProcessorSplit)
+		processor.EnableLogPositionMeta = true
+		var log = "xxxx\nyyyy\nzzzz\n"
+		logPb := test.CreateLogs("content", log, helper.FileOffsetKey, "1000")
+		logArray := make([]*protocol.Log, 1)
+		logArray[0] = logPb
+		outLogs := processor.ProcessLogs(logArray)
+		c.Assert(len(outLogs), check.Equals, 3)
+		for i := 0; i < len(outLogs); i++ {
+			cont := helper.GetFileOffsetTag(outLogs[i])
+			c.Assert(cont, check.NotNil)
+			off, _ := strconv.ParseInt(cont.Value, 10, 64)
+			c.Assert(off, check.Equals, int64(1000+i*5))
 		}
 	}
-	return nil
+
+	{
+		processor, _ := s.processor.(*ProcessorSplit)
+		processor.EnableLogPositionMeta = true
+		var log = "xxxx\nyyyy\nzzzz\n"
+		logPb := test.CreateLogs("content", log)
+		logArray := make([]*protocol.Log, 1)
+		logArray[0] = logPb
+		outLogs := processor.ProcessLogs(logArray)
+		c.Assert(len(outLogs), check.Equals, 3)
+		for i := 0; i < len(outLogs); i++ {
+			cont := helper.GetFileOffsetTag(outLogs[i])
+			c.Assert(cont, check.IsNil)
+		}
+	}
+
+	{
+		processor, _ := s.processor.(*ProcessorSplit)
+		processor.EnableLogPositionMeta = false
+		var log = "xxxx\nyyyy\nzzzz\n"
+		logPb := test.CreateLogs("content", log, helper.FileOffsetKey, "1000")
+		logArray := make([]*protocol.Log, 1)
+		logArray[0] = logPb
+		outLogs := processor.ProcessLogs(logArray)
+		c.Assert(len(outLogs), check.Equals, 3)
+		for i := 0; i < len(outLogs); i++ {
+			cont := helper.GetFileOffsetTag(outLogs[i])
+			c.Assert(cont, check.NotNil)
+			off, _ := strconv.ParseInt(cont.Value, 10, 64)
+			c.Assert(off, check.Equals, int64(1000))
+		}
+	}
 }
