@@ -2,12 +2,11 @@ package helper
 
 import (
 	"strconv"
+	"testing"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/stretchr/testify/assert"
-
-	"testing"
 )
 
 func TestReviseFileOffset(t *testing.T) {
@@ -33,9 +32,9 @@ func TestReviseFileOffset(t *testing.T) {
 			ReviseFileOffset(tt.log, 101)
 			cont := getFileOffsetTag(tt.log)
 			assert.True(t, cont != nil)
-			fileOffset, err := strconv.ParseInt(cont.Value, 10, 64)
+			off, err := strconv.ParseInt(cont.Value, 10, 64)
 			assert.True(t, err == nil)
-			assert.Equal(t, tt.want, fileOffset)
+			assert.Equal(t, tt.want, off)
 		})
 	}
 }
