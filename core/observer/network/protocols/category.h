@@ -70,7 +70,7 @@ struct CommonAggKey {
         auto remoteInfo = std::string(kRemoteInfoPrefix)
                               .append(meta.Empty() ? this->RemoteIp : meta.Host)
                               .append(kRemoteInfoSuffix);
-        AddAnyLogContent(log, observer::kRemoteInfo, remoteInfo);
+        AddAnyLogContent(log, observer::kRemoteInfo, std::move(remoteInfo));
     }
 
     uint64_t HashVal{0};
@@ -92,7 +92,7 @@ struct DBAggKey {
         : ConnKey(std::move(other.ConnKey)),
           QueryCmd(std::move(other.QueryCmd)),
           Query(std::move(other.Query)),
-          Version(other.Version),
+          Version(std::move(other.Version)),
           Status(other.Status) {}
     DBAggKey& operator=(const DBAggKey& other) = default;
     DBAggKey& operator=(DBAggKey&& other) noexcept {
@@ -107,19 +107,22 @@ struct DBAggKey {
         uint64_t hashValue = ConnKey.HashVal;
         hashValue = XXH32(this->QueryCmd.c_str(), this->QueryCmd.size(), hashValue);
         hashValue = XXH32(this->Query.c_str(), this->Query.size(), hashValue);
+        hashValue = XXH32(this->Version.c_str(), this->Version.size(), hashValue);
         hashValue = XXH32(&this->Status, sizeof(this->Status), hashValue);
         return hashValue;
     }
     uint64_t ToPB(sls_logs::Log* log) const {
-        AddAnyLogContent(log, observer::kProtocol, ProtocolTypeToString(PT));
         AddAnyLogContent(log, observer::kVersion, Version);
         AddAnyLogContent(log, observer::kQueryCmd, QueryCmd);
         AddAnyLogContent(log, observer::kQuery, Query);
         AddAnyLogContent(log, observer::kStatus, Status);
+        AddAnyLogContent(log, observer::kProtocol, ProtocolTypeToString(PT));
         AddAnyLogContent(log, observer::kType, ObserverMetricsTypeToString(ObserverMetricsType::L7_DB_METRICS));
-
         ConnKey.ToPB(log);
     }
+
+    std::string ProtocolType() { return ProtocolTypeToString(PT); }
+
     friend std::ostream& operator<<(std::ostream& Os, const DBAggKey& Key) {
         Os << "ConnKey: " << Key.ConnKey << " QueryCmd: " << Key.QueryCmd << " Query: " << Key.Query
            << " Version: " << Key.Version << " Status: " << Key.Status;
@@ -147,8 +150,8 @@ struct RequestAggKey {
         : ConnKey(std::move(other.ConnKey)),
           ReqType(std::move(other.ReqType)),
           ReqDomain(std::move(other.ReqDomain)),
-          ReqResource(other.ReqResource),
-          Version(other.Version),
+          ReqResource(std::move(other.ReqResource)),
+          Version(std::move(other.Version)),
           RespCode(other.RespCode),
           RespStatus(other.RespStatus) {}
     RequestAggKey& operator=(RequestAggKey&& other) noexcept {
@@ -166,6 +169,7 @@ struct RequestAggKey {
         hashValue = XXH32(this->ReqType.c_str(), this->ReqType.size(), hashValue);
         hashValue = XXH32(this->ReqDomain.c_str(), this->ReqDomain.size(), hashValue);
         hashValue = XXH32(this->ReqResource.c_str(), this->ReqResource.size(), hashValue);
+        hashValue = XXH32(this->Version.c_str(), this->Version.size(), hashValue);
         hashValue = XXH32(&this->RespCode, sizeof(this->RespCode), hashValue);
         hashValue = XXH32(&this->RespStatus, sizeof(this->RespStatus), hashValue);
         return hashValue;
@@ -174,13 +178,16 @@ struct RequestAggKey {
         AddAnyLogContent(log, observer::kReqType, ReqType);
         AddAnyLogContent(log, observer::kReqDomain, ReqDomain);
         AddAnyLogContent(log, observer::kReqResource, ReqResource);
+        AddAnyLogContent(log, observer::kVersion, Version);
         AddAnyLogContent(log, observer::kRespStatus, RespStatus);
         AddAnyLogContent(log, observer::kRespCode, RespCode);
         AddAnyLogContent(log, observer::kProtocol, ProtocolTypeToString(PT));
-        AddAnyLogContent(log, observer::kVersion, Version);
         AddAnyLogContent(log, observer::kType, ObserverMetricsTypeToString(ObserverMetricsType::L7_REQ_METRICS));
         ConnKey.ToPB(log);
     }
+
+    std::string ProtocolType() { return ProtocolTypeToString(PT); }
+
     friend std::ostream& operator<<(std::ostream& Os, const RequestAggKey& Key) {
         Os << "ConnKey: " << Key.ConnKey << " ReqType: " << Key.ReqType << " ReqDomain: " << Key.ReqDomain
            << " ReqResource: " << Key.ReqResource << " Version: " << Key.Version << " RespCode: " << Key.RespCode

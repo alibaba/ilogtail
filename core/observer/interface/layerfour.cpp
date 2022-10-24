@@ -27,7 +27,7 @@ void NetStatisticsKey::ToPB(sls_logs::Log* log) const {
     const ServiceMeta& meta = sHostnameManager->GetServiceMeta(this->PID, remoteAddr);
     auto remoteInfo
         = std::string(kRemoteInfoPrefix).append(meta.Empty() ? remoteAddr : meta.Host).append(kRemoteInfoSuffix);
-    AddAnyLogContent(log, logtail::observer::kRemoteInfo, remoteInfo);
+    AddAnyLogContent(log, logtail::observer::kRemoteInfo, std::move(remoteInfo));
     AddAnyLogContent(log, logtail::observer::kRole, PacketRoleTypeToString(this->RoleType));
     AddAnyLogContent(log, logtail::observer::kConnId, GenConnectionID(this->PID, this->SockHash));
     AddAnyLogContent(log, logtail::observer::kConnType, std::string("tcp")); // todo replace with real type

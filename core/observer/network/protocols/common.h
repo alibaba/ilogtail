@@ -205,43 +205,22 @@ public:
         auto hashVal = key.Hash();
         auto findRst = mProtocolEventAggMap.find(hashVal);
         if (findRst == mProtocolEventAggMap.end()) {
+            if (isFull(event.Key.ConnKey.Role)) {
+                static uint32_t sLastDropTime{0};
+                auto now = time(nullptr);
+                LOG_DEBUG(sLogger, ("aggregator is full, some events would be dropped", event.Key.ToString()));
+                if (now - sLastDropTime > 60) {
+                    sLastDropTime = now;
+                    LOG_ERROR(sLogger, ("aggregator is full, some events would be dropped", event.Key.ProtocolType()));
+                }
+                return false;
+            }
             auto item = mAggItemManager.Create(std::move(event.Key));
             findRst = mProtocolEventAggMap.insert(std::make_pair(hashVal, item)).first;
         }
         findRst->second->AddEventInfo(event.Info);
         return true;
     }
-
-    // AddEvent 增加一个事件
-    //    bool AddEvent(ProtocolEvent* event) {
-    //
-    //        uint64_t hashVal = event->Key.Hash();
-    //        auto findRst = mProtocolEventAggMap.find(hashVal);
-    //        if (findRst == mProtocolEventAggMap.end()) {
-    //            if ((event->Key.ConnKey.Role == PacketRoleType::Client
-    //                 && this->mProtocolEventAggMap.size() >= mClientAggMaxSize)
-    //                || (event->Key.ConnKey.Role == PacketRoleType::Server
-    //                    && this->mProtocolEventAggMap.size() >= mServerAggMaxSize)) {
-    //                LOG_DEBUG(sLogger,
-    //                          ("aggregator is full, the event would be dropped",
-    //                           ProtocolTypeToString(PT))("key", event->Key.ToString())("info",
-    //                           event->Info.ToString()));
-    //
-    //                static uint32_t sLastDropTime;
-    //                auto now = time(NULL);
-    //                if (now - sLastDropTime > 60) {
-    //                    sLastDropTime = now;
-    //                    LOG_ERROR(sLogger, ("aggregator is full, some events would be dropped",
-    //                    ProtocolTypeToString(PT)));
-    //                }
-    //                return false;
-    //            }
-    //            auto item = mAggItemManager.Create(event->Key);
-    //            findRst = mProtocolEventAggMap.insert(std::make_pair(hashVal, item)).first;
-    //        }
-    //        findRst->second->AddEvent(event);
-    //        return true;
-    //    }
 
     void FlushLogs(std::vector<sls_logs::Log>& allData, const std::string& tags, uint64_t interval) {
         for (auto iter = mProtocolEventAggMap.begin(); iter != mProtocolEventAggMap.end();) {
@@ -260,7 +239,17 @@ public:
         }
     }
 
-protected:
+
+private:
+    bool isFull(PacketRoleType role) {
+        if (role == PacketRoleType::Client) {
+            return this->mProtocolEventAggMap.size() >= mClientAggMaxSize;
+        }
+        if (role == PacketRoleType::Server) {
+            return this->mProtocolEventAggMap.size() >= mServerAggMaxSize;
+        }
+        return true;
+    }
     ProtocolEventAggItemManager mAggItemManager;
     std::unordered_map<uint64_t, ProtocolEventAggItem*> mProtocolEventAggMap;
     uint32_t mClientAggMaxSize;
