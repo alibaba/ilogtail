@@ -133,7 +133,7 @@ void NetworkObserver::GarbageCollection(uint64_t nowTimeNs) {
 
 void NetworkObserver::FlushOutMetrics(std::vector<sls_logs::Log>& allData) {
     static ContainerProcessGroupManager* containerProcessGroupManager = ContainerProcessGroupManager::GetInstance();
-    containerProcessGroupManager->FlushOutMetrics(allData, mConfig->mTags);
+    containerProcessGroupManager->FlushOutMetrics(allData, mConfig->mTags, mConfig->mFlushOutInterval);
 }
 
 void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, std::vector<sls_logs::Log>& allData) {
@@ -173,7 +173,6 @@ void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, 
                 root[item.first] = item.second;
             }
         }
-        AddAnyLogContent(log, observer::kType, static_cast<int>(ObserverMetricsType::L4_METRICS));
         AddAnyLogContent(log, observer::kLocalInfo, Json::writeString(builder, root));
         AddAnyLogContent(log, observer::kInterval, this->mConfig->mFlushOutInterval);
         iter->first.ToPB(log);

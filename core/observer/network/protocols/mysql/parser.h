@@ -55,8 +55,8 @@ public:
                 event.Info.LatencyNs = int64_t(responseInfo->TimeNano - requestInfo->TimeNano);
                 event.Info.ReqBytes = requestInfo->ReqBytes;
                 event.Info.RespBytes = responseInfo->RespBytes;
-                event.Key.SQL = std::move(requestInfo->SQL);
-                event.Key.OK = responseInfo->OK ? '1' : '0';
+                event.Key.Query = std::move(requestInfo->SQL);
+                event.Key.Status = responseInfo->OK;
                 event.Key.ConnKey = mKey;
                 return true;
             });

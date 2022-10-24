@@ -30,12 +30,16 @@ Common structure means which are referenced by the most other structures.
 
 | Column          | Type               | Meaning                                                               | Required column |
 |-----------------|--------------------|-----------------------------------------------------------------------|-----------------|
-| time            | int                | timestamp for aggregation                                             | true            |
+| `__time__`      | int                | timestamp for aggregation                                             | true            |
+| `_local_addr`_  | string             | local address                                                         | true            |
+| `_local_port`_  | int                | local port                                                            | true            |
+| `_remote_addr`_ | string             | remote address                                                        | true            |
+| `_remote_port`_ | int                | remote port                                                           | true            |
 | type            | int                | 0 means L7 DB metrics, 1 means L7 RPC metrics, and 2 means L4 metrics | true            |
-| conn_id         | string             | each aggregation belongs to one unique connection id                  | true            |
-| interval_ns     | int                | unit is nano seconds                                                  | true            |
 | local_info      | `Local Info` Json  | local information                                                     | true            |
 | remote_info     | `Remote Info` Json | remote information                                                    | true            |
+| conn_id         | int                | each aggregation belongs to one unique connection id                  | true            |
+| interval        | string             | unit is  seconds, aggregation interval                                | true            |
 | role            | int                | 0 means client, 1 means server                                        | true            |
 | protocol        | string             | L7 detect protocol                                                    | true            |
 | query_cmd       | string             | DB query command，such as select, insert and etc.                      | true            |
@@ -54,12 +58,16 @@ Request metric works in RPC, DNS or MQ transfer.
 
 | Column          | Type               | Meaning                                                               | Required column |
 |-----------------|--------------------|-----------------------------------------------------------------------|-----------------|
-| time            | int                | timestamp for aggregation                                             | true            |
+| `__time__`      | int                | timestamp for aggregation                                             | true            |
+| `_local_addr`_  | string             | local address                                                         | true            |
+| `_local_port`_  | int                | local port                                                            | true            |
+| `_remote_addr`_ | string             | remote address                                                        | true            |
+| `_remote_port`_ | int                | remote port                                                           | true            |
 | type            | int                | 0 means L7 DB metrics, 1 means L7 RPC metrics, and 2 means L4 metrics | true            |
-| conn_id         | string             | each aggregation belongs to one unique connection id                  | true            |
-| interval_ns     | int                | unit is nano seconds                                                  | true            |
 | local_info      | `Local Info` Json  | local information                                                     | true            |
 | remote_info     | `Remote Info` Json | remote information                                                    | true            |
+| conn_id         | int                | each aggregation belongs to one unique connection id                  | true            |
+| interval        | string             | unit is  seconds, aggregation interval                                | true            |
 | role            | int                | 0 means client, 1 means server                                        | true            |
 | protocol        | string             | L7 detect protocol                                                    | true            |
 | req_type        | string             | request type, such as POST in HTTP.                                   | true            |
@@ -76,22 +84,22 @@ Request metric works in RPC, DNS or MQ transfer.
 
 ## Layer 4 metrics data structure
 
-| Column        | Type               | Meaning                                                               | Required column |
-|---------------|--------------------|-----------------------------------------------------------------------|-----------------|
+| Column          | Type               | Meaning                                                               | Required column |
+|-----------------|--------------------|-----------------------------------------------------------------------|-----------------|
 | `__time__`      | int                | timestamp for aggregation                                             | true            |
 | `_local_addr`_  | string             | local address                                                         | true            |
 | `_local_port`_  | int                | local port                                                            | true            |
 | `_remote_addr`_ | string             | remote address                                                        | true            |
 | `_remote_port`_ | int                | remote port                                                           | true            |
-| type          | int                | 0 means L7 DB metrics, 1 means L7 RPC metrics, and 2 means L4 metrics | true            |
-| local_info    | `Local Info` Json  | local information                                                     | true            |
-| remote_info   | `Remote Info` Json | remote information                                                    | true            |
-| conn_id       | int                | each aggregation belongs to one unique connection id                  | true            |
-| interval      | string             | unit is  seconds, aggregation interval                                | true            |
-| role          | int                | 0 means client, 1 means server                                        | true            |
-| conn_type     | int                | 0 means TCP, and 1 means UDP.                                         | true            |
-| extra         | json               | extra message for feature.                                            | true            |
-| recv_bytes    | int                | the total receive bytes                                               | true            |
-| send_bytes    | int                | the total send bytes                                                  | true            |
-| recv_packets  | int                | the total receive packets                                             | true            |
-| send_packets  | int                | the total send packets                                                | true            |
+| type            | int                | 0 means L7 DB metrics, 1 means L7 RPC metrics, and 2 means L4 metrics | true            |
+| local_info      | `Local Info` Json  | local information                                                     | true            |
+| remote_info     | `Remote Info` Json | remote information                                                    | true            |
+| conn_id         | int                | each aggregation belongs to one unique connection id                  | true            |
+| role            | int                | 0 means client, 1 means server                                        | true            |
+| interval        | string             | unit is  seconds, aggregation interval                                | true            |
+| conn_type       | int                | 0 means TCP, and 1 means UDP.                                         | true            |
+| extra           | json               | extra message for feature.                                            | true            |
+| recv_bytes      | int                | the total receive bytes                                               | true            |
+| send_bytes      | int                | the total send bytes                                                  | true            |
+| recv_packets    | int                | the total receive packets                                             | true            |
+| send_packets    | int                | the total send packets                                                | true            |

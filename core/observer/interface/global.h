@@ -23,5 +23,23 @@ namespace observer {
     extern std::string kRecvBytes;
     extern std::string kSendpackets;
     extern std::string kRecvPackets;
+
+    // metric names
+    extern std::string kQueryCmd;
+    extern std::string kQuery;
+    extern std::string kStatus;
+    extern std::string kReqType;
+    extern std::string kReqDomain;
+    extern std::string kReqResource;
+    extern std::string kRespStatus;
+    extern std::string kRespCode;
+    extern std::string kLatencyNs;
+    extern std::string kReqBytes;
+    extern std::string kRespBytes;
+    extern std::string kCount;
+    extern std::string kProtocol;
+    extern std::string kVersion;
+    extern std::string kTdigestLatency;
+
 } // namespace observer
 } // namespace logtail
