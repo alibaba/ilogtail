@@ -78,7 +78,7 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 				copyLog := protocol.CloneLog(newLog)
 				copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{Key: destCont.Key, Value: strArray[i]})
 				helper.ReviseFileOffset(copyLog, offset)
-				offset += int64(len(strArray[i]))
+				offset += int64(len(strArray[i]) + len(p.SplitSep))
 				destArray = append(destArray, copyLog)
 			}
 			newLogCont := strArray[len(strArray)-1]
