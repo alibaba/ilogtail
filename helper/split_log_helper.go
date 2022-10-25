@@ -20,7 +20,8 @@ func ReviseFileOffset(log *protocol.Log, offset int64, enableMeta bool) {
 }
 
 func GetFileOffsetTag(log *protocol.Log) *protocol.Log_Content {
-	for _, cont := range log.Contents {
+	for i := len(log.Contents) - 1; i >= 0; i-- {
+		cont := log.Contents[i]
 		if cont.Key == FileOffsetKey {
 			return cont
 		}
