@@ -480,9 +480,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
             Json::Value pluginConfigJson;
             Json::Reader jsonReader;
-            if (pluginConfig.empty() || !jsonReader.parse(pluginConfig, pluginConfigJson)) {
+            if (!pluginConfig.empty() && !jsonReader.parse(pluginConfig, pluginConfigJson)) {
                 LOG_WARNING(sLogger,
-                            ("invalid plugin config",
+                            ("invalid plugin config, plugin config json parse error",
                              pluginConfig)("project", projectName)("logstore", category)("config", logName));
             }
 
@@ -493,6 +493,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
                 if (!pluginConfigJson.isNull()) {
+                    pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
                     pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
                     if (pluginConfig.find("\"observer_ilogtail_") != string::npos) {
                         if (pluginConfigJson.isMember("inputs")) {
@@ -585,20 +586,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     if (pluginConfigJson.isMember("processors")
                         && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())) {
                         // patch enable_log_position_meta to split processor if exists ...
-                        if (value["advanced"] && value["advanced"]["enable_log_position_meta"]) {
-                            for (int i = 0; i < pluginConfigJson["processors"].size(); i++) {
-                                Json::Value procrssorConfigJson = pluginConfigJson["processors"][i];
-                                if (procrssorConfigJson["type"] == "processor_split_log_string"
-                                    || procrssorConfigJson["type"] == "processor_split_log_regex") {
-                                    if (procrssorConfigJson["detail"]) {
-                                        procrssorConfigJson["detail"]["EnableLogPositionMeta"]
-                                            = value["advanced"]["enable_log_position_meta"];
-                                    }
-                                }
-                                pluginConfigJson["processors"][i] = procrssorConfigJson;
-                            }
-                        }
                         config->mPluginProcessFlag = true;
+                        pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
                         pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
                         config->mPluginConfig = pluginConfig;
                     }
