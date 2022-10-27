@@ -41,6 +41,15 @@
 | HashOnce                          | Boolean  | 否    |                                                                                                    |
 | ClientID                          | String   | 否    | 写入Kafka的Client ID，默认取值：`LogtailPlugin`。                                                            |
 
+- `Version`需要填写的是`kafka protocol version`版本号，`flusher_kafka_v2`当前支持的`kafka`版本范围：`0.8.2.x~2.7.0`。
+请根据自己的`kafka`版本号参照下面的`kafka protocol version`规则进行配置。`kafka protocol version`配置规则如下：
+```
+// x代表小版本号
+0.8.2.x,0.9.0.x,0.10.0.x,0.10.1.x,0.10.2.x,0.11.0.x,1.0.0,1.1.0,1.1.1,2.0.0,2.0.1,2.1.0,2.2.0,2.3.0,2.4.0,2.5.0,2.6.0,2.7.0
+```
+
+
+
 ## 样例
 
 采集`/home/test-log/`路径下的所有文件名匹配`*.log`规则的文件，并将采集结果发送到Kafka。
