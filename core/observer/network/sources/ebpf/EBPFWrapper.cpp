@@ -394,7 +394,7 @@ bool EBPFWrapper::Init(std::function<int(StringPiece)> processor) {
     uint64_t nowTime = GetCurrentTimeInNanoSeconds();
     mDeltaTimeNs = nowTime - (uint64_t)ts.tv_sec * 1000000000ULL - (uint64_t)ts.tv_nsec;
     set_ebpf_int_config((int32_t)PROTOCOL_FILTER, 0, -1);
-    set_ebpf_int_config((int32_t)TGID_FILTER, 0, mConfig->mPid);
+    set_ebpf_int_config((int32_t)TGID_FILTER, 0, mConfig->mEBPFPid);
     set_ebpf_int_config((int32_t)SELF_FILTER, 0, getpid());
     set_ebpf_int_config((int32_t)DATA_SAMPLING, 0, mConfig->mSampling);
     set_ebpf_int_config((int32_t)PERF_BUFFER_PAGE, (int32_t)DATA_HAND, 512);

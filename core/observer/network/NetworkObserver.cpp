@@ -42,12 +42,12 @@ DECLARE_FLAG_INT32(merge_log_count_limit);
 namespace logtail {
 
 NetworkObserver::~NetworkObserver() {
-    for (auto iter = mAllProcesses.begin(); iter != mAllProcesses.end(); ++iter) {
-        delete iter->second;
+    for (auto& mAllProcess : mAllProcesses) {
+        delete mAllProcess.second;
     }
 }
 void NetworkObserver::HoldOn(bool exitFlag) {
-    if (mEBPFWrapper != NULL) {
+    if (mEBPFWrapper != nullptr) {
         mEBPFWrapper->HoldOn();
     }
     mEventLoopThreadRWL.lock();
@@ -55,7 +55,7 @@ void NetworkObserver::HoldOn(bool exitFlag) {
 }
 
 void NetworkObserver::Resume() {
-    if (mEBPFWrapper != NULL) {
+    if (mEBPFWrapper != nullptr) {
         mEBPFWrapper->Resume();
     }
     Reload();
@@ -133,7 +133,7 @@ void NetworkObserver::GarbageCollection(uint64_t nowTimeNs) {
 
 void NetworkObserver::FlushOutMetrics(std::vector<sls_logs::Log>& allData) {
     static ContainerProcessGroupManager* containerProcessGroupManager = ContainerProcessGroupManager::GetInstance();
-    containerProcessGroupManager->FlushOutMetrics(allData, mConfig->mTags, mConfig->mFlushOutInterval);
+    containerProcessGroupManager->FlushOutMetrics(allData, mConfig->mTags, mConfig->mFlushOutL7Interval);
 }
 
 void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, std::vector<sls_logs::Log>& allData) {
@@ -174,7 +174,7 @@ void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, 
             }
         }
         AddAnyLogContent(log, observer::kLocalInfo, Json::writeString(builder, root));
-        AddAnyLogContent(log, observer::kInterval, this->mConfig->mFlushOutInterval);
+        AddAnyLogContent(log, observer::kInterval, this->mConfig->mFlushOutL4Interval);
         iter->first.ToPB(log);
         iter->second.ToPB(log);
         mNetworkStatistic->mInputBytes += iter->second.Base.RecvBytes;
@@ -187,13 +187,13 @@ void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, 
 
 void NetworkObserver::FlushOutStatistics(std::vector<sls_logs::Log>& allData) {
     // pcap wrapper, do not need to add meta
-    if (mPCAPWrapper != NULL) {
+    if (mPCAPWrapper != nullptr) {
         NetStaticticsMap& statisticsMap = mPCAPWrapper->GetStatistics();
         FlushStatistics(statisticsMap, allData);
         statisticsMap.Clear();
     }
 
-    if (mEBPFWrapper != NULL) {
+    if (mEBPFWrapper != nullptr) {
         NetStaticticsMap& statisticsMap = mEBPFWrapper->GetStatistics();
         FlushStatistics(statisticsMap, allData);
         statisticsMap.Clear();
@@ -206,9 +206,9 @@ ProcessObserver* NetworkObserver::GetProcess(PacketEventHeader* header, bool cre
         return findIter->second;
     }
     if (!create) {
-        return NULL;
+        return nullptr;
     }
-    ProcessObserver* newProc = new ProcessObserver(header->TimeNano);
+    auto newProc = new ProcessObserver(header->TimeNano);
     static ContainerProcessGroupManager* containerProcessGroupManager = ContainerProcessGroupManager::GetInstance();
     ProcessMetaPtr processMeta = containerProcessGroupManager->GetProcessMeta(header->PID);
     ContainerProcessGroupPtr groupPtr
@@ -223,10 +223,10 @@ int NetworkObserver::OnPacketEvent(void* event, size_t len) {
         LOG_ERROR(sLogger, ("invalid packet len", len));
         return -1;
     }
-    PacketEventHeader* header = static_cast<PacketEventHeader*>(event);
+    auto header = static_cast<PacketEventHeader*>(event);
     static bool openPartialSelect = false;
     if (mConfig->mSaveToDisk) {
-        if (mDumpFilePtr == NULL) {
+        if (mDumpFilePtr == nullptr) {
             std::string fileName = STRING_FLAG(sls_observer_network_save_filename);
             if (mConfig->mLocalFileEnabled) {
                 fileName += ".new";
@@ -234,7 +234,7 @@ int NetworkObserver::OnPacketEvent(void* event, size_t len) {
             mDumpFilePtr = fopen64(fileName.c_str(), "wb+");
             openPartialSelect = mConfig->isOpenPartialSelectDump();
         }
-        if (mDumpFilePtr != NULL && mDumpSize < INT64_FLAG(sls_observer_network_max_save_size)) {
+        if (mDumpFilePtr != nullptr && mDumpSize < INT64_FLAG(sls_observer_network_max_save_size)) {
             if (!openPartialSelect
                 || (header->PID == mConfig->localPickPID || header->SockHash == mConfig->localPickConnectionHashId
                     || header->SrcPort == mConfig->localPickSrcPort || header->DstPort == mConfig->localPickDstPort)) {
@@ -249,7 +249,7 @@ int NetworkObserver::OnPacketEvent(void* event, size_t len) {
         case PacketEventType_None:
             break;
         case PacketEventType_Data: {
-            PacketEventData* data = reinterpret_cast<PacketEventData*>((char*)event + sizeof(PacketEventHeader));
+            auto data = reinterpret_cast<PacketEventData*>((char*)event + sizeof(PacketEventHeader));
 
             if (data->PtlType == ProtocolType_None) {
                 break;
@@ -270,7 +270,7 @@ int NetworkObserver::OnPacketEvent(void* event, size_t len) {
             break;
         case PacketEventType_Closed: {
             ProcessObserver* proc = GetProcess(header, false);
-            if (proc == NULL) {
+            if (proc == nullptr) {
                 break;
             }
             proc->ConnectionMarkDeleted(header);
@@ -302,11 +302,11 @@ void NetworkObserver::ReloadSource() {
             && mPCAPWrapper->Init(std::bind(&NetworkObserver::OnPacketEventStringPiece, this, std::placeholders::_1))
             && mPCAPWrapper->Start();
     } else {
-        if (mPCAPWrapper != NULL) {
+        if (mPCAPWrapper != nullptr) {
             LOG_INFO(sLogger, ("disable module", "pcap"));
             success = mPCAPWrapper->Stop();
         }
-        mPCAPWrapper = NULL;
+        mPCAPWrapper = nullptr;
     }
     if (mConfig->mEBPFEnabled) {
         LOG_INFO(sLogger, ("reload module", "ebpf"));
@@ -315,11 +315,11 @@ void NetworkObserver::ReloadSource() {
             && mEBPFWrapper->Init(std::bind(&NetworkObserver::OnPacketEventStringPiece, this, std::placeholders::_1))
             && mEBPFWrapper->Start();
     } else {
-        if (mEBPFWrapper != NULL) {
+        if (mEBPFWrapper != nullptr) {
             LOG_INFO(sLogger, ("disable module", "ebpf"));
             success = mEBPFWrapper->Stop();
         }
-        mEBPFWrapper = NULL;
+        mEBPFWrapper = nullptr;
     }
     if (success) {
         ContainerProcessGroupManager::GetInstance()->ResetFilterProcessMeta();
@@ -370,7 +370,7 @@ void NetworkObserver::EventLoop() {
         }
         uint64_t nowTimeNs = GetCurrentTimeInNanoSeconds();
         // fetching and processing packets
-        if (mPCAPWrapper != NULL) {
+        if (mPCAPWrapper != nullptr) {
             int32_t rst = mPCAPWrapper->ProcessPackets(100, 100);
             if (rst >= 100) {
                 hasMoreData = true;
@@ -381,7 +381,7 @@ void NetworkObserver::EventLoop() {
             }
         }
 
-        if (mEBPFWrapper != NULL) {
+        if (mEBPFWrapper != nullptr) {
             if (nowTimeNs - mLastCleanAllDisableProcessNs
                 >= INT64_FLAG(sls_observer_network_cleanall_disable_process_interval) * 1000ULL * 1000ULL * 1000ULL) {
                 mLastCleanAllDisableProcessNs = nowTimeNs;
@@ -403,7 +403,7 @@ void NetworkObserver::EventLoop() {
                            rst)("time", GetCurrentTimeInNanoSeconds() - nowTimeNs / 1000LL / 1000LL));
             }
         }
-        if (mReplayFilePtr != NULL) {
+        if (mReplayFilePtr != nullptr) {
             uint32_t dataSize = 0;
             fread(&dataSize, 1, 4, mReplayFilePtr);
             if (dataSize != 0 && dataSize < 1024 * 1024) {
@@ -411,10 +411,10 @@ void NetworkObserver::EventLoop() {
                 if (dataSize != fread(buf, 1, dataSize, mReplayFilePtr)) {
                     LOG_ERROR(sLogger, ("read ebpf replay file failed", errno));
                 } else {
-                    void* event = NULL;
+                    void* event = nullptr;
                     int32_t len = 0;
-                    BufferToPacketEvent(buf, dataSize, event, len);
-                    if (event != NULL) {
+                    BufferToPacketEvent(buf, static_cast<int32_t>(dataSize), event, len);
+                    if (event != nullptr) {
                         OnPacketEvent(event, len);
                         hasMoreData = true;
                     }
@@ -435,7 +435,7 @@ void NetworkObserver::EventLoop() {
             mLastGCTimeNs = nowTimeNs;
             GarbageCollection(nowTimeNs);
         }
-        if (mEBPFWrapper != NULL
+        if (mEBPFWrapper != nullptr
             && nowTimeNs - mLastEbpfGCTimeNs
                 > INT64_FLAG(sls_observer_network_ebpf_connection_gc_interval) * 1000ULL * 1000ULL * 1000ULL) {
             mLastEbpfGCTimeNs = nowTimeNs;
@@ -448,26 +448,32 @@ void NetworkObserver::EventLoop() {
         }
 
         // flush observer metrics
-        if (nowTimeNs - mLastFlushTimeNs >= mConfig->mFlushOutInterval * 1000ULL * 1000ULL * 1000ULL) {
-            mLastFlushTimeNs = nowTimeNs;
+        if (nowTimeNs - mLastL4FlushTimeNs >= mConfig->mFlushOutL4Interval * 1000ULL * 1000ULL * 1000ULL) {
+            mLastL4FlushTimeNs = nowTimeNs;
             std::vector<sls_logs::Log> allLogs;
             FlushOutMetrics(allLogs);
             if (mSenderFunc) {
                 mSenderFunc(allLogs, mConfig->mLastApplyedConfig);
             }
-
             mNetworkStatistic->mOutputEvents += allLogs.size();
             for (const auto& item : allLogs) {
                 mNetworkStatistic->mOutputBytes += item.GetCachedSize();
             }
-            allLogs.clear();
+        }
 
+        // flush observer metrics
+        if (nowTimeNs - mLastL7FlushTimeNs >= mConfig->mFlushOutL7Interval * 1000ULL * 1000ULL * 1000ULL) {
+            mLastL7FlushTimeNs = nowTimeNs;
+            std::vector<sls_logs::Log> allLogs;
             FlushOutStatistics(allLogs);
             if (mSenderFunc) {
                 mSenderFunc(allLogs, mConfig->mLastApplyedConfig);
             }
+            mNetworkStatistic->mOutputEvents += allLogs.size();
+            for (const auto& item : allLogs) {
+                mNetworkStatistic->mOutputBytes += item.GetCachedSize();
+            }
         }
-
         // flush profile metrics
         if ((nowTimeNs - lastProfilingTime) >= INT32_FLAG(monitor_interval) * 1000ULL * 1000ULL * 1000ULL) {
             static auto sPMStat = ProcessMetaStatistic::GetInstance();
