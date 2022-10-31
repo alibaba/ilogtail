@@ -199,3 +199,690 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+
+This software also contains code from the following projects. Files from these projects have notices at  the top of each file. 
+======
+alexei-led/pumba, 
+aliyun/alibaba-cloud-sdk-go, 
+Android - platform - frameworks - base, 
+Apache Beam, 
+apache/skywalking-swck, 
+apache/xalan-j, 
+beego/beego, 
+bufbuild/buf, 
+census-instrumentation/opencensus-g, 
+cilium, 
+client-go, 
+client_golang, 
+Cloud Foundry BOSH, 
+cockroachdb/apd, 
+containerd/cgroups, 
+containerd/containerd, 
+containerd/continuity, 
+containerd/fifo, 
+containerd/imgcrypt, 
+containerd/nri, 
+containerd/typeurl, 
+containernetworking/plugins, 
+containers/ocicrypt, 
+coreos-pkg, 
+dmlc/parameter_server, 
+docker, 
+docker-go-units, 
+docker-org, 
+Elastic Beats, 
+elastic/go-lumber, 
+fatedier/frp, 
+github.com/containerd/go-cni, 
+github.com/containerd/ttrpc, 
+github.com/containernetworking/cni, 
+github.com/moby/spdystream, 
+github.com/xdg-go/pbkdf2, 
+go-jose, 
+go-logr/logr, 
+go-systemd, 
+gogo/googleapis, 
+golang-github-docker-go-connections-dev, 
+golang-sql/civil, 
+golang/appengine, 
+golang/glog, 
+Google Cloud Client Libraries for Go, 
+google-gofuzz, 
+google/note-maps, 
+googleapis/gnostic, 
+gopkg.in/jcmturner/aescts, 
+gotest.tools, 
+Grafana, 
+groupcache,
+grpc, 
+grpc-go, 
+heroiclabs/nakama, 
+hoterran/misc, 
+intel/goresctrl, 
+iotexproject/iotex-core, 
+jcmturner/dnsutils, 
+jcmturner/goidentity, 
+jcmturner/gokrb5, 
+jmespath-go-jmespath, 
+k3s-io/klog, 
+k8s.io/utils, 
+kata-containers, 
+kata-containers, 
+kata-containers, 
+kernel m1, 
+Kubernetes ccm, 
+Kubernetes, 
+kubernetes/api, 
+kubernetes/apimachinery, 
+kubernetes/apiserver, 
+kubernetes/autoscaler vertical-pod-autoscaler, 
+kubernetes/component-base, 
+kubernetes/cri-api, 
+matttproud-golang_protobuf_extensions, 
+meili/TeamTalk, 
+mheese/journalbeat, 
+mheese/journalbeat, 
+mindprince/gonvml, 
+moby/term, 
+modern-go/concurrent, 
+modern-go/reflect2, 
+ode_exporter, 
+OpenCensus, 
+opencontainers-runtime-spec, 
+opencontainers/go-digest, 
+opencontainers/image-spec, 
+opencontainers/selinux, 
+PaddlePaddle/Paddle, 
+pingcap/log, 
+pixie-labs release/cli/, 
+prometheus-client_model, 
+prometheus-common, 
+prometheus-procfs, 
+runc, 
+smartystreets-assertions, 
+Splunk, 
+sunny0826/drone-docker, 
+tears-of-noobs/journalbeat, 
+tklauser/go-sysconf, 
+tklauser/numcpus, 
+uber/jaeger, 
+vdaas/vald, 
+VictoriaMetrics/metricsql, 
+vishvananda-netlink, 
+vishvananda-netns, 
+web3-crypto, 
+xdg-go/scram , 
+xdg-go/stringprep, 
+yaml for Go
+VictoriaMetrics/metricsql 
+
+SPDX-License-Identifier: Apache-2.0 
+======
+github.com/pingcap/errors, 
+go-check-check, 
+go-dockerclient , 
+go-metrics 20201227-snapshot-cf1acfcd, 
+gopkg.in/mgo, 
+gosnmp/gosnmp
+
+SPDX-License-Identifier: BSD-2-Clause
+======
+protobuf-c 
+Copyright (c) 2008-2014, Dave Benson and the protobuf-c authors.
+All rights reserved.
+
+SPDX-License-Identifier: BSD-2-Clause
+======
+gopherjs
+Copyright (c) 2013 Richard Musiol. All rights reserved.
+
+SPDX-License-Identifier: BSD-2-Clause
+======
+secynic/ipwhois 
+Copyright (c) 2013, 2014 Philip Hane
+
+SPDX-License-Identifier: BSD-2-Clause
+======
+godbus/go.dbus
+Copyright (c) 2013, Georg Reinke (<guelfey at gmail dot com>), Google
+All rights reserved.
+
+SPDX-License-Identifier: BSD-2-Clause
+======
+pkg/errors 
+Copyright (c) 2015, Dave Cheney <dave@cheney.net>
+All rights reserved.
+
+SPDX-License-Identifier: BSD-2-Clause
+======
+danwakefield/fnmatch
+Copyright (c) 2016, Daniel Wakefield
+All rights reserved.
+
+SPDX-License-Identifier: BSD-2-Clause
+======
+goleveldb 
+Copyright 2012 Suryandaru Triandana <syndtr@gmail.com>
+All rights reserved.
+
+SPDX-License-Identifier: BSD-2-Clause
+======
+andrewkroh/sys,
+golang/text, 
+jcmturner/gofork
+Copyright (c) 2009 The Go Authors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+google/uuid
+Copyright (c) 2009,2014 Google Inc. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+go-tomb-tomb
+Copyright (c) 2010-2011 - Gustavo Niemeyer <gustavo@niemeyer.net>
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+golang-snappy-go-dev
+Copyright (c) 2011 The Snappy-Go Authors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+golang-github-spf13-pflag-dev
+Copyright (c) 2012 Alex Ogier. All rights reserved.
+Copyright (c) 2012 The Go Authors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+go-inf-inf 
+Copyright (c) 2012 Péter Surányi. Portions Copyright (c) 2009 The Go
+Authors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+fortytw2/leaktest, 
+sigs.k8s.io/yaml
+Copyright (c) 2012 The Go Authors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+fsnotify-fsnotify 
+Copyright (c) 2012 The Go Authors. All rights reserved.
+Copyright (c) 2012-2019 fsnotify Authors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+seelog
+Copyright (c) 2012, Cloud Instruments Co., Ltd. <info@cin.io>
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+cloudflare/golz4
+Copyright (c) 2013 CloudFlare, Inc.
+All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+mergo 
+Copyright (c) 2013 Dario Castañé. All rights reserved.
+Copyright (c) 2012 The Go Authors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+miekg/pkcs
+Copyright (c) 2013 Miek Gieben. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+pierrec-lz4 
+Copyright (c) 2015, Pierre Curto
+All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+rogpeppe/go-internal
+Copyright (c) 2018 The Go Authors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+go-mssqldb,
+ golang.org/x/crypto, 
+golang.org/x/oauth2, 
+golang.org/x/sync,
+ golang.org/x/term,
+ golang.org/x/time,
+ google.golang.org/protobuf, 
+google/go-cmp,
+goproxy, 
+gosnmp/gosnmp, 
+grpc-gateway, 
+HipHop Virtual Machine for PHP HPHP, 
+klauspost-compress,
+pingcap/check, 
+smartystreets-assertions, 
+tklauser/go-sysconf, 
+tklauser/numcpus
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+golang protobuf
+Copyright 2010 The Go Authors. All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+gogo-protobuf
+Copyright 2010 The Go Authors. All rights reserved.
+https://github.com/golang/protobuf
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+siddontang-go
+Copyright 2012, Google Inc.
+All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+pmezard-go-difflib
+Source: https://github.com/pmezard/go-difflib
+Files: *
+Copyright: 2013 Patrick Mézard
+Files: debian/*
+Copyright: 2016 Dmitry Smirnov <onlyjob@debian.org>
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+gopsutil
+Copyright (c) 2014, WAKAYAMA Shirou
+All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
+======
+eclipse-paho.mqtt.golang
+
+SPDX-License-Identifier: EPL-1.0
+======
+frankban/quicktest
+
+License: Expat
+======
+go-spew
+Copyright (c) 2012-2016 Dave Collins <dave@davec.name>
+
+SPDX-License-Identifier: ISC
+======
+geoip2-golang, maxminddb-golang
+Copyright (c) 2015, Gregory J. Oschwald <oschwald@gmail.com>
+
+SPDX-License-Identifier: ISC
+======
+nxadm/tail
+Copyright 2015 Hewlett Packard Enterprise Development LP
+Copyright (c) 2014 ActiveState
+
+SPDX-License-Identifier: MIT
+======
+bsm/sarama-cluster
+Copyright (c) 2017 Black Square Media Ltd
+
+SPDX-License-Identifier: MIT
+======
+ratecounter
+Copyright (C) 2012 by Paul Bellamy
+
+SPDX-License-Identifier: MIT
+======
+beorn7-perks
+Copyright (C) 2013 Blake Mizerany
+
+SPDX-License-Identifier: MIT
+======
+github.com/gofrs/uuid, 
+go.uuid
+Copyright (C) 2013-2018 by Maxim Bublis <b@codemonkey.ru>
+
+SPDX-License-Identifier: MIT
+======
+Masterminds-semver
+Copyright (C) 2014-2019, Matt Butcher and Matt Farina
+
+SPDX-License-Identifier: MIT
+======
+creack/pty
+Copyright (c) 2011 Keith Rarick
+
+SPDX-License-Identifier: MIT
+======
+pq
+Copyright (c) 2011-2013, 'pq' Contributors
+Portions Copyright (C) 2011 Blake Mizerany
+
+SPDX-License-Identifier: MIT
+======
+go-restful
+Copyright (c) 2012,2013 Ernest Micklei
+
+SPDX-License-Identifier: MIT
+======
+sarama,
+Copyright (c) 2013 Shopify
+
+SPDX-License-Identifier: MIT
+======
+jtolds-gls
+Copyright (c) 2013, Space Monkey, Inc.
+
+SPDX-License-Identifier: MIT
+======
+gomega, 
+onsi/ginkgo, 
+Copyright (c) 2013-2014 Onsi Fakhouri
+
+SPDX-License-Identifier: MIT
+======
+h2o/h2o
+Copyright (c) 2014 DeNA Co., Ltd.
+
+SPDX-License-Identifier: MIT
+======
+cespare/xxhash
+Copyright (c) 2016 Caleb Spare
+
+SPDX-License-Identifier: MIT
+======
+mailru/easyjson
+Copyright (c) 2016 Mail.Ru Group
+
+SPDX-License-Identifier: MIT
+======
+goconvey
+Copyright (c) 2016 SmartyStreets, LLC
+
+SPDX-License-Identifier: MIT
+======
+smartystreets-assertions
+Copyright (c) 2016 SmartyStreets, LLC
+
+SPDX-License-Identifier: MIT
+======
+uber-go/atomic
+Copyright (c) 2016 Uber Technologies, Inc.
+
+SPDX-License-Identifier: MIT
+======
+go-zap
+Copyright (c) 2016-2017 Uber Technologies, Inc.
+
+SPDX-License-Identifier: MIT
+======
+go.uber.org/multierr
+Copyright (c) 2017 Uber Technologies, Inc.
+
+SPDX-License-Identifier: MIT
+======
+jackc/chunkreader, 
+jackc/pgio, 
+jackc/pgpassfile
+Copyright (c) 2019 Jack Christensen
+
+SPDX-License-Identifier: MIT
+======
+go-logfmt-logfmt 
+Files: debian/*
+Copyright: 2017 Martín Ferrari <tincho@debian.org>
+
+SPDX-License-Identifier: MIT
+======
+GoDoc Text
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: github.com/kr/text
+Source: https://github.com/kr/text/
+Files: *
+Copyright: 2013 Keith Rarick <kr@xph.us>
+Files: debian/*
+Copyright: 2013 Tonnerre Lombard <tonnerre@ancient-solutions.com>
+
+SPDX-License-Identifier: MIT
+======
+kr/pretty
+
+SPDX-License-Identifier: MIT
+======
+jsoniter-go
+Copyright (c) 2016 json-iterator
+
+SPDX-License-Identifier: MIT
+======
+cilium/ebpf
+Copyright (c) 2017 Nathan Sweet
+Copyright (c) 2018, 2019 Cloudflare
+Copyright (c) 2019 Authors of Cilium
+
+SPDX-License-Identifier: MIT
+======
+josharian/intern
+Copyright (c) 2019 Josh Bleecher Snyder
+
+SPDX-License-Identifier: MIT
+======
+blang-semver 
+Source: https://github.com/blang/semver
+Files: *
+Copyright: 2014-2017 Benedikt Lang <github@benediktlang.de>
+Files: debian/*
+Copyright: 2016 Dmitry Smirnov <onlyjob@debian.org>
+2017 Dr. Tobias Quathamer <toddy@debian.org>
+
+SPDX-License-Identifier: MIT
+======
+eapache-go-resiliency
+Source: https://github.com/eapache/go-resiliency
+Files: *
+Copyright: 2014 Evan Huus <eapache@gmail.com>
+Files: debian/*
+Copyright: 2015 Alexandre Viau <alexandre@alexandreviau.net>
+
+SPDX-License-Identifier: MIT
+======
+stretchr/objx
+Copyright (c) 2014 Stretchr, Inc.
+Copyright (c) 2017-2018 objx contributors
+
+SPDX-License-Identifier: MIT
+======
+influxdata/go-syslog
+Copyright (c) 2018, InfluxData Inc.
+
+SPDX-License-Identifier: MIT
+======
+aliyun/aliyun-log-go-sdk, 
+birkirb/loggers, 
+dlclark/regexp2, 
+github.com/VictoriaMetrics/fasthttp, 
+Go Testify, 
+go-mysql-org/go-mysql, 
+jackc/pgconn, 
+jackc/pgmock, 
+jackc/pgproto3, 
+jackc/pgservicefile,
+jackc/pgtype, 
+Microsoft-hcsshim, 
+mozilla-services/pkcs7, 
+narqo/go-dogstatsd-parser, 
+pgx, 
+siddontang-go-log, 
+sparrc/go-ping, 
+squeaky-pl/japronto, 
+StackExchange-wmi, 
+valyala/histogram, 
+webdruino master,
+ yaml for Go
+
+SPDX-License-Identifier: MIT
+======
+spdlog
+Copyright (c) 2016 Gabi Melman.
+
+SPDX-License-Identifier: MIT
+======
+go.etcd.io/bbolt
+Copyright (c) 2013 Ben Johnson
+
+SPDX-License-Identifier: MIT
+======
+BurntSushi/toml
+Copyright (c) 2013 TOML authors
+
+SPDX-License-Identifier: MIT
+======
+InfluxDB
+Copyright (c) 2013-2018 InfluxData Inc.
+
+SPDX-License-Identifier: MIT
+======
+benbjohnson-clock
+Copyright (c) 2014 Ben Johnson
+
+SPDX-License-Identifier: MIT
+======
+cenkalti/backoff
+Copyright (c) 2014 Cenk Altı
+
+SPDX-License-Identifier: MIT
+======
+go-stack-stack
+Copyright (c) 2014 Chris Hines
+
+SPDX-License-Identifier: MIT
+======
+eapache-queue
+Copyright (c) 2014 Evan Huus
+
+SPDX-License-Identifier: MIT
+======
+joeshaw/multierror
+Copyright (c) 2014 Joe Shaw
+
+SPDX-License-Identifier: MIT
+======
+natefinch/lumberjack
+Copyright (c) 2014 Nate Finch
+
+SPDX-License-Identifier: MIT
+======
+sigs.k8s.io/yaml
+Copyright (c) 2014 Sam Ghods
+
+SPDX-License-Identifier: MIT
+======
+Toxiproxy
+Copyright (c) 2014 Shopify
+
+SPDX-License-Identifier: MIT
+======
+Go Logrus
+Copyright (c) 2014 Simon Eskildsen
+
+SPDX-License-Identifier: MIT
+======
+tchap-go-patricia
+Copyright (c) 2014 The AUTHORS
+
+SPDX-License-Identifier: MIT
+======
+siddontang-go
+Copyright (c) 2014 siddontang
+
+SPDX-License-Identifier: MIT
+======
+valyala-fasttemplate
+Copyright (c) 2015 Aliaksandr Valialkin
+
+SPDX-License-Identifier: MIT
+======
+Telegraf 
+Copyright (c) 2015-2020 InfluxDB
+
+SPDX-License-Identifier: MIT
+======
+Microsoft-go-winio
+Copyright (c) 2015 Microsoft
+
+SPDX-License-Identifier: MIT
+======
+go-ansiterm
+Copyright (c) 2015 Microsoft Corporation
+
+SPDX-License-Identifier: MIT
+======
+Go-kit-kit 
+Copyright (c) 2015 Peter Bourgon
+
+SPDX-License-Identifier: MIT
+======
+shopspring-decimal
+Copyright (c) 2015 Spring, Inc.
+
+SPDX-License-Identifier: MIT
+======
+v2ray-v2ray-core
+Copyright (c) 2015-2019 V2Ray
+
+SPDX-License-Identifier: MIT
+======
+valyala-quicktemplate, 
+valyala/bytebufferpool
+Copyright (c) 2016 Aliaksandr Valialkin, VertaMedia
+
+SPDX-License-Identifier: MIT
+======
+eapache/go-xerial-snappy
+Copyright (c) 2016 Evan Huus
+
+SPDX-License-Identifier: MIT
+======
+morikuni/aec 
+Copyright (c) 2016 Taihei Morikuni
+
+SPDX-License-Identifier: MIT
+======
+valyala/fastrand
+Copyright (c) 2017 Aliaksandr Valialkin
+
+SPDX-License-Identifier: MIT
+======
+valyala-fastjson
+Copyright (c) 2018 Aliaksandr Valialkin
+
+SPDX-License-Identifier: MIT
+======
+go.uber.org/goleak, uber/zanzibar
+Copyright (c) 2018 Uber Technologies, Inc.
+
+SPDX-License-Identifier: MIT
+======
+go-ole-go-ole
+Copyright © 2013-2017 Yasuhiro Matsumoto, <mattn.jp@gmail.com>
+
+SPDX-License-Identifier: MIT
+======
+go-toml v1.9.3
+github.com/pelletier/go-toml:
+Copyright (c) 2013 - 2021 Thomas Pelletier, Eric Anderton
+
+SPDX-License-Identifier: MIT
+======
+errwrap, go-sql-driver, hashicorp-go-multierror, hashicorp-go-uuid 
+
+SPDX-License-Identifier: MPL-2.0
+======
+HipHop Virtual Machine for PHP HPHP
+
+SPDX-License-Identifier: PHP-3.01
+======
+curl 
+Copyright (c) 1996 - 2015, Daniel Stenberg, <daniel@haxx.se>.
+
+SPDX-License-Identifier: Curl
+============
