@@ -45,9 +45,10 @@ GO_BUILD_FLAGS = -v
 
 LICENSE_COVERAGE_FILE=license_coverage.txt
 OUT_DIR = output
-DIST_DIR = ilogtail-$(VERSION)
-VENDOR_DIR = vendor
+DIST_DIR = dist
+PACKAGE_DIR = ilogtail-$(VERSION)
 EXTERNAL_DIR = external
+DIST_FILE = $(DIST_DIR)/ilogtail-$(VERSION).linux-$(ARCH).tar.gz
 
 .PHONY: tools
 tools:
@@ -108,13 +109,13 @@ upgrade_adapter_lib:
 
 .PHONY: plugin_main
 plugin_main: clean
-	./scripts/plugin_build.sh vendor default $(OUT_DIR)
+	./scripts/plugin_build.sh mod default $(OUT_DIR)
 	cp pkg/logtail/libPluginAdapter.so $(OUT_DIR)/libPluginAdapter.so
 	cp pkg/logtail/PluginAdapter.dll $(OUT_DIR)/PluginAdapter.dll
 
 .PHONY: plugin_local
 plugin_local:
-	./scripts/plugin_build.sh vendor c-shared $(OUT_DIR)
+	./scripts/plugin_build.sh mod c-shared $(OUT_DIR)
 
 .PHONY: e2edocker
 e2edocker: clean
@@ -130,8 +131,7 @@ gocdocker: clean
 vendor: clean
 	rm -rf vendor
 	$(GO) mod vendor
-	./scripts/sync_vendor.sh $(EXTERNAL_DIR) $(VENDOR_DIR)
-
+	
 .PHONY: check-dependency-licenses
 check-dependency-licenses: clean
 	./scripts/dependency_licenses.sh plugin_main LICENSE_OF_ILOGTAIL_DEPENDENCIES.md && ./scripts/dependency_licenses.sh test LICENSE_OF_TESTENGINE_DEPENDENCIES.md
@@ -166,7 +166,7 @@ unittest_plugin: clean
 	cp pkg/logtail/libPluginAdapter.so ./plugin_main
 	cp pkg/logtail/PluginAdapter.dll ./plugin_main
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
-	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|(input\/prometheus)|(input\/syslog)"| grep -Ev "plugin_main|pluginmanager") -coverprofile .testCoverage.txt
+	go test $$(go list ./...|grep -Ev "telegraf|external|envconfig|(input\/prometheus)|(input\/syslog)"| grep -Ev "plugin_main|pluginmanager") -coverprofile .testCoverage.txt
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 	rm -rf plugins/input/jmxfetch/test/
 
@@ -175,7 +175,7 @@ unittest_pluginmanager: clean
 	cp pkg/logtail/libPluginAdapter.so ./plugin_main
 	cp pkg/logtail/PluginAdapter.dll ./plugin_main
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
-	go test $$(go list ./...|grep -Ev "vendor|telegraf|external|envconfig|()"| grep -E "plugin_main|pluginmanager") -coverprofile .coretestCoverage.txt
+	go test $$(go list ./...|grep -Ev "telegraf|external|envconfig|()"| grep -E "plugin_main|pluginmanager") -coverprofile .coretestCoverage.txt
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 
 .PHONY: all
@@ -186,16 +186,16 @@ all: clean
 
 .PHONY: dist
 dist: all
-	./scripts/dist.sh $(OUT_DIR) $(DIST_DIR)
+	./scripts/dist.sh $(OUT_DIR) $(DIST_DIR) $(PACKAGE_DIR)
 
-ilogtail-$(VERSION).linux-$(ARCH).tar.gz:
-	@echo 'ilogtail-$(VERSION) does not exist! Please download or run `make dist` first!'
+$(DIST_FILE):
+	@echo 'ilogtail-$(VERSION) dist does not exist! Please download or run `make dist` first!'
 	@false
 
 .PHONY: docker
-docker: ilogtail-$(VERSION).linux-$(ARCH).tar.gz
+docker: $(DIST_FILE)
 	./scripts/docker_build.sh production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
 
 .PHONY: multi-arch-docker
-multi-arch-docker: ilogtail-$(VERSION).linux-$(ARCH).tar.gz
+multi-arch-docker: $(DIST_FILE)
 	./scripts/docker_build.sh multi-arch-production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
