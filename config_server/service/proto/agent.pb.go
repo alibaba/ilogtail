@@ -20,22 +20,23 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Define Config's type
 type ConfigType int32
 
 const (
-	ConfigType_PIPELINE_CONFIG_TYPE ConfigType = 0 // 采集PIPIELINE配置
-	ConfigType_AGENT_CONFIG_TYPE    ConfigType = 1 // Agent运行配置
+	ConfigType_PIPELINE_CONFIG ConfigType = 0
+	ConfigType_AGENT_CONFIG    ConfigType = 1
 )
 
 // Enum value maps for ConfigType.
 var (
 	ConfigType_name = map[int32]string{
-		0: "PIPELINE_CONFIG_TYPE",
-		1: "AGENT_CONFIG_TYPE",
+		0: "PIPELINE_CONFIG",
+		1: "AGENT_CONFIG",
 	}
 	ConfigType_value = map[string]int32{
-		"PIPELINE_CONFIG_TYPE": 0,
-		"AGENT_CONFIG_TYPE":    1,
+		"PIPELINE_CONFIG": 0,
+		"AGENT_CONFIG":    1,
 	}
 )
 
@@ -66,12 +67,13 @@ func (ConfigType) EnumDescriptor() ([]byte, []int) {
 	return file_agent_proto_rawDescGZIP(), []int{0}
 }
 
+// Define Config's update status
 type CheckStatus int32
 
 const (
-	CheckStatus_NEW      CheckStatus = 0 // 新增
-	CheckStatus_DELETED  CheckStatus = 1 // 删除
-	CheckStatus_MODIFIED CheckStatus = 2 // 修改
+	CheckStatus_NEW      CheckStatus = 0
+	CheckStatus_DELETED  CheckStatus = 1
+	CheckStatus_MODIFIED CheckStatus = 2
 )
 
 // Enum value maps for CheckStatus.
@@ -115,13 +117,13 @@ func (CheckStatus) EnumDescriptor() ([]byte, []int) {
 	return file_agent_proto_rawDescGZIP(), []int{1}
 }
 
-// 定义响应码
+// Define response code
 type RespCode int32
 
 const (
-	RespCode_ACCEPT                RespCode = 0 // 请求成功
-	RespCode_INVALID_PARAMETER     RespCode = 1 // 无效的参数
-	RespCode_INTERNAL_SERVER_ERROR RespCode = 2 // 内部服务调用错误
+	RespCode_ACCEPT                RespCode = 0
+	RespCode_INVALID_PARAMETER     RespCode = 1
+	RespCode_INTERNAL_SERVER_ERROR RespCode = 2
 )
 
 // Enum value maps for RespCode.
@@ -165,16 +167,16 @@ func (RespCode) EnumDescriptor() ([]byte, []int) {
 	return file_agent_proto_rawDescGZIP(), []int{2}
 }
 
-// 定义请求时携带的 Config 信息
+// Define the Config information carried in the request
 type ConfigInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type    ConfigType `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.proto.ConfigType" json:"type,omitempty"` // 必选，Config 类型
-	Name    string     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                     // 必选，Config 名（唯一标识）
-	Version int64      `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`                              // 必选，Config 版本号
-	Context string     `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`                               // Config 上下文附加信息描述
+	Type    ConfigType `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.proto.ConfigType" json:"type,omitempty"` // Required, Config's type
+	Name    string     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                     // Required, Config's unique identification
+	Version int64      `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`                              // Required, Config's version number
+	Context string     `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`                               // Config's context
 }
 
 func (x *ConfigInfo) Reset() {
@@ -213,7 +215,7 @@ func (x *ConfigInfo) GetType() ConfigType {
 	if x != nil {
 		return x.Type
 	}
-	return ConfigType_PIPELINE_CONFIG_TYPE
+	return ConfigType_PIPELINE_CONFIG
 }
 
 func (x *ConfigInfo) GetName() string {
@@ -237,18 +239,18 @@ func (x *ConfigInfo) GetContext() string {
 	return ""
 }
 
-// 定义检查 Config 更新状态的结果
+// Define the result of checking the Config update status
 type ConfigCheckResult struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type        ConfigType  `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.proto.ConfigType" json:"type,omitempty"`                                   // 必选，Config 类型
-	Name        string      `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                                                       // 必选，Config 名（唯一标识）
-	OldVersion  int64       `protobuf:"varint,3,opt,name=old_version,json=oldVersion,proto3" json:"old_version,omitempty"`                                        // 必选，Config 当前版本号
-	NewVersion  int64       `protobuf:"varint,4,opt,name=new_version,json=newVersion,proto3" json:"new_version,omitempty"`                                        // 必选，Config 最新版本号
-	Context     string      `protobuf:"bytes,5,opt,name=context,proto3" json:"context,omitempty"`                                                                 // Config 上下文附加信息描述
-	CheckStatus CheckStatus `protobuf:"varint,6,opt,name=check_status,json=checkStatus,proto3,enum=configserver.proto.CheckStatus" json:"check_status,omitempty"` // 必选，Config 检查状态
+	Type        ConfigType  `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.proto.ConfigType" json:"type,omitempty"`                                   // Required, Config's type
+	Name        string      `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                                                       // Required, Config's unique identification
+	OldVersion  int64       `protobuf:"varint,3,opt,name=old_version,json=oldVersion,proto3" json:"old_version,omitempty"`                                        // Required, Config's current version number
+	NewVersion  int64       `protobuf:"varint,4,opt,name=new_version,json=newVersion,proto3" json:"new_version,omitempty"`                                        // Required, Config's latest version number
+	Context     string      `protobuf:"bytes,5,opt,name=context,proto3" json:"context,omitempty"`                                                                 // Config's context
+	CheckStatus CheckStatus `protobuf:"varint,6,opt,name=check_status,json=checkStatus,proto3,enum=configserver.proto.CheckStatus" json:"check_status,omitempty"` // Required, Config's update status
 }
 
 func (x *ConfigCheckResult) Reset() {
@@ -287,7 +289,7 @@ func (x *ConfigCheckResult) GetType() ConfigType {
 	if x != nil {
 		return x.Type
 	}
-	return ConfigType_PIPELINE_CONFIG_TYPE
+	return ConfigType_PIPELINE_CONFIG
 }
 
 func (x *ConfigCheckResult) GetName() string {
@@ -325,17 +327,17 @@ func (x *ConfigCheckResult) GetCheckStatus() CheckStatus {
 	return CheckStatus_NEW
 }
 
-// 定义 Config 的完整信息
+// Define Config's detail
 type ConfigDetail struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type    ConfigType `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.proto.ConfigType" json:"type,omitempty"` // 必选，Config 类型
-	Name    string     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                     // 必选，Config 名（唯一标识）
-	Version int64      `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`                              // 必选，Config 版本号
-	Context string     `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`                               // Config 上下文附加信息描述
-	Detail  string     `protobuf:"bytes,5,opt,name=detail,proto3" json:"detail,omitempty"`                                 // 必选，Config 详情
+	Type    ConfigType `protobuf:"varint,1,opt,name=type,proto3,enum=configserver.proto.ConfigType" json:"type,omitempty"` // Required, Config's type
+	Name    string     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                     // Required, Config's unique identification
+	Version int64      `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`                              // Required, Config's version number
+	Context string     `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`                               // Config's context
+	Detail  string     `protobuf:"bytes,5,opt,name=detail,proto3" json:"detail,omitempty"`                                 // Required, Config's detail
 }
 
 func (x *ConfigDetail) Reset() {
@@ -374,7 +376,7 @@ func (x *ConfigDetail) GetType() ConfigType {
 	if x != nil {
 		return x.Type
 	}
-	return ConfigType_PIPELINE_CONFIG_TYPE
+	return ConfigType_PIPELINE_CONFIG
 }
 
 func (x *ConfigDetail) GetName() string {
@@ -405,19 +407,19 @@ func (x *ConfigDetail) GetDetail() string {
 	return ""
 }
 
-// 定义 Agent 的基本属性
+// Define Agent's basic attributes
 type AgentAttributes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Version  string            `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`                                                                                         // Agent 版本
-	Category string            `protobuf:"bytes,2,opt,name=category,proto3" json:"category,omitempty"`                                                                                       // Agent 类别（用于区分Agent运行配置）
-	Ip       string            `protobuf:"bytes,3,opt,name=ip,proto3" json:"ip,omitempty"`                                                                                                   // Agent ip
-	Hostname string            `protobuf:"bytes,4,opt,name=hostname,proto3" json:"hostname,omitempty"`                                                                                       // Agent 主机名
-	Region   string            `protobuf:"bytes,5,opt,name=region,proto3" json:"region,omitempty"`                                                                                           // Agent 所在区域
-	Zone     string            `protobuf:"bytes,6,opt,name=zone,proto3" json:"zone,omitempty"`                                                                                               // Agent 所属可用区
-	Extras   map[string]string `protobuf:"bytes,100,rep,name=extras,proto3" json:"extras,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // Agent 的其他信息
+	Version  string            `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`                                                                                         // Agent's version
+	Category string            `protobuf:"bytes,2,opt,name=category,proto3" json:"category,omitempty"`                                                                                       // Agent's type(used to distinguish AGENT_CONFIG)
+	Ip       string            `protobuf:"bytes,3,opt,name=ip,proto3" json:"ip,omitempty"`                                                                                                   // Agent's ip
+	Hostname string            `protobuf:"bytes,4,opt,name=hostname,proto3" json:"hostname,omitempty"`                                                                                       // Agent's hostname
+	Region   string            `protobuf:"bytes,5,opt,name=region,proto3" json:"region,omitempty"`                                                                                           // Agent's region
+	Zone     string            `protobuf:"bytes,6,opt,name=zone,proto3" json:"zone,omitempty"`                                                                                               // Agent's zone
+	Extras   map[string]string `protobuf:"bytes,100,rep,name=extras,proto3" json:"extras,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // Agent's other attributes
 }
 
 func (x *AgentAttributes) Reset() {
@@ -501,16 +503,16 @@ func (x *AgentAttributes) GetExtras() map[string]string {
 	return nil
 }
 
-// 定义指令
+// Define command
 type Command struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Type string            `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`                                                                                         // 必选，指令类型
-	Name string            `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                                                                         // 必选，指令名
-	Id   string            `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`                                                                                             // 必选，指令编号
-	Args map[string]string `protobuf:"bytes,4,rep,name=args,proto3" json:"args,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // 指令参数数组
+	Type string            `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`                                                                                         // Required, Command type
+	Name string            `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                                                                         // Required, Command name
+	Id   string            `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`                                                                                             // Required, Command id
+	Args map[string]string `protobuf:"bytes,4,rep,name=args,proto3" json:"args,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // Command's parameter arrays
 }
 
 func (x *Command) Reset() {
@@ -573,22 +575,22 @@ func (x *Command) GetArgs() map[string]string {
 	return nil
 }
 
-// Agent 向 ConfigServer 发送心跳、获取配置更新信息并接收指令的请求
+// Agent sends requests to the ConfigServer to send heartbeats, get config updates and receive commands.
 type HeartBeatRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RequestId       string           `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`                   // 必选，请求编号
-	AgentId         string           `protobuf:"bytes,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`                         // 必选，Agent 的唯一标识
-	AgentType       string           `protobuf:"bytes,3,opt,name=agent_type,json=agentType,proto3" json:"agent_type,omitempty"`                   // 必选，Agent 类型（iLogtail等）
-	Attributes      *AgentAttributes `protobuf:"bytes,4,opt,name=attributes,proto3" json:"attributes,omitempty"`                                  // Agent 的基础信息
-	Tags            []string         `protobuf:"bytes,5,rep,name=tags,proto3" json:"tags,omitempty"`                                              // Agent 拥有的 tag
-	RunningStatus   string           `protobuf:"bytes,6,opt,name=running_status,json=runningStatus,proto3" json:"running_status,omitempty"`       // 必选，Agent 的运行状态
-	StartupTime     int64            `protobuf:"varint,7,opt,name=startup_time,json=startupTime,proto3" json:"startup_time,omitempty"`            // 必选，Agent 的启动时间
-	Interval        int32            `protobuf:"varint,8,opt,name=interval,proto3" json:"interval,omitempty"`                                     // Agent 的心跳间隔
-	PipelineConfigs []*ConfigInfo    `protobuf:"bytes,9,rep,name=pipeline_configs,json=pipelineConfigs,proto3" json:"pipeline_configs,omitempty"` // Agent 当前拥有的采集配置信息
-	AgentConfigs    []*ConfigInfo    `protobuf:"bytes,10,rep,name=agent_configs,json=agentConfigs,proto3" json:"agent_configs,omitempty"`         // Agent 当前拥有的运行配置信息
+	RequestId       string           `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	AgentId         string           `protobuf:"bytes,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`                         // Required, Agent's unique identification
+	AgentType       string           `protobuf:"bytes,3,opt,name=agent_type,json=agentType,proto3" json:"agent_type,omitempty"`                   // Required, Agent's type(ilogtail, ..)
+	Attributes      *AgentAttributes `protobuf:"bytes,4,opt,name=attributes,proto3" json:"attributes,omitempty"`                                  // Agent's basic attributes
+	Tags            []string         `protobuf:"bytes,5,rep,name=tags,proto3" json:"tags,omitempty"`                                              // Agent's tags
+	RunningStatus   string           `protobuf:"bytes,6,opt,name=running_status,json=runningStatus,proto3" json:"running_status,omitempty"`       // Required, Agent's running status
+	StartupTime     int64            `protobuf:"varint,7,opt,name=startup_time,json=startupTime,proto3" json:"startup_time,omitempty"`            // Required, Agent's startup time
+	Interval        int32            `protobuf:"varint,8,opt,name=interval,proto3" json:"interval,omitempty"`                                     // Agent's heartbeat interval
+	PipelineConfigs []*ConfigInfo    `protobuf:"bytes,9,rep,name=pipeline_configs,json=pipelineConfigs,proto3" json:"pipeline_configs,omitempty"` // Information about the current PIPELINE_CONFIG held by the Agent
+	AgentConfigs    []*ConfigInfo    `protobuf:"bytes,10,rep,name=agent_configs,json=agentConfigs,proto3" json:"agent_configs,omitempty"`         // Information about the current AGENT_CONFIG held by the Agent
 }
 
 func (x *HeartBeatRequest) Reset() {
@@ -693,18 +695,18 @@ func (x *HeartBeatRequest) GetAgentConfigs() []*ConfigInfo {
 	return nil
 }
 
-// ConfigServer 对 Agent 心跳的响应
+// ConfigServer's response to Agent's heartbeats
 type HeartBeatResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RequestId            string               `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`                                    // 必选，请求编号
-	Code                 RespCode             `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`                             // 必选，响应码
-	Message              string               `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`                                                         // 必选，响应信息
-	PipelineCheckResults []*ConfigCheckResult `protobuf:"bytes,4,rep,name=pipeline_check_results,json=pipelineCheckResults,proto3" json:"pipeline_check_results,omitempty"` // Agent 的采集配置更新信息
-	AgentCheckResults    []*ConfigCheckResult `protobuf:"bytes,5,rep,name=agent_check_results,json=agentCheckResults,proto3" json:"agent_check_results,omitempty"`          // Agent 的运行配置更新信息
-	CustomCommands       []*Command           `protobuf:"bytes,6,rep,name=custom_commands,json=customCommands,proto3" json:"custom_commands,omitempty"`                     // Agent 接收到的自定义指令
+	RequestId            string               `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Code                 RespCode             `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Message              string               `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	PipelineCheckResults []*ConfigCheckResult `protobuf:"bytes,4,rep,name=pipeline_check_results,json=pipelineCheckResults,proto3" json:"pipeline_check_results,omitempty"` // Agent's PIPELINE_CONFIG update status
+	AgentCheckResults    []*ConfigCheckResult `protobuf:"bytes,5,rep,name=agent_check_results,json=agentCheckResults,proto3" json:"agent_check_results,omitempty"`          // Agent's AGENT_CONFIG update status
+	CustomCommands       []*Command           `protobuf:"bytes,6,rep,name=custom_commands,json=customCommands,proto3" json:"custom_commands,omitempty"`                     // Agent received commands
 }
 
 func (x *HeartBeatResponse) Reset() {
@@ -782,15 +784,15 @@ func (x *HeartBeatResponse) GetCustomCommands() []*Command {
 }
 
 // API: /Agent/FetchPipelineConfig/
-// Agent 向 ConfigServer 拉取采集配置的请求
+// Agent request to ConfigServer, pulling details of the PIPELINE_CONFIG
 type FetchPipelineConfigRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RequestId  string        `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`    // 必选，请求编号
-	AgentId    string        `protobuf:"bytes,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`          // 必选，Agent 的唯一标识
-	ReqConfigs []*ConfigInfo `protobuf:"bytes,3,rep,name=req_configs,json=reqConfigs,proto3" json:"req_configs,omitempty"` // Agent 需要获取完整信息的配置
+	RequestId  string        `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	AgentId    string        `protobuf:"bytes,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`          // Required, Agent's unique identification
+	ReqConfigs []*ConfigInfo `protobuf:"bytes,3,rep,name=req_configs,json=reqConfigs,proto3" json:"req_configs,omitempty"` // PIPELINE_CONFIGs that Agent requires for full information
 }
 
 func (x *FetchPipelineConfigRequest) Reset() {
@@ -846,16 +848,16 @@ func (x *FetchPipelineConfigRequest) GetReqConfigs() []*ConfigInfo {
 	return nil
 }
 
-// ConfigServer 对 Agent 拉取采集配置的响应
+// ConfigServer response to Agent's request
 type FetchPipelineConfigResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RequestId     string          `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`             // 必选，请求编号
-	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`      // 必选，响应码
-	Message       string          `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`                                  // 必选，响应信息
-	ConfigDetails []*ConfigDetail `protobuf:"bytes,4,rep,name=config_details,json=configDetails,proto3" json:"config_details,omitempty"` // Agent 请求的配置的完整信息
+	RequestId     string          `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Message       string          `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	ConfigDetails []*ConfigDetail `protobuf:"bytes,4,rep,name=config_details,json=configDetails,proto3" json:"config_details,omitempty"` // PIPELINE_CONFIGs' detail
 }
 
 func (x *FetchPipelineConfigResponse) Reset() {
@@ -919,16 +921,16 @@ func (x *FetchPipelineConfigResponse) GetConfigDetails() []*ConfigDetail {
 }
 
 // API: /Agent/FetchAgentConfig/
-// Agent 向 ConfigServer 拉取运行配置的请求
+// Agent request to ConfigServer, pulling details of the AGENT_CONFIG
 type FetchAgentConfigRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RequestId  string           `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`    // 必选，请求编号
-	AgentId    string           `protobuf:"bytes,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`          // 必选，Agent 的唯一标识
-	Attributes *AgentAttributes `protobuf:"bytes,3,opt,name=attributes,proto3" json:"attributes,omitempty"`                   // 必选，Agent 的基础信息
-	ReqConfigs []*ConfigInfo    `protobuf:"bytes,4,rep,name=req_configs,json=reqConfigs,proto3" json:"req_configs,omitempty"` // Agent 需要获取更新内容的配置信息
+	RequestId  string           `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	AgentId    string           `protobuf:"bytes,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`          // Required, Agent's unique identification
+	Attributes *AgentAttributes `protobuf:"bytes,3,opt,name=attributes,proto3" json:"attributes,omitempty"`                   // Required, Agent's basic attributes
+	ReqConfigs []*ConfigInfo    `protobuf:"bytes,4,rep,name=req_configs,json=reqConfigs,proto3" json:"req_configs,omitempty"` // AGENT_CONFIGs that Agent requires for full information
 }
 
 func (x *FetchAgentConfigRequest) Reset() {
@@ -991,16 +993,16 @@ func (x *FetchAgentConfigRequest) GetReqConfigs() []*ConfigInfo {
 	return nil
 }
 
-// ConfigServer 对 Agent 拉取运行配置的响应
+// ConfigServer response to Agent's request
 type FetchAgentConfigResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RequestId     string          `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`             // 必选，请求编号
-	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`      // 必选，响应码
-	Message       string          `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`                                  // 必选，响应信息
-	ConfigDetails []*ConfigDetail `protobuf:"bytes,4,rep,name=config_details,json=configDetails,proto3" json:"config_details,omitempty"` // Agent 请求的配置的完整信息
+	RequestId     string          `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	Code          RespCode        `protobuf:"varint,2,opt,name=code,proto3,enum=configserver.proto.RespCode" json:"code,omitempty"`
+	Message       string          `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	ConfigDetails []*ConfigDetail `protobuf:"bytes,4,rep,name=config_details,json=configDetails,proto3" json:"config_details,omitempty"` // AGENT_CONFIGs' detail
 }
 
 func (x *FetchAgentConfigResponse) Reset() {
@@ -1234,20 +1236,20 @@ var file_agent_proto_rawDesc = []byte{
 	0x20, 0x2e, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x44, 0x65, 0x74, 0x61, 0x69,
 	0x6c, 0x52, 0x0d, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73,
-	0x2a, 0x3d, 0x0a, 0x0a, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x54, 0x79, 0x70, 0x65, 0x12, 0x18,
-	0x0a, 0x14, 0x50, 0x49, 0x50, 0x45, 0x4c, 0x49, 0x4e, 0x45, 0x5f, 0x43, 0x4f, 0x4e, 0x46, 0x49,
-	0x47, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x10, 0x00, 0x12, 0x15, 0x0a, 0x11, 0x41, 0x47, 0x45, 0x4e,
-	0x54, 0x5f, 0x43, 0x4f, 0x4e, 0x46, 0x49, 0x47, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x10, 0x01, 0x2a,
-	0x31, 0x0a, 0x0b, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x07,
-	0x0a, 0x03, 0x4e, 0x45, 0x57, 0x10, 0x00, 0x12, 0x0b, 0x0a, 0x07, 0x44, 0x45, 0x4c, 0x45, 0x54,
-	0x45, 0x44, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x4d, 0x4f, 0x44, 0x49, 0x46, 0x49, 0x45, 0x44,
-	0x10, 0x02, 0x2a, 0x48, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x70, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x0a,
-	0x0a, 0x06, 0x41, 0x43, 0x43, 0x45, 0x50, 0x54, 0x10, 0x00, 0x12, 0x15, 0x0a, 0x11, 0x49, 0x4e,
-	0x56, 0x41, 0x4c, 0x49, 0x44, 0x5f, 0x50, 0x41, 0x52, 0x41, 0x4d, 0x45, 0x54, 0x45, 0x52, 0x10,
-	0x01, 0x12, 0x19, 0x0a, 0x15, 0x49, 0x4e, 0x54, 0x45, 0x52, 0x4e, 0x41, 0x4c, 0x5f, 0x53, 0x45,
-	0x52, 0x56, 0x45, 0x52, 0x5f, 0x45, 0x52, 0x52, 0x4f, 0x52, 0x10, 0x02, 0x42, 0x16, 0x5a, 0x14,
-	0x2e, 0x3b, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x2a, 0x33, 0x0a, 0x0a, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x54, 0x79, 0x70, 0x65, 0x12, 0x13,
+	0x0a, 0x0f, 0x50, 0x49, 0x50, 0x45, 0x4c, 0x49, 0x4e, 0x45, 0x5f, 0x43, 0x4f, 0x4e, 0x46, 0x49,
+	0x47, 0x10, 0x00, 0x12, 0x10, 0x0a, 0x0c, 0x41, 0x47, 0x45, 0x4e, 0x54, 0x5f, 0x43, 0x4f, 0x4e,
+	0x46, 0x49, 0x47, 0x10, 0x01, 0x2a, 0x31, 0x0a, 0x0b, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x53, 0x74,
+	0x61, 0x74, 0x75, 0x73, 0x12, 0x07, 0x0a, 0x03, 0x4e, 0x45, 0x57, 0x10, 0x00, 0x12, 0x0b, 0x0a,
+	0x07, 0x44, 0x45, 0x4c, 0x45, 0x54, 0x45, 0x44, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x4d, 0x4f,
+	0x44, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x02, 0x2a, 0x48, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x70,
+	0x43, 0x6f, 0x64, 0x65, 0x12, 0x0a, 0x0a, 0x06, 0x41, 0x43, 0x43, 0x45, 0x50, 0x54, 0x10, 0x00,
+	0x12, 0x15, 0x0a, 0x11, 0x49, 0x4e, 0x56, 0x41, 0x4c, 0x49, 0x44, 0x5f, 0x50, 0x41, 0x52, 0x41,
+	0x4d, 0x45, 0x54, 0x45, 0x52, 0x10, 0x01, 0x12, 0x19, 0x0a, 0x15, 0x49, 0x4e, 0x54, 0x45, 0x52,
+	0x4e, 0x41, 0x4c, 0x5f, 0x53, 0x45, 0x52, 0x56, 0x45, 0x52, 0x5f, 0x45, 0x52, 0x52, 0x4f, 0x52,
+	0x10, 0x02, 0x42, 0x16, 0x5a, 0x14, 0x2e, 0x3b, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x73, 0x65,
+	0x72, 0x76, 0x65, 0x72, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (

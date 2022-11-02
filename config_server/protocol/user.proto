@@ -15,13 +15,13 @@ message AgentGroup {
 }
 
 message Agent {
-    string agent_id = 1;            // 必选，Agent 的唯一标识
-    string agent_type = 2;          // 必选，Agent 类型（iLogtail等）
-    AgentAttributes attributes = 3; // Agent 的基础信息
-    repeated string tags =  4;      // Agent 拥有的 tag
-    string running_status = 5;      // 必选，Agent 的运行状态
-    int64 startup_time = 6;         // 必选，Agent 的启动时间
-    int32 interval = 7;             // Agent 的心跳间隔
+    string agent_id = 1;            // Required, Agent's unique identification
+    string agent_type = 2;          // Required, Agent's type(ilogtail, ..)
+    AgentAttributes attributes = 3; // Agent's basic attributes
+    repeated string tags =  4;      // Agent's tags
+    string running_status = 5;      // Required, Agent's running status
+    int64 startup_time = 6;         // Required, Agent's startup time
+    int32 interval = 7;             // Agent's heartbeat interval
 }
 
 // API: /User/CreateAgentGroup

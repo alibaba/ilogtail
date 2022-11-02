@@ -2,131 +2,133 @@ syntax = "proto3";
 package configserver.proto;
 option go_package = ".;configserver_proto";
 
-// 定义 Config 的类别
-
+// Define Config's type
 enum ConfigType {
-    PIPELINE_CONFIG_TYPE = 0;   // 采集PIPIELINE配置
-    AGENT_CONFIG_TYPE = 1;      // Agent运行配置
+    PIPELINE_CONFIG = 0; 
+    AGENT_CONFIG = 1;      
 }
 
-// 定义 Config 更新状态
-
+// Define Config's update status
 enum CheckStatus {
-    NEW = 0;        // 新增
-    DELETED = 1;    // 删除
-    MODIFIED = 2;   // 修改
+    NEW = 0;
+    DELETED = 1;
+    MODIFIED = 2;
 }
 
-// 定义响应码
+// Define response code
 enum RespCode {
-    ACCEPT = 0;                 // 请求成功
-    INVALID_PARAMETER = 1;      // 无效的参数
-    INTERNAL_SERVER_ERROR = 2;  // 内部服务调用错误
+    ACCEPT = 0;                 
+    INVALID_PARAMETER = 1;      
+    INTERNAL_SERVER_ERROR = 2;  
 }
 
-// 定义请求时携带的 Config 信息
+// Define the Config information carried in the request
 message ConfigInfo {
-    ConfigType type = 1;    // 必选，Config 类型
-    string name = 2;        // 必选，Config 名（唯一标识）
-    int64 version = 3;      // 必选，Config 版本号
-    string context = 4;     // Config 上下文附加信息描述
+    ConfigType type = 1;    // Required, Config's type
+    string name = 2;        // Required, Config's unique identification
+    int64 version = 3;      // Required, Config's version number
+    string context = 4;     // Config's context
 }
 
-// 定义检查 Config 更新状态的结果
+// Define the result of checking the Config update status
 message ConfigCheckResult {
-    ConfigType type = 1;                     // 必选，Config 类型
-    string name = 2;                            // 必选，Config 名（唯一标识）
-    int64 old_version = 3;                   // 必选，Config 当前版本号
-    int64 new_version = 4;                 // 必选，Config 最新版本号
-    string context = 5;                         // Config 上下文附加信息描述
-    CheckStatus check_status = 6;   // 必选，Config 检查状态    
+    ConfigType type = 1;            // Required, Config's type
+    string name = 2;                // Required, Config's unique identification
+    int64 old_version = 3;          // Required, Config's current version number
+    int64 new_version = 4;          // Required, Config's latest version number
+    string context = 5;             // Config's context
+    CheckStatus check_status = 6;   // Required, Config's update status   
 }
 
-// 定义 Config 的完整信息
+// Define Config's detail
 message ConfigDetail {
-    ConfigType type = 1;    // 必选，Config 类型
-    string name = 2;           // 必选，Config 名（唯一标识）
-    int64 version = 3;         // 必选，Config 版本号
-    string context = 4;       // Config 上下文附加信息描述
-    string detail = 5;          // 必选，Config 详情
+    ConfigType type = 1;    // Required, Config's type
+    string name = 2;        // Required, Config's unique identification
+    int64 version = 3;      // Required, Config's version number
+    string context = 4;     // Config's context
+    string detail = 5;      // Required, Config's detail
 }
 
-// 定义 Agent 的基本属性
+// Define Agent's basic attributes
 message AgentAttributes {
-    string version = 1;                  // Agent 版本
-    string category = 2;                // Agent 类别（用于区分Agent运行配置）
-    string ip = 3;                            // Agent ip
-    string hostname = 4;              // Agent 主机名
-    string region = 5;                    // Agent 所在区域
-    string zone = 6;                       // Agent 所属可用区
-    map<string, string> extras = 100;   // Agent 的其他信息
+    string version = 1;                 // Agent's version
+    string category = 2;                // Agent's type(used to distinguish AGENT_CONFIG)
+    string ip = 3;                      // Agent's ip
+    string hostname = 4;                // Agent's hostname
+    string region = 5;                  // Agent's region
+    string zone = 6;                    // Agent's zone
+    map<string, string> extras = 100;   // Agent's other attributes
 }
 
-// 定义指令
+// Define command
 message Command {
-    string type = 1;                  // 必选，指令类型
-    string name = 2;                // 必选，指令名
-    string id = 3;                      // 必选，指令编号
-    map<string, string> args = 4;   // 指令参数数组
+    string type = 1;                // Required, Command type
+    string name = 2;                // Required, Command name
+    string id = 3;                  // Required, Command id
+    map<string, string> args = 4;   // Command's parameter arrays
 }
 
 // API: /Agent/HeartBeat/
 
-// Agent 向 ConfigServer 发送心跳、获取配置更新信息并接收指令的请求
+// Agent sends requests to the ConfigServer to send heartbeats, get config updates and receive commands.
 message HeartBeatRequest {
-    string request_id = 1;                            // 必选，请求编号
-    string agent_id = 2;                              // 必选，Agent 的唯一标识
-    string agent_type = 3;                         // 必选，Agent 类型（iLogtail等）
-    AgentAttributes attributes = 4;           // Agent 的基础信息
-    repeated string tags =  5;                        // Agent 拥有的 tag
-    string running_status = 6;                   // 必选，Agent 的运行状态
-    int64 startup_time = 7;                        // 必选，Agent 的启动时间
-    int32 interval = 8;                                  // Agent 的心跳间隔
-    repeated ConfigInfo pipeline_configs = 9;   // Agent 当前拥有的采集配置信息
-    repeated ConfigInfo agent_configs = 10;      // Agent 当前拥有的运行配置信息
+    string request_id = 1;  
+
+    string agent_id = 2;                        // Required, Agent's unique identification
+    string agent_type = 3;                      // Required, Agent's type(ilogtail, ..)
+    AgentAttributes attributes = 4;             // Agent's basic attributes
+    repeated string tags =  5;                  // Agent's tags
+    string running_status = 6;                  // Required, Agent's running status
+    int64 startup_time = 7;                     // Required, Agent's startup time
+    int32 interval = 8;                         // Agent's heartbeat interval
+    repeated ConfigInfo pipeline_configs = 9;   // Information about the current PIPELINE_CONFIG held by the Agent
+    repeated ConfigInfo agent_configs = 10;     // Information about the current AGENT_CONFIG held by the Agent
 }
 
-// ConfigServer 对 Agent 心跳的响应
+// ConfigServer's response to Agent's heartbeats
 message HeartBeatResponse {
-    string request_id = 1;                                  // 必选，请求编号
-    RespCode code = 2;                                    // 必选，响应码
-    string message = 3;                                    // 必选，响应信息
+    string request_id = 1;  
+    RespCode code = 2;      
+    string message = 3;     
 
-    repeated ConfigCheckResult pipeline_check_results = 4;  // Agent 的采集配置更新信息
-    repeated ConfigCheckResult agent_check_results = 5;     // Agent 的运行配置更新信息
-    repeated Command custom_commands = 6;                   // Agent 接收到的自定义指令
+    repeated ConfigCheckResult pipeline_check_results = 4;  // Agent's PIPELINE_CONFIG update status
+    repeated ConfigCheckResult agent_check_results = 5;     // Agent's AGENT_CONFIG update status
+    repeated Command custom_commands = 6;                   // Agent received commands
 }
 
 // API: /Agent/FetchPipelineConfig/
-// Agent 向 ConfigServer 拉取采集配置的请求
+// Agent request to ConfigServer, pulling details of the PIPELINE_CONFIG
 message FetchPipelineConfigRequest {
-    string request_id = 1;                  // 必选，请求编号
-    string agent_id = 2;                    // 必选，Agent 的唯一标识
-    repeated ConfigInfo req_configs = 3;    // Agent 需要获取完整信息的配置
+    string request_id = 1; 
+
+    string agent_id = 2;                    // Required, Agent's unique identification
+    repeated ConfigInfo req_configs = 3;    // PIPELINE_CONFIGs that Agent requires for full information
 }
 
-// ConfigServer 对 Agent 拉取采集配置的响应
+// ConfigServer response to Agent's request
 message FetchPipelineConfigResponse {
-    string request_id = 1;                     // 必选，请求编号
-    RespCode code = 2;                          // 必选，响应码
-    string message = 3;                         // 必选，响应信息
+    string request_id = 1;                     
+    RespCode code = 2;      
+    string message = 3;     
 
-    repeated ConfigDetail config_details = 4;   // Agent 请求的配置的完整信息
+    repeated ConfigDetail config_details = 4;   // PIPELINE_CONFIGs' detail
 }
 
 // API: /Agent/FetchAgentConfig/
-// Agent 向 ConfigServer 拉取运行配置的请求
+// Agent request to ConfigServer, pulling details of the AGENT_CONFIG
 message FetchAgentConfigRequest {
-    string request_id = 1;                  // 必选，请求编号
-    string agent_id = 2;                    // 必选，Agent 的唯一标识
-    AgentAttributes attributes = 3;         // 必选，Agent 的基础信息
-    repeated ConfigInfo req_configs = 4;    // Agent 需要获取更新内容的配置信息
+    string request_id = 1; 
+
+    string agent_id = 2;                    // Required, Agent's unique identification
+    AgentAttributes attributes = 3;         // Required, Agent's basic attributes
+    repeated ConfigInfo req_configs = 4;    // AGENT_CONFIGs that Agent requires for full information
 }
 
-// ConfigServer 对 Agent 拉取运行配置的响应
+// ConfigServer response to Agent's request
 message FetchAgentConfigResponse {
-    string request_id = 1;                                    // 必选，请求编号
-    RespCode code = 2;                                      // 必选，响应码
-    string message = 3;                                       // 必选，响应信息
-    repeated ConfigDetail config_details = 4;   // Agent 请求的配置的完整信息
+    string request_id = 1;         
+    RespCode code = 2;               
+    string message = 3;                   
+
+    repeated ConfigDetail config_details = 4;   // AGENT_CONFIGs' detail
 }

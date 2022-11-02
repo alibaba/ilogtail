@@ -143,13 +143,13 @@ type Agent struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	AgentId       string           `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`                   // 必选，Agent 的唯一标识
-	AgentType     string           `protobuf:"bytes,2,opt,name=agent_type,json=agentType,proto3" json:"agent_type,omitempty"`             // 必选，Agent 类型（iLogtail等）
-	Attributes    *AgentAttributes `protobuf:"bytes,3,opt,name=attributes,proto3" json:"attributes,omitempty"`                            // Agent 的基础信息
-	Tags          []string         `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`                                        // Agent 拥有的 tag
-	RunningStatus string           `protobuf:"bytes,5,opt,name=running_status,json=runningStatus,proto3" json:"running_status,omitempty"` // 必选，Agent 的运行状态
-	StartupTime   int64            `protobuf:"varint,6,opt,name=startup_time,json=startupTime,proto3" json:"startup_time,omitempty"`      // 必选，Agent 的启动时间
-	Interval      int32            `protobuf:"varint,7,opt,name=interval,proto3" json:"interval,omitempty"`                               // Agent 的心跳间隔
+	AgentId       string           `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`                   // Required, Agent's unique identification
+	AgentType     string           `protobuf:"bytes,2,opt,name=agent_type,json=agentType,proto3" json:"agent_type,omitempty"`             // Required, Agent's type(ilogtail, ..)
+	Attributes    *AgentAttributes `protobuf:"bytes,3,opt,name=attributes,proto3" json:"attributes,omitempty"`                            // Agent's basic attributes
+	Tags          []string         `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`                                        // Agent's tags
+	RunningStatus string           `protobuf:"bytes,5,opt,name=running_status,json=runningStatus,proto3" json:"running_status,omitempty"` // Required, Agent's running status
+	StartupTime   int64            `protobuf:"varint,6,opt,name=startup_time,json=startupTime,proto3" json:"startup_time,omitempty"`      // Required, Agent's startup time
+	Interval      int32            `protobuf:"varint,7,opt,name=interval,proto3" json:"interval,omitempty"`                               // Agent's heartbeat interval
 }
 
 func (x *Agent) Reset() {
