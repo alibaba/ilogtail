@@ -442,10 +442,10 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	if config.LifeCycle != nil {
 		lifeCycle = int(*config.LifeCycle)
 	}
-	mode := STANDARD_MODE
+	mode := StandardMode
 	if len(config.LogstoreMode) != 0 {
-		if config.LogstoreMode == QUERY_MODE {
-			mode = QUERY_MODE
+		if config.LogstoreMode == QueryMode {
+			mode = QueryMode
 		}
 	}
 	err := o.makesureLogstoreExist(config, project, logstore, shardCount, lifeCycle, config.ProductCode, config.ProductLang, mode)

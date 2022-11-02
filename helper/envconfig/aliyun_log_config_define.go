@@ -107,8 +107,8 @@ type AliyunLogConfigSpec struct {
 }
 
 const (
-	QUERY_MODE    string = "query"
-	STANDARD_MODE string = "standard"
+	QueryMode    string = "query"
+	StandardMode string = "standard"
 )
 
 // AliyunLogConfigDetail logtail config detail
