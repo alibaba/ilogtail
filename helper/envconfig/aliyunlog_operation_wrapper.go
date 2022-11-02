@@ -262,7 +262,6 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec, pr
 		ShardCount:    shardCount,
 		AutoSplit:     true,
 		MaxSplitShard: 32,
-		AppendMeta:    true,
 		Mode:          mode,
 	}
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
