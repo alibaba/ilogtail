@@ -67,8 +67,8 @@ public:
             event.Info.ReqBytes = req->ReqBytes;
             event.Info.RespBytes = resp->RespBytes;
             event.Key.ConnKey = mKey;
-            event.Key.Query = std::move(req->CMD);
             event.Key.QueryCmd = req->CMD.substr(0, req->CMD.find_first_of(' '));
+            event.Key.Query = std::move(req->CMD);
             event.Key.Status = resp->isOK;
             return true;
         });
