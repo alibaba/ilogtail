@@ -222,13 +222,17 @@ public:
         return true;
     }
 
-    void FlushLogs(std::vector<sls_logs::Log>& allData, const std::string& tags, uint64_t interval) {
+    void FlushLogs(std::vector<sls_logs::Log>& allData,
+                   const std::string& tags,
+                   google::protobuf::RepeatedPtrField<sls_logs::Log_Content>& globalTags,
+                   uint64_t interval) {
         for (auto iter = mProtocolEventAggMap.begin(); iter != mProtocolEventAggMap.end();) {
             if (iter->second->AggResult.IsEmpty()) {
                 mAggItemManager.Delete(iter->second);
                 iter = mProtocolEventAggMap.erase(iter);
             } else {
                 sls_logs::Log newLog;
+                newLog.mutable_contents()->CopyFrom(globalTags);
                 AddAnyLogContent(&newLog, observer::kLocalInfo, tags);
                 AddAnyLogContent(&newLog, observer::kInterval, interval);
                 iter->second->ToPB(&newLog);

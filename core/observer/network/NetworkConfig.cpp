@@ -188,19 +188,19 @@ std::string NetworkConfig::SetFromJsonString() {
     try {
         if (!(jsonRoot.isMember("type") && jsonRoot["type"].asString() == "observer_ilogtail_network_v1")
             || !(jsonRoot.isMember("detail") && jsonRoot["detail"].isObject())) {
-            return "invalid format, observer_sls_network is not exist or error type";
+            return "invalid format, observer_ilogtail_network_v1 is not exist or error type";
         }
         Json::Value& obserValue = jsonRoot["detail"];
 
         if (obserValue.isMember("EBPF") && obserValue["EBPF"].isObject()) {
             Json::Value& ebpfValue = obserValue["EBPF"];
             OBSERVER_CONFIG_EXTRACT_BOOL(ebpfValue, Enabled, false, EBPF);
-            OBSERVER_CONFIG_EXTRACT_BOOL(ebpfValue, Pid, false, EBPF);
+            OBSERVER_CONFIG_EXTRACT_INT(ebpfValue, Pid, -1, EBPF);
         }
         if (obserValue.isMember("PCAP") && obserValue["PCAP"].isObject()) {
             Json::Value& pcapValue = obserValue["PCAP"];
             OBSERVER_CONFIG_EXTRACT_BOOL(pcapValue, Enabled, false, PCAP);
-            OBSERVER_CONFIG_EXTRACT_BOOL(pcapValue, Promiscuous, false, PCAP);
+            OBSERVER_CONFIG_EXTRACT_BOOL(pcapValue, Promiscuous, true, PCAP);
             OBSERVER_CONFIG_EXTRACT_INT(pcapValue, TimeoutMs, 0, PCAP);
             OBSERVER_CONFIG_EXTRACT_STRING(pcapValue, Filter, "", PCAP);
             OBSERVER_CONFIG_EXTRACT_STRING(pcapValue, Interface, "", PCAP);
@@ -214,9 +214,9 @@ std::string NetworkConfig::SetFromJsonString() {
             OBSERVER_CONFIG_EXTRACT_INT(commonValue, FlushNetlinkInterval, 10, );
             OBSERVER_CONFIG_EXTRACT_INT(commonValue, Sampling, 100, );
             OBSERVER_CONFIG_EXTRACT_BOOL(commonValue, SaveToDisk, false, );
-            OBSERVER_CONFIG_EXTRACT_BOOL(commonValue, DropUnixSocket, false, );
-            OBSERVER_CONFIG_EXTRACT_BOOL(commonValue, DropLocalConnections, false, );
-            OBSERVER_CONFIG_EXTRACT_BOOL(commonValue, DropUnknownSocket, false, );
+            OBSERVER_CONFIG_EXTRACT_BOOL(commonValue, DropUnixSocket, true, );
+            OBSERVER_CONFIG_EXTRACT_BOOL(commonValue, DropLocalConnections, true, );
+            OBSERVER_CONFIG_EXTRACT_BOOL(commonValue, DropUnknownSocket, true, );
             OBSERVER_CONFIG_EXTRACT_REGEXP_MAP(commonValue, IncludeContainerLabels);
             OBSERVER_CONFIG_EXTRACT_REGEXP_MAP(commonValue, ExcludeContainerLabels);
             OBSERVER_CONFIG_EXTRACT_REGEXP_MAP(commonValue, IncludeK8sLabels);
@@ -287,7 +287,6 @@ bool NetworkConfig::isOpenPartialSelectDump() {
     return -1 != this->localPickPID || -1 != this->localPickConnectionHashId || -1 != this->localPickSrcPort
         || -1 != this->localPickDstPort;
 }
-
 
 
 std::string NetworkConfig::ToString() const {

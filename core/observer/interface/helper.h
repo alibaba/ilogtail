@@ -57,7 +57,7 @@ static uint64_t GenConnectionID(uint32_t pid, uint32_t connid) {
     static uint32_t sHash = XXH32(sHostname.c_str(), sHostname.size(), pid);
     return static_cast<uint64_t>(sHash) << 32 | static_cast<uint64_t>(connid);
 }
-static const std::string kRemoteInfoPrefix = R"({"remote_host":")";
+static const std::string kRemoteInfoPrefix = R"({"_remote_host_":")";
 static const std::string kRemoteInfoSuffix = R"("})";
 
 } // namespace logtail

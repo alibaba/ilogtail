@@ -28,29 +28,35 @@ void ProtocolEventAggregators::FlushOutMetrics(uint64_t timeNano,
     for (auto& tag : processTags) {
         root[tag.first] = tag.second;
     }
+    const std::string& pTags = Json::writeString(builder, root);
+
+    ::google::protobuf::RepeatedPtrField<sls_logs::Log_Content> gTags;
+    gTags.Reserve(globalTags.size());
     for (const auto& tag : globalTags) {
-        root[tag.first] = tag.second;
-    }
-    const std::string& tags = Json::writeString(builder, root);
-
-    if (mDNSAggregators != NULL) {
-        mDNSAggregators->FlushLogs(allData, tags, interval);
+        sls_logs::Log_Content* content = gTags.Add();
+        content->set_key(tag.first);
+        content->set_value(tag.second);
     }
 
-    if (mHTTPAggregators != NULL) {
-        mHTTPAggregators->FlushLogs(allData, tags, interval);
+
+    if (mDNSAggregators != nullptr) {
+        mDNSAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
 
-    if (mMySQLAggregators != NULL) {
-        mMySQLAggregators->FlushLogs(allData, tags, interval);
+    if (mHTTPAggregators != nullptr) {
+        mHTTPAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
 
-    if (mRedisAggregators != NULL) {
-        mRedisAggregators->FlushLogs(allData, tags, interval);
+    if (mMySQLAggregators != nullptr) {
+        mMySQLAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
 
-    if (mPgSQLAggregators != NULL) {
-        mPgSQLAggregators->FlushLogs(allData, tags, interval);
+    if (mRedisAggregators != nullptr) {
+        mRedisAggregators->FlushLogs(allData, pTags, gTags, interval);
+    }
+
+    if (mPgSQLAggregators != nullptr) {
+        mPgSQLAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
 }
 

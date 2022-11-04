@@ -267,14 +267,11 @@ bool EBPFWrapper::isSupportedOS(int64_t& kernelVersion, std::string& kernelRelea
     std::string os;
     int64_t osVersion;
 
-    if (!GetRedHatReleaseInfo(os, osVersion, STRING_FLAG(default_container_host_path))
+    if (GetRedHatReleaseInfo(os, osVersion, STRING_FLAG(default_container_host_path))
         || GetRedHatReleaseInfo(os, osVersion)) {
-        return false;
+        return os == kLowkernelCentosName && osVersion >= kLowkernelCentosMinVersion;
     }
-    if (os != kLowkernelCentosName || osVersion < kLowkernelCentosMinVersion) {
-        return false;
-    }
-    return true;
+    return false;
 }
 
 bool EBPFWrapper::loadEbpfLib(int64_t kernelVersion, std::string& soPath) {
@@ -671,7 +668,8 @@ void EBPFWrapper::OnCtrl(struct conn_ctrl_event_t* event) {
 
 void EBPFWrapper::OnStat(struct conn_stats_event_t* event) {
     logtail::NetStatisticsKey key;
-    key.SockCategory = ConvertSockAddress(event->addr, event->conn_id, key.AddrInfo.RemoteAddr, key.AddrInfo.RemotePort);
+    key.SockCategory
+        = ConvertSockAddress(event->addr, event->conn_id, key.AddrInfo.RemoteAddr, key.AddrInfo.RemotePort);
     EBPF_CONNECTION_FILTER(key.SockCategory, key.AddrInfo.RemoteAddr, event->conn_id, event->addr);
     key.PID = event->conn_id.tgid;
     key.SockHash = ConvertConnIdToSockHash(&(event->conn_id));
@@ -680,9 +678,9 @@ void EBPFWrapper::OnStat(struct conn_stats_event_t* event) {
     key.AddrInfo.LocalAddr.Addr.IPV4 = 0;
     key.RoleType = DetectRole(event->role, event->conn_id, key.AddrInfo.RemotePort);
     LOG_TRACE(sLogger,
-              ("receive stat event,addr", SockAddressToString(key.AddrInfo.RemoteAddr))("family", event->addr.sa.sa_family)(
-                  "socket_type", SocketCategoryToString(key.SockCategory))("port",key.AddrInfo.RemotePort)("pid", key.PID)(
-                  "fd", event->conn_id.fd));
+              ("receive stat event,addr", SockAddressToString(key.AddrInfo.RemoteAddr))(
+                  "family", event->addr.sa.sa_family)("socket_type", SocketCategoryToString(key.SockCategory))(
+                  "port", key.AddrInfo.RemotePort)("pid", key.PID)("fd", event->conn_id.fd));
     NetStatisticsTCP& item = mStatistics.GetStatisticsItem(key);
     item.Base.SendBytes += event->wr_bytes - event->last_output_wr_bytes;
     item.Base.RecvBytes += event->rd_bytes - event->last_output_rd_bytes;

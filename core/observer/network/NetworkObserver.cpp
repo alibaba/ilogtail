@@ -149,10 +149,19 @@ void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, 
     }
     size_t lastSize = allData.size();
     allData.resize(mergedMap.size() + lastSize);
+
+    ::google::protobuf::RepeatedPtrField<sls_logs::Log_Content> gTags;
+    gTags.Reserve(mConfig->mTags.size());
+    for (const auto& tag : mConfig->mTags) {
+        sls_logs::Log_Content* content = gTags.Add();
+        content->set_key(tag.first);
+        content->set_value(tag.second);
+    }
+
     for (auto iter = mergedMap.begin(); iter != mergedMap.end() && lastSize < allData.size(); ++iter) {
         sls_logs::Log* log = &allData[lastSize];
         log->mutable_contents()->Reserve(16);
-
+        log->mutable_contents()->CopyFrom(gTags);
         Json::Value root;
         Json::StreamWriterBuilder builder;
         builder["indentation"] = ""; // If you want whitespace-less output
@@ -167,9 +176,6 @@ void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, 
                 continue;
             }
             for (const auto& item : ptr->GetFormattedMeta()) {
-                root[item.first] = item.second;
-            }
-            for (const auto& item : mConfig->mTags) {
                 root[item.first] = item.second;
             }
         }
