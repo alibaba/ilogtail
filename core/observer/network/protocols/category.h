@@ -33,6 +33,7 @@ struct CommonAggKey {
         this->LocalPort = other.LocalPort;
         this->RemoteIp = std::move(other.LocalIp);
         this->ConnId = other.ConnId;
+        return *this;
     }
     explicit CommonAggKey(PacketEventHeader* header)
         : HashVal(header->SockHash),
@@ -111,7 +112,7 @@ struct DBAggKey {
         hashValue = XXH32(&this->Status, sizeof(this->Status), hashValue);
         return hashValue;
     }
-    uint64_t ToPB(sls_logs::Log* log) const {
+    void ToPB(sls_logs::Log* log) const {
         AddAnyLogContent(log, observer::kVersion, Version);
         AddAnyLogContent(log, observer::kQueryCmd, QueryCmd);
         AddAnyLogContent(log, observer::kQuery, Query);
@@ -174,7 +175,7 @@ struct RequestAggKey {
         hashValue = XXH32(&this->RespStatus, sizeof(this->RespStatus), hashValue);
         return hashValue;
     }
-    uint64_t ToPB(sls_logs::Log* log) const {
+    void ToPB(sls_logs::Log* log) const {
         AddAnyLogContent(log, observer::kReqType, ReqType);
         AddAnyLogContent(log, observer::kReqDomain, ReqDomain);
         AddAnyLogContent(log, observer::kReqResource, ReqResource);
