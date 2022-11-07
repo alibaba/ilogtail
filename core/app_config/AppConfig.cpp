@@ -16,6 +16,7 @@
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 #include "common/util.h"
+#include "common/StringTools.h"
 
 using namespace std;
 
@@ -34,6 +35,44 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
             mBindInterface.clear();
         LOG_INFO(sLogger, ("bind_interface", mBindInterface));
     }
+
+    // configserver path
+    if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isObject()) {
+        Json::Value::Members members = confJson["ilogtail_configserver_address"].getMemberNames();
+        for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
+            vector<string> configServerAddress = SplitString(TrimString(confJson["ilogtail_configserver_address"][*it].asString()), ":");
+     
+            if (configServerAddress.size() !=2 ) 
+                LOG_ERROR(sLogger, ("ilogtail_configserver_address", "format error")("wrong address", TrimString(confJson["ilogtail_configserver_address"][*it].asString())));  
+            string host = configServerAddress[0];
+            int32_t port = atoi(configServerAddress[1].c_str());
+
+            std::string exception;
+            boost::regex reg_ip = boost::regex(" (?:(?:1[0-9][0-9]\\.)|(?:2[0-4][0-9]\\.)|(?:25[0-5]\\.)|(?:[1-9][0-9]\\.)|(?:[0-9]\\.)){3}(?:(?:1[0-9][0-9])|(?:2[0-4][0-9])|(?:25[0-5])|(?:[1-9][0-9])|(?:[0-9]))");      
+            if (!BoostRegexMatch(host.c_str(), reg_ip, exception))
+                LOG_ERROR(sLogger, ("ilogtail_configserver_address", "parse fail")("exception", exception));
+            else if (1024 <= port && port <= 65535)
+                LOG_ERROR(sLogger, ("ilogtail_configserver_address", "illegal port")("port", port));
+            else mConfigServerAddress.push_back(ConfigServerAddress(host, port));
+        }
+        LOG_INFO(sLogger, ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
+    }
+
+    // tags for configserver
+    if (confJson.isMember("ilogtail_tags") && confJson["ilogtail_tags"].isObject()) {
+        Json::Value::Members members = confJson["ilogtail_tags"].getMemberNames();
+        for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
+            mConfigServerTags.push_back(confJson["ilogtail_tags"][*it].asString());
+        }
+
+        LOG_INFO(sLogger, ("ilogtail_configserver_tags", confJson["ilogtail_tags"].toStyledString()));
+    }
+}
+
+const AppConfig::ConfigServerAddress& AppConfig::GetConfigServerAddress() const {
+    if (0 == mConfigServerAddress.size()) return AppConfig::ConfigServerAddress("", -1);
+    std::random_device rd; 
+    return mConfigServerAddress[rd()%mConfigServerAddress.size()];
 }
 
 } // namespace logtail
