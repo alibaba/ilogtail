@@ -1016,12 +1016,11 @@ func (dc *DockerCenter) fetchOne(containerID string, tryFindSandbox bool) error 
 	if err != nil {
 		dc.setLastError(err, "inspect container error "+containerID)
 		return err
-	} else {
-		if containerDetail.State.Status == ContainerStatusRunning && !ContainerProcessAlive(containerDetail.State.Pid) {
-			containerDetail.State.Status = ContainerStatusExited
-		}
-		dc.updateContainer(containerID, dc.CreateInfoDetail(containerDetail, envConfigPrefix, false))
 	}
+	if containerDetail.State.Status == ContainerStatusRunning && !ContainerProcessAlive(containerDetail.State.Pid) {
+		containerDetail.State.Status = ContainerStatusExited
+	}
+	dc.updateContainer(containerID, dc.CreateInfoDetail(containerDetail, envConfigPrefix, false))
 	logger.Debug(context.Background(), "update container", containerID, "detail", containerDetail)
 	if tryFindSandbox && containerDetail.Config != nil {
 		if id := containerDetail.Config.Labels["io.kubernetes.sandbox.id"]; id != "" {
