@@ -51,9 +51,9 @@ inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, std::st
 }
 
 // GenUniqueConnectionID use connid,add and pid to generate a mostly unique id.
-static uint64_t GenConnectionID(uint32_t pid, uint32_t connid) {
+inline uint64_t GenConnectionID(uint32_t pid, uint32_t connid) {
     static std::string sHostname = GetHostName();
-    static uint32_t sHash = XXH32(sHostname.c_str(), sHostname.size(), pid);
+    uint32_t sHash = XXH32(sHostname.c_str(), sHostname.size(), pid);
     return static_cast<uint64_t>(sHash) << 32 | static_cast<uint64_t>(connid);
 }
 static const std::string kRemoteInfoPrefix = R"({"_remote_host_":")";
