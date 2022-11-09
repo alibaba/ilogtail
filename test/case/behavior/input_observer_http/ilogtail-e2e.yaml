@@ -36,7 +36,7 @@ verify:
       validator: sys_sum_checker
       spec:
         expect_received_minimum_num: 100
-        field: total_count
+        field: count
 testing_interval: 10s
 retry:
   times: 0
