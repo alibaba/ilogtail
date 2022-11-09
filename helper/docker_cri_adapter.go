@@ -31,11 +31,12 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 
 	containerdcriserver "github.com/containerd/containerd/pkg/cri/server"
-	docker "github.com/fsouza/go-dockerclient"
 	"google.golang.org/grpc"
-	cri "k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
+	cri "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
 
 const kubeRuntimeAPIVersion = "0.1.0"
@@ -270,24 +271,26 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 		stateStatus = ContainerStatusRunning
 	}
 
-	dockerContainer := &docker.Container{
-		ID:      containerID,
-		Created: time.Unix(0, status.GetStatus().CreatedAt),
-		LogPath: status.GetStatus().GetLogPath(),
-		Config: &docker.Config{
+	dockerContainer := types.ContainerJSON{
+		ContainerJSONBase: &types.ContainerJSONBase{
+			ID:      containerID,
+			Created: time.Unix(0, status.GetStatus().CreatedAt).Format(time.RFC3339Nano),
+			LogPath: status.GetStatus().GetLogPath(),
+			State: &types.ContainerState{
+				Status: stateStatus,
+				Pid:    int(ci.Pid),
+			},
+			HostConfig: &container.HostConfig{
+				VolumeDriver: ci.Snapshotter,
+				Runtime:      cw.runtimeVersion.RuntimeName,
+				LogConfig: container.LogConfig{
+					Type: "json-file",
+				},
+			},
+		},
+		Config: &container.Config{
 			Labels: labels,
 			Image:  image,
-		},
-		State: docker.State{
-			Status: stateStatus,
-			Pid:    int(ci.Pid),
-		},
-		HostConfig: &docker.HostConfig{
-			VolumeDriver: ci.Snapshotter,
-			Runtime:      cw.runtimeVersion.RuntimeName,
-			LogConfig: docker.LogConfig{
-				Type: "json-file",
-			},
 		},
 	}
 
@@ -315,7 +318,7 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 			if mount.Destination == "/etc/hostname" {
 				hostnamePath = mount.Source
 			}
-			dockerContainer.Mounts = append(dockerContainer.Mounts, docker.Mount{
+			dockerContainer.Mounts = append(dockerContainer.Mounts, types.MountPoint{
 				Source:      mount.Source,
 				Destination: mount.Destination,
 				Driver:      mount.Type,
@@ -323,7 +326,7 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 		}
 	}
 
-	dockerContainer.Config.Mounts = dockerContainer.Mounts
+	dockerContainer.Mounts = dockerContainer.Mounts
 	if len(hostnamePath) > 0 {
 		hn, _ := ioutil.ReadFile(GetMountedFilePath(hostnamePath))
 		dockerContainer.Config.Hostname = strings.Trim(string(hn), "\t \n")
@@ -494,7 +497,7 @@ func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
 		// bytes, _ := json.Marshal(dockerContainer)
 		// logger.Debugf(context.Background(), "Create container info: %s", string(bytes))
 		logger.Debugf(context.Background(), "Create container info: id=%v name=%v created=%v status=%v detail=%+v",
-			containerID, dockerContainer.ContainerInfo.Name, dockerContainer.ContainerInfo.Created.Format(time.RFC3339Nano), dockerContainer.ContainerInfo.State.Status, dockerContainer.ContainerInfo)
+			containerID, dockerContainer.ContainerInfo.Name, dockerContainer.ContainerInfo.Created, dockerContainer.ContainerInfo.State.Status, dockerContainer.ContainerInfo)
 	}
 
 	cw.dockerCenter.updateContainer(containerID, dockerContainer)
@@ -578,7 +581,7 @@ func (cw *CRIRuntimeWrapper) lookupRootfsCache(containerID string) (string, bool
 	return dir, ok
 }
 
-func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info *docker.Container) string {
+func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSON) string {
 	// For cri-runtime
 	containerID := info.ID
 	if dir, ok := cw.lookupRootfsCache(containerID); ok {

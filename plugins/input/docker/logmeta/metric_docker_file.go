@@ -305,7 +305,7 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 	for _, info := range dockerInfoDetails {
 		sourcePath, containerPath := info.FindBestMatchedPath(idf.LogPath)
 		logger.Debugf(idf.context.GetRuntimeContext(), "bestMatchedPath for logPath:%v container id:%v name:%v created:%v status:%v sourcePath:%v containerPath:%v",
-			idf.LogPath, info.ContainerInfo.ID, info.ContainerInfo.Name, info.ContainerInfo.Created.Format(time.RFC3339Nano), info.ContainerInfo.State.Status, sourcePath, containerPath)
+			idf.LogPath, info.ContainerInfo.ID, info.ContainerInfo.Name, info.ContainerInfo.Created, info.ContainerInfo.State.Status, sourcePath, containerPath)
 		if len(sourcePath) > 0 {
 			if info.ContainerInfo.State.Status == helper.ContainerStatusRunning {
 				idf.updateMapping(info, sourcePath, containerPath, allCmd)

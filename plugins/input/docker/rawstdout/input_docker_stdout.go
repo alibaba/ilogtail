@@ -23,7 +23,8 @@ import (
 	"sync"
 	"time"
 
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/docker/docker/api/types"
+	docker "github.com/docker/docker/client"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
@@ -31,7 +32,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
-func logDriverSupported(container *docker.Container) bool {
+func logDriverSupported(container types.ContainerJSON) bool {
 	switch container.HostConfig.LogConfig.Type {
 	case "json-file", "journald":
 		return true
@@ -232,19 +233,15 @@ func (ss *stdoutSyner) Start(c ilogtail.Collector) {
 		ss.lock.Unlock()
 		logger.Info(ss.context.GetRuntimeContext(), "docker stdout", "begin", "id", ss.info.ContainerInfo.ID, "name", ss.info.ContainerInfo.Name)
 		ss.newContainerPump(c, outrd, errrd)
-		err := ss.client.Logs(docker.LogsOptions{
-			Container:         ss.info.ContainerInfo.ID,
-			OutputStream:      outwr,
-			ErrorStream:       errwr,
-			Stdout:            ss.stdout,
-			Stderr:            ss.stderr,
-			Follow:            true,
-			InactivityTimeout: time.Hour, // add InactivityTimeout, if connection is invalid(reason unknown), we can disconnect and retry
-			Timestamps:        true,
-			Since:             cpTime.Unix(),
-			RawTerminal:       rawTerminal,
-			Context:           ss.runtimeContext,
+		readCloser, err := ss.client.ContainerLogs(ss.runtimeContext, ss.info.ContainerInfo.ID, types.ContainerLogsOptions{
+			ShowStdout: ss.stdout,
+			ShowStderr: ss.stderr,
+			Since:      cpTime.Format(time.RFC3339Nano),
+			Timestamps: true,
+			Follow:     true,
 		})
+
+		readCloser.Read()
 		_ = outrd.CloseWithError(io.EOF)
 		_ = errrd.CloseWithError(io.EOF)
 		ss.lock.Lock()
