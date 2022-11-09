@@ -281,7 +281,8 @@ public:
             APSARA_TEST_EQUAL(parserRes, expectRes[i]);
         }
         std::vector<sls_logs::Log> allData;
-        aggregator->FlushLogs(allData, {}, 1);
+        google::protobuf::RepeatedPtrField<sls_logs::Log_Content> tags;
+        aggregator->FlushLogs(allData, {}, tags, 1);
         APSARA_TEST_TRUE(allData.size() == 1);
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[0], "version", "1"));
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[0], "host", "ocs-oneagent-server.alibaba.com"));
@@ -300,7 +301,7 @@ public:
                 = parser->OnPacket(data->PktType, data->MsgType, header, data->Buffer, data->BufferLen, data->RealLen);
             APSARA_TEST_EQUAL(parserRes, expectRes[i]);
         }
-        aggregator->FlushLogs(allData, {}, 1);
+        aggregator->FlushLogs(allData, {}, tags, 1);
         APSARA_TEST_TRUE(allData.size() == 2);
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[1], "version", "1"));
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[1], "host", "ocs-oneagent-server.alibaba.com"));
@@ -381,7 +382,9 @@ public:
         }
         std::vector<sls_logs::Log> allData;
         ::google::protobuf::RepeatedPtrField<sls_logs::Log_Content> tagsContent;
-        aggregator->FlushLogs(allData, {}, 1);
+        google::protobuf::RepeatedPtrField<sls_logs::Log_Content> tags;
+
+        aggregator->FlushLogs(allData, {}, tags, 1);
         APSARA_TEST_TRUE(allData.size() == 1);
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[0], "req_version", "1"));
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[0], "req_domain", "anglesharp.azurewebsites.net"));
@@ -397,7 +400,7 @@ public:
                 = parser->OnPacket(data->PktType, data->MsgType, header, data->Buffer, data->BufferLen, data->RealLen);
             APSARA_TEST_EQUAL(parserRes, expectRes[i]);
         }
-        aggregator->FlushLogs(allData, {}, 1);
+        aggregator->FlushLogs(allData, {}, tags, 1);
         APSARA_TEST_TRUE(allData.size() == 2);
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[1], "req_version", "1"));
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[1], "req_domain", "anglesharp.azurewebsites.net"));

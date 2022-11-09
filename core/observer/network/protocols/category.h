@@ -101,7 +101,7 @@ struct DBAggKey {
         this->QueryCmd = std::move(other.QueryCmd);
         this->Query = std::move(other.Query);
         this->Version = std::move(other.Version);
-        this->Status = Status;
+        this->Status = other.Status;
         return *this;
 
     }
@@ -163,8 +163,8 @@ struct RequestAggKey {
         this->ReqDomain = std::move(other.ReqDomain);
         this->ReqResource = std::move(other.ReqResource);
         this->Version = std::move(other.Version);
-        this->RespCode = RespCode;
-        this->RespStatus = RespStatus;
+        this->RespCode = other.RespCode;
+        this->RespStatus = other.RespStatus;
         return *this;
     }
 
