@@ -32,10 +32,21 @@ const (
 	labelsKey     = "__labels__"
 	timeNanoKey   = "__time_nano__"
 	valueKey      = "__value__"
+	typeKey       = "__type__"
 )
+
+const (
+	valueTypeFloat  = "float"
+	valueTypeInt    = "int"
+	valueTypeBool   = "bool"
+	valueTypeString = "string"
+)
+
+const tagDB = "__tag__:db"
 
 // Decoder impl
 type Decoder struct {
+	TypeExtend bool
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, decodeErr error) {
@@ -52,6 +63,14 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 	}
 
 	logs = d.parsePointsToLogs(points)
+
+	db := req.FormValue("db")
+	if db != "" {
+		for _, log := range logs {
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: tagDB, Value: db})
+		}
+	}
+
 	return logs, err
 }
 
@@ -66,19 +85,27 @@ func (d *Decoder) parsePointsToLogs(points []models.Point) []*protocol.Log {
 		if err != nil {
 			continue
 		}
+		var valueType = valueTypeFloat
+		var value string
 		for field, v := range fields {
-			var value float64
 			switch v := v.(type) {
 			case float64:
-				value = v
+				value = strconv.FormatFloat(v, 'g', -1, 64)
 			case int64:
-				value = float64(v)
+				value = strconv.FormatInt(v, 10)
 			case bool:
 				if v {
-					value = 1
+					value = "1"
 				} else {
-					value = 0
+					value = "0"
 				}
+				valueType = valueTypeBool
+			case string:
+				if !d.TypeExtend {
+					continue
+				}
+				value = v
+				valueType = valueTypeString
 			default:
 				continue
 			}
@@ -120,7 +147,11 @@ func (d *Decoder) parsePointsToLogs(points []models.Point) []*protocol.Log {
 					},
 					{
 						Key:   valueKey,
-						Value: strconv.FormatFloat(value, 'g', -1, 64),
+						Value: value,
+					},
+					{
+						Key:   typeKey,
+						Value: valueType,
 					},
 				},
 			}

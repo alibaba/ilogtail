@@ -25,6 +25,7 @@ import (
 const (
 	ProtocolCustomSingle = "custom_single"
 	ProtocolOtlpLogV1    = "otlp_log_v1"
+	ProtocolInfluxdb     = "influxdb"
 )
 
 const (
@@ -87,6 +88,9 @@ var supportedEncodingMap = map[string]map[string]bool{
 	ProtocolOtlpLogV1: {
 		EncodingNone: true,
 	},
+	ProtocolInfluxdb: {
+		EncodingNone: true,
+	},
 }
 
 type Converter struct {
@@ -94,6 +98,8 @@ type Converter struct {
 	Encoding             string
 	TagKeyRenameMap      map[string]string
 	ProtocolKeyRenameMap map[string]string
+
+	streamBuffer []byte
 }
 
 func NewConverter(protocol, encoding string, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
@@ -137,6 +143,8 @@ func (c *Converter) ToByteStreamWithSelectedFields(logGroup *protocol.LogGroup, 
 	switch c.Protocol {
 	case ProtocolCustomSingle:
 		return c.ConvertToSingleProtocolStream(logGroup, targetFields)
+	case ProtocolInfluxdb:
+		return c.ConvertToInfluxdbProtocolStream(logGroup, targetFields)
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
 	}
