@@ -39,16 +39,15 @@ inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const T
     content->set_key(key);
     content->set_value(std::to_string(value));
 }
-
 inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const std::string& value) {
     auto content = log->add_contents();
     content->set_key(key);
     content->set_value(value);
 }
-inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const std::string&& value) {
+inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, std::string&& value) {
     auto content = log->add_contents();
     content->set_key(key);
-    content->set_value(value);
+    content->set_value(std::move(value));
 }
 
 // GenUniqueConnectionID use connid,add and pid to generate a mostly unique id.
