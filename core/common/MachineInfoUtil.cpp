@@ -158,7 +158,39 @@ std::string GetHostName() {
 }
 
 std::string GetHostIpByHostName() {
-    struct hostent* entry = gethostbyname(GetHostName().c_str());
+    std::string hostname = GetHostName();
+
+    // For hostnames in the following format, gethostbyname will return wrong ip. Thus, empty string should be returned
+    // to allow caller generating ip using other methods:
+    // 1. a, where a is a number between 0 and 2^32-1;
+    // 2. a.b, where a & b are numbers, and a is between 0 and 2^8-1, b is between 0 and 2^24-1;
+    // 3. a.b.c, where a, b & c are numbers, and a & b are between 0 and 2^8-1, c is between 0 and 2^16-1;
+    // 4. a.b.c.d, where a, b, c & d are numbers between 0 and 2^8-1.
+    if (!hostname.empty()) {
+        size_t pos = 0;
+        u_int16_t digits = 32;
+        while (digits != 0) {
+            u_int64_t sum = 0;
+            while (pos != hostname.size() && isdigit(hostname[pos])) {
+                sum = sum * 10 + hostname[pos] - '0';
+                if (sum >= (1UL << digits)) {
+                    break;
+                }
+                pos++;
+            }
+            if (hostname[pos] == '.' && sum <= 255) {
+                digits -= 8;
+                pos++;
+            } else {
+                break;
+            }
+        }
+        if (pos == hostname.size()) {
+            return "";
+        }
+    }
+
+    struct hostent* entry = gethostbyname(hostname.c_str());
     if (entry == NULL) {
         return "";
     }
