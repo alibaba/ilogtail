@@ -97,7 +97,7 @@ struct DBAggKey {
           Status(other.Status) {}
     DBAggKey& operator=(const DBAggKey& other) = default;
     DBAggKey& operator=(DBAggKey&& other) noexcept {
-        this->ConnKey = std::move(other.QueryCmd);
+        this->ConnKey = std::move(other.ConnKey);
         this->QueryCmd = std::move(other.QueryCmd);
         this->Query = std::move(other.Query);
         this->Version = std::move(other.Version);
@@ -158,7 +158,7 @@ struct RequestAggKey {
           RespCode(other.RespCode),
           RespStatus(other.RespStatus) {}
     RequestAggKey& operator=(RequestAggKey&& other) noexcept {
-        this->ConnKey = std::move(other.QueryCmd);
+        this->ConnKey = std::move(other.ConnKey);
         this->ReqType = std::move(other.ReqType);
         this->ReqDomain = std::move(other.ReqDomain);
         this->ReqResource = std::move(other.ReqResource);
