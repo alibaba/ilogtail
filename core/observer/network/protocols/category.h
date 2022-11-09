@@ -102,6 +102,8 @@ struct DBAggKey {
         this->Query = std::move(other.Query);
         this->Version = std::move(other.Version);
         this->Status = Status;
+        return *this;
+
     }
 
     uint64_t Hash() const {
@@ -163,6 +165,7 @@ struct RequestAggKey {
         this->Version = std::move(other.Version);
         this->RespCode = RespCode;
         this->RespStatus = RespStatus;
+        return *this;
     }
 
     uint64_t Hash() const {
