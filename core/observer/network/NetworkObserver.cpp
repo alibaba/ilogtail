@@ -457,7 +457,7 @@ void NetworkObserver::EventLoop() {
         if (nowTimeNs - mLastL4FlushTimeNs >= mConfig->mFlushOutL4Interval * 1000ULL * 1000ULL * 1000ULL) {
             mLastL4FlushTimeNs = nowTimeNs;
             std::vector<sls_logs::Log> allLogs;
-            FlushOutMetrics(allLogs);
+            FlushOutStatistics(allLogs);
             if (mSenderFunc) {
                 mSenderFunc(allLogs, mConfig->mLastApplyedConfig);
             }
@@ -471,7 +471,7 @@ void NetworkObserver::EventLoop() {
         if (nowTimeNs - mLastL7FlushTimeNs >= mConfig->mFlushOutL7Interval * 1000ULL * 1000ULL * 1000ULL) {
             mLastL7FlushTimeNs = nowTimeNs;
             std::vector<sls_logs::Log> allLogs;
-            FlushOutStatistics(allLogs);
+            FlushOutMetrics(allLogs);
             if (mSenderFunc) {
                 mSenderFunc(allLogs, mConfig->mLastApplyedConfig);
             }

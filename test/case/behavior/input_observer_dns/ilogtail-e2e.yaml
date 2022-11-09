@@ -37,7 +37,7 @@ verify:
       spec:
         expect_received_minimum_num: 100
         field: total_count
-        filter_key: query_record
+        filter_key: req_resource
         filter_val: sls.test.ebpf
 testing_interval: 10s
 retry:
