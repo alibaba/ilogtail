@@ -1015,6 +1015,7 @@ func (dc *DockerCenter) fetchOne(containerID string, tryFindSandbox bool) error 
 	containerDetail, err := dc.client.InspectContainerWithOptions(docker.InspectContainerOptions{ID: containerID})
 	if err != nil {
 		dc.setLastError(err, "inspect container error "+containerID)
+		return err
 	} else {
 		if containerDetail.State.Status == ContainerStatusRunning && !ContainerProcessAlive(containerDetail.State.Pid) {
 			containerDetail.State.Status = ContainerStatusExited
