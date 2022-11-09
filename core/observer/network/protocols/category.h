@@ -40,6 +40,7 @@ struct CommonAggKey {
           ConnId(GenConnectionID(header->PID, header->SockHash)),
           RemotePort(header->DstPort),
           LocalPort(header->SrcPort),
+          Pid(header->PID),
           Role(header->RoleType),
           RemoteIp(SockAddressToString(header->DstAddr)),
           LocalIp(SockAddressToString(header->SrcAddr)) {
@@ -82,7 +83,6 @@ struct CommonAggKey {
     PacketRoleType Role{PacketRoleType::Unknown};
     std::string RemoteIp;
     std::string LocalIp;
-    std::string RemoteHost;
 };
 
 template <ProtocolType PT>
