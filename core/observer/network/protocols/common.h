@@ -161,12 +161,12 @@ public:
         ProtocolEventAggItem* item;
         if (mUnUsed.empty()) {
             item = new ProtocolEventAggItem();
-            item->Key = event;
+            item->Key = std::move(event);
             return item;
         }
         item = mUnUsed.back();
         item->Clear();
-        item->Key = event;
+        item->Key = std::move(event);
         mUnUsed.pop_back();
         return item;
     }
