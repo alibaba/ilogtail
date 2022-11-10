@@ -31,7 +31,7 @@ struct CommonAggKey {
         this->RemotePort = other.RemotePort;
         this->RemoteIp = std::move(other.RemoteIp);
         this->LocalPort = other.LocalPort;
-        this->RemoteIp = std::move(other.LocalIp);
+        this->LocalIp = std::move(other.LocalIp);
         this->ConnId = other.ConnId;
         return *this;
     }
