@@ -266,6 +266,10 @@ std::string NetworkConfig::SetFromJsonString() {
                     }
                 }
             }
+            std::string cluster = GetStringValue(commonValue, "Cluster", "");
+            if (!cluster.empty()) {
+                mTags.emplace_back("__tag__:cluster", cluster);
+            }
             // append global tags.
             if (commonValue.isMember("Tags") && commonValue["Tags"].isObject()) {
                 Json::Value& tags = commonValue["Tags"];
