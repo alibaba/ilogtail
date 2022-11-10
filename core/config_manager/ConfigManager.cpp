@@ -345,7 +345,7 @@ void ConfigManager::UpdateRemoteConfig(
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> checkResults,
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> configDetails
 ) {
-    static string serverConfigDirPath = AppConfig::GetInstance()->GetLocalUserYamlConfigDirPath() + "remote_config" + PATH_SEPARATOR;
+    static string serverConfigDirPath = AppConfig::GetInstance()->GetRemoteUserYamlConfigDirPath();
 
     string configName, oldConfigPath, newConfigPath;
     ofstream newConfig;
