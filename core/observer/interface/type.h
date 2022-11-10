@@ -92,13 +92,13 @@ enum class PacketRoleType : uint8_t {
 inline std::string PacketRoleTypeToString(PacketRoleType type) {
     switch (type) {
         case PacketRoleType::Unknown:
-            return "unknown";
+            return "u";
         case PacketRoleType::Client:
             return "c";
         case PacketRoleType::Server:
             return "s";
         default:
-            return "unknown";
+            return "u";
     }
 }
 
