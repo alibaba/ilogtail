@@ -48,7 +48,7 @@ NetworkObserver::~NetworkObserver() {
 }
 void NetworkObserver::HoldOn(bool exitFlag) {
     if (mEBPFWrapper != nullptr) {
-        mEBPFWrapper->HoldOn();
+        mEBPFWrapper->HoldOn(exitFlag);
     }
     mEventLoopThreadRWL.lock();
     LOG_INFO(sLogger, ("hold on", "observer"));
