@@ -55,11 +55,11 @@ func (p *SlsFlusher) IsReady(projectName string, logstoreName string, logstoreKe
 	return logtail.IsValidToSend(logstoreKey)
 }
 
-// Flush ...
+// FlushLogs ...
 // Because IsReady is called before, Logtail must have space in sending queue,
 // just call LogtailSendPb through cgo to push data into queue, Logtail will
 // send data to its destination (SLS mostly) according to its config.
-func (p *SlsFlusher) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (p *SlsFlusher) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		if len(logGroup.Logs) == 0 {
 			continue

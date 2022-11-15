@@ -96,7 +96,7 @@ func (f *FlusherOTLPLog) getConverter() (*converter.Converter, error) {
 	}
 }
 
-func (f *FlusherOTLPLog) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (f *FlusherOTLPLog) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	request := f.convertLogGroupToRequest(logGroupList)
 	if !f.GrpcConfig.Retry.Enable {
 		return f.flush(request)

@@ -46,7 +46,7 @@ func InvalidTestConnectAndWrite(t *testing.T) {
 
 	// Verify that we can successfully write data to the kafka broker
 	lgl := makeTestLogGroupList()
-	err = k.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
+	err = k.FlushLogs("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
 	require.NoError(t, err)
 	_ = k.Stop()
 }

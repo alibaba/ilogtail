@@ -15,6 +15,7 @@
 package ilogtail
 
 import (
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -33,11 +34,6 @@ type Flusher interface {
 	//   can return true to accept more data in time and config instance can be
 	//   stopped gracefully.
 	IsReady(projectName string, logstoreName string, logstoreKey int64) bool
-
-	// Flush flushes data to destination, such as SLS, console, file, etc.
-	// It is expected to return no error at most time because IsReady will be called
-	// before it to make sure there is space for next data.
-	Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
 
 	// SetUrgent indicates the flusher that it will be destroyed soon.
 	// @flag indicates if main program (Logtail mostly) will exit after calling this.
@@ -59,4 +55,20 @@ type Flusher interface {
 	// 3. Maybe more, it depends.
 	// In a word, flusher should only have things that can be recycled by GC after this.
 	Stop() error
+}
+
+type SlsFlusher interface {
+	Flusher
+	// FlushLogs flushes data to destination, such as SLS, console, file, etc.
+	// It is expected to return no error at most time because IsReady will be called
+	// before it to make sure there is space for next data.
+	FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
+}
+
+type PipelineFlusher interface {
+	Flusher
+	// FlushLogs flushes data to destination, such as SLS, console, file, etc.
+	// It is expected to return no error at most time because IsReady will be called
+	// before it to make sure there is space for next data.
+	Flush([]*models.PipelineGroupEvents, PipelineContext) error
 }

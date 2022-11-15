@@ -28,6 +28,7 @@ import (
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugin_main/flags"
@@ -96,14 +97,21 @@ type LogstoreConfig struct {
 	LogsChan      chan *ilogtail.LogWithContext
 	LogGroupsChan chan *protocol.LogGroup
 
-	processWaitSema   sync.WaitGroup
-	flushWaitSema     sync.WaitGroup
-	processShutdown   chan struct{}
-	flushShutdown     chan struct{}
-	Context           ilogtail.Context
-	Statistics        LogstoreStatistics
-	FlushOutLogGroups []*protocol.LogGroup
-	FlushOutFlag      bool
+	InputPipeContext     ilogtail.PipelineContext
+	ProcessPipeContext   ilogtail.PipelineContext
+	AggregatePipeContext ilogtail.PipelineContext
+	FlushPipeContext     ilogtail.PipelineContext
+
+	processWaitSema sync.WaitGroup
+	flushWaitSema   sync.WaitGroup
+	processShutdown chan struct{}
+	flushShutdown   chan struct{}
+	Context         ilogtail.Context
+	Statistics      LogstoreStatistics
+
+	FlushOutFlag            bool
+	LogGroupFlushOutStore   *FlushOutStore[protocol.LogGroup]
+	PipeEventsFlushOutStore *FlushOutStore[models.PipelineGroupEvents]
 
 	pauseChan       chan struct{}
 	resumeChan      chan struct{}
@@ -152,11 +160,9 @@ func (lc *LogstoreConfig) Start() {
 		defer lc.flushWaitSema.Done()
 		lc.flushInternal()
 	}()
-	for i := 0; i < len(lc.FlushOutLogGroups); i++ {
-		lc.LogGroupsChan <- lc.FlushOutLogGroups[i]
-		lc.FlushOutLogGroups[i] = nil
-	}
-	lc.FlushOutLogGroups = lc.FlushOutLogGroups[:0]
+
+	lc.LogGroupFlushOutStore.Read(lc.LogGroupsChan)
+	lc.PipeEventsFlushOutStore.Read(lc.AggregatePipeContext.Collector().Observe())
 
 	for _, aggregator := range lc.AggregatorPlugins {
 		go func(aw *AggregatorWrapper) {
@@ -183,11 +189,11 @@ func (lc *LogstoreConfig) Start() {
 	logger.Info(lc.Context.GetRuntimeContext(), "config start", "success")
 }
 
-func (lc *LogstoreConfig) TryFlushLoggroups() bool {
-	for _, flusher := range lc.FlusherPlugins {
-		for waitCount := 0; !flusher.Flusher.IsReady(lc.ProjectName, lc.LogstoreName, lc.LogstoreKey); waitCount++ {
+func TryFlushOutStore[T FlushData, F ilogtail.Flusher](lc *LogstoreConfig, store *FlushOutStore[T], flushers []F, flushFunc func(*LogstoreConfig, F, *FlushOutStore[T]) error) bool {
+	for _, flusher := range flushers {
+		for waitCount := 0; !flusher.IsReady(lc.ProjectName, lc.LogstoreName, lc.LogstoreKey); waitCount++ {
 			if waitCount > maxFlushOutTime*100 {
-				logger.Error(lc.Context.GetRuntimeContext(), "DROP_DATA_ALARM", "flush out data timeout, drop loggroups", len(lc.FlushOutLogGroups))
+				logger.Error(lc.Context.GetRuntimeContext(), "DROP_DATA_ALARM", "flush out data timeout, drop data", store.Len())
 				return false
 			}
 			lc.Statistics.FlushReadyMetric.Add(0)
@@ -195,14 +201,34 @@ func (lc *LogstoreConfig) TryFlushLoggroups() bool {
 		}
 		lc.Statistics.FlushReadyMetric.Add(1)
 		lc.Statistics.FlushLatencyMetric.Begin()
-		err := flusher.Flusher.Flush(lc.ProjectName, lc.LogstoreName, lc.ConfigName, lc.FlushOutLogGroups)
-		lc.Statistics.FlushLatencyMetric.End()
+		err := flushFunc(lc, flusher, store)
 		if err != nil {
 			logger.Error(lc.Context.GetRuntimeContext(), "FLUSH_DATA_ALARM", "flush data error", lc.ProjectName, lc.LogstoreName, err)
 		}
+		lc.Statistics.FlushLatencyMetric.End()
 	}
-	lc.FlushOutLogGroups = make([]*protocol.LogGroup, 0)
+	store.Reset()
 	return true
+}
+
+func (lc *LogstoreConfig) getSlsFlusherPlugins() []ilogtail.SlsFlusher {
+	flushers := make([]ilogtail.SlsFlusher, 0)
+	for _, flusher := range lc.FlusherPlugins {
+		if slsFlusher, ok := flusher.Flusher.(ilogtail.SlsFlusher); ok {
+			flushers = append(flushers, slsFlusher)
+		}
+	}
+	return flushers
+}
+
+func (lc *LogstoreConfig) getPipeFlusherPlugins() []ilogtail.PipelineFlusher {
+	flushers := make([]ilogtail.PipelineFlusher, 0)
+	for _, flusher := range lc.FlusherPlugins {
+		if pipeFlusher, ok := flusher.Flusher.(ilogtail.PipelineFlusher); ok {
+			flushers = append(flushers, pipeFlusher)
+		}
+	}
+	return flushers
 }
 
 // Stop stops plugin instances and corresponding goroutines of config.
@@ -245,10 +271,20 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 	lc.flushWaitSema.Wait()
 	logger.Info(lc.Context.GetRuntimeContext(), "flusher goroutine stop", "done")
 
-	if exitFlag && len(lc.FlushOutLogGroups) > 0 {
-		logger.Info(lc.Context.GetRuntimeContext(), "flushout loggroups, count", len(lc.FlushOutLogGroups))
-		rst := lc.TryFlushLoggroups()
+	if exitFlag && lc.LogGroupFlushOutStore.Len() > 0 {
+		logger.Info(lc.Context.GetRuntimeContext(), "flushout loggroups, count", lc.LogGroupFlushOutStore.Len())
+		rst := TryFlushOutStore(lc, lc.LogGroupFlushOutStore, lc.getSlsFlusherPlugins(), func(lc *LogstoreConfig, sf ilogtail.SlsFlusher, store *FlushOutStore[protocol.LogGroup]) error {
+			return sf.FlushLogs(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), store.Get())
+		})
 		logger.Info(lc.Context.GetRuntimeContext(), "flushout loggroups, result", rst)
+	}
+
+	if exitFlag && lc.PipeEventsFlushOutStore.Len() > 0 {
+		logger.Info(lc.Context.GetRuntimeContext(), "flushout pipe group events, count", lc.PipeEventsFlushOutStore.Len())
+		rst := TryFlushOutStore(lc, lc.PipeEventsFlushOutStore, lc.getPipeFlusherPlugins(), func(lc *LogstoreConfig, pf ilogtail.PipelineFlusher, store *FlushOutStore[models.PipelineGroupEvents]) error {
+			return pf.Flush(store.Get(), lc.FlushPipeContext)
+		})
+		logger.Info(lc.Context.GetRuntimeContext(), "flushout pipe group events, result", rst)
 	}
 
 	for idx, flusher := range lc.FlusherPlugins {
@@ -282,17 +318,75 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 func (lc *LogstoreConfig) processInternal() {
 	defer panicRecover(lc.ConfigName)
 	var logCtx *ilogtail.LogWithContext
+	pipeContext := lc.ProcessPipeContext
+	pipeChan := lc.InputPipeContext.Collector().Observe()
 	for {
 		select {
 		case <-lc.processShutdown:
 			if len(lc.LogsChan) == 0 {
 				return
 			}
+		case group := <-pipeChan:
+			lc.Statistics.RawLogMetric.Add(int64(len(group.Events)))
+			pipeEvents := []*models.PipelineGroupEvents{group}
+			for _, processor := range lc.ProcessorPlugins {
+				if pipeProcessor, ok := processor.Processor.(ilogtail.PipelineProcessor); ok {
+					for _, in := range pipeEvents {
+						pipeProcessor.Process(in, pipeContext)
+					}
+					pipeEvents = pipeContext.Collector().Dump()
+					if len(pipeEvents) == 0 {
+						break
+					}
+				}
+			}
+			getPipelineAggregators := func(lc *LogstoreConfig) []ilogtail.PipelineAggregator {
+				aggregators := make([]ilogtail.PipelineAggregator, 0)
+				for _, aggregator := range lc.AggregatorPlugins {
+					if pipeAggregator, ok := aggregator.Aggregator.(ilogtail.PipelineAggregator); ok {
+						aggregators = append(aggregators, pipeAggregator)
+					}
+				}
+				return aggregators
+			}
+			if len(pipeEvents) > 0 {
+				pipeAggregators := getPipelineAggregators(lc)
+				if len(pipeAggregators) > 0 {
+					for _, aggregator := range pipeAggregators {
+						for _, pipeEvent := range pipeEvents {
+							if len(pipeEvent.Events) == 0 {
+								continue
+							}
+							lc.Statistics.SplitLogMetric.Add(int64(len(pipeEvent.Events)))
+							for tryCount := 1; true; tryCount++ {
+								err := aggregator.Add(pipeEvent, lc.AggregatePipeContext)
+								if err == nil {
+									break
+								}
+								// wait until shutdown is active
+								if tryCount%100 == 0 {
+									logger.Warning(lc.Context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
+								}
+								time.Sleep(time.Millisecond * 10)
+							}
+						}
+					}
+				}
+			} else {
+				// Before rewriting sls Aggregator using pipeline Aggregator.
+				// If no pipeline Aggregator is defined in the plugin config,
+				// then events need to be sent to the Aggregate collector
+				for _, pipeEvent := range pipeEvents {
+					lc.AggregatePipeContext.Collector().Collect(pipeEvent.Group, pipeEvent.Events...)
+				}
+			}
 		case logCtx = <-lc.LogsChan:
 			logs := []*protocol.Log{logCtx.Log}
 			lc.Statistics.RawLogMetric.Add(int64(len(logs)))
 			for _, processor := range lc.ProcessorPlugins {
-				logs = processor.Processor.ProcessLogs(logs)
+				if slsProcessor, ok := processor.Processor.(ilogtail.SlsProcessor); ok {
+					logs = slsProcessor.ProcessLogs(logs)
+				}
 				if len(logs) == 0 {
 					break
 				}
@@ -302,23 +396,25 @@ func (lc *LogstoreConfig) processInternal() {
 			if len(logs) > 0 {
 				lc.Statistics.SplitLogMetric.Add(int64(len(logs)))
 				for _, aggregator := range lc.AggregatorPlugins {
-					for _, l := range logs {
-						if len(l.Contents) == 0 {
-							continue
-						}
-						if l.Time == uint32(0) {
-							l.Time = nowTime
-						}
-						for tryCount := 1; true; tryCount++ {
-							err := aggregator.Aggregator.Add(l, logCtx.Context)
-							if err == nil {
-								break
+					if slsAggregator, ok := aggregator.Aggregator.(ilogtail.SlsAggregator); ok {
+						for _, l := range logs {
+							if len(l.Contents) == 0 {
+								continue
 							}
-							// wait until shutdown is active
-							if tryCount%100 == 0 {
-								logger.Warning(lc.Context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
+							if l.Time == uint32(0) {
+								l.Time = nowTime
 							}
-							time.Sleep(time.Millisecond * 10)
+							for tryCount := 1; true; tryCount++ {
+								err := slsAggregator.AddLogs(l, logCtx.Context)
+								if err == nil {
+									break
+								}
+								// wait until shutdown is active
+								if tryCount%100 == 0 {
+									logger.Warning(lc.Context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
+								}
+								time.Sleep(time.Millisecond * 10)
+							}
 						}
 					}
 				}
@@ -335,6 +431,7 @@ func (lc *LogstoreConfig) processInternal() {
 func (lc *LogstoreConfig) flushInternal() {
 	defer panicRecover(lc.ConfigName)
 	var logGroup *protocol.LogGroup
+	pipeChan := lc.AggregatePipeContext.Collector().Observe()
 	for {
 		select {
 		case <-lc.flushShutdown:
@@ -344,81 +441,111 @@ func (lc *LogstoreConfig) flushInternal() {
 		case <-lc.pauseChan:
 			lc.waitForResume()
 
+		case event := <-pipeChan:
+			if event == nil {
+				continue
+			}
+			flushExecute(lc, event, pipeChan, lc.PipeEventsFlushOutStore, lc.getPipeFlusherPlugins(),
+				func(lc *LogstoreConfig, data []*models.PipelineGroupEvents) {
+					// Add tags for each non-empty PipelineGroupEvents, includes: default hostname tag,
+					// env tags and global tags in config.
+					for _, item := range data {
+						lc.Statistics.FlushLogMetric.Add(int64(len(item.Events)))
+						item.Group.Tags.Merge(lc.loadAdditionalTags())
+					}
+				},
+				func(lc *LogstoreConfig, flusher ilogtail.PipelineFlusher, data []*models.PipelineGroupEvents) error {
+					return flusher.Flush(data, lc.FlushPipeContext)
+				})
 		case logGroup = <-lc.LogGroupsChan:
 			if logGroup == nil {
 				continue
 			}
 
-			// Check pause status if config is still alive, if paused, wait for resume.
-			select {
-			case <-lc.pauseChan:
-				lc.waitForResume()
-			default:
-			}
-
-			listLen := len(lc.LogGroupsChan) + 1
-			logGroups := make([]*protocol.LogGroup, listLen)
-			logGroups[0] = logGroup
-			for i := 1; i < listLen; i++ {
-				logGroups[i] = <-lc.LogGroupsChan
-			}
-			lc.Statistics.FlushLogGroupMetric.Add(int64(len(logGroups)))
-
-			// Add tags for each non-empty LogGroup, includes: default hostname tag,
-			// env tags and global tags in config.
-			for _, logGroup := range logGroups {
-				if len(logGroup.Logs) == 0 {
-					continue
-				}
-				lc.Statistics.FlushLogMetric.Add(int64(len(logGroup.Logs)))
-				logGroup.Source = util.GetIPAddress()
-				logGroup.LogTags = append(logGroup.LogTags, &protocol.LogTag{Key: "__hostname__", Value: util.GetHostName()})
-				for i := 0; i < len(helper.EnvTags); i += 2 {
-					logGroup.LogTags = append(logGroup.LogTags, &protocol.LogTag{Key: helper.EnvTags[i], Value: helper.EnvTags[i+1]})
-				}
-				for key, value := range lc.GlobalConfig.Tags {
-					logGroup.LogTags = append(logGroup.LogTags, &protocol.LogTag{Key: key, Value: value})
-				}
-			}
-
-			// Flush LogGroups to all flushers.
-			// Note: multiple flushers is unrecommended, because all flushers will
-			//   be blocked if one of them is unready.
-			for {
-				allReady := true
-				for _, flusher := range lc.FlusherPlugins {
-					if !flusher.Flusher.IsReady(lc.ProjectName,
-						lc.LogstoreName, lc.LogstoreKey) {
-						allReady = false
-						break
-					}
-				}
-				if allReady {
-					for _, flusher := range lc.FlusherPlugins {
-						lc.Statistics.FlushReadyMetric.Add(1)
-						lc.Statistics.FlushLatencyMetric.Begin()
-						err := flusher.Flusher.Flush(lc.ProjectName,
-							lc.LogstoreName, lc.ConfigName, logGroups)
-						lc.Statistics.FlushLatencyMetric.End()
-						if err != nil {
-							logger.Error(lc.Context.GetRuntimeContext(), "FLUSH_DATA_ALARM", "flush data error",
-								lc.ProjectName, lc.LogstoreName, err)
+			flushExecute(lc, logGroup, lc.LogGroupsChan, lc.LogGroupFlushOutStore, lc.getSlsFlusherPlugins(),
+				func(lc *LogstoreConfig, data []*protocol.LogGroup) {
+					// Add tags for each non-empty LogGroup, includes: default hostname tag,
+					// env tags and global tags in config.
+					for _, item := range data {
+						if len(item.Logs) == 0 {
+							continue
+						}
+						lc.Statistics.FlushLogMetric.Add(int64(len(item.Logs)))
+						item.Source = util.GetIPAddress()
+						for key, value := range lc.loadAdditionalTags().Iterator() {
+							item.LogTags = append(item.LogTags, &protocol.LogTag{Key: key, Value: value})
 						}
 					}
-					break
-				}
-				if !lc.FlushOutFlag {
-					time.Sleep(time.Duration(10) * time.Millisecond)
-					continue
-				}
+				},
+				func(lc *LogstoreConfig, flusher ilogtail.SlsFlusher, data []*protocol.LogGroup) error {
+					return flusher.FlushLogs(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), data)
+				})
+		}
+	}
+}
 
-				// Config is stopping, move unflushed LogGroups to FlushOutLogGroups.
-				logger.Info(lc.Context.GetRuntimeContext(), "flush loggroup to slice, loggroup count", listLen)
-				lc.FlushOutLogGroups = append(lc.FlushOutLogGroups, logGroups...)
+func flushExecute[T FlushData, F ilogtail.Flusher](lc *LogstoreConfig, event *T, ch chan *T, store *FlushOutStore[T], flushers []F, dataProcessFunc func(*LogstoreConfig, []*T), flushFunc func(*LogstoreConfig, F, []*T) error) {
+	select {
+	case <-lc.pauseChan:
+		lc.waitForResume()
+	default:
+	}
+	dataSize := len(ch) + 1
+	data := make([]*T, dataSize)
+	data[0] = event
+	for i := 1; i < dataSize; i++ {
+		data[i] = <-ch
+	}
+	lc.Statistics.FlushLogGroupMetric.Add(int64(dataSize))
+
+	dataProcessFunc(lc, data)
+
+	// Flush LogGroups to all flushers.
+	// Note: multiple flushers is unrecommended, because all flushers will
+	//   be blocked if one of them is unready.
+	for {
+		allReady := true
+		for _, flusher := range flushers {
+			if !flusher.IsReady(lc.ProjectName,
+				lc.LogstoreName, lc.LogstoreKey) {
+				allReady = false
 				break
 			}
 		}
+		if allReady {
+			for _, flusher := range flushers {
+				lc.Statistics.FlushReadyMetric.Add(1)
+				lc.Statistics.FlushLatencyMetric.Begin()
+				err := flushFunc(lc, flusher, data)
+				lc.Statistics.FlushLatencyMetric.End()
+				if err != nil {
+					logger.Error(lc.Context.GetRuntimeContext(), "FLUSH_DATA_ALARM", "flush data error",
+						lc.ProjectName, lc.LogstoreName, err)
+				}
+			}
+			break
+		}
+		if !lc.FlushOutFlag {
+			time.Sleep(time.Duration(10) * time.Millisecond)
+			continue
+		}
+
+		// Config is stopping, move unflushed LogGroups to FlushOutLogGroups.
+		logger.Info(lc.Context.GetRuntimeContext(), "flush loggroup to slice, loggroup count", dataSize)
+		store.Add(data...)
+		break
 	}
+}
+
+func (lc *LogstoreConfig) loadAdditionalTags() models.Tags {
+	tags := models.NewTagsWithKeyValues("__hostname__", util.GetHostName())
+	for i := 0; i < len(helper.EnvTags); i += 2 {
+		tags.Add(helper.EnvTags[i], helper.EnvTags[i+1])
+	}
+	for key, value := range lc.GlobalConfig.Tags {
+		tags.Add(key, value)
+	}
+	return tags
 }
 
 func (lc *LogstoreConfig) pause() {
@@ -560,12 +687,16 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	contextImp := &ContextImp{}
 	contextImp.InitContext(project, logstore, configName)
 	logstoreC := &LogstoreConfig{
-		ProjectName:      project,
-		LogstoreName:     logstore,
-		ConfigName:       configName,
-		LogstoreKey:      logstoreKey,
-		Context:          contextImp,
-		configDetailHash: fmt.Sprintf("%x", md5.Sum([]byte(jsonStr))), //nolint:gosec
+		ProjectName:             project,
+		LogstoreName:            logstore,
+		ConfigName:              configName,
+		LogstoreKey:             logstoreKey,
+		Context:                 contextImp,
+		configDetailHash:        fmt.Sprintf("%x", md5.Sum([]byte(jsonStr))), //nolint:gosec
+		LogGroupFlushOutStore:   NewFlushOutStore[protocol.LogGroup](),
+		PipeEventsFlushOutStore: NewFlushOutStore[models.PipelineGroupEvents](),
+		ProcessPipeContext:      ilogtail.NewDumpPipelineConext(),
+		FlushPipeContext:        ilogtail.NewVoidPipelineConext(),
 	}
 
 	// Check if the config has been disabled (keep disabled if config detail is unchanged).
@@ -585,10 +716,15 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 
 	// Move unsent LogGroups from last config to new config.
 	if lastConfig, hasLastConfig := LastLogtailConfig[configName]; hasLastConfig {
-		if len(lastConfig.FlushOutLogGroups) > 0 {
+		if lastConfig.LogGroupFlushOutStore.Len() > 0 {
 			logger.Info(contextImp.GetRuntimeContext(), "repush loggroup to logstore, count",
-				len(lastConfig.FlushOutLogGroups))
-			logstoreC.FlushOutLogGroups = lastConfig.FlushOutLogGroups
+				lastConfig.LogGroupFlushOutStore.Len())
+			logstoreC.LogGroupFlushOutStore.Merge(lastConfig.LogGroupFlushOutStore)
+		}
+		if lastConfig.PipeEventsFlushOutStore.Len() > 0 {
+			logger.Info(contextImp.GetRuntimeContext(), "repush pipegroup to logstore, count",
+				lastConfig.PipeEventsFlushOutStore.Len())
+			logstoreC.PipeEventsFlushOutStore.Merge(lastConfig.PipeEventsFlushOutStore)
 		}
 	}
 
@@ -598,13 +734,14 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			logstoreC = oldConfig
 			logstoreC.alreadyStarted = true
 			logger.Info(contextImp.GetRuntimeContext(), "config is same after reload, use it again",
-				len(logstoreC.FlushOutLogGroups))
+				logstoreC.LogGroupFlushOutStore.Len()+logstoreC.PipeEventsFlushOutStore.Len())
 			return logstoreC, nil
 		}
 		_ = oldConfig.Stop(false)
-		logstoreC.FlushOutLogGroups = oldConfig.FlushOutLogGroups
+		logstoreC.LogGroupFlushOutStore.Merge(oldConfig.LogGroupFlushOutStore)
+		logstoreC.PipeEventsFlushOutStore.Merge(oldConfig.PipeEventsFlushOutStore)
 		logger.Info(contextImp.GetRuntimeContext(), "config is changed after reload, stop and create a new one",
-			len(oldConfig.FlushOutLogGroups))
+			logstoreC.LogGroupFlushOutStore.Len()+logstoreC.PipeEventsFlushOutStore.Len())
 	}
 
 	var plugins = make(map[string]interface{})
@@ -642,15 +779,20 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		logQueueSize = 10
 	}
 	logstoreC.LogsChan = make(chan *ilogtail.LogWithContext, logQueueSize)
+	logstoreC.InputPipeContext = ilogtail.NewObservePipelineConext(logQueueSize)
 	// loggroup chan size must >= flushout loggroups
 	logGroupSize := logstoreC.GlobalConfig.DefaultLogGroupQueueSize
-	if logGroupSize < len(logstoreC.FlushOutLogGroups) {
+
+	flushOutStoreMax := helper.Max(logstoreC.LogGroupFlushOutStore.Len(), logstoreC.PipeEventsFlushOutStore.Len())
+	if logGroupSize < flushOutStoreMax {
 		logger.Info(contextImp.GetRuntimeContext(), "config", configName,
 			"expand loggroup chan size from", logGroupSize,
-			"to", len(logstoreC.FlushOutLogGroups))
-		logGroupSize = len(logstoreC.FlushOutLogGroups)
+			"to", flushOutStoreMax)
+		logGroupSize = flushOutStoreMax
 	}
 	logstoreC.LogGroupsChan = make(chan *protocol.LogGroup, logGroupSize)
+	logstoreC.AggregatePipeContext = ilogtail.NewObservePipelineConext(logGroupSize)
+
 	logstoreC.Statistics.Init(logstoreC.Context)
 
 	for pluginType, pluginConfig := range plugins {
@@ -838,6 +980,7 @@ func loadMetric(pluginType string, logstoreConfig *LogstoreConfig, configInterfa
 	wrapper.Input = metric
 	wrapper.Interval = time.Duration(interval) * time.Millisecond
 	wrapper.LogsChan = logstoreConfig.LogsChan
+	wrapper.PipeContext = logstoreConfig.InputPipeContext
 	wrapper.LatencyMetric = logstoreConfig.Statistics.CollecLatencytMetric
 	logstoreConfig.MetricPlugins = append(logstoreConfig.MetricPlugins, &wrapper)
 	return nil
@@ -873,6 +1016,7 @@ func loadService(pluginType string, logstoreConfig *LogstoreConfig, configInterf
 	wrapper.Input = service
 	wrapper.Interval = time.Duration(interval) * time.Millisecond
 	wrapper.LogsChan = logstoreConfig.LogsChan
+	wrapper.PipeContext = logstoreConfig.InputPipeContext
 	logstoreConfig.ServicePlugins = append(logstoreConfig.ServicePlugins, &wrapper)
 	return nil
 }
@@ -926,6 +1070,7 @@ func loadAggregator(pluginType string, logstoreConfig *LogstoreConfig, configInt
 	wrapper.Config = logstoreConfig
 	wrapper.Aggregator = aggregator
 	wrapper.LogGroupsChan = logstoreConfig.LogGroupsChan
+	wrapper.PipeContext = logstoreConfig.AggregatePipeContext
 	interval, err := aggregator.Init(logstoreConfig.Context, &wrapper)
 	if err != nil {
 		return err

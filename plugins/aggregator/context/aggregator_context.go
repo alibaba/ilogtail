@@ -73,7 +73,7 @@ func (*AggregatorContext) Description() string {
 }
 
 // Add adds @log with @ctx to aggregator.
-func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) error {
+func (p *AggregatorContext) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
@@ -127,7 +127,7 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 }
 
 // Flush ...
-func (p *AggregatorContext) Flush() []*protocol.LogGroup {
+func (p *AggregatorContext) FlushLogs() []*protocol.LogGroup {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	var ret []*protocol.LogGroup

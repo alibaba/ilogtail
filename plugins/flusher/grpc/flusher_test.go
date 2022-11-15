@@ -79,7 +79,7 @@ func TestFlusher_Flush(t *testing.T) {
 
 	// send logs
 	go func() {
-		err = p.Flush("p", "l", "c", groupList)
+		err = p.FlushLogs("p", "l", "c", groupList)
 		assert.NoError(t, err)
 		time.Sleep(time.Second)
 		close(receiveChan)

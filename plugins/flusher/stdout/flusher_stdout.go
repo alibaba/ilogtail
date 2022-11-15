@@ -89,8 +89,8 @@ func (*FlusherStdout) Description() string {
 	return "stdout flusher for logtail"
 }
 
-// Flush the logGroup list to stdout or files.
-func (p *FlusherStdout) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+// FlushLogs the logGroup list to stdout or files.
+func (p *FlusherStdout) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		if p.Tags {
 			if p.outLogger != nil {

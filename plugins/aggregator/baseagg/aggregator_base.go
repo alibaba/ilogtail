@@ -89,7 +89,7 @@ func (*AggregatorBase) evaluateLogSize(log *protocol.Log) int {
 // Add returns any error encountered, nil means success.
 //
 // @return error. **For inner usage, must handle this error!!!!**
-func (p *AggregatorBase) Add(log *protocol.Log, ctx map[string]interface{}) error {
+func (p *AggregatorBase) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
 	p.Lock.Lock()
 	defer p.Lock.Unlock()
 	if len(p.defaultLogGroup) == 0 {
@@ -146,7 +146,7 @@ func (p *AggregatorBase) addPackID(logGroup *protocol.LogGroup) {
 }
 
 // Flush ...
-func (p *AggregatorBase) Flush() []*protocol.LogGroup {
+func (p *AggregatorBase) FlushLogs() []*protocol.LogGroup {
 	p.Lock.Lock()
 	if len(p.defaultLogGroup) == 0 {
 		p.Lock.Unlock()

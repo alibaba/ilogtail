@@ -37,6 +37,8 @@ type AggregatorWrapper struct {
 	LogGroupsChan chan *protocol.LogGroup
 	Interval      time.Duration
 
+	PipeContext ilogtail.PipelineContext
+
 	shutdown  chan struct{}
 	waitgroup sync.WaitGroup
 }
@@ -82,13 +84,20 @@ func (p *AggregatorWrapper) Run() {
 	defer p.waitgroup.Done()
 	for {
 		exitFlag := util.RandomSleep(p.Interval, 0.1, p.shutdown)
-		logGroups := p.Aggregator.Flush()
-		for _, logGroup := range logGroups {
-			if len(logGroup.Logs) == 0 {
-				continue
+		if slsAggregator, ok := p.Aggregator.(ilogtail.SlsAggregator); ok {
+			logGroups := slsAggregator.FlushLogs()
+			for _, logGroup := range logGroups {
+				if len(logGroup.Logs) == 0 {
+					continue
+				}
+				p.LogGroupsChan <- logGroup
 			}
-			p.LogGroupsChan <- logGroup
+		} else if pipeAggregator, ok := p.Aggregator.(ilogtail.PipelineAggregator); ok {
+			_ = pipeAggregator.Flush(p.PipeContext)
+		} else {
+			return
 		}
+
 		if exitFlag {
 			return
 		}

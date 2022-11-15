@@ -33,6 +33,8 @@ type MetricWrapper struct {
 	LogsChan      chan *ilogtail.LogWithContext
 	LatencyMetric ilogtail.LatencyMetric
 
+	PipeContext ilogtail.PipelineContext
+
 	shutdown  chan struct{}
 	waitgroup sync.WaitGroup
 }
@@ -46,7 +48,12 @@ func (p *MetricWrapper) Run() {
 	for {
 		if !util.RandomSleep(p.Interval, 0.1, p.shutdown) {
 			p.LatencyMetric.Begin()
-			err := p.Input.Collect(p)
+			var err error
+			if slsInput, ok := p.Input.(ilogtail.SlsMetricInput); ok {
+				err = slsInput.Collect(p)
+			} else if pipeInput, ok := p.Input.(ilogtail.PipelineMetricInput); ok {
+				err = pipeInput.Collect(p.PipeContext)
+			}
 			p.LatencyMetric.End()
 			if err != nil {
 				logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)

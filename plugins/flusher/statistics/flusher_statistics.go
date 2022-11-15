@@ -60,9 +60,9 @@ func (*FlusherStatistics) Description() string {
 func (*FlusherStatistics) SetUrgent(flag bool) {
 }
 
-// Flush flushes @logGroupList but it only do statistics.
+// FlushLogs flushes @logGroupList but it only do statistics.
 // It returns any error it encountered.
-func (p *FlusherStatistics) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (p *FlusherStatistics) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		p.loggroupRateCounter.Incr(1)
 		p.logRateCounter.Incr((int64)(len(logGroup.Logs)))

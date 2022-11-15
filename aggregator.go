@@ -15,6 +15,7 @@
 package ilogtail
 
 import (
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -30,12 +31,23 @@ type Aggregator interface {
 	// Description returns a one-sentence description on the Input.
 	Description() string
 
-	// Add the metric to the aggregator.
-	Add(log *protocol.Log, ctx map[string]interface{}) error
-
-	// Flush pushes the current aggregates to the accumulator.
-	Flush() []*protocol.LogGroup
-
 	// Reset resets the aggregators caches and aggregates.
 	Reset()
+}
+
+type SlsAggregator interface {
+
+	// AddLogs the metric to the aggregator.
+	AddLogs(log *protocol.Log, ctx map[string]interface{}) error
+
+	// FlushLogs pushes the current aggregates to the accumulator.
+	FlushLogs() []*protocol.LogGroup
+}
+
+type PipelineAggregator interface {
+
+	// Add the metric to the aggregator.
+	Add(*models.PipelineGroupEvents, PipelineContext) error
+	// Flush pushes the current aggregates to the accumulator.
+	Flush(PipelineContext) error
 }

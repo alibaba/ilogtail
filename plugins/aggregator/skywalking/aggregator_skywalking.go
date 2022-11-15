@@ -91,19 +91,19 @@ func (*AggregatorSkywalking) Description() string {
 // Add adds @log to aggregator.
 // Add use first content as route key
 // Add returns any error encountered, nil means success.
-func (p *AggregatorSkywalking) Add(log *protocol.Log, ctx map[string]interface{}) error {
+func (p *AggregatorSkywalking) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
 	if len(log.Contents) > 0 {
 		routeKey := log.Contents[0]
 		switch routeKey.Key {
 		case "__name__":
-			return p.metricsAgg.Add(log, ctx)
+			return p.metricsAgg.AddLogs(log, ctx)
 		case "links":
-			return p.traceAgg.Add(log, ctx)
+			return p.traceAgg.AddLogs(log, ctx)
 		case "otlp.name":
-			return p.logAgg.Add(log, ctx)
+			return p.logAgg.AddLogs(log, ctx)
 		default:
 			logger.Warning(p.context.GetRuntimeContext(), "SKYWALKING_TOPIC_NOT_RECOGNIZED", "error", "topic not recognized", "topic", routeKey.Value)
-			return p.logAgg.Add(log, ctx)
+			return p.logAgg.AddLogs(log, ctx)
 		}
 	}
 	return nil
@@ -111,9 +111,9 @@ func (p *AggregatorSkywalking) Add(log *protocol.Log, ctx map[string]interface{}
 
 func (p *AggregatorSkywalking) Flush() []*protocol.LogGroup {
 	logGroups := []*protocol.LogGroup{}
-	logGroups = append(logGroups, p.metricsAgg.Flush()...)
-	logGroups = append(logGroups, p.traceAgg.Flush()...)
-	logGroups = append(logGroups, p.logAgg.Flush()...)
+	logGroups = append(logGroups, p.metricsAgg.FlushLogs()...)
+	logGroups = append(logGroups, p.traceAgg.FlushLogs()...)
+	logGroups = append(logGroups, p.logAgg.FlushLogs()...)
 	return logGroups
 }
 

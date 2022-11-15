@@ -15,6 +15,7 @@
 package pluginmanager
 
 import (
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/plugin_main/flags"
@@ -164,7 +165,11 @@ func HoldOn(exitFlag bool) error {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the static metrics")
 			for _, plugin := range StatisticsConfig.MetricPlugins {
-				_ = plugin.Input.Collect(plugin)
+				if slsInput, ok := plugin.Input.(ilogtail.SlsMetricInput); ok {
+					_ = slsInput.Collect(plugin)
+				} else if pipeInput, ok := plugin.Input.(ilogtail.PipelineMetricInput); ok {
+					_ = pipeInput.Collect(StatisticsConfig.InputPipeContext)
+				}
 			}
 		}
 		_ = StatisticsConfig.Stop(exitFlag)
@@ -173,7 +178,11 @@ func HoldOn(exitFlag bool) error {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the alarm metrics")
 			for _, plugin := range AlarmConfig.MetricPlugins {
-				_ = plugin.Input.Collect(plugin)
+				if slsInput, ok := plugin.Input.(ilogtail.SlsMetricInput); ok {
+					_ = slsInput.Collect(plugin)
+				} else if pipeInput, ok := plugin.Input.(ilogtail.PipelineMetricInput); ok {
+					_ = pipeInput.Collect(AlarmConfig.InputPipeContext)
+				}
 			}
 		}
 		_ = AlarmConfig.Stop(exitFlag)

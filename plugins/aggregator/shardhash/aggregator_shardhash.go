@@ -161,7 +161,7 @@ func (s *AggregatorShardHash) selectShardAgg(sourceValue string) *shardAggregato
 }
 
 // Add ...
-func (s *AggregatorShardHash) Add(log *protocol.Log, ctx map[string]interface{}) error {
+func (s *AggregatorShardHash) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
 	var sourceValue string
 	for idx, key := range s.SourceKeys {
 		var val string
@@ -185,7 +185,7 @@ func (s *AggregatorShardHash) Add(log *protocol.Log, ctx map[string]interface{})
 		}
 	}
 
-	return s.selectShardAgg(sourceValue).agg.Add(log, ctx)
+	return s.selectShardAgg(sourceValue).agg.AddLogs(log, ctx)
 }
 
 // update resets topic and appends tags (shardHash, pack ID) if they are not existing.
@@ -209,10 +209,10 @@ func (s *AggregatorShardHash) update(logGroup *protocol.LogGroup) {
 	logGroup.Topic = s.Topic
 }
 
-func (s *AggregatorShardHash) Flush() []*protocol.LogGroup {
+func (s *AggregatorShardHash) FlushLogs() []*protocol.LogGroup {
 	var logGroups []*protocol.LogGroup
 	for _, shardAgg := range s.shardAggs {
-		logGroups = append(logGroups, shardAgg.agg.Flush()...)
+		logGroups = append(logGroups, shardAgg.agg.FlushLogs()...)
 	}
 	for _, logGroup := range logGroups {
 		s.update(logGroup)

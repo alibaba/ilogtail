@@ -91,24 +91,24 @@ func (*AggregatorOpenTelemetry) Description() string {
 // Add adds @log to aggregator.
 // Add use first content as route key
 // Add returns any error encountered, nil means success.
-func (p *AggregatorOpenTelemetry) Add(log *protocol.Log, ctx map[string]interface{}) error {
+func (p *AggregatorOpenTelemetry) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
 	if len(log.Contents) > 0 {
 		if len(log.Contents) <= 5 {
-			return p.metricsAgg.Add(log, ctx)
+			return p.metricsAgg.AddLogs(log, ctx)
 		}
 		if len(log.Contents) >= 19 {
-			return p.traceAgg.Add(log, ctx)
+			return p.traceAgg.AddLogs(log, ctx)
 		}
-		return p.logAgg.Add(log, ctx)
+		return p.logAgg.AddLogs(log, ctx)
 	}
 	return nil
 }
 
 func (p *AggregatorOpenTelemetry) Flush() []*protocol.LogGroup {
 	logGroups := []*protocol.LogGroup{}
-	logGroups = append(logGroups, p.metricsAgg.Flush()...)
-	logGroups = append(logGroups, p.traceAgg.Flush()...)
-	logGroups = append(logGroups, p.logAgg.Flush()...)
+	logGroups = append(logGroups, p.metricsAgg.FlushLogs()...)
+	logGroups = append(logGroups, p.traceAgg.FlushLogs()...)
+	logGroups = append(logGroups, p.logAgg.FlushLogs()...)
 	return logGroups
 }
 

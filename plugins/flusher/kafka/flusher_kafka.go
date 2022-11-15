@@ -116,7 +116,7 @@ func (k *FlusherKafka) Description() string {
 	return "Kafka flusher for logtail"
 }
 
-func (k *FlusherKafka) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (k *FlusherKafka) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	return k.flusher(projectName, logstoreName, configName, logGroupList)
 }
 

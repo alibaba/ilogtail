@@ -12,27 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ilogtail
+package helper
 
-import (
-	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/protocol"
-)
-
-// Processor also can be a filter
-type Processor interface {
-	// Init called for init some system resources, like socket, mutex...
-	Init(Context) error
-
-	// Description returns a one-sentence description on the Input
-	Description() string
+type IntUintFloat interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~float32 | ~float64
 }
 
-type PipelineProcessor interface {
-	Process(in *models.PipelineGroupEvents, context PipelineContext)
+func Max[T IntUintFloat](x T, y T) T {
+	if x > y {
+		return x
+	}
+	return y
 }
 
-type SlsProcessor interface {
-	// Apply the filter to the given metric
-	ProcessLogs(logArray []*protocol.Log) []*protocol.Log
+func Min[T IntUintFloat](x T, y T) T {
+	if x < y {
+		return x
+	}
+	return y
 }

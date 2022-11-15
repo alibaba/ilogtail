@@ -30,6 +30,8 @@ type ServiceWrapper struct {
 	Interval time.Duration
 
 	LogsChan chan *ilogtail.LogWithContext
+
+	PipeContext ilogtail.PipelineContext
 }
 
 func (p *ServiceWrapper) Run() {
@@ -37,7 +39,12 @@ func (p *ServiceWrapper) Run() {
 
 	go func() {
 		defer panicRecover(p.Input.Description())
-		err := p.Input.Start(p)
+		var err error
+		if slsInput, ok := p.Input.(ilogtail.SlsServiceInput); ok {
+			err = slsInput.Start(p)
+		} else if pipeInput, ok := p.Input.(ilogtail.PipelineServiceInput); ok {
+			err = pipeInput.Start(p.PipeContext)
+		}
 		if err != nil {
 			logger.Error(p.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
 		}

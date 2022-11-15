@@ -97,12 +97,12 @@ func (*AggregatorRouter) Description() string {
 func (p *AggregatorRouter) route(log *protocol.Log, value string) error {
 	for _, subAgg := range p.subAggs {
 		if indexArray := subAgg.reg.FindStringSubmatchIndex(value); len(indexArray) >= 2 && indexArray[0] == 0 && indexArray[1] == len(value) {
-			return subAgg.agg.Add(log, nil)
+			return subAgg.agg.AddLogs(log, nil)
 		}
 	}
 	// no match
 	if !p.DropDisMatch {
-		return p.defaultAgg.Add(log, nil)
+		return p.defaultAgg.AddLogs(log, nil)
 	}
 	if p.NoMatchError {
 		logger.Warning(p.context.GetRuntimeContext(), "NO_MATCH_ROUTER_ALARM", "no match router", "drop this log")
@@ -116,7 +116,7 @@ func (p *AggregatorRouter) route(log *protocol.Log, value string) error {
 // If @log don't have specified key but aggregator.DropDisMatch is not set, it passed @log to
 // default aggregator, otherwise, it returns error when aggregator.NoMatchError is set.
 // Add returns any error encountered, nil means success.
-func (p *AggregatorRouter) Add(log *protocol.Log, ctx map[string]interface{}) error {
+func (p *AggregatorRouter) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
 	// logger.Debug("agg add", *log)
 
 	// find log key
@@ -127,7 +127,7 @@ func (p *AggregatorRouter) Add(log *protocol.Log, ctx map[string]interface{}) er
 	}
 	// find no key
 	if !p.DropDisMatch {
-		return p.defaultAgg.Add(log, ctx)
+		return p.defaultAgg.AddLogs(log, ctx)
 	}
 	if p.NoMatchError {
 		logger.Warning(p.context.GetRuntimeContext(), "NO_MATCH_ROUTER_ALARM", "no match router", "drop this log")
@@ -135,14 +135,14 @@ func (p *AggregatorRouter) Add(log *protocol.Log, ctx map[string]interface{}) er
 	return nil
 }
 
-func (p *AggregatorRouter) Flush() []*protocol.LogGroup {
+func (p *AggregatorRouter) FlushLogs() []*protocol.LogGroup {
 
 	logGroups := []*protocol.LogGroup{}
 	if !p.DropDisMatch {
-		logGroups = append(logGroups, p.defaultAgg.Flush()...)
+		logGroups = append(logGroups, p.defaultAgg.FlushLogs()...)
 	}
 	for _, subAgg := range p.subAggs {
-		logGroups = append(logGroups, subAgg.agg.Flush()...)
+		logGroups = append(logGroups, subAgg.agg.FlushLogs()...)
 	}
 	return logGroups
 }
