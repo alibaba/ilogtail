@@ -45,7 +45,7 @@ e2e-test
 *-test/
 
 # vscode
-
+.vscode
 !.vscode/settings.json
 !.vscode/launch.json
 output
