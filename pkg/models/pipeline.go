@@ -30,12 +30,12 @@ type PipelineEvent interface {
 	SetObservedTimestamp(uint64)
 }
 
-type PipelineGroup struct {
+type GroupInfo struct {
 	Metadata Metadata
 	Tags     Tags
 }
 
 type PipelineGroupEvents struct {
-	Group  *PipelineGroup
+	Group  *GroupInfo
 	Events []PipelineEvent
 }

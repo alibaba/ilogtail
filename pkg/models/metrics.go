@@ -40,26 +40,26 @@ type MetricValue interface {
 	GetMultiValues() MetricFloatValues
 }
 
-type MetricSingleValues struct {
+type MetricSingleValue struct {
 	Value float64
 }
 
-func (v *MetricSingleValues) IsSingleValue() bool {
+func (v *MetricSingleValue) IsSingleValue() bool {
 	return true
 }
 
-func (v *MetricSingleValues) IsMultiValues() bool {
+func (v *MetricSingleValue) IsMultiValues() bool {
 	return false
 }
 
-func (v *MetricSingleValues) GetSingleValue() float64 {
+func (v *MetricSingleValue) GetSingleValue() float64 {
 	if v != nil {
 		return v.Value
 	}
 	return 0
 }
 
-func (v *MetricSingleValues) GetMultiValues() MetricFloatValues {
+func (v *MetricSingleValue) GetMultiValues() MetricFloatValues {
 	return nil
 }
 
@@ -102,7 +102,6 @@ type MetricEvent struct {
 	MetricType        MetricType
 	Timestamp         uint64
 	ObservedTimestamp uint64
-	Metadata          Metadata
 	Tags              Tags
 	Value             MetricValue
 	TypedValue        MetricTypedValues

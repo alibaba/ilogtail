@@ -23,7 +23,7 @@ type PipelineContext interface {
 }
 
 type PipelineCollector interface {
-	Collect(group *models.PipelineGroup, events ...models.PipelineEvent)
+	Collect(group *models.GroupInfo, events ...models.PipelineEvent)
 
 	Dump() []*models.PipelineGroupEvents
 
@@ -34,7 +34,7 @@ type observePipeCollector struct {
 	groupChan chan *models.PipelineGroupEvents
 }
 
-func (p *observePipeCollector) Collect(group *models.PipelineGroup, events ...models.PipelineEvent) {
+func (p *observePipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
 	if len(events) == 0 {
 		return
 	}
@@ -53,10 +53,10 @@ func (p *observePipeCollector) Observe() chan *models.PipelineGroupEvents {
 }
 
 type dumpPipeCollector struct {
-	groupEvents map[*models.PipelineGroup][]models.PipelineEvent
+	groupEvents map[*models.GroupInfo][]models.PipelineEvent
 }
 
-func (p *dumpPipeCollector) Collect(group *models.PipelineGroup, events ...models.PipelineEvent) {
+func (p *dumpPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
 	store, has := p.groupEvents[group]
 	if !has {
 		store = make([]models.PipelineEvent, 0)
@@ -77,7 +77,7 @@ func (p *dumpPipeCollector) Dump() []*models.PipelineGroupEvents {
 		}
 		idx++
 	}
-	p.groupEvents = make(map[*models.PipelineGroup][]models.PipelineEvent)
+	p.groupEvents = make(map[*models.GroupInfo][]models.PipelineEvent)
 	return results
 }
 
@@ -88,7 +88,7 @@ func (p *dumpPipeCollector) Observe() chan *models.PipelineGroupEvents {
 type voidPipeCollector struct {
 }
 
-func (p *voidPipeCollector) Collect(group *models.PipelineGroup, events ...models.PipelineEvent) {
+func (p *voidPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
 }
 
 func (p *voidPipeCollector) Dump() []*models.PipelineGroupEvents {
@@ -115,7 +115,7 @@ func NewObservePipelineConext(queueSize int) PipelineContext {
 
 func NewDumpPipelineConext() PipelineContext {
 	return newPipelineConext(&dumpPipeCollector{
-		groupEvents: make(map[*models.PipelineGroup][]models.PipelineEvent),
+		groupEvents: make(map[*models.GroupInfo][]models.PipelineEvent),
 	})
 }
 

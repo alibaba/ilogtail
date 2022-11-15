@@ -21,6 +21,7 @@ import (
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"github.com/cihub/seelog"
@@ -131,6 +132,20 @@ func (p *FlusherStdout) FlushLogs(projectName string, logstoreName string, confi
 			}
 		}
 
+	}
+	return nil
+}
+
+func (p *FlusherStdout) Flush(in []*models.PipelineGroupEvents, context ilogtail.PipelineContext) error {
+	for _, groupEvents := range in {
+		for _, event := range groupEvents.Events {
+			buf, _ := json.Marshal(event)
+			if p.outLogger != nil {
+				p.outLogger.Infof("%s", buf)
+			} else {
+				logger.Info(p.context.GetRuntimeContext(), string(buf))
+			}
+		}
 	}
 	return nil
 }

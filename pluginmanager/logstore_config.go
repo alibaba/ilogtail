@@ -371,13 +371,13 @@ func (lc *LogstoreConfig) processInternal() {
 							}
 						}
 					}
-				}
-			} else {
-				// Before rewriting sls Aggregator using pipeline Aggregator.
-				// If no pipeline Aggregator is defined in the plugin config,
-				// then events need to be sent to the Aggregate collector
-				for _, pipeEvent := range pipeEvents {
-					lc.AggregatePipeContext.Collector().Collect(pipeEvent.Group, pipeEvent.Events...)
+				} else {
+					// Before rewriting sls Aggregator using pipeline Aggregator.
+					// If no pipeline Aggregator is defined in the plugin config,
+					// then events need to be sent to the Aggregate collector
+					for _, pipeEvent := range pipeEvents {
+						lc.AggregatePipeContext.Collector().Collect(pipeEvent.Group, pipeEvent.Events...)
+					}
 				}
 			}
 		case logCtx = <-lc.LogsChan:

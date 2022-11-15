@@ -15,36 +15,25 @@
 package mock
 
 import (
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/helper"
-
-	"strconv"
 	"time"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/models"
 )
 
 type InputMock struct {
-	Tags                  map[string]string
-	Fields                map[string]string
-	Index                 int64
-	OpenPrometheusPattern bool
+	GroupMeta map[string]string
+	GroupTags map[string]string
 
-	context  ilogtail.Context
-	labelStr string
+	Tags   map[string]string
+	Fields map[string]float64
+	Index  int64
+
+	context ilogtail.Context
 }
 
 func (r *InputMock) Init(context ilogtail.Context) (int, error) {
 	r.context = context
-	var labels helper.KeyValues
-	if r.OpenPrometheusPattern {
-		for k, v := range r.Tags {
-			labels.Append(k, v)
-		}
-		for k, v := range r.Fields {
-			labels.Append(k, v)
-		}
-	}
-	labels.Sort()
-	r.labelStr = labels.String()
 	return 0, nil
 }
 
@@ -52,24 +41,24 @@ func (r *InputMock) Description() string {
 	return "mock input plugin for logtail"
 }
 
-func (r *InputMock) Collect(collector ilogtail.Collector) error {
+func (r *InputMock) Collect(context ilogtail.PipelineContext) error {
 	r.Index++
-	if r.OpenPrometheusPattern {
-		helper.AddMetric(collector, "metrics_mock", time.Now(), r.labelStr, float64(r.Index))
-	} else {
-		// original log pattern.
-		r.Fields["Index"] = strconv.FormatInt(r.Index, 10)
-		collector.AddData(r.Tags, r.Fields)
-	}
+	group := models.NewGroup(models.NewMetadataWithMap(r.GroupMeta), models.NewTagsWithMap(r.GroupTags))
+	counter := models.NewSingleValueMetric("counter_metrics_mock", models.MetricTypeCounter, models.NewTagsWithMap(r.Tags), time.Now().UnixNano(), r.Index)
+	gauge := models.NewSingleValueMetric("gauge_metrics_mock", models.MetricTypeGauge, models.NewTagsWithMap(r.Tags), time.Now().UnixNano(), r.Index)
+	multiValues := models.NewMultiValuesMetric("multi_values_metrics_mock", models.MetricTypeUntyped, models.NewTagsWithMap(r.Tags), time.Now().UnixNano(), models.NewMetricFloatValuesWithMap(r.Fields))
+	context.Collector().Collect(group, counter, gauge, multiValues)
 	return nil
 }
 
 func init() {
 	ilogtail.MetricInputs["metric_mock"] = func() ilogtail.MetricInput {
 		return &InputMock{
-			Index:  0,
-			Tags:   make(map[string]string),
-			Fields: make(map[string]string),
+			Index:     0,
+			GroupMeta: make(map[string]string),
+			GroupTags: make(map[string]string),
+			Tags:      make(map[string]string),
+			Fields:    make(map[string]float64),
 		}
 	}
 }

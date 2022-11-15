@@ -33,6 +33,10 @@ const (
 	ValueTypeMap
 )
 
+type IntUintFloat interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~float32 | ~float64
+}
+
 type TypedValue struct {
 	Type  ValueType
 	Value interface{}
@@ -40,6 +44,8 @@ type TypedValue struct {
 
 type KeyValues[TValue string | float64 | *TypedValue] interface {
 	Add(key string, value TValue)
+
+	AddAll(items map[string]TValue)
 
 	Get(key string) TValue
 
@@ -68,6 +74,12 @@ func (kv *keyValuesImpl[TValue]) Add(key string, value TValue) {
 	kv.keyValues[key] = value
 }
 
+func (kv *keyValuesImpl[TValue]) AddAll(items map[string]TValue) {
+	for key, value := range items {
+		kv.keyValues[key] = value
+	}
+}
+
 func (kv *keyValuesImpl[TValue]) Get(key string) TValue {
 	return kv.keyValues[key]
 }
@@ -89,29 +101,4 @@ func (kv *keyValuesImpl[TValue]) Merge(other KeyValues[TValue]) {
 
 func (kv *keyValuesImpl[TValue]) Iterator() map[string]TValue {
 	return kv.keyValues
-}
-
-func NewTagsWithMap(tags map[string]string) Tags {
-	return &keyValuesImpl[string]{
-		keyValues: tags,
-	}
-}
-
-func NewTagsWithKeyValues(keyValues ...string) Tags {
-	if len(keyValues)%2 != 0 {
-		keyValues = keyValues[:len(keyValues)-1]
-	}
-	tags := make(map[string]string)
-	for i := 0; i < len(keyValues); i += 2 {
-		tags[keyValues[i]] = keyValues[i+1]
-	}
-	return &keyValuesImpl[string]{
-		keyValues: tags,
-	}
-}
-
-func NewTags() Tags {
-	return &keyValuesImpl[string]{
-		keyValues: make(map[string]string),
-	}
 }
