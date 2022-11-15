@@ -186,6 +186,14 @@ void LogtailMonitor::Monitor() {
             _exit(1);
         }
 
+        if (IsHostIpChanged()) {
+            SendStatusProfile(true);
+            mMonitorRunning = false;
+            LogtailGlobalPara::Instance()->SetSigtermFlag(true);
+            sleep(15);
+            _exit(1);
+        }
+
         SendStatusProfile(false);
         if (BOOL_FLAG(logtail_dump_monitor_info)) {
             if (!DumpMonitorInfo(monitorTime))
@@ -457,6 +465,26 @@ bool LogtailMonitor::DumpMonitorInfo(time_t monitorTime) {
     outfile << "cpu_usage:" << mCpuStat.mCpuUsage << "\t";
     outfile << "mem_rss:" << mMemStat.mRss << "\n";
     return true;
+}
+
+bool LogtailMonitor::IsHostIpChanged() {
+    if (AppConfig::GetInstance()->GetConfigIP().empty()) {
+        const std::string& interface = AppConfig::GetInstance()->GetBindInterface();
+        std::string ip = GetHostIp();
+        if (interface.size() > 0) {
+            ip = GetHostIp(interface);
+        }
+        if (ip.empty()) {
+            ip = GetAnyAvailableIP();
+        }
+        if (ip != LogFileProfiler::mIpAddr) {
+            LOG_ERROR(sLogger,
+                      ("error",
+                       "host ip changed during running, prepare to restart Logtail")("original ip", LogFileProfiler::mIpAddr)("current ip", ip));
+            return true;
+        }
+        return false;
+    }
 }
 
 #if defined(__linux__) // Linux only methods, for scale up calculation, load average.
