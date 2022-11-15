@@ -19,15 +19,15 @@ type MetricType uint32
 const (
 	// Common metrics types
 	_ MetricType = iota
-	MetricType_Counter
-	MetricType_Gauge
-	MetricType_Histogram
-	MetricType_Summary
-	MetricType_Untyped
+	MetricTypeCounter
+	MetricTypeGauge
+	MetricTypeHistogram
+	MetricTypeSummary
+	MetricTypeUntyped
 
 	// Extended metrics types
-	MetricType_Meter       // In bytetsd, meter is an extension of the counter type, which contains a counter value and a rate value within a period
-	MetricType_RateCounter // In bytetsd, ratecounter is an extension of the counter type, which contains a rate value within a period
+	MetricTypeMeter       // In bytetsd, meter is an extension of the counter type, which contains a counter value and a rate value within a period
+	MetricTypeRateCounter // In bytetsd, ratecounter is an extension of the counter type, which contains a rate value within a period
 )
 
 type MetricValue interface {
@@ -129,7 +129,7 @@ func (m *MetricEvent) GetTags() Tags {
 }
 
 func (m *MetricEvent) GetType() EventType {
-	return EventType_Metric
+	return EventTypeMetric
 }
 
 func (m *MetricEvent) GetTimestamp() uint64 {

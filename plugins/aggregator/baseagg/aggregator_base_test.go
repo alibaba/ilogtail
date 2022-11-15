@@ -65,7 +65,7 @@ func BenchmarkAdd(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 300; j++ {
-			agg.Add(log, ctx[j%10])
+			agg.AddLogs(log, ctx[j%10])
 		}
 	}
 }
@@ -95,9 +95,9 @@ func benchmarkLogSource(b *testing.B, num int) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 30*num; j++ {
-			agg.Add(log, ctx[j%num])
+			agg.AddLogs(log, ctx[j%num])
 		}
-		_ = agg.Flush()
+		_ = agg.FlushLogs()
 	}
 }
 
@@ -126,9 +126,9 @@ func benchmarkLogProducingPace(b *testing.B, num int) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 3*num*10; j++ {
-			agg.Add(log, ctx[j%10])
+			agg.AddLogs(log, ctx[j%10])
 		}
-		_ = agg.Flush()
+		_ = agg.FlushLogs()
 	}
 }
 
@@ -164,8 +164,8 @@ func benchmarkLogLength(b *testing.B, len string) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 300; j++ {
-			agg.Add(log, ctx[j%10])
+			agg.AddLogs(log, ctx[j%10])
 		}
-		_ = agg.Flush()
+		_ = agg.FlushLogs()
 	}
 }

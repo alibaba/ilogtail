@@ -29,10 +29,12 @@ type Processor interface {
 }
 
 type PipelineProcessor interface {
+	Processor
 	Process(in *models.PipelineGroupEvents, context PipelineContext)
 }
 
 type SlsProcessor interface {
+	Processor
 	// Apply the filter to the given metric
 	ProcessLogs(logArray []*protocol.Log) []*protocol.Log
 }

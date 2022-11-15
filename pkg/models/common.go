@@ -18,19 +18,19 @@ type EventType uint32
 
 const (
 	_ EventType = iota
-	EventType_Metric
-	EventType_Trace
-	EventType_Logging
+	EventTypeMetric
+	EventTypeTrace
+	EventTypeLogging
 )
 
 type ValueType uint32
 
 const (
 	_ ValueType = iota
-	ValueType_String
-	ValueType_Boolean
-	ValueType_Array
-	ValueType_Map
+	ValueTypeString
+	ValueTypeBoolean
+	ValueTypeArray
+	ValueTypeMap
 )
 
 type TypedValue struct {

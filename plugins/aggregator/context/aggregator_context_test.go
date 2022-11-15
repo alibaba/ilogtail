@@ -83,9 +83,9 @@ func TestAggregatorDefault(t *testing.T) {
 		Convey("When log producing pace is slow and each log is relatively small", func() {
 			logNo := make([]int, len(packIDPrefix))
 			generateLogs(agg, 900, true, logNo, true)
-			logGroups := agg.Flush()
+			logGroups := agg.FlushLogs()
 			generateLogs(agg, 1800, true, logNo, true)
-			logGroups = append(logGroups, agg.Flush()...)
+			logGroups = append(logGroups, agg.FlushLogs()...)
 
 			Convey("Then no quick flush happens, and each logGroup should contain logs from the same source with chronological order", func() {
 				So(logGroups, ShouldHaveLength, 6)
@@ -97,7 +97,7 @@ func TestAggregatorDefault(t *testing.T) {
 			logNo := make([]int, len(packIDPrefix))
 			generateLogs(agg, 18432, true, logNo, true) // 1024 * 6 * 3
 			logGroups := que.PopAll()
-			logGroups = append(logGroups, agg.Flush()...)
+			logGroups = append(logGroups, agg.FlushLogs()...)
 
 			Convey("Then quick flush happens, and each logGroup should contain logs from the same source with chronological order", func() {
 				So(logGroups, ShouldHaveLength, 18)
@@ -109,7 +109,7 @@ func TestAggregatorDefault(t *testing.T) {
 			logNo := make([]int, len(packIDPrefix))
 			generateLogs(agg, 9216, true, logNo, false) // 1024 * 3 * 3
 			logGroups := que.PopAll()
-			logGroups = append(logGroups, agg.Flush()...)
+			logGroups = append(logGroups, agg.FlushLogs()...)
 
 			Convey("Then quick flush happens, and each logGroup should contain logs from the same source with chronological order", func() {
 				So(logGroups, ShouldHaveLength, 12)
@@ -121,7 +121,7 @@ func TestAggregatorDefault(t *testing.T) {
 			logNo := make([]int, len(packIDPrefix))
 			generateLogs(agg, 20000, false, logNo, true)
 			logGroups := que.PopAll()
-			logGroups = append(logGroups, agg.Flush()...)
+			logGroups = append(logGroups, agg.FlushLogs()...)
 
 			Convey("Then each logGroup will contain logs from different source", func() {
 				logSum := 0
@@ -151,7 +151,7 @@ func TestAggregatorDefault(t *testing.T) {
 			logNo := make([]int, len(packIDPrefix))
 			generateLogs(agg, 20000, true, logNo, true)
 			logGroups := que.PopAll()
-			logGroups = append(logGroups, agg.Flush()...)
+			logGroups = append(logGroups, agg.FlushLogs()...)
 
 			Convey("Then each logGroup will contain logs from different source", func() {
 				logSum := 0
@@ -185,9 +185,9 @@ func generateLogs(agg *AggregatorContext, logNum int, withCtx bool, logNo []int,
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "no", Value: fmt.Sprintf("%d", logNo[index]+1)})
 		if withCtx {
 			ctx := map[string]interface{}{"source": packIDPrefix[index] + "-", "topic": "file"}
-			agg.Add(log, ctx)
+			agg.AddLogs(log, ctx)
 		} else {
-			agg.Add(log, nil)
+			agg.AddLogs(log, nil)
 		}
 		logNo[index]++
 		time.Sleep(time.Duration(1) * time.Microsecond)
@@ -278,7 +278,7 @@ func BenchmarkAdd(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 300; j++ {
-			agg.Add(log, ctx[j%10])
+			agg.AddLogs(log, ctx[j%10])
 		}
 	}
 }
@@ -308,9 +308,9 @@ func benchmarkLogSource(b *testing.B, num int) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 30*num; j++ {
-			agg.Add(log, ctx[j%num])
+			agg.AddLogs(log, ctx[j%num])
 		}
-		_ = agg.Flush()
+		_ = agg.FlushLogs()
 	}
 }
 
@@ -339,9 +339,9 @@ func benchmarkLogProducingPace(b *testing.B, num int) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 3*num*10; j++ {
-			agg.Add(log, ctx[j%10])
+			agg.AddLogs(log, ctx[j%10])
 		}
-		_ = agg.Flush()
+		_ = agg.FlushLogs()
 	}
 }
 
@@ -377,8 +377,8 @@ func benchmarkLogLength(b *testing.B, len string) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 300; j++ {
-			agg.Add(log, ctx[j%10])
+			agg.AddLogs(log, ctx[j%10])
 		}
-		_ = agg.Flush()
+		_ = agg.FlushLogs()
 	}
 }

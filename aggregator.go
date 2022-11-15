@@ -36,7 +36,7 @@ type Aggregator interface {
 }
 
 type SlsAggregator interface {
-
+	Aggregator
 	// AddLogs the metric to the aggregator.
 	AddLogs(log *protocol.Log, ctx map[string]interface{}) error
 
@@ -45,7 +45,7 @@ type SlsAggregator interface {
 }
 
 type PipelineAggregator interface {
-
+	Aggregator
 	// Add the metric to the aggregator.
 	Add(*models.PipelineGroupEvents, PipelineContext) error
 	// Flush pushes the current aggregates to the accumulator.
