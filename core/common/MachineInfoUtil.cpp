@@ -407,9 +407,10 @@ bool GetRedHatReleaseInfo(std::string& os, int64_t& osVersion, std::string bashP
 // 2. a.b, where a & b are numbers, and a is between 0 and 2^8-1, b is between 0 and 2^24-1;
 // 3. a.b.c, where a, b & c are numbers, and a & b are between 0 and 2^8-1, c is between 0 and 2^16-1;
 // 4. a.b.c.d, where a, b, c & d are numbers between 0 and 2^8-1.
+// All numbers mentioned here can be both in base 8 or 10.
 //
-// see https://codebrowser.dev/glibc/glibc/nss/digits_dots.c.html#__nss_hostname_digits_dots_context for detail
-bool IsValidHostname(const char *hostname) {
+// see https://codebrowser.dev/glibc/glibc/nss/digits_dots.c.html#__nss_hostname_digits_dots_context for more details.
+bool IsValidHostname(const char* hostname) {
     if (hostname && *hostname != '\0') {
         const char* cp = hostname;
         int16_t digits = 32;

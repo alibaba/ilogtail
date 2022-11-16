@@ -15,10 +15,6 @@
 #include "unittest/Unittest.h"
 #include "common/MachineInfoUtil.h"
 
-DECLARE_FLAG_STRING(ilogtail_config);
-DECLARE_FLAG_STRING(user_log_config);
-DECLARE_FLAG_INT32(batch_send_interval);
-
 namespace logtail {
 class HostnameValidationUnittest : public ::testing::Test {
 public:
