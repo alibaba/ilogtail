@@ -167,7 +167,8 @@ func HoldOn(exitFlag bool) error {
 			for _, plugin := range StatisticsConfig.MetricPlugins {
 				if slsInput, ok := plugin.Input.(ilogtail.SlsMetricInput); ok {
 					_ = slsInput.CollectLogs(plugin)
-				} else if pipeInput, ok := plugin.Input.(ilogtail.PipelineMetricInput); ok {
+				}
+				if pipeInput, ok := plugin.Input.(ilogtail.PipelineMetricInput); ok {
 					_ = pipeInput.Collect(StatisticsConfig.InputPipeContext)
 				}
 			}
@@ -180,7 +181,8 @@ func HoldOn(exitFlag bool) error {
 			for _, plugin := range AlarmConfig.MetricPlugins {
 				if slsInput, ok := plugin.Input.(ilogtail.SlsMetricInput); ok {
 					_ = slsInput.CollectLogs(plugin)
-				} else if pipeInput, ok := plugin.Input.(ilogtail.PipelineMetricInput); ok {
+				}
+				if pipeInput, ok := plugin.Input.(ilogtail.PipelineMetricInput); ok {
 					_ = pipeInput.Collect(AlarmConfig.InputPipeContext)
 				}
 			}
