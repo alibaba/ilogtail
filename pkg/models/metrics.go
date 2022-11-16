@@ -30,6 +30,18 @@ const (
 	MetricTypeRateCounter // In bytetsd, ratecounter is an extension of the counter type, which contains a rate value within a period
 )
 
+var (
+	MetricTypeStrings = map[MetricType]string{
+		MetricTypeCounter:     "Counter",
+		MetricTypeGauge:       "Gauge",
+		MetricTypeHistogram:   "Histogram",
+		MetricTypeSummary:     "Summary",
+		MetricTypeUntyped:     "Untyped",
+		MetricTypeMeter:       "Meter",
+		MetricTypeRateCounter: "RateCounter",
+	}
+)
+
 type MetricValue interface {
 	IsSingleValue() bool
 

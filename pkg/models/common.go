@@ -56,6 +56,8 @@ type KeyValues[TValue string | float64 | *TypedValue] interface {
 	Merge(other KeyValues[TValue])
 
 	Iterator() map[string]TValue
+
+	Len() int
 }
 
 type Tags interface {
@@ -70,35 +72,67 @@ type keyValuesImpl[TValue string | float64 | *TypedValue] struct {
 	keyValues map[string]TValue
 }
 
+func (kv *keyValuesImpl[TValue]) values() (map[string]TValue, bool) {
+	if kv == nil || kv.keyValues == nil {
+		return nil, false
+	}
+	return kv.keyValues, true
+}
+
 func (kv *keyValuesImpl[TValue]) Add(key string, value TValue) {
-	kv.keyValues[key] = value
+	if values, ok := kv.values(); ok {
+		values[key] = value
+	}
 }
 
 func (kv *keyValuesImpl[TValue]) AddAll(items map[string]TValue) {
-	for key, value := range items {
-		kv.keyValues[key] = value
+	if values, ok := kv.values(); ok {
+		for key, value := range items {
+			values[key] = value
+		}
 	}
 }
 
 func (kv *keyValuesImpl[TValue]) Get(key string) TValue {
-	return kv.keyValues[key]
+	if values, ok := kv.values(); ok {
+		return values[key]
+	}
+	var null TValue
+	return null
 }
 
 func (kv *keyValuesImpl[TValue]) Contains(key string) bool {
-	_, ok := kv.keyValues[key]
-	return ok
+	if values, ok := kv.values(); ok {
+		_, ok := values[key]
+		return ok
+	}
+	return false
 }
 
 func (kv *keyValuesImpl[TValue]) Delete(key string) {
-	delete(kv.keyValues, key)
+	if _, ok := kv.values(); ok {
+		delete(kv.keyValues, key)
+	}
 }
 
 func (kv *keyValuesImpl[TValue]) Merge(other KeyValues[TValue]) {
-	for k, v := range other.Iterator() {
-		kv.keyValues[k] = v
+	if values, ok := kv.values(); ok {
+		for k, v := range other.Iterator() {
+			values[k] = v
+		}
 	}
 }
 
 func (kv *keyValuesImpl[TValue]) Iterator() map[string]TValue {
-	return kv.keyValues
+	if values, ok := kv.values(); ok {
+		return values
+	}
+	return nil
+}
+
+func (kv *keyValuesImpl[TValue]) Len() int {
+	if values, ok := kv.values(); ok {
+		return len(values)
+	}
+	return 0
 }
