@@ -35,7 +35,7 @@ var winMeta = &publisherMetadataStore{
 	},
 	Opcodes: map[uint8]string{
 		0: "Info",
-		1: "StartCollectLogs",
+		1: "Start",
 		2: "Stop",
 		3: "DCStart",
 		4: "DCStop",
