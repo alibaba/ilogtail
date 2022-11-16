@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/alibaba/ilogtail"
@@ -38,18 +39,23 @@ type retryConfig struct {
 }
 
 type FlusherHTTP struct {
-	RemoteURL string
-	Headers   map[string]string
-	Query     map[string]string
-	Timeout   time.Duration
-	Retry     retryConfig
-	Convert   convertConfig
+	RemoteURL   string
+	Headers     map[string]string
+	Query       map[string]string
+	Timeout     time.Duration
+	Retry       retryConfig
+	Convert     convertConfig
+	Concurrency int
 
 	queryVarKeys []string
 
 	context   ilogtail.Context
 	converter *converter.Converter
 	client    *http.Client
+
+	tokenCh chan struct{}
+	tokenWg sync.WaitGroup
+	stopCh  chan struct{}
 }
 
 func (f *FlusherHTTP) Description() string {
@@ -75,6 +81,8 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 	f.client = &http.Client{
 		Timeout: f.Timeout,
 	}
+	f.tokenCh = make(chan struct{}, f.Concurrency)
+	f.stopCh = make(chan struct{}, 1)
 
 	f.buildQueryVarKeys()
 
@@ -84,27 +92,73 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 
 func (f *FlusherHTTP) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
-		logs, varValues, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.queryVarKeys)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher converter log fail, error", err)
-			continue
-		}
-		switch rows := logs.(type) {
-		case [][]byte:
-			for idx, data := range rows {
+		f.convertAndFlush(logGroup)
+	}
+	return nil
+}
+
+func (f *FlusherHTTP) SetUrgent(flag bool) {
+}
+
+func (f *FlusherHTTP) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
+	return f.client != nil
+}
+
+func (f *FlusherHTTP) Stop() error {
+	f.stopCh <- struct{}{}
+	f.tokenWg.Wait()
+	return nil
+}
+
+func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {
+	return converter.NewConverter(f.Convert.Protocol, f.Convert.Encoding, nil, nil)
+}
+
+func (f *FlusherHTTP) acquireToken() bool {
+	select {
+	case f.tokenCh <- struct{}{}:
+		f.tokenWg.Add(1)
+		return true
+	case <-f.stopCh:
+		return false
+	}
+}
+
+func (f *FlusherHTTP) releaseToken() {
+	f.tokenWg.Done()
+	<-f.tokenCh
+}
+
+func (f *FlusherHTTP) convertAndFlush(logGroup *protocol.LogGroup) error {
+	logs, varValues, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.queryVarKeys)
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher converter log fail, error", err)
+		return err
+	}
+	switch rows := logs.(type) {
+	case [][]byte:
+		for idx, data := range rows {
+			body, values := data, varValues[idx]
+			if !f.acquireToken() {
+				break
+			}
+			go func() {
+				defer f.releaseToken()
 				for i := 0; i <= f.Retry.MaxCount; i++ {
-					ok, retryable, _ := f.flush(data, varValues[idx])
+					ok, retryable, _ := f.flush(body, values)
 					if ok || !retryable || !f.Retry.Enable {
 						break
 					}
 					<-time.After(f.Retry.DefaultDelay)
 				}
-			}
-		default:
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "not supported logs type", fmt.Sprintf("%T", logs))
+			}()
 		}
+		return nil
+	default:
+		err = fmt.Errorf("not supported logs type [%T]", logs)
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "error", err)
+		return err
 	}
-	return nil
 }
 
 func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retryable bool, err error) {
@@ -163,21 +217,6 @@ func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retry
 	}
 }
 
-func (f *FlusherHTTP) SetUrgent(flag bool) {
-}
-
-func (f *FlusherHTTP) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
-	return f.client != nil
-}
-
-func (f *FlusherHTTP) Stop() error {
-	return nil
-}
-
-func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {
-	return converter.NewConverter(f.Convert.Protocol, f.Convert.Encoding, nil, nil)
-}
-
 func (f *FlusherHTTP) buildQueryVarKeys() {
 	var varKeys []string
 	for _, v := range f.Query {
@@ -205,7 +244,8 @@ func (f *FlusherHTTP) buildQueryVarKeys() {
 func init() {
 	ilogtail.Flushers["flusher_http"] = func() ilogtail.Flusher {
 		return &FlusherHTTP{
-			Timeout: defaultTimeout,
+			Timeout:     defaultTimeout,
+			Concurrency: 1,
 			Convert: convertConfig{
 				Protocol: converter.ProtocolCustomSingle,
 				Encoding: converter.EncodingJSON,
