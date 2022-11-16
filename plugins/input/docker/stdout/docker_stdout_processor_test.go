@@ -91,7 +91,7 @@ var splitedlog3 = `{"log":"333\n","stream":"stdout", "time":"2018-05-16T06:28:41
 
 type inputProcessorTestSuite struct {
 	context          helper.LocalContext
-	collector        helper.LocalSlsCollector
+	collector        helper.LocalCollector
 	tag              map[string]string
 	allLog           string
 	allLogContent    []string
@@ -426,7 +426,7 @@ func (s *inputProcessorTestSuite) TestBigLine(c *check.C) {
 
 func TestParseCRILine(t *testing.T) {
 	var context helper.LocalContext
-	var collector helper.LocalSlsCollector
+	var collector helper.LocalCollector
 	tags := map[string]string{
 		"container":    "test",
 		"container_id": "id",
@@ -535,7 +535,7 @@ func TestParseCRILine(t *testing.T) {
 
 func TestSingleLineChangeBlock(t *testing.T) {
 	var context helper.LocalContext
-	var collector helper.LocalSlsCollector
+	var collector helper.LocalCollector
 	tags := map[string]string{
 		"container":    "test",
 		"container_id": "id",

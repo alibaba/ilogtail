@@ -21,27 +21,27 @@ import (
 	"time"
 )
 
-// LocalSlsCollector for unit test
-type LocalSlsCollector struct {
+// LocalCollector for unit test
+type LocalCollector struct {
 	Logs []*protocol.Log
 }
 
-func (p *LocalSlsCollector) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
+func (p *LocalCollector) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
 	p.AddDataWithContext(tags, fields, nil, t...)
 }
 
-func (p *LocalSlsCollector) AddDataArray(tags map[string]string,
+func (p *LocalCollector) AddDataArray(tags map[string]string,
 	columns []string,
 	values []string,
 	t ...time.Time) {
 	p.AddDataArrayWithContext(tags, columns, values, nil, t...)
 }
 
-func (p *LocalSlsCollector) AddRawLog(log *protocol.Log) {
+func (p *LocalCollector) AddRawLog(log *protocol.Log) {
 	p.AddRawLogWithContext(log, nil)
 }
 
-func (p *LocalSlsCollector) AddDataWithContext(tags map[string]string, fields map[string]string, ctx map[string]interface{}, t ...time.Time) {
+func (p *LocalCollector) AddDataWithContext(tags map[string]string, fields map[string]string, ctx map[string]interface{}, t ...time.Time) {
 	// log.Printf("Begin add %v %v", tags, fields)
 	var logTime time.Time
 	if len(t) == 0 {
@@ -53,7 +53,7 @@ func (p *LocalSlsCollector) AddDataWithContext(tags map[string]string, fields ma
 	p.Logs = append(p.Logs, slsLog)
 }
 
-func (p *LocalSlsCollector) AddDataArrayWithContext(tags map[string]string,
+func (p *LocalCollector) AddDataArrayWithContext(tags map[string]string,
 	columns []string,
 	values []string,
 	ctx map[string]interface{},
@@ -68,6 +68,6 @@ func (p *LocalSlsCollector) AddDataArrayWithContext(tags map[string]string,
 	p.Logs = append(p.Logs, slsLog)
 }
 
-func (p *LocalSlsCollector) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
+func (p *LocalCollector) AddRawLogWithContext(log *protocol.Log, ctx map[string]interface{}) {
 	p.Logs = append(p.Logs, log)
 }
