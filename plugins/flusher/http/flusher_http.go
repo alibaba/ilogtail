@@ -21,31 +21,26 @@ const (
 )
 
 type convertConfig struct {
-	// Rename one or more fields from tags.
-	TagFieldsRename map[string]string
-	// Rename one or more fields, The protocol field options can only be: contents, tags, time
-	ProtocolFieldsRename map[string]string
-	// Convert protocol, default value: custom_single
-	Protocol string
-	// Convert encoding, default value:json
-	// The options are: 'json'
-	Encoding string
+	TagFieldsRename      map[string]string // Rename one or more fields from tags.
+	ProtocolFieldsRename map[string]string // Rename one or more fields, The protocol field options can only be: contents, tags, time
+	Protocol             string            // Convert protocol, default value: custom_single
+	Encoding             string            // Convert encoding, options are: 'json','none', default value:json
 }
 
 type retryConfig struct {
-	Enable       bool
-	MaxCount     int
-	DefaultDelay time.Duration
+	Enable   bool          // If enable retry, default is true
+	MaxCount int           // Max retry times, default is 3
+	Delay    time.Duration // Delay time before next retry, default is 100 ms
 }
 
 type FlusherHTTP struct {
-	RemoteURL   string
-	Headers     map[string]string
-	Query       map[string]string
-	Timeout     time.Duration
-	Retry       retryConfig
-	Convert     convertConfig
-	Concurrency int
+	RemoteURL   string            // RemoteURL to request
+	Headers     map[string]string // Headers to append to the http request
+	Query       map[string]string // Query parameters to append to the http request
+	Timeout     time.Duration     // Request timeout, default is 60s
+	Retry       retryConfig       // Retry strategy, default is retry 3 times with 100 milliseconds each time
+	Convert     convertConfig     // Convert defines which protocol and format to convert to
+	Concurrency int               // How many requests can be performed in concurrent
 
 	queryVarKeys []string
 
@@ -149,7 +144,7 @@ func (f *FlusherHTTP) convertAndFlush(logGroup *protocol.LogGroup) error {
 					if ok || !retryable || !f.Retry.Enable {
 						break
 					}
-					<-time.After(f.Retry.DefaultDelay)
+					<-time.After(f.Retry.Delay)
 				}
 			}()
 		}
@@ -249,6 +244,11 @@ func init() {
 			Convert: convertConfig{
 				Protocol: converter.ProtocolCustomSingle,
 				Encoding: converter.EncodingJSON,
+			},
+			Retry: retryConfig{
+				Enable:   true,
+				MaxCount: 3,
+				Delay:    100 * time.Microsecond,
 			},
 		}
 	}

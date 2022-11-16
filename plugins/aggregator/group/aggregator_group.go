@@ -49,10 +49,10 @@ func (q *groupQueue) AddWithWait(logGroup *protocol.LogGroup, duration time.Dura
 }
 
 type AggregatorGroup struct {
-	GroupKeys        []string
-	Topic            string
-	ErrIfKeyNotFound bool
-	EnablePackID     bool
+	GroupKeys        []string // The Keys to group by s
+	Topic            string   // Topic to attach, if set
+	ErrIfKeyNotFound bool     // If logging when group-key not found
+	EnablePackID     bool     // If attach PackID
 
 	groupAggs sync.Map
 	lock      *sync.Mutex
@@ -142,8 +142,7 @@ func (g *AggregatorGroup) buildGroupKey(log *protocol.Log) string {
 			}
 		}
 
-		isFirstKey := 0 == idx
-		if isFirstKey {
+		if idx == 0 {
 			groupKey = val
 		} else {
 			groupKey += groupKeyConnector + val
