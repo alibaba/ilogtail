@@ -161,7 +161,7 @@ std::string GetHostIpByHostName() {
     const char* hostname = GetHostName().c_str();
 
     // if hostname is invalid, other methods should be used to get correct ip.
-    if (!IsValidHostname(hostname)) {
+    if (!IsDigitsDotsHostname(hostname)) {
         return "";
     }
 
@@ -402,7 +402,7 @@ bool GetRedHatReleaseInfo(std::string& os, int64_t& osVersion, std::string bashP
     return !os.empty() && osVersion != 0;
 }
 
-// For hostnames in the following format, gethostbyname will fake an IP (and thus return wrong ip):
+// For hostnames in the following format, gethostbyname will fake an IP (and thus return wrong IP):
 // 1. a, where a is a number between 0 and 2^32-1;
 // 2. a.b, where a & b are numbers, and a is between 0 and 2^8-1, b is between 0 and 2^24-1;
 // 3. a.b.c, where a, b & c are numbers, and a & b are between 0 and 2^8-1, c is between 0 and 2^16-1;
@@ -410,7 +410,7 @@ bool GetRedHatReleaseInfo(std::string& os, int64_t& osVersion, std::string bashP
 // All numbers mentioned here can be both in base 8 or 10.
 //
 // see https://codebrowser.dev/glibc/glibc/nss/digits_dots.c.html#__nss_hostname_digits_dots_context for more details.
-bool IsValidHostname(const char* hostname) {
+bool IsDigitsDotsHostname(const char* hostname) {
     if (hostname && *hostname != '\0') {
         const char* cp = hostname;
         int16_t digits = 32;

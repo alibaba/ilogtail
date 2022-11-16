@@ -30,7 +30,7 @@ std::string GetHostIp(const std::string& intf = "");
 void GetAllPids(std::unordered_set<int32_t>& pids);
 bool GetKernelInfo(std::string& kernelRelease, int64_t& kernelVersion);
 bool GetRedHatReleaseInfo(std::string& os, int64_t& osVersion, std::string bashPath = "");
-bool IsValidHostname(const char *hostname);
+bool IsDigitsDotsHostname(const char *hostname);
 
 // GetAnyAvailableIP walks through all interfaces (AF_INET) to find an available IP.
 // Priority:

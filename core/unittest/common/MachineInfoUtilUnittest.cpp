@@ -21,130 +21,130 @@ public:
     void DecHostnameValidationTest() {
         std::string hostname;
         hostname = "4294967296";  // 2^32
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "4294967295";  // 2^32-1
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0.";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
 
         hostname = "256.123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.16777216";  // 2^24
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.16777215"; // 2^24-1
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.0";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.0.";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
 
         hostname = "256.123.123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.123.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0.123.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.256.123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.0.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.65536"; // 2^16
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.65535"; // 2^16-1
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.0";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.0.";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
 
         hostname = "256.123.123.123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.123.123.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0.123.123.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.256.123.123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.123.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.0.123.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.256.123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.255.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.0.123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.255.256";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.255.255";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.255.0";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "255.255.255.0.";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
 
         hostname = "255.255.a255";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "a255d";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "abcd";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
     }
 
     void OctHostnameValidationTest() {
         std::string hostname;
         hostname = "040000000000";  // 2^32
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "037777777777";  // 2^32-1
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
 
         hostname = "0400.0123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0100000000";  // 2^24
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.077777777"; // 2^24-1
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
 
         hostname = "0400.0123.0123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0123.0123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0400.0123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0377.0123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0377.0200000"; // 2^16
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0377.0177777"; // 2^16-1
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
 
         hostname = "0400.0123.0123.0123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0123.0123.0123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0400.0123.0123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0377.0123.0123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0377.0400.0123";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0377.0377.0123";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0377.0377.0400";
-        EXPECT_TRUE(IsValidHostname(hostname.c_str()));
+        EXPECT_TRUE(IsDigitsDotsHostname(hostname.c_str()));
         hostname = "0377.0377.0377.0377";
-        EXPECT_FALSE(IsValidHostname(hostname.c_str()));
+        EXPECT_FALSE(IsDigitsDotsHostname(hostname.c_str()));
     }
 };
 
