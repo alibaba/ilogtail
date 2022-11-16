@@ -144,7 +144,7 @@ func (m *Jmx) Description() string {
 	return "a jmx fetch manger to generate configuration and control jmx fetch process(https://github.com/DataDog/jmxfetch)."
 }
 
-func (m *Jmx) Start(collector ilogtail.Collector) error {
+func (m *Jmx) StartCollectLogs(collector ilogtail.Collector) error {
 	GetJmxFetchManager(m.jvmHome).RegisterCollector(m.context, m.key, collector, m.filters)
 
 	if !m.DiscoveryMode {

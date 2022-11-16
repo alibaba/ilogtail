@@ -536,7 +536,7 @@ func (sc *ServiceCanal) syncCheckpointWithCanal() {
 
 // Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (sc *ServiceCanal) Collect(ilogtail.Collector) error {
+func (sc *ServiceCanal) CollectLogs(ilogtail.Collector) error {
 	return nil
 }
 
@@ -664,7 +664,7 @@ func (sc *ServiceCanal) newCanal() (bool, error) {
 }
 
 // Start starts the ServiceInput's service, whatever that may be
-func (sc *ServiceCanal) Start(c ilogtail.Collector) error {
+func (sc *ServiceCanal) StartCollectLogs(c ilogtail.Collector) error {
 	sc.lastErrorCount = 0
 	sc.shutdown = make(chan struct{}, 1)
 	sc.waitGroup.Add(1)
@@ -718,7 +718,7 @@ func (sc *ServiceCanal) Start(c ilogtail.Collector) error {
 	logger.Infof(sc.context.GetRuntimeContext(), "Checkpoint initialized: %v", sc.checkpoint)
 
 	// Construct start synchronization position according to GTID or binlog-file.
-	// Start with GTID if it exists and is valid, otherwise use binlog-file to
+	// StartCollectLogs with GTID if it exists and is valid, otherwise use binlog-file to
 	// construct synchronization position.
 	// If both of them are missing, get from server if StartFromBegining is not set.
 	var gtid mysql.GTIDSet

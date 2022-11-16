@@ -24,7 +24,7 @@ import (
 )
 
 // Although the benchmark test maybe influenced by the network and cluster size, we also cloud
-// find 32% CPU times used in json serialization and 51% CPU times used in Collect method.
+// find 32% CPU times used in json serialization and 51% CPU times used in CollectLogs method.
 // Also, about 43% memory allocs comes from the helper.makeMetaLog method on the memory side.
 // So the core mem and CPU costs comes from the json serialization.
 
@@ -50,6 +50,6 @@ func BenchmarkInputKubernetesMeta_Collect(b *testing.B) {
 	time.Sleep(time.Second * 5)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		p.Collect(c)
+		p.CollectLogs(c)
 	}
 }

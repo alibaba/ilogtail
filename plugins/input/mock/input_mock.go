@@ -15,25 +15,41 @@
 package mock
 
 import (
+	"fmt"
+	"strconv"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/models"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 )
 
 type InputMock struct {
-	GroupMeta map[string]string
-	GroupTags map[string]string
+	GroupMeta             map[string]string
+	GroupTags             map[string]string
+	Tags                  map[string]string
+	Fields                map[string]interface{}
+	Index                 int64
+	OpenPrometheusPattern bool
 
-	Tags   map[string]string
-	Fields map[string]float64
-	Index  int64
-
-	context ilogtail.Context
+	context  ilogtail.Context
+	labelStr string
 }
 
 func (r *InputMock) Init(context ilogtail.Context) (int, error) {
 	r.context = context
+	var labels helper.KeyValues
+	if r.OpenPrometheusPattern {
+		for k, v := range r.Tags {
+			labels.Append(k, v)
+		}
+		for k, v := range r.Fields {
+			labels.Append(k, fmt.Sprint(v))
+		}
+	}
+	labels.Sort()
+	r.labelStr = labels.String()
 	return 0, nil
 }
 
@@ -41,12 +57,35 @@ func (r *InputMock) Description() string {
 	return "mock input plugin for logtail"
 }
 
+func (r *InputMock) CollectLogs(collector ilogtail.Collector) error {
+	r.Index++
+	if r.OpenPrometheusPattern {
+		helper.AddMetric(collector, "metrics_mock", time.Now(), r.labelStr, float64(r.Index))
+	} else {
+		// original log pattern.
+		r.Fields["Index"] = strconv.FormatInt(r.Index, 10)
+		fields := make(map[string]string)
+		for k, v := range r.Fields {
+			fields[k] = fmt.Sprint(v)
+		}
+		collector.AddData(r.Tags, fields)
+	}
+	return nil
+}
+
 func (r *InputMock) Collect(context ilogtail.PipelineContext) error {
 	r.Index++
 	group := models.NewGroup(models.NewMetadataWithMap(r.GroupMeta), models.NewTagsWithMap(r.GroupTags))
 	counter := models.NewSingleValueMetric("counter_metrics_mock", models.MetricTypeCounter, models.NewTagsWithMap(r.Tags), time.Now().UnixNano(), r.Index)
 	gauge := models.NewSingleValueMetric("gauge_metrics_mock", models.MetricTypeGauge, models.NewTagsWithMap(r.Tags), time.Now().UnixNano(), r.Index)
-	multiValues := models.NewMultiValuesMetric("multi_values_metrics_mock", models.MetricTypeUntyped, models.NewTagsWithMap(r.Tags), time.Now().UnixNano(), models.NewMetricFloatValuesWithMap(r.Fields))
+
+	values := models.NewMetricMultiValueValues()
+	values.Add("index", float64(r.Index))
+	typedValues := models.NewMetricTypedValues()
+	for k, v := range r.Fields {
+		typedValues.Add(k, &models.TypedValue{Type: models.ValueTypeString, Value: fmt.Sprint(v)})
+	}
+	multiValues := models.NewMetric("multi_values_metrics_mock", models.MetricTypeUntyped, models.NewTagsWithMap(r.Tags), time.Now().UnixNano(), values, typedValues)
 	context.Collector().Collect(group, counter, gauge, multiValues)
 	return nil
 }
@@ -58,7 +97,7 @@ func init() {
 			GroupMeta: make(map[string]string),
 			GroupTags: make(map[string]string),
 			Tags:      make(map[string]string),
-			Fields:    make(map[string]float64),
+			Fields:    make(map[string]interface{}),
 		}
 	}
 }

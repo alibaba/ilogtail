@@ -99,12 +99,12 @@ func (s *Syslog) Description() string {
 }
 
 // Collect ...
-func (s *Syslog) Collect(collector ilogtail.Collector) error {
+func (s *Syslog) CollectLogs(collector ilogtail.Collector) error {
 	return nil
 }
 
 // Start ...
-func (s *Syslog) Start(collector ilogtail.Collector) error {
+func (s *Syslog) StartCollectLogs(collector ilogtail.Collector) error {
 	s.done = make(chan struct{}, 1)
 	scheme, host, err := getAddressParts(s.Address)
 	if err != nil {

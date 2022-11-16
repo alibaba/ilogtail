@@ -98,7 +98,7 @@ func InvalidTestInputKafka(t *testing.T) {
 	_, input, err := newInput()
 	require.NoError(t, err)
 	collector := &mockCollector{}
-	err = input.Start(collector)
+	err = input.StartCollectLogs(collector)
 	require.NoError(t, err)
 	time.Sleep(time.Second * 2)
 	assert.Equal(t, 2, len(collector.logs))

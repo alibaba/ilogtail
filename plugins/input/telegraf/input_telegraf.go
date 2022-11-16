@@ -45,11 +45,11 @@ func (s *ServiceTelegraf) Description() string {
 	return "service for Telegraf agent"
 }
 
-func (s *ServiceTelegraf) Collect(collector ilogtail.Collector) error {
+func (s *ServiceTelegraf) CollectLogs(collector ilogtail.Collector) error {
 	return nil
 }
 
-func (s *ServiceTelegraf) Start(collector ilogtail.Collector) error {
+func (s *ServiceTelegraf) StartCollectLogs(collector ilogtail.Collector) error {
 	s.tm.RegisterConfig(s.context, s.config)
 	return nil
 }

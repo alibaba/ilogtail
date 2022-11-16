@@ -182,7 +182,7 @@ func TestStartAndStop(t *testing.T) {
 
 	var err error
 	go func() {
-		err = input.Start(collector)
+		err = input.StartCollectLogs(collector)
 		require.NoError(t, err)
 	}()
 
@@ -201,7 +201,7 @@ func TestStartAndStop(t *testing.T) {
 
 	collector = &mockCollector{}
 	go func() {
-		err = input.Start(collector)
+		err = input.StartCollectLogs(collector)
 		require.NoError(t, err)
 	}()
 
@@ -233,7 +233,7 @@ func TestGET(t *testing.T) {
 	require.NoError(t, err)
 	collector := &mockCollector{}
 	go func() {
-		err = input.Start(collector)
+		err = input.StartCollectLogs(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -257,7 +257,7 @@ func TestGET(t *testing.T) {
 	require.NoError(t, err)
 	collector = &mockCollector{}
 	go func() {
-		err = input.Start(collector)
+		err = input.StartCollectLogs(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -281,7 +281,7 @@ func TestGET(t *testing.T) {
 	require.NoError(t, err)
 	collector = &mockCollector{}
 	go func() {
-		err = input.Start(collector)
+		err = input.StartCollectLogs(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -305,7 +305,7 @@ func TestGET(t *testing.T) {
 	require.NoError(t, err)
 	collector = &mockCollector{}
 	go func() {
-		err = input.Start(collector)
+		err = input.StartCollectLogs(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)

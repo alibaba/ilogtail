@@ -124,8 +124,8 @@ func TestInputProcess_RegexMatching(t *testing.T) {
 		return
 	}
 	c := &test.MockMetricCollector{}
-	_ = p.Collect(c)
-	_ = p.Collect(c)
+	_ = p.CollectLogs(c)
+	_ = p.CollectLogs(c)
 	if len(c.Logs) != 7 {
 		bytes, _ := json.Marshal(c.Logs)
 		t.Errorf("regex matching should only match one process: %s", string(bytes))

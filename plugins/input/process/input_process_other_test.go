@@ -59,7 +59,7 @@ func TestInputProcess_Collect(t *testing.T) {
 	c := &test.MockMetricCollector{}
 	p.TopNCPU = 1
 
-	_ = p.Collect(c)
+	_ = p.CollectLogs(c)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c.Logs = nil
@@ -68,7 +68,7 @@ func TestInputProcess_Collect(t *testing.T) {
 			p.NetIO = tt.conditions.NetIO
 			p.Thread = tt.conditions.Thread
 
-			if err := p.Collect(c); err != nil {
+			if err := p.CollectLogs(c); err != nil {
 				t.Errorf("cannot collect the process metrics: %v", err)
 				return
 			}

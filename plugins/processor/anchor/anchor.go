@@ -170,7 +170,7 @@ func (p *ExpondParam) ExpondJSONCallBack(key []byte, value []byte, dataType json
 
 func (p *ProcessorAnchor) ProcessAnchor(log *protocol.Log, val *string) {
 	for _, anchor := range p.Anchors {
-		// Start is "", startIndex is 0
+		// StartCollectLogs is "", startIndex is 0
 		startIndex := strings.Index(*val, anchor.Start)
 		if startIndex < 0 {
 			if p.NoAnchorError {

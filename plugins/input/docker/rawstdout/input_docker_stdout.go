@@ -366,7 +366,7 @@ func (sds *ServiceDockerStdout) Description() string {
 
 // Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (sds *ServiceDockerStdout) Collect(ilogtail.Collector) error {
+func (sds *ServiceDockerStdout) CollectLogs(ilogtail.Collector) error {
 	return nil
 }
 
@@ -449,7 +449,7 @@ func (sds *ServiceDockerStdout) GetCheckPoint() *StdoutCheckPoint {
 }
 
 // Start starts the ServiceInput's service, whatever that may be
-func (sds *ServiceDockerStdout) Start(c ilogtail.Collector) error {
+func (sds *ServiceDockerStdout) StartCollectLogs(c ilogtail.Collector) error {
 
 	sds.shutdown = make(chan struct{})
 	sds.waitGroup.Add(1)

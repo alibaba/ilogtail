@@ -35,7 +35,7 @@ var DB *sql.DB
 var dataBase = "root:root@tcp(mysql:3306)/mysql"
 
 func getConnection() {
-	//Start mysql client using `server`'s config
+	//StartCollectLogs mysql client using `server`'s config
 	var err error
 	DB, err = sql.Open("mysql", dataBase)
 	if err != nil {

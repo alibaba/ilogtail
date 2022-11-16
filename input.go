@@ -26,9 +26,9 @@ type MetricInput interface {
 
 type SlsMetricInput interface {
 	MetricInput
-	// Collect takes in an accumulator and adds the metrics that the Input
+	// CollectLogs takes in an accumulator and adds the metrics that the Input
 	// gathers. This is called every "interval"
-	Collect(Collector) error
+	CollectLogs(Collector) error
 }
 
 type PipelineMetricInput interface {
@@ -53,8 +53,8 @@ type ServiceInput interface {
 
 type SlsServiceInput interface {
 	ServiceInput
-	// Start starts the ServiceInput's service, whatever that may be
-	Start(Collector) error
+	// StartCollectLogs starts the ServiceInput's service, whatever that may be
+	StartCollectLogs(Collector) error
 }
 
 type PipelineServiceInput interface {

@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+//go:build windows
 // +build windows
 
 package wineventlog
@@ -34,7 +35,7 @@ var winMeta = &publisherMetadataStore{
 	},
 	Opcodes: map[uint8]string{
 		0: "Info",
-		1: "Start",
+		1: "StartCollectLogs",
 		2: "Stop",
 		3: "DCStart",
 		4: "DCStop",

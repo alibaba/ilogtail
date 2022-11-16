@@ -194,7 +194,7 @@ func TestInputPrometheus(t *testing.T) {
 	input, err := newInput("prometheus")
 	require.NoError(t, err)
 	collector := &mockCollector{}
-	err = input.Start(collector)
+	err = input.StartCollectLogs(collector)
 	require.NoError(t, err)
 	port := input.listener.Addr().(*net.TCPAddr).Port
 	defer func() {
@@ -219,7 +219,7 @@ func TestInputInfluxDB(t *testing.T) {
 	input, err := newInput("influx")
 	require.NoError(t, err)
 	collector := &mockCollector{}
-	err = input.Start(collector)
+	err = input.StartCollectLogs(collector)
 	require.NoError(t, err)
 	port := input.listener.Addr().(*net.TCPAddr).Port
 
@@ -258,6 +258,6 @@ func TestUnlinkUnixSock(t *testing.T) {
 	require.NoError(t, err)
 
 	collector := &mockCollector{}
-	require.NoError(t, input.Start(collector))
+	require.NoError(t, input.StartCollectLogs(collector))
 	require.NoError(t, input.Stop())
 }

@@ -42,7 +42,7 @@ func Benchmark_CollectNoProcess(b *testing.B) {
 	c := &test.MockMetricCollector{}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := p.Collect(c); err != nil {
+		if err := p.CollectLogs(c); err != nil {
 			b.Errorf("error in collect process metrics: %v", err)
 			return
 		}
@@ -69,7 +69,7 @@ func Benchmark_CollectWithProcess(b *testing.B) {
 	c := &test.MockMetricCollector{}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := p.Collect(c); err != nil {
+		if err := p.CollectLogs(c); err != nil {
 			b.Errorf("error in collect process metrics: %v", err)
 			return
 		}

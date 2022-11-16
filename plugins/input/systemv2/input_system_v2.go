@@ -376,7 +376,7 @@ func (r *InputSystem) CollectProtocol(collector ilogtail.Collector) {
 	}
 }
 
-func (r *InputSystem) Collect(collector ilogtail.Collector) error {
+func (r *InputSystem) CollectLogs(collector ilogtail.Collector) error {
 	r.collectTime = time.Now()
 	r.CollectCore(collector)
 	if r.CPU {

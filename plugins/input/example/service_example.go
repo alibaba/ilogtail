@@ -46,7 +46,7 @@ func (s *ServiceExample) Description() string {
 // Start the service example plugin would run in a separate go routine, so it is blocking method.
 // The ServiceInput plugin is suitable for receiving the external input data.
 // In the demo, we implemented an http server to accept the specified header of requests.
-func (s *ServiceExample) Start(collector ilogtail.Collector) error {
+func (s *ServiceExample) StartCollectLogs(collector ilogtail.Collector) error {
 	logger.Info(s.context.GetRuntimeContext(), "start the example plugin")
 	mux := http.NewServeMux()
 	mux.HandleFunc("/data", func(writer http.ResponseWriter, request *http.Request) {

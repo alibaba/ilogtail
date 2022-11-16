@@ -79,6 +79,10 @@ type MetricMultiValue struct {
 	Values MetricFloatValues
 }
 
+func (v *MetricMultiValue) Add(key string, value float64) {
+	v.Values.Add(key, value)
+}
+
 func (v *MetricMultiValue) IsSingleValue() bool {
 	return false
 }
@@ -102,7 +106,7 @@ type MetricFloatValues interface {
 	KeyValues[float64]
 }
 
-// In TSDB such as influxdb,
+// MetricTypedValues In TSDB such as influxdb,
 // its fields not only have numeric types, also string, bool, and array types.
 // MetricTypedValues is used to define types other than numeric values.
 type MetricTypedValues interface {

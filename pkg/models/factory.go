@@ -104,14 +104,24 @@ func NewMultiValuesMetric(name string, metricType MetricType, tags Tags, timesta
 	}
 }
 
-func NewMetricFloatValues() MetricFloatValues {
-	return &keyValuesImpl[float64]{
-		keyValues: make(map[string]float64),
+func NewMetricMultiValueValues() *MetricMultiValue {
+	return &MetricMultiValue{
+		Values: &keyValuesImpl[float64]{
+			keyValues: make(map[string]float64),
+		},
 	}
 }
 
-func NewMetricFloatValuesWithMap(keyValues map[string]float64) MetricFloatValues {
-	return &keyValuesImpl[float64]{
-		keyValues: keyValues,
+func NewMetricMultiValueWithMap(keyValues map[string]float64) *MetricMultiValue {
+	return &MetricMultiValue{
+		Values: &keyValuesImpl[float64]{
+			keyValues: keyValues,
+		},
+	}
+}
+
+func NewMetricTypedValues() MetricTypedValues {
+	return &keyValuesImpl[*TypedValue]{
+		keyValues: make(map[string]*TypedValue),
 	}
 }

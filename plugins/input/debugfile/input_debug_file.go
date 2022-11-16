@@ -46,7 +46,7 @@ func (r *InputDebugFile) Description() string {
 }
 
 // Collect ...
-func (r *InputDebugFile) Collect(collector ilogtail.Collector) error {
+func (r *InputDebugFile) CollectLogs(collector ilogtail.Collector) error {
 	log := map[string]string{}
 	log[r.FieldName] = r.content
 	collector.AddData(nil, log)

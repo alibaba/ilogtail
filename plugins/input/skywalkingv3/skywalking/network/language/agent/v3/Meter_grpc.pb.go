@@ -78,7 +78,7 @@ type UnimplementedMeterReportServiceServer struct {
 }
 
 func (UnimplementedMeterReportServiceServer) Collect(MeterReportService_CollectServer) error {
-	return status.Errorf(codes.Unimplemented, "method Collect not implemented")
+	return status.Errorf(codes.Unimplemented, "method CollectLogs not implemented")
 }
 
 // UnsafeMeterReportServiceServer may be embedded to opt out of forward compatibility for this service.

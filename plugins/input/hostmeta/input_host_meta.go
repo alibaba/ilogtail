@@ -87,10 +87,10 @@ func (in *InputNodeMeta) Init(context ilogtail.Context) (int, error) {
 }
 
 func (in *InputNodeMeta) Description() string {
-	return "Collect the host metadata"
+	return "CollectLogs the host metadata"
 }
 
-func (in *InputNodeMeta) Collect(collector ilogtail.Collector) error {
+func (in *InputNodeMeta) CollectLogs(collector ilogtail.Collector) error {
 	now := time.Now()
 	if len(in.hostCollects) > 0 {
 		node, err := in.collectHostMeta()

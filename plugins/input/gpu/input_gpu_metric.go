@@ -50,11 +50,11 @@ func (r *InputGpuMetric) Description() string {
 	return "collect gpu metric plugin for logtail (only linux and nvidia gpu)"
 }
 
-func (r *InputGpuMetric) Collect(collector ilogtail.Collector) error {
+func (r *InputGpuMetric) CollectLogs(collector ilogtail.Collector) error {
 	return nil
 }
 
-func (r *InputGpuMetric) Start(collector ilogtail.Collector) error {
+func (r *InputGpuMetric) StartCollectLogs(collector ilogtail.Collector) error {
 	err := gonvml.Initialize()
 	if err != nil {
 		logger.Error(r.context.GetRuntimeContext(), "GPU_NVML_INIT_ALARM", "Couldn't initialize nvml, error", err)

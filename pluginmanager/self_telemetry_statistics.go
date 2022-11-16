@@ -33,7 +33,7 @@ func (r *InputStatistics) Description() string {
 	return "statistics input plugin for logtail"
 }
 
-func (r *InputStatistics) Collect(collector ilogtail.Collector) error {
+func (r *InputStatistics) CollectLogs(collector ilogtail.Collector) error {
 	for _, config := range LogtailConfig {
 		log := &protocol.Log{}
 		config.Context.MetricSerializeToPB(log)

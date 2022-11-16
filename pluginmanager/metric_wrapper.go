@@ -15,10 +15,11 @@
 package pluginmanager
 
 import (
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 
 	"sync"
 	"time"
@@ -48,16 +49,17 @@ func (p *MetricWrapper) Run() {
 	for {
 		if !util.RandomSleep(p.Interval, 0.1, p.shutdown) {
 			p.LatencyMetric.Begin()
-			var err error
 			if slsInput, ok := p.Input.(ilogtail.SlsMetricInput); ok {
-				err = slsInput.Collect(p)
-			} else if pipeInput, ok := p.Input.(ilogtail.PipelineMetricInput); ok {
-				err = pipeInput.Collect(p.PipeContext)
+				if err := slsInput.CollectLogs(p); err != nil {
+					logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)
+				}
+			}
+			if pipeInput, ok := p.Input.(ilogtail.PipelineMetricInput); ok {
+				if err := pipeInput.Collect(p.PipeContext); err != nil {
+					logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)
+				}
 			}
 			p.LatencyMetric.End()
-			if err != nil {
-				logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)
-			}
 			continue
 		}
 		return

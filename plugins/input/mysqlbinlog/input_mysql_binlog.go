@@ -220,7 +220,7 @@ func (b *InputMysqlBinlog) collectOneFile(collector ilogtail.Collector) error {
 	return nil
 }
 
-func (b *InputMysqlBinlog) Collect(collector ilogtail.Collector) error {
+func (b *InputMysqlBinlog) CollectLogs(collector ilogtail.Collector) error {
 	if b.checkpoint.Offset == 0 {
 		err := b.findOffset(b.FromBegining)
 		if err != nil {

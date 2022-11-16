@@ -182,7 +182,7 @@ func (in *InputKubernetesMeta) Description() string {
 	return "collect the kubernetes metadata"
 }
 
-func (in *InputKubernetesMeta) Collect(collector ilogtail.Collector) error {
+func (in *InputKubernetesMeta) CollectLogs(collector ilogtail.Collector) error {
 	now := time.Now()
 	transfer := func(nodes []*helper.MetaNode) {
 		for _, node := range nodes {

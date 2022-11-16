@@ -51,7 +51,7 @@ type UnimplementedCLRMetricReportServiceServer struct {
 }
 
 func (UnimplementedCLRMetricReportServiceServer) Collect(context.Context, *CLRMetricCollection) (*v3.Commands, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Collect not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method CollectLogs not implemented")
 }
 
 // UnsafeCLRMetricReportServiceServer may be embedded to opt out of forward compatibility for this service.

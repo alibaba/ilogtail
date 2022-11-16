@@ -51,12 +51,12 @@ func (r *Input) Description() string {
 
 // Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (r *Input) Collect(ilogtail.Collector) error {
+func (r *Input) CollectLogs(ilogtail.Collector) error {
 	return nil
 }
 
 // Start starts the ServiceInput's service, whatever that may be
-func (r *Input) Start(collector ilogtail.Collector) error {
+func (r *Input) StartCollectLogs(collector ilogtail.Collector) error {
 	agent.RegisterJVMMetricReportServiceServer(r.grpcServer, &JVMMetricHandler{r.ctx, collector, r.MetricIntervalMs, -1})
 	agent.RegisterCLRMetricReportServiceServer(r.grpcServer, &CLRMetricHandler{r.ctx, collector, r.MetricIntervalMs, -1})
 	agent.RegisterMeterReportServiceServer(r.grpcServer, &MeterHandler{r.ctx, collector})

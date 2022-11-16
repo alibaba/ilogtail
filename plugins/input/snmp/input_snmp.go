@@ -462,7 +462,7 @@ func (s *Agent) GetTranslated() error {
 	return nil
 }
 
-func (s *Agent) Start(collector ilogtail.Collector) error {
+func (s *Agent) StartCollectLogs(collector ilogtail.Collector) error {
 	runtime.GOMAXPROCS(len(s.gs))
 	for index, GsAgent := range s.gs {
 		// use anonymous function to avoid resource leak
@@ -582,7 +582,7 @@ func (s *Agent) Stop() error {
 	return nil
 }
 
-func (s *Agent) Collect(_ ilogtail.Collector) error {
+func (s *Agent) CollectLogs(_ ilogtail.Collector) error {
 	return nil
 }
 
