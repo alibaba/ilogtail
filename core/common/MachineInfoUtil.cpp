@@ -158,39 +158,14 @@ std::string GetHostName() {
 }
 
 std::string GetHostIpByHostName() {
-    std::string hostname = GetHostName();
+    const char* hostname = GetHostName().c_str();
 
-    // For hostnames in the following format, gethostbyname will return wrong ip. Thus, empty string should be returned
-    // to allow caller generating ip using other methods:
-    // 1. a, where a is a number between 0 and 2^32-1;
-    // 2. a.b, where a & b are numbers, and a is between 0 and 2^8-1, b is between 0 and 2^24-1;
-    // 3. a.b.c, where a, b & c are numbers, and a & b are between 0 and 2^8-1, c is between 0 and 2^16-1;
-    // 4. a.b.c.d, where a, b, c & d are numbers between 0 and 2^8-1.
-    if (!hostname.empty()) {
-        size_t pos = 0;
-        u_int16_t digits = 32;
-        while (digits != 0) {
-            u_int64_t sum = 0;
-            while (pos != hostname.size() && isdigit(hostname[pos])) {
-                sum = sum * 10 + hostname[pos] - '0';
-                if (sum >= (1UL << digits)) {
-                    break;
-                }
-                pos++;
-            }
-            if (hostname[pos] == '.' && sum <= 255) {
-                digits -= 8;
-                pos++;
-            } else {
-                break;
-            }
-        }
-        if (pos == hostname.size()) {
-            return "";
-        }
+    // if hostname is invalid, other methods should be used to get correct ip.
+    if (!IsValidHostname(hostname)) {
+        return "";
     }
 
-    struct hostent* entry = gethostbyname(hostname.c_str());
+    struct hostent* entry = gethostbyname(hostname);
     if (entry == NULL) {
         return "";
     }
@@ -425,6 +400,38 @@ bool GetRedHatReleaseInfo(std::string& os, int64_t& osVersion, std::string bashP
         osVersion += strtol(what[3].begin(), nullptr, 10);
     }
     return !os.empty() && osVersion != 0;
+}
+
+// For hostnames in the following format, gethostbyname will fake an IP (and thus return wrong ip):
+// 1. a, where a is a number between 0 and 2^32-1;
+// 2. a.b, where a & b are numbers, and a is between 0 and 2^8-1, b is between 0 and 2^24-1;
+// 3. a.b.c, where a, b & c are numbers, and a & b are between 0 and 2^8-1, c is between 0 and 2^16-1;
+// 4. a.b.c.d, where a, b, c & d are numbers between 0 and 2^8-1.
+//
+// see https://codebrowser.dev/glibc/glibc/nss/digits_dots.c.html#__nss_hostname_digits_dots_context for detail
+bool IsValidHostname(const char *hostname) {
+    if (hostname && *hostname != '\0') {
+        const char* cp = hostname;
+        int16_t digits = 32;
+        while (*cp != '\0' && digits > 0) {
+            char* endp;
+            u_int64_t sum = strtoul(cp, &endp, 0);
+            if (sum == ULONG_MAX && errno == ERANGE || sum >= (1UL << digits)) {
+                break;
+            }
+            cp = endp;
+            if (*cp == '.' && sum <= 255) {
+                digits -= 8;
+                cp++;
+            } else {
+                break;
+            }
+        }
+        if (*cp == '\0' && *(cp - 1) != '.') {
+            return false;
+        }
+        return true;
+    }
 }
 
 } // namespace logtail
