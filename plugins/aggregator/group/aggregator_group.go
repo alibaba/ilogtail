@@ -63,7 +63,7 @@ func (q *groupQueue) AddWithWait(logGroup *protocol.LogGroup, duration time.Dura
 }
 
 type AggregatorGroup struct {
-	GroupKeys        []string // The Keys to group by s
+	GroupKeys        []string // The Keys to group by
 	Topic            string   // Topic to attach, if set
 	ErrIfKeyNotFound bool     // If logging when group-key not found
 	EnablePackID     bool     // If attach PackID
