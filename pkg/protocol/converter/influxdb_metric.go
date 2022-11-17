@@ -26,11 +26,10 @@ import (
 // ConvertToInfluxdbProtocolStream converts @logGroup to []byte in the influxdb line protocol,
 // @c.TagKeyRenameMap, @c.ProtocolKeyRenameMap param will be ignored, as they are not very suitable for metrics.
 func (c *Converter) ConvertToInfluxdbProtocolStream(logGroup *protocol.LogGroup, targetFields []string) (stream [][]byte, values []map[string]string, err error) {
-	if len(c.streamBuffer) == 0 {
-		c.streamBuffer = make([]byte, 0, 1024)
-	}
+	pooledBuf := GetPooledByteBuf()
+
 	var encoder lineprotocol.Encoder
-	encoder.SetBuffer(c.streamBuffer)
+	encoder.SetBuffer(*pooledBuf)
 	encoder.Reset()
 	encoder.SetLax(false)
 
@@ -70,15 +69,13 @@ func (c *Converter) ConvertToInfluxdbProtocolStream(logGroup *protocol.LogGroup,
 		}
 	}
 
-	c.streamBuffer = encoder.Bytes()
-
 	// we are batching logs in LogGroup, so only support find tags in the logGroup.LogTags
 	var desiredValues map[string]string
 	if len(targetFields) > 0 {
 		desiredValues = findTargetValuesInLogTags(targetFields, logGroup.LogTags)
 	}
 
-	return [][]byte{c.streamBuffer}, []map[string]string{desiredValues}, nil
+	return [][]byte{encoder.Bytes()}, []map[string]string{desiredValues}, nil
 }
 
 func findTargetValuesInLogTags(targetFields []string, logTags []*protocol.LogTag) map[string]string {

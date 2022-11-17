@@ -76,6 +76,12 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 	f.client = &http.Client{
 		Timeout: f.Timeout,
 	}
+
+	if f.Concurrency < 1 {
+		err := errors.New("Concurrency must be greater than zero")
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher check concurrency fail, error", err)
+		return err
+	}
 	f.tokenCh = make(chan struct{}, f.Concurrency)
 	f.stopCh = make(chan struct{}, 1)
 
@@ -87,7 +93,10 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 
 func (f *FlusherHTTP) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
-		f.convertAndFlush(logGroup)
+		err := f.convertAndFlush(logGroup)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -146,6 +155,7 @@ func (f *FlusherHTTP) convertAndFlush(logGroup *protocol.LogGroup) error {
 					}
 					<-time.After(f.Retry.Delay)
 				}
+				converter.PutPooledByteBuf(&body)
 			}()
 		}
 		return nil

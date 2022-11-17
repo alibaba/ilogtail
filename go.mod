@@ -27,6 +27,7 @@ require (
 	github.com/influxdata/go-syslog v1.0.1
 	github.com/influxdata/influxdb v1.10.0
 	github.com/jackc/pgx/v4 v4.16.1
+	github.com/jarcoal/httpmock v1.2.0
 	github.com/jeromer/syslogparser v0.0.0-20190429161531-5fbaaf06d9e7
 	github.com/json-iterator/go v1.1.12
 	github.com/juju/errors v0.0.0-20170703010042-c7d06af17c68

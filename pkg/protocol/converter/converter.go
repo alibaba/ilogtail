@@ -17,6 +17,7 @@ package protocol
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -59,6 +60,14 @@ const (
 	tagK8sContainerImageName = "k8s.container.image.name"
 )
 
+// todo: make multiple pools for different size levels
+var byteBufPool = sync.Pool{
+	New: func() interface{} {
+		buf := make([]byte, 0, 1024)
+		return &buf
+	},
+}
+
 var tagConversionMap = map[string]string{
 	"__path__":         tagLogFilePath,
 	"__hostname__":     tagHostname,
@@ -98,8 +107,6 @@ type Converter struct {
 	Encoding             string
 	TagKeyRenameMap      map[string]string
 	ProtocolKeyRenameMap map[string]string
-
-	streamBuffer []byte
 }
 
 func NewConverter(protocol, encoding string, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
@@ -148,6 +155,14 @@ func (c *Converter) ToByteStreamWithSelectedFields(logGroup *protocol.LogGroup, 
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
 	}
+}
+
+func GetPooledByteBuf() *[]byte {
+	return byteBufPool.Get().(*[]byte)
+}
+
+func PutPooledByteBuf(buf *[]byte) {
+	byteBufPool.Put(buf)
 }
 
 func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic string, tagKeyRenameMap map[string]string) (map[string]string, map[string]string) {
