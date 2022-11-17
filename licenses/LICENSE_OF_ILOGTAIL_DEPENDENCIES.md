@@ -150,6 +150,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/go-ole/go-ole](https://pkg.go.dev/github.com/go-ole/go-ole?tab=licenses)
 - [github.com/influxdata/go-syslog](https://pkg.go.dev/github.com/influxdata/go-syslog?tab=licenses)
 - [github.com/influxdata/influxdb](https://pkg.go.dev/github.com/influxdata/influxdb?tab=licenses)
+- [github.com/influxdata/line-protocol](https://pkg.go.dev/github.com/influxdata/line-protocol?tab=licenses)
 - [github.com/jackc/chunkreader](https://pkg.go.dev/github.com/jackc/chunkreader?tab=licenses)
 - [github.com/jackc/pgconn](https://pkg.go.dev/github.com/jackc/pgconn?tab=licenses)
 - [github.com/jackc/pgio](https://pkg.go.dev/github.com/jackc/pgio?tab=licenses)
