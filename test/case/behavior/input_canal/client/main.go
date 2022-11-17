@@ -20,11 +20,12 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -35,7 +36,7 @@ var DB *sql.DB
 var dataBase = "root:root@tcp(mysql:3306)/mysql"
 
 func getConnection() {
-	//StartCollectLogs mysql client using `server`'s config
+	//Start mysql client using `server`'s config
 	var err error
 	DB, err = sql.Open("mysql", dataBase)
 	if err != nil {
