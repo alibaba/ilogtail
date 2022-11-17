@@ -452,7 +452,7 @@ type SpanObject struct {
 	// -1 represents no parent span.
 	// Also, be known as the root/first span of the segment.
 	ParentSpanId int32 `protobuf:"varint,2,opt,name=parentSpanId,proto3" json:"parentSpanId,omitempty"`
-	// StartCollectLogs timestamp in milliseconds of this span,
+	// Start timestamp in milliseconds of this span,
 	// measured between the current time and midnight, January 1, 1970 UTC.
 	StartTime int64 `protobuf:"varint,3,opt,name=startTime,proto3" json:"startTime,omitempty"`
 	// End timestamp in milliseconds of this span,
