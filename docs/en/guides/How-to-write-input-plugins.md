@@ -28,7 +28,7 @@ Description() string
 
 // Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-Collect(Collector) error
+CollectLogs(Collector) error
 }
 ```
 

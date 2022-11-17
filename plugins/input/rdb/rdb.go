@@ -149,7 +149,7 @@ func (m *Rdb) CheckPointToString() string {
 }
 
 // Start starts the ServiceInput's service, whatever that may be
-func (m *Rdb) Start(collector ilogtail.Collector, connStr string, rdbFunc RdbFunc, columnResolverFuncMap map[string]ColumnResolverFunc) error {
+func (m *Rdb) StartCollectLogs(collector ilogtail.Collector, connStr string, rdbFunc RdbFunc, columnResolverFuncMap map[string]ColumnResolverFunc) error {
 	checkpointAlarmName := fmt.Sprintf("%s_CHECKPOINT_ALARM", strings.ToUpper(m.Driver))
 	timeoutAlarmName := fmt.Sprintf("%s_TIMEOUT_ALARM", strings.ToUpper(m.Driver))
 	queryAlarmName := fmt.Sprintf("%s_QUERY_ALARM", strings.ToUpper(m.Driver))
@@ -196,7 +196,7 @@ func (m *Rdb) Start(collector ilogtail.Collector, connStr string, rdbFunc RdbFun
 		case <-timer.C:
 			startTime := time.Now()
 			m.collectLatency.Begin()
-			err = m.Collect(collector, columnResolverFuncMap)
+			err = m.CollectLogs(collector, columnResolverFuncMap)
 			if err != nil {
 				logger.Error(m.Context.GetRuntimeContext(), queryAlarmName, "collect err", err)
 			}
@@ -217,7 +217,7 @@ func (m *Rdb) Start(collector ilogtail.Collector, connStr string, rdbFunc RdbFun
 	}
 }
 
-func (m *Rdb) Collect(collector ilogtail.Collector, columnResolverFuncMap map[string]ColumnResolverFunc) error {
+func (m *Rdb) CollectLogs(collector ilogtail.Collector, columnResolverFuncMap map[string]ColumnResolverFunc) error {
 	if m.dbStatment == nil {
 		return fmt.Errorf("unknow error, instance not init")
 	}

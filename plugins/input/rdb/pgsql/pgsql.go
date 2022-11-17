@@ -92,13 +92,13 @@ func (m *Pgsql) dsnConfig() string {
 // Start starts the ServiceInput's service, whatever that may be
 func (m *Pgsql) StartCollectLogs(collector ilogtail.Collector) error {
 	connStr := m.dsnConfig()
-	return m.Rdb.Start(collector, connStr, func() error {
+	return m.Rdb.StartCollectLogs(collector, connStr, func() error {
 		return nil
 	}, nil)
 }
 
 func (m *Pgsql) CollectLogs(collector ilogtail.Collector) error {
-	return m.Rdb.Collect(collector, nil)
+	return m.Rdb.CollectLogs(collector, nil)
 }
 
 // Stop stops the services and closes any necessary channels and connections

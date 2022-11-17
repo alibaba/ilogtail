@@ -19,13 +19,14 @@ package input_wineventlog
 
 import (
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input/input_wineventlog/eventlog"
-	"strings"
-	"sync"
-	"time"
 )
 
 const (
@@ -113,12 +114,12 @@ func (w *WinEventLog) Description() string {
 }
 
 // CollectLogs ...
-func (w *WinEventLog) Collect(collector ilogtail.Collector) error {
+func (w *WinEventLog) CollectLogs(collector ilogtail.Collector) error {
 	return nil
 }
 
 // StartCollectLogs ...
-func (w *WinEventLog) Start(collector ilogtail.Collector) error {
+func (w *WinEventLog) StartCollectLogs(collector ilogtail.Collector) error {
 	w.collector = collector
 	w.initCheckpoint()
 	w.shutdown = make(chan struct{}, 1)

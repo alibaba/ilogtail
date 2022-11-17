@@ -268,7 +268,7 @@ func (idf *InputDockerFile) notifyStop(id string) {
 	logger.Info(idf.context.GetRuntimeContext(), "container mapping", "stopped", "source path", idf.lastPathMappingCache[id], "id", id)
 }
 
-func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
+func (idf *InputDockerFile) CollectLogs(collector ilogtail.Collector) error {
 	newUpdateTime := helper.GetContainersLastUpdateTime()
 	if idf.lastUpdateTime != 0 {
 		// Nothing update, just skip.
@@ -348,8 +348,10 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 
 func init() {
 	ilogtail.MetricInputs["metric_docker_file"] = func() ilogtail.MetricInput {
-		return &InputDockerFile{
-			FlushIntervalMs: 3000,
-		}
+		return func() ilogtail.SlsMetricInput {
+			return &InputDockerFile{
+				FlushIntervalMs: 3000,
+			}
+		}()
 	}
 }
