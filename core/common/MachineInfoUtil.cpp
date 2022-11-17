@@ -162,6 +162,7 @@ std::string GetHostIpByHostName() {
 
     // if hostname is invalid, other methods should be used to get correct ip.
     if (!IsDigitsDotsHostname(hostname)) {
+        LOG_INFO(sLogger, ("invalid hostname", "will use other methods to obtain ip")("hostname", hostname));
         return "";
     }
 

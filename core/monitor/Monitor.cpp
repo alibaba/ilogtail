@@ -174,24 +174,14 @@ void LogtailMonitor::Monitor() {
         // logtail to release resource.
         // Mainly for controlling memory because we have no idea to descrease memory usage.
         if (CheckCpuLimit() || CheckMemLimit()) {
-            SendStatusProfile(true);
             LOG_ERROR(sLogger,
                       ("Resource used by program exceeds upper limit",
                        "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
-            mMonitorRunning = false;
-            LogtailGlobalPara::Instance()->SetSigtermFlag(true);
-            sleep(15);
-            // The main thread hang, forcing exit.
-            LOG_ERROR(sLogger, ("worker process force quit", "for reason of timeout"));
-            _exit(1);
+            Suicide();
         }
 
         if (IsHostIpChanged()) {
-            SendStatusProfile(true);
-            mMonitorRunning = false;
-            LogtailGlobalPara::Instance()->SetSigtermFlag(true);
-            sleep(15);
-            _exit(1);
+            Suicide();
         }
 
         SendStatusProfile(false);
@@ -479,12 +469,20 @@ bool LogtailMonitor::IsHostIpChanged() {
         }
         if (ip != LogFileProfiler::mIpAddr) {
             LOG_ERROR(sLogger,
-                      ("error",
-                       "host ip changed during running, prepare to restart Logtail")("original ip", LogFileProfiler::mIpAddr)("current ip", ip));
+                      ("error", "host ip changed during running, prepare to restart Logtail")(
+                          "original ip", LogFileProfiler::mIpAddr)("current ip", ip));
             return true;
         }
         return false;
     }
+}
+
+void LogtailMonitor::Suicide() {
+    SendStatusProfile(true);
+    mMonitorRunning = false;
+    LogtailGlobalPara::Instance()->SetSigtermFlag(true);
+    sleep(15);
+    _exit(1);
 }
 
 #if defined(__linux__) // Linux only methods, for scale up calculation, load average.
