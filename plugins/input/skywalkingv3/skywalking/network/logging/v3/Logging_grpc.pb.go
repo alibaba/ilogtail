@@ -82,7 +82,7 @@ type UnimplementedLogReportServiceServer struct {
 }
 
 func (UnimplementedLogReportServiceServer) Collect(LogReportService_CollectServer) error {
-	return status.Errorf(codes.Unimplemented, "method CollectLogs not implemented")
+	return status.Errorf(codes.Unimplemented, "method Collect not implemented")
 }
 
 // UnsafeLogReportServiceServer may be embedded to opt out of forward compatibility for this service.

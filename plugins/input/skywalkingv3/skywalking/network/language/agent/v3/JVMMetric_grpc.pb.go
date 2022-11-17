@@ -51,7 +51,7 @@ type UnimplementedJVMMetricReportServiceServer struct {
 }
 
 func (UnimplementedJVMMetricReportServiceServer) Collect(context.Context, *JVMMetricCollection) (*v3.Commands, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CollectLogs not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method Collect not implemented")
 }
 
 // UnsafeJVMMetricReportServiceServer may be embedded to opt out of forward compatibility for this service.
