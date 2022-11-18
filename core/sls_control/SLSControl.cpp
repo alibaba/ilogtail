@@ -39,16 +39,18 @@ SLSControl* SLSControl::Instance() {
     pos = os.find(';', pos + 1);
     os = os.substr(0, pos);
 #endif
-    std::string ua = slsControl->user_agent = std::string("ilogtail/") + ILOGTAIL_VERSION + " (" + os + ") ip/"
+    std::string userAgent = slsControl->mUserAgent = std::string("ilogtail/") + ILOGTAIL_VERSION + " (" + os + ") ip/"
         + LogFileProfiler::mIpAddr + " env/" + slsControl->GetRunningEnvironment();
     if (!STRING_FLAG(custom_user_agent).empty()) {
-        ua += " " + STRING_FLAG(custom_user_agent);
+        userAgent += " " + STRING_FLAG(custom_user_agent);
     }
+    slsControl->mUserAgent = userAgent;
+
     return slsControl;
 }
 
 void SLSControl::SetSlsSendClientCommonParam(sdk::Client* sendClient) {
-    sendClient->SetUserAgent(user_agent);
+    sendClient->SetUserAgent(mUserAgent);
     sendClient->SetPort(AppConfig::GetInstance()->GetDataServerPort());
 }
 
@@ -67,44 +69,26 @@ std::string SLSControl::GetRunningEnvironment() {
     if (getenv("ALIYUN_LOG_STATIC_CONTAINER_INFO")) {
         env = "ECI";
     } else if (getenv("ACK_NODE_LOCAL_DNS_ADMISSION_CONTROLLER_SERVICE_HOST")) {
-        env = "ACK"; // ACK Daemonset
+        env = "ACK Daemonset";
     } else if (getenv("KUBERNETES_SERVICE_HOST")) {
         if (AppConfig::GetInstance()->IsPurageContainerMode()) {
-            env = "K8S"; // K8S Daemonset
+            env = "K8S Daemonset";
+        } else if (TryCurlEndpoint("http://100.100.100.200/latest/meta-data")) {
+            env = "ACK Sidecar";
         } else {
-            int16_t res = TryCurlEndpoint("http://100.100.100.200/latest/meta-data");
-            switch (res) {
-                case 0:
-                    env = "ACK"; // Probably ACK Sidecar
-                    break;
-                case 1:
-                    env = "K8S"; // K8s Sidecar
-                    break;
-                default:
-                    env = "Unknown";
-                    break;
-            }
+            env = "K8S Sidecar";
         }
     } else if (AppConfig::GetInstance()->IsPurageContainerMode() || getenv("ALIYUN_LOGTAIL_CONFIG")) {
-        env = "Container"; // Probably container
+        env = "Docker";
+    } else if (TryCurlEndpoint("http://100.100.100.200/latest/meta-data")) {
+        env = "ECS";
     } else {
-        int16_t res = TryCurlEndpoint("http://100.100.100.200/latest/meta-data");
-        switch (res) {
-            case 0:
-                env = "ECS";
-                break;
-            case 1:
-                env = "Others";
-                break;
-            default:
-                env = "Unknown";
-                break;
-        }
+        env = "Others";
     }
     return env;
 }
 
-int16_t SLSControl::TryCurlEndpoint(const std::string& endpoint) {
+bool SLSControl::TryCurlEndpoint(const std::string& endpoint) {
     CURL* curl;
     for (size_t retryTimes = 1; retryTimes <= 5; retryTimes++) {
         curl = curl_easy_init();
@@ -122,16 +106,16 @@ int16_t SLSControl::TryCurlEndpoint(const std::string& endpoint) {
 
         if (curl_easy_perform(curl) != CURLE_OK) {
             curl_easy_cleanup(curl);
-            return 1;
+            return false;
         }
         curl_easy_cleanup(curl);
-        return 0;
+        return true;
     }
 
     LOG_WARNING(sLogger,
                 ("problem", "curl handler cannot be initialized during user environment identification")(
                     "action", "use Unknown identification for user environment"));
-    return -1;
+    return false;
 }
 
 
