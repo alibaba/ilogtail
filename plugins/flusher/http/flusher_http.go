@@ -271,6 +271,10 @@ func (f *FlusherHTTP) buildQueryVarKeys() {
 }
 
 func (f *FlusherHTTP) fillRequestContentType() {
+	if f.Headers == nil {
+		f.Headers = make(map[string]string, 4)
+	}
+
 	_, ok := f.Headers[contentTypeHeader]
 	if ok {
 		return
