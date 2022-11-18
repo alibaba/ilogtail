@@ -32,7 +32,16 @@ import (
 
 const (
 	defaultTimeout = time.Minute
+
+	contentTypeHeader  = "Content-Type"
+	defaultContentType = "application/octet-stream"
 )
+
+var contentTypeMaps = map[string]string{
+	converter.EncodingJSON:     "application/json",
+	converter.EncodingProtobuf: defaultContentType,
+	converter.EncodingNone:     defaultContentType,
+}
 
 type convertConfig struct {
 	TagFieldsRename      map[string]string // Rename one or more fields from tags.
@@ -92,7 +101,7 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 	}
 
 	if f.Concurrency < 1 {
-		err := errors.New("Concurrency must be greater than zero")
+		err := errors.New("concurrency must be greater than zero")
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher check concurrency fail, error", err)
 		return err
 	}
@@ -100,6 +109,7 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 	f.stopCh = make(chan struct{}, 1)
 
 	f.buildQueryVarKeys()
+	f.fillRequestContentType()
 
 	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized")
 	return nil
@@ -258,6 +268,19 @@ func (f *FlusherHTTP) buildQueryVarKeys() {
 		}
 	}
 	f.queryVarKeys = varKeys
+}
+
+func (f *FlusherHTTP) fillRequestContentType() {
+	_, ok := f.Headers[contentTypeHeader]
+	if ok {
+		return
+	}
+
+	contentType, ok := contentTypeMaps[f.Convert.Encoding]
+	if !ok {
+		contentType = defaultContentType
+	}
+	f.Headers[contentTypeHeader] = contentType
 }
 
 func init() {
