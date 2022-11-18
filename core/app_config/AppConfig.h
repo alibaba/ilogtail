@@ -35,10 +35,6 @@ public:
 private:
     void LoadAddrConfig(const Json::Value& confJson) override;
 
-protected:
-    std::vector<ConfigServerAddress> mConfigServerAddress;
-    std::vector<std::string> mConfigServerTags;
-
 public:
     AppConfig();
     ~AppConfig();
@@ -47,6 +43,9 @@ public:
         static AppConfig singleton;
         return &singleton;
     }
+
+    std::vector<ConfigServerAddress> mConfigServerAddresses;
+    std::vector<std::string> mConfigServerTags;
 
     bool IsDebugMode() const { return false; }
 

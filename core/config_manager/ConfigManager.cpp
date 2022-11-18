@@ -217,7 +217,9 @@ Json::Value& ConfigManager::CheckPluginProcessor(Json::Value& pluginConfigJson, 
 }
 
 // ConfigServer
-google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> ConfigManager::SendHeartbeat(AppConfig::ConfigServerAddress configServerAddress) {
+google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> ConfigManager::SendHeartbeat(
+    const AppConfig::ConfigServerAddress& configServerAddress
+) {
     configserver::proto::HeartBeatRequest heartBeatReq;
     configserver::proto::AgentAttributes attributes;
     std::string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
@@ -275,14 +277,14 @@ google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> Confi
 
         return heartBeatResp.pipeline_check_results();
     } catch (const sdk::LOGException& e) {
-        LOG_ERROR(sLogger, ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
+        LOG_WARNING(sLogger, ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
         return emptyResult;
     }
 }
 
 google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> ConfigManager::FetchPipelineConfig(
-    AppConfig::ConfigServerAddress configServerAddress,
-    google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> requestConfigs
+    const AppConfig::ConfigServerAddress& configServerAddress,
+    const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs
 ) {
     configserver::proto::FetchPipelineConfigRequest fetchConfigReq;
     string requestID = sdk::Base64Enconde(GetInstanceId().append("_").append(to_string(time(NULL)))); 
@@ -336,7 +338,7 @@ google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> ConfigMana
         
         return fetchConfigResp.config_details();
     } catch (const sdk::LOGException& e) {
-        LOG_ERROR(sLogger, ("GetConfigUpdateInfos", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
+        LOG_WARNING(sLogger, ("GetConfigUpdateInfos", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
         return emptyResult;
     }
 }

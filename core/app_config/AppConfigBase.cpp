@@ -74,7 +74,7 @@ const char* DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE = "user_yaml_confi
 DEFINE_FLAG_STRING(ilogtail_local_yaml_config_dir,
                    "local ilogtail yaml config file dir",
                    DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE);
-const char* DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE = "user_remote_yaml_config.d";
+const char* DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE = "remote_yaml_config.d";
 DEFINE_FLAG_STRING(ilogtail_remote_yaml_config_dir,
                    "remote ilogtail yaml config file dir",
                    DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE);

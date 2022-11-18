@@ -76,11 +76,13 @@ private:
     void GetRemoteConfigUpdate();
 
     // ConfigServer
-    google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> SendHeartbeat(AppConfig::ConfigServerAddress configServerAddress);
+    google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> SendHeartbeat(
+        const AppConfig::ConfigServerAddress& configServerAddress
+    );
 
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> FetchPipelineConfig(
-        AppConfig::ConfigServerAddress configServerAddress, 
-        google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> requestConfigs
+        const AppConfig::ConfigServerAddress& configServerAddress, 
+        const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs
     );
     
     void UpdateRemoteConfig(
