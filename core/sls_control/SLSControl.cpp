@@ -16,13 +16,10 @@
 #include <sys/utsname.h>
 #include "SLSControl.h"
 #include "app_config/AppConfig.h"
-#include "config_manager/ConfigManager.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/version.h"
 #include "logger/Logger.h"
 #include "profiler/LogFileProfiler.h"
-
-using namespace sls_logs;
 
 DEFINE_FLAG_STRING(custom_user_agent, "custom user agent appended at the end of the exsiting ones", "");
 
@@ -38,9 +35,15 @@ SLSControl* SLSControl::Instance() {
 #if defined(__linux__)
     utsname* buf = new utsname;
     if (-1 == uname(buf)) {
-        LOG_WARNING(sLogger, ("get os info part of user agent failed, use default os info", errno));
+        LOG_WARNING(
+            sLogger,
+            ("get os info part of user agent failed", errno)("use default os info", LogFileProfiler::mOsDetail));
         os = LogFileProfiler::mOsDetail;
     } else {
+        char* pch = strchr(buf->release, '-');
+        if (pch) {
+            *pch = '\0';
+        }
         os.append(buf->sysname);
         os.append("; ");
         os.append(buf->release);
