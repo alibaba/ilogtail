@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <curl/curl.h>
+#include <sys/utsname.h>
 #include "SLSControl.h"
 #include "app_config/AppConfig.h"
 #include "config_manager/ConfigManager.h"
@@ -33,12 +34,24 @@ SLSControl::SLSControl() {
 SLSControl* SLSControl::Instance() {
     static SLSControl* slsControl = new SLSControl();
 
-    std::string os = LogFileProfiler::mOsDetail;
+    std::string os;
 #if defined(__linux__)
-    size_t pos = os.find(';');
-    pos = os.find(';', pos + 1);
-    os = os.substr(0, pos);
+    utsname* buf = new utsname;
+    if (-1 == uname(buf)) {
+        LOG_WARNING(sLogger, ("get os info part of user agent failed, use default os info", errno));
+        os = LogFileProfiler::mOsDetail;
+    } else {
+        os.append(buf->sysname);
+        os.append("; ");
+        os.append(buf->release);
+        os.append("; ");
+        os.append(buf->machine);
+    }
+    delete buf;
+#elif defined(_MSC_VER)
+    os = LogFileProfiler::mOsDetail;
 #endif
+
     std::string userAgent = slsControl->mUserAgent = std::string("ilogtail/") + ILOGTAIL_VERSION + " (" + os + ") ip/"
         + LogFileProfiler::mIpAddr + " env/" + slsControl->GetRunningEnvironment();
     if (!STRING_FLAG(custom_user_agent).empty()) {
