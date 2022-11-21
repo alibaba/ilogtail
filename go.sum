@@ -689,8 +689,8 @@ github.com/hashicorp/memberlist v0.1.3/go.mod h1:ajVTdAv/9Im8oMAAj5G31PhhMCZJV2p
 github.com/hashicorp/serf v0.8.2/go.mod h1:6hOLApaqBFA1NXqRQAsxw9QxuDEvNxSQRwA/JwenrHc=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/hudl/fargo v1.3.0/go.mod h1:y3CKSmjA+wD2gak7sUSXTAoopbhU08POFhmITJgmKTg=
-github.com/iLogtail/VictoriaMetrics v1.83.1-ilogtail h1:Zq5ZLMJxCpno1hF102AroQSF1Kq6hmOYIgOmATkYJ6U=
-github.com/iLogtail/VictoriaMetrics v1.83.1-ilogtail/go.mod h1:JagjwAO58g1WNpyr6x/lrQqMTf99d/WU/yxjADxBz8E=
+github.com/iLogtail/VictoriaMetrics v1.83.2-ilogtail h1:V5zlbAOEkVHKG6lFT8XpmZOEQU5PyLT1znQbEJnbz1c=
+github.com/iLogtail/VictoriaMetrics v1.83.2-ilogtail/go.mod h1:JagjwAO58g1WNpyr6x/lrQqMTf99d/WU/yxjADxBz8E=
 github.com/iLogtail/go-mysql v0.0.0-20180725024449-535abe8f2eba-ilogtail h1:iCXW1UHQjf2nokNAG3qjzHLdkkobIjUWhD67wVprauI=
 github.com/iLogtail/go-mysql v0.0.0-20180725024449-535abe8f2eba-ilogtail/go.mod h1:YImGVfNUet1+WXaKgnSIoS+qFSmnlB5SpDshXbgrPsU=
 github.com/iLogtail/metrics v1.23.0-ilogtail h1:WHhiXtMy5+HWiPpDwO7a0zkMjPd7IPa5euF07LH5h6g=
