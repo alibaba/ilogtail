@@ -33,6 +33,7 @@ else
     ARCH := arm64
 endif
 
+
 GO = go
 GO_PATH = $$($(GO) env GOPATH)
 GO_BUILD = $(GO) build
@@ -131,7 +132,7 @@ gocdocker: clean
 vendor: clean
 	rm -rf vendor
 	$(GO) mod vendor
-	
+
 .PHONY: check-dependency-licenses
 check-dependency-licenses: clean
 	./scripts/dependency_licenses.sh plugin_main LICENSE_OF_ILOGTAIL_DEPENDENCIES.md && ./scripts/dependency_licenses.sh test LICENSE_OF_TESTENGINE_DEPENDENCIES.md
