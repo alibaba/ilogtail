@@ -98,12 +98,12 @@ func (s *Syslog) Description() string {
 	return "A input plugin for syslog"
 }
 
-// Execute ...
+// Collect ...
 func (s *Syslog) Collect(collector ilogtail.Collector) error {
 	return nil
 }
 
-// StartService ...
+// Start ...
 func (s *Syslog) Start(collector ilogtail.Collector) error {
 	s.done = make(chan struct{}, 1)
 	scheme, host, err := getAddressParts(s.Address)

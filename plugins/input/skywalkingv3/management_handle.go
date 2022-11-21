@@ -60,7 +60,7 @@ func (r *ResourcePropertiesCache) filterProperties(properties map[string]string)
 		return make(map[string]string)
 	}
 
-	delete(properties, "StartService Time")
+	delete(properties, "Start Time")
 	delete(properties, "JVM Arguments")
 	delete(properties, "Jar Dependencies")
 	return properties

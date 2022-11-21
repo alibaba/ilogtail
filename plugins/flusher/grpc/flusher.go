@@ -18,15 +18,15 @@ import (
 	"context"
 	"io"
 
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/util"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type Flusher struct {

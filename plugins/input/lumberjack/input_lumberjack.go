@@ -31,10 +31,9 @@ import (
 	lumberlog "github.com/elastic/go-lumber/log"
 	"github.com/elastic/go-lumber/server"
 
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/alibaba/ilogtail"
 )
 
 var errDecode = errors.New("decode error")

@@ -22,9 +22,8 @@ import (
 
 	_ "github.com/jackc/pgx/v4/stdlib" //
 
-	"github.com/alibaba/ilogtail/pkg/util"
-
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input/rdb"
 )
 
@@ -92,13 +91,13 @@ func (m *Pgsql) dsnConfig() string {
 // Start starts the ServiceInput's service, whatever that may be
 func (m *Pgsql) Start(collector ilogtail.Collector) error {
 	connStr := m.dsnConfig()
-	return m.Rdb.StartCollectLogs(collector, connStr, func() error {
+	return m.Rdb.Start(collector, connStr, func() error {
 		return nil
 	}, nil)
 }
 
 func (m *Pgsql) Collect(collector ilogtail.Collector) error {
-	return m.Rdb.CollectLogs(collector, nil)
+	return m.Rdb.Collect(collector, nil)
 }
 
 // Stop stops the services and closes any necessary channels and connections

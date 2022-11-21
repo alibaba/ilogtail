@@ -26,11 +26,10 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/util"
-
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type CheckPoint struct {

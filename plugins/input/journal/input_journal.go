@@ -161,7 +161,7 @@ func (sj *ServiceJournal) addMatchesForKernel() error {
 	return sj.journal.AddDisjunction()
 }
 
-// Apply syslog identifiers to monitor
+// Add syslog identifiers to monitor
 func (sj *ServiceJournal) addSyslogIdentifiers() error {
 	var err error
 

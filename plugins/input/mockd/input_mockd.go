@@ -20,9 +20,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type ServiceMock struct {

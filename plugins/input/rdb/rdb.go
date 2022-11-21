@@ -23,10 +23,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type RdbFunc func() error //nolint:revive
@@ -150,7 +149,7 @@ func (m *Rdb) CheckPointToString() string {
 }
 
 // Start starts the ServiceInput's service, whatever that may be
-func (m *Rdb) StartCollectLogs(collector ilogtail.Collector, connStr string, rdbFunc RdbFunc, columnResolverFuncMap map[string]ColumnResolverFunc) error {
+func (m *Rdb) Start(collector ilogtail.Collector, connStr string, rdbFunc RdbFunc, columnResolverFuncMap map[string]ColumnResolverFunc) error {
 	checkpointAlarmName := fmt.Sprintf("%s_CHECKPOINT_ALARM", strings.ToUpper(m.Driver))
 	timeoutAlarmName := fmt.Sprintf("%s_TIMEOUT_ALARM", strings.ToUpper(m.Driver))
 	queryAlarmName := fmt.Sprintf("%s_QUERY_ALARM", strings.ToUpper(m.Driver))
@@ -197,7 +196,7 @@ func (m *Rdb) StartCollectLogs(collector ilogtail.Collector, connStr string, rdb
 		case <-timer.C:
 			startTime := time.Now()
 			m.collectLatency.Begin()
-			err = m.CollectLogs(collector, columnResolverFuncMap)
+			err = m.Collect(collector, columnResolverFuncMap)
 			if err != nil {
 				logger.Error(m.Context.GetRuntimeContext(), queryAlarmName, "collect err", err)
 			}
@@ -218,7 +217,7 @@ func (m *Rdb) StartCollectLogs(collector ilogtail.Collector, connStr string, rdb
 	}
 }
 
-func (m *Rdb) CollectLogs(collector ilogtail.Collector, columnResolverFuncMap map[string]ColumnResolverFunc) error {
+func (m *Rdb) Collect(collector ilogtail.Collector, columnResolverFuncMap map[string]ColumnResolverFunc) error {
 	if m.dbStatment == nil {
 		return fmt.Errorf("unknow error, instance not init")
 	}

@@ -21,9 +21,8 @@ import (
 
 	mssql "github.com/denisenkom/go-mssqldb"
 
-	"github.com/alibaba/ilogtail/pkg/util"
-
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input/rdb"
 )
 
@@ -99,13 +98,13 @@ func (m *Mssql) dsnConfig() string {
 // Start starts the ServiceInput's service, whatever that may be
 func (m *Mssql) Start(collector ilogtail.Collector) error {
 	connStr := m.dsnConfig()
-	return m.Rdb.StartCollectLogs(collector, connStr, func() error {
+	return m.Rdb.Start(collector, connStr, func() error {
 		return nil
 	}, msColumnResolverFuncMap)
 }
 
 func (m *Mssql) Collect(collector ilogtail.Collector) error {
-	return m.Rdb.CollectLogs(collector, msColumnResolverFuncMap)
+	return m.Rdb.Collect(collector, msColumnResolverFuncMap)
 }
 
 // Stop stops the services and closes any necessary channels and connections

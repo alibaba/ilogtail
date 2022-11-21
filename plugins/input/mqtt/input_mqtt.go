@@ -24,10 +24,9 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/pkg/errors"
 
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/alibaba/ilogtail"
 )
 
 // ServiceMQTT ...

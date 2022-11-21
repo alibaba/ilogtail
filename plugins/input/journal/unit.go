@@ -68,7 +68,7 @@ var unitTypes = []string{
 	".scope",
 }
 
-// Apply units to monitor
+// Add units to monitor
 func (sj *ServiceJournal) addUnits() error {
 	var patterns []string
 

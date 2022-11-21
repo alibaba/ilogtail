@@ -248,7 +248,7 @@ func (m *NetPing) Description() string {
 	return "a icmp-ping/tcp-ping/http-ping plugin for logtail"
 }
 
-// Execute is called every trigger interval to collect the metrics and send them to the collector.
+// Collect is called every trigger interval to collect the metrics and send them to the collector.
 func (m *NetPing) Collect(collector ilogtail.Collector) error {
 	if !m.hasConfig {
 		return nil

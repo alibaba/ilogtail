@@ -25,11 +25,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/util"
-
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 
 	liblogger "github.com/VictoriaMetrics/VictoriaMetrics/lib/logger"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/prompbmarshal"

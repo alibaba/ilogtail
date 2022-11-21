@@ -50,7 +50,7 @@ func (m *MetricsExample) Description() string {
 	return "This is a metric input example plugin, this plugin would show how to write a simple metric input plugin."
 }
 
-// Execute is called every trigger interval to collect the metrics and send them to the collector.
+// Collect is called every trigger interval to collect the metrics and send them to the collector.
 func (m *MetricsExample) Collect(collector ilogtail.Collector) error {
 	// counter increment
 	m.counter++
