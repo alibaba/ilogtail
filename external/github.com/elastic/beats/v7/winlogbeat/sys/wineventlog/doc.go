@@ -21,6 +21,6 @@
 // Windows Server 2003, and Windows 2000.
 package wineventlog
 
-// Apply -trace to enable debug prints around syscalls.
+// Add -trace to enable debug prints around syscalls.
 //go:generate go get golang.org/x/sys/windows/mkwinsyscall
 //go:generate $GOPATH/bin/mkwinsyscall.exe -systemdll -output zsyscall_windows.go syscall_windows.go

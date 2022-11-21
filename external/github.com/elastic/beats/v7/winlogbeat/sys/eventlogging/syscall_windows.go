@@ -135,7 +135,7 @@ type eventLogRecord struct {
 	userSid      []byte
 }
 
-// Apply -trace to enable debug prints around syscalls.
+// Add -trace to enable debug prints around syscalls.
 //go:generate go run $GOROOT/src/syscall/mksyscall_windows.go -output zsyscall_windows.go syscall_windows.go
 
 // Windows API calls

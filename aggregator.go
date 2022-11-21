@@ -21,8 +21,6 @@ import (
 
 // Aggregator is an interface for implementing an Aggregator plugin.
 // the RunningAggregator wraps this interface and guarantees that
-// Apply, Push, and Reset can not be called concurrently, so locking is not
-// required when implementing an Aggregator plugin.
 type Aggregator interface {
 	// Init called for init some system resources, like socket, mutex...
 	// return flush interval(ms) and error flag, if interval is 0, use default interval
@@ -35,6 +33,9 @@ type Aggregator interface {
 	Reset()
 }
 
+// SlsAggregator
+// Add, Flush, and Reset can not be called concurrently, so locking is not
+// required when implementing an Aggregator plugin.
 type SlsAggregator interface {
 	Aggregator
 	// Add the metric to the aggregator.
@@ -44,6 +45,9 @@ type SlsAggregator interface {
 	Flush() []*protocol.LogGroup
 }
 
+// PipelineAggregator
+// Apply, Push, and Reset can not be called concurrently, so locking is not
+// required when implementing an Aggregator plugin.
 type PipelineAggregator interface {
 	Aggregator
 	// Apply the metric to the aggregator.

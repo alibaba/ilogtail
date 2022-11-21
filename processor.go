@@ -35,6 +35,6 @@ type PipelineProcessor interface {
 
 type SlsProcessor interface {
 	Processor
-	// Apply the filter to the given metric
+	// ProcessLogs the filter to the given metric
 	ProcessLogs(logArray []*protocol.Log) []*protocol.Log
 }
