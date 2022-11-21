@@ -25,6 +25,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/VictoriaMetrics/VictoriaMetrics/lib/auth"
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -58,7 +59,7 @@ func (p *ServiceStaticPrometheus) Init(context ilogtail.Context) (int, error) {
 	if env != "" && num != -1 {
 		p.clusterReplicas, _ = strconv.Atoi(env)
 		p.clusterNum = num
-		promscrape.ConfigMemberInfo(p.clusterReplicas, p.clusterNum) // nolint:typecheck
+		promscrape.ConfigMemberInfo(p.clusterReplicas, strconv.Itoa(p.clusterNum)) // nolint:typecheck
 	}
 	libLoggerOnce.Do(func() {
 		if f := flag.Lookup("loggerOutput"); f != nil {
@@ -121,7 +122,7 @@ func (p *ServiceStaticPrometheus) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()
-	p.scraper.Init(func(wr *prompbmarshal.WriteRequest) {
+	p.scraper.Init(func(_ *auth.Token, wr *prompbmarshal.WriteRequest) {
 		appendTSDataToSlsLog(c, wr)
 	})
 	<-p.shutdown
