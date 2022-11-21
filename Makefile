@@ -33,7 +33,6 @@ else
     ARCH := arm64
 endif
 
-
 GO = go
 GO_PATH = $$($(GO) env GOPATH)
 GO_BUILD = $(GO) build
