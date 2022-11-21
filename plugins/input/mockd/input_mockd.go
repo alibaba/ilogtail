@@ -20,8 +20,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
+
+	"github.com/alibaba/ilogtail"
 )
 
 type ServiceMock struct {
@@ -60,7 +61,7 @@ func (p *ServiceMock) Collect(ilogtail.Collector) error {
 	return nil
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (p *ServiceMock) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)

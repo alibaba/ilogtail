@@ -96,7 +96,7 @@ func (m *Mssql) dsnConfig() string {
 	return conn
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (m *Mssql) Start(collector ilogtail.Collector) error {
 	connStr := m.dsnConfig()
 	return m.Rdb.StartCollectLogs(collector, connStr, func() error {

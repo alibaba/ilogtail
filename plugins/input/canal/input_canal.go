@@ -23,10 +23,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/go-mysql-org/go-mysql/mysql"
@@ -663,7 +664,7 @@ func (sc *ServiceCanal) newCanal() (bool, error) {
 	}
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (sc *ServiceCanal) Start(c ilogtail.Collector) error {
 	sc.lastErrorCount = 0
 	sc.shutdown = make(chan struct{}, 1)

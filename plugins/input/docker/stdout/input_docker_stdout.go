@@ -338,7 +338,7 @@ func (sds *ServiceDockerStdout) ClearUselessCheckpoint() {
 	}
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (sds *ServiceDockerStdout) Start(c ilogtail.Collector) error {
 	sds.collector = c
 	sds.shutdown = make(chan struct{})

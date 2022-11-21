@@ -23,9 +23,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/logger"
+
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type RdbFunc func() error //nolint:revive
@@ -148,7 +149,7 @@ func (m *Rdb) CheckPointToString() string {
 	return m.checkpointValue
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (m *Rdb) StartCollectLogs(collector ilogtail.Collector, connStr string, rdbFunc RdbFunc, columnResolverFuncMap map[string]ColumnResolverFunc) error {
 	checkpointAlarmName := fmt.Sprintf("%s_CHECKPOINT_ALARM", strings.ToUpper(m.Driver))
 	timeoutAlarmName := fmt.Sprintf("%s_TIMEOUT_ALARM", strings.ToUpper(m.Driver))

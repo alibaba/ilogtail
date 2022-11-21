@@ -26,10 +26,11 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 )
 
 type CheckPoint struct {
@@ -230,7 +231,7 @@ func (m *Mysql) CheckPointToString() string {
 	return m.checkpointValue
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (m *Mysql) Start(collector ilogtail.Collector) error {
 	m.waitGroup.Add(1)
 	defer m.waitGroup.Done()

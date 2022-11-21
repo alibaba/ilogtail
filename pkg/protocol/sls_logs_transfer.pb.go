@@ -216,7 +216,7 @@ type UnimplementedLogReportServiceServer struct {
 }
 
 func (*UnimplementedLogReportServiceServer) Collect(srv LogReportService_CollectServer) error {
-	return status.Errorf(codes.Unimplemented, "method Execute not implemented")
+	return status.Errorf(codes.Unimplemented, "method Collect not implemented")
 }
 
 func RegisterLogReportServiceServer(s *grpc.Server, srv LogReportServiceServer) {

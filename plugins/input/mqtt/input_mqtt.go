@@ -24,9 +24,10 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/pkg/errors"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 )
 
 // ServiceMQTT ...
@@ -194,7 +195,7 @@ func (p *ServiceMQTT) createClient(tlsConfig *tls.Config, connLostChannel chan s
 	return nil, err
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (p *ServiceMQTT) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.collector = c

@@ -55,7 +55,7 @@ func (r *Input) Collect(ilogtail.Collector) error {
 	return nil
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (r *Input) Start(collector ilogtail.Collector) error {
 	agent.RegisterJVMMetricReportServiceServer(r.grpcServer, &JVMMetricHandler{r.ctx, collector, r.MetricIntervalMs, -1})
 	agent.RegisterCLRMetricReportServiceServer(r.grpcServer, &CLRMetricHandler{r.ctx, collector, r.MetricIntervalMs, -1})

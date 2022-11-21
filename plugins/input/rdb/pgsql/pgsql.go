@@ -16,15 +16,15 @@ package pgsql
 
 import (
 	"fmt"
-
 	"net/url"
 	"strconv"
 	"strings"
 
 	_ "github.com/jackc/pgx/v4/stdlib" //
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/plugins/input/rdb"
 )
 
@@ -89,7 +89,7 @@ func (m *Pgsql) dsnConfig() string {
 	return conn
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (m *Pgsql) Start(collector ilogtail.Collector) error {
 	connStr := m.dsnConfig()
 	return m.Rdb.StartCollectLogs(collector, connStr, func() error {

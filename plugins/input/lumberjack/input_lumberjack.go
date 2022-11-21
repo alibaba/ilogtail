@@ -31,9 +31,10 @@ import (
 	lumberlog "github.com/elastic/go-lumber/log"
 	"github.com/elastic/go-lumber/server"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 )
 
 var errDecode = errors.New("decode error")
@@ -96,7 +97,7 @@ func (p *ServiceLumber) Collect(ilogtail.Collector) error {
 	return nil
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (p *ServiceLumber) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)

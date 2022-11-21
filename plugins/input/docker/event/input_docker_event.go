@@ -82,7 +82,7 @@ func (p *ServiceDockerEvents) fire(c ilogtail.Collector, event *docker.APIEvents
 	c.AddDataArray(nil, key, value, time.Unix(0, event.TimeNano))
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (p *ServiceDockerEvents) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)

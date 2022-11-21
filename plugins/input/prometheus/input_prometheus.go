@@ -25,10 +25,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 
 	liblogger "github.com/VictoriaMetrics/VictoriaMetrics/lib/logger"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/prompbmarshal"
@@ -116,7 +117,7 @@ func (p *ServiceStaticPrometheus) Description() string {
 	return "prometheus scrape plugin for logtail, use vmagent lib"
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (p *ServiceStaticPrometheus) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)

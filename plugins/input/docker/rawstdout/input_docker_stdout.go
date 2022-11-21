@@ -25,10 +25,11 @@ import (
 
 	docker "github.com/fsouza/go-dockerclient"
 
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 )
 
 func logDriverSupported(container *docker.Container) bool {
@@ -448,7 +449,7 @@ func (sds *ServiceDockerStdout) GetCheckPoint() *StdoutCheckPoint {
 	return stdoutCheckPoint
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (sds *ServiceDockerStdout) Start(c ilogtail.Collector) error {
 
 	sds.shutdown = make(chan struct{})

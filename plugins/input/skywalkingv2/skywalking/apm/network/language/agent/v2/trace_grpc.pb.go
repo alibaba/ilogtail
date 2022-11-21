@@ -77,7 +77,7 @@ type UnimplementedTraceSegmentReportServiceServer struct {
 }
 
 func (UnimplementedTraceSegmentReportServiceServer) Collect(TraceSegmentReportService_CollectServer) error {
-	return status.Errorf(codes.Unimplemented, "method Execute not implemented")
+	return status.Errorf(codes.Unimplemented, "method Collect not implemented")
 }
 
 // UnsafeTraceSegmentReportServiceServer may be embedded to opt out of forward compatibility for this service.

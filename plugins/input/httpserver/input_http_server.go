@@ -15,19 +15,19 @@
 package httpserver
 
 import (
-	"syscall"
-
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/helper/decoder"
-	"github.com/alibaba/ilogtail/pkg/logger"
-
 	"context"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper/decoder"
 )
 
 // ServiceHTTP ...
@@ -137,7 +137,7 @@ func badRequest(res http.ResponseWriter) {
 	_, _ = res.Write([]byte(`{"error":"http: bad request"}`))
 }
 
-// StartService starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (s *ServiceHTTP) Start(c ilogtail.Collector) error {
 	s.collector = c
 	s.wg.Add(1)
