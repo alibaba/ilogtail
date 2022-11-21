@@ -20,12 +20,11 @@ package sls
 import (
 	"fmt"
 
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/helper"
 )
 
 // SlsFlusher uses symbols in LogtailAdaptor(.so) to flush log groups to Logtail.
@@ -56,11 +55,11 @@ func (p *SlsFlusher) IsReady(projectName string, logstoreName string, logstoreKe
 	return logtail.IsValidToSend(logstoreKey)
 }
 
-// GetResult ...
+// Flush ...
 // Because IsReady is called before, Logtail must have space in sending queue,
 // just call LogtailSendPb through cgo to push data into queue, Logtail will
 // send data to its destination (SLS mostly) according to its config.
-func (p *SlsFlusher) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (p *SlsFlusher) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		if len(logGroup.Logs) == 0 {
 			continue

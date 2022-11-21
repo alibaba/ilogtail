@@ -22,10 +22,9 @@ import (
 
 	"github.com/Shopify/sarama"
 
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"github.com/alibaba/ilogtail"
 )
 
 type FlusherKafka struct {

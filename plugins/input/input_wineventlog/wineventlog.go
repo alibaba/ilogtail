@@ -114,12 +114,12 @@ func (w *WinEventLog) Description() string {
 }
 
 // Collect ...
-func (w *WinEventLog) CollectLogs(collector ilogtail.Collector) error {
+func (w *WinEventLog) Collect(collector ilogtail.Collector) error {
 	return nil
 }
 
 // Start ...
-func (w *WinEventLog) StartCollectLogs(collector ilogtail.Collector) error {
+func (w *WinEventLog) Start(collector ilogtail.Collector) error {
 	w.collector = collector
 	w.initCheckpoint()
 	w.shutdown = make(chan struct{}, 1)

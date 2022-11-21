@@ -24,10 +24,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper/decoder"
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 // ServiceHTTP ...
@@ -67,7 +66,7 @@ func (s *ServiceHTTP) Description() string {
 	return "HTTP service input plugin for logtail"
 }
 
-// Execute takes in an accumulator and adds the metrics that the Input
+// Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
 func (s *ServiceHTTP) Collect(ilogtail.Collector) error {
 	return nil

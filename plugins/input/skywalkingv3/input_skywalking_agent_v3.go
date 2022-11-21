@@ -49,7 +49,7 @@ func (r *Input) Description() string {
 	return "skywalking agent v3 input for logtail"
 }
 
-// Execute takes in an accumulator and adds the metrics that the Input
+// Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
 func (r *Input) Collect(ilogtail.Collector) error {
 	return nil

@@ -25,11 +25,10 @@ import (
 
 	docker "github.com/fsouza/go-dockerclient"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/util"
-
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 func logDriverSupported(container *docker.Container) bool {
@@ -365,7 +364,7 @@ func (sds *ServiceDockerStdout) Description() string {
 	return "docker stdout input plugin for logtail"
 }
 
-// Execute takes in an accumulator and adds the metrics that the Input
+// Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
 func (sds *ServiceDockerStdout) Collect(ilogtail.Collector) error {
 	return nil

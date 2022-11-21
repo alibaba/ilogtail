@@ -91,7 +91,7 @@ func (p *ServiceMQTT) Description() string {
 	return "mqtt service input plugin for logtail"
 }
 
-// Execute takes in an accumulator and adds the metrics that the Input
+// Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
 func (p *ServiceMQTT) Collect(ilogtail.Collector) error {
 	return nil

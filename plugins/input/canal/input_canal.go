@@ -23,11 +23,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/util"
-
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/go-mysql-org/go-mysql/mysql"
@@ -102,9 +101,9 @@ type ServiceCanal struct {
 	// in this array, its binlog will not be collected.
 	// Example: "ExcludeTables": ["^mysql\\..*$"], exclude all tables in schema named 'mysql'.
 	ExcludeTables []string
-	// StartService* are used to specify start synchronization point. StartGTID is preferred if
+	// Start* are used to specify start synchronization point. StartGTID is preferred if
 	// both of them are specified. **Only works when no checkpoint is exiting.**
-	// StartService* will fail if any error is encountered during synchronization because plugin will
+	// Start* will fail if any error is encountered during synchronization because plugin will
 	// recovery from latest checkpoint (got from server).
 	// StartGTID will not synchrnoize event specified by it, for example, set StartGTID to
 	// 'uuid:1-9', then plugin will skip 1 to 9, and synchrnoize from interval 10.
@@ -136,7 +135,7 @@ type ServiceCanal struct {
 	// True by default, convert field in Go []byte type to string, such as JSON type.
 	ByteValueToString bool
 	// TODO: This parameter is not exposed in document.
-	// StartFromBegining only works when no checkpoint and all StartService* parameters are missing.
+	// StartFromBegining only works when no checkpoint and all Start* parameters are missing.
 	// If StartFromBegining is set, plugin will not try to get latest position from server.
 	StartFromBegining bool
 	Charset           string
@@ -512,7 +511,7 @@ func (sc *ServiceCanal) Description() string {
 }
 
 // initCheckPoint tries to get last checkpoint with key 'msyql_canal'.
-// If no such checkpoint is found, use StartService* values from user config.
+// If no such checkpoint is found, use Start* values from user config.
 func (sc *ServiceCanal) initCheckPoint() {
 	ok := sc.context.GetCheckPointObject("mysql_canal", &sc.checkpoint)
 	if ok {
@@ -535,7 +534,7 @@ func (sc *ServiceCanal) syncCheckpointWithCanal() {
 	}
 }
 
-// Execute takes in an accumulator and adds the metrics that the Input
+// Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
 func (sc *ServiceCanal) Collect(ilogtail.Collector) error {
 	return nil

@@ -150,7 +150,7 @@ func (d *dockerProfileSystemValidator) FetchProfile() {
 
 func calculateCPUPercentWindows(v *types.StatsJSON) float64 {
 	// Max number of 100ns intervals between the previous time read and now
-	possIntervals := uint64(v.Read.Sub(v.PreRead).Nanoseconds()) // StartService with number of ns intervals
+	possIntervals := uint64(v.Read.Sub(v.PreRead).Nanoseconds()) // Start with number of ns intervals
 	possIntervals /= 100                                         // Convert to number of 100ns intervals
 	possIntervals *= uint64(v.NumProcs)                          // Multiple by the number of processors
 

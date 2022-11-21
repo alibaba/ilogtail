@@ -19,11 +19,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"github.com/alibaba/ilogtail"
 
 	"github.com/cihub/seelog"
 	jsoniter "github.com/json-iterator/go"

@@ -27,9 +27,10 @@ import (
 
 	"github.com/dlclark/regexp2"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
+	"github.com/alibaba/ilogtail"
 )
 
 type ProcessorGrok struct {
@@ -172,7 +173,7 @@ func (p *ProcessorGrok) processGrok(log *protocol.Log, val *string) string {
 	return parseSuccess
 }
 
-// Apply patterns from path to processor_grok
+// Add patterns from path to processor_grok
 func (p *ProcessorGrok) addPatternsFromPath(path string) error {
 	if fi, err := os.Stat(path); err == nil {
 		if fi.IsDir() {
@@ -207,7 +208,7 @@ func (p *ProcessorGrok) addPatternsFromPath(path string) error {
 	return nil
 }
 
-// Apply patterns from map to processor_grok
+// Add patterns from map to processor_grok
 func (p *ProcessorGrok) addPatternsFromMap(m map[string]string) {
 	for name, pattern := range m {
 		p.originalPatterns[name] = pattern

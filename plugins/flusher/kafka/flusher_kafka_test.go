@@ -16,7 +16,6 @@ package kafka
 
 import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 

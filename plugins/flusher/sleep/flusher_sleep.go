@@ -15,9 +15,8 @@
 package sleep
 
 import (
-	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"time"
 )

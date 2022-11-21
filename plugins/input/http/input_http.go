@@ -293,7 +293,7 @@ func (h *Response) httpGather(address string) (map[string]string, error) {
 	return fields, nil
 }
 
-// Execute gets all metric fields and tags and returns any errors it encounters
+// Collect gets all metric fields and tags and returns any errors it encounters
 func (h *Response) Collect(collector ilogtail.Collector) error {
 	// should not occur
 	if h.tags == nil || h.client == nil {
@@ -317,7 +317,7 @@ func (h *Response) Collect(collector ilogtail.Collector) error {
 			logger.Warning(h.context.GetRuntimeContext(), "HTTP_COLLECT_ALARM", "collect error, address", address, "error", err)
 		}
 		if len(fields) > 0 {
-			// Apply metrics
+			// Add metrics
 			collector.AddData(h.tags, fields)
 		}
 	}

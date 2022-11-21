@@ -46,7 +46,7 @@ func (p *ServiceDockerEvents) Description() string {
 	return "docker event input plugin for logtail"
 }
 
-// Execute takes in an accumulator and adds the metrics that the Input
+// Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
 func (p *ServiceDockerEvents) Collect(ilogtail.Collector) error {
 	if p.EventQueueSize < 4 {

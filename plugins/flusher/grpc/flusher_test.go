@@ -25,10 +25,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 
+	"github.com/alibaba/ilogtail"
 	_ "github.com/alibaba/ilogtail/pkg/logger/test"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )

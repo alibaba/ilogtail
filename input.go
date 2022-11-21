@@ -33,7 +33,7 @@ type SlsMetricInput interface {
 
 type PipelineMetricInput interface {
 	MetricInput
-	// Execute takes in an accumulator and adds the metrics that the Input
+	// Collect takes in an accumulator and adds the metrics that the Input
 	// gathers. This is called every "interval"
 	Execute(PipelineContext) error
 }

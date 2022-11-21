@@ -45,7 +45,7 @@ func (r *InputDebugFile) Description() string {
 	return "input plugin for debugging"
 }
 
-// Execute ...
+// Collect ...
 func (r *InputDebugFile) Collect(collector ilogtail.Collector) error {
 	log := map[string]string{}
 	log[r.FieldName] = r.content
