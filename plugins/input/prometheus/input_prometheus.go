@@ -116,8 +116,8 @@ func (p *ServiceStaticPrometheus) Description() string {
 	return "prometheus scrape plugin for logtail, use vmagent lib"
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (p *ServiceStaticPrometheus) StartCollectLogs(c ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (p *ServiceStaticPrometheus) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()

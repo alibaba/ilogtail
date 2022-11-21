@@ -113,12 +113,12 @@ func (w *WinEventLog) Description() string {
 	return "A service input plugin which collects Windows event logs of " + w.Name
 }
 
-// CollectLogs ...
+// Collect ...
 func (w *WinEventLog) CollectLogs(collector ilogtail.Collector) error {
 	return nil
 }
 
-// StartCollectLogs ...
+// Start ...
 func (w *WinEventLog) StartCollectLogs(collector ilogtail.Collector) error {
 	w.collector = collector
 	w.initCheckpoint()
@@ -134,7 +134,7 @@ func (w *WinEventLog) StartCollectLogs(collector ilogtail.Collector) error {
 		logger.Infof(w.context.GetRuntimeContext(), "%s rerun", w.logPrefix)
 	}
 	w.saveCheckpoint()
-	logger.Infof(w.context.GetRuntimeContext(), "%s Quit StartCollectLogs routine, saved checkpoint %v", w.logPrefix, w.checkpoint)
+	logger.Infof(w.context.GetRuntimeContext(), "%s Quit Start routine, saved checkpoint %v", w.logPrefix, w.checkpoint)
 	return nil
 }
 

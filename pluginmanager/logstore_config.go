@@ -25,12 +25,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/plugin_main/flags"
 	"github.com/alibaba/ilogtail/plugins/input"
 )
@@ -274,7 +275,7 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 	if exitFlag && lc.LogGroupFlushOutStore.Len() > 0 {
 		logger.Info(lc.Context.GetRuntimeContext(), "flushout loggroups, count", lc.LogGroupFlushOutStore.Len())
 		rst := TryFlushOutStore(lc, lc.LogGroupFlushOutStore, lc.getSlsFlusherPlugins(), func(lc *LogstoreConfig, sf ilogtail.SlsFlusher, store *FlushOutStore[protocol.LogGroup]) error {
-			return sf.FlushLogs(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), store.Get())
+			return sf.Flush(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), store.Get())
 		})
 		logger.Info(lc.Context.GetRuntimeContext(), "flushout loggroups, result", rst)
 	}
@@ -282,7 +283,7 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 	if exitFlag && lc.PipeEventsFlushOutStore.Len() > 0 {
 		logger.Info(lc.Context.GetRuntimeContext(), "flushout pipe group events, count", lc.PipeEventsFlushOutStore.Len())
 		rst := TryFlushOutStore(lc, lc.PipeEventsFlushOutStore, lc.getPipeFlusherPlugins(), func(lc *LogstoreConfig, pf ilogtail.PipelineFlusher, store *FlushOutStore[models.PipelineGroupEvents]) error {
-			return pf.Flush(store.Get(), lc.FlushPipeContext)
+			return pf.Export(store.Get(), lc.FlushPipeContext)
 		})
 		logger.Info(lc.Context.GetRuntimeContext(), "flushout pipe group events, result", rst)
 	}
@@ -359,7 +360,7 @@ func (lc *LogstoreConfig) processInternal() {
 							}
 							lc.Statistics.SplitLogMetric.Add(int64(len(pipeEvent.Events)))
 							for tryCount := 1; true; tryCount++ {
-								err := aggregator.Add(pipeEvent, lc.AggregatePipeContext)
+								err := aggregator.Apply(pipeEvent, lc.AggregatePipeContext)
 								if err == nil {
 									break
 								}
@@ -405,7 +406,7 @@ func (lc *LogstoreConfig) processInternal() {
 								l.Time = nowTime
 							}
 							for tryCount := 1; true; tryCount++ {
-								err := slsAggregator.AddLogs(l, logCtx.Context)
+								err := slsAggregator.Add(l, logCtx.Context)
 								if err == nil {
 									break
 								}
@@ -447,7 +448,7 @@ func (lc *LogstoreConfig) flushInternal() {
 			}
 			flushExecute(lc, event, pipeChan, lc.PipeEventsFlushOutStore, lc.getPipeFlusherPlugins(),
 				func(lc *LogstoreConfig, data []*models.PipelineGroupEvents) {
-					// Add tags for each non-empty PipelineGroupEvents, includes: default hostname tag,
+					// Apply tags for each non-empty PipelineGroupEvents, includes: default hostname tag,
 					// env tags and global tags in config.
 					for _, item := range data {
 						lc.Statistics.FlushLogMetric.Add(int64(len(item.Events)))
@@ -455,7 +456,7 @@ func (lc *LogstoreConfig) flushInternal() {
 					}
 				},
 				func(lc *LogstoreConfig, flusher ilogtail.PipelineFlusher, data []*models.PipelineGroupEvents) error {
-					return flusher.Flush(data, lc.FlushPipeContext)
+					return flusher.Export(data, lc.FlushPipeContext)
 				})
 		case logGroup = <-lc.LogGroupsChan:
 			if logGroup == nil {
@@ -464,7 +465,7 @@ func (lc *LogstoreConfig) flushInternal() {
 
 			flushExecute(lc, logGroup, lc.LogGroupsChan, lc.LogGroupFlushOutStore, lc.getSlsFlusherPlugins(),
 				func(lc *LogstoreConfig, data []*protocol.LogGroup) {
-					// Add tags for each non-empty LogGroup, includes: default hostname tag,
+					// Apply tags for each non-empty LogGroup, includes: default hostname tag,
 					// env tags and global tags in config.
 					for _, item := range data {
 						if len(item.Logs) == 0 {
@@ -478,7 +479,7 @@ func (lc *LogstoreConfig) flushInternal() {
 					}
 				},
 				func(lc *LogstoreConfig, flusher ilogtail.SlsFlusher, data []*protocol.LogGroup) error {
-					return flusher.FlushLogs(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), data)
+					return flusher.Flush(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), data)
 				})
 		}
 	}
@@ -500,7 +501,7 @@ func flushExecute[T FlushData, F ilogtail.Flusher](lc *LogstoreConfig, event *T,
 
 	dataProcessFunc(lc, data)
 
-	// Flush LogGroups to all flushers.
+	// Export LogGroups to all flushers.
 	// Note: multiple flushers is unrecommended, because all flushers will
 	//   be blocked if one of them is unready.
 	for {

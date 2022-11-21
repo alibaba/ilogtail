@@ -855,7 +855,7 @@ func (dc *DockerCenter) getAllAcceptedInfoV2(
 		}
 	}
 
-	// Add new containers to full list and matched to match list.
+	// Apply new containers to full list and matched to match list.
 	newCount := 0
 	for id, info := range dc.containerMap {
 		if _, exist := fullList[id]; !exist {

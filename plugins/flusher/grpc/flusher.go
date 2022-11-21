@@ -23,10 +23,11 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 )
 
 type Flusher struct {
@@ -93,7 +94,7 @@ func (f *Flusher) IsReady(projectName string, logstoreName string, logstoreKey i
 	return f.conn.GetState() == connectivity.Ready
 }
 
-func (f *Flusher) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (f *Flusher) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	stream, err := f.client.Collect(context.Background())
 	defer f.closeStream(stream)
 	if err != nil {

@@ -96,15 +96,15 @@ func (m *Mssql) dsnConfig() string {
 	return conn
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (m *Mssql) StartCollectLogs(collector ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (m *Mssql) Start(collector ilogtail.Collector) error {
 	connStr := m.dsnConfig()
 	return m.Rdb.StartCollectLogs(collector, connStr, func() error {
 		return nil
 	}, msColumnResolverFuncMap)
 }
 
-func (m *Mssql) CollectLogs(collector ilogtail.Collector) error {
+func (m *Mssql) Collect(collector ilogtail.Collector) error {
 	return m.Rdb.CollectLogs(collector, msColumnResolverFuncMap)
 }
 

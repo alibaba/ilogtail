@@ -63,7 +63,7 @@ func Test_Flusher_Flush(t *testing.T) {
 
 			convey.Convey("When FlusherOTLPLog flush", func() {
 				groupList := makeTestLogGroupList().GetLogGroupList()
-				err := f.FlushLogs("p", "l", "c", groupList)
+				err := f.Flush("p", "l", "c", groupList)
 				convey.So(err, convey.ShouldBeNil)
 				r := <-service.ch
 				r2 := f.convertLogGroupToRequest(groupList)
@@ -91,7 +91,7 @@ func Test_Flusher_Flush_Timeout(t *testing.T) {
 
 			convey.Convey("When FlusherOTLPLog flush timeout", func() {
 				groupList := makeTestLogGroupList().GetLogGroupList()
-				err := f.FlushLogs("p", "l", "c", groupList)
+				err := f.Flush("p", "l", "c", groupList)
 				convey.So(err, convey.ShouldBeError)
 			})
 		})

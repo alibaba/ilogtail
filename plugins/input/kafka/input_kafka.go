@@ -120,7 +120,7 @@ func (k *InputKafka) Description() string {
 	return "Kafka input for logtail"
 }
 
-func (k *InputKafka) StartCollectLogs(collector ilogtail.Collector) error {
+func (k *InputKafka) Start(collector ilogtail.Collector) error {
 	k.shutdown = make(chan struct{})
 
 	// consume errors
@@ -206,7 +206,7 @@ func (k *InputKafka) Stop() error {
 	return nil
 }
 
-func (k *InputKafka) CollectLogs(collector ilogtail.Collector) error {
+func (k *InputKafka) Collect(collector ilogtail.Collector) error {
 	return nil
 }
 

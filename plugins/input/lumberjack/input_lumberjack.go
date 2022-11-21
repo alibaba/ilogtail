@@ -92,12 +92,12 @@ func (p *ServiceLumber) Description() string {
 
 // Gather takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (p *ServiceLumber) CollectLogs(ilogtail.Collector) error {
+func (p *ServiceLumber) Collect(ilogtail.Collector) error {
 	return nil
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (p *ServiceLumber) StartCollectLogs(c ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (p *ServiceLumber) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()

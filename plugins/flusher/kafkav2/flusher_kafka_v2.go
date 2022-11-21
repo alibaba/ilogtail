@@ -25,12 +25,13 @@ import (
 
 	"github.com/Shopify/sarama"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 )
 
 const (
@@ -270,7 +271,7 @@ func (k *FlusherKafka) Description() string {
 	return "Kafka flusher for logtail"
 }
 
-func (k *FlusherKafka) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (k *FlusherKafka) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	return k.flusher(projectName, logstoreName, configName, logGroupList)
 }
 

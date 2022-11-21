@@ -56,12 +56,12 @@ func (p *ServiceMock) Description() string {
 
 // Gather takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (p *ServiceMock) CollectLogs(ilogtail.Collector) error {
+func (p *ServiceMock) Collect(ilogtail.Collector) error {
 	return nil
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (p *ServiceMock) StartCollectLogs(c ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (p *ServiceMock) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()

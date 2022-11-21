@@ -16,6 +16,7 @@ package kafka
 
 import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 
@@ -46,7 +47,7 @@ func InvalidTestConnectAndWrite(t *testing.T) {
 
 	// Verify that we can successfully write data to the kafka broker
 	lgl := makeTestLogGroupList()
-	err = k.FlushLogs("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
+	err = k.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
 	require.NoError(t, err)
 	_ = k.Stop()
 }

@@ -229,7 +229,7 @@ func (h *Response) httpGather(address string) (map[string]string, error) {
 		}
 	}
 
-	// StartCollectLogs Timer
+	// Start Timer
 	start := time.Now()
 	resp, err := h.client.Do(request)
 
@@ -293,8 +293,8 @@ func (h *Response) httpGather(address string) (map[string]string, error) {
 	return fields, nil
 }
 
-// Collect gets all metric fields and tags and returns any errors it encounters
-func (h *Response) CollectLogs(collector ilogtail.Collector) error {
+// Execute gets all metric fields and tags and returns any errors it encounters
+func (h *Response) Collect(collector ilogtail.Collector) error {
 	// should not occur
 	if h.tags == nil || h.client == nil {
 		return nil
@@ -317,7 +317,7 @@ func (h *Response) CollectLogs(collector ilogtail.Collector) error {
 			logger.Warning(h.context.GetRuntimeContext(), "HTTP_COLLECT_ALARM", "collect error, address", address, "error", err)
 		}
 		if len(fields) > 0 {
-			// Add metrics
+			// Apply metrics
 			collector.AddData(h.tags, fields)
 		}
 	}

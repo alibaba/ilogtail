@@ -17,9 +17,10 @@ package baseagg
 import (
 	"sync"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 )
 
 const (
@@ -31,8 +32,8 @@ const (
 //
 // For inner usage, note about following information.
 // There is a quick flush design in AggregatorBase, which is implemented
-// in Add method (search p.queue.Add in current file). Therefore, not all
-// LogGroups are returned through Flush method.
+// in Apply method (search p.queue.Apply in current file). Therefore, not all
+// LogGroups are returned through Export method.
 // If you want to do some operations (such as adding tags) on LogGroups returned
 // by AggregatorBase in your own aggregator, you should do some extra works,
 // just see the sample code in doc.go.
@@ -76,20 +77,20 @@ func (*AggregatorBase) evaluateLogSize(log *protocol.Log) int {
 	return logSize
 }
 
-// Add adds @log to aggregator.
+// Apply adds @log to aggregator.
 // It uses defaultLogGroup to store log groups which contain logs as following:
 // defaultLogGroup => [LG1: log1->log2->log3] -> [LG2: log1->log2->log3] -> ..
 // The last log group is set as nowLogGroup, @log will be appended to nowLogGroup
 // if the size and log count of the log group don't exceed limits (MaxLogCount and
 // MAX_LOG_GROUP_SIZE).
-// When nowLogGroup exceeds limits, Add creates a new log group and switch nowLogGroup
+// When nowLogGroup exceeds limits, Apply creates a new log group and switch nowLogGroup
 // to it, then append @log to it.
 // When the count of log group reaches MaxLogGroupCount, the first log group will
 // be popped from defaultLogGroup list and add to queue (after adding pack_id tag).
-// Add returns any error encountered, nil means success.
+// Apply returns any error encountered, nil means success.
 //
 // @return error. **For inner usage, must handle this error!!!!**
-func (p *AggregatorBase) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
+func (p *AggregatorBase) Add(log *protocol.Log, ctx map[string]interface{}) error {
 	p.Lock.Lock()
 	defer p.Lock.Unlock()
 	if len(p.defaultLogGroup) == 0 {
@@ -145,8 +146,8 @@ func (p *AggregatorBase) addPackID(logGroup *protocol.LogGroup) {
 	}
 }
 
-// Flush ...
-func (p *AggregatorBase) FlushLogs() []*protocol.LogGroup {
+// Export ...
+func (p *AggregatorBase) Flush() []*protocol.LogGroup {
 	p.Lock.Lock()
 	if len(p.defaultLogGroup) == 0 {
 		p.Lock.Unlock()

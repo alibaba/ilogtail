@@ -42,11 +42,11 @@ func (r *Input) Description() string {
 	return "skywalking agent v2 input for logtail"
 }
 
-func (r *Input) CollectLogs(ilogtail.Collector) error {
+func (r *Input) Collect(ilogtail.Collector) error {
 	return nil
 }
 
-func (r *Input) StartCollectLogs(collector ilogtail.Collector) error {
+func (r *Input) Start(collector ilogtail.Collector) error {
 	registryInformationCache := NewRegistryInformationCache()
 	agent.RegisterApplicationRegisterServiceServer(r.grpcServer, &ApplicationRegisterHandle{RegistryInformationCache: registryInformationCache})
 	agent.RegisterInstanceDiscoveryServiceServer(r.grpcServer, &InstanceDiscoveryServiceHandle{RegistryInformationCache: registryInformationCache})

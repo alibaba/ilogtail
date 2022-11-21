@@ -21,7 +21,7 @@ import (
 
 // Aggregator is an interface for implementing an Aggregator plugin.
 // the RunningAggregator wraps this interface and guarantees that
-// Add, Push, and Reset can not be called concurrently, so locking is not
+// Apply, Push, and Reset can not be called concurrently, so locking is not
 // required when implementing an Aggregator plugin.
 type Aggregator interface {
 	// Init called for init some system resources, like socket, mutex...
@@ -37,17 +37,17 @@ type Aggregator interface {
 
 type SlsAggregator interface {
 	Aggregator
-	// AddLogs the metric to the aggregator.
-	AddLogs(log *protocol.Log, ctx map[string]interface{}) error
+	// Add the metric to the aggregator.
+	Add(log *protocol.Log, ctx map[string]interface{}) error
 
-	// FlushLogs pushes the current aggregates to the accumulator.
-	FlushLogs() []*protocol.LogGroup
+	// Flush pushes the current aggregates to the accumulator.
+	Flush() []*protocol.LogGroup
 }
 
 type PipelineAggregator interface {
 	Aggregator
-	// Add the metric to the aggregator.
-	Add(*models.PipelineGroupEvents, PipelineContext) error
-	// Flush pushes the current aggregates to the accumulator.
-	Flush(PipelineContext) error
+	// Apply the metric to the aggregator.
+	Apply(*models.PipelineGroupEvents, PipelineContext) error
+	// GetResult the current aggregates to the accumulator.
+	GetResult(PipelineContext) error
 }

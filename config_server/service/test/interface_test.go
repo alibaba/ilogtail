@@ -72,7 +72,7 @@ func TestBaseConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config success")
+			So(res.Message, ShouldEqual, "Apply config success")
 
 			requestID++
 		}
@@ -165,7 +165,7 @@ func TestBaseConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config success")
+			So(res.Message, ShouldEqual, "Apply config success")
 
 			requestID++
 		}
@@ -354,7 +354,7 @@ func TestBaseConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config success")
+			So(res.Message, ShouldEqual, "Apply config success")
 
 			requestID++
 		}
@@ -476,7 +476,7 @@ func TestOperationsBetweenConfigAndAgentGroup(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config success")
+			So(res.Message, ShouldEqual, "Apply config success")
 
 			requestID++
 		}
@@ -495,7 +495,7 @@ func TestOperationsBetweenConfigAndAgentGroup(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config success")
+			So(res.Message, ShouldEqual, "Apply config success")
 
 			requestID++
 		}
@@ -511,7 +511,7 @@ func TestOperationsBetweenConfigAndAgentGroup(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config to agent group success")
+			So(res.Message, ShouldEqual, "Apply config to agent group success")
 
 			requestID++
 		}
@@ -576,7 +576,7 @@ func TestOperationsBetweenConfigAndAgentGroup(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config to agent group success")
+			So(res.Message, ShouldEqual, "Apply config to agent group success")
 
 			requestID++
 		}
@@ -973,7 +973,7 @@ func TestAgentGetConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config success")
+			So(res.Message, ShouldEqual, "Apply config success")
 
 			requestID++
 		}
@@ -992,7 +992,7 @@ func TestAgentGetConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config success")
+			So(res.Message, ShouldEqual, "Apply config success")
 
 			requestID++
 		}
@@ -1011,7 +1011,7 @@ func TestAgentGetConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config success")
+			So(res.Message, ShouldEqual, "Apply config success")
 
 			requestID++
 		}
@@ -1030,7 +1030,7 @@ func TestAgentGetConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config success")
+			So(res.Message, ShouldEqual, "Apply config success")
 
 			requestID++
 		}
@@ -1046,7 +1046,7 @@ func TestAgentGetConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config to agent group success")
+			So(res.Message, ShouldEqual, "Apply config to agent group success")
 
 			requestID++
 		}
@@ -1062,7 +1062,7 @@ func TestAgentGetConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config to agent group success")
+			So(res.Message, ShouldEqual, "Apply config to agent group success")
 
 			requestID++
 		}
@@ -1078,7 +1078,7 @@ func TestAgentGetConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config to agent group success")
+			So(res.Message, ShouldEqual, "Apply config to agent group success")
 
 			requestID++
 		}
@@ -1119,7 +1119,7 @@ func TestAgentGetConfig(t *testing.T) {
 			So(status, ShouldEqual, common.Accept.Status)
 			So(res.ResponseId, ShouldEqual, fmt.Sprint(requestID))
 			So(res.Code, ShouldEqual, common.Accept.Code)
-			So(res.Message, ShouldEqual, "Add config to agent group success")
+			So(res.Message, ShouldEqual, "Apply config to agent group success")
 
 			requestID++
 		}

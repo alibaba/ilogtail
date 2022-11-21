@@ -50,8 +50,8 @@ func (m *MetricsExample) Description() string {
 	return "This is a metric input example plugin, this plugin would show how to write a simple metric input plugin."
 }
 
-// Collect is called every trigger interval to collect the metrics and send them to the collector.
-func (m *MetricsExample) CollectLogs(collector ilogtail.Collector) error {
+// Execute is called every trigger interval to collect the metrics and send them to the collector.
+func (m *MetricsExample) Collect(collector ilogtail.Collector) error {
 	// counter increment
 	m.counter++
 	// create a random value as gauge value

@@ -19,10 +19,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
+	"github.com/alibaba/ilogtail"
 
 	"github.com/cihub/seelog"
 	jsoniter "github.com/json-iterator/go"
@@ -90,8 +91,8 @@ func (*FlusherStdout) Description() string {
 	return "stdout flusher for logtail"
 }
 
-// FlushLogs the logGroup list to stdout or files.
-func (p *FlusherStdout) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+// Flush the logGroup list to stdout or files.
+func (p *FlusherStdout) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		if p.Tags {
 			if p.outLogger != nil {
@@ -136,7 +137,7 @@ func (p *FlusherStdout) FlushLogs(projectName string, logstoreName string, confi
 	return nil
 }
 
-func (p *FlusherStdout) Flush(in []*models.PipelineGroupEvents, context ilogtail.PipelineContext) error {
+func (p *FlusherStdout) Export(in []*models.PipelineGroupEvents, context ilogtail.PipelineContext) error {
 	for _, groupEvents := range in {
 
 		if p.Tags {
@@ -206,8 +207,8 @@ func (p *FlusherStdout) Flush(in []*models.PipelineGroupEvents, context ilogtail
 func (p *FlusherStdout) writeMetricValues(writer *jsoniter.Stream, metric *models.MetricEvent) {
 	_, _ = writer.Write([]byte{','})
 	writer.WriteObjectField("metricType")
-	_, _ = writer.Write([]byte{','})
 	writer.WriteString(models.MetricTypeStrings[metric.MetricType])
+	_, _ = writer.Write([]byte{','})
 	if metric.Value.IsSingleValue() {
 		writer.WriteObjectField("value")
 		writer.WriteFloat64(metric.Value.GetSingleValue())

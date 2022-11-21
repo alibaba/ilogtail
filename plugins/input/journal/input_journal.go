@@ -161,7 +161,7 @@ func (sj *ServiceJournal) addMatchesForKernel() error {
 	return sj.journal.AddDisjunction()
 }
 
-// Add syslog identifiers to monitor
+// Apply syslog identifiers to monitor
 func (sj *ServiceJournal) addSyslogIdentifiers() error {
 	var err error
 
@@ -182,7 +182,7 @@ func (sj *ServiceJournal) Description() string {
 	return "journal input plugin for logtail"
 }
 
-// CollectLogs takes in an accumulator and adds the metrics that the Input
+// Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
 func (sj *ServiceJournal) Collect(ilogtail.Collector) error {
 	return nil
@@ -275,7 +275,7 @@ func (sj *ServiceJournal) initJournal() error {
 	return nil
 }
 
-// StartCollectLogs starts the ServiceInput's service, whatever that may be
+// Start starts the ServiceInput's service, whatever that may be
 func (sj *ServiceJournal) Start(c ilogtail.Collector) error {
 	sj.shutdown = make(chan struct{})
 	sj.waitGroup.Add(1)

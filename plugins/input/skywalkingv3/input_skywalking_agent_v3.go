@@ -49,14 +49,14 @@ func (r *Input) Description() string {
 	return "skywalking agent v3 input for logtail"
 }
 
-// Collect takes in an accumulator and adds the metrics that the Input
+// Execute takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (r *Input) CollectLogs(ilogtail.Collector) error {
+func (r *Input) Collect(ilogtail.Collector) error {
 	return nil
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (r *Input) StartCollectLogs(collector ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (r *Input) Start(collector ilogtail.Collector) error {
 	agent.RegisterJVMMetricReportServiceServer(r.grpcServer, &JVMMetricHandler{r.ctx, collector, r.MetricIntervalMs, -1})
 	agent.RegisterCLRMetricReportServiceServer(r.grpcServer, &CLRMetricHandler{r.ctx, collector, r.MetricIntervalMs, -1})
 	agent.RegisterMeterReportServiceServer(r.grpcServer, &MeterHandler{r.ctx, collector})

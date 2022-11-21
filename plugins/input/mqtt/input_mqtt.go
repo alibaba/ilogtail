@@ -90,9 +90,9 @@ func (p *ServiceMQTT) Description() string {
 	return "mqtt service input plugin for logtail"
 }
 
-// Collect takes in an accumulator and adds the metrics that the Input
+// Execute takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (p *ServiceMQTT) CollectLogs(ilogtail.Collector) error {
+func (p *ServiceMQTT) Collect(ilogtail.Collector) error {
 	return nil
 }
 
@@ -194,8 +194,8 @@ func (p *ServiceMQTT) createClient(tlsConfig *tls.Config, connLostChannel chan s
 	return nil, err
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (p *ServiceMQTT) StartCollectLogs(c ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (p *ServiceMQTT) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.collector = c
 	p.waitGroup.Add(1)

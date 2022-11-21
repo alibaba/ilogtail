@@ -28,6 +28,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
 	pluginmanager "github.com/alibaba/ilogtail/pluginmanager"
 )
 
@@ -265,10 +266,10 @@ func TestInnerQueue(t *testing.T) {
 		log.Contents = append(log.Contents, &protocol.Log_Content{
 			Key: "test", Value: tc.Value,
 		})
-		require.NoError(t, s.AddLogs(log, nil))
+		require.NoError(t, s.Add(log, nil))
 	}
 
-	logGroups := s.FlushLogs()
+	logGroups := s.Flush()
 	require.Equal(t, len(logGroups), 5, "%v", logGroups)
 	for _, logGroup := range logGroups {
 		require.Equal(t, logGroup.Topic, "topic", "%v", logGroup)
@@ -311,9 +312,9 @@ func TestMultipleSourceKeys(t *testing.T) {
 				Key: s.SourceKeys[idx], Value: tc.Values[idx],
 			})
 		}
-		require.NoError(t, s.AddLogs(log, nil))
+		require.NoError(t, s.Add(log, nil))
 
-		logGroups := s.FlushLogs()
+		logGroups := s.Flush()
 		require.Equal(t, len(logGroups), 1, "%v", logGroups)
 		logGroup := logGroups[0]
 

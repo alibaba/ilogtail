@@ -24,10 +24,11 @@ import (
 
 	"github.com/cespare/xxhash/v2"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/plugins/aggregator/baseagg"
 )
 
@@ -160,8 +161,8 @@ func (s *AggregatorShardHash) selectShardAgg(sourceValue string) *shardAggregato
 	return s.shardAggs[bucketID]
 }
 
-// Add ...
-func (s *AggregatorShardHash) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
+// Apply ...
+func (s *AggregatorShardHash) Add(log *protocol.Log, ctx map[string]interface{}) error {
 	var sourceValue string
 	for idx, key := range s.SourceKeys {
 		var val string
@@ -185,11 +186,11 @@ func (s *AggregatorShardHash) AddLogs(log *protocol.Log, ctx map[string]interfac
 		}
 	}
 
-	return s.selectShardAgg(sourceValue).agg.AddLogs(log, ctx)
+	return s.selectShardAgg(sourceValue).agg.Add(log, ctx)
 }
 
 // update resets topic and appends tags (shardHash, pack ID) if they are not existing.
-// An updated logGroup might be called to update again when quick flush Add has failed, so
+// An updated logGroup might be called to update again when quick flush Apply has failed, so
 // we must check before appending tags.
 func (s *AggregatorShardHash) update(logGroup *protocol.LogGroup) {
 	for _, tag := range logGroup.LogTags {
@@ -209,10 +210,10 @@ func (s *AggregatorShardHash) update(logGroup *protocol.LogGroup) {
 	logGroup.Topic = s.Topic
 }
 
-func (s *AggregatorShardHash) FlushLogs() []*protocol.LogGroup {
+func (s *AggregatorShardHash) Flush() []*protocol.LogGroup {
 	var logGroups []*protocol.LogGroup
 	for _, shardAgg := range s.shardAggs {
-		logGroups = append(logGroups, shardAgg.agg.FlushLogs()...)
+		logGroups = append(logGroups, shardAgg.agg.Flush()...)
 	}
 	for _, logGroup := range logGroups {
 		s.update(logGroup)

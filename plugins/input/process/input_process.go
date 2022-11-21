@@ -83,7 +83,7 @@ func (ip *InputProcess) Description() string {
 	return "Support collect process metrics on the host machine or Linux virtual environments."
 }
 
-func (ip *InputProcess) CollectLogs(collector ilogtail.Collector) error {
+func (ip *InputProcess) Collect(collector ilogtail.Collector) error {
 	ip.collectTime = time.Now()
 	matchedProcesses, err := ip.filterMatchedProcesses()
 	if err != nil {

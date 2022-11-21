@@ -20,9 +20,10 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
+	"github.com/alibaba/ilogtail"
 )
 
 type FlusherChecker struct {
@@ -121,7 +122,7 @@ func (p *FlusherChecker) CheckEveryKeyValue(checker func(string, string) error) 
 	return nil
 }
 
-func (p *FlusherChecker) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (p *FlusherChecker) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	p.Lock.Lock()
 	defer p.Lock.Unlock()
 	for _, logGroup := range logGroupList {

@@ -25,9 +25,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 
-	"github.com/alibaba/ilogtail"
 	_ "github.com/alibaba/ilogtail/pkg/logger/test"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
@@ -79,7 +80,7 @@ func TestFlusher_Flush(t *testing.T) {
 
 	// send logs
 	go func() {
-		err = p.FlushLogs("p", "l", "c", groupList)
+		err = p.Flush("p", "l", "c", groupList)
 		assert.NoError(t, err)
 		time.Sleep(time.Second)
 		close(receiveChan)

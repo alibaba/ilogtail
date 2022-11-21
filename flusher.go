@@ -39,7 +39,7 @@ type Flusher interface {
 	// @flag indicates if main program (Logtail mostly) will exit after calling this.
 	//
 	// Note: there might be more data to flush after SetUrgent is called, and if flag
-	//   is true, these data will be passed to flusher through IsReady/Flush before
+	//   is true, these data will be passed to flusher through IsReady/Export before
 	//   program exits.
 	//
 	// Recommendation: set some state flags in this method to guide the behavior
@@ -48,7 +48,7 @@ type Flusher interface {
 
 	// Stop stops flusher and release resources.
 	// It is time for flusher to do cleaning jobs, includes:
-	// 1. Flush cached but not flushed data. For flushers that contain some kinds of
+	// 1. Export cached but not flushed data. For flushers that contain some kinds of
 	//   aggregation or buffering, it is important to flush cached out now, otherwise
 	//   data will lost.
 	// 2. Release opened resources: goroutines, file handles, connections, etc.
@@ -59,16 +59,16 @@ type Flusher interface {
 
 type SlsFlusher interface {
 	Flusher
-	// FlushLogs flushes data to destination, such as SLS, console, file, etc.
+	// Flush flushes data to destination, such as SLS, console, file, etc.
 	// It is expected to return no error at most time because IsReady will be called
 	// before it to make sure there is space for next data.
-	FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
+	Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
 }
 
 type PipelineFlusher interface {
 	Flusher
-	// FlushLogs flushes data to destination, such as SLS, console, file, etc.
+	// Export data to destination, such as gRPC, console, file, etc.
 	// It is expected to return no error at most time because IsReady will be called
 	// before it to make sure there is space for next data.
-	Flush([]*models.PipelineGroupEvents, PipelineContext) error
+	Export([]*models.PipelineGroupEvents, PipelineContext) error
 }

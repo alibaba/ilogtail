@@ -15,10 +15,11 @@
 package skywalking
 
 import (
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/plugins/aggregator/baseagg"
 
 	"sync"
@@ -88,22 +89,22 @@ func (*AggregatorSkywalking) Description() string {
 	return "aggregator router for skywalking"
 }
 
-// Add adds @log to aggregator.
-// Add use first content as route key
-// Add returns any error encountered, nil means success.
+// Apply adds @log to aggregator.
+// Apply use first content as route key
+// Apply returns any error encountered, nil means success.
 func (p *AggregatorSkywalking) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
 	if len(log.Contents) > 0 {
 		routeKey := log.Contents[0]
 		switch routeKey.Key {
 		case "__name__":
-			return p.metricsAgg.AddLogs(log, ctx)
+			return p.metricsAgg.Add(log, ctx)
 		case "links":
-			return p.traceAgg.AddLogs(log, ctx)
+			return p.traceAgg.Add(log, ctx)
 		case "otlp.name":
-			return p.logAgg.AddLogs(log, ctx)
+			return p.logAgg.Add(log, ctx)
 		default:
 			logger.Warning(p.context.GetRuntimeContext(), "SKYWALKING_TOPIC_NOT_RECOGNIZED", "error", "topic not recognized", "topic", routeKey.Value)
-			return p.logAgg.AddLogs(log, ctx)
+			return p.logAgg.Add(log, ctx)
 		}
 	}
 	return nil
@@ -111,9 +112,9 @@ func (p *AggregatorSkywalking) AddLogs(log *protocol.Log, ctx map[string]interfa
 
 func (p *AggregatorSkywalking) Flush() []*protocol.LogGroup {
 	logGroups := []*protocol.LogGroup{}
-	logGroups = append(logGroups, p.metricsAgg.FlushLogs()...)
-	logGroups = append(logGroups, p.traceAgg.FlushLogs()...)
-	logGroups = append(logGroups, p.logAgg.FlushLogs()...)
+	logGroups = append(logGroups, p.metricsAgg.Flush()...)
+	logGroups = append(logGroups, p.traceAgg.Flush()...)
+	logGroups = append(logGroups, p.logAgg.Flush()...)
 	return logGroups
 }
 

@@ -244,7 +244,7 @@ func (sds *ServiceDockerStdout) Description() string {
 	return "the container stdout input plugin for iLogtail, which supports docker and containerd."
 }
 
-func (sds *ServiceDockerStdout) CollectLogs(ilogtail.Collector) error {
+func (sds *ServiceDockerStdout) Collect(ilogtail.Collector) error {
 	return nil
 }
 
@@ -338,8 +338,8 @@ func (sds *ServiceDockerStdout) ClearUselessCheckpoint() {
 	}
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (sds *ServiceDockerStdout) StartCollectLogs(c ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (sds *ServiceDockerStdout) Start(c ilogtail.Collector) error {
 	sds.collector = c
 	sds.shutdown = make(chan struct{})
 	sds.waitGroup.Add(1)

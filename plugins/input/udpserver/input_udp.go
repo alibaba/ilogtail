@@ -76,7 +76,7 @@ func (u *UDPServer) Description() string {
 	return "this is an udp listening server"
 }
 
-func (u *UDPServer) StartCollectLogs(collector ilogtail.Collector) error {
+func (u *UDPServer) Start(collector ilogtail.Collector) error {
 	u.collector = collector
 	err := u.doStart(u.dispatcher)
 	logger.Infof(u.context.GetRuntimeContext(), "start udp server, status", err == nil)

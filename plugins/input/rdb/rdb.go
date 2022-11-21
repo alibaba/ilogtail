@@ -148,7 +148,7 @@ func (m *Rdb) CheckPointToString() string {
 	return m.checkpointValue
 }
 
-// Start starts the ServiceInput's service, whatever that may be
+// StartService starts the ServiceInput's service, whatever that may be
 func (m *Rdb) StartCollectLogs(collector ilogtail.Collector, connStr string, rdbFunc RdbFunc, columnResolverFuncMap map[string]ColumnResolverFunc) error {
 	checkpointAlarmName := fmt.Sprintf("%s_CHECKPOINT_ALARM", strings.ToUpper(m.Driver))
 	timeoutAlarmName := fmt.Sprintf("%s_TIMEOUT_ALARM", strings.ToUpper(m.Driver))

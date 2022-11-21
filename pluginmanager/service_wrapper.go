@@ -41,12 +41,12 @@ func (p *ServiceWrapper) Run() {
 	go func() {
 		defer panicRecover(p.Input.Description())
 		if slsInput, ok := p.Input.(ilogtail.SlsServiceInput); ok {
-			if err := slsInput.StartCollectLogs(p); err != nil {
+			if err := slsInput.Start(p); err != nil {
 				logger.Error(p.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
 			}
 		}
 		if pipeInput, ok := p.Input.(ilogtail.PipelineServiceInput); ok {
-			if err := pipeInput.Start(p.PipeContext); err != nil {
+			if err := pipeInput.StartService(p.PipeContext); err != nil {
 				logger.Error(p.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
 			}
 		}

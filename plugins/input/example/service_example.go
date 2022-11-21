@@ -43,10 +43,10 @@ func (s *ServiceExample) Description() string {
 	return "This is a service input example plugin, the plugin would show how to write a simple service input plugin."
 }
 
-// Start the service example plugin would run in a separate go routine, so it is blocking method.
+// StartService the service example plugin would run in a separate go routine, so it is blocking method.
 // The ServiceInput plugin is suitable for receiving the external input data.
 // In the demo, we implemented an http server to accept the specified header of requests.
-func (s *ServiceExample) StartCollectLogs(collector ilogtail.Collector) error {
+func (s *ServiceExample) Start(collector ilogtail.Collector) error {
 	logger.Info(s.context.GetRuntimeContext(), "start the example plugin")
 	mux := http.NewServeMux()
 	mux.HandleFunc("/data", func(writer http.ResponseWriter, request *http.Request) {
@@ -64,7 +64,7 @@ func (s *ServiceExample) StartCollectLogs(collector ilogtail.Collector) error {
 }
 
 // Stop method would triggered when closing the plugin to graceful stop the go routine blocking with
-// the Start method.
+// the StartService method.
 func (s *ServiceExample) Stop() error {
 	logger.Info(s.context.GetRuntimeContext(), "close the example plugin")
 	return s.server.Shutdown(context.Background())

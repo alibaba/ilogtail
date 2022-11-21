@@ -71,7 +71,7 @@ var ErrProtocolError = errors.New("redis protocol error")
 
 const defaultPort = "6379"
 
-func (r *InputRedis) CollectLogs(collector ilogtail.Collector) error {
+func (r *InputRedis) Collect(collector ilogtail.Collector) error {
 
 	if len(r.ServerUrls) == 0 {
 		return r.gatherServer(&url.URL{

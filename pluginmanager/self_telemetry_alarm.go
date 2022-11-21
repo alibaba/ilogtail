@@ -35,7 +35,7 @@ func (r *InputAlarm) Description() string {
 	return "alarm input plugin for logtail"
 }
 
-func (r *InputAlarm) CollectLogs(collector ilogtail.Collector) error {
+func (r *InputAlarm) Collect(collector ilogtail.Collector) error {
 	loggroup := &protocol.LogGroup{}
 	for _, config := range LogtailConfig {
 		alarm := config.Context.GetRuntimeContext().Value(pkg.LogTailMeta).(*pkg.LogtailContextMeta).GetAlarm()

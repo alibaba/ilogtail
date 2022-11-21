@@ -18,9 +18,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 	baseagg "github.com/alibaba/ilogtail/plugins/aggregator/baseagg"
 )
 
@@ -88,27 +89,27 @@ func (*AggregatorOpenTelemetry) Description() string {
 	return "aggregator router for opentelemetry"
 }
 
-// Add adds @log to aggregator.
-// Add use first content as route key
-// Add returns any error encountered, nil means success.
+// Apply adds @log to aggregator.
+// Apply use first content as route key
+// Apply returns any error encountered, nil means success.
 func (p *AggregatorOpenTelemetry) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
 	if len(log.Contents) > 0 {
 		if len(log.Contents) <= 5 {
-			return p.metricsAgg.AddLogs(log, ctx)
+			return p.metricsAgg.Add(log, ctx)
 		}
 		if len(log.Contents) >= 19 {
-			return p.traceAgg.AddLogs(log, ctx)
+			return p.traceAgg.Add(log, ctx)
 		}
-		return p.logAgg.AddLogs(log, ctx)
+		return p.logAgg.Add(log, ctx)
 	}
 	return nil
 }
 
 func (p *AggregatorOpenTelemetry) Flush() []*protocol.LogGroup {
 	logGroups := []*protocol.LogGroup{}
-	logGroups = append(logGroups, p.metricsAgg.FlushLogs()...)
-	logGroups = append(logGroups, p.traceAgg.FlushLogs()...)
-	logGroups = append(logGroups, p.logAgg.FlushLogs()...)
+	logGroups = append(logGroups, p.metricsAgg.Flush()...)
+	logGroups = append(logGroups, p.traceAgg.Flush()...)
+	logGroups = append(logGroups, p.logAgg.Flush()...)
 	return logGroups
 }
 

@@ -15,8 +15,9 @@
 package sleep
 
 import (
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
+	"github.com/alibaba/ilogtail"
 
 	"time"
 )
@@ -35,7 +36,7 @@ func (*FlusherSleep) Description() string {
 	return "stdout flusher for logtail"
 }
 
-func (p *FlusherSleep) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (p *FlusherSleep) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	time.Sleep(time.Duration(p.SleepMS) * time.Millisecond)
 	return nil
 }

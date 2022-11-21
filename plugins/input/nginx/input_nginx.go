@@ -61,7 +61,7 @@ func (n *Nginx) Description() string {
 	return "Read Nginx's basic status information (ngx_http_stub_status_module)"
 }
 
-func (n *Nginx) CollectLogs(collector ilogtail.Collector) error {
+func (n *Nginx) Collect(collector ilogtail.Collector) error {
 	var wg sync.WaitGroup
 	logger.Debug(n.context.GetRuntimeContext(), "start collect nginx info", *n)
 	// Create an HTTP client that is re-used for each

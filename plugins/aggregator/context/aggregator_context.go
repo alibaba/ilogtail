@@ -19,9 +19,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 )
 
 const (
@@ -72,8 +73,8 @@ func (*AggregatorContext) Description() string {
 	return "context aggregator for logtail"
 }
 
-// Add adds @log with @ctx to aggregator.
-func (p *AggregatorContext) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
+// Apply adds @log with @ctx to aggregator.
+func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
@@ -126,8 +127,8 @@ func (p *AggregatorContext) AddLogs(log *protocol.Log, ctx map[string]interface{
 	return nil
 }
 
-// Flush ...
-func (p *AggregatorContext) FlushLogs() []*protocol.LogGroup {
+// Export ...
+func (p *AggregatorContext) Flush() []*protocol.LogGroup {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	var ret []*protocol.LogGroup

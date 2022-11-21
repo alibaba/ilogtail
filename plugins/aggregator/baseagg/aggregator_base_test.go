@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
 
@@ -65,7 +66,7 @@ func BenchmarkAdd(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 300; j++ {
-			agg.AddLogs(log, ctx[j%10])
+			agg.Add(log, ctx[j%10])
 		}
 	}
 }
@@ -95,9 +96,9 @@ func benchmarkLogSource(b *testing.B, num int) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 30*num; j++ {
-			agg.AddLogs(log, ctx[j%num])
+			agg.Add(log, ctx[j%num])
 		}
-		_ = agg.FlushLogs()
+		_ = agg.Flush()
 	}
 }
 
@@ -126,9 +127,9 @@ func benchmarkLogProducingPace(b *testing.B, num int) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 3*num*10; j++ {
-			agg.AddLogs(log, ctx[j%10])
+			agg.Add(log, ctx[j%10])
 		}
-		_ = agg.FlushLogs()
+		_ = agg.Flush()
 	}
 }
 
@@ -164,8 +165,8 @@ func benchmarkLogLength(b *testing.B, len string) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 300; j++ {
-			agg.AddLogs(log, ctx[j%10])
+			agg.Add(log, ctx[j%10])
 		}
-		_ = agg.FlushLogs()
+		_ = agg.Flush()
 	}
 }

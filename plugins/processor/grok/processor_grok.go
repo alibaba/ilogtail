@@ -172,7 +172,7 @@ func (p *ProcessorGrok) processGrok(log *protocol.Log, val *string) string {
 	return parseSuccess
 }
 
-// Add patterns from path to processor_grok
+// Apply patterns from path to processor_grok
 func (p *ProcessorGrok) addPatternsFromPath(path string) error {
 	if fi, err := os.Stat(path); err == nil {
 		if fi.IsDir() {
@@ -207,7 +207,7 @@ func (p *ProcessorGrok) addPatternsFromPath(path string) error {
 	return nil
 }
 
-// Add patterns from map to processor_grok
+// Apply patterns from map to processor_grok
 func (p *ProcessorGrok) addPatternsFromMap(m map[string]string) {
 	for name, pattern := range m {
 		p.originalPatterns[name] = pattern

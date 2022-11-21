@@ -33,7 +33,7 @@ package baseagg
 //
 // 	// For example, add extra tags for logGroup.
 // 	// NOTE: must check, the logGroup might be passed to this method multiple times
-// 	// if it is added because of  quick flush policy, which might fail to Add.
+// 	// if it is added because of  quick flush policy, which might fail to Apply.
 // 	const tagKey = "my_tag"
 // 	alreadyAdded := false
 // 	for _, tag := range logGroup.LogTags {
@@ -47,10 +47,10 @@ package baseagg
 // 	}
 // }
 //
-// func (q *queueWrapper) Add(logGroup *ilogtail.LogGroup) error {
+// func (q *queueWrapper) Apply(logGroup *ilogtail.LogGroup) error {
 // 	q.DoYourOwnOperation(logGroup)
 // 	// Pass to real queue.
-// 	return q.queue.Add(logGroup)
+// 	return q.queue.Apply(logGroup)
 // }
 //
 // func (q *queueWrapper) AddWithWait(logGroup *ilogtail.LogGroup, duration time.Duration) error {
@@ -93,9 +93,9 @@ package baseagg
 // 	return 0, nil
 // }
 //
-// // Flush ...
-// func (p *outerAggregator) Flush() []*ilogtail.LogGroup {
-// 	logGroupArray := p.defaultAgg.Flush()
+// // Export ...
+// func (p *outerAggregator) Export() []*ilogtail.LogGroup {
+// 	logGroupArray := p.defaultAgg.Export()
 // 	for _, logGroup := range logGroupArray {
 // 		// do your own operation here
 // 		// make sure that logGroupArray is handled before flushing

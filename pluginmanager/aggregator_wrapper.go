@@ -19,9 +19,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
 )
 
 var errAggAdd = errors.New("loggroup queue is full")
@@ -75,7 +76,7 @@ func (p *AggregatorWrapper) AddWithWait(loggroup *protocol.LogGroup, duration ti
 	}
 }
 
-// Run calls periodically Aggregator.Flush to get log groups from associated aggregator and
+// Run calls periodically Aggregator.Export to get log groups from associated aggregator and
 // pass them to LogstoreConfig through LogGroupsChan.
 func (p *AggregatorWrapper) Run() {
 	defer panicRecover(p.Aggregator.Description())
@@ -85,7 +86,7 @@ func (p *AggregatorWrapper) Run() {
 	for {
 		exitFlag := util.RandomSleep(p.Interval, 0.1, p.shutdown)
 		if slsAggregator, ok := p.Aggregator.(ilogtail.SlsAggregator); ok {
-			logGroups := slsAggregator.FlushLogs()
+			logGroups := slsAggregator.Flush()
 			for _, logGroup := range logGroups {
 				if len(logGroup.Logs) == 0 {
 					continue
@@ -93,7 +94,7 @@ func (p *AggregatorWrapper) Run() {
 				p.LogGroupsChan <- logGroup
 			}
 		} else if pipeAggregator, ok := p.Aggregator.(ilogtail.PipelineAggregator); ok {
-			_ = pipeAggregator.Flush(p.PipeContext)
+			_ = pipeAggregator.GetResult(p.PipeContext)
 		} else {
 			return
 		}

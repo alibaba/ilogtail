@@ -215,7 +215,7 @@ const nonUnsignedIntVersion = `
     <Data Name="ObjectName">(workshop_fg);/Some/Path/2020.jpg</Data>
     <Data Name="AccessList">%%4416 %%4417 %%4418 %%4419 %%4420 %%4423 %%4424 %%1538 </Data>
     <Data Name="AccessMask">8607</Data>
-    <Data Name="DesiredAccess">Read Data; List Directory; Write Data; Add File; Append Data; Add Subdirectory; Read Extended Attributes; Write Extended Attributes; Read Attributes; Write Attributes; Read ACL; </Data>
+    <Data Name="DesiredAccess">Read Data; List Directory; Write Data; Apply File; Append Data; Apply Subdirectory; Read Extended Attributes; Write Extended Attributes; Read Attributes; Write Attributes; Read ACL; </Data>
     <Data Name="Attributes">Set Attributes; Create; Open a non-directory; </Data>
   </EventData>
 </Event>

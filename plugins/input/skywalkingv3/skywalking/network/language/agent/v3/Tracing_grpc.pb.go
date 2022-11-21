@@ -101,7 +101,7 @@ type UnimplementedTraceSegmentReportServiceServer struct {
 }
 
 func (UnimplementedTraceSegmentReportServiceServer) Collect(TraceSegmentReportService_CollectServer) error {
-	return status.Errorf(codes.Unimplemented, "method Collect not implemented")
+	return status.Errorf(codes.Unimplemented, "method Execute not implemented")
 }
 func (UnimplementedTraceSegmentReportServiceServer) CollectInSync(context.Context, *SegmentCollection) (*v3.Commands, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CollectInSync not implemented")

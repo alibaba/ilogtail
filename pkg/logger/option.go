@@ -23,7 +23,7 @@ import (
 var defaultProductionOptions = []ConfigOption{
 	OptionOffConsole,
 	OptionAsyncLogger,
-	OptionInfoLevel,
+	OptionDebugLevel,
 	OptionRetainConfig,
 	OptionOffMemoryReceiver,
 }

@@ -50,8 +50,8 @@ func (s *SkywalkingHTTPServerInput) Description() string {
 	return "This is a skywalking v3 http server input"
 }
 
-func (s *SkywalkingHTTPServerInput) StartCollectLogs(collector ilogtail.Collector) error {
-	logger.Info(s.context.GetRuntimeContext(), "StartCollectLogs skywalking v3 http server")
+func (s *SkywalkingHTTPServerInput) Start(collector ilogtail.Collector) error {
+	logger.Info(s.context.GetRuntimeContext(), "Start skywalking v3 http server")
 	mux := http.NewServeMux()
 
 	resourcePropertiesCache := &ResourcePropertiesCache{

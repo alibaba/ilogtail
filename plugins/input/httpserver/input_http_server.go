@@ -67,9 +67,9 @@ func (s *ServiceHTTP) Description() string {
 	return "HTTP service input plugin for logtail"
 }
 
-// Collect takes in an accumulator and adds the metrics that the Input
+// Execute takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (s *ServiceHTTP) CollectLogs(ilogtail.Collector) error {
+func (s *ServiceHTTP) Collect(ilogtail.Collector) error {
 	return nil
 }
 
@@ -137,8 +137,8 @@ func badRequest(res http.ResponseWriter) {
 	_, _ = res.Write([]byte(`{"error":"http: bad request"}`))
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (s *ServiceHTTP) StartCollectLogs(c ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (s *ServiceHTTP) Start(c ilogtail.Collector) error {
 	s.collector = c
 	s.wg.Add(1)
 

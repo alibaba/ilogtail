@@ -38,10 +38,10 @@ func Benchmark_CollectDefault(b *testing.B) {
 		return
 	}
 	c := &test.MockMetricCollector{}
-	_ = p.CollectLogs(c)
+	_ = p.Collect(c)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := p.CollectLogs(c); err != nil {
+		if err := p.Collect(c); err != nil {
 			b.Errorf("error in collect process metrics: %v", err)
 			return
 		}

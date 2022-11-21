@@ -89,15 +89,15 @@ func (m *Pgsql) dsnConfig() string {
 	return conn
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (m *Pgsql) StartCollectLogs(collector ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (m *Pgsql) Start(collector ilogtail.Collector) error {
 	connStr := m.dsnConfig()
 	return m.Rdb.StartCollectLogs(collector, connStr, func() error {
 		return nil
 	}, nil)
 }
 
-func (m *Pgsql) CollectLogs(collector ilogtail.Collector) error {
+func (m *Pgsql) Collect(collector ilogtail.Collector) error {
 	return m.Rdb.CollectLogs(collector, nil)
 }
 

@@ -50,12 +50,12 @@ func (p *MetricWrapper) Run() {
 		if !util.RandomSleep(p.Interval, 0.1, p.shutdown) {
 			p.LatencyMetric.Begin()
 			if slsInput, ok := p.Input.(ilogtail.SlsMetricInput); ok {
-				if err := slsInput.CollectLogs(p); err != nil {
+				if err := slsInput.Collect(p); err != nil {
 					logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)
 				}
 			}
 			if pipeInput, ok := p.Input.(ilogtail.PipelineMetricInput); ok {
-				if err := pipeInput.Collect(p.PipeContext); err != nil {
+				if err := pipeInput.Execute(p.PipeContext); err != nil {
 					logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)
 				}
 			}

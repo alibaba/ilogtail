@@ -60,7 +60,7 @@ func (c *ConfigManager) CreateConfig(req *proto.CreateConfigRequest, res *proto.
 		}
 
 		res.Code = common.Accept.Code
-		res.Message = "Add config success"
+		res.Message = "Apply config success"
 		return common.Accept.Status, res
 	}
 	// doesn't exist
@@ -77,7 +77,7 @@ func (c *ConfigManager) CreateConfig(req *proto.CreateConfigRequest, res *proto.
 	}
 
 	res.Code = common.Accept.Code
-	res.Message = "Add config success"
+	res.Message = "Apply config success"
 	return common.Accept.Status, res
 }
 
@@ -317,7 +317,7 @@ func (c *ConfigManager) CreateAgentGroup(req *proto.CreateAgentGroupRequest, res
 	}
 
 	res.Code = common.Accept.Code
-	res.Message = "Add agent group success"
+	res.Message = "Apply agent group success"
 	return common.Accept.Status, res
 }
 
@@ -629,7 +629,7 @@ func (c *ConfigManager) ApplyConfigToAgentGroup(req *proto.ApplyConfigToAgentGro
 	}
 
 	res.Code = common.Accept.Code
-	res.Message = "Add config to agent group success"
+	res.Message = "Apply config to agent group success"
 	return common.Accept.Status, res
 }
 

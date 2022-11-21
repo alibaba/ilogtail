@@ -18,9 +18,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
+	"github.com/alibaba/ilogtail"
 
 	"github.com/paulbellamy/ratecounter"
 )
@@ -60,9 +61,9 @@ func (*FlusherStatistics) Description() string {
 func (*FlusherStatistics) SetUrgent(flag bool) {
 }
 
-// FlushLogs flushes @logGroupList but it only do statistics.
+// Flush flushes @logGroupList but it only do statistics.
 // It returns any error it encountered.
-func (p *FlusherStatistics) FlushLogs(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (p *FlusherStatistics) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		p.loggroupRateCounter.Incr(1)
 		p.logRateCounter.Incr((int64)(len(logGroup.Logs)))

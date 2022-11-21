@@ -46,9 +46,9 @@ func (p *ServiceDockerEvents) Description() string {
 	return "docker event input plugin for logtail"
 }
 
-// Collect takes in an accumulator and adds the metrics that the Input
+// Execute takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (p *ServiceDockerEvents) CollectLogs(ilogtail.Collector) error {
+func (p *ServiceDockerEvents) Collect(ilogtail.Collector) error {
 	if p.EventQueueSize < 4 {
 		p.EventQueueSize = 4
 	}
@@ -82,8 +82,8 @@ func (p *ServiceDockerEvents) fire(c ilogtail.Collector, event *docker.APIEvents
 	c.AddDataArray(nil, key, value, time.Unix(0, event.TimeNano))
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (p *ServiceDockerEvents) StartCollectLogs(c ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (p *ServiceDockerEvents) Start(c ilogtail.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)
 	p.innerEventQueue = make(chan *docker.APIEvents, p.EventQueueSize)

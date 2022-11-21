@@ -230,8 +230,8 @@ func (m *Mysql) CheckPointToString() string {
 	return m.checkpointValue
 }
 
-// Start starts the ServiceInput's service, whatever that may be
-func (m *Mysql) StartCollectLogs(collector ilogtail.Collector) error {
+// StartService starts the ServiceInput's service, whatever that may be
+func (m *Mysql) Start(collector ilogtail.Collector) error {
 	m.waitGroup.Add(1)
 	defer m.waitGroup.Done()
 	// initialize additional query intervals
@@ -274,7 +274,7 @@ func (m *Mysql) StartCollectLogs(collector ilogtail.Collector) error {
 		case <-timer.C:
 			startTime := time.Now()
 			m.collectLatency.Begin()
-			err = m.CollectLogs(collector)
+			err = m.Collect(collector)
 			if err != nil {
 				logger.Error(m.context.GetRuntimeContext(), "MYSQL_QUERY_ALARM", "sql query error", err)
 			}
@@ -295,7 +295,7 @@ func (m *Mysql) StartCollectLogs(collector ilogtail.Collector) error {
 	}
 }
 
-func (m *Mysql) CollectLogs(collector ilogtail.Collector) error {
+func (m *Mysql) Collect(collector ilogtail.Collector) error {
 	if m.dbStatment == nil {
 		return fmt.Errorf("unknow error, instance not init")
 	}

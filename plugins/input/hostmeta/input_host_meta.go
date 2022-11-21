@@ -23,10 +23,11 @@ import (
 
 	"github.com/shirou/gopsutil/host"
 
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 )
 
 const pluginName = "metric_meta_host"
@@ -87,10 +88,10 @@ func (in *InputNodeMeta) Init(context ilogtail.Context) (int, error) {
 }
 
 func (in *InputNodeMeta) Description() string {
-	return "CollectLogs the host metadata"
+	return "Collect the host metadata"
 }
 
-func (in *InputNodeMeta) CollectLogs(collector ilogtail.Collector) error {
+func (in *InputNodeMeta) Collect(collector ilogtail.Collector) error {
 	now := time.Now()
 	if len(in.hostCollects) > 0 {
 		node, err := in.collectHostMeta()

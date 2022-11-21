@@ -102,14 +102,14 @@ func TestInputProcess_Collect(t *testing.T) {
 			}
 			c := &test.MockMetricCollector{}
 			p.TopNCPU = 1
-			_ = p.CollectLogs(c)
+			_ = p.Collect(c)
 			c.Logs = nil
 			p.OpenFD = tt.conditions.OpenFD
 			p.IO = tt.conditions.IO
 			p.NetIO = tt.conditions.NetIO
 			p.Thread = tt.conditions.Thread
 
-			if err := p.CollectLogs(c); err != nil {
+			if err := p.Collect(c); err != nil {
 				t.Errorf("cannot collect the process metrics: %v", err)
 				return
 			}

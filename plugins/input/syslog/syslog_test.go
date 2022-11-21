@@ -40,7 +40,7 @@ func TestStartAndStop(t *testing.T) {
 	collector := &mockCollector{}
 	_, _ = syslog.Init(ctx)
 	go func() {
-		err := syslog.StartCollectLogs(collector)
+		err := syslog.Start(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Second)
@@ -211,7 +211,7 @@ func TestMockTcpRun(t *testing.T) {
 	syslog.Address = "tcp://127.0.0.1:0"
 	_, _ = syslog.Init(ctx)
 	go func() {
-		err := syslog.StartCollectLogs(collector)
+		err := syslog.Start(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -229,7 +229,7 @@ func TestMockUdpRun(t *testing.T) {
 	syslog.Address = "udp://127.0.0.1:0"
 	_, _ = syslog.Init(ctx)
 	go func() {
-		err := syslog.StartCollectLogs(collector)
+		err := syslog.Start(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)
@@ -252,7 +252,7 @@ func TestMockUnixGram(t *testing.T) {
 	syslog.Address = "unixgram://" + unixFilePath
 	_, _ = syslog.Init(ctx)
 	go func() {
-		err := syslog.StartCollectLogs(collector)
+		err := syslog.Start(collector)
 		require.NoError(t, err)
 	}()
 	time.Sleep(time.Duration(1) * time.Second)

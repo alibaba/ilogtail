@@ -80,11 +80,11 @@ func TestInputNodeMeta_Collect(t *testing.T) {
 				t.Errorf("cannot init meta node plugin: %v", err)
 				return
 			}
-			if err := p.CollectLogs(c); err != nil {
-				t.Errorf("CollectLogs() error = %v", err)
+			if err := p.Collect(c); err != nil {
+				t.Errorf("Collect() error = %v", err)
 				return
 			} else if len(c.Logs) != tt.wantNodeNum {
-				t.Errorf("CollectLogs() want collect %d logs, but got %d", tt.wantNodeNum, len(c.Logs))
+				t.Errorf("Collect() want collect %d logs, but got %d", tt.wantNodeNum, len(c.Logs))
 				return
 			}
 			for _, log := range c.Logs {

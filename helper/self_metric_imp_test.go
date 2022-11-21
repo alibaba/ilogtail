@@ -15,8 +15,9 @@
 package helper
 
 import (
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
+	"github.com/alibaba/ilogtail"
 
 	"reflect"
 	"testing"
@@ -103,7 +104,7 @@ func TestStrMetric_Get(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -131,7 +132,7 @@ func TestStrMetric_Serialize(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -157,7 +158,7 @@ func TestNormalMetric_Add(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -183,7 +184,7 @@ func TestNormalMetric_Clear(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -206,7 +207,7 @@ func TestNormalMetric_Get(t *testing.T) {
 		fields fields
 		want   int64
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -231,7 +232,7 @@ func TestNormalMetric_Name(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -259,7 +260,7 @@ func TestNormalMetric_Serialize(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -287,7 +288,7 @@ func TestAvgMetric_Add(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -317,7 +318,7 @@ func TestAvgMetric_Clear(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -344,7 +345,7 @@ func TestAvgMetric_Get(t *testing.T) {
 		fields fields
 		want   int64
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -373,7 +374,7 @@ func TestAvgMetric_GetAvg(t *testing.T) {
 		fields fields
 		want   float64
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -402,7 +403,7 @@ func TestAvgMetric_Name(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -434,7 +435,7 @@ func TestAvgMetric_Serialize(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -461,7 +462,7 @@ func TestLatMetric_Name(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -489,7 +490,7 @@ func TestLatMetric_Begin(t *testing.T) {
 		name   string
 		fields fields
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -515,7 +516,7 @@ func TestLatMetric_End(t *testing.T) {
 		name   string
 		fields fields
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -541,7 +542,7 @@ func TestLatMetric_Clear(t *testing.T) {
 		name   string
 		fields fields
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -568,7 +569,7 @@ func TestLatMetric_Get(t *testing.T) {
 		fields fields
 		want   int64
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -600,7 +601,7 @@ func TestLatMetric_Serialize(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -624,7 +625,7 @@ func TestNewCounterMetric(t *testing.T) {
 		args args
 		want ilogtail.CounterMetric
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -644,7 +645,7 @@ func TestNewAverageMetric(t *testing.T) {
 		args args
 		want ilogtail.CounterMetric
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -664,7 +665,7 @@ func TestNewStringMetric(t *testing.T) {
 		args args
 		want ilogtail.StringMetric
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -684,7 +685,7 @@ func TestNewLatencyMetric(t *testing.T) {
 		args args
 		want ilogtail.LatencyMetric
 	}{
-		// TODO: Add test cases.
+		// TODO: Apply test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

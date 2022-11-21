@@ -59,7 +59,7 @@ func (r *InputMock) Description() string {
 	return "mock input plugin for logtail"
 }
 
-func (r *InputMock) CollectLogs(collector ilogtail.Collector) error {
+func (r *InputMock) Collect(collector ilogtail.Collector) error {
 	if r.MockSlsLogFormat {
 		r.Index++
 		if r.OpenPrometheusPattern {
@@ -77,7 +77,7 @@ func (r *InputMock) CollectLogs(collector ilogtail.Collector) error {
 	return nil
 }
 
-func (r *InputMock) Collect(context ilogtail.PipelineContext) error {
+func (r *InputMock) Execute(context ilogtail.PipelineContext) error {
 	if r.MockMetricEventFormat {
 		r.Index++
 		group := models.NewGroup(models.NewMetadataWithMap(r.GroupMeta), models.NewTagsWithMap(r.GroupTags))

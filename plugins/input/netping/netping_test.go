@@ -53,7 +53,7 @@ func TestInitEmpty(t *testing.T) {
 	assert.Equal(t, 0, len(netPing.TCPConfigs))
 
 	c := &test.MockMetricCollector{}
-	netPing.CollectLogs(c)
+	netPing.Collect(c)
 }
 
 func TestInitAndCollect(t *testing.T) {
@@ -90,7 +90,7 @@ func TestInitAndCollect(t *testing.T) {
 
 	c := &test.MockMetricCollector{}
 	netPing.icmpPrivileged = false
-	netPing.CollectLogs(c)
+	netPing.Collect(c)
 
 	hasTcping := false
 	hasPing := false
@@ -121,7 +121,7 @@ func TestInitAndCollect(t *testing.T) {
 	fmt.Println("disable dns")
 	c = &test.MockMetricCollector{}
 	netPing.DisableDNS = true
-	netPing.CollectLogs(c)
+	netPing.Collect(c)
 
 	hasTcping = false
 	hasPing = false
