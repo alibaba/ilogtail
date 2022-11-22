@@ -161,7 +161,7 @@ func (s *AggregatorShardHash) selectShardAgg(sourceValue string) *shardAggregato
 	return s.shardAggs[bucketID]
 }
 
-// Apply ...
+// Add ...
 func (s *AggregatorShardHash) Add(log *protocol.Log, ctx map[string]interface{}) error {
 	var sourceValue string
 	for idx, key := range s.SourceKeys {

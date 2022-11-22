@@ -32,7 +32,7 @@ const (
 //
 // For inner usage, note about following information.
 // There is a quick flush design in AggregatorBase, which is implemented
-// in Apply method (search p.queue.Apply in current file). Therefore, not all
+// in Add method (search p.queue.Apply in current file). Therefore, not all
 // LogGroups are returned through Export method.
 // If you want to do some operations (such as adding tags) on LogGroups returned
 // by AggregatorBase in your own aggregator, you should do some extra works,
@@ -77,7 +77,7 @@ func (*AggregatorBase) evaluateLogSize(log *protocol.Log) int {
 	return logSize
 }
 
-// Apply adds @log to aggregator.
+// Add adds @log to aggregator.
 // It uses defaultLogGroup to store log groups which contain logs as following:
 // defaultLogGroup => [LG1: log1->log2->log3] -> [LG2: log1->log2->log3] -> ..
 // The last log group is set as nowLogGroup, @log will be appended to nowLogGroup
@@ -87,7 +87,7 @@ func (*AggregatorBase) evaluateLogSize(log *protocol.Log) int {
 // to it, then append @log to it.
 // When the count of log group reaches MaxLogGroupCount, the first log group will
 // be popped from defaultLogGroup list and add to queue (after adding pack_id tag).
-// Apply returns any error encountered, nil means success.
+// Add returns any error encountered, nil means success.
 //
 // @return error. **For inner usage, must handle this error!!!!**
 func (p *AggregatorBase) Add(log *protocol.Log, ctx map[string]interface{}) error {
@@ -146,7 +146,7 @@ func (p *AggregatorBase) addPackID(logGroup *protocol.LogGroup) {
 	}
 }
 
-// Export ...
+// Collect ...
 func (p *AggregatorBase) Flush() []*protocol.LogGroup {
 	p.Lock.Lock()
 	if len(p.defaultLogGroup) == 0 {

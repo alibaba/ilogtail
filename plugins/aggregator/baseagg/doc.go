@@ -93,7 +93,7 @@ package baseagg
 // 	return 0, nil
 // }
 //
-// // Export ...
+// // Collect ...
 // func (p *outerAggregator) Export() []*ilogtail.LogGroup {
 // 	logGroupArray := p.defaultAgg.Export()
 // 	for _, logGroup := range logGroupArray {

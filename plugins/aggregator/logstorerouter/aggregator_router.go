@@ -111,12 +111,12 @@ func (p *AggregatorRouter) route(log *protocol.Log, value string) error {
 	return nil
 }
 
-// Apply adds @log to aggregator.
+// Add adds @log to aggregator.
 // If @log has a key equal to aggregator.SourceKey (or SourceKey is empty), it passes @log to
 // matched sub aggregator by calling route function.
 // If @log don't have specified key but aggregator.DropDisMatch is not set, it passed @log to
 // default aggregator, otherwise, it returns error when aggregator.NoMatchError is set.
-// Apply returns any error encountered, nil means success.
+// Add returns any error encountered, nil means success.
 func (p *AggregatorRouter) Add(log *protocol.Log, ctx map[string]interface{}) error {
 	// logger.Debug("agg add", *log)
 

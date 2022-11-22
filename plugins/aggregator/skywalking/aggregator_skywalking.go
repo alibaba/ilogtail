@@ -89,9 +89,9 @@ func (*AggregatorSkywalking) Description() string {
 	return "aggregator router for skywalking"
 }
 
-// Apply adds @log to aggregator.
+// Add adds @log to aggregator.
 // Apply use first content as route key
-// Apply returns any error encountered, nil means success.
+// Add returns any error encountered, nil means success.
 func (p *AggregatorSkywalking) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
 	if len(log.Contents) > 0 {
 		routeKey := log.Contents[0]

@@ -73,7 +73,7 @@ func (*AggregatorContext) Description() string {
 	return "context aggregator for logtail"
 }
 
-// Apply adds @log with @ctx to aggregator.
+// Add adds @log with @ctx to aggregator.
 func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
@@ -127,7 +127,7 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	return nil
 }
 
-// Export ...
+// Collect ...
 func (p *AggregatorContext) Flush() []*protocol.LogGroup {
 	p.lock.Lock()
 	defer p.lock.Unlock()
