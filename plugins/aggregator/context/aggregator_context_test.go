@@ -26,7 +26,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
 
@@ -86,7 +85,7 @@ func TestAggregatorDefault(t *testing.T) {
 			generateLogs(agg, 900, true, logNo, true)
 			logGroups := agg.Flush()
 			generateLogs(agg, 1800, true, logNo, true)
-			logGroups = append(logGroups, agg.FlushLogs()...)
+			logGroups = append(logGroups, agg.Flush()...)
 
 			Convey("Then no quick flush happens, and each logGroup should contain logs from the same source with chronological order", func() {
 				So(logGroups, ShouldHaveLength, 6)

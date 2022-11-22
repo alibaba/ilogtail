@@ -18,10 +18,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/alibaba/ilogtail"
 	baseagg "github.com/alibaba/ilogtail/plugins/aggregator/baseagg"
 )
 
@@ -90,9 +89,9 @@ func (*AggregatorOpenTelemetry) Description() string {
 }
 
 // Add adds @log to aggregator.
-// Apply use first content as route key
+// Add use first content as route key
 // Add returns any error encountered, nil means success.
-func (p *AggregatorOpenTelemetry) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
+func (p *AggregatorOpenTelemetry) Add(log *protocol.Log, ctx map[string]interface{}) error {
 	if len(log.Contents) > 0 {
 		if len(log.Contents) <= 5 {
 			return p.metricsAgg.Add(log, ctx)

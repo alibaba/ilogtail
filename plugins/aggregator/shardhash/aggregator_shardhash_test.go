@@ -28,7 +28,6 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-
 	pluginmanager "github.com/alibaba/ilogtail/pluginmanager"
 )
 

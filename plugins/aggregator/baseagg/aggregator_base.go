@@ -32,8 +32,8 @@ const (
 //
 // For inner usage, note about following information.
 // There is a quick flush design in AggregatorBase, which is implemented
-// in Add method (search p.queue.Apply in current file). Therefore, not all
-// LogGroups are returned through Export method.
+// in Add method (search p.queue.Add in current file). Therefore, not all
+// LogGroups are returned through Flush method.
 // If you want to do some operations (such as adding tags) on LogGroups returned
 // by AggregatorBase in your own aggregator, you should do some extra works,
 // just see the sample code in doc.go.
@@ -83,7 +83,7 @@ func (*AggregatorBase) evaluateLogSize(log *protocol.Log) int {
 // The last log group is set as nowLogGroup, @log will be appended to nowLogGroup
 // if the size and log count of the log group don't exceed limits (MaxLogCount and
 // MAX_LOG_GROUP_SIZE).
-// When nowLogGroup exceeds limits, Apply creates a new log group and switch nowLogGroup
+// When nowLogGroup exceeds limits, Add creates a new log group and switch nowLogGroup
 // to it, then append @log to it.
 // When the count of log group reaches MaxLogGroupCount, the first log group will
 // be popped from defaultLogGroup list and add to queue (after adding pack_id tag).
@@ -146,7 +146,7 @@ func (p *AggregatorBase) addPackID(logGroup *protocol.LogGroup) {
 	}
 }
 
-// Collect ...
+// Flush ...
 func (p *AggregatorBase) Flush() []*protocol.LogGroup {
 	p.Lock.Lock()
 	if len(p.defaultLogGroup) == 0 {

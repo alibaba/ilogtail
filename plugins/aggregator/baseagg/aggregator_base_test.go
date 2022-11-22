@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
 

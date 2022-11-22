@@ -24,11 +24,10 @@ import (
 
 	"github.com/cespare/xxhash/v2"
 
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/plugins/aggregator/baseagg"
 )
 
@@ -190,7 +189,7 @@ func (s *AggregatorShardHash) Add(log *protocol.Log, ctx map[string]interface{})
 }
 
 // update resets topic and appends tags (shardHash, pack ID) if they are not existing.
-// An updated logGroup might be called to update again when quick flush Apply has failed, so
+// An updated logGroup might be called to update again when quick flush Add has failed, so
 // we must check before appending tags.
 func (s *AggregatorShardHash) update(logGroup *protocol.LogGroup) {
 	for _, tag := range logGroup.LogTags {

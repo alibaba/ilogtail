@@ -19,10 +19,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/alibaba/ilogtail"
 )
 
 const (
@@ -127,7 +126,7 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	return nil
 }
 
-// Collect ...
+// Flush ...
 func (p *AggregatorContext) Flush() []*protocol.LogGroup {
 	p.lock.Lock()
 	defer p.lock.Unlock()

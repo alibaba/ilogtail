@@ -15,11 +15,10 @@
 package skywalking
 
 import (
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/plugins/aggregator/baseagg"
 
 	"sync"
@@ -90,9 +89,9 @@ func (*AggregatorSkywalking) Description() string {
 }
 
 // Add adds @log to aggregator.
-// Apply use first content as route key
+// Add use first content as route key
 // Add returns any error encountered, nil means success.
-func (p *AggregatorSkywalking) AddLogs(log *protocol.Log, ctx map[string]interface{}) error {
+func (p *AggregatorSkywalking) Add(log *protocol.Log, ctx map[string]interface{}) error {
 	if len(log.Contents) > 0 {
 		routeKey := log.Contents[0]
 		switch routeKey.Key {
