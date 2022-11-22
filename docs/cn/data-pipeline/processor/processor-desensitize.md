@@ -10,11 +10,11 @@
 | - | - | - |
 | Type                  | String，无默认值(必填) | 插件类型，固定为`processor_desensitize` |
 | SourceKey             | String，`content`    | 日志字段名称。 |
-| DesensitizationMethod | String，无默认值(必填) | 脱敏方式。可选值如下：<br>const：将敏感内容替换成 ConstString 参数处配置等字符串。<br>md5：将敏感内容替换为其对应的MD5值。 |
+| Method                | String，无默认值(必填) | 脱敏方式。可选值如下：<br>const：将敏感内容替换成 ConstString 参数处配置等字符串。<br>md5：将敏感内容替换为其对应的MD5值。 |
 | RegexBegin            | String，无默认值(必填) | 敏感内容前缀的正则表达式，用于查找敏感内容。    |
 | RegexContent          | String，无默认值(必填) | 敏感内容的正则表达式。|
 | ReplaceAll            | Boolean，`true`      | 是否替换该字段中所有的敏感内容。默认为 true，即替换。若设置为 false，则只替换字段中匹配正则表达式的第一部分内容。|
-| ConstString           | String，无默认值(必填) | 用于替换敏感内容等字符串，当 DesensitizationMethod 设置为 const 时，必须配置。 |
+| ConstString           | String，无默认值(必填) | 用于替换敏感内容等字符串，当 Method 设置为 const 时，必须配置。 |
 
 ## 样例
 
@@ -37,7 +37,7 @@ inputs:
 processors:
   - Type: processor_desensitize
     SourceKey: content
-    DesensitizationMethod: "const"
+    Method: "const"
     RegexBegin: "'password':'"
     RegexContent: "[^']*"
     ReplaceAll: true
@@ -68,7 +68,7 @@ inputs:
 processors:
   - Type: processor_desensitize
     SourceKey: content
-    DesensitizationMethod: "md5"
+    Method: "md5"
     RegexBegin: "'password':'"
     RegexContent: "[^']*"
     ReplaceAll: false

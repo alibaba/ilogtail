@@ -27,12 +27,12 @@ import (
 func newProcessor() (*ProcessorDesensitize, error) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	processor := &ProcessorDesensitize{
-		SourceKey:             "content",
-		DesensitizationMethod: "const",
-		RegexBegin:            "'password':'",
-		RegexContent:          "[^']*",
-		ReplaceAll:            true,
-		ConstString:           "***",
+		SourceKey:    "content",
+		Method:       "const",
+		RegexBegin:   "'password':'",
+		RegexContent: "[^']*",
+		ReplaceAll:   true,
+		ConstString:  "***",
 	}
 	err := processor.Init(ctx)
 	return processor, err
@@ -49,16 +49,16 @@ func TestProcessorDesensitizeInit(t *testing.T) {
 			So(processor.Description(), ShouldEqual, "desensitize processor for logtail")
 		})
 
-		Convey("Test load fail with no DesensitizationMethod error", func() {
-			processor.DesensitizationMethod = ""
+		Convey("Test load fail with no Method error", func() {
+			processor.Method = ""
 			err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
-			So(err, ShouldResemble, errors.New("parameter DesensitizationMethod should be \"const\" or \"md5\""))
+			So(err, ShouldResemble, errors.New("parameter Method should be \"const\" or \"md5\""))
 		})
 
-		Convey("Test load fail with wrong DesensitizationMethod error", func() {
-			processor.DesensitizationMethod = "Base64"
+		Convey("Test load fail with wrong Method error", func() {
+			processor.Method = "Base64"
 			err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
-			So(err, ShouldResemble, errors.New("parameter DesensitizationMethod should be \"const\" or \"md5\""))
+			So(err, ShouldResemble, errors.New("parameter Method should be \"const\" or \"md5\""))
 		})
 
 		Convey("Test load fail with no RegexBegin error", func() {
@@ -86,10 +86,10 @@ func TestProcessorDesensitizeInit(t *testing.T) {
 		})
 
 		Convey("Test load fail with no ConstString error", func() {
-			processor.DesensitizationMethod = "const"
+			processor.Method = "const"
 			processor.ConstString = ""
 			err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
-			So(err, ShouldResemble, errors.New("parameter ConstString should not be empty when DesensitizationMethod is \"const\""))
+			So(err, ShouldResemble, errors.New("parameter ConstString should not be empty when Method is \"const\""))
 		})
 	})
 }
@@ -121,7 +121,7 @@ func TestProcessorDesensitizeWork(t *testing.T) {
 	Convey("Test md5.", t, func() {
 		processor, err := newProcessor()
 		So(err, ShouldBeNil)
-		processor.DesensitizationMethod = "md5"
+		processor.Method = "md5"
 		err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
 		So(err, ShouldBeNil)
 

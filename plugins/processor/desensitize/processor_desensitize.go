@@ -27,12 +27,12 @@ import (
 )
 
 type ProcessorDesensitize struct {
-	SourceKey             string
-	DesensitizationMethod string
-	RegexBegin            string
-	RegexContent          string
-	ReplaceAll            bool
-	ConstString           string
+	SourceKey    string
+	Method       string
+	RegexBegin   string
+	RegexContent string
+	ReplaceAll   bool
+	ConstString  string
 
 	context      ilogtail.Context
 	regexBegin   *regexp2.Regexp
@@ -47,9 +47,9 @@ func (p *ProcessorDesensitize) Init(context ilogtail.Context) error {
 
 	var err error
 
-	// check DesensitizationMethod
-	if p.DesensitizationMethod != "const" && p.DesensitizationMethod != "md5" {
-		err = errors.New("parameter DesensitizationMethod should be \"const\" or \"md5\"")
+	// check Method
+	if p.Method != "const" && p.Method != "md5" {
+		err = errors.New("parameter Method should be \"const\" or \"md5\"")
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_desensitize error", err)
 		return err
 	}
@@ -78,9 +78,9 @@ func (p *ProcessorDesensitize) Init(context ilogtail.Context) error {
 		return err
 	}
 
-	// check DesensitizationMethod
-	if p.DesensitizationMethod == "const" && p.ConstString == "" {
-		err = errors.New("parameter ConstString should not be empty when DesensitizationMethod is \"const\"")
+	// check Method
+	if p.Method == "const" && p.ConstString == "" {
+		err = errors.New("parameter ConstString should not be empty when Method is \"const\"")
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_desensitize error", err)
 		return err
 	}
@@ -116,11 +116,11 @@ func (p *ProcessorDesensitize) desensitize(val string) string {
 		pos = match.Index + match.Length
 		value, _ := p.regexContent.FindStringMatchStartingAt(val, pos)
 		if value != nil {
-			if p.DesensitizationMethod == "const" {
+			if p.Method == "const" {
 				val, _ = p.regexContent.Replace(val, p.ConstString, pos, 1)
 				pos = value.Index + len(p.ConstString)
 			}
-			if p.DesensitizationMethod == "md5" {
+			if p.Method == "md5" {
 				has := md5.Sum([]byte(value.String())) //nolint:gosec
 				md5str := fmt.Sprintf("%x", has)
 				val, _ = p.regexContent.Replace(val, md5str, pos, 1)
@@ -138,12 +138,12 @@ func (p *ProcessorDesensitize) desensitize(val string) string {
 func init() {
 	ilogtail.Processors[pluginName] = func() ilogtail.Processor {
 		return &ProcessorDesensitize{
-			SourceKey:             "content",
-			DesensitizationMethod: "",
-			RegexBegin:            "",
-			RegexContent:          "",
-			ReplaceAll:            true,
-			ConstString:           "",
+			SourceKey:    "content",
+			Method:       "",
+			RegexBegin:   "",
+			RegexContent: "",
+			ReplaceAll:   true,
+			ConstString:  "",
 		}
 	}
 }
