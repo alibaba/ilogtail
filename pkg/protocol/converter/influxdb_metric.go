@@ -31,7 +31,7 @@ func (c *Converter) ConvertToInfluxdbProtocolStream(logGroup *protocol.LogGroup,
 	var encoder lineprotocol.Encoder
 	encoder.SetBuffer(*pooledBuf)
 	encoder.Reset()
-	encoder.SetLax(false)
+	encoder.SetLax(true)
 
 	for _, log := range logGroup.Logs {
 		reader, err := newMetricReader(log)
@@ -51,7 +51,7 @@ func (c *Converter) ConvertToInfluxdbProtocolStream(logGroup *protocol.LogGroup,
 		}
 		value, ok := lineprotocol.NewValue(v)
 		if !ok {
-			return nil, nil, fmt.Errorf("unknown field value")
+			return nil, nil, fmt.Errorf("unknown field value: %v", v)
 		}
 		timestamp, err := reader.readTimestamp()
 		if err != nil {
