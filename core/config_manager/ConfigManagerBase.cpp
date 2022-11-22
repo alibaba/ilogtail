@@ -873,6 +873,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             config->mLocalStorage = true; // Must be true, parameter local_storage is desperated.
             config->mVersion = version;
 
+            config->mCompressType = STRING_FLAG(forced_data_compress_type).empty() ? GetStringValue(value, "compressType", "") : STRING_FLAG(forced_data_compress_type);
             config->mDiscardNoneUtf8 = GetBoolValue(value, "discard_none_utf8", false);
 
             config->mAliuid = GetStringValue(value, "aliuid", "");
@@ -1529,7 +1530,6 @@ Config* ConfigManagerBase::FindBestMatch(const string& path, const string& name)
     unordered_map<string, Config*>::iterator itr = mNameConfigMap.begin();
     Config* prevMatch = NULL;
     size_t prevLen = 0;
-    int32_t preCreateTime = INT_MAX;
     size_t curLen = 0;
     uint32_t nameRepeat = 0;
     string logNameList;
@@ -1559,12 +1559,10 @@ Config* ConfigManagerBase::FindBestMatch(const string& path, const string& name)
                 curLen = config->mBasePath.size();
                 if (prevLen < curLen) {
                     prevMatch = config;
-                    preCreateTime = config->mCreateTime;
                     prevLen = curLen;
                 } else if (prevLen == curLen && prevMatch != NULL) {
                     if (prevMatch->mCreateTime > config->mCreateTime) {
                         prevMatch = config;
-                        preCreateTime = config->mCreateTime;
                         prevLen = curLen;
                     }
                 }

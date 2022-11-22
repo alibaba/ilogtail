@@ -149,7 +149,8 @@ enum SendResult {
     SEND_UNAUTHORIZED,
     SEND_SERVER_ERROR,
     SEND_DISCARD_ERROR,
-    SEND_INVALID_SEQUENCE_ID
+    SEND_INVALID_SEQUENCE_ID,
+    SEND_PARAMETER_INVALID
 };
 SendResult ConvertErrorCode(const std::string& errorCode);
 
@@ -362,6 +363,7 @@ public:
     // for debug & ut
     void (*MockAsyncSend)(const std::string& projectName,
                           const std::string& logstore,
+                          sls_logs::SlsCompressType compressType,
                           const std::string& logData,
                           SEND_DATA_TYPE dataType,
                           int32_t rawSize,
@@ -426,7 +428,8 @@ public:
                 const std::string& logstore = "",
                 const std::string& shardHash = "");
 
-    void SendLZ4Compressed(const std::string& projectName,
+    // only used by exactly once
+    void SendCompressed(const std::string& projectName,
                            sls_logs::LogGroup& logGroup,
                            const std::vector<int32_t>& neededLogIndex,
                            const std::string& configName,
@@ -435,7 +438,7 @@ public:
                            const std::string& filename,
                            const LogGroupContext& context);
 
-    void SendLZ4Compressed(std::vector<MergeItem*>& sendDataVec);
+    void SendCompressed(std::vector<MergeItem*>& sendDataVec);
     void SendLogPackageList(std::vector<MergeItem*>& sendDataVec);
 
     friend class SendClosure;
