@@ -38,7 +38,7 @@ func newProcessor() (*ProcessorDesensitize, error) {
 	return processor, err
 }
 
-func TestProcessorGrokInit(t *testing.T) {
+func TestProcessorDesensitizeInit(t *testing.T) {
 	Convey("Test load Processor Desensitize.", t, func() {
 		processor, err := newProcessor()
 		So(err, ShouldBeNil)
