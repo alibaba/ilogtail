@@ -114,17 +114,17 @@ func (p *ProcessorDesensitize) desensitize(val string) string {
 	match, _ := p.regexBegin.FindStringMatchStartingAt(val, pos)
 	for match != nil {
 		pos = match.Index + match.Length
-		value, _ := p.regexContent.FindStringMatchStartingAt(val, pos)
-		if value != nil {
+		content, _ := p.regexContent.FindStringMatchStartingAt(val, pos)
+		if content != nil {
 			if p.Method == "const" {
 				val, _ = p.regexContent.Replace(val, p.ConstString, pos, 1)
-				pos = value.Index + len(p.ConstString)
+				pos = content.Index + len(p.ConstString)
 			}
 			if p.Method == "md5" {
-				has := md5.Sum([]byte(value.String())) //nolint:gosec
+				has := md5.Sum([]byte(content.String())) //nolint:gosec
 				md5str := fmt.Sprintf("%x", has)
 				val, _ = p.regexContent.Replace(val, md5str, pos, 1)
-				pos = value.Index + 32
+				pos = content.Index + len(md5str)
 			}
 			if !p.ReplaceAll {
 				break
