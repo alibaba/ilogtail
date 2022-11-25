@@ -37,8 +37,8 @@ func TestAlwaysOnlineManager(t *testing.T) {
 		config.ConfigName = name
 		config.configDetailHash = hash
 		config.Context = mock.NewEmptyContext("p", "l", "c")
-		config.processShutdown = make(chan struct{})
-		config.flushShutdown = make(chan struct{})
+		// config.processShutdown = make(chan struct{})
+		// config.flushShutdown = make(chan struct{})
 		config.pauseChan = make(chan struct{})
 		config.resumeChan = make(chan struct{})
 		return config

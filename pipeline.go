@@ -15,6 +15,8 @@
 package ilogtail
 
 import (
+	"sync"
+
 	"github.com/alibaba/ilogtail/pkg/models"
 )
 
@@ -45,7 +47,11 @@ func (p *observePipeCollector) Collect(group *models.GroupInfo, events ...models
 }
 
 func (p *observePipeCollector) Dump() []*models.PipelineGroupEvents {
-	return nil
+	results := make([]*models.PipelineGroupEvents, len(p.groupChan))
+	for i := 0; i < len(p.groupChan); i++ {
+		results[i] = <-p.groupChan
+	}
+	return results
 }
 
 func (p *observePipeCollector) Observe() chan *models.PipelineGroupEvents {
@@ -125,4 +131,32 @@ func NewVoidPipelineConext() PipelineContext {
 
 func newPipelineConext(collector PipelineCollector) PipelineContext {
 	return &defaultPipelineContext{collector: collector}
+}
+
+type CancellationControl struct {
+	cancelToken chan struct{}
+	wg          sync.WaitGroup
+}
+
+func (p *CancellationControl) CancelToken() <-chan struct{} {
+	return p.cancelToken
+}
+
+func (p *CancellationControl) Run(action func(*CancellationControl)) {
+	p.wg.Add(1)
+	go func(c *CancellationControl) {
+		defer c.wg.Done()
+		action(p)
+	}(p)
+}
+
+func (p *CancellationControl) Cancel() {
+	close(p.cancelToken)
+	p.wg.Wait()
+}
+
+func NewCancellationControl() *CancellationControl {
+	return &CancellationControl{
+		cancelToken: make(chan struct{}, 1),
+	}
 }

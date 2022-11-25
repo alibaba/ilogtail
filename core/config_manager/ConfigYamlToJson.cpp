@@ -226,6 +226,10 @@ bool ConfigYamlToJson::GenerateLocalJsonConfig(const string configName,
 
         FillupDefalutUserJsonConfig(workMode, userJsonConfig);
         if (!pluginJsonConfig.empty()) {
+            if (yamlConfig["version"])
+                pluginJsonConfig["version"] = yamlConfig["version"].as<std::string>();
+            else
+                pluginJsonConfig["version"] = "v1";
             userJsonConfig["plugin"] = pluginJsonConfig;
         }
         userJsonConfig["log_type"] = workMode.mLogType;

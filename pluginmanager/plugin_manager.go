@@ -164,28 +164,18 @@ func HoldOn(exitFlag bool) error {
 	if StatisticsConfig != nil {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the static metrics")
-			for _, plugin := range StatisticsConfig.MetricPlugins {
-				if slsInput, ok := plugin.Input.(ilogtail.SlsMetricInput); ok {
-					_ = slsInput.Collect(plugin)
-				}
-				if pipeInput, ok := plugin.Input.(ilogtail.PipelineMetricInput); ok {
-					_ = pipeInput.Execute(StatisticsConfig.InputPipeContext)
-				}
-			}
+			control := ilogtail.NewCancellationControl()
+			StatisticsConfig.PluginRunner.RunMetricInput(control)
+			control.Cancel()
 		}
 		_ = StatisticsConfig.Stop(exitFlag)
 	}
 	if AlarmConfig != nil {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the alarm metrics")
-			for _, plugin := range AlarmConfig.MetricPlugins {
-				if slsInput, ok := plugin.Input.(ilogtail.SlsMetricInput); ok {
-					_ = slsInput.Collect(plugin)
-				}
-				if pipeInput, ok := plugin.Input.(ilogtail.PipelineMetricInput); ok {
-					_ = pipeInput.Execute(AlarmConfig.InputPipeContext)
-				}
-			}
+			control := ilogtail.NewCancellationControl()
+			AlarmConfig.PluginRunner.RunMetricInput(control)
+			control.Cancel()
 		}
 		_ = AlarmConfig.Stop(exitFlag)
 	}

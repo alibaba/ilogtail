@@ -19,7 +19,7 @@ import (
 )
 
 type ProcessorWrapper struct {
-	Processor ilogtail.Processor
+	Processor ilogtail.Processor1
 	Config    *LogstoreConfig
 	LogsChan  chan *ilogtail.LogWithContext
 	Priority  int

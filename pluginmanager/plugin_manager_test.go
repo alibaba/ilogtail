@@ -71,8 +71,8 @@ func (s *managerTestSuite) TestPluginManager() {
 		time.Sleep(time.Millisecond * time.Duration(1500))
 		config, ok := LogtailConfig["test_config"]
 		s.True(ok)
-		s.Equal(2, len(config.FlusherPlugins))
-		c, ok := config.FlusherPlugins[1].Flusher.(*checker.FlusherChecker)
+		s.Equal(2, len(config.PluginRunner.(*pluginv1Runner).FlusherPlugins))
+		c, ok := config.PluginRunner.(*pluginv1Runner).FlusherPlugins[1].Flusher.(*checker.FlusherChecker)
 		s.True(ok)
 		s.NoError(HoldOn(false), "got err when hold on")
 		s.Equal(200, c.GetLogCount())

@@ -15,60 +15,42 @@
 package pluginmanager
 
 import (
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 
-	"github.com/alibaba/ilogtail"
-
-	"sync"
 	"time"
 )
 
 type MetricWrapper struct {
-	Input    ilogtail.MetricInput
+	Input    ilogtail.MetricInput1
 	Config   *LogstoreConfig
 	Tags     map[string]string
 	Interval time.Duration
 
 	LogsChan      chan *ilogtail.LogWithContext
 	LatencyMetric ilogtail.LatencyMetric
-
-	PipeContext ilogtail.PipelineContext
-
-	shutdown  chan struct{}
-	waitgroup sync.WaitGroup
 }
 
-func (p *MetricWrapper) Run() {
+func (p *MetricWrapper) Run(control *ilogtail.CancellationControl) {
 	logger.Info(p.Config.Context.GetRuntimeContext(), "start run metric ", p.Input)
-	p.shutdown = make(chan struct{}, 1)
-	p.waitgroup.Add(1)
-	defer p.waitgroup.Done()
 	defer panicRecover(p.Input.Description())
 	for {
-		if !util.RandomSleep(p.Interval, 0.1, p.shutdown) {
-			p.LatencyMetric.Begin()
-			if slsInput, ok := p.Input.(ilogtail.SlsMetricInput); ok {
-				if err := slsInput.Collect(p); err != nil {
-					logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)
-				}
-			}
-			if pipeInput, ok := p.Input.(ilogtail.PipelineMetricInput); ok {
-				if err := pipeInput.Execute(p.PipeContext); err != nil {
-					logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)
-				}
-			}
-			p.LatencyMetric.End()
-			continue
+		exitFlag := util.RandomSleep(p.Interval, 0.1, control.CancelToken())
+		p.LatencyMetric.Begin()
+		err := p.Input.Collect(p)
+		p.LatencyMetric.End()
+		if err != nil {
+			logger.Error(p.Config.Context.GetRuntimeContext(), "INPUT_COLLECT_ALARM", "error", err)
 		}
-		return
+		if exitFlag {
+			return
+		}
 	}
 }
 
 func (p *MetricWrapper) Stop() {
-	close(p.shutdown)
-	p.waitgroup.Wait()
 	logger.Info(p.Config.Context.GetRuntimeContext(), "stop metric success", p.Input)
 }
 

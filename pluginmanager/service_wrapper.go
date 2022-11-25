@@ -15,24 +15,21 @@
 package pluginmanager
 
 import (
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/alibaba/ilogtail"
 
 	"time"
 )
 
 type ServiceWrapper struct {
-	Input    ilogtail.ServiceInput
+	Input    ilogtail.ServiceInput1
 	Config   *LogstoreConfig
 	Tags     map[string]string
 	Interval time.Duration
 
 	LogsChan chan *ilogtail.LogWithContext
-
-	PipeContext ilogtail.PipelineContext
 }
 
 func (p *ServiceWrapper) Run() {
@@ -40,15 +37,9 @@ func (p *ServiceWrapper) Run() {
 
 	go func() {
 		defer panicRecover(p.Input.Description())
-		if slsInput, ok := p.Input.(ilogtail.SlsServiceInput); ok {
-			if err := slsInput.Start(p); err != nil {
-				logger.Error(p.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
-			}
-		}
-		if pipeInput, ok := p.Input.(ilogtail.PipelineServiceInput); ok {
-			if err := pipeInput.StartService(p.PipeContext); err != nil {
-				logger.Error(p.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
-			}
+		err := p.Input.Start(p)
+		if err != nil {
+			logger.Error(p.Config.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
 		}
 		logger.Info(p.Config.Context.GetRuntimeContext(), "service done", p.Input.Description())
 	}()

@@ -39,7 +39,7 @@ func (s *FlushOutStore[T]) Get() []*T {
 	return s.data
 }
 
-func (s *FlushOutStore[T]) Read(ch chan *T) {
+func (s *FlushOutStore[T]) Write(ch chan *T) {
 	for i := 0; i < s.Len(); i++ {
 		ch <- s.data[i]
 		s.data[i] = nil

@@ -36,11 +36,11 @@ func Test(t *testing.T) {
 }
 
 type processorTestSuite struct {
-	processor ilogtail.SlsProcessor
+	processor ilogtail.Processor1
 }
 
 func (s *processorTestSuite) SetUpTest(c *check.C) {
-	s.processor = ilogtail.Processors["processor_regex"]().(ilogtail.SlsProcessor)
+	s.processor = ilogtail.Processors["processor_regex"]().(ilogtail.Processor1)
 	require.Error(c, s.processor.Init(mock.NewEmptyContext("p", "l", "c")))
 	logger.Info(context.Background(), "set up", s.processor.Description())
 }
