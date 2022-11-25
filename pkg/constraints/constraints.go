@@ -12,20 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package helper
+package constraints
 
-import "github.com/alibaba/ilogtail/pkg/constraints"
-
-func Max[T constraints.IntUintFloat](x T, y T) T {
-	if x > y {
-		return x
-	}
-	return y
-}
-
-func Min[T constraints.IntUintFloat](x T, y T) T {
-	if x < y {
-		return x
-	}
-	return y
+type IntUintFloat interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~float32 | ~float64
 }

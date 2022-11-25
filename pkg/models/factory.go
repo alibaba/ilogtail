@@ -14,6 +14,8 @@
 
 package models
 
+import "github.com/alibaba/ilogtail/pkg/constraints"
+
 func NewTagsWithMap(tags map[string]string) Tags {
 	return &keyValuesImpl[string]{
 		keyValues: tags,
@@ -82,7 +84,7 @@ func NewMetric(name string, metricType MetricType, tags Tags, timestamp int64, v
 	}
 }
 
-func NewSingleValueMetric[T IntUintFloat](name string, metricType MetricType, tags Tags, timestamp int64, value T) *MetricEvent {
+func NewSingleValueMetric[T constraints.IntUintFloat](name string, metricType MetricType, tags Tags, timestamp int64, value T) *MetricEvent {
 	return &MetricEvent{
 		Name:       name,
 		MetricType: metricType,
