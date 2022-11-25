@@ -32,7 +32,7 @@ type ServiceWrapper struct {
 	LogsChan chan *ilogtail.LogWithContext
 }
 
-func (p *ServiceWrapper) Run() {
+func (p *ServiceWrapper) Run(cc *ilogtail.CancellationControl) {
 	logger.Info(p.Config.Context.GetRuntimeContext(), "start run service", p.Input)
 
 	go func() {

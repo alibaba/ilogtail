@@ -52,11 +52,11 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	return nil
 }
 
-func (p *pluginv1Runner) AddMetricInput(input ilogtail.MetricInput, interval time.Duration) {
+func (p *pluginv1Runner) AddMetricInput(input ilogtail.MetricInput, interval int) {
 	var wrapper MetricWrapper
 	wrapper.Config = p.LogstoreConfig
 	wrapper.Input = input.(ilogtail.MetricInput1)
-	wrapper.Interval = time.Millisecond * interval
+	wrapper.Interval = time.Duration(interval) * time.Millisecond
 	wrapper.LogsChan = p.LogsChan
 	wrapper.LatencyMetric = p.LogstoreConfig.Statistics.CollecLatencytMetric
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
@@ -106,19 +106,23 @@ func (p *pluginv1Runner) AddFlusher(flusher ilogtail.Flusher) {
 
 func (p *pluginv1Runner) RunMetricInput(control *ilogtail.CancellationControl) {
 	for _, metric := range p.MetricPlugins {
-		control.Run(metric.Run)
+		m := metric
+		control.Run(m.Run)
 	}
 }
 
 func (p *pluginv1Runner) RunServiceInput(control *ilogtail.CancellationControl) {
 	for _, service := range p.ServicePlugins {
-		control.Run(func(cc *ilogtail.CancellationControl) {
-			service.Run()
-		})
+		s := service
+		control.Run(s.Run)
 	}
 }
 
-// processInternal is the routine of processors.
+func (p *pluginv1Runner) RunProcessor(control *ilogtail.CancellationControl) {
+	control.Run(p.runProcessorInternal)
+}
+
+// runProcessorInternal is the routine of processors.
 // Each LogstoreConfig has its own goroutine for this routine.
 // When log is ready (passed through LogsChan), we will try to get
 //
@@ -129,10 +133,6 @@ func (p *pluginv1Runner) RunServiceInput(control *ilogtail.CancellationControl) 
 //	one by one, just like logs -> p1 -> p2 -> p3 -> logsGoToNextStep.
 //
 // It returns when processShutdown is closed.
-func (p *pluginv1Runner) RunProcessor(control *ilogtail.CancellationControl) {
-	control.Run(p.runProcessorInternal)
-}
-
 func (p *pluginv1Runner) runProcessorInternal(cc *ilogtail.CancellationControl) {
 	defer panicRecover(p.LogstoreConfig.ConfigName)
 	var logCtx *ilogtail.LogWithContext
@@ -187,7 +187,8 @@ func (p *pluginv1Runner) RunAggregator(control *ilogtail.CancellationControl) {
 		_ = loadAggregator("aggregator_default", p.LogstoreConfig, nil)
 	}
 	for _, aggregator := range p.AggregatorPlugins {
-		control.Run(aggregator.Run)
+		a := aggregator
+		control.Run(a.Run)
 	}
 }
 

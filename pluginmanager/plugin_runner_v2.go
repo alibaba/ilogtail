@@ -46,18 +46,18 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	p.AggregatorPlugins = make([]ilogtail.Aggregator2, 0)
 	p.FlusherPlugins = make([]ilogtail.Flusher2, 0)
 	p.InputPipeContext = ilogtail.NewObservePipelineConext(inputQueueSize)
-	p.ProcessPipeContext = ilogtail.NewDumpPipelineConext()
+	p.ProcessPipeContext = ilogtail.NewGroupedPipelineConext()
 	p.AggregatePipeContext = ilogtail.NewObservePipelineConext(flushQueueSize)
 	p.FlushPipeContext = ilogtail.NewVoidPipelineConext()
 	p.FlushOutStore.Write(p.AggregatePipeContext.Collector().Observe())
 	return nil
 }
 
-func (p *pluginv2Runner) AddMetricInput(input ilogtail.MetricInput, interval time.Duration) {
+func (p *pluginv2Runner) AddMetricInput(input ilogtail.MetricInput, interval int) {
 	p.MetricPlugins = append(p.MetricPlugins, input.(ilogtail.MetricInput2))
 	p.Timers = append(p.Timers, &timerRunner{
 		state:         input,
-		interval:      time.Millisecond * interval,
+		interval:      time.Duration(interval) * time.Millisecond,
 		context:       p.LogstoreConfig.Context,
 		latencyMetric: p.LogstoreConfig.Statistics.CollecLatencytMetric,
 	})
@@ -78,6 +78,9 @@ func (p *pluginv2Runner) AddAggregator(aggregator ilogtail.Aggregator) {
 		logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "AGGREGATOR_INIT_ERROR", "Aggregator failed to initialize", aggregator.Description(), "error", err)
 		return
 	}
+	if interval == 0 {
+		interval = p.LogstoreConfig.GlobalConfig.AggregatIntervalMs
+	}
 	p.Timers = append(p.Timers, &timerRunner{
 		state:         aggregator,
 		interval:      time.Millisecond * time.Duration(interval),
@@ -92,10 +95,11 @@ func (p *pluginv2Runner) AddFlusher(flusher ilogtail.Flusher) {
 
 func (p *pluginv2Runner) RunMetricInput(control *ilogtail.CancellationControl) {
 	for _, t := range p.Timers {
-		if _, ok := t.state.(ilogtail.MetricInput2); ok {
+		if plugin, ok := t.state.(ilogtail.MetricInput2); ok {
+			metric := plugin
+			timer := t
 			control.Run(func(cc *ilogtail.CancellationControl) {
-				t.Run(func(state interface{}) error {
-					metric, _ := state.(ilogtail.MetricInput2)
+				timer.Run(func(state interface{}) error {
 					return metric.Read(p.InputPipeContext)
 				}, cc)
 			})
@@ -105,28 +109,82 @@ func (p *pluginv2Runner) RunMetricInput(control *ilogtail.CancellationControl) {
 
 func (p *pluginv2Runner) RunServiceInput(control *ilogtail.CancellationControl) {
 	for _, input := range p.ServicePlugins {
+		service := input
 		control.Run(func(c *ilogtail.CancellationControl) {
-			logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "start run service", input)
-			defer panicRecover(input.Description())
-			if err := input.StartService(p.InputPipeContext, c); err != nil {
+			logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "start run service", service)
+			defer panicRecover(service.Description())
+			if err := service.StartService(p.InputPipeContext, c); err != nil {
 				logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "PLUGIN_ALARM", "start service error, err", err)
 			}
-			logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "service done", input.Description())
+			logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "service done", service.Description())
 		})
 	}
 }
 
 func (p *pluginv2Runner) RunProcessor(control *ilogtail.CancellationControl) {
-	// p.AggregatorPlugins.apped
+	control.Run(p.runProcessorInternal)
+}
+
+func (p *pluginv2Runner) runProcessorInternal(cc *ilogtail.CancellationControl) {
+	defer panicRecover(p.LogstoreConfig.ConfigName)
+	pipeContext := p.ProcessPipeContext
+	pipeChan := p.InputPipeContext.Collector().Observe()
+	for {
+		select {
+		case <-cc.CancelToken():
+			if len(pipeChan) == 0 {
+				return
+			}
+		case group := <-pipeChan:
+			p.LogstoreConfig.Statistics.RawLogMetric.Add(int64(len(group.Events)))
+			pipeEvents := []*models.PipelineGroupEvents{group}
+			for _, processor := range p.ProcessorPlugins {
+				for _, in := range pipeEvents {
+					processor.Process(in, pipeContext)
+				}
+				pipeEvents = pipeContext.Collector().Dump()
+				if len(pipeEvents) == 0 {
+					break
+				}
+			}
+			if len(pipeEvents) == 0 {
+				break
+			}
+			for _, aggregator := range p.AggregatorPlugins {
+				for _, pipeEvent := range pipeEvents {
+					if len(pipeEvent.Events) == 0 {
+						continue
+					}
+					p.LogstoreConfig.Statistics.SplitLogMetric.Add(int64(len(pipeEvent.Events)))
+					for tryCount := 1; true; tryCount++ {
+						err := aggregator.Record(pipeEvent, p.AggregatePipeContext)
+						if err == nil {
+							break
+						}
+						// wait until shutdown is active
+						if tryCount%100 == 0 {
+							logger.Warning(p.LogstoreConfig.Context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
+						}
+						time.Sleep(time.Millisecond * 10)
+					}
+				}
+			}
+		}
+	}
 }
 
 func (p *pluginv2Runner) RunAggregator(control *ilogtail.CancellationControl) {
+	if len(p.AggregatorPlugins) == 0 {
+		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
+		_ = loadAggregator("aggregator_default", p.LogstoreConfig, nil)
+	}
 	for _, t := range p.Timers {
-		if _, ok := t.state.(ilogtail.Aggregator2); ok {
+		if plugin, ok := t.state.(ilogtail.Aggregator2); ok {
+			aggregator := plugin
+			timer := t
 			control.Run(func(cc *ilogtail.CancellationControl) {
-				t.Run(func(state interface{}) error {
-					aggr, _ := state.(ilogtail.Aggregator2)
-					return aggr.GetResult(p.AggregatePipeContext)
+				timer.Run(func(state interface{}) error {
+					return aggregator.GetResult(p.AggregatePipeContext)
 				}, cc)
 			})
 		}

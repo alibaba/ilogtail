@@ -140,10 +140,12 @@ func (p *FlusherStdout) Export(in []*models.PipelineGroupEvents, context ilogtai
 	for _, groupEvents := range in {
 
 		if p.Tags {
+			metadata := fmt.Sprintf("%v", groupEvents.Group.Metadata.Iterator())
+			tags := fmt.Sprintf("%v", groupEvents.Group.Tags.Iterator())
 			if p.outLogger != nil {
-				p.outLogger.Infof("[EventGroup] eventcount %d, metadata %v, tags %v", len(groupEvents.Events), groupEvents.Group.Metadata.Iterator(), groupEvents.Group.Tags.Iterator())
+				p.outLogger.Infof("[Event] event %d, metadata %s, tags %s", len(groupEvents.Events), metadata, tags)
 			} else {
-				logger.Info(p.context.GetRuntimeContext(), "[EventGroup] eventcount", len(groupEvents.Events), "metadata", groupEvents.Group.Metadata.Iterator(), "tags", groupEvents.Group.Tags.Iterator())
+				logger.Info(p.context.GetRuntimeContext(), "[Event] event", len(groupEvents.Events), "metadata", metadata, "tags", tags)
 			}
 		}
 

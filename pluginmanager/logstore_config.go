@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
@@ -522,7 +521,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			continue
 		}
 
-		if pluginType != "global" && pluginType != mixProcessModeFlag {
+		if pluginType != "global" && pluginType != "version" && pluginType != mixProcessModeFlag {
 			return nil, fmt.Errorf("error plugin name %s", pluginType)
 		}
 	}
@@ -605,7 +604,7 @@ func loadMetric(pluginType string, logstoreConfig *LogstoreConfig, configInterfa
 			}
 		}
 	}
-	logstoreConfig.PluginRunner.AddMetricInput(metric, time.Duration(interval))
+	logstoreConfig.PluginRunner.AddMetricInput(metric, interval)
 	return nil
 }
 

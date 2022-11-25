@@ -30,7 +30,7 @@ type PluginRunner interface {
 
 	ReceiveRawLog(log *ilogtail.LogWithContext)
 
-	AddMetricInput(input ilogtail.MetricInput, interval time.Duration)
+	AddMetricInput(input ilogtail.MetricInput, interval int)
 
 	AddServiceInput(input ilogtail.ServiceInput)
 

@@ -27,6 +27,8 @@ type PipelineContext interface {
 type PipelineCollector interface {
 	Collect(group *models.GroupInfo, events ...models.PipelineEvent)
 
+	CollectAll(groups ...*models.PipelineGroupEvents)
+
 	Dump() []*models.PipelineGroupEvents
 
 	Observe() chan *models.PipelineGroupEvents
@@ -46,6 +48,15 @@ func (p *observePipeCollector) Collect(group *models.GroupInfo, events ...models
 	}
 }
 
+func (p *observePipeCollector) CollectAll(groups ...*models.PipelineGroupEvents) {
+	if len(groups) == 0 {
+		return
+	}
+	for _, g := range groups {
+		p.groupChan <- g
+	}
+}
+
 func (p *observePipeCollector) Dump() []*models.PipelineGroupEvents {
 	results := make([]*models.PipelineGroupEvents, len(p.groupChan))
 	for i := 0; i < len(p.groupChan); i++ {
@@ -58,11 +69,14 @@ func (p *observePipeCollector) Observe() chan *models.PipelineGroupEvents {
 	return p.groupChan
 }
 
-type dumpPipeCollector struct {
+type groupedPipeCollector struct {
 	groupEvents map[*models.GroupInfo][]models.PipelineEvent
 }
 
-func (p *dumpPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
+func (p *groupedPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
+	if len(events) == 0 {
+		return
+	}
 	store, has := p.groupEvents[group]
 	if !has {
 		store = make([]models.PipelineEvent, 0)
@@ -70,7 +84,16 @@ func (p *dumpPipeCollector) Collect(group *models.GroupInfo, events ...models.Pi
 	p.groupEvents[group] = append(store, events...)
 }
 
-func (p *dumpPipeCollector) Dump() []*models.PipelineGroupEvents {
+func (p *groupedPipeCollector) CollectAll(groups ...*models.PipelineGroupEvents) {
+	if len(groups) == 0 {
+		return
+	}
+	for _, g := range groups {
+		p.Collect(g.Group, g.Events...)
+	}
+}
+
+func (p *groupedPipeCollector) Dump() []*models.PipelineGroupEvents {
 	len, idx := len(p.groupEvents), 0
 	results := make([]*models.PipelineGroupEvents, len)
 	if len == 0 {
@@ -87,7 +110,7 @@ func (p *dumpPipeCollector) Dump() []*models.PipelineGroupEvents {
 	return results
 }
 
-func (p *dumpPipeCollector) Observe() chan *models.PipelineGroupEvents {
+func (p *groupedPipeCollector) Observe() chan *models.PipelineGroupEvents {
 	return nil
 }
 
@@ -95,6 +118,9 @@ type voidPipeCollector struct {
 }
 
 func (p *voidPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
+}
+
+func (p *voidPipeCollector) CollectAll(groups ...*models.PipelineGroupEvents) {
 }
 
 func (p *voidPipeCollector) Dump() []*models.PipelineGroupEvents {
@@ -119,8 +145,8 @@ func NewObservePipelineConext(queueSize int) PipelineContext {
 	})
 }
 
-func NewDumpPipelineConext() PipelineContext {
-	return newPipelineConext(&dumpPipeCollector{
+func NewGroupedPipelineConext() PipelineContext {
+	return newPipelineConext(&groupedPipeCollector{
 		groupEvents: make(map[*models.GroupInfo][]models.PipelineEvent),
 	})
 }
@@ -142,12 +168,12 @@ func (p *CancellationControl) CancelToken() <-chan struct{} {
 	return p.cancelToken
 }
 
-func (p *CancellationControl) Run(action func(*CancellationControl)) {
+func (p *CancellationControl) Run(task func(*CancellationControl)) {
 	p.wg.Add(1)
-	go func(c *CancellationControl) {
-		defer c.wg.Done()
-		action(p)
-	}(p)
+	go func(cc *CancellationControl, fn func(*CancellationControl)) {
+		defer cc.wg.Done()
+		fn(cc)
+	}(p, task)
 }
 
 func (p *CancellationControl) Cancel() {
