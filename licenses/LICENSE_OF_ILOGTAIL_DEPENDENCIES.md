@@ -1,6 +1,6 @@
 # Licenses of dependencies
 
-When distributed in a binary form, Logtailplugin may contain portions of the following works:
+When distributed in a binary form, iLogtail may contain portions of the following works:
 
 ## Apache 2.0 licenses
 
@@ -90,7 +90,6 @@ When distributed in a binary form, Logtailplugin may contain portions of the fol
 - [github.com/klauspost/compress](https://pkg.go.dev/github.com/klauspost/compress?tab=licenses)
 - [github.com/danwakefield/fnmatch](https://pkg.go.dev/github.com/danwakefield/fnmatch?tab=licenses)
 - [github.com/denisenkom/go-mssqldb](https://pkg.go.dev/github.com/denisenkom/go-mssqldb?tab=licenses)
-- [github.com/fsouza/go-dockerclient](https://pkg.go.dev/github.com/fsouza/go-dockerclient?tab=licenses)
 - [github.com/godbus/dbus](https://pkg.go.dev/github.com/godbus/dbus?tab=licenses)
 - [github.com/knz/strtime](https://pkg.go.dev/github.com/knz/strtime?tab=licenses)
 - [github.com/pingcap/errors](https://pkg.go.dev/github.com/pingcap/errors?tab=licenses)
@@ -211,7 +210,7 @@ When distributed in a binary form, Logtailplugin may contain portions of the fol
 
 ## EPL V2 licenses
 
-# Logtailplugin used or modified  source code from these projects
+## iLogtail used or modified source code from these projects
 
 - [github.com/elastic/beats](./LICENSE-beats)
 - [github.com/jeromer/syslogparser](./LICENSE-syslogparser)

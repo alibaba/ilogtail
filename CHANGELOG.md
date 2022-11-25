@@ -40,4 +40,4 @@ your changes, such as:
 - [public] [both] [added] add a new flusher_otlp_log plugin.
 - [public] [both] [added] add a new flusher_kafka_v2 plugin.
 - [public] [linux] [fixed] strip binaries to reduce dist size.
-
+- [public] [both] [fixed] fix docker fd leak and event lost by using official docker Go library

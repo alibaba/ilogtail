@@ -20,8 +20,6 @@ package helper
 import (
 	"errors"
 	"runtime"
-
-	docker "github.com/fsouza/go-dockerclient"
 )
 
 var errUninplemented = errors.New("Unimplemented on " + runtime.GOOS)

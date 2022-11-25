@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/Shopify/sarama v1.28.0
 	github.com/VictoriaMetrics/VictoriaMetrics v1.58.0
-	github.com/alibaba/ilogtail/pkg v0.0.0
+	github.com/alibaba/ilogtail/pkg v0.0.0-00010101000000-000000000000
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner v0.0.0
 	github.com/aliyun/aliyun-log-go-sdk v0.1.12
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
@@ -18,7 +18,6 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/elastic/beats/v7 v7.7.1
 	github.com/elastic/go-lumber v0.1.0
-	github.com/fsouza/go-dockerclient v1.8.3
 	github.com/go-kit/kit v0.10.0
 	github.com/go-mysql-org/go-mysql v1.3.0
 	github.com/go-ping/ping v0.0.0-20211130115550-779d1e919534
@@ -95,7 +94,6 @@ require (
 
 require (
 	cloud.google.com/go v0.81.0 // indirect
-	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Microsoft/hcsshim v0.9.4 // indirect
@@ -165,13 +163,11 @@ require (
 	github.com/juju/testing v0.0.0-20200608005635-e4eedbc6f7aa // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
-	github.com/moby/sys/mount v0.3.3 // indirect
 	github.com/moby/sys/mountinfo v0.6.2 // indirect
 	github.com/moby/sys/symlink v0.2.0 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
 	github.com/opencontainers/runc v1.1.2 // indirect

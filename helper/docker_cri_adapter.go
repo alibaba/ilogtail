@@ -39,12 +39,16 @@ import (
 	cri "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
 
-const kubeRuntimeAPIVersion = "0.1.0"
-const maxMsgSize = 1024 * 1024 * 16
+const (
+	kubeRuntimeAPIVersion = "0.1.0"
+	maxMsgSize            = 1024 * 1024 * 16
+)
 
-var containerdUnixSocket = "/run/containerd/containerd.sock"
-var dockerShimUnixSocket1 = "/var/run/dockershim.sock"
-var dockerShimUnixSocket2 = "/run/dockershim.sock"
+var (
+	containerdUnixSocket  = "/run/containerd/containerd.sock"
+	dockerShimUnixSocket1 = "/var/run/dockershim.sock"
+	dockerShimUnixSocket2 = "/run/dockershim.sock"
+)
 
 var criRuntimeWrapper *CRIRuntimeWrapper
 
@@ -326,7 +330,6 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 		}
 	}
 
-	dockerContainer.Mounts = dockerContainer.Mounts
 	if len(hostnamePath) > 0 {
 		hn, _ := ioutil.ReadFile(GetMountedFilePath(hostnamePath))
 		dockerContainer.Config.Hostname = strings.Trim(string(hn), "\t \n")

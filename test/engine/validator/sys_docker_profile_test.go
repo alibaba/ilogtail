@@ -20,6 +20,8 @@ import (
 	"io"
 	"testing"
 	"time"
+	
+	"github.com/alibaba/ilogtail/helper"
 
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
@@ -68,7 +70,7 @@ func closeDockerContainer(cli *client.Client, id string) {
 }
 
 func Test_dockerProfileValidator_FetchProfile(t *testing.T) {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := helper.CreateDockerClient()
 	assert.NoError(t, err)
 	defer cli.Close()
 

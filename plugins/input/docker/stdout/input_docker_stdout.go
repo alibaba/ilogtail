@@ -25,13 +25,12 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input"
-
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/docker/docker/api/types"
 )
 
 const serviceDockerStdoutKey = "service_docker_stdout_v2"
 
-func logDriverSupported(container *docker.Container) bool {
+func logDriverSupported(container types.ContainerJSON) bool {
 	// containerd has no hostConfig, return true
 	if container.HostConfig == nil {
 		return true
@@ -52,7 +51,7 @@ type DockerFileSyner struct {
 
 func NewDockerFileSynerByFile(sds *ServiceDockerStdout, filePath string) *DockerFileSyner {
 	dockerInfoDetail := &helper.DockerInfoDetail{}
-	dockerInfoDetail.ContainerInfo = &docker.Container{}
+	dockerInfoDetail.ContainerInfo = types.ContainerJSON{}
 	dockerInfoDetail.ContainerInfo.LogPath = filePath
 	sds.LogtailInDocker = false
 	sds.StartLogMaxOffset = 10 * 1024 * 1024 * 1024

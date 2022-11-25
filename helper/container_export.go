@@ -174,8 +174,12 @@ func SplitRegexFromMap(input map[string]string) (staticResult map[string]string,
 	return staticResult, regexResult, nil
 }
 
-func CreateDockerClient() (client *docker.Client, err error) {
-	client, err = docker.NewClientWithOpts(docker.FromEnv, docker.WithTimeout(DockerCenterTimeout))
+func CreateDockerClient(opt ...docker.Opt) (client *docker.Client, err error) {
+	opt = append(opt, docker.FromEnv)
+	client, err = docker.NewClientWithOpts(opt...)
+	if err == nil {
+		client.NegotiateAPIVersion(context.Background())
+	}
 	return
 }
 

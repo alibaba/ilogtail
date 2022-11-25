@@ -1104,11 +1104,11 @@ func dockerCenterRecover() {
 
 func (dc *DockerCenter) initClient() error {
 	var err error
-	if dc.client, err = docker.NewClientWithOpts(docker.FromEnv, docker.WithTimeout(DockerCenterTimeout)); err != nil {
+	// DockerCenterTimeout should only be used by context.WithTimeout() in specific methods
+	if dc.client, err = CreateDockerClient(); err != nil {
 		dc.setLastError(err, "init docker client from env error")
 		return err
 	}
-	dc.client.NegotiateAPIVersion(context.Background())
 	return nil
 }
 
@@ -1153,8 +1153,8 @@ func (dc *DockerCenter) eventListener() {
 					}
 				}
 				dc.eventChanLock.Unlock()
-			case <-errors:
-				logger.Errorf(context.Background(), "DOCKER_EVENT_ALARM", "docker event listener error")
+			case err = <-errors:
+				logger.Error(context.Background(), "DOCKER_EVENT_ALARM", "docker event listener error", err)
 				breakFlag = true
 			case <-timer.C:
 				logger.Errorf(context.Background(), "DOCKER_EVENT_ALARM", "no docker event in 1 hour. Reset event listener")
