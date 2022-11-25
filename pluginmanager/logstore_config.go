@@ -146,6 +146,7 @@ func (lc *LogstoreConfig) Start() {
 
 	lc.pauseChan = make(chan struct{}, 1)
 	lc.resumeChan = make(chan struct{}, 1)
+	lc.ShutdownControl.Reset()
 
 	lc.PluginRunner.RunFlusher(lc.ShutdownControl)
 	lc.PluginRunner.RunAggregator(lc.ShutdownControl)

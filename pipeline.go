@@ -168,6 +168,16 @@ func (p *CancellationControl) CancelToken() <-chan struct{} {
 	return p.cancelToken
 }
 
+func (p *CancellationControl) Notify() {
+	p.cancelToken <- struct{}{}
+}
+
+func (p *CancellationControl) Reset() {
+	if p.cancelToken == nil {
+		p.cancelToken = make(chan struct{}, 1)
+	}
+}
+
 func (p *CancellationControl) Run(task func(*CancellationControl)) {
 	p.wg.Add(1)
 	go func(cc *CancellationControl, fn func(*CancellationControl)) {
@@ -179,6 +189,7 @@ func (p *CancellationControl) Run(task func(*CancellationControl)) {
 func (p *CancellationControl) Cancel() {
 	close(p.cancelToken)
 	p.wg.Wait()
+	p.cancelToken = nil
 }
 
 func NewCancellationControl() *CancellationControl {
