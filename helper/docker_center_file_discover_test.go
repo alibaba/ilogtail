@@ -132,7 +132,7 @@ func TestTryReadStaticContainerInfo(t *testing.T) {
 	info := containerInfo[0]
 	require.Equal(t, "123abc", info.ID)
 	require.Equal(t, "xxx_info", info.Name)
-	require.Equal(t, time.Date(2022, 9, 16, 12, 55, 14, 930245185, loc).UnixNano(), info.Created)
+	require.Equal(t, "2022-09-16T12:55:14.930245185+08:00", info.Created)
 	require.Equal(t, "/var/lib/docker/xxxx/0.log", info.LogPath)
 	require.Equal(t, "b", info.Config.Labels["a"])
 	require.Equal(t, "centos:latest", info.Config.Image)
@@ -160,7 +160,7 @@ func TestTryReadStaticContainerInfo(t *testing.T) {
 	info = containerInfo[0]
 	require.Equal(t, "123abc-2", info.ID)
 	require.Equal(t, "xxx_info", info.Name)
-	require.Equal(t, time.Date(2022, 9, 16, 12, 56, 14, 0, loc).UnixNano(), info.Created)
+	require.Equal(t, "2022-09-16T12:55:14.930245185+08:00", info.Created)
 	require.Equal(t, "/var/lib/docker/xxxx/1.log", info.LogPath)
 	require.Equal(t, 999999999909, info.State.Pid)
 
