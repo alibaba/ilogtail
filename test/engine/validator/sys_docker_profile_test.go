@@ -20,7 +20,7 @@ import (
 	"io"
 	"testing"
 	"time"
-	
+
 	"github.com/alibaba/ilogtail/helper"
 
 	"github.com/docker/docker/api/types"

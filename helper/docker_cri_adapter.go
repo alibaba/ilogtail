@@ -31,10 +31,10 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 
 	containerdcriserver "github.com/containerd/containerd/pkg/cri/server"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"google.golang.org/grpc"
 	cri "k8s.io/cri-api/pkg/apis/runtime/v1"
 )

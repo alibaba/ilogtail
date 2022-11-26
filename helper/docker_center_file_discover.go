@@ -15,11 +15,6 @@
 package helper
 
 import (
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-
 	"context"
 	"encoding/json"
 	"fmt"
@@ -31,6 +26,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 )
 
 const staticContainerInfoPathEnvKey = "ALIYUN_LOG_STATIC_CONTAINER_INFO"
