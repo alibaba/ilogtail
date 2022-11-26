@@ -40,6 +40,7 @@ var onceDocker sync.Once
 // set default value to aliyun_logs_
 var envConfigPrefix = "aliyun_logs_"
 
+const CONTARINER_ID_PREFIX_SIZE = 12
 const DockerTimeFormat = "2006-01-02T15:04:05.999999999Z"
 
 var DefaultSyncContainersPeriod = time.Second * 3 // should be same as docker_config_update_interval gflag in C
@@ -243,6 +244,27 @@ type DockerInfoDetail struct {
 	deleteFlag     bool
 }
 
+func (did *DockerInfoDetail) IDPrefix() string {
+	if len(did.ContainerInfo.ID) < CONTARINER_ID_PREFIX_SIZE {
+		return did.ContainerInfo.ID
+	}
+	return did.ContainerInfo.ID[:CONTARINER_ID_PREFIX_SIZE]
+}
+
+func (did *DockerInfoDetail) PodName() string {
+	if did.K8SInfo != nil {
+		return did.K8SInfo.Pod
+	}
+	return ""
+}
+
+func (did *DockerInfoDetail) Status() string {
+	if did.ContainerInfo.State != nil {
+		return did.ContainerInfo.State.Status
+	}
+	return ""
+}
+
 func (did *DockerInfoDetail) IsTimeout() bool {
 	nowTime := time.Now()
 	if nowTime.Sub(did.lastUpdateTime) > fetchAllSuccessTimeout ||
@@ -308,12 +330,12 @@ func (did *DockerInfoDetail) FindBestMatchedPath(pth string) (sourcePath, contai
 	pth = path.Clean(pth)
 	pthSize := len(pth)
 
-	// logger.Debugf(context.Background(), "FindBestMatchedPath for container %s, target path: %s, containerInfo: %+v", did.ContainerInfo.ID, pth, did.ContainerInfo)
+	// logger.Debugf(context.Background(), "FindBestMatchedPath for container %s, target path: %s, containerInfo: %+v", did.IDPrefix(), pth, did.ContainerInfo)
 
 	// check mounts
 	var bestMatchedMounts types.MountPoint
 	for _, mount := range did.ContainerInfo.Mounts {
-		// logger.Debugf("container(%s-%s) mount: source-%s destination-%s", did.ContainerInfo.ID, did.ContainerInfo.Name, mount.Source, mount.Destination)
+		// logger.Debugf("container(%s-%s) mount: source-%s destination-%s", did.IDPrefix(), did.ContainerInfo.Name, mount.Source, mount.Destination)
 
 		dst := path.Clean(mount.Destination)
 		dstSize := len(dst)
@@ -909,6 +931,11 @@ func (dc *DockerCenter) refreshLastUpdateMapTime() {
 }
 
 func (dc *DockerCenter) updateContainers(containerMap map[string]*DockerInfoDetail) {
+	for _, c := range containerMap {
+		if c == nil {
+			break
+		}
+	}
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 	for key, container := range dc.containerMap {
@@ -920,11 +947,16 @@ func (dc *DockerCenter) updateContainers(containerMap map[string]*DockerInfoDeta
 			}
 		}
 	}
+	for _, c := range containerMap {
+		if c == nil {
+			break
+		}
+	}
 	// switch to new container map
 	if logger.DebugFlag() {
 		for i, c := range containerMap {
-			logger.Debugf(context.Background(), "Update all containers [%v]: id=%v name=%v created=%v status=%v detail=%+v",
-				i, c.ContainerInfo.ID, c.ContainerInfo.Name, c.ContainerInfo.Created, c.ContainerInfo.State.Status, c.ContainerInfo)
+			logger.Debugf(context.Background(), "Update all containers [%v]: id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v detail=%+v",
+				i, c.IDPrefix(), c.ContainerInfo.Name, c.PodName(), c.ContainerInfo.Created, c.Status(), c.ContainerInfo)
 		}
 	}
 	dc.containerMap = containerMap
@@ -971,8 +1003,8 @@ func (dc *DockerCenter) updateContainer(id string, container *DockerInfoDetail) 
 	if logger.DebugFlag() {
 		// bytes, _ := json.Marshal(container)
 		// logger.Debug(context.Background(), "update container info", string(bytes))
-		logger.Debugf(context.Background(), "Update one container: id=%v name=%v created=%v status=%v detail=%+v",
-			container.ContainerInfo.ID, container.ContainerInfo.Name, container.ContainerInfo.Created, container.ContainerInfo.State.Status, container.ContainerInfo)
+		logger.Debugf(context.Background(), "Update one container: id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v detail=%+v",
+			container.IDPrefix(), container.ContainerInfo.Name, container.PodName(), container.ContainerInfo.Created, container.Status(), container.ContainerInfo)
 	}
 	dc.containerMap[id] = container
 	dc.refreshLastUpdateMapTime()
@@ -1047,8 +1079,8 @@ func (dc *DockerCenter) markRemove(containerID string) {
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 	if container, ok := dc.containerMap[containerID]; ok {
-		logger.Debugf(context.Background(), "mark remove container: id=%v name=%v created=%v status=%v detail=%+v",
-			container.ContainerInfo.ID, container.ContainerInfo.Name, container.ContainerInfo.Created, container.ContainerInfo.State.Status, container.ContainerInfo)
+		logger.Debugf(context.Background(), "mark remove container: id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v detail=%+v",
+			container.IDPrefix(), container.ContainerInfo.Name, container.PodName(), container.ContainerInfo.Created, container.Status(), container.ContainerInfo)
 		container.ContainerInfo.State.Status = ContainerStatusExited
 		container.deleteFlag = true
 		container.lastUpdateTime = time.Now()
@@ -1064,8 +1096,8 @@ func (dc *DockerCenter) cleanTimeoutContainer() {
 		// 1. The container is marked deleted for a while.
 		// 2. The time of last success fetch all is too old.
 		if container.IsTimeout() {
-			logger.Debugf(context.Background(), "delete container: id=%v name=%v created=%v status=%v detail=%+v",
-				key, container.ContainerInfo.Name, container.ContainerInfo.Created, container.ContainerInfo.State.Status, container.ContainerInfo)
+			logger.Debugf(context.Background(), "delete container, id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v\tdetail:%+v",
+				container.IDPrefix(), container.ContainerInfo.Name, container.PodName(), container.ContainerInfo.Created, container.Status(), container.ContainerInfo)
 			delete(dc.containerMap, key)
 			hasDelete = true
 		}

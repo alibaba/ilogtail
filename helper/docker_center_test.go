@@ -80,8 +80,9 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 	newContainer := func(id string) *DockerInfoDetail {
 		return dc.CreateInfoDetail(types.ContainerJSON{
 			ContainerJSONBase: &types.ContainerJSONBase{
-				ID:   id,
-				Name: id,
+				ID:    id,
+				Name:  id,
+				State: &types.ContainerState{},
 			},
 			Config: &container.Config{
 				Env: make([]string, 0),
