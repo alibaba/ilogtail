@@ -40,21 +40,19 @@ type PluginRunner interface {
 
 	AddFlusher(flusher ilogtail.Flusher)
 
-	RunMetricInput(c *ilogtail.CancellationControl)
+	RunMetricInputOnce(cc *ilogtail.CancellationControl)
 
-	RunServiceInput(c *ilogtail.CancellationControl)
+	RunInput()
 
-	RunProcessor(c *ilogtail.CancellationControl)
+	RunProcessor()
 
-	RunAggregator(c *ilogtail.CancellationControl)
+	RunAggregator()
 
-	RunFlusher(c *ilogtail.CancellationControl)
+	RunFlusher()
 
 	Merge(p PluginRunner)
 
 	Stop(exit bool) error
-
-	Stopped(exit bool) error
 }
 
 type timerRunner struct {
@@ -75,13 +73,10 @@ func (p *timerRunner) Run(task func(state interface{}) error, cc *ilogtail.Cance
 		}
 		p.latencyMetric.End()
 		if exitFlag {
+			logger.Info(p.context.GetRuntimeContext(), "task stop", "done", "plugin", fmt.Sprint(p.state))
 			return
 		}
 	}
-}
-
-func (p *timerRunner) Stop() {
-	logger.Info(p.context.GetRuntimeContext(), "stop timer plugin success", fmt.Sprint(p.state))
 }
 
 func flushOutStore[T FlushData, F ilogtail.Flusher](lc *LogstoreConfig, store *FlushOutStore[T], flushers []F, flushFunc func(*LogstoreConfig, F, *FlushOutStore[T]) error) bool {
@@ -115,4 +110,24 @@ func loadAdditionalTags(globalConfig *GlobalConfig) models.Tags {
 		tags.Add(key, value)
 	}
 	return tags
+}
+
+func GetFlushStoreLen(runner PluginRunner) int {
+	if r, ok := runner.(*pluginv1Runner); ok {
+		return r.FlushOutStore.Len()
+	}
+	if r, ok := runner.(*pluginv2Runner); ok {
+		return r.FlushOutStore.Len()
+	}
+	return 0
+}
+
+func GetFlushCancelToken(runner PluginRunner) <-chan struct{} {
+	if r, ok := runner.(*pluginv1Runner); ok {
+		return r.FlushControl.CancelToken()
+	}
+	if r, ok := runner.(*pluginv2Runner); ok {
+		return r.FlushControl.CancelToken()
+	}
+	return make(<-chan struct{}, 0)
 }

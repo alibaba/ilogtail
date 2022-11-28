@@ -34,7 +34,7 @@ type MetricWrapper struct {
 }
 
 func (p *MetricWrapper) Run(control *ilogtail.CancellationControl) {
-	logger.Info(p.Config.Context.GetRuntimeContext(), "start run metric ", p.Input)
+	logger.Info(p.Config.Context.GetRuntimeContext(), "start run metric ", p.Input.Description())
 	defer panicRecover(p.Input.Description())
 	for {
 		exitFlag := util.RandomSleep(p.Interval, 0.1, control.CancelToken())
@@ -51,7 +51,7 @@ func (p *MetricWrapper) Run(control *ilogtail.CancellationControl) {
 }
 
 func (p *MetricWrapper) Stop() {
-	logger.Info(p.Config.Context.GetRuntimeContext(), "stop metric success", p.Input)
+	logger.Info(p.Config.Context.GetRuntimeContext(), "stop metric success", p.Input.Description())
 }
 
 func (p *MetricWrapper) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {

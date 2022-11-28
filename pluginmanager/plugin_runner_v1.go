@@ -38,9 +38,18 @@ type pluginv1Runner struct {
 
 	FlushOutStore  *FlushOutStore[protocol.LogGroup]
 	LogstoreConfig *LogstoreConfig
+
+	InputControl     *ilogtail.CancellationControl
+	ProcessControl   *ilogtail.CancellationControl
+	AggregateControl *ilogtail.CancellationControl
+	FlushControl     *ilogtail.CancellationControl
 }
 
 func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
+	p.InputControl = ilogtail.NewCancellationControl()
+	p.ProcessControl = ilogtail.NewCancellationControl()
+	p.AggregateControl = ilogtail.NewCancellationControl()
+	p.FlushControl = ilogtail.NewCancellationControl()
 	p.MetricPlugins = make([]*MetricWrapper, 0)
 	p.ServicePlugins = make([]*ServiceWrapper, 0)
 	p.ProcessorPlugins = make([]*ProcessorWrapper, 0)
@@ -104,22 +113,25 @@ func (p *pluginv1Runner) AddFlusher(flusher ilogtail.Flusher) {
 	p.FlusherPlugins = append(p.FlusherPlugins, &wrapper)
 }
 
-func (p *pluginv1Runner) RunMetricInput(control *ilogtail.CancellationControl) {
-	for _, metric := range p.MetricPlugins {
-		m := metric
-		control.Run(m.Run)
-	}
-}
-
-func (p *pluginv1Runner) RunServiceInput(control *ilogtail.CancellationControl) {
+func (p *pluginv1Runner) RunInput() {
+	p.InputControl.Reset()
+	p.RunMetricInputOnce(p.InputControl)
 	for _, service := range p.ServicePlugins {
 		s := service
-		control.Run(s.Run)
+		p.InputControl.Run(s.Run)
 	}
 }
 
-func (p *pluginv1Runner) RunProcessor(control *ilogtail.CancellationControl) {
-	control.Run(p.runProcessorInternal)
+func (p *pluginv1Runner) RunMetricInputOnce(cc *ilogtail.CancellationControl) {
+	for _, metric := range p.MetricPlugins {
+		m := metric
+		cc.Run(m.Run)
+	}
+}
+
+func (p *pluginv1Runner) RunProcessor() {
+	p.ProcessControl.Reset()
+	p.ProcessControl.Run(p.runProcessorInternal)
 }
 
 // runProcessorInternal is the routine of processors.
@@ -181,24 +193,26 @@ func (p *pluginv1Runner) runProcessorInternal(cc *ilogtail.CancellationControl) 
 	}
 }
 
-func (p *pluginv1Runner) RunAggregator(control *ilogtail.CancellationControl) {
+func (p *pluginv1Runner) RunAggregator() {
+	p.AggregateControl.Reset()
 	if len(p.AggregatorPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
 		_ = loadAggregator("aggregator_default", p.LogstoreConfig, nil)
 	}
 	for _, aggregator := range p.AggregatorPlugins {
 		a := aggregator
-		control.Run(a.Run)
+		p.AggregateControl.Run(a.Run)
 	}
 }
 
-func (p *pluginv1Runner) RunFlusher(control *ilogtail.CancellationControl) {
+func (p *pluginv1Runner) RunFlusher() {
+	p.FlushControl.Reset()
 	if len(p.FlusherPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
 		category, options := flags.GetFlusherConfiguration()
 		_ = loadFlusher(category, p.LogstoreConfig, options)
 	}
-	control.Run(p.runFlusherInternal)
+	p.FlushControl.Run(p.runFlusherInternal)
 }
 
 func (p *pluginv1Runner) runFlusherInternal(cc *ilogtail.CancellationControl) {
@@ -293,20 +307,25 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 	for _, metric := range p.MetricPlugins {
 		metric.Stop()
 	}
-	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "metric plugins stop", "done")
 	for _, service := range p.ServicePlugins {
 		_ = service.Stop()
 	}
-	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "service plugins stop", "done")
+	p.InputControl.Cancel()
+	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "metric plugins stop", "done", "service plugins stop", "done")
+
+	p.ProcessControl.Cancel()
+	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "processor plugins stop", "done")
+
 	for _, aggregator := range p.AggregatorPlugins {
 		aggregator.Stop()
 	}
+	p.AggregateControl.Cancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "aggregator plugins stop", "done")
-	return nil
-}
 
-func (p *pluginv1Runner) Stopped(exit bool) error {
-	if exit && p.LogstoreConfig.FlushOutFlag {
+	p.LogstoreConfig.FlushOutFlag = true
+	p.FlushControl.Cancel()
+
+	if exit && p.FlushOutStore.Len() > 0 {
 		flushers := make([]ilogtail.Flusher1, len(p.FlusherPlugins))
 		for idx, flusher := range p.FlusherPlugins {
 			flushers[idx] = flusher.Flusher
@@ -325,6 +344,7 @@ func (p *pluginv1Runner) Stopped(exit bool) error {
 		}
 	}
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "flusher plugins stop", "done")
+
 	return nil
 }
 

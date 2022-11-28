@@ -165,7 +165,7 @@ func HoldOn(exitFlag bool) error {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the static metrics")
 			control := ilogtail.NewCancellationControl()
-			StatisticsConfig.PluginRunner.RunMetricInput(control)
+			StatisticsConfig.PluginRunner.RunMetricInputOnce(control)
 			control.Cancel()
 		}
 		_ = StatisticsConfig.Stop(exitFlag)
@@ -174,7 +174,7 @@ func HoldOn(exitFlag bool) error {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the alarm metrics")
 			control := ilogtail.NewCancellationControl()
-			AlarmConfig.PluginRunner.RunMetricInput(control)
+			AlarmConfig.PluginRunner.RunMetricInputOnce(control)
 			control.Cancel()
 		}
 		_ = AlarmConfig.Stop(exitFlag)

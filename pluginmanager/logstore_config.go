@@ -110,8 +110,6 @@ type LogstoreConfig struct {
 	// processWaitSema  sync.WaitGroup
 	// flushWaitSema    sync.WaitGroup
 	pauseOrResumeWg sync.WaitGroup
-
-	ShutdownControl *ilogtail.CancellationControl
 }
 
 func (p *LogstoreStatistics) Init(context ilogtail.Context) {
@@ -146,13 +144,11 @@ func (lc *LogstoreConfig) Start() {
 
 	lc.pauseChan = make(chan struct{}, 1)
 	lc.resumeChan = make(chan struct{}, 1)
-	lc.ShutdownControl.Reset()
 
-	lc.PluginRunner.RunFlusher(lc.ShutdownControl)
-	lc.PluginRunner.RunAggregator(lc.ShutdownControl)
-	lc.PluginRunner.RunProcessor(lc.ShutdownControl)
-	lc.PluginRunner.RunMetricInput(lc.ShutdownControl)
-	lc.PluginRunner.RunServiceInput(lc.ShutdownControl)
+	lc.PluginRunner.RunFlusher()
+	lc.PluginRunner.RunAggregator()
+	lc.PluginRunner.RunProcessor()
+	lc.PluginRunner.RunInput()
 
 	logger.Info(lc.Context.GetRuntimeContext(), "config start", "success")
 }
@@ -172,12 +168,7 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 	if err := lc.PluginRunner.Stop(exitFlag); err != nil {
 		return err
 	}
-	lc.FlushOutFlag = true
-	lc.ShutdownControl.Cancel()
-	logger.Info(lc.Context.GetRuntimeContext(), "processor control stop", "done", "flusher control stop", "done")
-	if err := lc.PluginRunner.Stopped(exitFlag); err != nil {
-		return err
-	}
+	logger.Info(lc.Context.GetRuntimeContext(), "Plugin Runner stop", "done")
 	close(lc.pauseChan)
 	close(lc.resumeChan)
 	logger.Info(lc.Context.GetRuntimeContext(), "config stop", "success")
@@ -195,7 +186,7 @@ func (lc *LogstoreConfig) waitForResume() {
 	select {
 	case <-lc.resumeChan:
 		lc.pauseOrResumeWg.Done()
-	case <-lc.ShutdownControl.CancelToken():
+	case <-GetFlushCancelToken(lc.PluginRunner):
 	}
 }
 
@@ -329,7 +320,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		LogstoreKey:      logstoreKey,
 		Context:          contextImp,
 		configDetailHash: fmt.Sprintf("%x", md5.Sum([]byte(jsonStr))), //nolint:gosec
-		ShutdownControl:  ilogtail.NewCancellationControl(),
 	}
 
 	// Check if the config has been disabled (keep disabled if config detail is unchanged).
@@ -364,10 +354,13 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 
 	// check AlwaysOnlineManager
 	if oldConfig, ok := GetAlwaysOnlineManager().GetCachedConfig(configName); ok {
+		logger.Info(contextImp.GetRuntimeContext(), "find alwaysOnline config", oldConfig.ConfigName)
+		logger.Info(contextImp.GetRuntimeContext(), "config compare", oldConfig.configDetailHash == logstoreC.configDetailHash,
+			"new config hash", logstoreC.configDetailHash, "old config hash", oldConfig.configDetailHash)
 		if oldConfig.configDetailHash == logstoreC.configDetailHash {
 			logstoreC = oldConfig
 			logstoreC.alreadyStarted = true
-			logger.Info(contextImp.GetRuntimeContext(), "config is same after reload", "use it again")
+			logger.Info(contextImp.GetRuntimeContext(), "config is same after reload, use it again", GetFlushStoreLen(logstoreC.PluginRunner))
 			return logstoreC, nil
 		}
 		_ = oldConfig.Stop(false)
