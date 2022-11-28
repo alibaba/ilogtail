@@ -31,36 +31,38 @@ SLSControl::SLSControl() {
 SLSControl* SLSControl::Instance() {
     static SLSControl* slsControl = new SLSControl();
 
-    std::string os;
+    if (slsControl->mUserAgent.empty()) {
+        std::string os;
 #if defined(__linux__)
-    utsname* buf = new utsname;
-    if (-1 == uname(buf)) {
-        LOG_WARNING(
-            sLogger,
-            ("get os info part of user agent failed", errno)("use default os info", LogFileProfiler::mOsDetail));
-        os = LogFileProfiler::mOsDetail;
-    } else {
-        char* pch = strchr(buf->release, '-');
-        if (pch) {
-            *pch = '\0';
+        utsname* buf = new utsname;
+        if (-1 == uname(buf)) {
+            LOG_WARNING(
+                sLogger,
+                ("get os info part of user agent failed", errno)("use default os info", LogFileProfiler::mOsDetail));
+            os = LogFileProfiler::mOsDetail;
+        } else {
+            char* pch = strchr(buf->release, '-');
+            if (pch) {
+                *pch = '\0';
+            }
+            os.append(buf->sysname);
+            os.append("; ");
+            os.append(buf->release);
+            os.append("; ");
+            os.append(buf->machine);
         }
-        os.append(buf->sysname);
-        os.append("; ");
-        os.append(buf->release);
-        os.append("; ");
-        os.append(buf->machine);
-    }
-    delete buf;
+        delete buf;
 #elif defined(_MSC_VER)
-    os = LogFileProfiler::mOsDetail;
+        os = LogFileProfiler::mOsDetail;
 #endif
 
-    std::string userAgent = slsControl->mUserAgent = std::string("ilogtail/") + ILOGTAIL_VERSION + " (" + os + ") ip/"
-        + LogFileProfiler::mIpAddr + " env/" + slsControl->GetRunningEnvironment();
-    if (!STRING_FLAG(custom_user_agent).empty()) {
-        userAgent += " " + STRING_FLAG(custom_user_agent);
+        std::string userAgent = slsControl->mUserAgent = std::string("ilogtail/") + ILOGTAIL_VERSION + " (" + os
+            + ") ip/" + LogFileProfiler::mIpAddr + " env/" + slsControl->GetRunningEnvironment();
+        if (!STRING_FLAG(custom_user_agent).empty()) {
+            userAgent += " " + STRING_FLAG(custom_user_agent);
+        }
+        slsControl->mUserAgent = userAgent;
     }
-    slsControl->mUserAgent = userAgent;
 
     return slsControl;
 }
@@ -84,15 +86,20 @@ std::string SLSControl::GetRunningEnvironment() {
     std::string env;
     if (getenv("ALIYUN_LOG_STATIC_CONTAINER_INFO")) {
         env = "ECI";
-    } else if (getenv("ACK_NODE_LOCAL_DNS_ADMISSION_CONTROLLER_SERVICE_HOST")) {
-        env = "ACK Daemonset";
+    } else if (getenv("ALICLOUD_LOG_K8S_FLAG") || getenv("ACK_NODE_LOCAL_DNS_ADMISSION_CONTROLLER_SERVICE_HOST")) {
+        // logtail-ds installed by ACK will possess the above two env
+        env = "ACK-Daemonset";
     } else if (getenv("KUBERNETES_SERVICE_HOST")) {
+        // containers in K8S will possess the above env
         if (AppConfig::GetInstance()->IsPurageContainerMode()) {
-            env = "K8S Daemonset";
+            env = "K8S-Daemonset";
         } else if (TryCurlEndpoint("http://100.100.100.200/latest/meta-data")) {
-            env = "ACK Sidecar";
+            // containers in ACK can be connected to the above address, see
+            // https://help.aliyun.com/document_detail/108460.html#section-akf-lwh-1gb Note: we can not distinguish ACK
+            // from K8S built on ECS
+            env = "ACK-Sidecar";
         } else {
-            env = "K8S Sidecar";
+            env = "K8S-Sidecar";
         }
     } else if (AppConfig::GetInstance()->IsPurageContainerMode() || getenv("ALIYUN_LOGTAIL_CONFIG")) {
         env = "Docker";
@@ -128,9 +135,9 @@ bool SLSControl::TryCurlEndpoint(const std::string& endpoint) {
         return true;
     }
 
-    LOG_WARNING(sLogger,
-                ("problem", "curl handler cannot be initialized during user environment identification")(
-                    "action", "use Unknown identification for user environment"));
+    LOG_WARNING(
+        sLogger,
+        ("curl handler cannot be initialized during user environment identification", "user agent may be mislabeled"));
     return false;
 }
 
