@@ -103,7 +103,7 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 	}
 
 	logger.Info(sds.context.GetRuntimeContext(), "new stdout reader id", info.IDPrefix(),
-		"name", info.ContainerInfo.Name, "pod", info.PodName(), "created", info.ContainerInfo.Created, "status", info.Status(),
+		"name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status(),
 		"checkpoint_logpath", checkpoint.Path,
 		"in_docker", sds.LogtailInDocker)
 

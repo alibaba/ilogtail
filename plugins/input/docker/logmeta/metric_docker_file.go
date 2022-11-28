@@ -178,6 +178,7 @@ func (idf *InputDockerFile) Init(context ilogtail.Context) (int, error) {
 	}
 	idf.K8sFilter, err = helper.CreateK8SFilter(idf.K8sNamespaceRegex, idf.K8sPodRegex, idf.K8sContainerRegex, idf.IncludeK8sLabel, idf.ExcludeK8sLabel)
 
+	logger.Debugf(idf.context.GetRuntimeContext(), "InputDockerFile inited successfully")
 	return idf.FlushIntervalMs, err
 }
 
@@ -247,13 +248,13 @@ func (idf *InputDockerFile) updateMapping(info *helper.DockerInfoDetail, sourceP
 		// send delete first and then add this info
 		idf.updateMetric.Add(1)
 		logger.Info(idf.context.GetRuntimeContext(), "container mapping", "changed", "last", val, "source host path", sourcePath, "destination container path", containerPath, "destination log path", destPath,
-			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "pod", info.PodName(), "created", info.ContainerInfo.Created, "status", info.Status())
+			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
 		idf.lastPathMappingCache[info.ContainerInfo.ID] = sourcePath
 		idf.addMappingToLogtail(info, destPath, allCmd)
 	} else if !ok {
 		idf.addMetric.Add(1)
 		logger.Info(idf.context.GetRuntimeContext(), "container mapping", "added", "source host path", sourcePath, "destination container path", containerPath, "destination log path", destPath,
-			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "pod", info.PodName(), "created", info.ContainerInfo.Created, "status", info.Status())
+			"id", info.IDPrefix(), "name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status())
 		idf.lastPathMappingCache[info.ContainerInfo.ID] = sourcePath
 		idf.addMappingToLogtail(info, destPath, allCmd)
 	}
@@ -306,8 +307,8 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 	idf.avgInstanceMetric.Add(int64(len(dockerInfoDetails)))
 	for _, info := range dockerInfoDetails {
 		sourcePath, containerPath := info.FindBestMatchedPath(idf.LogPath)
-		logger.Debugf(idf.context.GetRuntimeContext(), "bestMatchedPath for logPath:%v\tcontainer id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v\tsourcePath:%v\tcontainerPath:%v",
-			idf.LogPath, info.IDPrefix(), info.ContainerInfo.Name, info.PodName(), info.ContainerInfo.Created, info.Status(), sourcePath, containerPath)
+		logger.Debugf(idf.context.GetRuntimeContext(), "bestMatchedPath for logPath:%v\tcontainer id:%v\tname:%v\tcreated:%v\tstatus:%v\tsourcePath:%v\tcontainerPath:%v",
+			idf.LogPath, info.IDPrefix(), info.ContainerInfo.Name, info.ContainerInfo.Created, info.Status(), sourcePath, containerPath)
 		if len(sourcePath) > 0 {
 			if info.Status() == helper.ContainerStatusRunning {
 				idf.updateMapping(info, sourcePath, containerPath, allCmd)

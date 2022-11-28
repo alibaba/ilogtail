@@ -114,10 +114,10 @@ func (ss *stdoutSyner) newContainerPump(c ilogtail.Collector, stdout, stderr *io
 				if err != nil {
 					if err != io.EOF && err != io.ErrClosedPipe {
 						logger.Warning(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "stdoutSyner done, id", ss.info.IDPrefix(),
-							"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status(), "source", source, "error", err)
+							"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status(), "source", source, "error", err)
 					}
 					logger.Debug(ss.context.GetRuntimeContext(), "docker source stop", source, "id", ss.info.IDPrefix(),
-						"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status(), "error", err)
+						"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status(), "error", err)
 					return
 				}
 				if index := strings.IndexByte(line, ' '); index > 1 && index < len(line)-1 {
@@ -150,7 +150,7 @@ func (ss *stdoutSyner) newContainerPump(c ilogtail.Collector, stdout, stderr *io
 				if err != nil {
 					if err != io.EOF && err != io.ErrClosedPipe {
 						logger.Warning(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "stdoutSyner done, id", ss.info.IDPrefix(),
-							"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status(), "source", source, "error", err)
+							"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status(), "source", source, "error", err)
 					}
 					logger.Debug(ss.context.GetRuntimeContext(), "docker source stop", source, "name", ss.info.ContainerInfo.Name, "error", err)
 					if len(values[2]) > 0 {
@@ -224,11 +224,11 @@ func (ss *stdoutSyner) Start(c ilogtail.Collector) {
 			if cpTime, err = time.Parse(helper.DockerTimeFormat, ss.startCheckPoint); err != nil {
 				logger.Warning(ss.context.GetRuntimeContext(), "CHECKPOINT_ALARM", "docker stdout raw parse start time error", ss.startCheckPoint,
 					"id", ss.info.IDPrefix(),
-					"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
+					"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
 			} else {
 				logger.Info(ss.context.GetRuntimeContext(), "docker stdout raw recover since", ss.startCheckPoint,
 					"id", ss.info.IDPrefix(),
-					"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
+					"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
 			}
 		}
 		if cpTime.IsZero() {
@@ -236,7 +236,7 @@ func (ss *stdoutSyner) Start(c ilogtail.Collector) {
 			cpTime = time.Now().Add(time.Second * time.Duration(-10))
 			logger.Info(ss.context.GetRuntimeContext(), "docker stdout raw first read since", cpTime.Format(helper.DockerTimeFormat),
 				"id", ss.info.IDPrefix(),
-				"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
+				"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
 		}
 		ss.lock.Unlock()
 		options := types.ContainerLogsOptions{
@@ -260,38 +260,38 @@ func (ss *stdoutSyner) Start(c ilogtail.Collector) {
 		}
 
 		logger.Info(ss.context.GetRuntimeContext(), "docker stdout raw", "begin", "id", ss.info.IDPrefix(),
-			"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
+			"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
 		// start pump logs go routines
 		ss.newContainerPump(c, outrd, errrd)
 		// loop to copy logs to parser
 		logReader, err := ss.client.ContainerLogs(ss.runtimeContext, ss.info.ContainerInfo.ID, options)
 		if err != nil {
-			logger.Errorf(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "open container log error=%v, id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v",
-				err.Error(), ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.PodName(), ss.info.ContainerInfo.Created, ss.info.Status())
+			logger.Errorf(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "open container log error=%v, id:%v\tname:%v\tcreated:%v\tstatus:%v",
+				err.Error(), ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.ContainerInfo.Created, ss.info.Status())
 			break
 		}
 		var written int64
 		if ss.info.ContainerInfo.Config.Tty {
 			written, err = io.Copy(outwr, logReader)
-			logger.Debugf(ss.context.GetRuntimeContext(), "read container log bytes=%v, id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v",
-				written, ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.PodName(), ss.info.ContainerInfo.Created, ss.info.Status())
+			logger.Debugf(ss.context.GetRuntimeContext(), "read container log bytes=%v, id:%v\tname:%v\tcreated:%v\tstatus:%v",
+				written, ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.ContainerInfo.Created, ss.info.Status())
 			if err != nil && err != context.Canceled {
-				logger.Errorf(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "read container log error=%v, id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v",
-					err.Error(), ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.PodName(), ss.info.ContainerInfo.Created, ss.info.Status())
+				logger.Errorf(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "read container log error=%v, id:%v\tname:%v\tcreated:%v\tstatus:%v",
+					err.Error(), ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.ContainerInfo.Created, ss.info.Status())
 			}
 		} else {
 			written, err = stdcopy.StdCopy(outwr, errwr, logReader)
-			logger.Debugf(ss.context.GetRuntimeContext(), "read container log bytes=%v, id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v",
-				written, ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.PodName(), ss.info.ContainerInfo.Created, ss.info.Status())
+			logger.Debugf(ss.context.GetRuntimeContext(), "read container log bytes=%v, id:%v\tname:%v\tcreated:%v\tstatus:%v",
+				written, ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.ContainerInfo.Created, ss.info.Status())
 			if err != nil && err != context.Canceled {
-				logger.Errorf(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "read container log error=%v, id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v",
-					err.Error(), ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.PodName(), ss.info.ContainerInfo.Created, ss.info.Status())
+				logger.Errorf(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "read container log error=%v, id:%v\tname:%v\tcreated:%v\tstatus:%v",
+					err.Error(), ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.ContainerInfo.Created, ss.info.Status())
 			}
 		}
 		// loop broken if container exits
 		if closeErr := logReader.Close(); closeErr != nil {
-			logger.Warningf(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "close container log error=%v, id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v",
-				closeErr, ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.PodName(), ss.info.ContainerInfo.Created, ss.info.Status())
+			logger.Warningf(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "close container log error=%v, id:%v\tname:%v\tcreated:%v\tstatus:%v",
+				closeErr, ss.info.IDPrefix(), ss.info.ContainerInfo.Name, ss.info.ContainerInfo.Created, ss.info.Status())
 		}
 		_ = outrd.CloseWithError(io.EOF)
 		_ = errrd.CloseWithError(io.EOF)
@@ -304,15 +304,15 @@ func (ss *stdoutSyner) Start(c ilogtail.Collector) {
 		switch err {
 		case nil, context.Canceled, context.DeadlineExceeded:
 			logger.Info(ss.context.GetRuntimeContext(), "docker stdout raw", "stop", "id", ss.info.IDPrefix(),
-				"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
+				"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
 			return
 		default:
 			// after sleep, we need recheck if runtime context is done
 			logger.Warning(ss.context.GetRuntimeContext(), "DOCKER_STDOUT_STOP_ALARM", "stdoutSyner stop, retry after 10 seconds, id", ss.info.IDPrefix(),
-				"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status(), "error", err)
+				"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status(), "error", err)
 			if util.RandomSleep(time.Second*time.Duration(10), 0.1, ss.runtimeContext.Done()) {
 				logger.Info(ss.context.GetRuntimeContext(), "docker stdout raw", "stop", "id", ss.info.IDPrefix(),
-					"name", ss.info.ContainerInfo.Name, "pod", ss.info.PodName(), "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
+					"name", ss.info.ContainerInfo.Name, "created", ss.info.ContainerInfo.Created, "status", ss.info.Status())
 				return
 			}
 		}

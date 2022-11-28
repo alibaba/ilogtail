@@ -398,7 +398,7 @@ func (r *LogFileReader) Run() {
 		}
 		endProcessTime := time.Now()
 		sleepDuration := time.Millisecond*time.Duration(r.Config.ReadIntervalMs) - endProcessTime.Sub(startProcessTime)
-		logger.Debug(r.logContext, "sleep duration", sleepDuration, "normal", r.Config.ReadIntervalMs, "path", r.checkpoint.Path)
+		// logger.Debug(r.logContext, "sleep duration", sleepDuration, "normal", r.Config.ReadIntervalMs, "path", r.checkpoint.Path)
 		if util.RandomSleep(sleepDuration, 0.1, r.shutdown) {
 			r.ReadAndProcess(true)
 			if r.lastBufferSize > 0 {

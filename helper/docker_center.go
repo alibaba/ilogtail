@@ -955,8 +955,8 @@ func (dc *DockerCenter) updateContainers(containerMap map[string]*DockerInfoDeta
 	// switch to new container map
 	if logger.DebugFlag() {
 		for i, c := range containerMap {
-			logger.Debugf(context.Background(), "Update all containers [%v]: id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v detail=%+v",
-				i, c.IDPrefix(), c.ContainerInfo.Name, c.PodName(), c.ContainerInfo.Created, c.Status(), c.ContainerInfo)
+			logger.Debugf(context.Background(), "Update all containers [%v]: id:%v\tname:%v\tcreated:%v\tstatus:%v detail=%+v",
+				i, c.IDPrefix(), c.ContainerInfo.Name, c.ContainerInfo.Created, c.Status(), c.ContainerInfo)
 		}
 	}
 	dc.containerMap = containerMap
@@ -1003,8 +1003,8 @@ func (dc *DockerCenter) updateContainer(id string, container *DockerInfoDetail) 
 	if logger.DebugFlag() {
 		// bytes, _ := json.Marshal(container)
 		// logger.Debug(context.Background(), "update container info", string(bytes))
-		logger.Debugf(context.Background(), "Update one container: id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v detail=%+v",
-			container.IDPrefix(), container.ContainerInfo.Name, container.PodName(), container.ContainerInfo.Created, container.Status(), container.ContainerInfo)
+		logger.Debugf(context.Background(), "Update one container: id:%v\tname:%v\tcreated:%v\tstatus:%v detail=%+v",
+			container.IDPrefix(), container.ContainerInfo.Name, container.ContainerInfo.Created, container.Status(), container.ContainerInfo)
 	}
 	dc.containerMap[id] = container
 	dc.refreshLastUpdateMapTime()
@@ -1079,8 +1079,8 @@ func (dc *DockerCenter) markRemove(containerID string) {
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 	if container, ok := dc.containerMap[containerID]; ok {
-		logger.Debugf(context.Background(), "mark remove container: id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v detail=%+v",
-			container.IDPrefix(), container.ContainerInfo.Name, container.PodName(), container.ContainerInfo.Created, container.Status(), container.ContainerInfo)
+		logger.Debugf(context.Background(), "mark remove container: id:%v\tname:%v\tcreated:%v\tstatus:%v detail=%+v",
+			container.IDPrefix(), container.ContainerInfo.Name, container.ContainerInfo.Created, container.Status(), container.ContainerInfo)
 		container.ContainerInfo.State.Status = ContainerStatusExited
 		container.deleteFlag = true
 		container.lastUpdateTime = time.Now()
@@ -1096,8 +1096,8 @@ func (dc *DockerCenter) cleanTimeoutContainer() {
 		// 1. The container is marked deleted for a while.
 		// 2. The time of last success fetch all is too old.
 		if container.IsTimeout() {
-			logger.Debugf(context.Background(), "delete container, id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v\tdetail:%+v",
-				container.IDPrefix(), container.ContainerInfo.Name, container.PodName(), container.ContainerInfo.Created, container.Status(), container.ContainerInfo)
+			logger.Debugf(context.Background(), "delete container, id:%v\tname:%v\tcreated:%v\tstatus:%v\tdetail:%+v",
+				container.IDPrefix(), container.ContainerInfo.Name, container.ContainerInfo.Created, container.Status(), container.ContainerInfo)
 			delete(dc.containerMap, key)
 			hasDelete = true
 		}

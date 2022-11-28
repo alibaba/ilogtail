@@ -397,8 +397,8 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 		if sandbox, ok := sandboxMap[container.PodSandboxId]; ok {
 			cw.wrapperK8sInfoByLabels(sandbox.GetLabels(), dockerContainer)
 		}
-		logger.Debugf(context.Background(), "Create container info, id:%v\tname:%v\tpod:%v\tcreated:%v\tstatus:%v\tdetail:%+v",
-			dockerContainer.IDPrefix(), container.Metadata.Name, dockerContainer.PodName(), dockerContainer.ContainerInfo.Created, dockerContainer.Status(), container)
+		logger.Debugf(context.Background(), "Create container info, id:%v\tname:%v\tcreated:%v\tstatus:%v\tdetail:%+v",
+			dockerContainer.IDPrefix(), container.Metadata.Name, dockerContainer.ContainerInfo.Created, dockerContainer.Status(), container)
 	}
 	cw.dockerCenter.updateContainers(containerMap)
 
@@ -499,8 +499,8 @@ func (cw *CRIRuntimeWrapper) fetchOne(containerID string) error {
 	if logger.DebugFlag() {
 		// bytes, _ := json.Marshal(dockerContainer)
 		// logger.Debugf(context.Background(), "Create container info: %s", string(bytes))
-		logger.Debugf(context.Background(), "Create container info, id:%v\tname:%vpod:%v\tcreated:%v\tstatus:%v\tdetail=%+v",
-			dockerContainer.IDPrefix(), dockerContainer.ContainerInfo.Name, dockerContainer.PodName(), dockerContainer.ContainerInfo.Created, dockerContainer.Status(), dockerContainer.ContainerInfo)
+		logger.Debugf(context.Background(), "Create container info, id:%v\tname:%v\tcreated:%v\tstatus:%v\tdetail=%+v",
+			dockerContainer.IDPrefix(), dockerContainer.ContainerInfo.Name, dockerContainer.ContainerInfo.Created, dockerContainer.Status(), dockerContainer.ContainerInfo)
 	}
 
 	cw.dockerCenter.updateContainer(containerID, dockerContainer)
