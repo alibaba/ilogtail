@@ -306,7 +306,7 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 }
 
 func (p *pluginv1Runner) Stopped(exit bool) error {
-	if exit && p.FlushOutStore.Len() > 0 {
+	if exit && p.LogstoreConfig.FlushOutFlag {
 		flushers := make([]ilogtail.Flusher1, len(p.FlusherPlugins))
 		for idx, flusher := range p.FlusherPlugins {
 			flushers[idx] = flusher.Flusher

@@ -294,7 +294,7 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 }
 
 func (p *pluginv2Runner) Stopped(exit bool) error {
-	if exit && p.FlushOutStore.Len() > 0 {
+	if exit && p.LogstoreConfig.FlushOutFlag {
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "Flushout group events, count", p.FlushOutStore.Len())
 		rst := flushOutStore(p.LogstoreConfig, p.FlushOutStore, p.FlusherPlugins, func(lc *LogstoreConfig, pf ilogtail.Flusher2, store *FlushOutStore[models.PipelineGroupEvents]) error {
 			return pf.Export(store.Get(), p.FlushPipeContext)

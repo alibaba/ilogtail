@@ -172,6 +172,7 @@ func (lc *LogstoreConfig) Stop(exitFlag bool) error {
 	if err := lc.PluginRunner.Stop(exitFlag); err != nil {
 		return err
 	}
+	lc.FlushOutFlag = true
 	lc.ShutdownControl.Cancel()
 	logger.Info(lc.Context.GetRuntimeContext(), "processor control stop", "done", "flusher control stop", "done")
 	if err := lc.PluginRunner.Stopped(exitFlag); err != nil {
