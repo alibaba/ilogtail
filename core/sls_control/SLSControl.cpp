@@ -88,7 +88,7 @@ std::string SLSControl::GetRunningEnvironment() {
     if (getenv("ALIYUN_LOG_STATIC_CONTAINER_INFO")) {
         env = "ECI";
     } else if (getenv("ACK_NODE_LOCAL_DNS_ADMISSION_CONTROLLER_SERVICE_HOST")) {
-        // logtail-ds installed by ACK will possess the above two env
+        // logtail-ds installed by ACK will possess the above env
         env = "ACK-Daemonset";
     } else if (getenv("KUBERNETES_SERVICE_HOST")) {
         // containers in K8S will possess the above env
