@@ -96,8 +96,8 @@ std::string SLSControl::GetRunningEnvironment() {
             env = "K8S-Daemonset";
         } else if (TryCurlEndpoint("http://100.100.100.200/latest/meta-data")) {
             // containers in ACK can be connected to the above address, see
-            // https://help.aliyun.com/document_detail/108460.html#section-akf-lwh-1gb Note: we can not distinguish ACK
-            // from K8S built on ECS
+            // https://help.aliyun.com/document_detail/108460.html#section-akf-lwh-1gb.
+            // Note: we can not distinguish ACK from K8S built on ECS
             env = "ACK-Sidecar";
         } else {
             env = "K8S-Sidecar";
