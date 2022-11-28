@@ -62,6 +62,7 @@ SLSControl* SLSControl::Instance() {
             userAgent += " " + STRING_FLAG(custom_user_agent);
         }
         slsControl->mUserAgent = userAgent;
+        LOG_INFO(sLogger, ("user agent", userAgent));
     }
 
     return slsControl;
@@ -86,7 +87,7 @@ std::string SLSControl::GetRunningEnvironment() {
     std::string env;
     if (getenv("ALIYUN_LOG_STATIC_CONTAINER_INFO")) {
         env = "ECI";
-    } else if (getenv("ALICLOUD_LOG_K8S_FLAG") || getenv("ACK_NODE_LOCAL_DNS_ADMISSION_CONTROLLER_SERVICE_HOST")) {
+    } else if (getenv("ACK_NODE_LOCAL_DNS_ADMISSION_CONTROLLER_SERVICE_HOST")) {
         // logtail-ds installed by ACK will possess the above two env
         env = "ACK-Daemonset";
     } else if (getenv("KUBERNETES_SERVICE_HOST")) {
