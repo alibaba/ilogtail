@@ -767,17 +767,6 @@ void ModifyHandler::Handle(const Event& event) {
                 if (readerPtr.get() == NULL) {
                     return;
                 }
-                // if (readerPtr->GetFileSize() > 0) {
-                //     Event* ev = new Event(event.GetSource(),
-                //                           event.GetObject(),
-                //                           EVENT_MODIFY,
-                //                           event.GetWd(),
-                //                           event.GetCookie(),
-                //                           event.GetDev(),
-                //                           event.GetInode());
-                //     ev->SetConfigName(mConfigName);
-                //     LogInput::GetInstance()->PushEventQueue(ev);
-                // }
             }
         }
     }
