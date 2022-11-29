@@ -62,14 +62,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 		return nil, err
 	}
 
-	logs = d.parsePointsToLogs(points)
-
-	db := req.FormValue("db")
-	if db != "" {
-		for _, log := range logs {
-			log.Contents = append(log.Contents, &protocol.Log_Content{Key: tagDB, Value: db})
-		}
-	}
+	logs = d.parsePointsToLogs(points, req)
 
 	return logs, err
 }
@@ -78,7 +71,16 @@ func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBo
 	return common.CollectBody(res, req, maxBodySize)
 }
 
-func (d *Decoder) parsePointsToLogs(points []models.Point) []*protocol.Log {
+func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []*protocol.Log {
+	db := req.FormValue("db")
+	contentLen := 4
+	if len(db) > 0 {
+		contentLen++
+	}
+	if d.TypeExtend {
+		contentLen++
+	}
+
 	logs := make([]*protocol.Log, 0, len(points))
 	for _, s := range points {
 		fields, err := s.Fields()
@@ -130,30 +132,36 @@ func (d *Decoder) parsePointsToLogs(points []models.Point) []*protocol.Log {
 				builder.WriteString(string(v.Value))
 			}
 
+			contents := make([]*protocol.Log_Content, 0, contentLen)
+			contents = append(contents, &protocol.Log_Content{
+				Key:   metricNameKey,
+				Value: name,
+			}, &protocol.Log_Content{
+				Key:   labelsKey,
+				Value: builder.String(),
+			}, &protocol.Log_Content{
+				Key:   timeNanoKey,
+				Value: strconv.FormatInt(s.UnixNano(), 10),
+			}, &protocol.Log_Content{
+				Key:   valueKey,
+				Value: value,
+			})
+			if d.TypeExtend {
+				contents = append(contents, &protocol.Log_Content{
+					Key:   typeKey,
+					Value: valueType,
+				})
+			}
+			if len(db) > 0 {
+				contents = append(contents, &protocol.Log_Content{
+					Key:   tagDB,
+					Value: db,
+				})
+			}
+
 			log := &protocol.Log{
-				Time: uint32(s.Time().Unix()),
-				Contents: []*protocol.Log_Content{
-					{
-						Key:   metricNameKey,
-						Value: name,
-					},
-					{
-						Key:   labelsKey,
-						Value: builder.String(),
-					},
-					{
-						Key:   timeNanoKey,
-						Value: strconv.FormatInt(s.UnixNano(), 10),
-					},
-					{
-						Key:   valueKey,
-						Value: value,
-					},
-					{
-						Key:   typeKey,
-						Value: valueType,
-					},
-				},
+				Time:     uint32(s.Time().Unix()),
+				Contents: contents,
 			}
 			logs = append(logs, log)
 

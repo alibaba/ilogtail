@@ -81,7 +81,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 	return d.decodeInExpFmt(data, req)
 }
 
-func (d *Decoder) decodeInExpFmt(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
+func (d *Decoder) decodeInExpFmt(data []byte, _ *http.Request) (logs []*protocol.Log, err error) {
 	decoder := expfmt.NewDecoder(bytes.NewReader(data), expfmt.FmtText)
 	sampleDecoder := expfmt.SampleDecoder{
 		Dec: decoder,
@@ -140,38 +140,41 @@ func (d *Decoder) decodeInRemoteWriteFormat(data []byte, req *http.Request) (log
 		return nil, err
 	}
 
+	db := req.FormValue("db")
+	contentLen := 4
+	if len(db) > 0 {
+		contentLen++
+	}
+
 	for _, m := range metrics.Timeseries {
 		metricName, labelsValue := d.parsePbLabels(m.Labels)
 		for _, sample := range m.Samples {
+			contents := make([]*protocol.Log_Content, 0, contentLen)
+			contents = append(contents, &protocol.Log_Content{
+				Key:   metricNameKey,
+				Value: metricName,
+			}, &protocol.Log_Content{
+				Key:   labelsKey,
+				Value: labelsValue,
+			}, &protocol.Log_Content{
+				Key:   timeNanoKey,
+				Value: strconv.FormatInt(sample.Timestamp*1e6, 10),
+			}, &protocol.Log_Content{
+				Key:   valueKey,
+				Value: strconv.FormatFloat(sample.Value, 'g', -1, 64),
+			})
+			if len(db) > 0 {
+				contents = append(contents, &protocol.Log_Content{
+					Key:   tagDB,
+					Value: db,
+				})
+			}
+
 			log := &protocol.Log{
-				Time: uint32(model.Time(sample.Timestamp).Unix()),
-				Contents: []*protocol.Log_Content{
-					{
-						Key:   metricNameKey,
-						Value: metricName,
-					},
-					{
-						Key:   labelsKey,
-						Value: labelsValue,
-					},
-					{
-						Key:   timeNanoKey,
-						Value: strconv.FormatInt(sample.Timestamp*1e6, 10),
-					},
-					{
-						Key:   valueKey,
-						Value: strconv.FormatFloat(float64(sample.Value), 'g', -1, 64),
-					},
-				},
+				Time:     uint32(model.Time(sample.Timestamp).Unix()),
+				Contents: contents,
 			}
 			logs = append(logs, log)
-		}
-	}
-
-	db := req.FormValue("db")
-	if db != "" {
-		for _, log := range logs {
-			log.Contents = append(log.Contents, &protocol.Log_Content{Key: tagDB, Value: db})
 		}
 	}
 
@@ -182,15 +185,15 @@ func (d *Decoder) parsePbLabels(labels []prompb.Label) (metricName, labelsValue 
 	var builder strings.Builder
 	for _, label := range labels {
 		if label.Name == model.MetricNameLabel {
-			metricName = string(label.Value)
+			metricName = label.Value
 			continue
 		}
 		if builder.Len() > 0 {
 			builder.WriteByte('|')
 		}
-		builder.WriteString(string(label.Name))
+		builder.WriteString(label.Name)
 		builder.WriteString("#$#")
-		builder.WriteString(string(label.Value))
+		builder.WriteString(label.Value)
 	}
 	return metricName, builder.String()
 }

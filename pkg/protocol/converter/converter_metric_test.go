@@ -279,7 +279,7 @@ func Test_metricReader_readTimestamp(t *testing.T) {
 			reader: &metricReader{
 				timestamp: "",
 			},
-			wantTime: time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC),
+			wantTime: time.Time{},
 		},
 		{
 			reader: &metricReader{

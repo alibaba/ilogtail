@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -41,13 +42,7 @@ var contentTypeMaps = map[string]string{
 	converter.EncodingJSON:     "application/json",
 	converter.EncodingProtobuf: defaultContentType,
 	converter.EncodingNone:     defaultContentType,
-}
-
-type convertConfig struct {
-	TagFieldsRename      map[string]string // Rename one or more fields from tags.
-	ProtocolFieldsRename map[string]string // Rename one or more fields, The protocol field options can only be: contents, tags, time
-	Protocol             string            // Convert protocol, default value: custom_single
-	Encoding             string            // Convert encoding, options are: 'json','none', default value:json
+	converter.EncodingCustom:   defaultContentType,
 }
 
 type retryConfig struct {
@@ -57,13 +52,13 @@ type retryConfig struct {
 }
 
 type FlusherHTTP struct {
-	RemoteURL   string            // RemoteURL to request
-	Headers     map[string]string // Headers to append to the http request
-	Query       map[string]string // Query parameters to append to the http request
-	Timeout     time.Duration     // Request timeout, default is 60s
-	Retry       retryConfig       // Retry strategy, default is retry 3 times with 100 milliseconds each time
-	Convert     convertConfig     // Convert defines which protocol and format to convert to
-	Concurrency int               // How many requests can be performed in concurrent
+	RemoteURL   string               // RemoteURL to request
+	Headers     map[string]string    // Headers to append to the http request
+	Query       map[string]string    // Query parameters to append to the http request
+	Timeout     time.Duration        // Request timeout, default is 60s
+	Retry       retryConfig          // Retry strategy, default is retry 3 times with 100 milliseconds each time
+	Convert     helper.ConvertConfig // Convert defines which protocol and format to convert to
+	Concurrency int                  // How many requests can be performed in concurrent
 
 	queryVarKeys []string
 
@@ -73,7 +68,6 @@ type FlusherHTTP struct {
 
 	tokenCh chan struct{}
 	tokenWg sync.WaitGroup
-	stopCh  chan struct{}
 }
 
 func (f *FlusherHTTP) Description() string {
@@ -106,7 +100,6 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 		return err
 	}
 	f.tokenCh = make(chan struct{}, f.Concurrency)
-	f.stopCh = make(chan struct{}, 1)
 
 	f.buildQueryVarKeys()
 	f.fillRequestContentType()
@@ -133,7 +126,6 @@ func (f *FlusherHTTP) IsReady(projectName string, logstoreName string, logstoreK
 }
 
 func (f *FlusherHTTP) Stop() error {
-	f.stopCh <- struct{}{}
 	f.tokenWg.Wait()
 	return nil
 }
@@ -143,18 +135,14 @@ func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {
 }
 
 func (f *FlusherHTTP) acquireToken() bool {
-	select {
-	case f.tokenCh <- struct{}{}:
-		f.tokenWg.Add(1)
-		return true
-	case <-f.stopCh:
-		return false
-	}
+	f.tokenWg.Add(1)
+	f.tokenCh <- struct{}{}
+	return true
 }
 
 func (f *FlusherHTTP) releaseToken() {
-	f.tokenWg.Done()
 	<-f.tokenCh
+	f.tokenWg.Done()
 }
 
 func (f *FlusherHTTP) convertAndFlush(logGroup *protocol.LogGroup) error {
@@ -170,24 +158,35 @@ func (f *FlusherHTTP) convertAndFlush(logGroup *protocol.LogGroup) error {
 			if !f.acquireToken() {
 				break
 			}
-			go func() {
-				defer f.releaseToken()
-				for i := 0; i <= f.Retry.MaxCount; i++ {
-					ok, retryable, _ := f.flush(body, values)
-					if ok || !retryable || !f.Retry.Enable {
-						break
-					}
-					<-time.After(f.Retry.Delay)
-				}
-				converter.PutPooledByteBuf(&body)
-			}()
+			go f.flushWithRetry(body, values)
 		}
+		return nil
+	case []byte:
+		if !f.acquireToken() {
+			return nil
+		}
+		go f.flushWithRetry(rows, nil)
 		return nil
 	default:
 		err = fmt.Errorf("not supported logs type [%T]", logs)
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "error", err)
 		return err
 	}
+}
+
+func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) error {
+	defer f.releaseToken()
+	var err error
+	for i := 0; i <= f.Retry.MaxCount; i++ {
+		ok, retryable, e := f.flush(data, varValues)
+		if ok || !retryable || !f.Retry.Enable {
+			break
+		}
+		err = e
+		<-time.After(f.Retry.Delay)
+	}
+	converter.PutPooledByteBuf(&data)
+	return err
 }
 
 func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retryable bool, err error) {
@@ -238,10 +237,10 @@ func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retry
 	case 2:
 		return true, false, nil
 	case 5:
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher write data returned error, status", response.Status, "body", string(body))
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher write data returned error, url", req.URL.String(), "status", response.Status, "body", string(body))
 		return false, true, fmt.Errorf("err status returned: %v", response.Status)
 	default:
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher write data returned error, status", response.Status, "body", string(body))
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher write data returned error, url", req.URL.String(), "status", response.Status, "body", string(body))
 		return false, false, fmt.Errorf("unexpected status returned: %v", response.Status)
 	}
 }
@@ -292,7 +291,7 @@ func init() {
 		return &FlusherHTTP{
 			Timeout:     defaultTimeout,
 			Concurrency: 1,
-			Convert: convertConfig{
+			Convert: helper.ConvertConfig{
 				Protocol: converter.ProtocolCustomSingle,
 				Encoding: converter.EncodingJSON,
 			},

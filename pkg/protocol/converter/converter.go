@@ -33,6 +33,7 @@ const (
 	EncodingNone     = "none"
 	EncodingJSON     = "json"
 	EncodingProtobuf = "protobuf"
+	EncodingCustom   = "custom"
 )
 
 const (
@@ -98,7 +99,7 @@ var supportedEncodingMap = map[string]map[string]bool{
 		EncodingNone: true,
 	},
 	ProtocolInfluxdb: {
-		EncodingNone: true,
+		EncodingCustom: true,
 	},
 }
 

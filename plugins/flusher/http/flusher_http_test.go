@@ -24,6 +24,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 )
@@ -42,7 +43,7 @@ func TestHttpFlusherInit(t *testing.T) {
 	Convey("Given a http flusher with empty converter", t, func() {
 		flusher := &FlusherHTTP{
 			RemoteURL: "http://localhost:8086/write",
-			Convert:   convertConfig{},
+			Convert:   helper.ConvertConfig{},
 		}
 		Convey("Then Init() should return error", func() {
 			err := flusher.Init(mockContext{})
@@ -53,7 +54,7 @@ func TestHttpFlusherInit(t *testing.T) {
 	Convey("Given a http flusher with empty converter", t, func() {
 		flusher := &FlusherHTTP{
 			RemoteURL: "http://localhost:8086/write",
-			Convert:   convertConfig{},
+			Convert:   helper.ConvertConfig{},
 		}
 		Convey("Then Init() should return error", func() {
 			err := flusher.Init(mockContext{})
@@ -64,7 +65,7 @@ func TestHttpFlusherInit(t *testing.T) {
 	Convey("Given a http flusher with Query contains variable ", t, func() {
 		flusher := &FlusherHTTP{
 			RemoteURL: "http://localhost:8086/write",
-			Convert: convertConfig{
+			Convert: helper.ConvertConfig{
 				Protocol: converter.ProtocolCustomSingle,
 				Encoding: converter.EncodingJSON,
 			},
@@ -97,7 +98,7 @@ func TestHttpFlusherFlush(t *testing.T) {
 
 		flusher := &FlusherHTTP{
 			RemoteURL: "http://test.com/write",
-			Convert: convertConfig{
+			Convert: helper.ConvertConfig{
 				Protocol: converter.ProtocolInfluxdb,
 				Encoding: converter.EncodingNone,
 			},
@@ -196,7 +197,7 @@ func TestHttpFlusherFlush(t *testing.T) {
 
 		flusher := &FlusherHTTP{
 			RemoteURL: "http://test.com/write",
-			Convert: convertConfig{
+			Convert: helper.ConvertConfig{
 				Protocol: converter.ProtocolCustomSingle,
 				Encoding: converter.EncodingJSON,
 			},

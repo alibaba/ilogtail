@@ -58,11 +58,11 @@ func TestConvertToInfluxdbProtocolStream(t *testing.T) {
 						},
 					},
 				},
-				wantStream: []byte("metric field=1\nmetric,aa=bb field=1\nmetric field=1 1667615389000000000\n"),
+				wantStream: [][]byte{[]byte("metric field=1\nmetric,aa=bb field=1\nmetric field=1 1667615389000000000\n")},
 			},
 		}
 
-		converter, err := NewConverter("influxdb", "none", nil, nil)
+		converter, err := NewConverter("influxdb", "custom", nil, nil)
 		convey.So(err, convey.ShouldBeNil)
 
 		for _, test := range cases {
