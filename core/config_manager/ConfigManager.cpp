@@ -142,6 +142,7 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
         int32_t curTime = time(NULL);
 
         if (curTime - lastCheckTime >= checkInterval) {
+            DeleteHandlers();
             if (!IsUpdate() && GetLocalConfigUpdate()) {
                 StartUpdateConfig();
             }
