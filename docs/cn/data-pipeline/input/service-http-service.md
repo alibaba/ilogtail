@@ -15,7 +15,7 @@
 | ShutdownTimeoutSec | String  | 否       | <p>关闭超时时间。</p><p>默认取值为:`5s`。</p>                                                                      |
 | MaxBodySize        | String  | 否       | <p>最大传输 body 大小。</p><p>默认取值为:`64k`。</p>                                                               |
 | UnlinkUnixSock     | String  | 否       | <p>启动前如果监听地址为unix socket，是否进行强制释放。</p><p>默认取值为:`true`。</p>                               |
-| TypeExtend         | Boolean | 否       | <p>是否支持非integer以外的数据类型(如String)</p><p>目前仅针对有 String、Bool 等额外类型的 influxdb Format 有效</p> |
+| FieldsExtend         | Boolean | 否       | <p>是否支持非integer以外的数据类型(如String)</p><p>目前仅针对有 String、Bool 等额外类型的 influxdb Format 有效</p> |
 
 ## 样例
 

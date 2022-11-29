@@ -46,7 +46,7 @@ const tagDB = "__tag__:db"
 
 // Decoder impl
 type Decoder struct {
-	TypeExtend bool
+	FieldsExtend bool
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, decodeErr error) {
@@ -74,10 +74,10 @@ func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBo
 func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []*protocol.Log {
 	db := req.FormValue("db")
 	contentLen := 4
-	if len(db) > 0 {
+	if d.FieldsExtend && len(db) > 0 {
 		contentLen++
 	}
-	if d.TypeExtend {
+	if d.FieldsExtend {
 		contentLen++
 	}
 
@@ -103,7 +103,7 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 				}
 				valueType = valueTypeBool
 			case string:
-				if !d.TypeExtend {
+				if !d.FieldsExtend {
 					continue
 				}
 				value = v
@@ -146,13 +146,13 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 				Key:   valueKey,
 				Value: value,
 			})
-			if d.TypeExtend {
+			if d.FieldsExtend {
 				contents = append(contents, &protocol.Log_Content{
 					Key:   typeKey,
 					Value: valueType,
 				})
 			}
-			if len(db) > 0 {
+			if d.FieldsExtend && len(db) > 0 {
 				contents = append(contents, &protocol.Log_Content{
 					Key:   tagDB,
 					Value: db,

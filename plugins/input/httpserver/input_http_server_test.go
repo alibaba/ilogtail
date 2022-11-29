@@ -247,9 +247,9 @@ func TestInputInfluxDB(t *testing.T) {
 	}
 }
 
-func TestInputInfluxDBWithTypeExtend(t *testing.T) {
+func TestInputInfluxDBWithFieldsExtend(t *testing.T) {
 	input, err := newInputWithOpts("influx", func(input *ServiceHTTP) {
-		input.TypeExtend = true
+		input.FieldsExtend = true
 	})
 	require.NoError(t, err)
 	collector := &mockCollector{}

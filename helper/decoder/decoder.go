@@ -37,7 +37,7 @@ type Decoder interface {
 }
 
 type Option struct {
-	TypeExtend bool
+	FieldsExtend bool
 }
 
 var errDecoderNotFound = errors.New("no such decoder")
@@ -54,7 +54,7 @@ func GetDecoderWithOptions(format string, option Option) (Decoder, error) {
 	case common.ProtocolPrometheus:
 		return &prometheus.Decoder{}, nil
 	case common.ProtocolInflux, common.ProtocolInfluxdb:
-		return &influxdb.Decoder{TypeExtend: option.TypeExtend}, nil
+		return &influxdb.Decoder{FieldsExtend: option.FieldsExtend}, nil
 	case common.ProtocolStatsd:
 		return &statsd.Decoder{
 			Time: time.Now(),
