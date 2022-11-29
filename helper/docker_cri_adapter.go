@@ -36,7 +36,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"google.golang.org/grpc"
-	cri "k8s.io/cri-api/pkg/apis/runtime/v1"
+	cri "k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
 )
 
 const (
@@ -109,6 +109,7 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithInsecure(), grpc.WithDialer(dailer), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*16)))
 	if err != nil {
+		logger.Debug(context.Background(), "Dial", addr, "failed", err)
 		return false
 	}
 
@@ -120,21 +121,26 @@ func IsCRIStatusValid(criRuntimeEndpoint string) bool {
 			break
 		}
 		if strings.Contains(err.Error(), "code = Unimplemented") {
+			logger.Debug(context.Background(), "Status failed", err)
 			return false
 		}
 		time.Sleep(time.Millisecond * 100)
 	}
 	if err != nil {
+		logger.Debug(context.Background(), "Status failed", err)
 		return false
 	}
 	// check running containers
 	for tryCount := 0; tryCount < 5; tryCount++ {
-		containersResp, err := client.ListContainers(ctx, &cri.ListContainersRequest{Filter: nil})
+		var containersResp *cri.ListContainersResponse
+		containersResp, err = client.ListContainers(ctx, &cri.ListContainersRequest{Filter: nil})
 		if err == nil {
+			logger.Debug(context.Background(), "ListContainers result", containersResp.Containers)
 			return containersResp.Containers != nil
 		}
 		time.Sleep(time.Millisecond * 100)
 	}
+	logger.Debug(context.Background(), "ListContainers failed", err)
 	return false
 }
 
