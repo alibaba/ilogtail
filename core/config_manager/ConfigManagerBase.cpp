@@ -873,7 +873,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             config->mLocalStorage = true; // Must be true, parameter local_storage is desperated.
             config->mVersion = version;
 
-            config->mCompressType = STRING_FLAG(forced_data_compress_type).empty() ? GetStringValue(value, "compressType", "") : STRING_FLAG(forced_data_compress_type);
+            // default compress type is lz4. none if disable by gflag
+            config->mCompressType
+                = BOOL_FLAG(sls_client_send_compress) ? GetStringValue(value, "compressType", "") : "none";
             config->mDiscardNoneUtf8 = GetBoolValue(value, "discard_none_utf8", false);
 
             config->mAliuid = GetStringValue(value, "aliuid", "");

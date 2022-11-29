@@ -18,7 +18,6 @@
 | EnableShardHash | Boolean | 否    | 是否启用Key路由Shard模式写入数据。仅当配置了aggregator_shardhash时有效。如果未添加该参数，则默认使用false，表示使用负载均衡模式写入数据。 |
 | KeepShardHash   | Boolean | 否    | 是否在日志tag中增加__shardhash__:&lt;shardhashkey>。仅当配置了aggregator_shardhash时有效。如果未添加该参数，则默认使用true，表示在日志中增加前述tag。 |
 | ShardHashKey    | Array   | 否    | 以Key路由Shard模式写入数据时，写入shard的判定依据字段。仅当配置了加速处理插件（processor_&lt;type>_accelerate）时有效。如果未添加该参数，则默认以负载均衡模式写入数据 |
-| CompressType    | String  | 否    | 默认为lz4，可选[zstd](https://github.com/facebook/zstd) |
 
 ## 安全性说明
 

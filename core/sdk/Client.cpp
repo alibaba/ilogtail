@@ -464,8 +464,6 @@ namespace sdk {
         switch (compressType) {
             case sls_logs::SLS_CMP_NONE:
                 return "";
-            case sls_logs::SLS_CMP_DEFLATE:
-                return LOG_DEFLATE;
             case sls_logs::SLS_CMP_LZ4:
                 return LOG_LZ4;
             case sls_logs::SLS_CMP_ZSTD:
@@ -479,8 +477,6 @@ namespace sdk {
                                                       sls_logs::SlsCompressType defaultType) {
         if (compressTypeString == "none") {
             return sls_logs::SLS_CMP_NONE;
-        } else if (compressTypeString == LOG_DEFLATE) {
-            return sls_logs::SLS_CMP_DEFLATE;
         } else if (compressTypeString == LOG_LZ4) {
             return sls_logs::SLS_CMP_LZ4;
         } else if (compressTypeString == LOG_ZSTD) {

@@ -230,11 +230,11 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
     } else if (sendResult == SEND_UNAUTHORIZED) {
         failDetail << "write unauthorized";
         suggestion << "check https connection to endpoint or access keys provided";
+        Sender::Instance()->IncTotalSendStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
         if (mDataPtr->mSendRetryTimes > INT32_FLAG(unauthorized_send_retrytimes)) {
             operation = DISCARD_WHEN_FAIL;
         } else {
             BOOL_FLAG(global_network_success) = true;
-            Sender::Instance()->IncTotalSendStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
             if (mDataPtr->mAliuid.empty() && ConfigManager::GetInstance()->GetRegionType() == REGION_CORP) {
                 operation = RETRY_ASYNC_WHEN_FAIL;
             } else {
@@ -249,11 +249,13 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
             }
         }
     } else if (sendResult == SEND_PARAMETER_INVALID) {
+        Sender::Instance()->IncTotalSendStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
         if (errorMessage.find("x-log-compresstype : zstd") == std::string::npos) {
             failDetail << "invalid paramters";
             suggestion << "check input parameters";
-            operation = DISCARD_WHEN_FAIL;
+            operation = DefaultOperation();
         } else {
+            // TODO: feedback compress type support to Global Feedback Map
             failDetail << "server does not support zstd compress type, will retry with lz4";
             suggestion << "change compressType config to lz4";
             LogtailAlarm::GetInstance()->SendAlarm(
@@ -284,6 +286,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         }
     } else if (sendResult == SEND_INVALID_SEQUENCE_ID) {
         failDetail << "invalid exactly-once sequence id";
+        Sender::Instance()->IncTotalSendStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
         do {
             auto& cpt = mDataPtr->mLogGroupContext.mExactlyOnceCheckpoint;
             if (!cpt) {
@@ -319,6 +322,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
     } else if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust() && sdk::LOGE_REQUEST_TIME_EXPIRED == errorCode) {
         failDetail << "write request expired, will retry";
         suggestion << "check local system time";
+        Sender::Instance()->IncTotalSendStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
         operation = RETRY_ASYNC_WHEN_FAIL;
     } else {
         failDetail << "other error";
@@ -328,13 +332,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         // first time, we will retry immediately
         // then we record error and retry latter
         // when retry times > unknow_error_try_max, we will drop this data
-        if (mDataPtr->mSendRetryTimes == 1) {
-            operation = RETRY_ASYNC_WHEN_FAIL;
-        } else if (mDataPtr->mSendRetryTimes > INT32_FLAG(unknow_error_try_max)) {
-            operation = DISCARD_WHEN_FAIL;
-        } else {
-            operation = RECORD_ERROR_WHEN_FAIL;
-        }
+        operation = DefaultOperation();
     }
     if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(discard_send_fail_interval)) {
         operation = DISCARD_WHEN_FAIL;
@@ -364,7 +362,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         case RETRY_ASYNC_WHEN_FAIL:
             Sender::Instance()->SendToNetAsync(mDataPtr);
             break;
-        case RECORD_ERROR_WHEN_FAIL: //TODO:
+        case RECORD_ERROR_WHEN_FAIL:
             // Sender::Instance()->PutIntoSecondaryBuffer(mDataPtr, 10);
             Sender::Instance()->SubSendingBufferCount();
             // record error
@@ -390,6 +388,16 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
     }
 
     delete this;
+}
+
+OperationOnFail SendClosure::DefaultOperation() {
+    if (mDataPtr->mSendRetryTimes == 1) {
+        return RETRY_ASYNC_WHEN_FAIL;
+    } else if (mDataPtr->mSendRetryTimes > INT32_FLAG(unknow_error_try_max)) {
+        return DISCARD_WHEN_FAIL;
+    } else {
+        return RECORD_ERROR_WHEN_FAIL;
+    }
 }
 
 SendResult ConvertErrorCode(const std::string& errorCode) {
@@ -2405,14 +2413,15 @@ double Sender::UpdateSendStatistic(const std::string& key, int32_t curTime, bool
 
     int32_t second = curTime % STATISTIC_CYCLE;
     int32_t window = second / WINDOW_SIZE;
-    int32_t curBeginTime = curTime - second + window * WINDOW_SIZE;
+    int32_t curBeginTime = curTime - second + window * WINDOW_SIZE; // normalize to 10s
     {
         PTScopedLock lock(mSendStatisticLock);
         std::unordered_map<std::string, std::vector<SendStatistic*> >::iterator iter = mSendStatisticMap.find(key);
         if (iter == mSendStatisticMap.end()) {
-            vector<SendStatistic*> value;
-            for (int32_t idx = 0; idx < WINDOW_COUNT; ++idx)
+            std::vector<SendStatistic*> value;
+            for (int32_t idx = 0; idx < WINDOW_COUNT; ++idx) {
                 value.push_back(new SendStatistic(0));
+            }
             iter = mSendStatisticMap.insert(iter, std::make_pair(key, value));
         }
 

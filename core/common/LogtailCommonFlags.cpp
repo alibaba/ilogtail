@@ -71,7 +71,7 @@ DEFINE_FLAG_STRING(local_machine_uuid, "use this value if not empty, for ut/debu
 DEFINE_FLAG_STRING(user_defined_id_file, "", "user_defined_id");
 DEFINE_FLAG_STRING(logtail_sys_conf_users_dir, "", "users");
 DEFINE_FLAG_INT32(sls_client_send_timeout, "timeout time of one operation for SlsClient", 15);
-DEFINE_FLAG_STRING(forced_data_compress_type, "enforce data compress type when put data", "");
+DEFINE_FLAG_BOOL(sls_client_send_compress, "whether compresses the data or not when put data", true);
 DEFINE_FLAG_INT32(send_retrytimes, "how many times should retry if PostLogStoreLogs operation fail", 3);
 DEFINE_FLAG_INT32(default_StreamLog_tcp_port, "", 11111);
 DEFINE_FLAG_INT32(default_StreamLog_poll_size_in_mb, "", 50);

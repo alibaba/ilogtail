@@ -132,6 +132,7 @@ class SendClosure : public sdk::PostLogStoreLogsClosure {
 public:
     virtual void OnSuccess(sdk::Response* response);
     virtual void OnFail(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage);
+    OperationOnFail DefaultOperation();
     LoggroupTimeValue* mDataPtr;
 };
 
@@ -306,8 +307,22 @@ private:
     bool TestEndpoint(const std::string& region, const std::string& endpoint);
     void PutIntoBatchMap(LoggroupTimeValue* data);
 
+    /*
+     * only increase total count
+     */
     double IncTotalSendStatistic(const std::string& projectName, const std::string& logstore, int32_t curTime);
+    /*
+     * increase total count and error count
+     * should only be used if connect to server failed
+     */
     double IncSendServerErrorStatistic(const std::string& projectName, const std::string& logstore, int32_t curTime);
+    /*
+     * @brief accumulate sender total count, error count and calc error rate
+     * @param key project_logstore
+     * @param curTime current time
+     * @param serverError accumulate error count by 1 and return error rate
+     * @return error rate in 1 min if serverError is true, 0 if serverError is false
+     */
     double UpdateSendStatistic(const std::string& key, int32_t curTime, bool serverError);
     void CleanTimeoutSendStatistic();
 
@@ -430,13 +445,13 @@ public:
 
     // only used by exactly once
     void SendCompressed(const std::string& projectName,
-                           sls_logs::LogGroup& logGroup,
-                           const std::vector<int32_t>& neededLogIndex,
-                           const std::string& configName,
-                           const std::string& aliuid,
-                           const std::string& region,
-                           const std::string& filename,
-                           const LogGroupContext& context);
+                        sls_logs::LogGroup& logGroup,
+                        const std::vector<int32_t>& neededLogIndex,
+                        const std::string& configName,
+                        const std::string& aliuid,
+                        const std::string& region,
+                        const std::string& filename,
+                        const LogGroupContext& context);
 
     void SendCompressed(std::vector<MergeItem*>& sendDataVec);
     void SendLogPackageList(std::vector<MergeItem*>& sendDataVec);
