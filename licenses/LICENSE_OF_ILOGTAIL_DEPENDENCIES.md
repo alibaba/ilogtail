@@ -59,6 +59,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/prometheus/client\_model](https://pkg.go.dev/github.com/prometheus/client_model?tab=licenses)
 - [github.com/prometheus/common](https://pkg.go.dev/github.com/prometheus/common?tab=licenses)
 - [github.com/prometheus/procfs](https://pkg.go.dev/github.com/prometheus/procfs?tab=licenses)
+- [github.com/prometheus/prometheus](https://pkg.go.dev/github.com/prometheus/prometheus?tab=licenses)
 - [github.com/stefanberger/go-pkcs11uri](https://pkg.go.dev/github.com/stefanberger/go-pkcs11uri?tab=licenses)
 - [github.com/tklauser/numcpus](https://pkg.go.dev/github.com/tklauser/numcpus?tab=licenses)
 - [github.com/VictoriaMetrics/metricsql](https://pkg.go.dev/github.com/VictoriaMetrics/metricsql?tab=licenses)
