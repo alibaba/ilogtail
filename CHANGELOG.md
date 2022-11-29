@@ -41,4 +41,5 @@ your changes, such as:
 - [public] [both] [added] add a new flusher_kafka_v2 plugin.
 - [public] [linux] [fixed] strip binaries to reduce dist size.
 - [public] [both] [added] add zstd compress type support to sls_flusher.
+- [public] [linux] [updated] polish ebpf data structure
 
