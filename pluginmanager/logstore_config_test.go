@@ -316,5 +316,4 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 		assert.True(t, helper.IsSafeString(log.Log.Contents[3].GetKey(), tagsStr))
 		assert.True(t, helper.IsSafeString(log.Log.Contents[3].GetValue(), tagsStr))
 	}
-
 }

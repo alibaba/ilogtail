@@ -28,20 +28,20 @@ type pluginv2Runner struct {
 	ProcessPipeContext   ilogtail.PipelineContext
 	AggregatePipeContext ilogtail.PipelineContext
 	FlushPipeContext     ilogtail.PipelineContext
-	MetricPlugins        []ilogtail.MetricInput2
-	ServicePlugins       []ilogtail.ServiceInput2
-	ProcessorPlugins     []ilogtail.Processor2
-	AggregatorPlugins    []ilogtail.Aggregator2
-	FlusherPlugins       []ilogtail.Flusher2
-	Timers               []*timerRunner
+	InputControl         *ilogtail.CancellationControl
+	ProcessControl       *ilogtail.CancellationControl
+	AggregateControl     *ilogtail.CancellationControl
+	FlushControl         *ilogtail.CancellationControl
+
+	MetricPlugins     []ilogtail.MetricInput2
+	ServicePlugins    []ilogtail.ServiceInput2
+	ProcessorPlugins  []ilogtail.Processor2
+	AggregatorPlugins []ilogtail.Aggregator2
+	FlusherPlugins    []ilogtail.Flusher2
+	TimerRunner       []*timerRunner
 
 	FlushOutStore  *FlushOutStore[models.PipelineGroupEvents]
 	LogstoreConfig *LogstoreConfig
-
-	InputControl     *ilogtail.CancellationControl
-	ProcessControl   *ilogtail.CancellationControl
-	AggregateControl *ilogtail.CancellationControl
-	FlushControl     *ilogtail.CancellationControl
 }
 
 func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
@@ -64,7 +64,7 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 
 func (p *pluginv2Runner) AddMetricInput(input ilogtail.MetricInput, interval int) {
 	p.MetricPlugins = append(p.MetricPlugins, input.(ilogtail.MetricInput2))
-	p.Timers = append(p.Timers, &timerRunner{
+	p.TimerRunner = append(p.TimerRunner, &timerRunner{
 		state:         input,
 		interval:      time.Duration(interval) * time.Millisecond,
 		context:       p.LogstoreConfig.Context,
@@ -90,7 +90,7 @@ func (p *pluginv2Runner) AddAggregator(aggregator ilogtail.Aggregator) {
 	if interval == 0 {
 		interval = p.LogstoreConfig.GlobalConfig.AggregatIntervalMs
 	}
-	p.Timers = append(p.Timers, &timerRunner{
+	p.TimerRunner = append(p.TimerRunner, &timerRunner{
 		state:         aggregator,
 		interval:      time.Millisecond * time.Duration(interval),
 		context:       p.LogstoreConfig.Context,
@@ -119,7 +119,7 @@ func (p *pluginv2Runner) RunInput() {
 }
 
 func (p *pluginv2Runner) RunMetricInputOnce(control *ilogtail.CancellationControl) {
-	for _, t := range p.Timers {
+	for _, t := range p.TimerRunner {
 		if plugin, ok := t.state.(ilogtail.MetricInput2); ok {
 			metric := plugin
 			timer := t
@@ -191,7 +191,7 @@ func (p *pluginv2Runner) RunAggregator() {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
 		_ = loadAggregator("aggregator_default", p.LogstoreConfig, nil)
 	}
-	for _, t := range p.Timers {
+	for _, t := range p.TimerRunner {
 		if plugin, ok := t.state.(ilogtail.Aggregator2); ok {
 			aggregator := plugin
 			timer := t

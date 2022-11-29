@@ -545,7 +545,7 @@ func initPluginRunner(lc *LogstoreConfig) (PluginRunner, error) {
 			FlushOutStore:  NewFlushOutStore[models.PipelineGroupEvents](),
 		}, nil
 	default:
-		return nil, fmt.Errorf("Undefined config version %s", lc.Version)
+		return nil, fmt.Errorf("undefined config version %s", lc.Version)
 	}
 }
 
