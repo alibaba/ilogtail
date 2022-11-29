@@ -70,11 +70,11 @@ func (c *HTTPCaseController) Start() error {
 	if c.cfg.Times > 0 {
 		physicalAddress := boot.GetPhysicalAddress(c.virtualAddr)
 		if physicalAddress == "" {
-			return fmt.Errorf("cannot find the physical address of the %s virtual address in the exported ports", c.virtualAddr)
+			physicalAddress = c.virtualAddr
 		}
 		realAddress := "http://" + physicalAddress + c.path
 
-		request, err := http.NewRequest(c.cfg.Method, realAddress, nil)
+		request, err := http.NewRequest(c.cfg.Method, realAddress, strings.NewReader(c.cfg.Body))
 		if err != nil {
 			return fmt.Errorf("error in creating http trigger request: %v", err)
 		}
