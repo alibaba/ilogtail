@@ -96,10 +96,10 @@ DEFINE_FLAG_INT32(reset_region_concurrency_error_count,
                   5);
 DEFINE_FLAG_INT32(unknow_error_try_max, "discard data when try times > this value", 5);
 DEFINE_FLAG_INT32(test_unavailable_endpoint_interval, "test unavailable endpoint interval", 60);
-DEFINE_FLAG_INT32(sending_cost_time_alarm_interval, "sending log group cost too much time, second", 10);
+DEFINE_FLAG_INT32(sending_cost_time_alarm_interval, "sending log group cost too much time, second", 3);
 DEFINE_FLAG_INT32(log_group_wait_in_queue_alarm_interval,
                   "log group wait in queue alarm interval, may blocked by concurrency or quota, second",
-                  10);
+                  3);
 
 namespace logtail {
 const string Sender::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";
@@ -219,12 +219,14 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
             suggestion << "create ticket or raise issue in support chat group";
         }
         Sender::Instance()->IncTotalSendStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
-        LogtailAlarm::GetInstance()->SendAlarm(SEND_QUOTA_EXCEED_ALARM,
-                                               "error_code: " + errorCode + ", error_message: " + errorMessage
-                                                   + ", request_id:" + response->requestId,
-                                               mDataPtr->mProjectName,
-                                               mDataPtr->mLogstore,
-                                               mDataPtr->mRegion);
+        if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
+            LogtailAlarm::GetInstance()->SendAlarm(SEND_QUOTA_EXCEED_ALARM,
+                                                   "error_code: " + errorCode + ", error_message: " + errorMessage
+                                                       + ", request_id:" + response->requestId,
+                                                   mDataPtr->mProjectName,
+                                                   mDataPtr->mLogstore,
+                                                   mDataPtr->mRegion);
+        }
         operation = RECORD_ERROR_WHEN_FAIL;
         recordRst = LogstoreSenderInfo::SendResult_QuotaFail;
     } else if (sendResult == SEND_UNAUTHORIZED) {
@@ -349,20 +351,19 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         "Region", mDataPtr->mRegion)("Project", mDataPtr->mProjectName)("Logstore", mDataPtr->mLogstore)( \
         "Config", mDataPtr->mConfigName)("RetryTimes", mDataPtr->mSendRetryTimes)("LogLines", mDataPtr->mLogLines)( \
         "Bytes", mDataPtr->mLogData.size())("Endpoint", mDataPtr->mCurrentEndpoint)("IsProfileData", isProfileData)
-    if (isProfileData) {
-        LOG_DEBUG(sLogger, LOG_PATTERN);
-    } else if (operation != DISCARD_WHEN_FAIL) {
-        LOG_WARNING(sLogger, LOG_PATTERN);
-    } else {
-        LOG_ERROR(sLogger, LOG_PATTERN);
-    }
-#undef LOG_PATTERN
 
+    // Log warning if retry for too long or will discard data
     switch (operation) {
         case RETRY_ASYNC_WHEN_FAIL:
+            if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
+                LOG_WARNING(sLogger, LOG_PATTERN);
+            }
             Sender::Instance()->SendToNetAsync(mDataPtr);
             break;
         case RECORD_ERROR_WHEN_FAIL:
+            if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
+                LOG_WARNING(sLogger, LOG_PATTERN);
+            }
             // Sender::Instance()->PutIntoSecondaryBuffer(mDataPtr, 10);
             Sender::Instance()->SubSendingBufferCount();
             // record error
@@ -371,6 +372,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
             break;
         case DISCARD_WHEN_FAIL:
         default:
+            LOG_WARNING(sLogger, LOG_PATTERN);
             if (!isProfileData) {
                 LogtailAlarm::GetInstance()->SendAlarm(
                     SEND_DATA_FAIL_ALARM,
@@ -386,6 +388,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
             Sender::Instance()->OnSendDone(mDataPtr, LogstoreSenderInfo::SendResult_DiscardFail);
             Sender::Instance()->DescSendingCount();
     }
+#undef LOG_PATTERN
 
     delete this;
 }
@@ -1412,6 +1415,7 @@ void Sender::DaemonSender() {
                 sendBufferBytes += data->mRawSize;
                 sendNetBodyBytes += data->mLogData.size();
                 sendLines += data->mLogLines;
+                data->mLastUpdateTime = time(NULL);
                 SendToNetAsync(data);
             }
         }
