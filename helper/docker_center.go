@@ -931,11 +931,6 @@ func (dc *DockerCenter) refreshLastUpdateMapTime() {
 }
 
 func (dc *DockerCenter) updateContainers(containerMap map[string]*DockerInfoDetail) {
-	for _, c := range containerMap {
-		if c == nil {
-			break
-		}
-	}
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 	for key, container := range dc.containerMap {
@@ -945,11 +940,6 @@ func (dc *DockerCenter) updateContainers(containerMap map[string]*DockerInfoDeta
 				// not timeout, put to new map
 				containerMap[key] = container
 			}
-		}
-	}
-	for _, c := range containerMap {
-		if c == nil {
-			break
 		}
 	}
 	// switch to new container map
