@@ -33,17 +33,21 @@ type timerRunner struct {
 }
 
 func (p *timerRunner) Run(task func(state interface{}) error, cc *ilogtail.CancellationControl) {
-	logger.Info(p.context.GetRuntimeContext(), "start run plugin", p.state)
+	logger.Info(p.context.GetRuntimeContext(), "task run", "start", "interval", p.interval, "state", fmt.Sprintf("%T", p.state))
 	defer panicRecover(fmt.Sprint(p.state))
 	for {
 		exitFlag := util.RandomSleep(p.interval, 0.1, cc.CancelToken())
-		p.latencyMetric.Begin()
-		if err := task(p.state); err != nil {
-			logger.Error(p.context.GetRuntimeContext(), "PLUGIN_RUN_ALARM", "Plugin timer run error", "error", err, "plugin", fmt.Sprint(p.state))
+		if p.latencyMetric != nil {
+			p.latencyMetric.Begin()
 		}
-		p.latencyMetric.End()
+		if err := task(p.state); err != nil {
+			logger.Error(p.context.GetRuntimeContext(), "PLUGIN_RUN_ALARM", "task run", "error", err, "plugin", "state", fmt.Sprintf("%T", p.state))
+		}
+		if p.latencyMetric != nil {
+			p.latencyMetric.End()
+		}
 		if exitFlag {
-			logger.Info(p.context.GetRuntimeContext(), "task stop", "done", "plugin", fmt.Sprint(p.state))
+			logger.Info(p.context.GetRuntimeContext(), "task run", "exit", "state", fmt.Sprintf("%T", p.state))
 			return
 		}
 	}

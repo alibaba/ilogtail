@@ -297,17 +297,17 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 	for _, serviceInput := range p.ServicePlugins {
 		_ = serviceInput.Stop()
 	}
-	p.InputControl.Cancel()
+	p.InputControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "metric plugins stop", "done", "service plugins stop", "done")
 
-	p.ProcessControl.Cancel()
+	p.ProcessControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "processor plugins stop", "done")
 
-	p.AggregateControl.Cancel()
+	p.AggregateControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "aggregator plugins stop", "done")
 
 	p.LogstoreConfig.FlushOutFlag = true
-	p.FlushControl.Cancel()
+	p.FlushControl.WaitCancel()
 
 	if exit && p.FlushOutStore.Len() > 0 {
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "Flushout group events, count", p.FlushOutStore.Len())

@@ -310,20 +310,20 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 	for _, service := range p.ServicePlugins {
 		_ = service.Stop()
 	}
-	p.InputControl.Cancel()
+	p.InputControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "metric plugins stop", "done", "service plugins stop", "done")
 
-	p.ProcessControl.Cancel()
+	p.ProcessControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "processor plugins stop", "done")
 
 	for _, aggregator := range p.AggregatorPlugins {
 		aggregator.Stop()
 	}
-	p.AggregateControl.Cancel()
+	p.AggregateControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "aggregator plugins stop", "done")
 
 	p.LogstoreConfig.FlushOutFlag = true
-	p.FlushControl.Cancel()
+	p.FlushControl.WaitCancel()
 
 	if exit && p.FlushOutStore.Len() > 0 {
 		flushers := make([]ilogtail.Flusher1, len(p.FlusherPlugins))

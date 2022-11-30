@@ -186,7 +186,7 @@ func (p *CancellationControl) Run(task func(*CancellationControl)) {
 	}(p, task)
 }
 
-func (p *CancellationControl) Cancel() {
+func (p *CancellationControl) WaitCancel() {
 	close(p.cancelToken)
 	p.wg.Wait()
 	p.cancelToken = nil
