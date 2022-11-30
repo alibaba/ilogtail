@@ -591,38 +591,35 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                         pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
                         config->mPluginConfig = pluginConfig;
                     }
-
-                    if (value.isMember("docker_file") && value["docker_file"].isBool()
-                        && value["docker_file"].asBool()) {
-                        if (AppConfig::GetInstance()->IsPurageContainerMode()) {
-                            // docker file is not supported in Logtail's container mode
-                            if (AppConfig::GetInstance()->IsContainerMode()) {
-                                throw ExceptionBase(
-                                    std::string("docker file is not supported in Logtail's container mode "));
-                            }
-                            // load saved container path
-                            auto iter = mAllDockerContainerPathMap.find(logName);
-                            if (iter != mAllDockerContainerPathMap.end()) {
-                                config->mDockerContainerPaths = iter->second;
-                                mAllDockerContainerPathMap.erase(iter);
-                            }
-                            if (!config->SetDockerFileFlag(true)) {
-                                // should not happen
-                                throw ExceptionBase(std::string("docker file do not support wildcard path"));
-                            }
-                            MappingPluginConfig(value, config, pluginConfigJson);
-                        } else {
-                            LOG_WARNING(sLogger,
-                                        ("config is docker_file mode, but logtail is not a purage container",
-                                         "the flag is ignored")("project", projectName)("logstore", category));
-                            LogtailAlarm::GetInstance()->SendAlarm(
-                                CATEGORY_CONFIG_ALARM,
-                                string("config is docker_file mode, but logtail is not "
-                                       "a purage container, the flag is ignored"),
-                                projectName,
-                                category,
-                                region);
+                }
+                if (value.isMember("docker_file") && value["docker_file"].isBool() && value["docker_file"].asBool()) {
+                    if (AppConfig::GetInstance()->IsPurageContainerMode()) {
+                        // docker file is not supported in Logtail's container mode
+                        if (AppConfig::GetInstance()->IsContainerMode()) {
+                            throw ExceptionBase(
+                                std::string("docker file is not supported in Logtail's container mode "));
                         }
+                        // load saved container path
+                        auto iter = mAllDockerContainerPathMap.find(logName);
+                        if (iter != mAllDockerContainerPathMap.end()) {
+                            config->mDockerContainerPaths = iter->second;
+                            mAllDockerContainerPathMap.erase(iter);
+                        }
+                        if (!config->SetDockerFileFlag(true)) {
+                            // should not happen
+                            throw ExceptionBase(std::string("docker file do not support wildcard path"));
+                        }
+                        MappingPluginConfig(value, config, pluginConfigJson);
+                    } else {
+                        LOG_WARNING(sLogger,
+                                    ("config is docker_file mode, but logtail is not a purage container",
+                                     "the flag is ignored")("project", projectName)("logstore", category));
+                        LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+                                                               string("config is docker_file mode, but logtail is not "
+                                                                      "a purage container, the flag is ignored"),
+                                                               projectName,
+                                                               category,
+                                                               region);
                     }
                 }
                 if (AppConfig::GetInstance()->IsContainerMode()) {
@@ -1268,9 +1265,11 @@ void ConfigManagerBase::RegisterWildcardPath(Config* config, const string& path,
             return;
         if (finish) {
             DirRegisterStatus registerStatus = EventDispatcher::GetInstance()->IsDirRegistered(item);
-            if (registerStatus == PATH_INODE_NOT_REGISTERED) {
-                if (EventDispatcher::GetInstance()->RegisterEventHandler(item.c_str(), config, mSharedHandler))
-                    RegisterDescendants(item, config, config->mMaxDepth < 0 ? 100 : config->mMaxDepth);
+            if (registerStatus == GET_REGISTER_STATUS_ERROR) {
+                return;
+            }
+            if (EventDispatcher::GetInstance()->RegisterEventHandler(item.c_str(), config, mSharedHandler)) {
+                RegisterDescendants(item, config, config->mMaxDepth < 0 ? 100 : config->mMaxDepth);
             }
         } else {
             RegisterWildcardPath(config, item, depth + 1);
@@ -1333,9 +1332,11 @@ void ConfigManagerBase::RegisterWildcardPath(Config* config, const string& path,
         if (fnmatch(&(config->mWildcardPaths[depth + 1].at(dirIndex)), ent.Name().c_str(), FNM_PATHNAME) == 0) {
             if (finish) {
                 DirRegisterStatus registerStatus = EventDispatcher::GetInstance()->IsDirRegistered(item);
-                if (registerStatus == PATH_INODE_NOT_REGISTERED) {
-                    if (EventDispatcher::GetInstance()->RegisterEventHandler(item.c_str(), config, mSharedHandler))
-                        RegisterDescendants(item, config, config->mMaxDepth < 0 ? 100 : config->mMaxDepth);
+                if (registerStatus == GET_REGISTER_STATUS_ERROR) {
+                    return;
+                }
+                if (EventDispatcher::GetInstance()->RegisterEventHandler(item.c_str(), config, mSharedHandler)) {
+                    RegisterDescendants(item, config, config->mMaxDepth < 0 ? 100 : config->mMaxDepth);
                 }
             } else {
                 RegisterWildcardPath(config, item, depth + 1);
@@ -1370,7 +1371,7 @@ bool ConfigManagerBase::RegisterHandlers(const string& basePath, Config* config)
         return result;
     }
     DirRegisterStatus registerStatus = EventDispatcher::GetInstance()->IsDirRegistered(basePath);
-    if (registerStatus == PATH_INODE_REGISTERED || registerStatus == GET_REGISTER_STATUS_ERROR)
+    if (registerStatus == GET_REGISTER_STATUS_ERROR)
         return result;
     // dir in config is valid by default, do not call pathValidator
     result = EventDispatcher::GetInstance()->RegisterEventHandler(basePath.c_str(), config, mSharedHandler);
