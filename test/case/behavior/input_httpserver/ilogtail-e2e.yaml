@@ -23,8 +23,10 @@ ilogtail:
             Address: ":18086"
             Format: influxdb
             FieldsExtend: true
+  ports:
+    - "18086"
 trigger:
-  url: http://localhost:18086?db=mydb
+  url: http://ilogtailC:18086/?db=mydb
   method: POST
   interval: 1s
   times: 5
@@ -41,4 +43,9 @@ verify:
           "__labels__": "city#\\$#hz"
           "__type__": "float"
           "__time_nano__": "\\d+"
+  system_rules:
+    - name: counter-check
+      validator: sys_counter
+      spec:
+        expect_received_minimum_log_num: 1
 testing_interval: 5s
