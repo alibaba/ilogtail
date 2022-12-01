@@ -591,38 +591,35 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                         pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
                         config->mPluginConfig = pluginConfig;
                     }
-
-                    if (value.isMember("docker_file") && value["docker_file"].isBool()
-                        && value["docker_file"].asBool()) {
-                        if (AppConfig::GetInstance()->IsPurageContainerMode()) {
-                            // docker file is not supported in Logtail's container mode
-                            if (AppConfig::GetInstance()->IsContainerMode()) {
-                                throw ExceptionBase(
-                                    std::string("docker file is not supported in Logtail's container mode "));
-                            }
-                            // load saved container path
-                            auto iter = mAllDockerContainerPathMap.find(logName);
-                            if (iter != mAllDockerContainerPathMap.end()) {
-                                config->mDockerContainerPaths = iter->second;
-                                mAllDockerContainerPathMap.erase(iter);
-                            }
-                            if (!config->SetDockerFileFlag(true)) {
-                                // should not happen
-                                throw ExceptionBase(std::string("docker file do not support wildcard path"));
-                            }
-                            MappingPluginConfig(value, config, pluginConfigJson);
-                        } else {
-                            LOG_WARNING(sLogger,
-                                        ("config is docker_file mode, but logtail is not a purage container",
-                                         "the flag is ignored")("project", projectName)("logstore", category));
-                            LogtailAlarm::GetInstance()->SendAlarm(
-                                CATEGORY_CONFIG_ALARM,
-                                string("config is docker_file mode, but logtail is not "
-                                       "a purage container, the flag is ignored"),
-                                projectName,
-                                category,
-                                region);
+                }
+                if (value.isMember("docker_file") && value["docker_file"].isBool() && value["docker_file"].asBool()) {
+                    if (AppConfig::GetInstance()->IsPurageContainerMode()) {
+                        // docker file is not supported in Logtail's container mode
+                        if (AppConfig::GetInstance()->IsContainerMode()) {
+                            throw ExceptionBase(
+                                std::string("docker file is not supported in Logtail's container mode "));
                         }
+                        // load saved container path
+                        auto iter = mAllDockerContainerPathMap.find(logName);
+                        if (iter != mAllDockerContainerPathMap.end()) {
+                            config->mDockerContainerPaths = iter->second;
+                            mAllDockerContainerPathMap.erase(iter);
+                        }
+                        if (!config->SetDockerFileFlag(true)) {
+                            // should not happen
+                            throw ExceptionBase(std::string("docker file do not support wildcard path"));
+                        }
+                        MappingPluginConfig(value, config, pluginConfigJson);
+                    } else {
+                        LOG_WARNING(sLogger,
+                                    ("config is docker_file mode, but logtail is not a purage container",
+                                     "the flag is ignored")("project", projectName)("logstore", category));
+                        LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+                                                               string("config is docker_file mode, but logtail is not "
+                                                                      "a purage container, the flag is ignored"),
+                                                               projectName,
+                                                               category,
+                                                               region);
                     }
                 }
                 if (AppConfig::GetInstance()->IsContainerMode()) {
@@ -873,6 +870,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             config->mLocalStorage = true; // Must be true, parameter local_storage is desperated.
             config->mVersion = version;
 
+            // default compress type is lz4. none if disable by gflag
+            config->mCompressType
+                = BOOL_FLAG(sls_client_send_compress) ? GetStringValue(value, "compressType", "") : "none";
             config->mDiscardNoneUtf8 = GetBoolValue(value, "discard_none_utf8", false);
 
             config->mAliuid = GetStringValue(value, "aliuid", "");
@@ -1533,7 +1533,6 @@ Config* ConfigManagerBase::FindBestMatch(const string& path, const string& name)
     unordered_map<string, Config*>::iterator itr = mNameConfigMap.begin();
     Config* prevMatch = NULL;
     size_t prevLen = 0;
-    int32_t preCreateTime = INT_MAX;
     size_t curLen = 0;
     uint32_t nameRepeat = 0;
     string logNameList;
@@ -1563,12 +1562,10 @@ Config* ConfigManagerBase::FindBestMatch(const string& path, const string& name)
                 curLen = config->mBasePath.size();
                 if (prevLen < curLen) {
                     prevMatch = config;
-                    preCreateTime = config->mCreateTime;
                     prevLen = curLen;
                 } else if (prevLen == curLen && prevMatch != NULL) {
                     if (prevMatch->mCreateTime > config->mCreateTime) {
                         prevMatch = config;
-                        preCreateTime = config->mCreateTime;
                         prevLen = curLen;
                     }
                 }
