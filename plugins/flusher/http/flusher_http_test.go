@@ -84,7 +84,7 @@ func TestHttpFlusherInit(t *testing.T) {
 }
 
 func TestHttpFlusherFlush(t *testing.T) {
-	Convey("Given a http flusher with protocol: Influxdb, encoding: none, query: contains variable '%{tag.db}'", t, func() {
+	Convey("Given a http flusher with protocol: Influxdb, encoding: custom, query: contains variable '%{tag.db}'", t, func() {
 
 		var actualRequests []string
 		httpmock.Activate()
@@ -100,7 +100,7 @@ func TestHttpFlusherFlush(t *testing.T) {
 			RemoteURL: "http://test.com/write",
 			Convert: helper.ConvertConfig{
 				Protocol: converter.ProtocolInfluxdb,
-				Encoding: converter.EncodingNone,
+				Encoding: converter.EncodingCustom,
 			},
 			Timeout:     defaultTimeout,
 			Concurrency: 1,
