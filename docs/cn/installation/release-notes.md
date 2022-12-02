@@ -8,26 +8,27 @@
 
 新功能
 
-### Features
-
-* 新增Kafka新版本输出插件，支持自定义输出格式
-* 支持通过grpc输出Open Telemetry协议日志
-* 支持通过HTTP接入Open Telemetry协议日志
-* 新增脱敏插件processor\_desensitize
-* 支持写入SLS时使用zstd压缩编码
+* 新增Kafka新版本输出插件，支持自定义输出格式 [#218](https://github.com/alibaba/ilogtail/issues/218)
+* 支持通过grpc输出Open Telemetry协议日志 [#418](https://github.com/alibaba/ilogtail/pull/418)
+* 支持通过HTTP接入Open Telemetry协议日志 [#421](https://github.com/alibaba/ilogtail/issues/421)
+* 新增脱敏插件processor\_desensitize [#525](https://github.com/alibaba/ilogtail/pull/525)
+* 支持写入SLS时使用zstd压缩编码 [#526](https://github.com/alibaba/ilogtail/issues/526)
 
 优化
 
-* 减小发布二进制包大小
-* 使用ENV方式创建SLS资源时支持使用HTTPS协议
-* 支持创建SLS Logstore时选择query mode
+* 减小发布二进制包大小 [#433](https://github.com/alibaba/ilogtail/pull/433)
+* 使用ENV方式创建SLS资源时支持使用HTTPS协议 [#505](https://github.com/alibaba/ilogtail/issues/505)
+* 支持创建SLS Logstore时选择query mode [#502](https://github.com/alibaba/ilogtail/issues/502)
+* 使用插件处理时也支持输出内容在文件内偏移量 [#395](https://github.com/alibaba/ilogtail/issues/395)
+* 默认支持采集容器标准输出时上下文保持连续 [#522](https://github.com/alibaba/ilogtail/pull/522)
+* Prometheus数据接入内存优化 [#524](https://github.com/alibaba/ilogtail/pull/524)
 
 问题修复
 
-* 修复Docker环境下潜在的FD泄露和事件遗漏问题
-* 修复配置更新时文件句柄泄露的问题
-* IP在特殊主机名下解析错误
-* 修复多个配置路径存在父子目录关系时文件重复采集的问题
+* 修复Docker环境下潜在的FD泄露和事件遗漏问题 [#529](https://github.com/alibaba/ilogtail/issues/529)
+* 修复配置更新时文件句柄泄露的问题 [#420](https://github.com/alibaba/ilogtail/issues/420)
+* IP在特殊主机名下解析错误 [#517](https://github.com/alibaba/ilogtail/pull/517)
+* 修复多个配置路径存在父子目录关系时文件重复采集的问题 [#533](https://github.com/alibaba/ilogtail/issues/533)
 
 [详情和源代码](https://github.com/alibaba/ilogtail/blob/main/changes/v1.3.0.md)
 
@@ -36,7 +37,7 @@
 | 文件名                                                                                                                                          | 系统    | 架构     | SHA256 校验码                                                       |
 | -------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | ---------------------------------------------------------------- |
 | [ilogtail-1.3.0.linux-amd64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.3.0/ilogtail-1.3.0.linux-amd64.tar.gz) | Linux | x86-64 | - |
-| [ilogtail-1.2.1.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.3.0/ilogtail-1.3.0.linux-arm64.tar.gz) | Linux | arm64  | - |
+| [ilogtail-1.3.0.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.3.0/ilogtail-1.3.0.linux-arm64.tar.gz) | Linux | arm64  | - |
 
 ### Docker 镜像
 
