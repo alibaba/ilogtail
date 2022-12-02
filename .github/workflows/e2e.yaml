@@ -56,7 +56,7 @@ jobs:
       - name: UnitTest E2e Engine
         if: matrix.runner == 'ubuntu'
         run: |
-          go version
+          sudo go version
           sudo make unittest_e2e_engine
 
   result:
