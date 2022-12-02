@@ -13,7 +13,7 @@
 # limitations under the License.
 
 .DEFAULT_GOAL := all
-VERSION ?= 1.2.1
+VERSION ?= 1.3.0
 DOCKER_PUSH ?= false
 DOCKER_REPOSITORY ?= aliyun/ilogtail
 BUILD_REPOSITORY ?= aliyun/ilogtail_build
@@ -198,4 +198,5 @@ docker: $(DIST_FILE)
 
 .PHONY: multi-arch-docker
 multi-arch-docker: $(DIST_FILE)
+	@echo "will push to $(DOCKER_REPOSITORY):edge. Make sure this tag does not exist or push will fail."
 	./scripts/docker_build.sh multi-arch-production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
