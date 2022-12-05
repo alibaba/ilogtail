@@ -87,6 +87,3 @@ func (p *AggregatorWrapper) Run(control *ilogtail.AsyncControl) {
 		}
 	}
 }
-
-func (p *AggregatorWrapper) Stop() {
-}

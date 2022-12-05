@@ -62,6 +62,17 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	return nil
 }
 
+func (p *pluginv2Runner) Initialized() error {
+	if len(p.AggregatorPlugins) == 0 {
+		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
+		if err := loadAggregator("aggregator_default", p.LogstoreConfig, nil); err != nil {
+			return err
+		}
+	}
+	// TODO Implement default flusher v2
+	return nil
+}
+
 func (p *pluginv2Runner) AddPlugin(pluginName string, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
 	switch category {
 	case pluginMetricInput:
@@ -235,10 +246,6 @@ func (p *pluginv2Runner) runProcessorInternal(cc *ilogtail.AsyncControl) {
 
 func (p *pluginv2Runner) runAggregator() {
 	p.AggregateControl.Reset()
-	if len(p.AggregatorPlugins) == 0 {
-		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
-		_ = loadAggregator("aggregator_default", p.LogstoreConfig, nil)
-	}
 	for _, t := range p.TimerRunner {
 		if plugin, ok := t.state.(ilogtail.AggregatorV2); ok {
 			aggregator := plugin

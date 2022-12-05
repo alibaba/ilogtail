@@ -50,10 +50,6 @@ func (p *MetricWrapper) Run(control *ilogtail.AsyncControl) {
 	}
 }
 
-func (p *MetricWrapper) Stop() {
-	logger.Info(p.Config.Context.GetRuntimeContext(), "stop metric success", p.Input.Description())
-}
-
 func (p *MetricWrapper) AddData(tags map[string]string, fields map[string]string, t ...time.Time) {
 	p.AddDataWithContext(tags, fields, nil, t...)
 }

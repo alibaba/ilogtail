@@ -61,6 +61,23 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	return nil
 }
 
+func (p *pluginv1Runner) Initialized() error {
+	if len(p.AggregatorPlugins) == 0 {
+		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
+		if err := loadAggregator("aggregator_default", p.LogstoreConfig, nil); err != nil {
+			return err
+		}
+	}
+	if len(p.FlusherPlugins) == 0 {
+		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
+		category, options := flags.GetFlusherConfiguration()
+		if err := loadFlusher(category, p.LogstoreConfig, options); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (p *pluginv1Runner) AddPlugin(pluginName string, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
 	switch category {
 	case pluginMetricInput:
@@ -243,10 +260,6 @@ func (p *pluginv1Runner) runProcessorInternal(cc *ilogtail.AsyncControl) {
 
 func (p *pluginv1Runner) runAggregator() {
 	p.AggregateControl.Reset()
-	if len(p.AggregatorPlugins) == 0 {
-		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
-		_ = loadAggregator("aggregator_default", p.LogstoreConfig, nil)
-	}
 	for _, aggregator := range p.AggregatorPlugins {
 		a := aggregator
 		p.AggregateControl.Run(a.Run)
@@ -255,11 +268,6 @@ func (p *pluginv1Runner) runAggregator() {
 
 func (p *pluginv1Runner) runFlusher() {
 	p.FlushControl.Reset()
-	if len(p.FlusherPlugins) == 0 {
-		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
-		category, options := flags.GetFlusherConfiguration()
-		_ = loadFlusher(category, p.LogstoreConfig, options)
-	}
 	p.FlushControl.Run(p.runFlusherInternal)
 }
 
@@ -352,9 +360,6 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 	for _, flusher := range p.FlusherPlugins {
 		flusher.Flusher.SetUrgent(exit)
 	}
-	for _, metric := range p.MetricPlugins {
-		metric.Stop()
-	}
 	for _, service := range p.ServicePlugins {
 		_ = service.Stop()
 	}
@@ -364,9 +369,6 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 	p.ProcessControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "processor plugins stop", "done")
 
-	for _, aggregator := range p.AggregatorPlugins {
-		aggregator.Stop()
-	}
 	p.AggregateControl.WaitCancel()
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "aggregator plugins stop", "done")
 

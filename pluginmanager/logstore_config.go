@@ -351,8 +351,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 
 	// check AlwaysOnlineManager
 	if oldConfig, ok := GetAlwaysOnlineManager().GetCachedConfig(configName); ok {
-		logger.Info(contextImp.GetRuntimeContext(), "find alwaysOnline config", oldConfig.ConfigName)
-		logger.Info(contextImp.GetRuntimeContext(), "config compare", oldConfig.configDetailHash == logstoreC.configDetailHash,
+		logger.Info(contextImp.GetRuntimeContext(), "find alwaysOnline config", oldConfig.ConfigName, "config compare", oldConfig.configDetailHash == logstoreC.configDetailHash,
 			"new config hash", logstoreC.configDetailHash, "old config hash", oldConfig.configDetailHash)
 		if oldConfig.configDetailHash == logstoreC.configDetailHash {
 			logstoreC = oldConfig
@@ -516,6 +515,10 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		if pluginType != "global" && pluginType != "version" && pluginType != mixProcessModeFlag {
 			return nil, fmt.Errorf("error plugin name %s", pluginType)
 		}
+	}
+	// Perform operations after pluginrunner initialization, such as adding default aggregators and flushers
+	if err := logstoreC.PluginRunner.Initialized(); err != nil {
+		return nil, err
 	}
 	return logstoreC, nil
 }
