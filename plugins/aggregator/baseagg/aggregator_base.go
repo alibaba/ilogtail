@@ -194,7 +194,7 @@ func (p *AggregatorBase) InitInner(packFlag bool, packString string, lock *sync.
 }
 
 func (p *AggregatorBase) Record(event *models.PipelineGroupEvents, ctx ilogtail.PipelineContext) error {
-	ctx.Collector().CollectAll(event)
+	ctx.Collector().CollectList(event)
 	return nil
 }
 

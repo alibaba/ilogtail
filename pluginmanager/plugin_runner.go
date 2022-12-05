@@ -18,30 +18,26 @@ import (
 	"github.com/alibaba/ilogtail"
 )
 
+type pluginCategory string
+
+const (
+	pluginMetricInput  pluginCategory = "MetricInput"
+	pluginServiceInput pluginCategory = "ServiceInput"
+	pluginProcessor    pluginCategory = "Porcessor"
+	pluginAggregator   pluginCategory = "Aggregator"
+	pluginFlusher      pluginCategory = "Flusher"
+)
+
 type PluginRunner interface {
 	Init(inputQueueSize int, aggrQueueSize int) error
 
 	ReceiveRawLog(log *ilogtail.LogWithContext)
 
-	AddMetricInput(input ilogtail.MetricInput, interval int)
+	AddPlugin(pluginName string, category pluginCategory, plugin interface{}, config map[string]interface{}) error
 
-	AddServiceInput(input ilogtail.ServiceInput)
+	Run()
 
-	AddProcessor(processor ilogtail.Processor, priority int)
-
-	AddAggregator(aggregator ilogtail.Aggregator)
-
-	AddFlusher(flusher ilogtail.Flusher)
-
-	RunMetricInputOnce(cc *ilogtail.CancellationControl)
-
-	RunInput()
-
-	RunProcessor()
-
-	RunAggregator()
-
-	RunFlusher()
+	RunPlugins(category pluginCategory, control *ilogtail.AsyncControl)
 
 	Merge(p PluginRunner)
 

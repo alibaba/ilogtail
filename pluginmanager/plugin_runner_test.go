@@ -48,7 +48,7 @@ func (s *pluginRunnerTestSuite) TestTimerRunner() {
 	runner := &timerRunner{state: s, interval: time.Millisecond * 500, context: s.Context}
 	cc := ilogtail.NewCancellationControl()
 	ch := make(chan struct{}, 10)
-	cc.Run(func(cc *ilogtail.CancellationControl) {
+	cc.Run(func(cc *ilogtail.AsyncControl) {
 		runner.Run(func(state interface{}) error {
 			ch <- struct{}{}
 			s.Equal(state, s)
@@ -60,7 +60,7 @@ func (s *pluginRunnerTestSuite) TestTimerRunner() {
 
 	ch = make(chan struct{}, 10)
 	cc.Reset()
-	cc.Run(func(cc *ilogtail.CancellationControl) {
+	cc.Run(func(cc *ilogtail.AsyncControl) {
 		runner.Run(func(state interface{}) error {
 			ch <- struct{}{}
 			s.Equal(state, s)

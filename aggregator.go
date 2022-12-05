@@ -33,10 +33,10 @@ type Aggregator interface {
 	Reset()
 }
 
-// Aggregator1
+// AggregatorV1
 // Add, Flush, and Reset can not be called concurrently, so locking is not
 // required when implementing an Aggregator plugin.
-type Aggregator1 interface {
+type AggregatorV1 interface {
 	Aggregator
 	// Add the metric to the aggregator.
 	Add(log *protocol.Log, ctx map[string]interface{}) error
@@ -45,10 +45,10 @@ type Aggregator1 interface {
 	Flush() []*protocol.LogGroup
 }
 
-// Aggregator2
+// AggregatorV2
 // Apply, Push, and Reset can not be called concurrently, so locking is not
 // required when implementing an Aggregator plugin.
-type Aggregator2 interface {
+type AggregatorV2 interface {
 	Aggregator
 	// Add the metric to the aggregator.
 	Record(*models.PipelineGroupEvents, PipelineContext) error

@@ -81,8 +81,8 @@ type LogstoreStatistics struct {
 type ConfigVersion string
 
 var (
-	v1 ConfigVersion = "v1"
-	v2 ConfigVersion = "v2"
+	v1 ConfigVersion = "V1"
+	v2 ConfigVersion = "V2"
 )
 
 type LogstoreConfig struct {
@@ -145,10 +145,7 @@ func (lc *LogstoreConfig) Start() {
 	lc.pauseChan = make(chan struct{}, 1)
 	lc.resumeChan = make(chan struct{}, 1)
 
-	lc.PluginRunner.RunFlusher()
-	lc.PluginRunner.RunAggregator()
-	lc.PluginRunner.RunProcessor()
-	lc.PluginRunner.RunInput()
+	lc.PluginRunner.Run()
 
 	logger.Info(lc.Context.GetRuntimeContext(), "config start", "success")
 }
@@ -599,8 +596,7 @@ func loadMetric(pluginType string, logstoreConfig *LogstoreConfig, configInterfa
 			}
 		}
 	}
-	logstoreConfig.PluginRunner.AddMetricInput(metric, interval)
-	return nil
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginMetricInput, metric, map[string]interface{}{"interval": interval})
 }
 
 // loadService creates a service plugin object and append to logstoreConfig.ServicePlugins.
@@ -619,8 +615,7 @@ func loadService(pluginType string, logstoreConfig *LogstoreConfig, configInterf
 	if _, err = service.Init(logstoreConfig.Context); err != nil {
 		return err
 	}
-	logstoreConfig.PluginRunner.AddServiceInput(service)
-	return nil
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginServiceInput, service, map[string]interface{}{})
 }
 
 func loadProcessor(pluginType string, priority int, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
@@ -636,8 +631,7 @@ func loadProcessor(pluginType string, priority int, logstoreConfig *LogstoreConf
 	if err = processor.Init(logstoreConfig.Context); err != nil {
 		return err
 	}
-	logstoreConfig.PluginRunner.AddProcessor(processor, priority)
-	return nil
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginProcessor, processor, map[string]interface{}{"priority": priority})
 }
 
 func loadAggregator(pluginType string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
@@ -650,8 +644,7 @@ func loadAggregator(pluginType string, logstoreConfig *LogstoreConfig, configInt
 	if err = applyPluginConfig(aggregator, configInterface); err != nil {
 		return err
 	}
-	logstoreConfig.PluginRunner.AddAggregator(aggregator)
-	return err
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginAggregator, aggregator, map[string]interface{}{})
 }
 
 func loadFlusher(pluginType string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
@@ -666,8 +659,7 @@ func loadFlusher(pluginType string, logstoreConfig *LogstoreConfig, configInterf
 	if err = flusher.Init(logstoreConfig.Context); err != nil {
 		return err
 	}
-	logstoreConfig.PluginRunner.AddFlusher(flusher)
-	return err
+	return logstoreConfig.PluginRunner.AddPlugin(pluginType, pluginFlusher, flusher, map[string]interface{}{})
 }
 
 func applyPluginConfig(plugin interface{}, pluginConfig interface{}) error {

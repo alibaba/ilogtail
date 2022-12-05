@@ -28,13 +28,13 @@ type Processor interface {
 	Description() string
 }
 
-type Processor1 interface {
+type ProcessorV1 interface {
 	Processor
 	// ProcessLogs the filter to the given metric
 	ProcessLogs(logArray []*protocol.Log) []*protocol.Log
 }
 
-type Processor2 interface {
+type ProcessorV2 interface {
 	Processor
 	Process(in *models.PipelineGroupEvents, context PipelineContext)
 }

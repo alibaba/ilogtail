@@ -32,7 +32,7 @@ type timerRunner struct {
 	state         interface{}
 }
 
-func (p *timerRunner) Run(task func(state interface{}) error, cc *ilogtail.CancellationControl) {
+func (p *timerRunner) Run(task func(state interface{}) error, cc *ilogtail.AsyncControl) {
 	logger.Info(p.context.GetRuntimeContext(), "task run", "start", "interval", p.interval, "state", fmt.Sprintf("%T", p.state))
 	defer panicRecover(fmt.Sprint(p.state))
 	for {
@@ -118,4 +118,12 @@ func GetConfigFluhsers(runner PluginRunner) []ilogtail.Flusher {
 		}
 	}
 	return flushers
+}
+
+func pluginUnImplementError(category pluginCategory, version ConfigVersion, pluginName string) error {
+	return fmt.Errorf("plugin does not implement %s%s. pluginType: %s", category, version, pluginName)
+}
+
+func pluginCategoryUndefinedError(category pluginCategory) error {
+	return fmt.Errorf("undefined plugin category : %s", category)
 }

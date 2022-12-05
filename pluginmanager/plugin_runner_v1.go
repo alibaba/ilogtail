@@ -39,10 +39,10 @@ type pluginv1Runner struct {
 	FlushOutStore  *FlushOutStore[protocol.LogGroup]
 	LogstoreConfig *LogstoreConfig
 
-	InputControl     *ilogtail.CancellationControl
-	ProcessControl   *ilogtail.CancellationControl
-	AggregateControl *ilogtail.CancellationControl
-	FlushControl     *ilogtail.CancellationControl
+	InputControl     *ilogtail.AsyncControl
+	ProcessControl   *ilogtail.AsyncControl
+	AggregateControl *ilogtail.AsyncControl
+	FlushControl     *ilogtail.AsyncControl
 }
 
 func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
@@ -61,75 +61,123 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	return nil
 }
 
-func (p *pluginv1Runner) AddMetricInput(input ilogtail.MetricInput, interval int) {
+func (p *pluginv1Runner) AddPlugin(pluginName string, category pluginCategory, plugin interface{}, config map[string]interface{}) error {
+	switch category {
+	case pluginMetricInput:
+		if metric, ok := plugin.(ilogtail.MetricInputV1); ok {
+			return p.addMetricInput(metric, config["interval"].(int))
+		}
+	case pluginServiceInput:
+		if service, ok := plugin.(ilogtail.ServiceInputV1); ok {
+			return p.addServiceInput(service)
+		}
+	case pluginProcessor:
+		if processor, ok := plugin.(ilogtail.ProcessorV1); ok {
+			return p.addProcessor(processor, config["priority"].(int))
+		}
+	case pluginAggregator:
+		if aggregator, ok := plugin.(ilogtail.AggregatorV1); ok {
+			return p.addAggregator(aggregator)
+		}
+	case pluginFlusher:
+		if flusher, ok := plugin.(ilogtail.FlusherV1); ok {
+			return p.addFlusher(flusher)
+		}
+	default:
+		return pluginCategoryUndefinedError(category)
+	}
+	return pluginUnImplementError(category, v1, pluginName)
+}
+
+func (p *pluginv1Runner) Run() {
+	p.runFlusher()
+	p.runAggregator()
+	p.runProcessor()
+	p.runInput()
+}
+
+func (p *pluginv1Runner) RunPlugins(category pluginCategory, control *ilogtail.AsyncControl) {
+	switch category {
+	case pluginMetricInput:
+		p.runMetricInput(control)
+	default:
+	}
+}
+
+func (p *pluginv1Runner) addMetricInput(input ilogtail.MetricInputV1, interval int) error {
 	var wrapper MetricWrapper
 	wrapper.Config = p.LogstoreConfig
-	wrapper.Input = input.(ilogtail.MetricInput1)
+	wrapper.Input = input
 	wrapper.Interval = time.Duration(interval) * time.Millisecond
 	wrapper.LogsChan = p.LogsChan
 	wrapper.LatencyMetric = p.LogstoreConfig.Statistics.CollecLatencytMetric
 	p.MetricPlugins = append(p.MetricPlugins, &wrapper)
+	return nil
 }
 
-func (p *pluginv1Runner) AddServiceInput(input ilogtail.ServiceInput) {
+func (p *pluginv1Runner) addServiceInput(input ilogtail.ServiceInputV1) error {
 	var wrapper ServiceWrapper
 	wrapper.Config = p.LogstoreConfig
-	wrapper.Input = input.(ilogtail.ServiceInput1)
+	wrapper.Input = input
 	wrapper.LogsChan = p.LogsChan
 	p.ServicePlugins = append(p.ServicePlugins, &wrapper)
+	return nil
 }
 
-func (p *pluginv1Runner) AddProcessor(processor ilogtail.Processor, priority int) {
+func (p *pluginv1Runner) addProcessor(processor ilogtail.ProcessorV1, priority int) error {
 	var wrapper ProcessorWrapper
 	wrapper.Config = p.LogstoreConfig
-	wrapper.Processor = processor.(ilogtail.Processor1)
+	wrapper.Processor = processor
 	wrapper.LogsChan = p.LogsChan
 	wrapper.Priority = priority
 	p.ProcessorPlugins = append(p.ProcessorPlugins, &wrapper)
+	return nil
 }
 
-func (p *pluginv1Runner) AddAggregator(aggregator ilogtail.Aggregator) {
+func (p *pluginv1Runner) addAggregator(aggregator ilogtail.AggregatorV1) error {
 	var wrapper AggregatorWrapper
 	wrapper.Config = p.LogstoreConfig
-	wrapper.Aggregator = aggregator.(ilogtail.Aggregator1)
+	wrapper.Aggregator = aggregator
 	wrapper.LogGroupsChan = p.LogGroupsChan
 	interval, err := aggregator.Init(p.LogstoreConfig.Context, &wrapper)
 	if err != nil {
 		logger.Error(p.LogstoreConfig.Context.GetRuntimeContext(), "AGGREGATOR_INIT_ERROR", "Aggregator failed to initialize", aggregator.Description(), "error", err)
-		return
+		return err
 	}
 	if interval == 0 {
 		interval = p.LogstoreConfig.GlobalConfig.AggregatIntervalMs
 	}
 	wrapper.Interval = time.Millisecond * time.Duration(interval)
 	p.AggregatorPlugins = append(p.AggregatorPlugins, &wrapper)
+	return nil
 }
 
-func (p *pluginv1Runner) AddFlusher(flusher ilogtail.Flusher) {
+func (p *pluginv1Runner) addFlusher(flusher ilogtail.FlusherV1) error {
 	var wrapper FlusherWrapper
 	wrapper.Config = p.LogstoreConfig
-	wrapper.Flusher = flusher.(ilogtail.Flusher1)
+	wrapper.Flusher = flusher
 	wrapper.LogGroupsChan = p.LogGroupsChan
 	p.FlusherPlugins = append(p.FlusherPlugins, &wrapper)
+	return nil
 }
 
-func (p *pluginv1Runner) RunInput() {
+func (p *pluginv1Runner) runInput() {
 	p.InputControl.Reset()
-	p.RunMetricInputOnce(p.InputControl)
+	p.runMetricInput(p.InputControl)
 	for _, service := range p.ServicePlugins {
 		s := service
 		p.InputControl.Run(s.Run)
 	}
 }
 
-func (p *pluginv1Runner) RunMetricInputOnce(cc *ilogtail.CancellationControl) {
+func (p *pluginv1Runner) runMetricInput(async *ilogtail.AsyncControl) {
 	for _, metric := range p.MetricPlugins {
 		m := metric
-		cc.Run(m.Run)
+		async.Run(m.Run)
 	}
 }
 
-func (p *pluginv1Runner) RunProcessor() {
+func (p *pluginv1Runner) runProcessor() {
 	p.ProcessControl.Reset()
 	p.ProcessControl.Run(p.runProcessorInternal)
 }
@@ -145,7 +193,7 @@ func (p *pluginv1Runner) RunProcessor() {
 //	one by one, just like logs -> p1 -> p2 -> p3 -> logsGoToNextStep.
 //
 // It returns when processShutdown is closed.
-func (p *pluginv1Runner) runProcessorInternal(cc *ilogtail.CancellationControl) {
+func (p *pluginv1Runner) runProcessorInternal(cc *ilogtail.AsyncControl) {
 	defer panicRecover(p.LogstoreConfig.ConfigName)
 	var logCtx *ilogtail.LogWithContext
 	for {
@@ -193,7 +241,7 @@ func (p *pluginv1Runner) runProcessorInternal(cc *ilogtail.CancellationControl) 
 	}
 }
 
-func (p *pluginv1Runner) RunAggregator() {
+func (p *pluginv1Runner) runAggregator() {
 	p.AggregateControl.Reset()
 	if len(p.AggregatorPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
@@ -205,7 +253,7 @@ func (p *pluginv1Runner) RunAggregator() {
 	}
 }
 
-func (p *pluginv1Runner) RunFlusher() {
+func (p *pluginv1Runner) runFlusher() {
 	p.FlushControl.Reset()
 	if len(p.FlusherPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
@@ -215,7 +263,7 @@ func (p *pluginv1Runner) RunFlusher() {
 	p.FlushControl.Run(p.runFlusherInternal)
 }
 
-func (p *pluginv1Runner) runFlusherInternal(cc *ilogtail.CancellationControl) {
+func (p *pluginv1Runner) runFlusherInternal(cc *ilogtail.AsyncControl) {
 	defer panicRecover(p.LogstoreConfig.ConfigName)
 	var logGroup *protocol.LogGroup
 	for {
@@ -326,12 +374,12 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 	p.FlushControl.WaitCancel()
 
 	if exit && p.FlushOutStore.Len() > 0 {
-		flushers := make([]ilogtail.Flusher1, len(p.FlusherPlugins))
+		flushers := make([]ilogtail.FlusherV1, len(p.FlusherPlugins))
 		for idx, flusher := range p.FlusherPlugins {
 			flushers[idx] = flusher.Flusher
 		}
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "flushout loggroups, count", p.FlushOutStore.Len())
-		rst := flushOutStore(p.LogstoreConfig, p.FlushOutStore, flushers, func(lc *LogstoreConfig, sf ilogtail.Flusher1, store *FlushOutStore[protocol.LogGroup]) error {
+		rst := flushOutStore(p.LogstoreConfig, p.FlushOutStore, flushers, func(lc *LogstoreConfig, sf ilogtail.FlusherV1, store *FlushOutStore[protocol.LogGroup]) error {
 			return sf.Flush(lc.Context.GetProject(), lc.Context.GetLogstore(), lc.Context.GetConfigName(), store.Get())
 		})
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "flushout loggroups, result", rst)

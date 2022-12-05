@@ -24,14 +24,14 @@ type MetricInput interface {
 	Description() string
 }
 
-type MetricInput1 interface {
+type MetricInputV1 interface {
 	MetricInput
 	// Collect takes in an accumulator and adds the metrics that the Input
 	// gathers. This is called every "interval"
 	Collect(Collector) error
 }
 
-type MetricInput2 interface {
+type MetricInputV2 interface {
 	MetricInput
 	// Collect takes in an accumulator and adds the metrics that the Input
 	// gathers. This is called every "interval"
@@ -51,14 +51,14 @@ type ServiceInput interface {
 	Stop() error
 }
 
-type ServiceInput1 interface {
+type ServiceInputV1 interface {
 	ServiceInput
 	// Start starts the ServiceInput's service, whatever that may be
 	Start(Collector) error
 }
 
-type ServiceInput2 interface {
+type ServiceInputV2 interface {
 	ServiceInput
 	// StartService starts the ServiceInput's service, whatever that may be
-	StartService(PipelineContext, *CancellationControl) error
+	StartService(PipelineContext) error
 }

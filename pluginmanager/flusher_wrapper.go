@@ -22,7 +22,7 @@ import (
 )
 
 type FlusherWrapper struct {
-	Flusher       ilogtail.Flusher1
+	Flusher       ilogtail.FlusherV1
 	Config        *LogstoreConfig
 	LogGroupsChan chan *protocol.LogGroup
 	Interval      time.Duration

@@ -24,7 +24,7 @@ import (
 )
 
 type MetricWrapper struct {
-	Input    ilogtail.MetricInput1
+	Input    ilogtail.MetricInputV1
 	Config   *LogstoreConfig
 	Tags     map[string]string
 	Interval time.Duration
@@ -33,7 +33,7 @@ type MetricWrapper struct {
 	LatencyMetric ilogtail.LatencyMetric
 }
 
-func (p *MetricWrapper) Run(control *ilogtail.CancellationControl) {
+func (p *MetricWrapper) Run(control *ilogtail.AsyncControl) {
 	logger.Info(p.Config.Context.GetRuntimeContext(), "start run metric ", p.Input.Description())
 	defer panicRecover(p.Input.Description())
 	for {

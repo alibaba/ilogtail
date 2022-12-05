@@ -57,7 +57,7 @@ type Flusher interface {
 	Stop() error
 }
 
-type Flusher1 interface {
+type FlusherV1 interface {
 	Flusher
 	// Flush flushes data to destination, such as SLS, console, file, etc.
 	// It is expected to return no error at most time because IsReady will be called
@@ -65,7 +65,7 @@ type Flusher1 interface {
 	Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
 }
 
-type Flusher2 interface {
+type FlusherV2 interface {
 	Flusher
 	// Export data to destination, such as gRPC, console, file, etc.
 	// It is expected to return no error at most time because IsReady will be called
