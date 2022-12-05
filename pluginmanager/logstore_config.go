@@ -81,8 +81,8 @@ type LogstoreStatistics struct {
 type ConfigVersion string
 
 var (
-	v1 ConfigVersion = "V1"
-	v2 ConfigVersion = "V2"
+	v1 ConfigVersion = "v1"
+	v2 ConfigVersion = "v2"
 )
 
 type LogstoreConfig struct {
@@ -523,7 +523,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 func fetchPluginVersion(config map[string]interface{}) ConfigVersion {
 	if v, ok := config["version"]; ok {
 		if s, ok := v.(string); ok {
-			return ConfigVersion(s)
+			return ConfigVersion(strings.ToLower(s))
 		}
 	}
 	return v1

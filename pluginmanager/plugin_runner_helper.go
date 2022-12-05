@@ -16,6 +16,7 @@ package pluginmanager
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/alibaba/ilogtail"
@@ -121,7 +122,7 @@ func GetConfigFluhsers(runner PluginRunner) []ilogtail.Flusher {
 }
 
 func pluginUnImplementError(category pluginCategory, version ConfigVersion, pluginName string) error {
-	return fmt.Errorf("plugin does not implement %s%s. pluginType: %s", category, version, pluginName)
+	return fmt.Errorf("plugin does not implement %s%s. pluginType: %s", category, strings.ToUpper(string(version)), pluginName)
 }
 
 func pluginCategoryUndefinedError(category pluginCategory) error {

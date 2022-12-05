@@ -164,7 +164,7 @@ func HoldOn(exitFlag bool) error {
 	if StatisticsConfig != nil {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the static metrics")
-			control := ilogtail.NewCancellationControl()
+			control := ilogtail.NewAsyncControl()
 			StatisticsConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
 			control.WaitCancel()
 		}
@@ -173,7 +173,7 @@ func HoldOn(exitFlag bool) error {
 	if AlarmConfig != nil {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the alarm metrics")
-			control := ilogtail.NewCancellationControl()
+			control := ilogtail.NewAsyncControl()
 			AlarmConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
 			control.WaitCancel()
 		}

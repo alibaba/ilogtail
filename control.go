@@ -54,7 +54,7 @@ func (p *AsyncControl) WaitCancel() {
 	p.cancelToken = nil
 }
 
-func NewCancellationControl() *AsyncControl {
+func NewAsyncControl() *AsyncControl {
 	return &AsyncControl{
 		cancelToken: make(chan struct{}, 1),
 	}

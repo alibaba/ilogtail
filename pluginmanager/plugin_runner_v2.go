@@ -45,10 +45,10 @@ type pluginv2Runner struct {
 }
 
 func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
-	p.InputControl = ilogtail.NewCancellationControl()
-	p.ProcessControl = ilogtail.NewCancellationControl()
-	p.AggregateControl = ilogtail.NewCancellationControl()
-	p.FlushControl = ilogtail.NewCancellationControl()
+	p.InputControl = ilogtail.NewAsyncControl()
+	p.ProcessControl = ilogtail.NewAsyncControl()
+	p.AggregateControl = ilogtail.NewAsyncControl()
+	p.FlushControl = ilogtail.NewAsyncControl()
 	p.MetricPlugins = make([]ilogtail.MetricInputV2, 0)
 	p.ServicePlugins = make([]ilogtail.ServiceInputV2, 0)
 	p.ProcessorPlugins = make([]ilogtail.ProcessorV2, 0)
