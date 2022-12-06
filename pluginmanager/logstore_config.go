@@ -346,7 +346,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 
 	// Move unsent LogGroups from last config to new config.
 	if lastConfig, hasLastConfig := LastLogtailConfig[configName]; hasLastConfig {
-		logstoreC.PluginRunner.Merge(lastConfig.PluginRunner)
+		logstoreC.PluginRunner.Merge(lastConfig.PluginRunner, false)
 	}
 
 	// check AlwaysOnlineManager
@@ -360,7 +360,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			return logstoreC, nil
 		}
 		_ = oldConfig.Stop(false)
-		logstoreC.PluginRunner.Merge(oldConfig.PluginRunner)
+		logstoreC.PluginRunner.Merge(oldConfig.PluginRunner, true)
 		logger.Info(contextImp.GetRuntimeContext(), "config is changed after reload", "stop and create a new one")
 	}
 

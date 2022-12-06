@@ -402,8 +402,12 @@ func (p *pluginv1Runner) ReceiveRawLog(log *ilogtail.LogWithContext) {
 	p.LogsChan <- log
 }
 
-func (p *pluginv1Runner) Merge(r PluginRunner) {
+func (p *pluginv1Runner) Merge(r PluginRunner, overwrite bool) {
 	if other, ok := r.(*pluginv1Runner); ok {
-		p.FlushOutStore.Merge(other.FlushOutStore)
+		if overwrite {
+			p.FlushOutStore = other.FlushOutStore
+		} else {
+			p.FlushOutStore.Merge(other.FlushOutStore)
+		}
 	}
 }
