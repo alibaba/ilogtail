@@ -379,7 +379,6 @@ bool LogParser::RegexLogLineParser(const char* buffer,
         return true;
     } else if (!discardUnmatch) {
         LogParser::AddUnmatchLog(buffer, logGroup, logGroupSize);
-        return true;
     }
     return false;
 }
@@ -448,12 +447,10 @@ bool LogParser::RegexLogLineParser(const char* buffer,
         parseSuccess = false;
     }
     if (!parseSuccess) {
-        if (discardUnmatch)
-            return false;
-        else {
+        if (!discardUnmatch) {
             AddUnmatchLog(buffer, logGroup, logGroupSize);
-            return true;
         }
+        return false;
     }
 
     Log* logPtr = logGroup.add_logs();
@@ -694,12 +691,11 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
             PARSE_TIME_FAIL_ALARM, bufOut + " $ " + ToString(logTime), projectName, category, region);
         error = PARSE_LOG_TIMEFORMAT_ERROR;
 
-        if (discardUnmatch)
-            return false;
-        else {
+        if (!discardUnmatch)
+        {
             AddUnmatchLog(buffer, logGroup, logGroupSize);
-            return true;
         }
+        return false;
     }
     if (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime) > INT32_FLAG(ilogtail_discard_interval)) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
