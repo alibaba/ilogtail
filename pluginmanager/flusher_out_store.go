@@ -52,6 +52,9 @@ func (s *FlushOutStore[T]) Reset() {
 }
 
 func (s *FlushOutStore[T]) Merge(in *FlushOutStore[T]) {
+	if s == in {
+		return
+	}
 	if s.Len() == 0 {
 		s.data = in.data
 	} else {

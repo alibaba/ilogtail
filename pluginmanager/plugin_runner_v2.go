@@ -386,12 +386,8 @@ func (p *pluginv2Runner) ReceiveRawLog(log *ilogtail.LogWithContext) {
 	// TODO
 }
 
-func (p *pluginv2Runner) Merge(r PluginRunner, overwrite bool) {
+func (p *pluginv2Runner) Merge(r PluginRunner) {
 	if other, ok := r.(*pluginv2Runner); ok {
-		if overwrite {
-			p.FlushOutStore = other.FlushOutStore
-		} else {
-			p.FlushOutStore.Merge(other.FlushOutStore)
-		}
+		p.FlushOutStore.Merge(other.FlushOutStore)
 	}
 }

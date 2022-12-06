@@ -344,11 +344,6 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 		return nil, err
 	}
 
-	// Move unsent LogGroups from last config to new config.
-	if lastConfig, hasLastConfig := LastLogtailConfig[configName]; hasLastConfig {
-		logstoreC.PluginRunner.Merge(lastConfig.PluginRunner, false)
-	}
-
 	// check AlwaysOnlineManager
 	if oldConfig, ok := GetAlwaysOnlineManager().GetCachedConfig(configName); ok {
 		logger.Info(contextImp.GetRuntimeContext(), "find alwaysOnline config", oldConfig.ConfigName, "config compare", oldConfig.configDetailHash == logstoreC.configDetailHash,
@@ -360,8 +355,11 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			return logstoreC, nil
 		}
 		_ = oldConfig.Stop(false)
-		logstoreC.PluginRunner.Merge(oldConfig.PluginRunner, true)
+		logstoreC.PluginRunner.Merge(oldConfig.PluginRunner)
 		logger.Info(contextImp.GetRuntimeContext(), "config is changed after reload", "stop and create a new one")
+	} else if lastConfig, hasLastConfig := LastLogtailConfig[configName]; hasLastConfig {
+		// Move unsent LogGroups from last config to new config.
+		logstoreC.PluginRunner.Merge(lastConfig.PluginRunner)
 	}
 
 	enableAlwaysOnline := enableAlwaysOnlineForStdout && hasDockerStdoutInput(plugins)

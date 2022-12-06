@@ -41,7 +41,7 @@ type PluginRunner interface {
 
 	RunPlugins(category pluginCategory, control *ilogtail.AsyncControl)
 
-	Merge(p PluginRunner, overwrite bool)
+	Merge(p PluginRunner)
 
 	Stop(exit bool) error
 }
