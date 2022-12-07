@@ -836,11 +836,19 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     ("choose to adjust log time zone, but time format is not specified",
                                      "use system time as log time instead")("project", config->mProjectName)(
                                         "logstore", config->mCategory)("config", config->mConfigName));
+                        config->mTimeZoneAdjust = false;
+                    } else if ((logType == DELIMITER_LOG || logType == JSON_LOG) && config->mTimeKey.empty()) {
+                        LOG_WARNING(sLogger,
+                                    ("choose to adjust log time zone, but time key is not specified",
+                                     "use system time as log time instead")("project", config->mProjectName)(
+                                        "logstore", config->mCategory)("config", config->mConfigName));
+                        config->mTimeZoneAdjust = false;
                     } else if (!ParseTimeZoneOffsetSecond(logTZ, logTZSecond)) {
                         LOG_WARNING(sLogger,
                                     ("invalid log time zone specified, will parse log time without time zone adjusted",
                                      logTZ)("project", config->mProjectName)("logstore", config->mCategory)(
                                         "config", config->mConfigName));
+                        config->mTimeZoneAdjust = false;
                     } else {
                         config->mTimeZoneAdjust = adjustFlag;
                         config->mLogTimeZoneOffsetSecond = logTZSecond;
@@ -848,6 +856,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                  ("set log time zone", logTZ)("project", config->mProjectName)(
                                      "logstore", config->mCategory)("config", config->mConfigName));
                     }
+                } else {
+                    config->mTimeZoneAdjust = adjustFlag;
+                    config->mLogTimeZoneOffsetSecond = logTZSecond;
                 }
             }
 
