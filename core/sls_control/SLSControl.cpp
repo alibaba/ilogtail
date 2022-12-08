@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <curl/curl.h>
-#include <sys/utsname.h>
 #include "SLSControl.h"
+#include <curl/curl.h>
+#if defined(__linux__)
+#include <sys/utsname.h>
+#endif
 #include "app_config/AppConfig.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/version.h"
 #include "logger/Logger.h"
 #include "profiler/LogFileProfiler.h"
+#ifdef SetPort
+#undef SetPort
+#endif
 
 DEFINE_FLAG_STRING(custom_user_agent, "custom user agent appended at the end of the exsiting ones", "");
 
@@ -119,7 +124,11 @@ bool SLSControl::TryCurlEndpoint(const std::string& endpoint) {
         if (curl) {
             break;
         }
+#ifdef _MSC_VER
+        Sleep(1000);
+#else
         sleep(1);
+#endif
     }
 
     if (curl) {
