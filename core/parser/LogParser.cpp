@@ -521,7 +521,7 @@ bool LogParser::ParseLogTime(const char* buffer,
     }
 
     if (logTime <= 0
-        || (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime) > INT32_FLAG(ilogtail_discard_interval))) {
+        || (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval))) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(sLogger,
@@ -534,6 +534,7 @@ bool LogParser::ParseLogTime(const char* buffer,
         error = PARSE_LOG_HISTORY_ERROR;
         return false;
     }
+    time_t sdf;
     return true;
 }
 
