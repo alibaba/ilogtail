@@ -33,8 +33,11 @@ func (c *Converter) ConvertToInfluxdbProtocolStream(logGroup *protocol.LogGroup,
 	encoder.Reset()
 	encoder.SetLax(true)
 
+	reader := newMetricReader()
+	defer reader.recycle()
+
 	for _, log := range logGroup.Logs {
-		reader, err := newMetricReader(log)
+		err := reader.set(log)
 		if err != nil {
 			return nil, nil, err
 		}

@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package group
+package contentvaluegroup
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -62,7 +63,7 @@ func (q *groupQueue) AddWithWait(logGroup *protocol.LogGroup, duration time.Dura
 	return q.queue.AddWithWait(logGroup, duration)
 }
 
-type AggregatorGroup struct {
+type AggregatorContentValueGroup struct {
 	GroupKeys        []string // The Keys to group by
 	Topic            string   // Topic to attach, if set
 	ErrIfKeyNotFound bool     // If logging when group-key not found
@@ -75,11 +76,11 @@ type AggregatorGroup struct {
 }
 
 // Description ...
-func (*AggregatorGroup) Description() string {
+func (*AggregatorContentValueGroup) Description() string {
 	return "aggregator that group logs by a set of keys"
 }
 
-func (g *AggregatorGroup) Init(context ilogtail.Context, que ilogtail.LogGroupQueue) (int, error) {
+func (g *AggregatorContentValueGroup) Init(context ilogtail.Context, que ilogtail.LogGroupQueue) (int, error) {
 	g.context = context
 	g.queue = que
 
@@ -90,7 +91,7 @@ func (g *AggregatorGroup) Init(context ilogtail.Context, que ilogtail.LogGroupQu
 	return 0, nil
 }
 
-func (g *AggregatorGroup) Add(log *protocol.Log, ctx map[string]interface{}) error {
+func (g *AggregatorContentValueGroup) Add(log *protocol.Log, ctx map[string]interface{}) error {
 	agg, err := g.getOrCreateGroupAggs(log)
 	if err != nil {
 		return err
@@ -98,7 +99,7 @@ func (g *AggregatorGroup) Add(log *protocol.Log, ctx map[string]interface{}) err
 	return agg.Add(log, ctx)
 }
 
-func (g *AggregatorGroup) Flush() []*protocol.LogGroup {
+func (g *AggregatorContentValueGroup) Flush() []*protocol.LogGroup {
 	var logGroups []*protocol.LogGroup
 	g.groupAggs.Range(func(key, value any) bool {
 		agg := value.(*groupAggregator)
@@ -108,7 +109,7 @@ func (g *AggregatorGroup) Flush() []*protocol.LogGroup {
 	return logGroups
 }
 
-func (g *AggregatorGroup) Reset() {
+func (g *AggregatorContentValueGroup) Reset() {
 	g.groupAggs.Range(func(key, value any) bool {
 		agg := value.(*groupAggregator)
 		agg.agg.Reset()
@@ -116,7 +117,7 @@ func (g *AggregatorGroup) Reset() {
 	})
 }
 
-func (g *AggregatorGroup) getOrCreateGroupAggs(log *protocol.Log) (*groupAggregator, error) {
+func (g *AggregatorContentValueGroup) getOrCreateGroupAggs(log *protocol.Log) (*groupAggregator, error) {
 	groupKey := g.buildGroupKey(log)
 	groupAgg, ok := g.groupAggs.Load(groupKey)
 	if ok {
@@ -128,7 +129,7 @@ func (g *AggregatorGroup) getOrCreateGroupAggs(log *protocol.Log) (*groupAggrega
 
 	agg := baseagg.NewAggregatorBase()
 	if _, err := agg.Init(g.context, groupQueue); err != nil {
-		logger.Error(g.context.GetRuntimeContext(), "AGG_GROUP_ALARM", "fail to create agg for group", groupKVs)
+		logger.Error(g.context.GetRuntimeContext(), "AGG_GROUP_ALARM", "aggregator group fail to create agg for group", groupKVs)
 		return nil, err
 	}
 	agg.InitInner(
@@ -145,40 +146,38 @@ func (g *AggregatorGroup) getOrCreateGroupAggs(log *protocol.Log) (*groupAggrega
 	return groupAgg.(*groupAggregator), nil
 }
 
-func (g *AggregatorGroup) buildGroupKey(log *protocol.Log) string {
-	var groupKey string
-	for idx, key := range g.GroupKeys {
-		var val string
-		for _, cont := range log.Contents {
-			if cont.Key == key {
-				val = cont.Value
-				break
-			}
-		}
-
-		if idx == 0 {
-			groupKey = val
-		} else {
-			groupKey += groupKeyConnector + val
+func (g *AggregatorContentValueGroup) findLogContent(log *protocol.Log, key string) (value string, ok bool) {
+	for _, cont := range log.Contents {
+		if cont.Key == key {
+			value = cont.Value
+			ok = true
+			break
 		}
 	}
-	return groupKey
+	return
 }
 
-func (g *AggregatorGroup) getGroupKVs(log *protocol.Log) map[string]string {
+func (g *AggregatorContentValueGroup) buildGroupKey(log *protocol.Log) string {
+	var groupKey strings.Builder
+	for idx, key := range g.GroupKeys {
+		var val string
+		g.findLogContent(log, key)
+		if idx == 0 {
+			groupKey.WriteString(val)
+		} else {
+			groupKey.WriteString(groupKeyConnector)
+			groupKey.WriteString(val)
+		}
+	}
+	return groupKey.String()
+}
+
+func (g *AggregatorContentValueGroup) getGroupKVs(log *protocol.Log) map[string]string {
 	group := make(map[string]string, len(g.GroupKeys))
 	for _, key := range g.GroupKeys {
-		var val string
-		found := false
-		for _, cont := range log.Contents {
-			if cont.Key == key {
-				val = cont.Value
-				found = true
-				break
-			}
-		}
+		val, found := g.findLogContent(log, key)
 		if !found && g.ErrIfKeyNotFound {
-			logger.Warning(g.context.GetRuntimeContext(), "AGG_GROUP_NOT_FOUND_KEY", key)
+			logger.Warning(g.context.GetRuntimeContext(), "AGG_GROUP_ALARM", "aggregator group fail to find key in log content,key", key)
 		}
 		group[key] = val
 	}
@@ -202,8 +201,8 @@ func addGroupTags(logGroup *protocol.LogGroup, tagKVs map[string]string) {
 }
 
 func init() {
-	ilogtail.Aggregators["aggregator_group"] = func() ilogtail.Aggregator {
-		return &AggregatorGroup{
+	ilogtail.Aggregators["aggregator_content_value_group"] = func() ilogtail.Aggregator {
+		return &AggregatorContentValueGroup{
 			EnablePackID:     true,
 			ErrIfKeyNotFound: false,
 			lock:             &sync.Mutex{},

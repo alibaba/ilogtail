@@ -46,7 +46,7 @@
 
 | 名称                           | 提供方                                                | 简介                                        |
 |-------------------------------|------------------------------------------------------|---------------------------------------------|
-| `aggregator_group`            | 社区<br>[`snakorse`](https://github.com/snakorse)     | 按照指定的Key对采集到的数据进行分组聚合           |
+| `aggregator_content_value_group`            | 社区<br>[`snakorse`](https://github.com/snakorse)     | 按照指定的Key对采集到的数据进行分组聚合           |
 
 ## 输出
 

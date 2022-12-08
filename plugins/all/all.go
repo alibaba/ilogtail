@@ -17,8 +17,8 @@ package all
 import (
 	_ "github.com/alibaba/ilogtail/plugins/aggregator"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/baseagg"
+	_ "github.com/alibaba/ilogtail/plugins/aggregator/contentvaluegroup"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/context"
-	_ "github.com/alibaba/ilogtail/plugins/aggregator/group"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/logstorerouter"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/shardhash"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/skywalking"

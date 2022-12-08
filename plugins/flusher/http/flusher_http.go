@@ -16,9 +16,11 @@ package http
 
 import (
 	"bytes"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"sync"
 	"time"
@@ -46,9 +48,10 @@ var contentTypeMaps = map[string]string{
 }
 
 type retryConfig struct {
-	Enable   bool          // If enable retry, default is true
-	MaxCount int           // Max retry times, default is 3
-	Delay    time.Duration // Delay time before next retry, default is 100 ms
+	Enable        bool          // If enable retry, default is true
+	MaxRetryTimes int           // Max retry times, default is 3
+	InitialDelay  time.Duration // Delay time before the first retry, default is 1s
+	MaxDelay      time.Duration // max delay time when retry, default is 30s
 }
 
 type FlusherHTTP struct {
@@ -56,7 +59,7 @@ type FlusherHTTP struct {
 	Headers     map[string]string    // Headers to append to the http request
 	Query       map[string]string    // Query parameters to append to the http request
 	Timeout     time.Duration        // Request timeout, default is 60s
-	Retry       retryConfig          // Retry strategy, default is retry 3 times with 100 milliseconds each time
+	Retry       retryConfig          // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
 	Convert     helper.ConvertConfig // Convert defines which protocol and format to convert to
 	Concurrency int                  // How many requests can be performed in concurrent
 
@@ -66,8 +69,8 @@ type FlusherHTTP struct {
 	converter *converter.Converter
 	client    *http.Client
 
-	tokenCh chan struct{}
-	tokenWg sync.WaitGroup
+	queue   chan *protocol.LogGroup
+	counter sync.WaitGroup
 }
 
 func (f *FlusherHTTP) Description() string {
@@ -83,6 +86,12 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 		return err
 	}
 
+	if f.Concurrency < 1 {
+		err := errors.New("concurrency must be greater than zero")
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher check concurrency fail, error", err)
+		return err
+	}
+
 	converter, err := f.getConverter()
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init converter fail, error", err)
@@ -90,16 +99,19 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 	}
 	f.converter = converter
 
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	if f.Concurrency > transport.MaxIdleConnsPerHost {
+		transport.MaxIdleConnsPerHost = f.Concurrency + 1
+	}
 	f.client = &http.Client{
-		Timeout: f.Timeout,
+		Timeout:   f.Timeout,
+		Transport: transport,
 	}
 
-	if f.Concurrency < 1 {
-		err := errors.New("concurrency must be greater than zero")
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher check concurrency fail, error", err)
-		return err
+	f.queue = make(chan *protocol.LogGroup)
+	for i := 0; i < f.Concurrency; i++ {
+		go f.runFlushTask()
 	}
-	f.tokenCh = make(chan struct{}, f.Concurrency)
 
 	f.buildQueryVarKeys()
 	f.fillRequestContentType()
@@ -110,10 +122,7 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 
 func (f *FlusherHTTP) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
-		err := f.convertAndFlush(logGroup)
-		if err != nil {
-			return err
-		}
+		f.addTask(logGroup)
 	}
 	return nil
 }
@@ -126,7 +135,8 @@ func (f *FlusherHTTP) IsReady(projectName string, logstoreName string, logstoreK
 }
 
 func (f *FlusherHTTP) Stop() error {
-	f.tokenWg.Wait()
+	f.counter.Wait()
+	close(f.queue)
 	return nil
 }
 
@@ -134,18 +144,26 @@ func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {
 	return converter.NewConverter(f.Convert.Protocol, f.Convert.Encoding, nil, nil)
 }
 
-func (f *FlusherHTTP) acquireToken() bool {
-	f.tokenWg.Add(1)
-	f.tokenCh <- struct{}{}
-	return true
+func (f *FlusherHTTP) addTask(log *protocol.LogGroup) {
+	f.counter.Add(1)
+	f.queue <- log
 }
 
-func (f *FlusherHTTP) releaseToken() {
-	<-f.tokenCh
-	f.tokenWg.Done()
+func (f *FlusherHTTP) countDownTask() {
+	f.counter.Done()
+}
+
+func (f *FlusherHTTP) runFlushTask() {
+	for logGroup := range f.queue {
+		err := f.convertAndFlush(logGroup)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher failed convert or flush data, data dropped, error", err)
+		}
+	}
 }
 
 func (f *FlusherHTTP) convertAndFlush(logGroup *protocol.LogGroup) error {
+	defer f.countDownTask()
 	logs, varValues, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.queryVarKeys)
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher converter log fail, error", err)
@@ -155,38 +173,53 @@ func (f *FlusherHTTP) convertAndFlush(logGroup *protocol.LogGroup) error {
 	case [][]byte:
 		for idx, data := range rows {
 			body, values := data, varValues[idx]
-			if !f.acquireToken() {
-				break
+			err = f.flushWithRetry(body, values)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher failed flush data after retry, data dropped, error", err)
 			}
-			go f.flushWithRetry(body, values)
 		}
 		return nil
 	case []byte:
-		if !f.acquireToken() {
-			return nil
+		err = f.flushWithRetry(rows, nil)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher failed flush data after retry, error", err)
 		}
-		go f.flushWithRetry(rows, nil)
-		return nil
+		return err
 	default:
 		err = fmt.Errorf("not supported logs type [%T]", logs)
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "error", err)
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher failed flush data, error", err)
 		return err
 	}
 }
 
 func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) error {
-	defer f.releaseToken()
 	var err error
-	for i := 0; i <= f.Retry.MaxCount; i++ {
+	for i := 0; i <= f.Retry.MaxRetryTimes; i++ {
 		ok, retryable, e := f.flush(data, varValues)
 		if ok || !retryable || !f.Retry.Enable {
 			break
 		}
 		err = e
-		<-time.After(f.Retry.Delay)
+		<-time.After(f.getNextRetryDelay(i))
 	}
 	converter.PutPooledByteBuf(&data)
 	return err
+}
+
+func (f *FlusherHTTP) getNextRetryDelay(retryTime int) time.Duration {
+	delay := f.Retry.InitialDelay * 1 << time.Duration(retryTime)
+	if delay > f.Retry.MaxDelay {
+		delay = f.Retry.MaxDelay
+	}
+
+	// apply about equaly distributed jitter in second half of the interval, such that the wait
+	// time falls into the interval [dur/2, dur]
+	harf := int64(delay / 2)
+	jitter, err := rand.Int(rand.Reader, big.NewInt(harf+1))
+	if err != nil {
+		return delay
+	}
+	return time.Duration(harf + jitter.Int64())
 }
 
 func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retryable bool, err error) {
@@ -296,9 +329,10 @@ func init() {
 				Encoding: converter.EncodingJSON,
 			},
 			Retry: retryConfig{
-				Enable:   true,
-				MaxCount: 3,
-				Delay:    100 * time.Microsecond,
+				Enable:        true,
+				MaxRetryTimes: 3,
+				InitialDelay:  time.Second,
+				MaxDelay:      30 * time.Second,
 			},
 		}
 	}

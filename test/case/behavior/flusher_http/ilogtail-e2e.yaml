@@ -28,7 +28,7 @@ ilogtail:
                 __labels__: "city#$#hz"
                 __tag__:db: mydb
           aggregators:
-            - Type: aggregator_group
+            - Type: aggregator_content_value_group
               GroupKeys:
                 - '__tag__:db'
           outputs:

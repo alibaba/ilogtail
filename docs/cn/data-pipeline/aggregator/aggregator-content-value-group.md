@@ -2,13 +2,13 @@
 
 ## 简介
 
-`aggregator_group` `aggregator`插件可以实现对单条日志按照指定的 Key 进行聚合。
+`aggregator_content_value_group` `aggregator`插件可以实现对单条日志按照指定的 Key 进行聚合。
 
 ## 配置参数
 
 | 参数             | 类型     | 是否必选 | 说明                                                                                                               |
 | ---------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------ |
-| Type             | String   | 是       | 插件类型，指定为`aggregator_group`。                                                                               |
+| Type             | String   | 是       | 插件类型，指定为`aggregator_content_value_group`。                                                                               |
 | GroupKeys        | []String | 是       | 指定需要按照其值分组的Key列表                                                                                      |
 | EnablePackID     | Boolean  | 否       | 是否需要在LogGroup的LogTag中添加__pack_id__字段。如果未添加改参数，则默认在LogGroup的LogTag中添加__pack_id__字段。 |
 | Topic            | String   | 否       | LogGroup的Topic名。如果未添加该参数，则默认每个LogGroup的Topic名为空。                                             |
@@ -50,7 +50,7 @@ processors:
       - ref_url
       - browser
 aggregators:
-  - Type: aggregator_group
+  - Type: aggregator_content_value_group
     GroupKeys:
       - url
       - method

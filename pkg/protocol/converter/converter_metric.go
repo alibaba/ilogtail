@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -38,6 +39,12 @@ const (
 	valueTypeBool   = "bool"
 	valueTypeString = "string"
 )
+
+var readerPool = sync.Pool{
+	New: func() any {
+		return &metricReader{}
+	},
+}
 
 type metricReader struct {
 	name      string
@@ -114,24 +121,41 @@ func (r *metricReader) readTimestamp() (time.Time, error) {
 	return time.Unix(t/1e9, t%1e9).UTC(), nil
 }
 
-func newMetricReader(log *protocol.Log) (*metricReader, error) {
-	reader := metricReader{}
+func (r *metricReader) recycle() {
+	r.reset()
+	readerPool.Put(r)
+}
+
+func (r *metricReader) reset() {
+	r.labels = ""
+	r.name = ""
+	r.value = ""
+	r.valueType = ""
+	r.timestamp = ""
+}
+
+func (r *metricReader) set(log *protocol.Log) error {
+	r.reset()
 	for _, v := range log.Contents {
 		switch v.Key {
 		case metricNameKey:
-			reader.name = v.Value
+			r.name = v.Value
 		case metricLabelsKey:
-			reader.labels = v.Value
+			r.labels = v.Value
 		case metricTimeNanoKey:
-			reader.timestamp = v.Value
+			r.timestamp = v.Value
 		case metricValueKey:
-			reader.value = v.Value
+			r.value = v.Value
 		case metricValueTypeKey:
-			reader.valueType = v.Value
+			r.valueType = v.Value
 		}
 	}
-	if len(reader.name) == 0 || len(reader.value) == 0 {
-		return nil, fmt.Errorf("metrics data must contains keys: %s, %s", metricNameKey, metricValueKey)
+	if len(r.name) == 0 || len(r.value) == 0 {
+		return fmt.Errorf("metrics data must contains keys: %s, %s", metricNameKey, metricValueKey)
 	}
-	return &reader, nil
+	return nil
+}
+
+func newMetricReader() *metricReader {
+	return readerPool.Get().(*metricReader)
 }

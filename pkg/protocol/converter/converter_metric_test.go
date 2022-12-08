@@ -71,7 +71,8 @@ func Test_newMetricReader(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		reader, err := newMetricReader(test.log)
+		reader := newMetricReader()
+		err := reader.set(test.log)
 		if test.wantErr {
 			assert.NotNil(t, err)
 			continue

@@ -19,9 +19,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/jarcoal/httpmock"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
@@ -159,7 +161,7 @@ func TestHttpFlusherFlush(t *testing.T) {
 			}
 
 			err := flusher.Flush("", "", "", logGroups)
-			flusher.tokenWg.Wait()
+			flusher.Stop()
 			Convey("Then", func() {
 				Convey("Flush() should not return error", func() {
 					So(err, ShouldBeNil)
@@ -260,7 +262,7 @@ func TestHttpFlusherFlush(t *testing.T) {
 			}
 
 			err := flusher.Flush("", "", "", logGroups)
-			flusher.tokenWg.Wait()
+			flusher.Stop()
 			Convey("Then", func() {
 				Convey("Flush() should not return error", func() {
 					So(err, ShouldBeNil)
@@ -282,6 +284,35 @@ func TestHttpFlusherFlush(t *testing.T) {
 			})
 		})
 	})
+}
+
+func TestGetNextRetryDelay(t *testing.T) {
+	f := &FlusherHTTP{
+		Retry: retryConfig{
+			Enable:        true,
+			MaxRetryTimes: 3,
+			InitialDelay:  time.Second,
+			MaxDelay:      3 * time.Second,
+		},
+	}
+
+	for i := 0; i < 1000; i++ {
+		delay := f.getNextRetryDelay(0)
+		assert.GreaterOrEqual(t, delay, time.Second/2)
+		assert.LessOrEqual(t, delay, time.Second)
+
+		delay = f.getNextRetryDelay(1)
+		assert.GreaterOrEqual(t, delay, time.Second)
+		assert.LessOrEqual(t, delay, 2*time.Second)
+
+		delay = f.getNextRetryDelay(2)
+		assert.GreaterOrEqual(t, delay, 3*time.Second/2)
+		assert.LessOrEqual(t, delay, 3*time.Second)
+
+		delay = f.getNextRetryDelay(3)
+		assert.GreaterOrEqual(t, delay, 3*time.Second/2)
+		assert.LessOrEqual(t, delay, 3*time.Second)
+	}
 }
 
 type mockContext struct {

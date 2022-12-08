@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package group
+package contentvaluegroup
 
 import (
 	"context"
@@ -29,7 +29,7 @@ import (
 
 func TestGroupAggregatorInit(t *testing.T) {
 	Convey("Given a group aggregator without GroupKeys", t, func() {
-		agg := &AggregatorGroup{}
+		agg := &AggregatorContentValueGroup{}
 		Convey("When Init(), should return error", func() {
 			_, err := agg.Init(nil, nil)
 			So(err, ShouldNotBeNil)
@@ -37,7 +37,7 @@ func TestGroupAggregatorInit(t *testing.T) {
 	})
 
 	Convey("Given a group aggregator with valid GroupKeys", t, func() {
-		agg := &AggregatorGroup{GroupKeys: []string{"a", "b"}}
+		agg := &AggregatorContentValueGroup{GroupKeys: []string{"a", "b"}}
 		Convey("When Init(), should not return error", func() {
 			_, err := agg.Init(nil, nil)
 			So(err, ShouldBeNil)
@@ -47,7 +47,7 @@ func TestGroupAggregatorInit(t *testing.T) {
 
 func TestGroupAggregatorAdd(t *testing.T) {
 	Convey("Given a group aggregator with groupKeys:[a,b]", t, func() {
-		agg := &AggregatorGroup{
+		agg := &AggregatorContentValueGroup{
 			GroupKeys: []string{"ka", "kb"},
 			lock:      &sync.Mutex{},
 		}
