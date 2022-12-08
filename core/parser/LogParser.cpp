@@ -534,7 +534,6 @@ bool LogParser::ParseLogTime(const char* buffer,
         error = PARSE_LOG_HISTORY_ERROR;
         return false;
     }
-    time_t sdf;
     return true;
 }
 
@@ -698,7 +697,7 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
         }
         return false;
     }
-    if (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime) > INT32_FLAG(ilogtail_discard_interval)) {
+    if (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval)) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             string bufOut(buffer);
             if (bufOut.size() > (size_t)(1024)) {
