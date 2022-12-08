@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "SLSControl.h"
+#include <thread>
 #include <curl/curl.h>
 #if defined(__linux__)
 #include <sys/utsname.h>
@@ -22,6 +23,7 @@
 #include "common/version.h"
 #include "logger/Logger.h"
 #include "profiler/LogFileProfiler.h"
+// for windows compatability, to avoid conflict with the same function defined in windows.h
 #ifdef SetPort
 #undef SetPort
 #endif
@@ -124,11 +126,7 @@ bool SLSControl::TryCurlEndpoint(const std::string& endpoint) {
         if (curl) {
             break;
         }
-#ifdef _MSC_VER
-        Sleep(1000);
-#else
-        sleep(1);
-#endif
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     if (curl) {
