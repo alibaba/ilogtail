@@ -160,8 +160,7 @@ func (g *AggregatorContentValueGroup) findLogContent(log *protocol.Log, key stri
 func (g *AggregatorContentValueGroup) buildGroupKey(log *protocol.Log) string {
 	var groupKey strings.Builder
 	for idx, key := range g.GroupKeys {
-		var val string
-		g.findLogContent(log, key)
+		val, _ := g.findLogContent(log, key)
 		if idx == 0 {
 			groupKey.WriteString(val)
 		} else {
