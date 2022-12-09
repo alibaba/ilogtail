@@ -99,13 +99,13 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 	}
 	f.converter = converter
 
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	if f.Concurrency > transport.MaxIdleConnsPerHost {
-		transport.MaxIdleConnsPerHost = f.Concurrency + 1
-	}
 	f.client = &http.Client{
-		Timeout:   f.Timeout,
-		Transport: transport,
+		Timeout: f.Timeout,
+	}
+	transport, ok := http.DefaultTransport.(*http.Transport)
+	if ok && f.Concurrency > transport.MaxIdleConnsPerHost {
+		transport.MaxIdleConnsPerHost = f.Concurrency + 1
+		f.client.Transport = transport
 	}
 
 	f.queue = make(chan *protocol.LogGroup)
