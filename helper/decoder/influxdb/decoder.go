@@ -127,7 +127,6 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 				if index != 0 {
 					builder.WriteByte('|')
 				}
-
 				if !d.FieldsExtend {
 					key := string(v.Key)
 					helper.ReplaceInvalidChars(&key)
