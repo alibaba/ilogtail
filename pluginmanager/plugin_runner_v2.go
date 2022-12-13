@@ -40,7 +40,11 @@ type pluginv2Runner struct {
 	FlusherPlugins    []ilogtail.FlusherV2
 	TimerRunner       []*timerRunner
 
+<<<<<<< HEAD
 	FlushOutStore  *FlushOutStore[models.GroupedEvents]
+=======
+	FlushOutStore  *FlushOutStore[models.PipelineGroupEvents]
+>>>>>>> main
 	LogstoreConfig *LogstoreConfig
 }
 
