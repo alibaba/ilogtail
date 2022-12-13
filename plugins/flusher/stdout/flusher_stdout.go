@@ -136,7 +136,7 @@ func (p *FlusherStdout) Flush(projectName string, logstoreName string, configNam
 	return nil
 }
 
-func (p *FlusherStdout) Export(in []*models.GroupedEvents, context ilogtail.PipelineContext) error {
+func (p *FlusherStdout) Export(in []*models.PipelineGroupEvents, context ilogtail.PipelineContext) error {
 	for _, groupEvents := range in {
 
 		if p.Tags {

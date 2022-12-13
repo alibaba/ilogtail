@@ -70,5 +70,5 @@ type FlusherV2 interface {
 	// Export data to destination, such as gRPC, console, file, etc.
 	// It is expected to return no error at most time because IsReady will be called
 	// before it to make sure there is space for next data.
-	Export([]*models.GroupedEvents, PipelineContext) error
+	Export([]*models.PipelineGroupEvents, PipelineContext) error
 }

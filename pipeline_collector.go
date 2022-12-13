@@ -25,33 +25,33 @@ type PipelineCollector interface {
 	Collect(groupInfo *models.GroupInfo, eventList ...models.PipelineEvent)
 
 	// CollectList collect GroupEvents list that have been grouped
-	CollectList(groupEventsList ...*models.GroupedEvents)
+	CollectList(groupEventsList ...*models.PipelineGroupEvents)
 
 	// ToArray returns an array containing all of the PipelineGroupEvents in this collector.
-	ToArray() []*models.GroupedEvents
+	ToArray() []*models.PipelineGroupEvents
 
 	// Observe returns a chan that can consume PipelineGroupEvents from this collector.
-	Observe() chan *models.GroupedEvents
+	Observe() chan *models.PipelineGroupEvents
 
 	Close()
 }
 
 // Observable pipeline data collector, which stores data based on channal and can be subscribed by multiple consumers
 type observePipeCollector struct {
-	groupChan chan *models.GroupedEvents
+	groupChan chan *models.PipelineGroupEvents
 }
 
 func (p *observePipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
 	if len(events) == 0 {
 		return
 	}
-	p.groupChan <- &models.GroupedEvents{
+	p.groupChan <- &models.PipelineGroupEvents{
 		Group:  group,
 		Events: events,
 	}
 }
 
-func (p *observePipeCollector) CollectList(groups ...*models.GroupedEvents) {
+func (p *observePipeCollector) CollectList(groups ...*models.PipelineGroupEvents) {
 	if len(groups) == 0 {
 		return
 	}
@@ -60,15 +60,15 @@ func (p *observePipeCollector) CollectList(groups ...*models.GroupedEvents) {
 	}
 }
 
-func (p *observePipeCollector) ToArray() []*models.GroupedEvents {
-	results := make([]*models.GroupedEvents, len(p.groupChan))
+func (p *observePipeCollector) ToArray() []*models.PipelineGroupEvents {
+	results := make([]*models.PipelineGroupEvents, len(p.groupChan))
 	for i := 0; i < len(p.groupChan); i++ {
 		results[i] = <-p.groupChan
 	}
 	return results
 }
 
-func (p *observePipeCollector) Observe() chan *models.GroupedEvents {
+func (p *observePipeCollector) Observe() chan *models.PipelineGroupEvents {
 	return p.groupChan
 }
 
@@ -94,7 +94,7 @@ func (p *groupedPipeCollector) Collect(group *models.GroupInfo, events ...models
 	p.groupEvents[group] = append(store, events...)
 }
 
-func (p *groupedPipeCollector) CollectList(groups ...*models.GroupedEvents) {
+func (p *groupedPipeCollector) CollectList(groups ...*models.PipelineGroupEvents) {
 	if len(groups) == 0 {
 		return
 	}
@@ -103,14 +103,14 @@ func (p *groupedPipeCollector) CollectList(groups ...*models.GroupedEvents) {
 	}
 }
 
-func (p *groupedPipeCollector) ToArray() []*models.GroupedEvents {
+func (p *groupedPipeCollector) ToArray() []*models.PipelineGroupEvents {
 	len, idx := len(p.groupEvents), 0
-	results := make([]*models.GroupedEvents, len)
+	results := make([]*models.PipelineGroupEvents, len)
 	if len == 0 {
 		return results
 	}
 	for group, events := range p.groupEvents {
-		results[idx] = &models.GroupedEvents{
+		results[idx] = &models.PipelineGroupEvents{
 			Group:  group,
 			Events: events,
 		}
@@ -120,7 +120,7 @@ func (p *groupedPipeCollector) ToArray() []*models.GroupedEvents {
 	return results
 }
 
-func (p *groupedPipeCollector) Observe() chan *models.GroupedEvents {
+func (p *groupedPipeCollector) Observe() chan *models.PipelineGroupEvents {
 	return nil
 }
 
@@ -137,14 +137,14 @@ type noopPipeCollector struct {
 func (p *noopPipeCollector) Collect(group *models.GroupInfo, events ...models.PipelineEvent) {
 }
 
-func (p *noopPipeCollector) CollectList(groups ...*models.GroupedEvents) {
+func (p *noopPipeCollector) CollectList(groups ...*models.PipelineGroupEvents) {
 }
 
-func (p *noopPipeCollector) ToArray() []*models.GroupedEvents {
+func (p *noopPipeCollector) ToArray() []*models.PipelineGroupEvents {
 	return nil
 }
 
-func (p *noopPipeCollector) Observe() chan *models.GroupedEvents {
+func (p *noopPipeCollector) Observe() chan *models.PipelineGroupEvents {
 	return nil
 }
 
@@ -161,7 +161,7 @@ func (p *defaultPipelineContext) Collector() PipelineCollector {
 
 func NewObservePipelineConext(queueSize int) PipelineContext {
 	return newPipelineConext(&observePipeCollector{
-		groupChan: make(chan *models.GroupedEvents, queueSize),
+		groupChan: make(chan *models.PipelineGroupEvents, queueSize),
 	})
 }
 

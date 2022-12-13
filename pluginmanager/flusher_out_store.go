@@ -20,7 +20,7 @@ import (
 )
 
 type FlushData interface {
-	protocol.LogGroup | models.GroupedEvents
+	protocol.LogGroup | models.PipelineGroupEvents
 }
 
 type FlushOutStore[T FlushData] struct {

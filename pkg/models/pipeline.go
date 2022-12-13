@@ -49,7 +49,7 @@ func (g *GroupInfo) Tags() Tags {
 	return emptyStringValues
 }
 
-type GroupedEvents struct {
+type PipelineGroupEvents struct {
 	Group  *GroupInfo
 	Events []PipelineEvent
 }
