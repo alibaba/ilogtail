@@ -14,16 +14,17 @@
 
 package models
 
-type EventType uint32
+type EventType int
 
 const (
 	_ EventType = iota
 	EventTypeMetric
-	EventTypeTrace
+	EventTypeSpan
 	EventTypeLogging
+	EventTypeByteArray
 )
 
-type ValueType uint32
+type ValueType int
 
 const (
 	_ ValueType = iota
@@ -31,6 +32,12 @@ const (
 	ValueTypeBoolean
 	ValueTypeArray
 	ValueTypeMap
+)
+
+var (
+	emptyStringValues = &keyValuesEmpty[string]{}
+	emptyTypedValues  = &keyValuesEmpty[*TypedValue]{}
+	emptyFloatValues  = &keyValuesEmpty[float64]{}
 )
 
 type TypedValue struct {
@@ -130,5 +137,37 @@ func (kv *keyValuesImpl[TValue]) Len() int {
 	if values, ok := kv.values(); ok {
 		return len(values)
 	}
+	return 0
+}
+
+type keyValuesEmpty[TValue string | float64 | *TypedValue] struct {
+}
+
+func (kv *keyValuesEmpty[TValue]) Add(key string, value TValue) {
+}
+
+func (kv *keyValuesEmpty[TValue]) AddAll(items map[string]TValue) {
+}
+
+func (kv *keyValuesEmpty[TValue]) Get(key string) TValue {
+	var null TValue
+	return null
+}
+
+func (kv *keyValuesEmpty[TValue]) Contains(key string) bool {
+	return false
+}
+
+func (kv *keyValuesEmpty[TValue]) Delete(key string) {
+}
+
+func (kv *keyValuesEmpty[TValue]) Merge(other KeyValues[TValue]) {
+}
+
+func (kv *keyValuesEmpty[TValue]) Iterator() map[string]TValue {
+	return make(map[string]TValue)
+}
+
+func (kv *keyValuesEmpty[TValue]) Len() int {
 	return 0
 }

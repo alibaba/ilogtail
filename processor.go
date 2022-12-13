@@ -36,5 +36,5 @@ type ProcessorV1 interface {
 
 type ProcessorV2 interface {
 	Processor
-	Process(in *models.PipelineGroupEvents, context PipelineContext)
+	Process(in *models.GroupedEvents, context PipelineContext)
 }

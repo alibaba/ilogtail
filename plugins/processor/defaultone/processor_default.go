@@ -36,7 +36,7 @@ func (*ProcessorDefault) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 	return logArray
 }
 
-func (*ProcessorDefault) Process(in *models.PipelineGroupEvents, context ilogtail.PipelineContext) {
+func (*ProcessorDefault) Process(in *models.GroupedEvents, context ilogtail.PipelineContext) {
 	context.Collector().Collect(in.Group, in.Events...)
 }
 

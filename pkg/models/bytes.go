@@ -14,28 +14,30 @@
 
 package models
 
-type PipelineEvent interface {
-	GetName() string
+type ByteArray []byte
 
-	SetName(string)
-
-	GetTags() Tags
-
-	GetType() EventType
-
-	GetTimestamp() uint64
-
-	GetObservedTimestamp() uint64
-
-	SetObservedTimestamp(uint64)
+func (ByteArray) GetName() string {
+	return ""
 }
 
-type GroupInfo struct {
-	Metadata Metadata
-	Tags     Tags
+func (ByteArray) SetName(name string) {
 }
 
-type PipelineGroupEvents struct {
-	Group  *GroupInfo
-	Events []PipelineEvent
+func (ByteArray) GetTags() Tags {
+	return emptyStringValues
+}
+
+func (ByteArray) GetType() EventType {
+	return EventTypeByteArray
+}
+
+func (ByteArray) GetTimestamp() uint64 {
+	return 0
+}
+
+func (ByteArray) GetObservedTimestamp() uint64 {
+	return 0
+}
+
+func (ByteArray) SetObservedTimestamp(timestamp uint64) {
 }

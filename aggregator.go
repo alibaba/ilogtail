@@ -51,7 +51,7 @@ type AggregatorV1 interface {
 type AggregatorV2 interface {
 	Aggregator
 	// Add the metric to the aggregator.
-	Record(*models.PipelineGroupEvents, PipelineContext) error
+	Record(*models.GroupedEvents, PipelineContext) error
 	// GetResult the current aggregates to the accumulator.
 	GetResult(PipelineContext) error
 }

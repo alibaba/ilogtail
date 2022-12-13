@@ -40,7 +40,7 @@ type pluginv2Runner struct {
 	FlusherPlugins    []ilogtail.FlusherV2
 	TimerRunner       []*timerRunner
 
-	FlushOutStore  *FlushOutStore[models.PipelineGroupEvents]
+	FlushOutStore  *FlushOutStore[models.GroupedEvents]
 	LogstoreConfig *LogstoreConfig
 }
 
@@ -208,7 +208,7 @@ func (p *pluginv2Runner) runProcessorInternal(cc *ilogtail.AsyncControl) {
 			}
 		case group := <-pipeChan:
 			p.LogstoreConfig.Statistics.RawLogMetric.Add(int64(len(group.Events)))
-			pipeEvents := []*models.PipelineGroupEvents{group}
+			pipeEvents := []*models.GroupedEvents{group}
 			for _, processor := range p.ProcessorPlugins {
 				for _, in := range pipeEvents {
 					processor.Process(in, pipeContext)
@@ -289,7 +289,7 @@ func (p *pluginv2Runner) runFlusherInternal(cc *ilogtail.AsyncControl) {
 			}
 
 			dataSize := len(pipeChan) + 1
-			data := make([]*models.PipelineGroupEvents, dataSize)
+			data := make([]*models.GroupedEvents, dataSize)
 			data[0] = event
 			for i := 1; i < dataSize; i++ {
 				data[i] = <-pipeChan
@@ -303,7 +303,7 @@ func (p *pluginv2Runner) runFlusherInternal(cc *ilogtail.AsyncControl) {
 					continue
 				}
 				p.LogstoreConfig.Statistics.FlushLogMetric.Add(int64(len(item.Events)))
-				item.Group.Tags.Merge(loadAdditionalTags(p.LogstoreConfig.GlobalConfig))
+				item.Group.Tags().Merge(loadAdditionalTags(p.LogstoreConfig.GlobalConfig))
 			}
 
 			// Flush LogGroups to all flushers.
@@ -366,7 +366,7 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 
 	if exit && p.FlushOutStore.Len() > 0 {
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "Flushout group events, count", p.FlushOutStore.Len())
-		rst := flushOutStore(p.LogstoreConfig, p.FlushOutStore, p.FlusherPlugins, func(lc *LogstoreConfig, pf ilogtail.FlusherV2, store *FlushOutStore[models.PipelineGroupEvents]) error {
+		rst := flushOutStore(p.LogstoreConfig, p.FlushOutStore, p.FlusherPlugins, func(lc *LogstoreConfig, pf ilogtail.FlusherV2, store *FlushOutStore[models.GroupedEvents]) error {
 			return pf.Export(store.Get(), p.FlushPipeContext)
 		})
 		logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "Flushout group events, result", rst)

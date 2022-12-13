@@ -99,7 +99,7 @@ func (p *ProcessorRename) processLog(log *protocol.Log) {
 	}
 }
 
-func (p *ProcessorRename) Process(in *models.PipelineGroupEvents, context ilogtail.PipelineContext) {
+func (p *ProcessorRename) Process(in *models.GroupedEvents, context ilogtail.PipelineContext) {
 	if p.NoKeyError {
 		for idx := range p.noKeyErrorBoolArray {
 			p.noKeyErrorBoolArray[idx] = false
