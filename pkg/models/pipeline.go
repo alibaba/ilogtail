@@ -31,20 +31,20 @@ type PipelineEvent interface {
 }
 
 type GroupInfo struct {
-	metadata Metadata
-	tags     Tags
+	Metadata Metadata
+	Tags     Tags
 }
 
 func (g *GroupInfo) Metadata() Metadata {
-	if g != nil && g.metadata != nil {
-		return g.metadata
+	if g != nil && g.Metadata != nil {
+		return g.Metadata
 	}
 	return emptyStringValues
 }
 
 func (g *GroupInfo) Tags() Tags {
-	if g != nil && g.tags != nil {
-		return g.tags
+	if g != nil && g.Tags != nil {
+		return g.Tags
 	}
 	return emptyStringValues
 }

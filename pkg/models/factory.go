@@ -68,8 +68,8 @@ func NewMetadata() Metadata {
 
 func NewGroup(meta Metadata, tags Tags) *GroupInfo {
 	return &GroupInfo{
-		metadata: meta,
-		tags:     tags,
+		Metadata: meta,
+		Tags:     tags,
 	}
 }
 
