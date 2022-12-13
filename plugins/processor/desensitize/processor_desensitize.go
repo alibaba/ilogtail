@@ -28,8 +28,8 @@ import (
 
 type ProcessorDesensitize struct {
 	SourceKey     string
-	ReplaceMethod string
-	MatchMethod   string
+	Method        string
+	Match         string
 	ReplaceString string
 	RegexBegin    string
 	RegexContent  string
@@ -55,22 +55,22 @@ func (p *ProcessorDesensitize) Init(context ilogtail.Context) error {
 	}
 
 	// check Method
-	if p.ReplaceMethod != "const" && p.ReplaceMethod != "md5" {
-		err = errors.New("parameter ReplaceMethod should be \"const\" or \"md5\"")
+	if p.Method != "const" && p.Method != "md5" {
+		err = errors.New("parameter Method should be \"const\" or \"md5\"")
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_desensitize error", err)
 		return err
 	}
 
 	// check Method
-	if p.ReplaceMethod == "const" && p.ReplaceString == "" {
-		err = errors.New("parameter ReplaceString should not be empty when ReplaceMethod is \"const\"")
+	if p.Method == "const" && p.ReplaceString == "" {
+		err = errors.New("parameter ReplaceString should not be empty when Method is \"const\"")
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_desensitize error", err)
 		return err
 	}
 
-	if p.MatchMethod == "full" {
+	if p.Match == "full" {
 		return nil
-	} else if p.MatchMethod == "regex" {
+	} else if p.Match == "regex" {
 		// check RegexBegin
 		if p.RegexBegin == "" {
 			err = errors.New("need parameter RegexBegin")
@@ -97,7 +97,7 @@ func (p *ProcessorDesensitize) Init(context ilogtail.Context) error {
 
 		return nil
 	} else {
-		err = errors.New("parameter MatchMethod should be \"full\" or \"regex\"")
+		err = errors.New("parameter Match should be \"full\" or \"regex\"")
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_desensitize error", err)
 		return err
 	}
@@ -121,11 +121,11 @@ func (p *ProcessorDesensitize) ProcessLogs(logArray []*protocol.Log) []*protocol
 }
 
 func (p *ProcessorDesensitize) desensitize(val string) string {
-	if p.MatchMethod == "full" {
-		if p.ReplaceMethod == "const" {
+	if p.Match == "full" {
+		if p.Method == "const" {
 			return p.ReplaceString
 		}
-		if p.ReplaceMethod == "md5" {
+		if p.Method == "md5" {
 			has := md5.Sum([]byte(val)) //nolint:gosec
 			md5str := fmt.Sprintf("%x", has)
 			return md5str
@@ -138,11 +138,11 @@ func (p *ProcessorDesensitize) desensitize(val string) string {
 		pos = match.Index + match.Length
 		content, _ := p.regexContent.FindStringMatchStartingAt(val, pos)
 		if content != nil {
-			if p.ReplaceMethod == "const" {
+			if p.Method == "const" {
 				val, _ = p.regexContent.Replace(val, p.ReplaceString, pos, 1)
 				pos = content.Index + len(p.ReplaceString)
 			}
-			if p.ReplaceMethod == "md5" {
+			if p.Method == "md5" {
 				has := md5.Sum([]byte(content.String())) //nolint:gosec
 				md5str := fmt.Sprintf("%x", has)
 				val, _ = p.regexContent.Replace(val, md5str, pos, 1)
@@ -158,8 +158,8 @@ func init() {
 	ilogtail.Processors[pluginName] = func() ilogtail.Processor {
 		return &ProcessorDesensitize{
 			SourceKey:     "",
-			ReplaceMethod: "const",
-			MatchMethod:   "full",
+			Method:        "const",
+			Match:         "full",
 			ReplaceString: "",
 			RegexBegin:    "",
 			RegexContent:  "",

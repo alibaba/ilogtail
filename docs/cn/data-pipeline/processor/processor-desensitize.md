@@ -10,8 +10,8 @@
 | - | - | - |
 | Type                  | String，无默认值(必填) | 插件类型，固定为`processor_desensitize` |
 | SourceKey             | String，无默认值(必填) | 日志字段名称。 |
-| ReplaceMethod         | String，无默认值(必填) | 脱敏方式。可选值如下：<br>const：将敏感内容替换成 ReplaceString 参数处配置等字符串。<br>md5：将敏感内容替换为其对应的MD5值。 |
-| MatchMethod           | String，无默认值(必填) | 指定敏感数据。可选值如下：<br>full：字段全文。<br>regex：使用正则提取敏感数据。 |
+| Method         | String，无默认值(必填) | 脱敏方式。可选值如下：<br>const：将敏感内容替换成 ReplaceString 参数处配置等字符串。<br>md5：将敏感内容替换为其对应的MD5值。 |
+| Match           | String，无默认值(必填) | 指定敏感数据。可选值如下：<br>full：字段全文。<br>regex：使用正则提取敏感数据。 |
 | ReplaceString         | String，无默认值      | 用于替换敏感内容等字符串，当 Method 设置为 const 时，必须配置。 |
 | RegexBegin            | String，无默认值      | 用于指定敏感内容前缀的正则表达式，当 SelectFullField 配置为 false 时必填。 |
 | RegexContent          | String，无默认值      | 用于指定敏感内容的正则表达式，当 SelectFullField 配置为 false 时必填。|
@@ -37,8 +37,8 @@ inputs:
 processors:
   - Type: processor_desensitize
     SourceKey: content
-    ReplaceMethod: "const"
-    MatchMethod: "full"
+    Method: "const"
+    Match: "full"
     ReplaceString: "********"
 flushers:
   - Type: flusher_stdout
@@ -64,8 +64,8 @@ inputs:
 processors:
   - Type: processor_desensitize
     SourceKey: content
-    ReplaceMethod: "const"
-    MatchMethod: "regex"
+    Method: "const"
+    Match: "regex"
     ReplaceString: "********"
     RegexBegin: "'password':'"
     RegexContent: "[^']*"
@@ -93,8 +93,8 @@ inputs:
 processors:
   - Type: processor_desensitize
     SourceKey: content
-    ReplaceMethod: "md5"
-    MatchMethod: "regex"
+    Method: "md5"
+    Match: "regex"
     ReplaceString: "********"
     RegexBegin: "'password':'"
     RegexContent: "[^']*"
