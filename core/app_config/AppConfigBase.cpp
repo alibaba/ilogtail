@@ -573,6 +573,7 @@ void AppConfigBase::LoadResourceConf(const Json::Value& confJson) {
             mScaledCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
     }
 
+    // first set buffer_file_path, if buffer_file_path is null then set default_buffer_file_path
     if (confJson.isMember("buffer_file_path") && confJson["buffer_file_path"].isString())
         mBufferFilePath = confJson["buffer_file_path"].asString();
     else if (STRING_FLAG(buffer_file_path) != "") 
