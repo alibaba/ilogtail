@@ -853,17 +853,22 @@ func (dc *DockerCenter) getAllAcceptedInfoV2(
 	includeEnvRegex map[string]*regexp.Regexp,
 	excludeEnvRegex map[string]*regexp.Regexp,
 	k8sFilter *K8SFilter,
-) (int, int) {
+) (int, int, []string, []string, []string, []string) {
 	dc.lock.RLock()
 	defer dc.lock.RUnlock()
-
+	deleteResultList := make([]string, 0)
+	addResultList := make([]string, 0)
+	deleteFullList := make([]string, 0)
+	addFullList := make([]string, 0)
 	// Remove deleted containers from match list and full list.
 	delCount := 0
 	for id := range fullList {
 		if _, exist := dc.containerMap[id]; !exist {
 			delete(fullList, id)
+			deleteFullList = append(deleteFullList, id)
 			if _, matched := matchList[id]; matched {
 				delete(matchList, id)
+				deleteResultList = append(deleteResultList, id)
 				delCount++
 			}
 		}
@@ -881,19 +886,28 @@ func (dc *DockerCenter) getAllAcceptedInfoV2(
 
 	// Add new containers to full list and matched to match list.
 	newCount := 0
+	flagFirstInitContainers := false
+	if len(fullList) == 0 && len(dc.containerMap) != 0 {
+		flagFirstInitContainers = true
+	}
 	for id, info := range dc.containerMap {
 		if _, exist := fullList[id]; !exist {
 			fullList[id] = true
+			if !flagFirstInitContainers {
+				addFullList = append(addFullList, id)
+			}
 			if isContainerLabelMatch(includeLabel, excludeLabel, includeLabelRegex, excludeLabelRegex, info) &&
 				isContainerEnvMatch(includeEnv, excludeEnv, includeEnvRegex, excludeEnvRegex, info) &&
 				info.K8SInfo.IsMatch(k8sFilter) {
 				newCount++
 				matchList[id] = info
+				if !flagFirstInitContainers {
+					addResultList = append(addResultList, id)
+				}
 			}
 		}
 	}
-
-	return newCount, delCount
+	return newCount, delCount, addResultList, deleteResultList, addFullList, deleteFullList
 }
 
 func (dc *DockerCenter) getAllSpecificInfo(filter func(*DockerInfoDetail) bool) (infoList []*DockerInfoDetail) {

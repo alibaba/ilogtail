@@ -99,7 +99,7 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 			"c1": newContainer("c1"),
 		})
 
-		newCount, delCount := dc.getAllAcceptedInfoV2(
+		newCount, delCount, _, _, _, _ := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil)
@@ -115,7 +115,7 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 	{
 		dc.updateContainer("c2", newContainer("c2"))
 
-		newCount, delCount := dc.getAllAcceptedInfoV2(
+		newCount, delCount, _, _, _, _ := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil)
@@ -133,7 +133,7 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 	{
 		delete(dc.containerMap, "c1")
 
-		newCount, delCount := dc.getAllAcceptedInfoV2(
+		newCount, delCount, _, _, _, _ := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil)
@@ -153,7 +153,7 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 		})
 		delete(dc.containerMap, "c2")
 
-		newCount, delCount := dc.getAllAcceptedInfoV2(
+		newCount, delCount, _, _, _, _ := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			nil, nil, nil, nil, nil, nil, nil, nil, nil)
@@ -171,7 +171,7 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 	fullList = make(map[string]bool)
 	matchList = make(map[string]*DockerInfoDetail)
 	{
-		newCount, delCount := dc.getAllAcceptedInfoV2(
+		newCount, delCount, _, _, _, _ := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			map[string]string{
@@ -190,7 +190,7 @@ func TestGetAllAcceptedInfoV2(t *testing.T) {
 	{
 		delete(dc.containerMap, "c3")
 
-		newCount, delCount := dc.getAllAcceptedInfoV2(
+		newCount, delCount, _, _, _, _ := dc.getAllAcceptedInfoV2(
 			fullList,
 			matchList,
 			map[string]string{

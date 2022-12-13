@@ -37,6 +37,12 @@ type ContainerMeta struct {
 	Env             map[string]string
 }
 
+type DockerInfoDetailWithFilteredEnvAndLabel struct {
+	Detail *DockerInfoDetail
+	Env    map[string]string
+	Labels map[string]string
+}
+
 func GetContainersLastUpdateTime() int64 {
 	return getDockerCenterInstance().getLastUpdateMapTime()
 }
@@ -149,7 +155,7 @@ func GetContainerByAcceptedInfoV2(
 	includeEnvRegex map[string]*regexp.Regexp,
 	excludeEnvRegex map[string]*regexp.Regexp,
 	k8sFilter *K8SFilter,
-) (int, int) {
+) (int, int, []string, []string, []string, []string) {
 	return getDockerCenterInstance().getAllAcceptedInfoV2(
 		fullList, matchList, includeLabel, excludeLabel, includeLabelRegex, excludeLabelRegex, includeEnv, excludeEnv, includeEnvRegex, excludeEnvRegex, k8sFilter)
 
@@ -198,4 +204,53 @@ func ContainerCenterInit() {
 
 func CreateContainerInfoDetail(info types.ContainerJSON, envConfigPrefix string, selfConfigFlag bool) *DockerInfoDetail {
 	return getDockerCenterInstance().CreateInfoDetail(info, envConfigPrefix, selfConfigFlag)
+}
+
+func GetAllContainerToRecord(envSet, labelSet map[string]struct{}, containerIds map[string]struct{}) []*DockerInfoDetailWithFilteredEnvAndLabel {
+	instance := getDockerCenterInstance()
+	instance.lock.RLock()
+	defer instance.lock.RUnlock()
+	logger.Infof(context.Background(), "containerMapSize", instance.containerMap)
+	result := make([]*DockerInfoDetailWithFilteredEnvAndLabel, 0)
+	if len(containerIds) > 0 {
+		for key := range containerIds {
+			value, ok := instance.containerMap[key]
+			if !ok {
+				continue
+			}
+			result = append(result, CastContainerDetail(value, envSet, labelSet))
+		}
+	} else {
+		for _, value := range instance.containerMap {
+			result = append(result, CastContainerDetail(value, envSet, labelSet))
+		}
+	}
+	return result
+}
+func CastContainerDetail(containerInfo *DockerInfoDetail, envSet, labelSet map[string]struct{}) *DockerInfoDetailWithFilteredEnvAndLabel {
+	newEnv := make(map[string]string)
+	for _, env := range containerInfo.ContainerInfo.Config.Env {
+		splitArray := strings.SplitN(env, "=", 2)
+		envKey := splitArray[0]
+		if len(splitArray) != 2 {
+			continue
+		}
+		envValue := splitArray[1]
+		_, ok := envSet[envKey]
+		if ok {
+			newEnv[envKey] = envValue
+		}
+	}
+	newLabels := make(map[string]string)
+	for key, value := range containerInfo.ContainerInfo.Config.Labels {
+		_, ok := labelSet[key]
+		if ok {
+			newLabels[key] = value
+		}
+	}
+	return &DockerInfoDetailWithFilteredEnvAndLabel{
+		Detail: containerInfo,
+		Env:    newEnv,
+		Labels: newLabels,
+	}
 }

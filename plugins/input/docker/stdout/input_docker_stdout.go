@@ -15,6 +15,7 @@
 package stdout
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"sync"
@@ -258,7 +259,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 	}
 
 	var err error
-	newCount, delCount := helper.GetContainerByAcceptedInfoV2(
+	newCount, delCount, addResultList, deleteResultList, addFullList, deleteFullList := helper.GetContainerByAcceptedInfoV2(
 		sds.fullList, sds.matchList,
 		sds.IncludeLabel, sds.ExcludeLabel,
 		sds.IncludeLabelRegex, sds.ExcludeLabelRegex,
@@ -266,6 +267,50 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 		sds.IncludeEnvRegex, sds.ExcludeEnvRegex,
 		sds.K8sFilter)
 	sds.lastUpdateTime = newUpdateTime
+
+	// record added container id
+	if len(addFullList) > 0 {
+		for _, id := range addFullList {
+			if len(id) > 0 {
+				util.RecordAddContainerIds(id)
+			}
+		}
+	}
+	// record deleted container id
+	if len(deleteFullList) > 0 {
+		for _, id := range deleteFullList {
+			if len(id) > 0 {
+				util.RecordDeleteContainerIds(util.GetShortId(id))
+			}
+		}
+	}
+	// record config result
+	{
+		keys := make([]string, 0, len(sds.matchList))
+		for k := range sds.matchList {
+			if len(k) > 0 {
+				keys = append(keys, util.GetShortId(k))
+			}
+		}
+		configResult := &util.ConfigResult{
+			DataType:                   "container_config_result",
+			Project:                    sds.context.GetProject(),
+			Logstore:                   sds.context.GetLogstore(),
+			ConfigName:                 sds.context.GetConfigName(),
+			PathExistInputContainerIDs: util.GetStringFromList(keys),
+			SourceAddress:              "stdout",
+			InputType:                  "service_docker_stdout",
+			FlusherType:                "flusher_sls",
+			FlusherTargetAddress:       fmt.Sprintf("%s/%s", sds.context.GetProject(), sds.context.GetLogstore()),
+		}
+		logger.Infof(sds.context.GetRuntimeContext(), "configResult", configResult)
+		util.RecordConfigResultMap(configResult)
+		if newCount != 0 || delCount != 0 {
+			util.RecordConfigResultIncrement(configResult)
+		}
+		logger.Infof(sds.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
+	}
+
 	if !firstStart && newCount == 0 && delCount == 0 {
 		logger.Debugf(sds.context.GetRuntimeContext(), "update match list, firstStart: %v, new: %v, delete: %v",
 			firstStart, newCount, delCount)
