@@ -68,9 +68,10 @@ func (p *ProcessorDesensitize) Init(context ilogtail.Context) error {
 		return err
 	}
 
-	if p.Match == "full" {
+	switch p.Match {
+	case "full":
 		return nil
-	} else if p.Match == "regex" {
+	case "regex":
 		// check RegexBegin
 		if p.RegexBegin == "" {
 			err = errors.New("need parameter RegexBegin")
@@ -96,7 +97,7 @@ func (p *ProcessorDesensitize) Init(context ilogtail.Context) error {
 		}
 
 		return nil
-	} else {
+	default:
 		err = errors.New("parameter Match should be \"full\" or \"regex\"")
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_desensitize error", err)
 		return err
