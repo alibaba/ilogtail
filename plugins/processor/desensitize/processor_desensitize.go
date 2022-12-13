@@ -27,12 +27,13 @@ import (
 )
 
 type ProcessorDesensitize struct {
-	SourceKey    string
-	Method       string
-	RegexBegin   string
-	RegexContent string
-	ReplaceAll   bool
-	ConstString  string
+	SourceKey       string
+	Method          string
+	ConstString     string
+	SelectFullField bool
+	RegexBegin      string
+	RegexContent    string
+	ReplaceAll      bool
 
 	context      ilogtail.Context
 	regexBegin   *regexp2.Regexp
@@ -52,6 +53,17 @@ func (p *ProcessorDesensitize) Init(context ilogtail.Context) error {
 		err = errors.New("parameter Method should be \"const\" or \"md5\"")
 		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_desensitize error", err)
 		return err
+	}
+
+	// check Method
+	if p.Method == "const" && p.ConstString == "" {
+		err = errors.New("parameter ConstString should not be empty when Method is \"const\"")
+		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_desensitize error", err)
+		return err
+	}
+
+	if p.SelectFullField {
+		return nil
 	}
 
 	// check RegexBegin
@@ -78,13 +90,6 @@ func (p *ProcessorDesensitize) Init(context ilogtail.Context) error {
 		return err
 	}
 
-	// check Method
-	if p.Method == "const" && p.ConstString == "" {
-		err = errors.New("parameter ConstString should not be empty when Method is \"const\"")
-		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_desensitize error", err)
-		return err
-	}
-
 	return nil
 }
 
@@ -97,11 +102,7 @@ func (p *ProcessorDesensitize) ProcessLogs(logArray []*protocol.Log) []*protocol
 		for i, content := range log.Contents {
 			if p.SourceKey == content.Key {
 				newVal := p.desensitize(content.Value)
-				newContent := &protocol.Log_Content{
-					Key:   content.Key,
-					Value: newVal,
-				}
-				log.Contents[i] = newContent
+				log.Contents[i].Value = newVal
 				break
 			}
 		}
@@ -110,6 +111,17 @@ func (p *ProcessorDesensitize) ProcessLogs(logArray []*protocol.Log) []*protocol
 }
 
 func (p *ProcessorDesensitize) desensitize(val string) string {
+	if p.SelectFullField {
+		if p.Method == "const" {
+			return p.ConstString
+		}
+		if p.Method == "md5" {
+			has := md5.Sum([]byte(val)) //nolint:gosec
+			md5str := fmt.Sprintf("%x", has)
+			return md5str
+		}
+	}
+
 	var pos = 0
 	match, _ := p.regexBegin.FindStringMatchStartingAt(val, pos)
 	for match != nil {
@@ -138,12 +150,13 @@ func (p *ProcessorDesensitize) desensitize(val string) string {
 func init() {
 	ilogtail.Processors[pluginName] = func() ilogtail.Processor {
 		return &ProcessorDesensitize{
-			SourceKey:    "content",
-			Method:       "",
-			RegexBegin:   "",
-			RegexContent: "",
-			ReplaceAll:   true,
-			ConstString:  "",
+			SourceKey:       "content",
+			Method:          "",
+			ConstString:     "",
+			SelectFullField: true,
+			RegexBegin:      "",
+			RegexContent:    "",
+			ReplaceAll:      true,
 		}
 	}
 }
