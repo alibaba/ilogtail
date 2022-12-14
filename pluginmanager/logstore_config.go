@@ -398,12 +398,12 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 								continue
 							}
 							if strings.Contains(key, "Label") {
-								for key, _ := range conditionMap {
+								for key := range conditionMap {
 									logstoreC.LabelSet[key] = struct{}{}
 								}
 							}
 							if strings.Contains(key, "Env") {
-								for key, _ := range conditionMap {
+								for key := range conditionMap {
 									logstoreC.EnvSet[key] = struct{}{}
 								}
 							}
