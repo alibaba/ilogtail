@@ -91,6 +91,7 @@ type SpanEvent struct {
 	Name      string
 }
 
+// A Span represents a single operation performed by a single component of the system.
 type Span struct {
 	TraceID      string
 	SpanID       string

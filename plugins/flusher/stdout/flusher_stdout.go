@@ -157,7 +157,7 @@ func (p *FlusherStdout) Export(in []*models.PipelineGroupEvents, context ilogtai
 			case models.EventTypeMetric:
 				writer.WriteString("metric")
 			case models.EventTypeSpan:
-				writer.WriteString("trace")
+				writer.WriteString("span")
 			case models.EventTypeLogging:
 				writer.WriteString("log")
 			}
@@ -188,7 +188,7 @@ func (p *FlusherStdout) Export(in []*models.PipelineGroupEvents, context ilogtai
 			case models.EventTypeMetric:
 				p.writeMetricValues(writer, event.(*models.Metric))
 			case models.EventTypeSpan:
-				p.writeTrace(writer, nil)
+				p.writeSpan(writer, nil)
 			case models.EventTypeLogging:
 				p.writeLogBody(writer, nil)
 			}
@@ -247,7 +247,7 @@ func (p *FlusherStdout) writeMetricValues(writer *jsoniter.Stream, metric *model
 	}
 }
 
-func (p *FlusherStdout) writeTrace(writer *jsoniter.Stream, metric *models.Span) {
+func (p *FlusherStdout) writeSpan(writer *jsoniter.Stream, metric *models.Span) {
 	// TODO
 }
 

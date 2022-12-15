@@ -14,6 +14,10 @@
 
 package models
 
+// Defines a ByteArray event.
+// For example, the agent is deployed as a proxy
+// to directly transparently transmit the received binary data to the backend,
+// using ByteArray can avoid additional Marshal/Unmarshal overhead.
 type ByteArray []byte
 
 func (ByteArray) GetName() string {

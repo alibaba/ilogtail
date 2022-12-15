@@ -144,6 +144,20 @@ type MetricTypedValues interface {
 	KeyValues[*TypedValue]
 }
 
+// Defines a Metric which has one or more timeseries.  The following is a
+// brief summary of the Metric data model.  For more details, see:
+//
+//   https://github.com/alibaba/ilogtail/discussions/518
+//
+//
+// The data model and relation between entities is shown in the
+// diagram below. Here, "DataPoint" is the term used to refer to any
+// one of the specific data point value types, and "points" is the term used
+// to refer to any one of the lists of points contained in the Metric.
+//
+// - Metric is composed of a metadata and data.
+// - Metadata part contains a name, description, unit, tags
+// - Data is one of the possible types (Counter, Gauge, Histogram, Summary).
 type Metric struct {
 	Name              string
 	Unit              string
