@@ -59,6 +59,10 @@ func (s *ServiceHTTP) Init(context ilogtail.Context) (int, error) {
 		s.Address += "/v1/logs"
 	}
 
+	if s.Format == "otlp_metricv1" {
+		s.Address += "/v1/metrics"
+	}
+
 	return 0, nil
 }
 

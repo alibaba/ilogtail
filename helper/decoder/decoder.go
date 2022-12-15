@@ -61,6 +61,8 @@ func GetDecoderWithOptions(format string, option Option) (Decoder, error) {
 		}, nil
 	case common.ProtocolOTLPLogV1:
 		return &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, nil
+	case common.ProtocolOTLPMetricV1:
+		return &opentelemetry.Decoder{Format: common.ProtocolOTLPMetricV1}, nil
 	}
 	return nil, errDecoderNotFound
 }

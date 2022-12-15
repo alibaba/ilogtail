@@ -38,7 +38,8 @@ type Decoder struct {
 
 // Decode impl
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
-	if common.ProtocolOTLPLogV1 == d.Format {
+	switch d.Format {
+	case common.ProtocolOTLPLogV1:
 		otlpLogReq := plogotlp.NewRequest()
 		switch req.Header.Get("Content-Type") {
 		case pbContentType:
@@ -54,13 +55,89 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 		default:
 			err = errors.New("Invalid ContentType: " + req.Header.Get("Content-Type"))
 		}
-	} else {
+	case common.ProtocolOTLPMetricV1:
+		otlpMetricReq := plogotlp.NewRequest()
+		switch req.Header.Get("Content-Type") {
+		case pbContentType:
+			if err = otlpMetricReq.UnmarshalProto(data); err != nil {
+				return logs, err
+			}
+			logs, err = d.ConvertOtlpMetricV1(otlpMetricReq)
+		case jsonContentType:
+			if err = otlpMetricReq.UnmarshalJSON(data); err != nil {
+				return logs, err
+			}
+			logs, err = d.ConvertOtlpMetricV1(otlpMetricReq)
+		default:
+			err = errors.New("Invalid ContentType: " + req.Header.Get("Content-Type"))
+		}
+	default:
 		err = errors.New("Invalid RequestURI: " + req.RequestURI)
 	}
 	return logs, err
 }
 
 func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.Request) (logs []*protocol.Log, err error) {
+	resLogs := otlpLogReq.Logs().ResourceLogs()
+	for i := 0; i < resLogs.Len(); i++ {
+		resourceLog := resLogs.At(i)
+		sLogs := resourceLog.ScopeLogs()
+		for j := 0; j < sLogs.Len(); j++ {
+			scopeLog := sLogs.At(j)
+			lRecords := scopeLog.LogRecords()
+			for k := 0; k < lRecords.Len(); k++ {
+				logRecord := lRecords.At(k)
+
+				protoContents := []*protocol.Log_Content{
+					{
+						Key:   "time_unix_nano",
+						Value: strconv.FormatInt(logRecord.Timestamp().AsTime().UnixNano(), 10),
+					},
+					{
+						Key:   "severity_number",
+						Value: strconv.FormatInt(int64(logRecord.SeverityNumber()), 10),
+					},
+					{
+						Key:   "severity_text",
+						Value: logRecord.SeverityText(),
+					},
+					{
+						Key:   "content",
+						Value: logRecord.Body().AsString(),
+					},
+				}
+
+				if logRecord.Attributes().Len() != 0 {
+					if d, err := json.Marshal(logRecord.Attributes().AsRaw()); err == nil {
+						protoContents = append(protoContents, &protocol.Log_Content{
+							Key:   "attributes",
+							Value: string(d),
+						})
+					}
+				}
+
+				if resourceLog.Resource().Attributes().Len() != 0 {
+					if d, err := json.Marshal(resourceLog.Resource().Attributes().AsRaw()); err == nil {
+						protoContents = append(protoContents, &protocol.Log_Content{
+							Key:   "resources",
+							Value: string(d),
+						})
+					}
+				}
+
+				protoLog := &protocol.Log{
+					Time:     uint32(logRecord.Timestamp().AsTime().Unix()),
+					Contents: protoContents,
+				}
+				logs = append(logs, protoLog)
+			}
+		}
+	}
+
+	return logs, nil
+}
+
+func (d *Decoder) ConvertOtlpMetricV1(otlpLogReq plogotlp.Request) (logs []*protocol.Log, err error) {
 	resLogs := otlpLogReq.Logs().ResourceLogs()
 	for i := 0; i < resLogs.Len(); i++ {
 		resourceLog := resLogs.At(i)
