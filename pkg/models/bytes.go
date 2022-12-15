@@ -28,7 +28,7 @@ func (ByteArray) SetName(name string) {
 }
 
 func (ByteArray) GetTags() Tags {
-	return emptyStringValues
+	return noopStringValues
 }
 
 func (ByteArray) GetType() EventType {

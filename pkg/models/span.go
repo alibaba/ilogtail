@@ -75,8 +75,8 @@ var (
 		SpanKindTextConsumer: SpanKindConsumer,
 	}
 
-	emptySpanEvents = make([]*SpanEvent, 0)
-	emptySpanLinks  = make([]*SpanLink, 0)
+	noopSpanEvents = make([]*SpanEvent, 0)
+	noopSpanLinks  = make([]*SpanLink, 0)
 )
 
 type SpanLink struct {
@@ -127,7 +127,7 @@ func (m *Span) GetTags() Tags {
 	if m != nil {
 		return m.Tags
 	}
-	return emptyStringValues
+	return noopStringValues
 }
 
 func (m *Span) GetType() EventType {
@@ -214,12 +214,12 @@ func (m *Span) GetLinks() []*SpanLink {
 	if m != nil {
 		return m.Links
 	}
-	return emptySpanLinks
+	return noopSpanLinks
 }
 
 func (m *Span) GetEvents() []*SpanEvent {
 	if m != nil {
 		return m.Events
 	}
-	return emptySpanEvents
+	return noopSpanEvents
 }

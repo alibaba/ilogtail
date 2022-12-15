@@ -91,7 +91,7 @@ func NewSingleValueMetric[T constraints.IntUintFloat](name string, metricType Me
 		Timestamp:  uint64(timestamp),
 		Tags:       tags,
 		Value:      &MetricSingleValue{Value: float64(value)},
-		TypedValue: emptyTypedValues,
+		TypedValue: noopTypedValues,
 	}
 }
 
@@ -102,7 +102,7 @@ func NewMultiValuesMetric(name string, metricType MetricType, tags Tags, timesta
 		Timestamp:  uint64(timestamp),
 		Tags:       tags,
 		Value:      &MetricMultiValue{Values: values},
-		TypedValue: emptyTypedValues,
+		TypedValue: noopTypedValues,
 	}
 }
 

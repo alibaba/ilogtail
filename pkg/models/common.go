@@ -35,9 +35,9 @@ const (
 )
 
 var (
-	emptyStringValues = &keyValuesEmpty[string]{}
-	emptyTypedValues  = &keyValuesEmpty[*TypedValue]{}
-	emptyFloatValues  = &keyValuesEmpty[float64]{}
+	noopStringValues = &keyValuesNoop[string]{}
+	noopTypedValues  = &keyValuesNoop[*TypedValue]{}
+	noopFloatValues  = &keyValuesNoop[float64]{}
 )
 
 type TypedValue struct {
@@ -140,34 +140,34 @@ func (kv *keyValuesImpl[TValue]) Len() int {
 	return 0
 }
 
-type keyValuesEmpty[TValue string | float64 | *TypedValue] struct {
+type keyValuesNoop[TValue string | float64 | *TypedValue] struct {
 }
 
-func (kv *keyValuesEmpty[TValue]) Add(key string, value TValue) {
+func (kv *keyValuesNoop[TValue]) Add(key string, value TValue) {
 }
 
-func (kv *keyValuesEmpty[TValue]) AddAll(items map[string]TValue) {
+func (kv *keyValuesNoop[TValue]) AddAll(items map[string]TValue) {
 }
 
-func (kv *keyValuesEmpty[TValue]) Get(key string) TValue {
+func (kv *keyValuesNoop[TValue]) Get(key string) TValue {
 	var null TValue
 	return null
 }
 
-func (kv *keyValuesEmpty[TValue]) Contains(key string) bool {
+func (kv *keyValuesNoop[TValue]) Contains(key string) bool {
 	return false
 }
 
-func (kv *keyValuesEmpty[TValue]) Delete(key string) {
+func (kv *keyValuesNoop[TValue]) Delete(key string) {
 }
 
-func (kv *keyValuesEmpty[TValue]) Merge(other KeyValues[TValue]) {
+func (kv *keyValuesNoop[TValue]) Merge(other KeyValues[TValue]) {
 }
 
-func (kv *keyValuesEmpty[TValue]) Iterator() map[string]TValue {
+func (kv *keyValuesNoop[TValue]) Iterator() map[string]TValue {
 	return make(map[string]TValue)
 }
 
-func (kv *keyValuesEmpty[TValue]) Len() int {
+func (kv *keyValuesNoop[TValue]) Len() int {
 	return 0
 }

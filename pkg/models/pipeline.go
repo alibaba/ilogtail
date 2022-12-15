@@ -39,14 +39,14 @@ func (g *GroupInfo) GetMetadata() Metadata {
 	if g != nil && g.Metadata != nil {
 		return g.Metadata
 	}
-	return emptyStringValues
+	return noopStringValues
 }
 
 func (g *GroupInfo) GetTags() Tags {
 	if g != nil && g.Tags != nil {
 		return g.Tags
 	}
-	return emptyStringValues
+	return noopStringValues
 }
 
 type PipelineGroupEvents struct {
