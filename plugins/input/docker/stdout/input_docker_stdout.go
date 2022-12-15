@@ -272,7 +272,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 	if len(addFullList) > 0 {
 		for _, id := range addFullList {
 			if len(id) > 0 {
-				util.RecordAddContainerIds(id)
+				util.RecordAddContainerIDs(id)
 			}
 		}
 	}
@@ -280,7 +280,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 	if len(deleteFullList) > 0 {
 		for _, id := range deleteFullList {
 			if len(id) > 0 {
-				util.RecordDeleteContainerIds(util.GetShortId(id))
+				util.RecordDeleteContainerIDs(util.GetShortID(id))
 			}
 		}
 	}
@@ -289,7 +289,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 		keys := make([]string, 0, len(sds.matchList))
 		for k := range sds.matchList {
 			if len(k) > 0 {
-				keys = append(keys, util.GetShortId(k))
+				keys = append(keys, util.GetShortID(k))
 			}
 		}
 		configResult := &util.ConfigResult{

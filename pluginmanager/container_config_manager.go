@@ -38,15 +38,15 @@ func TimerRecordData() {
 
 // 记录增量的容器
 func RecordAddContainers() {
-	containerIds := util.GetAddContainerIds()
-	logger.Info(context.Background(), "GetAddContainerIds", containerIds)
-	if len(containerIds) > 0 {
+	containerIDs := util.GetAddContainerIDs()
+	logger.Info(context.Background(), "GetAddContainerIDs", containerIDs)
+	if len(containerIDs) > 0 {
 		// get project list
-		recordContainers(containerIds)
+		recordContainers(containerIDs)
 	}
 }
 
-func recordContainers(containerIds map[string]struct{}) {
+func recordContainers(containerIDs map[string]struct{}) {
 	envSet := make(map[string]struct{})
 	labelSet := make(map[string]struct{})
 	projectSet := make(map[string]struct{})
@@ -67,7 +67,7 @@ func recordContainers(containerIds map[string]struct{}) {
 	}
 	projectStr := util.GetStringFromList(keys)
 	// get add container
-	result := helper.GetAllContainerToRecord(envSet, labelSet, containerIds)
+	result := helper.GetAllContainerToRecord(envSet, labelSet, containerIDs)
 	for _, containerInfo := range result {
 		var containerDetailToRecord util.ContainerDetail
 		containerDetailToRecord.Project = projectStr
@@ -98,9 +98,9 @@ func CollectContainers(logGroup *protocol.LogGroup) {
 }
 
 func CollectDeleteContainers(logGroup *protocol.LogGroup) {
-	containerIds := util.GetDeleteContainerIds()
-	logger.Info(context.Background(), "GetDeleteContainerIds", containerIds)
-	if len(containerIds) > 0 {
+	containerIDs := util.GetDeleteContainerIDs()
+	logger.Info(context.Background(), "GetDeleteContainerIDs", containerIDs)
+	if len(containerIDs) > 0 {
 		projectSet := make(map[string]struct{})
 
 		// get project list
@@ -115,13 +115,13 @@ func CollectDeleteContainers(logGroup *protocol.LogGroup) {
 		}
 		projectStr := util.GetStringFromList(keys)
 
-		ids := make([]string, len(containerIds))
-		for id := range containerIds {
+		ids := make([]string, len(containerIDs))
+		for id := range containerIDs {
 			if len(id) > 0 {
 				ids = append(ids, id)
 			}
 		}
-		logger.Info(context.Background(), "record GetDeleteContainerIds", ids)
+		logger.Info(context.Background(), "record GetDeleteContainerIDs", ids)
 		util.SerializeDeleteContainerToPb(logGroup, projectStr, util.GetStringFromList(ids))
 	}
 }

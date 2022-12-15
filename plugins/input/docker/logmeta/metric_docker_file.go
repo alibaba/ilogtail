@@ -301,7 +301,7 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 	if len(addFullList) > 0 {
 		for _, id := range addFullList {
 			if len(id) > 0 {
-				util.RecordAddContainerIds(id)
+				util.RecordAddContainerIDs(id)
 			}
 		}
 	}
@@ -309,7 +309,7 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 	if len(deleteFullList) > 0 {
 		for _, id := range deleteFullList {
 			if len(id) > 0 {
-				util.RecordDeleteContainerIds(util.GetShortId(id))
+				util.RecordDeleteContainerIDs(util.GetShortID(id))
 			}
 		}
 	}
@@ -337,12 +337,12 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 
 		if ok, err := util.PathExists(destPath); err == nil {
 			if !ok {
-				nothavingPathkeys = append(nothavingPathkeys, util.GetShortId(k))
+				nothavingPathkeys = append(nothavingPathkeys, util.GetShortID(k))
 			} else {
-				havingPathkeys = append(havingPathkeys, util.GetShortId(k))
+				havingPathkeys = append(havingPathkeys, util.GetShortID(k))
 			}
 		} else {
-			nothavingPathkeys = append(nothavingPathkeys, util.GetShortId(k))
+			nothavingPathkeys = append(nothavingPathkeys, util.GetShortID(k))
 			logger.Warning(idf.context.GetRuntimeContext(), "check docker mount path error", err.Error())
 		}
 

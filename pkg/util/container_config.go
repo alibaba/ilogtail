@@ -125,14 +125,14 @@ func RecordConfigResultIncrement(message *ConfigResult) {
 }
 
 // 记录新增容器ID
-func RecordAddContainerIds(containerId string) {
+func RecordAddContainerIDs(containerID string) {
 	addContainerMutex.Lock()
 	defer addContainerMutex.Unlock()
-	addAllContainer[containerId] = struct{}{}
+	addAllContainer[containerID] = struct{}{}
 }
 
 // 获取新增容器ID列表
-func GetAddContainerIds() map[string]struct{} {
+func GetAddContainerIDs() map[string]struct{} {
 	addContainerMutex.Lock()
 	defer addContainerMutex.Unlock()
 	result := make(map[string]struct{})
@@ -144,14 +144,14 @@ func GetAddContainerIds() map[string]struct{} {
 }
 
 // 记录删除容器ID
-func RecordDeleteContainerIds(containerId string) {
+func RecordDeleteContainerIDs(containerID string) {
 	deleteContainerMutex.Lock()
 	defer deleteContainerMutex.Unlock()
-	deleteAllContainer[containerId] = struct{}{}
+	deleteAllContainer[containerID] = struct{}{}
 }
 
 // 获取删除容器ID列表
-func GetDeleteContainerIds() map[string]struct{} {
+func GetDeleteContainerIDs() map[string]struct{} {
 	deleteContainerMutex.Lock()
 	defer deleteContainerMutex.Unlock()
 	result := make(map[string]struct{})
@@ -164,13 +164,13 @@ func GetDeleteContainerIds() map[string]struct{} {
 	return result
 }
 
-func SerializeDeleteContainerToPb(logGroup *protocol.LogGroup, project string, containerIdsStr string) {
+func SerializeDeleteContainerToPb(logGroup *protocol.LogGroup, project string, containerIDsStr string) {
 	nowTime := (uint32)(time.Now().Unix())
 	deleteContainerMutex.Lock()
 	log := &protocol.Log{}
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "type", Value: "delete_containers"})
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "project", Value: project})
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "container_ids", Value: containerIdsStr})
+	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "container_ids", Value: containerIDsStr})
 
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
 	log.Time = nowTime
@@ -185,7 +185,7 @@ func SerializeContainerToPb(logGroup *protocol.LogGroup) {
 		log := &protocol.Log{}
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "type", Value: item.DataType})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "project", Value: item.Project})
-		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "container_id", Value: GetShortId(item.ContainerID)})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "container_id", Value: GetShortID(item.ContainerID)})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "container_ip", Value: item.ContainerIP})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "container_name", Value: item.ContainerName})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "raw_container_name", Value: item.RawContainerName})
@@ -249,8 +249,8 @@ func SerializeConfigResultToPb(logGroup *protocol.LogGroup) {
 	configResultMutex.Unlock()
 }
 
-func GetShortId(fullId string) string {
-	return fullId[0:12]
+func GetShortID(fullID string) string {
+	return fullID[0:12]
 }
 
 func GetStringFromList(list []string) string {
