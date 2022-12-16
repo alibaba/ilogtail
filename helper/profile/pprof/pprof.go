@@ -122,7 +122,7 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 
 		labelsMap := make(map[string]string)
 		for _, l := range tl {
-			if len(tp.StringTable) <= int(l.GetKey()) || len(tp.StringTable) <= int(l.GetKey()) {
+			if len(tp.StringTable) <= int(l.GetKey()) || len(tp.StringTable) <= int(l.GetStr()) {
 				if logger.DebugFlag() {
 					logger.Debug(ctx, "found illegal labels index, would skip it", vt.String())
 				}
@@ -154,9 +154,7 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 	if err != nil {
 		return nil, fmt.Errorf("iterate profile tree error: %w", err)
 	}
-	if strings.HasSuffix(meta.SpyName, "spy") {
-		meta.SpyName = meta.SpyName[:len(meta.SpyName)-3]
-	}
+	meta.SpyName = strings.TrimPrefix(meta.SpyName, "spy")
 	for id, fs := range stackMap {
 		if len(valMap[id]) == 0 || len(typeMap[id]) == 0 || len(unitMap[id]) == 0 || labelMap[id] == nil {
 			logger.Warning(ctx, "PPROF_PROFILE_ALARM", "stack don't have enough meta or values", fs)
