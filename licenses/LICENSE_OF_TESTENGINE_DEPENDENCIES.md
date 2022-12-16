@@ -4,7 +4,6 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 
 ## Apache 2.0 licenses
 
-- [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
 - [gopkg.in/yaml.v3](https://pkg.go.dev/gopkg.in/yaml.v3?tab=licenses)
 - [github.com/containerd/containerd](https://pkg.go.dev/github.com/containerd/containerd?tab=licenses)
 - [github.com/docker/distribution](https://pkg.go.dev/github.com/docker/distribution?tab=licenses)
@@ -70,6 +69,7 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 
 ## BSD licenses
 
+- [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
 - [github.com/magiconair/properties](https://pkg.go.dev/github.com/magiconair/properties?tab=licenses)
 - [github.com/pkg/errors](https://pkg.go.dev/github.com/pkg/errors?tab=licenses)
 - [github.com/russross/blackfriday](https://pkg.go.dev/github.com/russross/blackfriday?tab=licenses)
