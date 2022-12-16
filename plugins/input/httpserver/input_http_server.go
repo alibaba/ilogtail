@@ -26,6 +26,7 @@ import (
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper/decoder"
+	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
@@ -55,8 +56,11 @@ func (s *ServiceHTTP) Init(context ilogtail.Context) (int, error) {
 		return 0, err
 	}
 
-	if s.Format == "otlp_logv1" {
+	if s.Format == common.ProtocolOTLPLogV1 {
 		s.Address += "/v1/logs"
+	}
+	if s.Format == common.ProtocolPyroscope {
+		s.Address += "/ingest"
 	}
 
 	return 0, nil
@@ -90,7 +94,6 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		internalServerError(w)
 	case http.StatusMethodNotAllowed:
 		methodNotAllowed(w)
-
 	}
 	if err != nil {
 		logger.Warning(s.context.GetRuntimeContext(), "READ_BODY_FAIL_ALARM", "read body failed", err, "request", r.URL.String())
@@ -108,10 +111,9 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.Format == "sls" {
 		w.Header().Set("x-log-requestid", "1234567890abcde")
 		w.WriteHeader(http.StatusOK)
-	} else {
+	} else if s.Format != common.ProtocolPyroscope {
 		w.WriteHeader(http.StatusNoContent)
 	}
-
 }
 
 func tooLarge(res http.ResponseWriter) {

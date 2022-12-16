@@ -24,6 +24,7 @@ import (
 	"github.com/alibaba/ilogtail/helper/decoder/influxdb"
 	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
 	"github.com/alibaba/ilogtail/helper/decoder/prometheus"
+	"github.com/alibaba/ilogtail/helper/decoder/pyroscope"
 	"github.com/alibaba/ilogtail/helper/decoder/sls"
 	"github.com/alibaba/ilogtail/helper/decoder/statsd"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -61,6 +62,8 @@ func GetDecoderWithOptions(format string, option Option) (Decoder, error) {
 		}, nil
 	case common.ProtocolOTLPLogV1:
 		return &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, nil
+	case common.ProtocolPyroscope:
+		return &pyroscope.Decoder{}, nil
 	}
 	return nil, errDecoderNotFound
 }
