@@ -2,6 +2,7 @@ package pprof
 
 import (
 	"fmt"
+
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
 )
