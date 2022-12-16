@@ -4,6 +4,7 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 
 ## Apache 2.0 licenses
 
+- [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
 - [gopkg.in/yaml.v3](https://pkg.go.dev/gopkg.in/yaml.v3?tab=licenses)
 - [github.com/containerd/containerd](https://pkg.go.dev/github.com/containerd/containerd?tab=licenses)
 - [github.com/docker/distribution](https://pkg.go.dev/github.com/docker/distribution?tab=licenses)
@@ -83,7 +84,6 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [golang.org/x/text](https://pkg.go.dev/golang.org/x/text?tab=licenses)
 - [google.golang.org/protobuf](https://pkg.go.dev/google.golang.org/protobuf?tab=licenses)
 - [github.com/godbus/dbus](https://pkg.go.dev/github.com/godbus/dbus?tab=licenses)
-- [github.com/google/go-cmp](https://pkg.go.dev/github.com/google/go-cmp?tab=licenses)
 - [github.com/miekg/pkcs11](https://pkg.go.dev/github.com/miekg/pkcs11?tab=licenses)
 - [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto?tab=licenses)
 - [golang.org/x/oauth2](https://pkg.go.dev/golang.org/x/oauth2?tab=licenses)

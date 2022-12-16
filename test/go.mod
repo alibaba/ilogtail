@@ -8,6 +8,7 @@ require (
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0
+	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/mitchellh/mapstructure v1.4.2
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.8.1
@@ -46,21 +47,19 @@ require (
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/emicklei/go-restful v2.15.0+incompatible // indirect
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-logr/logr v1.2.2 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/godbus/dbus/v5 v5.0.6 // indirect
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c // indirect
 	github.com/intel/goresctrl v0.2.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -113,7 +112,7 @@ require (
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
-	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
+	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221109142239-94d6d90a7d66 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
@@ -121,16 +120,17 @@ require (
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.22.5 // indirect
-	k8s.io/apimachinery v0.22.5 // indirect
+	k8s.io/api v0.24.0 // indirect
+	k8s.io/apimachinery v0.24.0 // indirect
 	k8s.io/apiserver v0.22.5 // indirect
-	k8s.io/client-go v0.22.5 // indirect
+	k8s.io/client-go v0.24.0 // indirect
 	k8s.io/component-base v0.22.5 // indirect
 	k8s.io/cri-api v0.23.1 // indirect
-	k8s.io/klog/v2 v2.30.0 // indirect
-	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
-	sigs.k8s.io/yaml v1.2.0 // indirect
+	k8s.io/klog/v2 v2.60.1 // indirect
+	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
+	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
+	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
 replace (

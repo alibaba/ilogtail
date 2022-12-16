@@ -4,6 +4,16 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 ## Apache 2.0 licenses
 
+- [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
+- [github.com/dgraph-io/badger](https://pkg.go.dev/github.com/dgraph-io/badger?tab=licenses)
+- [github.com/dgraph-io/ristretto](https://pkg.go.dev/github.com/dgraph-io/ristretto?tab=licenses)
+- [github.com/golang/glog](https://pkg.go.dev/github.com/golang/glog?tab=licenses)
+- [github.com/google/gnostic](https://pkg.go.dev/github.com/google/gnostic?tab=licenses)
+- [github.com/go-openapi/jsonpointer](https://pkg.go.dev/github.com/go-openapi/jsonpointer?tab=licenses)
+- [github.com/go-openapi/jsonreference](https://pkg.go.dev/github.com/go-openapi/jsonreference?tab=licenses)
+- [github.com/go-openapi/swag](https://pkg.go.dev/github.com/go-openapi/swag?tab=licenses)
+- [github.com/mwitkow/go-conntrack](https://pkg.go.dev/github.com/mwitkow/go-conntrack?tab=licenses)
+- [github.com/pyroscope-io/pyroscope](https://pkg.go.dev/github.com/pyroscope-io/pyroscope?tab=licenses)
 - [cloud.google.com/go/compute/metadata](https://pkg.go.dev/cloud.google.com/go/compute/metadata?tab=licenses)
 - [github.com/aliyun/alibaba-cloud-sdk-go](https://pkg.go.dev/github.com/aliyun/alibaba-cloud-sdk-go?tab=licenses)
 - [github.com/containerd/cgroups](https://pkg.go.dev/github.com/containerd/cgroups?tab=licenses)
@@ -33,7 +43,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/golang/groupcache](https://pkg.go.dev/github.com/golang/groupcache?tab=licenses)
 - [github.com/golang-sql/civil](https://pkg.go.dev/github.com/golang-sql/civil?tab=licenses)
 - [github.com/google/gofuzz](https://pkg.go.dev/github.com/google/gofuzz?tab=licenses)
-- [github.com/googleapis/gnostic](https://pkg.go.dev/github.com/googleapis/gnostic?tab=licenses)
 - [github.com/jcmturner/aescts](https://pkg.go.dev/github.com/jcmturner/aescts?tab=licenses)
 - [github.com/jcmturner/dnsutils](https://pkg.go.dev/github.com/jcmturner/dnsutils?tab=licenses)
 - [github.com/jcmturner/gokrb5](https://pkg.go.dev/github.com/jcmturner/gokrb5?tab=licenses)
@@ -87,6 +96,11 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 ## BSD licenses
 
+- [github.com/DataDog/zstd](https://pkg.go.dev/github.com/DataDog/zstd?tab=licenses)
+- [github.com/gorilla/mux](https://pkg.go.dev/github.com/gorilla/mux?tab=licenses)
+- [github.com/munnerz/goautoneg](https://pkg.go.dev/github.com/munnerz/goautoneg?tab=licenses)
+- [github.com/PuerkitoBio/purell](https://pkg.go.dev/github.com/PuerkitoBio/purell?tab=licenses)
+- [github.com/PuerkitoBio/urlesc](https://pkg.go.dev/github.com/PuerkitoBio/urlesc?tab=licenses)
 - [github.com/klauspost/compress](https://pkg.go.dev/github.com/klauspost/compress?tab=licenses)
 - [github.com/danwakefield/fnmatch](https://pkg.go.dev/github.com/danwakefield/fnmatch?tab=licenses)
 - [github.com/denisenkom/go-mssqldb](https://pkg.go.dev/github.com/denisenkom/go-mssqldb?tab=licenses)
@@ -126,6 +140,10 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 ## MIT licenses
 
+- [github.com/dgryski/go-farm](https://pkg.go.dev/github.com/dgryski/go-farm?tab=licenses)
+- [github.com/dustin/go-humanize](https://pkg.go.dev/github.com/dustin/go-humanize?tab=licenses)
+- [github.com/gofrs/uuid](https://pkg.go.dev/github.com/gofrs/uuid?tab=licenses)
+- [github.com/jpillora/backoff](https://pkg.go.dev/github.com/jpillora/backoff?tab=licenses)
 - [github.com/go-kit/log](https://pkg.go.dev/github.com/go-kit/log?tab=licenses)
 - [github.com/narqo/go-dogstatsd-parser](https://pkg.go.dev/github.com/narqo/go-dogstatsd-parser?tab=licenses)
 - [sigs.k8s.io/yaml](https://pkg.go.dev/sigs.k8s.io/yaml?tab=licenses)
