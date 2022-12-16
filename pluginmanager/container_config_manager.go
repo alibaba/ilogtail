@@ -25,8 +25,11 @@ import (
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
-var FetchAllInterval = time.Second * time.Duration(300)
-var FirstFetchAllInterval = time.Second * time.Duration(60)
+// 24h
+var FetchAllInterval = time.Second * time.Duration(24*60*60)
+
+// 30min
+var FirstFetchAllInterval = time.Second * time.Duration(30*60)
 
 var timerFetchRunning = false
 
