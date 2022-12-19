@@ -88,12 +88,13 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 		if err != nil {
 			continue
 		}
+		var valueType string
+		var value string
 		for field, v := range fields {
-			var valueType = valueTypeFloat
-			var value string
 			switch v := v.(type) {
 			case float64:
 				value = strconv.FormatFloat(v, 'g', -1, 64)
+				valueType = valueTypeFloat
 			case int64:
 				value = strconv.FormatInt(v, 10)
 				valueType = valueTypeInt
