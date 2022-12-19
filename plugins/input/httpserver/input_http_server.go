@@ -27,6 +27,7 @@ import (
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper/decoder"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 )
 
 // ServiceHTTP ...
@@ -38,6 +39,9 @@ type ServiceHTTP struct {
 	listener  net.Listener
 	wg        sync.WaitGroup
 
+	decoderV2   decoder.V2
+	collectorV2 ilogtail.PipelineCollector
+
 	Format             string
 	Address            string
 	ReadTimeoutSec     int
@@ -45,15 +49,17 @@ type ServiceHTTP struct {
 	MaxBodySize        int64
 	UnlinkUnixSock     bool
 	FieldsExtend       bool
+
+	// params below works only for version v2
+	QueryParams       []string
+	HeaderParams      []string
+	QueryParamPrefix  string
+	HeaderParamPrefix string
 }
 
 // Init ...
 func (s *ServiceHTTP) Init(context ilogtail.Context) (int, error) {
 	s.context = context
-	var err error
-	if s.decoder, err = decoder.GetDecoderWithOptions(s.Format, decoder.Option{FieldsExtend: s.FieldsExtend}); err != nil {
-		return 0, err
-	}
 
 	if s.Format == "otlp_logv1" {
 		s.Address += "/v1/logs"
@@ -78,8 +84,14 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		tooLarge(w)
 		return
 	}
-
-	data, statusCode, err := s.decoder.ParseRequest(w, r, s.MaxBodySize)
+	var data []byte
+	var statusCode int
+	var err error
+	if s.decoder != nil {
+		data, statusCode, err = s.decoder.ParseRequest(w, r, s.MaxBodySize)
+	} else {
+		data, statusCode, err = s.decoderV2.ParseRequest(w, r, s.MaxBodySize)
+	}
 
 	switch statusCode {
 	case http.StatusBadRequest:
@@ -96,15 +108,30 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		logger.Warning(s.context.GetRuntimeContext(), "READ_BODY_FAIL_ALARM", "read body failed", err, "request", r.URL.String())
 		return
 	}
-	logs, err := s.decoder.Decode(data, r)
-	if err != nil {
-		logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
-		badRequest(w)
-		return
+
+	if s.decoder != nil {
+		logs, err := s.decoder.Decode(data, r)
+		if err != nil {
+			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
+			badRequest(w)
+			return
+		}
+		for _, log := range logs {
+			s.collector.AddRawLog(log)
+		}
+	} else {
+		grouEvents, err := s.decoderV2.DecodeV2(data, r)
+		if err != nil {
+			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
+			badRequest(w)
+			return
+		}
+		if reqParams := s.extractRequestParams(r); len(reqParams) != 0 {
+			grouEvents.Group.Metadata.Merge(models.NewMetadataWithMap(reqParams))
+		}
+		s.collectorV2.Collect(grouEvents.Group, grouEvents.Events...)
 	}
-	for _, log := range logs {
-		s.collector.AddRawLog(log)
-	}
+
 	if s.Format == "sls" {
 		w.Header().Set("x-log-requestid", "1234567890abcde")
 		w.WriteHeader(http.StatusOK)
@@ -140,6 +167,25 @@ func badRequest(res http.ResponseWriter) {
 // Start starts the ServiceInput's service, whatever that may be
 func (s *ServiceHTTP) Start(c ilogtail.Collector) error {
 	s.collector = c
+	var err error
+	if s.decoder, err = decoder.GetDecoderWithOptions(s.Format, decoder.Option{FieldsExtend: s.FieldsExtend}); err != nil {
+		return err
+	}
+	return s.start()
+}
+
+// StartService start the ServiceInput's service by plugin runner v2
+func (s *ServiceHTTP) StartService(context ilogtail.PipelineContext) error {
+	s.collectorV2 = context.Collector()
+	var err error
+	if s.decoderV2, err = decoder.GetDecoderV2(s.Format); err != nil {
+		return err
+	}
+
+	return s.start()
+}
+
+func (s *ServiceHTTP) start() error {
 	s.wg.Add(1)
 
 	server := &http.Server{
@@ -182,6 +228,31 @@ func (s *ServiceHTTP) Start(c ilogtail.Collector) error {
 		s.wg.Done()
 	}()
 	return nil
+}
+
+func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string {
+	keyValues := map[string]string{}
+	for _, key := range s.QueryParams {
+		value := req.FormValue(key)
+		if len(value) == 0 {
+			continue
+		}
+		builder := strings.Builder{}
+		builder.WriteString(s.QueryParamPrefix)
+		builder.WriteString(key)
+		keyValues[builder.String()] = value
+	}
+	for _, key := range s.HeaderParams {
+		value := req.Header.Get(key)
+		if len(value) == 0 {
+			continue
+		}
+		builder := strings.Builder{}
+		builder.WriteString(s.HeaderParamPrefix)
+		builder.WriteString(key)
+		keyValues[builder.String()] = value
+	}
+	return keyValues
 }
 
 // Stop stops the services and closes any necessary channels and connections

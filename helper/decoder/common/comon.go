@@ -34,6 +34,7 @@ const (
 	ProtocolInfluxdb   = "influxdb"
 	ProtocolStatsd     = "statsd"
 	ProtocolOTLPLogV1  = "otlp_logv1"
+	ProtocolRaw        = "raw"
 )
 
 func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) ([]byte, int, error) {
