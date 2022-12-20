@@ -156,8 +156,14 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
                     UpdateRemoteConfig(checkResults, configDetails);
                 }  
             }
+            
+            if (!IsUpdate()) {
+                // DeleteHandlers is used to remove handlers deleted in main thread by
+                // EventDispatcherBase::DumpAllHandlersMeta after new configs are loaded.
+                DeleteHandlers();
+            }
 
-            if (IsUpdate() && GetLocalConfigUpdate()) {
+            if (!IsUpdate() && GetLocalConfigUpdate()) {
                 StartUpdateConfig();
             }
             lastCheckTime = curTime;
@@ -199,8 +205,8 @@ Json::Value& ConfigManager::CheckPluginProcessor(Json::Value& pluginConfigJson, 
         && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())) {
         // patch enable_log_position_meta to split processor if exists ...
         if (rootConfigJson["advanced"] && rootConfigJson["advanced"]["enable_log_position_meta"]) {
-            for (int i = 0; i < pluginConfigJson["processors"].size(); i++) {
-                Json::Value& processorConfigJson = pluginConfigJson["processors"][i];
+            for (size_t i = 0; i < pluginConfigJson["processors"].size(); i++) {
+                Json::Value& processorConfigJson = pluginConfigJson["processors"][int(i)];
                 if (processorConfigJson["type"] == "processor_split_log_string"
                     || processorConfigJson["type"] == "processor_split_log_regex") {
                     if (processorConfigJson["detail"]) {
@@ -209,7 +215,7 @@ Json::Value& ConfigManager::CheckPluginProcessor(Json::Value& pluginConfigJson, 
                     }
                     break;
                 }
-                pluginConfigJson["processors"][i] = processorConfigJson;
+                pluginConfigJson["processors"][int(i)] = processorConfigJson;
             }
         }
     }

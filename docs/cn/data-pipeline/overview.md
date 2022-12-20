@@ -28,7 +28,9 @@
 | -------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------ |
 | `processor_add_fields`<br>添加字段                 | SLS官方                                             | 添加字段。                                       |
 | `processor_default`<br>原始数据                    | SLS官方                                             | 不对数据任何操作，只是简单的数据透传。           |
+| `processor_desensitize`<br>数据脱敏                    | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 对敏感数据进行脱敏处理。           |
 | `processor_drop`<br>丢弃字段                       | SLS官方                                             | 丢弃字段。                                       |
+| `processor_encrypt`<br>字段加密                   | SLS官方                                               | 加密字段                                  |
 | `processor_fields_with_conditions`<br>条件字段处理 | 社区<br>[`pj1987111`](https://github.com/pj1987111) | 根据日志部分字段的取值，动态进行字段扩展或删除。 |
 | `processor_filter_regex`<br>日志过滤               | SLS官方                                             | 通过正则匹配过滤日志。                           |
 | `processor_grok`<br>Grok                          | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 通过 Grok 语法对数据进行处理              |
@@ -42,6 +44,10 @@
 
 ## 聚合
 
+| 名称                           | 提供方                                                | 简介                                        |
+|-------------------------------|------------------------------------------------------|---------------------------------------------|
+| `aggregator_content_value_group`            | 社区<br>[`snakorse`](https://github.com/snakorse)     | 按照指定的Key对采集到的数据进行分组聚合           |
+
 ## 输出
 
 | 名称                           | 提供方                                                 | 简介                                        |
@@ -51,6 +57,7 @@
 | `flusher_sls`<br>SLS         | SLS官方                                               | 将采集到的数据输出到SLS。                            |
 | `flusher_stdout`<br>标准输出/文件  | SLS官方                                               | 将采集到的数据输出到标准输出或文件。                        |
 | `flusher_otlp_log`<br>OTLP日志 | 社区<br>[`liuhaoyang`](https://github.com/liuhaoyang) | 将采集到的数据支持`Opentelemetry log protocol`的后端。 |
+| `flusher_http`<br>HTTP       | 社区<br>[`snakorse`](https://github.com/snakorse)     | 将采集到的数据以http方式输出到指定的后端。      |
 
 ## 加速
 

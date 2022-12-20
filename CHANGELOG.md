@@ -35,9 +35,3 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
-
-- [public] [both] [added] service_http_server support OTLP log input.
-- [public] [both] [added] add a new flusher_otlp_log plugin.
-- [public] [both] [added] add a new flusher_kafka_v2 plugin.
-- [public] [linux] [fixed] strip binaries to reduce dist size.
-- [public] [linux] [updated] polish ebpf data structure
