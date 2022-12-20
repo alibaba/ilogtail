@@ -2,16 +2,18 @@ package pprof
 
 import (
 	"context"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
 	"github.com/pyroscope-io/pyroscope/pkg/convert/pprof"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
-	"time"
 )
 
 func readPprofFixture(path string) (*tree.Profile, error) {

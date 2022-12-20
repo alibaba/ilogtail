@@ -69,6 +69,7 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 
 ## BSD licenses
 
+- [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
 - [github.com/magiconair/properties](https://pkg.go.dev/github.com/magiconair/properties?tab=licenses)
 - [github.com/pkg/errors](https://pkg.go.dev/github.com/pkg/errors?tab=licenses)
 - [github.com/russross/blackfriday](https://pkg.go.dev/github.com/russross/blackfriday?tab=licenses)
@@ -83,7 +84,6 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [golang.org/x/text](https://pkg.go.dev/golang.org/x/text?tab=licenses)
 - [google.golang.org/protobuf](https://pkg.go.dev/google.golang.org/protobuf?tab=licenses)
 - [github.com/godbus/dbus](https://pkg.go.dev/github.com/godbus/dbus?tab=licenses)
-- [github.com/google/go-cmp](https://pkg.go.dev/github.com/google/go-cmp?tab=licenses)
 - [github.com/miekg/pkcs11](https://pkg.go.dev/github.com/miekg/pkcs11?tab=licenses)
 - [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto?tab=licenses)
 - [golang.org/x/oauth2](https://pkg.go.dev/golang.org/x/oauth2?tab=licenses)
