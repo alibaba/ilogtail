@@ -350,7 +350,10 @@ func (*FlusherKafka) SetUrgent(flag bool) {
 
 // IsReady is ready to flush
 func (k *FlusherKafka) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
-	return k.producer != nil
+	if k.producer != nil {
+		return true
+	}
+	return false
 }
 
 // Stop ...
