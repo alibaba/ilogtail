@@ -97,7 +97,7 @@ func TestInputProcess_Collect(t *testing.T) {
 			cxt := mock.NewEmptyContext("project", "store", "config")
 			p := ilogtail.MetricInputs["metric_process_v2"]().(*InputProcess)
 			// exclude the systemd proc
-			p.ProcessNamesRegex = []string{"^([^s]|s[^y]|sy[^s]).*$"}
+			p.ProcessNamesRegex = []string{"^([^s]|s[^y]|sy[^s]|sys[^t]|syst[^e]|syste[^m]|system[^d])+$"}
 			if _, err := p.Init(cxt); err != nil {
 				t.Errorf("cannot init the mock process plugin: %v", err)
 				return
