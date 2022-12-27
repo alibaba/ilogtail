@@ -1,6 +1,6 @@
 # 日志
 
-完整的iLogtail由`C++`开发的主程序及`Golang`开发的插件组成，因此iLogtail的运行日志也有两部分组成。
+完整的iLogtail由`C++`开发的主程序及`Golang`开发的插件组成，因此iLogtail的运行日志也由两部分组成。
 
 ## iLogtail主程序日志
 
