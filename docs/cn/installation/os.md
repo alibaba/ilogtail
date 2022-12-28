@@ -5,7 +5,7 @@ iLogtail支持以下操作系统和架构。
 |          |                                       |         |
 | -------- | ------------------------------------- | ------- |
 | **操作系统** | **发行版**                               | **架构**  |
-| Linux    | Aliyun Linux 2                        | x86\_64 |
+| Linux    | Alibaba Cloud Linux 2                        | x86\_64 |
 |          | RedHat Enterprise 6、7、8               | x86\_64 |
 |          | CentOS 6、7、8                          | x86\_64 |
 |          | CentOS Stream 8                       | x86\_64 |
