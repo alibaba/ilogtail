@@ -82,7 +82,7 @@ func (r *metricReader) readSortedLabels() ([]metricLabel, error) {
 	for i, v := range segments {
 		idx := strings.Index(v, "#$#")
 		if idx < 0 {
-			return nil, fmt.Errorf("failed to peek label key")
+			return nil, fmt.Errorf("failed to peek label key: %s", r.labels)
 		}
 		labels[i] = metricLabel{key: v[:idx], value: v[idx+3:]}
 	}
