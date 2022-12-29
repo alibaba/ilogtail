@@ -20,6 +20,7 @@ import (
 	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -27,6 +28,7 @@ const (
 	ProtocolCustomSingle = "custom_single"
 	ProtocolOtlpLogV1    = "otlp_log_v1"
 	ProtocolInfluxdb     = "influxdb"
+	ProtocolRaw          = "raw"
 )
 
 const (
@@ -40,6 +42,9 @@ const (
 	tagPrefix           = "__tag__:"
 	targetContentPrefix = "content."
 	targetTagPrefix     = "tag."
+
+	targetGroupMetadataPrefix = "metadata."
+	targetGroupTagsPrefix     = "tags."
 )
 
 const (
@@ -101,6 +106,9 @@ var supportedEncodingMap = map[string]map[string]bool{
 	ProtocolInfluxdb: {
 		EncodingCustom: true,
 	},
+	ProtocolRaw: {
+		EncodingCustom: true,
+	},
 }
 
 type Converter struct {
@@ -153,6 +161,15 @@ func (c *Converter) ToByteStreamWithSelectedFields(logGroup *protocol.LogGroup, 
 		return c.ConvertToSingleProtocolStream(logGroup, targetFields)
 	case ProtocolInfluxdb:
 		return c.ConvertToInfluxdbProtocolStream(logGroup, targetFields)
+	default:
+		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
+	}
+}
+
+func (c *Converter) ToByteStreamWithSelectedFieldsV2(groupEvents *models.PipelineGroupEvents, targetFields []string) (stream interface{}, values []map[string]string, err error) {
+	switch c.Protocol {
+	case ProtocolRaw:
+		return c.ConvertToRawStream(groupEvents, targetFields)
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
 	}

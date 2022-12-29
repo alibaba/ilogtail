@@ -16,10 +16,11 @@ package metadatagroup
 
 import (
 	"fmt"
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"strings"
 	"sync"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/models"
 )
 
 const (
@@ -29,7 +30,6 @@ const (
 )
 
 type metadataGroup struct {
-	//defaultPipeGroupEvents *models.PipelineGroupEvents
 	Group  *models.GroupInfo
 	Events []models.PipelineEvent
 
@@ -47,15 +47,15 @@ func (g *metadataGroup) Record(group *models.PipelineGroupEvents, ctx ilogtail.P
 	eventsLen := len(group.Events)
 	bytesLen := g.evaluateByteLength(group.Events)
 
-	//When current events is full, make a quick flush.
+	// when current events is full, make a quick flush.
 	if g.nowEventsLength+eventsLen > g.MaxEventsLength || g.nowEventsByteLength+bytesLen > g.MaxEventsByteLength {
 		ctx.Collector().Collect(g.Group, g.Events...)
 
-		//reset length
+		// reset length
 		g.Reset()
 	}
 
-	//add events
+	// add events
 	g.nowEventsLength += eventsLen
 	g.nowEventsByteLength += bytesLen
 	g.Events = append(g.Events, group.Events...)
@@ -70,7 +70,7 @@ func (g *metadataGroup) GetResult(ctx ilogtail.PipelineContext) error {
 	}
 
 	eventsToFlush := g.Events
-	//reset
+	// reset
 	g.Reset()
 	g.Lock.Unlock()
 
@@ -97,15 +97,6 @@ func (g *metadataGroup) evaluateByteLength(events []models.PipelineEvent) int {
 		length += len(byteArray)
 	}
 	return length
-}
-
-func NewMetadataGroup(meta models.Metadata, maxEventsLength, maxBytesLength int) *metadataGroup {
-	return &metadataGroup{
-		Group:               &models.GroupInfo{Metadata: meta},
-		MaxEventsLength:     maxEventsLength,
-		MaxEventsByteLength: maxBytesLength,
-		Lock:                &sync.Mutex{},
-	}
 }
 
 type AggregatorMetadataGroup struct {
@@ -139,7 +130,6 @@ func (g *AggregatorMetadataGroup) Reset() {
 		metaGroup.Reset()
 		return true
 	})
-	return
 }
 
 func (g *AggregatorMetadataGroup) Record(event *models.PipelineGroupEvents, ctx ilogtail.PipelineContext) error {
@@ -149,10 +139,7 @@ func (g *AggregatorMetadataGroup) Record(event *models.PipelineGroupEvents, ctx 
 func (g *AggregatorMetadataGroup) GetResult(ctx ilogtail.PipelineContext) error {
 	g.groupAgg.Range(func(key, value any) bool {
 		metaGroup := value.(*metadataGroup)
-		if err := metaGroup.GetResult(ctx); err != nil {
-			return false
-		}
-		return true
+		return metaGroup.GetResult(ctx) == nil
 	})
 	return nil
 }
@@ -161,7 +148,13 @@ func (g *AggregatorMetadataGroup) getOrCreateMetadataGroup(event *models.Pipelin
 	aggKey, metadata := g.buildGroupKey(event)
 	group, ok := g.groupAgg.Load(aggKey)
 	if !ok {
-		group, _ = g.groupAgg.LoadOrStore(aggKey, NewMetadataGroup(metadata, g.GroupMaxEventLength, g.GroupMaxByteLength))
+		newGroup := &metadataGroup{
+			Group:               &models.GroupInfo{Metadata: metadata},
+			MaxEventsLength:     g.GroupMaxEventLength,
+			MaxEventsByteLength: g.GroupMaxByteLength,
+			Lock:                &sync.Mutex{},
+		}
+		group, _ = g.groupAgg.LoadOrStore(aggKey, newGroup)
 	}
 	return group.(*metadataGroup)
 }

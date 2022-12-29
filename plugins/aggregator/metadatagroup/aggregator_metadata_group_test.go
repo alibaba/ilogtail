@@ -15,11 +15,12 @@
 package metadatagroup
 
 import (
-	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/models"
 )
 
 const (
@@ -96,7 +97,7 @@ func TestMetadataGroupAggregatorRecord(t *testing.T) {
 			result := ctx.Collector().ToArray()
 			So(len(result), ShouldEqual, 0)
 
-			groupEvent = generateByteArrayEvents(5, map[string]string{"a": "1", "b": "1", "c": "3"})
+			groupEvent = generateByteArrayEvents(4, map[string]string{"a": "1", "b": "1", "c": "3"})
 			for _, group := range groupEvent {
 				err := agg.Record(group, ctx)
 				So(err, ShouldBeNil)
