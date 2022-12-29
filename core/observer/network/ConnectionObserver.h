@@ -22,13 +22,15 @@
 #include <network/protocols/http/parser.h>
 #include <network/protocols/mysql/parser.h>
 #include <network/protocols/redis/parser.h>
+#include <network/protocols/dubbo2/parser.h>
+#include "network/protocols/kafka/parser.h"
 #include <ostream>
 #include "NetworkConfig.h"
 #include "network/protocols/pgsql/parser.h"
 #include "interface/statistics.h"
 
 #define OBSERVER_PROTOCOL_GARBAGE(protocolType) \
-    { \
+    do { \
         protocolType##ProtocolParser* parser = (protocolType##ProtocolParser*)mProtocolParser; \
         auto success = parser->GarbageCollection(size_limit_bytes, nowTimeNs); \
         if (!success && BOOL_FLAG(sls_observer_network_protocol_stat)) { \
@@ -36,9 +38,9 @@
             sStatistic->m##protocolType##ConnectionCachedSize += parser->GetCacheSize(); \
         } \
         return success; \
-    }
+    } while (0)
 #define OBSERVER_PROTOCOL_ON_DATA(protocolType) \
-    { \
+    do { \
         if (mProtocolParser == NULL) { \
             mProtocolParser \
                 = protocolType##ProtocolParser::Create(mAllAggregators.Get##protocolType##Aggregator(), header); \
@@ -53,7 +55,7 @@
         if (rst == ParseResult_Drop) { \
             ++sStatistic->m##protocolType##DropCount; \
         } \
-    }
+    } while (0)
 namespace logtail {
 
 class ConnectionObserver {
@@ -87,6 +89,12 @@ public:
                 break;
             case ProtocolType_PgSQL:
                 PgSQLProtocolParser::Delete((PgSQLProtocolParser*)mProtocolParser);
+                break;
+            case ProtocolType_Dubbo:
+                DubboProtocolParser::Delete((DubboProtocolParser*)mProtocolParser);
+                break;
+            case ProtocolType_Kafka:
+                KafkaProtocolParser::Delete((KafkaProtocolParser*)mProtocolParser);
                 break;
             default:
                 break;
@@ -124,6 +132,12 @@ public:
             case ProtocolType_PgSQL:
                 OBSERVER_PROTOCOL_ON_DATA(PgSQL);
                 break;
+            case ProtocolType_Dubbo:
+                OBSERVER_PROTOCOL_ON_DATA(Dubbo);
+                break;
+            case ProtocolType_Kafka:
+                OBSERVER_PROTOCOL_ON_DATA(Kafka);
+                break;
             default:
                 break;
         }
@@ -153,15 +167,20 @@ public:
                 break;
             case ProtocolType_DNS:
                 OBSERVER_PROTOCOL_GARBAGE(DNS);
-                break;
             case ProtocolType_MySQL:
-                OBSERVER_PROTOCOL_GARBAGE(MySQL);
                 break;
+                OBSERVER_PROTOCOL_GARBAGE(MySQL);
             case ProtocolType_Redis:
                 OBSERVER_PROTOCOL_GARBAGE(Redis);
                 break;
             case ProtocolType_PgSQL:
                 OBSERVER_PROTOCOL_GARBAGE(PgSQL);
+                break;
+            case ProtocolType_Dubbo:
+                OBSERVER_PROTOCOL_GARBAGE(Dubbo);
+                break;
+            case ProtocolType_Kafka:
+                OBSERVER_PROTOCOL_GARBAGE(Kafka);
                 break;
             default:
                 break;
@@ -183,6 +202,7 @@ protected:
     friend class ProtocolMySqlUnittest;
     friend class ProtocolRedisUnittest;
     friend class ProtocolPgSqlUnittest;
+    friend class ProtocolKafkaUnittest;
 };
 
 } // namespace logtail

@@ -150,6 +150,8 @@ private:
     friend class ProtocolMySqlUnittest;
     friend class ProtocolRedisUnittest;
     friend class ProtocolPgSqlUnittest;
+    friend class ProtocolDubboUnittest;
+    friend class ProtocolKafkaUnittest;
 };
 
 } // namespace logtail

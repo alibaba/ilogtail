@@ -24,6 +24,7 @@
 #include "metas/ServiceMetaCache.h"
 #include "Logger.h"
 #include <unordered_map>
+#include <queue>
 #include <ostream>
 
 namespace logtail {
@@ -147,6 +148,7 @@ public:
     explicit CommonProtocolEventAggItemManager(size_t maxCount = 128) : mMaxCount(maxCount) {}
 
     ~CommonProtocolEventAggItemManager() {
+        std::cout << "de CommonProtocolEventAggItemManager" << std::endl;
         for (auto iter = mUnUsed.begin(); iter != mUnUsed.end(); ++iter) {
             delete *iter;
         }
@@ -156,17 +158,14 @@ public:
      * Create an new object or reuse the cached object.
      * @return an protocol metrics event aggregate node.
      */
-    template <typename ProtocolEventKey>
-    ProtocolEventAggItem* Create(ProtocolEventKey&& event) {
+    ProtocolEventAggItem* Create() {
         ProtocolEventAggItem* item;
         if (mUnUsed.empty()) {
             item = new ProtocolEventAggItem();
-            item->Key = std::move(event);
             return item;
         }
         item = mUnUsed.back();
         item->Clear();
-        item->Key = std::move(event);
         mUnUsed.pop_back();
         return item;
     }
@@ -186,6 +185,7 @@ public:
 private:
     size_t mMaxCount;
     std::deque<ProtocolEventAggItem*> mUnUsed;
+    friend class ProtocolUtilUnittest;
 };
 
 // 通用的协议的聚类器实现
@@ -215,7 +215,8 @@ public:
                 }
                 return false;
             }
-            auto item = mAggItemManager.Create(std::move(event.Key));
+            auto item = mAggItemManager.Create();
+            item->Key = std::move(event.Key);
             findRst = mProtocolEventAggMap.insert(std::make_pair(hashVal, item)).first;
         }
         findRst->second->AddEventInfo(event.Info);
@@ -259,6 +260,135 @@ private:
     uint32_t mClientAggMaxSize;
     uint32_t mServerAggMaxSize;
 };
+/**
+ * CommonMapCache is designed for the protocols having unique ID, such as dubbo2 or dns.
+ * @tparam reqType
+ * @tparam respType
+ * @tparam aggregatorType
+ * @tparam eventType
+ * @tparam capacity
+ */
+template <typename reqType,
+          typename respType,
+          typename uniqueKey,
+          typename aggregatorType,
+          typename eventType,
+          std::size_t capacity>
+class CommonMapCache {
+    using reqManager = CommonProtocolEventAggItemManager<reqType>;
+    using respManager = CommonProtocolEventAggItemManager<respType>;
+
+public:
+    explicit CommonMapCache(aggregatorType* aggregators)
+        : mReqManager(capacity), mRespManager(capacity), mAggregators(aggregators) {}
+    ~CommonMapCache() {
+        for (auto iter = mRequests.begin(); iter != mRequests.end();) {
+            mReqManager.Delete(iter->second);
+            iter = mRequests.erase(iter);
+        }
+        for (auto iter = mResponses.begin(); iter != mResponses.end();) {
+            mRespManager.Delete(iter->second);
+            iter = mResponses.erase(iter);
+        }
+    }
+    CommonMapCache(const CommonMapCache&) = delete;
+    CommonMapCache& operator=(const CommonMapCache&) = delete;
+
+    bool GarbageCollection(uint64_t expireTimeNs) {
+        for (auto iter = mRequests.begin(); iter != mRequests.end();) {
+            if (iter->second->TimeNano > expireTimeNs) {
+                break;
+            }
+            mReqManager.Delete(iter->second);
+            iter = mRequests.erase(iter);
+        }
+        for (auto iter = mResponses.begin(); iter != mResponses.end();) {
+            if (iter->second->TimeNano > expireTimeNs) {
+                break;
+            }
+            mRespManager.Delete(iter->second);
+            iter = mResponses.erase(iter);
+        }
+        return mRequests.empty() && mResponses.empty();
+    }
+
+    bool InsertReq(const uniqueKey& key, std::function<void(reqType* req)> configFunc) {
+        auto iter = mResponses.find(key);
+        if (iter == mResponses.end()) {
+            if (mRequests.size() >= capacity * 4) {
+                LOG_DEBUG(sLogger, ("cannot append any request to map cache", key));
+                return false;
+            }
+            reqType* req = mReqManager.Create();
+            configFunc(req);
+            mRequests.insert(std::make_pair(key, req));
+            return true;
+        }
+        eventType event;
+        bool success = true;
+        reqType req;
+        configFunc(&req);
+        if (this->mConvertEventFunc != nullptr && this->mConvertEventFunc(&req, iter->second, event)) {
+            LOG_TRACE(sLogger, ("sticker unique ID", key));
+            success = this->mAggregators->AddEvent(std::move(event));
+        }
+        mResponses.erase(iter);
+        mRespManager.Delete(iter->second);
+        return success;
+    }
+
+    bool InsertResp(const uniqueKey& key, std::function<void(respType* resp)> configFunc) {
+        auto iter = mRequests.find(key);
+        if (iter == mRequests.end()) {
+            if (mResponses.size() >= capacity * 4) {
+                LOG_DEBUG(sLogger, ("cannot append any response to map cache", key));
+                return false;
+            }
+            respType* resp = mRespManager.Create();
+            configFunc(resp);
+            mResponses.insert(std::make_pair(key, resp));
+            return true;
+        }
+        eventType event;
+        bool success = true;
+        respType resp;
+        configFunc(&resp);
+        if (this->mConvertEventFunc != nullptr && this->mConvertEventFunc(iter->second, &resp, event)) {
+            LOG_TRACE(sLogger, ("sticker unique ID", key));
+            success = this->mAggregators->AddEvent(std::move(event));
+        }
+        mRequests.erase(iter);
+        mReqManager.Delete(iter->second);
+        return success;
+    }
+
+
+    reqType* FindReq(uniqueKey id) {
+        auto iter = this->mRequests.find(id);
+        if (iter == mRequests.end()) {
+            return NULL;
+        }
+        return iter->second;
+    }
+
+    void BindConvertFunc(std::function<bool(reqType* req, respType* resp, eventType&)> func) {
+        this->mConvertEventFunc = func;
+    }
+
+    size_t GetRequestsSize() { return mRequests.size(); }
+
+    size_t GetResponsesSize() { return mResponses.size(); }
+
+private:
+    std::unordered_map<uniqueKey, reqType*> mRequests;
+    std::unordered_map<uniqueKey, respType*> mResponses;
+    reqManager mReqManager;
+    respManager mRespManager;
+    aggregatorType* mAggregators;
+    std::function<bool(reqType* req, respType* resp, eventType&)> mConvertEventFunc;
+    friend class ProtocolUtilUnittest;
+};
+
 
 /**
  * For many protocols, they don't have an ID to bind the request and the response, such as mysql.
@@ -281,6 +411,8 @@ public:
             delete mResponses[i];
         }
     }
+    CommonCache(const CommonCache&) = delete;
+    CommonCache& operator=(const CommonCache&) = delete;
 
     // Only add event fail returns false;
     bool InsertReq(std::function<void(reqType* req)> configFunc) {

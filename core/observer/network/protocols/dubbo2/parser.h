@@ -18,81 +18,97 @@
 
 #include <map>
 #include <ostream>
-#include "network/protocols/http/type.h"
+#include "type.h"
 #include "observer/interface/network.h"
-#include "inner_parser.h"
 
 namespace logtail {
 
-struct HTTPRequestInfo {
-    uint64_t TimeNano;
-    std::string Method;
-    std::string URL;
-    std::string Version;
-    std::string Host;
+struct DubboRequestInfo {
     int32_t ReqBytes;
+    uint64_t TimeNano;
+    std::string Version;
+    std::string ServiceVersion;
+    std::string Method;
+    std::string Service;
 
-    friend std::ostream& operator<<(std::ostream& os, const HTTPRequestInfo& info) {
-        os << "TimeNano: " << info.TimeNano << " Method: " << info.Method << " URL: " << info.URL
-           << " Version: " << info.Version << " Host: " << info.Host << " ReqBytes: " << info.ReqBytes;
+    friend std::ostream& operator<<(std::ostream& os, const DubboRequestInfo& info) {
+        os << "TimeNano: " << info.TimeNano << " Version: " << info.Version
+           << " ServiceVersion: " << info.ServiceVersion << " Method: " << info.Method << " Service: " << info.Service
+           << " ReqBytes: " << info.ReqBytes;
         return os;
     }
 
-    std::string ToString() {
+    std::string ToString() const {
         std::stringstream ss;
         ss << *this;
         return ss.str();
     }
+
+    void Clear() {
+        TimeNano = 0;
+        Version.clear();
+        ServiceVersion.clear();
+        Method.clear();
+        Service.clear();
+        ReqBytes = 0;
+    }
 };
-struct HTTPResponseInfo {
-    uint64_t TimeNano;
+struct DubboResponseInfo {
     int16_t RespCode;
     int32_t RespBytes;
+    uint64_t TimeNano;
 
-    friend std::ostream& operator<<(std::ostream& os, const HTTPResponseInfo& info) {
+    friend std::ostream& operator<<(std::ostream& os, const DubboResponseInfo& info) {
         os << "TimeNano: " << info.TimeNano << " RespCode: " << info.RespCode << " RespBytes: " << info.RespBytes;
         return os;
     }
-    std::string ToString() {
+    std::string ToString() const {
         std::stringstream ss;
         ss << *this;
         return ss.str();
     }
+    void Clear() {
+        RespCode = 0;
+        RespBytes = 0;
+        TimeNano = 0;
+    }
 };
 
-typedef CommonCache<HTTPRequestInfo, HTTPResponseInfo, HTTPProtocolEventAggregator, HTTPProtocolEvent, 4> HttpCache;
 
-
-// 协议解析器，流式解析，解析到某个协议后，自动放到aggregator中聚合
-class HTTPProtocolParser {
+using DubboCache = CommonMapCache<DubboRequestInfo,
+                                  DubboResponseInfo,
+                                  uint64_t,
+                                  DubboProtocolEventAggregator,
+                                  DubboProtocolEvent,
+                                  4>;
+class DubboProtocolParser {
 public:
-    explicit HTTPProtocolParser(HTTPProtocolEventAggregator* aggregator, PacketEventHeader* header)
+    explicit DubboProtocolParser(DubboProtocolEventAggregator* aggregator, PacketEventHeader* header)
         : mCache(aggregator), mKey(header) {
         mCache.BindConvertFunc(
-            [&](HTTPRequestInfo* requestInfo, HTTPResponseInfo* responseInfo, HTTPProtocolEvent& event) -> bool {
-                event.Info.LatencyNs = responseInfo->TimeNano - requestInfo->TimeNano;
+            [&](DubboRequestInfo* requestInfo, DubboResponseInfo* responseInfo, DubboProtocolEvent& event) -> bool {
+                event.Info.LatencyNs = int64_t(responseInfo->TimeNano - requestInfo->TimeNano);
                 if (event.Info.LatencyNs < 0) {
                     event.Info.LatencyNs = 0;
                 }
                 event.Info.ReqBytes = requestInfo->ReqBytes;
                 event.Info.RespBytes = responseInfo->RespBytes;
-                event.Key.ReqType = std::move(requestInfo->Method);
-                event.Key.ReqDomain = std::move(requestInfo->Host);
-                event.Key.ReqResource = std::move(requestInfo->URL);
                 event.Key.Version = std::move(requestInfo->Version);
+                event.Key.ReqDomain = std::move(requestInfo->Service);
+                event.Key.ReqResource = std::move(requestInfo->Method);
                 event.Key.RespCode = responseInfo->RespCode;
+                event.Key.ReqType = "rpc";
                 event.Key.ConnKey = mKey;
                 return true;
             });
     }
 
-    static HTTPProtocolParser* Create(HTTPProtocolEventAggregator* aggregator, PacketEventHeader* header) {
-        return new HTTPProtocolParser(aggregator, header);
+    static DubboProtocolParser* Create(DubboProtocolEventAggregator* aggregator, PacketEventHeader* header) {
+        return new DubboProtocolParser(aggregator, header);
     }
 
-    static void Delete(HTTPProtocolParser* parser) { delete parser; }
+    static void Delete(DubboProtocolParser* parser) { delete parser; }
 
-    // Packet到达的时候会Call，所有参数都会告诉类型（PacketType，MessageType）
     ParseResult OnPacket(PacketType pktType,
                          MessageType msgType,
                          PacketEventHeader* header,
@@ -100,18 +116,13 @@ public:
                          int32_t pktSize,
                          int32_t pktRealSize);
 
-    // GC，把内部没有完成Event匹配的消息按照SizeLimit和TimeOut进行清理
-    // 返回值，如果是true代表还有数据，false代表无数据
     bool GarbageCollection(size_t size_limit_bytes, uint64_t expireTimeNs);
 
     int32_t GetCacheSize();
 
+
 private:
-    HttpCache mCache;
+    DubboCache mCache;
     CommonAggKey mKey;
-
-    friend class ProtocolHttpUnittest;
 };
-
-
 } // end of namespace logtail

@@ -242,6 +242,15 @@ public:
         this->currPostion += step;
     }
 
+    void positionBack(uint64_t step) {
+        if (this->currPostion - step < 0) {
+            this->setParseFail("unexcepted eof");
+            return;
+        }
+        this->currPostion -= step;
+    }
+
+
     bool isNextEof() {
         if (this->currPostion + 1 >= this->pktSize) {
             return true;
@@ -249,6 +258,40 @@ public:
             return false;
         }
     }
+    template <uint8_t Len>
+    int64_t readVarintCore(bool commit = true) {
+        static const uint8_t kFirstMask = 0x80;
+        static const uint8_t kLastMask = 0x7f;
+        static const uint8_t kLen = 7;
+        int64_t value = 0;
+        uint32_t offset = 0;
+        for (int i = 0; i < Len; i += kLen) {
+            uint8_t b = readUint8(true);
+            ++offset;
+            if (!this->OK()) {
+                this->positionBack(offset);
+                return -1;
+            }
+            if (!(b & kFirstMask)) {
+                value |= b << i;
+                if (!commit) {
+                    this->positionBack(offset);
+                }
+                return value;
+            }
+            value |= ((b & kLastMask) << i);
+        }
+        this->positionBack(offset);
+        return -1;
+    }
+
+    int64_t readVarInt32(bool commit = true) { return readVarintCore<35>(commit); }
+
+    int64_t readVarInt64(bool commit = true) { return readVarintCore<64>(commit); }
+
+    const char* head() { return this->payload + this->currPostion; }
+
+    uint32_t getPosition() { return currPostion; }
 
     int32_t getLeftSize() { return pktSize - this->currPostion; }
 

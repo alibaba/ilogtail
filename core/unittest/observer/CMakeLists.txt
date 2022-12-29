@@ -24,12 +24,16 @@ add_executable(protocol_http_unittest ProtocolHttpUnittest.cpp)
 add_executable(protocol_redis_unittest ProtocolRedisUnittest.cpp)
 add_executable(protocol_pgsql_unittest ProtocolPgsqlUnittest.cpp)
 add_executable(protocol_mysql_unittest ProtocolMySqlUnittest.cpp)
+add_executable(protocol_dubbo_unittest ProtocolDubboUnittest.cpp)
+add_executable(protocol_kafka_unittest ProtocolKafkaUnittest.cpp)
 
 target_link_libraries(protocol_dns_unittest unittest_base)
 target_link_libraries(protocol_http_unittest unittest_base)
 target_link_libraries(protocol_redis_unittest unittest_base)
 target_link_libraries(protocol_pgsql_unittest unittest_base)
 target_link_libraries(protocol_mysql_unittest unittest_base)
+target_link_libraries(protocol_dubbo_unittest unittest_base)
+target_link_libraries(protocol_kafka_unittest unittest_base)
 
 # cgoutp meta unittest
 add_executable(cgroup_meta_unittest CGoupMetaUnittest.cpp)

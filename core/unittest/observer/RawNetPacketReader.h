@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <utility>
 #include <vector>
 #include <string>
 #include "observer/network/NetworkObserver.h"
@@ -35,25 +36,40 @@ private:
     bool mIsServer;
     ProtocolType mProtocolType;
     std::vector<std::string> rawHexs;
+    uint16_t mLocalPort{0};
 
 public:
     RawNetPacketReader(std::string mLocalAddress,
                        bool mIsServer,
                        ProtocolType mProtocolType,
                        std::vector<std::string> rawHexs)
-        : mLocalAddress(mLocalAddress), mIsServer(mIsServer), mProtocolType(mProtocolType), rawHexs(rawHexs) {}
+        : mLocalAddress(std::move(mLocalAddress)),
+          mIsServer(mIsServer),
+          mProtocolType(mProtocolType),
+          rawHexs(std::move(rawHexs)) {}
+
+    RawNetPacketReader(std::string mLocalAddress,
+                       uint16_t mLocalPort,
+                       bool mIsServer,
+                       ProtocolType mProtocolType,
+                       std::vector<std::string> rawHexs)
+        : mLocalAddress(std::move(mLocalAddress)),
+          mIsServer(mIsServer),
+          mProtocolType(mProtocolType),
+          rawHexs(std::move(rawHexs)),
+          mLocalPort(mLocalPort) {}
 
     std::string& GetParseFailMsg() { return parserFailMsg; }
 
     bool OK() { return parseSuccess; }
 
-    void GetAllNetPackets(std::vector<std::string>& packets) {
+    void GetAllNetPackets(std::vector<std::string>& packets, bool local = false) {
         for (auto& rawHex : rawHexs) {
             std::vector<uint8_t> rawData;
             hexstring_to_bin(rawHex, rawData);
             const char* rawPkt = (const char*)rawData.data();
             size_t rawPktSize = rawData.size();
-            parse(rawPkt, rawPktSize, packets);
+            parse(rawPkt, rawPktSize, packets, local);
         }
     }
 
@@ -77,7 +93,7 @@ public:
         data->Buffer = beginData + sizeof(PacketEventHeader) + sizeof(PacketEventData);
 
         // check packet direction
-        if (src == mLocalAddress) {
+        if ((mLocalPort == 0 && src == mLocalAddress) || mLocalPort == srcPort) {
             data->PktType = PacketType_Out;
             if (mIsServer) {
                 data->MsgType = MessageType_Response;
@@ -123,7 +139,7 @@ public:
         pData->Buffer = bData + sizeof(PacketEventHeader) + sizeof(PacketEventData);
     }
 
-    void parse(const char* rawPkt, const size_t rawPktSize, std::vector<std::string>& packets) {
+    void parse(const char* rawPkt, const size_t rawPktSize, std::vector<std::string>& packets, bool local) {
         uint32_t position = 0;
         // read ethernet layer
         if (rawPktSize < 15) { // 以太网+ip的第一个字段
@@ -131,7 +147,7 @@ public:
             parseSuccess = false;
             return;
         }
-        position = 14;
+        position = local ? 4 : 14;
 
         // read ip layer
         uint8_t* ipheader = (uint8_t*)(rawPkt + position);

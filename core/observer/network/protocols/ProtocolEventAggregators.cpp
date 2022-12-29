@@ -38,25 +38,26 @@ void ProtocolEventAggregators::FlushOutMetrics(uint64_t timeNano,
         content->set_value(tag.second);
     }
 
-
     if (mDNSAggregators != nullptr) {
         mDNSAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
-
     if (mHTTPAggregators != nullptr) {
         mHTTPAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
-
     if (mMySQLAggregators != nullptr) {
         mMySQLAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
-
     if (mRedisAggregators != nullptr) {
         mRedisAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
-
     if (mPgSQLAggregators != nullptr) {
         mPgSQLAggregators->FlushLogs(allData, pTags, gTags, interval);
+    }
+    if (mDubboAggregators != nullptr) {
+        mDubboAggregators->FlushLogs(allData, pTags, gTags, interval);
+    }
+    if (mKafkaAggregators != nullptr) {
+        mKafkaAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
 }
 

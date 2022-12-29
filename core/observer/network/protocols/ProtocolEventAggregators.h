@@ -21,6 +21,8 @@
 #include "network/protocols/mysql/type.h"
 #include "network/protocols/redis/type.h"
 #include "network/protocols/pgsql/type.h"
+#include "network/protocols/dubbo2/type.h"
+#include "network/protocols/kafka/type.h"
 #include <unordered_map>
 #include <metas/ProcessMeta.h>
 #include <log_pb/sls_logs.pb.h>
@@ -28,31 +30,27 @@
 
 namespace logtail {
 
+#define DELETE_AGGREGATOR(name) \
+    do { \
+        if (m##name != NULL) { \
+            delete m##name; \
+            m##name = NULL; \
+        } \
+    } while (0)
+
+
 class ProtocolEventAggregators {
 public:
     ProtocolEventAggregators() = default;
 
     ~ProtocolEventAggregators() {
-        if (mDNSAggregators != NULL) {
-            delete mDNSAggregators;
-            mDNSAggregators = NULL;
-        }
-        if (mHTTPAggregators != NULL) {
-            delete mHTTPAggregators;
-            mHTTPAggregators = NULL;
-        }
-        if (mMySQLAggregators != NULL) {
-            delete mMySQLAggregators;
-            mMySQLAggregators = NULL;
-        }
-        if (mRedisAggregators != NULL) {
-            delete mRedisAggregators;
-            mRedisAggregators = NULL;
-        }
-        if (mPgSQLAggregators != NULL) {
-            delete mPgSQLAggregators;
-            mPgSQLAggregators = NULL;
-        }
+        DELETE_AGGREGATOR(DNSAggregators);
+        DELETE_AGGREGATOR(HTTPAggregators);
+        DELETE_AGGREGATOR(MySQLAggregators);
+        DELETE_AGGREGATOR(RedisAggregators);
+        DELETE_AGGREGATOR(PgSQLAggregators);
+        DELETE_AGGREGATOR(DubboAggregators);
+        DELETE_AGGREGATOR(KafkaAggregators);
     }
 
     DNSProtocolEventAggregator* GetDNSAggregator() {
@@ -101,6 +99,24 @@ public:
         return mPgSQLAggregators;
     }
 
+    DubboProtocolEventAggregator* GetDubboAggregator() {
+        if (mDubboAggregators != NULL) {
+            return mDubboAggregators;
+        }
+        auto pair = NetworkConfig::GetProtocolAggSize(ProtocolType_Dubbo);
+        mDubboAggregators = new DubboProtocolEventAggregator(pair.first, pair.second);
+        return mDubboAggregators;
+    }
+
+    KafkaProtocolEventAggregator* GetKafkaAggregator() {
+        if (mKafkaAggregators != NULL) {
+            return mKafkaAggregators;
+        }
+        auto pair = NetworkConfig::GetProtocolAggSize(ProtocolType_Kafka);
+        mKafkaAggregators = new KafkaProtocolEventAggregator(pair.first, pair.second);
+        return mKafkaAggregators;
+    }
+
     const ProcessMetaPtr& GetProcessMeta() const { return mMetaPtr; }
 
     void SetProcessMeta(const ProcessMetaPtr& metaPtr) { mMetaPtr = metaPtr; }
@@ -112,11 +128,13 @@ public:
                          uint64_t interval);
 
 protected:
-    DNSProtocolEventAggregator* mDNSAggregators = NULL;
-    HTTPProtocolEventAggregator* mHTTPAggregators = NULL;
-    MySQLProtocolEventAggregator* mMySQLAggregators = NULL;
-    RedisProtocolEventAggregator* mRedisAggregators = NULL;
-    PgSQLProtocolEventAggregator* mPgSQLAggregators = NULL;
+    DNSProtocolEventAggregator* mDNSAggregators = nullptr;
+    HTTPProtocolEventAggregator* mHTTPAggregators = nullptr;
+    MySQLProtocolEventAggregator* mMySQLAggregators = nullptr;
+    RedisProtocolEventAggregator* mRedisAggregators = nullptr;
+    PgSQLProtocolEventAggregator* mPgSQLAggregators = nullptr;
+    DubboProtocolEventAggregator* mDubboAggregators = nullptr;
+    KafkaProtocolEventAggregator* mKafkaAggregators = nullptr;
     ProcessMetaPtr mMetaPtr;
 };
 
