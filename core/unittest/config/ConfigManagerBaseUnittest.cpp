@@ -173,7 +173,7 @@ public:
 			"project_name" : "test",
 			"regex" : 
 			[
-				"[([^]]+)]\\s(.*)"
+				"\\[([^]]+)]\\s(.*)"
 			],
 			"timeformat" : "",
 			"tz_adjust" : false
@@ -194,7 +194,7 @@ public:
 			"project_name" : "test",
 			"regex" : 
 			[
-				"[([^]]+)]\\s(.*)"
+				"\\[([^]]+)]\\s(.*)"
 			],
 			"timeformat" : "",
 			"tz_adjust" : true
@@ -215,7 +215,7 @@ public:
 			"project_name" : "test",
 			"regex" : 
 			[
-				"[([^]]+)]\\s(.*)"
+				"\\[([^]]+)]\\s(.*)"
 			],
 			"timeformat" : "%Y-%M-%dT%h:%m:%s",
 			"tz_adjust" : true
@@ -229,7 +229,7 @@ public:
 			"log_tz" : "",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "",
+			"time_key": "",
 			"timeformat" : "",
 			"tz_adjust" : false
 		},
@@ -242,7 +242,7 @@ public:
 			"log_tz" : "GMT+08:00",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "",
+			"time_key": "",
 			"timeformat" : "",
 			"tz_adjust" : true
 		},
@@ -255,7 +255,7 @@ public:
 			"log_tz" : "GMT+08:00",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "time",
+			"time_key": "time",
 			"timeformat" : "",
 			"tz_adjust" : true
 		},
@@ -268,7 +268,7 @@ public:
 			"log_tz" : "GMT+08:00",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "",
+			"time_key": "",
 			"timeformat" : "%Y-%M-%dT%h:%m:%s",
 			"tz_adjust" : true
 		},
@@ -281,107 +281,107 @@ public:
 			"log_tz" : "GMT+08:00",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "time",
+			"time_key": "time",
 			"timeformat" : "%Y-%M-%dT%h:%m:%s",
 			"tz_adjust" : true
 		},
         "##1.0##test$delimiter-1" : 
 		{
 			"category" : "test",
-            "column_keys" : 
+			"column_keys" : 
 			[
 				"time",
 				"msg"
 			],
-            "delimiter_quote": "'",
-            "delimiter_separator": " ",
+			"delimiter_quote": "'",
+			"delimiter_separator": " ",
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
 			"log_tz" : "",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "",
+			"time_key": "",
 			"timeformat" : "",
 			"tz_adjust" : false
 		},
         "##1.0##test$delimiter-2" : 
 		{
 			"category" : "test",
-            "column_keys" : 
+			"column_keys" : 
 			[
 				"time",
 				"msg"
 			],
-            "delimiter_quote": "'",
-            "delimiter_separator": " ",
+			"delimiter_quote": "'",
+			"delimiter_separator": " ",
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
 			"log_tz" : "GMT+08:00",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "",
+			"time_key": "",
 			"timeformat" : "",
 			"tz_adjust" : true
 		},
         "##1.0##test$delimiter-3" : 
 		{
 			"category" : "test",
-            "column_keys" : 
+			"column_keys" : 
 			[
 				"time",
 				"msg"
 			],
-            "delimiter_quote": "'",
-            "delimiter_separator": " ",
+			"delimiter_quote": "'",
+			"delimiter_separator": " ",
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
 			"log_tz" : "GMT+08:00",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "time",
+			"time_key": "time",
 			"timeformat" : "",
 			"tz_adjust" : true
 		},
         "##1.0##test$delimiter-4" : 
 		{
 			"category" : "test",
-            "column_keys" : 
+			"column_keys" : 
 			[
 				"time",
 				"msg"
 			],
-            "delimiter_quote": "'",
-            "delimiter_separator": " ",
+			"delimiter_quote": "'",
+			"delimiter_separator": " ",
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
 			"log_tz" : "GMT+08:00",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "",
+			"time_key": "",
 			"timeformat" : "%Y-%M-%dT%h:%m:%s",
 			"tz_adjust" : true
 		},
         "##1.0##test$delimiter-5" : 
 		{
 			"category" : "test",
-            "column_keys" : 
+			"column_keys" : 
 			[
 				"time",
 				"msg"
 			],
-            "delimiter_quote": "'",
-            "delimiter_separator": " ",
+			"delimiter_quote": "'",
+			"delimiter_separator": " ",
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
 			"log_tz" : "GMT+08:00",
 			"max_depth" : 0,
 			"project_name" : "test",
-            "time_key": "time",
+			"time_key": "time",
 			"timeformat" : "%Y-%M-%dT%h:%m:%s",
 			"tz_adjust" : true
 		}
