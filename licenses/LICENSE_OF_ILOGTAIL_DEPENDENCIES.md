@@ -68,6 +68,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/xdg-go/pbkdf2](https://pkg.go.dev/github.com/xdg-go/pbkdf2?tab=licenses)
 - [github.com/xdg-go/scram](https://pkg.go.dev/github.com/xdg-go/scram?tab=licenses)
 - [github.com/xdg-go/stringprep](https://pkg.go.dev/github.com/xdg-go/stringprep?tab=licenses)
+- [github.com/apache/pulsar-client-go/pulsar](https://pkg.go.dev/github.com/apache/pulsar-client-go/pulsar?tab=licenses)
 - [google.golang.org/genproto](https://pkg.go.dev/google.golang.org/genproto?tab=licenses)
 - [google.golang.org/grpc](https://pkg.go.dev/google.golang.org/grpc?tab=licenses)
 - [gopkg.in/square/go-jose.v2](https://pkg.go.dev/gopkg.in/square/go-jose.v2?tab=licenses)
@@ -203,6 +204,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 - [github.com/go-sql-driver/mysql](https://pkg.go.dev/github.com/go-sql-driver/mysql?tab=licenses)
 - [github.com/hashicorp/go-uuid](https://pkg.go.dev/github.com/hashicorp/go-uuid?tab=licenses)
+- [github.com/hashicorp/golang-lru](https://pkg.go.dev/github.com/hashicorp/golang-lru?tab=licenses)
 
 ## LGPL v3 licenses
 
