@@ -100,9 +100,9 @@ func (g *metadataGroup) evaluateByteLength(events []models.PipelineEvent) int {
 }
 
 type AggregatorMetadataGroup struct {
-	GroupMetadataKeys   []string
-	GroupMaxEventLength int
-	GroupMaxByteLength  int
+	GroupMetadataKeys   []string `json:"GroupMetadataKeys,omitempty" comment:"group by metadata keys"`
+	GroupMaxEventLength int      `json:"GroupMaxEventLength,omitempty" comment:"max count of events in a pipelineGroupEvents"`
+	GroupMaxByteLength  int      `json:"GroupMaxByteLength,omitempty" comment:"max sum of byte length of events in a pipelineGroupEvents"`
 
 	groupAgg sync.Map
 }
