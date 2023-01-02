@@ -46,6 +46,7 @@ const (
 type Units string
 
 const (
+	SamplesUnits         Units = "samples"
 	NanosecondsUnit      Units = "nanoseconds"
 	ObjectsUnit          Units = "objects"
 	BytesUnit            Units = "bytes"

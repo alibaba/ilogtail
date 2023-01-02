@@ -11,6 +11,7 @@ import (
 
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/profile"
+	"github.com/alibaba/ilogtail/helper/profile/jfr"
 	"github.com/alibaba/ilogtail/helper/profile/pprof"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -34,6 +35,11 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 	case ft == profile.FormatPprof:
 		in.Profile = &pprof.RawProfile{
 			RawData: data,
+		}
+	case ft == "jfr":
+		in.Profile = &jfr.RawProfile{
+			FormDataContentType: ct,
+			RawData:             data,
 		}
 	case strings.Contains(ct, "multipart/form-data"):
 		in.Profile = &pprof.RawProfile{

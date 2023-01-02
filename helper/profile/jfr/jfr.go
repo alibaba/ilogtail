@@ -3,9 +3,10 @@ package jfr
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
+	"io"
 	"mime/multipart"
+	"strings"
 
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -14,34 +15,36 @@ import (
 	"github.com/pyroscope-io/pyroscope/pkg/util/form"
 )
 
+const (
+	formFieldProfile, formFieldSampleTypeConfig = "profile", "sample_type_config"
+	splitor                                     = "$@$"
+)
+
 type RawProfile struct {
 	RawData             []byte
 	FormDataContentType string
-
-	profile        []byte
-	labelsSnapshot *LabelsSnapshot
 }
 
 func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
-	if err = r.extractProfile(); err != nil {
-		return nil, fmt.Errorf("cannot extract profile: %w", err)
+	var reader io.Reader = bytes.NewReader(r.RawData)
+	labels := new(LabelsSnapshot)
+	if strings.Contains(r.FormDataContentType, "multipart/form-data") {
+		if reader, labels, err = loadJFRFromForm(reader, r.FormDataContentType); err != nil {
+			return nil, err
+		}
 	}
-	if len(r.profile) == 0 {
-		return nil, errors.New("empty profile")
-	}
-
-	return extractLogs(ctx)
+	return ParseJFR(ctx, meta, reader, labels)
 }
 
-func (r *RawProfile) extractProfile() error {
-	boundary, err := form.ParseBoundary(r.FormDataContentType)
+func loadJFRFromForm(r io.Reader, contentType string) (io.Reader, *LabelsSnapshot, error) {
+	boundary, err := form.ParseBoundary(contentType)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
-	f, err := multipart.NewReader(bytes.NewReader(r.RawData), boundary).ReadForm(32 << 20)
+	f, err := multipart.NewReader(r, boundary).ReadForm(32 << 20)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	defer func() {
 		_ = f.RemoveAll()
@@ -49,28 +52,22 @@ func (r *RawProfile) extractProfile() error {
 
 	jfrField, err := form.ReadField(f, "jfr")
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	if jfrField == nil {
-		return fmt.Errorf("jfr field is required")
+		return nil, nil, fmt.Errorf("jfr field is required")
 	}
 
 	labelsField, err := form.ReadField(f, "labels")
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	var labels LabelsSnapshot
 	if len(labelsField) > 0 {
 		if err = proto.Unmarshal(labelsField, &labels); err != nil {
-			return err
+			return nil, nil, err
 		}
-		r.labelsSnapshot = &labels
 	}
-	r.profile = jfrField
-	return nil
-}
 
-func extractLogs(ctx context.Context, meta *profile.Meta, profile []byte, labelsSnapshot *LabelsSnapshot,  logs []*protocol.Log) error {
-	ParseJFR(ctx, meta, profile, labelsSnapshot, logs)
-	return nil
+	return bytes.NewReader(jfrField), &labels, nil
 }

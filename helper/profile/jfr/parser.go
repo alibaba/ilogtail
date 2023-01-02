@@ -1,13 +1,19 @@
 package jfr
 
 import (
-	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/alibaba/ilogtail/helper/profile"
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/cespare/xxhash"
+	"github.com/gofrs/uuid"
 	"github.com/pyroscope-io/jfr-parser/parser"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/metadata"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
@@ -26,24 +32,33 @@ const (
 	sampleTypeLockDuration
 )
 
-func ParseJFR(ctx context.Context, meta *profile.Meta, profile []byte, jfrLabels *LabelsSnapshot, logs []*protocol.Log) (err error) {
-	chunks, err := parser.ParseWithOptions(bytes.NewReader(profile), &parser.ChunkParseOptions{
+func ParseJFR(ctx context.Context, meta *profile.Meta, body io.Reader, jfrLabels *LabelsSnapshot) (logs []*protocol.Log, err error) {
+	chunks, err := parser.ParseWithOptions(body, &parser.ChunkParseOptions{
 		CPoolProcessor: processSymbols,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to parse JFR format: %w", err)
+		return nil, fmt.Errorf("unable to parse JFR format: %w", err)
 	}
 	for _, c := range chunks {
-		if pErr := parse(ctx, meta, c, jfrLabels); pErr != nil {
+		oneChunkLogs, pErr := parse(ctx, meta, c, jfrLabels)
+		if pErr != nil {
 			//err = multierror.Append(err, pErr)
-			return err
+			return nil, err
 		}
+		logs = append(logs, oneChunkLogs...)
 	}
-	return err
+	return logs, nil
 }
 
 // revive:disable-next-line:cognitive-complexity necessary complexity
-func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *LabelsSnapshot) (err error) {
+func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *LabelsSnapshot) (logs []*protocol.Log, err error) {
+	stackMap := make(map[uint64]string)
+	valMap := make(map[uint64][]uint64)
+	labelMap := make(map[uint64]map[string]string)
+	typeMap := make(map[uint64][]string)
+	unitMap := make(map[uint64][]string)
+	aggtypeMap := make(map[uint64][]string)
+
 	var event string
 	for _, e := range c.Events {
 		if as, ok := e.(*parser.ActiveSetting); ok {
@@ -53,9 +68,9 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 		}
 	}
 	cache := make(tree.LabelsCache)
-	for _, events := range groupEventsByContextID(c.Events) {
-		//labels := getContextLabels(contextID, jfrLabels)
-		//lh := labels.Hash()
+	for contextID, events := range groupEventsByContextID(c.Events) {
+		labels := getContextLabels(contextID, jfrLabels)
+		lh := labels.Hash()
 		for _, e := range events {
 			switch e.(type) {
 			case *parser.ExecutionSample:
@@ -102,8 +117,29 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 		}
 	}
 	cb := func(n string, labels tree.Labels, t *tree.Tree, u metadata.Units) {
-		//TODO: getlog
+		key := buildKey(n, map[string]string{}, labels, jfrLabels)
 
+		meta.Key = key
+
+		labelsMap := make(map[string]string)
+
+		if name := meta.Key.AppName(); name != "" {
+			labelsMap["_app_name_"] = name
+		}
+		if meta.SampleRate > 0 {
+			labelsMap["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
+		}
+
+		t.IterateStacks(func(name string, self uint64, stack []string) {
+			fs := name + splitor + strings.Join(stack, "\n")
+			id := xxhash.Sum64String(fs)
+			stackMap[id] = fs
+			aggtypeMap[id] = append(aggtypeMap[id], string(meta.AggregationType))
+			typeMap[id] = append(typeMap[id], n)
+			unitMap[id] = append(unitMap[id], u.String())
+			valMap[id] = append(valMap[id], self)
+			labelMap[id] = labelsMap
+		})
 	}
 	for sampleType, entries := range cache {
 		if sampleType == sampleTypeWall && event != "wall" {
@@ -115,7 +151,91 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 			cb(n, e.Labels, e.Tree, units)
 		}
 	}
-	return err
+
+	var profileIDStr string
+	if meta.Key.HasProfileID() {
+		profileIDStr, _ = meta.Key.ProfileID()
+	} else {
+		profileID, _ := uuid.NewV4()
+		profileIDStr = profileID.String()
+	}
+
+	meta.SpyName = strings.TrimSuffix(meta.SpyName, "spy")
+	for id, fs := range stackMap {
+		if len(valMap[id]) == 0 || len(typeMap[id]) == 0 || len(unitMap[id]) == 0 || len(labelMap[id]) == 0 {
+			logger.Warning(ctx, "PPROF_PROFILE_ALARM", "stack don't have enough meta or values", fs)
+			continue
+		}
+		var content []*protocol.Log_Content
+		idx := strings.Index(fs, splitor)
+		b, _ := json.Marshal(labelMap[id])
+
+		content = append(content,
+			&protocol.Log_Content{
+				Key:   "name",
+				Value: fs[:idx],
+			},
+			&protocol.Log_Content{
+				Key:   "stack",
+				Value: fs[idx+3:],
+			},
+			&protocol.Log_Content{
+				Key:   "stackID",
+				Value: strconv.FormatUint(id, 10),
+			},
+			&protocol.Log_Content{
+				Key:   "__tag__:language",
+				Value: meta.SpyName,
+			},
+			&protocol.Log_Content{
+				Key:   "__tag__:type",
+				Value: meta.Units.DetectProfileType(),
+			},
+			&protocol.Log_Content{
+				Key:   "__tag__:units",
+				Value: strings.Join(unitMap[id], ","),
+			},
+			&protocol.Log_Content{
+				Key:   "__tag__:valueTypes",
+				Value: strings.Join(typeMap[id], ","),
+			},
+			&protocol.Log_Content{
+				Key:   "__tag__:aggTypes",
+				Value: strings.Join(aggtypeMap[id], ","),
+			},
+			&protocol.Log_Content{
+				Key:   "__tag__:dataType",
+				Value: "CallStack",
+			},
+			/*
+				&protocol.Log_Content{
+					Key:   "__tag__:durationNs",
+					Value: strconv.FormatInt(tp.GetDurationNanos(), 10),
+				},
+			*/
+			&protocol.Log_Content{
+				Key:   "__tag__:profileID",
+				Value: profileIDStr,
+			},
+			&protocol.Log_Content{
+				Key:   "__tag__:labels",
+				Value: string(b),
+			},
+		)
+		for i, v := range valMap[id] {
+			content = append(content, &protocol.Log_Content{
+				Key:   fmt.Sprintf("value_%d", i),
+				Value: strconv.FormatUint(v, 10),
+			})
+		}
+		log := &protocol.Log{
+			Time:     uint32(meta.StartTime.Unix()),
+			Contents: content,
+		}
+		logs = append(logs, log)
+	}
+
+	return logs, err
 }
 
 func getName(sampleType int64, event string) string {
