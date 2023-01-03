@@ -262,9 +262,9 @@ func (p *FlusherStdout) writeLogBody(writer *jsoniter.Stream, metric *models.Met
 func (p FlusherStdout) writeByteArray(writer *jsoniter.Stream, metric models.ByteArray) {
 	_, _ = writer.Write([]byte{','})
 	writer.WriteObjectField("byteArray")
-	writer.Write([]byte{'"'})
-	writer.Write(metric)
-	writer.Write([]byte{'"'})
+	_, _ = writer.Write([]byte{'"'})
+	_, _ = writer.Write(metric)
+	_, _ = writer.Write([]byte{'"'})
 }
 
 func (p *FlusherStdout) SetUrgent(flag bool) {
