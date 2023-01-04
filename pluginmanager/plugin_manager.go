@@ -243,8 +243,7 @@ func Resume() error {
 			logger.Infof(config.Context.GetRuntimeContext(), "always online config %v stopped, error: %v", config.ConfigName, err)
 		}(cfg)
 	}
-	timerFetchFuction()
-
+	TimerFetchFuction()
 	for _, logstoreConfig := range LogtailConfig {
 		if logstoreConfig.alreadyStarted {
 			logstoreConfig.resume()

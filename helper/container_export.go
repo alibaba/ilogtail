@@ -155,7 +155,7 @@ func GetContainerByAcceptedInfoV2(
 	includeEnvRegex map[string]*regexp.Regexp,
 	excludeEnvRegex map[string]*regexp.Regexp,
 	k8sFilter *K8SFilter,
-) (int, int, []string, []string, []string, []string) {
+) (newCount, delCount int, addResultList, deleteResultList, addFullList, deleteFullList []string) {
 	return getDockerCenterInstance().getAllAcceptedInfoV2(
 		fullList, matchList, includeLabel, excludeLabel, includeLabelRegex, excludeLabelRegex, includeEnv, excludeEnv, includeEnvRegex, excludeEnvRegex, k8sFilter)
 
@@ -210,7 +210,6 @@ func GetAllContainerToRecord(envSet, labelSet map[string]struct{}, containerIds 
 	instance := getDockerCenterInstance()
 	instance.lock.RLock()
 	defer instance.lock.RUnlock()
-	logger.Infof(context.Background(), "containerMapSize", instance.containerMap)
 	result := make([]*DockerInfoDetailWithFilteredEnvAndLabel, 0)
 	if len(containerIds) > 0 {
 		for key := range containerIds {

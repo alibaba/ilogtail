@@ -240,7 +240,7 @@ int LogtailPlugin::SendPbV2(const char* configName,
         if (0 == pConfig->mProjectName.size()) {
             return 0;
         }
-    } else if (configNameStr == containerConfig -> mCategory) {
+    } else if (configNameStr == containerConfig->mCategory) {
         pConfig = containerConfig;
         pConfig->mProjectName = ConfigManager::GetInstance()->GetDefaultProfileProjectName();
         pConfig->mRegion = ConfigManager::GetInstance()->GetDefaultProfileRegion();

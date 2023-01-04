@@ -272,7 +272,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 	if len(addFullList) > 0 {
 		for _, id := range addFullList {
 			if len(id) > 0 {
-				util.RecordAddContainerIDs(id)
+				util.RecordAddedContainerIDs(id)
 			}
 		}
 	}
@@ -280,7 +280,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 	if len(deleteFullList) > 0 {
 		for _, id := range deleteFullList {
 			if len(id) > 0 {
-				util.RecordDeleteContainerIDs(util.GetShortID(id))
+				util.RecordDeletedContainerIDs(util.GetShortID(id))
 			}
 		}
 	}
@@ -299,11 +299,10 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 			ConfigName:                 sds.context.GetConfigName(),
 			PathExistInputContainerIDs: util.GetStringFromList(keys),
 			SourceAddress:              "stdout",
-			InputType:                  "service_docker_stdout",
+			InputType:                  input.ServiceDockerStdoutPluginName,
 			FlusherType:                "flusher_sls",
 			FlusherTargetAddress:       fmt.Sprintf("%s/%s", sds.context.GetProject(), sds.context.GetLogstore()),
 		}
-		logger.Infof(sds.context.GetRuntimeContext(), "configResult", configResult)
 		util.RecordConfigResultMap(configResult)
 		if newCount != 0 || delCount != 0 {
 			util.RecordConfigResultIncrement(configResult)

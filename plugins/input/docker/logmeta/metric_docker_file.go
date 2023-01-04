@@ -301,7 +301,7 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 	if len(addFullList) > 0 {
 		for _, id := range addFullList {
 			if len(id) > 0 {
-				util.RecordAddContainerIDs(id)
+				util.RecordAddedContainerIDs(id)
 			}
 		}
 	}
@@ -309,7 +309,7 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 	if len(deleteFullList) > 0 {
 		for _, id := range deleteFullList {
 			if len(id) > 0 {
-				util.RecordDeleteContainerIDs(util.GetShortID(id))
+				util.RecordDeletedContainerIDs(util.GetShortID(id))
 			}
 		}
 	}
@@ -371,7 +371,6 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 			FlusherType:                   "flusher_sls",
 			FlusherTargetAddress:          fmt.Sprintf("%s/%s", idf.context.GetProject(), idf.context.GetLogstore()),
 		}
-		logger.Infof(idf.context.GetRuntimeContext(), "configResult", configResult)
 		util.RecordConfigResultMap(configResult)
 		if newCount != 0 || delCount != 0 {
 			util.RecordConfigResultIncrement(configResult)

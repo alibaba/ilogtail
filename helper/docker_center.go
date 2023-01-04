@@ -853,19 +853,20 @@ func (dc *DockerCenter) getAllAcceptedInfoV2(
 	includeEnvRegex map[string]*regexp.Regexp,
 	excludeEnvRegex map[string]*regexp.Regexp,
 	k8sFilter *K8SFilter,
-) (int, int, []string, []string, []string, []string) {
+) (newCount, delCount int, addResultList, deleteResultList, fullAddedList, fullDeletedList []string) {
+
 	dc.lock.RLock()
 	defer dc.lock.RUnlock()
-	deleteResultList := make([]string, 0)
-	addResultList := make([]string, 0)
-	deleteFullList := make([]string, 0)
-	addFullList := make([]string, 0)
+	deleteResultList = make([]string, 0)
+	addResultList = make([]string, 0)
+	fullDeletedList = make([]string, 0)
+	fullAddedList = make([]string, 0)
 	// Remove deleted containers from match list and full list.
-	delCount := 0
+	delCount = 0
 	for id := range fullList {
 		if _, exist := dc.containerMap[id]; !exist {
 			delete(fullList, id)
-			deleteFullList = append(deleteFullList, id)
+			fullDeletedList = append(fullDeletedList, id)
 			if _, matched := matchList[id]; matched {
 				delete(matchList, id)
 				deleteResultList = append(deleteResultList, id)
@@ -885,7 +886,8 @@ func (dc *DockerCenter) getAllAcceptedInfoV2(
 	}
 
 	// Add new containers to full list and matched to match list.
-	newCount := 0
+	newCount = 0
+	// 第一次启动的时候，会有全量的容器信息，不需要这里上报，因此忽略掉
 	flagFirstInitContainers := false
 	if len(fullList) == 0 && len(dc.containerMap) != 0 {
 		flagFirstInitContainers = true
@@ -894,7 +896,7 @@ func (dc *DockerCenter) getAllAcceptedInfoV2(
 		if _, exist := fullList[id]; !exist {
 			fullList[id] = true
 			if !flagFirstInitContainers {
-				addFullList = append(addFullList, id)
+				fullAddedList = append(fullAddedList, id)
 			}
 			if isContainerLabelMatch(includeLabel, excludeLabel, includeLabelRegex, excludeLabelRegex, info) &&
 				isContainerEnvMatch(includeEnv, excludeEnv, includeEnvRegex, excludeEnvRegex, info) &&
@@ -907,7 +909,7 @@ func (dc *DockerCenter) getAllAcceptedInfoV2(
 			}
 		}
 	}
-	return newCount, delCount, addResultList, deleteResultList, addFullList, deleteFullList
+	return newCount, delCount, addResultList, deleteResultList, fullAddedList, fullDeletedList
 }
 
 func (dc *DockerCenter) getAllSpecificInfo(filter func(*DockerInfoDetail) bool) (infoList []*DockerInfoDetail) {

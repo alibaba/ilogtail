@@ -33,18 +33,16 @@ var FirstFetchAllInterval = time.Second * time.Duration(30*60)
 
 var timerFetchRunning = false
 
-func TimerRecordData() {
+func timerRecordData() {
 	recordContainers(make(map[string]struct{}))
-	// record all container confit result at same time
+	// record all container config result at same time
 	util.RecordConfigResult()
 }
 
 // 记录增量的容器
-func RecordAddContainers() {
-	containerIDs := util.GetAddContainerIDs()
-	logger.Info(context.Background(), "GetAddContainerIDs", containerIDs)
+func recordAddedContainers() {
+	containerIDs := util.GetAddedContainerIDs()
 	if len(containerIDs) > 0 {
-		// get project list
 		recordContainers(containerIDs)
 	}
 }
@@ -91,18 +89,18 @@ func recordContainers(containerIDs map[string]struct{}) {
 
 		containerDetailToRecord.Env = containerInfo.Env
 		containerDetailToRecord.Labels = containerInfo.Labels
-		util.RecordContainer(&containerDetailToRecord)
+		util.RecordAddedContainer(&containerDetailToRecord)
 	}
 }
 
 func CollectContainers(logGroup *protocol.LogGroup) {
-	RecordAddContainers()
+	recordAddedContainers()
 	util.SerializeContainerToPb(logGroup)
 }
 
 func CollectDeleteContainers(logGroup *protocol.LogGroup) {
-	containerIDs := util.GetDeleteContainerIDs()
-	logger.Info(context.Background(), "GetDeleteContainerIDs", containerIDs)
+	containerIDs := util.GetDeletedContainerIDs()
+	logger.Info(context.Background(), "GetDeletedContainerIDs", containerIDs)
 	if len(containerIDs) > 0 {
 		projectSet := make(map[string]struct{})
 
@@ -110,7 +108,7 @@ func CollectDeleteContainers(logGroup *protocol.LogGroup) {
 		for _, logstoreConfig := range LogtailConfig {
 			projectSet[logstoreConfig.ProjectName] = struct{}{}
 		}
-		keys := make([]string, len(projectSet))
+		keys := make([]string, 0, len(projectSet))
 		for k := range projectSet {
 			if len(k) > 0 {
 				keys = append(keys, k)
@@ -118,13 +116,12 @@ func CollectDeleteContainers(logGroup *protocol.LogGroup) {
 		}
 		projectStr := util.GetStringFromList(keys)
 
-		ids := make([]string, len(containerIDs))
+		ids := make([]string, 0, len(containerIDs))
 		for id := range containerIDs {
 			if len(id) > 0 {
 				ids = append(ids, id)
 			}
 		}
-		logger.Info(context.Background(), "record GetDeleteContainerIDs", ids)
 		util.SerializeDeleteContainerToPb(logGroup, projectStr, util.GetStringFromList(ids))
 	}
 }
@@ -133,29 +130,23 @@ func CollectConfigResult(logGroup *protocol.LogGroup) {
 	util.SerializeConfigResultToPb(logGroup)
 }
 
-func timerFetchFuction() {
+func TimerFetchFuction() {
 	timerFetch := func() {
 		lastFetchAllTime := time.Now()
-		// 第一次时间跟后面的周期性时间不同
-		for {
-			logger.Info(context.Background(), "First timerFetchFuction", time.Since(lastFetchAllTime))
-			time.Sleep(time.Duration(10) * time.Second)
-			if time.Since(lastFetchAllTime) >= FirstFetchAllInterval {
-				logger.Info(context.Background(), "First PrintConfig fetch all", "start")
-				TimerRecordData()
-				lastFetchAllTime = time.Now()
-				logger.Info(context.Background(), "First PrintConfig fetch all", "end")
-				break
-			}
-		}
+		flagFirst := true
 		for {
 			logger.Info(context.Background(), "timerFetchFuction", time.Since(lastFetchAllTime))
 			time.Sleep(time.Duration(10) * time.Second)
-			if time.Since(lastFetchAllTime) >= FetchAllInterval {
-				logger.Info(context.Background(), "PrintConfig fetch all", "start")
-				TimerRecordData()
+
+			fetchInterval := FetchAllInterval
+			if flagFirst {
+				// 第一次时间跟后面的周期性时间不同
+				fetchInterval = FirstFetchAllInterval
+				flagFirst = false
+			}
+			if time.Since(lastFetchAllTime) >= fetchInterval {
+				timerRecordData()
 				lastFetchAllTime = time.Now()
-				logger.Info(context.Background(), "PrintConfig fetch all", "end")
 			}
 		}
 	}

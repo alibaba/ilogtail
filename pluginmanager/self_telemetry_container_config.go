@@ -16,7 +16,6 @@ package pluginmanager
 
 import (
 	"github.com/alibaba/ilogtail"
-	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
@@ -36,7 +35,6 @@ func (r *InputContainer) Description() string {
 }
 
 func (r *InputContainer) Collect(collector ilogtail.Collector) error {
-	logger.Info(r.context.GetRuntimeContext(), "taiye_test_string_metric")
 	loggroup := &protocol.LogGroup{}
 
 	CollectContainers(loggroup)
