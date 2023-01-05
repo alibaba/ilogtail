@@ -1,4 +1,4 @@
-// Copyright 2021 iLogtail Authors
+// Copyright 2023 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ type TLSConfig struct {
 	MaxVersion string
 }
 
-func (c TLSConfig) LoadTLSConfig() (*tls.Config, error) {
+func (c *TLSConfig) LoadTLSConfig() (*tls.Config, error) {
 	if !c.Enabled {
 		return nil, nil
 	}

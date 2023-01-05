@@ -76,8 +76,6 @@ require (
 	github.com/frankban/quicktest v1.14.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/influxdata/line-protocol/v2 v2.2.1 // indirect
 	github.com/intel/goresctrl v0.2.0 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect

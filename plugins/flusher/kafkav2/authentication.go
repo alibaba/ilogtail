@@ -81,7 +81,7 @@ func (config *Authentication) ConfigureAuthentication(saramaConfig *sarama.Confi
 	}
 
 	if config.TLS != nil {
-		if err := configureTLS(*config.TLS, saramaConfig); err != nil {
+		if err := configureTLS(config.TLS, saramaConfig); err != nil {
 			return err
 		}
 	}
@@ -144,7 +144,7 @@ func (saslConfig *SaslConfig) ConfigureSasl(saramaConfig *sarama.Config) error {
 	return nil
 }
 
-func configureTLS(config tlscommon.TLSConfig, saramaConfig *sarama.Config) error {
+func configureTLS(config *tlscommon.TLSConfig, saramaConfig *sarama.Config) error {
 	tlsConfig, err := config.LoadTLSConfig()
 	if err != nil {
 		return fmt.Errorf("error loading tls config: %w", err)
