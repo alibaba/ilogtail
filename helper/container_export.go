@@ -226,6 +226,45 @@ func GetAllContainerToRecord(envSet, labelSet map[string]struct{}, containerIds 
 	}
 	return result
 }
+
+func GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, diffEnvSet, diffLabelSet map[string]struct{}) []*DockerInfoDetailWithFilteredEnvAndLabel {
+	instance := getDockerCenterInstance()
+	instance.lock.RLock()
+	defer instance.lock.RUnlock()
+	result := make([]*DockerInfoDetailWithFilteredEnvAndLabel, 0)
+	for _, value := range instance.containerMap {
+		match := false
+		if len(diffEnvSet) > 0 {
+			for _, env := range value.ContainerInfo.Config.Env {
+				splitArray := strings.SplitN(env, "=", 2)
+				envKey := splitArray[0]
+				if len(splitArray) != 2 {
+					continue
+				}
+				//envValue := splitArray[1]
+				_, ok := diffEnvSet[envKey]
+				if ok {
+					match = true
+				}
+			}
+		}
+		if len(diffLabelSet) > 0 {
+			if !match {
+				for key := range value.ContainerInfo.Config.Labels {
+					_, ok := diffLabelSet[key]
+					if ok {
+						match = true
+					}
+				}
+			}
+		}
+		if match {
+			result = append(result, CastContainerDetail(value, envSet, labelSet))
+		}
+	}
+	return result
+}
+
 func CastContainerDetail(containerInfo *DockerInfoDetail, envSet, labelSet map[string]struct{}) *DockerInfoDetailWithFilteredEnvAndLabel {
 	newEnv := make(map[string]string)
 	for _, env := range containerInfo.ContainerInfo.Config.Env {

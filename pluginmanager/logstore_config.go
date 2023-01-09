@@ -368,7 +368,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	enableAlwaysOnline := enableAlwaysOnlineForStdout && hasDockerStdoutInput(plugins)
 	logstoreC.LabelSet = make(map[string]struct{})
 	logstoreC.EnvSet = make(map[string]struct{})
-	// taiye add env and label
+	// add env and label set to logstore config
 	inputs, exists := plugins["inputs"]
 	if exists {
 		inputList, valid := inputs.([]interface{})
