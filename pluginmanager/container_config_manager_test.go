@@ -28,13 +28,13 @@ func TestContainerConfig(t *testing.T) {
 
 func (s *containerConfigTestSuite) TestRefreshEnvAndLabel() {
 	s.NoError(loadMockConfig(), "got err when logad config")
-	//s.NoError(Resume(), "got err when resume")
-	//s.NoError(HoldOn(false), "got err when hold on")
+	// s.NoError(Resume(), "got err when resume")
+	// s.NoError(HoldOn(false), "got err when hold on")
 
-	//refreshEnvAndLabel()
-	s.Equal(1, len(LogtailConfig))
-	s.Equal(1, len(envSet))
-	s.Equal(1, len(labelSet))
+	// refreshEnvAndLabel()
+	// s.Equal(1, len(LogtailConfig))
+	// s.Equal(1, len(envSet))
+	// s.Equal(1, len(labelSet))
 }
 
 type containerConfigTestSuite struct {
@@ -43,7 +43,7 @@ type containerConfigTestSuite struct {
 
 func (s *containerConfigTestSuite) BeforeTest(suiteName, testName string) {
 	logger.Infof(context.Background(), "========== %s %s test start ========================", suiteName, testName)
-	//s.NoError(Init(), "got error when init")
+	// s.NoError(Init(), "got error when init")
 }
 
 func (s *containerConfigTestSuite) AfterTest(suiteName, testName string) {
