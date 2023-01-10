@@ -133,6 +133,7 @@ func Init() (err error) {
 		return
 	}
 	logger.Info(context.Background(), "loadBuiltinConfig container")
+	TimerFetchFuction()
 	return
 }
 
@@ -243,7 +244,6 @@ func Resume() error {
 			logger.Infof(config.Context.GetRuntimeContext(), "always online config %v stopped, error: %v", config.ConfigName, err)
 		}(cfg)
 	}
-	TimerFetchFuction()
 	for _, logstoreConfig := range LogtailConfig {
 		if logstoreConfig.alreadyStarted {
 			logstoreConfig.resume()

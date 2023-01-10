@@ -241,7 +241,6 @@ func GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, diffEnvSet, dif
 				if len(splitArray) != 2 {
 					continue
 				}
-				//envValue := splitArray[1]
 				_, ok := diffEnvSet[envKey]
 				if ok {
 					match = true

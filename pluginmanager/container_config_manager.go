@@ -66,7 +66,9 @@ func recordContainers(containerIDs map[string]struct{}) {
 	}
 	projectStr := util.GetStringFromList(keys)
 	// get add container
+	envAndLabelMutex.Lock()
 	result := helper.GetAllContainerToRecord(envSet, labelSet, containerIDs)
+	envAndLabelMutex.Unlock()
 	for _, containerInfo := range result {
 		var containerDetailToRecord util.ContainerDetail
 		containerDetailToRecord.Project = projectStr
@@ -141,13 +143,16 @@ func refreshEnvAndLabel() {
 			labelSet[key] = struct{}{}
 		}
 	}
+	logger.Info(context.Background(), "refreshEnvAndLabel", envSet, labelSet)
 }
 
-func compareEnvAndLabel() (diffEnvSet, diffLabelSet map[string]struct{}) {
+func compareEnvAndLabelAndRecordContainer() {
 	envAndLabelMutex.Lock()
 	defer envAndLabelMutex.Unlock()
-	diffEnvSet = make(map[string]struct{})
-	diffLabelSet = make(map[string]struct{})
+
+	// get newest env label and compare with old
+	diffEnvSet := make(map[string]struct{})
+	diffLabelSet := make(map[string]struct{})
 	for _, logstoreConfig := range LogtailConfig {
 		for key := range logstoreConfig.EnvSet {
 			if _, ok := envSet[key]; !ok {
@@ -162,13 +167,9 @@ func compareEnvAndLabel() (diffEnvSet, diffLabelSet map[string]struct{}) {
 			}
 		}
 	}
-	return diffEnvSet, diffLabelSet
-}
 
-func compareEnvAndLabelAndRecordContainer() {
-	envAndLabelMutex.Lock()
-	defer envAndLabelMutex.Unlock()
-	diffEnvSet, diffLabelSet := compareEnvAndLabel()
+	logger.Info(context.Background(), "compareEnvAndLabel", diffEnvSet, diffLabelSet)
+
 	if len(diffEnvSet) != 0 || len(diffLabelSet) != 0 {
 		projectSet := make(map[string]struct{})
 		for _, logstoreConfig := range LogtailConfig {
@@ -182,6 +183,9 @@ func compareEnvAndLabelAndRecordContainer() {
 		}
 		projectStr := util.GetStringFromList(keys)
 		result := helper.GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, diffEnvSet, diffLabelSet)
+
+		logger.Info(context.Background(), "GetAllContainerIncludeEnvAndLabelToRecord", result)
+
 		for _, containerInfo := range result {
 			var containerDetailToRecord util.ContainerDetail
 			containerDetailToRecord.Project = projectStr
@@ -220,12 +224,14 @@ func TimerFetchFuction() {
 			if flagFirst {
 				// 第一次时间跟后面的周期性时间不同
 				fetchInterval = FirstFetchAllInterval
-				flagFirst = false
 			}
 			if time.Since(lastFetchAllTime) >= fetchInterval {
 				refreshEnvAndLabel()
 				timerRecordData()
 				lastFetchAllTime = time.Now()
+				if flagFirst {
+					flagFirst = false
+				}
 			} else {
 				compareEnvAndLabelAndRecordContainer()
 			}
