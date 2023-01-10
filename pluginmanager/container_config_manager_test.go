@@ -19,6 +19,10 @@ import (
 	"testing"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+
+	_ "github.com/alibaba/ilogtail/plugins/flusher/stdout"
+	_ "github.com/alibaba/ilogtail/plugins/input/docker/stdout"
+
 	"github.com/stretchr/testify/suite"
 )
 
