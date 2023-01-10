@@ -28,7 +28,7 @@ cpu.load.short,host=server01,region=cn value=0.64
 `
 
 func TestNormal(t *testing.T) {
-	decoder := &DecoderV2{}
+	decoder := &Decoder{}
 	req := &http.Request{}
 	byteData := []byte(data)
 	group, err := decoder.DecodeV2(byteData, req)

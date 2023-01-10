@@ -35,13 +35,8 @@ import (
 type Decoder interface {
 	// Decode reader to logs
 	Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error)
-	ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error)
-}
-
-// V2 used to parse buffer to metric events
-type V2 interface {
-	// DecodeV2 reader to PipeLineGroupEvents
-	DecodeV2(data []byte, req *http.Request) (groupInfo *models.PipelineGroupEvents, err error)
+	// DecodeV2 reader to groupEvents
+	DecodeV2(data []byte, req *http.Request) (groupEvents *models.PipelineGroupEvents, err error)
 	ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error)
 }
 
@@ -70,13 +65,9 @@ func GetDecoderWithOptions(format string, option Option) (Decoder, error) {
 		}, nil
 	case common.ProtocolOTLPLogV1:
 		return &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, nil
-	}
-	return nil, errDecoderNotFound
-}
+	case common.ProtocolRaw:
+		return &raw.Decoder{}, nil
 
-func GetDecoderV2(format string) (V2, error) {
-	if strings.TrimSpace(strings.ToLower(format)) == common.ProtocolRaw {
-		return &raw.DecoderV2{}, nil
 	}
 	return nil, errDecoderNotFound
 }

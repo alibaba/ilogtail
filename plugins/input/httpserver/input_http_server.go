@@ -30,17 +30,21 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 )
 
+const (
+	v1 = iota
+	v2
+)
+
 // ServiceHTTP ...
 type ServiceHTTP struct {
-	context   ilogtail.Context
-	collector ilogtail.Collector
-	decoder   decoder.Decoder
-	server    *http.Server
-	listener  net.Listener
-	wg        sync.WaitGroup
-
-	decoderV2   decoder.V2
+	context     ilogtail.Context
+	collector   ilogtail.Collector
+	decoder     decoder.Decoder
+	server      *http.Server
+	listener    net.Listener
+	wg          sync.WaitGroup
 	collectorV2 ilogtail.PipelineCollector
+	version     int8
 
 	Format             string
 	Address            string
@@ -60,6 +64,10 @@ type ServiceHTTP struct {
 // Init ...
 func (s *ServiceHTTP) Init(context ilogtail.Context) (int, error) {
 	s.context = context
+	var err error
+	if s.decoder, err = decoder.GetDecoderWithOptions(s.Format, decoder.Option{FieldsExtend: s.FieldsExtend}); err != nil {
+		return 0, err
+	}
 
 	if s.Format == "otlp_logv1" {
 		s.Address += "/v1/logs"
@@ -84,14 +92,7 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		tooLarge(w)
 		return
 	}
-	var data []byte
-	var statusCode int
-	var err error
-	if s.decoder != nil {
-		data, statusCode, err = s.decoder.ParseRequest(w, r, s.MaxBodySize)
-	} else {
-		data, statusCode, err = s.decoderV2.ParseRequest(w, r, s.MaxBodySize)
-	}
+	data, statusCode, err := s.decoder.ParseRequest(w, r, s.MaxBodySize)
 
 	switch statusCode {
 	case http.StatusBadRequest:
@@ -109,7 +110,8 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if s.decoder != nil {
+	switch s.version {
+	case v1:
 		logs, err := s.decoder.Decode(data, r)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
@@ -119,8 +121,8 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, log := range logs {
 			s.collector.AddRawLog(log)
 		}
-	} else {
-		grouEvents, err := s.decoderV2.DecodeV2(data, r)
+	case v2:
+		grouEvents, err := s.decoder.DecodeV2(data, r)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
 			badRequest(w)
@@ -167,20 +169,14 @@ func badRequest(res http.ResponseWriter) {
 // Start starts the ServiceInput's service, whatever that may be
 func (s *ServiceHTTP) Start(c ilogtail.Collector) error {
 	s.collector = c
-	var err error
-	if s.decoder, err = decoder.GetDecoderWithOptions(s.Format, decoder.Option{FieldsExtend: s.FieldsExtend}); err != nil {
-		return err
-	}
+	s.version = v1
 	return s.start()
 }
 
 // StartService start the ServiceInput's service by plugin runner v2
 func (s *ServiceHTTP) StartService(context ilogtail.PipelineContext) error {
 	s.collectorV2 = context.Collector()
-	var err error
-	if s.decoderV2, err = decoder.GetDecoderV2(s.Format); err != nil {
-		return err
-	}
+	s.version = v2
 
 	return s.start()
 }

@@ -19,18 +19,23 @@ import (
 
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-type DecoderV2 struct {
+type Decoder struct {
 }
 
-func (d *DecoderV2) DecodeV2(data []byte, req *http.Request) (groupEvents *models.PipelineGroupEvents, decodeErr error) {
+func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groupEvents *models.PipelineGroupEvents, decodeErr error) {
 	groupEvents = &models.PipelineGroupEvents{}
 	groupEvents.Group = models.NewGroup(models.NewMetadata(), models.NewTags())
 	groupEvents.Events = []models.PipelineEvent{models.ByteArray(data)}
 	return groupEvents, nil
 }
 
-func (d *DecoderV2) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {
+func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {
 	return common.CollectBody(res, req, maxBodySize)
+}
+
+func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
+	return nil, nil
 }
