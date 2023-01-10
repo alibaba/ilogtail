@@ -76,8 +76,8 @@ func TestInitMetadataGroupAggregator(t *testing.T) {
 func TestDefaultMetadataGroupAggregator(t *testing.T) {
 	Convey("Given a default metadata group aggregator", t, func() {
 		agg := NewAggregatorMetadataGroup()
-		So(agg.GroupMaxEventLength, ShouldEqual, MaxEventsLength)
-		So(agg.GroupMaxByteLength, ShouldEqual, MaxBytesLength)
+		So(agg.GroupMaxEventLength, ShouldEqual, maxEventsLength)
+		So(agg.GroupMaxByteLength, ShouldEqual, maxBytesLength)
 	})
 }
 

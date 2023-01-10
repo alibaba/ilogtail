@@ -45,6 +45,7 @@ type ServiceHTTP struct {
 	wg          sync.WaitGroup
 	collectorV2 ilogtail.PipelineCollector
 	version     int8
+	paramCount  int
 
 	Format             string
 	Address            string
@@ -72,6 +73,8 @@ func (s *ServiceHTTP) Init(context ilogtail.Context) (int, error) {
 	if s.Format == "otlp_logv1" {
 		s.Address += "/v1/logs"
 	}
+
+	s.paramCount = len(s.QueryParams) + len(s.HeaderParams)
 
 	return 0, nil
 }
@@ -227,14 +230,16 @@ func (s *ServiceHTTP) start() error {
 }
 
 func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string {
-	keyValues := map[string]string{}
+	keyValues := make(map[string]string, s.paramCount)
 	for _, key := range s.QueryParams {
 		value := req.FormValue(key)
 		if len(value) == 0 {
 			continue
 		}
 		builder := strings.Builder{}
-		builder.WriteString(s.QueryParamPrefix)
+		if len(s.QueryParamPrefix) > 0 {
+			builder.WriteString(s.QueryParamPrefix)
+		}
 		builder.WriteString(key)
 		keyValues[builder.String()] = value
 	}
@@ -244,7 +249,9 @@ func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string 
 			continue
 		}
 		builder := strings.Builder{}
-		builder.WriteString(s.HeaderParamPrefix)
+		if len(s.HeaderParamPrefix) > 0 {
+			builder.WriteString(s.HeaderParamPrefix)
+		}
 		builder.WriteString(key)
 		keyValues[builder.String()] = value
 	}

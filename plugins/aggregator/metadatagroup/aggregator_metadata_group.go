@@ -24,9 +24,10 @@ import (
 )
 
 const (
-	connector       = "_"
-	MaxEventsLength = 1024
-	MaxBytesLength  = 2 * 1024 * 1024
+	connector = "_"
+
+	maxEventsLength = 1024
+	maxBytesLength  = 2 * 1024 * 1024
 )
 
 type metadataGroup struct {
@@ -173,8 +174,8 @@ func (g *AggregatorMetadataGroup) buildGroupKey(event *models.PipelineGroupEvent
 func NewAggregatorMetadataGroup() *AggregatorMetadataGroup {
 	return &AggregatorMetadataGroup{
 		GroupMetadataKeys:   make([]string, 0),
-		GroupMaxByteLength:  MaxBytesLength,
-		GroupMaxEventLength: MaxEventsLength,
+		GroupMaxByteLength:  maxBytesLength,
+		GroupMaxEventLength: maxEventsLength,
 	}
 }
 
