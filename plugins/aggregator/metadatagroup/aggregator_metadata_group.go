@@ -64,17 +64,14 @@ func (g *metadataGroup) Record(group *models.PipelineGroupEvents, ctx ilogtail.P
 
 func (g *metadataGroup) GetResult(ctx ilogtail.PipelineContext) error {
 	g.Lock.Lock()
+	defer g.Lock.Unlock()
 	if len(g.Events) == 0 {
-		g.Lock.Unlock()
 		return nil
 	}
 
-	eventsToFlush := g.Events
 	// reset
+	ctx.Collector().Collect(g.Group, g.Events...)
 	g.Reset()
-	g.Lock.Unlock()
-
-	ctx.Collector().Collect(g.Group, eventsToFlush...)
 	return nil
 }
 
