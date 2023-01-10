@@ -15,9 +15,9 @@
 package raw
 
 import (
+	"io/ioutil"
 	"net/http"
 
-	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
@@ -33,7 +33,13 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groupEvents *models.
 }
 
 func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {
-	return common.CollectBody(res, req, maxBodySize)
+	body := req.Body
+	body = http.MaxBytesReader(res, body, maxBodySize)
+	bytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		return nil, http.StatusRequestEntityTooLarge, err
+	}
+	return bytes, http.StatusOK, nil
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
