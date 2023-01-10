@@ -26,6 +26,7 @@ import (
 	// dependency packages
 	_ "github.com/alibaba/ilogtail/plugins/aggregator"
 	"github.com/alibaba/ilogtail/plugins/flusher/checker"
+	_ "github.com/alibaba/ilogtail/plugins/flusher/sls"
 	_ "github.com/alibaba/ilogtail/plugins/flusher/statistics"
 	_ "github.com/alibaba/ilogtail/plugins/flusher/stdout"
 	_ "github.com/alibaba/ilogtail/plugins/input/canal"

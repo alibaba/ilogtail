@@ -20,7 +20,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 
-	_ "github.com/alibaba/ilogtail/plugins/flusher/stdout"
+	_ "github.com/alibaba/ilogtail/plugins/flusher/sls"
 	_ "github.com/alibaba/ilogtail/plugins/input/docker/stdout"
 
 	"github.com/stretchr/testify/suite"
@@ -35,10 +35,10 @@ func (s *containerConfigTestSuite) TestRefreshEnvAndLabel() {
 	// s.NoError(Resume(), "got err when resume")
 	// s.NoError(HoldOn(false), "got err when hold on")
 
-	// refreshEnvAndLabel()
-	// s.Equal(1, len(LogtailConfig))
-	// s.Equal(1, len(envSet))
-	// s.Equal(1, len(labelSet))
+	refreshEnvAndLabel()
+	s.Equal(1, len(LogtailConfig))
+	s.Equal(1, len(envSet))
+	s.Equal(1, len(labelSet))
 }
 
 type containerConfigTestSuite struct {
@@ -69,7 +69,7 @@ func loadMockConfig() error {
 				"IncludeLabel": {
 					"app": "^.*$"
 				},
-				"IncludeLabel": {
+				"IncludeEnv": {
 					"test": "^.*$"
 				},
 				"Stdout": true
