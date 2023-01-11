@@ -71,6 +71,9 @@ func (s *managerTestSuite) TestResumeHoldOn() {
 */
 
 func (s *managerTestSuite) TestPluginManager() {
+	s.NoError(LoadMockConfig(), "got err when logad config")
+	s.NoError(Resume(), "got err when resume")
+	time.Sleep(time.Millisecond * time.Duration(10))
 	s.NoError(HoldOn(false), "got err when hold on")
 	for i := 0; i < 5; i++ {
 		logger.Infof(context.Background(), "==================================", i)
