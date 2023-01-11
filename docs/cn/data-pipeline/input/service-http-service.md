@@ -7,19 +7,21 @@
 ## 配置参数
 
 | 参数                 | 类型       | 是否必选 | 说明                                                                                                                                |
-|--------------------|----------|------|-----------------------------------------------------------------------------------------------------------------------------------|
-| Type               | String   | 是    | 插件类型，固定为`service_http_server`                                                                                                     |
-| Format             | String   | 否    | <p>数据格式。</p> <p>支持格式：`sls`、`prometheus`、`influxdb`、`otlp_logv1`、`statsd`</p>  <p>v2版本支持格式: `raw`</p><p>说明：`raw`格式以原始请求字节流传输数据</p> |
-| Address            | String   | 否    | <p>监听地址。</p><p></p>                                                                                                               |
-| ReadTimeoutSec     | String   | 否    | <p>读取超时时间。</p><p>默认取值为:`10s`。</p>                                                                                                 |
-| ShutdownTimeoutSec | String   | 否    | <p>关闭超时时间。</p><p>默认取值为:`5s`。</p>                                                                                                  |
-| MaxBodySize        | String   | 否    | <p>最大传输 body 大小。</p><p>默认取值为:`64k`。</p>                                                                                           |
-| UnlinkUnixSock     | String   | 否    | <p>启动前如果监听地址为unix socket，是否进行强制释放。</p><p>默认取值为:`true`。</p>                                                                        |
-| FieldsExtend       | Boolean  | 否    | <p>是否支持非integer以外的数据类型(如String)</p><p>目前仅针对有 String、Bool 等额外类型的 influxdb Format 有效</p>                                            |
-| QueryParams        | []String | 否    | 需要解析到Group.Metadata中的请求参数<p>仅v2版本有效</p>                                                                                           |
-| QueryParamPrefix   | String   | 否    | 解析请求参数时需要添加的key前缀<p>仅v2版本有效</p>                                                                                                   |
-| HeaderParams       | []String | 否    | 需要解析到Group.Metadata中的header参数<p>仅v2版本有效</p>                                                                                       |
-| QueryParamPrefix   | String   | 否    | 解析Header参数时需要添加的key前缀<p>仅v2版本有效</p>                                                                                               |
+|--------------------|----------|-----|-----------------------------------------------------------------------------------------------------------------------------------|
+| Type               | String   | 是   | 插件类型，固定为`service_http_server`                                                                                                     |
+| Format             | String   | 否   | <p>数据格式。</p> <p>支持格式：`sls`、`prometheus`、`influxdb`、`otlp_logv1`、`statsd`</p>  <p>v2版本支持格式: `raw`</p><p>说明：`raw`格式以原始请求字节流传输数据</p> |
+| Address            | String   | 否   | <p>监听地址。</p><p></p>                                                                                                               |
+| ReadTimeoutSec     | String   | 否   | <p>读取超时时间。</p><p>默认取值为:`10s`。</p>                                                                                                 |
+| ShutdownTimeoutSec | String   | 否   | <p>关闭超时时间。</p><p>默认取值为:`5s`。</p>                                                                                                  |
+| MaxBodySize        | String   | 否   | <p>最大传输 body 大小。</p><p>默认取值为:`64k`。</p>                                                                                           |
+| UnlinkUnixSock     | String   | 否   | <p>启动前如果监听地址为unix socket，是否进行强制释放。</p><p>默认取值为:`true`。</p>                                                                        |
+| FieldsExtend       | Boolean  | 否   | <p>是否支持非integer以外的数据类型(如String)</p><p>目前仅针对有 String、Bool 等额外类型的 influxdb Format 有效</p>                                            |
+| QueryParams        | []String | 否   | 需要解析到Group.Metadata中的请求参数<p>仅v2版本有效</p>                                                                                           |
+| QueryParamPrefix   | String   | 否   | 解析请求参数时需要添加的key前缀<p>仅v2版本有效</p>                                                                                                   |
+| HeaderParams       | []String | 否   | 需要解析到Group.Metadata中的header参数<p>仅v2版本有效</p>                                                                                       |
+| QueryParamPrefix   | String   | 否   | 解析Header参数时需要添加的key前缀<p>仅v2版本有效</p>                                                                                               |
+| DisableUncompress  | Boolean  | 否   | 禁用对于请求数据的解压缩, 默认取值为:`false`<p>目前仅针对Raw Format有效</p><p>仅v2版本有效</p>                                                                 |
+
 
 ## 样例
 

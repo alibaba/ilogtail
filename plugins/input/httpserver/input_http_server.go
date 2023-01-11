@@ -54,6 +54,7 @@ type ServiceHTTP struct {
 	MaxBodySize        int64
 	UnlinkUnixSock     bool
 	FieldsExtend       bool
+	DisableUncompress  bool
 
 	// params below works only for version v2
 	QueryParams       []string
@@ -66,7 +67,7 @@ type ServiceHTTP struct {
 func (s *ServiceHTTP) Init(context ilogtail.Context) (int, error) {
 	s.context = context
 	var err error
-	if s.decoder, err = decoder.GetDecoderWithOptions(s.Format, decoder.Option{FieldsExtend: s.FieldsExtend}); err != nil {
+	if s.decoder, err = decoder.GetDecoderWithOptions(s.Format, decoder.Option{FieldsExtend: s.FieldsExtend, DisableUncompress: s.DisableUncompress}); err != nil {
 		return 0, err
 	}
 

@@ -41,7 +41,8 @@ type Decoder interface {
 }
 
 type Option struct {
-	FieldsExtend bool
+	FieldsExtend      bool
+	DisableUncompress bool
 }
 
 var errDecoderNotFound = errors.New("no such decoder")
@@ -66,7 +67,7 @@ func GetDecoderWithOptions(format string, option Option) (Decoder, error) {
 	case common.ProtocolOTLPLogV1:
 		return &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, nil
 	case common.ProtocolRaw:
-		return &raw.Decoder{}, nil
+		return &raw.Decoder{DisableUncompress: option.DisableUncompress}, nil
 
 	}
 	return nil, errDecoderNotFound

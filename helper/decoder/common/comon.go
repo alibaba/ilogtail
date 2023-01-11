@@ -77,3 +77,13 @@ func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) 
 
 	return bytes, http.StatusOK, nil
 }
+
+func CollectRawBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) ([]byte, int, error) {
+	body := req.Body
+	body = http.MaxBytesReader(res, body, maxBodySize)
+	bytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		return nil, http.StatusRequestEntityTooLarge, err
+	}
+	return bytes, http.StatusOK, nil
+}
