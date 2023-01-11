@@ -36,3 +36,4 @@ your changes, such as:
 
 ## [Unreleased]
 - [public] [both] [added] add a new flusher_pulsar plugin.
+- [public] [both] [fixed] ignore time zone adjustment in config when using system time as log time
