@@ -362,3 +362,35 @@ func TestInputWithRequestParams(t *testing.T) {
 	}
 
 }
+
+func TestInputWithRequestParamsWithoutPrefix(t *testing.T) {
+	input, err := newInput("raw")
+	require.NoError(t, err)
+	input.HeaderParams = []string{"Test-A", "Test-B"}
+	input.QueryParams = []string{"db"}
+
+	inputCtx := ilogtail.NewObservePipelineConext(10)
+	err = input.StartService(inputCtx)
+	require.NoError(t, err)
+
+	port := input.listener.Addr().(*net.TCPAddr).Port
+	mockHeader := map[string]string{"Test-A": "a", "Test-B": "b"}
+	mockQuery := map[string]string{"db": "test"}
+	err = sendRequestWithParams(textFormatInflux, port, mockHeader, mockQuery)
+	require.NoError(t, err)
+	err = sendRequestWithParams(textFormatInflux, port, mockHeader, mockQuery)
+	require.NoError(t, err)
+
+	time.Sleep(time.Second * 2)
+	res := inputCtx.Collector().ToArray()
+	assert.Equal(t, 2, len(res))
+	for _, groupEvents := range res {
+		for _, key := range input.HeaderParams {
+			assert.Equal(t, mockHeader[key], groupEvents.Group.Metadata.Get(key))
+		}
+		for _, key := range input.QueryParams {
+			assert.Equal(t, mockQuery[key], groupEvents.Group.Metadata.Get(key))
+		}
+	}
+
+}

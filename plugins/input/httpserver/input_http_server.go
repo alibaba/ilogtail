@@ -237,24 +237,26 @@ func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string 
 		if len(value) == 0 {
 			continue
 		}
-		builder := strings.Builder{}
 		if len(s.QueryParamPrefix) > 0 {
+			builder := strings.Builder{}
 			builder.WriteString(s.QueryParamPrefix)
+			builder.WriteString(key)
+			key = builder.String()
 		}
-		builder.WriteString(key)
-		keyValues[builder.String()] = value
+		keyValues[key] = value
 	}
 	for _, key := range s.HeaderParams {
 		value := req.Header.Get(key)
 		if len(value) == 0 {
 			continue
 		}
-		builder := strings.Builder{}
 		if len(s.HeaderParamPrefix) > 0 {
+			builder := strings.Builder{}
 			builder.WriteString(s.HeaderParamPrefix)
+			builder.WriteString(key)
+			key = builder.String()
 		}
-		builder.WriteString(key)
-		keyValues[builder.String()] = value
+		keyValues[key] = value
 	}
 	return keyValues
 }
