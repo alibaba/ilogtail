@@ -76,22 +76,15 @@ func (s *managerTestSuite) TestPluginManager() {
 	time.Sleep(time.Millisecond * time.Duration(10))
 	s.NoError(HoldOn(false), "got err when hold on")
 	for i := 0; i < 5; i++ {
-		logger.Infof(context.Background(), "==================================", i)
-		logger.Infof(context.Background(), "========== LoadMockConfig ========================")
 		s.NoError(LoadMockConfig(), "got err when logad config")
-		logger.Infof(context.Background(), "========== Resume ========================")
 		s.NoError(Resume(), "got err when resume")
-		logger.Infof(context.Background(), "========== sleep ========================")
 		time.Sleep(time.Millisecond * time.Duration(1500))
 		config, ok := LogtailConfig["test_config"]
 		s.True(ok)
-		logger.Infof(context.Background(), "========== GetConfigFluhsers ========================")
 		s.Equal(2, len(GetConfigFluhsers(config.PluginRunner)))
 		c, ok := GetConfigFluhsers(config.PluginRunner)[1].(*checker.FlusherChecker)
 		s.True(ok)
-		logger.Infof(context.Background(), "========== HoldOn ========================")
 		s.NoError(HoldOn(false), "got err when hold on")
-		logger.Infof(context.Background(), "========== ASSERT ========================")
 		s.Equal(200, c.GetLogCount())
 	}
 }
