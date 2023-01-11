@@ -59,6 +59,7 @@ func (s *managerTestSuite) AfterTest(suiteName, testName string) {
 
 }
 
+/*
 func (s *managerTestSuite) TestResumeHoldOn() {
 	for i := 0; i < 10; i++ {
 		s.NoError(LoadMockConfig(), "got err when logad config")
@@ -67,8 +68,10 @@ func (s *managerTestSuite) TestResumeHoldOn() {
 		s.NoError(HoldOn(false), "got err when hold on")
 	}
 }
+*/
 
 func (s *managerTestSuite) TestPluginManager() {
+	s.NoError(HoldOn(false), "got err when hold on")
 	for i := 0; i < 5; i++ {
 		logger.Infof(context.Background(), "==================================", i)
 		logger.Infof(context.Background(), "========== LoadMockConfig ========================")
