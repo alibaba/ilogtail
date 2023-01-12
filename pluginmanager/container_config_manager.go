@@ -146,13 +146,10 @@ func refreshEnvAndLabel() {
 	logger.Info(context.Background(), "refreshEnvAndLabel", envSet, labelSet)
 }
 
-func compareEnvAndLabelAndRecordContainer() {
-	envAndLabelMutex.Lock()
-	defer envAndLabelMutex.Unlock()
-
+func compareEnvAndLabel() (diffEnvSet, diffLabelSet map[string]struct{}) {
 	// get newest env label and compare with old
-	diffEnvSet := make(map[string]struct{})
-	diffLabelSet := make(map[string]struct{})
+	diffEnvSet = make(map[string]struct{})
+	diffLabelSet = make(map[string]struct{})
 	for _, logstoreConfig := range LogtailConfig {
 		for key := range logstoreConfig.EnvSet {
 			if _, ok := envSet[key]; !ok {
@@ -167,7 +164,14 @@ func compareEnvAndLabelAndRecordContainer() {
 			}
 		}
 	}
+	return diffEnvSet, diffLabelSet
+}
 
+func compareEnvAndLabelAndRecordContainer() {
+	envAndLabelMutex.Lock()
+	defer envAndLabelMutex.Unlock()
+
+	diffEnvSet, diffLabelSet := compareEnvAndLabel()
 	logger.Info(context.Background(), "compareEnvAndLabel", diffEnvSet, diffLabelSet)
 
 	if len(diffEnvSet) != 0 || len(diffLabelSet) != 0 {

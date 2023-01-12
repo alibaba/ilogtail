@@ -21,12 +21,16 @@ import (
 	"context"
 	"testing"
 
+	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/stretchr/testify/suite"
 
 	_ "github.com/alibaba/ilogtail/plugins/flusher/sls"
 	_ "github.com/alibaba/ilogtail/plugins/input/docker/stdout"
-
-	"github.com/stretchr/testify/suite"
 )
 
 func TestContainerConfig(t *testing.T) {
@@ -35,13 +39,54 @@ func TestContainerConfig(t *testing.T) {
 
 func (s *containerConfigTestSuite) TestRefreshEnvAndLabel() {
 	s.NoError(loadMockConfig(), "got err when logad config")
-	// s.NoError(Resume(), "got err when resume")
-	// s.NoError(HoldOn(false), "got err when hold on")
-
-	refreshEnvAndLabel()
 	s.Equal(1, len(LogtailConfig))
 	s.Equal(1, len(envSet))
 	s.Equal(1, len(labelSet))
+}
+
+func (s *containerConfigTestSuite) TestCompareEnvAndLabel() {
+	envSet = make(map[string]struct{})
+	labelSet = make(map[string]struct{})
+
+	s.NoError(loadMockConfig(), "got err when logad config")
+
+	envSet["testEnv1"] = struct{}{}
+	labelSet["testLebel1"] = struct{}{}
+
+	diffEnvSet, diffLabelSet := compareEnvAndLabel()
+	s.Equal(1, len(diffEnvSet))
+	s.Equal(1, len(diffLabelSet))
+	s.Equal(2, len(envSet))
+	s.Equal(2, len(labelSet))
+}
+
+func (s *containerConfigTestSuite) TestCompareEnvAndLabelAndRecordContainer() {
+	envSet = make(map[string]struct{})
+	labelSet = make(map[string]struct{})
+
+	s.NoError(loadMockConfig(), "got err when logad config")
+
+	envSet["testEnv1"] = struct{}{}
+	labelSet["testLebel1"] = struct{}{}
+
+	envList := []string{0: "test=111"}
+	info := mockDockerInfoDetail("testConfig", envList)
+	cMap := helper.GetContainerMap()
+	cMap["test"] = info
+
+	compareEnvAndLabelAndRecordContainer()
+	s.Equal(1, len(util.AddedContainers))
+}
+
+func (s *containerConfigTestSuite) TestRecordContainers() {
+	info := mockDockerInfoDetail("testConfig", []string{0: "test=111"})
+	cMap := helper.GetContainerMap()
+	cMap["test"] = info
+
+	containerIDs := make(map[string]struct{})
+	containerIDs["test"] = struct{}{}
+	recordContainers(containerIDs)
+	s.Equal(1, len(util.AddedContainers))
 }
 
 type containerConfigTestSuite struct {
@@ -50,12 +95,24 @@ type containerConfigTestSuite struct {
 
 func (s *containerConfigTestSuite) BeforeTest(suiteName, testName string) {
 	logger.Infof(context.Background(), "========== %s %s test start ========================", suiteName, testName)
-	// s.NoError(Init(), "got error when init")
+	//s.NoError(Init(), "got error when init")
 }
 
 func (s *containerConfigTestSuite) AfterTest(suiteName, testName string) {
 	logger.Infof(context.Background(), "========== %s %s test end =======================", suiteName, testName)
 
+}
+
+func mockDockerInfoDetail(containerName string, envList []string) *helper.DockerInfoDetail {
+	dockerInfo := types.ContainerJSON{
+		ContainerJSONBase: &types.ContainerJSONBase{
+			Name: containerName,
+			ID:   "test",
+		},
+	}
+	dockerInfo.Config = &container.Config{}
+	dockerInfo.Config.Env = envList
+	return helper.CreateContainerInfoDetail(dockerInfo, *flags.LogConfigPrefix, false)
 }
 
 // project, logstore, config, configJsonStr

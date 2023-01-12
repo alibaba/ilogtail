@@ -206,6 +206,12 @@ func CreateContainerInfoDetail(info types.ContainerJSON, envConfigPrefix string,
 	return getDockerCenterInstance().CreateInfoDetail(info, envConfigPrefix, selfConfigFlag)
 }
 
+// for test
+func GetContainerMap() map[string]*DockerInfoDetail {
+	instance := getDockerCenterInstance()
+	return instance.containerMap
+}
+
 func GetAllContainerToRecord(envSet, labelSet map[string]struct{}, containerIds map[string]struct{}) []*DockerInfoDetailWithFilteredEnvAndLabel {
 	instance := getDockerCenterInstance()
 	instance.lock.RLock()
