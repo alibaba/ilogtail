@@ -32,11 +32,11 @@ func Test_Flusher(t *testing.T) {
 	}
 
 	f := NewFlusherClickHouse()
-	f.Addrs = []string{"127.0.0.1:9001", "127.0.0.1:9002", "127.0.0.1:9003", "127.0.0.1:9004"}
+	f.Addrs = []string{"127.0.0.1:9000"}
 	f.Database = "default"
-	f.Table = "demo_1216_v4_buffer"
-	f.User = "user1"
-	f.Password = "123456"
+	f.Table = "demo"
+	f.User = ""
+	f.Password = ""
 	f.Debug = true
 	f.flusher = f.BufferFlush
 	// Verify that we can connect to the Kafka broker
