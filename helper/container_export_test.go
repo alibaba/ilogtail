@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/alibaba/ilogtail/pkg/flags"
-	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/alibaba/ilogtail/pkg/flags"
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 func TestContainerExport(t *testing.T) {
