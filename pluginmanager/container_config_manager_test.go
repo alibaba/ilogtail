@@ -39,6 +39,7 @@ func TestContainerConfig(t *testing.T) {
 
 func (s *containerConfigTestSuite) TestRefreshEnvAndLabel() {
 	s.NoError(loadMockConfig(), "got err when logad config")
+	refreshEnvAndLabel()
 	s.Equal(1, len(LogtailConfig))
 	s.Equal(1, len(envSet))
 	s.Equal(1, len(labelSet))
@@ -76,6 +77,7 @@ func (s *containerConfigTestSuite) TestCompareEnvAndLabelAndRecordContainer() {
 
 	compareEnvAndLabelAndRecordContainer()
 	s.Equal(1, len(util.AddedContainers))
+	util.AddedContainers = util.AddedContainers[:0]
 }
 
 func (s *containerConfigTestSuite) TestRecordContainers() {
@@ -87,6 +89,7 @@ func (s *containerConfigTestSuite) TestRecordContainers() {
 	containerIDs["test"] = struct{}{}
 	recordContainers(containerIDs)
 	s.Equal(1, len(util.AddedContainers))
+	util.AddedContainers = util.AddedContainers[:0]
 }
 
 type containerConfigTestSuite struct {
