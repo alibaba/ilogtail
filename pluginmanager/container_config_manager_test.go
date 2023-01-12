@@ -95,7 +95,6 @@ type containerConfigTestSuite struct {
 
 func (s *containerConfigTestSuite) BeforeTest(suiteName, testName string) {
 	logger.Infof(context.Background(), "========== %s %s test start ========================", suiteName, testName)
-	//s.NoError(Init(), "got error when init")
 }
 
 func (s *containerConfigTestSuite) AfterTest(suiteName, testName string) {
