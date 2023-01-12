@@ -20,7 +20,7 @@ import (
 	"sync"
 
 	"github.com/apache/pulsar-client-go/pulsar"
-	lru "github.com/hashicorp/golang-lru/simplelru"
+	"github.com/hashicorp/golang-lru/simplelru"
 	"go.uber.org/multierr"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -28,15 +28,15 @@ import (
 
 type Producers struct {
 	mu    sync.RWMutex
-	cache *lru.LRU
+	cache *simplelru.LRU
 }
 
-func NewProducers(maxProducers int) *Producers {
-	cache, err := lru.NewLRU(maxProducers, func(key interface{}, value interface{}) {
+func NewProducers(context context.Context, maxProducers int) *Producers {
+	cache, err := simplelru.NewLRU(maxProducers, func(key interface{}, value interface{}) {
 		producer := value.(pulsar.Producer)
 		err := close(producer)
 		if err != nil {
-			logger.Error(context.TODO(), "close pulsar producer error", err)
+			logger.Error(context, "close pulsar producer error", err)
 			return
 		}
 	})

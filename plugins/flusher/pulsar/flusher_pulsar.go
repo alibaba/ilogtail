@@ -122,7 +122,7 @@ func (f *FlusherPulsar) Init(context ilogtail.Context) error {
 	}
 	f.pulsarClient = client
 	// Init pulsar producers
-	f.producers = NewProducers(f.MaxCacheProducers)
+	f.producers = NewProducers(f.context.GetRuntimeContext(), f.MaxCacheProducers)
 	f.producerOptions = f.initProducerOptions()
 
 	// Init partition keys
