@@ -126,16 +126,18 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			s.collector.AddRawLog(log)
 		}
 	case v2:
-		grouEvents, err := s.decoder.DecodeV2(data, r)
+		groups, err := s.decoder.DecodeV2(data, r)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
 			badRequest(w)
 			return
 		}
 		if reqParams := s.extractRequestParams(r); len(reqParams) != 0 {
-			grouEvents.Group.Metadata.Merge(models.NewMetadataWithMap(reqParams))
+			for _, g := range groups {
+				g.Group.Metadata.Merge(models.NewMetadataWithMap(reqParams))
+			}
 		}
-		s.collectorV2.Collect(grouEvents.Group, grouEvents.Events...)
+		s.collectorV2.CollectList(groups...)
 	}
 
 	if s.Format == "sls" {

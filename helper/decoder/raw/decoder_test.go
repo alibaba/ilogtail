@@ -31,10 +31,11 @@ func TestNormal(t *testing.T) {
 	decoder := &Decoder{}
 	req := &http.Request{}
 	byteData := []byte(data)
-	group, err := decoder.DecodeV2(byteData, req)
+	groups, err := decoder.DecodeV2(byteData, req)
 	assert.Nil(t, err)
-	assert.Equal(t, len(group.Events), 1)
-	event, ok := group.Events[0].(models.ByteArray)
+	assert.Equal(t, len(groups), 1)
+	assert.Equal(t, len(groups[0].Events), 1)
+	event, ok := groups[0].Events[0].(models.ByteArray)
 	if !ok {
 		t.Errorf("raw decoder needs ByteArray")
 	}

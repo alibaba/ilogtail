@@ -36,7 +36,7 @@ type Decoder interface {
 	// Decode reader to logs
 	Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error)
 	// DecodeV2 reader to groupEvents
-	DecodeV2(data []byte, req *http.Request) (groupEvents *models.PipelineGroupEvents, err error)
+	DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error)
 	ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error)
 }
 

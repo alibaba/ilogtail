@@ -26,11 +26,11 @@ type Decoder struct {
 	DisableUncompress bool
 }
 
-func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groupEvents *models.PipelineGroupEvents, decodeErr error) {
-	groupEvents = &models.PipelineGroupEvents{}
+func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, decodeErr error) {
+	groupEvents := &models.PipelineGroupEvents{}
 	groupEvents.Group = models.NewGroup(models.NewMetadata(), models.NewTags())
 	groupEvents.Events = []models.PipelineEvent{models.ByteArray(data)}
-	return groupEvents, nil
+	return []*models.PipelineGroupEvents{groupEvents}, nil
 }
 
 func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {

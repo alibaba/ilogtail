@@ -125,7 +125,7 @@ func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBo
 	return common.CollectBody(res, req, maxBodySize)
 }
 
-func (d *Decoder) DecodeV2(data []byte, req *http.Request) (group *models.PipelineGroupEvents, err error) {
+func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
 	//TODO: Implement DecodeV2
 	return nil, nil
 }
