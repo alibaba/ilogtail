@@ -21,14 +21,14 @@ import (
 	"context"
 	"testing"
 
-	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/pkg/flags"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/flags"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 	_ "github.com/alibaba/ilogtail/plugins/flusher/sls"
 	_ "github.com/alibaba/ilogtail/plugins/input/docker/stdout"
 )
