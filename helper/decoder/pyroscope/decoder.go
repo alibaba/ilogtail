@@ -11,7 +11,8 @@ import (
 
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/helper/profile/pprof"
+	"github.com/alibaba/ilogtail/helper/profile/pyroscope/pprof"
+	"github.com/alibaba/ilogtail/helper/profile/pyroscope/tire"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
@@ -25,6 +26,7 @@ type Decoder struct {
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
+	logger.Debug(context.Background(), "URL", req.URL.Query().Encode(), "Data", string(data))
 	in, ft, err := d.parseInputMeta(req)
 	if err != nil {
 		return nil, err
@@ -40,6 +42,11 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 			FormDataContentType: ct,
 			RawData:             data,
 		}
+	case ft == profile.FormatTrie, ct == "binary/octet-stream+trie":
+		in.Profile = &tire.RawProfile{
+			RawData: data,
+		}
+
 	default:
 		st := fmt.Sprintf("unknown format type %s or content type %s", ft, ct)
 		logger.Debug(context.Background(), st)

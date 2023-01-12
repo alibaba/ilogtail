@@ -1,0 +1,21 @@
+{
+  "global": {
+  },
+  "inputs" : [
+    {
+      "type" : "service_http_server",
+      "detail" : {
+        "Format" : "pyroscope",
+        "Address": "http://localhost:4040"
+      }
+    }
+  ],
+  "flushers" : [
+    {
+      "type" : "flusher_stdout",
+      "detail": {
+        "OnlyStdout": true
+      }
+    }
+  ]
+}
