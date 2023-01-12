@@ -16,10 +16,8 @@ package clickhouse
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"net"
 	"strconv"
 	"time"
 
@@ -40,7 +38,7 @@ type FlusherClickHouse struct {
 	flusher FlusherFunc
 	// Required parameters
 	Addrs    []string
-	User     string
+	Username string
 	Password string
 	Database string
 	Table    string
@@ -71,7 +69,7 @@ func NewFlusherClickHouse() *FlusherClickHouse {
 		context:          nil,
 		client:           nil,
 		Addrs:            []string{},
-		User:             "",
+		Username:         "",
 		Password:         "",
 		Database:         "",
 		Table:            "",
@@ -103,35 +101,7 @@ func (f *FlusherClickHouse) Init(ctx ilogtail.Context) error {
 		logger.Error(f.context.GetRuntimeContext(), "CLICKHOUSE_FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
 		return err
 	}
-	db, err := clickhouse.Open(&clickhouse.Options{
-		TLS:  &tls.Config{InsecureSkipVerify: true},
-		Addr: f.Addrs,
-		Auth: clickhouse.Auth{
-			Database: f.Database,
-			Username: f.User,
-			Password: f.Password,
-		},
-		DialContext: func(ctx context.Context, addr string) (net.Conn, error) {
-			var d net.Dialer
-			return d.DialContext(ctx, "tcp", addr)
-		},
-		Debug: f.Debug,
-		Debugf: func(format string, v ...interface{}) {
-			fmt.Printf(format, v)
-		},
-		Settings: clickhouse.Settings{
-			"max_execution_time": f.MaxExecutionTime,
-		},
-		Compression: &clickhouse.Compression{
-			Method: clickhouse.CompressionLZ4,
-		},
-		DialTimeout:      f.DialTimeout,
-		MaxOpenConns:     f.MaxOpenConns,
-		MaxIdleConns:     f.MaxIdleConns,
-		ConnMaxLifetime:  f.ConnMaxLifetime,
-		ConnOpenStrategy: clickhouse.ConnOpenInOrder,
-		BlockBufferSize:  f.BlockBufferSize,
-	})
+	db, err := clickhouse.Open()
 	if err != nil {
 		err = fmt.Errorf("sql open failed, err: %w", err)
 		logger.Error(f.context.GetRuntimeContext(), "CLICKHOUSE_FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)

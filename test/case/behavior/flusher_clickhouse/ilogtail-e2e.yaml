@@ -30,7 +30,7 @@ ilogtail:
               Addrs: ["clickhouse:9000"]
               Database: "default"
               Table: "demo"
-              User: ""
+              Username: ""
               Password: ""
   close_wait: 5s
   depends_on:

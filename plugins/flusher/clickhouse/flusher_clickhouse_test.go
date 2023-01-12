@@ -35,7 +35,7 @@ func Test_Flusher(t *testing.T) {
 	f.Addrs = []string{"127.0.0.1:9000"}
 	f.Database = "default"
 	f.Table = "demo"
-	f.User = ""
+	f.Username = ""
 	f.Password = ""
 	f.Debug = true
 	f.flusher = f.BufferFlush
