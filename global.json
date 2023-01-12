@@ -1,8 +1,0 @@
-{
-  "InputIntervalMs": 5000,
-  "AggregatIntervalMs": 30,
-  "FlushIntervalMs": 30,
-  "DefaultLogQueueSize": 11,
-  "DefaultLogGroupQueueSize": 12,
-  "LogtailSysConfDir": "."
-}
