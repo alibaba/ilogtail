@@ -31,6 +31,7 @@ const (
 	metricTimeNanoKey  = "__time_nano__"
 	metricValueKey     = "__value__"
 	metricValueTypeKey = "__type__"
+	metricFieldKey     = "__field__"
 )
 
 const (
@@ -52,6 +53,7 @@ type metricReader struct {
 	value     string
 	valueType string
 	timestamp string
+	fieldName string
 }
 
 type metricLabel struct {
@@ -59,12 +61,26 @@ type metricLabel struct {
 	value string
 }
 
+type metricLabels []metricLabel
+
+func (m metricLabels) Len() int {
+	return len(m)
+}
+
+func (m metricLabels) Less(i, j int) bool {
+	return m[i].key < m[j].key
+}
+
+func (m metricLabels) Swap(i, j int) {
+	m[i], m[j] = m[j], m[i]
+}
+
 func (r *metricReader) readNames() (metricName, fieldName string) {
-	idx := strings.LastIndexByte(r.name, ':')
-	if idx <= 0 {
+	if len(r.fieldName) == 0 || r.fieldName == "value" {
 		return r.name, "value"
 	}
-	return r.name[:idx], r.name[idx+1:]
+	name := strings.TrimSuffix(r.name, ":"+r.fieldName)
+	return name, r.fieldName
 }
 
 func (r *metricReader) readSortedLabels() ([]metricLabel, error) {
@@ -73,16 +89,58 @@ func (r *metricReader) readSortedLabels() ([]metricLabel, error) {
 		return nil, nil
 	}
 
-	segments := strings.SplitN(r.labels, "|", n)
-	sort.Strings(segments)
+	labels := make([]metricLabel, 0, n)
+	remainLabels := r.labels
+	lastIndex := -1
+	label := ""
+	key := ""
 
-	labels := make([]metricLabel, len(segments))
-	for i, v := range segments {
-		idx := strings.Index(v, "#$#")
-		if idx < 0 {
-			return nil, fmt.Errorf("failed to peed label key")
+	for len(remainLabels) > 0 {
+		endIdx := strings.Index(remainLabels, "|")
+		if endIdx < 0 {
+			label = remainLabels
+			remainLabels = ""
+		} else {
+			label = remainLabels[:endIdx]
+			remainLabels = remainLabels[endIdx+1:]
 		}
-		labels[i] = metricLabel{key: v[:idx], value: v[idx+3:]}
+		splitIdx := strings.Index(label, "#$#")
+		if splitIdx < 0 {
+			if lastIndex >= 0 {
+				labels[lastIndex].value += "|"
+				labels[lastIndex].value += label
+				continue
+			}
+			if len(key) == 0 {
+				key = label
+				continue
+			}
+			key += "|"
+			key += label
+			continue
+		}
+
+		if len(key) > 0 {
+			key += "|"
+			key += label[:splitIdx]
+		} else {
+			key = label[:splitIdx]
+		}
+
+		labels = append(labels, metricLabel{key: key, value: label[splitIdx+3:]})
+
+		lastIndex++
+		key = ""
+
+		if endIdx < 0 {
+			break
+		}
+	}
+
+	sort.Sort(metricLabels(labels))
+
+	if len(key) > 0 {
+		return labels, fmt.Errorf("found miss matching key: %s", key)
 	}
 
 	return labels, nil
@@ -132,6 +190,7 @@ func (r *metricReader) reset() {
 	r.value = ""
 	r.valueType = ""
 	r.timestamp = ""
+	r.fieldName = ""
 }
 
 func (r *metricReader) set(log *protocol.Log) error {
@@ -148,6 +207,8 @@ func (r *metricReader) set(log *protocol.Log) error {
 			r.value = v.Value
 		case metricValueTypeKey:
 			r.valueType = v.Value
+		case metricFieldKey:
+			r.fieldName = v.Value
 		}
 	}
 	if len(r.name) == 0 || len(r.value) == 0 {

@@ -99,6 +99,14 @@ func Test_metricReader_readNames(t *testing.T) {
 			reader: &metricReader{
 				name: "aa:bb",
 			},
+			wantMetricName: "aa:bb",
+			wantFieldName:  "value",
+		},
+		{
+			reader: &metricReader{
+				name:      "aa:bb",
+				fieldName: "bb",
+			},
 			wantMetricName: "aa",
 			wantFieldName:  "bb",
 		},
@@ -107,6 +115,14 @@ func Test_metricReader_readNames(t *testing.T) {
 				name: ":",
 			},
 			wantMetricName: ":",
+			wantFieldName:  "value",
+		},
+		{
+			reader: &metricReader{
+				name:      "aa:value",
+				fieldName: "value",
+			},
+			wantMetricName: "aa:value",
 			wantFieldName:  "value",
 		},
 	}
@@ -160,13 +176,51 @@ func Test_metricReader_readSortedLabels(t *testing.T) {
 			reader: &metricReader{
 				labels: "bb#$#aa|aa#$#bb|",
 			},
-			wantErr: true,
+			wantLabels: []metricLabel{
+				{key: "aa", value: "bb"},
+				{key: "bb", value: "aa"},
+			},
 		},
 		{
 			reader: &metricReader{
 				labels: "bb",
 			},
 			wantErr: true,
+		},
+		{
+			reader: &metricReader{
+				labels: "bb#$#aa|eee",
+			},
+			wantLabels: []metricLabel{
+				{key: "bb", value: "aa|eee"},
+			},
+		},
+		{
+			reader: &metricReader{
+				labels: "bb#$#aa|eee|aa#$#bb",
+			},
+			wantLabels: []metricLabel{
+				{key: "aa", value: "bb"},
+				{key: "bb", value: "aa|eee"},
+			},
+		},
+		{
+			reader: &metricReader{
+				labels: "bb#$#aa||eee||aa#$#bb",
+			},
+			wantLabels: []metricLabel{
+				{key: "aa", value: "bb"},
+				{key: "bb", value: "aa||eee|"},
+			},
+		},
+		{
+			reader: &metricReader{
+				labels: "cc||bb#$#aa||eee||aa#$#bb",
+			},
+			wantLabels: []metricLabel{
+				{key: "aa", value: "bb"},
+				{key: "cc||bb", value: "aa||eee|"},
+			},
 		},
 	}
 

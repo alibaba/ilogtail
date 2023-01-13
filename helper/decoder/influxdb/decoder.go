@@ -33,6 +33,7 @@ const (
 	timeNanoKey   = "__time_nano__"
 	valueKey      = "__value__"
 	typeKey       = "__type__"
+	fieldNameKey  = "__field__"
 )
 
 const (
@@ -78,7 +79,7 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 		contentLen++
 	}
 	if d.FieldsExtend {
-		contentLen++
+		contentLen += 2
 	}
 
 	logs := make([]*protocol.Log, 0, len(points))
@@ -87,14 +88,16 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 		if err != nil {
 			continue
 		}
-		var valueType = valueTypeFloat
+		var valueType string
 		var value string
 		for field, v := range fields {
 			switch v := v.(type) {
 			case float64:
 				value = strconv.FormatFloat(v, 'g', -1, 64)
+				valueType = valueTypeFloat
 			case int64:
 				value = strconv.FormatInt(v, 10)
+				valueType = valueTypeInt
 			case bool:
 				if v {
 					value = "1"
@@ -156,6 +159,9 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 				contents = append(contents, &protocol.Log_Content{
 					Key:   typeKey,
 					Value: valueType,
+				}, &protocol.Log_Content{
+					Key:   fieldNameKey,
+					Value: field,
 				})
 			}
 			if d.FieldsExtend && len(db) > 0 {
