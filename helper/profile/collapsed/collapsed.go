@@ -6,9 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cespare/xxhash"
+
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/cespare/xxhash"
 )
 
 const (
@@ -21,7 +22,8 @@ type RawProfile struct {
 	regexp  *regexp.Regexp
 }
 
-func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
+func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) ([]*protocol.Log, error) {
+	logs := make([]*protocol.Log, 0)
 	arrays := strings.Split(string(r.RawData), "\n")
 	for _, data := range arrays {
 		el, err := extractLogs(ctx, data, meta)
@@ -32,20 +34,30 @@ func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*pro
 	return logs, nil
 }
 
-func extractLogs(ctx context.Context, data string, meta *profile.Meta) (logs []*protocol.Log, err error) {
+func extractLogs(ctx context.Context, data string, meta *profile.Meta) ([]*protocol.Log, error) {
+	if len(data) == 0 {
+		return make([]*protocol.Log, 0), nil
+	}
+	logs := make([]*protocol.Log, 0)
 	parttarn := regexp.MustCompile(`(.+) (\d)`)
 	arrays := parttarn.FindStringSubmatch(data)
 	s := arrays[1]
 	v := arrays[2]
 	stacks := strings.Split(s, ";")
 
-	var content []*protocol.Log_Content
+	content := make([]*protocol.Log_Content, 0)
 
 	fs := strings.Join(stacks, "\n")
+
+	name := "unknown"
+	if len(stacks) > 0 {
+		name = stacks[0]
+	}
+
 	content = append(content,
 		&protocol.Log_Content{
 			Key:   "name",
-			Value: "unknown",
+			Value: name,
 		},
 		&protocol.Log_Content{
 			Key:   "stack",
