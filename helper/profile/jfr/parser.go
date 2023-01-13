@@ -9,15 +9,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/cespare/xxhash"
 	"github.com/gofrs/uuid"
 	"github.com/pyroscope-io/jfr-parser/parser"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/metadata"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
+
+	"github.com/alibaba/ilogtail/helper/profile"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 const (
@@ -117,13 +118,14 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 		}
 	}
 	cb := func(n string, labels tree.Labels, t *tree.Tree, u metadata.Units) {
-		key := buildKey(n, map[string]string{}, labels, jfrLabels)
-
-		meta.Key = key
+		key := buildKey(n, meta.Key.Labels(), labels, jfrLabels)
 
 		labelsMap := make(map[string]string)
+		for lk, lv := range key.Labels() {
+			labelsMap[lk] = lv
+		}
 
-		if name := meta.Key.AppName(); name != "" {
+		if name := key.AppName(); name != "" {
 			labelsMap["_app_name_"] = name
 		}
 		if meta.SampleRate > 0 {
