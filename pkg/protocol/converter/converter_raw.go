@@ -15,43 +15,35 @@
 package protocol
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/models"
 )
-
-var streamPool = sync.Pool{
-	New: func() any {
-		return &bytes.Buffer{}
-	}}
 
 func (c *Converter) ConvertToRawStream(groupEvents *models.PipelineGroupEvents, targetFields []string) (stream [][]byte, values []map[string]string, err error) {
 	if len(groupEvents.Events) == 0 {
 		return nil, nil, nil
 	}
 
-	byteStream := streamPool.Get().(*bytes.Buffer)
-	defer streamPool.Put(byteStream)
-	defer byteStream.Reset()
+	byteStream := *GetPooledByteBuf()
+	byteStream = byteStream[:0]
 	for idx, event := range groupEvents.Events {
 		eventType := event.GetType()
 		if eventType != models.EventTypeByteArray {
 			return nil, nil, fmt.Errorf("unsupported event type %v", eventType)
 		}
 		if idx != 0 {
-			byteStream.Write([]byte{'\n'})
+			byteStream = append(byteStream, '\n')
 		}
-		byteStream.Write(event.(models.ByteArray))
+		byteStream = append(byteStream, event.(models.ByteArray)...)
 	}
 
 	var targetValues map[string]string
 	if len(targetFields) > 0 {
 		targetValues = findTargetFieldsInGroup(targetFields, groupEvents.Group)
 	}
-	return [][]byte{byteStream.Bytes()}, []map[string]string{targetValues}, nil
+	return [][]byte{byteStream}, []map[string]string{targetValues}, nil
 }
 
 func findTargetFieldsInGroup(targetFields []string, group *models.GroupInfo) map[string]string {

@@ -97,6 +97,7 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data, statusCode, err := s.decoder.ParseRequest(w, r, s.MaxBodySize)
+	logger.Debugf(s.context.GetRuntimeContext(), "request [method] %v; [header] %v; [url] %v; [body] %v", r.Method, r.Header, r.URL, string(data))
 
 	switch statusCode {
 	case http.StatusBadRequest:
