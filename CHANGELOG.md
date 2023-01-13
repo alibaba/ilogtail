@@ -35,3 +35,5 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+
+- [public] [both] [updated] flusher kafka v2 support TLS and Kerberos authentication.
