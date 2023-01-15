@@ -32,19 +32,20 @@ func Test_Flusher(t *testing.T) {
 	}
 
 	f := NewFlusherClickHouse()
-	f.Addrs = []string{"127.0.0.1:9000"}
-	f.Database = "default"
-	f.Table = "demo"
-	f.Username = ""
-	f.Password = ""
+	f.Addrs = []string{"127.0.0.1:9001"}
+	f.Authentication.PlainText.Username = "user1"
+	f.Authentication.PlainText.Password = "123456"
+	f.Authentication.PlainText.Database = "default"
+	f.Cluster = "cluster_1"
+	f.Table = "demo_v5"
 	f.Debug = true
 	f.flusher = f.BufferFlush
-	// Verify that we can connect to the Kafka broker
+	// Verify that we can connect to the ClickHouse
 	lctx := mock.NewEmptyContext("p", "l", "c")
 	err := f.Init(lctx)
 	require.NoError(t, err)
 
-	// Verify that we can successfully write data to the kafka broker
+	// Verify that we can successfully write data to the ClickHouse buffer engine table
 	lgl := makeTestLogGroupList()
 	err = f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
 	require.NoError(t, err)

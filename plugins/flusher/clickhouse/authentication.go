@@ -26,10 +26,12 @@ type Authentication struct {
 }
 
 type PlainTextConfig struct {
-	// The username for connecting to Kafka.
+	// The username for connecting to clickhouse.
 	Username string
-	// The password for connecting to Kafka.
+	// The password for connecting to clickhouse.
 	Password string
+	// The default database
+	Database string
 }
 
 func (config *Authentication) ConfigureAuthentication(opts *clickhouse.Options) error {
@@ -46,7 +48,11 @@ func (plainTextConfig *PlainTextConfig) ConfigurePlaintext(opts *clickhouse.Opti
 	if plainTextConfig.Username != "" && plainTextConfig.Password == "" {
 		return fmt.Errorf("PlainTextConfig password must be set when username is configured")
 	}
+	if plainTextConfig.Database == "" {
+		return fmt.Errorf("PlainTextConfig database must be set")
+	}
 	opts.Auth.Username = plainTextConfig.Username
 	opts.Auth.Password = plainTextConfig.Password
+	opts.Auth.Database = plainTextConfig.Database
 	return nil
 }
