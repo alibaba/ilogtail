@@ -27,7 +27,6 @@ func (c *Converter) ConvertToRawStream(groupEvents *models.PipelineGroupEvents, 
 	}
 
 	byteStream := *GetPooledByteBuf()
-	byteStream = byteStream[:0]
 	for idx, event := range groupEvents.Events {
 		eventType := event.GetType()
 		if eventType != models.EventTypeByteArray {

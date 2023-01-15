@@ -179,6 +179,7 @@ func GetPooledByteBuf() *[]byte {
 }
 
 func PutPooledByteBuf(buf *[]byte) {
+	*buf = (*buf)[:0]
 	byteBufPool.Put(buf)
 }
 
