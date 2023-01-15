@@ -44,7 +44,6 @@ const (
 	targetTagPrefix     = "tag."
 
 	targetGroupMetadataPrefix = "metadata."
-	targetGroupTagsPrefix     = "tags."
 )
 
 const (

@@ -58,8 +58,8 @@ func findTargetFieldsInGroup(targetFields []string, group *models.GroupInfo) map
 		if strings.HasPrefix(field, targetGroupMetadataPrefix) {
 			tagName = field[len(targetGroupMetadataPrefix):]
 			tagValue = group.GetMetadata().Get(tagName)
-		} else if strings.HasPrefix(field, targetGroupTagsPrefix) {
-			tagName = field[len(targetGroupTagsPrefix):]
+		} else if strings.HasPrefix(field, targetTagPrefix) {
+			tagName = field[len(targetTagPrefix):]
 			tagValue = group.GetTags().Get(tagName)
 		}
 		targetKVs[field] = tagValue

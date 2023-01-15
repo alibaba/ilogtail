@@ -152,6 +152,66 @@ func TestMetadataGroupAggregatorRecord(t *testing.T) {
 	})
 }
 
+func TestMetadataGroupAggregatorRecordWithNonexistentKey(t *testing.T) {
+	Convey("Given a metadata group aggregator with nonexistent GroupMetadataKeys", t, func() {
+		agg := NewAggregatorMetadataGroup()
+		agg.GroupMetadataKeys = []string{"nonexistentKEY"}
+
+		Convey("record events with ByteArray, when metadata key not existed: all groups aggregate in one aggregator", func() {
+			ctx := ilogtail.NewObservePipelineConext(100)
+			agg.GroupMaxByteLength = len([]byte(RawData)) * 5
+			groups := generateByteArrayEvents(5, map[string]string{"a": "1"})
+			for _, group := range groups {
+				err := agg.Record(group, ctx)
+				So(err, ShouldBeNil)
+			}
+			result := ctx.Collector().ToArray()
+			So(len(result), ShouldEqual, 0)
+
+			groups = generateByteArrayEvents(4, map[string]string{"b": "1"})
+			for _, group := range groups {
+				err := agg.Record(group, ctx)
+				So(err, ShouldBeNil)
+			}
+			result = ctx.Collector().ToArray()
+			So(len(result), ShouldEqual, 1)
+			So(len(result[0].Events), ShouldEqual, 5)
+			target := result[0].Group.Metadata
+			So(target.Contains("a"), ShouldEqual, false)
+			So(target.Contains("b"), ShouldEqual, false)
+			So(target.Contains("nonexistentKEY"), ShouldEqual, true)
+			So(target.Get("nonexistentKEY"), ShouldEqual, "")
+
+		})
+
+		Convey("record with metric events,when events length exceeds GroupMaxEventLength", func() {
+			agg.GroupMaxEventLength = 5
+			ctx := ilogtail.NewObservePipelineConext(100)
+			groupEvent := generateMetricEvents(5, map[string]string{"a": "1"})
+			for _, group := range groupEvent {
+				err := agg.Record(group, ctx)
+				So(err, ShouldBeNil)
+			}
+			result := ctx.Collector().ToArray()
+			So(len(result), ShouldEqual, 0)
+
+			groupEvent = generateMetricEvents(4, map[string]string{"b": "1"})
+			for _, group := range groupEvent {
+				err := agg.Record(group, ctx)
+				So(err, ShouldBeNil)
+			}
+			result = ctx.Collector().ToArray()
+			So(len(result), ShouldEqual, 1)
+			So(len(result[0].Events), ShouldEqual, 5)
+			target := result[0].Group.Metadata
+			So(target.Contains("a"), ShouldEqual, false)
+			So(target.Contains("b"), ShouldEqual, false)
+			So(target.Contains("nonexistentKEY"), ShouldEqual, true)
+			So(target.Get("nonexistentKEY"), ShouldEqual, "")
+		})
+	})
+}
+
 func generateByteArrayEvents(count int, meta map[string]string) []*models.PipelineGroupEvents {
 	groupEventsArray := make([]*models.PipelineGroupEvents, 0, count)
 	event := models.ByteArray(RawData)

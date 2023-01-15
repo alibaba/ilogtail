@@ -110,13 +110,27 @@ func Test_findTargetFieldsInGroup(t *testing.T) {
 			args: args{
 				targetFields: []string{"metadata.db"},
 				group:        models.NewGroup(models.NewMetadataWithMap(map[string]string{"db": "test"}), nil),
-			}, want: map[string]string{"metadata.db": "test"}},
+			}, want: map[string]string{"metadata.db": "test"},
+		},
 		{
 			name: "find tags fields",
 			args: args{
-				targetFields: []string{"tags.tagKey"},
+				targetFields: []string{"tag.tagKey"},
 				group:        models.NewGroup(nil, models.NewTagsWithMap(map[string]string{"tagKey": "tagValue"})),
-			}, want: map[string]string{"tags.tagKey": "tagValue"},
+			}, want: map[string]string{"tag.tagKey": "tagValue"},
+		},
+		{name: "can not find metadata fields",
+			args: args{
+				targetFields: []string{"metadata.db"},
+				group:        models.NewGroup(models.NewMetadataWithMap(map[string]string{"nodb": "test"}), nil),
+			}, want: map[string]string{"metadata.db": ""},
+		},
+		{
+			name: "can not find tags fields",
+			args: args{
+				targetFields: []string{"tag.tagKey"},
+				group:        models.NewGroup(nil, models.NewTagsWithMap(map[string]string{"noTagKey": "tagValue"})),
+			}, want: map[string]string{"tag.tagKey": ""},
 		},
 	}
 	for _, tt := range tests {
