@@ -135,13 +135,11 @@ func GetContainerByAcceptedInfo(
 //	  deleted = fullList - containerMap
 //	  newList = containerMap - fullList
 //	  matchList -= deleted + filter(newList)
-//    addResultList: new container ID for current config
-//    deleteResultList: deleted container ID for current config
-//    addFullList = newList
-// 	  deleteFullList = deleted
-//
-//
-//		 return len(deleted), len(filter(newList)), addResultList, deleteResultList, addFullList, deleteFullList
+//    matchAddedList: new container ID for current config
+//    matchDeletedList: deleted container ID for current config
+//    fullAddedList = newList
+// 	  fullDeletedList = deleted
+//		 return len(deleted), len(filter(newList)), matchAddedList, matchDeletedList, fullAddedList, fullDeletedList
 //
 // @param fullList [in,out]: all containers.
 // @param matchList [in,out]: all matched containers.
@@ -161,7 +159,7 @@ func GetContainerByAcceptedInfoV2(
 	includeEnvRegex map[string]*regexp.Regexp,
 	excludeEnvRegex map[string]*regexp.Regexp,
 	k8sFilter *K8SFilter,
-) (newCount, delCount int, addResultList, deleteResultList, addFullList, deleteFullList []string) {
+) (newCount, delCount int, matchAddedList, matchDeletedList, fullAddedList, fullDeletedList []string) {
 	return getDockerCenterInstance().getAllAcceptedInfoV2(
 		fullList, matchList, includeLabel, excludeLabel, includeLabelRegex, excludeLabelRegex, includeEnv, excludeEnv, includeEnvRegex, excludeEnvRegex, k8sFilter)
 
