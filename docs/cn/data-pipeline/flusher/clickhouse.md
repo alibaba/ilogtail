@@ -10,6 +10,7 @@
 |-----------------------------------|----------|------|---------------------------------------------|
 | Addrs                             | String数组 | 是    | ClickHouse 地址                               |
 | Debug                             | Boolean     | 否    | 是否开启 ClickHouse-go 调试日志                     |
+| Authentication | Struct | 是 | Clickhouse 连接访问认证配置                         |
 | Authentication.PlainText.Username | String   | 否    | ClickHouse 用户名                              |
 | Authentication.PlainText.Password | String   | 否    | ClickHouse 密码                               |
 | Authentication.PlainText.Database | String   | 是    | 插入数据目标数据库名称                                 |
