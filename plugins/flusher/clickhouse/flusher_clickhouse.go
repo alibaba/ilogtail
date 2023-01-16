@@ -103,7 +103,7 @@ func NewFlusherClickHouse() *FlusherClickHouse {
 		MaxIdleConns:     5,
 		ConnMaxLifetime:  time.Duration(10) * time.Minute,
 		BlockBufferSize:  10,
-		KeyValuePairs:    false,
+		KeyValuePairs:    true,
 		BufferNumLayers:  16,
 		BufferMinTime:    10,
 		BufferMaxTime:    100,

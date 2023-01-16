@@ -21,7 +21,7 @@ import (
 )
 
 const clickHouseName = "clickhouse"
-const clickhouseQuerySQL = "select _timestamp,_log from `%s`.`%s` where _timestamp > %v order by _timestamp"
+const clickhouseQuerySQL = "select _timestamp,_log from `%s`.`ilogtail_%s_buffer` where _timestamp > %v order by _timestamp"
 
 type ClickHouseSubscriber struct {
 	Addr            string `mapstructure:"addr" comment:"the clickhouse host address"`
@@ -86,19 +86,6 @@ func (i *ClickHouseSubscriber) Start() error {
 		return err
 	}
 	i.client = conn
-	if i.CreateTable {
-		err := i.createDatabase()
-		if err != nil {
-			logger.Warningf(context.Background(), "CLICKHOUSE_SUBSCRIBER_ALARM", "failed to create database %s, host %, err: %s", i.Database, host, err)
-			return err
-		}
-		err = i.createTable()
-		if err != nil {
-			logger.Warningf(context.Background(), "CLICKHOUSE_SUBSCRIBER_ALARM", "failed to create table %s, err: %s", i.Table, err)
-			return err
-		}
-	}
-
 	go i.runQueryRecordsTask()
 	return nil
 }
@@ -113,30 +100,6 @@ func (i *ClickHouseSubscriber) SubscribeChan() <-chan *protocol.LogGroup {
 
 func (i *ClickHouseSubscriber) FlusherConfig() string {
 	return ""
-}
-
-func (i *ClickHouseSubscriber) createDatabase() error {
-	s := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", i.Database)
-	err := i.client.Exec(context.Background(), s)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// createDatabase Create action using DB information
-func (i *ClickHouseSubscriber) createTable() error {
-	s := fmt.Sprintf("CREATE TABLE IF NOT EXISTS default.demo" +
-		"(" +
-		"`_timestamp` Int64," +
-		"`_log` String" +
-		")" +
-		"ENGINE = Log;")
-	fmt.Println("INFO: Executing ", s)
-	if err := i.client.Exec(context.Background(), s); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (i *ClickHouseSubscriber) runQueryRecordsTask() {
@@ -170,6 +133,8 @@ func (i *ClickHouseSubscriber) queryRecords() (logGroup *protocol.LogGroup, maxT
 		logger.Warning(context.Background(), "CLICKHOUSE_SUBSCRIBER_ALARM", "err", err)
 		return
 	}
+	logger.Debug(context.Background(), "sql", s)
+
 	defer func() { _ = rows.Close() }()
 	for rows.Next() {
 		var (

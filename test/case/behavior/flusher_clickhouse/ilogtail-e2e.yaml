@@ -28,10 +28,18 @@ ilogtail:
           outputs:
             - Type: flusher_clickhouse
               Addrs: ["clickhouse:9000"]
-              Database: "default"
-              Table: "demo"
-              Username: ""
-              Password: ""
+              Authentication:
+                PlainText:
+                  Database: default
+                  Username:
+                  Password:
+              Table: demo
+              BufferMinTime: 10000000
+              BufferMaxTime: 100000000
+              BufferMinRows: 10000000
+              BufferMaxRows: 100000000
+              BufferMinBytes: 10000000
+              BufferMaxBytes: 100000000
   close_wait: 5s
   depends_on:
     clickhouse:
