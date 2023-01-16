@@ -284,7 +284,7 @@ func (f *FlusherPulsar) initProducerOptions() (pulsar.ProducerOptions, error) {
 func (f *FlusherPulsar) hashPartitionKey(valueMap map[string]string, defaultKey string) string {
 	var hashData []string
 	var notMatchKeys []string
-	for key, _ := range f.hashKeyMap {
+	for key := range f.hashKeyMap {
 		if value, ok := valueMap[key]; ok {
 			hashData = append(hashData, value)
 		} else {
