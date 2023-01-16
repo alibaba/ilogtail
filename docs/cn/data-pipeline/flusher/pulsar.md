@@ -8,7 +8,7 @@
 | 参数                                    | 类型       | 是否必选 | 说明                                                                                 |
 |---------------------------------------|----------|------|------------------------------------------------------------------------------------|
 | Type                                  | String   | 是    | 插件类型                                                                               |
-| Url                                   | String   | 是    | Pulsar url                                                                         |
+| Url                                   | String   | 是    | Pulsar url,多地址用逗号分隔，可以参考本文中的用例配置                                                   |
 | Topic                                 | String   | 是    | Pulsar Topic,支持动态topic, 例如: `test_%{contents.appname}`                             |
 | Name                                  | String   | 否    | producer名称，默认ilogtail                                                              |
 | Convert                               | Struct   | 否    | ilogtail数据转换协议配置                                                                   |
@@ -19,8 +19,8 @@
 | EnableTLS                             | Boolean  | 否    | 是否启用TLS安全连接，对应采用TLS和Athenz两种认证模式都需要设置为true，默认值：`false`                             |
 | TLSTrustCertsFilePath                 | String   | 否    | TLS CA根证书文件路径，对应采用TLS和Athenz认证时需要指定                                                |
 | Authentication                        | Struct   | 否    | Pulsar连接访问认证配置                                                                     |
-| Authentication.TLS.CertFile           | String   | 否    | TLS连接`kafka`证书文件路径                                                                 |
-| Authentication.TLS.KeyFile            | String   | 否    | TLS连接`kafka`私钥文件路径                                                                 |
+| Authentication.TLS.CertFile           | String   | 否    | TLS连接`Pulsar`证书文件路径                                                                |
+| Authentication.TLS.KeyFile            | String   | 否    | TLS连接`Pulsar`私钥文件路径                                                                |
 | Authentication.Token.Token            | String   | 否    | 采用JWT 认证方式的token                                                                   |
 | Authentication.Athenz.ProviderDomain  | String   | 否    | Provider domain name                                                               |
 | Authentication.Athenz.TenantDomain    | String   | 否    | 租户域                                                                                |
@@ -35,14 +35,14 @@
 | Authentication.OAuth2.Audience        | String   | 否    | Pulsar 集群的 OAuth 2.0 “资源服务” 的标识符                                                   |
 | Authentication.OAuth2.Scope           | String   | 否    | 访问范围                                                                               |
 | CompressionType                       | String   | 否    | 压缩算法，`NONE,LZ4,ZLIB,ZSTD`，默认值`NONE`                                                |
-| BlockIfQueueFull                      | Boolean  | 否    | 队列满的时候是否阻塞，默认值:false                                                               |
+| BlockIfQueueFull                      | Boolean  | 否    | 队列满的时候是否阻塞，默认值:`false`                                                             |
 | SendTimeout                           | Int      | 否    | 发送超时时间，默认`30s`                                                                     |
-| HashingScheme                         | Int      | 否    | 消息push分区的分发方式：0表示JavaStringHash,1表示Murmur3_32Hash                                  |
+| HashingScheme                         | Int      | 否    | 消息push分区的分发方式：`JavaStringHash`,`Murmur3_32Hash`,默认值：`JavaStringHash`               |
 | BatchingMaxPublishDelay               | int      | 否    | 提交时延，默认值：`1ms`                                                                     |
 | BatchingMaxMessages                   | int      | 否    | 批量提交最大消息数，默认值：`1000`                                                               |
-| MaxCacheProducers                     | int      | 否    | 动态topic情况下采用lru缓存的最大Producer数量 ，默认最大数量：8                                           |
+| MaxCacheProducers                     | int      | 否    | 动态topic情况下最大Producer数量 ，默认最大数量：8,使用动态topic的使用可以根据自己的情况调整。                          |
 | PartitionKeys                         | String数组 | 否    | 指定消息分区分发的key。                                                                      |
-| ClientID                              | String   | 否    | 写入Pulsar的Client ID，默认取值：`LogtailPlugin`。                                           |
+| ClientID                              | String   | 否    | 写入Pulsar的Client ID，默认取值：`iLogtail`。                                                |
 
 
 ## 样例
@@ -232,7 +232,7 @@ inputs:
     FilePattern: "*.log"
 flushers:
   - Type: flusher_pulsar
-    URL: "pulsar+ssl://192.168.6.128:6650,192.168.6.129:6650,192.168.6.130:6650"
+    URL: "pulsar+ssl://192.168.6.128:6651,192.168.6.129:6651,192.168.6.130:6651"
     EnableTLS: true
     TLSTrustCertsFilePath: /data/cert/ca.crt
     Authentication:
@@ -254,7 +254,7 @@ inputs:
     FilePattern: "*.log"
 flushers:
   - Type: flusher_pulsar
-    URL: "pulsar+ssl://192.168.6.128:6650,192.168.6.129:6650,192.168.6.130:6650"
+    URL: "pulsar+ssl://192.168.6.128:6651,192.168.6.129:6651,192.168.6.130:6651"
     EnableTLS: true
     TLSTrustCertsFilePath: /data/cert/ca.crt
     Authentication:

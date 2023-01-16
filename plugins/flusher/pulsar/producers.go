@@ -49,10 +49,6 @@ func NewProducers(context context.Context, maxProducers int) *Producers {
 }
 
 func (p *Producers) GetProducer(topic string, client pulsar.Client, producerOptions pulsar.ProducerOptions) (pulsar.Producer, error) {
-	producer, ok := p.getProducer(topic)
-	if ok {
-		return producer, nil
-	}
 	return p.getOrCreateProducer(topic, client, producerOptions)
 }
 
@@ -69,15 +65,6 @@ func (p *Producers) Close() error {
 	}
 	p.mu.Unlock()
 	return errs
-}
-func (p *Producers) getProducer(topic string) (pulsar.Producer, bool) {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-	value, ok := p.cache.Get(topic)
-	if ok {
-		return value.(pulsar.Producer), ok
-	}
-	return nil, false
 }
 
 func (p *Producers) getOrCreateProducer(topic string, client pulsar.Client, producerOptions pulsar.ProducerOptions) (pulsar.Producer, error) {

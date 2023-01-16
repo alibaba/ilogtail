@@ -16,6 +16,7 @@ package pulsar
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -52,7 +53,7 @@ type FlusherPulsar struct {
 	// CompressionType  Codec used to produce messages,NONE,LZ4,ZLIB,ZSTD(0,1,2,3)
 	CompressionType string
 	// HashingScheme is used to define the partition on where to publish a particular message
-	HashingScheme pulsar.HashingScheme
+	HashingScheme string
 	// the batch push delay
 	BatchingMaxPublishDelay time.Duration
 	// maximum number of messages in a batch
@@ -121,9 +122,17 @@ func (f *FlusherPulsar) Init(context ilogtail.Context) error {
 		return err
 	}
 	f.pulsarClient = client
+
 	// Init pulsar producers
 	f.producers = NewProducers(f.context.GetRuntimeContext(), f.MaxCacheProducers)
-	f.producerOptions = f.initProducerOptions()
+
+	// Init Producer options
+	producerOptions, err := f.initProducerOptions()
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init pulsar flusher producer options fail, error", err)
+		return err
+	}
+	f.producerOptions = producerOptions
 
 	// Init partition keys
 	if f.PartitionKeys != nil {
@@ -132,7 +141,6 @@ func (f *FlusherPulsar) Init(context ilogtail.Context) error {
 			f.hashKeyMap[key] = struct{}{}
 		}
 	}
-
 	return nil
 }
 
@@ -241,18 +249,25 @@ func (f *FlusherPulsar) initClientOptions() pulsar.ClientOptions {
 	return options
 }
 
-func (f *FlusherPulsar) initProducerOptions() pulsar.ProducerOptions {
+func (f *FlusherPulsar) initProducerOptions() (pulsar.ProducerOptions, error) {
 	producerOptions := pulsar.ProducerOptions{
 		Topic: f.Topic,
 	}
 	if len(f.Name) > 0 {
 		producerOptions.Name = f.Name
 	}
-	if f.HashingScheme > 0 {
-		producerOptions.HashingScheme = f.HashingScheme
-	}
 
-	producerOptions.CompressionType = f.convertCompressionType(f.CompressionType)
+	hashScheme, err := f.convertHashScheme(f.HashingScheme)
+	if err != nil {
+		return pulsar.ProducerOptions{}, err
+	}
+	producerOptions.HashingScheme = hashScheme
+
+	compressType, err := f.convertCompressionType(f.CompressionType)
+	if err != nil {
+		return pulsar.ProducerOptions{}, err
+	}
+	producerOptions.CompressionType = compressType
 
 	if f.BatchingMaxPublishDelay > 0 {
 		producerOptions.BatchingMaxPublishDelay = f.BatchingMaxPublishDelay
@@ -263,15 +278,21 @@ func (f *FlusherPulsar) initProducerOptions() pulsar.ProducerOptions {
 	if f.DisableBlockIfQueueFull {
 		producerOptions.DisableBlockIfQueueFull = f.DisableBlockIfQueueFull
 	}
-	return producerOptions
+	return producerOptions, nil
 }
 
 func (f *FlusherPulsar) hashPartitionKey(valueMap map[string]string, defaultKey string) string {
 	var hashData []string
-	for key, value := range valueMap {
-		if _, ok := f.hashKeyMap[key]; ok {
+	var notMatchKeys []string
+	for key, _ := range f.hashKeyMap {
+		if value, ok := valueMap[key]; ok {
 			hashData = append(hashData, value)
+		} else {
+			notMatchKeys = append(notMatchKeys, key)
 		}
+	}
+	if len(notMatchKeys) > 0 {
+		logger.Warning(f.context.GetRuntimeContext(), "Some fields in PartitionKeys cannot be matched in the log content, keys", notMatchKeys)
 	}
 	if len(hashData) == 0 {
 		hashData = append(hashData, defaultKey)
@@ -280,16 +301,29 @@ func (f *FlusherPulsar) hashPartitionKey(valueMap map[string]string, defaultKey 
 	return strings.Join(hashData, "###")
 }
 
-func (f *FlusherPulsar) convertCompressionType(compressionType string) pulsar.CompressionType {
+func (f *FlusherPulsar) convertCompressionType(compressionType string) (pulsar.CompressionType, error) {
 	switch compressionType {
+	case "NONE":
+		return pulsar.NoCompression, nil
 	case "LZ4":
-		return pulsar.LZ4
+		return pulsar.LZ4, nil
 	case "ZLIB":
-		return pulsar.ZLib
+		return pulsar.ZLib, nil
 	case "ZSTD":
-		return pulsar.ZSTD
+		return pulsar.ZSTD, nil
 	default:
-		return pulsar.NoCompression
+		return pulsar.NoCompression, fmt.Errorf("CompressionType should be one of 'NONE', 'LZ4', 'ZLIB', or 'ZSTD'. configured value %v", compressionType)
+	}
+}
+
+func (f *FlusherPulsar) convertHashScheme(hashScheme string) (pulsar.HashingScheme, error) {
+	switch hashScheme {
+	case "JavaStringHash":
+		return pulsar.JavaStringHash, nil
+	case "Murmur3_32Hash ":
+		return pulsar.Murmur3_32Hash, nil
+	default:
+		return pulsar.JavaStringHash, fmt.Errorf("HashingScheme  should be one of 'JavaStringHash', 'Murmur3_32Hash'. configured value %v", hashScheme)
 	}
 }
 
@@ -297,12 +331,14 @@ func init() {
 	ilogtail.Flushers["flusher_pulsar"] = func() ilogtail.Flusher {
 		return &FlusherPulsar{
 			URL:               "",
-			ClientID:          "LogtailPlugin",
+			ClientID:          "iLogtail",
 			MaxCacheProducers: 8,
 			Convert: convertConfig{
 				Protocol: converter.ProtocolCustomSingle,
 				Encoding: converter.EncodingJSON,
 			},
+			CompressionType: "NONE",
+			HashingScheme:   "JavaStringHash",
 		}
 	}
 }
