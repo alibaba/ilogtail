@@ -135,10 +135,10 @@ func GetContainerByAcceptedInfo(
 //	  deleted = fullList - containerMap
 //	  newList = containerMap - fullList
 //	  matchList -= deleted + filter(newList)
-//    matchAddedList: new container ID for current config
-//    matchDeletedList: deleted container ID for current config
-//    fullAddedList = newList
-// 	  fullDeletedList = deleted
+//	  matchAddedList: new container ID for current config
+//	  matchDeletedList: deleted container ID for current config
+//	  fullAddedList = newList
+//	  fullDeletedList = deleted
 //		 return len(deleted), len(filter(newList)), matchAddedList, matchDeletedList, fullAddedList, fullDeletedList
 //
 // @param fullList [in,out]: all containers.
