@@ -177,7 +177,7 @@ func (s *containerConfigTestSuite) TestLargeCountLog() {
 		]
 	}`
 	nowTime := (uint32)(time.Now().Unix())
-	ContainerConfig, err := loadBuiltinConfig("container", "sls-admin", "logtail_containers", "logtail_containers", configStr)
+	ContainerConfig, err := loadBuiltinConfig("container", "sls-test", "logtail_containers", "logtail_containers", configStr)
 	s.NoError(err)
 	ContainerConfig.Start()
 	loggroup := &protocol.LogGroup{}
