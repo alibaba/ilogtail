@@ -138,6 +138,9 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 		if meta.SampleRate > 0 {
 			labelsMap["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
 		}
+		for k, v := range meta.Key.Labels() {
+			labelsMap[k] = v
+		}
 
 		t.IterateStacks(func(name string, self uint64, stack []string) {
 			fs := name + splitor + strings.Join(stack, "\n")

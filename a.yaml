@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 120s # Default is every 30s.
+  scrape_timeout: 240s  #is set to the global default (10s).
+scrape_configs:
+  - job_name: 'prometheus'
+    labels:
+      config: instance1
+    static_configs:
+      - targets: ['localhost:8080']
