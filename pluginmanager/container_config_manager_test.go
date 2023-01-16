@@ -20,15 +20,19 @@ package pluginmanager
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/alibaba/ilogtail/plugins/flusher/checker"
 	_ "github.com/alibaba/ilogtail/plugins/flusher/sls"
 	_ "github.com/alibaba/ilogtail/plugins/input/docker/stdout"
 )
