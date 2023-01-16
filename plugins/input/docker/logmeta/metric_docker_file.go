@@ -346,7 +346,7 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 			logger.Warning(idf.context.GetRuntimeContext(), "check docker mount path error", err.Error())
 		}
 
-		logger.Info(idf.context.GetRuntimeContext(), "bestMatchedPath for logPath:%v container id:%v name:%v created:%v status:%v sourcePath:%v containerPath:%v",
+		logger.Debugf(idf.context.GetRuntimeContext(), "bestMatchedPath for logPath:%v container id:%v name:%v created:%v status:%v sourcePath:%v containerPath:%v",
 			idf.LogPath, info.ContainerInfo.ID, info.ContainerInfo.Name, info.ContainerInfo.Created, info.ContainerInfo.State.Status, sourcePath, containerPath)
 		if len(sourcePath) > 0 {
 			if info.ContainerInfo.State.Status == helper.ContainerStatusRunning {
@@ -375,7 +375,7 @@ func (idf *InputDockerFile) Collect(collector ilogtail.Collector) error {
 		if newCount != 0 || delCount != 0 {
 			util.RecordConfigResultIncrement(configResult)
 		}
-		logger.Infof(idf.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
+		logger.Debugf(idf.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
 	}
 
 	for id := range idf.lastPathMappingCache {

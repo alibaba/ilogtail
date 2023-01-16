@@ -21,13 +21,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/docker/docker/api/types"
+
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input"
-
-	"github.com/docker/docker/api/types"
 )
 
 const serviceDockerStdoutKey = "service_docker_stdout_v2"
@@ -307,7 +307,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 		if newCount != 0 || delCount != 0 {
 			util.RecordConfigResultIncrement(configResult)
 		}
-		logger.Infof(sds.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
+		logger.Debugf(sds.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
 	}
 
 	if !firstStart && newCount == 0 && delCount == 0 {

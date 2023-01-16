@@ -17,7 +17,6 @@ package pluginmanager
 import (
 	"context"
 	"sync"
-
 	"time"
 
 	"github.com/alibaba/ilogtail/helper"
@@ -100,7 +99,7 @@ func CollectContainers(logGroup *protocol.LogGroup) {
 
 func CollectDeleteContainers(logGroup *protocol.LogGroup) {
 	containerIDs := util.GetDeletedContainerIDs()
-	logger.Info(context.Background(), "GetDeletedContainerIDs", containerIDs)
+	logger.Debugf(context.Background(), "GetDeletedContainerIDs", containerIDs)
 	if len(containerIDs) > 0 {
 		projectSet := make(map[string]struct{})
 
@@ -143,7 +142,7 @@ func refreshEnvAndLabel() {
 			labelSet[key] = struct{}{}
 		}
 	}
-	logger.Info(context.Background(), "refreshEnvAndLabel", envSet, labelSet)
+	logger.Debugf(context.Background(), "refreshEnvAndLabel", envSet, labelSet)
 }
 
 func compareEnvAndLabel() (diffEnvSet, diffLabelSet map[string]struct{}) {
@@ -172,7 +171,7 @@ func compareEnvAndLabelAndRecordContainer() {
 	defer envAndLabelMutex.Unlock()
 
 	diffEnvSet, diffLabelSet := compareEnvAndLabel()
-	logger.Info(context.Background(), "compareEnvAndLabel", diffEnvSet, diffLabelSet)
+	logger.Debugf(context.Background(), "compareEnvAndLabel", diffEnvSet, diffLabelSet)
 
 	if len(diffEnvSet) != 0 || len(diffLabelSet) != 0 {
 		projectSet := make(map[string]struct{})
@@ -188,7 +187,7 @@ func compareEnvAndLabelAndRecordContainer() {
 		projectStr := util.GetStringFromList(keys)
 		result := helper.GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, diffEnvSet, diffLabelSet)
 
-		logger.Info(context.Background(), "GetAllContainerIncludeEnvAndLabelToRecord", result)
+		logger.Debugf(context.Background(), "GetAllContainerIncludeEnvAndLabelToRecord", result)
 
 		for _, containerInfo := range result {
 			var containerDetailToRecord util.ContainerDetail
@@ -221,7 +220,7 @@ func TimerFetchFuction() {
 		flagFirst := true
 		refreshEnvAndLabel()
 		for {
-			logger.Info(context.Background(), "timerFetchFuction", time.Since(lastFetchAllTime))
+			logger.Debugf(context.Background(), "timerFetchFuction", time.Since(lastFetchAllTime))
 			time.Sleep(time.Duration(10) * time.Second)
 
 			fetchInterval := FetchAllInterval
@@ -230,6 +229,7 @@ func TimerFetchFuction() {
 				fetchInterval = FirstFetchAllInterval
 			}
 			if time.Since(lastFetchAllTime) >= fetchInterval {
+				logger.Info(context.Background(), "timerFetchFuction running", time.Since(lastFetchAllTime))
 				refreshEnvAndLabel()
 				timerRecordData()
 				lastFetchAllTime = time.Now()
