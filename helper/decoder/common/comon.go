@@ -35,6 +35,7 @@ const (
 	ProtocolStatsd     = "statsd"
 	ProtocolOTLPLogV1  = "otlp_logv1"
 	ProtocolPyroscope  = "pyroscope"
+	JavaFlightRecord   = "JavaFlightRecord"
 )
 
 func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) ([]byte, int, error) {
