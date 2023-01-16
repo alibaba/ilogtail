@@ -145,3 +145,51 @@ func loadMockConfig() error {
 	}`
 	return LoadLogstoreConfig(project, logstore, configName, 666, configStr)
 }
+
+func (s *containerConfigTestSuite) TestLargeCountLog() {
+	configStr := `
+	{
+		"global": {
+			"InputIntervalMs" :  30000,
+			"AggregatIntervalMs": 1000,
+			"FlushIntervalMs": 1000,
+			"DefaultLogQueueSize": 4,
+			"DefaultLogGroupQueueSize": 4,
+			"Tags" : {
+				"base_version" : "0.1.0",
+				"logtail_version" : "0.16.19"
+			}
+		},
+		"inputs" : [
+			{
+				"type" : "metric_container",
+				"detail" : null
+			}
+		],
+		"flushers": [
+			{
+				"type": "flusher_checker"
+			}
+		]
+	}`
+	nowTime := (uint32)(time.Now().Unix())
+	ContainerConfig, err := loadBuiltinConfig("container", "sls-admin", "logtail_containers", "logtail_containers", configStr)
+	s.NoError(err)
+	ContainerConfig.Start()
+	loggroup := &protocol.LogGroup{}
+	for i := 1; i <= 100000; i++ {
+		log := &protocol.Log{}
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "test", Value: "123"})
+		log.Time = nowTime
+		loggroup.Logs = append(loggroup.Logs, log)
+	}
+
+	for _, log := range loggroup.Logs {
+		ContainerConfig.PluginRunner.ReceiveRawLog(&ilogtail.LogWithContext{Log: log})
+	}
+	s.Equal(1, len(GetConfigFluhsers(ContainerConfig.PluginRunner)))
+	time.Sleep(time.Millisecond * time.Duration(1500))
+	c, ok := GetConfigFluhsers(ContainerConfig.PluginRunner)[0].(*checker.FlusherChecker)
+	s.True(ok)
+	s.Equal(100000, c.GetLogCount())
+}
