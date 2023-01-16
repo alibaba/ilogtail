@@ -20,11 +20,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/events"
 	docker "github.com/docker/docker/client"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type ContainerMeta struct {
@@ -135,14 +135,20 @@ func GetContainerByAcceptedInfo(
 //	  deleted = fullList - containerMap
 //	  newList = containerMap - fullList
 //	  matchList -= deleted + filter(newList)
-//		 return len(deleted), len(filter(newList))
+//    addResultList: new container ID for current config
+//    deleteResultList: deleted container ID for current config
+//    addFullList = newList
+// 	  deleteFullList = deleted
+//
+//
+//		 return len(deleted), len(filter(newList)), addResultList, deleteResultList, addFullList, deleteFullList
 //
 // @param fullList [in,out]: all containers.
 // @param matchList [in,out]: all matched containers.
 //
-// It returns two integers: the number of new matched containers
-//
-//	and deleted containers.
+// It returns two integers and four list
+// two integers: the number of new matched containers and deleted containers.
+// four list: new matched containers list, deleted matched containers list, added containers list, delete containers list
 func GetContainerByAcceptedInfoV2(
 	fullList map[string]bool,
 	matchList map[string]*DockerInfoDetail,
