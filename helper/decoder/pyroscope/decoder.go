@@ -9,17 +9,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
+	"github.com/pyroscope-io/pyroscope/pkg/util/attime"
+
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/helper/profile/jfr"
-	"github.com/alibaba/ilogtail/helper/profile/pprof"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/pprof"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/tire"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
-	"github.com/pyroscope-io/pyroscope/pkg/util/attime"
 )
 
 const AlarmType = "PYROSCOPE_ALARM"
