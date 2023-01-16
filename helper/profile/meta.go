@@ -51,13 +51,13 @@ const (
 	ObjectsUnit          Units = "objects"
 	BytesUnit            Units = "bytes"
 	GoroutinesUnits      Units = "goroutines"
-	LockNanosecondsUnits Units = "lock_ns"
+	LockNanosecondsUnits Units = "lock_nanoseconds"
 	LockSamplesUnits     Units = "local_samples"
 )
 
 func (u Units) DetectProfileType() string {
 	switch u {
-	case NanosecondsUnit:
+	case NanosecondsUnit, SamplesUnits:
 		return "profile_cpu"
 	case ObjectsUnit, BytesUnit:
 		return "profile_mem"
@@ -67,6 +67,20 @@ func (u Units) DetectProfileType() string {
 		return "profile_mutex"
 	}
 	return "profile_unknown"
+}
+
+func (u Units) DetectValueType() string {
+	switch u {
+	case NanosecondsUnit, SamplesUnits:
+		return "cpu"
+	case ObjectsUnit, BytesUnit:
+		return "mem"
+	case GoroutinesUnits:
+		return "goroutines"
+	case LockSamplesUnits, LockNanosecondsUnits:
+		return "mutex"
+	}
+	return "unknown"
 }
 
 type RawProfile interface {
