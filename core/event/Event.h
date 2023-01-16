@@ -147,7 +147,7 @@ public:
     std::string GetTypeString() const {
         std::string type;
         if (IsDir()) {
-            type = "ISDIR && ";
+            type = "ISDIR | ";
         }
         if (IsCreate()) {
             type += "CREATE";

@@ -78,7 +78,7 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
             LOG_INFO(sLogger,
                      ("skip dump reader meta", "invalid log reader queue name")("project", mProjectName)(
                          "logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
-                         "file device", mDevInode.dev)("file inode", mDevInode.inode)("file signature",
+                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature",
                                                                                       mLastFileSignatureHash));
             return;
         }
@@ -88,14 +88,14 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
             LOG_INFO(sLogger,
                      ("skip dump reader meta", "no config matches the file path")("project", mProjectName)(
                          "logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
-                         "file device", mDevInode.dev)("file inode", mDevInode.inode)("file signature",
+                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature",
                                                                                       mLastFileSignatureHash));
             return;
         }
         LOG_INFO(
             sLogger,
             ("dump log reader meta, project", mProjectName)("logstore", mCategory)("config", mConfigName)(
-                "log reader queue name", mLogPath)("file device", mDevInode.dev)("file inode", mDevInode.inode)(
+                "log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
                 "file signature", mLastFileSignatureHash)("real file path", mRealLogPath)("file size", mLastFileSize)(
                 "last file position", mLastFilePos)("is file opened", ToString(mLogFileOp.IsOpen())));
     }
