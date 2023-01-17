@@ -14,7 +14,8 @@ import (
 
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/helper/profile/jfr"
+	"github.com/alibaba/ilogtail/helper/profile/pyroscope/collapsed"
+	"github.com/alibaba/ilogtail/helper/profile/pyroscope/jfr"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/pprof"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/tire"
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -38,11 +39,16 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 		in.Profile = &pprof.RawProfile{
 			RawData: data,
 		}
-	case ft == "jfr":
+	case ft == profile.FormatJFR:
 		in.Profile = &jfr.RawProfile{
 			FormDataContentType: ct,
 			RawData:             data,
 		}
+	case ft == profile.FormatCollapsed: {
+		in.Profile = &collapsed.RawProfile {
+			RawData:             data,
+		}
+	}
 	case strings.Contains(ct, "multipart/form-data"):
 		in.Profile = &pprof.RawProfile{
 			FormDataContentType: ct,
