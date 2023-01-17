@@ -209,12 +209,11 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 				Key:   "__tag__:dataType",
 				Value: "CallStack",
 			},
-			/*
-				&protocol.Log_Content{
-					Key:   "__tag__:durationNs",
-					Value: strconv.FormatInt(tp.GetDurationNanos(), 10),
-				},
-			*/
+			&protocol.Log_Content{
+				Key:   "__tag__:durationNs",
+				Value: strconv.FormatInt(meta.EndTime.Sub(meta.StartTime).Nanoseconds(), 10),
+			},
+
 			&protocol.Log_Content{
 				Key:   "__tag__:profileID",
 				Value: profileIDStr,
@@ -295,7 +294,7 @@ func buildKey(n string, appLabels map[string]string, labels tree.Labels, snapsho
 	for k, v := range appLabels {
 		finalLabels[k] = v
 	}
-	for _, v := range labels { //todo
+	for _, v := range labels {
 		ks, ok := snapshot.Strings[v.Key]
 		if !ok {
 			continue
@@ -303,8 +302,7 @@ func buildKey(n string, appLabels map[string]string, labels tree.Labels, snapsho
 		vs, ok := snapshot.Strings[v.Str]
 		finalLabels[ks] = vs
 	}
-
-	finalLabels["__name__"] += "." + n
+	// finalLabels["__name__"] += "." + n
 	return segment.NewKey(finalLabels)
 }
 

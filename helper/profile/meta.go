@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
+
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 type Input struct {
@@ -19,6 +19,7 @@ type Format string
 const (
 	FormatPprof      Format = "pprof"
 	FormatJFR        Format = "jfr"
+	FormatCollapsed     Format = ""
 	FormatTrie       Format = "trie"
 	FormatTree       Format = "tree"
 	FormatLines      Format = "lines"
