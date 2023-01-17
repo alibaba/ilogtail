@@ -97,7 +97,6 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [github.com/go-faster/errors](https://pkg.go.dev/github.com/go-faster/errors?tab=licenses)
 - [github.com/pierrec/lz4](https://pkg.go.dev/github.com/pierrec/lz4?tab=licenses)
 
-
 ## MIT licenses
 
 - [github.com/pelletier/go-toml](https://pkg.go.dev/github.com/pelletier/go-toml?tab=licenses)
