@@ -68,39 +68,39 @@ func extractLogs(ctx context.Context, data string, meta *profile.Meta) ([]*proto
 			Value: strconv.FormatUint(xxhash.Sum64String(fs), 10),
 		},
 		&protocol.Log_Content{
-			Key:   "__tag__:language",
+			Key:   "language",
 			Value: meta.SpyName,
 		},
 		&protocol.Log_Content{
-			Key:   "__tag__:type",
+			Key:   "type",
 			Value: meta.Units.DetectProfileType(),
 		},
 		&protocol.Log_Content{
-			Key:   "__tag__:units",
+			Key:   "units",
 			Value: string(meta.Units),
 		},
 		&protocol.Log_Content{
-			Key:   "__tag__:valueTypes",
+			Key:   "valueTypes",
 			Value: "unknown",
 		},
 		&protocol.Log_Content{
-			Key:   "__tag__:aggTypes",
+			Key:   "aggTypes",
 			Value: string(meta.AggregationType),
 		},
 		&protocol.Log_Content{
-			Key:   "__tag__:dataType",
+			Key:   "dataType",
 			Value: "CallStack",
 		},
 		&protocol.Log_Content{
-			Key:   "__tag__:durationNs",
+			Key:   "durationNs",
 			Value: "0",
 		},
 		&protocol.Log_Content{
-			Key:   "__tag__:profileID",
+			Key:   "profileID",
 			Value: "unknown",
 		},
 		&protocol.Log_Content{
-			Key:   "__tag__:labels",
+			Key:   "labels",
 			Value: "",
 		},
 		&protocol.Log_Content{

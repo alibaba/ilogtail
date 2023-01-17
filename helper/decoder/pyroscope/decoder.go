@@ -2,7 +2,6 @@ package pyroscope
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -17,7 +16,7 @@ import (
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/collapsed"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/jfr"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/pprof"
-	"github.com/alibaba/ilogtail/helper/profile/pyroscope/tire"
+	"github.com/alibaba/ilogtail/helper/profile/pyroscope/raw"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
@@ -28,7 +27,14 @@ type Decoder struct {
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
-	logger.Debug(context.Background(), "URL", req.URL.Query().Encode())
+	if logger.DebugFlag() {
+		var h string
+		for k, v := range req.Header {
+			h += "key: " + k + " val: " + strings.Join(v, ",")
+		}
+		logger.Debug(context.Background(), "URL", req.URL.Query().Encode(), "Header", h)
+	}
+
 	in, ft, err := d.parseInputMeta(req)
 	if err != nil {
 		return nil, err
@@ -44,25 +50,25 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 			FormDataContentType: ct,
 			RawData:             data,
 		}
-	case ft == profile.FormatCollapsed: {
-		in.Profile = &collapsed.RawProfile {
-			RawData:             data,
+	case ft == profile.FormatCollapsed:
+		in.Profile = &collapsed.RawProfile{
+			RawData: data,
 		}
-	}
 	case strings.Contains(ct, "multipart/form-data"):
 		in.Profile = &pprof.RawProfile{
 			FormDataContentType: ct,
 			RawData:             data,
 		}
 	case ft == profile.FormatTrie, ct == "binary/octet-stream+trie":
-		in.Profile = &tire.RawProfile{
+		in.Profile = &raw.Profile{
 			RawData: data,
+			Format:  profile.FormatTrie,
 		}
-
 	default:
-		st := fmt.Sprintf("unknown format type %s or content type %s", ft, ct)
-		logger.Debug(context.Background(), st)
-		return nil, errors.New(st)
+		in.Profile = &raw.Profile{
+			RawData: data,
+			Format:  profile.FormatGroups,
+		}
 	}
 	return in.Profile.Parse(context.Background(), &in.Metadata)
 }
@@ -106,6 +112,8 @@ func (d *Decoder) parseInputMeta(req *http.Request) (*profile.Input, profile.For
 	}
 
 	if sn := q.Get("spyName"); sn != "" {
+		sn = strings.TrimPrefix(sn, "pyroscope-")
+		sn = strings.TrimSuffix(sn, "spy")
 		input.Metadata.SpyName = sn
 	} else {
 		input.Metadata.SpyName = "unknown"
