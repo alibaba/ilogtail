@@ -1,0 +1,58 @@
+# Copyright 2023 iLogtail Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+boot:
+  category: docker-compose
+testing_interval: 10s
+ilogtail:
+  config:
+    - name: flusher-pulsar-case
+      detail:
+        - inputs:
+            - Type: metric_mock
+              IntervalMs: 100
+              Tags:
+                tag1: aaaa
+                tag2: bbb
+              Fields:
+                content: "hello pulsar"
+                time: 2017.09.12 20:55:36
+          outputs:
+            - Type: flusher_pulsar
+              URL: pulsar://pulsar:6650
+              Topic: "test"
+  close_wait: 5s
+  depends_on:
+    pulsar:
+      condition: service_healthy
+subscriber:
+  name: pulsar
+  config:
+    url: pulsar://pulsar:6650
+    topic: test
+verify:
+  log_rules:
+    - name: fields-check
+      validator: log_fields
+      spec:
+        expect_log_fields:
+          - tag1
+          - tag2
+          - content
+          - time
+  system_rules:
+    - name: counter-check
+      validator: sys_counter
+      spec:
+        expect_received_minimum_log_num: 1
