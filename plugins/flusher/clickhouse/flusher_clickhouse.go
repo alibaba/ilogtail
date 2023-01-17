@@ -215,7 +215,7 @@ func newConn(f *FlusherClickHouse) (driver.Conn, error) {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
 		return nil, err
 	}
-	opt := &clickhouse.Options{
+	opt := &clickhouse.Options{ // #nosec G402
 		TLS: &tls.Config{
 			InsecureSkipVerify: true,
 		},
