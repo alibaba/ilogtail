@@ -16,6 +16,7 @@ package httpserver
 
 import (
 	"context"
+	"github.com/alibaba/ilogtail/pkg/util"
 	"net"
 	"net/http"
 	"net/url"
@@ -62,7 +63,10 @@ func (s *ServiceHTTP) Init(context ilogtail.Context) (int, error) {
 	if s.Format == common.ProtocolPyroscope {
 		s.Address += "/ingest"
 	}
-
+	if strings.Contains(s.Address, "SELF_ADDR") {
+		s.Address = strings.ReplaceAll(s.Address, "SELF_ADDR", util.GetIPAddress())
+	}
+	logger.Infof(context.GetRuntimeContext(), "addr", s.Address, "format", s.Format)
 	return 0, nil
 }
 

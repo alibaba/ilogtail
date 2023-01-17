@@ -186,41 +186,41 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 				Value: strconv.FormatUint(id, 10),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:language",
+				Key:   "language",
 				Value: meta.SpyName,
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:type",
+				Key:   "type",
 				Value: meta.Units.DetectProfileType(),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:units",
+				Key:   "units",
 				Value: strings.Join(unitMap[id], ","),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:valueTypes",
+				Key:   "valueTypes",
 				Value: strings.Join(typeMap[id], ","),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:aggTypes",
+				Key:   "aggTypes",
 				Value: strings.Join(aggtypeMap[id], ","),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:dataType",
+				Key:   "dataType",
 				Value: "CallStack",
 			},
 			/*
 				&protocol.Log_Content{
-					Key:   "__tag__:durationNs",
+					Key:   "durationNs",
 					Value: strconv.FormatInt(tp.GetDurationNanos(), 10),
 				},
 			*/
 			&protocol.Log_Content{
-				Key:   "__tag__:profileID",
+				Key:   "profileID",
 				Value: profileIDStr,
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:labels",
+				Key:   "labels",
 				Value: string(b),
 			},
 		)
