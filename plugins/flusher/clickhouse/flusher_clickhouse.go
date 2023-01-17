@@ -216,7 +216,9 @@ func newConn(f *FlusherClickHouse) (driver.Conn, error) {
 		return nil, err
 	}
 	opt := &clickhouse.Options{
-		TLS:  &tls.Config{InsecureSkipVerify: true},
+		TLS: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 		Addr: f.Addrs,
 		DialContext: func(ctx context.Context, addr string) (net.Conn, error) {
 			var d net.Dialer
