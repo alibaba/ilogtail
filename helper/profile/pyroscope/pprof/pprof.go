@@ -129,7 +129,6 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 		}
 		for k, v := range meta.Key.Labels() {
 			labelsMap[k] = v
-			logger.Debugf(ctx, "key labels: %s: %s", k, v)
 		}
 
 		t.IterateStacks(func(name string, self uint64, stack []string) {
@@ -151,7 +150,6 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 	if err != nil {
 		return nil, fmt.Errorf("iterate profile tree error: %w", err)
 	}
-	meta.SpyName = strings.TrimSuffix(meta.SpyName, "spy")
 	for id, fs := range stackMap {
 		if len(valMap[id]) == 0 || len(typeMap[id]) == 0 || len(unitMap[id]) == 0 || labelMap[id] == nil {
 			logger.Warning(ctx, "PPROF_PROFILE_ALARM", "stack don't have enough meta or values", fs)

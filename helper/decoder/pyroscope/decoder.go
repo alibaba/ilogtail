@@ -13,7 +13,6 @@ import (
 
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/helper/profile/pyroscope/collapsed"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/jfr"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/pprof"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/raw"
@@ -27,48 +26,49 @@ type Decoder struct {
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
-	if logger.DebugFlag() {
-		var h string
-		for k, v := range req.Header {
-			h += "key: " + k + " val: " + strings.Join(v, ",")
-		}
-		logger.Debug(context.Background(), "URL", req.URL.Query().Encode(), "Header", h)
-	}
-
 	in, ft, err := d.parseInputMeta(req)
 	if err != nil {
 		return nil, err
 	}
 	ct := req.Header.Get("Content-Type")
+	var category string
 	switch {
 	case ft == profile.FormatPprof:
 		in.Profile = &pprof.RawProfile{
 			RawData: data,
 		}
+		category = "pprof"
 	case ft == profile.FormatJFR:
 		in.Profile = &jfr.RawProfile{
 			FormDataContentType: ct,
 			RawData:             data,
 		}
-	case ft == profile.FormatCollapsed:
-		in.Profile = &collapsed.RawProfile{
-			RawData: data,
-		}
+		category = "JFR"
 	case strings.Contains(ct, "multipart/form-data"):
 		in.Profile = &pprof.RawProfile{
 			FormDataContentType: ct,
 			RawData:             data,
 		}
+		category = "pprof"
 	case ft == profile.FormatTrie, ct == "binary/octet-stream+trie":
 		in.Profile = &raw.Profile{
 			RawData: data,
 			Format:  profile.FormatTrie,
 		}
+		category = "tire"
 	default:
 		in.Profile = &raw.Profile{
 			RawData: data,
 			Format:  profile.FormatGroups,
 		}
+		category = "groups"
+	}
+	if logger.DebugFlag() {
+		var h string
+		for k, v := range req.Header {
+			h += "key: " + k + " val: " + strings.Join(v, ",")
+		}
+		logger.Debug(context.Background(), "CATEGORY", category, "URL", req.URL.Query().Encode(), "Header", h)
 	}
 	return in.Profile.Parse(context.Background(), &in.Metadata)
 }
