@@ -28,7 +28,7 @@ type Decoder struct {
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
-	logger.Debug(context.Background(), "URL", req.URL.Query().Encode(), "Data", string(data))
+	logger.Debug(context.Background(), "URL", req.URL.Query().Encode())
 	in, ft, err := d.parseInputMeta(req)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (d *Decoder) parseInputMeta(req *http.Request) (*profile.Input, profile.For
 	if u := q.Get("units"); u != "" {
 		input.Metadata.Units = profile.Units(u)
 	} else {
-		input.Metadata.Units = profile.NanosecondsUnit
+		input.Metadata.Units = profile.SamplesUnits
 	}
 
 	if at := q.Get("aggregationType"); at != "" {

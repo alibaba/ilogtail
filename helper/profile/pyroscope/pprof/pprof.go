@@ -112,6 +112,9 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 		profileID, _ := uuid.NewV4()
 		profileIDStr = profileID.String()
 	}
+	if len(tp.SampleType) > 0 {
+		meta.Units = profile.Units(tp.StringTable[tp.SampleType[0].Type])
+	}
 
 	err := p.iterate(tp, func(vt *tree.ValueType, tl tree.Labels, t *tree.Tree) (keep bool, err error) {
 		if len(tp.StringTable) <= int(vt.Type) || len(tp.StringTable) <= int(vt.Unit) {
@@ -121,33 +124,24 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 		sunit := tp.StringTable[vt.Unit]
 
 		labelsMap := make(map[string]string)
-		for _, l := range tl {
-			if len(tp.StringTable) <= int(l.GetKey()) || len(tp.StringTable) <= int(l.GetStr()) {
-				if logger.DebugFlag() {
-					logger.Debug(ctx, "found illegal labels index, would skip it", vt.String())
-				}
-				continue
-			}
-			k := tp.StringTable[l.GetKey()]
-			v := tp.StringTable[l.GetStr()]
-			labelsMap[k] = v
-		}
-		if name := meta.Key.AppName(); name != "" {
-			labelsMap["_app_name_"] = name
-		}
 		if meta.SampleRate > 0 {
 			labelsMap["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
 		}
 		for k, v := range meta.Key.Labels() {
 			labelsMap[k] = v
+			logger.Debugf(ctx, "key labels: %s: %s", k, v)
 		}
 
 		t.IterateStacks(func(name string, self uint64, stack []string) {
-			fs := name + splitor + strings.Join(stack, "\n")
+			if name == "" {
+				return
+			}
+			fs := name + splitor + strings.Join(stack[1:], "\n")
 			id := xxhash.Sum64String(fs)
 			stackMap[id] = fs
 			aggtypeMap[id] = append(aggtypeMap[id], p.getAggregationType(stype, string(meta.AggregationType)))
 			typeMap[id] = append(typeMap[id], p.getDisplayName(stype))
+
 			unitMap[id] = append(unitMap[id], sunit)
 			valMap[id] = append(valMap[id], self)
 			labelMap[id] = labelsMap
@@ -181,39 +175,39 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 				Value: strconv.FormatUint(id, 10),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:language",
+				Key:   "language",
 				Value: meta.SpyName,
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:type",
+				Key:   "type",
 				Value: meta.Units.DetectProfileType(),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:units",
+				Key:   "units",
 				Value: strings.Join(unitMap[id], ","),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:valueTypes",
+				Key:   "valueTypes",
 				Value: strings.Join(typeMap[id], ","),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:aggTypes",
+				Key:   "aggTypes",
 				Value: strings.Join(aggtypeMap[id], ","),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:dataType",
+				Key:   "dataType",
 				Value: "CallStack",
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:durationNs",
+				Key:   "durationNs",
 				Value: strconv.FormatInt(tp.GetDurationNanos(), 10),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:profileID",
+				Key:   "profileID",
 				Value: profileIDStr,
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:labels",
+				Key:   "labels",
 				Value: string(b),
 			},
 		)

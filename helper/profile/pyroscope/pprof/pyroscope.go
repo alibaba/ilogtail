@@ -2,6 +2,8 @@ package pprof
 
 import (
 	"fmt"
+	"github.com/alibaba/ilogtail/helper/profile"
+	"github.com/pyroscope-io/pyroscope/pkg/storage/metadata"
 
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
@@ -47,7 +49,14 @@ func (p *Parser) getAggregationType(name string, defaultval string) string {
 	if !ok {
 		return defaultval
 	}
-	return string(config.Aggregation)
+	switch config.Aggregation {
+	case metadata.AverageAggregationType:
+		return string(profile.AvgAggType)
+	case metadata.SumAggregationType:
+		return string(profile.SumAggType)
+	default:
+		return defaultval
+	}
 }
 
 func (p *Parser) iterate(x *tree.Profile, fn func(vt *tree.ValueType, l tree.Labels, t *tree.Tree) (keep bool, err error)) error {
