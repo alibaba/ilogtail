@@ -91,7 +91,7 @@ func (p *Profile) extractProfileLog(meta *profile.Meta) func([]byte, int) {
 			},
 			&protocol.Log_Content{
 				Key:   "type",
-				Value: meta.Units.DetectProfileType(),
+				Value: profile.DetectProfileType(meta.Units.DetectValueType()),
 			},
 			&protocol.Log_Content{
 				Key:   "units",

@@ -81,9 +81,15 @@ func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*pro
 		return nil, errors.New("empty profile")
 	}
 	err = pprof.DecodePool(bytes.NewReader(r.profile), func(tf *tree.Profile) error {
-		if r.sampleTypeConfig == nil {
-			r.sampleTypeConfig = DefaultSampleTypeMapping
+		if logger.DebugFlag() {
+			var keys []string
+			for k := range r.sampleTypeConfig {
+				keys = append(keys, k)
+			}
+			logger.Debug(ctx, "pprof default sampleTypeConfig: ", r.sampleTypeConfig == nil, "config:", strings.Join(keys, ","))
 		}
+		// todo polish, currently force to use default mapping to filter unsupported data.
+		r.sampleTypeConfig = DefaultSampleTypeMapping
 		p := Parser{
 			stackFrameFormatter: Formatter{},
 			sampleTypesFilter:   filterKnownSamples(r.sampleTypeConfig),
@@ -178,7 +184,7 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 			},
 			&protocol.Log_Content{
 				Key:   "type",
-				Value: meta.Units.DetectProfileType(),
+				Value: profile.DetectProfileType(typeMap[id][0]),
 			},
 			&protocol.Log_Content{
 				Key:   "units",
