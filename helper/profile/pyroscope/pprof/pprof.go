@@ -88,8 +88,9 @@ func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*pro
 			}
 			logger.Debug(ctx, "pprof default sampleTypeConfig: ", r.sampleTypeConfig == nil, "config:", strings.Join(keys, ","))
 		}
-		// todo polish, currently force to use default mapping to filter unsupported data.
-		r.sampleTypeConfig = DefaultSampleTypeMapping
+		if r.sampleTypeConfig == nil {
+			r.sampleTypeConfig = DefaultSampleTypeMapping
+		}
 		p := Parser{
 			stackFrameFormatter: Formatter{},
 			sampleTypesFilter:   filterKnownSamples(r.sampleTypeConfig),
