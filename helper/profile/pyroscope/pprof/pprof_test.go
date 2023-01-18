@@ -42,7 +42,7 @@ func TestRawProfile_Parse(t *testing.T) {
 	var logs []*protocol.Log
 	logs, err = extractLogs(context.Background(), te, p, &profile.Meta{
 		Key:             segment.NewKey(map[string]string{"_app_name_": "12"}),
-		SpyName:         "gospy",
+		SpyName:         "go",
 		StartTime:       time.Now(),
 		EndTime:         time.Now(),
 		SampleRate:      99,
@@ -56,13 +56,13 @@ func TestRawProfile_Parse(t *testing.T) {
 	log := picks[0]
 	require.Equal(t, helper.ReadLogVal(log, "name"), "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
 	require.Equal(t, helper.ReadLogVal(log, "stack"), "runtime.netpoll /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/netpoll_kqueue.go\nruntime.findrunnable /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.schedule /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.park_m /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.mcall /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/asm_arm64.s")
-	require.Equal(t, helper.ReadLogVal(log, "__tag__:language"), "go")
-	require.Equal(t, helper.ReadLogVal(log, "__tag__:type"), "profile_cpu")
-	require.Equal(t, helper.ReadLogVal(log, "__tag__:units"), "nanoseconds")
-	require.Equal(t, helper.ReadLogVal(log, "__tag__:valueTypes"), "cpu")
-	require.Equal(t, helper.ReadLogVal(log, "__tag__:aggTypes"), "sum")
-	require.Equal(t, helper.ReadLogVal(log, "__tag__:dataType"), "CallStack")
-	require.Equal(t, helper.ReadLogVal(log, "__tag__:durationNs"), "1100177167")
-	require.Equal(t, helper.ReadLogVal(log, "__tag__:labels"), "{\"_app_name_\":\"12\",\"_sample_rate_\":\"99\"}")
+	require.Equal(t, helper.ReadLogVal(log, "language"), "go")
+	require.Equal(t, helper.ReadLogVal(log, "type"), "profile_cpu")
+	require.Equal(t, helper.ReadLogVal(log, "units"), "nanoseconds")
+	require.Equal(t, helper.ReadLogVal(log, "valueTypes"), "cpu")
+	require.Equal(t, helper.ReadLogVal(log, "aggTypes"), "sum")
+	require.Equal(t, helper.ReadLogVal(log, "dataType"), "CallStack")
+	require.Equal(t, helper.ReadLogVal(log, "durationNs"), "1100177167")
+	require.Equal(t, helper.ReadLogVal(log, "labels"), "{\"_app_name_\":\"12\",\"_sample_rate_\":\"99\"}")
 	require.Equal(t, helper.ReadLogVal(log, "value_0"), "250000000")
 }

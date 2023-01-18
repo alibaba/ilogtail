@@ -1,37 +1,63 @@
-package tire
+package raw
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
+	"strconv"
+	"strings"
+
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
 	"github.com/cespare/xxhash/v2"
 	"github.com/gofrs/uuid"
 	"github.com/pyroscope-io/pyroscope/pkg/structs/transporttrie"
-	"strconv"
-	"strings"
 )
 
-type RawProfile struct {
+type Profile struct {
 	RawData []byte
 	logs    []*protocol.Log
+	Format  profile.Format
 }
 
-func (p *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
-	meta.SpyName = strings.TrimSuffix(meta.SpyName, "spy")
+func (p *Profile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
 	cb := p.extractProfileLog(meta)
 	r := bytes.NewReader(p.RawData)
-	err = transporttrie.IterateRaw(r, make([]byte, 0, 256), cb)
-	if err != nil {
-		return nil, err
+	switch p.Format {
+	case profile.FormatTrie:
+		err = transporttrie.IterateRaw(r, make([]byte, 0, 256), cb)
+		if err != nil {
+			return nil, err
+		}
+	case profile.FormatGroups:
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			if err := scanner.Err(); err != nil {
+				return nil, err
+			}
+			line := scanner.Bytes()
+			index := bytes.LastIndexByte(line, byte(' '))
+			if index == -1 {
+				continue
+			}
+			stacktrace := line[:index]
+			count := line[index+1:]
+			i, err := strconv.Atoi(string(count))
+			if err != nil {
+				return nil, err
+			}
+			cb(stacktrace, i)
+		}
 	}
+
 	return p.logs, nil
 
 }
 
-func (p *RawProfile) extractProfileLog(meta *profile.Meta) func([]byte, int) {
+func (p *Profile) extractProfileLog(meta *profile.Meta) func([]byte, int) {
 	var profileIDStr string
 	if meta.Key.HasProfileID() {
 		profileIDStr, _ = meta.Key.ProfileID()
@@ -60,39 +86,39 @@ func (p *RawProfile) extractProfileLog(meta *profile.Meta) func([]byte, int) {
 				Value: strconv.FormatUint(xxhash.Sum64(k), 10),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:language",
+				Key:   "language",
 				Value: meta.SpyName,
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:type",
+				Key:   "type",
 				Value: meta.Units.DetectProfileType(),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:units",
+				Key:   "units",
 				Value: string(meta.Units),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:valueTypes",
+				Key:   "valueTypes",
 				Value: meta.Units.DetectValueType(),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:aggTypes",
+				Key:   "aggTypes",
 				Value: string(meta.AggregationType),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:dataType",
+				Key:   "dataType",
 				Value: "CallStack",
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:durationNs",
+				Key:   "durationNs",
 				Value: strconv.FormatInt(meta.EndTime.Sub(meta.StartTime).Nanoseconds(), 10),
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:profileID",
+				Key:   "profileID",
 				Value: profileIDStr,
 			},
 			&protocol.Log_Content{
-				Key:   "__tag__:labels",
+				Key:   "labels",
 				Value: labelStr,
 			},
 			&protocol.Log_Content{

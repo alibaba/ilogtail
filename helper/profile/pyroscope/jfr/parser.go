@@ -162,7 +162,6 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 		profileIDStr = profileID.String()
 	}
 
-	meta.SpyName = strings.TrimSuffix(meta.SpyName, "spy")
 	for id, fs := range stackMap {
 		if len(valMap[id]) == 0 || len(typeMap[id]) == 0 || len(unitMap[id]) == 0 || len(labelMap[id]) == 0 {
 			logger.Warning(ctx, "PPROF_PROFILE_ALARM", "stack don't have enough meta or values", fs)

@@ -44,6 +44,7 @@ require (
 	github.com/prometheus/common v0.37.0
 	github.com/prometheus/procfs v0.8.0
 	github.com/prometheus/prometheus v1.8.2-0.20201119142752-3ad25a6dc3d9
+	github.com/pyroscope-io/jfr-parser v0.5.2
 	github.com/pyroscope-io/pyroscope v0.0.0-00010101000000-000000000000
 	github.com/shirou/gopsutil v3.21.3+incompatible
 	github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba
@@ -90,7 +91,6 @@ require (
 	github.com/pingcap/errors v0.11.5-0.20210425183316-da1aaba5fb63 // indirect
 	github.com/pingcap/parser v0.0.0-20210415081931-48e7f467fd74 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
-	github.com/pyroscope-io/jfr-parser v0.5.2 // indirect
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/stefanberger/go-pkcs11uri v0.0.0-20201008174630-78d3cae3a980 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
