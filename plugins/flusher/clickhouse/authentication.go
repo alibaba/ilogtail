@@ -18,11 +18,15 @@ import (
 	"fmt"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+
+	"github.com/alibaba/ilogtail/pkg/tlscommon"
 )
 
 type Authentication struct {
-	// plaintext authentication
+	// PlainText authentication
 	PlainText *PlainTextConfig
+	// TLS authentication
+	TLS *tlscommon.TLSConfig
 }
 
 type PlainTextConfig struct {
@@ -40,6 +44,11 @@ func (config *Authentication) ConfigureAuthentication(opts *clickhouse.Options) 
 			return err
 		}
 	}
+	if config.TLS != nil {
+		if err := configureTLS(config.TLS, opts); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -54,5 +63,16 @@ func (plainTextConfig *PlainTextConfig) ConfigurePlaintext(opts *clickhouse.Opti
 	opts.Auth.Username = plainTextConfig.Username
 	opts.Auth.Password = plainTextConfig.Password
 	opts.Auth.Database = plainTextConfig.Database
+	return nil
+}
+
+func configureTLS(config *tlscommon.TLSConfig, opts *clickhouse.Options) error {
+	tlsConfig, err := config.LoadTLSConfig()
+	if err != nil {
+		return fmt.Errorf("error loading tls config: %w", err)
+	}
+	if tlsConfig != nil && tlsConfig.InsecureSkipVerify {
+		opts.TLS = tlsConfig
+	}
 	return nil
 }

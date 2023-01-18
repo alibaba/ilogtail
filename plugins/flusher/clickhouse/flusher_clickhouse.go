@@ -16,7 +16,6 @@ package clickhouse
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -215,10 +214,7 @@ func newConn(f *FlusherClickHouse) (driver.Conn, error) {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
 		return nil, err
 	}
-	opt := &clickhouse.Options{ // #nosec G402
-		TLS: &tls.Config{
-			InsecureSkipVerify: true,
-		},
+	opt := &clickhouse.Options{
 		Addr: f.Addrs,
 		DialContext: func(ctx context.Context, addr string) (net.Conn, error) {
 			var d net.Dialer
