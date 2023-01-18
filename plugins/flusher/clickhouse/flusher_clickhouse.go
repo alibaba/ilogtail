@@ -143,22 +143,18 @@ func (f *FlusherClickHouse) Description() string {
 }
 
 func (f *FlusherClickHouse) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
-	if f.flusher == nil {
-		return fmt.Errorf("clickHouse flusher func must be configured")
-	}
 	return f.flusher(projectName, logstoreName, configName, logGroupList)
 }
 
 func (f *FlusherClickHouse) BufferFlush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	ctx := context.Background()
 	sql := fmt.Sprintf(insertSQL, f.Authentication.PlainText.Database, f.Table)
-	// post them to db all at once
-	// build statements
-	batch, err := f.conn.PrepareBatch(ctx, sql)
-	if err != nil {
-		return err
-	}
 	for _, logGroup := range logGroupList {
+		// post them to db all at once, build statements
+		batch, err := f.conn.PrepareBatch(ctx, sql)
+		if err != nil {
+			return err
+		}
 		if f.KeyValuePairs {
 			for _, log := range logGroup.Logs {
 				writer := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 128)
@@ -185,9 +181,14 @@ func (f *FlusherClickHouse) BufferFlush(projectName string, logstoreName string,
 				}
 			}
 		}
+		// commit and record metrics
+		if err = batch.Send(); err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_Flush_ALARM", "send data to  clickhouse failed", err)
+			return err
+		}
 	}
-	// commit and record metrics
-	return batch.Send()
+	return nil
+
 }
 
 func (f *FlusherClickHouse) SetUrgent(flag bool) {}
