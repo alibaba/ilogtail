@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strconv"
 	"strings"
 	"time"
 
@@ -176,19 +175,6 @@ func (i *ClickHouseSubscriber) queryRecords() (logGroup *protocol.LogGroup, maxT
 		logGroup.Logs = append(logGroup.Logs, log)
 	}
 	return
-}
-
-func (i *ClickHouseSubscriber) buildValue(value interface{}) (typeStr, valueStr string) {
-	switch v := value.(type) {
-	case string:
-		return "string", v
-	case float64:
-		return "float", strconv.FormatFloat(v, 'g', -1, 64)
-	case json.Number:
-		return "float", v.String()
-	default:
-		return "unknown", fmt.Sprintf("%v", value)
-	}
 }
 
 func init() {
