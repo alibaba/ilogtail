@@ -12,7 +12,6 @@ import (
 	"github.com/cespare/xxhash"
 	"github.com/gofrs/uuid"
 	"github.com/pyroscope-io/jfr-parser/parser"
-	"github.com/pyroscope-io/pyroscope/pkg/storage/metadata"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
 
@@ -117,7 +116,7 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 			}
 		}
 	}
-	cb := func(n string, labels tree.Labels, t *tree.Tree, u metadata.Units) {
+	cb := func(n string, labels tree.Labels, t *tree.Tree, u profile.Units) {
 		key := buildKey(n, meta.Key.Labels(), labels, jfrLabels)
 
 		labelsMap := make(map[string]string)
@@ -133,12 +132,12 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 		}
 
 		t.IterateStacks(func(name string, self uint64, stack []string) {
-			fs := name + splitor + strings.Join(stack, "\n")
+			fs := name + splitor + strings.Join(stack[1:], "\n")
 			id := xxhash.Sum64String(fs)
 			stackMap[id] = fs
 			aggtypeMap[id] = append(aggtypeMap[id], string(meta.AggregationType))
 			typeMap[id] = append(typeMap[id], n)
-			unitMap[id] = append(unitMap[id], u.String())
+			unitMap[id] = append(unitMap[id], string(u))
 			valMap[id] = append(valMap[id], self)
 			labelMap[id] = labelsMap
 		})
@@ -266,26 +265,26 @@ func getName(sampleType int64, event string) string {
 	return "unknown"
 }
 
-func getUnits(sampleType int64) metadata.Units {
+func getUnits(sampleType int64) profile.Units {
 	switch sampleType {
 	case sampleTypeCPU:
-		return metadata.SamplesUnits
+		return profile.SamplesUnits
 	case sampleTypeWall:
-		return metadata.SamplesUnits
+		return profile.SamplesUnits
 	case sampleTypeInTLABObjects:
-		return metadata.ObjectsUnits
+		return profile.ObjectsUnit
 	case sampleTypeInTLABBytes:
-		return metadata.BytesUnits
+		return profile.BytesUnit
 	case sampleTypeOutTLABObjects:
-		return metadata.ObjectsUnits
+		return profile.ObjectsUnit
 	case sampleTypeOutTLABBytes:
-		return metadata.BytesUnits
+		return profile.BytesUnit
 	case sampleTypeLockSamples:
-		return metadata.LockSamplesUnits
+		return profile.LockSamplesUnits
 	case sampleTypeLockDuration:
-		return metadata.LockNanosecondsUnits
+		return profile.LockNanosecondsUnits
 	}
-	return metadata.SamplesUnits
+	return profile.SamplesUnits
 }
 
 func buildKey(n string, appLabels map[string]string, labels tree.Labels, snapshot *LabelsSnapshot) *segment.Key {

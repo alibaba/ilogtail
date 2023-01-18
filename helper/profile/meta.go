@@ -57,9 +57,9 @@ const (
 
 func DetectProfileType(valType string) string {
 	switch valType {
-	case "inuse_space", "inuse_objects", "alloc_space", "alloc_objects", "alloc-size", "alloc-samples":
+	case "inuse_space", "inuse_objects", "alloc_space", "alloc_objects", "alloc-size", "alloc-samples", "alloc_in_new_tlab_objects", "alloc_in_new_tlab_bytes", "alloc_outside_tlab_objects", "alloc_outside_tlab_bytes":
 		return "profile_mem"
-	case "samples", "cpu", "wall":
+	case "samples", "cpu", "itimer", "lock_count", "lock_duration", "wall":
 		return "profile_cpu"
 	case "mutex_count", "mutex_duration", "block_duration", "block_count", "contentions", "delay", "lock-time", "lock-count":
 		return "profile_mutex"
