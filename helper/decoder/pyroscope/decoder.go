@@ -17,12 +17,17 @@ import (
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/pprof"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/raw"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 const AlarmType = "PYROSCOPE_ALARM"
 
 type Decoder struct {
+}
+
+func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
+	return nil, nil
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
