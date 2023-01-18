@@ -52,11 +52,12 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/syndtr/goleveldb v0.0.0-20170725064836-b89cc31ef797
 	github.com/xdg-go/scram v1.1.1
-	go.opentelemetry.io/collector/pdata v0.60.0
+	go.opentelemetry.io/collector/consumer v0.69.1
+	go.opentelemetry.io/collector/pdata v1.0.0-rc3
 	go.opentelemetry.io/proto/otlp v0.19.0
 	go.uber.org/atomic v1.10.0
-	golang.org/x/sys v0.2.0
-	google.golang.org/grpc v1.50.1
+	golang.org/x/sys v0.3.0
+	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.22.5
@@ -212,14 +213,14 @@ require (
 	github.com/valyala/quicktemplate v1.7.0 // indirect
 	go.mozilla.org/pkcs7 v0.0.0-20200128120323-432b2356ecb1 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.uber.org/multierr v1.7.0
+	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/net v0.2.0 // indirect
+	golang.org/x/net v0.4.0 // indirect
 	golang.org/x/oauth2 v0.2.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/term v0.2.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/term v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221109142239-94d6d90a7d66

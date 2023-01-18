@@ -1,0 +1,98 @@
+// Copyright 2021 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      grpc://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oltp_grpc
+
+import (
+	"context"
+
+	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
+	"go.opentelemetry.io/collector/consumer"
+	"go.opentelemetry.io/collector/pdata/plog"
+	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
+	"go.opentelemetry.io/collector/pdata/pmetric"
+	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
+	"go.opentelemetry.io/collector/pdata/ptrace"
+	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
+)
+
+// The following fuctions implements Opten telemetry GRPCServer Interface
+type tracesReceiverFunc consumer.ConsumeTracesFunc
+type metricsReceiverFunc consumer.ConsumeMetricsFunc
+type logsReceiverFunc consumer.ConsumeLogsFunc
+
+func newTracesReceiver(pctx ilogtail.PipelineContext) tracesReceiverFunc {
+	return func(ctx context.Context, td ptrace.Traces) error {
+		groupEvents, err := opentelemetry.ConvertOtlpTracesToGroupEvents(td)
+		if err != nil {
+			return err
+		}
+		pctx.Collector().CollectList(groupEvents...)
+		return nil
+	}
+}
+
+func newMetricsReceiver(pctx ilogtail.PipelineContext) metricsReceiverFunc {
+	return func(ctx context.Context, md pmetric.Metrics) error {
+		groupEvents, err := opentelemetry.ConvertOtlpMetricsToGroupEvents(md)
+		if err != nil {
+			return err
+		}
+		pctx.Collector().CollectList(groupEvents...)
+		return nil
+	}
+}
+
+func newLogsReceiver(pctx ilogtail.PipelineContext) logsReceiverFunc {
+	return func(ctx context.Context, ld plog.Logs) error {
+		groupEvents, err := opentelemetry.ConvertOtlpLogsToGroupEvents(ld)
+		if err != nil {
+			return err
+		}
+		pctx.Collector().CollectList(groupEvents...)
+		return nil
+	}
+}
+
+func (f tracesReceiverFunc) Export(ctx context.Context, req ptraceotlp.ExportRequest) (ptraceotlp.ExportResponse, error) {
+	td := req.Traces()
+	numSpans := td.SpanCount()
+	if numSpans == 0 {
+		return ptraceotlp.NewExportResponse(), nil
+	}
+
+	err := f(ctx, td)
+	return ptraceotlp.NewExportResponse(), err
+}
+
+func (f metricsReceiverFunc) Export(ctx context.Context, req pmetricotlp.ExportRequest) (pmetricotlp.ExportResponse, error) {
+	md := req.Metrics()
+	numMetrics := md.MetricCount()
+	if numMetrics == 0 {
+		return pmetricotlp.NewExportResponse(), nil
+	}
+	err := f(ctx, md)
+	return pmetricotlp.NewExportResponse(), err
+}
+
+func (f logsReceiverFunc) Export(ctx context.Context, req plogotlp.ExportRequest) (plogotlp.ExportResponse, error) {
+	ld := req.Logs()
+	numLogs := ld.LogRecordCount()
+	if numLogs == 0 {
+		return plogotlp.NewExportResponse(), nil
+	}
+	err := f(ctx, ld)
+	return plogotlp.NewExportResponse(), err
+}

@@ -71,8 +71,13 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 		return 0, err
 	}
 
-	if s.Format == "otlp_logv1" {
+	switch s.Format {
+	case "otlp_logv1":
 		s.Address += "/v1/logs"
+	case "otlp_metricsv1":
+		s.Address += "/v1/metrics"
+	case "otlp_tracev1":
+		s.Address += "/v1/traces"
 	}
 
 	s.paramCount = len(s.QueryParams) + len(s.HeaderParams)

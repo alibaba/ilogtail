@@ -1,0 +1,88 @@
+# Open Telemetry gRPC Service Input
+
+## 简介
+
+`service_oltp` `input`插件实现了`ServiceInputV2`接口，可以接受`Opentelemetry log/metric/trace protocol`的http/gRPC请求，并且转换输出PipelineGroupEvents。
+
+## 配置参数
+
+| 参数               | 类型      | 是否必选 | 说明                                       |
+|-------------------|----------|-------|------------------------------------------|
+| Type              | String   | 是    | 插件类型, 固定为`service_oltp`。                        |
+| Protocals           | Struct   | 是    |   <p>接收的协议</p>                       |
+| Protocals.Grpc    | Struct | 否    | 是否启用gRPC Server                                |
+| Protocals.Grpc.Endpoint | string   | 否    | <p>gRPC Server 地址。</p><p>默认取值为:`0.0.0.0:4317`。</p>                            |
+| Protocals.GRPC.MaxRecvMsgSizeMiB | int   | 否    | gRPC Server 最大接受Msg大小。                           |
+| Protocals.GrpcGrpc.MaxConcurrentStreams | int   | 否    | gRPC Server 最大并发流。                           |
+| Protocals.Grpc.ReadBufferSize       | int   | 否    | gRPC Server读缓存大小。 |
+| Protocals.Grpc.WriteBufferSize      | int   | 否    | gRPC Server写缓存大小。               |
+| Protocals.Http    | Struct | 否    | 是否启用HTTP Server                                |
+| Protocals.Http.Endpoint | string   | 否    | <p>HTTP Server 地址。</p><p>默认取值为:`0.0.0.0:4318`。</p>                            |
+| Protocals.Http.MaxRecvMsgSizeMiB | int   | 否    | HTTP Server 最大接受Msg大小。 <p>默认取值为:`64(MiB)`。</p>                          |
+| Protocals.Http.ReadTimeoutSec | int   | 否    |  <p>HTTP 请求读取超时时间。</p><p>默认取值为:`10s`。</p>                           |
+| Protocals.Http.ShutdownTimeoutSec       | int   | 否    | <p>HTTP Server关闭超时时间。</p><p>默认取值为:`5s`。</p> |
+
+
+
+## 样例
+不接收gGRPC和HTTP请求
+```yaml
+enable: true
+version: v2
+inputs:
+  - Type: service_oltp
+    Protocals:
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true  
+```
+
+只接收gRPC请求。
+```yaml
+enable: true
+version: v2
+inputs:
+  - Type: service_oltp
+    Protocals:
+      Grpc:     
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true  
+```
+
+接收http/gRPC请求，使用默认oltp的默认端口。gRPC：4317，HTTP：4318.
+```yaml
+enable: true
+version: v2
+inputs:
+  - Type: service_oltp
+    Protocals:
+      Grpc:        
+      Http:        
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true  
+```
+
+完整配置
+```yaml
+enable: true
+version: v2
+inputs:
+  - Type: service_oltp
+    Protocals:
+      Grpc:        
+        Endpoint: 0.0.0.0:4317
+        MaxRecvMsgSizeMiB: 64
+        MaxConcurrentStreams: 100
+        ReadBufferSize: 1024
+        WriteBufferSize: 1024
+      Http:
+        Endpoint: 0.0.0.0:4318
+        MaxRecvMsgSizeMiB: 64
+        ReadTimeoutSec: 10
+        ShutdownTimeoutSec: 5
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true  
+```
