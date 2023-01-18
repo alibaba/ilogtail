@@ -133,7 +133,7 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 		}
 
 		t.IterateStacks(func(name string, self uint64, stack []string) {
-			fs := name + splitor + strings.Join(stack, "\n")
+			fs := name + splitor + strings.Join(stack[1:], "\n")
 			id := xxhash.Sum64String(fs)
 			stackMap[id] = fs
 			aggtypeMap[id] = append(aggtypeMap[id], string(meta.AggregationType))
@@ -191,7 +191,7 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 			},
 			&protocol.Log_Content{
 				Key:   "type",
-				Value: meta.Units.DetectProfileType(),
+				Value: profile.Units(unitMap[id][0]).DetectProfileType(),
 			},
 			&protocol.Log_Content{
 				Key:   "units",
