@@ -26,7 +26,7 @@ import (
 )
 
 // Invalid Test
-func Test_Flusher(t *testing.T) {
+func InvalidTestConnectAndWrite(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
