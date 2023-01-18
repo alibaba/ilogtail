@@ -190,7 +190,7 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 			},
 			&protocol.Log_Content{
 				Key:   "type",
-				Value: meta.Units.DetectProfileType(),
+				Value: profile.DetectProfileType(typeMap[id][0]),
 			},
 			&protocol.Log_Content{
 				Key:   "units",

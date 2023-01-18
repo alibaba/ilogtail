@@ -2,7 +2,6 @@ package profile
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
@@ -20,7 +19,6 @@ type Format string
 const (
 	FormatPprof      Format = "pprof"
 	FormatJFR        Format = "jfr"
-	FormatCollapsed     Format = ""
 	FormatTrie       Format = "trie"
 	FormatTree       Format = "tree"
 	FormatLines      Format = "lines"
@@ -57,19 +55,19 @@ const (
 	LockSamplesUnits     Units = "local_samples"
 )
 
-func (u Units) DetectProfileType() string {
-	s := string(u)
-	switch {
-	case strings.Contains(s, string(LockSamplesUnits)), strings.Contains(s, string(LockNanosecondsUnits)):
-		return "profile_mutex"
-	case strings.Contains(s, string(SamplesUnits)), strings.Contains(s, string(NanosecondsUnit)):
-		return "profile_cpu"
-	case strings.Contains(s, string(ObjectsUnit)), strings.Contains(s, string(BytesUnit)):
+func DetectProfileType(valType string) string {
+	switch valType {
+	case "inuse_space", "inuse_objects", "alloc_space", "alloc_objects":
 		return "profile_mem"
-	case strings.Contains(s, string(GoroutinesUnits)):
+	case "samples", "cpu":
+		return "profile_cpu"
+	case "mutex_count", "mutex_duration":
+		return "profile_mutex"
+	case "goroutines":
 		return "profile_goroutines"
+	default:
+		return "profile_unknown"
 	}
-	return "profile_unknown"
 }
 
 func (u Units) DetectValueType() string {

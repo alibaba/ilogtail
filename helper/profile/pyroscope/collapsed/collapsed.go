@@ -73,7 +73,7 @@ func extractLogs(ctx context.Context, data string, meta *profile.Meta) ([]*proto
 		},
 		&protocol.Log_Content{
 			Key:   "type",
-			Value: meta.Units.DetectProfileType(),
+			Value: profile.DetectProfileType(""),
 		},
 		&protocol.Log_Content{
 			Key:   "units",
