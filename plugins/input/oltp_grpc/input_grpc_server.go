@@ -45,7 +45,6 @@ type ServerGRPC struct {
 	MaxConcurrentStreams int
 	ReadBufferSize       int
 	WriteBufferSize      int
-	FieldsExtend         bool
 }
 
 // Init ...
