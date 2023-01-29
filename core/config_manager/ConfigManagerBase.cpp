@@ -2399,10 +2399,8 @@ bool ConfigManagerBase::GetYamlConfigDirUpdate() {
     std::unordered_map<std::string, int64_t> yamlConfigMTimeMap;
     static std::string localConfigDirPath = AppConfig::GetInstance()->GetLocalUserYamlConfigDirPath();
     updateFlag |= CheckYamlDirConfigUpdate(localConfigDirPath, false, filepathes, yamlConfigMTimeMap);
-    // TODO: Change serverConfigDirPath to be parallel to localConfigDirPath. Futhermore, create serverConfigDirPath
-    // only when config server is connected.
-    // static std::string serverConfigDirPath = localConfigDirPath + "remote_config" + PATH_SEPARATOR;
-    // updateFlag |= CheckYamlDirConfigUpdate(serverConfigDirPath, true, filepathes, yamlConfigMTimeMap);
+    static std::string serverConfigDirPath = AppConfig::GetInstance()->GetRemoteUserYamlConfigDirPath();
+    updateFlag |= CheckYamlDirConfigUpdate(serverConfigDirPath, true, filepathes, yamlConfigMTimeMap);
 
     if (mYamlConfigMTimeMap.size() != yamlConfigMTimeMap.size()) {
         updateFlag = true;

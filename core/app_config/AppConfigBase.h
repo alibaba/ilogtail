@@ -82,6 +82,7 @@ private:
     std::string mUserLocalConfigPath;
     std::string mUserLocalConfigDirPath;
     std::string mUserLocalYamlConfigDirPath;
+    std::string mUserRemoteYamlConfigDirPath;
     bool mLogParseAlarmFlag;
     std::string mProcessExecutionDir;
     std::string mWorkingDir;
@@ -382,6 +383,10 @@ public:
         return mUserLocalYamlConfigDirPath;
     }
 
+    const std::string& GetRemoteUserYamlConfigDirPath() const {
+        return mUserRemoteYamlConfigDirPath;
+    }
+
     bool IgnoreDirInodeChanged() const {
         return mIgnoreDirInodeChanged;
     }
@@ -469,7 +474,7 @@ public:
         return mEnableResponseVerification;
     }
 
-    EndpointAddressType GetConfigServerAddressNetType() const {
+    EndpointAddressType GetOneConfigServerAddressNetType() const {
         return mConfigServerAddressNetType;
     }
 
