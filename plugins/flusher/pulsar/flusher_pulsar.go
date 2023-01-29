@@ -50,7 +50,7 @@ type FlusherPulsar struct {
 	Authentication Authentication
 
 	DisableBlockIfQueueFull bool
-	// CompressionType  Codec used to produce messages,NONE,LZ4,ZLIB,ZSTD(0,1,2,3)
+	// CompressionType  Codec used to produce messages,NONE,LZ4,ZLIB,ZSTD
 	CompressionType string
 	// HashingScheme is used to define the partition on where to publish a particular message
 	HashingScheme string
@@ -188,7 +188,7 @@ func (f *FlusherPulsar) Flush(projectName string, logstoreName string, configNam
 			}
 			producer, err := f.producers.GetProducer(*topic, f.pulsarClient, f.producerOptions)
 			if err != nil {
-				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "load pulsar producer fail,topic", topic, "err", err)
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "load pulsar producer fail,topic", *topic, "err", err)
 				return err
 			}
 
