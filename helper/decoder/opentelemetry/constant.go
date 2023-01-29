@@ -19,4 +19,20 @@ const (
 	KeyDroppedEventsCount = "otel.dropped_events_count"
 	KeyDroppedLinksCount  = "otel.dropped_links_count"
 	KeyDroppedAttrsCount  = "otel.dropped_attributes_count"
+	KeyScopeName          = "name"
+	KeyScopeVersion       = "version"
+)
+
+const (
+	TagKeyUnit                   = "_unit"
+	TagKeyIsMonotonic            = "_is_monotonic"
+	TagKeyAggregationTemporality = "_aggregation_temporality"
+	TagKeyInterval               = "_interval"
+)
+
+const (
+	FieldCount = "count"
+	FieldSum   = "sum"
+	FieldMin   = "min"
+	FieldMax   = "max"
 )
