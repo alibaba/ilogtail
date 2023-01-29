@@ -22,6 +22,7 @@ import (
 
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/decoder/common"
+	imodels "github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"github.com/influxdata/influxdb/models"
@@ -72,6 +73,11 @@ func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBo
 	return common.CollectBody(res, req, maxBodySize)
 }
 
+func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*imodels.PipelineGroupEvents, err error) {
+	//TODO: Implement DecodeV2
+	return nil, nil
+}
+
 func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []*protocol.Log {
 	db := req.FormValue("db")
 	contentLen := 4
@@ -88,14 +94,16 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 		if err != nil {
 			continue
 		}
-		var valueType = valueTypeFloat
+		var valueType string
 		var value string
 		for field, v := range fields {
 			switch v := v.(type) {
 			case float64:
 				value = strconv.FormatFloat(v, 'g', -1, 64)
+				valueType = valueTypeFloat
 			case int64:
 				value = strconv.FormatInt(v, 10)
+				valueType = valueTypeInt
 			case bool:
 				if v {
 					value = "1"

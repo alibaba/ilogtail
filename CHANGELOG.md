@@ -35,3 +35,9 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+
+- [public] [both] [updated] flusher kafka v2 support TLS and Kerberos authentication.
+- [public] [both] [updated] improve logs related to file discovery
+- [public] [both] [fixed] fix collection duplication problem caused by checkpoint overwritten
+- [public] [both] [fixed] ignore timezone adjustment when system time is used
+- [public] [both] [fixed] ignore timezone adjustment when log parse fails
