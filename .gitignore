@@ -66,5 +66,6 @@ plugin_main/*.json
 # e2e report
 report
 
-# local plugins
-*.local.go
+# external plugins
+*.external_plugins.go
+/external_plugins.yml

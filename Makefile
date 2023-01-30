@@ -18,6 +18,10 @@ DOCKER_PUSH ?= false
 DOCKER_REPOSITORY ?= aliyun/ilogtail
 BUILD_REPOSITORY ?= aliyun/ilogtail_build
 GENERATED_HOME ?= generated_files
+EXTERNAL_PLUGINS_CONFIG_FILE ?= external_plugins.yml
+GO_MOD_FILE ?= go.mod
+DOCKER_BUILD_EXPORT_GO_ENVS ?= true
+DOCKER_BUILD_COPY_GIT_CONFIGS ?= true
 
 SCOPE ?= .
 
@@ -70,6 +74,7 @@ clean:
 	rm -rf core/build
 	rm -rf plugin_main/*.dll
 	rm -rf plugin_main/*.so
+	rm -rf plugins/all/*.external_plugins.go
 
 .PHONY: license
 license:  clean tools
@@ -93,13 +98,13 @@ lint-e2e: clean tools
 
 .PHONY: core
 core: clean
-	./scripts/gen_build_scripts.sh core $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR)
+	./scripts/gen_build_scripts.sh core $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GOENVS) $(DOCKER_BUILD_COPY_GITCONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
 	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
 	./$(GENERATED_HOME)/gen_copy_docker.sh
 
 .PHONY: plugin
 plugin: clean
-	./scripts/gen_build_scripts.sh plugin $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR)
+	./scripts/gen_build_scripts.sh plugin $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GOENVS) $(DOCKER_BUILD_COPY_GITCONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
 	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
 	./$(GENERATED_HOME)/gen_copy_docker.sh
 
@@ -109,17 +114,21 @@ upgrade_adapter_lib:
 
 .PHONY: plugin_main
 plugin_main: clean
-	./scripts/plugin_build.sh mod default $(OUT_DIR)
+	./scripts/plugin_build.sh mod default $(OUT_DIR) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
 	cp pkg/logtail/libPluginAdapter.so $(OUT_DIR)/libPluginAdapter.so
 	cp pkg/logtail/PluginAdapter.dll $(OUT_DIR)/PluginAdapter.dll
 
 .PHONY: plugin_local
 plugin_local:
-	./scripts/plugin_build.sh mod c-shared $(OUT_DIR)
+	./scripts/plugin_build.sh mod c-shared $(OUT_DIR) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
+
+.PHONY: add_external_plugins
+add_external_plugins:
+	./scripts/gen_external_plugins.sh $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
 
 .PHONY: e2edocker
 e2edocker: clean
-	./scripts/gen_build_scripts.sh e2e $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(OUT_DIR)
+	./scripts/gen_build_scripts.sh e2e $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GOENVS) $(DOCKER_BUILD_COPY_GITCONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
 	./scripts/docker_build.sh development $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
 
 # provide a goc server for e2e testing
@@ -181,7 +190,7 @@ unittest_pluginmanager: clean
 
 .PHONY: all
 all: clean
-	./scripts/gen_build_scripts.sh all $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR)
+	./scripts/gen_build_scripts.sh all $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GOENVS) $(DOCKER_BUILD_COPY_GITCONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
 	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
 	./$(GENERATED_HOME)/gen_copy_docker.sh
 

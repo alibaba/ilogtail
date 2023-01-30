@@ -27,6 +27,8 @@ function os() {
 MOD=${1:-mod}
 BUILDMODE=${2:-default}
 OUT_DIR=${3:-output}
+EXTERNAL_PLUGINS_CONFIG_FILE=${4:-${EXTERNAL_PLUGINS_CONFIG_FILE:-external_plugins.yml}}
+GO_MOD_FILE=${5:-${GO_MOD_FILE:-go.mod}}
 NAME=ilogtail
 LDFLAGS=''
 
@@ -34,6 +36,7 @@ os
 OS_FLAG=$?
 
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
+CURRDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 mkdir -p "$ROOTDIR"/bin
 
 if [ $OS_FLAG = 1 ]; then
@@ -53,4 +56,7 @@ elif [ $OS_FLAG = 2 ]; then
   BUILDMODE=default
 fi
 
-go build -mod="$MOD" -buildmode="$BUILDMODE" -ldflags="$LDFLAGS" -o "$ROOTDIR/$OUT_DIR/${NAME}" "$ROOTDIR"/plugin_main
+# make external plugins stuffs
+"$CURRDIR/gen_external_plugins.sh" "$EXTERNAL_PLUGINS_CONFIG_FILE" "$GO_MOD_FILE"
+
+go build -mod="$MOD" -modfile="$GO_MOD_FILE" -buildmode="$BUILDMODE" -ldflags="$LDFLAGS" -o "$ROOTDIR/$OUT_DIR/${NAME}" "$ROOTDIR"/plugin_main

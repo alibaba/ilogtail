@@ -77,12 +77,14 @@ echo "========================================="
 
 if [[ $CATEGORY != "multi-arch-production" ]]; then
     docker build --build-arg TARGETPLATFORM=linux/$ARCH \
-	--build-arg VERSION="$VERSION" \
+        --ssh default \
+	      --build-arg VERSION="$VERSION" \
         --build-arg HOST_OS="$HOST_OS" \
         -t "$REPOSITORY":"$VERSION" \
         --no-cache -f $GEN_DOCKERFILE .
 else
     docker buildx build --platform linux/amd64,linux/arm64 \
+        --ssh default \
         --build-arg VERSION="$VERSION" \
         --build-arg HOST_OS="$HOST_OS" \
         -t "$REPOSITORY":edge \
