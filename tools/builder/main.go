@@ -41,7 +41,7 @@ var gitExe = flag.String("git-exe", "git", "the git executable binary path")
 
 func main() {
 	flag.Parse()
-	if *configFile == "" {
+	if _, err := os.Stat(*configFile); err != nil {
 		fmt.Println("no external plugins config found")
 		return
 	}
