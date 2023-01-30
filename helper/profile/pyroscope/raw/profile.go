@@ -5,38 +5,59 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"github.com/cespare/xxhash/v2"
-	"github.com/gofrs/uuid"
 	"github.com/pyroscope-io/pyroscope/pkg/structs/transporttrie"
 )
 
 type Profile struct {
 	RawData []byte
-	logs    []*protocol.Log
 	Format  profile.Format
+
+	// v1 result
+	logs []*protocol.Log
+	// v2 result
+	group  models.PipelineGroupEvents
+	v2Once sync.Once
+}
+
+func (p *Profile) ParseV2(ctx context.Context, meta *profile.Meta) (group *models.PipelineGroupEvents, err error) {
+	cb := p.extractProfileV2(meta)
+	if err := p.doParse(cb); err != nil {
+		return nil, err
+	}
+	return &p.group, nil
 }
 
 func (p *Profile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
-	cb := p.extractProfileLog(meta)
+	cb := p.extractProfileV1(meta)
+	if err := p.doParse(cb); err != nil {
+		return nil, err
+	}
+	return p.logs, nil
+}
+
+func (p *Profile) doParse(cb func([]byte, int)) error {
 	r := bytes.NewReader(p.RawData)
 	switch p.Format {
 	case profile.FormatTrie:
-		err = transporttrie.IterateRaw(r, make([]byte, 0, 256), cb)
+		err := transporttrie.IterateRaw(r, make([]byte, 0, 256), cb)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	case profile.FormatGroups:
 		scanner := bufio.NewScanner(r)
 		for scanner.Scan() {
 			if err := scanner.Err(); err != nil {
-				return nil, err
+				return err
 			}
 			line := scanner.Bytes()
 			index := bytes.LastIndexByte(line, byte(' '))
@@ -47,24 +68,35 @@ func (p *Profile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protoc
 			count := line[index+1:]
 			i, err := strconv.Atoi(string(count))
 			if err != nil {
-				return nil, err
+				return err
 			}
 			cb(stacktrace, i)
 		}
 	}
-
-	return p.logs, nil
-
+	return nil
 }
 
-func (p *Profile) extractProfileLog(meta *profile.Meta) func([]byte, int) {
-	var profileIDStr string
-	if meta.Key.HasProfileID() {
-		profileIDStr, _ = meta.Key.ProfileID()
-	} else {
-		profileID, _ := uuid.NewV4()
-		profileIDStr = profileID.String()
+func (p *Profile) extractProfileV2(meta *profile.Meta) func([]byte, int) {
+	if p.group.Group == nil {
+		p.group.Group = models.NewGroup(models.NewMetadata(), models.NewTags())
 	}
+	profileID := profile.GetProfileID(meta)
+	p.group.Group.GetMetadata().Add("profileID", profileID)
+	p.group.Group.GetMetadata().Add("dataType", "CallStack")
+	p.group.Group.GetMetadata().Add("language", meta.SpyName)
+	p.group.Group.GetMetadata().Add("type", profile.DetectProfileType(meta.Units.DetectValueType()))
+	return func(k []byte, v int) {
+		name, stack := extractNameAndStacks(k)
+		stackID := strconv.FormatUint(xxhash.Sum64(k), 10)
+		newProfile := models.NewProfile(name, stackID, stack, meta.StartTime.UnixNano(), meta.EndTime.UnixNano(), models.NewTags(), []*models.ProfileValue{
+			models.NewProfileValue(meta.Units.DetectValueType(), string(meta.Units), string(meta.AggregationType), uint64(v)),
+		})
+		p.group.Events = append(p.group.Events, newProfile)
+	}
+}
+
+func (p *Profile) extractProfileV1(meta *profile.Meta) func([]byte, int) {
+	profileID := profile.GetProfileID(meta)
 	labels, _ := json.Marshal(meta.Key.Labels())
 	labelStr := string(labels)
 
@@ -79,7 +111,7 @@ func (p *Profile) extractProfileLog(meta *profile.Meta) func([]byte, int) {
 			},
 			&protocol.Log_Content{
 				Key:   "stack",
-				Value: stack,
+				Value: strings.Join(stack, "\n"),
 			},
 			&protocol.Log_Content{
 				Key:   "stackID",
@@ -115,7 +147,7 @@ func (p *Profile) extractProfileLog(meta *profile.Meta) func([]byte, int) {
 			},
 			&protocol.Log_Content{
 				Key:   "profileID",
-				Value: profileIDStr,
+				Value: profileID,
 			},
 			&protocol.Log_Content{
 				Key:   "labels",
@@ -136,16 +168,16 @@ func (p *Profile) extractProfileLog(meta *profile.Meta) func([]byte, int) {
 
 }
 
-func extractNameAndStacks(k []byte) (name string, stack string) {
+func extractNameAndStacks(k []byte) (name string, stack []string) {
 	slice := strings.Split(string(k), ";")
 	if len(slice) > 0 && slice[len(slice)-1] == "" {
 		slice = slice[:len(slice)-1]
 	}
 	if len(slice) == 1 {
-		return slice[0], ""
+		return slice[0], []string{}
 	}
 	name = slice[len(slice)-1]
 	slice = slice[:len(slice)-1]
 	helper.ReverseStringSlice(slice)
-	return name, strings.Join(slice, "\n")
+	return name, slice
 }

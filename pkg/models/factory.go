@@ -145,3 +145,16 @@ func NewSpan(name, traceID, spanID string, kind SpanKind, startTime, endTime uin
 func NewByteArray(bytes []byte) ByteArray {
 	return ByteArray(bytes)
 }
+
+func NewProfile(name, stackID string, stack ProfileStack, startTime, endTime int64, tags Tags, values ProfileValues) *Profile {
+	return &Profile{
+		Name:      name,
+		Stack:     stack,
+		StackID:   stackID,
+		StartTime: startTime,
+		EndTime:   endTime,
+		Tags:      tags,
+		Values:    values,
+	}
+
+}

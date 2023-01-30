@@ -22,6 +22,7 @@ const (
 	EventTypeSpan
 	EventTypeLogging
 	EventTypeByteArray
+	EventTupeProfile
 )
 
 type ValueType int

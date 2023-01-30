@@ -27,10 +27,27 @@ type Decoder struct {
 }
 
 func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
-	return nil, nil
+	in, err := d.extractRawInput(data, req)
+	if err != nil {
+		return nil, err
+	}
+	v2, err := in.Profile.ParseV2(context.Background(), &in.Metadata)
+	if err != nil {
+		return nil, err
+	}
+	groups = append(groups, v2)
+	return groups, nil
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
+	in, err := d.extractRawInput(data, req)
+	if err != nil {
+		return nil, err
+	}
+	return in.Profile.Parse(context.Background(), &in.Metadata)
+}
+
+func (d *Decoder) extractRawInput(data []byte, req *http.Request) (*profile.Input, error) {
 	in, ft, err := d.parseInputMeta(req)
 	if err != nil {
 		return nil, err
@@ -75,7 +92,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 		}
 		logger.Debug(context.Background(), "CATEGORY", category, "URL", req.URL.Query().Encode(), "Header", h)
 	}
-	return in.Profile.Parse(context.Background(), &in.Metadata)
+	return in, nil
 }
 
 func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {

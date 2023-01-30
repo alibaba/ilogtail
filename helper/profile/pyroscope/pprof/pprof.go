@@ -6,16 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/alibaba/ilogtail/helper/profile"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"mime/multipart"
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"github.com/cespare/xxhash/v2"
-	"github.com/gofrs/uuid"
 	"github.com/pyroscope-io/pyroscope/pkg/convert/pprof"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/metadata"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
@@ -24,7 +24,6 @@ import (
 
 const (
 	formFieldProfile, formFieldSampleTypeConfig = "profile", "sample_type_config"
-	splitor                                     = "$@$"
 )
 
 var DefaultSampleTypeMapping = map[string]*tree.SampleTypeConfig{
@@ -68,19 +67,41 @@ var DefaultSampleTypeMapping = map[string]*tree.SampleTypeConfig{
 type RawProfile struct {
 	RawData             []byte
 	FormDataContentType string
+	profile             []byte
+	sampleTypeConfig    map[string]*tree.SampleTypeConfig
 
-	profile          []byte
-	sampleTypeConfig map[string]*tree.SampleTypeConfig
+	logs  []*protocol.Log            // v1 result
+	group models.PipelineGroupEvents // v2 result
 }
 
 func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
-	if err = r.extractProfile(); err != nil {
-		return nil, fmt.Errorf("cannot extract profile: %w", err)
+	cb := r.extraceProfileV1(meta)
+	if err = r.doParse(ctx, meta, cb); err != nil {
+		return nil, err
+	}
+	return r.logs, err
+}
+
+func (r *RawProfile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {
+	cb := r.extraceProfileV2(meta)
+	if err = r.doParse(ctx, meta, cb); err != nil {
+		return nil, err
+	}
+	return &r.group, err
+}
+
+func (r *RawProfile) doParse(ctx context.Context, meta *profile.Meta, cb profile.CallbackFunc) error {
+	if err := r.extractProfileRaw(); err != nil {
+		return fmt.Errorf("cannot extract profile: %w", err)
 	}
 	if len(r.profile) == 0 {
-		return nil, errors.New("empty profile")
+		return errors.New("empty profile")
 	}
-	err = pprof.DecodePool(bytes.NewReader(r.profile), func(tf *tree.Profile) error {
+
+	if meta.SampleRate > 0 {
+		meta.Key.Labels()["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
+	}
+	return pprof.DecodePool(bytes.NewReader(r.profile), func(tf *tree.Profile) error {
 		if logger.DebugFlag() {
 			var keys []string
 			for k := range r.sampleTypeConfig {
@@ -96,29 +117,23 @@ func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*pro
 			sampleTypesFilter:   filterKnownSamples(r.sampleTypeConfig),
 			sampleTypes:         r.sampleTypeConfig,
 		}
-		if logs, err = extractLogs(ctx, tf, p, meta, logs); err != nil {
+
+		if err := extractLogs(ctx, tf, p, meta, cb); err != nil {
 			return err
 		}
 		return nil
 	})
-	return logs, err
 }
 
-func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.Meta, logs []*protocol.Log) ([]*protocol.Log, error) {
-	stackMap := make(map[uint64]string)
+func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.Meta, cb profile.CallbackFunc) error {
+
+	stackMap := make(map[uint64]*profile.Stack)
 	valMap := make(map[uint64][]uint64)
 	labelMap := make(map[uint64]map[string]string)
 	typeMap := make(map[uint64][]string)
 	unitMap := make(map[uint64][]string)
 	aggtypeMap := make(map[uint64][]string)
 
-	var profileIDStr string
-	if meta.Key.HasProfileID() {
-		profileIDStr, _ = meta.Key.ProfileID()
-	} else {
-		profileID, _ := uuid.NewV4()
-		profileIDStr = profileID.String()
-	}
 	if len(tp.SampleType) > 0 {
 		meta.Units = profile.Units(tp.StringTable[tp.SampleType[0].Type])
 	}
@@ -130,50 +145,67 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 		stype := tp.StringTable[vt.Type]
 		sunit := tp.StringTable[vt.Unit]
 
-		labelsMap := make(map[string]string)
-		if meta.SampleRate > 0 {
-			labelsMap["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
-		}
-		for k, v := range meta.Key.Labels() {
-			labelsMap[k] = v
-		}
-
 		t.IterateStacks(func(name string, self uint64, stack []string) {
 			if name == "" {
 				return
 			}
-			fs := name + splitor + strings.Join(stack[1:], "\n")
-			id := xxhash.Sum64String(fs)
-			stackMap[id] = fs
+			id := xxhash.Sum64String(strings.Join(stack, ""))
+			stackMap[id] = &profile.Stack{
+				Name:  name,
+				Stack: stack[1:],
+			}
 			aggtypeMap[id] = append(aggtypeMap[id], p.getAggregationType(stype, string(meta.AggregationType)))
 			typeMap[id] = append(typeMap[id], p.getDisplayName(stype))
-
 			unitMap[id] = append(unitMap[id], sunit)
 			valMap[id] = append(valMap[id], self)
-			labelMap[id] = labelsMap
+			labelMap[id] = buildKey(meta.Key.Labels(), tl, tp.StringTable).Labels()
 		})
 		return true, nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("iterate profile tree error: %w", err)
+		return fmt.Errorf("iterate profile tree error: %w", err)
 	}
 	for id, fs := range stackMap {
-		if len(valMap[id]) == 0 || len(typeMap[id]) == 0 || len(unitMap[id]) == 0 || labelMap[id] == nil {
+		if len(valMap[id]) == 0 || len(typeMap[id]) == 0 || len(unitMap[id]) == 0 || len(aggtypeMap[id]) == 0 {
 			logger.Warning(ctx, "PPROF_PROFILE_ALARM", "stack don't have enough meta or values", fs)
 			continue
 		}
-		var content []*protocol.Log_Content
-		idx := strings.Index(fs, splitor)
-		b, _ := json.Marshal(labelMap[id])
+		cb(id, fs, valMap[id], typeMap[id], unitMap[id], aggtypeMap[id], tp.GetTimeNanos(), tp.GetTimeNanos()+tp.GetDurationNanos(), labelMap[id])
+	}
+	return nil
+}
 
+func (r *RawProfile) extraceProfileV2(meta *profile.Meta) profile.CallbackFunc {
+	if r.group.Group == nil {
+		r.group.Group = models.NewGroup(models.NewMetadata(), models.NewTags())
+	}
+	r.group.Group.GetMetadata().Add("profileID", profile.GetProfileID(meta))
+	r.group.Group.GetMetadata().Add("dataType", "CallStack")
+	r.group.Group.GetMetadata().Add("language", meta.SpyName)
+	return func(id uint64, stack *profile.Stack, vals []uint64, types, units, aggs []string, startTime, endTime int64, labels map[string]string) {
+		r.group.Group.GetMetadata().Add("type", profile.DetectProfileType(types[0]))
+		var values models.ProfileValues
+		for i, val := range vals {
+			values = append(values, models.NewProfileValue(types[i], units[i], aggs[i], val))
+		}
+		newProfile := models.NewProfile(stack.Name, strconv.FormatUint(id, 10), stack.Stack, startTime, endTime, models.NewTagsWithMap(labels), values)
+		r.group.Events = append(r.group.Events, newProfile)
+	}
+}
+
+func (r *RawProfile) extraceProfileV1(meta *profile.Meta) profile.CallbackFunc {
+	profileIDStr := profile.GetProfileID(meta)
+	return func(id uint64, stack *profile.Stack, vals []uint64, types, units, aggs []string, startTime, endTime int64, labels map[string]string) {
+		b, _ := json.Marshal(labels)
+		var content []*protocol.Log_Content
 		content = append(content,
 			&protocol.Log_Content{
 				Key:   "name",
-				Value: fs[:idx],
+				Value: stack.Name,
 			},
 			&protocol.Log_Content{
 				Key:   "stack",
-				Value: fs[idx+3:],
+				Value: strings.Join(stack.Stack, "\n"),
 			},
 			&protocol.Log_Content{
 				Key:   "stackID",
@@ -185,19 +217,19 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 			},
 			&protocol.Log_Content{
 				Key:   "type",
-				Value: profile.DetectProfileType(typeMap[id][0]),
+				Value: profile.DetectProfileType(types[0]),
 			},
 			&protocol.Log_Content{
 				Key:   "units",
-				Value: strings.Join(unitMap[id], ","),
+				Value: strings.Join(units, ","),
 			},
 			&protocol.Log_Content{
 				Key:   "valueTypes",
-				Value: strings.Join(typeMap[id], ","),
+				Value: strings.Join(types, ","),
 			},
 			&protocol.Log_Content{
 				Key:   "aggTypes",
-				Value: strings.Join(aggtypeMap[id], ","),
+				Value: strings.Join(aggs, ","),
 			},
 			&protocol.Log_Content{
 				Key:   "dataType",
@@ -205,7 +237,7 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 			},
 			&protocol.Log_Content{
 				Key:   "durationNs",
-				Value: strconv.FormatInt(tp.GetDurationNanos(), 10),
+				Value: strconv.FormatInt(endTime-startTime, 10),
 			},
 			&protocol.Log_Content{
 				Key:   "profileID",
@@ -216,7 +248,7 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 				Value: string(b),
 			},
 		)
-		for i, v := range valMap[id] {
+		for i, v := range vals {
 			content = append(content, &protocol.Log_Content{
 				Key:   fmt.Sprintf("value_%d", i),
 				Value: strconv.FormatUint(v, 10),
@@ -226,12 +258,30 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 			Time:     uint32(meta.StartTime.Unix()),
 			Contents: content,
 		}
-		logs = append(logs, log)
+		r.logs = append(r.logs, log)
 	}
-	return logs, nil
 }
 
-func (r *RawProfile) extractProfile() error {
+func buildKey(appLabels map[string]string, labels tree.Labels, table []string) *segment.Key {
+	finalLabels := map[string]string{}
+	for k, v := range appLabels {
+		finalLabels[k] = v
+	}
+	for _, v := range labels {
+		ks := table[v.Key]
+		if ks == "" {
+			continue
+		}
+		vs := table[v.Str]
+		if vs == "" {
+			continue
+		}
+		finalLabels[ks] = vs
+	}
+	return segment.NewKey(finalLabels)
+}
+
+func (r *RawProfile) extractProfileRaw() error {
 	if r.FormDataContentType == "" {
 		r.profile = r.RawData
 		return nil

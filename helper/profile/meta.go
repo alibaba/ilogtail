@@ -2,6 +2,8 @@ package profile
 
 import (
 	"context"
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/gofrs/uuid"
 	"time"
 
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
@@ -14,7 +16,14 @@ type Input struct {
 	Metadata Meta
 }
 
+type Stack struct {
+	Name  string
+	Stack []string
+}
+
 type Format string
+
+type CallbackFunc func(id uint64, stack *Stack, vals []uint64, types, units, aggs []string, startTime, endTime int64, labels map[string]string)
 
 const (
 	FormatPprof      Format = "pprof"
@@ -72,6 +81,17 @@ func DetectProfileType(valType string) string {
 	}
 }
 
+func GetProfileID(meta *Meta) string {
+	var profileIDStr string
+	if meta.Key.HasProfileID() {
+		profileIDStr, _ = meta.Key.ProfileID()
+	} else {
+		profileID, _ := uuid.NewV4()
+		profileIDStr = profileID.String()
+	}
+	return profileIDStr
+}
+
 func (u Units) DetectValueType() string {
 	switch u {
 	case NanosecondsUnit, SamplesUnits:
@@ -88,4 +108,5 @@ func (u Units) DetectValueType() string {
 
 type RawProfile interface {
 	Parse(ctx context.Context, meta *Meta) (logs []*protocol.Log, err error)
+	ParseV2(ctx context.Context, meta *Meta) (groups *models.PipelineGroupEvents, err error)
 }

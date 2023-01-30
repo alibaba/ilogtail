@@ -2,7 +2,6 @@ package jfr
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"regexp"
@@ -10,14 +9,12 @@ import (
 	"strings"
 
 	"github.com/cespare/xxhash"
-	"github.com/gofrs/uuid"
 	"github.com/pyroscope-io/jfr-parser/parser"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
 
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 const (
@@ -32,27 +29,29 @@ const (
 	sampleTypeLockDuration
 )
 
-func ParseJFR(ctx context.Context, meta *profile.Meta, body io.Reader, jfrLabels *LabelsSnapshot) (logs []*protocol.Log, err error) {
+func (r *RawProfile) ParseJFR(ctx context.Context, meta *profile.Meta, body io.Reader, jfrLabels *LabelsSnapshot, cb profile.CallbackFunc) (err error) {
+	if meta.SampleRate > 0 {
+		meta.Key.Labels()["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
+	}
 	chunks, err := parser.ParseWithOptions(body, &parser.ChunkParseOptions{
 		CPoolProcessor: processSymbols,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse JFR format: %w", err)
+		return fmt.Errorf("unable to parse JFR format: %w", err)
 	}
 	for _, c := range chunks {
-		oneChunkLogs, pErr := parse(ctx, meta, c, jfrLabels)
+		pErr := r.parseChunk(ctx, meta, c, jfrLabels, cb)
 		if pErr != nil {
 			//err = multierror.Append(err, pErr)
-			return nil, err
+			return err
 		}
-		logs = append(logs, oneChunkLogs...)
 	}
-	return logs, nil
+	return nil
 }
 
 // revive:disable-next-line:cognitive-complexity necessary complexity
-func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *LabelsSnapshot) (logs []*protocol.Log, err error) {
-	stackMap := make(map[uint64]string)
+func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *LabelsSnapshot, convertCb profile.CallbackFunc) (err error) {
+	stackMap := make(map[uint64]*profile.Stack)
 	valMap := make(map[uint64][]uint64)
 	labelMap := make(map[uint64]map[string]string)
 	typeMap := make(map[uint64][]string)
@@ -117,29 +116,17 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 		}
 	}
 	cb := func(n string, labels tree.Labels, t *tree.Tree, u profile.Units) {
-		key := buildKey(n, meta.Key.Labels(), labels, jfrLabels)
-
-		labelsMap := make(map[string]string)
-		for lk, lv := range key.Labels() {
-			labelsMap[lk] = lv
-		}
-
-		if name := key.AppName(); name != "" {
-			labelsMap["_app_name_"] = name
-		}
-		if meta.SampleRate > 0 {
-			labelsMap["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
-		}
-
 		t.IterateStacks(func(name string, self uint64, stack []string) {
-			fs := name + splitor + strings.Join(stack[1:], "\n")
-			id := xxhash.Sum64String(fs)
-			stackMap[id] = fs
+			id := xxhash.Sum64String(strings.Join(stack, ""))
+			stackMap[id] = &profile.Stack{
+				Name:  name,
+				Stack: stack[1:],
+			}
 			aggtypeMap[id] = append(aggtypeMap[id], string(meta.AggregationType))
 			typeMap[id] = append(typeMap[id], n)
 			unitMap[id] = append(unitMap[id], string(u))
 			valMap[id] = append(valMap[id], self)
-			labelMap[id] = labelsMap
+			labelMap[id] = buildKey(n, meta.Key.Labels(), labels, jfrLabels).Labels()
 		})
 	}
 	for sampleType, entries := range cache {
@@ -153,88 +140,14 @@ func parse(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *L
 		}
 	}
 
-	var profileIDStr string
-	if meta.Key.HasProfileID() {
-		profileIDStr, _ = meta.Key.ProfileID()
-	} else {
-		profileID, _ := uuid.NewV4()
-		profileIDStr = profileID.String()
-	}
-
 	for id, fs := range stackMap {
-		if len(valMap[id]) == 0 || len(typeMap[id]) == 0 || len(unitMap[id]) == 0 || len(labelMap[id]) == 0 {
+		if len(valMap[id]) == 0 || len(typeMap[id]) == 0 || len(unitMap[id]) == 0 || len(aggtypeMap[id]) == 0 || len(labelMap[id]) == 0 {
 			logger.Warning(ctx, "PPROF_PROFILE_ALARM", "stack don't have enough meta or values", fs)
 			continue
 		}
-		var content []*protocol.Log_Content
-		idx := strings.Index(fs, splitor)
-		b, _ := json.Marshal(labelMap[id])
-
-		content = append(content,
-			&protocol.Log_Content{
-				Key:   "name",
-				Value: fs[:idx],
-			},
-			&protocol.Log_Content{
-				Key:   "stack",
-				Value: fs[idx+3:],
-			},
-			&protocol.Log_Content{
-				Key:   "stackID",
-				Value: strconv.FormatUint(id, 10),
-			},
-			&protocol.Log_Content{
-				Key:   "language",
-				Value: meta.SpyName,
-			},
-			&protocol.Log_Content{
-				Key:   "type",
-				Value: profile.DetectProfileType(typeMap[id][0]),
-			},
-			&protocol.Log_Content{
-				Key:   "units",
-				Value: strings.Join(unitMap[id], ","),
-			},
-			&protocol.Log_Content{
-				Key:   "valueTypes",
-				Value: strings.Join(typeMap[id], ","),
-			},
-			&protocol.Log_Content{
-				Key:   "aggTypes",
-				Value: strings.Join(aggtypeMap[id], ","),
-			},
-			&protocol.Log_Content{
-				Key:   "dataType",
-				Value: "CallStack",
-			},
-			&protocol.Log_Content{
-				Key:   "durationNs",
-				Value: strconv.FormatInt(meta.EndTime.Sub(meta.StartTime).Nanoseconds(), 10),
-			},
-
-			&protocol.Log_Content{
-				Key:   "profileID",
-				Value: profileIDStr,
-			},
-			&protocol.Log_Content{
-				Key:   "labels",
-				Value: string(b),
-			},
-		)
-		for i, v := range valMap[id] {
-			content = append(content, &protocol.Log_Content{
-				Key:   fmt.Sprintf("value_%d", i),
-				Value: strconv.FormatUint(v, 10),
-			})
-		}
-		log := &protocol.Log{
-			Time:     uint32(meta.StartTime.Unix()),
-			Contents: content,
-		}
-		logs = append(logs, log)
+		convertCb(id, fs, valMap[id], typeMap[id], unitMap[id], aggtypeMap[id], meta.StartTime.UnixNano(), meta.EndTime.UnixNano(), labelMap[id])
 	}
-
-	return logs, err
+	return err
 }
 
 func getName(sampleType int64, event string) string {

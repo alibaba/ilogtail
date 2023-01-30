@@ -2,14 +2,14 @@ package pprof
 
 import (
 	"context"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"github.com/pyroscope-io/pyroscope/pkg/convert/pprof"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
@@ -32,15 +32,15 @@ func readPprofFixture(path string) (*tree.Profile, error) {
 	return &p, nil
 }
 
-func TestRawProfile_Parse(t *testing.T) {
+func TestRawProfile_ParseV2(t *testing.T) {
 	te, err := readPprofFixture("testdata/cpu.pb.gz")
 	require.NoError(t, err)
 	p := Parser{
 		stackFrameFormatter: Formatter{},
 		sampleTypesFilter:   filterKnownSamples(DefaultSampleTypeMapping),
 	}
-	var logs []*protocol.Log
-	logs, err = extractLogs(context.Background(), te, p, &profile.Meta{
+	r := new(RawProfile)
+	meta := &profile.Meta{
 		Key:             segment.NewKey(map[string]string{"_app_name_": "12"}),
 		SpyName:         "go",
 		StartTime:       time.Now(),
@@ -48,10 +48,57 @@ func TestRawProfile_Parse(t *testing.T) {
 		SampleRate:      99,
 		Units:           profile.NanosecondsUnit,
 		AggregationType: profile.SumAggType,
-	}, logs)
+	}
+	cb := r.extraceProfileV2(meta)
+	err = extractLogs(context.Background(), te, p, meta, cb)
 	require.NoError(t, err)
+	group := r.group
+	require.Equal(t, 4, group.Group.Metadata.Len())
+	require.Equal(t, 0, group.Group.Tags.Len())
+	require.Equal(t, "go", group.Group.Metadata.Get("language"))
+	require.Equal(t, "profile_cpu", group.Group.Metadata.Get("type"))
+	require.Equal(t, "CallStack", group.Group.Metadata.Get("dataType"))
+	require.Equal(t, 6, len(group.Events))
+	event := helper.PickEvent(group.Events, "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
+	require.True(t, event != nil)
+	m := event.(*models.Profile)
+
+	require.Equal(t, "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go", m.Name)
+	require.Equal(t, models.ProfileStack(strings.Split("runtime.netpoll /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/netpoll_kqueue.go\nruntime.findrunnable /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.schedule /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.park_m /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.mcall /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/asm_arm64.s", "\n")), m.Stack)
+	require.Equal(t, "4682452006970879243", m.StackID)
+	require.Equal(t, int64(1619321948265140000), m.StartTime)
+	require.Equal(t, int64(1619321949365317167), m.EndTime)
+	require.Equal(t, models.NewTagsWithMap(map[string]string{
+		"_app_name_": "12",
+	}), m.Tags)
+	require.Equal(t, models.ProfileValues{
+		models.NewProfileValue("cpu", "nanoseconds", "sum", 250000000),
+	}, m.Values)
+}
+
+func TestRawProfile_Parse(t *testing.T) {
+	te, err := readPprofFixture("testdata/cpu.pb.gz")
+	require.NoError(t, err)
+	p := Parser{
+		stackFrameFormatter: Formatter{},
+		sampleTypesFilter:   filterKnownSamples(DefaultSampleTypeMapping),
+	}
+	r := new(RawProfile)
+	meta := &profile.Meta{
+		Key:             segment.NewKey(map[string]string{"_app_name_": "12"}),
+		SpyName:         "go",
+		StartTime:       time.Now(),
+		EndTime:         time.Now(),
+		SampleRate:      99,
+		Units:           profile.NanosecondsUnit,
+		AggregationType: profile.SumAggType,
+	}
+	cb := r.extraceProfileV1(meta)
+	err = extractLogs(context.Background(), te, p, meta, cb)
+	require.NoError(t, err)
+	logs := r.logs
 	require.Equal(t, len(logs), 6)
-	picks := helper.PickLogs(logs, "stackID", "8803545477719005912")
+	picks := helper.PickLogs(logs, "stackID", "4682452006970879243")
 	require.Equal(t, len(picks), 1)
 	log := picks[0]
 	require.Equal(t, helper.ReadLogVal(log, "name"), "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
@@ -63,6 +110,6 @@ func TestRawProfile_Parse(t *testing.T) {
 	require.Equal(t, helper.ReadLogVal(log, "aggTypes"), "sum")
 	require.Equal(t, helper.ReadLogVal(log, "dataType"), "CallStack")
 	require.Equal(t, helper.ReadLogVal(log, "durationNs"), "1100177167")
-	require.Equal(t, helper.ReadLogVal(log, "labels"), "{\"_app_name_\":\"12\",\"_sample_rate_\":\"99\"}")
+	require.Equal(t, helper.ReadLogVal(log, "labels"), "{\"_app_name_\":\"12\"}")
 	require.Equal(t, helper.ReadLogVal(log, "value_0"), "250000000")
 }
