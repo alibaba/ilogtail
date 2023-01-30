@@ -76,7 +76,7 @@ cat $GEN_DOCKERFILE
 echo "========================================="
 
 if [[ $CATEGORY != "multi-arch-production" ]]; then
-    docker build --build-arg TARGETPLATFORM=linux/$ARCH \
+    DOCKER_BUILDKIT=1 docker build --build-arg TARGETPLATFORM=linux/$ARCH \
         --ssh default \
 	      --build-arg VERSION="$VERSION" \
         --build-arg HOST_OS="$HOST_OS" \
