@@ -63,14 +63,12 @@ func main() {
 	}
 
 	ctx := buildContext{
-		Config:                *conf,
-		ProjectRoot:           *projectRoot,
-		ModFile:               *modFile,
-		GoExe:                 *goExe,
-		GitExe:                *gitExe,
-		GoModContent:          string(goModContent),
-		GenerateCodeBeginFlag: "// Builder Generated Code Begin",
-		GenerateCodeEndFlag:   "// Builder Generated Code End",
+		Config:       *conf,
+		ProjectRoot:  *projectRoot,
+		ModFile:      *modFile,
+		GoExe:        *goExe,
+		GitExe:       *gitExe,
+		GoModContent: string(goModContent),
 	}
 	fmt.Println("using external plugin config:", mustMarshal2Json(ctx))
 
@@ -89,6 +87,12 @@ func main() {
 	err = applyGoEnvs(&ctx)
 	if err != nil {
 		fmt.Println("failed to apply go envs, err:", err)
+		os.Exit(1)
+	}
+
+	err = getGoModules(&ctx)
+	if err != nil {
+		fmt.Println("failed to get modules, err:", err)
 		os.Exit(1)
 	}
 }
@@ -173,10 +177,6 @@ func generatePluginSourceCode(ctx *buildContext) error {
 	}
 
 	// generate go.mod
-	reg := regexp.MustCompile(fmt.Sprintf(`%s[\s\S]*?%s|%s`, ctx.GenerateCodeBeginFlag, ctx.GenerateCodeEndFlag, ctx.GenerateCodeEndFlag))
-	ctx.GoModContent = reg.ReplaceAllString(ctx.GoModContent, "")
-	ctx.GoModContent = strings.TrimRight(ctx.GoModContent, "\r\n\t ")
-
 	path := getAbsPath(ctx.ModFile, ctx.ProjectRoot)
 	outFile, err := os.Create(path) // nolint
 	if err != nil {
@@ -222,6 +222,24 @@ func applyGoEnvs(ctx *buildContext) error {
 		}
 		fmt.Println("apply go env:", k, v)
 	}
+	return nil
+}
+
+func getGoModules(ctx *buildContext) error {
+	cmd := exec.Command(ctx.GoExe, "mod", "tidy", "-modfile", ctx.ModFile)
+	cmd.Dir = ctx.ProjectRoot
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to execute go mod tidy, err: %w, output: %s", err, out)
+	}
+
+	cmd = exec.Command(ctx.GoExe, "mod", "download", "-modfile", ctx.ModFile)
+	cmd.Dir = ctx.ProjectRoot
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to download go modules, err: %w, output: %s", err, out)
+	}
+
 	return nil
 }
 

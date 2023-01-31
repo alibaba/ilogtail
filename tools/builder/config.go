@@ -43,12 +43,10 @@ type pluginModule struct {
 }
 
 type buildContext struct {
-	ProjectRoot           string
-	GoModContent          string `json:"-"`
-	ModFile               string
-	GenerateCodeBeginFlag string
-	GenerateCodeEndFlag   string
-	GoExe                 string
-	GitExe                string
-	Config                pluginConfig
+	ProjectRoot  string
+	GoModContent string `json:"-"`
+	ModFile      string
+	GoExe        string
+	GitExe       string
+	Config       pluginConfig
 }

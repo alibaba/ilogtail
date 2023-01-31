@@ -87,8 +87,6 @@ go 1.18
 require (
 	github.com/alibaba/ilogtail/base v0.0.0-20230128101543-c0c844084b0e
 )`,
-		GenerateCodeBeginFlag: "// Generated Code Begin",
-		GenerateCodeEndFlag:   "// Generated Code End",
 		Config: pluginConfig{
 			Plugins: pluginCategory{
 				Common: []*pluginModule{
@@ -178,8 +176,6 @@ require (
 	github.com/alibaba/ilogtail/base v0.0.0-20230128101543-c0c844084b0e
 )
 
-// Generated Code Begin
-
 
 require github.com/mock/common_plugins1 v1.0.0
 require github.com/mock/common_plugins2 v1.0.0
@@ -196,9 +192,6 @@ replace github.com/mock/common_plugins1 v1.0.0 => ../
 
 
 
-
-
-// Generated Code End
 `,
 	}
 

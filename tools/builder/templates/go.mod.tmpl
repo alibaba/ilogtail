@@ -1,7 +1,5 @@
 {{.GoModContent}}
 
-{{.GenerateCodeBeginFlag}}
-
 {{range .Config.Plugins.Common}}
 {{if .GoMod}}require {{.GoMod}}{{end}}
 {{- end}}
@@ -30,5 +28,3 @@
 {{- range .Config.Project.Replaces}}
 replace {{.}}
 {{- end}}
-
-{{.GenerateCodeEndFlag}}
