@@ -68,21 +68,13 @@ EOF
   fi
 
   if [ $COPY_GIT_CONFIGS ]; then
-    localUrlConfigs=($(git config -l | grep -E '^url\.'))
     globalUrlConfigs=($(git config -l --global | grep -E '^url\.'))
     for gc in ${globalUrlConfigs[@]}; do
-      copy=true
-      for lc in $localUrlConfigs ; do
-        if [[ $gc = $lc ]]; then
-          copy=false
-          break
-        fi
-      done
-      if [ $copy ]; then
-        echo "git config $(echo "$gc" | sed 's/=/ /')" >> $BUILD_SCRIPT_FILE
-      fi
+      echo "git config --global $(echo "$gc" | sed 's/=/ /')" >> $BUILD_SCRIPT_FILE
     done
   fi
+
+  echo "echo 'StrictHostkeyChecking no' >> /etc/ssh/ssh_config" >> $BUILD_SCRIPT_FILE
 
   chmod 755 $BUILD_SCRIPT_FILE
   if [ $CATEGORY = "plugin" ]; then

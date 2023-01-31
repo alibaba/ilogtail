@@ -79,6 +79,7 @@ echo "========================================="
 BUILD_SSH_OPTS=""
 if [[ "$USE_DOCKER_BUILDKIT" = "true" ]]; then
   export DOCKER_BUILDKIT=1
+  export BUILDKIT_PROGRESS=plain
   BUILD_SSH_OPTS="--ssh default"
 fi
 
