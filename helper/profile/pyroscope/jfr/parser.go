@@ -40,17 +40,13 @@ func (r *RawProfile) ParseJFR(ctx context.Context, meta *profile.Meta, body io.R
 		return fmt.Errorf("unable to parse JFR format: %w", err)
 	}
 	for _, c := range chunks {
-		pErr := r.parseChunk(ctx, meta, c, jfrLabels, cb)
-		if pErr != nil {
-			//err = multierror.Append(err, pErr)
-			return err
-		}
+		r.parseChunk(ctx, meta, c, jfrLabels, cb)
 	}
 	return nil
 }
 
 // revive:disable-next-line:cognitive-complexity necessary complexity
-func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *LabelsSnapshot, convertCb profile.CallbackFunc) (err error) {
+func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parser.Chunk, jfrLabels *LabelsSnapshot, convertCb profile.CallbackFunc) {
 	stackMap := make(map[uint64]*profile.Stack)
 	valMap := make(map[uint64][]uint64)
 	labelMap := make(map[uint64]map[string]string)
@@ -126,7 +122,7 @@ func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parse
 			typeMap[id] = append(typeMap[id], n)
 			unitMap[id] = append(unitMap[id], string(u))
 			valMap[id] = append(valMap[id], self)
-			labelMap[id] = buildKey(n, meta.Key.Labels(), labels, jfrLabels).Labels()
+			labelMap[id] = buildKey(meta.Key.Labels(), labels, jfrLabels).Labels()
 		})
 	}
 	for sampleType, entries := range cache {
@@ -147,7 +143,6 @@ func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parse
 		}
 		convertCb(id, fs, valMap[id], typeMap[id], unitMap[id], aggtypeMap[id], meta.StartTime.UnixNano(), meta.EndTime.UnixNano(), labelMap[id])
 	}
-	return err
 }
 
 func getName(sampleType int64, event string) string {
@@ -200,7 +195,7 @@ func getUnits(sampleType int64) profile.Units {
 	return profile.SamplesUnits
 }
 
-func buildKey(n string, appLabels map[string]string, labels tree.Labels, snapshot *LabelsSnapshot) *segment.Key {
+func buildKey(appLabels map[string]string, labels tree.Labels, snapshot *LabelsSnapshot) *segment.Key {
 	finalLabels := map[string]string{}
 	for k, v := range appLabels {
 		finalLabels[k] = v
@@ -211,9 +206,11 @@ func buildKey(n string, appLabels map[string]string, labels tree.Labels, snapsho
 			continue
 		}
 		vs, ok := snapshot.Strings[v.Str]
+		if !ok {
+			continue
+		}
 		finalLabels[ks] = vs
 	}
-	// finalLabels["__name__"] += "." + n
 	return segment.NewKey(finalLabels)
 }
 

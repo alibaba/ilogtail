@@ -2,11 +2,12 @@ package pprof
 
 import (
 	"fmt"
-	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/pyroscope-io/pyroscope/pkg/storage/metadata"
 
+	"github.com/pyroscope-io/pyroscope/pkg/storage/metadata"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
+
+	"github.com/alibaba/ilogtail/helper/profile"
 )
 
 type StackFrameFormatter interface {

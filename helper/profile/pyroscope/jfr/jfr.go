@@ -5,21 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"io"
 	"mime/multipart"
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/pyroscope-io/pyroscope/pkg/util/form"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/pyroscope-io/pyroscope/pkg/util/form"
-)
-
-const (
-	formFieldProfile, formFieldSampleTypeConfig = "profile", "sample_type_config"
+	"github.com/alibaba/ilogtail/helper/profile"
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 type RawProfile struct {
