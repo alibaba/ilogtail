@@ -2,12 +2,12 @@ package profile
 
 import (
 	"context"
-	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/gofrs/uuid"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 

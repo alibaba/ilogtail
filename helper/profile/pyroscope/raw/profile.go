@@ -5,17 +5,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"strconv"
 	"strings"
-	"sync"
-
-	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/pyroscope-io/pyroscope/pkg/structs/transporttrie"
+
+	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/helper/profile"
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 type Profile struct {
@@ -26,7 +25,6 @@ type Profile struct {
 	logs []*protocol.Log
 	// v2 result
 	group  *models.PipelineGroupEvents
-	v2Once sync.Once
 }
 
 func (p *Profile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {

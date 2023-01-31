@@ -10,10 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/alibaba/ilogtail/helper/profile"
 )
 
 func TestRawProfile_Parse(t *testing.T) {
@@ -25,12 +26,6 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to read JFR file: %s", err)
 	}
-	/*
-		expectedJson, err := readGzipFile("./testdata/example_parsed.json.gz")
-		if err != nil {
-			t.Fatalf("Unable to read example_parsd.json")
-		}
-	*/
 
 	rp := RawProfile{
 		FormDataContentType: "",
@@ -50,7 +45,7 @@ func TestParse(t *testing.T) {
 		t.Fatalf("Failed to parse JFR: %s", err)
 		return
 	}
-	require.Equal(t, len(logs), 3)
+	require.Equal(t, len(logs), 229)
 }
 
 func TestParseJFR(t *testing.T) {
@@ -71,7 +66,8 @@ func TestParseJFR(t *testing.T) {
 
 	var reader io.Reader = bytes.NewReader(jfr)
 
-	logs, err := ParseJFR(context.Background(), &profile.Meta{
+	r := new(RawProfile)
+	meta := &profile.Meta{
 		Key:             segment.NewKey(map[string]string{"_app_name_": "12"}),
 		SpyName:         "javaspy",
 		StartTime:       time.Now(),
@@ -79,7 +75,10 @@ func TestParseJFR(t *testing.T) {
 		SampleRate:      99,
 		Units:           profile.SamplesUnits,
 		AggregationType: profile.SumAggType,
-	}, reader, &labels)
+	}
+	cb := r.extractProfileV1(meta)
+	r.ParseJFR(context.Background(), meta, reader, &labels, cb)
+	logs := r.logs
 	require.Equal(t, len(logs), 3)
 }
 
