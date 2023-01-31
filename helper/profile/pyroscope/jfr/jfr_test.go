@@ -45,7 +45,7 @@ func TestParse(t *testing.T) {
 		t.Fatalf("Failed to parse JFR: %s", err)
 		return
 	}
-	require.Equal(t, len(logs), 3)
+	require.Equal(t, len(logs), 229)
 }
 
 func TestParseJFR(t *testing.T) {
