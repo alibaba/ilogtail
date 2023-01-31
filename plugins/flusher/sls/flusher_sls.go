@@ -109,7 +109,9 @@ func (p *SlsFlusher) Export(events []*models.PipelineGroupEvents, context ilogta
 		eventType := event.Events[0].GetType()
 		switch eventType {
 		case models.EventTypeProfile:
-			p.flushProfile(event)
+			if err := p.flushProfile(event); err != nil {
+				return err
+			}
 		default:
 			logger.Warning(p.context.GetRuntimeContext(), "UNKNOWN_EVENT_TYPE", "type", eventType)
 			continue
