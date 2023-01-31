@@ -15,8 +15,9 @@
 package models
 
 import (
-	"github.com/alibaba/ilogtail/pkg/constraints"
 	"strings"
+
+	"github.com/alibaba/ilogtail/pkg/constraints"
 )
 
 func NewTagsWithMap(tags map[string]string) Tags {

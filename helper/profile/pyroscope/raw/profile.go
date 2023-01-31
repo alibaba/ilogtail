@@ -20,11 +20,8 @@ import (
 type Profile struct {
 	RawData []byte
 	Format  profile.Format
-
-	// v1 result
-	logs []*protocol.Log
-	// v2 result
-	group  *models.PipelineGroupEvents
+	logs    []*protocol.Log             // v1 result
+	group   *models.PipelineGroupEvents // v2 result
 }
 
 func (p *Profile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {

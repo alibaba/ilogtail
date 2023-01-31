@@ -21,7 +21,7 @@ type ProfileKind int
 
 const (
 	_ ProfileKind = iota
-	ProfileCpu
+	ProfileCPU
 	ProfileMem
 	ProfileMutex
 	ProfileGoRoutines
@@ -31,18 +31,17 @@ const (
 
 type Profile struct {
 	// 100 ==>1000
-	Name      string        // means the top of the stack
-	Stack     ProfileStack  // means the call stack removed the top method.
-	StackID   string        // a unique id for current invoke stack
-	StartTime int64         // profile begin time
-	EndTime   int64         // profile end time
-	Tags      Tags          // profile tags
-	Values    ProfileValues // profile value list for multi values
-	//
-	ProfileID   string      // means the unique id for one profiling
-	ProfileType ProfileKind // profile category, such as profile_cpu
-	Language    string      // the language of the profiling target
-	DataType    string      // the data structure for profile struct, currently default with CallStack
+	Name        string        // means the top of the stack
+	Stack       ProfileStack  // means the call stack removed the top method.
+	StackID     string        // a unique id for current invoke stack
+	StartTime   int64         // profile begin time
+	EndTime     int64         // profile end time
+	Tags        Tags          // profile tags
+	Values      ProfileValues // profile value list for multi values
+	ProfileID   string        // means the unique id for one profiling
+	ProfileType ProfileKind   // profile category, such as profile_cpu
+	Language    string        // the language of the profiling target
+	DataType    string        // the data structure for profile struct, currently default with CallStack
 }
 
 func NewProfileValue(valType, unit, aggType string, val float64) *ProfileValue {
@@ -56,7 +55,7 @@ func NewProfileValue(valType, unit, aggType string, val float64) *ProfileValue {
 
 func (p ProfileKind) String() string {
 	switch p {
-	case ProfileCpu:
+	case ProfileCPU:
 		return "profile_cpu"
 	case ProfileMem:
 		return "profile_mem"

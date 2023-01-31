@@ -3,11 +3,12 @@ package sls
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"strconv"
-	"strings"
 )
 
 type ConverterFunc func(logs ...*models.PipelineGroupEvents) *protocol.LogGroup

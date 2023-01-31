@@ -3,7 +3,9 @@ package pipelineeventgroup
 import (
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/models"
+
 	"github.com/stretchr/testify/require"
+
 	"testing"
 )
 

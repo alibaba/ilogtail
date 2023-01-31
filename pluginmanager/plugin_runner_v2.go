@@ -15,12 +15,12 @@
 package pluginmanager
 
 import (
-	"github.com/alibaba/ilogtail/plugin_main/flags"
 	"time"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/plugin_main/flags"
 )
 
 type pluginv2Runner struct {

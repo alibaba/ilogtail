@@ -69,7 +69,7 @@ func DetectProfileType(valType string) models.ProfileKind {
 	case "inuse_space", "inuse_objects", "alloc_space", "alloc_objects", "alloc-size", "alloc-samples", "alloc_in_new_tlab_objects", "alloc_in_new_tlab_bytes", "alloc_outside_tlab_objects", "alloc_outside_tlab_bytes":
 		return models.ProfileMem
 	case "samples", "cpu", "itimer", "lock_count", "lock_duration", "wall":
-		return models.ProfileCpu
+		return models.ProfileCPU
 	case "mutex_count", "mutex_duration", "block_duration", "block_count", "contentions", "delay", "lock-time", "lock-count":
 		return models.ProfileMutex
 	case "goroutines", "goroutine":

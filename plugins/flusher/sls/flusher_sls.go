@@ -19,12 +19,12 @@ package sls
 
 import (
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/models"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/logtail"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
