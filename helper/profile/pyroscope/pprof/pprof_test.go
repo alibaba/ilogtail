@@ -100,7 +100,7 @@ func TestRawProfile_Parse(t *testing.T) {
 	require.NoError(t, err)
 	logs := r.logs
 	require.Equal(t, len(logs), 6)
-	picks := helper.PickLogs(logs, "stackID", "4682452006970879243")
+	picks := helper.PickLogs(logs, "stackID", "40fb694aa9506d0b")
 	require.Equal(t, len(picks), 1)
 	log := picks[0]
 	require.Equal(t, helper.ReadLogVal(log, "name"), "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
