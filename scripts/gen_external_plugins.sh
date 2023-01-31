@@ -31,5 +31,7 @@ if [ "$CONFIG_FILE" == "off" ]; then
   return
 fi
 
+rm -rf $ROOT_DIR/plugins/all/*.external_plugins.go
+
 go run -mod=mod "$ROOT_DIR/tools/builder" -root-dir="$ROOT_DIR" -config="$CONFIG_FILE" -modfile="$MOD_FILE" && \
 echo "generating external plugins finished successfully"

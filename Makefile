@@ -75,6 +75,7 @@ clean:
 	rm -rf plugin_main/*.dll
 	rm -rf plugin_main/*.so
 	rm -rf plugins/all/*.external_plugins.go
+	go mod tidy || true
 
 .PHONY: license
 license:  clean tools

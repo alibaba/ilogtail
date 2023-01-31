@@ -69,3 +69,5 @@ report
 # external plugins
 *.external_plugins.go
 /external_plugins.yml
+*.go.mod
+*.go.mod.sum

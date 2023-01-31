@@ -2,7 +2,7 @@
 
 {{.GenerateCodeBeginFlag}}
 
-{{- range .Config.Plugins.Common}}
+{{range .Config.Plugins.Common}}
 {{if .GoMod}}require {{.GoMod}}{{end}}
 {{- end}}
 {{- range .Config.Plugins.Windows}}
@@ -31,4 +31,4 @@
 replace {{.}}
 {{- end}}
 
-{{- .GenerateCodeEndFlag}}
+{{.GenerateCodeEndFlag}}

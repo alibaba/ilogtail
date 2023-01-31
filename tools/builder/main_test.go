@@ -179,6 +179,8 @@ require (
 )
 
 // Generated Code Begin
+
+
 require github.com/mock/common_plugins1 v1.0.0
 require github.com/mock/common_plugins2 v1.0.0
 require github.com/mock/windows_plugins1 v1.0.0
@@ -188,6 +190,8 @@ require github.com/mock/linux_plugins2 v1.0.0
 require github.com/mock/debug_plugins1 v1.0.0
 require github.com/mock/debug_plugins2 v1.0.0
 replace github.com/mock/common_plugins1 v1.0.0 => ../
+
+
 
 
 

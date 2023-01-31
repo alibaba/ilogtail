@@ -175,6 +175,7 @@ func generatePluginSourceCode(ctx *buildContext) error {
 	// generate go.mod
 	reg := regexp.MustCompile(fmt.Sprintf(`%s[\s\S]*?%s|%s`, ctx.GenerateCodeBeginFlag, ctx.GenerateCodeEndFlag, ctx.GenerateCodeEndFlag))
 	ctx.GoModContent = reg.ReplaceAllString(ctx.GoModContent, "")
+	ctx.GoModContent = strings.TrimRight(ctx.GoModContent, "\r\n\t ")
 
 	path := getAbsPath(ctx.ModFile, ctx.ProjectRoot)
 	outFile, err := os.Create(path) // nolint

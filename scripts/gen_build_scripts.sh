@@ -62,15 +62,15 @@ EOF
 
   if [ $EXPORT_GO_ENVS ]; then
     envs=($(go env | grep -E 'GOPRIVATE=".+"|GOPROXY=".+"'))
-    for v in $envs ; do
-        echo "go env -w $v" >> $BUILD_SCRIPT_FILE;
+    for v in ${envs[@]}; do
+      echo "go env -w $v" >> $BUILD_SCRIPT_FILE
     done
   fi
 
   if [ $COPY_GIT_CONFIGS ]; then
     localUrlConfigs=($(git config -l | grep -E '^url\.'))
     globalUrlConfigs=($(git config -l --global | grep -E '^url\.'))
-    for gc in $globalUrlConfigs ; do
+    for gc in ${globalUrlConfigs[@]}; do
       copy=true
       for lc in $localUrlConfigs ; do
         if [[ $gc = $lc ]]; then
@@ -79,7 +79,7 @@ EOF
         fi
       done
       if [ $copy ]; then
-        echo "git config $(echo "$gc" | sed 's/=/ /')" >> $BUILD_SCRIPT_FILE;
+        echo "git config $(echo "$gc" | sed 's/=/ /')" >> $BUILD_SCRIPT_FILE
       fi
     done
   fi
