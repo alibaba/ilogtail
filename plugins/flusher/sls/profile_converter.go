@@ -40,10 +40,6 @@ func ConvertProfile(events ...*models.PipelineGroupEvents) *protocol.LogGroup {
 					Value: p.Language,
 				},
 				&protocol.Log_Content{
-					Key:   "language",
-					Value: p.Language,
-				},
-				&protocol.Log_Content{
 					Key:   "type",
 					Value: p.ProfileType.String(),
 				},
