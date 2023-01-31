@@ -22,6 +22,7 @@ EXTERNAL_PLUGINS_CONFIG_FILE ?= external_plugins.yml
 GO_MOD_FILE ?= go.mod
 DOCKER_BUILD_EXPORT_GO_ENVS ?= true
 DOCKER_BUILD_COPY_GIT_CONFIGS ?= true
+DOCKER_BUILD_USE_BUILDKIT ?=
 
 SCOPE ?= .
 
@@ -35,6 +36,14 @@ ifeq ($(shell uname -m),x86_64)
     ARCH := amd64
 else
     ARCH := arm64
+endif
+
+ifndef DOCKER_BUILD_USE_BUILDKIT
+	ifdef SSH_AUTH_SOCK
+		DOCKER_BUILD_USE_BUILDKIT = true
+	else
+		DOCKER_BUILD_USE_BUILDKIT = false
+	endif
 endif
 
 GO = go
@@ -99,14 +108,14 @@ lint-e2e: clean tools
 
 .PHONY: core
 core: clean
-	./scripts/gen_build_scripts.sh core $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GOENVS) $(DOCKER_BUILD_COPY_GITCONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
-	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
+	./scripts/gen_build_scripts.sh core $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GO_ENVS) $(DOCKER_BUILD_COPY_GIT_CONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
+	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false $(DOCKER_BUILD_USE_BUILDKIT)
 	./$(GENERATED_HOME)/gen_copy_docker.sh
 
 .PHONY: plugin
 plugin: clean
-	./scripts/gen_build_scripts.sh plugin $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GOENVS) $(DOCKER_BUILD_COPY_GITCONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
-	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
+	./scripts/gen_build_scripts.sh plugin $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GO_ENVS) $(DOCKER_BUILD_COPY_GIT_CONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
+	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false $(DOCKER_BUILD_USE_BUILDKIT)
 	./$(GENERATED_HOME)/gen_copy_docker.sh
 
 .PHONY: upgrade_adapter_lib
@@ -129,13 +138,13 @@ add_external_plugins:
 
 .PHONY: e2edocker
 e2edocker: clean
-	./scripts/gen_build_scripts.sh e2e $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GOENVS) $(DOCKER_BUILD_COPY_GITCONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
-	./scripts/docker_build.sh development $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) false
+	./scripts/gen_build_scripts.sh e2e $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GO_ENVS) $(DOCKER_BUILD_COPY_GIT_CONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
+	./scripts/docker_build.sh development $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) false $(DOCKER_BUILD_USE_BUILDKIT)
 
 # provide a goc server for e2e testing
 .PHONY: gocdocker
 gocdocker: clean
-	./scripts/docker_build.sh goc $(GENERATED_HOME) latest goc-server false
+	./scripts/docker_build.sh goc $(GENERATED_HOME) latest goc-server false $(DOCKER_BUILD_USE_BUILDKIT)
 
 .PHONY: vendor
 vendor: clean
@@ -191,8 +200,8 @@ unittest_pluginmanager: clean
 
 .PHONY: all
 all: clean
-	./scripts/gen_build_scripts.sh all $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GOENVS) $(DOCKER_BUILD_COPY_GITCONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
-	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false
+	./scripts/gen_build_scripts.sh all $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GO_ENVS) $(DOCKER_BUILD_COPY_GIT_CONFIGS) $(EXTERNAL_PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
+	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false $(DOCKER_BUILD_USE_BUILDKIT)
 	./$(GENERATED_HOME)/gen_copy_docker.sh
 
 .PHONY: dist
@@ -205,9 +214,9 @@ $(DIST_FILE):
 
 .PHONY: docker
 docker: $(DIST_FILE)
-	./scripts/docker_build.sh production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+	./scripts/docker_build.sh production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH) $(DOCKER_BUILD_USE_BUILDKIT)
 
 .PHONY: multi-arch-docker
 multi-arch-docker: $(DIST_FILE)
 	@echo "will push to $(DOCKER_REPOSITORY):edge. Make sure this tag does not exist or push will fail."
-	./scripts/docker_build.sh multi-arch-production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH)
+	./scripts/docker_build.sh multi-arch-production $(GENERATED_HOME) $(VERSION) $(DOCKER_REPOSITORY) $(DOCKER_PUSH) $(DOCKER_BUILD_USE_BUILDKIT)

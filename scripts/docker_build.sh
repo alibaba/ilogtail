@@ -40,6 +40,7 @@ GENERATED_HOME=$2
 VERSION=${3:-1.3.1}
 REPOSITORY=${4:-aliyun/ilogtail}
 PUSH=${5:-false}
+USE_DOCKER_BUILDKIT=${6:-${DOCKER_BUILD_USE_BUILDKIT:-$(if [[ -n "${SSH_AUTH_SOCK}" ]];then echo "true";else echo "false";fi)}}
 
 HOST_OS=`uname -s`
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
@@ -75,16 +76,22 @@ echo "=============DOCKERFILE=================="
 cat $GEN_DOCKERFILE
 echo "========================================="
 
+BUILD_SSH_OPTS=""
+if [[ "$USE_DOCKER_BUILDKIT" = "true" ]]; then
+  export DOCKER_BUILDKIT=1
+  BUILD_SSH_OPTS="--ssh default"
+fi
+
 if [[ $CATEGORY != "multi-arch-production" ]]; then
-    DOCKER_BUILDKIT=1 docker build --build-arg TARGETPLATFORM=linux/$ARCH \
-        --ssh default \
+    docker build --build-arg TARGETPLATFORM=linux/$ARCH \
+        $BUILD_SSH_OPTS \
 	      --build-arg VERSION="$VERSION" \
         --build-arg HOST_OS="$HOST_OS" \
         -t "$REPOSITORY":"$VERSION" \
         --no-cache -f $GEN_DOCKERFILE .
 else
     docker buildx build --platform linux/amd64,linux/arm64 \
-        --ssh default \
+        $BUILD_SSH_OPTS \
         --build-arg VERSION="$VERSION" \
         --build-arg HOST_OS="$HOST_OS" \
         -t "$REPOSITORY":edge \
