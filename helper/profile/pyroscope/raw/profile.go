@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/pyroscope-io/pyroscope/pkg/structs/transporttrie"
@@ -25,8 +24,7 @@ type Profile struct {
 	// v1 result
 	logs []*protocol.Log
 	// v2 result
-	group  models.PipelineGroupEvents
-	v2Once sync.Once
+	group models.PipelineGroupEvents
 }
 
 func (p *Profile) ParseV2(ctx context.Context, meta *profile.Meta) (group *models.PipelineGroupEvents, err error) {

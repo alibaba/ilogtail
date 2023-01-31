@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/alibaba/ilogtail/helper"
-
 	"github.com/pyroscope-io/pyroscope/pkg/structs/transporttrie"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/alibaba/ilogtail/helper"
 )
 
 func TestDecoder_DecodeTire(t *testing.T) {
@@ -40,7 +40,7 @@ func TestDecoder_DecodeTire(t *testing.T) {
 	}
 	var buf bytes.Buffer
 	trie.Serialize(&buf)
-	println(string(buf.Bytes()))
+	println(buf.String())
 	request, err := http.NewRequest("POST", "http://localhost:8080?aggregationType=sum&from=1673495500&name=demo.cpu{a=b}&sampleRate=100&spyName=ebpfspy&units=samples&until=1673495510", &buf)
 	request.Header.Set("Content-Type", "binary/octet-stream+trie")
 	assert.NoError(t, err)
