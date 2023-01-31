@@ -70,8 +70,8 @@ type RawProfile struct {
 	profile             []byte
 	sampleTypeConfig    map[string]*tree.SampleTypeConfig
 
-	logs  []*protocol.Log            // v1 result
-	group models.PipelineGroupEvents // v2 result
+	logs  []*protocol.Log             // v1 result
+	group *models.PipelineGroupEvents // v2 result
 }
 
 func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
@@ -79,15 +79,20 @@ func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*pro
 	if err = r.doParse(ctx, meta, cb); err != nil {
 		return nil, err
 	}
-	return r.logs, err
+	logs = r.logs
+	r.logs = nil
+	return
 }
 
 func (r *RawProfile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {
+	groups = new(models.PipelineGroupEvents)
+	r.group = groups
 	cb := r.extraceProfileV2(meta)
 	if err = r.doParse(ctx, meta, cb); err != nil {
 		return nil, err
 	}
-	return &r.group, err
+	r.group = nil
+	return
 }
 
 func (r *RawProfile) doParse(ctx context.Context, meta *profile.Meta, cb profile.CallbackFunc) error {
@@ -179,16 +184,18 @@ func (r *RawProfile) extraceProfileV2(meta *profile.Meta) profile.CallbackFunc {
 	if r.group.Group == nil {
 		r.group.Group = models.NewGroup(models.NewMetadata(), models.NewTags())
 	}
-	r.group.Group.GetMetadata().Add("profileID", profile.GetProfileID(meta))
-	r.group.Group.GetMetadata().Add("dataType", "CallStack")
-	r.group.Group.GetMetadata().Add("language", meta.SpyName)
+	profileID := profile.GetProfileID(meta)
 	return func(id uint64, stack *profile.Stack, vals []uint64, types, units, aggs []string, startTime, endTime int64, labels map[string]string) {
-		r.group.Group.GetMetadata().Add("type", profile.DetectProfileType(types[0]))
 		var values models.ProfileValues
 		for i, val := range vals {
-			values = append(values, models.NewProfileValue(types[i], units[i], aggs[i], val))
+			values = append(values, models.NewProfileValue(types[i], units[i], aggs[i], float64(val)))
 		}
-		newProfile := models.NewProfile(stack.Name, strconv.FormatUint(id, 10), stack.Stack, startTime, endTime, models.NewTagsWithMap(labels), values)
+		newProfile := models.NewProfile(stack.Name, strconv.FormatUint(id, 16),
+			profileID,
+			"CallStack",
+			meta.SpyName,
+			profile.DetectProfileType(types[0]),
+			stack.Stack, startTime, endTime, models.NewTagsWithMap(labels), values)
 		r.group.Events = append(r.group.Events, newProfile)
 	}
 }
@@ -209,7 +216,7 @@ func (r *RawProfile) extraceProfileV1(meta *profile.Meta) profile.CallbackFunc {
 			},
 			&protocol.Log_Content{
 				Key:   "stackID",
-				Value: strconv.FormatUint(id, 10),
+				Value: strconv.FormatUint(id, 16),
 			},
 			&protocol.Log_Content{
 				Key:   "language",
@@ -217,7 +224,7 @@ func (r *RawProfile) extraceProfileV1(meta *profile.Meta) profile.CallbackFunc {
 			},
 			&protocol.Log_Content{
 				Key:   "type",
-				Value: profile.DetectProfileType(types[0]),
+				Value: profile.DetectProfileType(types[0]).String(),
 			},
 			&protocol.Log_Content{
 				Key:   "units",

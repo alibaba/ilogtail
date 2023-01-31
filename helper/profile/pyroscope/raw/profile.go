@@ -25,16 +25,19 @@ type Profile struct {
 	// v1 result
 	logs []*protocol.Log
 	// v2 result
-	group  models.PipelineGroupEvents
+	group  *models.PipelineGroupEvents
 	v2Once sync.Once
 }
 
-func (p *Profile) ParseV2(ctx context.Context, meta *profile.Meta) (group *models.PipelineGroupEvents, err error) {
+func (p *Profile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {
+	groups = new(models.PipelineGroupEvents)
+	p.group = groups
 	cb := p.extractProfileV2(meta)
 	if err := p.doParse(cb); err != nil {
 		return nil, err
 	}
-	return &p.group, nil
+	p.group = nil
+	return
 }
 
 func (p *Profile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
@@ -81,16 +84,14 @@ func (p *Profile) extractProfileV2(meta *profile.Meta) func([]byte, int) {
 		p.group.Group = models.NewGroup(models.NewMetadata(), models.NewTags())
 	}
 	profileID := profile.GetProfileID(meta)
-	p.group.Group.GetMetadata().Add("profileID", profileID)
-	p.group.Group.GetMetadata().Add("dataType", "CallStack")
-	p.group.Group.GetMetadata().Add("language", meta.SpyName)
-	p.group.Group.GetMetadata().Add("type", profile.DetectProfileType(meta.Units.DetectValueType()))
 	return func(k []byte, v int) {
 		name, stack := extractNameAndStacks(k)
-		stackID := strconv.FormatUint(xxhash.Sum64(k), 10)
-		newProfile := models.NewProfile(name, stackID, stack, meta.StartTime.UnixNano(), meta.EndTime.UnixNano(), models.NewTags(), []*models.ProfileValue{
-			models.NewProfileValue(meta.Units.DetectValueType(), string(meta.Units), string(meta.AggregationType), uint64(v)),
-		})
+		stackID := strconv.FormatUint(xxhash.Sum64(k), 16)
+		newProfile := models.NewProfile(name, stackID,
+			profileID, "CallStack", meta.SpyName, profile.DetectProfileType(meta.Units.DetectValueType()),
+			stack, meta.StartTime.UnixNano(), meta.EndTime.UnixNano(), models.NewTags(), []*models.ProfileValue{
+				models.NewProfileValue(meta.Units.DetectValueType(), string(meta.Units), string(meta.AggregationType), float64(v)),
+			})
 		p.group.Events = append(p.group.Events, newProfile)
 	}
 }
@@ -115,7 +116,7 @@ func (p *Profile) extractProfileV1(meta *profile.Meta) func([]byte, int) {
 			},
 			&protocol.Log_Content{
 				Key:   "stackID",
-				Value: strconv.FormatUint(xxhash.Sum64(k), 10),
+				Value: strconv.FormatUint(xxhash.Sum64(k), 16),
 			},
 			&protocol.Log_Content{
 				Key:   "language",
@@ -123,7 +124,7 @@ func (p *Profile) extractProfileV1(meta *profile.Meta) func([]byte, int) {
 			},
 			&protocol.Log_Content{
 				Key:   "type",
-				Value: profile.DetectProfileType(meta.Units.DetectValueType()),
+				Value: profile.DetectProfileType(meta.Units.DetectValueType()).String(),
 			},
 			&protocol.Log_Content{
 				Key:   "units",

@@ -19,6 +19,8 @@ package sls
 
 import (
 	"fmt"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 
 	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
@@ -98,6 +100,24 @@ func (p *SlsFlusher) Flush(projectName string, logstoreName string, configName s
 	return nil
 }
 
+// Export convert different PipelineGroupEvents to sls protocol.Log
+func (p *SlsFlusher) Export(events []*models.PipelineGroupEvents, context ilogtail.PipelineContext) error {
+	if len(events) == 0 {
+		return nil
+	}
+	for _, event := range events {
+		eventType := event.Events[0].GetType()
+		switch eventType {
+		case models.EventTypeProfile:
+			p.flushProfile(event)
+		default:
+			logger.Warning(p.context.GetRuntimeContext(), "UNKNOWN_EVENT_TYPE", "type", eventType)
+			continue
+		}
+	}
+	return nil
+}
+
 // SetUrgent ...
 // We do nothing here because necessary flag has already been set in Logtail
 // before this method is called. Any future call of IsReady will return
@@ -109,6 +129,21 @@ func (*SlsFlusher) SetUrgent(flag bool) {
 // Stop ...
 // We do nothing here because SlsFlusher does not create any resources.
 func (*SlsFlusher) Stop() error {
+	return nil
+}
+
+func (p *SlsFlusher) flushProfile(event *models.PipelineGroupEvents) error {
+	logGroup := ConvertProfile(event)
+	buf, err := logGroup.Marshal()
+	if err != nil {
+		return fmt.Errorf("loggroup marshal err %v", err)
+	}
+	bufLen := len(buf)
+	p.lenCounter.Add(int64(bufLen))
+	rst := logtail.SendPb(p.context.GetConfigName(), p.context.GetLogstore(), buf, len(logGroup.Logs))
+	if rst < 0 {
+		return fmt.Errorf("send error %d", rst)
+	}
 	return nil
 }
 

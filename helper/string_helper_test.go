@@ -35,6 +35,10 @@ func TestZeroCopySlice(t *testing.T) {
 	assert.Equal(t, &bytes[0], &slice[0])
 }
 
+func TestDeepCopyString(t *testing.T) {
+
+}
+
 // goos: darwin
 // goarch: amd64
 // pkg: github.com/alibaba/ilogtail/helper

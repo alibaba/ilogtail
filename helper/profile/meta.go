@@ -64,20 +64,20 @@ const (
 	LockSamplesUnits     Units = "local_samples"
 )
 
-func DetectProfileType(valType string) string {
+func DetectProfileType(valType string) models.ProfileKind {
 	switch valType {
 	case "inuse_space", "inuse_objects", "alloc_space", "alloc_objects", "alloc-size", "alloc-samples", "alloc_in_new_tlab_objects", "alloc_in_new_tlab_bytes", "alloc_outside_tlab_objects", "alloc_outside_tlab_bytes":
-		return "profile_mem"
+		return models.ProfileMem
 	case "samples", "cpu", "itimer", "lock_count", "lock_duration", "wall":
-		return "profile_cpu"
+		return models.ProfileCpu
 	case "mutex_count", "mutex_duration", "block_duration", "block_count", "contentions", "delay", "lock-time", "lock-count":
-		return "profile_mutex"
+		return models.ProfileMutex
 	case "goroutines", "goroutine":
-		return "profile_goroutines"
+		return models.ProfileGoRoutines
 	case "exception":
-		return "profile_exception"
+		return models.ProfileException
 	default:
-		return "profile_unknown"
+		return models.ProfileUnknown
 	}
 }
 

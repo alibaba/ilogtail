@@ -14,7 +14,10 @@
 
 package models
 
-import "github.com/alibaba/ilogtail/pkg/constraints"
+import (
+	"github.com/alibaba/ilogtail/pkg/constraints"
+	"strings"
+)
 
 func NewTagsWithMap(tags map[string]string) Tags {
 	return &keyValuesImpl[string]{
@@ -71,6 +74,17 @@ func NewGroup(meta Metadata, tags Tags) *GroupInfo {
 		Metadata: meta,
 		Tags:     tags,
 	}
+}
+
+func GroupDeepClone(g *GroupInfo) *GroupInfo {
+	group := NewGroup(NewMetadataWithMap(make(map[string]string, g.GetMetadata().Len())), NewTagsWithMap(make(map[string]string, g.GetTags().Len())))
+	for k, v := range g.Tags.Iterator() {
+		group.Tags.Add(strings.Clone(k), strings.Clone(v))
+	}
+	for k, v := range g.Metadata.Iterator() {
+		group.Metadata.Add(strings.Clone(k), strings.Clone(v))
+	}
+	return group
 }
 
 func NewMetric(name string, metricType MetricType, tags Tags, timestamp int64, value MetricValue, typedValues MetricTypedValues) *Metric {
@@ -146,15 +160,19 @@ func NewByteArray(bytes []byte) ByteArray {
 	return ByteArray(bytes)
 }
 
-func NewProfile(name, stackID string, stack ProfileStack, startTime, endTime int64, tags Tags, values ProfileValues) *Profile {
+func NewProfile(name, stackID, profileID, dataType, language string, profileType ProfileKind, stack ProfileStack, startTime, endTime int64, tags Tags, values ProfileValues) *Profile {
 	return &Profile{
-		Name:      name,
-		Stack:     stack,
-		StackID:   stackID,
-		StartTime: startTime,
-		EndTime:   endTime,
-		Tags:      tags,
-		Values:    values,
+		Name:        name,
+		ProfileID:   profileID,
+		DataType:    dataType,
+		Language:    language,
+		ProfileType: profileType,
+		Stack:       stack,
+		StackID:     stackID,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		Tags:        tags,
+		Values:      values,
 	}
 
 }

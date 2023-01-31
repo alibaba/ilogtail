@@ -15,6 +15,7 @@
 package pluginmanager
 
 import (
+	"github.com/alibaba/ilogtail/plugin_main/flags"
 	"time"
 
 	"github.com/alibaba/ilogtail"
@@ -66,6 +67,13 @@ func (p *pluginv2Runner) Initialized() error {
 	if len(p.AggregatorPlugins) == 0 {
 		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
 		if err := loadAggregator("aggregator_default", p.LogstoreConfig, nil); err != nil {
+			return err
+		}
+	}
+	if len(p.FlusherPlugins) == 0 {
+		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
+		category, options := flags.GetFlusherConfiguration()
+		if err := loadFlusher(category, p.LogstoreConfig, options); err != nil {
 			return err
 		}
 	}
