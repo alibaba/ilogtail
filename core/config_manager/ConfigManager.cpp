@@ -350,8 +350,8 @@ google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> ConfigMana
 }
 
 void ConfigManager::UpdateRemoteConfig(
-    google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> checkResults,
-    google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> configDetails
+    const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& checkResults,
+    const google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail>& configDetails
 ) {
     static string serverConfigDirPath = AppConfig::GetInstance()->GetRemoteUserYamlConfigDirPath();
 
