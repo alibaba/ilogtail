@@ -17,6 +17,7 @@ package httpserver
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -25,6 +26,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"syscall"
 	"testing"
 	"time"
@@ -411,9 +413,14 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 
 	insertFun := func(num int, start int) {
 		for i := start; i < start+num; i++ {
+			m := map[string][]string{
+				"header": []string{strconv.Itoa(i)},
+			}
+			b, _ := json.Marshal(m)
 			ch <- &dumpData{
-				body: []byte(fmt.Sprintf("body_%d", i)),
-				url:  []byte(fmt.Sprintf("url_%d", i)),
+				body:   []byte(fmt.Sprintf("body_%d", i)),
+				url:    []byte(fmt.Sprintf("url_%d", i)),
+				header: b,
 			}
 
 		}
@@ -427,16 +434,22 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 			if offset == len(data) {
 				break
 			}
-			var urlLen, bodyLen uint32
+			var urlLen, bodyLen, headerLen uint32
 			buffer := bytes.NewBuffer(data[offset:])
 			require.NoError(t, binary.Read(buffer, binary.BigEndian, &urlLen))
 			require.NoError(t, binary.Read(buffer, binary.BigEndian, &bodyLen))
+			require.NoError(t, binary.Read(buffer, binary.BigEndian, &headerLen))
 
-			url := data[offset+8 : offset+8+int(urlLen)]
-			body := data[offset+8+int(urlLen) : offset+8+int(urlLen)+int(bodyLen)]
+			url := data[offset+12 : offset+12+int(urlLen)]
+			body := data[offset+12+int(urlLen) : offset+12+int(urlLen)+int(bodyLen)]
+			header := data[offset+12+int(urlLen)+int(bodyLen) : offset+12+int(urlLen)+int(bodyLen)+int(headerLen)]
 			require.Equal(t, fmt.Sprintf("url_%d", num), string(url))
 			require.Equal(t, fmt.Sprintf("body_%d", num), string(body))
-			offset = offset + 8 + int(urlLen) + int(bodyLen)
+			res := make(map[string][]string)
+			require.NoError(t, json.Unmarshal(header, &res))
+			require.Equal(t, len(res), 1)
+			require.Equal(t, strconv.Itoa(num), res["header"][0])
+			offset = offset + 12 + int(urlLen) + int(bodyLen) + int(headerLen)
 			num++
 		}
 		require.Equal(t, num, expectLen)

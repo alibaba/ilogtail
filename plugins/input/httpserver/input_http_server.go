@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"io"
 	"net"
 	"net/http"
@@ -44,8 +45,9 @@ const (
 )
 
 type dumpData struct {
-	body []byte
-	url  []byte
+	body   []byte
+	url    []byte
+	header []byte
 }
 
 // ServiceHTTP ...
@@ -153,9 +155,11 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.DumpData {
+		b, _ := json.Marshal(r.Header)
 		s.dumpDataChan <- &dumpData{
-			body: data,
-			url:  []byte(r.URL.String()),
+			body:   data,
+			url:    []byte(r.URL.String()),
+			header: b,
 		}
 	}
 	switch s.version {
@@ -320,21 +324,27 @@ func (s *ServiceHTTP) doDumpFile() {
 			}
 			if f != nil {
 				buffer := bytes.NewBuffer([]byte{})
-				// 4Byte url len, 4Byte body len, url, body
+				// 4Byte url len, 4Byte body len,4 byte header len,  url, body, header(serialized by json)
 				if err = binary.Write(buffer, binary.BigEndian, uint32(len(d.url))); err != nil {
 					continue
 				}
 				if err = binary.Write(buffer, binary.BigEndian, uint32(len(d.body))); err != nil {
 					continue
 				}
-				total := 8 + len(d.url) + len(d.body)
+				if err = binary.Write(buffer, binary.BigEndian, uint32(len(d.header))); err != nil {
+					continue
+				}
+				total := 12 + len(d.url) + len(d.body) + len(d.header)
 				if _, err = f.WriteAt(buffer.Bytes(), offset); err != nil {
 					continue
 				}
-				if _, err = f.WriteAt(d.url, offset+8); err != nil {
+				if _, err = f.WriteAt(d.url, offset+12); err != nil {
 					continue
 				}
-				if _, err = f.WriteAt(d.body, offset+8+int64(len(d.url))); err != nil {
+				if _, err = f.WriteAt(d.body, offset+12+int64(len(d.url))); err != nil {
+					continue
+				}
+				if _, err = f.WriteAt(d.header, offset+12+int64(len(d.url)+len(d.body))); err != nil {
 					continue
 				}
 				offset += int64(total)
