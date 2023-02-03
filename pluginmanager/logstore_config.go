@@ -601,6 +601,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 				len(logstoreC.FlushOutLogGroups))
 			return logstoreC, nil
 		}
+		oldConfig.resume()
 		_ = oldConfig.Stop(false)
 		logstoreC.FlushOutLogGroups = oldConfig.FlushOutLogGroups
 		logger.Info(contextImp.GetRuntimeContext(), "config is changed after reload, stop and create a new one",
