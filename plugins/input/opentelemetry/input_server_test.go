@@ -79,7 +79,7 @@ func newInput(enableGRPC, enableHTTP bool, grpcEndpoint, httpEndpoint string) (*
 	return s, err
 }
 
-func TestOLTPGRPC_Trace(t *testing.T) {
+func TestOtlpGRPC_Trace(t *testing.T) {
 	endpointGrpc := GetAvailableLocalAddress(t)
 	input, err := newInput(true, false, endpointGrpc, "")
 	assert.NoError(t, err)
@@ -119,7 +119,7 @@ func TestOLTPGRPC_Trace(t *testing.T) {
 	}
 }
 
-func TestOLTPGRPC_Metrics(t *testing.T) {
+func TestOtlpGRPC_Metrics(t *testing.T) {
 	endpointGrpc := GetAvailableLocalAddress(t)
 	input, err := newInput(true, false, endpointGrpc, "")
 	assert.NoError(t, err)
@@ -157,7 +157,7 @@ func TestOLTPGRPC_Metrics(t *testing.T) {
 	}
 }
 
-func TestOLTPHTTP_Metrics(t *testing.T) {
+func TestOtlpHTTP_Metrics(t *testing.T) {
 	endpointHTTP := GetAvailableLocalAddress(t)
 	input, err := newInput(false, true, "", endpointHTTP)
 	assert.NoError(t, err)
@@ -192,7 +192,7 @@ func TestOLTPHTTP_Metrics(t *testing.T) {
 	}
 }
 
-func TestOLTPHTTP_Trace(t *testing.T) {
+func TestOtlpHTTP_Trace(t *testing.T) {
 	endpointHTTP := GetAvailableLocalAddress(t)
 	input, err := newInput(false, true, "", endpointHTTP)
 	assert.NoError(t, err)

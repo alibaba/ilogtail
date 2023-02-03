@@ -2,13 +2,13 @@
 
 ## 简介
 
-`service_oltp` `input`插件实现了`ServiceInputV2`接口，可以接受`Opentelemetry log/metric/trace protocol`的http/gRPC请求，并且转换输出PipelineGroupEvents。
+`service_otlp` `input`插件实现了`ServiceInputV2`接口，可以接受`Opentelemetry log/metric/trace protocol`的http/gRPC请求，并且转换输出PipelineGroupEvents。
 
 ## 配置参数
 
 | 参数               | 类型      | 是否必选 | 说明                                       |
 |-------------------|----------|-------|------------------------------------------|
-| Type              | String   | 是    | 插件类型, 固定为`service_oltp`。                        |
+| Type              | String   | 是    | 插件类型, 固定为`service_otlp`。                        |
 | Protocals           | Struct   | 是    |   <p>接收的协议</p>                       |
 | Protocals.Grpc    | Struct | 否    | 是否启用gRPC Server                                |
 | Protocals.Grpc.Endpoint | string   | 否    | <p>gRPC Server 地址。</p><p>默认取值为:`0.0.0.0:4317`。</p>                            |
@@ -30,7 +30,7 @@
 enable: true
 version: v2
 inputs:
-  - Type: service_oltp
+  - Type: service_otlp
     Protocals:
 flushers:
   - Type: flusher_stdout
@@ -42,7 +42,7 @@ flushers:
 enable: true
 version: v2
 inputs:
-  - Type: service_oltp
+  - Type: service_otlp
     Protocals:
       Grpc:     
 flushers:
@@ -50,12 +50,12 @@ flushers:
     OnlyStdout: true  
 ```
 
-接收http/gRPC请求，使用默认oltp的默认端口。gRPC：4317，HTTP：4318.
+接收http/gRPC请求，使用默认otlp的默认端口。gRPC：4317，HTTP：4318.
 ```yaml
 enable: true
 version: v2
 inputs:
-  - Type: service_oltp
+  - Type: service_otlp
     Protocals:
       Grpc:        
       Http:        
@@ -69,7 +69,7 @@ flushers:
 enable: true
 version: v2
 inputs:
-  - Type: service_oltp
+  - Type: service_otlp
     Protocals:
       Grpc:        
         Endpoint: 0.0.0.0:4317

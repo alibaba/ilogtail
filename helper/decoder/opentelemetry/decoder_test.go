@@ -410,7 +410,7 @@ func TestDecoder_DecodeV2_Traces(t *testing.T) {
 	pipelineGrouptEventsSlice, err := decoder.DecodeV2(jsonBuf, httpReq)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(pipelineGrouptEventsSlice))
-	oltpScopeSpans := tracesOTLPFull.ResourceSpans().At(0)
+	otlpScopeSpans := tracesOTLPFull.ResourceSpans().At(0)
 
 	for i, groupEvents := range pipelineGrouptEventsSlice {
 		resource := groupEvents.Group.Metadata
@@ -421,30 +421,30 @@ func TestDecoder_DecodeV2_Traces(t *testing.T) {
 		assert.Equal(t, "scope version", scopeAttributes.Get("version"))
 		assert.Equal(t, "scope name", scopeAttributes.Get("name"))
 
-		oltpSpans := oltpScopeSpans.ScopeSpans().At(i).Spans()
+		otlpSpans := otlpScopeSpans.ScopeSpans().At(i).Spans()
 		assert.Equal(t, 2, len(groupEvents.Events))
 
 		for j, event := range groupEvents.Events {
-			oltpSpan := oltpSpans.At(j)
+			otlpSpan := otlpSpans.At(j)
 			name := event.GetName()
-			assert.Equal(t, oltpSpan.Name(), name)
+			assert.Equal(t, otlpSpan.Name(), name)
 			eventType := event.GetType()
 			assert.Equal(t, models.EventTypeSpan, eventType)
 			span, ok := event.(*models.Span)
 			assert.True(t, ok)
-			assert.Equal(t, oltpSpan.TraceID().String(), span.TraceID)
-			assert.Equal(t, oltpSpan.SpanID().String(), span.SpanID)
-			assert.Equal(t, int(oltpSpan.Status().Code()), int(span.Status))
+			assert.Equal(t, otlpSpan.TraceID().String(), span.TraceID)
+			assert.Equal(t, otlpSpan.SpanID().String(), span.SpanID)
+			assert.Equal(t, int(otlpSpan.Status().Code()), int(span.Status))
 
-			oltpSpan.Attributes().Range(
+			otlpSpan.Attributes().Range(
 				func(k string, v pcommon.Value) bool {
 					assert.True(t, span.Tags.Contains(k))
 					return true
 				},
 			)
 
-			for m := 0; m < oltpSpan.Links().Len(); m++ {
-				otLink := oltpSpan.Links().At(m)
+			for m := 0; m < otlpSpan.Links().Len(); m++ {
+				otLink := otlpSpan.Links().At(m)
 				assert.Equal(t, otLink.SpanID().String(), span.Links[m].SpanID)
 				assert.Equal(t, otLink.TraceID().String(), span.Links[m].TraceID)
 				assert.Equal(t, otLink.TraceState().AsRaw(), span.Links[m].TraceState)
@@ -455,8 +455,8 @@ func TestDecoder_DecodeV2_Traces(t *testing.T) {
 				})
 			}
 
-			for m := 0; m < oltpSpan.Events().Len(); m++ {
-				otEvent := oltpSpan.Events().At(m)
+			for m := 0; m < otlpSpan.Events().Len(); m++ {
+				otEvent := otlpSpan.Events().At(m)
 				assert.Equal(t, otEvent.Name(), span.Events[m].Name)
 				assert.Equal(t, int64(otEvent.Timestamp()), span.Events[m].Timestamp)
 				otEvent.Attributes().Range(func(k string, v pcommon.Value) bool {

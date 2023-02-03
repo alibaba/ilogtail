@@ -66,7 +66,7 @@ type Server struct {
 // Init ...
 func (s *Server) Init(context ilogtail.Context) (int, error) {
 	s.context = context
-	logger.Info(s.context.GetRuntimeContext(), "oltp server init", "initializing")
+	logger.Info(s.context.GetRuntimeContext(), "otlp server init", "initializing")
 
 	if s.Protocals.Grpc != nil {
 		if s.Protocals.Grpc.Endpoint == "" {
@@ -93,7 +93,7 @@ func (s *Server) Init(context ilogtail.Context) (int, error) {
 
 	}
 
-	logger.Info(s.context.GetRuntimeContext(), "oltp server init", "initialized", "gRPC settings", s.Protocals.Grpc, "HTTP setting", s.Protocals.Http)
+	logger.Info(s.context.GetRuntimeContext(), "otlp server init", "initialized", "gRPC settings", s.Protocals.Grpc, "HTTP setting", s.Protocals.Http)
 	return 0, nil
 }
 
@@ -128,14 +128,14 @@ func (s *Server) StartService(ctx ilogtail.PipelineContext) error {
 		ptraceotlp.RegisterGRPCServer(s.serverGPRC, s.tracesReceiver)
 		pmetricotlp.RegisterGRPCServer(s.serverGPRC, s.metricsReceiver)
 		plogotlp.RegisterGRPCServer(s.serverGPRC, s.logsReceiver)
-		logger.Info(s.context.GetRuntimeContext(), "oltp grpc receiver for logs/metrics/traces", "initialized")
+		logger.Info(s.context.GetRuntimeContext(), "otlp grpc receiver for logs/metrics/traces", "initialized")
 
 		s.wg.Add(1)
 		go func() {
-			logger.Info(s.context.GetRuntimeContext(), "oltp grpc server start", s.Protocals.Grpc.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "otlp grpc server start", s.Protocals.Grpc.Endpoint)
 			_ = s.serverGPRC.Serve(listener)
 			s.serverGPRC.GracefulStop()
-			logger.Info(s.context.GetRuntimeContext(), "oltp grpc server shutdown", s.Protocals.Grpc.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "otlp grpc server shutdown", s.Protocals.Grpc.Endpoint)
 			s.wg.Done()
 		}()
 	}
@@ -147,7 +147,7 @@ func (s *Server) StartService(ctx ilogtail.PipelineContext) error {
 		s.registerHTTPLogsComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, maxBodySize, "/v1/logs")
 		s.registerHTTPMetricsComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPMetricV1}, maxBodySize, "/v1/metrics")
 		s.registerHTTPTracesComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPTraceV1}, maxBodySize, "/v1/traces")
-		logger.Info(s.context.GetRuntimeContext(), "oltp http receiver for logs/metrics/traces", "initialized")
+		logger.Info(s.context.GetRuntimeContext(), "otlp http receiver for logs/metrics/traces", "initialized")
 
 		httpServer := &http.Server{
 			Addr:        s.Protocals.Http.Endpoint,
@@ -161,16 +161,16 @@ func (s *Server) StartService(ctx ilogtail.PipelineContext) error {
 			return err
 		}
 		s.httpListener = listener
-		logger.Info(s.context.GetRuntimeContext(), "oltp http server init", "initialized")
+		logger.Info(s.context.GetRuntimeContext(), "otlp http server init", "initialized")
 
 		s.wg.Add(1)
 		go func() {
-			logger.Info(s.context.GetRuntimeContext(), "oltp http server start", s.Protocals.Http.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "otlp http server start", s.Protocals.Http.Endpoint)
 			_ = s.serverHTTP.Serve(s.httpListener)
 			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.Protocals.Http.ShutdownTimeoutSec)*time.Second)
 			defer cancel()
 			_ = s.serverHTTP.Shutdown(ctx)
-			logger.Info(s.context.GetRuntimeContext(), "oltp http server shutdown", s.Protocals.Http.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "otlp http server shutdown", s.Protocals.Http.Endpoint)
 			s.wg.Done()
 		}()
 
@@ -182,13 +182,13 @@ func (s *Server) StartService(ctx ilogtail.PipelineContext) error {
 func (s *Server) Stop() error {
 	if s.grpcListener != nil {
 		_ = s.grpcListener.Close()
-		logger.Info(s.context.GetRuntimeContext(), "oltp grpc server stop", s.Protocals.Grpc.Endpoint)
+		logger.Info(s.context.GetRuntimeContext(), "otlp grpc server stop", s.Protocals.Grpc.Endpoint)
 		s.wg.Wait()
 	}
 
 	if s.httpListener != nil {
 		_ = s.httpListener.Close()
-		logger.Info(s.context.GetRuntimeContext(), "oltp http server stop", s.Protocals.Http.Endpoint)
+		logger.Info(s.context.GetRuntimeContext(), "otlp http server stop", s.Protocals.Http.Endpoint)
 		s.wg.Wait()
 	}
 	return nil
@@ -203,7 +203,7 @@ func (s *Server) registerHTTPLogsComsumer(serveMux *http.ServeMux, decoder decod
 		}
 
 		otlpLogReq := plogotlp.NewExportRequest()
-		otlpLogReq, err = opentelemetry.DecodeOltpRequest(otlpLogReq, data, r)
+		otlpLogReq, err = opentelemetry.DecodeOtlpRequest(otlpLogReq, data, r)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
 			httpserver.BadRequest(w)
@@ -239,7 +239,7 @@ func (s *Server) registerHTTPMetricsComsumer(serveMux *http.ServeMux, decoder de
 		}
 
 		otlpMetricReq := pmetricotlp.NewExportRequest()
-		otlpMetricReq, err = opentelemetry.DecodeOltpRequest(otlpMetricReq, data, r)
+		otlpMetricReq, err = opentelemetry.DecodeOtlpRequest(otlpMetricReq, data, r)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
 			httpserver.BadRequest(w)
@@ -274,7 +274,7 @@ func (s *Server) registerHTTPTracesComsumer(serveMux *http.ServeMux, decoder dec
 		}
 
 		otlpTraceReq := ptraceotlp.NewExportRequest()
-		otlpTraceReq, err = opentelemetry.DecodeOltpRequest(otlpTraceReq, data, r)
+		otlpTraceReq, err = opentelemetry.DecodeOtlpRequest(otlpTraceReq, data, r)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
 			httpserver.BadRequest(w)
@@ -418,7 +418,7 @@ type HTTPServerSettings struct {
 }
 
 func init() {
-	ilogtail.ServiceInputs["service_oltp"] = func() ilogtail.ServiceInput {
+	ilogtail.ServiceInputs["service_otlp"] = func() ilogtail.ServiceInput {
 		return &Server{}
 	}
 }

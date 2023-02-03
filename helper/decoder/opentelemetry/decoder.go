@@ -52,21 +52,21 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 	switch d.Format {
 	case common.ProtocolOTLPLogV1:
 		otlpLogReq := plogotlp.NewExportRequest()
-		otlpLogReq, err = DecodeOltpRequest(otlpLogReq, data, req)
+		otlpLogReq, err = DecodeOtlpRequest(otlpLogReq, data, req)
 		if err != nil {
 			return logs, err
 		}
 		logs, err = d.ConvertOtlpLogV1(otlpLogReq)
 	case common.ProtocolOTLPMetricV1:
 		otlpMetricReq := pmetricotlp.NewExportRequest()
-		otlpMetricReq, err = DecodeOltpRequest(otlpMetricReq, data, req)
+		otlpMetricReq, err = DecodeOtlpRequest(otlpMetricReq, data, req)
 		if err != nil {
 			return logs, err
 		}
 		logs, err = d.ConvertOtlpMetricV1(otlpMetricReq)
 	case common.ProtocolOTLPTraceV1:
 		otlpTraceReq := ptraceotlp.NewExportRequest()
-		otlpTraceReq, err = DecodeOltpRequest(otlpTraceReq, data, req)
+		otlpTraceReq, err = DecodeOtlpRequest(otlpTraceReq, data, req)
 		if err != nil {
 			return logs, err
 		}
@@ -87,21 +87,21 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 	switch d.Format {
 	case common.ProtocolOTLPLogV1:
 		otlpLogReq := plogotlp.NewExportRequest()
-		otlpLogReq, err = DecodeOltpRequest(otlpLogReq, data, req)
+		otlpLogReq, err = DecodeOtlpRequest(otlpLogReq, data, req)
 		if err != nil {
 			return groups, err
 		}
 		groups, err = ConvertOtlpLogRequestToGroupEvents(otlpLogReq)
 	case common.ProtocolOTLPMetricV1:
 		otlpMetricReq := pmetricotlp.NewExportRequest()
-		otlpMetricReq, err = DecodeOltpRequest(otlpMetricReq, data, req)
+		otlpMetricReq, err = DecodeOtlpRequest(otlpMetricReq, data, req)
 		if err != nil {
 			return groups, err
 		}
 		groups, err = ConvertOtlpMetricRequestToGroupEvents(otlpMetricReq)
 	case common.ProtocolOTLPTraceV1:
 		otlpTraceReq := ptraceotlp.NewExportRequest()
-		otlpTraceReq, err = DecodeOltpRequest(otlpTraceReq, data, req)
+		otlpTraceReq, err = DecodeOtlpRequest(otlpTraceReq, data, req)
 		if err != nil {
 			return groups, err
 		}
@@ -173,15 +173,15 @@ func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.ExportRequest) (logs []*p
 }
 
 func (d *Decoder) ConvertOtlpMetricV1(otlpMetricReq pmetricotlp.ExportRequest) (logs []*protocol.Log, err error) {
-	return logs, fmt.Errorf("does_not_support_oltpmetrics")
+	return logs, fmt.Errorf("does_not_support_otlpmetrics")
 }
 
 func (d *Decoder) ConvertOtlpTraceV1(otlpTraceReq ptraceotlp.ExportRequest) (logs []*protocol.Log, err error) {
-	return logs, fmt.Errorf("does_not_support_oltptraces")
+	return logs, fmt.Errorf("does_not_support_otlptraces")
 }
 
-// DecodeOltpRequest decodes the data and fills into the oltp logs/metrics/traces export request.
-func DecodeOltpRequest[P interface {
+// DecodeOtlpRequest decodes the data and fills into the otlp logs/metrics/traces export request.
+func DecodeOtlpRequest[P interface {
 	UnmarshalProto(data []byte) error
 	UnmarshalJSON(data []byte) error
 }](des P, data []byte, req *http.Request) (P, error) {
