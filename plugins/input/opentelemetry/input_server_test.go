@@ -1,4 +1,4 @@
-// Copyright 2022 iLogtail Authors
+// Copyright 2023 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package oltp_grpc
+package opentelemetry
 
 import (
 	"context"
@@ -56,11 +56,15 @@ func (p *ContextTest) LogWarn(alarmType string, kvPairs ...interface{}) {
 	fmt.Println(alarmType, kvPairs)
 }
 
-func newInput(address string) (*ServerGRPC, error) {
+func newInput(address string) (*Server, error) {
 	ctx := &ContextTest{}
 	ctx.ContextImp.InitContext("a", "b", "c")
-	s := &ServerGRPC{
-		Address: address,
+	s := &Server{
+		Protocals: Protocals{
+			GRPC: &GRPCServerSettings{
+				Endpoint: address,
+			},
+		},
 	}
 	_, err := s.Init(&ctx.ContextImp)
 	return s, err

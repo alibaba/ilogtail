@@ -98,7 +98,7 @@ func (s *ServiceHTTP) Collect(pipeline.Collector) error {
 
 func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.ContentLength > s.MaxBodySize {
-		tooLarge(w)
+		TooLarge(w)
 		return
 	}
 	data, statusCode, err := s.decoder.ParseRequest(w, r, s.MaxBodySize)
@@ -106,13 +106,13 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch statusCode {
 	case http.StatusBadRequest:
-		badRequest(w)
+		BadRequest(w)
 	case http.StatusRequestEntityTooLarge:
-		tooLarge(w)
+		TooLarge(w)
 	case http.StatusInternalServerError:
-		internalServerError(w)
+		InternalServerError(w)
 	case http.StatusMethodNotAllowed:
-		methodNotAllowed(w)
+		MethodNotAllowed(w)
 
 	}
 	if err != nil {
@@ -125,7 +125,7 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		logs, err := s.decoder.Decode(data, r)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
-			badRequest(w)
+			BadRequest(w)
 			return
 		}
 		for _, log := range logs {
@@ -135,7 +135,7 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		groups, err := s.decoder.DecodeV2(data, r)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
-			badRequest(w)
+			BadRequest(w)
 			return
 		}
 		if reqParams := s.extractRequestParams(r); len(reqParams) != 0 {
@@ -155,24 +155,24 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func tooLarge(res http.ResponseWriter) {
+func TooLarge(res http.ResponseWriter) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusRequestEntityTooLarge)
 	_, _ = res.Write([]byte(`{"error":"http: request body too large"}`))
 }
 
-func methodNotAllowed(res http.ResponseWriter) {
+func MethodNotAllowed(res http.ResponseWriter) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusMethodNotAllowed)
 	_, _ = res.Write([]byte(`{"error":"http: method not allowed"}`))
 }
 
-func internalServerError(res http.ResponseWriter) {
+func InternalServerError(res http.ResponseWriter) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusInternalServerError)
 }
 
-func badRequest(res http.ResponseWriter) {
+func BadRequest(res http.ResponseWriter) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusBadRequest)
 	_, _ = res.Write([]byte(`{"error":"http: bad request"}`))

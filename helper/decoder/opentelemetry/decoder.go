@@ -138,21 +138,21 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 	switch d.Format {
 	case common.ProtocolOTLPLogV1:
 		otlpLogReq := plogotlp.NewExportRequest()
-		otlpLogReq, err = decodeOltpRequest(otlpLogReq, data, req)
+		otlpLogReq, err = DecodeOltpRequest(otlpLogReq, data, req)
 		if err != nil {
 			return groups, err
 		}
 		groups, err = ConvertOtlpLogRequestToGroupEvents(otlpLogReq)
 	case common.ProtocolOTLPMetricV1:
 		otlpMetricReq := pmetricotlp.NewExportRequest()
-		otlpMetricReq, err = decodeOltpRequest(otlpMetricReq, data, req)
+		otlpMetricReq, err = DecodeOltpRequest(otlpMetricReq, data, req)
 		if err != nil {
 			return groups, err
 		}
 		groups, err = ConvertOtlpMetricRequestToGroupEvents(otlpMetricReq)
 	case common.ProtocolOTLPTraceV1:
 		otlpTraceReq := ptraceotlp.NewExportRequest()
-		otlpTraceReq, err = decodeOltpRequest(otlpTraceReq, data, req)
+		otlpTraceReq, err = DecodeOltpRequest(otlpTraceReq, data, req)
 		if err != nil {
 			return groups, err
 		}
@@ -163,7 +163,7 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 	return groups, err
 }
 
-func decodeOltpRequest[P interface {
+func DecodeOltpRequest[P interface {
 	UnmarshalProto(data []byte) error
 	UnmarshalJSON(data []byte) error
 }](des P, data []byte, req *http.Request) (P, error) {
