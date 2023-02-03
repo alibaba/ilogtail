@@ -1,8 +1,8 @@
 package pipelineeventgroup
 
 import (
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 
 	"github.com/stretchr/testify/require"
 
@@ -12,7 +12,7 @@ import (
 func TestPipelineeventGroup_Record_Directly(t *testing.T) {
 	p := new(PipelineeventGroup)
 	p.LimitSize = 5
-	ctx := ilogtail.NewObservePipelineConext(100)
+	ctx := pipeline.NewObservePipelineConext(100)
 	p.Init(nil, nil)
 	err := p.Record(constructEvents(104, map[string]string{}, map[string]string{}), ctx)
 	require.NoError(t, err)
@@ -29,7 +29,7 @@ func TestPipelineeventGroup_Record_Tag(t *testing.T) {
 	}, map[string]string{
 		"tag": "tagval",
 	})
-	ctx := ilogtail.NewObservePipelineConext(100)
+	ctx := pipeline.NewObservePipelineConext(100)
 	p.Init(nil, nil)
 	err := p.Record(events, ctx)
 	require.NoError(t, err)
@@ -44,7 +44,7 @@ func TestPipelineeventGroup_Record_Tag(t *testing.T) {
 func TestPipelineeventGroup_Record_Timer(t *testing.T) {
 	p := new(PipelineeventGroup)
 	p.LimitSize = 500
-	ctx := ilogtail.NewObservePipelineConext(100)
+	ctx := pipeline.NewObservePipelineConext(100)
 	p.Init(nil, nil)
 	err := p.Record(constructEvents(104, map[string]string{}, map[string]string{}), ctx)
 	require.NoError(t, err)

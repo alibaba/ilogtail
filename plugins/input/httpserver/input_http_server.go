@@ -30,6 +30,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/decoder"
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/logger"

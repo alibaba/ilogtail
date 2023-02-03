@@ -1,15 +1,15 @@
 package pipelineeventgroup
 
 import (
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 
 	"sync"
 )
 
 type PipelineeventGroup struct {
-	context               ilogtail.Context
+	context               pipeline.Context
 	defaultGroupInfo      *models.GroupInfo
 	defaultPipelineEvents []models.PipelineEvent
 	onceExtract           sync.Once
@@ -20,7 +20,7 @@ type PipelineeventGroup struct {
 	LimitSize    int
 }
 
-func (p *PipelineeventGroup) Init(context ilogtail.Context, queue ilogtail.LogGroupQueue) (int, error) {
+func (p *PipelineeventGroup) Init(context pipeline.Context, queue pipeline.LogGroupQueue) (int, error) {
 	p.context = context
 	p.Reset()
 	return 0, nil
@@ -35,7 +35,7 @@ func (p *PipelineeventGroup) Reset() {
 	p.currentLen = 0
 }
 
-func (p *PipelineeventGroup) Record(events *models.PipelineGroupEvents, context ilogtail.PipelineContext) error {
+func (p *PipelineeventGroup) Record(events *models.PipelineGroupEvents, context pipeline.PipelineContext) error {
 	// the pipeline event group aggregator designed for the data with same group info, which would aggregate small packets to a large packets.
 	// so the extract group info would only extract once.
 	if len(events.Events) == 0 {
@@ -80,7 +80,7 @@ func (p *PipelineeventGroup) Record(events *models.PipelineGroupEvents, context 
 
 }
 
-func (p *PipelineeventGroup) GetResult(context ilogtail.PipelineContext) error {
+func (p *PipelineeventGroup) GetResult(context pipeline.PipelineContext) error {
 	if len(p.defaultPipelineEvents) == 0 {
 		return nil
 	}
@@ -92,7 +92,7 @@ func (p *PipelineeventGroup) GetResult(context ilogtail.PipelineContext) error {
 }
 
 func init() {
-	ilogtail.Aggregators["aggregator_pipelineevent_group"] = func() ilogtail.Aggregator {
+	pipeline.Aggregators["aggregator_pipelineevent_group"] = func() pipeline.Aggregator {
 		return &PipelineeventGroup{
 			LimitSize: 3000,
 		}
