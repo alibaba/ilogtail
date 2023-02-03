@@ -15,16 +15,22 @@
 package httpserver
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/decoder"
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -37,18 +43,28 @@ const (
 	v2
 )
 
+type dumpData struct {
+	body []byte
+	url  []byte
+}
+
 // ServiceHTTP ...
 type ServiceHTTP struct {
-	context     ilogtail.Context
-	collector   ilogtail.Collector
-	decoder     decoder.Decoder
-	server      *http.Server
-	listener    net.Listener
-	wg          sync.WaitGroup
-	collectorV2 ilogtail.PipelineCollector
-	version     int8
-	paramCount  int
+	context           ilogtail.Context
+	collector         ilogtail.Collector
+	decoder           decoder.Decoder
+	server            *http.Server
+	listener          net.Listener
+	wg                sync.WaitGroup
+	collectorV2       ilogtail.PipelineCollector
+	version           int8
+	paramCount        int
+	dumpDataChan      chan *dumpData
+	stopChan          chan struct{}
+	dumpDataKeepFiles []string
 
+	DumpDataKeepFiles  int
+	DumpData           bool // would dump the received data to a local file, which is only used to valid data by the developers. And the maximum size of file is 100M.
 	Format             string
 	Address            string
 	Endpoint           string
@@ -89,6 +105,17 @@ func (s *ServiceHTTP) Init(context ilogtail.Context) (int, error) {
 
 	s.paramCount = len(s.QueryParams) + len(s.HeaderParams)
 
+	if s.DumpData {
+		s.dumpDataChan = make(chan *dumpData, 10)
+		prefix := strings.Join([]string{s.context.GetProject(), s.context.GetLogstore(), s.context.GetConfigName()}, "_")
+		files, err := helper.GetFileListByPrefix(util.GetCurrentBinaryPath(), prefix, true, 0)
+		if err != nil {
+			logger.Warning(context.GetRuntimeContext(), "LIST_HISTORY_DUMP_ALARM", "err", err)
+		} else {
+			s.dumpDataKeepFiles = files
+		}
+	}
+	s.stopChan = make(chan struct{})
 	return 0, nil
 }
 
@@ -125,6 +152,12 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if s.DumpData {
+		s.dumpDataChan <- &dumpData{
+			body: data,
+			url:  []byte(r.URL.String()),
+		}
+	}
 	switch s.version {
 	case v1:
 		logs, err := s.decoder.Decode(data, r)
@@ -198,7 +231,7 @@ func (s *ServiceHTTP) StartService(context ilogtail.PipelineContext) error {
 }
 
 func (s *ServiceHTTP) start() error {
-	s.wg.Add(1)
+	s.wg.Add(2)
 
 	server := &http.Server{
 		Addr:        s.Address,
@@ -239,7 +272,78 @@ func (s *ServiceHTTP) start() error {
 		logger.Info(s.context.GetRuntimeContext(), "http server shutdown", s.Address)
 		s.wg.Done()
 	}()
+	go func() {
+		defer s.wg.Done()
+		if s.DumpData {
+			s.doDumpFile()
+		}
+	}()
+
 	return nil
+}
+
+func (s *ServiceHTTP) doDumpFile() {
+	var err error
+	fileName := strings.Join([]string{s.context.GetProject(), s.context.GetLogstore(), s.context.GetConfigName()}, "_") + ".dump"
+	logger.Info(s.context.GetRuntimeContext(), "http server start dump data", fileName)
+	var f *os.File
+	closeFile := func() {
+		if f != nil {
+			_ = f.Close()
+		}
+	}
+	cutFile := func() (f *os.File, err error) {
+		nFile := path.Join(util.GetCurrentBinaryPath(), fileName+"_"+time.Now().Format("2006-01-02_15"))
+		if len(s.dumpDataKeepFiles) == 0 || s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1] != nFile {
+			s.dumpDataKeepFiles = append(s.dumpDataKeepFiles, nFile)
+		}
+		if len(s.dumpDataKeepFiles) > s.DumpDataKeepFiles {
+			_ = os.Remove(s.dumpDataKeepFiles[0])
+			s.dumpDataKeepFiles = s.dumpDataKeepFiles[1:]
+		}
+		closeFile()
+		return os.OpenFile(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], os.O_CREATE|os.O_WRONLY, 0777)
+	}
+	lastHour := 0
+	offset := int64(0)
+	for {
+		select {
+		case d := <-s.dumpDataChan:
+			if time.Now().Hour() != lastHour {
+				file, err := cutFile()
+				if err != nil {
+					logger.Error(s.context.GetRuntimeContext(), "DUMP_FILE_ALARM", "cut new file error", err)
+				} else {
+					offset, _ = file.Seek(0, io.SeekEnd)
+					f = file
+				}
+			}
+			if f != nil {
+				buffer := bytes.NewBuffer([]byte{})
+				// 4Byte url len, 4Byte body len, url, body
+				if err = binary.Write(buffer, binary.BigEndian, uint32(len(d.url))); err != nil {
+					continue
+				}
+				if err = binary.Write(buffer, binary.BigEndian, uint32(len(d.body))); err != nil {
+					continue
+				}
+				total := 8 + len(d.url) + len(d.body)
+				if _, err = f.WriteAt(buffer.Bytes(), offset); err != nil {
+					continue
+				}
+				if _, err = f.WriteAt(d.url, offset+8); err != nil {
+					continue
+				}
+				if _, err = f.WriteAt(d.body, offset+8+int64(len(d.url))); err != nil {
+					continue
+				}
+				offset += int64(total)
+			}
+		case <-s.stopChan:
+			closeFile()
+			return
+		}
+	}
 }
 
 func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string {
@@ -276,6 +380,7 @@ func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string 
 // Stop stops the services and closes any necessary channels and connections
 func (s *ServiceHTTP) Stop() error {
 	if s.listener != nil {
+		close(s.stopChan)
 		_ = s.listener.Close()
 		logger.Info(s.context.GetRuntimeContext(), "http server stop", s.Address)
 		s.wg.Wait()
@@ -290,6 +395,7 @@ func init() {
 			ShutdownTimeoutSec: 5,
 			MaxBodySize:        64 * 1024 * 1024,
 			UnlinkUnixSock:     true,
+			DumpDataKeepFiles:  5,
 		}
 	}
 }

@@ -16,10 +16,15 @@ package httpserver
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
+	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/alibaba/ilogtail/plugins/test/mock"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"syscall"
 	"testing"
 	"time"
@@ -393,4 +398,78 @@ func TestInputWithRequestParamsWithoutPrefix(t *testing.T) {
 		}
 	}
 
+}
+
+func TestServiceHTTP_doDumpFile(t *testing.T) {
+	files, err := helper.GetFileListByPrefix(util.GetCurrentBinaryPath(), "a_b_ctestdump", true, 0)
+	require.NoError(t, err)
+	for _, file := range files {
+		_ = os.Remove(file)
+
+	}
+	var ch chan *dumpData
+
+	insertFun := func(num int, start int) {
+		for i := start; i < start+num; i++ {
+			ch <- &dumpData{
+				body: []byte(fmt.Sprintf("body_%d", i)),
+				url:  []byte(fmt.Sprintf("url_%d", i)),
+			}
+
+		}
+	}
+	readFunc := func(file string, expectLen int) {
+		data, err := ioutil.ReadFile(file)
+		require.NoError(t, err)
+		offset := 0
+		num := 0
+		for {
+			if offset == len(data) {
+				break
+			}
+			var urlLen, bodyLen uint32
+			buffer := bytes.NewBuffer(data[offset:])
+			require.NoError(t, binary.Read(buffer, binary.BigEndian, &urlLen))
+			require.NoError(t, binary.Read(buffer, binary.BigEndian, &bodyLen))
+
+			url := data[offset+8 : offset+8+int(urlLen)]
+			body := data[offset+8+int(urlLen) : offset+8+int(urlLen)+int(bodyLen)]
+			require.Equal(t, fmt.Sprintf("url_%d", num), string(url))
+			require.Equal(t, fmt.Sprintf("body_%d", num), string(body))
+			offset = offset + 8 + int(urlLen) + int(bodyLen)
+			num++
+		}
+		require.Equal(t, num, expectLen)
+	}
+
+	// test dump and read
+	s := new(ServiceHTTP)
+	s.DumpData = true
+	s.DumpDataKeepFiles = 3
+	s.Format = "pyroscope"
+	_, err = s.Init(mock.NewEmptyContext("a", "b", "ctestdump"))
+	ch = make(chan *dumpData)
+	s.dumpDataChan = ch
+	require.NoError(t, err)
+	go s.doDumpFile()
+	insertFun(100, 0)
+	close(s.stopChan)
+	time.Sleep(time.Millisecond)
+	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 100)
+
+	// append
+	s2 := new(ServiceHTTP)
+	s2.DumpData = true
+	s2.DumpDataKeepFiles = 3
+	s2.Format = "pyroscope"
+	_, err = s2.Init(mock.NewEmptyContext("a", "b", "ctestdump"))
+	ch = make(chan *dumpData)
+	s2.dumpDataChan = ch
+	require.NoError(t, err)
+	go s2.doDumpFile()
+
+	insertFun(100, 100)
+	close(s2.stopChan)
+	time.Sleep(time.Millisecond)
+	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 200)
 }
