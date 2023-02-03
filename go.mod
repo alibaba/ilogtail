@@ -18,6 +18,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.12.2
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/elastic/beats/v7 v7.7.1
+	github.com/elastic/go-libaudit/v2 v2.3.2
 	github.com/elastic/go-lumber v0.1.0
 	github.com/go-kit/kit v0.12.0
 	github.com/go-mysql-org/go-mysql v1.3.0
