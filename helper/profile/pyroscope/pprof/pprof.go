@@ -176,7 +176,11 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 			logger.Warning(ctx, "PPROF_PROFILE_ALARM", "stack don't have enough meta or values", fs)
 			continue
 		}
-		cb(id, fs, valMap[id], typeMap[id], unitMap[id], aggtypeMap[id], tp.GetTimeNanos(), tp.GetTimeNanos()+tp.GetDurationNanos(), labelMap[id])
+		if tp.GetTimeNanos() != 0 {
+			cb(id, fs, valMap[id], typeMap[id], unitMap[id], aggtypeMap[id], tp.GetTimeNanos(), tp.GetTimeNanos()+tp.GetDurationNanos(), labelMap[id])
+		} else {
+			cb(id, fs, valMap[id], typeMap[id], unitMap[id], aggtypeMap[id], meta.StartTime.UnixNano(), meta.EndTime.UnixNano(), labelMap[id])
+		}
 	}
 	return nil
 }

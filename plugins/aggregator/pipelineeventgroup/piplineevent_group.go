@@ -2,6 +2,7 @@ package pipelineeventgroup
 
 import (
 	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 
 	"sync"
@@ -40,6 +41,7 @@ func (p *PipelineeventGroup) Record(events *models.PipelineGroupEvents, context 
 	if len(events.Events) == 0 {
 		return nil
 	}
+	logger.Debug(p.context.GetRuntimeContext(), "input len", len(events.Events))
 	p.onceExtract.Do(func() {
 		if len(p.ReserveTags) == 0 && len(p.ReserveMetas) == 0 {
 			p.defaultGroupInfo = models.NewGroup(models.NewMetadata(), models.NewTags())
@@ -73,11 +75,16 @@ func (p *PipelineeventGroup) Record(events *models.PipelineGroupEvents, context 
 			}
 		}
 	}
+	logger.Debug(p.context.GetRuntimeContext(), "cache len", len(p.defaultPipelineEvents))
 	return nil
 
 }
 
 func (p *PipelineeventGroup) GetResult(context ilogtail.PipelineContext) error {
+	if len(p.defaultPipelineEvents) == 0 {
+		return nil
+	}
+	logger.Debug(p.context.GetRuntimeContext(), "flush out len", len(p.defaultPipelineEvents))
 	context.Collector().Collect(models.GroupDeepClone(p.defaultGroupInfo), p.defaultPipelineEvents...)
 	p.Reset()
 	return nil

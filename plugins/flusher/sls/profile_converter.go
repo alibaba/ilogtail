@@ -2,7 +2,6 @@ package sls
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -14,15 +13,17 @@ import (
 type ConverterFunc func(logs ...*models.PipelineGroupEvents) *protocol.LogGroup
 
 func ConvertProfile(events ...*models.PipelineGroupEvents) *protocol.LogGroup {
+	if len(events) == 0 {
+		return nil
+	}
 	g := new(protocol.LogGroup)
 	g.Source = util.GetIPAddress()
 	for _, event := range events {
 		for _, pipelineEvent := range event.Events {
-			var log protocol.Log
+			contents := make([]*protocol.Log_Content, 0, 9)
 			p := pipelineEvent.(*models.Profile)
-			log.Time = uint32(p.StartTime / 1e9)
 			b, _ := json.Marshal(p.GetTags().Iterator())
-			log.Contents = append(log.Contents,
+			contents = append(contents,
 				&protocol.Log_Content{
 					Key:   "name",
 					Value: p.Name,
@@ -60,31 +61,37 @@ func ConvertProfile(events ...*models.PipelineGroupEvents) *protocol.LogGroup {
 					Value: p.ProfileID,
 				},
 			)
-			var types, aggs, units []string
 			for i, value := range p.Values {
-				types = append(types, value.Type)
-				aggs = append(aggs, value.AggType)
-				units = append(units, value.Unit)
-				log.Contents = append(log.Contents, &protocol.Log_Content{
-					Key:   fmt.Sprintf("value_%d", i),
-					Value: strconv.FormatFloat(value.Val, 'f', 2, 64),
+				var res []*protocol.Log_Content
+				if i != len(p.Values)-1 {
+					res := make([]*protocol.Log_Content, 0, len(contents))
+					copy(res, contents)
+				} else {
+					res = contents
+				}
+				res = append(res,
+					&protocol.Log_Content{
+						Key:   "units",
+						Value: value.Unit,
+					},
+					&protocol.Log_Content{
+						Key:   "valueTypes",
+						Value: value.Type,
+					},
+					&protocol.Log_Content{
+						Key:   "aggTypes",
+						Value: value.AggType,
+					},
+					&protocol.Log_Content{
+						Key:   "val",
+						Value: strconv.FormatFloat(value.Val, 'f', 2, 64),
+					},
+				)
+				g.Logs = append(g.Logs, &protocol.Log{
+					Time:     uint32(p.StartTime / 1e9),
+					Contents: res,
 				})
 			}
-			log.Contents = append(log.Contents,
-				&protocol.Log_Content{
-					Key:   "units",
-					Value: strings.Join(units, ","),
-				},
-				&protocol.Log_Content{
-					Key:   "valueTypes",
-					Value: strings.Join(types, ","),
-				},
-				&protocol.Log_Content{
-					Key:   "aggTypes",
-					Value: strings.Join(aggs, ","),
-				},
-			)
-			g.Logs = append(g.Logs, &log)
 		}
 	}
 	return g

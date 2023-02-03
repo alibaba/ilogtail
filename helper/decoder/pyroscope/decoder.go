@@ -113,13 +113,15 @@ func (d *Decoder) parseInputMeta(req *http.Request) (*profile.Input, profile.For
 
 	if f := q.Get("from"); f != "" {
 		input.Metadata.StartTime = attime.Parse(f)
-	} else {
+	}
+	if input.Metadata.StartTime.IsZero() {
 		input.Metadata.StartTime = time.Now()
 	}
 
 	if f := q.Get("until"); f != "" {
 		input.Metadata.EndTime = attime.Parse(f)
-	} else {
+	}
+	if input.Metadata.StartTime.IsZero() {
 		input.Metadata.EndTime = time.Now()
 	}
 

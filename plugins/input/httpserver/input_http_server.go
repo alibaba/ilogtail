@@ -51,6 +51,7 @@ type ServiceHTTP struct {
 
 	Format             string
 	Address            string
+	Endpoint           string
 	ReadTimeoutSec     int
 	ShutdownTimeoutSec int
 	MaxBodySize        int64
@@ -72,13 +73,15 @@ func (s *ServiceHTTP) Init(context ilogtail.Context) (int, error) {
 	if s.decoder, err = decoder.GetDecoderWithOptions(s.Format, decoder.Option{FieldsExtend: s.FieldsExtend, DisableUncompress: s.DisableUncompress}); err != nil {
 		return 0, err
 	}
-
-	if s.Format == common.ProtocolOTLPLogV1 {
-		s.Address += "/v1/logs"
+	if s.Endpoint == "" {
+		switch s.Format {
+		case common.ProtocolOTLPLogV1:
+			s.Endpoint = "/v1/logs"
+		case common.ProtocolPyroscope:
+			s.Endpoint = "/ingest"
+		}
 	}
-	if s.Format == common.ProtocolPyroscope {
-		s.Address += "/ingest"
-	}
+	s.Address += s.Endpoint
 	if strings.Contains(s.Address, "SELF_ADDR") {
 		s.Address = strings.ReplaceAll(s.Address, "SELF_ADDR", util.GetIPAddress())
 	}
@@ -106,8 +109,7 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data, statusCode, err := s.decoder.ParseRequest(w, r, s.MaxBodySize)
-	logger.Debugf(s.context.GetRuntimeContext(), "request [method] %v; [header] %v; [url] %v; [body] %v", r.Method, r.Header, r.URL, string(data))
-
+	logger.Debugf(s.context.GetRuntimeContext(), "request [method] %v; [header] %v; [url] %v; [body len] %d", r.Method, r.Header, r.URL, len(data))
 	switch statusCode {
 	case http.StatusBadRequest:
 		badRequest(w)

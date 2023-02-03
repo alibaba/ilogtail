@@ -84,7 +84,7 @@ func (p *Profile) extractProfileV2(meta *profile.Meta) func([]byte, int) {
 		stackID := strconv.FormatUint(xxhash.Sum64(k), 16)
 		newProfile := models.NewProfile(name, stackID,
 			profileID, "CallStack", meta.SpyName, profile.DetectProfileType(meta.Units.DetectValueType()),
-			stack, meta.StartTime.UnixNano(), meta.EndTime.UnixNano(), models.NewTags(), []*models.ProfileValue{
+			stack, meta.StartTime.UnixNano(), meta.EndTime.UnixNano(), models.NewTagsWithMap(meta.Key.Labels()), []*models.ProfileValue{
 				models.NewProfileValue(meta.Units.DetectValueType(), string(meta.Units), string(meta.AggregationType), float64(v)),
 			})
 		p.group.Events = append(p.group.Events, newProfile)
