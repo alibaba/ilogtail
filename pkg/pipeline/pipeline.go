@@ -14,8 +14,8 @@
 
 package pipeline
 
-// PipelineContext, which may include
+// PipelineContext which may include
 // collector interface、checkpoint interface、config read and many more..
-type PipelineContext interface {
+type PipelineContext interface { //nolint
 	Collector() PipelineCollector
 }

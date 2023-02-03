@@ -18,8 +18,8 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 )
 
-// PipelineCollector. Collect data in the plugin and send the data to the next operator
-type PipelineCollector interface {
+// PipelineCollector collect data in the plugin and send the data to the next operator
+type PipelineCollector interface { //nolint
 
 	// Collect single group and events data belonging to this group
 	Collect(groupInfo *models.GroupInfo, eventList ...models.PipelineEvent)
