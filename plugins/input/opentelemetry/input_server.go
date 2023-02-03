@@ -68,32 +68,32 @@ func (s *Server) Init(context ilogtail.Context) (int, error) {
 	s.context = context
 	logger.Info(s.context.GetRuntimeContext(), "oltp server init", "initializing")
 
-	if s.Protocals.GRPC != nil {
-		if s.Protocals.GRPC.Endpoint == "" {
-			s.Protocals.GRPC.Endpoint = defaultGRPCEndpoint
+	if s.Protocals.Grpc != nil {
+		if s.Protocals.Grpc.Endpoint == "" {
+			s.Protocals.Grpc.Endpoint = defaultGRPCEndpoint
 		}
 
 	}
 
-	if s.Protocals.HTTP != nil {
-		if s.Protocals.HTTP.Endpoint == "" {
-			s.Protocals.HTTP.Endpoint = defaultGRPCEndpoint
+	if s.Protocals.Http != nil {
+		if s.Protocals.Http.Endpoint == "" {
+			s.Protocals.Http.Endpoint = defaultGRPCEndpoint
 		}
-		if s.Protocals.HTTP.ReadTimeoutSec == 0 {
-			s.Protocals.HTTP.ReadTimeoutSec = 10
-		}
-
-		if s.Protocals.HTTP.ShutdownTimeoutSec == 0 {
-			s.Protocals.HTTP.ShutdownTimeoutSec = 5
+		if s.Protocals.Http.ReadTimeoutSec == 0 {
+			s.Protocals.Http.ReadTimeoutSec = 10
 		}
 
-		if s.Protocals.HTTP.MaxRequestBodySizeMiB == 0 {
-			s.Protocals.HTTP.MaxRequestBodySizeMiB = 64
+		if s.Protocals.Http.ShutdownTimeoutSec == 0 {
+			s.Protocals.Http.ShutdownTimeoutSec = 5
+		}
+
+		if s.Protocals.Http.MaxRequestBodySizeMiB == 0 {
+			s.Protocals.Http.MaxRequestBodySizeMiB = 64
 		}
 
 	}
 
-	logger.Info(s.context.GetRuntimeContext(), "oltp server init", "initialized", "settings", s.Protocals)
+	logger.Info(s.context.GetRuntimeContext(), "oltp server init", "initialized", "gRPC settings", s.Protocals.Grpc, "HTTP setting", s.Protocals.Http)
 	return 0, nil
 }
 
@@ -114,14 +114,12 @@ func (s *Server) StartService(ctx ilogtail.PipelineContext) error {
 	s.metricsReceiver = newMetricsReceiver(ctx)
 	s.logsReceiver = newLogsReceiver(ctx)
 
-	if s.Protocals.GRPC != nil {
+	if s.Protocals.Grpc != nil {
 		grpcServer := grpc.NewServer(
-			serverGRPCOptions(s.Protocals.GRPC)...,
+			serverGRPCOptions(s.Protocals.Grpc)...,
 		)
 		s.serverGPRC = grpcServer
-		logger.Info(s.context.GetRuntimeContext(), "oltp grpc server init", "initialized")
-
-		listener, err := getNetListener(s.Protocals.GRPC.Endpoint)
+		listener, err := getNetListener(s.Protocals.Grpc.Endpoint)
 		if err != nil {
 			return err
 		}
@@ -130,34 +128,35 @@ func (s *Server) StartService(ctx ilogtail.PipelineContext) error {
 		ptraceotlp.RegisterGRPCServer(s.serverGPRC, s.tracesReceiver)
 		pmetricotlp.RegisterGRPCServer(s.serverGPRC, s.metricsReceiver)
 		plogotlp.RegisterGRPCServer(s.serverGPRC, s.logsReceiver)
-		logger.Info(s.context.GetRuntimeContext(), "oltp receiver for logs/metrics/traces", "initialized")
+		logger.Info(s.context.GetRuntimeContext(), "oltp grpc receiver for logs/metrics/traces", "initialized")
 
 		s.wg.Add(1)
 		go func() {
-			logger.Info(s.context.GetRuntimeContext(), "oltp grpc server start", s.Protocals.GRPC.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "oltp grpc server start", s.Protocals.Grpc.Endpoint)
 			_ = s.serverGPRC.Serve(listener)
 			s.serverGPRC.GracefulStop()
-			logger.Info(s.context.GetRuntimeContext(), "oltp grpc server shutdown", s.Protocals.GRPC.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "oltp grpc server shutdown", s.Protocals.Grpc.Endpoint)
 			s.wg.Done()
 		}()
 	}
 
-	if s.Protocals.HTTP != nil {
+	if s.Protocals.Http != nil {
 		httpMux := http.NewServeMux()
-		maxBodySize := int64(s.Protocals.HTTP.MaxRequestBodySizeMiB) * 1024 * 1024
+		maxBodySize := int64(s.Protocals.Http.MaxRequestBodySizeMiB) * 1024 * 1024
 
-		s.registerHTTPLogsComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, maxBodySize, "/v1/traces")
+		s.registerHTTPLogsComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, maxBodySize, "/v1/logs")
 		s.registerHTTPMetricsComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPMetricV1}, maxBodySize, "/v1/metrics")
-		s.registerHTTPTracesComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, maxBodySize, "/v1/logs")
+		s.registerHTTPTracesComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPTraceV1}, maxBodySize, "/v1/traces")
+		logger.Info(s.context.GetRuntimeContext(), "oltp http receiver for logs/metrics/traces", "initialized")
 
 		httpServer := &http.Server{
-			Addr:        s.Protocals.GRPC.Endpoint,
+			Addr:        s.Protocals.Http.Endpoint,
 			Handler:     httpMux,
-			ReadTimeout: time.Duration(s.Protocals.HTTP.ReadTimeoutSec) * time.Second,
+			ReadTimeout: time.Duration(s.Protocals.Http.ReadTimeoutSec) * time.Second,
 		}
 
 		s.serverHTTP = httpServer
-		listener, err := getNetListener(s.Protocals.HTTP.Endpoint)
+		listener, err := getNetListener(s.Protocals.Http.Endpoint)
 		if err != nil {
 			return err
 		}
@@ -166,12 +165,12 @@ func (s *Server) StartService(ctx ilogtail.PipelineContext) error {
 
 		s.wg.Add(1)
 		go func() {
-			logger.Info(s.context.GetRuntimeContext(), "oltp http server start", s.Protocals.HTTP.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "oltp http server start", s.Protocals.Http.Endpoint)
 			_ = s.serverHTTP.Serve(s.httpListener)
-			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.Protocals.HTTP.ShutdownTimeoutSec)*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.Protocals.Http.ShutdownTimeoutSec)*time.Second)
 			defer cancel()
 			_ = s.serverHTTP.Shutdown(ctx)
-			logger.Info(s.context.GetRuntimeContext(), "oltp http server shutdown", s.Protocals.HTTP.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "oltp http server shutdown", s.Protocals.Http.Endpoint)
 			s.wg.Done()
 		}()
 
@@ -183,13 +182,13 @@ func (s *Server) StartService(ctx ilogtail.PipelineContext) error {
 func (s *Server) Stop() error {
 	if s.grpcListener != nil {
 		_ = s.grpcListener.Close()
-		logger.Info(s.context.GetRuntimeContext(), "oltp grpc server stop", s.Protocals.GRPC.Endpoint)
+		logger.Info(s.context.GetRuntimeContext(), "oltp grpc server stop", s.Protocals.Grpc.Endpoint)
 		s.wg.Wait()
 	}
 
 	if s.httpListener != nil {
 		_ = s.httpListener.Close()
-		logger.Info(s.context.GetRuntimeContext(), "oltp http server stop", s.Protocals.GRPC.Endpoint)
+		logger.Info(s.context.GetRuntimeContext(), "oltp http server stop", s.Protocals.Http.Endpoint)
 		s.wg.Wait()
 	}
 	return nil
@@ -399,8 +398,8 @@ func writeResponse(w http.ResponseWriter, contentType string, statusCode int, ms
 }
 
 type Protocals struct {
-	GRPC *GRPCServerSettings
-	HTTP *HTTPServerSettings
+	Grpc *GRPCServerSettings
+	Http *HTTPServerSettings
 }
 
 type GRPCServerSettings struct {

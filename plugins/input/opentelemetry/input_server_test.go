@@ -15,9 +15,11 @@
 package opentelemetry
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -56,15 +58,22 @@ func (p *ContextTest) LogWarn(alarmType string, kvPairs ...interface{}) {
 	fmt.Println(alarmType, kvPairs)
 }
 
-func newInput(address string) (*Server, error) {
+func newInput(enableGRPC, enableHTTP bool, grpcEndpoint, httpEndpoint string) (*Server, error) {
 	ctx := &ContextTest{}
 	ctx.ContextImp.InitContext("a", "b", "c")
 	s := &Server{
-		Protocals: Protocals{
-			GRPC: &GRPCServerSettings{
-				Endpoint: address,
-			},
-		},
+		Protocals: Protocals{},
+	}
+	if enableGRPC {
+		s.Protocals.Grpc = &GRPCServerSettings{
+			Endpoint: grpcEndpoint,
+		}
+	}
+
+	if enableHTTP {
+		s.Protocals.Http = &HTTPServerSettings{
+			Endpoint: httpEndpoint,
+		}
 	}
 	_, err := s.Init(&ctx.ContextImp)
 	return s, err
@@ -72,7 +81,7 @@ func newInput(address string) (*Server, error) {
 
 func TestOLTPGRPC_Trace(t *testing.T) {
 	endpointGrpc := GetAvailableLocalAddress(t)
-	input, err := newInput(endpointGrpc)
+	input, err := newInput(true, false, endpointGrpc, "")
 	assert.NoError(t, err)
 
 	queueSize := 10
@@ -112,7 +121,7 @@ func TestOLTPGRPC_Trace(t *testing.T) {
 
 func TestOLTPGRPC_Metrics(t *testing.T) {
 	endpointGrpc := GetAvailableLocalAddress(t)
-	input, err := newInput(endpointGrpc)
+	input, err := newInput(true, false, endpointGrpc, "")
 	assert.NoError(t, err)
 
 	queueSize := 10
@@ -146,6 +155,98 @@ func TestOLTPGRPC_Metrics(t *testing.T) {
 			break
 		}
 	}
+}
+
+func TestOLTPHTTP_Metrics(t *testing.T) {
+	endpointHTTP := GetAvailableLocalAddress(t)
+	input, err := newInput(false, true, "", endpointHTTP)
+	assert.NoError(t, err)
+
+	queueSize := 10
+	pipelineCxt := ilogtail.NewObservePipelineConext(queueSize)
+	input.StartService(pipelineCxt)
+	t.Cleanup(func() {
+		require.NoError(t, input.Stop())
+	})
+
+	client := &http.Client{}
+	url := fmt.Sprintf("http://%s/v1/metrics", endpointHTTP)
+
+	for i := 0; i < queueSize; i++ {
+		req := pmetricotlp.NewExportRequestFromMetrics(GenerateMetrics(i + 1))
+		err = httpExport(client, req, url)
+		assert.NoError(t, err)
+	}
+
+	count := 0
+
+	for groupEvent := range pipelineCxt.Collector().Observe() {
+		assert.Equal(t, "resource-attr-val-1", groupEvent.Group.Metadata.Get("resource-attr"))
+		for _, v := range groupEvent.Events {
+			assert.Equal(t, models.EventTypeMetric, v.GetType())
+		}
+		count++
+		if count == queueSize {
+			break
+		}
+	}
+}
+
+func TestOLTPHTTP_Trace(t *testing.T) {
+	endpointHTTP := GetAvailableLocalAddress(t)
+	input, err := newInput(false, true, "", endpointHTTP)
+	assert.NoError(t, err)
+
+	queueSize := 10
+	pipelineCxt := ilogtail.NewObservePipelineConext(queueSize)
+	input.StartService(pipelineCxt)
+	t.Cleanup(func() {
+		require.NoError(t, input.Stop())
+	})
+
+	client := &http.Client{}
+	url := fmt.Sprintf("http://%s/v1/traces", endpointHTTP)
+
+	for i := 0; i < queueSize; i++ {
+		req := ptraceotlp.NewExportRequestFromTraces(GenerateTraces(i + 1))
+		err = httpExport(client, req, url)
+		assert.NoError(t, err)
+	}
+
+	count := 0
+	for groupEvent := range pipelineCxt.Collector().Observe() {
+		assert.Equal(t, "resource-attr-val-1", groupEvent.Group.Metadata.Get("resource-attr"))
+		assert.Equal(t, count+1, len(groupEvent.Events))
+		assert.Equal(t, count+1, len(groupEvent.Events))
+		for _, v := range groupEvent.Events {
+			assert.Equal(t, models.EventTypeSpan, v.GetType())
+		}
+		count++
+		if count == queueSize {
+			break
+		}
+	}
+}
+
+func httpExport[P interface {
+	MarshalJSON() ([]byte, error)
+}](cli *http.Client, eReq P, url string) error {
+	eReqBytes, err := eReq.MarshalJSON()
+	if err != nil {
+		return err
+	}
+	buf := bytes.NewBuffer(eReqBytes)
+	req, err := http.NewRequest(http.MethodPost, url, buf)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := cli.Do(req)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("response_status_not_ok")
+	}
+	return err
 }
 
 func exportTraces(cc *grpc.ClientConn, td ptrace.Traces) error {

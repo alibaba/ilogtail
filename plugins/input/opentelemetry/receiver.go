@@ -28,7 +28,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
 )
 
-// The following fuctions implements Opten telemetry GRPCServer Interface
+// The following functions implement Opten telemetry GRPCServer Interface.
 type tracesReceiverFunc consumer.ConsumeTracesFunc
 type metricsReceiverFunc consumer.ConsumeMetricsFunc
 type logsReceiverFunc consumer.ConsumeLogsFunc

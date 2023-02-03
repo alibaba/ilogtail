@@ -17,6 +17,7 @@ package opentelemetry
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -48,26 +49,67 @@ type Decoder struct {
 
 // Decode impl
 func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
-	if common.ProtocolOTLPLogV1 == d.Format {
+	switch d.Format {
+	case common.ProtocolOTLPLogV1:
 		otlpLogReq := plogotlp.NewExportRequest()
-		switch req.Header.Get("Content-Type") {
-		case pbContentType:
-			if err = otlpLogReq.UnmarshalProto(data); err != nil {
-				return logs, err
-			}
-			logs, err = d.ConvertOtlpLogV1(otlpLogReq)
-		case jsonContentType:
-			if err = otlpLogReq.UnmarshalJSON(data); err != nil {
-				return logs, err
-			}
-			logs, err = d.ConvertOtlpLogV1(otlpLogReq)
-		default:
-			err = errors.New("Invalid ContentType: " + req.Header.Get("Content-Type"))
+		otlpLogReq, err = DecodeOltpRequest(otlpLogReq, data, req)
+		if err != nil {
+			return logs, err
 		}
-	} else {
+		logs, err = d.ConvertOtlpLogV1(otlpLogReq)
+	case common.ProtocolOTLPMetricV1:
+		otlpMetricReq := pmetricotlp.NewExportRequest()
+		otlpMetricReq, err = DecodeOltpRequest(otlpMetricReq, data, req)
+		if err != nil {
+			return logs, err
+		}
+		logs, err = d.ConvertOtlpMetricV1(otlpMetricReq)
+	case common.ProtocolOTLPTraceV1:
+		otlpTraceReq := ptraceotlp.NewExportRequest()
+		otlpTraceReq, err = DecodeOltpRequest(otlpTraceReq, data, req)
+		if err != nil {
+			return logs, err
+		}
+		logs, err = d.ConvertOtlpTraceV1(otlpTraceReq)
+	default:
 		err = errors.New("Invalid RequestURI: " + req.RequestURI)
 	}
 	return logs, err
+}
+
+// ParseRequest impl
+func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {
+	return common.CollectBody(res, req, maxBodySize)
+}
+
+// DecodeV2 impl
+func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
+	switch d.Format {
+	case common.ProtocolOTLPLogV1:
+		otlpLogReq := plogotlp.NewExportRequest()
+		otlpLogReq, err = DecodeOltpRequest(otlpLogReq, data, req)
+		if err != nil {
+			return groups, err
+		}
+		groups, err = ConvertOtlpLogRequestToGroupEvents(otlpLogReq)
+	case common.ProtocolOTLPMetricV1:
+		otlpMetricReq := pmetricotlp.NewExportRequest()
+		otlpMetricReq, err = DecodeOltpRequest(otlpMetricReq, data, req)
+		if err != nil {
+			return groups, err
+		}
+		groups, err = ConvertOtlpMetricRequestToGroupEvents(otlpMetricReq)
+	case common.ProtocolOTLPTraceV1:
+		otlpTraceReq := ptraceotlp.NewExportRequest()
+		otlpTraceReq, err = DecodeOltpRequest(otlpTraceReq, data, req)
+		if err != nil {
+			return groups, err
+		}
+		groups, err = ConvertOtlpTraceRequestToGroupEvents(otlpTraceReq)
+	default:
+		err = errors.New("Invalid RequestURI: " + req.RequestURI)
+	}
+	return groups, err
 }
 
 func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.ExportRequest) (logs []*protocol.Log, err error) {
@@ -130,39 +172,15 @@ func (d *Decoder) ConvertOtlpLogV1(otlpLogReq plogotlp.ExportRequest) (logs []*p
 	return logs, nil
 }
 
-func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {
-	return common.CollectBody(res, req, maxBodySize)
+func (d *Decoder) ConvertOtlpMetricV1(otlpMetricReq pmetricotlp.ExportRequest) (logs []*protocol.Log, err error) {
+	return logs, fmt.Errorf("does_not_support_oltpmetrics")
 }
 
-func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
-	switch d.Format {
-	case common.ProtocolOTLPLogV1:
-		otlpLogReq := plogotlp.NewExportRequest()
-		otlpLogReq, err = DecodeOltpRequest(otlpLogReq, data, req)
-		if err != nil {
-			return groups, err
-		}
-		groups, err = ConvertOtlpLogRequestToGroupEvents(otlpLogReq)
-	case common.ProtocolOTLPMetricV1:
-		otlpMetricReq := pmetricotlp.NewExportRequest()
-		otlpMetricReq, err = DecodeOltpRequest(otlpMetricReq, data, req)
-		if err != nil {
-			return groups, err
-		}
-		groups, err = ConvertOtlpMetricRequestToGroupEvents(otlpMetricReq)
-	case common.ProtocolOTLPTraceV1:
-		otlpTraceReq := ptraceotlp.NewExportRequest()
-		otlpTraceReq, err = DecodeOltpRequest(otlpTraceReq, data, req)
-		if err != nil {
-			return groups, err
-		}
-		groups, err = ConvertOtlpTraceRequestToGroupEvents(otlpTraceReq)
-	default:
-		err = errors.New("Invalid RequestURI: " + req.RequestURI)
-	}
-	return groups, err
+func (d *Decoder) ConvertOtlpTraceV1(otlpTraceReq ptraceotlp.ExportRequest) (logs []*protocol.Log, err error) {
+	return logs, fmt.Errorf("does_not_support_oltptraces")
 }
 
+// DecodeOltpRequest decodes the data and fills into the oltp logs/metrics/traces export request.
 func DecodeOltpRequest[P interface {
 	UnmarshalProto(data []byte) error
 	UnmarshalJSON(data []byte) error
@@ -197,8 +215,8 @@ func ConvertOtlpTraceRequestToGroupEvents(otlpTraceReq ptraceotlp.ExportRequest)
 
 func ConvertOtlpLogsToGroupEvents(logs plog.Logs) (groupEventsSlice []*models.PipelineGroupEvents, err error) {
 	// TODO:
-	// convert oltp logs to pipeline group events
-	return nil, nil
+	// waiting for log event definition.
+	return nil, fmt.Errorf("v2_not_support_log_event")
 }
 
 func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice []*models.PipelineGroupEvents, err error) {
