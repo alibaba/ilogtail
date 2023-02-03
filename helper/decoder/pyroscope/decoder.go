@@ -109,6 +109,10 @@ func (d *Decoder) parseInputMeta(req *http.Request) (*profile.Input, profile.For
 		logger.Error(context.Background(), AlarmType, "invalid name", n)
 		return nil, "", fmt.Errorf("pyroscope protocol get name err: %w", err)
 	}
+	name := key.AppName()
+	if strings.HasSuffix(name, ".cpu") {
+		key.Add("__name__", name[:len(name)-4])
+	}
 	input.Metadata.Key = key
 
 	if f := q.Get("from"); f != "" {
