@@ -4,6 +4,10 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 ## Apache 2.0 licenses
 
+- [github.com/apache/pulsar-client-go](https://pkg.go.dev/github.com/apache/pulsar-client-go?tab=licenses)
+- [github.com/ardielle/ardielle-go](https://pkg.go.dev/github.com/ardielle/ardielle-go?tab=licenses)
+- [github.com/AthenZ/athenz](https://pkg.go.dev/github.com/AthenZ/athenz?tab=licenses)
+- [github.com/linkedin/goavro](https://pkg.go.dev/github.com/linkedin/goavro?tab=licenses)
 - [cloud.google.com/go/compute/metadata](https://pkg.go.dev/cloud.google.com/go/compute/metadata?tab=licenses)
 - [github.com/VictoriaMetrics/metricsql](https://pkg.go.dev/github.com/VictoriaMetrics/metricsql?tab=licenses)
 - [github.com/googleapis/gnostic](https://pkg.go.dev/github.com/googleapis/gnostic?tab=licenses)
@@ -89,6 +93,8 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 ## BSD licenses
 
+- [github.com/DataDog/zstd](https://pkg.go.dev/github.com/DataDog/zstd?tab=licenses)
+- [github.com/spaolacci/murmur3](https://pkg.go.dev/github.com/spaolacci/murmur3?tab=licenses)
 - [github.com/klauspost/compress](https://pkg.go.dev/github.com/klauspost/compress?tab=licenses)
 - [github.com/danwakefield/fnmatch](https://pkg.go.dev/github.com/danwakefield/fnmatch?tab=licenses)
 - [github.com/denisenkom/go-mssqldb](https://pkg.go.dev/github.com/denisenkom/go-mssqldb?tab=licenses)
@@ -128,6 +134,12 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 ## MIT licenses
 
+- [github.com/99designs/keyring](https://pkg.go.dev/github.com/99designs/keyring?tab=licenses)
+- [github.com/danieljoos/wincred](https://pkg.go.dev/github.com/danieljoos/wincred?tab=licenses)
+- [github.com/dvsekhvalnov/jose2go](https://pkg.go.dev/github.com/dvsekhvalnov/jose2go?tab=licenses)
+- [github.com/golang-jwt/jwt](https://pkg.go.dev/github.com/golang-jwt/jwt?tab=licenses)
+- [github.com/gsterjov/go-libsecret](https://pkg.go.dev/github.com/gsterjov/go-libsecret?tab=licenses)
+- [github.com/mtibben/percent](https://pkg.go.dev/github.com/mtibben/percent?tab=licenses)
 - [github.com/valyala/fastjson](https://pkg.go.dev/github.com/valyala/fastjson?tab=licenses)
 - [github.com/valyala/fastrand](https://pkg.go.dev/github.com/valyala/fastrand?tab=licenses)
 - [github.com/valyala/fasttemplate](https://pkg.go.dev/github.com/valyala/fasttemplate?tab=licenses)
@@ -206,6 +218,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 - [github.com/go-sql-driver/mysql](https://pkg.go.dev/github.com/go-sql-driver/mysql?tab=licenses)
 - [github.com/hashicorp/go-uuid](https://pkg.go.dev/github.com/hashicorp/go-uuid?tab=licenses)
+- [github.com/hashicorp/golang-lru](https://pkg.go.dev/github.com/hashicorp/golang-lru?tab=licenses)
 
 ## LGPL v3 licenses
 
@@ -219,3 +232,4 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/jeromer/syslogparser](./LICENSE-syslogparser)
 - [github.com/siddontang/go-mysql](./LICENSE-go-mysql)
 - [github.com/VictoriaMetrics/VictoriaMetrics](./LICENSE-VictoriaMetrics)
+
