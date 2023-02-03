@@ -191,7 +191,9 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.Format == "sls" {
 		w.Header().Set("x-log-requestid", "1234567890abcde")
 		w.WriteHeader(http.StatusOK)
-	} else if s.Format != common.ProtocolPyroscope {
+	} else if s.Format == common.ProtocolPyroscope {
+		// do nothing
+	} else {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
