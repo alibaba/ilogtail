@@ -101,7 +101,7 @@ func (p *SlsFlusher) Flush(projectName string, logstoreName string, configName s
 }
 
 // Export convert different PipelineGroupEvents to sls protocol.Log
-func (p *SlsFlusher) Export(events []*models.PipelineGroupEvents, context ilogtail.PipelineContext) error {
+func (p *SlsFlusher) Export(events []*models.PipelineGroupEvents, context pipeline.PipelineContext) error {
 	if len(events) == 0 {
 		return nil
 	}
