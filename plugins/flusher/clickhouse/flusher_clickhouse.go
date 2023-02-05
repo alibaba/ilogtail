@@ -16,34 +16,25 @@ package clickhouse
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	jsoniter "github.com/json-iterator/go"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 )
 
 var insertSQL = "INSERT INTO `%s`.`ilogtail_%s_buffer` (_timestamp, _log) VALUES (?, ?)"
 
 type FlusherClickHouse struct {
-	context ilogtail.Context
-	conn    driver.Conn
-
-	// log configuration
-	KeyValuePairs bool
-
-	// ClickHouse configuration
-	// Whether to print debug logs, default false
-	Debug bool
-	// Required parameters
+	// ilogtail data convert config
+	Convert convertConfig
+	// Addrs clickhouse addresses
 	Addrs []string
 	// Authentication using PLAIN
 	Authentication Authentication
@@ -51,40 +42,54 @@ type FlusherClickHouse struct {
 	Cluster string
 	// Table Target of data writing
 	Table string
-	// Data compression strategy
+	// Compression Data compression strategy
 	Compression string
-	// Timeout duration of a single request, unit: second , the default is  60
+	// MaxExecutionTime Timeout duration of a single request, unit: second , the default is  60
 	MaxExecutionTime int
-	// Dial timeout, the default is 10s
+	// DialTimeout Dial timeout, the default is 10s
 	DialTimeout time.Duration
-	// Maximum number of connections, including long and short connections, the default is 5
+	// MaxOpenConns Maximum number of connections, including long and short connections, the default is 5
 	MaxOpenConns int
-	// The maximum number of idle connections, that is the size of the connection pool, the default is 5
+	// MaxIdleConns The maximum number of idle connections, that is the size of the connection pool, the default is 5
 	MaxIdleConns int
-	// Connection maximum lifetime, the default is 10m
+	// ConnMaxLifetime Connection maximum lifetime, the default is 10m
 	ConnMaxLifetime time.Duration
 	// BlockBufferSize, size of block buffer, the default is 10
 	BlockBufferSize uint8
 
 	// ClickHouse Buffer engine configuration
 	// The number of buffer, recommended as 16
-	BufferNumLayers int
 	// Data is flushed to disk when all min conditions are met, or when one max condition is met
-	BufferMinTime  int
-	BufferMaxTime  int
-	BufferMinRows  int
-	BufferMaxRows  int
-	BufferMinBytes int
-	BufferMaxBytes int
+	BufferNumLayers int
+	BufferMinTime   int
+	BufferMaxTime   int
+	BufferMinRows   int
+	BufferMaxRows   int
+	BufferMinBytes  int
+	BufferMaxBytes  int
 
-	flusher FlusherFunc
+	context   pipeline.Context
+	converter *converter.Converter
+	conn      driver.Conn
+	flusher   FlusherFunc
+}
+
+type convertConfig struct {
+	// Rename one or more fields from tags.
+	TagFieldsRename map[string]string
+	// Rename one or more fields, The protocol field options can only be: contents, tags, time
+	ProtocolFieldsRename map[string]string
+	// Convert protocol, default value: custom_single
+	Protocol string
+	// Convert encoding, default value:json
+	// The options are: 'json'
+	Encoding string
 }
 
 type FlusherFunc func(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
 
 func NewFlusherClickHouse() *FlusherClickHouse {
 	return &FlusherClickHouse{
-		Debug: false,
 		Addrs: []string{},
 		Authentication: Authentication{
 			PlainText: &PlainTextConfig{
@@ -102,7 +107,6 @@ func NewFlusherClickHouse() *FlusherClickHouse {
 		MaxIdleConns:     5,
 		ConnMaxLifetime:  time.Duration(10) * time.Minute,
 		BlockBufferSize:  10,
-		KeyValuePairs:    true,
 		BufferNumLayers:  16,
 		BufferMinTime:    10,
 		BufferMaxTime:    100,
@@ -110,21 +114,34 @@ func NewFlusherClickHouse() *FlusherClickHouse {
 		BufferMaxRows:    1000000,
 		BufferMinBytes:   10000000,
 		BufferMaxBytes:   100000000,
+		Convert: convertConfig{
+			Protocol: converter.ProtocolCustomSingle,
+			Encoding: converter.EncodingJSON,
+		},
 	}
 }
 
-func (f *FlusherClickHouse) Init(ctx ilogtail.Context) error {
-	f.context = ctx
-	if f.Addrs == nil || len(f.Addrs) == 0 {
-		var err = fmt.Errorf("clickhouse addrs is nil")
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
+func (f *FlusherClickHouse) Init(context pipeline.Context) error {
+	f.context = context
+	// Validate config of flusher
+	if err := f.Validate(); err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher fail, error", err)
 		return err
 	}
-	if f.Table == "" {
-		var err = fmt.Errorf("clickhouse table is nil")
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
+	// Set default value while not set
+	if f.Convert.Encoding == "" {
+		f.converter.Encoding = converter.EncodingJSON
+	}
+	if f.Convert.Protocol == "" {
+		f.Convert.Protocol = converter.ProtocolCustomSingle
+	}
+	// Init converter
+	convert, err := f.getConverter()
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher converter fail, error", err)
 		return err
 	}
+	f.converter = convert
 	conn, err := newConn(f)
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
@@ -142,6 +159,26 @@ func (f *FlusherClickHouse) Description() string {
 	return "ClickHouse flusher for logtail"
 }
 
+func (f *FlusherClickHouse) Validate() error {
+	if f.Addrs == nil || len(f.Addrs) == 0 {
+		var err = fmt.Errorf("clickhouse addrs is nil")
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
+		return err
+	}
+	if f.Table == "" {
+		var err = fmt.Errorf("clickhouse table is nil")
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
+		return err
+	}
+	return nil
+}
+
+func (f *FlusherClickHouse) getConverter() (*converter.Converter, error) {
+	logger.Debug(f.context.GetRuntimeContext(), "[ilogtail data convert config] Protocol", f.Convert.Protocol,
+		"Encoding", f.Convert.Encoding, "TagFieldsRename", f.Convert.TagFieldsRename, "ProtocolFieldsRename", f.Convert.ProtocolFieldsRename)
+	return converter.NewConverter(f.Convert.Protocol, f.Convert.Encoding, f.Convert.TagFieldsRename, f.Convert.ProtocolFieldsRename)
+}
+
 func (f *FlusherClickHouse) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	return f.flusher(projectName, logstoreName, configName, logGroupList)
 }
@@ -150,41 +187,29 @@ func (f *FlusherClickHouse) BufferFlush(projectName string, logstoreName string,
 	ctx := context.Background()
 	sql := fmt.Sprintf(insertSQL, f.Authentication.PlainText.Database, f.Table)
 	for _, logGroup := range logGroupList {
+		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
+		// Merge topicKeys and HashKeys,Only one convert after merge
+		serializedLogs, err := f.converter.ToByteStream(logGroup)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush clickhouse convert log fail, error", err)
+		}
 		// post them to db all at once, build statements
 		batch, err := f.conn.PrepareBatch(ctx, sql)
 		if err != nil {
 			return err
 		}
-		if f.KeyValuePairs {
-			for _, log := range logGroup.Logs {
-				writer := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 128)
-				writer.WriteObjectStart()
-				for _, c := range log.Contents {
-					writer.WriteObjectField(c.Key)
-					writer.WriteString(c.Value)
-					_, _ = writer.Write([]byte{','})
-				}
-				writer.WriteObjectField("_timestamp")
-				writer.WriteString(strconv.Itoa(int(log.Time)))
-				writer.WriteObjectEnd()
-				if err = batch.Append(int64(log.Time), string(writer.Buffer())); err != nil {
-					return err
-				}
-			}
-		} else {
+		for _, log := range serializedLogs.([][]byte) {
 			logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
-			for _, log := range logGroup.Logs {
-				buf, _ := json.Marshal(log)
-				logger.Debug(f.context.GetRuntimeContext(), string(buf))
-				if err = batch.Append(int64(log.Time), string(buf)); err != nil {
-					return err
-				}
+			if err = batch.Append(time.Now().Unix(), string(log)); err != nil {
+				return err
 			}
 		}
 		// commit and record metrics
 		if err = batch.Send(); err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_Flush_ALARM", "send data to  clickhouse failed", err)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to  clickhouse failed", err)
 			return err
+		} else {
+			logger.Debug(f.context.GetRuntimeContext(), "ClickHouse success send events: messageID")
 		}
 	}
 	return nil
@@ -202,7 +227,7 @@ func (f *FlusherClickHouse) Stop() error {
 }
 
 func init() {
-	ilogtail.Flushers["flusher_clickhouse"] = func() ilogtail.Flusher {
+	pipeline.Flushers["flusher_clickhouse"] = func() pipeline.Flusher {
 		f := NewFlusherClickHouse()
 		f.flusher = f.BufferFlush
 		return f
@@ -220,10 +245,6 @@ func newConn(f *FlusherClickHouse) (driver.Conn, error) {
 		DialContext: func(ctx context.Context, addr string) (net.Conn, error) {
 			var d net.Dialer
 			return d.DialContext(ctx, "tcp", addr)
-		},
-		Debug: f.Debug,
-		Debugf: func(format string, v ...interface{}) {
-			fmt.Printf(format, v)
 		},
 		Settings: clickhouse.Settings{
 			"max_execution_time": f.MaxExecutionTime,

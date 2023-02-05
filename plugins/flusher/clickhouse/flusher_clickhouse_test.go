@@ -26,7 +26,7 @@ import (
 )
 
 // Invalid Test
-func InvalidTestConnectAndWrite(t *testing.T) {
+func TestInvalidTestConnectAndWrite(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
@@ -37,8 +37,7 @@ func InvalidTestConnectAndWrite(t *testing.T) {
 	f.Authentication.PlainText.Password = "123456"
 	f.Authentication.PlainText.Database = "default"
 	f.Cluster = "cluster_1"
-	f.Table = "demo_v5"
-	f.Debug = true
+	f.Table = "demo_v7"
 	f.flusher = f.BufferFlush
 	// Verify that we can connect to the ClickHouse
 	lctx := mock.NewEmptyContext("p", "l", "c")
