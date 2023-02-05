@@ -244,6 +244,7 @@ func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice 
 				otMetric := otMetrics.At(k)
 				metricName := otMetric.Name()
 				metricUnit := otMetric.Unit()
+				metricDescription := otMetric.Description()
 
 				switch otMetric.Type() {
 				case pmetric.MetricTypeGauge:
@@ -251,7 +252,7 @@ func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice 
 					otDatapoints := otGauge.DataPoints()
 					for l := 0; l < otDatapoints.Len(); l++ {
 						datapoint := otDatapoints.At(l)
-						metric := newMetricFromGaugeDatapoint(datapoint, metricName, metricUnit)
+						metric := newMetricFromGaugeDatapoint(datapoint, metricName, metricUnit, metricDescription)
 						groupEvents.Events = append(groupEvents.Events, metric)
 					}
 				case pmetric.MetricTypeSum:
@@ -262,7 +263,7 @@ func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice 
 
 					for l := 0; l < otDatapoints.Len(); l++ {
 						datapoint := otDatapoints.At(l)
-						metric := newMetricFromSumDatapoint(datapoint, aggregationTemporality, isMonotonic, metricName, metricUnit)
+						metric := newMetricFromSumDatapoint(datapoint, aggregationTemporality, isMonotonic, metricName, metricUnit, metricDescription)
 						groupEvents.Events = append(groupEvents.Events, metric)
 					}
 				case pmetric.MetricTypeSummary:
@@ -270,7 +271,7 @@ func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice 
 					otDatapoints := otSummary.DataPoints()
 					for l := 0; l < otDatapoints.Len(); l++ {
 						datapoint := otDatapoints.At(l)
-						metric := newMetricFromSummaryDatapoint(datapoint, metricName, metricUnit)
+						metric := newMetricFromSummaryDatapoint(datapoint, metricName, metricUnit, metricDescription)
 						groupEvents.Events = append(groupEvents.Events, metric)
 					}
 				case pmetric.MetricTypeHistogram:
@@ -280,7 +281,7 @@ func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice 
 
 					for l := 0; l < otDatapoints.Len(); l++ {
 						datapoint := otDatapoints.At(l)
-						metric := newMetricFromHistogramDatapoint(datapoint, aggregationTemporality, metricName, metricUnit)
+						metric := newMetricFromHistogramDatapoint(datapoint, aggregationTemporality, metricName, metricUnit, metricDescription)
 						groupEvents.Events = append(groupEvents.Events, metric)
 					}
 				case pmetric.MetricTypeExponentialHistogram:
@@ -290,7 +291,7 @@ func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice 
 
 					for l := 0; l < otDatapoints.Len(); l++ {
 						datapoint := otDatapoints.At(l)
-						metric := newMetricFromExponentialHistogramDatapoint(datapoint, aggregationTemporality, metricName, metricUnit)
+						metric := newMetricFromExponentialHistogramDatapoint(datapoint, aggregationTemporality, metricName, metricUnit, metricDescription)
 						groupEvents.Events = append(groupEvents.Events, metric)
 					}
 				default:
@@ -440,7 +441,7 @@ func getValue(intValue int64, doubleValue float64) float64 {
 	return doubleValue
 }
 
-func newMetricFromGaugeDatapoint(datapoint pmetric.NumberDataPoint, metricName, metricUnit string) *models.Metric {
+func newMetricFromGaugeDatapoint(datapoint pmetric.NumberDataPoint, metricName, metricUnit, metricDescription string) *models.Metric {
 	timestamp := int64(datapoint.Timestamp())
 	startTimestamp := datapoint.StartTimestamp()
 	tags := attrs2Tags(datapoint.Attributes())
@@ -448,11 +449,12 @@ func newMetricFromGaugeDatapoint(datapoint pmetric.NumberDataPoint, metricName, 
 	value := getValue(datapoint.IntValue(), datapoint.DoubleValue())
 	metric := models.NewSingleValueMetric(metricName, models.MetricTypeGauge, tags, timestamp, value)
 	metric.Unit = metricUnit
+	metric.Description = metricDescription
 	metric.SetObservedTimestamp(uint64(startTimestamp))
 	return metric
 }
 
-func newMetricFromSumDatapoint(datapoint pmetric.NumberDataPoint, aggregationTemporality pmetric.AggregationTemporality, isMonotonic, metricName, metricUnit string) *models.Metric {
+func newMetricFromSumDatapoint(datapoint pmetric.NumberDataPoint, aggregationTemporality pmetric.AggregationTemporality, isMonotonic, metricName, metricUnit, metricDescription string) *models.Metric {
 	timestamp := int64(datapoint.Timestamp())
 	startTimestamp := datapoint.StartTimestamp()
 	tags := attrs2Tags(datapoint.Attributes())
@@ -467,11 +469,12 @@ func newMetricFromSumDatapoint(datapoint pmetric.NumberDataPoint, aggregationTem
 		metric = models.NewSingleValueMetric(metricName, models.MetricTypeRateCounter, tags, timestamp, value)
 	}
 	metric.Unit = metricUnit
+	metric.Description = metricDescription
 	metric.SetObservedTimestamp(uint64(startTimestamp))
 	return metric
 }
 
-func newMetricFromSummaryDatapoint(datapoint pmetric.SummaryDataPoint, metricName, metricUnit string) *models.Metric {
+func newMetricFromSummaryDatapoint(datapoint pmetric.SummaryDataPoint, metricName, metricUnit, metricDescription string) *models.Metric {
 	timestamp := int64(datapoint.Timestamp())
 	startTimestamp := datapoint.StartTimestamp()
 	tags := attrs2Tags(datapoint.Attributes())
@@ -490,11 +493,12 @@ func newMetricFromSummaryDatapoint(datapoint pmetric.SummaryDataPoint, metricNam
 
 	metric := models.NewMultiValuesMetric(metricName, models.MetricTypeSummary, tags, timestamp, multivalue.GetMultiValues())
 	metric.Unit = metricUnit
+	metric.Description = metricDescription
 	metric.SetObservedTimestamp(uint64(startTimestamp))
 	return metric
 }
 
-func newMetricFromHistogramDatapoint(datapoint pmetric.HistogramDataPoint, aggregationTemporality pmetric.AggregationTemporality, metricName, metricUnit string) *models.Metric {
+func newMetricFromHistogramDatapoint(datapoint pmetric.HistogramDataPoint, aggregationTemporality pmetric.AggregationTemporality, metricName, metricUnit, metricDescription string) *models.Metric {
 	timestamp := int64(datapoint.Timestamp())
 	startTimestamp := datapoint.StartTimestamp()
 
@@ -545,13 +549,14 @@ func newMetricFromHistogramDatapoint(datapoint pmetric.HistogramDataPoint, aggre
 
 	metric := models.NewMultiValuesMetric(metricName, models.MetricTypeHistogram, tags, timestamp, multivalue.GetMultiValues())
 	metric.Unit = metricUnit
+	metric.Description = metricDescription
 	metric.SetObservedTimestamp(uint64(startTimestamp))
 	return metric
 }
 
 // Note that ExponentialHistogram is still in experimental status.
 // https://opentelemetry.io/docs/reference/specification/metrics/data-model/#exponentialhistogram
-func newMetricFromExponentialHistogramDatapoint(datapoint pmetric.ExponentialHistogramDataPoint, aggregationTemporality pmetric.AggregationTemporality, metricName, metricUnit string) *models.Metric {
+func newMetricFromExponentialHistogramDatapoint(datapoint pmetric.ExponentialHistogramDataPoint, aggregationTemporality pmetric.AggregationTemporality, metricName, metricUnit, metricDescription string) *models.Metric {
 	timestamp := int64(datapoint.Timestamp())
 	startTimestamp := datapoint.StartTimestamp()
 
@@ -592,6 +597,7 @@ func newMetricFromExponentialHistogramDatapoint(datapoint pmetric.ExponentialHis
 
 	metric := models.NewMultiValuesMetric(metricName, models.MetricTypeHistogram, tags, timestamp, multivalue.GetMultiValues())
 	metric.Unit = metricUnit
+	metric.Description = metricDescription
 	metric.SetObservedTimestamp(uint64(startTimestamp))
 	return metric
 }

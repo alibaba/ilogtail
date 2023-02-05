@@ -153,6 +153,9 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 
 					for m := 0; m < scopeMetric.Metrics().Len(); m++ {
 						otMetric := scopeMetric.Metrics().At(m)
+						otUnit := otMetric.Unit()
+						otDescription := otMetric.Description()
+
 						switch otMetric.Type() {
 						case pmetric.MetricTypeGauge:
 							otGauge := otMetric.Gauge()
@@ -170,6 +173,8 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
 								assert.Equal(t, models.MetricTypeGauge, metric.MetricType)
+								assert.Equal(t, otUnit, metric.Unit)
+								assert.Equal(t, otDescription, metric.Description)
 
 								assert.Equal(t, otMetric.Name(), event.GetName())
 								assert.Equal(t, uint64(datapoint.Timestamp()), event.GetTimestamp())
@@ -208,6 +213,8 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 									assert.Equal(t, models.MetricTypeRateCounter, metric.MetricType)
 								}
 
+								assert.Equal(t, otUnit, metric.Unit)
+								assert.Equal(t, otDescription, metric.Description)
 								// check values
 								otValue := float64(datapoint.IntValue())
 								if datapoint.ValueType() == pmetric.NumberDataPointValueTypeDouble {
@@ -237,7 +244,8 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 								assert.True(t, ok)
 								//check type
 								assert.Equal(t, models.MetricTypeSummary, metric.MetricType)
-
+								assert.Equal(t, otUnit, metric.Unit)
+								assert.Equal(t, otDescription, metric.Description)
 								assert.Equal(t, otMetric.Name(), event.GetName())
 								assert.Equal(t, uint64(datapoint.Timestamp()), event.GetTimestamp())
 
@@ -272,6 +280,8 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
 								assert.Equal(t, models.MetricTypeHistogram, metric.MetricType)
+								assert.Equal(t, otUnit, metric.Unit)
+								assert.Equal(t, otDescription, metric.Description)
 
 								assert.Equal(t, otMetric.Name(), event.GetName())
 								assert.Equal(t, uint64(datapoint.Timestamp()), event.GetTimestamp())
@@ -310,6 +320,8 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
+								assert.Equal(t, otUnit, metric.Unit)
+								assert.Equal(t, otDescription, metric.Description)
 								assert.Equal(t, models.MetricTypeHistogram, metric.MetricType)
 								assert.Equal(t, otMetric.Name(), event.GetName())
 								assert.Equal(t, uint64(datapoint.Timestamp()), event.GetTimestamp())
