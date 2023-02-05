@@ -174,7 +174,7 @@ func TestOtlpHTTP_Metrics(t *testing.T) {
 
 	for i := 0; i < queueSize; i++ {
 		req := pmetricotlp.NewExportRequestFromMetrics(GenerateMetrics(i + 1))
-		err = httpExport(client, req, url)
+		err = httpExport(client, req, url, i%2 == 0)
 		assert.NoError(t, err)
 	}
 
@@ -209,7 +209,7 @@ func TestOtlpHTTP_Trace(t *testing.T) {
 
 	for i := 0; i < queueSize; i++ {
 		req := ptraceotlp.NewExportRequestFromTraces(GenerateTraces(i + 1))
-		err = httpExport(client, req, url)
+		err = httpExport(client, req, url, i%2 == 0)
 		assert.NoError(t, err)
 	}
 
@@ -229,9 +229,17 @@ func TestOtlpHTTP_Trace(t *testing.T) {
 }
 
 func httpExport[P interface {
+	MarshalProto() ([]byte, error)
 	MarshalJSON() ([]byte, error)
-}](cli *http.Client, eReq P, url string) error {
-	eReqBytes, err := eReq.MarshalJSON()
+}](cli *http.Client, eReq P, url string, usePB bool) error {
+	var eReqBytes []byte
+	var err error
+	if usePB {
+		eReqBytes, err = eReq.MarshalProto()
+	} else {
+		eReqBytes, err = eReq.MarshalJSON()
+	}
+
 	if err != nil {
 		return err
 	}
@@ -241,7 +249,12 @@ func httpExport[P interface {
 		return err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	if usePB {
+		req.Header.Set("Content-Type", pbContentType)
+	} else {
+		req.Header.Set("Content-Type", jsonContentType)
+	}
+
 	resp, err := cli.Do(req)
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("response_status_not_ok")
