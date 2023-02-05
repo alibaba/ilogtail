@@ -188,12 +188,13 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.collectorV2.CollectList(groups...)
 	}
 
-	if s.Format == "sls" {
+	switch s.Format {
+	case common.ProtocolSLS:
 		w.Header().Set("x-log-requestid", "1234567890abcde")
 		w.WriteHeader(http.StatusOK)
-	} else if s.Format == common.ProtocolPyroscope {
+	case common.ProtocolPyroscope:
 		// do nothing
-	} else {
+	default:
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -308,7 +309,7 @@ func (s *ServiceHTTP) doDumpFile() {
 			s.dumpDataKeepFiles = s.dumpDataKeepFiles[1:]
 		}
 		closeFile()
-		return os.OpenFile(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], os.O_CREATE|os.O_WRONLY, 0777)
+		return os.OpenFile(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], os.O_CREATE|os.O_WRONLY, 0600)
 	}
 	lastHour := 0
 	offset := int64(0)
@@ -316,8 +317,8 @@ func (s *ServiceHTTP) doDumpFile() {
 		select {
 		case d := <-s.dumpDataChan:
 			if time.Now().Hour() != lastHour {
-				file, err := cutFile()
-				if err != nil {
+				file, cerr := cutFile()
+				if cerr != nil {
 					logger.Error(s.context.GetRuntimeContext(), "DUMP_FILE_ALARM", "cut new file error", err)
 				} else {
 					offset, _ = file.Seek(0, io.SeekEnd)

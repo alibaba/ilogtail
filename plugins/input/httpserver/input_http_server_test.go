@@ -19,9 +19,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/alibaba/ilogtail/plugins/test/mock"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -31,9 +28,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/util"
 	pluginmanager "github.com/alibaba/ilogtail/pluginmanager"
+	"github.com/alibaba/ilogtail/plugins/test/mock"
 
 	"github.com/stretchr/testify/require"
 
@@ -414,7 +414,7 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 	insertFun := func(num int, start int) {
 		for i := start; i < start+num; i++ {
 			m := map[string][]string{
-				"header": []string{strconv.Itoa(i)},
+				"header": {strconv.Itoa(i)},
 			}
 			b, _ := json.Marshal(m)
 			ch <- &dumpData{
@@ -426,8 +426,8 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 		}
 	}
 	readFunc := func(file string, expectLen int) {
-		data, err := ioutil.ReadFile(file)
-		require.NoError(t, err)
+		data, rerr := ioutil.ReadFile(file)
+		require.NoError(t, rerr)
 		offset := 0
 		num := 0
 		for {

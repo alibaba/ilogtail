@@ -61,7 +61,7 @@ func GetFileListByPrefix(dirPath, prefix string, needDir bool, num int) ([]strin
 		return []string{dirPath}, nil
 	}
 
-	dir, err := os.Open(dirPath)
+	dir, err := os.Open(dirPath) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}

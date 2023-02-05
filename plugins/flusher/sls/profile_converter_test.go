@@ -1,9 +1,11 @@
 package sls
 
 import (
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/stretchr/testify/require"
+
 	"testing"
+
+	"github.com/alibaba/ilogtail/pkg/models"
 )
 
 func TestConvertProfile(t *testing.T) {
