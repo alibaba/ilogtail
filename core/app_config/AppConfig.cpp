@@ -77,13 +77,18 @@ const AppConfig::ConfigServerAddress& AppConfig::GetOneConfigServerAddress(bool 
     if (0 == mConfigServerAddresses.size()) return AppConfig::ConfigServerAddress("", -1); // No address available
 
     // Return a random address
-    if (0 == mConfigServerAddress.port || changeConfigServer) {
+    if (changeConfigServer) {
         std::random_device rd; 
-        int id = rd() % mConfigServerAddresses.size();
-        mConfigServerAddress.host = mConfigServerAddresses[id].host;
-        mConfigServerAddress.port = mConfigServerAddresses[id].port;
+        int tmpId = rd() % mConfigServerAddresses.size();
+        while (mConfigServerAddresses.size() > 1 && tmpId == mConfigServerAddressId) {
+            tmpId = rd() % mConfigServerAddresses.size();
+        }
+        mConfigServerAddressId = tmpId;
     }
-    return mConfigServerAddress;
+    return AppConfig::ConfigServerAddress(
+        mConfigServerAddresses[mConfigServerAddressId].host, 
+        mConfigServerAddresses[mConfigServerAddressId].port
+    );
 }
 
 } // namespace logtail

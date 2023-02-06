@@ -44,7 +44,7 @@ public:
     }
 
     std::vector<ConfigServerAddress> mConfigServerAddresses;
-    ConfigServerAddress mConfigServerAddress;
+    int mConfigServerAddressId;
     std::vector<std::string> mConfigServerTags;
 
     bool IsDebugMode() const { return false; }
