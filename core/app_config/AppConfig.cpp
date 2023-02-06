@@ -73,7 +73,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
     }
 }
 
-const AppConfig::ConfigServerAddress& AppConfig::GetOneConfigServerAddress(bool changeConfigServer) const {
+const AppConfig::ConfigServerAddress& AppConfig::GetOneConfigServerAddress(bool changeConfigServer) {
     if (0 == mConfigServerAddresses.size()) return AppConfig::ConfigServerAddress("", -1); // No address available
 
     // Return a random address
