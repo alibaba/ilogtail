@@ -2437,7 +2437,7 @@ bool ConfigManagerBase::GetYamlConfigDirUpdate() {
 bool ConfigManagerBase::CheckYamlDirConfigUpdate(const std::string& configDirPath,
                                                  bool isRemote,
                                                  std::vector<std::string>& filepathes,
-                                                 std::unordered_map<std::string, int64_t>& yamlConfigMTimeMap
+                                                 std::unordered_map<std::string, int64_t>& yamlConfigMTimeMap,
                                                  bool createIfNotExist) {
     bool updateFlag = false;
     fsutil::Dir configDir(configDirPath);
