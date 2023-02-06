@@ -1,8 +1,10 @@
 package pipelineeventgroup
 
 import (
+	_ "github.com/alibaba/ilogtail/pkg/logger/test"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/plugins/test/mock"
 
 	"github.com/stretchr/testify/require"
 
@@ -13,7 +15,8 @@ func TestPipelineeventGroup_Record_Directly(t *testing.T) {
 	p := new(PipelineeventGroup)
 	p.LimitSize = 5
 	ctx := pipeline.NewObservePipelineConext(100)
-	p.Init(nil, nil)
+	p.Init(mock.NewEmptyContext("a", "b", "c"), nil)
+
 	err := p.Record(constructEvents(104, map[string]string{}, map[string]string{}), ctx)
 	require.NoError(t, err)
 	require.Equal(t, 20, len(ctx.Collector().ToArray()))
@@ -30,7 +33,7 @@ func TestPipelineeventGroup_Record_Tag(t *testing.T) {
 		"tag": "tagval",
 	})
 	ctx := pipeline.NewObservePipelineConext(100)
-	p.Init(nil, nil)
+	p.Init(mock.NewEmptyContext("a", "b", "c"), nil)
 	err := p.Record(events, ctx)
 	require.NoError(t, err)
 	array := ctx.Collector().ToArray()
@@ -45,7 +48,7 @@ func TestPipelineeventGroup_Record_Timer(t *testing.T) {
 	p := new(PipelineeventGroup)
 	p.LimitSize = 500
 	ctx := pipeline.NewObservePipelineConext(100)
-	p.Init(nil, nil)
+	p.Init(mock.NewEmptyContext("a", "b", "c"), nil)
 	err := p.Record(constructEvents(104, map[string]string{}, map[string]string{}), ctx)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(ctx.Collector().ToArray()))
