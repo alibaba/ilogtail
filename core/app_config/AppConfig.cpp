@@ -36,7 +36,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
         LOG_INFO(sLogger, ("bind_interface", mBindInterface));
     }
 
-    // configserver path
+    // configserver path, does not support k8s
     if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isObject()) {
         Json::Value::Members members = confJson["ilogtail_configserver_address"].getMemberNames();
         for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
@@ -55,14 +55,14 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
             boost::regex reg_ip = boost::regex(" (?:(?:1[0-9][0-9]\\.)|(?:2[0-4][0-9]\\.)|(?:25[0-5]\\.)|(?:[1-9][0-9]\\.)|(?:[0-9]\\.)){3}(?:(?:1[0-9][0-9])|(?:2[0-4][0-9])|(?:25[0-5])|(?:[1-9][0-9])|(?:[0-9]))");      
             if (!BoostRegexMatch(host.c_str(), reg_ip, exception))
                 LOG_WARNING(sLogger, ("ilogtail_configserver_address", "parse fail")("exception", exception));
-            else if (1024 < port && port < 65535)
+            else if (port < 1024 || port > 65535)
                 LOG_WARNING(sLogger, ("ilogtail_configserver_address", "illegal port")("port", port));
             else mConfigServerAddresses.push_back(ConfigServerAddress(host, port));
         }
         LOG_INFO(sLogger, ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
     }
 
-    // tags for configserver
+    // tags for configserver, does not support k8s
     if (confJson.isMember("ilogtail_tags") && confJson["ilogtail_tags"].isObject()) {
         Json::Value::Members members = confJson["ilogtail_tags"].getMemberNames();
         for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
@@ -73,12 +73,15 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
     }
 }
 
-const AppConfig::ConfigServerAddress& AppConfig::GetOneConfigServerAddress() const {
+const AppConfig::ConfigServerAddress& AppConfig::GetOneConfigServerAddress(bool changeConfigServer) const {
     if (0 == mConfigServerAddresses.size()) return AppConfig::ConfigServerAddress("", -1); // No address available
 
     // Return a random address
-    std::random_device rd; 
-    return mConfigServerAddresses[rd()%mConfigServerAddresses.size()];
+    if (0 == mConfigServerAddress.port || changeConfigServer) {
+        std::random_device rd; 
+        mConfigServerAddress = mConfigServerAddresses[rd()%mConfigServerAddresses.size()];
+    }
+    return mConfigServerAddress;
 }
 
 } // namespace logtail

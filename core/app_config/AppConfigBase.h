@@ -474,7 +474,7 @@ public:
         return mEnableResponseVerification;
     }
 
-    EndpointAddressType GetOneConfigServerAddressNetType() const {
+    EndpointAddressType GetConfigServerAddressNetType() const {
         return mConfigServerAddressNetType;
     }
 

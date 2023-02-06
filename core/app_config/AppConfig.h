@@ -44,6 +44,7 @@ public:
     }
 
     std::vector<ConfigServerAddress> mConfigServerAddresses;
+    ConfigServerAddress mConfigServerAddress;
     std::vector<std::string> mConfigServerTags;
 
     bool IsDebugMode() const { return false; }
@@ -55,7 +56,7 @@ public:
     bool IsDataServerPrivateCloud() const { return false; }
 
     const std::string& GetBindInterface() const { return mBindInterface; }
-    const ConfigServerAddress& GetOneConfigServerAddress() const;
+    const ConfigServerAddress& GetOneConfigServerAddress(bool changeConfigServer) const;
     const std::vector<std::string>& GetConfigServerTags() const { return mConfigServerTags; }
 
 #ifdef APSARA_UNIT_TEST_MAIN

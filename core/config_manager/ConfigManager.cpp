@@ -145,7 +145,7 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
         int32_t curTime = time(NULL);
 
         if (curTime - lastCheckTime >= checkInterval) {
-            AppConfig::ConfigServerAddress configServerAddress = AppConfig::GetInstance()->GetOneConfigServerAddress();
+            AppConfig::ConfigServerAddress configServerAddress = AppConfig::GetInstance()->GetOneConfigServerAddress(false);
             if ("" != configServerAddress.host) {
                 google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> checkResults;
                 google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> configDetails;
@@ -153,8 +153,12 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
                 checkResults = SendHeartbeat(configServerAddress);
                 if (checkResults.size() > 0) {
                     configDetails = FetchPipelineConfig(configServerAddress, checkResults);
-                    UpdateRemoteConfig(checkResults, configDetails);
+                    if (configDetails.size() > 0) {
+                        UpdateRemoteConfig(checkResults, configDetails);
+                    }
+                    else configServerAddress = AppConfig::GetInstance()->GetOneConfigServerAddress(true);
                 }  
+                else configServerAddress = AppConfig::GetInstance()->GetOneConfigServerAddress(true);
             }
             
             if (!IsUpdate()) {
