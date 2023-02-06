@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 
 	"github.com/alibaba/ilogtail/pkg/doc"
@@ -49,13 +48,6 @@ type ClickHouseSubscriber struct {
 	lastTimestamp int64
 	channel       chan *protocol.LogGroup
 	stopCh        chan struct{}
-}
-
-type logContent struct {
-	Index     string `json:"Index"`
-	Name      string `json:"_name"`
-	Timestamp string `json:"_timestamp"`
-	Value     string `json:"_value"`
 }
 
 func (i *ClickHouseSubscriber) Name() string {
@@ -148,6 +140,19 @@ func (i *ClickHouseSubscriber) queryRecords() (logGroup *protocol.LogGroup, maxT
 	}
 	logger.Debug(context.Background(), "sql", s)
 
+	type logContent struct {
+		Contents struct {
+			Index string `json:"Index"`
+			Name  string `json:"_name"`
+			Value string `json:"_value"`
+		} `json:"contents"`
+		Tags struct {
+			HostIp   string `json:"host.ip"`
+			HostName string `json:"host.name"`
+		} `json:"tags"`
+		Time int `json:"time"`
+	}
+
 	defer func() { _ = rows.Close() }()
 	for rows.Next() {
 		var (
@@ -166,11 +171,11 @@ func (i *ClickHouseSubscriber) queryRecords() (logGroup *protocol.LogGroup, maxT
 		}
 		log.Contents = append(log.Contents, &protocol.Log_Content{
 			Key:   "_name",
-			Value: lc.Name,
+			Value: lc.Contents.Name,
 		})
 		log.Contents = append(log.Contents, &protocol.Log_Content{
 			Key:   "_value",
-			Value: lc.Value,
+			Value: lc.Contents.Value,
 		})
 		logGroup.Logs = append(logGroup.Logs, log)
 	}

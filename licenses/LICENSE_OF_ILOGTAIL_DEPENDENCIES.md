@@ -133,7 +133,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [google.golang.org/protobuf](https://pkg.go.dev/google.golang.org/protobuf?tab=licenses)
 - [gopkg.in/inf.v0](https://pkg.go.dev/gopkg.in/inf.v0?tab=licenses)
 - [github.com/go-faster/errors](https://pkg.go.dev/github.com/go-faster/errors?tab=licenses)
-- [github.com/miekg/pkcs11](https://pkg.go.dev/github.com/miekg/pkcs11?tab=licenses)
 
 ## MIT licenses
 
@@ -216,6 +215,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/paulmach/orb](https://pkg.go.dev/github.com/paulmach/orb?tab=licenses)
 - [github.com/segmentio/asm](https://pkg.go.dev/github.com/segmentio/asm?tab=licenses)
 - [github.com/yusufpapurcu/wmi](https://pkg.go.dev/github.com/yusufpapurcu/wmi?tab=licenses)
+- [github.com/99designs/go-keychain](https://pkg.go.dev/github.com/99designs/go-keychain?tab=licenses)
 
 ## ISC licenses
 

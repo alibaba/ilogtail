@@ -32,12 +32,12 @@ func TestInvalidTestConnectAndWrite(t *testing.T) {
 	}
 
 	f := NewFlusherClickHouse()
-	f.Addrs = []string{"127.0.0.1:9001"}
-	f.Authentication.PlainText.Username = "user1"
-	f.Authentication.PlainText.Password = "123456"
+	f.Addrs = []string{"127.0.0.1:9000"}
+	f.Authentication.PlainText.Username = ""
+	f.Authentication.PlainText.Password = ""
 	f.Authentication.PlainText.Database = "default"
-	f.Cluster = "cluster_1"
-	f.Table = "demo_v7"
+	f.Cluster = ""
+	f.Table = "demo"
 	f.flusher = f.BufferFlush
 	// Verify that we can connect to the ClickHouse
 	lctx := mock.NewEmptyContext("p", "l", "c")
