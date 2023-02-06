@@ -24,8 +24,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/elastic/go-libaudit/v2"
 	"github.com/elastic/go-libaudit/v2/auparse"
 )
@@ -67,7 +67,7 @@ type ServiceLinuxAuditd struct {
 	auditRules []auditRule
 	client     *libaudit.AuditClient
 
-	context ilogtail.Context
+	context pipeline.Context
 }
 
 type auditRule struct {
@@ -115,7 +115,7 @@ func (s *nonBlockingStream) EventsLost(count int) {
 	(*stream)(s).EventsLost(count)
 }
 
-func (s *ServiceLinuxAuditd) Init(context ilogtail.Context) (int, error) {
+func (s *ServiceLinuxAuditd) Init(context pipeline.Context) (int, error) {
 	s.context = context
 
 	_, _, kernel, _ := kernelVersion()
@@ -129,7 +129,7 @@ func (s *ServiceLinuxAuditd) Description() string {
 }
 
 // Start the service example plugin would run in a separate go routine, so it is blocking method.
-func (s *ServiceLinuxAuditd) Start(collector ilogtail.Collector) error {
+func (s *ServiceLinuxAuditd) Start(collector pipeline.Collector) error {
 	logger.Info(s.context.GetRuntimeContext(), "start the ServiceAuditd plugin")
 
 	var err error
@@ -362,7 +362,7 @@ func closeAuditClient(client *libaudit.AuditClient) error {
 
 // Register the plugin to the ServiceInputs array.
 func init() {
-	ilogtail.ServiceInputs["service_linux_auditd"] = func() ilogtail.ServiceInput {
+	pipeline.ServiceInputs["service_linux_auditd"] = func() pipeline.ServiceInput {
 		return &ServiceLinuxAuditd{
 			ResolveIDs:            true,
 			FailureMode:           "silent",
