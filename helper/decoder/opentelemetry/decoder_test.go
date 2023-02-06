@@ -202,8 +202,8 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 										assert.Equal(t, v.AsString(), event.GetTags().Get(k))
 										return true
 									})
-								assert.Equal(t, aggregationTemporality.String(), event.GetTags().Get(TagKeyAggregationTemporality))
-								assert.Equal(t, isMonotonic, event.GetTags().Get(TagKeyIsMonotonic))
+								assert.Equal(t, aggregationTemporality.String(), event.GetTags().Get(TagKeyMetricAggregationTemporality))
+								assert.Equal(t, isMonotonic, event.GetTags().Get(TagKeysMetricIsMonotonic))
 
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
@@ -275,7 +275,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 										assert.Equal(t, v.AsString(), event.GetTags().Get(k))
 										return true
 									})
-								assert.Equal(t, aggregationTemporality.String(), event.GetTags().Get(TagKeyAggregationTemporality))
+								assert.Equal(t, aggregationTemporality.String(), event.GetTags().Get(TagKeyMetricAggregationTemporality))
 
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
@@ -316,7 +316,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 										assert.Equal(t, v.AsString(), event.GetTags().Get(k))
 										return true
 									})
-								assert.Equal(t, aggregationTemporality.String(), event.GetTags().Get(TagKeyAggregationTemporality))
+								assert.Equal(t, aggregationTemporality.String(), event.GetTags().Get(TagKeyMetricAggregationTemporality))
 
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
@@ -393,7 +393,7 @@ func TestDecoder_DecodeV2_TracesEmpty(t *testing.T) {
 		resource := groupEvents.Group.Metadata
 		assert.True(t, resource.Contains("host.name"))
 		scopeAttributes := groupEvents.Group.Tags
-		assert.True(t, scopeAttributes.Contains("version"))
+		assert.True(t, scopeAttributes.Contains(TagKeyScopeVersion))
 
 		assert.Equal(t, 1, len(groupEvents.Events))
 		for _, event := range groupEvents.Events {
@@ -430,8 +430,8 @@ func TestDecoder_DecodeV2_Traces(t *testing.T) {
 		assert.Equal(t, "testService", resource.Get("service.name"))
 
 		scopeAttributes := groupEvents.Group.Tags
-		assert.Equal(t, "scope version", scopeAttributes.Get("version"))
-		assert.Equal(t, "scope name", scopeAttributes.Get("name"))
+		assert.Equal(t, "scope version", scopeAttributes.Get(TagKeyScopeVersion))
+		assert.Equal(t, "scope name", scopeAttributes.Get(TagKeyScopeName))
 
 		otlpSpans := otlpScopeSpans.ScopeSpans().At(i).Spans()
 		assert.Equal(t, 2, len(groupEvents.Events))

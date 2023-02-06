@@ -1,4 +1,4 @@
-# Open Telemetry gRPC Service Input
+# Open Telemetry Service Input
 
 ## 简介
 
@@ -25,19 +25,11 @@
 
 
 ## 样例
-不接收gGRPC和HTTP请求
-```yaml
-enable: true
-version: v2
-inputs:
-  - Type: service_otlp
-    Protocals:
-flushers:
-  - Type: flusher_stdout
-    OnlyStdout: true  
-```
 
-只接收gRPC请求。
+
+
+* 只接收gRPC请求。
+  
 ```yaml
 enable: true
 version: v2
@@ -50,7 +42,8 @@ flushers:
     OnlyStdout: true  
 ```
 
-接收http/gRPC请求，使用默认otlp的默认端口。gRPC：4317，HTTP：4318.
+* 接收http/gRPC请求，使用默认otlp的默认端口。gRPC：4317，HTTP：4318.
+
 ```yaml
 enable: true
 version: v2
@@ -64,7 +57,8 @@ flushers:
     OnlyStdout: true  
 ```
 
-完整配置
+* 完整配置
+  
 ```yaml
 enable: true
 version: v2

@@ -232,11 +232,12 @@ func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice 
 
 		for j := 0; j < scopeMetrics.Len(); j++ {
 			scopeMetric := scopeMetrics.At(j)
-			scopeAttributes := scopeMetric.Scope().Attributes()
+			scope := scopeMetric.Scope()
+			scopeTags := genScopeTags(scope)
 			otMetrics := scopeMetric.Metrics()
 
 			groupEvents := &models.PipelineGroupEvents{
-				Group:  models.NewGroup(attrs2Meta(resourceAttrs), attrs2Tags(scopeAttributes)),
+				Group:  models.NewGroup(attrs2Meta(resourceAttrs), scopeTags),
 				Events: make([]models.PipelineEvent, 0, otMetrics.Len()),
 			}
 
@@ -323,10 +324,8 @@ func ConvertOtlpTracesToGroupEvents(traces ptrace.Traces) (groupEventsSlice []*m
 		for j := 0; j < scopeSpans.Len(); j++ {
 			scopeSpan := scopeSpans.At(j)
 			scope := scopeSpan.Scope()
+			scopeTags := genScopeTags(scope)
 			otSpans := scopeSpan.Spans()
-			scopeTags := attrs2Tags(scope.Attributes())
-			scopeTags.Add(KeyScopeName, scope.Name())
-			scopeTags.Add(KeyScopeVersion, scope.Version())
 
 			groupEvents := &models.PipelineGroupEvents{
 				Group:  models.NewGroup(attrs2Meta(resourceAttrs), scopeTags),
@@ -353,20 +352,12 @@ func ConvertOtlpTracesToGroupEvents(traces ptrace.Traces) (groupEventsSlice []*m
 				span.Status = models.StatusCode(otSpan.Status().Code())
 
 				if message := otSpan.Status().Message(); len(message) > 0 {
-					span.Tags.Add(KeyMessage, message)
+					span.Tags.Add(TagKeySpanStatusMessage, message)
 				}
 
-				if count := otSpan.DroppedEventsCount(); count > 0 {
-					span.Tags.Add(KeyDroppedEventsCount, strconv.Itoa(int(count)))
-				}
-
-				if count := otSpan.DroppedAttributesCount(); count > 0 {
-					span.Tags.Add(KeyDroppedAttrsCount, strconv.Itoa(int(count)))
-				}
-
-				if count := otSpan.DroppedLinksCount(); count > 0 {
-					span.Tags.Add(KeyDroppedLinksCount, strconv.Itoa(int(count)))
-				}
+				span.Tags.Add(TagKeySpanDroppedEventsCount, strconv.Itoa(int(otSpan.DroppedEventsCount())))
+				span.Tags.Add(TagKeySpanDroppedAttrsCount, strconv.Itoa(int(otSpan.DroppedAttributesCount())))
+				span.Tags.Add(TagKeySpanDroppedLinksCount, strconv.Itoa(int(otSpan.DroppedLinksCount())))
 
 				groupEvents.Events = append(groupEvents.Events, span)
 			}
@@ -375,6 +366,14 @@ func ConvertOtlpTracesToGroupEvents(traces ptrace.Traces) (groupEventsSlice []*m
 
 	}
 	return groupEventsSlice, err
+}
+
+func genScopeTags(scope pcommon.InstrumentationScope) models.Tags {
+	scopeTags := attrs2Tags(scope.Attributes())
+	scopeTags.Add(TagKeyScopeName, scope.Name())
+	scopeTags.Add(TagKeyScopeVersion, scope.Version())
+	scopeTags.Add(TagKeyScopeDroppedAttributesCount, strconv.Itoa(int(scope.DroppedAttributesCount())))
+	return scopeTags
 }
 
 func convertSpanLinks(srcLinks ptrace.SpanLinkSlice) []*models.SpanLink {
@@ -458,8 +457,8 @@ func newMetricFromSumDatapoint(datapoint pmetric.NumberDataPoint, aggregationTem
 	timestamp := int64(datapoint.Timestamp())
 	startTimestamp := datapoint.StartTimestamp()
 	tags := attrs2Tags(datapoint.Attributes())
-	tags.Add(TagKeyIsMonotonic, isMonotonic)
-	tags.Add(TagKeyAggregationTemporality, aggregationTemporality.String())
+	tags.Add(TagKeysMetricIsMonotonic, isMonotonic)
+	tags.Add(TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 
 	value := getValue(datapoint.IntValue(), datapoint.DoubleValue())
 	var metric *models.Metric
@@ -503,7 +502,7 @@ func newMetricFromHistogramDatapoint(datapoint pmetric.HistogramDataPoint, aggre
 	startTimestamp := datapoint.StartTimestamp()
 
 	tags := attrs2Tags(datapoint.Attributes())
-	tags.Add(TagKeyAggregationTemporality, aggregationTemporality.String())
+	tags.Add(TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 
 	// TODO:
 	// handle datapoint's Exemplars, Flags
@@ -561,7 +560,7 @@ func newMetricFromExponentialHistogramDatapoint(datapoint pmetric.ExponentialHis
 	startTimestamp := datapoint.StartTimestamp()
 
 	tags := attrs2Tags(datapoint.Attributes())
-	tags.Add(TagKeyAggregationTemporality, aggregationTemporality.String())
+	tags.Add(TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 
 	// TODO:
 	// handle datapoint's Exemplars, Flags

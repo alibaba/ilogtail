@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/helper/decoder"
+	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -72,11 +73,11 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	}
 
 	switch s.Format {
-	case "otlp_logv1":
+	case common.ProtocolOTLPLogV1:
 		s.Address += "/v1/logs"
-	case "otlp_metricsv1":
+	case common.ProtocolOTLPMetricV1:
 		s.Address += "/v1/metrics"
-	case "otlp_tracev1":
+	case common.ProtocolOTLPTraceV1:
 		s.Address += "/v1/traces"
 	}
 

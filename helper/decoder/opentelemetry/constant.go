@@ -15,19 +15,15 @@
 package opentelemetry
 
 const (
-	KeyMessage            = "otel.message"
-	KeyDroppedEventsCount = "otel.dropped_events_count"
-	KeyDroppedLinksCount  = "otel.dropped_links_count"
-	KeyDroppedAttrsCount  = "otel.dropped_attributes_count"
-	KeyScopeName          = "name"
-	KeyScopeVersion       = "version"
-)
-
-const (
-	TagKeyUnit                   = "_unit"
-	TagKeyIsMonotonic            = "_is_monotonic"
-	TagKeyAggregationTemporality = "_aggregation_temporality"
-	TagKeyInterval               = "_interval"
+	TagKeyScopeName                    = "otlp.scope.name"
+	TagKeyScopeVersion                 = "otlp.scope.version"
+	TagKeyScopeDroppedAttributesCount  = "otlp.scope.dropped.attributes.count"
+	TagKeysMetricIsMonotonic           = "otlp.metric.ismonotonic"
+	TagKeyMetricAggregationTemporality = "otlp.metric.aggregation.temporality"
+	TagKeySpanStatusMessage            = "otlp.span.status.message"
+	TagKeySpanDroppedEventsCount       = "otlp.span.dropped.events.count"
+	TagKeySpanDroppedLinksCount        = "otlp.span.dropped.links.count"
+	TagKeySpanDroppedAttrsCount        = "otlp.span.dropped.attributes.count"
 )
 
 const (
