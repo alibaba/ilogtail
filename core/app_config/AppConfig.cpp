@@ -79,7 +79,9 @@ const AppConfig::ConfigServerAddress& AppConfig::GetOneConfigServerAddress(bool 
     // Return a random address
     if (0 == mConfigServerAddress.port || changeConfigServer) {
         std::random_device rd; 
-        mConfigServerAddress = mConfigServerAddresses[rd()%mConfigServerAddresses.size()];
+        int id = rd() % mConfigServerAddresses.size();
+        mConfigServerAddress.host = mConfigServerAddresses[id].host;
+        mConfigServerAddress.port = mConfigServerAddresses[id].port;
     }
     return mConfigServerAddress;
 }
