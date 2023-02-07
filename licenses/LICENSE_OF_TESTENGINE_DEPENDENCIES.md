@@ -131,7 +131,6 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [go.etcd.io/bbolt](https://pkg.go.dev/go.etcd.io/bbolt?tab=licenses)
 - [go.mozilla.org/pkcs7](https://pkg.go.dev/go.mozilla.org/pkcs7?tab=licenses)
 - [github.com/ClickHouse/clickhouse-go](https://pkg.go.dev/github.com/ClickHouse/clickhouse-go?tab=licenses)
-- [github.com/andybalholm/brotli](https://pkg.go.dev/github.com/andybalholm/brotli?tab=licenses)
 - [github.com/go-faster/city](https://pkg.go.dev/github.com/go-faster/city?tab=licenses)
 - [github.com/paulmach/orb](https://pkg.go.dev/github.com/paulmach/orb?tab=licenses)
 - [github.com/segmentio/asm](https://pkg.go.dev/github.com/segmentio/asm?tab=licenses)
