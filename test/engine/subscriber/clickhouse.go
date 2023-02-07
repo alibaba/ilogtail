@@ -148,7 +148,7 @@ func (i *ClickHouseSubscriber) queryRecords() (logGroup *protocol.LogGroup, maxT
 			Value string `json:"_value"`
 		} `json:"contents"`
 		Tags struct {
-			HostIp   string `json:"host.ip"`
+			HostIP   string `json:"host.ip"`
 			HostName string `json:"host.name"`
 		} `json:"tags"`
 		Time int `json:"time"`
