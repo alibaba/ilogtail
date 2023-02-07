@@ -206,14 +206,12 @@ func (f *FlusherClickHouse) BufferFlush(projectName string, logstoreName string,
 		}
 		// commit and record metrics
 		if err = batch.Send(); err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to  clickhouse failed", err)
-			return err
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to clickhouse failed", err)
 		} else {
 			logger.Debug(f.context.GetRuntimeContext(), "ClickHouse success send events: messageID")
 		}
 	}
 	return nil
-
 }
 
 func (f *FlusherClickHouse) SetUrgent(flag bool) {}
