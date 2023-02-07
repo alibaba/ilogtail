@@ -20,6 +20,7 @@ import (
 	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -27,6 +28,7 @@ const (
 	ProtocolCustomSingle = "custom_single"
 	ProtocolOtlpLogV1    = "otlp_log_v1"
 	ProtocolInfluxdb     = "influxdb"
+	ProtocolRaw          = "raw"
 )
 
 const (
@@ -40,6 +42,8 @@ const (
 	tagPrefix           = "__tag__:"
 	targetContentPrefix = "content."
 	targetTagPrefix     = "tag."
+
+	targetGroupMetadataPrefix = "metadata."
 )
 
 const (
@@ -101,13 +105,26 @@ var supportedEncodingMap = map[string]map[string]bool{
 	ProtocolInfluxdb: {
 		EncodingCustom: true,
 	},
+	ProtocolRaw: {
+		EncodingCustom: true,
+	},
 }
 
 type Converter struct {
 	Protocol             string
 	Encoding             string
+	Separator            string
 	TagKeyRenameMap      map[string]string
 	ProtocolKeyRenameMap map[string]string
+}
+
+func NewConverterWithSep(protocol, encoding, sep string, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
+	converter, err := NewConverter(protocol, encoding, tagKeyRenameMap, protocolKeyRenameMap)
+	if err != nil {
+		return nil, err
+	}
+	converter.Separator = sep
+	return converter, nil
 }
 
 func NewConverter(protocol, encoding string, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
@@ -158,11 +175,21 @@ func (c *Converter) ToByteStreamWithSelectedFields(logGroup *protocol.LogGroup, 
 	}
 }
 
+func (c *Converter) ToByteStreamWithSelectedFieldsV2(groupEvents *models.PipelineGroupEvents, targetFields []string) (stream interface{}, values []map[string]string, err error) {
+	switch c.Protocol {
+	case ProtocolRaw:
+		return c.ConvertToRawStream(groupEvents, targetFields)
+	default:
+		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
+	}
+}
+
 func GetPooledByteBuf() *[]byte {
 	return byteBufPool.Get().(*[]byte)
 }
 
 func PutPooledByteBuf(buf *[]byte) {
+	*buf = (*buf)[:0]
 	byteBufPool.Put(buf)
 }
 

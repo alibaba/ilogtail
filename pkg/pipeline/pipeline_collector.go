@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ilogtail
+package pipeline
 
 import (
 	"github.com/alibaba/ilogtail/pkg/models"
 )
 
-// PipelineCollector. Collect data in the plugin and send the data to the next operator
-type PipelineCollector interface {
+// PipelineCollector collect data in the plugin and send the data to the next operator
+type PipelineCollector interface { //nolint
 
 	// Collect single group and events data belonging to this group
 	Collect(groupInfo *models.GroupInfo, eventList ...models.PipelineEvent)
@@ -61,8 +61,9 @@ func (p *observePipeCollector) CollectList(groups ...*models.PipelineGroupEvents
 }
 
 func (p *observePipeCollector) ToArray() []*models.PipelineGroupEvents {
-	results := make([]*models.PipelineGroupEvents, len(p.groupChan))
-	for i := 0; i < len(p.groupChan); i++ {
+	totalCount := len(p.groupChan)
+	results := make([]*models.PipelineGroupEvents, totalCount)
+	for i := 0; i < totalCount; i++ {
 		results[i] = <-p.groupChan
 	}
 	return results

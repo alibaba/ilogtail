@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux || windows
+// +build linux windows
+
 package pluginmanager
 
 import (
@@ -20,9 +23,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/input"
 	"github.com/alibaba/ilogtail/plugins/processor/regex"
@@ -233,7 +236,7 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 	str := helper.ZeroCopyString(rawLogs)
 	l := new(LogstoreConfig)
 	l.PluginRunner = &pluginv1Runner{
-		LogsChan: make(chan *ilogtail.LogWithContext, 10),
+		LogsChan: make(chan *pipeline.LogWithContext, 10),
 	}
 
 	{

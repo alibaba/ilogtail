@@ -26,10 +26,10 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/plugins/input"
 )
@@ -69,13 +69,13 @@ func checkMixProcessMode(pluginCfg map[string]interface{}) mixProcessMode {
 }
 
 type LogstoreStatistics struct {
-	CollecLatencytMetric ilogtail.LatencyMetric
-	RawLogMetric         ilogtail.CounterMetric
-	SplitLogMetric       ilogtail.CounterMetric
-	FlushLogMetric       ilogtail.CounterMetric
-	FlushLogGroupMetric  ilogtail.CounterMetric
-	FlushReadyMetric     ilogtail.CounterMetric
-	FlushLatencyMetric   ilogtail.LatencyMetric
+	CollecLatencytMetric pipeline.LatencyMetric
+	RawLogMetric         pipeline.CounterMetric
+	SplitLogMetric       pipeline.CounterMetric
+	FlushLogMetric       pipeline.CounterMetric
+	FlushLogGroupMetric  pipeline.CounterMetric
+	FlushReadyMetric     pipeline.CounterMetric
+	FlushLatencyMetric   pipeline.LatencyMetric
 }
 
 type ConfigVersion string
@@ -97,7 +97,7 @@ type LogstoreConfig struct {
 	GlobalConfig *GlobalConfig
 
 	Version      ConfigVersion
-	Context      ilogtail.Context
+	Context      pipeline.Context
 	Statistics   LogstoreStatistics
 	PluginRunner PluginRunner
 	// private fields
@@ -110,9 +110,12 @@ type LogstoreConfig struct {
 	// processWaitSema  sync.WaitGroup
 	// flushWaitSema    sync.WaitGroup
 	pauseOrResumeWg sync.WaitGroup
+
+	LabelSet map[string]struct{}
+	EnvSet   map[string]struct{}
 }
 
-func (p *LogstoreStatistics) Init(context ilogtail.Context) {
+func (p *LogstoreStatistics) Init(context pipeline.Context) {
 	p.CollecLatencytMetric = helper.NewLatencyMetric("collect_latency")
 	p.RawLogMetric = helper.NewCounterMetric("raw_log")
 	p.SplitLogMetric = helper.NewCounterMetric("processed_log")
@@ -207,7 +210,7 @@ func (lc *LogstoreConfig) ProcessRawLog(rawLog []byte, packID string, topic stri
 	log := &protocol.Log{}
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: rawStringKey, Value: string(rawLog)})
 	logger.Debug(context.Background(), "Process raw log ", packID, topic, len(rawLog))
-	lc.PluginRunner.ReceiveRawLog(&ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
+	lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
 	return 0
 }
 
@@ -257,7 +260,7 @@ func (lc *LogstoreConfig) ProcessRawLogV2(rawLog []byte, packID string, topic st
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
 	extractTags(tags, log)
-	lc.PluginRunner.ReceiveRawLog(&ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
+	lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
 	return 0
 }
 
@@ -273,7 +276,7 @@ func (lc *LogstoreConfig) ProcessLog(logByte []byte, packID string, topic string
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
 	extractTags(tags, log)
-	lc.PluginRunner.ReceiveRawLog(&ilogtail.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
+	lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
 	return 0
 }
 
@@ -354,6 +357,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 			logger.Info(contextImp.GetRuntimeContext(), "config is same after reload, use it again", GetFlushStoreLen(logstoreC.PluginRunner))
 			return logstoreC, nil
 		}
+		oldConfig.resume()
 		_ = oldConfig.Stop(false)
 		logstoreC.PluginRunner.Merge(oldConfig.PluginRunner)
 		logger.Info(contextImp.GetRuntimeContext(), "config is changed after reload", "stop and create a new one")
@@ -363,6 +367,53 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	}
 
 	enableAlwaysOnline := enableAlwaysOnlineForStdout && hasDockerStdoutInput(plugins)
+	logstoreC.LabelSet = make(map[string]struct{})
+	logstoreC.EnvSet = make(map[string]struct{})
+	// add env and label set to logstore config
+	inputs, exists := plugins["inputs"]
+	if exists {
+		inputList, valid := inputs.([]interface{})
+		if valid {
+			for _, detail := range inputList {
+				cfg, valid := detail.(map[string]interface{})
+				if !valid {
+					continue
+				}
+				typeName, valid := cfg["type"]
+				if !valid {
+					continue
+				}
+				if val, valid := typeName.(string); valid && (val == input.ServiceDockerStdoutPluginName || val == input.MetricDocierFilePluginName) {
+					configDetail, valid := cfg["detail"]
+					if !valid {
+						continue
+					}
+					detailMap, valid := configDetail.(map[string]interface{})
+					if !valid {
+						continue
+					}
+					for key, value := range detailMap {
+						if strings.Contains(key, "Include") || strings.Contains(key, "Exclude") {
+							conditionMap, valid := value.(map[string]interface{})
+							if !valid {
+								continue
+							}
+							if strings.Contains(key, "Label") {
+								for key := range conditionMap {
+									logstoreC.LabelSet[key] = struct{}{}
+								}
+							}
+							if strings.Contains(key, "Env") {
+								for key := range conditionMap {
+									logstoreC.EnvSet[key] = struct{}{}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	logstoreC.GlobalConfig = &LogtailGlobalConfig
 	// If plugins config has "global" field, then override the logstoreC.GlobalConfig
@@ -573,7 +624,7 @@ func loadBuiltinConfig(name string, project string, logstore string,
 // @logstoreConfig: where to store the created metric plugin object.
 // It returns any error encountered.
 func loadMetric(pluginType string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
-	creator, existFlag := ilogtail.MetricInputs[pluginType]
+	creator, existFlag := pipeline.MetricInputs[pluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginType)
 	}
@@ -605,7 +656,7 @@ func loadMetric(pluginType string, logstoreConfig *LogstoreConfig, configInterfa
 // @logstoreConfig: where to store the created service plugin object.
 // It returns any error encountered.
 func loadService(pluginType string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
-	creator, existFlag := ilogtail.ServiceInputs[pluginType]
+	creator, existFlag := pipeline.ServiceInputs[pluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginType)
 	}
@@ -620,7 +671,7 @@ func loadService(pluginType string, logstoreConfig *LogstoreConfig, configInterf
 }
 
 func loadProcessor(pluginType string, priority int, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
-	creator, existFlag := ilogtail.Processors[pluginType]
+	creator, existFlag := pipeline.Processors[pluginType]
 	if !existFlag || creator == nil {
 		logger.Error(logstoreConfig.Context.GetRuntimeContext(), "INVALID_PROCESSOR_TYPE", "invalid processor type, maybe type is wrong or logtail version is too old", pluginType)
 		return nil
@@ -636,7 +687,7 @@ func loadProcessor(pluginType string, priority int, logstoreConfig *LogstoreConf
 }
 
 func loadAggregator(pluginType string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
-	creator, existFlag := ilogtail.Aggregators[pluginType]
+	creator, existFlag := pipeline.Aggregators[pluginType]
 	if !existFlag || creator == nil {
 		logger.Error(logstoreConfig.Context.GetRuntimeContext(), "INVALID_AGGREGATOR_TYPE", "invalid aggregator type, maybe type is wrong or logtail version is too old", pluginType)
 		return nil
@@ -649,7 +700,7 @@ func loadAggregator(pluginType string, logstoreConfig *LogstoreConfig, configInt
 }
 
 func loadFlusher(pluginType string, logstoreConfig *LogstoreConfig, configInterface interface{}) (err error) {
-	creator, existFlag := ilogtail.Flushers[pluginType]
+	creator, existFlag := pipeline.Flushers[pluginType]
 	if !existFlag || creator == nil {
 		return fmt.Errorf("can't find plugin %s", pluginType)
 	}

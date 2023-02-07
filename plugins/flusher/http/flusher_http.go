@@ -25,10 +25,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 )
@@ -65,11 +66,11 @@ type FlusherHTTP struct {
 
 	queryVarKeys []string
 
-	context   ilogtail.Context
+	context   pipeline.Context
 	converter *converter.Converter
 	client    *http.Client
 
-	queue   chan *protocol.LogGroup
+	queue   chan interface{}
 	counter sync.WaitGroup
 }
 
@@ -77,7 +78,7 @@ func (f *FlusherHTTP) Description() string {
 	return "http flusher for ilogtail"
 }
 
-func (f *FlusherHTTP) Init(context ilogtail.Context) error {
+func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.context = context
 	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initializing")
 	if f.RemoteURL == "" {
@@ -108,7 +109,7 @@ func (f *FlusherHTTP) Init(context ilogtail.Context) error {
 		f.client.Transport = transport
 	}
 
-	f.queue = make(chan *protocol.LogGroup)
+	f.queue = make(chan interface{})
 	for i := 0; i < f.Concurrency; i++ {
 		go f.runFlushTask()
 	}
@@ -127,6 +128,13 @@ func (f *FlusherHTTP) Flush(projectName string, logstoreName string, configName 
 	return nil
 }
 
+func (f *FlusherHTTP) Export(groupEventsArray []*models.PipelineGroupEvents, ctx pipeline.PipelineContext) error {
+	for _, groupEvents := range groupEventsArray {
+		f.addTask(groupEvents)
+	}
+	return nil
+}
+
 func (f *FlusherHTTP) SetUrgent(flag bool) {
 }
 
@@ -141,10 +149,10 @@ func (f *FlusherHTTP) Stop() error {
 }
 
 func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {
-	return converter.NewConverter(f.Convert.Protocol, f.Convert.Encoding, nil, nil)
+	return converter.NewConverterWithSep(f.Convert.Protocol, f.Convert.Encoding, f.Convert.Separator, nil, nil)
 }
 
-func (f *FlusherHTTP) addTask(log *protocol.LogGroup) {
+func (f *FlusherHTTP) addTask(log interface{}) {
 	f.counter.Add(1)
 	f.queue <- log
 }
@@ -154,17 +162,28 @@ func (f *FlusherHTTP) countDownTask() {
 }
 
 func (f *FlusherHTTP) runFlushTask() {
-	for logGroup := range f.queue {
-		err := f.convertAndFlush(logGroup)
+	for data := range f.queue {
+		err := f.convertAndFlush(data)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher failed convert or flush data, data dropped, error", err)
 		}
 	}
 }
 
-func (f *FlusherHTTP) convertAndFlush(logGroup *protocol.LogGroup) error {
+func (f *FlusherHTTP) convertAndFlush(data interface{}) error {
 	defer f.countDownTask()
-	logs, varValues, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.queryVarKeys)
+	var logs interface{}
+	var varValues []map[string]string
+	var err error
+	switch v := data.(type) {
+	case *protocol.LogGroup:
+		logs, varValues, err = f.converter.ToByteStreamWithSelectedFields(v, f.queryVarKeys)
+	case *models.PipelineGroupEvents:
+		logs, varValues, err = f.converter.ToByteStreamWithSelectedFieldsV2(v, f.queryVarKeys)
+	default:
+		return fmt.Errorf("unsupport data type")
+	}
+
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher converter log fail, error", err)
 		return err
@@ -252,6 +271,7 @@ func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retry
 		req.Header.Add(k, v)
 	}
 	response, err := f.client.Do(req)
+	logger.Debugf(f.context.GetRuntimeContext(), "request [method]: %v; [header]: %v; [url]: %v; [body]: %v", req.Method, req.Header, req.URL, string(data))
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALRAM", "http flusher send request fail, error", err)
 		return false, false, err
@@ -320,7 +340,7 @@ func (f *FlusherHTTP) fillRequestContentType() {
 }
 
 func init() {
-	ilogtail.Flushers["flusher_http"] = func() ilogtail.Flusher {
+	pipeline.Flushers["flusher_http"] = func() pipeline.Flusher {
 		return &FlusherHTTP{
 			Timeout:     defaultTimeout,
 			Concurrency: 1,

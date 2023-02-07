@@ -25,15 +25,16 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
 
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/auth"
 	liblogger "github.com/VictoriaMetrics/VictoriaMetrics/lib/logger"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/prompbmarshal"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/promscrape"
+	"github.com/VictoriaMetrics/VictoriaMetrics/lib/protoparser/common"
 )
 
 var libLoggerOnce sync.Once
@@ -47,12 +48,12 @@ type ServiceStaticPrometheus struct {
 	scraper         *promscrape.Scraper //nolint:typecheck
 	shutdown        chan struct{}
 	waitGroup       sync.WaitGroup
-	context         ilogtail.Context
+	context         pipeline.Context
 	clusterReplicas int
 	clusterNum      int
 }
 
-func (p *ServiceStaticPrometheus) Init(context ilogtail.Context) (int, error) {
+func (p *ServiceStaticPrometheus) Init(context pipeline.Context) (int, error) {
 	// check running with cluster mode
 	env := os.Getenv("ILOGTAIL_PROMETHEUS_CLUSTER_REPLICAS")
 	num := helper.ExtractStatefulSetNum(os.Getenv("POD_NAME"))
@@ -69,6 +70,7 @@ func (p *ServiceStaticPrometheus) Init(context ilogtail.Context) (int, error) {
 		err := flag.Set("promscrape.maxScrapeSize", "268435456")
 		logger.Info(context.GetRuntimeContext(), "set config maxScrapeSize to 256MB, error", err)
 		liblogger.Init()
+		common.StartUnmarshalWorkers()
 	})
 	p.context = context
 	for k, v := range p.ExtraFlags {
@@ -118,12 +120,14 @@ func (p *ServiceStaticPrometheus) Description() string {
 }
 
 // Start starts the ServiceInput's service, whatever that may be
-func (p *ServiceStaticPrometheus) Start(c ilogtail.Collector) error {
+func (p *ServiceStaticPrometheus) Start(c pipeline.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)
 	defer p.waitGroup.Done()
 	p.scraper.Init(func(_ *auth.Token, wr *prompbmarshal.WriteRequest) {
+		logger.Debug(p.context.GetRuntimeContext(), "append new metrics", wr.Size())
 		appendTSDataToSlsLog(c, wr)
+		logger.Debug(p.context.GetRuntimeContext(), "append done", wr.Size())
 	})
 	<-p.shutdown
 	p.scraper.Stop()
@@ -138,7 +142,7 @@ func (p *ServiceStaticPrometheus) Stop() error {
 }
 
 func init() {
-	ilogtail.ServiceInputs["service_prometheus"] = func() ilogtail.ServiceInput {
+	pipeline.ServiceInputs["service_prometheus"] = func() pipeline.ServiceInput {
 		return &ServiceStaticPrometheus{}
 	}
 }

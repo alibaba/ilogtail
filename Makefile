@@ -81,7 +81,7 @@ check-license: clean tools
 
 .PHONY: lint
 lint: clean tools
-	$(GO_LINT) run -v --timeout 5m $(SCOPE)/... && make lint-pkg && make lint-e2e
+	$(GO_LINT) run -v --timeout 10m $(SCOPE)/... && make lint-pkg && make lint-e2e
 
 .PHONY: lint-pkg
 lint-pkg: clean tools
@@ -174,8 +174,9 @@ unittest_plugin: clean
 unittest_pluginmanager: clean
 	cp pkg/logtail/libPluginAdapter.so ./plugin_main
 	cp pkg/logtail/PluginAdapter.dll ./plugin_main
+	cp pkg/logtail/libPluginAdapter.so ./pluginmanager
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
-	go test $$(go list ./...|grep -Ev "telegraf|external|envconfig|()"| grep -E "plugin_main|pluginmanager") -coverprofile .coretestCoverage.txt
+	go test $$(go list ./...|grep -Ev "telegraf|external|envconfig"| grep -E "plugin_main|pluginmanager") -coverprofile .coretestCoverage.txt
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 
 .PHONY: all
