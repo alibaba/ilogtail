@@ -20,8 +20,16 @@ import (
 type Profile struct {
 	RawData []byte
 	Format  profile.Format
-	logs    []*protocol.Log             // v1 result
-	group   *models.PipelineGroupEvents // v2 result
+
+	logs  []*protocol.Log             // v1 result
+	group *models.PipelineGroupEvents // v2 result
+}
+
+func NewRawProfile(data []byte, format profile.Format) *Profile {
+	return &Profile{
+		RawData: data,
+		Format:  format,
+	}
 }
 
 func (p *Profile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {
@@ -80,7 +88,7 @@ func (p *Profile) extractProfileV2(meta *profile.Meta) func([]byte, int) {
 	}
 	profileID := profile.GetProfileID(meta)
 	return func(k []byte, v int) {
-		name, stack := extractNameAndStacks(k)
+		name, stack := p.extractNameAndStacks(k, meta.SpyName)
 		stackID := strconv.FormatUint(xxhash.Sum64(k), 16)
 		newProfile := models.NewProfile(name, stackID,
 			profileID, "CallStack", meta.SpyName, profile.DetectProfileType(meta.Units.DetectValueType()),
@@ -97,7 +105,7 @@ func (p *Profile) extractProfileV1(meta *profile.Meta) func([]byte, int) {
 	labelStr := string(labels)
 
 	return func(k []byte, v int) {
-		name, stack := extractNameAndStacks(k)
+		name, stack := p.extractNameAndStacks(k, "")
 
 		var content []*protocol.Log_Content
 		content = append(content,
@@ -164,16 +172,16 @@ func (p *Profile) extractProfileV1(meta *profile.Meta) func([]byte, int) {
 
 }
 
-func extractNameAndStacks(k []byte) (name string, stack []string) {
+func (p *Profile) extractNameAndStacks(k []byte, spyName string) (name string, stack []string) {
 	slice := strings.Split(string(k), ";")
 	if len(slice) > 0 && slice[len(slice)-1] == "" {
 		slice = slice[:len(slice)-1]
 	}
 	if len(slice) == 1 {
-		return slice[0], []string{}
+		return profile.FormatPositionAndName(slice[len(slice)-1], profile.FormatType(spyName)), []string{}
 	}
-	name = slice[len(slice)-1]
-	slice = slice[:len(slice)-1]
+	name = profile.FormatPositionAndName(slice[len(slice)-1], profile.FormatType(spyName))
+	slice = profile.FormatPostionAndNames(slice[:len(slice)-1], profile.FormatType(spyName))
 	helper.ReverseStringSlice(slice)
 	return name, slice
 }

@@ -75,6 +75,13 @@ type RawProfile struct {
 	group *models.PipelineGroupEvents // v2 result
 }
 
+func NewRawProfile(data []byte, format string) *RawProfile {
+	return &RawProfile{
+		RawData:             data,
+		FormDataContentType: format,
+	}
+}
+
 func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
 	cb := r.extraceProfileV1(meta)
 	if err = r.doParse(ctx, meta, cb); err != nil {
@@ -124,14 +131,14 @@ func (r *RawProfile) doParse(ctx context.Context, meta *profile.Meta, cb profile
 			sampleTypes:         r.sampleTypeConfig,
 		}
 
-		if err := extractLogs(ctx, tf, p, meta, cb); err != nil {
+		if err := r.extractLogs(ctx, tf, p, meta, cb); err != nil {
 			return err
 		}
 		return nil
 	})
 }
 
-func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.Meta, cb profile.CallbackFunc) error {
+func (r *RawProfile) extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.Meta, cb profile.CallbackFunc) error {
 
 	stackMap := make(map[uint64]*profile.Stack)
 	valMap := make(map[uint64][]uint64)
@@ -157,8 +164,8 @@ func extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.
 			}
 			id := xxhash.Sum64String(strings.Join(stack, ""))
 			stackMap[id] = &profile.Stack{
-				Name:  name,
-				Stack: stack[1:],
+				Name:  profile.FormatPositionAndName(name, profile.FormatType(meta.SpyName)),
+				Stack: profile.FormatPostionAndNames(stack[1:], profile.FormatType(meta.SpyName)),
 			}
 			aggtypeMap[id] = append(aggtypeMap[id], p.getAggregationType(stype, string(meta.AggregationType)))
 			typeMap[id] = append(typeMap[id], p.getDisplayName(stype))

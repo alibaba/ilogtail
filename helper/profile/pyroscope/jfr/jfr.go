@@ -26,6 +26,13 @@ type RawProfile struct {
 	group *models.PipelineGroupEvents // v2 result
 }
 
+func NewRawProfile(data []byte, format string) *RawProfile {
+	return &RawProfile{
+		RawData:             data,
+		FormDataContentType: format,
+	}
+}
+
 func (r *RawProfile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {
 	reader, labels, err := r.extractProfileRaw()
 	if err != nil {

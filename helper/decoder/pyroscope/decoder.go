@@ -56,33 +56,19 @@ func (d *Decoder) extractRawInput(data []byte, req *http.Request) (*profile.Inpu
 	var category string
 	switch {
 	case ft == profile.FormatPprof:
-		in.Profile = &pprof.RawProfile{
-			RawData: data,
-		}
+		in.Profile = pprof.NewRawProfile(data, "")
 		category = "pprof"
 	case ft == profile.FormatJFR:
-		in.Profile = &jfr.RawProfile{
-			FormDataContentType: ct,
-			RawData:             data,
-		}
+		in.Profile = jfr.NewRawProfile(data, ct)
 		category = "JFR"
 	case strings.Contains(ct, "multipart/form-data"):
-		in.Profile = &pprof.RawProfile{
-			FormDataContentType: ct,
-			RawData:             data,
-		}
+		in.Profile = pprof.NewRawProfile(data, ct)
 		category = "pprof"
 	case ft == profile.FormatTrie, ct == "binary/octet-stream+trie":
-		in.Profile = &raw.Profile{
-			RawData: data,
-			Format:  profile.FormatTrie,
-		}
+		in.Profile = raw.NewRawProfile(data, profile.FormatTrie)
 		category = "tire"
 	default:
-		in.Profile = &raw.Profile{
-			RawData: data,
-			Format:  profile.FormatGroups,
-		}
+		in.Profile = raw.NewRawProfile(data, profile.FormatGroups)
 		category = "groups"
 	}
 	if logger.DebugFlag() {

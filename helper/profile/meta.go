@@ -2,6 +2,7 @@ package profile
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -90,6 +91,87 @@ func GetProfileID(meta *Meta) string {
 		profileIDStr = profileID.String()
 	}
 	return profileIDStr
+}
+
+type FormatType string
+
+// SequenceMapping demo
+// nodejs: ./node_modules/express/lib/router/index.js:process_params:338 /app/node_modules/express/lib/router/index.js
+// golang: compress/flate.NewWriter /usr/local/go/src/compress/flate/deflate.go
+// rust: backtrace_rs.rs:23 - <pprof::backtrace::backtrace_rs::Trace as pprof::backtrace::Trace>::trace
+// dotnet: System.Threading.Tasks!Task.InternalWaitCore System.Private.CoreLib
+// ruby: /usr/local/bundle/gems/pyroscope-0.3.0-x86_64-linux/lib/pyroscope.rb:63 - tag_wrapper
+// python: lib/utility/utility.py:38 - find_nearest_vehicle
+// java: libjvm.so.AdvancedThresholdPolicy::method_back_branch_event
+// ebpf: /usr/lib/systemd/systemd+0x93242
+// php: <internal> - sleep
+var sequenceMapping = map[FormatType]SequenceType{
+	PyroscopeNodeJs: FunctionFirst,
+	PyroscopeGolang: FunctionFirst,
+	PyroscopeRust:   PosFirst,
+	PyroscopeDotnet: FunctionFirst,
+	PyroscopeRuby:   PosFirst,
+	PyroscopePython: PosFirst,
+	PyroscopeJava:   FunctionFirst,
+	PyroscopeEbpf:   FunctionFirst,
+	PyroscopePhp:    PosFirst,
+	Unknown:         FunctionFirst,
+}
+
+const (
+	PyroscopeNodeJs = "node"
+	PyroscopeGolang = "go"
+	PyroscopeRust   = "rs"
+	PyroscopeDotnet = "dotnet"
+	PyroscopeRuby   = "rb"
+	PyroscopePython = "py"
+	PyroscopeJava   = "java"
+	PyroscopeEbpf   = "ebpf"
+	PyroscopePhp    = "php"
+	Unknown         = "unknown"
+)
+
+type SequenceType int
+
+const (
+	_ SequenceType = iota
+	PosFirst
+	FunctionFirst
+)
+
+func FormatPositionAndName(str string, t FormatType) string {
+	str = strings.TrimSpace(str)
+	idx := strings.Index(str, " ")
+	if idx < 0 {
+		return str // means no position
+	}
+	joiner := func(name, pos string) string {
+		var b strings.Builder
+		b.Grow(len(name) + len(pos) + 1)
+		b.Write([]byte(name))
+		b.Write([]byte{' '})
+		b.Write([]byte(pos))
+		return b.String()
+	}
+	name := str[:idx]
+	idx = strings.LastIndex(str, " ")
+	pos := str[idx+1:]
+	sequenceType := sequenceMapping[t]
+	switch sequenceType {
+	case PosFirst:
+		return joiner(pos, name)
+	case FunctionFirst:
+		return joiner(name, pos)
+	default:
+		return str
+	}
+}
+
+func FormatPostionAndNames(strs []string, t FormatType) []string {
+	for i := range strs {
+		strs[i] = FormatPositionAndName(strs[i], t)
+	}
+	return strs
 }
 
 func (u Units) DetectValueType() string {

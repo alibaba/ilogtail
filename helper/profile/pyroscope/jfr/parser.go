@@ -110,8 +110,8 @@ func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parse
 		t.IterateStacks(func(name string, self uint64, stack []string) {
 			id := xxhash.Sum64String(strings.Join(stack, ""))
 			stackMap[id] = &profile.Stack{
-				Name:  name,
-				Stack: stack[1:],
+				Name:  profile.FormatPositionAndName(name, profile.FormatType(meta.SpyName)),
+				Stack: profile.FormatPostionAndNames(stack[1:], profile.FormatType(meta.SpyName)),
 			}
 			aggtypeMap[id] = append(aggtypeMap[id], string(meta.AggregationType))
 			typeMap[id] = append(typeMap[id], n)
