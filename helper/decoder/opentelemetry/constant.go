@@ -30,9 +30,12 @@ const (
 
 // internal field names of otlp metrics.
 const (
-	FieldCount = "count"
-	FieldSum   = "sum"
-	FieldMin   = "min"
-	FieldMax   = "max"
-	FieldScale = "scale"
+	FieldCount          = "count"
+	FieldSum            = "sum"
+	FieldMin            = "min"
+	FieldMax            = "max"
+	FieldScale          = "scale"
+	FieldPositiveOffset = "positive.offset"
+	FieldNegativeOffset = "negative.offset"
+	FieldZeroCount      = "zero.count"
 )

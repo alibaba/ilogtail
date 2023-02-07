@@ -596,7 +596,7 @@ func newMetricFromExponentialHistogramDatapoint(datapoint pmetric.ExponentialHis
 	multivalue.Values.AddAll(postiveFields)
 	multivalue.Values.AddAll(negativeFields)
 
-	multivalue.Add("zero_count", float64(datapoint.ZeroCount()))
+	multivalue.Add(FieldZeroCount, float64(datapoint.ZeroCount()))
 
 	metric := models.NewMultiValuesMetric(metricName, models.MetricTypeHistogram, tags, timestamp, multivalue.GetMultiValues())
 	metric.Unit = metricUnit
@@ -615,6 +615,11 @@ func genExponentialHistogramValues(isPositive bool, base float64, buckets pmetri
 		upperBoundary := lowerBoundary * base
 		fieldKey := helper.ComposeBucketFieldName(lowerBoundary, upperBoundary, isPositive)
 		res[fieldKey] = float64(bucketCount)
+	}
+	if isPositive {
+		res[FieldPositiveOffset] = float64(offset)
+	} else {
+		res[FieldNegativeOffset] = float64(offset)
 	}
 	return res
 }

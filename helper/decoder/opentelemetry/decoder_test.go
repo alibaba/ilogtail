@@ -334,6 +334,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 								assert.Equal(t, scale, int32(metric.Value.GetMultiValues().Get(FieldScale)))
 
 								positiveOffset := datapoint.Positive().Offset()
+								assert.Equal(t, positiveOffset, int32(metric.Value.GetMultiValues().Get(FieldPositiveOffset)))
 								otPositiveBucketCounts := datapoint.Positive().BucketCounts()
 
 								otPositiveBucketBounds, otPositiveBucketCountsFloat := make([]float64, 0), make([]float64, 0)
@@ -348,6 +349,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 								assert.Equal(t, otPositiveBucketCountsFloat, positveBucketCounts)
 
 								negativeOffset := datapoint.Negative().Offset()
+								assert.Equal(t, negativeOffset, int32(metric.Value.GetMultiValues().Get(FieldNegativeOffset)))
 								otNegativeBucetCounts := datapoint.Negative().BucketCounts()
 
 								otNegativeBucketBounds, otNegativeBucketCountsFloat := make([]float64, 0), make([]float64, 0)
@@ -364,6 +366,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 
 								assert.Equal(t, float64(datapoint.Count()), metric.Value.GetMultiValues().Get(FieldCount))
 								assert.Equal(t, float64(datapoint.Sum()), metric.Value.GetMultiValues().Get(FieldSum))
+								assert.Equal(t, float64(datapoint.ZeroCount()), metric.Value.GetMultiValues().Get(FieldZeroCount))
 								eventIndex++
 							}
 						}

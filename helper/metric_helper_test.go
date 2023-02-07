@@ -18,6 +18,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -104,6 +105,37 @@ func TestComputeBucketBoundary(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, test.expectedBucket, bucket)
 	}
+}
+
+func TestComputeBuckets(t *testing.T) {
+	tests := []struct {
+		multiValues          map[string]float64
+		isPositive           bool
+		expectedBucketBounds []float64
+		expectedBucketCounts []float64
+	}{
+		{
+			multiValues:          map[string]float64{"(1,2]": 1, "(2,3]": 4, "(1": 1, "(3,+inf]": 100},
+			isPositive:           true,
+			expectedBucketBounds: []float64{1, 2, 3},
+			expectedBucketCounts: []float64{1, 4, 100},
+		},
+
+		{
+			multiValues:          map[string]float64{"[-2,-1)": 1, "[-3,-2)": 4, "(1": 1, "[-inf,-4)": 100},
+			isPositive:           false,
+			expectedBucketBounds: []float64{-1, -2, -4},
+			expectedBucketCounts: []float64{1, 4, 100},
+		},
+	}
+
+	for _, test := range tests {
+		v := models.NewMetricMultiValueWithMap(test.multiValues).GetMultiValues()
+		bucketBounds, bucketCounts := ComputeBuckets(v, test.isPositive)
+		assert.Equal(t, test.expectedBucketBounds, bucketBounds)
+		assert.Equal(t, test.expectedBucketCounts, bucketCounts)
+	}
+
 }
 
 func TestReverseSlice(t *testing.T) {
