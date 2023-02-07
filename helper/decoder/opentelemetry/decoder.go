@@ -582,6 +582,7 @@ func newMetricFromExponentialHistogramDatapoint(datapoint pmetric.ExponentialHis
 
 	scale := datapoint.Scale()
 	base := math.Pow(2, math.Pow(2, float64(-scale)))
+	multivalue.Values.Add(FieldScale, float64(scale)) // store scale in multivalues
 
 	// For example, when scale is 3, base is 2 ** (2 ** -3) = 2 ** (1/8).
 	// The negative bucket bounds look like:
@@ -594,6 +595,7 @@ func newMetricFromExponentialHistogramDatapoint(datapoint pmetric.ExponentialHis
 
 	multivalue.Values.AddAll(postiveFields)
 	multivalue.Values.AddAll(negativeFields)
+
 	multivalue.Add("zero_count", float64(datapoint.ZeroCount()))
 
 	metric := models.NewMultiValuesMetric(metricName, models.MetricTypeHistogram, tags, timestamp, multivalue.GetMultiValues())

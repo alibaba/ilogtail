@@ -34,4 +34,5 @@ const (
 	FieldSum   = "sum"
 	FieldMin   = "min"
 	FieldMax   = "max"
+	FieldScale = "scale"
 )

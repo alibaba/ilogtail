@@ -331,6 +331,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 								// check values
 								scale := datapoint.Scale()
 								base := math.Pow(2, math.Pow(2, float64(-scale)))
+								assert.Equal(t, scale, int32(metric.Value.GetMultiValues().Get(FieldScale)))
 
 								positiveOffset := datapoint.Positive().Offset()
 								otPositiveBucketCounts := datapoint.Positive().BucketCounts()
