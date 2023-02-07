@@ -27,4 +27,11 @@ using RedisProtocolEventAggItem = CommonProtocolEventAggItem<RedisProtocolEventK
 using RedisProtocolEventAggItemManager = CommonProtocolEventAggItemManager<RedisProtocolEventAggItem>;
 using RedisProtocolEventAggregator
     = CommonProtocolEventAggregator<RedisProtocolEvent, RedisProtocolEventAggItem, RedisProtocolEventAggItemManager>;
+
+constexpr char kSimpleStringFlag = '+';
+constexpr char kErrorFlag = '-';
+constexpr char kNumberFlag = ':';
+constexpr char kBulkStringFlag = '$';
+constexpr char kArrayFlag = '*';
+
 } // namespace logtail

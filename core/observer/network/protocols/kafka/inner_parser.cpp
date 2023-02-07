@@ -217,7 +217,7 @@ bool logtail::KafkaParser::readNullableCompactString(logtail::SlsStringPiece& pi
     this->positionCommit(len);
     return true;
 }
-uint32_t logtail::KafkaParser::readArraySize() {
+int32_t logtail::KafkaParser::readArraySize() {
     if (this->getLeftSize() < 2) {
         return -1;
     }
@@ -229,14 +229,14 @@ uint32_t logtail::KafkaParser::readArraySize() {
     return size == -1 ? 0 : size;
 }
 
-uint32_t logtail::KafkaParser::readCompactArraySize() {
+int32_t logtail::KafkaParser::readCompactArraySize() {
     int64_t len = readVarInt64(true);
     if (len < 0) {
         return -1;
     } else if (len == 0) {
         return 0;
     } else {
-        return len - 1;
+        return static_cast<int32_t>(len) - 1;
     }
 }
 bool logtail::KafkaParser::readString(logtail::SlsStringPiece& piece) {

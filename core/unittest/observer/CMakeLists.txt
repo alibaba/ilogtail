@@ -41,6 +41,9 @@ target_link_libraries(cgroup_meta_unittest unittest_base)
 add_executable(netlink_meta_unittest NetLinkUnittest.cpp)
 target_link_libraries(netlink_meta_unittest unittest_base)
 
+add_executable(continue_buffer_unittest ContinueBufferUnittest.cpp)
+target_link_libraries(continue_buffer_unittest unittest_base)
+
 add_executable(hostname_meta_unittest HostnameMetaUnittest.cpp)
 target_link_libraries(hostname_meta_unittest unittest_base)
 

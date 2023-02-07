@@ -76,6 +76,27 @@ DEFINE_FLAG_BOOL(sls_observer_network_protocol_stat, "SLS Observer NetWork proto
             } \
         } \
     } while (0)
+
+#define OBSERVER_CONFIG_EXTRACT_PROTOCOL_DETAIL_MAP(jsonvalue, param) \
+    do { \
+        this->m##param.erase(this->m##param.begin(), this->m##param.end()); \
+        if ((jsonvalue).isMember(#param) && commonValue[#param].isObject()) { \
+            Json::Value& detailVal = (jsonvalue)[#param]; \
+            for (const auto& item : detailVal.getMemberNames()) { \
+                for (int i = 1; i < ProtocolType_NumProto; ++i) { \
+                    if (strcasecmp(ProtocolTypeToString((ProtocolType)i).c_str(), item.c_str()) == 0 \
+                        && detailVal[item].isObject()) { \
+                        Json::Value& itemCfg = detailVal[item]; \
+                        this->m##param[i] = std::make_tuple(GetIntValue(itemCfg, "SampleType", 0), \
+                                                            GetBoolValue(itemCfg, "ErrorSample", false), \
+                                                            GetIntValue(itemCfg, "LatencySample", 0)); \
+                    } \
+                } \
+            } \
+        } \
+    } while (0)
+
+
 #define OBSERVER_CONFIG_EXTRACT_INT(jsonvalue, param, defaultVal, prefix) \
     do { \
         this->m##prefix##param = GetIntValue(jsonvalue, #param, defaultVal); \
@@ -231,6 +252,16 @@ std::string NetworkConfig::SetFromJsonString() {
             OBSERVER_CONFIG_EXTRACT_REGEXP(commonValue, ExcludePodNameRegex);
             OBSERVER_CONFIG_EXTRACT_REGEXP(commonValue, IncludeNamespaceNameRegex);
             OBSERVER_CONFIG_EXTRACT_REGEXP(commonValue, ExcludeNamespaceNameRegex);
+            OBSERVER_CONFIG_EXTRACT_PROTOCOL_DETAIL_MAP(commonValue, DetailProtocolSampling);
+            OBSERVER_CONFIG_EXTRACT_REGEXP(commonValue, DetailIncludePodNameRegex);
+            OBSERVER_CONFIG_EXTRACT_REGEXP(commonValue, DetailIncludeNamespaceRegex);
+            OBSERVER_CONFIG_EXTRACT_REGEXP(commonValue, DetailIncludeCmdRegex);
+            OBSERVER_CONFIG_EXTRACT_REGEXP(commonValue, DetailIncludeNodeRegex);
+            OBSERVER_CONFIG_EXTRACT_REGEXP(commonValue, DetailIncludeIpRegex);
+            OBSERVER_CONFIG_EXTRACT_REGEXP(commonValue, DetailIncludeHostnameRegex);
+            OBSERVER_CONFIG_EXTRACT_INT(commonValue, DetailThresholdPerSecond, 5000, );
+            OBSERVER_CONFIG_EXTRACT_INT(commonValue, DetailSampling, 10, );
+
             // partial open protocol processing.
             mProtocolProcessFlag = GetBoolValue(commonValue, "ProtocolProcess", true) ? -1 : 0;
             if (mProtocolProcessFlag != 0) {

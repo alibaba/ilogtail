@@ -145,8 +145,8 @@ private:
     bool readString(SlsStringPiece& piece);
     bool readCompactString(SlsStringPiece& piece);
     bool readTags();
-    uint32_t readArraySize();
-    uint32_t readCompactArraySize();
+    int32_t readArraySize();
+    int32_t readCompactArraySize();
     bool isFlexible(KafkaApiType type, uint16_t version);
     bool isSupportedApi(KafkaApiType type, uint16_t version);
 

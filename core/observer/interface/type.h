@@ -19,12 +19,23 @@
 #include <stdint.h>
 #include <string>
 
+enum class DetailSampleType : uint8_t {
+    PROCESS_SAMPLE = 0,
+    CONNECTION_SAMPLE = 1,
+    DISABLE_SAMPLE = 2,
+};
 
 enum class ObserverMetricsType : uint8_t {
     L4_METRICS = 0,
     L7_DB_METRICS = 1,
     L7_REQ_METRICS = 2,
+    L7_DETAILS = 3,
 };
+
+enum class DetailProcessSample:uint8_t {
+    NO
+};
+
 
 inline std::string ObserverMetricsTypeToString(ObserverMetricsType type) {
     switch (type) {
@@ -34,6 +45,8 @@ inline std::string ObserverMetricsTypeToString(ObserverMetricsType type) {
             return "l7_db";
         case ObserverMetricsType::L7_REQ_METRICS:
             return "l7_req";
+        case ObserverMetricsType::L7_DETAILS:
+            return "l7_details";
         default:
             break;
     }

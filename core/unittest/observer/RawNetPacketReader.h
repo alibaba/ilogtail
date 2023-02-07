@@ -36,7 +36,10 @@ private:
     bool mIsServer;
     ProtocolType mProtocolType;
     std::vector<std::string> rawHexs;
+    std::vector<int> mSequence;
     uint16_t mLocalPort{0};
+    int mReqPos{0};
+    int mRespPos{0};
 
 public:
     RawNetPacketReader(std::string mLocalAddress,
@@ -47,6 +50,17 @@ public:
           mIsServer(mIsServer),
           mProtocolType(mProtocolType),
           rawHexs(std::move(rawHexs)) {}
+
+    RawNetPacketReader(std::string mLocalAddress,
+                       bool mIsServer,
+                       ProtocolType mProtocolType,
+                       std::vector<std::string> rawHexs,
+                       std::vector<int> seq)
+        : mLocalAddress(std::move(mLocalAddress)),
+          mIsServer(mIsServer),
+          mProtocolType(mProtocolType),
+          rawHexs(std::move(rawHexs)),
+          mSequence(std::move(seq)) {}
 
     RawNetPacketReader(std::string mLocalAddress,
                        uint16_t mLocalPort,
@@ -64,12 +78,20 @@ public:
     bool OK() { return parseSuccess; }
 
     void GetAllNetPackets(std::vector<std::string>& packets, bool local = false) {
+        std::vector<std::string> temp;
         for (auto& rawHex : rawHexs) {
             std::vector<uint8_t> rawData;
             hexstring_to_bin(rawHex, rawData);
             const char* rawPkt = (const char*)rawData.data();
             size_t rawPktSize = rawData.size();
-            parse(rawPkt, rawPktSize, packets, local);
+            parse(rawPkt, rawPktSize, temp, local);
+        }
+        if (this->mSequence.empty()) {
+            packets = std::move(temp);
+        } else {
+            for (const auto& item : mSequence) {
+                packets.push_back(std::move(temp[item]));
+            }
         }
     }
 
@@ -129,7 +151,13 @@ public:
         for (int i = 0; i < dataLen; i++) {
             dataBuffer[i] = payload[i];
         }
-
+        if (data->MsgType == MessageType_Request) {
+            data->Pos = mReqPos;
+            mReqPos += data->RealLen;
+        } else if (data->MsgType == MessageType_Response) {
+            data->Pos = mRespPos;
+            mRespPos += data->RealLen;
+        }
         data->PtlType = mProtocolType;
         packets.push_back(packetData);
         // fix data buffers

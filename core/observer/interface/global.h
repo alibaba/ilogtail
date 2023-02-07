@@ -8,6 +8,8 @@ namespace observer {
     extern std::string kRemoteInfo;
     extern std::string kRole;
     extern std::string kType;
+    extern std::string kDetailRequest;
+    extern std::string kDetailResponse;
 
     // connection label keys
     extern std::string kConnId;

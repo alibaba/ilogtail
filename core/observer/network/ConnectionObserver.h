@@ -69,40 +69,50 @@ public:
 
 
     void ClearParser() {
-        if (mProtocolParser == NULL) {
-            return;
+        if (mProtocolParser != nullptr) {
+            switch (mLastProtocolType) {
+                case ProtocolType_None:
+                    break;
+                case ProtocolType_HTTP:
+                    HTTPProtocolParser::Delete((HTTPProtocolParser*)mProtocolParser);
+                    break;
+                case ProtocolType_DNS:
+                    DNSProtocolParser::Delete((DNSProtocolParser*)mProtocolParser);
+                    break;
+                case ProtocolType_MySQL:
+                    MySQLProtocolParser::Delete((MySQLProtocolParser*)mProtocolParser);
+                    break;
+                case ProtocolType_Redis:
+                    RedisProtocolParser::Delete((RedisProtocolParser*)mProtocolParser);
+                    break;
+                case ProtocolType_PgSQL:
+                    PgSQLProtocolParser::Delete((PgSQLProtocolParser*)mProtocolParser);
+                    break;
+                case ProtocolType_Dubbo:
+                    DubboProtocolParser::Delete((DubboProtocolParser*)mProtocolParser);
+                    break;
+                case ProtocolType_Kafka:
+                    KafkaProtocolParser::Delete((KafkaProtocolParser*)mProtocolParser);
+                    break;
+                default:
+                    break;
+            }
+            mProtocolParser = nullptr;
         }
-        switch (mLastProtocolType) {
-            case ProtocolType_None:
-                break;
-            case ProtocolType_HTTP:
-                HTTPProtocolParser::Delete((HTTPProtocolParser*)mProtocolParser);
-                break;
-            case ProtocolType_DNS:
-                DNSProtocolParser::Delete((DNSProtocolParser*)mProtocolParser);
-                break;
-            case ProtocolType_MySQL:
-                MySQLProtocolParser::Delete((MySQLProtocolParser*)mProtocolParser);
-                break;
-            case ProtocolType_Redis:
-                RedisProtocolParser::Delete((RedisProtocolParser*)mProtocolParser);
-                break;
-            case ProtocolType_PgSQL:
-                PgSQLProtocolParser::Delete((PgSQLProtocolParser*)mProtocolParser);
-                break;
-            case ProtocolType_Dubbo:
-                DubboProtocolParser::Delete((DubboProtocolParser*)mProtocolParser);
-                break;
-            case ProtocolType_Kafka:
-                KafkaProtocolParser::Delete((KafkaProtocolParser*)mProtocolParser);
-                break;
-            default:
-                break;
+        if (mSampler != nullptr) {
+            delete mSampler;
+            mSampler = nullptr;
         }
-        mProtocolParser = NULL;
     }
 
     void OnData(PacketEventHeader* header, PacketEventData* data) {
+        if (mSampler == nullptr) {
+            mSampler = new CommonProtocolDetailsSampler(
+                data->PtlType,
+                mAllAggregators.GetProcessMeta()->MatchDetailFilterRules(),
+                header->TimeNano,
+                [&](ProtocolDetail&& detail) -> void { mAllAggregators.AddDetail(std::move(detail)); });
+        }
         static auto sStatistic = ProtocolStatistic::GetInstance();
         mLastDataTimeNs = header->TimeNano;
         if (mLastProtocolType != ProtocolType_None && mLastProtocolType != data->PtlType) {
@@ -126,9 +136,22 @@ public:
             case ProtocolType_MySQL:
                 OBSERVER_PROTOCOL_ON_DATA(MySQL);
                 break;
-            case ProtocolType_Redis:
-                OBSERVER_PROTOCOL_ON_DATA(Redis);
+            case ProtocolType_Redis: {
+                if (mProtocolParser == NULL) {
+                    mProtocolParser
+                        = RedisProtocolParser::Create(mAllAggregators.GetRedisAggregator(), mSampler, header);
+                }
+                auto parser = (RedisProtocolParser*)mProtocolParser;
+                ParseResult rst = parser->OnData(header, data);
+                if (rst == ParseResult_Fail) {
+                    ++sStatistic->mRedisParseFailCount;
+                }
+                ++sStatistic->mRedisCount;
+                if (rst == ParseResult_Drop) {
+                    ++sStatistic->mRedisDropCount;
+                }
                 break;
+            }
             case ProtocolType_PgSQL:
                 OBSERVER_PROTOCOL_ON_DATA(PgSQL);
                 break;
@@ -196,6 +219,7 @@ protected:
     int32_t mProtocolSwitchCount = 0;
     void* mProtocolParser = NULL;
     uint64_t mLastDataTimeNs = 0;
+    CommonProtocolDetailsSampler* mSampler = NULL;
 
     friend class ProtocolDnsUnittest;
     friend class ProtocolHttpUnittest;

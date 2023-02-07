@@ -26,9 +26,9 @@
 #include <unordered_map>
 #include <queue>
 #include <ostream>
+#include <utility>
 
 namespace logtail {
-
 
 /**
  * Single protocol event metrics info.
@@ -188,6 +188,76 @@ private:
     friend class ProtocolUtilUnittest;
 };
 
+
+struct ProtocolDetail {
+    Json::Value Request;
+    Json::Value Response;
+    ProtocolType Type;
+
+    ProtocolDetail() = default;
+    ProtocolDetail(ProtocolDetail&& other) noexcept
+        : Request(std::move(other.Request)), Response(std::move(other.Response)), Type(other.Type) {}
+    ProtocolDetail(const ProtocolDetail& other) = default;
+    ProtocolDetail& operator=(ProtocolDetail&& other) noexcept {
+        this->Request = std::move(other.Request);
+        this->Response = std::move(other.Response);
+        this->Type = other.Type;
+        return *this;
+    }
+    ProtocolDetail& operator=(const ProtocolDetail& other) = default;
+};
+
+
+class CommonProtocolDetailsSampler {
+public:
+    CommonProtocolDetailsSampler(ProtocolType protocolType,
+                                 bool processMatch,
+                                 uint64_t time,
+                                 std::function<void(ProtocolDetail)> insertFunc)
+        : mInsertFunc(std::move(insertFunc)) {
+        const static auto sInstance = NetworkConfig::GetInstance();
+        auto tuple = NetworkConfig::GetProtocolDetailSampleCfg(protocolType);
+        // 1. <0 means disable, =0 means random, >0 means force sample
+        if (std::get<0>(tuple) < 0) {
+            mSample = -1;
+            return;
+        }
+        // 3. means process force sample and protocol match
+        if (processMatch || std::get<0>(tuple) > 0) {
+            mSample = 1;
+            return;
+        }
+        // 4. means random match
+        mSample = static_cast<int8_t>((time % 100)) < sInstance->mDetailSampling ? 1 : 0;
+        mErrorSample = std::get<1>(tuple);
+        mMaxLatencySample = std::get<2>(tuple);
+    }
+
+    bool IsSample(bool success, int32_t latency) const {
+        if (mSample > 0) {
+            return true;
+        } else if (mSample < 0) {
+            return false;
+        } else {
+            if (mMaxLatencySample != 0 && latency > mMaxLatencySample) {
+                return true;
+            }
+            if (mErrorSample && !success) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void AddData(ProtocolDetail&& item) { mInsertFunc(std::move(item)); }
+
+private:
+    int32_t mMaxLatencySample{0};
+    bool mErrorSample{false};
+    int8_t mSample{true}; // <0 means disable, >0 means force sample, =0 means should be checked by error or latency.
+    std::function<void(ProtocolDetail)> mInsertFunc;
+};
+
 // 通用的协议的聚类器实现
 template <typename ProtocolEvent, typename ProtocolEventAggItem, typename ProtocolEventAggItemManager>
 class CommonProtocolEventAggregator {
@@ -222,7 +292,6 @@ public:
         findRst->second->AddEventInfo(event.Info);
         return true;
     }
-
     void FlushLogs(std::vector<sls_logs::Log>& allData,
                    const std::string& tags,
                    google::protobuf::RepeatedPtrField<sls_logs::Log_Content>& globalTags,

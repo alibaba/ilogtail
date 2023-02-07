@@ -59,6 +59,19 @@ void ProtocolEventAggregators::FlushOutMetrics(uint64_t timeNano,
     if (mKafkaAggregators != nullptr) {
         mKafkaAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
+
+    for (auto iter = mProtocolDetails.begin(); iter != mProtocolDetails.end();) {
+        sls_logs::Log newLog;
+        newLog.mutable_contents()->CopyFrom(gTags);
+        AddAnyLogContent(&newLog, observer::kLocalInfo, pTags);
+        AddAnyLogContent(&newLog, observer::kDetailRequest, Json::writeString(builder, iter->Request));
+        AddAnyLogContent(&newLog, observer::kDetailResponse, Json::writeString(builder, iter->Response));
+        AddAnyLogContent(&newLog, observer::kType, ObserverMetricsTypeToString(ObserverMetricsType::L7_DETAILS));
+        AddAnyLogContent(&newLog, observer::kProtocol, ProtocolTypeToString(iter->Type));
+        allData.push_back(std::move(newLog));
+        ++iter;
+    }
+    mProtocolDetails.clear();
 }
 
 } // namespace logtail

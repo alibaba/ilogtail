@@ -21,18 +21,19 @@
 
 namespace logtail {
 
-
 ParseResult RedisProtocolParser::OnPacket(PacketType pktType,
                                           MessageType msgType,
-                                          PacketEventHeader* header,
+                                          const PacketEventHeader* header,
                                           const char* pkt,
                                           int32_t pktSize,
-                                          int32_t pktRealSize) {
-    RedisParser redis(pkt, pktSize);
+                                          int32_t pktRealSize,
+                                          int32_t* offset) {
+    RedisParser redis(pkt + *offset, pktSize - *offset);
+    ParseResult result;
     LOG_TRACE(sLogger,
               ("message_type", MessageTypeToString(msgType))("redis date", charToHexString(pkt, pktSize, pktSize)));
     try {
-        redis.parse();
+        result = redis.parse();
     } catch (const std::runtime_error& re) {
         LOG_DEBUG(sLogger,
                   ("redis_parse_fail", re.what())("data", charToHexString(pkt, pktSize, pktSize))(
@@ -51,26 +52,37 @@ ParseResult RedisProtocolParser::OnPacket(PacketType pktType,
         return ParseResult_Fail;
     }
 
-    if (redis.OK()) {
-        bool insertSuccess = true;
-        if (msgType == MessageType_Request) {
-            insertSuccess = mCache.InsertReq([&](RedisRequestInfo* info) {
-                info->TimeNano = header->TimeNano;
-                info->ReqBytes = pktRealSize;
-                info->CMD = redis.redisData.GetCommands();
-                LOG_TRACE(sLogger, ("redis insert req", info->ToString()));
-            });
-        } else if (msgType == MessageType_Response) {
-            insertSuccess = mCache.InsertResp([&](RedisResponseInfo* info) {
-                info->TimeNano = header->TimeNano;
-                info->RespBytes = pktRealSize;
-                info->isOK = !redis.redisData.isError;
-                LOG_TRACE(sLogger, ("redis insert resp", info->ToString()));
-            });
-        }
-        return insertSuccess ? ParseResult_OK : ParseResult_Drop;
+    if (result != ParseResult_OK) {
+        return result;
     }
-    return ParseResult_Fail;
+    bool insertSuccess = true;
+    if (msgType == MessageType_Request) {
+        insertSuccess = mCache.InsertReq([&](RedisRequestInfo* info) {
+            info->TimeNano = header->TimeNano;
+            info->ReqBytes = pktSize - *offset;
+            info->Data = redis.redisData.GetCommands();
+            LOG_TRACE(sLogger, ("redis insert req", info->ToString()));
+        });
+    } else if (msgType == MessageType_Response) {
+        insertSuccess = mCache.InsertResp([&](RedisResponseInfo* info) {
+            info->TimeNano = header->TimeNano;
+            info->RespBytes = pktSize - *offset;
+            info->IsOK = !redis.redisData.isError;
+            info->Data = redis.redisData.GetCommands();
+            LOG_TRACE(sLogger, ("redis insert resp", info->ToString()));
+        });
+    }
+    return insertSuccess ? ParseResult_OK : ParseResult_Drop;
+}
+
+size_t RedisProtocolParser::FindBoundary(const SlsStringPiece& piece) {
+    for (size_t i = 0; i < piece.mLen; ++i) {
+        auto c = piece[i];
+        if (c == kSimpleStringFlag || c == kErrorFlag || c == kArrayFlag || c == kBulkStringFlag || c == kNumberFlag) {
+            return i;
+        }
+    }
+    return std::string::npos;
 }
 
 bool RedisProtocolParser::GarbageCollection(size_t size_limit_bytes, uint64_t expireTimeNs) {
@@ -82,12 +94,13 @@ int32_t RedisProtocolParser::GetCacheSize() {
 }
 
 std::ostream& operator<<(std::ostream& os, const RedisRequestInfo& info) {
-    os << "TimeNano: " << info.TimeNano << " CMD: " << info.CMD << " ReqBytes: " << info.ReqBytes;
+    os << "TimeNano: " << info.TimeNano << " CMD: " << info.Data << " ReqBytes: " << info.ReqBytes;
     return os;
 }
 
 std::ostream& operator<<(std::ostream& os, const RedisResponseInfo& info) {
-    os << "TimeNano: " << info.TimeNano << " isOK: " << info.isOK << " RespBytes: " << info.RespBytes;
+    os << "TimeNano: " << info.TimeNano << " isOK: " << info.IsOK << " RespBytes: " << info.RespBytes
+       << " Data: " << info.Data;
     return os;
 }
 } // end of namespace logtail

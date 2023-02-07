@@ -127,6 +127,8 @@ public:
                          std::vector<std::pair<std::string, std::string>>& globalTags,
                          uint64_t interval);
 
+    void AddDetail(ProtocolDetail&& item) { mProtocolDetails.push_back(std::move(item)); }
+
 protected:
     DNSProtocolEventAggregator* mDNSAggregators = nullptr;
     HTTPProtocolEventAggregator* mHTTPAggregators = nullptr;
@@ -136,6 +138,7 @@ protected:
     DubboProtocolEventAggregator* mDubboAggregators = nullptr;
     KafkaProtocolEventAggregator* mKafkaAggregators = nullptr;
     ProcessMetaPtr mMetaPtr;
+    std::vector<ProtocolDetail> mProtocolDetails;
 };
 
 } // namespace logtail

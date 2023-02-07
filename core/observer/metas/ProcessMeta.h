@@ -25,6 +25,7 @@
 #include "logger/Logger.h"
 #include "network/NetworkConfig.h"
 #include "network/sources/ebpf/EBPFWrapper.h"
+#include "LogFileProfiler.h"
 
 namespace logtail {
 
@@ -165,11 +166,59 @@ struct ProcessMeta {
         return true;
     }
 
-    void ResetFilter() { this->mPassFilterRules = 0; }
+    // -1 means random, 1 means force
+    bool MatchDetailFilterRules() {
+        if (this->mPassDetailFilterRules != 0) {
+            return mPassDetailFilterRules > 0;
+        }
+        auto instance = NetworkConfig::GetInstance();
+        std::string exception;
+
+        if (instance->mDetailIncludeIpRegex.empty() && instance->mDetailIncludeHostnameRegex.empty()
+            && Pod.PodName.empty() && ProcessCMD.empty()) {
+            mPassDetailFilterRules = -1;
+        }
+
+
+        if (!instance->mDetailIncludeIpRegex.empty()
+            && !BoostRegexMatch(LogFileProfiler::mIpAddr.c_str(), instance->mDetailIncludeIpRegex, exception)) {
+            mPassFilterRules = -1;
+            return false;
+        }
+
+        if (!instance->mDetailIncludeHostnameRegex.empty()
+            && !BoostRegexMatch(LogFileProfiler::mHostname.c_str(), instance->mDetailIncludeHostnameRegex, exception)) {
+            mPassFilterRules = -1;
+            return false;
+        }
+        if (!Pod.PodName.empty()) {
+            if ((!instance->mDetailIncludeNamespaceRegex.empty()
+                 && !BoostRegexMatch(Pod.NameSpace.c_str(), instance->mDetailIncludeNamespaceRegex, exception))
+                || (!instance->mDetailIncludePodNameRegex.empty()
+                    && !BoostRegexMatch(Pod.PodName.c_str(), instance->mDetailIncludePodNameRegex, exception))) {
+                mPassFilterRules = -1;
+                return false;
+            }
+        } else if (!ProcessCMD.empty()) {
+            if ((!instance->mDetailIncludeCmdRegex.empty()
+                 && !BoostRegexMatch(ProcessCMD.c_str(), instance->mDetailIncludeCmdRegex, exception))) {
+                mPassFilterRules = -1;
+                return false;
+            }
+        }
+        mPassDetailFilterRules = 1;
+        return true;
+    }
+
+    void ResetFilter() {
+        mPassFilterRules = 0;
+        mPassDetailFilterRules = 0;
+    }
 
 private:
     std::vector<std::pair<std::string, std::string> > mMetaInfo;
     int8_t mPassFilterRules = 0;
+    int8_t mPassDetailFilterRules = 0;
     friend class CGroupPathResolverUnittest;
 };
 

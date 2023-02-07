@@ -600,6 +600,7 @@ void EBPFWrapper::OnData(struct conn_data_event_t* event) {
     EBPF_CONNECTION_FILTER(socketCategory, header->DstAddr, event->attr.conn_id, event->attr.addr);
     header->TimeNano = event->attr.ts + mDeltaTimeNs;
     PacketEventData* data = (PacketEventData*)(&mPacketDataBuffer.at(0) + sizeof(PacketEventHeader));
+    data->Pos = static_cast<int32_t>(event->attr.pos);
     data->PktType = (PacketType)event->attr.direction;
     data->PtlType = (ProtocolType)event->attr.protocol;
     data->BufferLen = event->attr.msg_buf_size;
