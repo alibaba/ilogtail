@@ -14,18 +14,21 @@
 
 package opentelemetry
 
+// internal event tag keys of otlp logs/metrics/traces.
 const (
 	TagKeyScopeName                    = "otlp.scope.name"
 	TagKeyScopeVersion                 = "otlp.scope.version"
 	TagKeyScopeDroppedAttributesCount  = "otlp.scope.dropped.attributes.count"
-	TagKeysMetricIsMonotonic           = "otlp.metric.ismonotonic"
+	TagKeyMetricIsMonotonic            = "otlp.metric.ismonotonic"
 	TagKeyMetricAggregationTemporality = "otlp.metric.aggregation.temporality"
+	TagKeyMetricHistogramType          = "otlp.metric.histogram.type"
 	TagKeySpanStatusMessage            = "otlp.span.status.message"
 	TagKeySpanDroppedEventsCount       = "otlp.span.dropped.events.count"
 	TagKeySpanDroppedLinksCount        = "otlp.span.dropped.links.count"
 	TagKeySpanDroppedAttrsCount        = "otlp.span.dropped.attributes.count"
 )
 
+// internal field names of otlp metrics.
 const (
 	FieldCount = "count"
 	FieldSum   = "sum"

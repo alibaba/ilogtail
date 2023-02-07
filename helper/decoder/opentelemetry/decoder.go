@@ -457,7 +457,7 @@ func newMetricFromSumDatapoint(datapoint pmetric.NumberDataPoint, aggregationTem
 	timestamp := int64(datapoint.Timestamp())
 	startTimestamp := datapoint.StartTimestamp()
 	tags := attrs2Tags(datapoint.Attributes())
-	tags.Add(TagKeysMetricIsMonotonic, isMonotonic)
+	tags.Add(TagKeyMetricIsMonotonic, isMonotonic)
 	tags.Add(TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 
 	value := getValue(datapoint.IntValue(), datapoint.DoubleValue())
@@ -503,6 +503,7 @@ func newMetricFromHistogramDatapoint(datapoint pmetric.HistogramDataPoint, aggre
 
 	tags := attrs2Tags(datapoint.Attributes())
 	tags.Add(TagKeyMetricAggregationTemporality, aggregationTemporality.String())
+	tags.Add(TagKeyMetricHistogramType, pmetric.MetricTypeHistogram.String())
 
 	// TODO:
 	// handle datapoint's Exemplars, Flags
@@ -561,6 +562,7 @@ func newMetricFromExponentialHistogramDatapoint(datapoint pmetric.ExponentialHis
 
 	tags := attrs2Tags(datapoint.Attributes())
 	tags.Add(TagKeyMetricAggregationTemporality, aggregationTemporality.String())
+	tags.Add(TagKeyMetricHistogramType, pmetric.MetricTypeExponentialHistogram.String())
 
 	// TODO:
 	// handle datapoint's Exemplars, Flags

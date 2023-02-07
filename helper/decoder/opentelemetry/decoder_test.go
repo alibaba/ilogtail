@@ -203,7 +203,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 										return true
 									})
 								assert.Equal(t, aggregationTemporality.String(), event.GetTags().Get(TagKeyMetricAggregationTemporality))
-								assert.Equal(t, isMonotonic, event.GetTags().Get(TagKeysMetricIsMonotonic))
+								assert.Equal(t, isMonotonic, event.GetTags().Get(TagKeyMetricIsMonotonic))
 
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
@@ -215,6 +215,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 
 								assert.Equal(t, otUnit, metric.Unit)
 								assert.Equal(t, otDescription, metric.Description)
+
 								// check values
 								otValue := float64(datapoint.IntValue())
 								if datapoint.ValueType() == pmetric.NumberDataPointValueTypeDouble {
@@ -276,6 +277,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 										return true
 									})
 								assert.Equal(t, aggregationTemporality.String(), event.GetTags().Get(TagKeyMetricAggregationTemporality))
+								assert.Equal(t, pmetric.MetricTypeHistogram.String(), event.GetTags().Get(TagKeyMetricHistogramType))
 
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
@@ -317,7 +319,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 										return true
 									})
 								assert.Equal(t, aggregationTemporality.String(), event.GetTags().Get(TagKeyMetricAggregationTemporality))
-
+								assert.Equal(t, pmetric.MetricTypeExponentialHistogram.String(), event.GetTags().Get(TagKeyMetricHistogramType))
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
 								assert.Equal(t, otUnit, metric.Unit)
