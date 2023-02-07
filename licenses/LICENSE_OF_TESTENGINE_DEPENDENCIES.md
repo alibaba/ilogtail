@@ -135,6 +135,7 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [github.com/paulmach/orb](https://pkg.go.dev/github.com/paulmach/orb?tab=licenses)
 - [github.com/segmentio/asm](https://pkg.go.dev/github.com/segmentio/asm?tab=licenses)
 - [github.com/shopspring/decimal](https://pkg.go.dev/github.com/shopspring/decimal?tab=licenses)
+- [github.com/andybalholm/brotli](https://pkg.go.dev/github.com/andybalholm/brotli?tab=licenses)
 
 ## ISC licenses
 
