@@ -64,7 +64,7 @@ func ConvertProfile(events ...*models.PipelineGroupEvents) *protocol.LogGroup {
 			for i, value := range p.Values {
 				var res []*protocol.Log_Content
 				if i != len(p.Values)-1 {
-					res = make([]*protocol.Log_Content, 0, len(contents))
+					res = make([]*protocol.Log_Content, len(contents))
 					copy(res, contents)
 				} else {
 					res = contents
