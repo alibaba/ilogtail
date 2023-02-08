@@ -32,10 +32,10 @@ import (
 var insertSQL = "INSERT INTO `%s`.`ilogtail_%s_buffer` (_timestamp, _log) VALUES (?, ?)"
 
 type FlusherClickHouse struct {
-	// ilogtail data convert config
+	// Convert ilogtail data convert config
 	Convert convertConfig
-	// Addrs clickhouse addresses
-	Addrs []string
+	// Hosts clickhouse addresses
+	Hosts []string
 	// Authentication using PLAIN
 	Authentication Authentication
 	// Cluster ClickHouse cluster name
@@ -90,7 +90,7 @@ type FlusherFunc func(projectName string, logstoreName string, configName string
 
 func NewFlusherClickHouse() *FlusherClickHouse {
 	return &FlusherClickHouse{
-		Addrs: []string{},
+		Hosts: []string{},
 		Authentication: Authentication{
 			PlainText: &PlainTextConfig{
 				Username: "",
@@ -160,7 +160,7 @@ func (f *FlusherClickHouse) Description() string {
 }
 
 func (f *FlusherClickHouse) Validate() error {
-	if f.Addrs == nil || len(f.Addrs) == 0 {
+	if f.Hosts == nil || len(f.Hosts) == 0 {
 		var err = fmt.Errorf("clickhouse addrs is nil")
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
 		return err
@@ -201,6 +201,7 @@ func (f *FlusherClickHouse) BufferFlush(projectName string, logstoreName string,
 		for _, log := range serializedLogs.([][]byte) {
 			logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
 			if err = batch.Append(time.Now().Unix(), string(log)); err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush clickhouse batch append fail, error", err)
 				return err
 			}
 		}
@@ -239,7 +240,7 @@ func newConn(f *FlusherClickHouse) (driver.Conn, error) {
 		return nil, err
 	}
 	opt := &clickhouse.Options{
-		Addr: f.Addrs,
+		Addr: f.Hosts,
 		DialContext: func(ctx context.Context, addr string) (net.Conn, error) {
 			var d net.Dialer
 			return d.DialContext(ctx, "tcp", addr)

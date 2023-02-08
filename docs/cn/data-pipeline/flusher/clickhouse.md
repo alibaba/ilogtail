@@ -8,7 +8,7 @@
 
 | 参数                                | 类型       | 是否必选 | 说明                                                                                 |
 |-----------------------------------|----------|------|------------------------------------------------------------------------------------|
-| Addrs                             | String数组 | 是    | ClickHouse 地址                                                                      |
+| Hosts                             | String数组 | 是    | ClickHouse 地址                                                                      |
 | Convert                           | Struct   | 否    | ilogtail数据转换协议配置                                                                   |
 | Convert.Protocol                  | String   | 否    | ilogtail数据转换协议，kafka flusher 可选值：`custom_single`,`otlp_log_v1`。默认值：`custom_single` |
 | Convert.Encoding                  | String   | 否    | ilogtail flusher数据转换编码，可选值：`json`、`none`、`protobuf`，默认值：`json`                     |
@@ -38,7 +38,7 @@
 | BufferMaxRows                     | Int      | 否    | 缓冲区数据刷新限制条件 max_rows，默认 1000000                                                    |
 | BufferMinBytes                    | Int      | 否    | 缓冲区数据刷新限制条件 min_bytes，默认 10000000                                                  |
 | BufferMaxBytes                    | Int      | 否    | 缓冲区数据刷新限制条件 max_bytes，默认 100000000                                                 |
-| Compression                       | String   | 否    | 压缩方式，默认 lz4，可选 none/gzip/deflate/lz4/brzstd                                        |
+| Compression                       | String   | 否    | 压缩方式，默认 lz4，可选 none/gzip/deflate/lz4/br/zstd                                       |
 
 ## 样例
 
@@ -52,7 +52,7 @@ inputs:
     FilePattern: "*.log"
 flushers:
   - Type: flusher_clickhouse
-    Addrs: 
+    Hosts: 
       - 192.XX.XX.1:9092
       - 192.XX.XX.2:9092
     Authentication:

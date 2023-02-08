@@ -32,7 +32,7 @@ func InvalidTestConnectAndWrite(t *testing.T) {
 	}
 
 	f := NewFlusherClickHouse()
-	f.Addrs = []string{"127.0.0.1:9000"}
+	f.Hosts = []string{"127.0.0.1:9000"}
 	f.Authentication.PlainText.Username = ""
 	f.Authentication.PlainText.Password = ""
 	f.Authentication.PlainText.Database = "default"
