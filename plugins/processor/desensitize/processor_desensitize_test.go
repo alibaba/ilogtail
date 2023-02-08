@@ -25,7 +25,6 @@ import (
 )
 
 func newProcessor() (*ProcessorDesensitize, error) {
-	ctx := mock.NewEmptyContext("p", "l", "c")
 	processor := &ProcessorDesensitize{
 		SourceKey:     "content",
 		Method:        "const",
@@ -34,8 +33,25 @@ func newProcessor() (*ProcessorDesensitize, error) {
 		RegexBegin:    "'password':'",
 		RegexContent:  "[^']*",
 	}
-	err := processor.Init(ctx)
-	return processor, err
+	return processor, nil
+}
+
+func TestChineseSample(t *testing.T) {
+	Convey("Test Match = full.", t, func() {
+		processor, err := newProcessor()
+		So(err, ShouldBeNil)
+		processor.Match = "regex"
+		processor.RegexBegin = "(?<=(%[A-Za-z0-9]{2}|[^0-9]))1[0-9]{2}"
+		processor.RegexContent = "[0-9]{4}(?=([0-9]{4}[^0-9]))"
+		err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
+		So(err, ShouldBeNil)
+
+		Convey("Test const chinese", func() {
+			record := "中文电话号码13123998001有用中文电话号码13123998001有用"
+			res := processor.desensitize(record)
+			So(res, ShouldEqual, "中文电话号码131***8001有用中文电话号码131***8001有用")
+		})
+	})
 }
 
 func TestProcessorDesensitizeInit(t *testing.T) {
