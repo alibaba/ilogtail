@@ -10,17 +10,17 @@
 |-------------------|----------|-------|------------------------------------------|
 | Type              | String   | 是    | 插件类型, 固定为`service_otlp`。                        |
 | Protocals           | Struct   | 是    |   <p>接收的协议</p>                       |
-| Protocals.Grpc    | Struct | 否    | 是否启用gRPC Server                                |
-| Protocals.Grpc.Endpoint | string   | 否    | <p>gRPC Server 地址。</p><p>默认取值为:`0.0.0.0:4317`。</p>                            |
+| Protocals.GRPC    | Struct | 否    | 是否启用gRPC Server                                |
+| Protocals.GRPC.Endpoint | string   | 否    | <p>gRPC Server 地址。</p><p>默认取值为:`0.0.0.0:4317`。</p>                            |
 | Protocals.GRPC.MaxRecvMsgSizeMiB | int   | 否    | gRPC Server 最大接受Msg大小。                           |
-| Protocals.GrpcGrpc.MaxConcurrentStreams | int   | 否    | gRPC Server 最大并发流。                           |
-| Protocals.Grpc.ReadBufferSize       | int   | 否    | gRPC Server读缓存大小。 |
-| Protocals.Grpc.WriteBufferSize      | int   | 否    | gRPC Server写缓存大小。               |
-| Protocals.Http    | Struct | 否    | 是否启用HTTP Server                                |
-| Protocals.Http.Endpoint | string   | 否    | <p>HTTP Server 地址。</p><p>默认取值为:`0.0.0.0:4318`。</p>                            |
-| Protocals.Http.MaxRecvMsgSizeMiB | int   | 否    | HTTP Server 最大接受Msg大小。 <p>默认取值为:`64(MiB)`。</p>                          |
-| Protocals.Http.ReadTimeoutSec | int   | 否    |  <p>HTTP 请求读取超时时间。</p><p>默认取值为:`10s`。</p>                           |
-| Protocals.Http.ShutdownTimeoutSec       | int   | 否    | <p>HTTP Server关闭超时时间。</p><p>默认取值为:`5s`。</p> |
+| Protocals.GRPCGRPC.MaxConcurrentStreams | int   | 否    | gRPC Server 最大并发流。                           |
+| Protocals.GRPC.ReadBufferSize       | int   | 否    | gRPC Server读缓存大小。 |
+| Protocals.GRPC.WriteBufferSize      | int   | 否    | gRPC Server写缓存大小。               |
+| Protocals.HTTP    | Struct | 否    | 是否启用HTTP Server                                |
+| Protocals.HTTP.Endpoint | string   | 否    | <p>HTTP Server 地址。</p><p>默认取值为:`0.0.0.0:4318`。</p>                            |
+| Protocals.HTTP.MaxRecvMsgSizeMiB | int   | 否    | HTTP Server 最大接受Msg大小。 <p>默认取值为:`64(MiB)`。</p>                          |
+| Protocals.HTTP.ReadTimeoutSec | int   | 否    |  <p>HTTP 请求读取超时时间。</p><p>默认取值为:`10s`。</p>                           |
+| Protocals.HTTP.ShutdownTimeoutSec       | int   | 否    | <p>HTTP Server关闭超时时间。</p><p>默认取值为:`5s`。</p> |
 
 
 
@@ -36,7 +36,7 @@ version: v2
 inputs:
   - Type: service_otlp
     Protocals:
-      Grpc:     
+      GRPC:     
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true  
@@ -50,8 +50,8 @@ version: v2
 inputs:
   - Type: service_otlp
     Protocals:
-      Grpc:        
-      Http:        
+      GRPC:        
+      HTTP:        
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true  
@@ -65,13 +65,13 @@ version: v2
 inputs:
   - Type: service_otlp
     Protocals:
-      Grpc:        
+      GRPC:        
         Endpoint: 0.0.0.0:4317
         MaxRecvMsgSizeMiB: 64
         MaxConcurrentStreams: 100
         ReadBufferSize: 1024
         WriteBufferSize: 1024
-      Http:
+      HTTP:
         Endpoint: 0.0.0.0:4318
         MaxRecvMsgSizeMiB: 64
         ReadTimeoutSec: 10

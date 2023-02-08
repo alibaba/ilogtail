@@ -26,9 +26,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pluginmanager"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -38,6 +35,10 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 type ContextTest struct {
@@ -65,13 +66,13 @@ func newInput(enableGRPC, enableHTTP bool, grpcEndpoint, httpEndpoint string) (*
 		Protocals: Protocals{},
 	}
 	if enableGRPC {
-		s.Protocals.Grpc = &GRPCServerSettings{
+		s.Protocals.GRPC = &GRPCServerSettings{
 			Endpoint: grpcEndpoint,
 		}
 	}
 
 	if enableHTTP {
-		s.Protocals.Http = &HTTPServerSettings{
+		s.Protocals.HTTP = &HTTPServerSettings{
 			Endpoint: httpEndpoint,
 		}
 	}
@@ -414,7 +415,7 @@ func fillSpanOne(span ptrace.Span) {
 	span.SetDroppedEventsCount(1)
 	status := span.Status()
 	status.SetCode(ptrace.StatusCodeError)
-	status.SetMessage("status-cancelled")
+	status.SetMessage("status-canceled")
 }
 
 func fillSpanTwo(span ptrace.Span) {

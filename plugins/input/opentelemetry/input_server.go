@@ -16,6 +16,7 @@ package opentelemetry
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -24,16 +25,17 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
+	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
+	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
+	"google.golang.org/grpc"
+
 	"github.com/alibaba/ilogtail/helper/decoder"
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/plugins/input/httpserver"
-	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
-	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
-	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -44,6 +46,11 @@ const (
 const (
 	pbContentType   = "application/x-protobuf"
 	jsonContentType = "application/json"
+)
+
+var (
+	errTooLargeRequest = errors.New("request_too_large")
+	errInvalidMethod   = errors.New("method_invalid")
 )
 
 // Server implements ServiceInputV2
@@ -68,32 +75,32 @@ func (s *Server) Init(context pipeline.Context) (int, error) {
 	s.context = context
 	logger.Info(s.context.GetRuntimeContext(), "otlp server init", "initializing")
 
-	if s.Protocals.Grpc != nil {
-		if s.Protocals.Grpc.Endpoint == "" {
-			s.Protocals.Grpc.Endpoint = defaultGRPCEndpoint
+	if s.Protocals.GRPC != nil {
+		if s.Protocals.GRPC.Endpoint == "" {
+			s.Protocals.GRPC.Endpoint = defaultGRPCEndpoint
 		}
 
 	}
 
-	if s.Protocals.Http != nil {
-		if s.Protocals.Http.Endpoint == "" {
-			s.Protocals.Http.Endpoint = defaultGRPCEndpoint
+	if s.Protocals.HTTP != nil {
+		if s.Protocals.HTTP.Endpoint == "" {
+			s.Protocals.HTTP.Endpoint = defaultGRPCEndpoint
 		}
-		if s.Protocals.Http.ReadTimeoutSec == 0 {
-			s.Protocals.Http.ReadTimeoutSec = 10
-		}
-
-		if s.Protocals.Http.ShutdownTimeoutSec == 0 {
-			s.Protocals.Http.ShutdownTimeoutSec = 5
+		if s.Protocals.HTTP.ReadTimeoutSec == 0 {
+			s.Protocals.HTTP.ReadTimeoutSec = 10
 		}
 
-		if s.Protocals.Http.MaxRequestBodySizeMiB == 0 {
-			s.Protocals.Http.MaxRequestBodySizeMiB = 64
+		if s.Protocals.HTTP.ShutdownTimeoutSec == 0 {
+			s.Protocals.HTTP.ShutdownTimeoutSec = 5
+		}
+
+		if s.Protocals.HTTP.MaxRequestBodySizeMiB == 0 {
+			s.Protocals.HTTP.MaxRequestBodySizeMiB = 64
 		}
 
 	}
 
-	logger.Info(s.context.GetRuntimeContext(), "otlp server init", "initialized", "gRPC settings", s.Protocals.Grpc, "HTTP setting", s.Protocals.Http)
+	logger.Info(s.context.GetRuntimeContext(), "otlp server init", "initialized", "gRPC settings", s.Protocals.GRPC, "HTTP setting", s.Protocals.HTTP)
 	return 0, nil
 }
 
@@ -114,12 +121,12 @@ func (s *Server) StartService(ctx pipeline.PipelineContext) error {
 	s.metricsReceiver = newMetricsReceiver(ctx)
 	s.logsReceiver = newLogsReceiver(ctx)
 
-	if s.Protocals.Grpc != nil {
+	if s.Protocals.GRPC != nil {
 		grpcServer := grpc.NewServer(
-			serverGRPCOptions(s.Protocals.Grpc)...,
+			serverGRPCOptions(s.Protocals.GRPC)...,
 		)
 		s.serverGPRC = grpcServer
-		listener, err := getNetListener(s.Protocals.Grpc.Endpoint)
+		listener, err := getNetListener(s.Protocals.GRPC.Endpoint)
 		if err != nil {
 			return err
 		}
@@ -132,17 +139,17 @@ func (s *Server) StartService(ctx pipeline.PipelineContext) error {
 
 		s.wg.Add(1)
 		go func() {
-			logger.Info(s.context.GetRuntimeContext(), "otlp grpc server start", s.Protocals.Grpc.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "otlp grpc server start", s.Protocals.GRPC.Endpoint)
 			_ = s.serverGPRC.Serve(listener)
 			s.serverGPRC.GracefulStop()
-			logger.Info(s.context.GetRuntimeContext(), "otlp grpc server shutdown", s.Protocals.Grpc.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "otlp grpc server shutdown", s.Protocals.GRPC.Endpoint)
 			s.wg.Done()
 		}()
 	}
 
-	if s.Protocals.Http != nil {
+	if s.Protocals.HTTP != nil {
 		httpMux := http.NewServeMux()
-		maxBodySize := int64(s.Protocals.Http.MaxRequestBodySizeMiB) * 1024 * 1024
+		maxBodySize := int64(s.Protocals.HTTP.MaxRequestBodySizeMiB) * 1024 * 1024
 
 		s.registerHTTPLogsComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, maxBodySize, "/v1/logs")
 		s.registerHTTPMetricsComsumer(httpMux, &opentelemetry.Decoder{Format: common.ProtocolOTLPMetricV1}, maxBodySize, "/v1/metrics")
@@ -150,13 +157,13 @@ func (s *Server) StartService(ctx pipeline.PipelineContext) error {
 		logger.Info(s.context.GetRuntimeContext(), "otlp http receiver for logs/metrics/traces", "initialized")
 
 		httpServer := &http.Server{
-			Addr:        s.Protocals.Http.Endpoint,
+			Addr:        s.Protocals.HTTP.Endpoint,
 			Handler:     httpMux,
-			ReadTimeout: time.Duration(s.Protocals.Http.ReadTimeoutSec) * time.Second,
+			ReadTimeout: time.Duration(s.Protocals.HTTP.ReadTimeoutSec) * time.Second,
 		}
 
 		s.serverHTTP = httpServer
-		listener, err := getNetListener(s.Protocals.Http.Endpoint)
+		listener, err := getNetListener(s.Protocals.HTTP.Endpoint)
 		if err != nil {
 			return err
 		}
@@ -165,12 +172,12 @@ func (s *Server) StartService(ctx pipeline.PipelineContext) error {
 
 		s.wg.Add(1)
 		go func() {
-			logger.Info(s.context.GetRuntimeContext(), "otlp http server start", s.Protocals.Http.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "otlp http server start", s.Protocals.HTTP.Endpoint)
 			_ = s.serverHTTP.Serve(s.httpListener)
-			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.Protocals.Http.ShutdownTimeoutSec)*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.Protocals.HTTP.ShutdownTimeoutSec)*time.Second)
 			defer cancel()
 			_ = s.serverHTTP.Shutdown(ctx)
-			logger.Info(s.context.GetRuntimeContext(), "otlp http server shutdown", s.Protocals.Http.Endpoint)
+			logger.Info(s.context.GetRuntimeContext(), "otlp http server shutdown", s.Protocals.HTTP.Endpoint)
 			s.wg.Done()
 		}()
 
@@ -182,21 +189,21 @@ func (s *Server) StartService(ctx pipeline.PipelineContext) error {
 func (s *Server) Stop() error {
 	if s.grpcListener != nil {
 		_ = s.grpcListener.Close()
-		logger.Info(s.context.GetRuntimeContext(), "otlp grpc server stop", s.Protocals.Grpc.Endpoint)
+		logger.Info(s.context.GetRuntimeContext(), "otlp grpc server stop", s.Protocals.GRPC.Endpoint)
 		s.wg.Wait()
 	}
 
 	if s.httpListener != nil {
 		_ = s.httpListener.Close()
-		logger.Info(s.context.GetRuntimeContext(), "otlp http server stop", s.Protocals.Http.Endpoint)
+		logger.Info(s.context.GetRuntimeContext(), "otlp http server stop", s.Protocals.HTTP.Endpoint)
 		s.wg.Wait()
 	}
 	return nil
 }
 
-func (s *Server) registerHTTPLogsComsumer(serveMux *http.ServeMux, decoder decoder.Decoder, MaxBodySize int64, routing string) error {
+func (s *Server) registerHTTPLogsComsumer(serveMux *http.ServeMux, decoder decoder.Decoder, maxBodySize int64, routing string) {
 	serveMux.HandleFunc(routing, func(w http.ResponseWriter, r *http.Request) {
-		data, _, err := handleInvalidRequest(w, r, MaxBodySize, decoder)
+		data, err := handleInvalidRequest(w, r, maxBodySize, decoder)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "READ_BODY_FAIL_ALARM", "read body failed", err, "request", r.URL.String())
 			return
@@ -227,12 +234,11 @@ func (s *Server) registerHTTPLogsComsumer(serveMux *http.ServeMux, decoder decod
 
 		writeResponse(w, contentType, http.StatusOK, msg)
 	})
-	return nil
 }
 
-func (s *Server) registerHTTPMetricsComsumer(serveMux *http.ServeMux, decoder decoder.Decoder, MaxBodySize int64, routing string) error {
+func (s *Server) registerHTTPMetricsComsumer(serveMux *http.ServeMux, decoder decoder.Decoder, maxBodySize int64, routing string) {
 	serveMux.HandleFunc(routing, func(w http.ResponseWriter, r *http.Request) {
-		data, _, err := handleInvalidRequest(w, r, MaxBodySize, decoder)
+		data, err := handleInvalidRequest(w, r, maxBodySize, decoder)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "READ_BODY_FAIL_ALARM", "read body failed", err, "request", r.URL.String())
 			return
@@ -262,12 +268,11 @@ func (s *Server) registerHTTPMetricsComsumer(serveMux *http.ServeMux, decoder de
 
 		writeResponse(w, contentType, http.StatusOK, msg)
 	})
-	return nil
 }
 
-func (s *Server) registerHTTPTracesComsumer(serveMux *http.ServeMux, decoder decoder.Decoder, MaxBodySize int64, routing string) error {
+func (s *Server) registerHTTPTracesComsumer(serveMux *http.ServeMux, decoder decoder.Decoder, maxBodySize int64, routing string) {
 	serveMux.HandleFunc(routing, func(w http.ResponseWriter, r *http.Request) {
-		data, _, err := handleInvalidRequest(w, r, MaxBodySize, decoder)
+		data, err := handleInvalidRequest(w, r, maxBodySize, decoder)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "READ_BODY_FAIL_ALARM", "read body failed", err, "request", r.URL.String())
 			return
@@ -298,14 +303,13 @@ func (s *Server) registerHTTPTracesComsumer(serveMux *http.ServeMux, decoder dec
 
 		writeResponse(w, contentType, http.StatusOK, msg)
 	})
-	return nil
 }
 
 func serverGRPCOptions(grpcConfig *GRPCServerSettings) []grpc.ServerOption {
 	var opts []grpc.ServerOption
 	if grpcConfig != nil {
 		if grpcConfig.MaxRecvMsgSizeMiB > 0 {
-			opts = append(opts, grpc.MaxRecvMsgSize(int(grpcConfig.MaxRecvMsgSizeMiB*1024*1024)))
+			opts = append(opts, grpc.MaxRecvMsgSize(grpcConfig.MaxRecvMsgSizeMiB*1024*1024))
 		}
 		if grpcConfig.MaxConcurrentStreams > 0 {
 			opts = append(opts, grpc.MaxConcurrentStreams(uint32(grpcConfig.MaxConcurrentStreams)))
@@ -358,18 +362,21 @@ func marshalResp[
 	return msg, contentType, err
 }
 
-func handleInvalidRequest(w http.ResponseWriter, r *http.Request, MaxBodySize int64, decoder decoder.Decoder) (data []byte, statusCode int, err error) {
+func handleInvalidRequest(w http.ResponseWriter, r *http.Request, maxBodySize int64, decoder decoder.Decoder) (data []byte, err error) {
 	if r.Method != http.MethodPost {
 		handleUnmatchedMethod(w)
+		err = errInvalidMethod
 		return
 	}
 
-	if r.ContentLength > MaxBodySize {
+	if r.ContentLength > maxBodySize {
 		httpserver.TooLarge(w)
+		err = errTooLargeRequest
 		return
 	}
 
-	data, statusCode, err = decoder.ParseRequest(w, r, MaxBodySize)
+	var statusCode int
+	data, statusCode, err = decoder.ParseRequest(w, r, maxBodySize)
 
 	switch statusCode {
 	case http.StatusBadRequest:
@@ -382,7 +389,7 @@ func handleInvalidRequest(w http.ResponseWriter, r *http.Request, MaxBodySize in
 		httpserver.MethodNotAllowed(w)
 	}
 
-	return data, statusCode, err
+	return data, err
 }
 
 func handleUnmatchedMethod(resp http.ResponseWriter) {
@@ -398,8 +405,8 @@ func writeResponse(w http.ResponseWriter, contentType string, statusCode int, ms
 }
 
 type Protocals struct {
-	Grpc *GRPCServerSettings
-	Http *HTTPServerSettings
+	GRPC *GRPCServerSettings
+	HTTP *HTTPServerSettings
 }
 
 type GRPCServerSettings struct {

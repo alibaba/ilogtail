@@ -18,8 +18,9 @@ import (
 	"math"
 	"testing"
 
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/alibaba/ilogtail/pkg/models"
 )
 
 func TestComposeBucket(t *testing.T) {

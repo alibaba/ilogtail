@@ -17,8 +17,6 @@ package opentelemetry
 import (
 	"context"
 
-	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
@@ -26,6 +24,9 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
+
+	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
 // The following functions implement Opten telemetry GRPCServer Interface.

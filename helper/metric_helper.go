@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	bucketErr = fmt.Errorf("invalid_bucket_boundary")
+	errInvalidBucket = fmt.Errorf("invalid_bucket_boundary")
 )
 
 // ComposeBucketFieldName generates the bucket count field name for histogram metrics.
@@ -48,7 +48,7 @@ func ComputeBuckets(multiValues models.MetricFloatValues, isPositive bool) (buck
 		bucketBounds = append(bucketBounds, bucketBound)
 	}
 
-	sort.Sort(sort.Float64Slice(bucketBounds))
+	sort.Float64s(bucketBounds)
 	if !isPositive {
 		ReverseSlice(bucketBounds)
 	}
@@ -62,27 +62,27 @@ func ComputeBuckets(multiValues models.MetricFloatValues, isPositive bool) (buck
 func ComputeBucketBoundary(fieldName string, isPositive bool) (float64, error) {
 	if !isPositive {
 		if !strings.HasPrefix(fieldName, "[") || !strings.HasSuffix(fieldName, ")") {
-			return 0, bucketErr
+			return 0, errInvalidBucket
 		}
 
 		fieldName = strings.TrimLeft(fieldName, "[")
 		fieldName = strings.TrimRight(fieldName, ")")
 		buckets := strings.Split(fieldName, ",")
 		if len(buckets) != 2 {
-			return 0, bucketErr
+			return 0, errInvalidBucket
 		}
 		return strconv.ParseFloat(buckets[1], 64)
 	}
 
 	if !strings.HasPrefix(fieldName, "(") || !strings.HasSuffix(fieldName, "]") {
-		return 0, bucketErr
+		return 0, errInvalidBucket
 	}
 
 	fieldName = strings.TrimLeft(fieldName, "(")
 	fieldName = strings.TrimRight(fieldName, "]")
 	buckets := strings.Split(fieldName, ",")
 	if len(buckets) != 2 {
-		return 0, bucketErr
+		return 0, errInvalidBucket
 	}
 	return strconv.ParseFloat(buckets[0], 64)
 }

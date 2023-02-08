@@ -488,7 +488,7 @@ func newMetricFromSummaryDatapoint(datapoint pmetric.SummaryDataPoint, metricNam
 	}
 
 	multivalue.Add(FieldCount, float64(datapoint.Count()))
-	multivalue.Add(FieldSum, float64(datapoint.Sum()))
+	multivalue.Add(FieldSum, datapoint.Sum())
 
 	metric := models.NewMultiValuesMetric(metricName, models.MetricTypeSummary, tags, timestamp, multivalue.GetMultiValues())
 	metric.Unit = metricUnit

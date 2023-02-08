@@ -243,7 +243,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 
 								metric, ok := event.(*models.Metric)
 								assert.True(t, ok)
-								//check type
+								// check type
 								assert.Equal(t, models.MetricTypeSummary, metric.MetricType)
 								assert.Equal(t, otUnit, metric.Unit)
 								assert.Equal(t, otDescription, metric.Description)
@@ -258,7 +258,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 								}
 
 								assert.Equal(t, float64(datapoint.Count()), metric.Value.GetMultiValues().Get(FieldCount))
-								assert.Equal(t, float64(datapoint.Sum()), metric.Value.GetMultiValues().Get(FieldSum))
+								assert.Equal(t, datapoint.Sum(), metric.Value.GetMultiValues().Get(FieldSum))
 								eventIndex++
 							}
 						case pmetric.MetricTypeHistogram:
@@ -301,7 +301,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 								assert.Equal(t, otBucketBoundarys.AsRaw(), bucketBounds[1:])
 
 								assert.Equal(t, float64(datapoint.Count()), metric.Value.GetMultiValues().Get(FieldCount))
-								assert.Equal(t, float64(datapoint.Sum()), metric.Value.GetMultiValues().Get(FieldSum))
+								assert.Equal(t, datapoint.Sum(), metric.Value.GetMultiValues().Get(FieldSum))
 								eventIndex++
 							}
 						case pmetric.MetricTypeExponentialHistogram:
@@ -365,7 +365,7 @@ func TestDecoder_DecodeV2_MetricsAll(t *testing.T) {
 								assert.Equal(t, otNegativeBucketCountsFloat, netativeBucketCounts)
 
 								assert.Equal(t, float64(datapoint.Count()), metric.Value.GetMultiValues().Get(FieldCount))
-								assert.Equal(t, float64(datapoint.Sum()), metric.Value.GetMultiValues().Get(FieldSum))
+								assert.Equal(t, datapoint.Sum(), metric.Value.GetMultiValues().Get(FieldSum))
 								assert.Equal(t, float64(datapoint.ZeroCount()), metric.Value.GetMultiValues().Get(FieldZeroCount))
 								eventIndex++
 							}
