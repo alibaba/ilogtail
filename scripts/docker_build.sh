@@ -61,10 +61,20 @@ mkdir -p $GENERATED_HOME
 rm -rf $GEN_DOCKERFILE
 touch $GEN_DOCKERFILE
 
+BUILD_SSH_OPTS=""
+if [[ "$USE_DOCKER_BUILDKIT" = "true" ]]; then
+  export DOCKER_BUILDKIT=1
+  export BUILDKIT_PROGRESS=plain
+  BUILD_SSH_OPTS="--ssh default"
+  REMOVE_SSH_MOUNT='sed s/#/#/'
+else
+  REMOVE_SSH_MOUNT='sed s/--mount=type=ssh//'
+fi
+
 if [[ $CATEGORY = "goc" || $CATEGORY = "build" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_$CATEGORY | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_$CATEGORY | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" | $REMOVE_SSH_MOUNT > $GEN_DOCKERFILE;
 elif [[ $CATEGORY = "development" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_build | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_build | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" | $REMOVE_SSH_MOUNT > $GEN_DOCKERFILE;
     cat $ROOTDIR/docker/Dockerfile_development_part |grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" >> $GEN_DOCKERFILE;
 elif [[ $CATEGORY = "production" ]]; then
     cat $ROOTDIR/docker/Dockerfile_production | grep -v "^#" | sed 's/ --platform=$TARGETPLATFORM//' > $GEN_DOCKERFILE;
@@ -75,13 +85,6 @@ fi
 echo "=============DOCKERFILE=================="
 cat $GEN_DOCKERFILE
 echo "========================================="
-
-BUILD_SSH_OPTS=""
-if [[ "$USE_DOCKER_BUILDKIT" = "true" ]]; then
-  export DOCKER_BUILDKIT=1
-  export BUILDKIT_PROGRESS=plain
-  BUILD_SSH_OPTS="--ssh default"
-fi
 
 if [[ $CATEGORY != "multi-arch-production" ]]; then
     docker build --build-arg TARGETPLATFORM=linux/$ARCH \
