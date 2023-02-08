@@ -211,9 +211,8 @@ func (f *FlusherClickHouse) BufferFlush(projectName string, logstoreName string,
 		if err = batch.Send(); err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to clickhouse failed", err)
 			return err
-		} else {
-			logger.Debug(f.context.GetRuntimeContext(), "ClickHouse success send events: messageID")
 		}
+		logger.Debug(f.context.GetRuntimeContext(), "ClickHouse success send events: messageID")
 	}
 	return nil
 }
