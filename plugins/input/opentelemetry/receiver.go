@@ -17,7 +17,7 @@ package opentelemetry
 import (
 	"context"
 
-	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/plog"

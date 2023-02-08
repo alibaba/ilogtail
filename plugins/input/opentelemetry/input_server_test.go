@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pluginmanager"
 	"github.com/stretchr/testify/assert"

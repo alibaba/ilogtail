@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/helper/decoder"
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
