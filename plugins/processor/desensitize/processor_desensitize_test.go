@@ -47,9 +47,9 @@ func TestChineseSample(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("Test const chinese", func() {
-			record := "中文电话号码13123998001有用中文电话号码13123998001有用"
+			record := "中文电话号码13122220000有用中文电话号码13122220000有用"
 			res := processor.desensitize(record)
-			So(res, ShouldEqual, "中文电话号码131***8001有用中文电话号码131***8001有用")
+			So(res, ShouldEqual, "中文电话号码131***0000有用中文电话号码131***0000有用")
 		})
 	})
 }
