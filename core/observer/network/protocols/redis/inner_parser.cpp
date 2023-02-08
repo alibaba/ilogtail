@@ -27,7 +27,7 @@
 
 
 namespace logtail {
-SlsStringPiece RedisParser::readUtilNewLine() {
+StringPiece RedisParser::readUtilNewLine() {
     const char* s = readChar();
     const char* ch = s;
     const char* lastCh = s;
@@ -37,7 +37,7 @@ SlsStringPiece RedisParser::readUtilNewLine() {
         counter++;
         positionCommit(1);
         if (isParseFail) {
-            SlsStringPiece empty;
+            StringPiece empty;
             return empty;
         }
 
@@ -46,11 +46,11 @@ SlsStringPiece RedisParser::readUtilNewLine() {
         }
         lastCh = ch;
     }
-    SlsStringPiece val(s, counter - 2);
+    StringPiece val(s, counter - 2);
     return val;
 }
 
-ParseResult RedisParser::readData(std::vector<SlsStringPiece>& data) {
+ParseResult RedisParser::readData(std::vector<StringPiece>& data) {
     const char* ch = readChar();
     switch (*ch) {
         case kErrorFlag:
@@ -67,7 +67,7 @@ ParseResult RedisParser::readData(std::vector<SlsStringPiece>& data) {
         {
             auto s = readUtilNewLine();
             CHECK_PARTIAL;
-            auto len = std::stoi(s.ToString());
+            auto len = std::stoi(std::string(s.data(), s.size()));
             if (len > getLeftSize()) {
                 return ParseResult_Partial;
             }
@@ -80,7 +80,7 @@ ParseResult RedisParser::readData(std::vector<SlsStringPiece>& data) {
         {
             auto s = readUtilNewLine();
             CHECK_PARTIAL;
-            int cnt = std::stoi(s.ToString());
+            auto cnt = std::stoi(std::string(s.data(), s.size()));
             for (int i = 0; i < cnt; i++) {
                 auto res = readData(data);
                 if (res != ParseResult_OK) {
@@ -101,7 +101,7 @@ ParseResult RedisParser::parse() {
 
 void RedisParser::print() {
     for (auto v : redisData.data) {
-        std::cout << v.ToString() << " ";
+        std::cout << std::string(v.data(), v.size()) << " ";
     }
 
     std::cout << std::endl;

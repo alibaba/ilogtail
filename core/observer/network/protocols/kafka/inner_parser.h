@@ -108,12 +108,12 @@ struct KafkaRequestData {
     uint16_t Version;
     uint16_t Acks;
     uint32_t TimeoutMs;
-    SlsStringPiece ClientId;
-    SlsStringPiece Topic;
+    StringPiece ClientId;
+    StringPiece Topic;
 };
 
 struct KafkaResponseData {
-    SlsStringPiece Topic;
+    StringPiece Topic;
     uint16_t PartitionID;
     uint16_t Code;
 };
@@ -140,10 +140,10 @@ private:
     void parseProduceResponse(uint16_t i);
     void parseFetchResponse(uint16_t i);
 
-    bool readNullableString(SlsStringPiece& piece);
-    bool readNullableCompactString(SlsStringPiece& piece);
-    bool readString(SlsStringPiece& piece);
-    bool readCompactString(SlsStringPiece& piece);
+    bool readNullableString(StringPiece& piece);
+    bool readNullableCompactString(StringPiece& piece);
+    bool readString(StringPiece& piece);
+    bool readCompactString(StringPiece& piece);
     bool readTags();
     int32_t readArraySize();
     int32_t readCompactArraySize();

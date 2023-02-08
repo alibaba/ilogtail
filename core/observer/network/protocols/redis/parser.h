@@ -110,7 +110,7 @@ public:
 
     int32_t GetCacheSize();
 
-    size_t FindBoundary(const SlsStringPiece& piece) override;
+    size_t FindBoundary(const StringPiece& piece) override;
 
 private:
     RedisCache mCache;

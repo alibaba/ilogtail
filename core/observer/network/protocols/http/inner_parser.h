@@ -33,12 +33,15 @@ enum class HTTPBodyPacketCategory {
 };
 
 struct HTTPRequestPacket {
-    SlsStringPiece method;
-    SlsStringPiece url;
+    const char* method;
+    size_t methodLen;
+    const char* url;
+    size_t urlLen;
 };
 
 struct HTTPResponsePacket {
-    SlsStringPiece msg;
+    const char* msg;
+    size_t msgLen;
     int code;
 };
 
@@ -50,7 +53,7 @@ struct HTTPCommonPacket {
 
 struct Packet {
     union Msg {
-        struct HTTPRequestPacket req;
+        struct HTTPRequestPacket req {};
         struct HTTPResponsePacket resp;
 
         Msg() {}
@@ -65,10 +68,10 @@ struct HTTPParser {
         packetLen = size;
         status = phr_parse_request(buf,
                                    size,
-                                   &packet.msg.req.method.mPtr,
-                                   &packet.msg.req.method.mLen,
-                                   &packet.msg.req.url.mPtr,
-                                   &packet.msg.req.url.mLen,
+                                   &packet.msg.req.method,
+                                   &packet.msg.req.methodLen,
+                                   &packet.msg.req.url,
+                                   &packet.msg.req.urlLen,
                                    &packet.common.version,
                                    packet.common.headers,
                                    &packet.common.headersNum,
@@ -81,8 +84,8 @@ struct HTTPParser {
                                     size,
                                     &packet.common.version,
                                     &packet.msg.resp.code,
-                                    &packet.msg.resp.msg.mPtr,
-                                    &packet.msg.resp.msg.mLen,
+                                    &packet.msg.resp.msg,
+                                    &packet.msg.resp.msgLen,
                                     packet.common.headers,
                                     &packet.common.headersNum,
                                     /*last_len*/ 0);
@@ -92,8 +95,8 @@ struct HTTPParser {
         // Content-Length
         static const std::string sContentName("Content-Length");
         auto val = ReadHeaderVal(sContentName);
-        if (val.Size() > 0) {
-            auto len = std::strtol(val.mPtr, NULL, 10);
+        if (val.size() > 0) {
+            auto len = std::strtol(val.data(), NULL, 10);
             if (len <= long(packetLen - status)) {
                 bodyPacketCategory = HTTPBodyPacketCategory::SingleContent;
             } else {
@@ -106,13 +109,13 @@ struct HTTPParser {
         static const std::string sChunkedName("Transfer-Encoding");
         static const std::string sChunkedVal = "chunked";
         val = ReadHeaderVal(sChunkedName);
-        if (val.Size() > 0 && val == sChunkedVal) {
+        if (val.size() > 0 && val == sChunkedVal) {
             bodyPacketCategory = HTTPBodyPacketCategory::Chunked;
             return;
         }
     }
 
-    SlsStringPiece ReadHeaderVal(const std::string& name) {
+    StringPiece ReadHeaderVal(const std::string& name) {
         for (size_t i = 0; i < this->packet.common.headersNum; ++i) {
             if (std::strncmp(packet.common.headers[i].name, name.c_str(), packet.common.headers[i].name_len) == 0) {
                 return {packet.common.headers[i].value, packet.common.headers[i].value_len};

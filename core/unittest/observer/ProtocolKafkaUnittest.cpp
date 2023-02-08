@@ -40,7 +40,7 @@ public:
         logtail::KafkaParser kafka(arr, 51);
         kafka.mData.Request.Version = 4;
         kafka.parseFetchRequest();
-        APSARA_TEST_EQUAL(kafka.mData.Request.Topic.ToString(), "my-topic");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Request.Topic.data(), kafka.mData.Request.Topic.size()), "my-topic");
     }
 
     void TestFetchReqV11() {
@@ -52,19 +52,23 @@ public:
         logtail::KafkaParser kafka(arr, 80);
         kafka.mData.Request.Version = 11;
         kafka.parseFetchRequest();
-        APSARA_TEST_EQUAL(kafka.mData.Request.Topic.ToString(), "quickstart-events");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Request.Topic.data(), kafka.mData.Request.Topic.size()),
+                          "quickstart-events");
     }
 
     void TestFetchReqV12() {
-        const char arr[]
-            = "\xff\xff\xff\xff\x00\x00\x01\xf4\x00\x00\x00\x01\x03\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-              "\x00\x00\x02\x12\x71\x75\x69\x63\x6b\x73\x74\x61\x72\x74\x2d\x65\x76\x65\x6e\x74\x73\x02\x00"
-              "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff"
-              "\xff\xff\xff\xff\x00\x10\x00\x00\x00\x00\x01\x01\x00";
-        logtail::KafkaParser kafka(arr, 59);
+        const std::string hexString
+            = "ffffffff000001f4000000010320000000000000000000"
+              "00000212717569636b73746172742d6576656e74730200"
+              "000000000000000000000000000000ffffffffffffffff"
+              "ffffffff001000000000010100";
+        std::vector<uint8_t> data;
+        hexstring_to_bin(hexString, data);
+        logtail::KafkaParser kafka((const char*)data.data(), (size_t)data.size());
         kafka.mData.Request.Version = 12;
         kafka.parseFetchRequest();
-        APSARA_TEST_EQUAL(kafka.mData.Request.Topic.ToString(), "quickstart-events");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Request.Topic.data(), kafka.mData.Request.Topic.size()),
+                          "quickstart-events");
     }
 
     void TestFetchRespV4() {
@@ -74,7 +78,8 @@ public:
               "\xFF\xFF\xFF\x00\x00\x00\x00";
         logtail::KafkaParser kafka(arr, 52);
         kafka.parseFetchResponse(4);
-        APSARA_TEST_EQUAL(kafka.mData.Response.Topic.ToString(), "my-topic");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Response.Topic.data(), kafka.mData.Response.Topic.size()),
+                          "my-topic");
         APSARA_TEST_EQUAL(kafka.mData.Response.PartitionID, 0);
         APSARA_TEST_EQUAL(kafka.mData.Response.Code, 0);
     }
@@ -104,7 +109,8 @@ public:
               "\x63\x6f\x6e\x64\x20\x65\x76\x65\x6e\x74\x00";
         logtail::KafkaParser kafka(arr, 460);
         kafka.parseFetchResponse(11);
-        APSARA_TEST_EQUAL(kafka.mData.Response.Topic.ToString(), "quickstart-events");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Response.Topic.data(), kafka.mData.Response.Topic.size()),
+                          "quickstart-events");
         APSARA_TEST_EQUAL(kafka.mData.Response.PartitionID, 0);
         APSARA_TEST_EQUAL(kafka.mData.Response.Code, 0);
     }
@@ -133,7 +139,8 @@ public:
               "\x00\x00";
         logtail::KafkaParser kafka(arr, 460);
         kafka.parseFetchResponse(12);
-        APSARA_TEST_EQUAL(kafka.mData.Response.Topic.ToString(), "quickstart-events");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Response.Topic.data(), kafka.mData.Response.Topic.size()),
+                          "quickstart-events");
         APSARA_TEST_EQUAL(kafka.mData.Response.PartitionID, 0);
         APSARA_TEST_EQUAL(kafka.mData.Response.Code, 0);
     }
@@ -153,7 +160,9 @@ public:
         APSARA_TEST_EQUAL(kafka.mData.Request.Version, 7);
         APSARA_TEST_EQUAL(kafka.mData.Request.Acks, 1);
         APSARA_TEST_EQUAL(kafka.mData.Request.TimeoutMs, 30000);
-        APSARA_TEST_EQUAL(kafka.mData.Request.Topic.ToString(), "my-topic");
+        auto topic = std::string(kafka.mData.Request.Topic.data(),
+                                 kafka.mData.Request.Topic.data() + kafka.mData.Request.Topic.size());
+        APSARA_TEST_EQUAL(topic, "my-topic");
     }
 
     void TestProduceReqV8() {
@@ -169,7 +178,8 @@ public:
         APSARA_TEST_EQUAL(kafka.mData.Request.Version, 8);
         APSARA_TEST_EQUAL(kafka.mData.Request.Acks, 1);
         APSARA_TEST_EQUAL(kafka.mData.Request.TimeoutMs, 1500);
-        APSARA_TEST_EQUAL(kafka.mData.Request.Topic.ToString(), "quickstart-events");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Request.Topic.data(), kafka.mData.Request.Topic.size()),
+                          "quickstart-events");
     }
 
 
@@ -186,7 +196,8 @@ public:
         APSARA_TEST_EQUAL(kafka.mData.Request.Version, 9);
         APSARA_TEST_EQUAL(kafka.mData.Request.Acks, 1);
         APSARA_TEST_EQUAL(kafka.mData.Request.TimeoutMs, 1500);
-        APSARA_TEST_EQUAL(kafka.mData.Request.Topic.ToString(), "quickstart-events");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Request.Topic.data(), kafka.mData.Request.Topic.size()),
+                          "quickstart-events");
     }
 
     void TestProduceRespV7() {
@@ -196,7 +207,8 @@ public:
               "\x00\x00\x00\x00\x00\x00";
         logtail::KafkaParser kafka(arr, 29);
         kafka.parseProduceResponse(7);
-        APSARA_TEST_EQUAL(kafka.mData.Response.Topic.ToString(), "my-topic");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Response.Topic.data(), kafka.mData.Response.Topic.size()),
+                          "my-topic");
         APSARA_TEST_EQUAL(kafka.mData.Response.PartitionID, 1);
         APSARA_TEST_EQUAL(kafka.mData.Response.Code, 0);
     }
@@ -208,7 +220,8 @@ public:
                            "\x00";
         logtail::KafkaParser kafka(arr, 67);
         kafka.parseProduceResponse(8);
-        APSARA_TEST_EQUAL(kafka.mData.Response.Topic.ToString(), "quickstart-events");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Response.Topic.data(), kafka.mData.Response.Topic.size()),
+                          "quickstart-events");
         APSARA_TEST_EQUAL(kafka.mData.Response.PartitionID, 1);
         APSARA_TEST_EQUAL(kafka.mData.Response.Code, 0);
     }
@@ -219,7 +232,8 @@ public:
                            "\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00";
         logtail::KafkaParser kafka(arr, 59);
         kafka.parseProduceResponse(9);
-        APSARA_TEST_EQUAL(kafka.mData.Response.Topic.ToString(), "quickstart-events");
+        APSARA_TEST_EQUAL(std::string(kafka.mData.Response.Topic.data(), kafka.mData.Response.Topic.size()),
+                          "quickstart-events");
         APSARA_TEST_EQUAL(kafka.mData.Response.PartitionID, 1);
         APSARA_TEST_EQUAL(kafka.mData.Response.Code, 0);
     }
@@ -328,20 +342,20 @@ public:
                             "656e74730200000000000000000000000000200000000000000020000000000000000000ffffffffae01";
 };
 
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceReqV7, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceReqV8, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceReqV9, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceRespV7, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceRespV8, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceRespV9, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestReadVarint, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchReqV4, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchReqV11, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchReqV12, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchRespV4, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchRespV11, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchRespV12, 0)
-// APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestKafkaProduce, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceReqV7, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceReqV8, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceReqV9, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceRespV7, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceRespV8, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestProduceRespV9, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestReadVarint, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchReqV4, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchReqV11, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchReqV12, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchRespV4, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchRespV11, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestFetchRespV12, 0)
+APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestKafkaProduce, 0)
 APSARA_UNIT_TEST_CASE(ProtocolKafkaUnittest, TestKafkaFetch, 0)
 
 } // namespace logtail

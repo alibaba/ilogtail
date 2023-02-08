@@ -70,8 +70,8 @@ public:
         logtail::HTTPParser http;
         http.ParseRequest((const char*)data.data(), (size_t)data.size());
         APSARA_TEST_TRUE(http.status >= 0);
-        APSARA_TEST_TRUE(http.packet.msg.req.method == "POST");
-        APSARA_TEST_TRUE(http.packet.msg.req.url == "/a");
+        APSARA_TEST_EQUAL(std::string(http.packet.msg.req.method, http.packet.msg.req.methodLen), "POST");
+        APSARA_TEST_EQUAL(std::string(http.packet.msg.req.url, http.packet.msg.req.urlLen), "/a");
         APSARA_TEST_TRUE(http.packet.common.version == 1);
         APSARA_TEST_EQUAL(http.packet.common.headersNum, 8);
         APSARA_TEST_EQUAL(getHeaders(http, "Host"), "ocs-oneagent-server.alibaba.com");
@@ -103,8 +103,9 @@ public:
         logtail::HTTPParser http;
         http.ParseRequest((const char*)data.data(), (size_t)data.size());
         APSARA_TEST_TRUE(http.status >= 0);
-        APSARA_TEST_EQUAL(http.packet.msg.req.method.ToString(), "POST");
-        APSARA_TEST_EQUAL(http.packet.msg.req.url.ToString(), "/logstores/logtail_status_profile/shards/lb");
+        APSARA_TEST_EQUAL(std::string(http.packet.msg.req.method, http.packet.msg.req.methodLen), "POST");
+        APSARA_TEST_EQUAL(std::string(http.packet.msg.req.url, http.packet.msg.req.urlLen),
+                          "/logstores/logtail_status_profile/shards/lb");
         APSARA_TEST_EQUAL(http.packet.common.version, 1);
         APSARA_TEST_EQUAL(http.packet.common.headersNum, 14);
 
@@ -147,7 +148,7 @@ public:
         APSARA_TEST_TRUE(http.status >= 0);
         APSARA_TEST_TRUE(http.packet.common.version == 1);
         APSARA_TEST_TRUE(http.packet.msg.resp.code == 200);
-        APSARA_TEST_TRUE(http.packet.msg.resp.msg == "OK");
+        APSARA_TEST_EQUAL(std::string(http.packet.msg.resp.msg, http.packet.msg.resp.msgLen), "OK");
 
         APSARA_TEST_EQUAL(http.packet.common.headersNum, 8);
         APSARA_TEST_EQUAL(getHeaders(http, "Server"), "Tengine");

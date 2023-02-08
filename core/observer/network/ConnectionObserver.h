@@ -187,24 +187,18 @@ public:
                 break;
             case ProtocolType_HTTP:
                 OBSERVER_PROTOCOL_GARBAGE(HTTP);
-                break;
             case ProtocolType_DNS:
                 OBSERVER_PROTOCOL_GARBAGE(DNS);
             case ProtocolType_MySQL:
-                break;
                 OBSERVER_PROTOCOL_GARBAGE(MySQL);
             case ProtocolType_Redis:
                 OBSERVER_PROTOCOL_GARBAGE(Redis);
-                break;
             case ProtocolType_PgSQL:
                 OBSERVER_PROTOCOL_GARBAGE(PgSQL);
-                break;
             case ProtocolType_Dubbo:
                 OBSERVER_PROTOCOL_GARBAGE(Dubbo);
-                break;
             case ProtocolType_Kafka:
                 OBSERVER_PROTOCOL_GARBAGE(Kafka);
-                break;
             default:
                 break;
         }

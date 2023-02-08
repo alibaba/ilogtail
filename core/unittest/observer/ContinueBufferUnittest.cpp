@@ -11,34 +11,46 @@ class ContinueBufferTest : public ::testing::Test {
 public:
     void TestAdd() {
         Buffer buffer(15, 15, 15);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "");
+        auto piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "");
         BufferAdd(buffer, "0123", 0, 0);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "0123");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "0123");
+        piece = buffer.Head();
         BufferAdd(buffer, "45", 4, 4);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "012345");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "012345");
         BufferAdd(buffer, "89", 8, 8);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "012345");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "012345");
         BufferAdd(buffer, "67", 6, 6);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "0123456789");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "0123456789");
         BufferAdd(buffer, "abcde", 10, 10);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "0123456789abcde");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "0123456789abcde");
         BufferAdd(buffer, "fghij", 15, 15);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "56789abcdefghij");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "56789abcdefghij");
         BufferAdd(buffer, "st", 28, 28);
         BufferAdd(buffer, "qr", 26, 26);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "fghij");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "fghij");
         BufferAdd(buffer, "op", 24, 24);
         BufferAdd(buffer, "mn", 22, 22);
         BufferAdd(buffer, "kl", 20, 20);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "fghijklmnopqrst");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "fghijklmnopqrst");
         buffer.RemovePrefix(5);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "klmnopqrst");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "klmnopqrst");
         BufferAdd(buffer, "12345", 100, 100);
         buffer.Trim();
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "12345");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "12345");
 
         BufferAdd(buffer, "small", 30, 30);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "12345");
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "12345");
     }
 
 
@@ -46,16 +58,21 @@ public:
         Buffer buffer(15, 15, 15);
         BufferAdd(buffer, "0123", 0, 0);
         BufferAdd(buffer, "abcd", 10, 10);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "0123");
+        auto piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "0123");
         buffer.RemovePrefix(2);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "23");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "23");
         buffer.RemovePrefix(1);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "3");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "3");
         buffer.RemovePrefix(1);
         buffer.Trim();
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "abcd");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "abcd");
         buffer.RemovePrefix(-1);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "abcd");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "abcd");
     }
 
 
@@ -66,7 +83,8 @@ public:
         BufferAdd(buffer, "0123", 0, 0);
         BufferAdd(buffer, "4567", 4, 4);
         buffer.RemovePrefix(1);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "1234567");
+        auto piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "1234567");
         APSARA_TEST_EQUAL(buffer.GetTimestamp(0), -1);
         APSARA_TEST_EQUAL(buffer.GetTimestamp(1), 0);
         APSARA_TEST_EQUAL(buffer.GetTimestamp(2), 0);
@@ -82,7 +100,8 @@ public:
         Buffer buffer(15, 15, 15);
         BufferAdd(buffer, "0123", 0, 0);
         BufferAdd(buffer, "abcd", 10, 10);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "0123");
+        auto piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "0123");
         APSARA_TEST_EQUAL(buffer.GetTimestamp(0), 0);
         APSARA_TEST_EQUAL(buffer.GetTimestamp(3), 0);
         APSARA_TEST_EQUAL(buffer.GetTimestamp(4), -1);
@@ -101,7 +120,8 @@ public:
         APSARA_TEST_EQUAL(buffer.GetTimestamp(10), 10);
 
         buffer.Trim();
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "abcd");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "abcd");
         APSARA_TEST_EQUAL(buffer.GetTimestamp(10), 10);
         APSARA_TEST_EQUAL(buffer.GetTimestamp(13), 10);
         buffer.RemovePrefix(2);
@@ -115,12 +135,14 @@ public:
     void TestLargeGap() {
         Buffer buffer(128, 32, 8);
         BufferAdd(buffer, "0123", 0, 0);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "0123");
+        auto piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "0123");
         APSARA_TEST_EQUAL(buffer.mPosition, 0);
         APSARA_TEST_EQUAL(buffer.mBuffer.size(), 4);
 
         BufferAdd(buffer, "4567", 32, 10);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "0123");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "0123");
 
         BufferAdd(buffer, "abcd", 100, 20);
         APSARA_TEST_EQUAL(buffer.mPosition, 92);
@@ -131,7 +153,8 @@ public:
         APSARA_TEST_EQUAL(buffer.mBuffer.size(), 12);
 
         BufferAdd(buffer, "allow", 92, 19);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "allow");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "allow");
         APSARA_TEST_EQUAL(buffer.mPosition, 92);
         APSARA_TEST_EQUAL(buffer.mBuffer.size(), 12);
     }
@@ -142,12 +165,14 @@ public:
         APSARA_TEST_EQUAL(buffer.mPosition, 0);
         APSARA_TEST_EQUAL(buffer.mBuffer.size(), 0);
         BufferAdd(buffer, "0123", 0, 0);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "0123");
+        auto piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "0123");
         APSARA_TEST_EQUAL(buffer.mPosition, 0);
         APSARA_TEST_EQUAL(buffer.mBuffer.size(), 4);
 
         BufferAdd(buffer, "abcdefghijklmno", 20, 20);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "abcdefghijklmno");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "abcdefghijklmno");
         APSARA_TEST_EQUAL(buffer.mPosition, 20);
         APSARA_TEST_EQUAL(buffer.mBuffer.size(), 15);
 
@@ -160,7 +185,8 @@ public:
         APSARA_TEST_EQUAL(buffer.mBuffer.size(), 0);
 
         BufferAdd(buffer, "abcdefghijklmno", 120, 120);
-        APSARA_TEST_EQUAL(buffer.Head().ToString(), "abcdefghijklmno");
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "abcdefghijklmno");
         APSARA_TEST_EQUAL(buffer.mPosition, 120);
         APSARA_TEST_EQUAL(buffer.mBuffer.size(), 15);
     }

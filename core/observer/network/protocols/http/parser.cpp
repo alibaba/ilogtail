@@ -99,7 +99,8 @@ ParseResult HTTPProtocolParser::OnPacket(PacketType pktType,
 
     bool insertSuccess = true;
     if (msgType == MessageType_Request) {
-        std::string host = parser.ReadHeaderVal("Host").ToString();
+        auto piece = parser.ReadHeaderVal("Host");
+        std::string host = std::string(piece.data(), piece.size());
         if (host.empty()) {
             if (pktType == PacketType_Out) {
                 host = SockAddressToString(header->DstAddr);
@@ -107,11 +108,12 @@ ParseResult HTTPProtocolParser::OnPacket(PacketType pktType,
                 host = SockAddressToString(header->SrcAddr);
             }
         }
-        int pos = parser.packet.msg.req.url.Find('?');
-        std::string url = std::string(parser.packet.msg.req.url.mPtr, pos == -1 ? parser.packet.msg.req.url.mLen : pos);
+        size_t pos = StringPiece(parser.packet.msg.req.url, parser.packet.msg.req.urlLen).find("?");
+        std::string url
+            = std::string(parser.packet.msg.req.url, pos == StringPiece::npos ? parser.packet.msg.req.urlLen : pos);
         insertSuccess = mCache.InsertReq([&](HTTPRequestInfo* req) {
             req->TimeNano = header->TimeNano;
-            req->Method = parser.packet.msg.req.method.ToString();
+            req->Method = std::string(parser.packet.msg.req.method, parser.packet.msg.req.methodLen);
             req->URL = std::move(url);
             req->Version = std::to_string(parser.packet.common.version);
             req->Host = std::move(host);

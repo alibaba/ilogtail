@@ -18,7 +18,7 @@ public:
         }
     }
 
-    SlsStringPiece GetPiece(MessageType msgType) {
+    StringPiece GetPiece(MessageType msgType) {
         switch (msgType) {
             case MessageType_Response:
                 return mRespBuffer.Head();
@@ -56,7 +56,8 @@ public:
         auto piece = GetPiece(data->MsgType);
         int32_t offset = 0;
         for (int i = 0; i < 2; ++i) {
-            auto parseRes = OnPacket(data->PktType, data->MsgType, header, piece.mPtr, piece.mLen, piece.mLen, &offset);
+            auto parseRes
+                = OnPacket(data->PktType, data->MsgType, header, piece.data(), piece.size(), piece.size(), &offset);
             switch (parseRes) {
                 case ParseResult_Partial: {
                     return ParseResult_Partial;
@@ -69,19 +70,19 @@ public:
                     auto pos = FindBoundary(piece);
                     if (pos == std::string::npos) {
                         // means the whole data is invalid, don't need to reparse again.
-                        RemovePrefix(data->MsgType, piece.mLen);
+                        RemovePrefix(data->MsgType, piece.size());
                         return ParseResult_Fail;
                     }
                     offset += static_cast<int32_t>(pos);
                     if (i == 1) {
                         // means the recorrect data fail again, directly to drop;
-                        RemovePrefix(data->MsgType, piece.mLen);
+                        RemovePrefix(data->MsgType, piece.size());
                         return ParseResult_Fail;
                     }
                     break;
                 }
                 default: {
-                    RemovePrefix(data->MsgType, piece.mLen);
+                    RemovePrefix(data->MsgType, piece.size());
                     return ParseResult_Drop;
                 }
             }
@@ -100,7 +101,7 @@ public:
         = 0;
 
     // return std::string::npos means not found boundary
-    virtual size_t FindBoundary(const SlsStringPiece& piece) = 0;
+    virtual size_t FindBoundary(const StringPiece& piece) = 0;
 
 protected:
     Buffer mReqBuffer;

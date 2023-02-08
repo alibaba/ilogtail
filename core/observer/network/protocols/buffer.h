@@ -25,6 +25,7 @@
 #include "interface/type.h"
 #include "interface/network.h"
 #include "interface/protocol.h"
+#include "common/StringPiece.h"
 #include "utils.h"
 #include "Flags.h"
 
@@ -34,7 +35,6 @@ DECLARE_FLAG_INT32(sls_observer_network_connection_buffer_max_gap);
 DECLARE_FLAG_INT32(sls_observer_network_connection_buffer_allow_before_gap_size);
 
 namespace logtail {
-
 
 class Buffer {
 public:
@@ -60,7 +60,7 @@ public:
      */
     BufferResult Add(int32_t pos, uint64_t timestamp, const char* pkt, int32_t pktLen, int32_t pktRealLen);
 
-    SlsStringPiece Head() const { return Get(mPosition); }
+    StringPiece Head() const { return Get(mPosition); }
     uint64_t GetTimestamp(int32_t pos);
     void RemovePrefix(int32_t len);
 
@@ -79,7 +79,7 @@ private:
     std::map<int32_t, int32_t>::const_iterator GetChunk(int32_t pos) const;
     int32_t EndPosition() const;
 
-    SlsStringPiece Get(int32_t pos) const;
+    StringPiece Get(int32_t pos) const;
 
     std::string mBuffer; // store the whole data.
     int32_t mCapacity;

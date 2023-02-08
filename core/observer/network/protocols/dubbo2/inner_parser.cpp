@@ -80,25 +80,25 @@ int logtail::Hessian2Parser::SkipString(logtail::ProtoParser& parser) {
     }
     return 0;
 }
-logtail::SlsStringPiece logtail::Hessian2Parser::ReadString(logtail::ProtoParser& parser) {
+logtail::StringPiece logtail::Hessian2Parser::ReadString(logtail::ProtoParser& parser) {
     uint8_t tag = parser.readUint8();
     if (tag >= 0x30 && tag <= 0x33) {
         uint8_t offset = parser.readUint8();
         if (!parser.OK()) {
-            return SlsStringPiece{};
+            return StringPiece{};
         }
         uint8_t len = ((tag - 0x30) << 8) + offset;
         const char* head = parser.head();
         parser.positionCommit(len);
         if (!parser.OK()) {
-            return SlsStringPiece{};
+            return StringPiece{};
         }
         return {head, len};
     } else {
         const char* head = parser.head();
         parser.positionCommit(tag);
         if (!parser.OK()) {
-            return SlsStringPiece{};
+            return StringPiece{};
         }
         return {head, tag};
     }
@@ -111,10 +111,10 @@ int logtail::FastjsonParser::SkipString(logtail::ProtoParser& parser) {
     }
     return 0;
 }
-logtail::SlsStringPiece logtail::FastjsonParser::ReadString(logtail::ProtoParser& parser) {
-    const SlsStringPiece& piece = parser.readUntil(0x0a);
+logtail::StringPiece logtail::FastjsonParser::ReadString(logtail::ProtoParser& parser) {
+    const StringPiece& piece = parser.readUntil(0x0a);
     if (!parser.OK()) {
-        return SlsStringPiece{};
+        return StringPiece{};
     }
-    return SlsStringPiece{piece.mPtr + 1, piece.mLen - 2};
+    return StringPiece{piece.data() + 1, piece.size() - 2};
 }

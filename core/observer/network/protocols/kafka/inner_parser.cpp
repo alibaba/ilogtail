@@ -84,7 +84,7 @@ static const std::unordered_map<uint8_t, KafkaSupporttedVersion> versions{
 void logtail::KafkaParser::parseProduceRequest() {
     bool compact = this->mData.Request.Version >= 9;
     if (this->mData.Request.Version >= 3) {
-        SlsStringPiece piece; // transactionId
+        StringPiece piece; // transactionId
         compact ? readNullableCompactString(piece) : readNullableString(piece);
     }
     this->mData.Request.Acks = readUint16();
@@ -94,7 +94,7 @@ void logtail::KafkaParser::parseProduceRequest() {
         CONFIG_TYPE_RETURN(IllegalType);
     }
     if (size > 0) {
-        SlsStringPiece piece;
+        StringPiece piece;
         bool success = compact ? readCompactString(piece) : readString(piece);
         if (success) {
             this->mData.Request.Topic = piece;
@@ -117,7 +117,7 @@ void logtail::KafkaParser::parseFetchRequest() {
     }
     uint32_t size = compact ? readCompactArraySize() : readArraySize();
     if (size > 0) {
-        SlsStringPiece piece;
+        StringPiece piece;
         bool success = compact ? readCompactString(piece) : readString(piece);
         if (success) {
             this->mData.Request.Topic = piece;
@@ -130,7 +130,7 @@ void logtail::KafkaParser::parseProduceResponse(uint16_t version) {
     bool compact = isFlexible(KafkaApiType::Produce, version);
     uint32_t size = compact ? readCompactArraySize() : readArraySize();
     if (size >= 0) {
-        SlsStringPiece piece;
+        StringPiece piece;
         bool success = compact ? readCompactString(piece) : readString(piece);
         if (!success) {
             CONFIG_TYPE_RETURN(IllegalType);
@@ -165,7 +165,7 @@ void logtail::KafkaParser::parseFetchResponse(uint16_t version) {
     }
     uint32_t size = compact ? readCompactArraySize() : readArraySize();
     if (size > 0) {
-        SlsStringPiece piece;
+        StringPiece piece;
         bool success = compact ? readCompactString(piece) : readString(piece);
         this->mData.Response.Topic = piece;
         if (!success) {
@@ -185,7 +185,7 @@ void logtail::KafkaParser::parseFetchResponse(uint16_t version) {
     }
 }
 
-bool logtail::KafkaParser::readNullableString(logtail::SlsStringPiece& piece) {
+bool logtail::KafkaParser::readNullableString(logtail::StringPiece& piece) {
     if (this->getLeftSize() < 2) {
         return false;
     }
@@ -195,25 +195,25 @@ bool logtail::KafkaParser::readNullableString(logtail::SlsStringPiece& piece) {
     }
     if (len == -1) {
         this->positionCommit(2);
-        piece = SlsStringPiece{};
+        piece = StringPiece{};
         return true;
     }
     this->positionCommit(2);
-    piece = SlsStringPiece(this->head(), len);
+    piece = StringPiece(this->head(), len);
     this->positionCommit(len);
     return true;
 }
-bool logtail::KafkaParser::readNullableCompactString(logtail::SlsStringPiece& piece) {
+bool logtail::KafkaParser::readNullableCompactString(logtail::StringPiece& piece) {
     int64_t len = readVarInt64(true);
     len -= 1;
     if (len < -1) {
         return false;
     }
     if (len == -1) {
-        piece = SlsStringPiece{};
+        piece = StringPiece{};
         return true;
     }
-    piece = SlsStringPiece(this->head(), len);
+    piece = StringPiece(this->head(), len);
     this->positionCommit(len);
     return true;
 }
@@ -239,7 +239,7 @@ int32_t logtail::KafkaParser::readCompactArraySize() {
         return static_cast<int32_t>(len) - 1;
     }
 }
-bool logtail::KafkaParser::readString(logtail::SlsStringPiece& piece) {
+bool logtail::KafkaParser::readString(logtail::StringPiece& piece) {
     if (this->getLeftSize() < 2) {
         return false;
     }
@@ -248,17 +248,17 @@ bool logtail::KafkaParser::readString(logtail::SlsStringPiece& piece) {
         return false;
     }
     this->positionCommit(2);
-    piece = SlsStringPiece(this->head(), len);
+    piece = StringPiece(this->head(), len);
     this->positionCommit(len);
     return true;
 }
-bool logtail::KafkaParser::readCompactString(logtail::SlsStringPiece& piece) {
+bool logtail::KafkaParser::readCompactString(logtail::StringPiece& piece) {
     int64_t len = readVarInt64(true);
     len -= 1;
     if (len < 0) {
         return false;
     }
-    piece = SlsStringPiece(this->head(), len);
+    piece = StringPiece(this->head(), len);
     this->positionCommit(len);
     return true;
 }
@@ -279,7 +279,7 @@ void logtail::KafkaParser::ParseRequest() {
     if (clientIdLen > this->getLeftSize()) {
         CONFIG_TYPE_RETURN(IllegalType);
     }
-    this->mData.Request.ClientId = SlsStringPiece{this->head(), clientIdLen};
+    this->mData.Request.ClientId = StringPiece{this->head(), clientIdLen};
     this->positionCommit(clientIdLen);
     if (isFlexible(static_cast<KafkaApiType>(apiKey), apiVersion)) {
         readTags();
@@ -328,7 +328,7 @@ bool logtail::KafkaParser::readTags() {
     for (int i = 0; i < num; ++i) {
         int64_t tag = readVarInt64();
         int64_t len = readVarInt64();
-        SlsStringPiece(this->head(), len);
+        StringPiece(this->head(), len);
         this->positionCommit(len);
     }
     return true;

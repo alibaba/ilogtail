@@ -22,19 +22,20 @@
 
 #include "network/protocols/utils.h"
 #include "interface/protocol.h"
+#include "StringPiece.h"
 
 namespace logtail {
 struct RedisData {
-    std::vector<SlsStringPiece> data;
+    std::vector<StringPiece> data;
     bool isError{false};
 
     std::string GetCommands() {
         std::string cmd;
         for (auto iter = data.begin(); iter < data.end(); iter++) {
             if ((iter + 1) != data.end()) {
-                cmd.append(iter->mPtr, iter->mLen).append(" ");
+                cmd.append(iter->data(), iter->size()).append(" ");
             } else {
-                cmd.append(iter->mPtr, iter->mLen);
+                cmd.append(iter->data(), iter->size());
             }
         }
         return cmd;
@@ -47,9 +48,9 @@ public:
         redisData.isError = false;
     }
 
-    SlsStringPiece readUtilNewLine();
+    StringPiece readUtilNewLine();
 
-    ParseResult readData(std::vector<SlsStringPiece>& data);
+    ParseResult readData(std::vector<StringPiece>& data);
 
     ParseResult parse();
 

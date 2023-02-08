@@ -25,92 +25,9 @@
 #include <iomanip>
 #include <map>
 #include <cstring>
+#include "StringPiece.h"
 
 namespace logtail {
-struct SlsStringPiece {
-    const char* mPtr;
-    size_t mLen;
-
-    SlsStringPiece(const char* ptr, size_t len) : mPtr(ptr), mLen(len) {}
-
-    explicit SlsStringPiece(const std::string& s) : mPtr(s.data()), mLen(s.size()) {}
-
-    SlsStringPiece() : mPtr(nullptr), mLen(0) {}
-
-    inline bool operator==(const std::string& targetStr) const {
-        return (this->mLen == targetStr.size()) && (memcmp(this->mPtr, targetStr.data(), this->mLen) == 0);
-    }
-
-    inline bool operator==(const SlsStringPiece& targetStr) const {
-        return (this->mLen == targetStr.mLen) && (memcmp(this->mPtr, targetStr.mPtr, this->mLen) == 0);
-    }
-
-    inline uint32_t Size() { return this->mLen; }
-
-    inline char operator[](size_t pos) const { return this->mPtr[pos]; }
-
-
-    inline bool StartWith(const std::string& prefix) const {
-        return (prefix.length() <= mLen) && (memcmp(this->mPtr, prefix.data(), prefix.length()) == 0);
-    }
-
-    std::string TrimToString() const {
-        if (mPtr == nullptr) {
-            return {};
-        }
-        const char* start = mPtr;
-        int preEmptyCount = 0;
-        for (uint32_t i = 0; i < mLen; i++) {
-            if (start[i] != ' ' && start[i] != '\t') {
-                start = start + i;
-                break;
-            }
-            preEmptyCount++;
-        }
-        int postEmptyCount = 0;
-        for (uint32_t i = mLen - 1; i > 0; i--) {
-            if (mPtr[i] != ' ' && mPtr[i] != '\t') {
-                break;
-            }
-            postEmptyCount++;
-        }
-        return std::string(start, mLen - preEmptyCount - postEmptyCount);
-    }
-
-    int Find(char c) const {
-        if (mPtr == nullptr) {
-            return -1;
-        }
-        for (int i = 0; i < (int)mLen; ++i) {
-            if (mPtr[i] == c) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    std::string ToString() const {
-        if (mPtr == nullptr) {
-            return {};
-        }
-        return {mPtr, mLen};
-    }
-
-    bool operator<(const SlsStringPiece& other) const {
-        if (mLen == 0 || other.mLen == 0) {
-            return mLen < other.mLen;
-        }
-        uint32_t i = 0;
-        while (mPtr[i] == other.mPtr[i]) {
-            i++;
-            if (i == mLen || i == other.mLen) {
-                return mLen < other.mLen;
-            }
-        }
-        return mPtr[i] < other.mPtr[i];
-    }
-};
-
 inline void hexstring_to_bin(std::string s, std::vector<uint8_t>& dest) {
     auto p = s.data();
     auto end = p + s.length();
@@ -217,7 +134,7 @@ public:
         return data;
     }
 
-    SlsStringPiece readUntil(char flag, bool commit = true) {
+    StringPiece readUntil(char flag, bool commit = true) {
         if (this->currPostion + 1 > this->pktSize) {
             this->setParseFail("unexcepted eof");
             return {};

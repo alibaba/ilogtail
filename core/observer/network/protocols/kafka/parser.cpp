@@ -82,7 +82,7 @@ ParseResult KafkaProtocolParser::OnPacket(PacketType pktType,
         insertSuccess = mCache.InsertReq(kafka.mData.CorrelationId, [&](KafkaRequestInfo* info) {
             info->TimeNano = header->TimeNano;
             info->ReqBytes = pktRealSize;
-            info->Topic = kafka.mData.Request.Topic.ToString();
+            info->Topic = std::string(kafka.mData.Request.Topic.data(), kafka.mData.Request.Topic.size());
             info->ApiKey = kafka.mData.Request.ApiKey;
             info->Version = kafka.mData.Request.Version;
             LOG_TRACE(sLogger, ("Kafka insert req", info->ToString()));
@@ -92,7 +92,7 @@ ParseResult KafkaProtocolParser::OnPacket(PacketType pktType,
             info->TimeNano = header->TimeNano;
             info->RespBytes = pktRealSize;
             info->Code = kafka.mData.Response.Code;
-            info->Topic = kafka.mData.Response.Topic.ToString();
+            info->Topic = std::string(kafka.mData.Response.Topic.data(), kafka.mData.Response.Topic.size());
             LOG_TRACE(sLogger, ("Kafka insert resp", info->ToString()));
         });
     }

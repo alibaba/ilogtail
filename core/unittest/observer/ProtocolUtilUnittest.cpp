@@ -85,78 +85,6 @@ public:
         APSARA_TEST_EQUAL(parser.readUint16(), 0);
     }
 
-    void TestSlsStringPiece() {
-        logtail::SlsStringPiece d1("abc", 3);
-        APSARA_TEST_TRUE(d1.TrimToString() == "abc");
-
-        logtail::SlsStringPiece d2("abc  ", 5);
-        APSARA_TEST_TRUE(d2.TrimToString() == "abc");
-
-        logtail::SlsStringPiece d3(" abc", 4);
-        APSARA_TEST_TRUE(d3.TrimToString() == "abc");
-
-
-        logtail::SlsStringPiece d4(" abc ", 5);
-        APSARA_TEST_TRUE(d4.TrimToString() == "abc");
-
-        logtail::SlsStringPiece d5(" \tabc  \t", 8);
-        APSARA_TEST_TRUE(d5.TrimToString() == "abc");
-
-        logtail::SlsStringPiece v1("Ram-Sdk-Hostip", 14);
-        logtail::SlsStringPiece v2("Content-Length", 14);
-
-        std::map<logtail::SlsStringPiece, int> header1;
-
-        header1[v1] = 1;
-        header1[v1] = 1;
-        APSARA_TEST_TRUE(header1.size() == 1);
-
-        std::map<logtail::SlsStringPiece, int> header2;
-
-        header2[v1] = 1;
-        header2[v2] = 1;
-
-        APSARA_TEST_TRUE(header2.size() == 2);
-
-        static logtail::SlsStringPiece v3("Content-Length", 14);
-
-        APSARA_TEST_TRUE(header2.find(v3) != header2.end());
-
-        logtail::SlsStringPiece v4("abc", 3);
-        logtail::SlsStringPiece v5("ab", 2);
-        logtail::SlsStringPiece v6("abcd", 4);
-        logtail::SlsStringPiece v7("aBc", 3);
-        logtail::SlsStringPiece v8("Ab", 2);
-        logtail::SlsStringPiece v9("abcD", 4);
-        logtail::SlsStringPiece v10("", 0);
-        logtail::SlsStringPiece v11("abc", 3);
-        logtail::SlsStringPiece v12("", 0);
-
-        APSARA_TEST_EQUAL(v4 < v5, false);
-        APSARA_TEST_EQUAL(v5 < v4, true);
-
-        APSARA_TEST_EQUAL(v4 < v6, true);
-        APSARA_TEST_EQUAL(v6 < v4, false);
-
-        APSARA_TEST_EQUAL(v4 < v7, false);
-        APSARA_TEST_EQUAL(v7 < v4, true);
-
-        APSARA_TEST_EQUAL(v4 < v8, false);
-        APSARA_TEST_EQUAL(v8 < v4, true);
-
-        APSARA_TEST_EQUAL(v4 < v9, true);
-        APSARA_TEST_EQUAL(v9 < v4, false);
-
-        APSARA_TEST_EQUAL(v4 < v10, false);
-        APSARA_TEST_EQUAL(v10 < v4, true);
-
-        APSARA_TEST_EQUAL(v4 < v11, false);
-        APSARA_TEST_EQUAL(v11 < v4, false);
-
-        APSARA_TEST_EQUAL(v10 < v12, false);
-        APSARA_TEST_EQUAL(v12 < v10, false);
-    }
-
     void PrintCache(TestCache& cache, ExpectTestCacheMeta meta) {
         std::cout << "=============================\n"
                   << "req head: " << cache.mHeadRequestsIdx << "req tail:" << cache.mTailRequestsIdx
@@ -461,7 +389,6 @@ public:
 
 
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestReadUntil, 0);
-APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestSlsStringPiece, 0);
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheContinueReq, 0);
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheContinueResp, 0);
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheContinueOneByOneAndReqFirst, 0);

@@ -43,10 +43,10 @@ ParseResult logtail::DubboProtocolParser::OnPacket(PacketType pktType,
             insertSuccess = mCache.InsertReq(dubbo.mData.ReqId, [&](DubboRequestInfo* info) {
                 info->TimeNano = header->TimeNano;
                 info->ReqBytes = pktRealSize;
-                info->Service = dubbo.mData.Request.ReqServiceName.ToString();
-                info->ServiceVersion = dubbo.mData.Request.ReqServiceVersionName.ToString();
-                info->Version = dubbo.mData.Request.ReqVersion.ToString();
-                info->Method = dubbo.mData.Request.ReqMethodName.ToString();
+                info->Service = std::string(dubbo.mData.Request.ReqServiceName.data(),dubbo.mData.Request.ReqServiceName.size());
+                info->ServiceVersion = std::string(dubbo.mData.Request.ReqServiceVersionName.data(),dubbo.mData.Request.ReqServiceVersionName.size());
+                info->Version = std::string(dubbo.mData.Request.ReqVersion.data(),dubbo.mData.Request.ReqVersion.size());
+                info->Method = std::string(dubbo.mData.Request.ReqMethodName.data(),dubbo.mData.Request.ReqMethodName.size());
                 LOG_TRACE(sLogger, ("dubbo insert req", info->ToString()));
             });
         } else if (msgType == MessageType_Response) {

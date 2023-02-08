@@ -1,25 +1,26 @@
 #pragma once
 
 #include "network/protocols/utils.h"
+#include "StringPiece.h"
 
 namespace logtail {
 
 class DeserializeParser {
 public:
     virtual int SkipString(ProtoParser& parser) = 0;
-    virtual SlsStringPiece ReadString(ProtoParser& parser) = 0;
+    virtual StringPiece ReadString(ProtoParser& parser) = 0;
 };
 
 class Hessian2Parser : public DeserializeParser {
 public:
     int SkipString(ProtoParser& parser) override;
-    SlsStringPiece ReadString(ProtoParser& parser) override;
+    StringPiece ReadString(ProtoParser& parser) override;
 };
 
 class FastjsonParser : public DeserializeParser {
 public:
     int SkipString(ProtoParser& parser) override;
-    SlsStringPiece ReadString(ProtoParser& parser) override;
+    StringPiece ReadString(ProtoParser& parser) override;
 };
 
 enum class DubboMsgType : uint8_t {
@@ -35,10 +36,10 @@ enum class DubboMsgType : uint8_t {
 
 
 struct DubboRequest {
-    SlsStringPiece ReqVersion;
-    SlsStringPiece ReqServiceName;
-    SlsStringPiece ReqServiceVersionName;
-    SlsStringPiece ReqMethodName;
+    StringPiece ReqVersion;
+    StringPiece ReqServiceName;
+    StringPiece ReqServiceVersionName;
+    StringPiece ReqMethodName;
 };
 
 struct DubboResponse {

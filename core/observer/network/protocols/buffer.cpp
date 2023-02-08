@@ -153,7 +153,7 @@ void logtail::Buffer::Reset() {
     ShrinkToFit();
 }
 
-logtail::SlsStringPiece logtail::Buffer::Get(int32_t pos) const {
+logtail::StringPiece logtail::Buffer::Get(int32_t pos) const {
     auto iter = GetChunk(pos);
     if (iter == mChunks.end()) {
         return {};

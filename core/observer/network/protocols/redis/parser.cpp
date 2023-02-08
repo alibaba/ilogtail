@@ -75,8 +75,8 @@ ParseResult RedisProtocolParser::OnPacket(PacketType pktType,
     return insertSuccess ? ParseResult_OK : ParseResult_Drop;
 }
 
-size_t RedisProtocolParser::FindBoundary(const SlsStringPiece& piece) {
-    for (size_t i = 0; i < piece.mLen; ++i) {
+size_t RedisProtocolParser::FindBoundary(const StringPiece& piece) {
+    for (size_t i = 0; i < piece.size(); ++i) {
         auto c = piece[i];
         if (c == kSimpleStringFlag || c == kErrorFlag || c == kArrayFlag || c == kBulkStringFlag || c == kNumberFlag) {
             return i;
