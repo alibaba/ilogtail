@@ -26,27 +26,18 @@ type projectConfig struct {
 }
 
 func (p *pluginConfig) Merge(conf *pluginConfig) {
-	for _, module := range conf.Plugins.Linux {
-		p.Plugins.Linux = append(p.Plugins.Linux, module)
-	}
-	for _, module := range conf.Plugins.Windows {
-		p.Plugins.Windows = append(p.Plugins.Windows, module)
-	}
-	for _, module := range conf.Plugins.Debug {
-		p.Plugins.Debug = append(p.Plugins.Debug, module)
-	}
-	for _, module := range conf.Plugins.Common {
-		p.Plugins.Common = append(p.Plugins.Common, module)
-	}
+	p.Plugins.Linux = append(p.Plugins.Linux, conf.Plugins.Linux...)
+	p.Plugins.Windows = append(p.Plugins.Windows, conf.Plugins.Windows...)
+	p.Plugins.Debug = append(p.Plugins.Debug, conf.Plugins.Debug...)
+	p.Plugins.Common = append(p.Plugins.Common, conf.Plugins.Common...)
+
 	for k, v := range conf.Project.GoEnvs {
 		p.Project.GoEnvs[k] = v
 	}
 	for k, v := range conf.Project.GitConfigs {
 		p.Project.GitConfigs[k] = v
 	}
-	for _, replace := range conf.Project.Replaces {
-		p.Project.Replaces = append(p.Project.Replaces, replace)
-	}
+	p.Project.Replaces = append(p.Project.Replaces, conf.Project.Replaces...)
 }
 
 type pluginCategory struct {

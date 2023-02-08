@@ -55,13 +55,13 @@ func main() {
 	}
 	conf := &pluginConfig{}
 	for _, file := range files {
-		if _, err := os.Stat(file); err != nil {
-			fmt.Println("plugins config file not found(skipped):", file)
+		if _, err = os.Stat(file); err != nil {
+			fmt.Println("plugins config file not found(skipped):", file, "error:", err)
 			continue
 		}
-		c, err := loadPluginConfig(file)
-		if err != nil {
-			fmt.Println("fail to load config from file:", file)
+		c, e := loadPluginConfig(file)
+		if e != nil {
+			fmt.Println("fail to load config from file:", file, "error:", e)
 			os.Exit(1)
 		}
 		conf.Merge(c)
