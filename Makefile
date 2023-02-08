@@ -90,11 +90,11 @@ clean:
 	go mod tidy -modfile $(GO_MOD_FILE) || true
 
 .PHONY: license
-license:  clean tools
+license:  clean tools import_plugins
 	./scripts/package_license.sh add-license $(SCOPE)
 
 .PHONY: check-license
-check-license: clean tools
+check-license: clean tools import_plugins
 	./scripts/package_license.sh check $(SCOPE) | tee $(LICENSE_COVERAGE_FILE)
 
 .PHONY: lint
@@ -155,7 +155,7 @@ vendor: clean
 	$(GO) mod vendor
 
 .PHONY: check-dependency-licenses
-check-dependency-licenses: clean
+check-dependency-licenses: clean import_plugins
 	./scripts/dependency_licenses.sh plugin_main LICENSE_OF_ILOGTAIL_DEPENDENCIES.md && ./scripts/dependency_licenses.sh test LICENSE_OF_TESTENGINE_DEPENDENCIES.md
 
 .PHONY: docs
