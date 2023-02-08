@@ -33,7 +33,7 @@
 
 ## <img alt="Senior Developer" width="100" height="100" src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/contributing/achievement/Sr.Dev.png?x-oss-process=image/resize,h_100" align="left" style="vertical-align: middle;"/> <span style="vertical-align: middle;">Senior Developer</span>
 
-解决至少10个 PR，并被社区接受（统计commit对应PR数量）。
+解决至少10个PR或2个重大PR，并被社区接受（统计commit对应PR数量）。
 
 ---
 
@@ -81,6 +81,10 @@
 - Jiapeng Liu([@EvanLjp](https://github.com/EvanLjp))
 - Weilong Pan([@panawala](https://github.com/panawala))
 - Yu Sun([@shalousun](https://github.com/shalousun))
+- Zehua Yang([@Takuka0311](https://github.com/Takuka0311))
+- bad-youngster([@bad-youngster](https://github.com/bad-youngster))
+- Shiyao Liu([@hanzoi](https://github.com/hanzoi))
+- mcy567([@mcy567](https://github.com/mcy567))
 
 ## <img alt="Senior Moderator" width="100" height="100" src="https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/images/contributing/achievement/Sr.Mod.png?x-oss-process=image/resize,h_100" align="left" style="vertical-align: middle;"/> <span style="vertical-align: middle;">Senior Moderator</span>
 
