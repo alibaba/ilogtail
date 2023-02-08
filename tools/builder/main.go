@@ -55,6 +55,7 @@ func main() {
 	}
 	conf := &pluginConfig{}
 	for _, file := range files {
+		file = getAbsPath(file, *projectRoot)
 		if _, err = os.Stat(file); err != nil {
 			fmt.Println("plugins config file not found(skipped):", file, "error:", err)
 			continue

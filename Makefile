@@ -184,7 +184,7 @@ unittest_e2e_engine: clean gocdocker
 	cd test && go test  ./... -coverprofile=../e2e-engine-coverage.txt -covermode=atomic -tags docker_ready
 
 .PHONY: unittest_plugin
-unittest_plugin: clean
+unittest_plugin: clean import_plugins
 	cp pkg/logtail/libPluginAdapter.so ./plugin_main
 	cp pkg/logtail/PluginAdapter.dll ./plugin_main
 	mv ./plugins/input/prometheus/input_prometheus.go ./plugins/input/prometheus/input_prometheus.go.bak
@@ -193,7 +193,7 @@ unittest_plugin: clean
 	rm -rf plugins/input/jmxfetch/test/
 
 .PHONY: unittest_pluginmanager
-unittest_pluginmanager: clean
+unittest_pluginmanager: clean import_plugins
 	cp pkg/logtail/libPluginAdapter.so ./plugin_main
 	cp pkg/logtail/PluginAdapter.dll ./plugin_main
 	cp pkg/logtail/libPluginAdapter.so ./pluginmanager
