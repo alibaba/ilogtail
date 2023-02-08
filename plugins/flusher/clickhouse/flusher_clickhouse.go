@@ -192,10 +192,12 @@ func (f *FlusherClickHouse) BufferFlush(projectName string, logstoreName string,
 		serializedLogs, err := f.converter.ToByteStream(logGroup)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush clickhouse convert log fail, error", err)
+			return err
 		}
 		// post them to db all at once, build statements
 		batch, err := f.conn.PrepareBatch(ctx, sql)
 		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush clickhouse prepare batch fail, error", err)
 			return err
 		}
 		for _, log := range serializedLogs.([][]byte) {
@@ -208,6 +210,7 @@ func (f *FlusherClickHouse) BufferFlush(projectName string, logstoreName string,
 		// commit and record metrics
 		if err = batch.Send(); err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to clickhouse failed", err)
+			return err
 		} else {
 			logger.Debug(f.context.GetRuntimeContext(), "ClickHouse success send events: messageID")
 		}
