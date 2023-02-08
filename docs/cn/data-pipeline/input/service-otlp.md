@@ -13,7 +13,7 @@
 | Protocals.GRPC    | Struct | 否    | 是否启用gRPC Server                                |
 | Protocals.GRPC.Endpoint | string   | 否    | <p>gRPC Server 地址。</p><p>默认取值为:`0.0.0.0:4317`。</p>                            |
 | Protocals.GRPC.MaxRecvMsgSizeMiB | int   | 否    | gRPC Server 最大接受Msg大小。                           |
-| Protocals.GRPCGRPC.MaxConcurrentStreams | int   | 否    | gRPC Server 最大并发流。                           |
+| Protocals.GRPC.MaxConcurrentStreams | int   | 否    | gRPC Server 最大并发流。                           |
 | Protocals.GRPC.ReadBufferSize       | int   | 否    | gRPC Server读缓存大小。 |
 | Protocals.GRPC.WriteBufferSize      | int   | 否    | gRPC Server写缓存大小。               |
 | Protocals.HTTP    | Struct | 否    | 是否启用HTTP Server                                |
