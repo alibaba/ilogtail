@@ -67,8 +67,8 @@ EOF
   fi
 
   if [ $COPY_GIT_CONFIGS ]; then
-    globalUrlConfigs=($(git config -l --global||true | grep -E '^url\.'))
-    for gc in ${globalUrlConfigs[@]}; do
+    globalUrlConfigs=($(git config -l --global 2>/dev/null | grep -E '^url\.'||true))
+    for gc in ${globalUrlConfigs[@]:-}; do
       echo "git config --global $(echo "$gc" | sed 's/=/ /')" >> $BUILD_SCRIPT_FILE
     done
   fi
