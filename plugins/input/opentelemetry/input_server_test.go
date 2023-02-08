@@ -26,8 +26,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pluginmanager"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -85,7 +85,7 @@ func TestOtlpGRPC_Trace(t *testing.T) {
 	assert.NoError(t, err)
 
 	queueSize := 10
-	pipelineCxt := ilogtail.NewObservePipelineConext(queueSize)
+	pipelineCxt := pipeline.NewObservePipelineConext(queueSize)
 	input.StartService(pipelineCxt)
 	t.Cleanup(func() {
 		require.NoError(t, input.Stop())
@@ -125,7 +125,7 @@ func TestOtlpGRPC_Metrics(t *testing.T) {
 	assert.NoError(t, err)
 
 	queueSize := 10
-	pipelineCxt := ilogtail.NewObservePipelineConext(queueSize)
+	pipelineCxt := pipeline.NewObservePipelineConext(queueSize)
 	input.StartService(pipelineCxt)
 	t.Cleanup(func() {
 		require.NoError(t, input.Stop())
@@ -163,7 +163,7 @@ func TestOtlpHTTP_Metrics(t *testing.T) {
 	assert.NoError(t, err)
 
 	queueSize := 10
-	pipelineCxt := ilogtail.NewObservePipelineConext(queueSize)
+	pipelineCxt := pipeline.NewObservePipelineConext(queueSize)
 	input.StartService(pipelineCxt)
 	t.Cleanup(func() {
 		require.NoError(t, input.Stop())
@@ -198,7 +198,7 @@ func TestOtlpHTTP_Trace(t *testing.T) {
 	assert.NoError(t, err)
 
 	queueSize := 10
-	pipelineCxt := ilogtail.NewObservePipelineConext(queueSize)
+	pipelineCxt := pipeline.NewObservePipelineConext(queueSize)
 	input.StartService(pipelineCxt)
 	t.Cleanup(func() {
 		require.NoError(t, input.Stop())

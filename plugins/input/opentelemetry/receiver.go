@@ -17,8 +17,8 @@ package opentelemetry
 import (
 	"context"
 
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
@@ -33,7 +33,7 @@ type tracesReceiverFunc consumer.ConsumeTracesFunc
 type metricsReceiverFunc consumer.ConsumeMetricsFunc
 type logsReceiverFunc consumer.ConsumeLogsFunc
 
-func newTracesReceiver(pctx ilogtail.PipelineContext) tracesReceiverFunc {
+func newTracesReceiver(pctx pipeline.PipelineContext) tracesReceiverFunc {
 	return func(ctx context.Context, td ptrace.Traces) error {
 		groupEvents, err := opentelemetry.ConvertOtlpTracesToGroupEvents(td)
 		if err != nil {
@@ -44,7 +44,7 @@ func newTracesReceiver(pctx ilogtail.PipelineContext) tracesReceiverFunc {
 	}
 }
 
-func newMetricsReceiver(pctx ilogtail.PipelineContext) metricsReceiverFunc {
+func newMetricsReceiver(pctx pipeline.PipelineContext) metricsReceiverFunc {
 	return func(ctx context.Context, md pmetric.Metrics) error {
 		groupEvents, err := opentelemetry.ConvertOtlpMetricsToGroupEvents(md)
 		if err != nil {
@@ -55,7 +55,7 @@ func newMetricsReceiver(pctx ilogtail.PipelineContext) metricsReceiverFunc {
 	}
 }
 
-func newLogsReceiver(pctx ilogtail.PipelineContext) logsReceiverFunc {
+func newLogsReceiver(pctx pipeline.PipelineContext) logsReceiverFunc {
 	return func(ctx context.Context, ld plog.Logs) error {
 		groupEvents, err := opentelemetry.ConvertOtlpLogsToGroupEvents(ld)
 		if err != nil {

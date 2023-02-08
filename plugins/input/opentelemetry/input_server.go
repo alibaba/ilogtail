@@ -24,11 +24,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/helper/decoder"
 	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/decoder/opentelemetry"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/plugins/input/httpserver"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
@@ -49,8 +49,8 @@ const (
 // Server implements ServiceInputV2
 // It can only work in v2 pipelines.
 type Server struct {
-	context         ilogtail.Context
-	piplineContext  ilogtail.PipelineContext
+	context         pipeline.Context
+	piplineContext  pipeline.PipelineContext
 	serverGPRC      *grpc.Server
 	serverHTTP      *http.Server
 	grpcListener    net.Listener
@@ -64,7 +64,7 @@ type Server struct {
 }
 
 // Init ...
-func (s *Server) Init(context ilogtail.Context) (int, error) {
+func (s *Server) Init(context pipeline.Context) (int, error) {
 	s.context = context
 	logger.Info(s.context.GetRuntimeContext(), "otlp server init", "initializing")
 
@@ -103,12 +103,12 @@ func (s *Server) Description() string {
 }
 
 // Start ...
-func (s *Server) Start(c ilogtail.Collector) error {
+func (s *Server) Start(c pipeline.Collector) error {
 	return nil
 }
 
 // StartService(PipelineContext) error
-func (s *Server) StartService(ctx ilogtail.PipelineContext) error {
+func (s *Server) StartService(ctx pipeline.PipelineContext) error {
 	s.piplineContext = ctx
 	s.tracesReceiver = newTracesReceiver(ctx)
 	s.metricsReceiver = newMetricsReceiver(ctx)
@@ -418,7 +418,7 @@ type HTTPServerSettings struct {
 }
 
 func init() {
-	ilogtail.ServiceInputs["service_otlp"] = func() ilogtail.ServiceInput {
+	pipeline.ServiceInputs["service_otlp"] = func() pipeline.ServiceInput {
 		return &Server{}
 	}
 }
