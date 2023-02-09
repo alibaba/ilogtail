@@ -79,6 +79,8 @@ type ServiceHTTP struct {
 
 	// params below works only for version v2
 	QueryParams       []string
+	Tags              map[string]string
+	Cluster           string
 	HeaderParams      []string
 	QueryParamPrefix  string
 	HeaderParamPrefix string
@@ -105,6 +107,9 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	}
 	logger.Infof(context.GetRuntimeContext(), "addr", s.Address, "format", s.Format)
 
+	if s.Cluster != "" {
+		s.Tags["cluster"] = s.Cluster
+	}
 	s.paramCount = len(s.QueryParams) + len(s.HeaderParams)
 
 	if s.DumpData {
@@ -183,6 +188,11 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if reqParams := s.extractRequestParams(r); len(reqParams) != 0 {
 			for _, g := range groups {
 				g.Group.Metadata.Merge(models.NewMetadataWithMap(reqParams))
+			}
+		}
+		if len(s.Tags) > 0 {
+			for _, g := range groups {
+				g.Group.Tags.Merge(models.NewTagsWithMap(s.Tags))
 			}
 		}
 		s.collectorV2.CollectList(groups...)
@@ -409,6 +419,7 @@ func init() {
 			MaxBodySize:        64 * 1024 * 1024,
 			UnlinkUnixSock:     true,
 			DumpDataKeepFiles:  5,
+			Tags:               map[string]string{},
 		}
 	}
 }

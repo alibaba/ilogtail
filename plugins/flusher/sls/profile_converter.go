@@ -19,6 +19,20 @@ func ConvertProfile(events ...*models.PipelineGroupEvents) *protocol.LogGroup {
 	g := new(protocol.LogGroup)
 	g.Source = util.GetIPAddress()
 	for _, event := range events {
+		group := event.Group
+		g.LogTags = make([]*protocol.LogTag, 0, group.Tags.Len()+group.Metadata.Len())
+		for k, v := range group.GetTags().Iterator() {
+			g.LogTags = append(g.LogTags, &protocol.LogTag{
+				Key:   k,
+				Value: v,
+			})
+		}
+		for k, v := range group.GetMetadata().Iterator() {
+			g.LogTags = append(g.LogTags, &protocol.LogTag{
+				Key:   k,
+				Value: v,
+			})
+		}
 		for _, pipelineEvent := range event.Events {
 			contents := make([]*protocol.Log_Content, 0, 9)
 			p := pipelineEvent.(*models.Profile)
