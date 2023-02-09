@@ -179,6 +179,8 @@ func (c *Converter) ToByteStreamWithSelectedFieldsV2(groupEvents *models.Pipelin
 	switch c.Protocol {
 	case ProtocolRaw:
 		return c.ConvertToRawStream(groupEvents, targetFields)
+	case ProtocolInfluxdb:
+		return c.ConvertToInfluxdbProtocolStreamV2(groupEvents, targetFields)
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
 	}
