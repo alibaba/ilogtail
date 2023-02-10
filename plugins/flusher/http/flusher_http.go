@@ -325,7 +325,7 @@ func (f *FlusherHTTP) buildVarKeys() {
 	}
 
 	varKeys := make([]string, 0, len(cache))
-	for k, _ := range cache {
+	for k := range cache {
 		varKeys = append(varKeys, k)
 	}
 	f.varKeys = varKeys
