@@ -2,7 +2,7 @@
 
 ## 简介
 
-`flusher_clickhouse` `flusher`插件可以实现将采集到的数据，经过处理后，发送到 ClickHouse。
+`flusher_clickhouse` `flusher`插件可以实现将采集到的数据，经过处理后，发送到 ClickHouse，需要 ClickHouse 版本至少为 `22.3`。
 
 ## 配置参数
 

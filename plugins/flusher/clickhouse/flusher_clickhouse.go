@@ -29,8 +29,6 @@ import (
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 )
 
-var insertSQL = "INSERT INTO `%s`.`ilogtail_%s_buffer` (_timestamp, _log) VALUES (?, ?)"
-
 type FlusherClickHouse struct {
 	// Convert ilogtail data convert config
 	Convert convertConfig
@@ -185,32 +183,19 @@ func (f *FlusherClickHouse) Flush(projectName string, logstoreName string, confi
 
 func (f *FlusherClickHouse) BufferFlush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	ctx := context.Background()
-	sql := fmt.Sprintf(insertSQL, f.Authentication.PlainText.Database, f.Table)
 	for _, logGroup := range logGroupList {
 		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
 		// Merge topicKeys and HashKeys,Only one convert after merge
 		serializedLogs, err := f.converter.ToByteStream(logGroup)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush clickhouse convert log fail, error", err)
-			return err
-		}
-		// post them to db all at once, build statements
-		batch, err := f.conn.PrepareBatch(ctx, sql)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush clickhouse prepare batch fail, error", err)
-			return err
 		}
 		for _, log := range serializedLogs.([][]byte) {
-			logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
-			if err = batch.Append(time.Now().Unix(), string(log)); err != nil {
-				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush clickhouse batch append fail, error", err)
-				return err
+			sql := fmt.Sprintf("INSERT INTO %s.ilogtail_%s_buffer (_timestamp, _log) VALUES (%d, '%s')", f.Authentication.PlainText.Database, f.Table, time.Now().Unix(), string(log))
+			err = f.conn.AsyncInsert(ctx, sql, false)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush clickhouse AsyncInsert fail, error", err)
 			}
-		}
-		// commit and record metrics
-		if err = batch.Send(); err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to clickhouse failed", err)
-			return err
 		}
 		logger.Debug(f.context.GetRuntimeContext(), "ClickHouse success send events: messageID")
 	}
