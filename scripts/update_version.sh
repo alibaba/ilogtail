@@ -32,6 +32,10 @@ sed -i "s/VERSION ?= .*/VERSION ?= $version/g" Makefile
 sed -i "s/set(LOGTAIL_VERSION \".*\")/set(LOGTAIL_VERSION \"$version\")/g" \
     core/CMakeLists.txt
 
+# Plugin version
+sed -i "s/var BaseVersion = \".*\")/var BaseVersion = \"$version\")/g" \
+    pluginmanager/plugin_manager.go
+
 # Dockerfile
 sed -i "s/ARG VERSION=.*/ARG VERSION=$version/g" docker/Dockerfile*
 
