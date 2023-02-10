@@ -15,12 +15,14 @@
 package protocol
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/influxdata/line-protocol/v2/lineprotocol"
 
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
@@ -94,6 +96,10 @@ func (c *Converter) ConvertToInfluxdbProtocolStreamV2(groupEvents *models.Pipeli
 	for _, event := range groupEvents.Events {
 		metric, ok := event.(*models.Metric)
 		if !ok {
+			if c.IgnoreUnExpectedData {
+				logger.Warningf(context.Background(), "CONVERT_ALARM", "unsupported event type[%T] for converter with influxdb protocol", event)
+				continue
+			}
 			return nil, nil, fmt.Errorf("unsupported event type: %v", event.GetType())
 		}
 		encoder.StartLine(metric.GetName())

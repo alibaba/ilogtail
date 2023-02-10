@@ -114,16 +114,18 @@ type Converter struct {
 	Protocol             string
 	Encoding             string
 	Separator            string
+	IgnoreUnExpectedData bool
 	TagKeyRenameMap      map[string]string
 	ProtocolKeyRenameMap map[string]string
 }
 
-func NewConverterWithSep(protocol, encoding, sep string, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
+func NewConverterWithSep(protocol, encoding, sep string, ignoreUnExpectedData bool, tagKeyRenameMap, protocolKeyRenameMap map[string]string) (*Converter, error) {
 	converter, err := NewConverter(protocol, encoding, tagKeyRenameMap, protocolKeyRenameMap)
 	if err != nil {
 		return nil, err
 	}
 	converter.Separator = sep
+	converter.IgnoreUnExpectedData = ignoreUnExpectedData
 	return converter, nil
 }
 
