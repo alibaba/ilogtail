@@ -277,8 +277,9 @@ public:
         NetworkObserver* mObserver = new NetworkObserver();
         NetworkConfig::GetInstance()->mDetailProtocolSampling.insert(
             std::make_pair(ProtocolType_Redis, std::make_tuple(true, true, 100)));
-        std::vector<std::string> rawHexs{combineReq, combineResp0, combineResp1, combineResp2};
-        RawNetPacketReader reader("30.240.100.128", false, ProtocolType_Redis, rawHexs, {0, 1, 2, 3});
+        std::vector<std::string> rawHexs{
+            combineReq, combineResp0, combineResp1, combineResp2, combineReq, combineResp0};
+        RawNetPacketReader reader("30.240.100.128", false, ProtocolType_Redis, rawHexs, {0, 1, 2, 3, 4, 5});
         APSARA_TEST_TRUE(reader.OK());
         std::vector<std::string> packets;
         reader.GetAllNetPackets(packets);

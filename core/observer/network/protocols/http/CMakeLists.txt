@@ -9,6 +9,6 @@ project(httpparser)
 # include network dir
 include_directories("../../../")
 
-file(GLOB LIB_SOURCE_FILES parser.cpp *.h)
+file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})

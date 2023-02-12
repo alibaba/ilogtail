@@ -52,6 +52,10 @@ logtail::Buffer::Add(int32_t pos, uint64_t timestamp, const char* pkt, int32_t p
     int32_t fPos = pos - mPosition;
     int32_t bPos = pos + pktLen - mPosition;
     bool cleanup = false;
+    if (fPos < 0 && bPos == 0) {
+        // means directly drop
+        return BufferResult_Drop;
+    }
     if (bPos < 0) {
         // skip old packet.
         LOG_TRACE(sLogger,
@@ -206,6 +210,28 @@ void logtail::Buffer::CleanupTimestamps() {
     }
     mTimeStamps.erase(mTimeStamps.begin(), iter);
 }
+bool logtail::Buffer::GarbageCollection(uint64_t expireTimeNs) {
+    if (this->mTimeStamps.empty()) {
+        return true;
+    }
+    auto iter = mTimeStamps.begin();
+    while (iter != mTimeStamps.end()) {
+        if (iter->second < expireTimeNs) {
+            ++iter;
+            continue;
+        }
+        break;
+
+    }
+    if (iter != mTimeStamps.end()) {
+        RemovePrefix(iter->first - mPosition);
+    } else {
+        this->Reset();
+    }
+    return this->mBuffer.empty();
+}
+
+
 void logtail::Buffer::RemovePrefix(int32_t len) {
     if (len <= 0) {
         return;
@@ -234,7 +260,4 @@ uint64_t logtail::Buffer::GetTimestamp(int32_t pos) {
         return -1;
     }
     return iter->second;
-
-
-    return 0;
 }

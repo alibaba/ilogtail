@@ -54,6 +54,8 @@ ParseResult RedisProtocolParser::OnPacket(PacketType pktType,
 
     if (result != ParseResult_OK) {
         return result;
+    } else {
+        *offset = *offset + redis.getPosition();
     }
     bool insertSuccess = true;
     if (msgType == MessageType_Request) {
@@ -75,7 +77,7 @@ ParseResult RedisProtocolParser::OnPacket(PacketType pktType,
     return insertSuccess ? ParseResult_OK : ParseResult_Drop;
 }
 
-size_t RedisProtocolParser::FindBoundary(const StringPiece& piece) {
+size_t RedisProtocolParser::FindBoundary(MessageType messageType, const StringPiece& piece) {
     for (size_t i = 0; i < piece.size(); ++i) {
         auto c = piece[i];
         if (c == kSimpleStringFlag || c == kErrorFlag || c == kArrayFlag || c == kBulkStringFlag || c == kNumberFlag) {
@@ -86,10 +88,12 @@ size_t RedisProtocolParser::FindBoundary(const StringPiece& piece) {
 }
 
 bool RedisProtocolParser::GarbageCollection(size_t size_limit_bytes, uint64_t expireTimeNs) {
-    return mCache.GarbageCollection(expireTimeNs);
+    bool pok = Parser::GarbageCollection(size_limit_bytes, expireTimeNs);
+    bool cok = mCache.GarbageCollection(expireTimeNs);
+    return pok && cok;
 }
 
-int32_t RedisProtocolParser::GetCacheSize() {
+size_t RedisProtocolParser::GetCacheSize() {
     return this->mCache.GetRequestsSize() + this->mCache.GetResponsesSize();
 }
 

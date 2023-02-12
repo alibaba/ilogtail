@@ -234,7 +234,7 @@ public:
 
             assemble(udpPayload, udpPayloadLength, srcPort, dstPort, srcIP, dstIP, packets);
         } else if (protocolCode == 6) {
-            // TCP Packet
+            // TCP mPacket
             position += ipheaderLen;
             if ((position + 20) > rawPktSize) { // tcp报文头至少20个字节
                 parserFailMsg = "bad tcp packet length";

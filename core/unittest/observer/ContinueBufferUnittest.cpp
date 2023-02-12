@@ -53,6 +53,32 @@ public:
         APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "12345");
     }
 
+    void TestGC() {
+        Buffer buffer(100, 100, 100);
+        auto piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "");
+        BufferAdd(buffer, "0123", 0, 0);
+        BufferAdd(buffer, "5", 5, 5);
+        BufferAdd(buffer, "7", 7, 7);
+        BufferAdd(buffer, "9", 9, 9);
+        BufferAdd(buffer, "20", 20, 20);
+        BufferAdd(buffer, "30", 30, 30);
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "0123");
+        buffer.GarbageCollection(6);
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "7");
+        APSARA_TEST_EQUAL(buffer.mPosition, 7);
+
+        buffer.GarbageCollection(20);
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "20");
+
+        buffer.GarbageCollection(30);
+        piece = buffer.Head();
+        APSARA_TEST_EQUAL(std::string(piece.data(), piece.size()), "30");
+    }
+
 
     void TestRemovePrefixAndTrim() {
         Buffer buffer(15, 15, 15);
@@ -212,6 +238,7 @@ APSARA_UNIT_TEST_CASE(ContinueBufferTest, TestTimestampGap, 0)
 APSARA_UNIT_TEST_CASE(ContinueBufferTest, TestSizeAndGetPos, 0)
 APSARA_UNIT_TEST_CASE(ContinueBufferTest, TestLargeGap, 0)
 APSARA_UNIT_TEST_CASE(ContinueBufferTest, TestSizeAndGetPos1, 0)
+APSARA_UNIT_TEST_CASE(ContinueBufferTest, TestGC, 0)
 
 } // namespace logtail
 

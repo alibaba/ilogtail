@@ -59,7 +59,19 @@ typedef CommonCache<RedisRequestInfo, RedisResponseInfo, RedisProtocolEventAggre
 
 // 协议解析器，流式解析，解析到某个协议后，自动放到aggregator中聚合
 class RedisProtocolParser : public Parser {
+private:
+    RedisCache mCache;
+    CommonAggKey mKey;
+    CommonProtocolDetailsSampler* mSampler;
+
 public:
+    static RedisProtocolParser*
+    Create(RedisProtocolEventAggregator* aggregator, CommonProtocolDetailsSampler* sampler, PacketEventHeader* header) {
+        return new RedisProtocolParser(aggregator, sampler, header);
+    }
+    static void Delete(RedisProtocolParser* parser) { delete parser; }
+
+
     RedisProtocolParser(RedisProtocolEventAggregator* aggregator,
                         CommonProtocolDetailsSampler* sampler,
                         PacketEventHeader* header)
@@ -89,11 +101,6 @@ public:
 
     ~RedisProtocolParser() override = default;
 
-    static RedisProtocolParser*
-    Create(RedisProtocolEventAggregator* aggregator, CommonProtocolDetailsSampler* sampler, PacketEventHeader* header) {
-        return new RedisProtocolParser(aggregator, sampler, header);
-    }
-
     ParseResult OnPacket(PacketType pktType,
                          MessageType msgType,
                          const PacketEventHeader* header,
@@ -101,21 +108,10 @@ public:
                          int32_t pktSize,
                          int32_t pktRealSize,
                          int32_t* offset) override;
-
-    static void Delete(RedisProtocolParser* parser) { delete parser; }
-
-    // GC，把内部没有完成Event匹配的消息按照SizeLimit和TimeOut进行清理
-    // 返回值，如果是true代表还有数据，false代表无数据
     bool GarbageCollection(size_t size_limit_bytes, uint64_t expireTimeNs);
+    size_t GetCacheSize() override;
+    size_t FindBoundary(MessageType messageType, const StringPiece& piece) override;
 
-    int32_t GetCacheSize();
-
-    size_t FindBoundary(const StringPiece& piece) override;
-
-private:
-    RedisCache mCache;
-    CommonAggKey mKey;
-    CommonProtocolDetailsSampler* mSampler;
 
     friend class ProtocolRedisUnittest;
 };

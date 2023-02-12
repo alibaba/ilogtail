@@ -70,6 +70,7 @@ public:
     void CleanupMetadata();
     void CleanupChunks();
     void CleanupTimestamps();
+    bool GarbageCollection(uint64_t expireTimeNs);
     void Trim();
 
 private:

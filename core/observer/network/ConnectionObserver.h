@@ -39,6 +39,25 @@
         } \
         return success; \
     } while (0)
+
+#define OBSERVER_PROTOCOL_ON_DATA_V2(protocolType) \
+    do { \
+        if (mProtocolParser == NULL) { \
+            mProtocolParser \
+                = protocolType##ProtocolParser::Create( \
+                    mAllAggregators.Get##protocolType##Aggregator(), mSampler, header); \
+        } \
+        auto parser = (protocolType##ProtocolParser*)mProtocolParser; \
+        ParseResult rst = parser->OnData(header, data); \
+        if (rst == ParseResult_Fail) { \
+            ++sStatistic->m##protocolType##ParseFailCount; \
+        } \
+        ++sStatistic->m##protocolType##Count; \
+        if (rst == ParseResult_Drop) { \
+            ++sStatistic->m##protocolType##DropCount; \
+        } \
+    } while (0)
+
 #define OBSERVER_PROTOCOL_ON_DATA(protocolType) \
     do { \
         if (mProtocolParser == NULL) { \
@@ -128,7 +147,7 @@ public:
             case ProtocolType_None:
                 break;
             case ProtocolType_HTTP:
-                OBSERVER_PROTOCOL_ON_DATA(HTTP);
+                OBSERVER_PROTOCOL_ON_DATA_V2(HTTP);
                 break;
             case ProtocolType_DNS:
                 OBSERVER_PROTOCOL_ON_DATA(DNS);
@@ -136,22 +155,9 @@ public:
             case ProtocolType_MySQL:
                 OBSERVER_PROTOCOL_ON_DATA(MySQL);
                 break;
-            case ProtocolType_Redis: {
-                if (mProtocolParser == NULL) {
-                    mProtocolParser
-                        = RedisProtocolParser::Create(mAllAggregators.GetRedisAggregator(), mSampler, header);
-                }
-                auto parser = (RedisProtocolParser*)mProtocolParser;
-                ParseResult rst = parser->OnData(header, data);
-                if (rst == ParseResult_Fail) {
-                    ++sStatistic->mRedisParseFailCount;
-                }
-                ++sStatistic->mRedisCount;
-                if (rst == ParseResult_Drop) {
-                    ++sStatistic->mRedisDropCount;
-                }
+            case ProtocolType_Redis:
+                OBSERVER_PROTOCOL_ON_DATA_V2(Redis);
                 break;
-            }
             case ProtocolType_PgSQL:
                 OBSERVER_PROTOCOL_ON_DATA(PgSQL);
                 break;

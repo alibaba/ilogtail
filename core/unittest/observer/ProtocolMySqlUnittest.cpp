@@ -26,8 +26,8 @@ namespace logtail {
 
 class ProtocolMySqlUnittest : public ::testing::Test {
 public:
-    // Packet Length: 74
-    // Packet Number: 0
+    // mPacket Length: 74
+    // mPacket Number: 0
     // Server Greeting
     //     Protocol: 10
     //     Version: 5.7.37
@@ -54,12 +54,12 @@ public:
         APSARA_TEST_TRUE(mysql.OK());
     }
 
-    // Packet Length: 32
-    // Packet Number: 1
+    // mPacket Length: 32
+    // mPacket Number: 1
     // Login Request
     //     Client Capabilities: 0xaa07
     //     Extended Client Capabilities: 0x013e
-    //     MAX Packet: 16777215
+    //     MAX mPacket: 16777215
     //     Charset: utf8 COLLATE utf8_general_ci (33)
     //     Unused: 0000000000000000000000000000000000000000000000
     //     Username:

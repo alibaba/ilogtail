@@ -21,110 +21,72 @@
 
 namespace logtail {
 
+
 ParseResult HTTPProtocolParser::OnPacket(PacketType pktType,
                                          MessageType msgType,
-                                         PacketEventHeader* header,
+                                         const PacketEventHeader* header,
                                          const char* pkt,
                                          int32_t pktSize,
-                                         int32_t pktRealSize) {
-    // Currently, only accept packets with header.
-    //        if (msgType == MessageType_Request) {
-    //            if (reqCategory == HTTPBodyPacketCategory::Chunked) {
-    //                int res = HTTPParser::isChunkedMsg(pkt, pktSize);
-    //                if (res == 0) {
-    //                    reqCategory = HTTPBodyPacketCategory::Unkonwn;
-    //                    return ParseResult_Partial;
-    //                } else if (res > 0) {
-    //                    return ParseResult_Partial;
-    //                } else {
-    //                    reqCategory = HTTPBodyPacketCategory::Unkonwn;
-    //                }
-    //            } else if (reqCategory == HTTPBodyPacketCategory::MoreContent) {
-    //                if (pktRealSize == mReqMoreContentCapacity) {
-    //                    reqCategory = HTTPBodyPacketCategory::Unkonwn;
-    //                    mReqMoreContentCapacity=0;
-    //                    return ParseResult_Partial;
-    //                } else if (pktRealSize < mReqMoreContentCapacity) {
-    //                    mReqMoreContentCapacity -= pktRealSize;
-    //                    return ParseResult_Partial;
-    //                } else {
-    //                    reqCategory = HTTPBodyPacketCategory::Unkonwn;
-    //                }
-    //            }
-    //        }else if(msgType == MessageType_Response){
-    //            if (respCategory == HTTPBodyPacketCategory::Chunked) {
-    //                int res = HTTPParser::isChunkedMsg(pkt, pktSize);
-    //                if (res == 0) {
-    //                    mRespMoreContentCapacity=0;
-    //                    respCategory = HTTPBodyPacketCategory::Unkonwn;
-    //                    return ParseResult_Partial;
-    //                } else if (res > 0) {
-    //                    return ParseResult_Partial;
-    //                } else {
-    //                    respCategory = HTTPBodyPacketCategory::Unkonwn;
-    //                }
-    //            } else if (respCategory == HTTPBodyPacketCategory::MoreContent) {
-    //                if (pktRealSize == mRespMoreContentCapacity) {
-    //                    respCategory = HTTPBodyPacketCategory::Unkonwn;
-    //                    return ParseResult_Partial;
-    //                } else if (pktRealSize < mRespMoreContentCapacity) {
-    //                    mRespMoreContentCapacity -= pktRealSize;
-    //                    return ParseResult_Partial;
-    //                } else {
-    //                    respCategory = HTTPBodyPacketCategory::Unkonwn;
-    //                }
-    //            }
-    //        }
-
-    HTTPParser parser;
+                                         int32_t pktRealSize,
+                                         int32_t* offset) {
+    HTTPParser parser(pkt + *offset, static_cast<size_t>((pktSize - *offset)));
+    ParseResult res = ParseResult_Drop;
     if (msgType == MessageType_Request) {
-        parser.ParseRequest(pkt, pktSize);
-        //            reqCategory = parser.bodyPacketCategory;
-        //            mReqMoreContentCapacity = parser.bodySize;
+        res = parser.ParseRequest();
     } else if (msgType == MessageType_Response) {
-        parser.ParseResp(pkt, pktSize);
-        //            this->respCategory = parser.bodyPacketCategory;
-        //            this->mRespMoreContentCapacity = parser.bodySize;
+        res = parser.ParseResp();
     }
     LOG_TRACE(sLogger,
               ("http got data", std::string(pkt, pktSize))("message_type", MessageTypeToString(msgType))(
                   "raw_data", charToHexString(pkt, pktSize, pktSize))("connection_id", header->SockHash));
-    if (parser.status == -1) {
-        LOG_DEBUG(sLogger,
-                  ("http_parse_fail", "")("data", charToHexString(pkt, pktSize, pktSize))("srcPort", header->SrcPort)(
-                      "dstPort", header->DstPort)("message_type", MessageTypeToString(msgType)));
-        return ParseResult_Fail;
+    if (res != ParseResult_OK) {
+        return res;
     }
-
-
+    *offset = *offset + parser.GetCostOffset();
     bool insertSuccess = true;
     if (msgType == MessageType_Request) {
-        auto piece = parser.ReadHeaderVal("Host");
-        std::string host = std::string(piece.data(), piece.size());
-        if (host.empty()) {
-            if (pktType == PacketType_Out) {
-                host = SockAddressToString(header->DstAddr);
-            } else {
-                host = SockAddressToString(header->SrcAddr);
+        auto iter = parser.GetPacket().Common.Headers.find("Host");
+        std::string host;
+        if (iter != parser.GetPacket().Common.Headers.end()) {
+            host = std::string(iter->second.data(), iter->second.size());
+        } else {
+            if (host.empty()) {
+                if (pktType == PacketType_Out) {
+                    host = SockAddressToString(header->DstAddr);
+                } else {
+                    host = SockAddressToString(header->SrcAddr);
+                }
             }
         }
-        size_t pos = StringPiece(parser.packet.msg.req.url, parser.packet.msg.req.urlLen).find("?");
+        size_t pos = StringPiece(parser.GetPacket().Req.Url, parser.GetPacket().Req.UrlLen).find("?");
         std::string url
-            = std::string(parser.packet.msg.req.url, pos == StringPiece::npos ? parser.packet.msg.req.urlLen : pos);
+            = std::string(parser.GetPacket().Req.Url, pos == StringPiece::npos ? parser.GetPacket().Req.UrlLen : pos);
         insertSuccess = mCache.InsertReq([&](HTTPRequestInfo* req) {
             req->TimeNano = header->TimeNano;
-            req->Method = std::string(parser.packet.msg.req.method, parser.packet.msg.req.methodLen);
+            req->Method = {parser.GetPacket().Req.Method, parser.GetPacket().Req.MethodLen};
             req->URL = std::move(url);
-            req->Version = std::to_string(parser.packet.common.version);
+            req->Version = std::to_string(parser.GetPacket().Common.Version);
             req->Host = std::move(host);
             req->ReqBytes = pktRealSize;
+            req->Body = Json::Value(parser.GetPacket().Req.Body.data(),
+                                    parser.GetPacket().Req.Body.data() + parser.GetPacket().Req.Body.size());
+            for (const auto& Header : parser.GetPacket().Common.Headers) {
+                req->Headers[std::string(Header.first.data(), Header.first.size())]
+                    = std::string(Header.second.data(), Header.second.size());
+            }
             LOG_TRACE(sLogger, ("http insert req hash", header->SockHash)("data", req->ToString()));
         });
     } else if (msgType == MessageType_Response) {
         insertSuccess = mCache.InsertResp([&](HTTPResponseInfo* info) {
             info->TimeNano = header->TimeNano;
-            info->RespCode = parser.packet.msg.resp.code;
+            info->RespCode = parser.GetPacket().Resp.Code;
             info->RespBytes = pktRealSize;
+            info->Body = Json::Value(parser.GetPacket().Resp.Body.data(),
+                                     parser.GetPacket().Resp.Body.data() + parser.GetPacket().Resp.Body.size());
+            for (const auto& Header : parser.GetPacket().Common.Headers) {
+                info->Headers[std::string(Header.first.data(), Header.first.size())]
+                    = std::string(Header.second.data(), Header.second.size());
+            }
             LOG_TRACE(sLogger, ("http insert resp hash", header->SockHash)("data", info->ToString()));
         });
     }
@@ -132,11 +94,54 @@ ParseResult HTTPProtocolParser::OnPacket(PacketType pktType,
 }
 
 bool HTTPProtocolParser::GarbageCollection(size_t size_limit_bytes, uint64_t expireTimeNs) {
-    return mCache.GarbageCollection(expireTimeNs);
+    bool pok = Parser::GarbageCollection(size_limit_bytes, expireTimeNs);
+    bool cok = mCache.GarbageCollection(expireTimeNs);
+    return pok && cok;
 }
 
-int32_t HTTPProtocolParser::GetCacheSize() {
+size_t HTTPProtocolParser::GetCacheSize() {
     return mCache.GetRequestsSize() + mCache.GetResponsesSize();
+}
+size_t HTTPProtocolParser::FindBoundary(MessageType message_type, const StringPiece& piece) {
+    static const std::array<StringPiece, 2> kRespFlags = {"HTTP/1.1 ", "HTTP/1.0 "};
+    static const std::array<StringPiece, 9> kReqFlags
+        = {"GET ", "HEAD ", "POST ", "PUT ", "DELETE ", "CONNECT ", "OPTIONS ", "TRACE ", "PATCH "};
+    static const StringPiece kEndFlag = "\r\n\r\n";
+    const StringPiece* head;
+    size_t len;
+    switch (message_type) {
+        case MessageType_Request:
+            head = kReqFlags.data();
+            len = kReqFlags.size();
+            break;
+        case MessageType_Response:
+            head = kRespFlags.data();
+            len = kRespFlags.size();
+            break;
+        default:
+            return std::string::npos;
+    }
+    size_t start = 0;
+    while (true) {
+        size_t endPos = piece.find(kEndFlag, start);
+        if (endPos == StringPiece::npos) {
+            return std::string::npos;
+        }
+        StringPiece sub = piece.substr(start, endPos);
+        size_t subPos = StringPiece::npos;
+        const StringPiece* cur = head;
+        for (size_t i = 0; i < len; ++i) {
+            cur += i;
+            auto pos = sub.rfind(*cur);
+            if (pos != StringPiece::npos) {
+                subPos = (subPos == StringPiece::npos) ? pos : std::max(subPos, pos);
+            }
+        }
+        if (subPos != StringPiece::npos) {
+            return start + subPos;
+        }
+        start = endPos + kEndFlag.size();
+    }
 }
 
 } // end of namespace logtail

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "buffer.h"
+
 namespace logtail {
 class Parser {
 public:
@@ -32,11 +33,11 @@ public:
     void RemovePrefix(MessageType msgType, int32_t len) {
         switch (msgType) {
             case MessageType_Response: {
-                mReqBuffer.RemovePrefix(len);
+                mRespBuffer.RemovePrefix(len);
                 break;
             }
             case MessageType_Request: {
-                mRespBuffer.RemovePrefix(len);
+                mReqBuffer.RemovePrefix(len);
                 break;
             }
             default:
@@ -67,7 +68,7 @@ public:
                     return ParseResult_OK;
                 }
                 case ParseResult_Fail: {
-                    auto pos = FindBoundary(piece);
+                    auto pos = FindBoundary(data->MsgType, piece);
                     if (pos == std::string::npos) {
                         // means the whole data is invalid, don't need to reparse again.
                         RemovePrefix(data->MsgType, piece.size());
@@ -101,7 +102,17 @@ public:
         = 0;
 
     // return std::string::npos means not found boundary
-    virtual size_t FindBoundary(const StringPiece& piece) = 0;
+    virtual size_t FindBoundary(MessageType message_type, const StringPiece& piece) = 0;
+
+    // GC，把内部没有完成Event匹配的消息按照SizeLimit和TimeOut进行清理
+    // 返回值，如果是true代表还有数据，false代表无数据
+    bool GarbageCollection(size_t size_limit_bytes, uint64_t expireTimeNs) {
+        bool req = this->mReqBuffer.GarbageCollection(expireTimeNs);
+        bool resp = this->mRespBuffer.GarbageCollection(expireTimeNs);
+        return req && resp;
+    }
+
+    virtual size_t GetCacheSize() = 0;
 
 protected:
     Buffer mReqBuffer;

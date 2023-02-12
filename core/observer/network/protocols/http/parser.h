@@ -21,6 +21,7 @@
 #include "network/protocols/http/type.h"
 #include "observer/interface/network.h"
 #include "inner_parser.h"
+#include "network/protocols/parser.h"
 
 namespace logtail {
 
@@ -31,6 +32,8 @@ struct HTTPRequestInfo {
     std::string Version;
     std::string Host;
     int32_t ReqBytes;
+    Json::Value Headers;
+    Json::Value Body;
 
     friend std::ostream& operator<<(std::ostream& os, const HTTPRequestInfo& info) {
         os << "TimeNano: " << info.TimeNano << " Method: " << info.Method << " URL: " << info.URL
@@ -48,12 +51,14 @@ struct HTTPResponseInfo {
     uint64_t TimeNano;
     int16_t RespCode;
     int32_t RespBytes;
+    Json::Value Headers;
+    Json::Value Body;
 
     friend std::ostream& operator<<(std::ostream& os, const HTTPResponseInfo& info) {
         os << "TimeNano: " << info.TimeNano << " RespCode: " << info.RespCode << " RespBytes: " << info.RespBytes;
         return os;
     }
-    std::string ToString() {
+    std::string ToString() const {
         std::stringstream ss;
         ss << *this;
         return ss.str();
@@ -64,10 +69,24 @@ typedef CommonCache<HTTPRequestInfo, HTTPResponseInfo, HTTPProtocolEventAggregat
 
 
 // 协议解析器，流式解析，解析到某个协议后，自动放到aggregator中聚合
-class HTTPProtocolParser {
+class HTTPProtocolParser : public Parser {
+private:
+    HttpCache mCache;
+    CommonAggKey mKey;
+    CommonProtocolDetailsSampler* mSampler;
+
 public:
-    explicit HTTPProtocolParser(HTTPProtocolEventAggregator* aggregator, PacketEventHeader* header)
-        : mCache(aggregator), mKey(header) {
+    static HTTPProtocolParser*
+    Create(HTTPProtocolEventAggregator* aggregator, CommonProtocolDetailsSampler* sampler, PacketEventHeader* header) {
+        return new HTTPProtocolParser(aggregator, sampler, header);
+    }
+    static void Delete(HTTPProtocolParser* parser) { delete parser; }
+
+
+    explicit HTTPProtocolParser(HTTPProtocolEventAggregator* aggregator,
+                                CommonProtocolDetailsSampler* sampler,
+                                PacketEventHeader* header)
+        : mCache(aggregator), mKey(header), mSampler(sampler) {
         mCache.BindConvertFunc(
             [&](HTTPRequestInfo* requestInfo, HTTPResponseInfo* responseInfo, HTTPProtocolEvent& event) -> bool {
                 event.Info.LatencyNs = responseInfo->TimeNano - requestInfo->TimeNano;
@@ -82,33 +101,38 @@ public:
                 event.Key.Version = std::move(requestInfo->Version);
                 event.Key.RespCode = responseInfo->RespCode;
                 event.Key.ConnKey = mKey;
+                if (this->mSampler->IsSample(event.Key.RespCode < 400,
+                                             static_cast<int32_t>((event.Info.LatencyNs / 1e3)))) {
+                    ProtocolDetail detail;
+                    detail.Type = ProtocolType_HTTP;
+                    detail.Request["host"] = event.Key.ReqDomain;
+                    detail.Request["url"] = event.Key.ReqResource;
+                    detail.Request["method"] = event.Key.ReqType;
+                    detail.Request["version"] = event.Key.Version;
+                    detail.Response["code"] = event.Key.RespCode;
+                    detail.Request["headers"] = std::move(requestInfo->Headers);
+                    detail.Request["body"] = std::move(requestInfo->Body);
+                    detail.Response["headers"] = std::move(responseInfo->Headers);
+                    detail.Response["body"] = std::move(responseInfo->Body);
+                    this->mSampler->AddData(std::move(detail));
+                }
                 return true;
             });
     }
 
-    static HTTPProtocolParser* Create(HTTPProtocolEventAggregator* aggregator, PacketEventHeader* header) {
-        return new HTTPProtocolParser(aggregator, header);
-    }
+    ~HTTPProtocolParser() override = default;
 
-    static void Delete(HTTPProtocolParser* parser) { delete parser; }
-
-    // Packet到达的时候会Call，所有参数都会告诉类型（PacketType，MessageType）
     ParseResult OnPacket(PacketType pktType,
                          MessageType msgType,
-                         PacketEventHeader* header,
+                         const PacketEventHeader* header,
                          const char* pkt,
                          int32_t pktSize,
-                         int32_t pktRealSize);
-
-    // GC，把内部没有完成Event匹配的消息按照SizeLimit和TimeOut进行清理
-    // 返回值，如果是true代表还有数据，false代表无数据
+                         int32_t pktRealSize,
+                         int32_t* offset) override;
+    size_t FindBoundary(MessageType message_type, const StringPiece& piece) override;
     bool GarbageCollection(size_t size_limit_bytes, uint64_t expireTimeNs);
+    size_t GetCacheSize() override;
 
-    int32_t GetCacheSize();
-
-private:
-    HttpCache mCache;
-    CommonAggKey mKey;
 
     friend class ProtocolHttpUnittest;
 };
