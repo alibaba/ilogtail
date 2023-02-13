@@ -1,7 +1,7 @@
 # OTLP Log
 
 ## 简介
-`flusher_otlp_log` `flusher`插件可以实现将采集到的数据，经过处理后，发送到支持`Opentelemetry log protocol`的后端。
+`flusher_otlp` `flusher`插件可以实现将采集到的数据，经过处理后，发送到支持`Opentelemetry Protocol`的后端。
 
 ## 配置参数
 
@@ -27,7 +27,28 @@ inputs:
     LogPath: /home/test_log
     FilePattern: "*.log"
 flushers:
-  - Type: flusher_otlp_log
+  - Type: flusher_otlp
+    Grpc:
+      Endpoint: http://192.168.xx.xx:8176
+      Headers:
+        X-AppKey: 8bc8f787-b0b2-4f26-89c6-d3950a090fef
+      Retry:
+        MaxCount: 3
+```
+
+
+v2 Pipeline
+采集`/home/test-log/`路径下的所有文件名匹配`*.log`规则的文件，并将采集结果发送到 `、Opentelemetry` 后端。
+
+```
+enable: true
+version: v2
+inputs:
+  - Type: file_log
+    LogPath: /home/test_log
+    FilePattern: "*.log"
+flushers:
+  - Type: flusher_otlp
     Grpc:
       Endpoint: http://192.168.xx.xx:8176
       Headers:

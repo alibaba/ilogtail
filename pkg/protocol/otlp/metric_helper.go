@@ -92,3 +92,23 @@ func ReverseSlice[T comparable](s []T) {
 		return i > j
 	})
 }
+
+// When count is less than 20, direct comparison faster than map.
+func IsInternalTag(tagname string) bool {
+	return tagname == TagKeyMetricAggregationTemporality ||
+		tagname == TagKeyScopeDroppedAttributesCount ||
+		tagname == TagKeyScopeName ||
+		tagname == TagKeyScopeVersion ||
+		tagname == TagKeySpanDroppedAttrsCount ||
+		tagname == TagKeySpanDroppedEventsCount ||
+		tagname == TagKeySpanDroppedLinksCount ||
+		tagname == TagKeySpanStatusMessage ||
+		tagname == TagKeyMetricIsMonotonic
+}
+
+func IsInternalField(fieldname string) bool {
+	return fieldname == FieldCount ||
+		fieldname == FieldMax ||
+		fieldname == FieldMin ||
+		fieldname == FieldSum
+}
