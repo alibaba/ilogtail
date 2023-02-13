@@ -94,18 +94,10 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	if s.decoder, err = decoder.GetDecoderWithOptions(s.Format, decoder.Option{FieldsExtend: s.FieldsExtend, DisableUncompress: s.DisableUncompress}); err != nil {
 		return 0, err
 	}
-	if s.Endpoint == "" {
-		switch s.Format {
-		case common.ProtocolOTLPLogV1:
-			s.Endpoint = "/v1/logs"
-		case common.ProtocolPyroscope:
-			s.Endpoint = "/ingest"
-		}
+	if s.Format == common.ProtocolOTLPLogV1 && s.Endpoint == "" {
+		s.Endpoint += "/v1/logs"
 	}
 	s.Address += s.Endpoint
-	if strings.Contains(s.Address, "SELF_ADDR") {
-		s.Address = strings.ReplaceAll(s.Address, "SELF_ADDR", util.GetIPAddress())
-	}
 	logger.Infof(context.GetRuntimeContext(), "addr", s.Address, "format", s.Format)
 
 	if s.Cluster != "" {
@@ -429,6 +421,7 @@ func init() {
 			UnlinkUnixSock:     true,
 			DumpDataKeepFiles:  5,
 			Tags:               map[string]string{},
+			TagsInGroup:        true,
 		}
 	}
 }
