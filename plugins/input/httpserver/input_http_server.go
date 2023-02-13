@@ -80,6 +80,7 @@ type ServiceHTTP struct {
 	// params below works only for version v2
 	QueryParams       []string
 	Tags              map[string]string
+	TagsInGroup       bool // append tags to group when true, otherwise would append tags to the specific event.
 	Cluster           string
 	HeaderParams      []string
 	QueryParamPrefix  string
@@ -191,8 +192,16 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if len(s.Tags) > 0 {
-			for _, g := range groups {
-				g.Group.Tags.Merge(models.NewTagsWithMap(s.Tags))
+			if s.TagsInGroup {
+				for _, g := range groups {
+					g.Group.Tags.Merge(models.NewTagsWithMap(s.Tags))
+				}
+			} else {
+				for _, g := range groups {
+					for _, e := range g.Events {
+						e.GetTags().Merge(models.NewTagsWithMap(s.Tags))
+					}
+				}
 			}
 		}
 		s.collectorV2.CollectList(groups...)
