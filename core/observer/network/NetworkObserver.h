@@ -110,6 +110,7 @@ private:
      * @param allData allData stores all observer protocol logs
      */
     void FlushOutMetrics(std::vector<sls_logs::Log>& allData);
+    void FlushOutDetails(std::vector<sls_logs::Log>& allData);
 
     void FlushStatistics(logtail::NetStaticticsMap& map, std::vector<sls_logs::Log>& logs);
 
@@ -125,6 +126,7 @@ private:
     uint64_t mLastGCTimeNs = 0;
     uint64_t mLastL4FlushTimeNs = 0;
     uint64_t mLastL7FlushTimeNs = 0;
+    uint64_t mLastL7DetailsFlushTimeNs = 0;
     uint64_t mLastEbpfGCTimeNs = 0;
     uint64_t mLastFlushMetaTimeNs = 0;
     uint64_t mLastFlushNetlinkTimeNs = 0;

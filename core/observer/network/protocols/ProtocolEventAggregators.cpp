@@ -59,7 +59,28 @@ void ProtocolEventAggregators::FlushOutMetrics(uint64_t timeNano,
     if (mKafkaAggregators != nullptr) {
         mKafkaAggregators->FlushLogs(allData, pTags, gTags, interval);
     }
+}
 
+void ProtocolEventAggregators::FlushOutDetails(uint64_t timeNano,
+                                               std::vector<sls_logs::Log>& allData,
+                                               std::vector<std::pair<std::string, std::string>>& processTags,
+                                               std::vector<std::pair<std::string, std::string>>& globalTags,
+                                               uint64_t interval) {
+    Json::Value root;
+    Json::StreamWriterBuilder builder;
+    builder["indentation"] = ""; // If you want whitespace-less output
+    for (auto& tag : processTags) {
+        root[tag.first] = tag.second;
+    }
+    const std::string& pTags = Json::writeString(builder, root);
+
+    ::google::protobuf::RepeatedPtrField<sls_logs::Log_Content> gTags;
+    gTags.Reserve(globalTags.size());
+    for (const auto& tag : globalTags) {
+        sls_logs::Log_Content* content = gTags.Add();
+        content->set_key(tag.first);
+        content->set_value(tag.second);
+    }
     for (auto iter = mProtocolDetails.begin(); iter != mProtocolDetails.end();) {
         sls_logs::Log newLog;
         newLog.mutable_contents()->CopyFrom(gTags);

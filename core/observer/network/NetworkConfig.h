@@ -137,6 +137,7 @@ struct NetworkConfig {
     int mSampling = 100;
     uint64_t mFlushOutL4Interval = 60;
     uint64_t mFlushOutL7Interval = 15;
+    uint64_t mFlushOutL7DetailsInterval = 3;
     uint64_t mFlushMetaInterval = 30;
     uint64_t mFlushNetlinkInterval = 10;
     boost::regex mIncludeCmdRegex;

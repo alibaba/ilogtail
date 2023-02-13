@@ -600,7 +600,7 @@ void EBPFWrapper::OnData(struct conn_data_event_t* event) {
     EBPF_CONNECTION_FILTER(socketCategory, header->DstAddr, event->attr.conn_id, event->attr.addr);
     header->TimeNano = event->attr.ts + mDeltaTimeNs;
     PacketEventData* data = (PacketEventData*)(&mPacketDataBuffer.at(0) + sizeof(PacketEventHeader));
-    data->Pos = static_cast<int32_t>(event->attr.pos);
+    data->Pos = static_cast<int32_t>(event->attr.pos - event->attr.msg_buf_size);
     data->PktType = (PacketType)event->attr.direction;
     data->PtlType = (ProtocolType)event->attr.protocol;
     data->BufferLen = event->attr.msg_buf_size;
@@ -624,8 +624,8 @@ void EBPFWrapper::OnData(struct conn_data_event_t* event) {
     LOG_TRACE(
         sLogger,
         ("data event, addr", SockAddressToString(header->DstAddr))("port", header->DstPort)(
-            "family", event->attr.addr.sa.sa_family)("pid", event->attr.conn_id.tgid)("fd", event->attr.conn_id.fd)(
-            "protocol", event->attr.protocol)("length_header", event->attr.length_header)(
+            "family", event->attr.addr.sa.sa_family)("pos", data->Pos)("pid", event->attr.conn_id.tgid)(
+            "fd", event->attr.conn_id.fd)("protocol", event->attr.protocol)("length_header", event->attr.length_header)(
             "role", PacketRoleTypeToString(header->RoleType))("ori_role", std::to_string(event->attr.role))(
             "ori_msg", MessageTypeToString((MessageType)event->attr.type))("msg", MessageTypeToString(data->MsgType))(
             "data", charToHexString(event->msg, event->attr.msg_buf_size, event->attr.msg_buf_size))(

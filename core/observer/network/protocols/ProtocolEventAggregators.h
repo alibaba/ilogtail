@@ -127,6 +127,12 @@ public:
                          std::vector<std::pair<std::string, std::string>>& globalTags,
                          uint64_t interval);
 
+    void FlushOutDetails(uint64_t timeNano,
+                         std::vector<sls_logs::Log>& allData,
+                         std::vector<std::pair<std::string, std::string>>& processTags,
+                         std::vector<std::pair<std::string, std::string>>& globalTags,
+                         uint64_t interval);
+
     void AddDetail(ProtocolDetail&& item) { mProtocolDetails.push_back(std::move(item)); }
 
 protected:

@@ -36,6 +36,14 @@ void ContainerProcessGroup::FlushOutMetrics(uint64_t timeNano,
     mAggregator.FlushOutMetrics(timeNano, allData, metaTags, tags, interval);
 }
 
+void ContainerProcessGroup::FlushOutDetails(uint64_t timeNano,
+                                            std::vector<sls_logs::Log>& allData,
+                                            std::vector<std::pair<std::string, std::string>>& tags,
+                                            uint64_t interval) {
+    auto& metaTags = mMetaPtr->GetFormattedMeta();
+    mAggregator.FlushOutDetails(timeNano, allData, metaTags, tags, interval);
+}
+
 void ContainerProcessGroupManager::FlushOutMetrics(std::vector<sls_logs::Log>& allData,
                                                    std::vector<std::pair<std::string, std::string>>& tags,
                                                    uint64_t interval) {
@@ -45,6 +53,18 @@ void ContainerProcessGroupManager::FlushOutMetrics(std::vector<sls_logs::Log>& a
     }
     for (auto& iter : mContainerProcessGroupMap) {
         iter.second->FlushOutMetrics(timeNano, allData, tags, interval);
+    }
+}
+
+void ContainerProcessGroupManager::FlushOutDetails(std::vector<sls_logs::Log>& allData,
+                                                   std::vector<std::pair<std::string, std::string>>& tags,
+                                                   uint64_t interval) {
+    uint64_t timeNano = GetCurrentTimeInNanoSeconds();
+    for (auto& iter : mPureProcessGroupMap) {
+        iter.second->FlushOutDetails(timeNano, allData, tags, interval);
+    }
+    for (auto& iter : mContainerProcessGroupMap) {
+        iter.second->FlushOutDetails(timeNano, allData, tags, interval);
     }
 }
 
