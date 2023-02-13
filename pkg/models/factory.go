@@ -15,8 +15,6 @@
 package models
 
 import (
-	"strings"
-
 	"github.com/alibaba/ilogtail/pkg/constraints"
 )
 
@@ -76,18 +74,6 @@ func NewGroup(meta Metadata, tags Tags) *GroupInfo {
 		Tags:     tags,
 	}
 }
-
-func GroupDeepClone(g *GroupInfo) *GroupInfo {
-	group := NewGroup(NewMetadataWithMap(make(map[string]string, g.GetMetadata().Len())), NewTagsWithMap(make(map[string]string, g.GetTags().Len())))
-	for k, v := range g.Tags.Iterator() {
-		group.Tags.Add(strings.Clone(k), strings.Clone(v))
-	}
-	for k, v := range g.Metadata.Iterator() {
-		group.Metadata.Add(strings.Clone(k), strings.Clone(v))
-	}
-	return group
-}
-
 func NewMetric(name string, metricType MetricType, tags Tags, timestamp int64, value MetricValue, typedValues MetricTypedValues) *Metric {
 	return &Metric{
 		Name:       name,

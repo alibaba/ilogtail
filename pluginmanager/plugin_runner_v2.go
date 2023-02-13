@@ -77,7 +77,6 @@ func (p *pluginv2Runner) Initialized() error {
 			return err
 		}
 	}
-	// TODO Implement default flusher v2
 	return nil
 }
 
