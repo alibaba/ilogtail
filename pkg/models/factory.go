@@ -41,9 +41,9 @@ func NewTags() Tags {
 	}
 }
 
-func NewMetadataWithMap(tags map[string]string) Metadata {
+func NewMetadataWithMap(md map[string]string) Metadata {
 	return &keyValuesImpl[string]{
-		keyValues: tags,
+		keyValues: md,
 	}
 }
 
@@ -51,12 +51,12 @@ func NewMetadataWithKeyValues(keyValues ...string) Metadata {
 	if len(keyValues)%2 != 0 {
 		keyValues = keyValues[:len(keyValues)-1]
 	}
-	tags := make(map[string]string)
+	md := make(map[string]string)
 	for i := 0; i < len(keyValues); i += 2 {
-		tags[keyValues[i]] = keyValues[i+1]
+		md[keyValues[i]] = keyValues[i+1]
 	}
 	return &keyValuesImpl[string]{
-		keyValues: tags,
+		keyValues: md,
 	}
 }
 
@@ -144,4 +144,55 @@ func NewSpan(name, traceID, spanID string, kind SpanKind, startTime, endTime uin
 
 func NewByteArray(bytes []byte) ByteArray {
 	return ByteArray(bytes)
+}
+
+func NewLog(name, level string, body []byte, spanID, traceID string, tags Tags, timestamp uint64) *Log {
+	return &Log{
+		Name:      name,
+		Level:     level,
+		Body:      body,
+		Tags:      tags,
+		Timestamp: timestamp,
+		SpanID:    spanID,
+		TraceID:   traceID,
+	}
+}
+
+func NewSimpleLog(body []byte, tags Tags, timestamp uint64) *Log {
+	return &Log{
+		Body:      body,
+		Tags:      tags,
+		Timestamp: timestamp,
+	}
+}
+
+func NewSimpleLevelLog(level string, body []byte, tags Tags, timestamp uint64) *Log {
+	return &Log{
+		Level:     level,
+		Body:      body,
+		Tags:      tags,
+		Timestamp: timestamp,
+	}
+}
+
+func NewStringLog(name, level, body string, spanID, traceID string, tags Tags, timestamp uint64) *Log {
+	log := &Log{
+		Name:      name,
+		Level:     level,
+		Tags:      tags,
+		Timestamp: timestamp,
+		SpanID:    spanID,
+		TraceID:   traceID,
+	}
+	log.SetStringBody(body)
+	return log
+}
+
+func NewSimpleStringLog(body string, tags Tags, timestamp uint64) *Log {
+	log := &Log{
+		Tags:      tags,
+		Timestamp: timestamp,
+	}
+	log.SetStringBody(body)
+	return log
 }

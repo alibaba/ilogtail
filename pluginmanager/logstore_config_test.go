@@ -233,7 +233,7 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 	rawLogs := []byte("12345")
 	topic := "topic"
 	tags := []byte("")
-	str := helper.ZeroCopyString(rawLogs)
+	str := helper.ZeroCopyBytesToString(rawLogs)
 	l := new(LogstoreConfig)
 	l.PluginRunner = &pluginv1Runner{
 		LogsChan: make(chan *pipeline.LogWithContext, 10),
@@ -251,7 +251,7 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 
 	{
 		tags = []byte("k1~=~v1^^^k2~=~v2")
-		tagsStr := helper.ZeroCopyString(tags)
+		tagsStr := helper.ZeroCopyBytesToString(tags)
 		assert.Equal(t, 0, l.ProcessRawLogV2(rawLogs, "", topic, tags))
 		assert.Equal(t, 1, len(l.PluginRunner.(*pluginv1Runner).LogsChan))
 		log := <-l.PluginRunner.(*pluginv1Runner).LogsChan
@@ -276,7 +276,7 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 
 	{
 		tags = []byte("^^^k2~=~v2")
-		tagsStr := helper.ZeroCopyString(tags)
+		tagsStr := helper.ZeroCopyBytesToString(tags)
 		assert.Equal(t, 0, l.ProcessRawLogV2(rawLogs, "", topic, tags))
 		assert.Equal(t, 1, len(l.PluginRunner.(*pluginv1Runner).LogsChan))
 		log := <-l.PluginRunner.(*pluginv1Runner).LogsChan
@@ -297,7 +297,7 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 
 	{
 		tags = []byte("^^^k2^^^k3")
-		tagsStr := helper.ZeroCopyString(tags)
+		tagsStr := helper.ZeroCopyBytesToString(tags)
 		assert.Equal(t, 0, l.ProcessRawLogV2(rawLogs, "", topic, tags))
 		assert.Equal(t, 1, len(l.PluginRunner.(*pluginv1Runner).LogsChan))
 		log := <-l.PluginRunner.(*pluginv1Runner).LogsChan
