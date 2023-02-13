@@ -34,12 +34,20 @@ type ContextImp struct {
 	common      *pkg.LogtailContextMeta
 	pluginNames string
 	ctx         context.Context
+	logstoreC   *LogstoreConfig
 }
 
 var contextMutex sync.Mutex
 
 func (p *ContextImp) GetRuntimeContext() context.Context {
 	return p.ctx
+}
+
+func (p *ContextImp) GetExtension(name string) (pipeline.Extension, bool) {
+	if p.logstoreC == nil || p.logstoreC.PluginRunner == nil {
+		return nil, false
+	}
+	return p.logstoreC.PluginRunner.GetExtension(name)
 }
 
 func (p *ContextImp) GetConfigName() string {

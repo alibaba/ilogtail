@@ -31,6 +31,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 )
@@ -57,13 +58,14 @@ type retryConfig struct {
 }
 
 type FlusherHTTP struct {
-	RemoteURL   string               // RemoteURL to request
-	Headers     map[string]string    // Headers to append to the http request
-	Query       map[string]string    // Query parameters to append to the http request
-	Timeout     time.Duration        // Request timeout, default is 60s
-	Retry       retryConfig          // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
-	Convert     helper.ConvertConfig // Convert defines which protocol and format to convert to
-	Concurrency int                  // How many requests can be performed in concurrent
+	RemoteURL     string               // RemoteURL to request
+	Headers       map[string]string    // Headers to append to the http request
+	Query         map[string]string    // Query parameters to append to the http request
+	Timeout       time.Duration        // Request timeout, default is 60s
+	Retry         retryConfig          // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
+	Convert       helper.ConvertConfig // Convert defines which protocol and format to convert to
+	Concurrency   int                  // How many requests can be performed in concurrent
+	Authenticator string               // name of the extensions.ClientAuthenticator extension to use
 
 	varKeys []string
 
@@ -101,13 +103,9 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	}
 	f.converter = converter
 
-	f.client = &http.Client{
-		Timeout: f.Timeout,
-	}
-	transport, ok := http.DefaultTransport.(*http.Transport)
-	if ok && f.Concurrency > transport.MaxIdleConnsPerHost {
-		transport.MaxIdleConnsPerHost = f.Concurrency + 1
-		f.client.Transport = transport
+	err = f.initHTTPClient()
+	if err != nil {
+		return err
 	}
 
 	f.queue = make(chan interface{})
@@ -146,6 +144,43 @@ func (f *FlusherHTTP) IsReady(projectName string, logstoreName string, logstoreK
 func (f *FlusherHTTP) Stop() error {
 	f.counter.Wait()
 	close(f.queue)
+	return nil
+}
+
+func (f *FlusherHTTP) initHTTPClient() error {
+	transport := http.DefaultTransport
+	var err error
+	if dt, ok := transport.(*http.Transport); ok {
+		dt = dt.Clone()
+		if f.Concurrency > dt.MaxIdleConnsPerHost {
+			dt.MaxIdleConnsPerHost = f.Concurrency + 1
+		}
+		transport = dt
+	}
+	if f.Authenticator != "" {
+		auth, ok := f.context.GetExtension(f.Authenticator)
+		if !ok {
+			err = fmt.Errorf("not found authenticator[%s]", f.Authenticator)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init authenticator fail, error", err)
+			return err
+		}
+		ca, ok := auth.(extensions.ClientAuthenticator)
+		if !ok {
+			err = fmt.Errorf("authenticator(%s) not implement interface extensions.ClientAuthenticator", f.Authenticator)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init authenticator fail, error", err)
+			return err
+		}
+		transport, err = ca.RoundTripper(transport)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init authenticator fail, error", err)
+			return err
+		}
+	}
+
+	f.client = &http.Client{
+		Timeout:   f.Timeout,
+		Transport: transport,
+	}
 	return nil
 }
 
@@ -217,6 +252,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 	for i := 0; i <= f.Retry.MaxRetryTimes; i++ {
 		ok, retryable, e := f.flush(data, varValues)
 		if ok || !retryable || !f.Retry.Enable {
+			err = e
 			break
 		}
 		err = e
@@ -311,6 +347,9 @@ func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retry
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher write data returned error, url", req.URL.String(), "status", response.Status, "body", string(body))
 		return false, true, fmt.Errorf("err status returned: %v", response.Status)
 	default:
+		if response.StatusCode == http.StatusUnauthorized || response.StatusCode == http.StatusForbidden {
+			return false, true, fmt.Errorf("err status returned: %v", response.Status)
+		}
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher write data returned error, url", req.URL.String(), "status", response.Status, "body", string(body))
 		return false, false, fmt.Errorf("unexpected status returned: %v", response.Status)
 	}

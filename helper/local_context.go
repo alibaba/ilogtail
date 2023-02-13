@@ -67,6 +67,10 @@ func (p *LocalContext) GetRuntimeContext() context.Context {
 	return p.ctx
 }
 
+func (p *LocalContext) GetExtension(name string) (pipeline.Extension, bool) {
+	return nil, false
+}
+
 func (p *LocalContext) RegisterCounterMetric(metric pipeline.CounterMetric) {
 	contextMutex.Lock()
 	defer contextMutex.Unlock()

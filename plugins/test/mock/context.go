@@ -166,3 +166,7 @@ func (p *EmptyContext) GetCheckPointObject(key string, obj interface{}) (exist b
 func (p *EmptyContext) GetRuntimeContext() context.Context {
 	return p.ctx
 }
+
+func (p *EmptyContext) GetExtension(name string) (pipeline.Extension, bool) {
+	return nil, false
+}

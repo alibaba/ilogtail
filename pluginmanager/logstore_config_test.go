@@ -26,9 +26,11 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/plugins/extension/basicauth"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input"
 	"github.com/alibaba/ilogtail/plugins/processor/regex"
+	"github.com/alibaba/ilogtail/plugins/test"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -173,6 +175,92 @@ func (s *logstoreConfigTestSuite) TestLoadConfig() {
 	}
 }
 
+func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
+	jsonStr = `
+	{
+		"inputs": [
+			{
+				"type": "service_mock",
+				"detail": {
+					"LogsPerSecond": 100,
+					"Fields": {
+						"content": "Active connections: 1\nserver accepts handled requests\n 6079 6079 11596\n Reading: 0 Writing: 1 Waiting: 0"
+					}
+				}
+			}
+		],
+		"processors": [
+			{
+				"type": "processor_regex",
+				"detail": {
+					"SourceKey": "content",
+					"Regex": "Active connections: (\\d+)\\s+server accepts handled requests\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+Reading: (\\d+) Writing: (\\d+) Waiting: (\\d+).*",
+					"Keys": [
+						"connection",
+						"accepts",
+						"handled",
+						"requests",
+						"reading",
+						"writing",
+						"waiting"
+					],
+					"FullMatch": true,
+					"NoKeyError": true,
+					"NoMatchError": true,
+					"KeepSource": true
+				}
+			}
+		],
+		"aggregators": [
+			{
+				"type": "aggregator_default"
+			}
+		],
+		"flushers": [
+			{
+				"type": "flusher_statistics",
+				"detail": {
+					"GeneratePB": true
+				}
+			},
+			{
+				"type": "flusher_checker"
+			}
+		],
+		"extensions": [
+			{
+				"type": "extension_basicauth/basicauth_user1"
+				"detail": {
+					"Username": "user1",
+					"Password": "pwd1"
+				}
+			}
+		]
+	}
+`
+
+	s.NoError(test.LoadMockConfig("project", "logstore", "test", ``))
+	s.Equal(len(LogtailConfig), 1)
+	config := LogtailConfig["test"]
+	s.Equal(config.ProjectName, "project")
+	s.Equal(config.LogstoreName, "logstore")
+	s.Equal(config.ConfigName, "test")
+	s.Equal(config.LogstoreKey, int64(666))
+	s.Equal(len(config.PluginRunner.(*pluginv1Runner).MetricPlugins), 0)
+	s.Equal(len(config.PluginRunner.(*pluginv1Runner).ServicePlugins), 1)
+	s.Equal(len(config.PluginRunner.(*pluginv1Runner).ProcessorPlugins), 1)
+	s.Equal(len(config.PluginRunner.(*pluginv1Runner).AggregatorPlugins), 1)
+	s.Equal(len(config.PluginRunner.(*pluginv1Runner).FlusherPlugins), 2)
+	s.Equal(len(config.PluginRunner.(*pluginv1Runner).ExtensionPlugins), 1)
+	// global config
+	s.Equal(config.GlobalConfig, &LogtailGlobalConfig)
+
+	// check plugin inner info
+	reg, ok := config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
+	s.True(ok)
+	basicAuth, ok := config.PluginRunner.(*pluginv1Runner).ExtensionPlugins["extension_basicauth/basicauth_user1"].(*basicauth.ExtensionBasicAuth)
+	s.True(ok)
+}
 func Test_hasDockerStdoutInput(t *testing.T) {
 	{
 		plugins := map[string]interface{}{
