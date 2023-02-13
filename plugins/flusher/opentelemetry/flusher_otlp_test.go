@@ -3,11 +3,13 @@ package opentelemetry
 import (
 	"context"
 	"net"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
@@ -434,4 +436,40 @@ func makeTestPipelineGroupEventsTraceSlice() []*models.PipelineGroupEvents {
 
 	}
 	return slice
+}
+
+func Test_GrpcConfig_Merge(t *testing.T) {
+	var defaultConfig *helper.GrpcClientConfig
+	var specificConfig *helper.GrpcClientConfig
+	mergedConfig, err := mergeGrpcConfig(defaultConfig, specificConfig)
+	assert.NotNil(t, err)
+	assert.Nil(t, mergedConfig)
+
+	defaultConfig = &helper.GrpcClientConfig{
+		Endpoint: ":1234",
+	}
+	mergedConfig, err = mergeGrpcConfig(defaultConfig, specificConfig)
+	assert.Nil(t, err)
+	assert.Equal(t, mergedConfig.Endpoint, ":1234")
+
+	defaultConfig = nil
+	specificConfig = &helper.GrpcClientConfig{
+		Endpoint: ":1235",
+	}
+	mergedConfig, err = mergeGrpcConfig(defaultConfig, specificConfig)
+	assert.Nil(t, err)
+	assert.Equal(t, mergedConfig.Endpoint, ":1235")
+
+	defaultConfig = &helper.GrpcClientConfig{
+		Endpoint: ":1236",
+	}
+	specificConfig = &helper.GrpcClientConfig{
+		Endpoint:       ":1237",
+		ReadBufferSize: 1024,
+	}
+	mergedConfig, err = mergeGrpcConfig(defaultConfig, specificConfig)
+	assert.Nil(t, err)
+	assert.Equal(t, mergedConfig.Endpoint, ":1237")
+	assert.Equal(t, mergedConfig.ReadBufferSize, 1024)
+	assert.True(t, reflect.DeepEqual(mergedConfig, specificConfig))
 }
