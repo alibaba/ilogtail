@@ -41,7 +41,7 @@ var DisabledLogtailConfigLock sync.Mutex
 var DisabledLogtailConfig = make(map[string]*LogstoreConfig)
 
 // StatisticsConfigJson, AlarmConfigJson
-var BaseVersion = "1.3.1"
+var BaseVersion = "0.1.0" // will be overwritten through ldflags at compile time
 
 var statisticsConfigJSON = `{
     "global": {
