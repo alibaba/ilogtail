@@ -27,7 +27,7 @@ ilogtail:
                 _value: "log contents"
           outputs:
             - Type: flusher_clickhouse
-              Hosts: ["clickhouse:9000"]
+              Addresses: ["clickhouse:9000"]
               Authentication:
                 PlainText:
                   Database: default
@@ -47,7 +47,7 @@ ilogtail:
 subscriber:
   name: clickhouse
   config:
-    host: http://clickhouse:9000
+    address: http://clickhouse:9000
     database: default
     table: demo
 verify:

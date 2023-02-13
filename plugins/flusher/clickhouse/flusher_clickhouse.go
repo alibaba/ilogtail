@@ -32,8 +32,8 @@ import (
 type FlusherClickHouse struct {
 	// Convert ilogtail data convert config
 	Convert convertConfig
-	// Hosts clickhouse addresses
-	Hosts []string
+	// Addresses clickhouse addresses
+	Addresses []string
 	// Authentication using PLAIN
 	Authentication Authentication
 	// Cluster ClickHouse cluster name
@@ -88,7 +88,7 @@ type FlusherFunc func(projectName string, logstoreName string, configName string
 
 func NewFlusherClickHouse() *FlusherClickHouse {
 	return &FlusherClickHouse{
-		Hosts: []string{},
+		Addresses: []string{},
 		Authentication: Authentication{
 			PlainText: &PlainTextConfig{
 				Username: "",
@@ -158,7 +158,7 @@ func (f *FlusherClickHouse) Description() string {
 }
 
 func (f *FlusherClickHouse) Validate() error {
-	if f.Hosts == nil || len(f.Hosts) == 0 {
+	if f.Addresses == nil || len(f.Addresses) == 0 {
 		var err = fmt.Errorf("clickhouse addrs is nil")
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
 		return err
@@ -227,7 +227,7 @@ func newConn(f *FlusherClickHouse) (driver.Conn, error) {
 		return nil, err
 	}
 	opt := &clickhouse.Options{
-		Addr: f.Hosts,
+		Addr: f.Addresses,
 		DialContext: func(ctx context.Context, addr string) (net.Conn, error) {
 			var d net.Dialer
 			return d.DialContext(ctx, "tcp", addr)

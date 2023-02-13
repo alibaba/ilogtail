@@ -37,7 +37,7 @@ const clickHouseName = "clickhouse"
 const clickhouseQuerySQL = "select _timestamp,_log from `%s`.`ilogtail_%s_buffer` where _timestamp > %v order by _timestamp"
 
 type ClickHouseSubscriber struct {
-	Host            string `mapstructure:"host" comment:"the clickhouse host"`
+	Address         string `mapstructure:"address" comment:"the clickhouse address"`
 	Username        string `mapstructure:"username" comment:"the clickhouse username"`
 	Password        string `mapstructure:"password" comment:"the clickhouse password"`
 	Database        string `mapstructure:"database" comment:"the clickhouse database name to query from"`
@@ -60,7 +60,7 @@ func (i *ClickHouseSubscriber) Description() string {
 }
 
 func (i *ClickHouseSubscriber) Start() error {
-	host, err := TryReplacePhysicalAddress(i.Host)
+	host, err := TryReplacePhysicalAddress(i.Address)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func init() {
 			return nil, err
 		}
 
-		if i.Host == "" {
+		if i.Address == "" {
 			return nil, errors.New("addr must not be empty")
 		}
 		if i.Database == "" {
