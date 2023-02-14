@@ -69,7 +69,7 @@ type ServiceHTTP struct {
 	DumpData           bool // would dump the received data to a local file, which is only used to valid data by the developers. And the maximum size of file is 100M.
 	Format             string
 	Address            string
-	Endpoint           string
+	Path               string
 	ReadTimeoutSec     int
 	ShutdownTimeoutSec int
 	MaxBodySize        int64
@@ -94,10 +94,10 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	if s.decoder, err = decoder.GetDecoderWithOptions(s.Format, decoder.Option{FieldsExtend: s.FieldsExtend, DisableUncompress: s.DisableUncompress}); err != nil {
 		return 0, err
 	}
-	if s.Format == common.ProtocolOTLPLogV1 && s.Endpoint == "" {
-		s.Endpoint += "/v1/logs"
+	if s.Format == common.ProtocolOTLPLogV1 && s.Path == "" {
+		s.Path += "/v1/logs"
 	}
-	s.Address += s.Endpoint
+	s.Address += s.Path
 	logger.Infof(context.GetRuntimeContext(), "addr", s.Address, "format", s.Format)
 
 	if s.Cluster != "" {

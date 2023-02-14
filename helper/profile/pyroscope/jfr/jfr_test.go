@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
@@ -33,7 +32,7 @@ func TestParse(t *testing.T) {
 	}
 
 	logs, err := rp.Parse(context.Background(), &profile.Meta{
-		Key:             segment.NewKey(map[string]string{"_app_name_": "12"}),
+		Tags:            map[string]string{"_app_name_": "12"},
 		SpyName:         "javaspy",
 		StartTime:       time.Now(),
 		EndTime:         time.Now(),
@@ -68,7 +67,7 @@ func TestParseJFR(t *testing.T) {
 
 	r := new(RawProfile)
 	meta := &profile.Meta{
-		Key:             segment.NewKey(map[string]string{"_app_name_": "12"}),
+		Tags:            map[string]string{"_app_name_": "12"},
 		SpyName:         "javaspy",
 		StartTime:       time.Now(),
 		EndTime:         time.Now(),

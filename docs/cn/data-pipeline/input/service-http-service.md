@@ -11,7 +11,7 @@
 | Type               | String            | 是    | 插件类型，固定为`service_http_server`                                                                                                     |
 | Format             | String            | 否    | <p>数据格式。</p> <p>支持格式：`sls`、`prometheus`、`influxdb`、`otlp_logv1`、`statsd`</p>  <p>v2版本支持格式: `raw`</p><p>说明：`raw`格式以原始请求字节流传输数据</p> |
 | Address            | String            | 否    | <p>监听地址。</p><p></p>                                                                                                               |
-| Endpoint           | String            | 否    | <p>接收端点, 如Format 为 `otlp_logv1` 时, 默认端点为`/v1/logs` 。</p><p></p>                                                                   |
+| Path               | String            | 否    | <p>接收端点, 如Format 为 `otlp_logv1` 时, 默认端点为`/v1/logs` 。</p><p></p>                                                                   |
 | ReadTimeoutSec     | String            | 否    | <p>读取超时时间。</p><p>默认取值为:`10s`。</p>                                                                                                 |
 | ShutdownTimeoutSec | String            | 否    | <p>关闭超时时间。</p><p>默认取值为:`5s`。</p>                                                                                                  |
 | MaxBodySize        | String            | 否    | <p>最大传输 body 大小。</p><p>默认取值为:`64k`。</p>                                                                                           |
@@ -163,10 +163,10 @@ curl --location --request POST 'http://127.0.0.1:12345?QueryKey=queryValue' --he
 
 ### 接收Pyroscope Agent 数据
 
-* [Agent](https://pyroscope.io/docs/agent-overview/) 兼容性说明  
+* [Agent](https://pyroscope.io/docs/agent-overview/) 兼容性说明
 
   | Agent | 协议         | 是否兼容 |
-      |------------|-----|----------|
+        |------------|-----|----------|
   | pyroscopde/nodjs | pprof      | 是|
   | pyroscopde/.net | pprof      | 是|
   | pyroscopde/.net-new| pprof      | 是|

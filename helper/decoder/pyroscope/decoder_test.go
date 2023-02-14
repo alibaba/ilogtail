@@ -2,14 +2,13 @@ package pyroscope
 
 import (
 	"bytes"
+	"github.com/alibaba/ilogtail/plugins/test"
 	"net/http"
 	"testing"
 
 	"github.com/pyroscope-io/pyroscope/pkg/structs/transporttrie"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/alibaba/ilogtail/helper"
 )
 
 func TestDecoder_DecodeTire(t *testing.T) {
@@ -49,15 +48,15 @@ func TestDecoder_DecodeTire(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, len(logs) == 9)
 	log := logs[1]
-	require.Equal(t, helper.ReadLogVal(log, "name"), "baz")
-	require.Equal(t, helper.ReadLogVal(log, "stack"), "bar\nfoo")
-	require.Equal(t, helper.ReadLogVal(log, "language"), "ebpf")
-	require.Equal(t, helper.ReadLogVal(log, "type"), "profile_cpu")
-	require.Equal(t, helper.ReadLogVal(log, "units"), "samples")
-	require.Equal(t, helper.ReadLogVal(log, "valueTypes"), "cpu")
-	require.Equal(t, helper.ReadLogVal(log, "aggTypes"), "sum")
-	require.Equal(t, helper.ReadLogVal(log, "dataType"), "CallStack")
-	require.Equal(t, helper.ReadLogVal(log, "durationNs"), "10000000000")
-	require.Equal(t, helper.ReadLogVal(log, "labels"), "{\"__name__\":\"demo.cpu\",\"a\":\"b\"}")
-	require.Equal(t, helper.ReadLogVal(log, "value_0"), "1")
+	require.Equal(t, test.ReadLogVal(log, "name"), "baz")
+	require.Equal(t, test.ReadLogVal(log, "stack"), "bar\nfoo")
+	require.Equal(t, test.ReadLogVal(log, "language"), "ebpf")
+	require.Equal(t, test.ReadLogVal(log, "type"), "profile_cpu")
+	require.Equal(t, test.ReadLogVal(log, "units"), "samples")
+	require.Equal(t, test.ReadLogVal(log, "valueTypes"), "cpu")
+	require.Equal(t, test.ReadLogVal(log, "aggTypes"), "sum")
+	require.Equal(t, test.ReadLogVal(log, "dataType"), "CallStack")
+	require.Equal(t, test.ReadLogVal(log, "durationNs"), "10000000000")
+	require.Equal(t, test.ReadLogVal(log, "labels"), "{\"__name__\":\"demo\",\"a\":\"b\"}")
+	require.Equal(t, test.ReadLogVal(log, "value_0"), "1")
 }

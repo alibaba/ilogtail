@@ -2,17 +2,16 @@ package pprof
 
 import (
 	"context"
+	"github.com/alibaba/ilogtail/plugins/test"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/pyroscope-io/pyroscope/pkg/convert/pprof"
-	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
 	"github.com/stretchr/testify/require"
 
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/models"
 )
@@ -43,7 +42,7 @@ func TestRawProfile_ParseV2(t *testing.T) {
 	r := new(RawProfile)
 	r.group = new(models.PipelineGroupEvents)
 	meta := &profile.Meta{
-		Key:             segment.NewKey(map[string]string{"_app_name_": "12"}),
+		Tags:            map[string]string{"_app_name_": "12"},
 		SpyName:         "go",
 		StartTime:       time.Now(),
 		EndTime:         time.Now(),
@@ -51,14 +50,14 @@ func TestRawProfile_ParseV2(t *testing.T) {
 		Units:           profile.NanosecondsUnit,
 		AggregationType: profile.SumAggType,
 	}
-	cb := r.extraceProfileV2(meta)
-	err = extractLogs(context.Background(), te, p, meta, cb)
+	cb := r.extractProfileV2(meta)
+	err = r.extractLogs(context.Background(), te, p, meta, cb)
 	require.NoError(t, err)
 	group := r.group
 	require.Equal(t, 0, group.Group.Metadata.Len())
 	require.Equal(t, 0, group.Group.Tags.Len())
 	require.Equal(t, 6, len(group.Events))
-	event := helper.PickEvent(group.Events, "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
+	event := test.PickEvent(group.Events, "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
 	require.True(t, event != nil)
 	m := event.(*models.Profile)
 
@@ -87,7 +86,7 @@ func TestRawProfile_Parse(t *testing.T) {
 	}
 	r := new(RawProfile)
 	meta := &profile.Meta{
-		Key:             segment.NewKey(map[string]string{"_app_name_": "12"}),
+		Tags:            map[string]string{"_app_name_": "12"},
 		SpyName:         "go",
 		StartTime:       time.Now(),
 		EndTime:         time.Now(),
@@ -95,23 +94,23 @@ func TestRawProfile_Parse(t *testing.T) {
 		Units:           profile.NanosecondsUnit,
 		AggregationType: profile.SumAggType,
 	}
-	cb := r.extraceProfileV1(meta)
-	err = extractLogs(context.Background(), te, p, meta, cb)
+	cb := r.extractProfileV1(meta)
+	err = r.extractLogs(context.Background(), te, p, meta, cb)
 	require.NoError(t, err)
 	logs := r.logs
 	require.Equal(t, len(logs), 6)
-	picks := helper.PickLogs(logs, "stackID", "40fb694aa9506d0b")
+	picks := test.PickLogs(logs, "stackID", "40fb694aa9506d0b")
 	require.Equal(t, len(picks), 1)
 	log := picks[0]
-	require.Equal(t, helper.ReadLogVal(log, "name"), "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
-	require.Equal(t, helper.ReadLogVal(log, "stack"), "runtime.netpoll /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/netpoll_kqueue.go\nruntime.findrunnable /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.schedule /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.park_m /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.mcall /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/asm_arm64.s")
-	require.Equal(t, helper.ReadLogVal(log, "language"), "go")
-	require.Equal(t, helper.ReadLogVal(log, "type"), "profile_cpu")
-	require.Equal(t, helper.ReadLogVal(log, "units"), "nanoseconds")
-	require.Equal(t, helper.ReadLogVal(log, "valueTypes"), "cpu")
-	require.Equal(t, helper.ReadLogVal(log, "aggTypes"), "sum")
-	require.Equal(t, helper.ReadLogVal(log, "dataType"), "CallStack")
-	require.Equal(t, helper.ReadLogVal(log, "durationNs"), "1100177167")
-	require.Equal(t, helper.ReadLogVal(log, "labels"), "{\"_app_name_\":\"12\"}")
-	require.Equal(t, helper.ReadLogVal(log, "value_0"), "250000000")
+	require.Equal(t, test.ReadLogVal(log, "name"), "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
+	require.Equal(t, test.ReadLogVal(log, "stack"), "runtime.netpoll /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/netpoll_kqueue.go\nruntime.findrunnable /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.schedule /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.park_m /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.mcall /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/asm_arm64.s")
+	require.Equal(t, test.ReadLogVal(log, "language"), "go")
+	require.Equal(t, test.ReadLogVal(log, "type"), "profile_cpu")
+	require.Equal(t, test.ReadLogVal(log, "units"), "nanoseconds")
+	require.Equal(t, test.ReadLogVal(log, "valueTypes"), "cpu")
+	require.Equal(t, test.ReadLogVal(log, "aggTypes"), "sum")
+	require.Equal(t, test.ReadLogVal(log, "dataType"), "CallStack")
+	require.Equal(t, test.ReadLogVal(log, "durationNs"), "1100177167")
+	require.Equal(t, test.ReadLogVal(log, "labels"), "{\"_app_name_\":\"12\"}")
+	require.Equal(t, test.ReadLogVal(log, "value_0"), "250000000")
 }

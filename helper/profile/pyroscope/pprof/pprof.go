@@ -83,7 +83,7 @@ func NewRawProfile(data []byte, format string) *RawProfile {
 }
 
 func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
-	cb := r.extraceProfileV1(meta)
+	cb := r.extractProfileV1(meta)
 	if err = r.doParse(ctx, meta, cb); err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*pro
 func (r *RawProfile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {
 	groups = new(models.PipelineGroupEvents)
 	r.group = groups
-	cb := r.extraceProfileV2(meta)
+	cb := r.extractProfileV2(meta)
 	if err = r.doParse(ctx, meta, cb); err != nil {
 		return nil, err
 	}
@@ -192,7 +192,7 @@ func (r *RawProfile) extractLogs(ctx context.Context, tp *tree.Profile, p Parser
 	return nil
 }
 
-func (r *RawProfile) extraceProfileV2(meta *profile.Meta) profile.CallbackFunc {
+func (r *RawProfile) extractProfileV2(meta *profile.Meta) profile.CallbackFunc {
 	if r.group.Group == nil {
 		r.group.Group = models.NewGroup(models.NewMetadata(), models.NewTags())
 	}
@@ -212,7 +212,7 @@ func (r *RawProfile) extraceProfileV2(meta *profile.Meta) profile.CallbackFunc {
 	}
 }
 
-func (r *RawProfile) extraceProfileV1(meta *profile.Meta) profile.CallbackFunc {
+func (r *RawProfile) extractProfileV1(meta *profile.Meta) profile.CallbackFunc {
 	profileIDStr := profile.GetProfileID(meta)
 	return func(id uint64, stack *profile.Stack, vals []uint64, types, units, aggs []string, startTime, endTime int64, labels map[string]string) {
 		b, _ := json.Marshal(labels)
