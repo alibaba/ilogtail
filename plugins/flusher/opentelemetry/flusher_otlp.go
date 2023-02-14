@@ -42,14 +42,18 @@ import (
 
 type Version string
 
-var v1 Version = "v1"
+var (
+	v1             Version = "v1"
+	errEmptyConfig         = fmt.Errorf("empty_config")
+	errNoEndpoint          = fmt.Errorf("no_specific_endpoint")
+)
 
 type FlusherOTLP struct {
 	GrpcConfig *helper.GrpcClientConfig `json:"Grpc"`
 	Version    Version                  `json:"Version"`
-	Logs       *helper.GrpcClientConfig `json:"Logs"`
-	Metrics    *helper.GrpcClientConfig `json:"Metrics"`
-	Traces     *helper.GrpcClientConfig `json:"Traces"`
+	Logs       *GrpcClientConfig        `json:"Logs"`
+	Metrics    *GrpcClientConfig        `json:"Metrics"`
+	Traces     *GrpcClientConfig        `json:"Traces"`
 
 	converter *converter.Converter
 	metadata  metadata.MD
@@ -75,14 +79,14 @@ func (f *FlusherOTLP) Init(ctx pipeline.Context) error {
 	}
 	f.converter = convert
 
-	logClientConfig, err1 := mergeGrpcConfig(f.GrpcConfig, f.Logs)
-	metricClientConfig, err2 := mergeGrpcConfig(f.GrpcConfig, f.Metrics)
-	traceClientConfig, err3 := mergeGrpcConfig(f.GrpcConfig, f.Traces)
+	logClientConfig, logErr := mergeGrpcConfig(f.GrpcConfig, f.Logs)
+	metricClientConfig, metricErr := mergeGrpcConfig(f.GrpcConfig, f.Metrics)
+	traceClientConfig, traceErr := mergeGrpcConfig(f.GrpcConfig, f.Traces)
 
-	if err1 != nil && err2 != nil && err3 != nil {
+	if logErr != nil && metricErr != nil && traceErr != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp converter fail, no invalid gRPC Config",
-			"log config error", err1, "metric config error", err2, "trace config error", err3)
-		return err1
+			"log config error", logErr, "metric config error", metricErr, "trace config error", traceErr)
+		return logErr
 	}
 
 	if f.GrpcConfig != nil {
@@ -94,43 +98,55 @@ func (f *FlusherOTLP) Init(ctx pipeline.Context) error {
 		logger.Info(f.context.GetRuntimeContext(), "otlp flusher idefault endpoint", f.GrpcConfig.Endpoint)
 	}
 
-	if reflect.DeepEqual(f.GrpcConfig, logClientConfig) && f.grpcConn != nil {
-		logger.Info(f.context.GetRuntimeContext(), "otlp logs flusher endpoint", f.GrpcConfig.Endpoint)
-		f.logClient = newGrpcClient(plogotlp.NewGRPCClient(f.grpcConn), f.grpcConn, logClientConfig, f.metadata)
-	} else {
-		grpcConn, err := buildGrpcClientConn(logClientConfig)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp log gRPC conn fail, error", err)
+	if logErr == nil {
+		if reflect.DeepEqual(f.GrpcConfig, logClientConfig) && f.grpcConn != nil {
+			logger.Info(f.context.GetRuntimeContext(), "otlp logs flusher endpoint", f.GrpcConfig.Endpoint)
+			f.logClient = newGrpcClient(plogotlp.NewGRPCClient(f.grpcConn), f.grpcConn, logClientConfig, f.metadata)
+		} else {
+			grpcConn, err := buildGrpcClientConn(logClientConfig)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp log gRPC conn fail, error", err)
+			}
+			logger.Info(f.context.GetRuntimeContext(), "otlp logs flusher endpoint", logClientConfig.Endpoint)
+			logMeta := metadata.New(logClientConfig.Headers)
+			f.logClient = newGrpcClient(plogotlp.NewGRPCClient(grpcConn), grpcConn, logClientConfig, logMeta)
 		}
-		logger.Info(f.context.GetRuntimeContext(), "otlp logs flusher endpoint", logClientConfig.Endpoint)
-		logMeta := metadata.New(logClientConfig.Headers)
-		f.logClient = newGrpcClient(plogotlp.NewGRPCClient(grpcConn), grpcConn, logClientConfig, logMeta)
+	} else {
+		logger.Info(f.context.GetRuntimeContext(), "otlp logs flusher", "disabled")
 	}
 
-	if reflect.DeepEqual(f.GrpcConfig, metricClientConfig) && f.grpcConn != nil {
-		logger.Info(f.context.GetRuntimeContext(), "otlp metrics flusher endpoint", f.GrpcConfig.Endpoint)
-		f.metricClient = newGrpcClient(pmetricotlp.NewGRPCClient(f.grpcConn), f.grpcConn, metricClientConfig, f.metadata)
-	} else {
-		grpcConn, err := buildGrpcClientConn(metricClientConfig)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp metric gRPC conn fail, error", err)
+	if metricErr == nil {
+		if reflect.DeepEqual(f.GrpcConfig, metricClientConfig) && f.grpcConn != nil {
+			logger.Info(f.context.GetRuntimeContext(), "otlp metrics flusher endpoint", f.GrpcConfig.Endpoint)
+			f.metricClient = newGrpcClient(pmetricotlp.NewGRPCClient(f.grpcConn), f.grpcConn, metricClientConfig, f.metadata)
+		} else {
+			grpcConn, err := buildGrpcClientConn(metricClientConfig)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp metric gRPC conn fail, error", err)
+			}
+			logger.Info(f.context.GetRuntimeContext(), "otlp metrics flusher endpoint", metricClientConfig.Endpoint)
+			metricMeta := metadata.New(logClientConfig.Headers)
+			f.metricClient = newGrpcClient(pmetricotlp.NewGRPCClient(grpcConn), grpcConn, metricClientConfig, metricMeta)
 		}
-		logger.Info(f.context.GetRuntimeContext(), "otlp metrics flusher endpoint", metricClientConfig.Endpoint)
-		metricMeta := metadata.New(logClientConfig.Headers)
-		f.metricClient = newGrpcClient(pmetricotlp.NewGRPCClient(grpcConn), grpcConn, metricClientConfig, metricMeta)
+	} else {
+		logger.Info(f.context.GetRuntimeContext(), "otlp metrics flusher", "disabled")
 	}
 
-	if reflect.DeepEqual(f.GrpcConfig, traceClientConfig) && f.grpcConn != nil {
-		logger.Info(f.context.GetRuntimeContext(), "otlp traces flusher endpoint", f.GrpcConfig.Endpoint)
-		f.traceClient = newGrpcClient(ptraceotlp.NewGRPCClient(f.grpcConn), f.grpcConn, traceClientConfig, f.metadata)
-	} else {
-		grpcConn, err := buildGrpcClientConn(traceClientConfig)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp trace gRPC conn fail, error", err)
+	if traceErr == nil {
+		if reflect.DeepEqual(f.GrpcConfig, traceClientConfig) && f.grpcConn != nil {
+			logger.Info(f.context.GetRuntimeContext(), "otlp traces flusher endpoint", f.GrpcConfig.Endpoint)
+			f.traceClient = newGrpcClient(ptraceotlp.NewGRPCClient(f.grpcConn), f.grpcConn, traceClientConfig, f.metadata)
+		} else {
+			grpcConn, err := buildGrpcClientConn(traceClientConfig)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp trace gRPC conn fail, error", err)
+			}
+			logger.Info(f.context.GetRuntimeContext(), "otlp traces flusher endpoint", traceClientConfig.Endpoint)
+			traceMeta := metadata.New(logClientConfig.Headers)
+			f.traceClient = newGrpcClient(ptraceotlp.NewGRPCClient(grpcConn), grpcConn, metricClientConfig, traceMeta)
 		}
-		logger.Info(f.context.GetRuntimeContext(), "otlp traces flusher endpoint", traceClientConfig.Endpoint)
-		traceMeta := metadata.New(logClientConfig.Headers)
-		f.traceClient = newGrpcClient(ptraceotlp.NewGRPCClient(grpcConn), grpcConn, metricClientConfig, traceMeta)
+	} else {
+		logger.Info(f.context.GetRuntimeContext(), "otlp traces flusher", "disabled")
 	}
 
 	logger.Info(f.context.GetRuntimeContext(), "otlp flusher init", "initialized")
@@ -147,6 +163,9 @@ func (f *FlusherOTLP) getConverter() (*converter.Converter, error) {
 }
 
 func (f *FlusherOTLP) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+	if f.logClient != nil || f.logClient.grpcConn != nil {
+		return nil
+	}
 	request := f.convertLogGroupToRequest(logGroupList)
 	if !f.GrpcConfig.Retry.Enable {
 		return timeoutFlush[plogotlp.ExportRequest, plogotlp.ExportResponse](f.logClient.client, request, f.metadata, f.logClient.grpcConfig)
@@ -171,7 +190,7 @@ func (f *FlusherOTLP) SetUrgent(flag bool) {
 
 // IsReady is ready to flush
 func (f *FlusherOTLP) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
-	if f.logClient.grpcConn == nil {
+	if f.logClient.grpcConn == nil || f.Logs.Disable {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_READY_ALARM", "otlp flusher is not ready, gRPC conn is nil")
 		return false
 	}
@@ -211,21 +230,21 @@ func (f *FlusherOTLP) Stop() error {
 		}
 	}
 
-	if f.logClient.grpcConn != nil {
+	if f.logClient != nil && f.logClient.grpcConn != nil {
 		err = f.logClient.grpcConn.Close()
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlp logs flusher fail, error", err)
 		}
 	}
 
-	if f.metricClient.grpcConn != nil {
+	if f.metricClient != nil && f.metricClient.grpcConn != nil {
 		err = f.metricClient.grpcConn.Close()
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlp metrics flusher fail, error", err)
 		}
 	}
 
-	if f.traceClient.grpcConn != nil {
+	if f.traceClient != nil && f.traceClient.grpcConn != nil {
 		err = f.traceClient.grpcConn.Close()
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlp traces flusher fail, error", err)
@@ -290,33 +309,41 @@ func (f *FlusherOTLP) flushRequests(log plogotlp.ExportRequest, metric pmetricot
 	wg := sync.WaitGroup{}
 	errChan := make(chan error, 3)
 
-	wg.Add(3)
-	go func() {
-		defer wg.Done()
-		err := timeoutFlush[plogotlp.ExportRequest, plogotlp.ExportResponse](f.logClient.client, log, f.metadata, f.logClient.grpcConfig)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send log data to otlp server fail, error", err)
-		}
-		errChan <- err
-	}()
+	if f.logClient != nil && f.logClient.grpcConn != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := timeoutFlush[plogotlp.ExportRequest, plogotlp.ExportResponse](f.logClient.client, log, f.metadata, f.logClient.grpcConfig)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send log data to otlp server fail, error", err)
+			}
+			errChan <- err
+		}()
+	}
 
-	go func() {
-		defer wg.Done()
-		err := timeoutFlush[pmetricotlp.ExportRequest, pmetricotlp.ExportResponse](f.metricClient.client, metric, f.metadata, f.metricClient.grpcConfig)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send metric data to otlp server fail, error", err)
-		}
-		errChan <- err
-	}()
+	if f.metricClient != nil && f.metricClient.grpcConn != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := timeoutFlush[pmetricotlp.ExportRequest, pmetricotlp.ExportResponse](f.metricClient.client, metric, f.metadata, f.metricClient.grpcConfig)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send metric data to otlp server fail, error", err)
+			}
+			errChan <- err
+		}()
+	}
 
-	go func() {
-		defer wg.Done()
-		err := timeoutFlush[ptraceotlp.ExportRequest, ptraceotlp.ExportResponse](f.traceClient.client, trace, f.metadata, f.traceClient.grpcConfig)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send trace data to otlp server fail, error", err)
-		}
-		errChan <- err
-	}()
+	if f.traceClient != nil && f.traceClient.grpcConn != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := timeoutFlush[ptraceotlp.ExportRequest, ptraceotlp.ExportResponse](f.traceClient.client, trace, f.metadata, f.traceClient.grpcConfig)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send trace data to otlp server fail, error", err)
+			}
+			errChan <- err
+		}()
+	}
 
 	wg.Wait()
 	return <-errChan
@@ -326,33 +353,41 @@ func (f *FlusherOTLP) flushRequestsWithRetry(log plogotlp.ExportRequest, metric 
 	wg := sync.WaitGroup{}
 	errChan := make(chan error, 3)
 
-	wg.Add(3)
-	go func() {
-		defer wg.Done()
-		err := flushWithRetry[plogotlp.ExportRequest, plogotlp.ExportResponse](f.logClient.client, log, f.metadata, f.logClient.grpcConfig)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send log data to otlp server fail, error", err)
-		}
-		errChan <- err
-	}()
+	if f.logClient != nil && f.logClient.grpcConn != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := flushWithRetry[plogotlp.ExportRequest, plogotlp.ExportResponse](f.logClient.client, log, f.metadata, f.logClient.grpcConfig)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send log data to otlp server fail, error", err)
+			}
+			errChan <- err
+		}()
+	}
 
-	go func() {
-		defer wg.Done()
-		err := flushWithRetry[pmetricotlp.ExportRequest, pmetricotlp.ExportResponse](f.metricClient.client, metric, f.metadata, f.metricClient.grpcConfig)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send metric data to otlp server fail, error", err)
-		}
-		errChan <- err
-	}()
+	if f.metricClient != nil && f.metricClient.grpcConn != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := flushWithRetry[pmetricotlp.ExportRequest, pmetricotlp.ExportResponse](f.metricClient.client, metric, f.metadata, f.metricClient.grpcConfig)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send metric data to otlp server fail, error", err)
+			}
+			errChan <- err
+		}()
+	}
 
-	go func() {
-		defer wg.Done()
-		err := flushWithRetry[ptraceotlp.ExportRequest, ptraceotlp.ExportResponse](f.traceClient.client, trace, f.metadata, f.traceClient.grpcConfig)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send trace data to otlp server fail, error", err)
-		}
-		errChan <- err
-	}()
+	if f.traceClient != nil && f.traceClient.grpcConn != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := flushWithRetry[ptraceotlp.ExportRequest, ptraceotlp.ExportResponse](f.traceClient.client, trace, f.metadata, f.traceClient.grpcConfig)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send trace data to otlp server fail, error", err)
+			}
+			errChan <- err
+		}()
+	}
 
 	wg.Wait()
 	return <-errChan
@@ -421,36 +456,40 @@ func newGrpcClient[T any](t T, conn *grpc.ClientConn, config *helper.GrpcClientC
 	}
 }
 
-func mergeGrpcConfig(defaultConfig *helper.GrpcClientConfig, specificConfig *helper.GrpcClientConfig) (*helper.GrpcClientConfig, error) {
+func mergeGrpcConfig(defaultConfig *helper.GrpcClientConfig, specificConfig *GrpcClientConfig) (*helper.GrpcClientConfig, error) {
 	if defaultConfig == nil && specificConfig == nil {
-		return nil, fmt.Errorf("empty_config")
+		return nil, errEmptyConfig
+	}
+
+	if specificConfig != nil && specificConfig.Disable {
+		return nil, errEmptyConfig
 	}
 
 	// only has default config
 	if specificConfig == nil {
 		if defaultConfig.Endpoint == "" {
-			return defaultConfig, fmt.Errorf("no_specific_endpoint")
+			return defaultConfig, errNoEndpoint
 		}
-		return defaultConfig, nil
+		specificConfig = &GrpcClientConfig{
+			GrpcClientConfig: *defaultConfig,
+		}
+		return &specificConfig.GrpcClientConfig, nil
 	}
 
 	// only has specific config
 	if defaultConfig == nil {
 		if specificConfig.Endpoint == "" {
-			return specificConfig, fmt.Errorf("no_specific_endpoint")
+			return &specificConfig.GrpcClientConfig, errNoEndpoint
 		}
-		return specificConfig, nil
+		return &specificConfig.GrpcClientConfig, nil
 	}
 
 	// has both configs
-	newConfig := new(helper.GrpcClientConfig)
-	*newConfig = *specificConfig
-
-	if newConfig.Endpoint == "" {
-		newConfig.Endpoint = defaultConfig.Endpoint
+	if specificConfig.Endpoint == "" {
+		specificConfig.Endpoint = defaultConfig.Endpoint
 	}
 
-	return newConfig, nil
+	return &specificConfig.GrpcClientConfig, nil
 }
 
 func buildGrpcClientConn(grpcConfig *helper.GrpcClientConfig) (*grpc.ClientConn, error) {
@@ -460,6 +499,11 @@ func buildGrpcClientConn(grpcConfig *helper.GrpcClientConfig) (*grpc.ClientConn,
 	}
 
 	return grpc.Dial(grpcConfig.GetEndpoint(), dialOpts...)
+}
+
+type GrpcClientConfig struct {
+	helper.GrpcClientConfig
+	Disable bool
 }
 
 func init() {
