@@ -44,10 +44,19 @@ const (
 	v2
 )
 
+type dumpDataReq struct {
+	Body   []byte
+	Url    string
+	Header map[string][]string
+}
+type dumpDataResp struct {
+	Body   []byte
+	Header map[string]string
+}
+
 type dumpData struct {
-	body   []byte
-	url    []byte
-	header []byte
+	Req  dumpDataReq
+	Resp dumpDataResp
 }
 
 // ServiceHTTP ...
@@ -66,7 +75,7 @@ type ServiceHTTP struct {
 	dumpDataKeepFiles []string
 
 	DumpDataKeepFiles  int
-	DumpData           bool // would dump the received data to a local file, which is only used to valid data by the developers. And the maximum size of file is 100M.
+	DumpData           bool // would dump the received data to a local file, which is only used to valid data by the developers.
 	Format             string
 	Address            string
 	Path               string
@@ -106,6 +115,7 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	s.paramCount = len(s.QueryParams) + len(s.HeaderParams)
 
 	if s.DumpData {
+		_ = os.MkdirAll(path.Join(util.GetCurrentBinaryPath(), "dump"), 0755)
 		s.dumpDataChan = make(chan *dumpData, 10)
 		prefix := strings.Join([]string{s.context.GetProject(), s.context.GetLogstore(), s.context.GetConfigName()}, "_")
 		files, err := helper.GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), prefix, true, 0)
@@ -153,11 +163,12 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.DumpData {
-		b, _ := json.Marshal(r.Header)
 		s.dumpDataChan <- &dumpData{
-			body:   data,
-			url:    []byte(r.URL.String()),
-			header: b,
+			Req: dumpDataReq{
+				Body:   data,
+				Url:    r.URL.String(),
+				Header: r.Header,
+			},
 		}
 	}
 	switch s.version {
@@ -338,30 +349,17 @@ func (s *ServiceHTTP) doDumpFile() {
 			}
 			if f != nil {
 				buffer := bytes.NewBuffer([]byte{})
-				// 4Byte url len, 4Byte body len,4 byte header len,  url, body, header(serialized by json)
-				if err = binary.Write(buffer, binary.BigEndian, uint32(len(d.url))); err != nil {
+				b, _ := json.Marshal(d)
+				if err = binary.Write(buffer, binary.BigEndian, uint32(len(b))); err != nil {
 					continue
 				}
-				if err = binary.Write(buffer, binary.BigEndian, uint32(len(d.body))); err != nil {
-					continue
-				}
-				if err = binary.Write(buffer, binary.BigEndian, uint32(len(d.header))); err != nil {
-					continue
-				}
-				total := 12 + len(d.url) + len(d.body) + len(d.header)
 				if _, err = f.WriteAt(buffer.Bytes(), offset); err != nil {
 					continue
 				}
-				if _, err = f.WriteAt(d.url, offset+12); err != nil {
+				if _, err = f.WriteAt(b, offset+4); err != nil {
 					continue
 				}
-				if _, err = f.WriteAt(d.body, offset+12+int64(len(d.url))); err != nil {
-					continue
-				}
-				if _, err = f.WriteAt(d.header, offset+12+int64(len(d.url)+len(d.body))); err != nil {
-					continue
-				}
-				offset += int64(total)
+				offset += int64(4 + len(b))
 			}
 		case <-s.stopChan:
 			closeFile()

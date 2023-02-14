@@ -23,6 +23,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"syscall"
 	"testing"
@@ -403,12 +404,16 @@ func TestInputWithRequestParamsWithoutPrefix(t *testing.T) {
 }
 
 func TestServiceHTTP_doDumpFile(t *testing.T) {
-	files, err := helper.GetFileListByPrefix(util.GetCurrentBinaryPath(), "a_b_ctestdump", true, 0)
-	require.NoError(t, err)
-	for _, file := range files {
-		_ = os.Remove(file)
+	_, err := os.Stat(path.Join(util.GetCurrentBinaryPath(), "dump"))
+	if err == nil {
+		files, err := helper.GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), "a_b_ctestdump", true, 0)
+		require.NoError(t, err)
+		for _, file := range files {
+			_ = os.Remove(file)
 
+		}
 	}
+
 	var ch chan *dumpData
 
 	insertFun := func(num int, start int) {
@@ -416,11 +421,12 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 			m := map[string][]string{
 				"header": {strconv.Itoa(i)},
 			}
-			b, _ := json.Marshal(m)
 			ch <- &dumpData{
-				body:   []byte(fmt.Sprintf("body_%d", i)),
-				url:    []byte(fmt.Sprintf("url_%d", i)),
-				header: b,
+				Req: dumpDataReq{
+					Body:   []byte(fmt.Sprintf("body_%d", i)),
+					Url:    fmt.Sprintf("url_%d", i),
+					Header: m,
+				},
 			}
 
 		}
@@ -434,22 +440,19 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 			if offset == len(data) {
 				break
 			}
-			var urlLen, bodyLen, headerLen uint32
+			var length uint32
 			buffer := bytes.NewBuffer(data[offset:])
-			require.NoError(t, binary.Read(buffer, binary.BigEndian, &urlLen))
-			require.NoError(t, binary.Read(buffer, binary.BigEndian, &bodyLen))
-			require.NoError(t, binary.Read(buffer, binary.BigEndian, &headerLen))
+			require.NoError(t, binary.Read(buffer, binary.BigEndian, &length))
 
-			url := data[offset+12 : offset+12+int(urlLen)]
-			body := data[offset+12+int(urlLen) : offset+12+int(urlLen)+int(bodyLen)]
-			header := data[offset+12+int(urlLen)+int(bodyLen) : offset+12+int(urlLen)+int(bodyLen)+int(headerLen)]
-			require.Equal(t, fmt.Sprintf("url_%d", num), string(url))
-			require.Equal(t, fmt.Sprintf("body_%d", num), string(body))
-			res := make(map[string][]string)
-			require.NoError(t, json.Unmarshal(header, &res))
-			require.Equal(t, len(res), 1)
-			require.Equal(t, strconv.Itoa(num), res["header"][0])
-			offset = offset + 12 + int(urlLen) + int(bodyLen) + int(headerLen)
+			data := data[offset+4 : offset+4+int(length)]
+			var d dumpData
+			require.NoError(t, json.Unmarshal(data, &d))
+
+			require.Equal(t, fmt.Sprintf("url_%d", num), d.Req.Url)
+			require.Equal(t, fmt.Sprintf("body_%d", num), string(d.Req.Body))
+			require.Equal(t, len(d.Req.Header), 1)
+			require.Equal(t, strconv.Itoa(num), d.Req.Header["header"][0])
+			offset = offset + 4 + int(length)
 			num++
 		}
 		require.Equal(t, num, expectLen)
