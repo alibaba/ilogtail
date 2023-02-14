@@ -9,12 +9,6 @@
 |-------------------|----------|------|------------------------------------------|
 | Type              | String   | 是    | 插件类型                                     |
 | Version           | String   | 否    | otlp 协议默认，默认为 v1                         |
-| Grpc              | Struct   | 是    | gRPC 配置项                                 |
-| Grpc.Endpoint     | String   | 是    | gRPC Server 地址                           |
-| Grpc.Compression  | String   | 否    | gRPC 数据压缩协议，可选 gzip、snappy、zstd。默认为 nono |
-| Grpc.Headers      | String数组 | 否    | gRPC 自定义 Headers                         |
-| Grpc.Timeout      | int      | 否    | gRPC 连接超时时间，单位为ms，默认为5000                |
-| Grpc.WaitForReady | bool     | 否    | gRPC 数据发送前是否等待就绪, 默认为false               |
 | Logs              | Struct   | 否    | Logs gRPC 配置项                                 |
 | Logs.Endpoint     | String   | 否    | Logs gRPC Server 地址                           |
 | Logs.Compression  | String   | 否    | Logs gRPC 数据压缩协议，可选 gzip、snappy、zstd。默认为 nono |
@@ -36,7 +30,7 @@
 
 ## 样例
 
-采集`/home/test-log/`路径下的所有文件名匹配`*.log`规则的文件，并将采集结果发送到 `Opentelemetry` 后端。
+采集`/home/test-log/`路径下的所有文件名匹配`*.log`规则的文件，并将采集结果发送到 `Opentelemetry` Log后端。
 
 ```
 enable: true
@@ -46,7 +40,7 @@ inputs:
     FilePattern: "*.log"
 flushers:
   - Type: flusher_otlp
-    Grpc:
+    Logs:
       Endpoint: http://192.168.xx.xx:8176
       Headers:
         X-AppKey: 8bc8f787-b0b2-4f26-89c6-d3950a090fef
@@ -57,7 +51,7 @@ flushers:
 
 ### v2 Pipeline
 
-监听4316端口的`Opentelemetry`的gRPC请求，并将采集结果发送到 `Opentelemetry` 后端。其中Logs和Traces发送到http://192.168.xx.xx:4317，Metrics发送到http://192.168.xx.xx:4319。
+监听4316端口的`Opentelemetry`的gRPC请求，并将采集结果发送到 `Opentelemetry` 后端。其中Logs发送到http://192.168.xx.xx:4317，Metrics发送到http://192.168.xx.xx:4319，Trace不发送。
 
 ```
 enable: true
@@ -69,12 +63,11 @@ inputs:
         Endpoint: 0.0.0.0:4316
 flushers:
   - Type: flusher_otlp
-    Grpc:
+    Logs:
       Endpoint: http://192.168.xx.xx:4317
     Metrics:
       Endpoint: http://192.168.xx.xx:4319   
 ```
-
 
 
 监听4316端口的`Opentelemetry`的gRPC请求，并将采集结果发送到 `Opentelemetry` 后端。Logs、Metrics、Traces发送到不同的后端。

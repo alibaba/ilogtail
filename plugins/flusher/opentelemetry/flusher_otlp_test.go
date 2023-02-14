@@ -3,13 +3,11 @@ package opentelemetry
 import (
 	"context"
 	"net"
-	"reflect"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
@@ -48,9 +46,25 @@ func Test_Flusher_Init(t *testing.T) {
 		logCtx := mock.NewEmptyContext("p", "l", "c")
 
 		convey.Convey("When FlusherOTLP init", func() {
-			f := &FlusherOTLP{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: ":8080"}}
+			f := &FlusherOTLP{Version: v1, Logs: &helper.GrpcClientConfig{Endpoint: ":8080"}}
 			err := f.Init(logCtx)
 			convey.So(err, convey.ShouldBeNil)
+		})
+	})
+}
+
+func Test_Flusher_Init_Invalid(t *testing.T) {
+	convey.Convey("When init grpc service", t, func() {
+		_, server := newTestGrpcService(t, ":8080", time.Nanosecond)
+		defer func() {
+			server.Stop()
+		}()
+		logCtx := mock.NewEmptyContext("p", "l", "c")
+
+		convey.Convey("When FlusherOTLP init", func() {
+			f := &FlusherOTLP{Version: v1}
+			err := f.Init(logCtx)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }
@@ -65,7 +79,7 @@ func Test_Flusher_Flush(t *testing.T) {
 		logCtx := mock.NewEmptyContext("p", "l", "c")
 
 		convey.Convey("When FlusherOTLP init", func() {
-			f := &FlusherOTLP{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: addr, WaitForReady: true}}
+			f := &FlusherOTLP{Version: v1, Logs: &helper.GrpcClientConfig{Endpoint: addr, WaitForReady: true}}
 			err := f.Init(logCtx)
 			convey.So(err, convey.ShouldBeNil)
 
@@ -108,7 +122,7 @@ func Test_Flusher_Export_Logs(t *testing.T) {
 		logCtx := mock.NewEmptyContext("p", "l", "c")
 
 		convey.Convey("When FlusherOTLP init", func() {
-			f := &FlusherOTLP{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: addr, WaitForReady: true}}
+			f := &FlusherOTLP{Version: v1, Logs: &helper.GrpcClientConfig{Endpoint: addr, WaitForReady: true}}
 			err := f.Init(logCtx)
 			convey.So(err, convey.ShouldBeNil)
 			convey.So(0, convey.ShouldEqual, len(service.ch))
@@ -126,7 +140,7 @@ func Test_Flusher_Export_Metrics(t *testing.T) {
 		logCtx := mock.NewEmptyContext("p", "l", "c")
 
 		convey.Convey("When FlusherOTLP init", func() {
-			f := &FlusherOTLP{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: addr, WaitForReady: true}}
+			f := &FlusherOTLP{Version: v1, Metrics: &helper.GrpcClientConfig{Endpoint: addr, WaitForReady: true}}
 			err := f.Init(logCtx)
 			convey.So(err, convey.ShouldBeNil)
 
@@ -169,7 +183,7 @@ func Test_Flusher_Export_Traces(t *testing.T) {
 		logCtx := mock.NewEmptyContext("p", "l", "c")
 
 		convey.Convey("When FlusherOTLP init", func() {
-			f := &FlusherOTLP{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: addr, WaitForReady: true}}
+			f := &FlusherOTLP{Version: v1, Traces: &helper.GrpcClientConfig{Endpoint: addr, WaitForReady: true}}
 			err := f.Init(logCtx)
 			convey.So(err, convey.ShouldBeNil)
 
@@ -222,9 +236,10 @@ func Test_Flusher_Export_All(t *testing.T) {
 
 		convey.Convey("When FlusherOTLP init", func() {
 			f := &FlusherOTLP{
-				Version:    v1,
-				GrpcConfig: &helper.GrpcClientConfig{Endpoint: defaultAddr, WaitForReady: true},
-				Metrics:    &helper.GrpcClientConfig{Endpoint: metricAddr, WaitForReady: true},
+				Version: v1,
+				Logs:    &helper.GrpcClientConfig{Endpoint: defaultAddr, WaitForReady: true},
+				Metrics: &helper.GrpcClientConfig{Endpoint: metricAddr, WaitForReady: true},
+				Traces:  &helper.GrpcClientConfig{Endpoint: defaultAddr, WaitForReady: true},
 			}
 			err := f.Init(logCtx)
 			convey.So(err, convey.ShouldBeNil)
@@ -285,6 +300,72 @@ func Test_Flusher_Export_All(t *testing.T) {
 	})
 }
 
+func Test_Flusher_Export_All_Disable_Trace(t *testing.T) {
+	convey.Convey("When init grpc service", t, func() {
+		defaultAddr := test.GetAvailableLocalAddress(t)
+		_, _, traceService, traceServer := newTestGrpcMetricServiceV2(t, defaultAddr, time.Nanosecond*0)
+		defer func() {
+			traceServer.Stop()
+		}()
+
+		metricAddr := test.GetAvailableLocalAddress(t)
+		_, metricService, _, metricServer := newTestGrpcMetricServiceV2(t, metricAddr, time.Nanosecond*0)
+		defer func() {
+			metricServer.Stop()
+		}()
+
+		logCtx := mock.NewEmptyContext("p", "l", "c")
+
+		convey.Convey("When FlusherOTLP init", func() {
+			f := &FlusherOTLP{
+				Version: v1,
+				Logs:    &helper.GrpcClientConfig{Endpoint: defaultAddr, WaitForReady: true},
+				Metrics: &helper.GrpcClientConfig{
+					Endpoint: metricAddr, WaitForReady: true},
+			}
+
+			err := f.Init(logCtx)
+			convey.So(err, convey.ShouldBeNil)
+
+			convey.Convey("When FlusherOTLP flush traces", func() {
+				PipelineGroupEventsSlice := makeTestPipelineGroupEventsTraceSlice()
+				err := f.Export(PipelineGroupEventsSlice, pipeline.NewNoopPipelineConext())
+				convey.So(err, convey.ShouldBeNil)
+
+				time.Sleep(1 * time.Second)
+				convey.So(len(traceService.ch), convey.ShouldEqual, 0)
+			})
+
+			convey.Convey("When FlusherOTLP flush metrics", func() {
+				PipelineGroupEventsSlice := makeTestPipelineGroupEventsMetricSlice()
+				err := f.Export(PipelineGroupEventsSlice, pipeline.NewNoopPipelineConext())
+				convey.So(err, convey.ShouldBeNil)
+
+				r := <-metricService.ch
+				_, r2, _ := f.convertPipelinesGroupeEventsToRequest(PipelineGroupEventsSlice)
+				convey.So(r.Metrics().ResourceMetrics().Len(), convey.ShouldEqual, r2.Metrics().ResourceMetrics().Len())
+				for i := 0; i < r.Metrics().ResourceMetrics().Len(); i++ {
+					resourceMetric := r.Metrics().ResourceMetrics().At(i)
+					for j := 0; j < resourceMetric.ScopeMetrics().Len(); j++ {
+						scopemetric := resourceMetric.ScopeMetrics().At(j)
+
+						for m := 0; m < scopemetric.Metrics().Len(); m++ {
+							metric := scopemetric.Metrics().At(m)
+
+							expected := metric
+							actual := r2.Metrics().ResourceMetrics().At(i).ScopeMetrics().At(j).Metrics().At(m)
+							convey.So(expected.Description(), convey.ShouldEqual, actual.Description())
+							convey.So(expected.Sum().DataPoints().Len(), convey.ShouldEqual, actual.Sum().DataPoints().Len())
+						}
+					}
+				}
+
+			})
+		})
+
+	})
+}
+
 func Test_Flusher_Flush_Timeout(t *testing.T) {
 	convey.Convey("When init grpc service", t, func() {
 		_, server := newTestGrpcService(t, ":8176", time.Second*2)
@@ -294,7 +375,7 @@ func Test_Flusher_Flush_Timeout(t *testing.T) {
 		logCtx := mock.NewEmptyContext("p", "l", "c")
 
 		convey.Convey("When FlusherOTLP init", func() {
-			f := &FlusherOTLP{Version: v1, GrpcConfig: &helper.GrpcClientConfig{Endpoint: ":8176", WaitForReady: true, Timeout: 1000}}
+			f := &FlusherOTLP{Version: v1, Logs: &helper.GrpcClientConfig{Endpoint: ":8176", WaitForReady: true, Timeout: 1000}}
 			err := f.Init(logCtx)
 			convey.So(err, convey.ShouldBeNil)
 
@@ -518,40 +599,4 @@ func makeTestPipelineGroupEventsTraceSlice() []*models.PipelineGroupEvents {
 
 	}
 	return slice
-}
-
-func Test_GrpcConfig_Merge(t *testing.T) {
-	var defaultConfig *helper.GrpcClientConfig
-	var specificConfig *helper.GrpcClientConfig
-	mergedConfig, err := mergeGrpcConfig(defaultConfig, specificConfig)
-	assert.NotNil(t, err)
-	assert.Nil(t, mergedConfig)
-
-	defaultConfig = &helper.GrpcClientConfig{
-		Endpoint: ":1234",
-	}
-	mergedConfig, err = mergeGrpcConfig(defaultConfig, specificConfig)
-	assert.Nil(t, err)
-	assert.Equal(t, mergedConfig.Endpoint, ":1234")
-
-	defaultConfig = nil
-	specificConfig = &helper.GrpcClientConfig{
-		Endpoint: ":1235",
-	}
-	mergedConfig, err = mergeGrpcConfig(defaultConfig, specificConfig)
-	assert.Nil(t, err)
-	assert.Equal(t, mergedConfig.Endpoint, ":1235")
-
-	defaultConfig = &helper.GrpcClientConfig{
-		Endpoint: ":1236",
-	}
-	specificConfig = &helper.GrpcClientConfig{
-		Endpoint:       ":1237",
-		ReadBufferSize: 1024,
-	}
-	mergedConfig, err = mergeGrpcConfig(defaultConfig, specificConfig)
-	assert.Nil(t, err)
-	assert.Equal(t, mergedConfig.Endpoint, ":1237")
-	assert.Equal(t, mergedConfig.ReadBufferSize, 1024)
-	assert.True(t, reflect.DeepEqual(mergedConfig, specificConfig))
 }
