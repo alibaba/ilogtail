@@ -113,11 +113,10 @@ inputs:
         Endpoint: 0.0.0.0:4316
 flushers:
   - Type: flusher_otlp
-    Grpc:
+    Logs:
       Endpoint: 0.0.0.0:4318
     Metrics:
       Endpoint: 0.0.0.0:4319
     Traces:
       Disable: true
 ```
-

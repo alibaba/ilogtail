@@ -163,7 +163,7 @@ func (f *FlusherOTLP) getConverter() (*converter.Converter, error) {
 }
 
 func (f *FlusherOTLP) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
-	if f.logClient == nil || f.logClient.grpcConn == nil {
+	if f.logClient != nil || f.logClient.grpcConn != nil {
 		return nil
 	}
 	request := f.convertLogGroupToRequest(logGroupList)
@@ -200,7 +200,7 @@ func (f *FlusherOTLP) IsReady(projectName string, logstoreName string, logstoreK
 	case connectivity.Ready:
 		ready = true
 	case connectivity.Connecting:
-		if !f.logClient.grpcConfig.WaitForReady {
+		if !f.GrpcConfig.WaitForReady {
 			ready = false
 			break
 		}
