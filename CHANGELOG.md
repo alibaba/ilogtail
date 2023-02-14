@@ -35,6 +35,8 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+- [public] [both] [added] add a new service_otlp plugin.
+- [public] [both] [updated] service_http_server supports otlp metrics/traces requests.
 - [public] [both] [added] add a new flusher_pulsar plugin.
 - [public] [both] [fixed] ignore time zone adjustment in config when using system time as log time
 - [public] [both] [updated] flusher kafka v2 support TLS and Kerberos authentication.
@@ -44,3 +46,8 @@ your changes, such as:
 - [public] [both] [fixed] ignore timezone adjustment when log parse fails
 - [public] [both] [fixed] fix blocking problem caused by alwaysonline config update
 - [public] [both] [added] config management by community config server
+- [public] [both] [added] add a new flusher\_clickhouse plugin.
+- [public] [both] [updated] grok processor reports unmatched errors by default
+- [public] [both] [fixed] grok processor gets stuck with Chinese
+- [public] [both] [fixed] fix plugin version in logs
+- [public] [both] [updated] flusher http support variable config in request header   
