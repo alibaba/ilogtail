@@ -93,6 +93,7 @@ public:
                 detail.Request["cmd"] = req->Data;
                 detail.Response["result"] = resp->Data;
                 detail.Response["success"] = resp->IsOK ? "true" : "false";
+                this->mKey.ToPB(detail.Tags);
                 this->mSampler->AddData(std::move(detail));
             }
             return true;

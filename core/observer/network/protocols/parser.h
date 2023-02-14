@@ -51,11 +51,12 @@ public:
         if (res == BufferResult_Drop) {
             return ParseResult_Drop;
         }
+        int32_t offset = 0;
         if (res == BufferResult_DirectParse) {
-            return OnPacket(data->PktType, data->MsgType, header, data->Buffer, data->BufferLen, data->RealLen, 0);
+            return OnPacket(
+                data->PktType, data->MsgType, header, data->Buffer, data->BufferLen, data->RealLen, &offset);
         }
         auto piece = GetPiece(data->MsgType);
-        int32_t offset = 0;
         for (int i = 0; i < 2; ++i) {
             auto parseRes
                 = OnPacket(data->PktType, data->MsgType, header, piece.data(), piece.size(), piece.size(), &offset);

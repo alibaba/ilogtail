@@ -114,6 +114,7 @@ public:
                     detail.Request["body"] = std::move(requestInfo->Body);
                     detail.Response["headers"] = std::move(responseInfo->Headers);
                     detail.Response["body"] = std::move(responseInfo->Body);
+                    this->mKey.ToPB(detail.Tags);
                     this->mSampler->AddData(std::move(detail));
                 }
                 return true;

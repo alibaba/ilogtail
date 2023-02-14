@@ -11,7 +11,7 @@ namespace logtail {
 
 
 /**
- * Common hash key for metrics aggregation
+ *   Common hash key for metrics aggregation
  */
 struct CommonAggKey {
     CommonAggKey() = default;
@@ -23,7 +23,8 @@ struct CommonAggKey {
           LocalPort(other.LocalPort),
           Role(other.Role),
           RemoteIp(std::move(other.RemoteIp)),
-          LocalIp(std::move(other.LocalIp)) {}
+          LocalIp(std::move(other.LocalIp)),
+          CommonTags(std::move(other.CommonTags)) {}
     CommonAggKey& operator=(const CommonAggKey& other) = default;
     CommonAggKey& operator=(CommonAggKey&& other) noexcept {
         this->HashVal = other.HashVal;
@@ -33,6 +34,7 @@ struct CommonAggKey {
         this->LocalPort = other.LocalPort;
         this->LocalIp = std::move(other.LocalIp);
         this->ConnId = other.ConnId;
+        this->CommonTags=std::move(other.CommonTags);
         return *this;
     }
     explicit CommonAggKey(PacketEventHeader* header)
@@ -45,6 +47,13 @@ struct CommonAggKey {
           RemoteIp(SockAddressToString(header->DstAddr)),
           LocalIp(SockAddressToString(header->SrcAddr)) {
         HashVal = XXH32(&this->Role, sizeof(Role), HashVal);
+        CommonTags.Reserve(6);
+        AddAnyLogContent(CommonTags.Add(), observer::kRole, PacketRoleTypeToString(Role));
+        AddAnyLogContent(CommonTags.Add(), observer::kRemoteAddr, RemoteIp);
+        AddAnyLogContent(CommonTags.Add(), observer::kRemotePort, RemotePort);
+        AddAnyLogContent(CommonTags.Add(), observer::kLocalPort, LocalPort);
+        AddAnyLogContent(CommonTags.Add(), observer::kLocalAddr, LocalIp);
+        AddAnyLogContent(CommonTags.Add(), observer::kConnId, ConnId);
     }
 
     friend std::ostream& operator<<(std::ostream& Os, const CommonAggKey& Key) {
@@ -60,20 +69,22 @@ struct CommonAggKey {
         return ss.str();
     }
 
-    void ToPB(sls_logs::Log* log) const {
+
+    void ToPB(::google::protobuf::RepeatedPtrField<sls_logs::Log_Content>& contents) const {
         static ServiceMetaManager* sHostnameManager = logtail::ServiceMetaManager::GetInstance();
-        AddAnyLogContent(log, observer::kRole, PacketRoleTypeToString(this->Role));
-        AddAnyLogContent(log, observer::kRemoteAddr, RemoteIp);
-        AddAnyLogContent(log, observer::kRemotePort, RemotePort);
-        AddAnyLogContent(log, observer::kLocalPort, LocalPort);
-        AddAnyLogContent(log, observer::kLocalAddr, LocalIp);
-        AddAnyLogContent(log, observer::kConnId, ConnId);
+        contents.CopyFrom(CommonTags);
         const ServiceMeta& meta = sHostnameManager->GetServiceMeta(this->Pid, this->RemoteIp);
         auto remoteInfo = std::string(kRemoteInfoPrefix)
                               .append(meta.Empty() ? this->RemoteIp : meta.Host)
                               .append(kRemoteInfoSuffix);
-        AddAnyLogContent(log, observer::kRemoteInfo, std::move(remoteInfo));
+        AddAnyLogContent(contents.Add(), observer::kRemoteInfo, std::move(remoteInfo));
     }
+
+    void ToPB(sls_logs::Log* log) const {
+        auto contents = log->contents();
+        ToPB(contents);
+    }
+
 
     uint64_t HashVal{0};
     uint64_t ConnId{0};
@@ -83,6 +94,7 @@ struct CommonAggKey {
     PacketRoleType Role{PacketRoleType::Unknown};
     std::string RemoteIp;
     std::string LocalIp;
+    google::protobuf::RepeatedPtrField<sls_logs::Log_Content> CommonTags;
 };
 
 template <ProtocolType PT>

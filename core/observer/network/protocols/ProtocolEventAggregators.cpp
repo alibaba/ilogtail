@@ -84,6 +84,7 @@ void ProtocolEventAggregators::FlushOutDetails(uint64_t timeNano,
     for (auto iter = mProtocolDetails.begin(); iter != mProtocolDetails.end();) {
         sls_logs::Log newLog;
         newLog.mutable_contents()->CopyFrom(gTags);
+        newLog.mutable_contents()->CopyFrom(iter->Tags);
         AddAnyLogContent(&newLog, observer::kLocalInfo, pTags);
         AddAnyLogContent(&newLog, observer::kDetailRequest, Json::writeString(builder, iter->Request));
         AddAnyLogContent(&newLog, observer::kDetailResponse, Json::writeString(builder, iter->Response));

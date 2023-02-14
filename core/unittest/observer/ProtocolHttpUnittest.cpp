@@ -260,6 +260,7 @@ public:
         }
         std::vector<sls_logs::Log> allData;
         mObserver->FlushOutMetrics(allData);
+        mObserver->FlushOutDetails(allData);
         APSARA_TEST_EQUAL(allData.size(), 4);
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[0], "version", "1"));
         APSARA_TEST_TRUE(UnitTestHelper::LogKeyMatched(&allData[0], "req_domain", "anglesharp.azurewebsites.net"));

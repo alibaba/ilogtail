@@ -193,15 +193,21 @@ struct ProtocolDetail {
     Json::Value Request;
     Json::Value Response;
     ProtocolType Type;
+    ::google::protobuf::RepeatedPtrField<sls_logs::Log_Content> Tags;
+
 
     ProtocolDetail() = default;
     ProtocolDetail(ProtocolDetail&& other) noexcept
-        : Request(std::move(other.Request)), Response(std::move(other.Response)), Type(other.Type) {}
+        : Request(std::move(other.Request)),
+          Response(std::move(other.Response)),
+          Type(other.Type),
+          Tags(std::move(other.Tags)) {}
     ProtocolDetail(const ProtocolDetail& other) = default;
     ProtocolDetail& operator=(ProtocolDetail&& other) noexcept {
         this->Request = std::move(other.Request);
         this->Response = std::move(other.Response);
         this->Type = other.Type;
+        this->Tags = std::move(other.Tags);
         return *this;
     }
     ProtocolDetail& operator=(const ProtocolDetail& other) = default;

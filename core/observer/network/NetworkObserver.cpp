@@ -371,7 +371,7 @@ void NetworkObserver::EventLoop() {
     while (true) {
         bool hasMoreData = false;
         ReadLock lock(mEventLoopThreadRWL);
-        if (mPCAPWrapper == nullptr && mEBPFWrapper == nullptr) {
+        if (mPCAPWrapper == nullptr && mEBPFWrapper == nullptr && mReplayFilePtr== nullptr) {
             static int sErrorCount = 0;
             static int sErrorPintCount = 60000 / INT32_FLAG(sls_observer_network_no_data_sleep_interval_ms);
             if (++sErrorCount % sErrorPintCount == 0) {
