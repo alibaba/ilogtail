@@ -36,7 +36,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
         LOG_INFO(sLogger, ("bind_interface", mBindInterface));
     }
 
-    // configserver path, does not support k8s
+    // configserver path
     if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isObject()) {
         Json::Value::Members members = confJson["ilogtail_configserver_address"].getMemberNames();
         for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
@@ -62,7 +62,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
         LOG_INFO(sLogger, ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
     }
 
-    // tags for configserver, does not support k8s
+    // tags for configserver
     if (confJson.isMember("ilogtail_tags") && confJson["ilogtail_tags"].isObject()) {
         Json::Value::Members members = confJson["ilogtail_tags"].getMemberNames();
         for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
