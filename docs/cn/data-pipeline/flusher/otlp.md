@@ -51,7 +51,7 @@ flushers:
 
 ### v2 Pipeline
 
-监听4316端口的`Opentelemetry`的gRPC请求，并将采集结果发送到 `Opentelemetry` 后端。其中Logs发送到http://192.168.xx.xx:4317，Metrics发送到http://192.168.xx.xx:4319，Trace不发送。
+监听4316端口的`Opentelemetry`的gRPC请求，并将采集结果发送到 `Opentelemetry` 后端。其中Logs发送到http://192.168.xx.xx:4317，Metrics发送到http://192.168.xx.xx:4319，Traces不发送。
 
 ```
 enable: true
@@ -87,5 +87,5 @@ flushers:
     Metrics:
       Endpoint: 0.0.0.0:4319
     Traces:
-       Endpoint: 0.0.0.0:4320
+      Endpoint: 0.0.0.0:4320
 ```

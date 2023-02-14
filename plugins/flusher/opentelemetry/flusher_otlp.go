@@ -49,10 +49,9 @@ type FlusherOTLP struct {
 	Metrics *helper.GrpcClientConfig `json:"Metrics"`
 	Traces  *helper.GrpcClientConfig `json:"Traces"`
 
-	converter *converter.Converter
-	metadata  metadata.MD
-	context   pipeline.Context
-
+	converter    *converter.Converter
+	metadata     metadata.MD
+	context      pipeline.Context
 	logClient    *grpcClient[plogotlp.GRPCClient]
 	metricClient *grpcClient[pmetricotlp.GRPCClient]
 	traceClient  *grpcClient[ptraceotlp.GRPCClient]
@@ -75,7 +74,7 @@ func (f *FlusherOTLP) Init(ctx pipeline.Context) error {
 	if f.Logs != nil {
 		grpcConn, err := buildGrpcClientConn(f.Logs)
 		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp log gRPC conn fail, error", err)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp logs gRPC conn fail, error", err)
 		} else {
 			logger.Info(f.context.GetRuntimeContext(), "otlp logs flusher endpoint", f.Logs.Endpoint)
 			logMeta := metadata.New(f.Logs.Headers)
@@ -85,7 +84,7 @@ func (f *FlusherOTLP) Init(ctx pipeline.Context) error {
 	if f.Metrics != nil {
 		grpcConn, err := buildGrpcClientConn(f.Metrics)
 		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp metric gRPC conn fail, error", err)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp metrics gRPC conn fail, error", err)
 		} else {
 			logger.Info(f.context.GetRuntimeContext(), "otlp metrics flusher endpoint", f.Metrics.Endpoint)
 			metricMeta := metadata.New(f.Metrics.Headers)
@@ -96,7 +95,7 @@ func (f *FlusherOTLP) Init(ctx pipeline.Context) error {
 	if f.Traces != nil {
 		grpcConn, err := buildGrpcClientConn(f.Traces)
 		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp trace gRPC conn fail, error", err)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp traces gRPC conn fail, error", err)
 		} else {
 			logger.Info(f.context.GetRuntimeContext(), "otlp traces flusher endpoint", f.Traces.Endpoint)
 			traceMeta := metadata.New(f.Traces.Headers)
@@ -106,9 +105,8 @@ func (f *FlusherOTLP) Init(ctx pipeline.Context) error {
 	}
 
 	if f.logClient == nil && f.metricClient == nil && f.traceClient == nil {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp converter fail",
-			"error", "no invalid gRPC Config")
-		return fmt.Errorf("no valid output")
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp flusher fail, error", "invalid gRPC configs")
+		return fmt.Errorf("invalid_grpc_configs")
 	}
 
 	logger.Info(f.context.GetRuntimeContext(), "otlp flusher init", "initialized")
@@ -140,7 +138,6 @@ func (f *FlusherOTLP) Flush(projectName string, logstoreName string, configName 
 // before it to make sure there is space for next data.
 func (f *FlusherOTLP) Export(pipelinegroupeEventSlice []*models.PipelineGroupEvents, ctx pipeline.PipelineContext) error {
 	logReq, metricReq, traceReq := f.convertPipelinesGroupeEventsToRequest(pipelinegroupeEventSlice)
-
 	return f.flushRequests(logReq, metricReq, traceReq)
 }
 
@@ -174,7 +171,7 @@ func (f *FlusherOTLP) IsReady(projectName string, logstoreName string, logstoreK
 		ready = state == connectivity.Ready
 	}
 	if !ready {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_READY_ALARM", "otlp log flusher is not ready. current status", f.logClient.grpcConn.GetState())
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_READY_ALARM", "otlp logs flusher is not ready. current status", f.logClient.grpcConn.GetState())
 	}
 	return ready
 }
@@ -274,7 +271,7 @@ func (f *FlusherOTLP) flushRequests(log plogotlp.ExportRequest, metric pmetricot
 			}
 
 			if err != nil {
-				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send log data to otlp server fail, error", err)
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "send data to otlp server fail, error", err)
 			}
 			errChan <- err
 		}()
