@@ -108,7 +108,7 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	if s.DumpData {
 		s.dumpDataChan = make(chan *dumpData, 10)
 		prefix := strings.Join([]string{s.context.GetProject(), s.context.GetLogstore(), s.context.GetConfigName()}, "_")
-		files, err := helper.GetFileListByPrefix(util.GetCurrentBinaryPath(), prefix, true, 0)
+		files, err := helper.GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), prefix, true, 0)
 		if err != nil {
 			logger.Warning(context.GetRuntimeContext(), "LIST_HISTORY_DUMP_ALARM", "err", err)
 		} else {
@@ -311,7 +311,7 @@ func (s *ServiceHTTP) doDumpFile() {
 		}
 	}
 	cutFile := func() (f *os.File, err error) {
-		nFile := path.Join(util.GetCurrentBinaryPath(), fileName+"_"+time.Now().Format("2006-01-02_15"))
+		nFile := path.Join(path.Join(util.GetCurrentBinaryPath(), "dump"), fileName+"_"+time.Now().Format("2006-01-02_15"))
 		if len(s.dumpDataKeepFiles) == 0 || s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1] != nFile {
 			s.dumpDataKeepFiles = append(s.dumpDataKeepFiles, nFile)
 		}
