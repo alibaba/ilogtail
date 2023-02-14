@@ -21,7 +21,6 @@ import (
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/context"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/logstorerouter"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/metadatagroup"
-	_ "github.com/alibaba/ilogtail/plugins/aggregator/pipelineeventgroup"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/shardhash"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator/skywalking"
 	_ "github.com/alibaba/ilogtail/plugins/flusher/checker"

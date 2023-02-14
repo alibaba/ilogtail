@@ -5,11 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofrs/uuid"
-	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
-
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+
+	"github.com/gofrs/uuid"
 )
 
 type Input struct {
@@ -39,7 +38,7 @@ const (
 type Meta struct {
 	StartTime       time.Time
 	EndTime         time.Time
-	Key             *segment.Key
+	Tags            map[string]string
 	SpyName         string
 	SampleRate      uint32
 	Units           Units
@@ -84,8 +83,8 @@ func DetectProfileType(valType string) models.ProfileKind {
 
 func GetProfileID(meta *Meta) string {
 	var profileIDStr string
-	if meta.Key.HasProfileID() {
-		profileIDStr, _ = meta.Key.ProfileID()
+	if id, ok := meta.Tags["profile_id"]; ok {
+		profileIDStr = id
 	} else {
 		profileID, _ := uuid.NewV4()
 		profileIDStr = profileID.String()

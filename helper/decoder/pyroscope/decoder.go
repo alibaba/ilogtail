@@ -99,7 +99,7 @@ func (d *Decoder) parseInputMeta(req *http.Request) (*profile.Input, profile.For
 	if strings.HasSuffix(name, ".cpu") {
 		key.Add("__name__", name[:len(name)-4])
 	}
-	input.Metadata.Key = key
+	input.Metadata.Tags = key.Labels()
 
 	if f := q.Get("from"); f != "" {
 		input.Metadata.StartTime = attime.Parse(f)

@@ -100,7 +100,7 @@ func mockHttpClient() {
 					}
 					beforeTime := time.Now()
 					// don't use keep alive connection to avoid out-of-order when concurrency.
-					request.Close = true
+					request.Close = false
 					resp, err := httpClient.Do(request)
 					afterTime := time.Now()
 					if err == nil {

@@ -112,7 +112,7 @@ func (r *RawProfile) doParse(ctx context.Context, meta *profile.Meta, cb profile
 	}
 
 	if meta.SampleRate > 0 {
-		meta.Key.Labels()["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
+		meta.Tags["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
 	}
 	return pprof.DecodePool(bytes.NewReader(r.profile), func(tf *tree.Profile) error {
 		if logger.DebugFlag() {
@@ -171,7 +171,7 @@ func (r *RawProfile) extractLogs(ctx context.Context, tp *tree.Profile, p Parser
 			typeMap[id] = append(typeMap[id], p.getDisplayName(stype))
 			unitMap[id] = append(unitMap[id], sunit)
 			valMap[id] = append(valMap[id], self)
-			labelMap[id] = buildKey(meta.Key.Labels(), tl, tp.StringTable).Labels()
+			labelMap[id] = buildKey(meta.Tags, tl, tp.StringTable).Labels()
 		})
 		return true, nil
 	})

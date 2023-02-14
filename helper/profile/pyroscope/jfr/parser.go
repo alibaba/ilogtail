@@ -31,7 +31,7 @@ const (
 
 func (r *RawProfile) ParseJFR(ctx context.Context, meta *profile.Meta, body io.Reader, jfrLabels *LabelsSnapshot, cb profile.CallbackFunc) (err error) {
 	if meta.SampleRate > 0 {
-		meta.Key.Labels()["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
+		meta.Tags["_sample_rate_"] = strconv.FormatUint(uint64(meta.SampleRate), 10)
 	}
 	chunks, err := parser.ParseWithOptions(body, &parser.ChunkParseOptions{
 		CPoolProcessor: processSymbols,
@@ -117,7 +117,7 @@ func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parse
 			typeMap[id] = append(typeMap[id], n)
 			unitMap[id] = append(unitMap[id], string(u))
 			valMap[id] = append(valMap[id], self)
-			labelMap[id] = buildKey(meta.Key.Labels(), labels, jfrLabels).Labels()
+			labelMap[id] = buildKey(meta.Tags, labels, jfrLabels).Labels()
 		})
 	}
 	for sampleType, entries := range cache {
