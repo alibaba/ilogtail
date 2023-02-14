@@ -101,7 +101,7 @@ func Test_Flusher_Flush(t *testing.T) {
 func Test_Flusher_Export_Logs(t *testing.T) {
 	convey.Convey("When init grpc service", t, func() {
 		addr := test.GetAvailableLocalAddress(t)
-		service, _, _, server := newTestGrpcMetricServiceV2(t, addr, time.Nanosecond*0)
+		service, _, _, server := newTestGrpcMetricServiceV2(t, addr, time.Nanosecond*1)
 		defer func() {
 			server.Stop()
 		}()
@@ -199,7 +199,89 @@ func Test_Flusher_Export_Traces(t *testing.T) {
 				}
 
 			})
+
 		})
+	})
+}
+
+func Test_Flusher_Export_All(t *testing.T) {
+	convey.Convey("When init grpc service", t, func() {
+		defaultAddr := test.GetAvailableLocalAddress(t)
+		_, _, traceService, traceServer := newTestGrpcMetricServiceV2(t, defaultAddr, time.Nanosecond*0)
+		defer func() {
+			traceServer.Stop()
+		}()
+
+		metricAddr := test.GetAvailableLocalAddress(t)
+		_, metricService, _, metricServer := newTestGrpcMetricServiceV2(t, metricAddr, time.Nanosecond*0)
+		defer func() {
+			metricServer.Stop()
+		}()
+
+		logCtx := mock.NewEmptyContext("p", "l", "c")
+
+		convey.Convey("When FlusherOTLP init", func() {
+			f := &FlusherOTLP{
+				Version:    v1,
+				GrpcConfig: &helper.GrpcClientConfig{Endpoint: defaultAddr, WaitForReady: true},
+				Metrics:    &helper.GrpcClientConfig{Endpoint: metricAddr, WaitForReady: true},
+			}
+			err := f.Init(logCtx)
+			convey.So(err, convey.ShouldBeNil)
+
+			convey.Convey("When FlusherOTLP flush traces", func() {
+				PipelineGroupEventsSlice := makeTestPipelineGroupEventsTraceSlice()
+				err := f.Export(PipelineGroupEventsSlice, pipeline.NewNoopPipelineConext())
+				convey.So(err, convey.ShouldBeNil)
+
+				r := <-traceService.ch
+				_, _, r2 := f.convertPipelinesGroupeEventsToRequest(PipelineGroupEventsSlice)
+				convey.So(r.Traces().ResourceSpans().Len(), convey.ShouldEqual, r2.Traces().ResourceSpans().Len())
+
+				for i := 0; i < r.Traces().ResourceSpans().Len(); i++ {
+					resourceSpan := r.Traces().ResourceSpans().At(i)
+					for j := 0; j < resourceSpan.ScopeSpans().Len(); j++ {
+						scopemetric := resourceSpan.ScopeSpans().At(j)
+
+						for m := 0; m < scopemetric.Spans().Len(); m++ {
+							span := scopemetric.Spans().At(m)
+							expected := span
+							actual := r2.Traces().ResourceSpans().At(i).ScopeSpans().At(j).Spans().At(m)
+							convey.So(3, convey.ShouldEqual, actual.Attributes().Len())
+							convey.So(expected.Attributes().Len(), convey.ShouldEqual, actual.Attributes().Len())
+							convey.So(expected.StartTimestamp(), convey.ShouldEqual, actual.StartTimestamp())
+						}
+					}
+				}
+			})
+
+			convey.Convey("When FlusherOTLP flush metrics", func() {
+				PipelineGroupEventsSlice := makeTestPipelineGroupEventsMetricSlice()
+				err := f.Export(PipelineGroupEventsSlice, pipeline.NewNoopPipelineConext())
+				convey.So(err, convey.ShouldBeNil)
+
+				r := <-metricService.ch
+				_, r2, _ := f.convertPipelinesGroupeEventsToRequest(PipelineGroupEventsSlice)
+				convey.So(r.Metrics().ResourceMetrics().Len(), convey.ShouldEqual, r2.Metrics().ResourceMetrics().Len())
+				for i := 0; i < r.Metrics().ResourceMetrics().Len(); i++ {
+					resourceMetric := r.Metrics().ResourceMetrics().At(i)
+					for j := 0; j < resourceMetric.ScopeMetrics().Len(); j++ {
+						scopemetric := resourceMetric.ScopeMetrics().At(j)
+
+						for m := 0; m < scopemetric.Metrics().Len(); m++ {
+							metric := scopemetric.Metrics().At(m)
+
+							expected := metric
+							actual := r2.Metrics().ResourceMetrics().At(i).ScopeMetrics().At(j).Metrics().At(m)
+							convey.So(expected.Description(), convey.ShouldEqual, actual.Description())
+							convey.So(expected.Sum().DataPoints().Len(), convey.ShouldEqual, actual.Sum().DataPoints().Len())
+						}
+					}
+				}
+
+			})
+		})
+
 	})
 }
 

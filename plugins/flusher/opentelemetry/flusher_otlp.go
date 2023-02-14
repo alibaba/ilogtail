@@ -91,37 +91,44 @@ func (f *FlusherOTLP) Init(ctx pipeline.Context) error {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp gRPC conn fail, error", err)
 		}
 		f.metadata = metadata.New(f.GrpcConfig.Headers)
+		logger.Info(f.context.GetRuntimeContext(), "otlp flusher idefault endpoint", f.GrpcConfig.Endpoint)
 	}
 
 	if reflect.DeepEqual(f.GrpcConfig, logClientConfig) && f.grpcConn != nil {
+		logger.Info(f.context.GetRuntimeContext(), "otlp logs flusher endpoint", f.GrpcConfig.Endpoint)
 		f.logClient = newGrpcClient(plogotlp.NewGRPCClient(f.grpcConn), f.grpcConn, logClientConfig, f.metadata)
 	} else {
 		grpcConn, err := buildGrpcClientConn(logClientConfig)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp log gRPC conn fail, error", err)
 		}
+		logger.Info(f.context.GetRuntimeContext(), "otlp logs flusher endpoint", logClientConfig.Endpoint)
 		logMeta := metadata.New(logClientConfig.Headers)
 		f.logClient = newGrpcClient(plogotlp.NewGRPCClient(grpcConn), grpcConn, logClientConfig, logMeta)
 	}
 
 	if reflect.DeepEqual(f.GrpcConfig, metricClientConfig) && f.grpcConn != nil {
+		logger.Info(f.context.GetRuntimeContext(), "otlp metrics flusher endpoint", f.GrpcConfig.Endpoint)
 		f.metricClient = newGrpcClient(pmetricotlp.NewGRPCClient(f.grpcConn), f.grpcConn, metricClientConfig, f.metadata)
 	} else {
 		grpcConn, err := buildGrpcClientConn(metricClientConfig)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp metric gRPC conn fail, error", err)
 		}
+		logger.Info(f.context.GetRuntimeContext(), "otlp metrics flusher endpoint", metricClientConfig.Endpoint)
 		metricMeta := metadata.New(logClientConfig.Headers)
 		f.metricClient = newGrpcClient(pmetricotlp.NewGRPCClient(grpcConn), grpcConn, metricClientConfig, metricMeta)
 	}
 
 	if reflect.DeepEqual(f.GrpcConfig, traceClientConfig) && f.grpcConn != nil {
+		logger.Info(f.context.GetRuntimeContext(), "otlp traces flusher endpoint", f.GrpcConfig.Endpoint)
 		f.traceClient = newGrpcClient(ptraceotlp.NewGRPCClient(f.grpcConn), f.grpcConn, traceClientConfig, f.metadata)
 	} else {
 		grpcConn, err := buildGrpcClientConn(traceClientConfig)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init otlp trace gRPC conn fail, error", err)
 		}
+		logger.Info(f.context.GetRuntimeContext(), "otlp traces flusher endpoint", traceClientConfig.Endpoint)
 		traceMeta := metadata.New(logClientConfig.Headers)
 		f.traceClient = newGrpcClient(ptraceotlp.NewGRPCClient(grpcConn), grpcConn, metricClientConfig, traceMeta)
 	}
@@ -196,16 +203,41 @@ func (f *FlusherOTLP) IsReady(projectName string, logstoreName string, logstoreK
 
 // Stop ...
 func (f *FlusherOTLP) Stop() error {
-	err := f.grpcConn.Close()
-	if err != nil {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlp flusher fail, error", err)
+	var err error
+	if f.grpcConn != nil {
+		err = f.grpcConn.Close()
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlp flusher fail, error", err)
+		}
 	}
+
+	if f.logClient.grpcConn != nil {
+		err = f.logClient.grpcConn.Close()
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlp logs flusher fail, error", err)
+		}
+	}
+
+	if f.metricClient.grpcConn != nil {
+		err = f.metricClient.grpcConn.Close()
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlp metrics flusher fail, error", err)
+		}
+	}
+
+	if f.traceClient.grpcConn != nil {
+		err = f.traceClient.grpcConn.Close()
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_STOP_ALARM", "stop otlp traces flusher fail, error", err)
+		}
+	}
+
 	return err
 }
 
 func (f *FlusherOTLP) reConnect() connectivity.State {
-	f.grpcConn.Connect()
-	return f.grpcConn.GetState()
+	f.logClient.grpcConn.Connect()
+	return f.logClient.grpcConn.GetState()
 }
 
 func (f *FlusherOTLP) convertPipelinesGroupeEventsToRequest(pipelinegroupeEventSlice []*models.PipelineGroupEvents) (plogotlp.ExportRequest, pmetricotlp.ExportRequest, ptraceotlp.ExportRequest) {
