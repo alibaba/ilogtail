@@ -311,7 +311,7 @@ func TestMetadataGroupGroup_Oversize(t *testing.T) {
 		p := new(AggregatorMetadataGroup)
 		p.GroupMaxEventLength = 500
 		p.GroupMaxByteLength = 1
-		p.OversizeDirectOutput = false
+		p.DropOversizeEvent = true
 		ctx := pipeline.NewObservePipelineConext(100)
 		p.Init(mock.NewEmptyContext("a", "b", "c"), nil)
 
@@ -327,7 +327,7 @@ func TestMetadataGroupGroup_Oversize(t *testing.T) {
 		p := new(AggregatorMetadataGroup)
 		p.GroupMaxEventLength = 500
 		p.GroupMaxByteLength = 1
-		p.OversizeDirectOutput = true
+		p.DropOversizeEvent = false
 		ctx := pipeline.NewObservePipelineConext(100)
 		p.Init(mock.NewEmptyContext("a", "b", "c"), nil)
 
