@@ -217,9 +217,9 @@ func TestMetadataGroupAggregatorRecordWithNonexistentKey(t *testing.T) {
 func generateByteArrayEvents(count int, meta map[string]string) []*models.PipelineGroupEvents {
 	groupEventsArray := make([]*models.PipelineGroupEvents, 0, count)
 	event := models.ByteArray(RawData)
-	groupEvents := &models.PipelineGroupEvents{Group: models.NewGroup(models.NewMetadataWithMap(meta), nil),
-		Events: []models.PipelineEvent{event}}
 	for i := 0; i < count; i++ {
+		groupEvents := &models.PipelineGroupEvents{Group: models.NewGroup(models.NewMetadataWithMap(meta), nil),
+			Events: []models.PipelineEvent{event}}
 		groupEventsArray = append(groupEventsArray, groupEvents)
 	}
 	return groupEventsArray
@@ -304,6 +304,42 @@ func TestMetadataGroupGroup_Record_Timer(t *testing.T) {
 	array := ctx.Collector().ToArray()
 	require.Equal(t, 1, len(array))
 	require.Equal(t, 104, len(array[0].Events))
+}
+
+func TestMetadataGroupGroup_Oversize(t *testing.T) {
+	{
+		p := new(AggregatorMetadataGroup)
+		p.GroupMaxEventLength = 500
+		p.GroupMaxByteLength = 1
+		p.OversizeDirectOutput = false
+		ctx := pipeline.NewObservePipelineConext(100)
+		p.Init(mock.NewEmptyContext("a", "b", "c"), nil)
+
+		events := generateByteArrayEvents(5, map[string]string{"a": "1", "b": "2", "c": "3"})
+		for _, event := range events {
+			require.NoError(t, p.Record(event, ctx))
+		}
+		require.Equal(t, 0, len(ctx.Collector().ToArray()))
+		_ = p.GetResult(ctx)
+		require.Equal(t, 0, len(ctx.Collector().ToArray()))
+	}
+	{
+		p := new(AggregatorMetadataGroup)
+		p.GroupMaxEventLength = 500
+		p.GroupMaxByteLength = 1
+		p.OversizeDirectOutput = true
+		ctx := pipeline.NewObservePipelineConext(100)
+		p.Init(mock.NewEmptyContext("a", "b", "c"), nil)
+
+		events := generateByteArrayEvents(5, map[string]string{"a": "1", "b": "2", "c": "3"})
+		for _, event := range events {
+			require.NoError(t, p.Record(event, ctx))
+		}
+		require.Equal(t, 5, len(ctx.Collector().ToArray()))
+		_ = p.GetResult(ctx)
+		require.Equal(t, 0, len(ctx.Collector().ToArray()))
+	}
+
 }
 
 func constructEvents(num int, meta, tags map[string]string) *models.PipelineGroupEvents {
