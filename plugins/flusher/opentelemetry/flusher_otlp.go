@@ -116,7 +116,7 @@ func (f *FlusherOTLP) Init(ctx pipeline.Context) error {
 func (f *FlusherOTLP) getConverter() (*converter.Converter, error) {
 	switch f.Version {
 	case v1:
-		return converter.NewConverter(converter.ProtocolOtlpLogV1, converter.EncodingNone, nil, nil)
+		return converter.NewConverter(converter.ProtocolOtlpAllV1, converter.EncodingNone, nil, nil)
 	default:
 		return nil, fmt.Errorf("unsupported otlp log protocol version : %s", f.Version)
 	}
@@ -146,32 +146,13 @@ func (f *FlusherOTLP) SetUrgent(flag bool) {
 
 // IsReady is ready to flush
 func (f *FlusherOTLP) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
-	if f.logClient.grpcConn == nil {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_READY_ALARM", "otlp flusher is not ready, gRPC conn is nil")
-		return false
-	}
-	state := f.logClient.grpcConn.GetState()
-	var ready bool
-	switch f.logClient.grpcConn.GetState() {
-	case connectivity.Ready:
-		ready = true
-	case connectivity.Connecting:
-		if !f.logClient.grpcConfig.WaitForReady {
-			ready = false
-			break
-		}
-		timeout, canal := context.WithTimeout(context.Background(), f.logClient.grpcConfig.GetTimeout())
-		defer canal()
-		_ = f.logClient.grpcConn.WaitForStateChange(timeout, state)
-		state = f.logClient.grpcConn.GetState()
-		ready = state == connectivity.Ready
-	default:
-		logger.Warning(f.context.GetRuntimeContext(), "FLUSHER_READY_ALARM", "gRPC conn is not ready, will reconnect. current status", f.logClient.grpcConn.GetState())
-		state = f.reConnect()
-		ready = state == connectivity.Ready
-	}
+	// logs/metrics/traces clients cannot be all nil, otherwise initialization would fail.
+	ready := (f.logClient == nil || f.logClient.isReady()) &&
+		(f.metricClient == nil || f.metricClient.isReady()) &&
+		(f.traceClient == nil || f.traceClient.isReady())
+
 	if !ready {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_READY_ALARM", "otlp logs flusher is not ready. current status", f.logClient.grpcConn.GetState())
+		logger.Warning(f.context.GetRuntimeContext(), "FLUSHER_READY_ALARM", "otlp flusher is not ready, all gRPC conn is nil")
 	}
 	return ready
 }
@@ -204,18 +185,13 @@ func (f *FlusherOTLP) Stop() error {
 	return err
 }
 
-func (f *FlusherOTLP) reConnect() connectivity.State {
-	f.logClient.grpcConn.Connect()
-	return f.logClient.grpcConn.GetState()
-}
-
 func (f *FlusherOTLP) convertPipelinesGroupeEventsToRequest(pipelinegroupeEventSlice []*models.PipelineGroupEvents) (plogotlp.ExportRequest, pmetricotlp.ExportRequest, ptraceotlp.ExportRequest) {
 	logs := plog.NewLogs()
 	metrics := pmetric.NewMetrics()
 	traces := ptrace.NewTraces()
 
 	for _, ps := range pipelinegroupeEventSlice {
-		resourceLog, resourceMetric, resourceTrace, err := f.converter.ConvertPipelineGroupEventsToOTLPEvents(ps)
+		resourceLog, resourceMetric, resourceTrace, err := converter.ConvertPipelineEventToOtlpEvent(f.converter, ps)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init gRPC client options fail, error", err)
 		}
@@ -379,6 +355,45 @@ func newGrpcClient[T any](t T, conn *grpc.ClientConn, config *helper.GrpcClientC
 		grpcConfig: config,
 		metadata:   metadata,
 	}
+}
+
+func (c *grpcClient[T]) reConnect() (connectivity.State, error) {
+	var state connectivity.State
+	if c == nil {
+		return state, fmt.Errorf("nilt grpc client")
+	}
+	c.grpcConn.Connect()
+	return c.grpcConn.GetState(), nil
+}
+
+func (c *grpcClient[T]) isReady() bool {
+	if c == nil {
+		return false
+	}
+	state := c.grpcConn.GetState()
+	var ready bool
+	switch c.grpcConn.GetState() {
+	case connectivity.Ready:
+		ready = true
+	case connectivity.Connecting:
+		if !c.grpcConfig.WaitForReady {
+			ready = false
+			break
+		}
+		timeout, canal := context.WithTimeout(context.Background(), c.grpcConfig.GetTimeout())
+		defer canal()
+		_ = c.grpcConn.WaitForStateChange(timeout, state)
+		state = c.grpcConn.GetState()
+		ready = state == connectivity.Ready
+	default:
+		var err error
+		state, err = c.reConnect()
+		if err != nil {
+			return false
+		}
+		ready = state == connectivity.Ready
+	}
+	return ready
 }
 
 func buildGrpcClientConn(grpcConfig *helper.GrpcClientConfig) (*grpc.ClientConn, error) {

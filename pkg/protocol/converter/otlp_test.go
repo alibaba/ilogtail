@@ -13,12 +13,12 @@ import (
 
 func TestNewConvertToOtlpLogs(t *testing.T) {
 	convey.Convey("When constructing converter with unsupported encoding", t, func() {
-		_, err := NewConverter(ProtocolOtlpLogV1, EncodingJSON, nil, nil)
+		_, err := NewConverter(ProtocolOtlpAllV1, EncodingJSON, nil, nil)
 		convey.So(err, convey.ShouldNotBeNil)
 	})
 
 	convey.Convey("When constructing converter with supported encoding", t, func() {
-		c, err := NewConverter(ProtocolOtlpLogV1, EncodingNone, nil, nil)
+		c, err := NewConverter(ProtocolOtlpAllV1, EncodingNone, nil, nil)
 		convey.So(err, convey.ShouldBeNil)
 
 		convey.Convey("When the logGroup is generated from files", func() {
@@ -43,11 +43,12 @@ func TestNewConvertToOtlpLogs(t *testing.T) {
 				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
 			}
 			logGroup := &protocol.LogGroup{
-				Logs:     logs,
-				Category: "test",
-				Topic:    "file",
-				Source:   "172.10.0.56",
-				LogTags:  tags,
+				Logs:        logs,
+				Category:    "test",
+				Topic:       "file",
+				Source:      "172.10.0.56",
+				LogTags:     tags,
+				MachineUUID: "machine_id",
 			}
 			d, err := c.Do(logGroup)
 			convey.Convey("Then the converted log should be valid", func() {
@@ -75,7 +76,7 @@ func TestNewConvertToOtlpLogs(t *testing.T) {
 
 func TestConvertPipelineGroupEventsToOtlpMetrics(t *testing.T) {
 	convey.Convey("When constructing converter with supported encoding", t, func() {
-		c, err := NewConverter(ProtocolOtlpAll, EncodingNone, nil, nil)
+		c, err := NewConverter(ProtocolOtlpAllV1, EncodingNone, nil, nil)
 		convey.So(err, convey.ShouldBeNil)
 
 		convey.Convey("When the logGroup is generated from files", func() {
@@ -112,7 +113,7 @@ func TestConvertPipelineGroupEventsToOtlpMetrics(t *testing.T) {
 				pipelineGroupEvent.Events = append(pipelineGroupEvent.Events, event)
 			}
 
-			logs, metrics, traces, err := c.ConvertPipelineGroupEventsToOTLPEvents(pipelineGroupEvent)
+			logs, metrics, traces, err := c.ConvertPipelineGroupEventsToOTLPEventsV1(pipelineGroupEvent)
 			convey.Convey("Then the converted metrics should be valid", func() {
 				convey.So(err, convey.ShouldBeNil)
 				convey.So(0, convey.ShouldEqual, logs.ScopeLogs().Len())
@@ -147,7 +148,7 @@ func TestConvertPipelineGroupEventsToOtlpMetrics(t *testing.T) {
 
 func TestConvertPipelineGroupEventsToOtlpTraces(t *testing.T) {
 	convey.Convey("When constructing converter with supported encoding", t, func() {
-		c, err := NewConverter(ProtocolOtlpAll, EncodingNone, nil, nil)
+		c, err := NewConverter(ProtocolOtlpAllV1, EncodingNone, nil, nil)
 		convey.So(err, convey.ShouldBeNil)
 
 		convey.Convey("When the logGroup is generated from files", func() {
@@ -188,7 +189,7 @@ func TestConvertPipelineGroupEventsToOtlpTraces(t *testing.T) {
 				pipelineGroupEvent.Events = append(pipelineGroupEvent.Events, event)
 			}
 
-			logs, metrics, traces, err := c.ConvertPipelineGroupEventsToOTLPEvents(pipelineGroupEvent)
+			logs, metrics, traces, err := c.ConvertPipelineGroupEventsToOTLPEventsV1(pipelineGroupEvent)
 			convey.Convey("Then the converted traces should be valid", func() {
 				convey.So(err, convey.ShouldBeNil)
 				convey.So(0, convey.ShouldEqual, logs.ScopeLogs().Len())

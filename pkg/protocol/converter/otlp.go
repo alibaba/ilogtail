@@ -44,9 +44,18 @@ func (c *Converter) ConvertToOtlpResourseLogs(logGroup *protocol.LogGroup, targe
 	rsLogs := plog.NewResourceLogs()
 	desiredValues := make([]map[string]string, len(logGroup.Logs))
 
-	rsLogs.Resource().Attributes().PutStr("source", logGroup.GetSource())
-	rsLogs.Resource().Attributes().PutStr("topic", logGroup.GetTopic())
-	rsLogs.Resource().Attributes().PutStr("machine_uuid", logGroup.GetMachineUUID())
+	if logGroup.GetSource() != "" {
+		rsLogs.Resource().Attributes().PutStr("source", logGroup.GetSource())
+	}
+
+	if logGroup.GetTopic() != "" {
+		rsLogs.Resource().Attributes().PutStr("topic", logGroup.GetTopic())
+	}
+
+	if logGroup.GetMachineUUID() != "" {
+		rsLogs.Resource().Attributes().PutStr("machine_uuid", logGroup.GetMachineUUID())
+	}
+
 	for _, t := range logGroup.LogTags {
 		rsLogs.Resource().Attributes().PutStr(t.Key, t.Value)
 	}
@@ -89,37 +98,70 @@ func (c *Converter) ConvertToOtlpResourseLogs(logGroup *protocol.LogGroup, targe
 	return rsLogs, desiredValues, nil
 }
 
-func (c *Converter) ConvertPipelineGroupEventsToOTLPEvents(ps *models.PipelineGroupEvents) (plog.ResourceLogs, pmetric.ResourceMetrics, ptrace.ResourceSpans, error) {
+func ConvertPipelineEventToOtlpEvent[
+	T1 plog.ResourceLogs,
+	T2 pmetric.ResourceMetrics,
+	T3 ptrace.ResourceSpans,
+](c *Converter, ps *models.PipelineGroupEvents) (t1 T1, t2 T2, t3 T3, err error) {
+	switch c.Protocol {
+	case ProtocolOtlpAllV1:
+		rsLogs := plog.NewResourceLogs()
+		rsMetrics := pmetric.NewResourceMetrics()
+		rsTraces := ptrace.NewResourceSpans()
+		err = ConvertPipelineGroupEvenstsToOtlpEvents(ps, rsLogs, rsMetrics, rsTraces)
+		return T1(rsLogs), T2(rsMetrics), T3(rsTraces), err
+	default:
+		err = fmt.Errorf("unsupported protocal %v", c.Protocol)
+	}
+	return
+}
+
+func (c *Converter) ConvertPipelineGroupEventsToOTLPEventsV1(ps *models.PipelineGroupEvents) (plog.ResourceLogs, pmetric.ResourceMetrics, ptrace.ResourceSpans, error) {
 	var err error
 	rsLogs := plog.NewResourceLogs()
 	rsMetrics := pmetric.NewResourceMetrics()
 	rsTraces := ptrace.NewResourceSpans()
+	err = ConvertPipelineGroupEvenstsToOtlpEvents(ps, rsLogs, rsMetrics, rsTraces)
+	return rsLogs, rsMetrics, rsTraces, err
+}
+
+func ConvertPipelineGroupEvenstsToOtlpEvents(ps *models.PipelineGroupEvents, rsLogs plog.ResourceLogs, rsMetrics pmetric.ResourceMetrics, rsTraces ptrace.ResourceSpans) error {
+	var err error
 	if ps == nil || len(ps.Events) == 0 {
-		return rsLogs, rsMetrics, rsTraces, err
+		return err
 	}
 	meta := ps.Group.Metadata
 	groupTags := ps.Group.Tags
-	setAttributes(rsLogs.Resource().Attributes(), meta)
-	setAttributes(rsMetrics.Resource().Attributes(), meta)
-	setAttributes(rsTraces.Resource().Attributes(), meta)
 
-	scopeLog := plog.NewScopeLogs()
-	scopeMetric := pmetric.NewScopeMetrics()
-	scopeTrace := ptrace.NewScopeSpans()
-	_ = setScope(scopeLog, groupTags)
-	_ = setScope(scopeMetric, groupTags)
-	_ = setScope(scopeTrace, groupTags)
+	var scopeLog plog.ScopeLogs
+	var scopeMetric pmetric.ScopeMetrics
+	var scopeTrace ptrace.ScopeSpans
 
 	hasLogs, hasMetrics, hasTraces := false, false, false
 	for _, v := range ps.Events {
 		switch v.GetType() {
 		case models.EventTypeLogging:
-			hasLogs = true
+			if !hasLogs {
+				setAttributes(rsLogs.Resource().Attributes(), meta)
+				scopeLog = plog.NewScopeLogs()
+				setScope(scopeLog, groupTags)
+				hasLogs = true
+			}
 		case models.EventTypeMetric:
-			hasMetrics = true
+			if !hasMetrics {
+				setAttributes(rsMetrics.Resource().Attributes(), meta)
+				scopeMetric = pmetric.NewScopeMetrics()
+				setScope(scopeMetric, groupTags)
+				hasMetrics = true
+			}
 			err = ConvertPipelineEventToOtlpMetric(v, scopeMetric)
 		case models.EventTypeSpan:
-			hasTraces = true
+			if !hasTraces {
+				setAttributes(rsTraces.Resource().Attributes(), meta)
+				scopeTrace = ptrace.NewScopeSpans()
+				setScope(scopeTrace, groupTags)
+				hasTraces = true
+			}
 			err = ConvertPipelineEventToOtlpSpan(v, scopeTrace)
 		}
 	}
@@ -139,7 +181,7 @@ func (c *Converter) ConvertPipelineGroupEventsToOTLPEvents(ps *models.PipelineGr
 		scopeTrace.MoveTo(newScopeTrace)
 	}
 
-	return rsLogs, rsMetrics, rsTraces, err
+	return err
 }
 
 // metric event -> datapoint
@@ -277,7 +319,7 @@ func ConvertPipelineEventToOtlpSpan(event models.PipelineEvent, scopeTrace ptrac
 
 func setScope[T interface {
 	Scope() pcommon.InstrumentationScope
-}](t T, groupTags models.Tags) error {
+}](t T, groupTags models.Tags) {
 	scope := t.Scope()
 	scope.SetName(groupTags.Get(otlp.TagKeyScopeName))
 	scope.SetVersion(groupTags.Get(otlp.TagKeyScopeVersion))
@@ -286,7 +328,7 @@ func setScope[T interface {
 		scope.SetDroppedAttributesCount(uint32(scopeDroppedAttributesCount))
 	}
 	setAttributes(scope.Attributes(), groupTags)
-	return err
+	return
 }
 
 func appgendNumberDatapoint[T interface {
