@@ -190,18 +190,18 @@ curl --location --request POST 'http://127.0.0.1:12345?QueryKey=queryValue' --he
 
 * [Agent](https://pyroscope.io/docs/agent-overview/) 兼容性说明
 
-  | Agent | 协议         | 是否兼容 |
-            |------------|-----|----------|
-  | pyroscopde/nodjs | pprof      | 是|
-  | pyroscopde/.net | pprof      | 是|
-  | pyroscopde/.net-new| pprof      | 是|
-  | pyroscopde/java | JFR        | 是|
-  | pyroscopde/go | pprof      | 是|
-  | pyroscopde/php | raw tire   | 是|
-  | pyroscopde/ebpf | raw tire   | 是|
-  | pyroscopde/rust | raw groups | 是|
-  | pyroscopde/ruby | raw groups | 是|
-  | pyroscopde/python | raw groups | 是|
+|        Agent        |     协议     | 是否兼容 |
+|:-------------------:|:----------:|:----:|
+|  pyroscopde/nodjs   |   pprof    |  是   |
+|   pyroscopde/.net   |   pprof    |  是   |
+| pyroscopde/.net-new |   pprof    |  是   |
+|   pyroscopde/java   |    JFR     |  是   |
+|    pyroscopde/go    |   pprof    |  是   |
+|   pyroscopde/php    |  raw tire  |  是   |
+|   pyroscopde/ebpf   |  raw tire  |  是   |
+|   pyroscopde/rust   | raw groups |  是   |
+|   pyroscopde/ruby   | raw groups |  是   |
+|  pyroscopde/python  | raw groups |  是   |
 
 * 采集配置
 
