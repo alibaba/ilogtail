@@ -73,7 +73,7 @@ func (c *Converter) ConvertToOtlpResourseLogs(logGroup *protocol.LogGroup, targe
 		desiredValues[i] = desiredValue
 
 		for k, v := range contents {
-			if k != bodyKey {
+			if k != bodyKey && k != levelKey {
 				logRecord.Attributes().PutStr(k, v)
 			}
 		}
