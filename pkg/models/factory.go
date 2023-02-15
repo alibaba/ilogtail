@@ -36,9 +36,7 @@ func NewTagsWithKeyValues(keyValues ...string) Tags {
 }
 
 func NewTags() Tags {
-	return &keyValuesImpl[string]{
-		keyValues: make(map[string]string),
-	}
+	return NewKeyValues[string]()
 }
 
 func NewMetadataWithMap(md map[string]string) Metadata {
@@ -61,9 +59,7 @@ func NewMetadataWithKeyValues(keyValues ...string) Metadata {
 }
 
 func NewMetadata() Metadata {
-	return &keyValuesImpl[string]{
-		keyValues: make(map[string]string),
-	}
+	return NewKeyValues[string]()
 }
 
 func NewGroup(meta Metadata, tags Tags) *GroupInfo {
@@ -91,7 +87,7 @@ func NewSingleValueMetric[T constraints.IntUintFloat](name string, metricType Me
 		Timestamp:  uint64(timestamp),
 		Tags:       tags,
 		Value:      &MetricSingleValue{Value: float64(value)},
-		TypedValue: noopTypedValues,
+		TypedValue: NilTypedValues,
 	}
 }
 
@@ -102,7 +98,7 @@ func NewMultiValuesMetric(name string, metricType MetricType, tags Tags, timesta
 		Timestamp:  uint64(timestamp),
 		Tags:       tags,
 		Value:      &MetricMultiValue{Values: values},
-		TypedValue: noopTypedValues,
+		TypedValue: NilTypedValues,
 	}
 }
 
@@ -146,7 +142,7 @@ func NewByteArray(bytes []byte) ByteArray {
 	return ByteArray(bytes)
 }
 
-func NewLog(name, level string, body []byte, spanID, traceID string, tags Tags, timestamp uint64) *Log {
+func NewLog(name, body, level, spanID, traceID string, tags Tags, timestamp uint64) *Log {
 	return &Log{
 		Name:      name,
 		Level:     level,
@@ -158,7 +154,7 @@ func NewLog(name, level string, body []byte, spanID, traceID string, tags Tags, 
 	}
 }
 
-func NewSimpleLog(body []byte, tags Tags, timestamp uint64) *Log {
+func NewSimpleLog(body string, tags Tags, timestamp uint64) *Log {
 	return &Log{
 		Body:      body,
 		Tags:      tags,
@@ -166,7 +162,7 @@ func NewSimpleLog(body []byte, tags Tags, timestamp uint64) *Log {
 	}
 }
 
-func NewSimpleLevelLog(level string, body []byte, tags Tags, timestamp uint64) *Log {
+func NewSimpleLevelLog(level, body string, tags Tags, timestamp uint64) *Log {
 	return &Log{
 		Level:     level,
 		Body:      body,
@@ -175,24 +171,6 @@ func NewSimpleLevelLog(level string, body []byte, tags Tags, timestamp uint64) *
 	}
 }
 
-func NewStringLog(name, level, body string, spanID, traceID string, tags Tags, timestamp uint64) *Log {
-	log := &Log{
-		Name:      name,
-		Level:     level,
-		Tags:      tags,
-		Timestamp: timestamp,
-		SpanID:    spanID,
-		TraceID:   traceID,
-	}
-	log.SetStringBody(body)
-	return log
-}
-
-func NewSimpleStringLog(body string, tags Tags, timestamp uint64) *Log {
-	log := &Log{
-		Tags:      tags,
-		Timestamp: timestamp,
-	}
-	log.SetStringBody(body)
-	return log
+func NewLogIndices() Indices {
+	return NewKeyValues[string]()
 }

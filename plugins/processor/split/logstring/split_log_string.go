@@ -15,13 +15,14 @@
 package logstring
 
 import (
-	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
-
 	"strings"
 	"time"
+
+	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
 type ProcessorSplit struct {
@@ -99,6 +100,10 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 	}
 
 	return destArray
+}
+
+func (p *ProcessorSplit) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
+	context.Collector().CollectList(in)
 }
 
 func init() {

@@ -35,9 +35,9 @@ const (
 )
 
 var (
-	noopStringValues = &keyValuesNoop[string]{}
-	noopTypedValues  = &keyValuesNoop[*TypedValue]{}
-	noopFloatValues  = &keyValuesNoop[float64]{}
+	NilStringValues = &keyValuesNil[string]{}
+	NilTypedValues  = &keyValuesNil[*TypedValue]{}
+	NilFloatValues  = &keyValuesNil[float64]{}
 )
 
 type TypedValue struct {
@@ -61,15 +61,13 @@ type KeyValues[TValue string | float64 | *TypedValue] interface {
 	Iterator() map[string]TValue
 
 	Len() int
+
+	IsNil() bool
 }
 
-type Tags interface {
-	KeyValues[string]
-}
+type Tags KeyValues[string]
 
-type Metadata interface {
-	KeyValues[string]
-}
+type Metadata KeyValues[string]
 
 type keyValuesImpl[TValue string | float64 | *TypedValue] struct {
 	keyValues map[string]TValue
@@ -140,34 +138,48 @@ func (kv *keyValuesImpl[TValue]) Len() int {
 	return 0
 }
 
-type keyValuesNoop[TValue string | float64 | *TypedValue] struct {
+func (kv *keyValuesImpl[TValue]) IsNil() bool {
+	return false
 }
 
-func (kv *keyValuesNoop[TValue]) Add(key string, value TValue) {
+type keyValuesNil[TValue string | float64 | *TypedValue] struct {
 }
 
-func (kv *keyValuesNoop[TValue]) AddAll(items map[string]TValue) {
+func (kv *keyValuesNil[TValue]) Add(key string, value TValue) {
 }
 
-func (kv *keyValuesNoop[TValue]) Get(key string) TValue {
+func (kv *keyValuesNil[TValue]) AddAll(items map[string]TValue) {
+}
+
+func (kv *keyValuesNil[TValue]) Get(key string) TValue {
 	var null TValue
 	return null
 }
 
-func (kv *keyValuesNoop[TValue]) Contains(key string) bool {
+func (kv *keyValuesNil[TValue]) Contains(key string) bool {
 	return false
 }
 
-func (kv *keyValuesNoop[TValue]) Delete(key string) {
+func (kv *keyValuesNil[TValue]) Delete(key string) {
 }
 
-func (kv *keyValuesNoop[TValue]) Merge(other KeyValues[TValue]) {
+func (kv *keyValuesNil[TValue]) Merge(other KeyValues[TValue]) {
 }
 
-func (kv *keyValuesNoop[TValue]) Iterator() map[string]TValue {
+func (kv *keyValuesNil[TValue]) Iterator() map[string]TValue {
 	return make(map[string]TValue)
 }
 
-func (kv *keyValuesNoop[TValue]) Len() int {
+func (kv *keyValuesNil[TValue]) Len() int {
 	return 0
+}
+
+func (kv *keyValuesNil[TValue]) IsNil() bool {
+	return true
+}
+
+func NewKeyValues[TValue string | float64 | *TypedValue]() KeyValues[TValue] {
+	return &keyValuesImpl[TValue]{
+		keyValues: make(map[string]TValue),
+	}
 }

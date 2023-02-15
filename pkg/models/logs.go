@@ -2,6 +2,8 @@ package models
 
 import "github.com/alibaba/ilogtail/pkg/util"
 
+type Indices KeyValues[string]
+
 type Log struct {
 	Name              string
 	Level             string
@@ -10,7 +12,8 @@ type Log struct {
 	Tags              Tags
 	Timestamp         uint64
 	ObservedTimestamp uint64
-	Body              []byte
+	Body              string
+	Indices           Indices
 }
 
 func (m *Log) GetName() string {
@@ -30,7 +33,7 @@ func (m *Log) GetTags() Tags {
 	if m != nil {
 		return m.Tags
 	}
-	return noopStringValues
+	return NilStringValues
 }
 
 func (m *Log) GetType() EventType {
@@ -96,28 +99,53 @@ func (m *Log) SetTraceID(traceID string) {
 	}
 }
 
-func (m *Log) GetBody() []byte {
+func (m *Log) GetBody() string {
 	if m != nil {
 		return m.Body
 	}
-	return nil
+	return ""
 }
 
-func (m *Log) SetBody(body []byte) {
+func (m *Log) SetBody(body string) {
 	if m != nil {
 		m.Body = body
 	}
 }
 
-func (m *Log) GetStringBody() string {
-	if m != nil && m.Body != nil {
-		return util.ZeroCopyBytesToString(m.Body)
-	}
-	return ""
+func (m *Log) GetBytesBody() []byte {
+	return util.ZeroCopyStringToBytes(m.GetBody())
 }
 
-func (m *Log) SetStringBody(body string) {
+func (m *Log) SetBytesBody(body []byte) {
+	m.SetBody(util.ZeroCopyBytesToString(body))
+}
+
+func (m *Log) SetIndices(indices Indices) {
 	if m != nil {
-		m.Body = util.ZeroCopyStringToBytes(body)
+		m.Indices = indices
 	}
+}
+
+func (m *Log) GetIndices() Indices {
+	if m != nil {
+		return m.Indices
+	}
+	return NilStringValues
+}
+
+func (m *Log) Clone() PipelineEvent {
+	if m != nil {
+		return &Log{
+			Name:              m.Name,
+			Level:             m.Level,
+			SpanID:            m.SpanID,
+			TraceID:           m.TraceID,
+			Tags:              m.Tags,
+			Timestamp:         m.Timestamp,
+			ObservedTimestamp: m.ObservedTimestamp,
+			Body:              m.Body,
+			Indices:           m.Indices,
+		}
+	}
+	return nil
 }

@@ -15,6 +15,8 @@
 package pluginmanager
 
 import (
+	"context"
+	"strings"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -382,8 +384,36 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 	return nil
 }
 
-func (p *pluginv2Runner) ReceiveRawLog(log *pipeline.LogWithContext) {
-	// TODO
+func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
+	md := models.NewMetadata()
+	if in.Context != nil {
+		for k, v := range in.Context {
+			md.Add(k, v.(string))
+		}
+	}
+	tags := models.NewTags()
+	var body string
+	for i, content := range in.Log.Contents {
+		if content.Key == "content" || i == 0 {
+			body = content.Value
+		} else {
+			if strings.Contains(content.Key, "__tag__:") {
+				tags.Add(content.Key[7:], content.Value)
+			} else {
+				tags.Add(content.Key, content.Value)
+			}
+		}
+	}
+	logger.Info(context.Background(), "time", in.Log.Time, "timestamp", uint64(time.Second*time.Duration(in.Log.Time)))
+	var timestamp uint64
+	if in.Log.Time != uint32(0) {
+		timestamp = uint64(time.Second * time.Duration(in.Log.Time))
+	} else {
+		timestamp = uint64(time.Now().UnixNano())
+	}
+	log := models.NewSimpleLog(body, tags, timestamp)
+	group := models.NewGroup(md, models.NewTags())
+	p.InputPipeContext.Collector().Collect(group, log)
 }
 
 func (p *pluginv2Runner) Merge(r PluginRunner) {
