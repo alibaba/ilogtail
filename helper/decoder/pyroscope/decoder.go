@@ -39,12 +39,12 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 	return groups, nil
 }
 
-func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error) {
+func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error) {
 	in, err := d.extractRawInput(data, req)
 	if err != nil {
 		return nil, err
 	}
-	return in.Profile.Parse(context.Background(), &in.Metadata)
+	return in.Profile.Parse(context.Background(), &in.Metadata, tags)
 }
 
 func (d *Decoder) extractRawInput(data []byte, req *http.Request) (*profile.Input, error) {

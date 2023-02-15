@@ -82,8 +82,8 @@ func NewRawProfile(data []byte, format string) *RawProfile {
 	}
 }
 
-func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
-	cb := r.extractProfileV1(meta)
+func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta, tags map[string]string) (logs []*protocol.Log, err error) {
+	cb := r.extractProfileV1(meta, tags)
 	if err = r.doParse(ctx, meta, cb); err != nil {
 		return nil, err
 	}
@@ -212,9 +212,12 @@ func (r *RawProfile) extractProfileV2(meta *profile.Meta) profile.CallbackFunc {
 	}
 }
 
-func (r *RawProfile) extractProfileV1(meta *profile.Meta) profile.CallbackFunc {
+func (r *RawProfile) extractProfileV1(meta *profile.Meta, tags map[string]string) profile.CallbackFunc {
 	profileIDStr := profile.GetProfileID(meta)
 	return func(id uint64, stack *profile.Stack, vals []uint64, types, units, aggs []string, startTime, endTime int64, labels map[string]string) {
+		for k, v := range tags {
+			labels[k] = v
+		}
 		b, _ := json.Marshal(labels)
 		var content []*protocol.Log_Content
 		content = append(content,
@@ -239,18 +242,6 @@ func (r *RawProfile) extractProfileV1(meta *profile.Meta) profile.CallbackFunc {
 				Value: profile.DetectProfileType(types[0]).String(),
 			},
 			&protocol.Log_Content{
-				Key:   "units",
-				Value: strings.Join(units, ","),
-			},
-			&protocol.Log_Content{
-				Key:   "valueTypes",
-				Value: strings.Join(types, ","),
-			},
-			&protocol.Log_Content{
-				Key:   "aggTypes",
-				Value: strings.Join(aggs, ","),
-			},
-			&protocol.Log_Content{
 				Key:   "dataType",
 				Value: "CallStack",
 			},
@@ -268,16 +259,37 @@ func (r *RawProfile) extractProfileV1(meta *profile.Meta) profile.CallbackFunc {
 			},
 		)
 		for i, v := range vals {
-			content = append(content, &protocol.Log_Content{
-				Key:   fmt.Sprintf("value_%d", i),
-				Value: strconv.FormatUint(v, 10),
+			var res []*protocol.Log_Content
+			if i != len(vals)-1 {
+				res = make([]*protocol.Log_Content, len(content))
+				copy(res, content)
+			} else {
+				res = content
+			}
+			res = append(res,
+				&protocol.Log_Content{
+					Key:   "units",
+					Value: units[i],
+				},
+				&protocol.Log_Content{
+					Key:   "valueTypes",
+					Value: types[i],
+				},
+				&protocol.Log_Content{
+					Key:   "aggTypes",
+					Value: aggs[i],
+				},
+				&protocol.Log_Content{
+					Key:   "val",
+					Value: strconv.FormatFloat(float64(v), 'f', 2, 64),
+				},
+			)
+
+			r.logs = append(r.logs, &protocol.Log{
+				Time:     uint32(startTime / 1e9),
+				Contents: res,
 			})
 		}
-		log := &protocol.Log{
-			Time:     uint32(meta.StartTime.Unix()),
-			Contents: content,
-		}
-		r.logs = append(r.logs, log)
 	}
 }
 

@@ -39,12 +39,12 @@ func TestParse(t *testing.T) {
 		SampleRate:      99,
 		Units:           profile.SamplesUnits,
 		AggregationType: profile.SumAggType,
-	})
+	}, nil)
 	if err != nil {
 		t.Fatalf("Failed to parse JFR: %s", err)
 		return
 	}
-	require.Equal(t, len(logs), 229)
+	require.Equal(t, len(logs), 323)
 }
 
 func TestParseJFR(t *testing.T) {
@@ -75,7 +75,7 @@ func TestParseJFR(t *testing.T) {
 		Units:           profile.SamplesUnits,
 		AggregationType: profile.SumAggType,
 	}
-	cb := r.extractProfileV1(meta)
+	cb := r.extractProfileV1(meta, nil)
 	r.ParseJFR(context.Background(), meta, reader, &labels, cb)
 	logs := r.logs
 	require.Equal(t, len(logs), 3)

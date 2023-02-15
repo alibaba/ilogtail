@@ -35,7 +35,7 @@ import (
 // Decoder used to parse buffer to sls logs
 type Decoder interface {
 	// Decode reader to logs
-	Decode(data []byte, req *http.Request) (logs []*protocol.Log, err error)
+	Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error)
 	// DecodeV2 reader to groupEvents
 	DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error)
 	// ParseRequst gets the request's body raw data and status code.

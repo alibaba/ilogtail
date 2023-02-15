@@ -3,6 +3,7 @@ package pprof
 import (
 	"context"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -32,6 +33,27 @@ func readPprofFixture(path string) (*tree.Profile, error) {
 	return &p, nil
 }
 
+const (
+	name        = "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go"
+	stack       = "runtime.netpoll /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/netpoll_kqueue.go\nruntime.findrunnable /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.schedule /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.park_m /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.mcall /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/asm_arm64.s"
+	stackID     = "40fb694aa9506d0b"
+	startTime   = 1619321948265140000
+	endTime     = 1619321949365317167
+	lanuage     = "go"
+	profileType = "profile_cpu"
+	dataType    = "CallStack"
+	val         = 250000000
+	valType     = "cpu"
+	unitType    = "nanoseconds"
+	aggType     = "sum"
+)
+
+var (
+	tags = map[string]string{
+		"_app_name_": "12",
+	}
+)
+
 func TestRawProfile_ParseV2(t *testing.T) {
 	te, err := readPprofFixture("testdata/cpu.pb.gz")
 	require.NoError(t, err)
@@ -42,8 +64,8 @@ func TestRawProfile_ParseV2(t *testing.T) {
 	r := new(RawProfile)
 	r.group = new(models.PipelineGroupEvents)
 	meta := &profile.Meta{
-		Tags:            map[string]string{"_app_name_": "12"},
-		SpyName:         "go",
+		Tags:            tags,
+		SpyName:         lanuage,
 		StartTime:       time.Now(),
 		EndTime:         time.Now(),
 		SampleRate:      99,
@@ -57,23 +79,21 @@ func TestRawProfile_ParseV2(t *testing.T) {
 	require.Equal(t, 0, group.Group.Metadata.Len())
 	require.Equal(t, 0, group.Group.Tags.Len())
 	require.Equal(t, 6, len(group.Events))
-	event := test.PickEvent(group.Events, "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
+	event := test.PickEvent(group.Events, name)
 	require.True(t, event != nil)
 	m := event.(*models.Profile)
 
-	require.Equal(t, "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go", m.Name)
-	require.Equal(t, models.ProfileStack(strings.Split("runtime.netpoll /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/netpoll_kqueue.go\nruntime.findrunnable /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.schedule /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.park_m /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.mcall /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/asm_arm64.s", "\n")), m.Stack)
-	require.Equal(t, "40fb694aa9506d0b", m.StackID)
-	require.Equal(t, int64(1619321948265140000), m.StartTime)
-	require.Equal(t, int64(1619321949365317167), m.EndTime)
-	require.Equal(t, "go", m.Language)
-	require.Equal(t, "profile_cpu", m.ProfileType.String())
-	require.Equal(t, "CallStack", m.DataType)
-	require.Equal(t, models.NewTagsWithMap(map[string]string{
-		"_app_name_": "12",
-	}), m.Tags)
+	require.Equal(t, name, m.Name)
+	require.Equal(t, models.ProfileStack(strings.Split(stack, "\n")), m.Stack)
+	require.Equal(t, stackID, m.StackID)
+	require.Equal(t, int64(startTime), m.StartTime)
+	require.Equal(t, int64(endTime), m.EndTime)
+	require.Equal(t, lanuage, m.Language)
+	require.Equal(t, profileType, m.ProfileType.String())
+	require.Equal(t, dataType, m.DataType)
+	require.Equal(t, models.NewTagsWithMap(tags), m.Tags)
 	require.Equal(t, models.ProfileValues{
-		models.NewProfileValue("cpu", "nanoseconds", "sum", 250000000),
+		models.NewProfileValue(valType, unitType, aggType, val),
 	}, m.Values)
 }
 
@@ -86,7 +106,7 @@ func TestRawProfile_Parse(t *testing.T) {
 	}
 	r := new(RawProfile)
 	meta := &profile.Meta{
-		Tags:            map[string]string{"_app_name_": "12"},
+		Tags:            tags,
 		SpyName:         "go",
 		StartTime:       time.Now(),
 		EndTime:         time.Now(),
@@ -94,23 +114,23 @@ func TestRawProfile_Parse(t *testing.T) {
 		Units:           profile.NanosecondsUnit,
 		AggregationType: profile.SumAggType,
 	}
-	cb := r.extractProfileV1(meta)
+	cb := r.extractProfileV1(meta, map[string]string{"cluster": "cluster2"})
 	err = r.extractLogs(context.Background(), te, p, meta, cb)
 	require.NoError(t, err)
 	logs := r.logs
 	require.Equal(t, len(logs), 6)
-	picks := test.PickLogs(logs, "stackID", "40fb694aa9506d0b")
+	picks := test.PickLogs(logs, "stackID", stackID)
 	require.Equal(t, len(picks), 1)
 	log := picks[0]
-	require.Equal(t, test.ReadLogVal(log, "name"), "runtime.kevent /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/sys_darwin.go")
-	require.Equal(t, test.ReadLogVal(log, "stack"), "runtime.netpoll /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/netpoll_kqueue.go\nruntime.findrunnable /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.schedule /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.park_m /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/proc.go\nruntime.mcall /opt/homebrew/Cellar/go/1.16.1/libexec/src/runtime/asm_arm64.s")
-	require.Equal(t, test.ReadLogVal(log, "language"), "go")
-	require.Equal(t, test.ReadLogVal(log, "type"), "profile_cpu")
-	require.Equal(t, test.ReadLogVal(log, "units"), "nanoseconds")
-	require.Equal(t, test.ReadLogVal(log, "valueTypes"), "cpu")
-	require.Equal(t, test.ReadLogVal(log, "aggTypes"), "sum")
-	require.Equal(t, test.ReadLogVal(log, "dataType"), "CallStack")
-	require.Equal(t, test.ReadLogVal(log, "durationNs"), "1100177167")
-	require.Equal(t, test.ReadLogVal(log, "labels"), "{\"_app_name_\":\"12\"}")
-	require.Equal(t, test.ReadLogVal(log, "value_0"), "250000000")
+	require.Equal(t, test.ReadLogVal(log, "name"), name)
+	require.Equal(t, test.ReadLogVal(log, "stack"), stack)
+	require.Equal(t, test.ReadLogVal(log, "language"), lanuage)
+	require.Equal(t, test.ReadLogVal(log, "type"), profileType)
+	require.Equal(t, test.ReadLogVal(log, "units"), unitType)
+	require.Equal(t, test.ReadLogVal(log, "valueTypes"), valType)
+	require.Equal(t, test.ReadLogVal(log, "aggTypes"), aggType)
+	require.Equal(t, test.ReadLogVal(log, "dataType"), dataType)
+	require.Equal(t, test.ReadLogVal(log, "durationNs"), strconv.Itoa(endTime-startTime))
+	require.Equal(t, test.ReadLogVal(log, "labels"), "{\"_app_name_\":\"12\",\"cluster\":\"cluster2\"}")
+	require.Equal(t, test.ReadLogVal(log, "val"), "250000000.00")
 }

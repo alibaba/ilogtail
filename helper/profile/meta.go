@@ -188,6 +188,6 @@ func (u Units) DetectValueType() string {
 }
 
 type RawProfile interface {
-	Parse(ctx context.Context, meta *Meta) (logs []*protocol.Log, err error)
+	Parse(ctx context.Context, meta *Meta, tags map[string]string) (logs []*protocol.Log, err error)
 	ParseV2(ctx context.Context, meta *Meta) (groups *models.PipelineGroupEvents, err error)
 }

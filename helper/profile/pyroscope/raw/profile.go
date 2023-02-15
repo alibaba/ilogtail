@@ -43,8 +43,8 @@ func (p *Profile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *mode
 	return
 }
 
-func (p *Profile) Parse(ctx context.Context, meta *profile.Meta) (logs []*protocol.Log, err error) {
-	cb := p.extractProfileV1(meta)
+func (p *Profile) Parse(ctx context.Context, meta *profile.Meta, tags map[string]string) (logs []*protocol.Log, err error) {
+	cb := p.extractProfileV1(meta, tags)
 	if err := p.doParse(cb); err != nil {
 		return nil, err
 	}
@@ -99,14 +99,15 @@ func (p *Profile) extractProfileV2(meta *profile.Meta) func([]byte, int) {
 	}
 }
 
-func (p *Profile) extractProfileV1(meta *profile.Meta) func([]byte, int) {
+func (p *Profile) extractProfileV1(meta *profile.Meta, tags map[string]string) func([]byte, int) {
 	profileID := profile.GetProfileID(meta)
+	for k, v := range tags {
+		meta.Tags[k] = v
+	}
 	labels, _ := json.Marshal(meta.Tags)
-	labelStr := string(labels)
-
 	return func(k []byte, v int) {
-		name, stack := p.extractNameAndStacks(k, "")
-
+		name, stack := p.extractNameAndStacks(k, meta.SpyName)
+		stackID := strconv.FormatUint(xxhash.Sum64(k), 16)
 		var content []*protocol.Log_Content
 		content = append(content,
 			&protocol.Log_Content{
@@ -119,7 +120,7 @@ func (p *Profile) extractProfileV1(meta *profile.Meta) func([]byte, int) {
 			},
 			&protocol.Log_Content{
 				Key:   "stackID",
-				Value: strconv.FormatUint(xxhash.Sum64(k), 16),
+				Value: stackID,
 			},
 			&protocol.Log_Content{
 				Key:   "language",
@@ -155,11 +156,11 @@ func (p *Profile) extractProfileV1(meta *profile.Meta) func([]byte, int) {
 			},
 			&protocol.Log_Content{
 				Key:   "labels",
-				Value: labelStr,
+				Value: string(labels),
 			},
 			&protocol.Log_Content{
-				Key:   "value_0",
-				Value: strconv.Itoa(v),
+				Key:   "val",
+				Value: strconv.FormatFloat(float64(v), 'f', 2, 64),
 			},
 		)
 

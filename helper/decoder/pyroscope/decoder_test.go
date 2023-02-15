@@ -45,7 +45,7 @@ func TestDecoder_DecodeTire(t *testing.T) {
 	request.Header.Set("Content-Type", "binary/octet-stream+trie")
 	assert.NoError(t, err)
 	d := new(Decoder)
-	logs, err := d.Decode(buf.Bytes(), request)
+	logs, err := d.Decode(buf.Bytes(), request, map[string]string{"cluster": "sls-mall"})
 	assert.NoError(t, err)
 	assert.True(t, len(logs) == 9)
 	log := logs[1]
@@ -58,6 +58,6 @@ func TestDecoder_DecodeTire(t *testing.T) {
 	require.Equal(t, test.ReadLogVal(log, "aggTypes"), "sum")
 	require.Equal(t, test.ReadLogVal(log, "dataType"), "CallStack")
 	require.Equal(t, test.ReadLogVal(log, "durationNs"), "10000000000")
-	require.Equal(t, test.ReadLogVal(log, "labels"), "{\"__name__\":\"demo\",\"a\":\"b\"}")
-	require.Equal(t, test.ReadLogVal(log, "value_0"), "1")
+	require.Equal(t, test.ReadLogVal(log, "labels"), "{\"__name__\":\"demo\",\"a\":\"b\",\"cluster\":\"sls-mall\"}")
+	require.Equal(t, test.ReadLogVal(log, "val"), "1.00")
 }
