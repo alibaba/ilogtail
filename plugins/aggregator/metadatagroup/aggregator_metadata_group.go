@@ -49,17 +49,20 @@ func (g *metadataGroup) Record(group *models.PipelineGroupEvents, ctx pipeline.P
 	t := group.Events[0].GetType()
 	switch t {
 	case models.EventTypeByteArray:
-		g.bytesAndLengthCollector(group, ctx)
+		g.collectByLengthAndBytesChecker(group, ctx)
 	default:
-		g.lengthCollector(group, ctx)
+		g.collectByLengthChecker(group, ctx)
 	}
 	return nil
 }
 
-func (g *metadataGroup) lengthCollector(group *models.PipelineGroupEvents, ctx pipeline.PipelineContext) {
+func (g *metadataGroup) collectByLengthChecker(group *models.PipelineGroupEvents, ctx pipeline.PipelineContext) {
 	for {
 		inputSize := len(group.Events)
 		availableSize := g.maxEventsLength - g.nowEventsLength
+		if availableSize < 0 {
+			break
+		}
 
 		if availableSize >= inputSize {
 			g.events = append(g.events, group.Events...)
@@ -74,7 +77,7 @@ func (g *metadataGroup) lengthCollector(group *models.PipelineGroupEvents, ctx p
 
 }
 
-func (g *metadataGroup) bytesAndLengthCollector(group *models.PipelineGroupEvents, ctx pipeline.PipelineContext) {
+func (g *metadataGroup) collectByLengthAndBytesChecker(group *models.PipelineGroupEvents, ctx pipeline.PipelineContext) {
 	for {
 		availableBytesSize := g.maxEventsByteLength - g.nowEventsByteLength
 		availableLenSize := g.maxEventsLength - g.nowEventsLength
