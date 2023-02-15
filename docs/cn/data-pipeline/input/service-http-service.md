@@ -6,27 +6,27 @@
 
 ## 配置参数
 
-| 参数                 | 类型                | 是否必选 | 说明                                                                                                                                |
-|--------------------|-------------------|------|-----------------------------------------------------------------------------------------------------------------------------------|
-| Type               | String            | 是    | 插件类型，固定为`service_http_server`                                                                                                     |
-| Format             | String            | 否    | <p>数据格式。</p> <p>支持格式：`sls`、`prometheus`、`influxdb`、`otlp_logv1`、`statsd`</p>  <p>v2版本支持格式: `raw`</p><p>说明：`raw`格式以原始请求字节流传输数据</p> |
-| Address            | String            | 否    | <p>监听地址。</p><p></p>                                                                                                               |
-| Path               | String            | 否    | <p>接收端点, 如Format 为 `otlp_logv1` 时, 默认端点为`/v1/logs` 。</p><p></p>                                                                   |
-| ReadTimeoutSec     | String            | 否    | <p>读取超时时间。</p><p>默认取值为:`10s`。</p>                                                                                                 |
-| ShutdownTimeoutSec | String            | 否    | <p>关闭超时时间。</p><p>默认取值为:`5s`。</p>                                                                                                  |
-| MaxBodySize        | String            | 否    | <p>最大传输 body 大小。</p><p>默认取值为:`64k`。</p>                                                                                           |
-| UnlinkUnixSock     | String            | 否    | <p>启动前如果监听地址为unix socket，是否进行强制释放。</p><p>默认取值为:`true`。</p>                                                                        |
-| FieldsExtend       | Boolean           | 否    | <p>是否支持非integer以外的数据类型(如String)</p><p>目前仅针对有 String、Bool 等额外类型的 influxdb Format 有效</p>                                            |
-| QueryParams        | []String          | 否    | 需要解析到Group.Metadata中的请求参数。<p>解析结果会以KeyValue放入Metadata。默认取值为`[]`，即不解析。</p><p>仅v2版本有效</p>                                           |
-| QueryParamPrefix   | String            | 否    | 解析请求参数时需要添加的key前缀，如`_query_param_`。<p>前缀会直接拼接在每个QueryParam前，无额外连接符，默认取值为空，即不增加前缀。</p><p>仅v2版本有效</p>                               |
-| HeaderParams       | []String          | 否    | 需要解析到Group.Metadata中的header参数。<p>解析结果会以KeyValue放入Metadata。默认取值为`[]`，即不解析。</p><p>仅v2版本有效</p>                                       |
-| HeaderParamPrefix  | String            | 否    | 解析Header参数时需要添加的key前缀，如`_header_param_`。<p>前缀会直接拼接在每个HeaderParam前，无额外连接符，默认取值为空，即不增加前缀。</p><p>仅v2版本有效</p>                         |
-| DisableUncompress  | Boolean           | 否    | 禁用对于请求数据的解压缩, 默认取值为:`false`<p>目前仅针对Raw Format有效</p><p>仅v2版本有效</p>                                                                 |
-| Tags               | map[String]String | 否    | 输出数据默认携带标签<p>仅v2版本有效</p>                                                                                                          |
-| TagsInGroup        | Boolean           | 否    | 输出数据标签保存位置, 默认为true, 表示存储于V2 结构GroupInfo.Tags中, 否则表示存储于具体Event.Tags中<p>仅v2版本有效</p>                                                |
-| Cluster            | String            | 否    | 特殊标签, 为Tags 中特殊部分, 当不为空时以 `cluster`作为键保存于Tags中<p>仅v2版本有效</p>                                                                      |
-| DumpData           | Boolean           | 否    | [开发使用] 将接收的请求存储于本地文件, 默认取值为:`false`                                                                                               |
-| DumpDataKeepFiles  | Int               | 否    | [开发使用] Dump文件保留文件数目, 文件按小时滚动, 此参数默认值为5, 表示保留5小时Dump 参数                                                                            |
+| 参数                 | 类型                | 是否必选 | 说明                                                                                                                                                                            |
+|--------------------|-------------------|------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Type               | String            | 是    | 插件类型，固定为`service_http_server`                                                                                                                                                 |
+| Format             | String            | 否    | <p>数据格式。</p> <p>支持格式：`sls`、`prometheus`、`influxdb`、`otlp_logv1`、 `otlp_metricv1`、`otlp_tracev1`, `pyroscope`,statsd`</p>  <p>v2版本支持格式: `raw`</p><p>说明：`raw`格式以原始请求字节流传输数据</p> |
+| Address            | String            | 否    | <p>监听地址。</p><p></p>                                                                                                                                                           |
+| Path               | String            | 否    | <p>接收端点, 如Format 为 `otlp_logv1` 时, 默认端点为`/v1/logs` 。</p><p></p>                                                                                                               |
+| ReadTimeoutSec     | String            | 否    | <p>读取超时时间。</p><p>默认取值为:`10s`。</p>                                                                                                                                             |
+| ShutdownTimeoutSec | String            | 否    | <p>关闭超时时间。</p><p>默认取值为:`5s`。</p>                                                                                                                                              |
+| MaxBodySize        | String            | 否    | <p>最大传输 body 大小。</p><p>默认取值为:`64k`。</p>                                                                                                                                       |
+| UnlinkUnixSock     | String            | 否    | <p>启动前如果监听地址为unix socket，是否进行强制释放。</p><p>默认取值为:`true`。</p>                                                                                                                    |
+| FieldsExtend       | Boolean           | 否    | <p>是否支持非integer以外的数据类型(如String)</p><p>目前仅针对有 String、Bool 等额外类型的 influxdb Format 有效</p>                                                                                        |
+| QueryParams        | []String          | 否    | 需要解析到Group.Metadata中的请求参数。<p>解析结果会以KeyValue放入Metadata。默认取值为`[]`，即不解析。</p><p>仅v2版本有效</p>                                                                                       |
+| QueryParamPrefix   | String            | 否    | 解析请求参数时需要添加的key前缀，如`_query_param_`。<p>前缀会直接拼接在每个QueryParam前，无额外连接符，默认取值为空，即不增加前缀。</p><p>仅v2版本有效</p>                                                                           |
+| HeaderParams       | []String          | 否    | 需要解析到Group.Metadata中的header参数。<p>解析结果会以KeyValue放入Metadata。默认取值为`[]`，即不解析。</p><p>仅v2版本有效</p>                                                                                   |
+| HeaderParamPrefix  | String            | 否    | 解析Header参数时需要添加的key前缀，如`_header_param_`。<p>前缀会直接拼接在每个HeaderParam前，无额外连接符，默认取值为空，即不增加前缀。</p><p>仅v2版本有效</p>                                                                     |
+| DisableUncompress  | Boolean           | 否    | 禁用对于请求数据的解压缩, 默认取值为:`false`<p>目前仅针对Raw Format有效</p><p>仅v2版本有效</p>                                                                                                             |
+| Tags               | map[String]String | 否    | 输出数据默认携带标签<p>仅v2版本有效</p>                                                                                                                                                      |
+| TagsInGroup        | Boolean           | 否    | 输出数据标签保存位置, 默认为true, 表示存储于V2 结构GroupInfo.Tags中, 否则表示存储于具体Event.Tags中<p>仅v2版本有效</p>                                                                                            |
+| Cluster            | String            | 否    | 特殊标签, 为Tags 中特殊部分, 当不为空时以 `cluster`作为键保存于Tags中<p>仅v2版本有效</p>                                                                                                                  |
+| DumpData           | Boolean           | 否    | [开发使用] 将接收的请求存储于本地文件, 默认取值为:`false`                                                                                                                                           |
+| DumpDataKeepFiles  | Int               | 否    | [开发使用] Dump文件保留文件数目, 文件按小时滚动, 此参数默认值为5, 表示保留5小时Dump 参数                                                                                                                        |
 
 ## 样例
 
@@ -114,6 +114,31 @@ opentelemetry-java-sdk构造数据，基于[ExampleConfiguration.java](https://g
 }
 ```
 
+### 接收 OTLP Logs/Metrics/Traces (v2)
+
+注意：目前v2 pipeline尚不支持otlp logs请求，会丢弃数据。
+
+* 采集配置
+
+```yaml
+
+enable: true
+version: v2
+inputs:
+  - Type: service_http_server
+    Format: "otlp_logv1"
+    Address: "http://127.0.0.1:12344"
+  - Type: service_http_server
+    Format: "otlp_metricv1"
+    Address: "http://127.0.0.1:12345"
+  - Type: service_http_server
+    Format: "otlp_tracev1"
+    Address: "http://127.0.0.1:12346"
+flushers:
+  - Type: flusher_stdout
+    OnlyStdout: true  
+```
+
 ### 接收字节流数据
 
 * 采集配置
@@ -166,7 +191,7 @@ curl --location --request POST 'http://127.0.0.1:12345?QueryKey=queryValue' --he
 * [Agent](https://pyroscope.io/docs/agent-overview/) 兼容性说明
 
   | Agent | 协议         | 是否兼容 |
-        |------------|-----|----------|
+            |------------|-----|----------|
   | pyroscopde/nodjs | pprof      | 是|
   | pyroscopde/.net | pprof      | 是|
   | pyroscopde/.net-new| pprof      | 是|
