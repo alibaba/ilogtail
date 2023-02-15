@@ -11,11 +11,3 @@ type Extension interface {
 	// Stop stops the services and release resources
 	Stop() error
 }
-
-type ExtensionV1 interface {
-	Extension
-}
-
-type ExtensionV2 interface {
-	Extension
-}

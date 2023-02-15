@@ -35,7 +35,7 @@ type pluginv1Runner struct {
 	ProcessorPlugins  []*ProcessorWrapper
 	AggregatorPlugins []*AggregatorWrapper
 	FlusherPlugins    []*FlusherWrapper
-	ExtensionPlugins  map[string]pipeline.ExtensionV1
+	ExtensionPlugins  map[string]pipeline.Extension
 
 	FlushOutStore  *FlushOutStore[protocol.LogGroup]
 	LogstoreConfig *LogstoreConfig
@@ -56,7 +56,7 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	p.ProcessorPlugins = make([]*ProcessorWrapper, 0)
 	p.AggregatorPlugins = make([]*AggregatorWrapper, 0)
 	p.FlusherPlugins = make([]*FlusherWrapper, 0)
-	p.ExtensionPlugins = make(map[string]pipeline.ExtensionV1, 0)
+	p.ExtensionPlugins = make(map[string]pipeline.Extension, 0)
 	p.LogsChan = make(chan *pipeline.LogWithContext, inputQueueSize)
 	p.LogGroupsChan = make(chan *protocol.LogGroup, helper.Max(flushQueueSize, p.FlushOutStore.Len()))
 	p.FlushOutStore.Write(p.LogGroupsChan)
@@ -103,7 +103,7 @@ func (p *pluginv1Runner) AddPlugin(pluginName string, category pluginCategory, p
 			return p.addFlusher(flusher)
 		}
 	case pluginExtension:
-		if extension, ok := plugin.(pipeline.ExtensionV1); ok {
+		if extension, ok := plugin.(pipeline.Extension); ok {
 			return p.addExtension(pluginName, extension)
 		}
 	default:
@@ -190,7 +190,7 @@ func (p *pluginv1Runner) addFlusher(flusher pipeline.FlusherV1) error {
 	return nil
 }
 
-func (p *pluginv1Runner) addExtension(name string, extension pipeline.ExtensionV1) error {
+func (p *pluginv1Runner) addExtension(name string, extension pipeline.Extension) error {
 	p.ExtensionPlugins[name] = extension
 	return nil
 }

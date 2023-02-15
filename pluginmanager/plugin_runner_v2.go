@@ -47,7 +47,7 @@ type pluginv2Runner struct {
 	ProcessorPlugins  []pipeline.ProcessorV2
 	AggregatorPlugins []pipeline.AggregatorV2
 	FlusherPlugins    []pipeline.FlusherV2
-	ExtensionPlugins  map[string]pipeline.ExtensionV2
+	ExtensionPlugins  map[string]pipeline.Extension
 	TimerRunner       []*timerRunner
 
 	FlushOutStore  *FlushOutStore[models.PipelineGroupEvents]
@@ -64,7 +64,7 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	p.ProcessorPlugins = make([]pipeline.ProcessorV2, 0)
 	p.AggregatorPlugins = make([]pipeline.AggregatorV2, 0)
 	p.FlusherPlugins = make([]pipeline.FlusherV2, 0)
-	p.ExtensionPlugins = make(map[string]pipeline.ExtensionV2, 0)
+	p.ExtensionPlugins = make(map[string]pipeline.Extension, 0)
 	p.InputPipeContext = pipeline.NewObservePipelineConext(inputQueueSize)
 	p.ProcessPipeContext = pipeline.NewGroupedPipelineConext()
 	p.AggregatePipeContext = pipeline.NewObservePipelineConext(flushQueueSize)
@@ -107,7 +107,7 @@ func (p *pluginv2Runner) AddPlugin(pluginName string, category pluginCategory, p
 			return p.addFlusher(flusher)
 		}
 	case pluginExtension:
-		if extension, ok := plugin.(pipeline.ExtensionV2); ok {
+		if extension, ok := plugin.(pipeline.Extension); ok {
 			return p.addExtension(pluginName, extension)
 		}
 	default:
@@ -181,7 +181,7 @@ func (p *pluginv2Runner) addFlusher(flusher pipeline.FlusherV2) error {
 	return nil
 }
 
-func (p *pluginv2Runner) addExtension(name string, extension pipeline.ExtensionV2) error {
+func (p *pluginv2Runner) addExtension(name string, extension pipeline.Extension) error {
 	p.ExtensionPlugins[name] = extension
 	return nil
 }
