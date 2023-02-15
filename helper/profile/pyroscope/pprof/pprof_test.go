@@ -2,7 +2,6 @@ package pprof
 
 import (
 	"context"
-	"github.com/alibaba/ilogtail/plugins/test"
 	"os"
 	"strings"
 	"testing"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/plugins/test"
 )
 
 func readPprofFixture(path string) (*tree.Profile, error) {

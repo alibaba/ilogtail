@@ -31,9 +31,8 @@ const (
 )
 
 type metadataGroup struct {
-	context pipeline.Context
-	group   *models.GroupInfo
-	events  []models.PipelineEvent
+	group  *models.GroupInfo
+	events []models.PipelineEvent
 
 	nowEventsLength     int
 	nowEventsByteLength int
@@ -46,68 +45,69 @@ type metadataGroup struct {
 func (g *metadataGroup) Record(group *models.PipelineGroupEvents, ctx pipeline.PipelineContext) error {
 	g.lock.Lock()
 	defer g.lock.Unlock()
-	bytesAndLengthChecker := func(group *models.PipelineGroupEvents) {
-		for {
-			availableBytesSize := g.maxEventsByteLength - g.nowEventsByteLength
-			availableLenSize := g.maxEventsLength - g.nowEventsLength
-			if availableLenSize < 0 || availableBytesSize < 0 {
-				break
-			}
-
-			bytes := 0
-			num := 0
-			for _, event := range group.Events {
-				byteArray, ok := event.(models.ByteArray)
-				if !ok {
-					continue
-				}
-				if bytes+len(byteArray) > availableBytesSize || num+1 > availableLenSize {
-					break
-				}
-				bytes += len(byteArray)
-				num++
-			}
-
-			if num >= len(group.Events) {
-				g.events = append(g.events, group.Events...)
-				g.nowEventsByteLength += bytes
-				g.nowEventsLength += num
-				break
-			} else {
-				g.events = append(g.events, group.Events[0:num]...)
-				_ = g.GetResultWithoutLock(ctx)
-				group.Events = group.Events[num:]
-			}
-		}
-
-	}
-
-	lengthChecker := func(group *models.PipelineGroupEvents) {
-		for {
-			inputSize := len(group.Events)
-			availableSize := g.maxEventsLength - g.nowEventsLength
-
-			if availableSize >= inputSize {
-				g.events = append(g.events, group.Events...)
-				g.nowEventsLength += inputSize
-				break
-			} else {
-				g.events = append(g.events, group.Events[0:availableSize]...)
-				_ = g.GetResultWithoutLock(ctx)
-				group.Events = group.Events[availableSize:]
-			}
-		}
-	}
-
 	// check by bytes size, currently only works at `models.ByteArray`
 	t := group.Events[0].GetType()
 	switch t {
 	case models.EventTypeByteArray:
-		bytesAndLengthChecker(group)
+		g.bytesAndLengthCollector(group, ctx)
 	default:
-		lengthChecker(group)
+		g.lengthCollector(group, ctx)
 	}
 	return nil
+}
+
+func (g *metadataGroup) lengthCollector(group *models.PipelineGroupEvents, ctx pipeline.PipelineContext) {
+	for {
+		inputSize := len(group.Events)
+		availableSize := g.maxEventsLength - g.nowEventsLength
+
+		if availableSize >= inputSize {
+			g.events = append(g.events, group.Events...)
+			g.nowEventsLength += inputSize
+			break
+		} else {
+			g.events = append(g.events, group.Events[0:availableSize]...)
+			_ = g.GetResultWithoutLock(ctx)
+			group.Events = group.Events[availableSize:]
+		}
+	}
+
+}
+
+func (g *metadataGroup) bytesAndLengthCollector(group *models.PipelineGroupEvents, ctx pipeline.PipelineContext) {
+	for {
+		availableBytesSize := g.maxEventsByteLength - g.nowEventsByteLength
+		availableLenSize := g.maxEventsLength - g.nowEventsLength
+		if availableLenSize < 0 || availableBytesSize < 0 {
+			break
+		}
+
+		bytes := 0
+		num := 0
+		for _, event := range group.Events {
+			byteArray, ok := event.(models.ByteArray)
+			if !ok {
+				continue
+			}
+			if bytes+len(byteArray) > availableBytesSize || num+1 > availableLenSize {
+				break
+			}
+			bytes += len(byteArray)
+			num++
+		}
+
+		if num >= len(group.Events) {
+			g.events = append(g.events, group.Events...)
+			g.nowEventsByteLength += bytes
+			g.nowEventsLength += num
+			break
+		} else {
+			g.events = append(g.events, group.Events[0:num]...)
+			_ = g.GetResultWithoutLock(ctx)
+			group.Events = group.Events[num:]
+		}
+	}
+
 }
 
 func (g *metadataGroup) GetResult(ctx pipeline.PipelineContext) error {

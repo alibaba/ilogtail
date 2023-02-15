@@ -16,12 +16,12 @@ package test
 
 import (
 	"context"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"io/ioutil"
 	"path/filepath"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/pluginmanager"

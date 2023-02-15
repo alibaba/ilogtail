@@ -46,7 +46,7 @@ const (
 
 type dumpDataReq struct {
 	Body   []byte
-	Url    string
+	URL    string
 	Header map[string][]string
 }
 type dumpDataResp struct {
@@ -106,11 +106,11 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 
 	switch s.Format {
 	case common.ProtocolOTLPLogV1:
-		s.Path= "/v1/logs"
+		s.Path = "/v1/logs"
 	case common.ProtocolOTLPMetricV1:
-		s.Path= "/v1/metrics"
+		s.Path = "/v1/metrics"
 	case common.ProtocolOTLPTraceV1:
-		s.Path= "/v1/traces"
+		s.Path = "/v1/traces"
 	}
 	s.Address += s.Path
 	logger.Infof(context.GetRuntimeContext(), "addr", s.Address, "format", s.Format)
@@ -121,7 +121,7 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	s.paramCount = len(s.QueryParams) + len(s.HeaderParams)
 
 	if s.DumpData {
-		_ = os.MkdirAll(path.Join(util.GetCurrentBinaryPath(), "dump"), 0755)
+		_ = os.MkdirAll(path.Join(util.GetCurrentBinaryPath(), "dump"), 0750)
 		s.dumpDataChan = make(chan *dumpData, 10)
 		prefix := strings.Join([]string{s.context.GetProject(), s.context.GetLogstore(), s.context.GetConfigName()}, "_")
 		files, err := helper.GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), prefix, true, 0)
@@ -172,7 +172,7 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.dumpDataChan <- &dumpData{
 			Req: dumpDataReq{
 				Body:   data,
-				Url:    r.URL.String(),
+				URL:    r.URL.String(),
 				Header: r.Header,
 			},
 		}

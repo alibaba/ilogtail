@@ -2,9 +2,10 @@ package pyroscope
 
 import (
 	"bytes"
-	"github.com/alibaba/ilogtail/plugins/test"
 	"net/http"
 	"testing"
+
+	"github.com/alibaba/ilogtail/plugins/test"
 
 	"github.com/pyroscope-io/pyroscope/pkg/structs/transporttrie"
 	"github.com/stretchr/testify/assert"

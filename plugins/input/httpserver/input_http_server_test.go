@@ -406,8 +406,8 @@ func TestInputWithRequestParamsWithoutPrefix(t *testing.T) {
 func TestServiceHTTP_doDumpFile(t *testing.T) {
 	_, err := os.Stat(path.Join(util.GetCurrentBinaryPath(), "dump"))
 	if err == nil {
-		files, err := helper.GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), "a_b_ctestdump", true, 0)
-		require.NoError(t, err)
+		files, findErr := helper.GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), "a_b_ctestdump", true, 0)
+		require.NoError(t, findErr)
 		for _, file := range files {
 			_ = os.Remove(file)
 
@@ -424,7 +424,7 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 			ch <- &dumpData{
 				Req: dumpDataReq{
 					Body:   []byte(fmt.Sprintf("body_%d", i)),
-					Url:    fmt.Sprintf("url_%d", i),
+					URL:    fmt.Sprintf("url_%d", i),
 					Header: m,
 				},
 			}
@@ -444,11 +444,11 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 			buffer := bytes.NewBuffer(data[offset:])
 			require.NoError(t, binary.Read(buffer, binary.BigEndian, &length))
 
-			data := data[offset+4 : offset+4+int(length)]
+			data := data[offset+4 : offset+4+int(length)] //nolint: govet
 			var d dumpData
 			require.NoError(t, json.Unmarshal(data, &d))
 
-			require.Equal(t, fmt.Sprintf("url_%d", num), d.Req.Url)
+			require.Equal(t, fmt.Sprintf("url_%d", num), d.Req.URL)
 			require.Equal(t, fmt.Sprintf("body_%d", num), string(d.Req.Body))
 			require.Equal(t, len(d.Req.Header), 1)
 			require.Equal(t, strconv.Itoa(num), d.Req.Header["header"][0])

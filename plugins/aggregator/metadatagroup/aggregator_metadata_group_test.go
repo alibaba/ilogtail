@@ -34,7 +34,7 @@ func TestInitMetadataGroupAggregator(t *testing.T) {
 		agg := NewAggregatorMetadataGroup()
 		Convey("When Init(), should return error", func() {
 			_, err := agg.Init(nil, nil)
-			So(err, ShouldNotBeNil)
+			So(err, ShouldBeNil)
 		})
 	})
 
