@@ -104,7 +104,7 @@ func ConvertPipelineEventToOtlpEvent[
 	T3 ptrace.ResourceSpans,
 ](c *Converter, ps *models.PipelineGroupEvents) (t1 T1, t2 T2, t3 T3, err error) {
 	switch c.Protocol {
-	case ProtocolOtlpAllV1:
+	case ProtocolOtlpV1:
 		rsLogs := plog.NewResourceLogs()
 		rsMetrics := pmetric.NewResourceMetrics()
 		rsTraces := ptrace.NewResourceSpans()

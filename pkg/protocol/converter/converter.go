@@ -26,8 +26,7 @@ import (
 
 const (
 	ProtocolCustomSingle = "custom_single"
-	ProtocolOtlpLogV1    = "otlp_log_v1"
-	ProtocolOtlpAllV1    = "otlp_v1"
+	ProtocolOtlpV1       = "otlp_v1"
 	ProtocolInfluxdb     = "influxdb"
 	ProtocolRaw          = "raw"
 )
@@ -103,7 +102,7 @@ var supportedEncodingMap = map[string]map[string]bool{
 	ProtocolOtlpLogV1: {
 		EncodingNone: true,
 	},
-	ProtocolOtlpAllV1: {
+	ProtocolOtlpV1: {
 		EncodingNone: true,
 	},
 	ProtocolInfluxdb: {
@@ -158,7 +157,7 @@ func (c *Converter) DoWithSelectedFields(logGroup *protocol.LogGroup, targetFiel
 	switch c.Protocol {
 	case ProtocolCustomSingle:
 		return c.ConvertToSingleProtocolLogs(logGroup, targetFields)
-	case ProtocolOtlpLogV1, ProtocolOtlpAllV1:
+	case ProtocolOtlpV1:
 		return c.ConvertToOtlpResourseLogs(logGroup, targetFields)
 	default:
 		return nil, nil, fmt.Errorf("unsupported protocol: %s", c.Protocol)
