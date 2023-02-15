@@ -99,9 +99,6 @@ var supportedEncodingMap = map[string]map[string]bool{
 		EncodingJSON:     true,
 		EncodingProtobuf: false,
 	},
-	ProtocolOtlpLogV1: {
-		EncodingNone: true,
-	},
 	ProtocolOtlpV1: {
 		EncodingNone: true,
 	},
