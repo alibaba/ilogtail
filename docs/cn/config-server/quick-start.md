@@ -24,8 +24,9 @@ ConfigServer 就是这样的一款可观测 Agent 管控工具，目前支持：
 
 ### 实例注册
 
-* Agent启动后，定期向 ConfigServer 进行心跳注册，证明存活性。
-* 上报如下信息，供 ConfigServer 汇集后统一通过API对外呈现。
+* Agent 侧配置已部署的 ConfigServer 信息。
+* Agent 启动后，定期向 ConfigServer 进行心跳注册，证明存活性。
+* 上报包括但不限于如下的信息，供 ConfigServer 汇集后统一通过API对外呈现。
   * Agent 的 instance_id，作为唯一标识。
   * 版本号
   * 启动时间
@@ -51,6 +52,31 @@ ConfigServer 就是这样的一款可观测 Agent 管控工具，目前支持：
 ## 运行
 
 ConfigServer 分为 UI 和 Service 两部分，可以分别独立运行。
+
+### Agent 配置
+
+Agent 侧需要配置 ConfigServer 信息，才能使用管控功能。
+
+#### ilogtail 配置 ConfigServer
+
+在安装Logtail的服务器上，打开/usr/local/ilogtail/ilogtail_config.json文件，配置 ConfigServer 相关参数 `ilogtail_configserver_address` 和 `ilogtail_tags`。
+
+`ilogtail_configserver_address` 是 ConfigServer 的 ip 地址与端口号，支持配置多个 ConfigServer，ilogtail 会自动切换选择可以链接的 ConfigServer。`ilogtail_tags` 是 ilogtail 在 ConfigServer 处的标签，也支持配置多个。
+
+下面是一个简单的配置示例。
+
+```json
+{
+    ...
+    "ilogtail_configserver_address" : [
+      "127.0.0.1:8899",
+      "192.168.1.1:8899"
+      ],
+    "ilogtail_tags" : ["default"],
+    ...
+}
+```
+
 
 ### Service
 
