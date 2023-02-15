@@ -111,7 +111,7 @@ func ConvertPipelineEventToOtlpEvent[
 		err = ConvertPipelineGroupEvenstsToOtlpEvents(ps, rsLogs, rsMetrics, rsTraces)
 		return T1(rsLogs), T2(rsMetrics), T3(rsTraces), err
 	default:
-		err = fmt.Errorf("unsupported protocal %v", c.Protocol)
+		err = fmt.Errorf("unsupported protocol %v", c.Protocol)
 	}
 	return
 }
@@ -328,7 +328,6 @@ func setScope[T interface {
 		scope.SetDroppedAttributesCount(uint32(scopeDroppedAttributesCount))
 	}
 	setAttributes(scope.Attributes(), groupTags)
-	return
 }
 
 func appgendNumberDatapoint[T interface {
