@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -60,11 +59,6 @@ func (p *ProcessorAppender) ProcessLogs(logArray []*protocol.Log) []*protocol.Lo
 		p.processLog(log)
 	}
 	return logArray
-}
-
-func (p *ProcessorAppender) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
-	in.Group.GetTags().Add(p.Key, p.realValue)
-	context.Collector().Collect(in.Group, in.Events...)
 }
 
 func (p *ProcessorAppender) processLog(log *protocol.Log) {
