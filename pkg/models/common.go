@@ -157,7 +157,6 @@ func (kv *keyValuesImpl[TValue]) IsNil() bool {
 	return false
 }
 
-
 func (kv *keyValuesImpl[TValue]) SortTo(buf []KeyValue[TValue]) []KeyValue[TValue] {
 	values, ok := kv.values()
 	if !ok {
@@ -220,4 +219,5 @@ func (kv *keyValuesNil[TValue]) SortTo(buf []KeyValue[TValue]) []KeyValue[TValue
 func NewKeyValues[TValue string | float64 | *TypedValue]() KeyValues[TValue] {
 	return &keyValuesImpl[TValue]{
 		keyValues: make(map[string]TValue),
+	}
 }
