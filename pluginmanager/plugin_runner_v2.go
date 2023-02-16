@@ -15,7 +15,6 @@
 package pluginmanager
 
 import (
-	"context"
 	"strings"
 	"time"
 
@@ -404,7 +403,6 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 			}
 		}
 	}
-	logger.Info(context.Background(), "time", in.Log.Time, "timestamp", uint64(time.Second*time.Duration(in.Log.Time)))
 	var timestamp uint64
 	if in.Log.Time != uint32(0) {
 		timestamp = uint64(time.Second * time.Duration(in.Log.Time))
