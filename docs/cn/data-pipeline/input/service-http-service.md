@@ -204,7 +204,7 @@ curl --location --request POST 'http://127.0.0.1:12345?QueryKey=queryValue' --he
 |  pyroscopde/python  | raw groups |  是   |
 
 * 采集配置
-
+*version v2 表示走PipelineEvent 管道传递数据, 如果使用v1 版本表述使用protocol.Log 传递数据*
 ```yaml
 enable: true
 version: v2
