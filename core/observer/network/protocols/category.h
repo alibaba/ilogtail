@@ -72,7 +72,7 @@ struct CommonAggKey {
 
     void ToPB(::google::protobuf::RepeatedPtrField<sls_logs::Log_Content>* contents) const {
         static ServiceMetaManager* sHostnameManager = logtail::ServiceMetaManager::GetInstance();
-        contents->CopyFrom(CommonTags);
+        contents->MergeFrom(CommonTags);
         const ServiceMeta& meta = sHostnameManager->GetServiceMeta(this->Pid, this->RemoteIp);
         auto remoteInfo = std::string(kRemoteInfoPrefix)
                               .append(meta.Empty() ? this->RemoteIp : meta.Host)
