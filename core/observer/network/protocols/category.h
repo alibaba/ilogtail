@@ -34,7 +34,7 @@ struct CommonAggKey {
         this->LocalPort = other.LocalPort;
         this->LocalIp = std::move(other.LocalIp);
         this->ConnId = other.ConnId;
-        this->CommonTags=std::move(other.CommonTags);
+        this->CommonTags = std::move(other.CommonTags);
         return *this;
     }
     explicit CommonAggKey(PacketEventHeader* header)
@@ -70,20 +70,17 @@ struct CommonAggKey {
     }
 
 
-    void ToPB(::google::protobuf::RepeatedPtrField<sls_logs::Log_Content>& contents) const {
+    void ToPB(::google::protobuf::RepeatedPtrField<sls_logs::Log_Content>* contents) const {
         static ServiceMetaManager* sHostnameManager = logtail::ServiceMetaManager::GetInstance();
-        contents.CopyFrom(CommonTags);
+        contents->CopyFrom(CommonTags);
         const ServiceMeta& meta = sHostnameManager->GetServiceMeta(this->Pid, this->RemoteIp);
         auto remoteInfo = std::string(kRemoteInfoPrefix)
                               .append(meta.Empty() ? this->RemoteIp : meta.Host)
                               .append(kRemoteInfoSuffix);
-        AddAnyLogContent(contents.Add(), observer::kRemoteInfo, std::move(remoteInfo));
+        AddAnyLogContent(contents->Add(), observer::kRemoteInfo, std::move(remoteInfo));
     }
 
-    void ToPB(sls_logs::Log* log) const {
-        auto contents = log->contents();
-        ToPB(contents);
-    }
+    void ToPB(sls_logs::Log* log) const { ToPB(log->mutable_contents()); }
 
 
     uint64_t HashVal{0};

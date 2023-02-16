@@ -17,6 +17,7 @@
 #include "unittest/Unittest.h"
 #include "metas/ConnectionMetaManager.h"
 #include "DynamicLibHelper.h"
+#include "network/protocols/category.h"
 
 namespace logtail {
 
