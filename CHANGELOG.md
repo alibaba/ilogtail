@@ -43,3 +43,5 @@ your changes, such as:
 - [public] [both] [fixed] ignore timezone adjustment when system time is used
 - [public] [both] [fixed] ignore timezone adjustment when log parse fails
 - [public] [both] [fixed] fix blocking problem caused by alwaysonline config update
+- [public] [both] [fixed] grok processor gets stuck with Chinese
+- [public] [both] [fixed] fix memory leak in container list maintainance introduced in v1.2.1
