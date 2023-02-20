@@ -90,6 +90,8 @@ public:
             if (this->mSampler->IsSample(event.Key.Status, static_cast<int32_t>((event.Info.LatencyNs / 1e3)))) {
                 ProtocolDetail detail;
                 detail.Type = ProtocolType_Redis;
+                detail.Query = event.Key.QueryCmd;
+                detail.QueryCmd = event.Key.QueryCmd;
                 detail.Request["cmd"] = req->Data;
                 detail.Response["result"] = resp->Data;
                 detail.Response["success"] = resp->IsOK ? "true" : "false";

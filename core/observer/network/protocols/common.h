@@ -193,6 +193,11 @@ struct ProtocolDetail {
     Json::Value Request;
     Json::Value Response;
     ProtocolType Type;
+    std::string ReqType;
+    std::string ReqDomain;
+    std::string ReqResource;
+    std::string QueryCmd;
+    std::string Query;
     ::google::protobuf::RepeatedPtrField<sls_logs::Log_Content> Tags;
 
 

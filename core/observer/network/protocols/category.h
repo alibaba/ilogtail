@@ -149,7 +149,6 @@ struct DBAggKey {
     std::string QueryCmd;
     std::string Query;
     std::string Version;
-    std::string Details; // used to stored serialized details
     int8_t Status{-1};
 };
 

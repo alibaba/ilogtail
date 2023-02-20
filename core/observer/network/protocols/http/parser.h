@@ -105,15 +105,15 @@ public:
                                              static_cast<int32_t>((event.Info.LatencyNs / 1e3)))) {
                     ProtocolDetail detail;
                     detail.Type = ProtocolType_HTTP;
-                    detail.Request["host"] = event.Key.ReqDomain;
-                    detail.Request["url"] = event.Key.ReqResource;
-                    detail.Request["method"] = event.Key.ReqType;
                     detail.Request["version"] = event.Key.Version;
                     detail.Response["code"] = event.Key.RespCode;
                     detail.Request["headers"] = std::move(requestInfo->Headers);
                     detail.Request["body"] = std::move(requestInfo->Body);
                     detail.Response["headers"] = std::move(responseInfo->Headers);
                     detail.Response["body"] = std::move(responseInfo->Body);
+                    detail.ReqDomain = event.Key.ReqDomain;
+                    detail.ReqResource = event.Key.ReqResource;
+                    detail.ReqType = event.Key.ReqType;
                     this->mKey.ToPB(&detail.Tags);
                     this->mSampler->AddData(std::move(detail));
                 }

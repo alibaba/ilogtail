@@ -90,6 +90,15 @@ void ProtocolEventAggregators::FlushOutDetails(uint64_t timeNano,
         AddAnyLogContent(&newLog, observer::kDetailResponse, Json::writeString(builder, iter->Response));
         AddAnyLogContent(&newLog, observer::kType, ObserverMetricsTypeToString(ObserverMetricsType::L7_DETAILS));
         AddAnyLogContent(&newLog, observer::kProtocol, ProtocolTypeToString(iter->Type));
+        if (iter->ReqType.empty()) {
+            AddAnyLogContent(&newLog, observer::kQuery, std::move(iter->Query));
+            AddAnyLogContent(&newLog, observer::kQueryCmd, std::move(iter->QueryCmd));
+        } else {
+            AddAnyLogContent(&newLog, observer::kReqType, std::move(iter->ReqType));
+            AddAnyLogContent(&newLog, observer::kReqDomain, std::move(iter->ReqDomain));
+            AddAnyLogContent(&newLog, observer::kReqResource, std::move(iter->ReqResource));
+        }
+        AddAnyLogContent(&newLog, observer::kProtocol, ProtocolTypeToString(iter->Type));
         allData.push_back(std::move(newLog));
         ++iter;
     }
