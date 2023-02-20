@@ -206,12 +206,22 @@ struct ProtocolDetail {
         : Request(std::move(other.Request)),
           Response(std::move(other.Response)),
           Type(other.Type),
+          ReqType(std::move(other.ReqType)),
+          ReqDomain(std::move(other.ReqDomain)),
+          ReqResource(std::move(other.ReqResource)),
+          QueryCmd(std::move(other.QueryCmd)),
+          Query(std::move(other.Query)),
           Tags(std::move(other.Tags)) {}
     ProtocolDetail(const ProtocolDetail& other) = default;
     ProtocolDetail& operator=(ProtocolDetail&& other) noexcept {
         this->Request = std::move(other.Request);
         this->Response = std::move(other.Response);
         this->Type = other.Type;
+        this->ReqType = other.ReqType;
+        this->ReqDomain = other.ReqDomain;
+        this->ReqResource = other.ReqResource;
+        this->QueryCmd = other.QueryCmd;
+        this->Query = other.Query;
         this->Tags = std::move(other.Tags);
         return *this;
     }
