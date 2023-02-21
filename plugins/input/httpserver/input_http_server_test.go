@@ -16,26 +16,17 @@ package httpserver
 
 import (
 	"bytes"
-	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
-	"path"
-	"strconv"
 	"syscall"
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/util"
 	pluginmanager "github.com/alibaba/ilogtail/pluginmanager"
-	"github.com/alibaba/ilogtail/plugins/test/mock"
-
 	"github.com/stretchr/testify/require"
 
 	"gotest.tools/assert"
@@ -401,91 +392,4 @@ func TestInputWithRequestParamsWithoutPrefix(t *testing.T) {
 		}
 	}
 
-}
-
-func TestServiceHTTP_doDumpFile(t *testing.T) {
-	_, err := os.Stat(path.Join(util.GetCurrentBinaryPath(), "dump"))
-	if err == nil {
-		files, findErr := helper.GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), "a_b_ctestdump", true, 0)
-		require.NoError(t, findErr)
-		for _, file := range files {
-			_ = os.Remove(file)
-
-		}
-	}
-
-	var ch chan *dumpData
-
-	insertFun := func(num int, start int) {
-		for i := start; i < start+num; i++ {
-			m := map[string][]string{
-				"header": {strconv.Itoa(i)},
-			}
-			ch <- &dumpData{
-				Req: dumpDataReq{
-					Body:   []byte(fmt.Sprintf("body_%d", i)),
-					URL:    fmt.Sprintf("url_%d", i),
-					Header: m,
-				},
-			}
-
-		}
-	}
-	readFunc := func(file string, expectLen int) {
-		data, rerr := ioutil.ReadFile(file)
-		require.NoError(t, rerr)
-		offset := 0
-		num := 0
-		for {
-			if offset == len(data) {
-				break
-			}
-			var length uint32
-			buffer := bytes.NewBuffer(data[offset:])
-			require.NoError(t, binary.Read(buffer, binary.BigEndian, &length))
-
-			data := data[offset+4 : offset+4+int(length)] //nolint: govet
-			var d dumpData
-			require.NoError(t, json.Unmarshal(data, &d))
-
-			require.Equal(t, fmt.Sprintf("url_%d", num), d.Req.URL)
-			require.Equal(t, fmt.Sprintf("body_%d", num), string(d.Req.Body))
-			require.Equal(t, len(d.Req.Header), 1)
-			require.Equal(t, strconv.Itoa(num), d.Req.Header["header"][0])
-			offset = offset + 4 + int(length)
-			num++
-		}
-		require.Equal(t, num, expectLen)
-	}
-
-	// test dump and read
-	s := new(ServiceHTTP)
-	s.DumpData = true
-	s.DumpDataKeepFiles = 3
-	s.Format = "pyroscope"
-	_, err = s.Init(mock.NewEmptyContext("a", "b", "ctestdump"))
-	ch = make(chan *dumpData)
-	s.dumpDataChan = ch
-	require.NoError(t, err)
-	go s.doDumpFile()
-	insertFun(100, 0)
-	close(s.stopChan)
-	time.Sleep(time.Millisecond)
-	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 100)
-
-	// append
-	s2 := new(ServiceHTTP)
-	s2.DumpData = true
-	s2.DumpDataKeepFiles = 3
-	s2.Format = "pyroscope"
-	_, err = s2.Init(mock.NewEmptyContext("a", "b", "ctestdump"))
-	ch = make(chan *dumpData)
-	s2.dumpDataChan = ch
-	require.NoError(t, err)
-	go s2.doDumpFile()
-
-	insertFun(100, 100)
-	close(s2.stopChan)
-	time.Sleep(time.Millisecond)
-	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 200)
 }

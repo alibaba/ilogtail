@@ -22,9 +22,7 @@
 | HeaderParams       | []String          | 否    | 需要解析到Group.Metadata中的header参数。<p>解析结果会以KeyValue放入Metadata。默认取值为`[]`，即不解析。</p><p>仅v2版本有效</p>                                                                                   |
 | HeaderParamPrefix  | String            | 否    | 解析Header参数时需要添加的key前缀，如`_header_param_`。<p>前缀会直接拼接在每个HeaderParam前，无额外连接符，默认取值为空，即不增加前缀。</p><p>仅v2版本有效</p>                                                                     |
 | DisableUncompress  | Boolean           | 否    | 禁用对于请求数据的解压缩, 默认取值为:`false`<p>目前仅针对Raw Format有效</p><p>仅v2版本有效</p>                                                                                                             |
-| Tags               | map[String]String | 否    | 输出数据默认携带标签<p>仅v2版本有效</p>                                                                                                                                                      |
-| TagsInGroup        | Boolean           | 否    | 输出数据标签保存位置, 默认为true, 表示存储于V2 结构GroupInfo.Tags中, 否则表示存储于具体Event.Tags中<p>仅v2版本有效</p>                                                                                            |
-| Cluster            | String            | 否    | 特殊标签, 为Tags 中特殊部分, 当不为空时以 `cluster`作为键保存于Tags中<p>仅v2版本有效</p>                                                                                                                  |
+| Tags               | map[String]String | 否    | 输出数据默认携带标签<p>仅v1版本有效</p>                                                                                                                                                      |
 | DumpData           | Boolean           | 否    | [开发使用] 将接收的请求存储于本地文件, 默认取值为:`false`                                                                                                                                           |
 | DumpDataKeepFiles  | Int               | 否    | [开发使用] Dump文件保留文件数目, 文件按小时滚动, 此参数默认值为5, 表示保留5小时Dump 参数                                                                                                                        |
 
@@ -204,10 +202,10 @@ curl --location --request POST 'http://127.0.0.1:12345?QueryKey=queryValue' --he
 |  pyroscopde/python  | raw groups |  是   |
 
 * 采集配置
-*version v2 表示走PipelineEvent 管道传递数据, 如果使用v1 版本表述使用protocol.Log 传递数据*
+*使用v1 版本表述使用protocol.Log 传递数据*
 ```yaml
 enable: true
-version: v2
+version: v1
 inputs:
   - Type: service_http_server
     Format: "pyroscope"

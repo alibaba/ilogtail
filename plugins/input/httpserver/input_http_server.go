@@ -15,16 +15,10 @@
 package httpserver
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
-	"encoding/json"
-	"io"
 	"net"
 	"net/http"
 	"net/url"
-	"os"
-	"path"
 	"strings"
 	"sync"
 	"syscall"
@@ -36,7 +30,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 const (
@@ -44,35 +37,20 @@ const (
 	v2
 )
 
-type dumpDataReq struct {
-	Body   []byte
-	URL    string
-	Header map[string][]string
-}
-type dumpDataResp struct {
-	Body   []byte
-	Header map[string]string
-}
-
-type dumpData struct {
-	Req  dumpDataReq
-	Resp dumpDataResp
-}
+const name = "service_http_server"
 
 // ServiceHTTP ...
 type ServiceHTTP struct {
-	context           pipeline.Context
-	collector         pipeline.Collector
-	decoder           decoder.Decoder
-	server            *http.Server
-	listener          net.Listener
-	wg                sync.WaitGroup
-	collectorV2       pipeline.PipelineCollector
-	version           int8
-	paramCount        int
-	dumpDataChan      chan *dumpData
-	stopChan          chan struct{}
-	dumpDataKeepFiles []string
+	context     pipeline.Context
+	collector   pipeline.Collector
+	decoder     decoder.Decoder
+	server      *http.Server
+	listener    net.Listener
+	wg          sync.WaitGroup
+	collectorV2 pipeline.PipelineCollector
+	version     int8
+	paramCount  int
+	dumper      *helper.Dumper
 
 	DumpDataKeepFiles  int
 	DumpData           bool // would dump the received data to a local file, which is only used to valid data by the developers.
@@ -116,17 +94,8 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	s.paramCount = len(s.QueryParams) + len(s.HeaderParams)
 
 	if s.DumpData {
-		_ = os.MkdirAll(path.Join(util.GetCurrentBinaryPath(), "dump"), 0750)
-		s.dumpDataChan = make(chan *dumpData, 10)
-		prefix := strings.Join([]string{s.context.GetProject(), s.context.GetLogstore(), s.context.GetConfigName()}, "_")
-		files, err := helper.GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), prefix, true, 0)
-		if err != nil {
-			logger.Warning(context.GetRuntimeContext(), "LIST_HISTORY_DUMP_ALARM", "err", err)
-		} else {
-			s.dumpDataKeepFiles = files
-		}
+		s.dumper = helper.NewDumper(name, s.DumpDataKeepFiles)
 	}
-	s.stopChan = make(chan struct{})
 	return 0, nil
 }
 
@@ -164,8 +133,8 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.DumpData {
-		s.dumpDataChan <- &dumpData{
-			Req: dumpDataReq{
+		s.dumper.InputChannel() <- &helper.DumpData{
+			Req: helper.DumpDataReq{
 				Body:   data,
 				URL:    r.URL.String(),
 				Header: r.Header,
@@ -243,12 +212,11 @@ func (s *ServiceHTTP) Start(c pipeline.Collector) error {
 func (s *ServiceHTTP) StartService(context pipeline.PipelineContext) error {
 	s.collectorV2 = context.Collector()
 	s.version = v2
-
 	return s.start()
 }
 
 func (s *ServiceHTTP) start() error {
-	s.wg.Add(2)
+	s.wg.Add(1)
 
 	server := &http.Server{
 		Addr:        s.Address,
@@ -289,71 +257,10 @@ func (s *ServiceHTTP) start() error {
 		logger.Info(s.context.GetRuntimeContext(), "http server shutdown", s.Address)
 		s.wg.Done()
 	}()
-	go func() {
-		defer s.wg.Done()
-		if s.DumpData {
-			s.doDumpFile()
-		}
-	}()
-
+	if s.dumper != nil {
+		s.dumper.Start()
+	}
 	return nil
-}
-
-func (s *ServiceHTTP) doDumpFile() {
-	var err error
-	fileName := strings.Join([]string{s.context.GetProject(), s.context.GetLogstore(), s.context.GetConfigName()}, "_") + ".dump"
-	logger.Info(s.context.GetRuntimeContext(), "http server start dump data", fileName)
-	var f *os.File
-	closeFile := func() {
-		if f != nil {
-			_ = f.Close()
-		}
-	}
-	cutFile := func() (f *os.File, err error) {
-		nFile := path.Join(path.Join(util.GetCurrentBinaryPath(), "dump"), fileName+"_"+time.Now().Format("2006-01-02_15"))
-		if len(s.dumpDataKeepFiles) == 0 || s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1] != nFile {
-			s.dumpDataKeepFiles = append(s.dumpDataKeepFiles, nFile)
-		}
-		if len(s.dumpDataKeepFiles) > s.DumpDataKeepFiles {
-			_ = os.Remove(s.dumpDataKeepFiles[0])
-			s.dumpDataKeepFiles = s.dumpDataKeepFiles[1:]
-		}
-		closeFile()
-		return os.OpenFile(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], os.O_CREATE|os.O_WRONLY, 0600)
-	}
-	lastHour := 0
-	offset := int64(0)
-	for {
-		select {
-		case d := <-s.dumpDataChan:
-			if time.Now().Hour() != lastHour {
-				file, cerr := cutFile()
-				if cerr != nil {
-					logger.Error(s.context.GetRuntimeContext(), "DUMP_FILE_ALARM", "cut new file error", err)
-				} else {
-					offset, _ = file.Seek(0, io.SeekEnd)
-					f = file
-				}
-			}
-			if f != nil {
-				buffer := bytes.NewBuffer([]byte{})
-				b, _ := json.Marshal(d)
-				if err = binary.Write(buffer, binary.BigEndian, uint32(len(b))); err != nil {
-					continue
-				}
-				if _, err = f.WriteAt(buffer.Bytes(), offset); err != nil {
-					continue
-				}
-				if _, err = f.WriteAt(b, offset+4); err != nil {
-					continue
-				}
-				offset += int64(4 + len(b))
-			}
-		case <-s.stopChan:
-			closeFile()
-			return
-		}
-	}
 }
 
 func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string {
@@ -390,16 +297,18 @@ func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string 
 // Stop stops the services and closes any necessary channels and connections
 func (s *ServiceHTTP) Stop() error {
 	if s.listener != nil {
-		close(s.stopChan)
 		_ = s.listener.Close()
 		logger.Info(s.context.GetRuntimeContext(), "http server stop", s.Address)
 		s.wg.Wait()
+	}
+	if s.dumper != nil {
+		s.dumper.Close()
 	}
 	return nil
 }
 
 func init() {
-	pipeline.ServiceInputs["service_http_server"] = func() pipeline.ServiceInput {
+	pipeline.ServiceInputs[name] = func() pipeline.ServiceInput {
 		return &ServiceHTTP{
 			ReadTimeoutSec:     10,
 			ShutdownTimeoutSec: 5,
