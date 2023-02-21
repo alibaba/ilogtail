@@ -103,7 +103,65 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 }
 
 func (p *ProcessorSplit) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
-	context.Collector().CollectList(in)
+	results := make([]models.PipelineEvent, 0)
+	for _, event := range in.Events {
+		if log, ok := event.(*models.Log); ok {
+			tmpLog := &models.Log{
+				Body:      log.Body,
+				Name:      log.Name,
+				Level:     log.Level,
+				Timestamp: log.Timestamp,
+				Indices:   log.Indices,
+				SpanID:    log.SpanID,
+				TraceID:   log.TraceID,
+			}
+			tmpLog.Tags = models.NewTags()
+			body := log.Body
+			for k, v := range log.GetTags().Iterator() {
+				if len(body) == 0 && k == p.SplitKey {
+					body = v
+				} else if p.PreserveOthers {
+					tmpLog.Tags.Add(k, v)
+				}
+			}
+			if tmpLog.Timestamp == uint64(0) {
+				tmpLog.Timestamp = uint64(time.Now().UnixNano())
+			}
+			if len(body) > 0 {
+				strArray := strings.Split(body, p.SplitSep)
+				if len(strArray) == 0 {
+					continue
+				}
+				var offset int64
+				for i := 0; i < len(strArray); i++ {
+					if len(strArray[i]) == 0 {
+						continue
+					}
+					var newLog *models.Log
+					if i < len(strArray)-1 {
+						newLog = tmpLog.Clone().(*models.Log)
+					} else {
+						newLog = tmpLog
+					}
+					newLog.Body = strArray[i]
+					newLog.Offset += uint64(offset)
+					offset += int64(len(strArray[i]) + len(p.SplitSep))
+					results = append(results, newLog)
+				}
+			} else {
+				if p.NoKeyError {
+					logger.Warning(p.context.GetRuntimeContext(), "PROCESSOR_SPLIT_LOG_STRING_FIND_ALARM", "can't find split key", p.SplitKey)
+				}
+				if p.PreserveOthers {
+					// context.Collector().Collect(in.Group, tmpLog)
+					results = append(results, tmpLog)
+				}
+			}
+		}
+	}
+	if len(results) > 0 {
+		context.Collector().Collect(in.Group, results...)
+	}
 }
 
 func init() {

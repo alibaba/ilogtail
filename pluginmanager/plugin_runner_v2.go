@@ -15,12 +15,19 @@
 package pluginmanager
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+)
+
+var (
+	tagPrefix     = "__tag__:"
+	fileOffsetKey = tagPrefix + "__file_offset__"
+	contentKey    = "content"
 )
 
 type pluginv2Runner struct {
@@ -390,26 +397,27 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 			md.Add(k, v.(string))
 		}
 	}
-	tags := models.NewTags()
-	var body string
+	log := &models.Log{}
+	log.Tags = models.NewTags()
 	for i, content := range in.Log.Contents {
-		if content.Key == "content" || i == 0 {
-			body = content.Value
-		} else {
-			if strings.Contains(content.Key, "__tag__:") {
-				tags.Add(content.Key[7:], content.Value)
-			} else {
-				tags.Add(content.Key, content.Value)
+		switch {
+		case content.Key == contentKey || i == 0:
+			log.Body = content.Value
+		case content.Key == fileOffsetKey:
+			if offset, err := strconv.ParseInt(content.Value, 10, 64); err == nil {
+				log.Offset = uint64(offset)
 			}
+		case strings.Contains(content.Key, tagPrefix):
+			log.Tags.Add(content.Key[len(tagPrefix)-1:], content.Value)
+		default:
+			log.Tags.Add(content.Key, content.Value)
 		}
 	}
-	var timestamp uint64
 	if in.Log.Time != uint32(0) {
-		timestamp = uint64(time.Second * time.Duration(in.Log.Time))
+		log.Timestamp = uint64(time.Second * time.Duration(in.Log.Time))
 	} else {
-		timestamp = uint64(time.Now().UnixNano())
+		log.Timestamp = uint64(time.Now().UnixNano())
 	}
-	log := models.NewSimpleLog(body, tags, timestamp)
 	group := models.NewGroup(md, models.NewTags())
 	p.InputPipeContext.Collector().Collect(group, log)
 }
