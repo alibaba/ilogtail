@@ -103,7 +103,6 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 }
 
 func (p *ProcessorSplit) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
-	results := make([]models.PipelineEvent, 0)
 	for _, event := range in.Events {
 		if log, ok := event.(*models.Log); ok {
 			tmpLog := &models.Log{
@@ -146,21 +145,17 @@ func (p *ProcessorSplit) Process(in *models.PipelineGroupEvents, context pipelin
 					newLog.Body = strArray[i]
 					newLog.Offset += uint64(offset)
 					offset += int64(len(strArray[i]) + len(p.SplitSep))
-					results = append(results, newLog)
+					context.Collector().Collect(in.Group, newLog)
 				}
 			} else {
 				if p.NoKeyError {
 					logger.Warning(p.context.GetRuntimeContext(), "PROCESSOR_SPLIT_LOG_STRING_FIND_ALARM", "can't find split key", p.SplitKey)
 				}
 				if p.PreserveOthers {
-					// context.Collector().Collect(in.Group, tmpLog)
-					results = append(results, tmpLog)
+					context.Collector().Collect(in.Group, tmpLog)
 				}
 			}
 		}
-	}
-	if len(results) > 0 {
-		context.Collector().Collect(in.Group, results...)
 	}
 }
 
