@@ -105,7 +105,7 @@ func (m *MyServiceInput) loop() {
 `example_plugin.go` 文件中追加如下函数
 ```go
 func init() {
-	pipeline.AddServiceCreator("service_volc_example_plugin", func() pipeline.ServiceInput {
+	pipeline.AddServiceCreator("service_example_plugin", func() pipeline.ServiceInput {
 		return &MyServiceInput{
 			Interval: 5 * time.Second,
 			stopCh:   make(chan struct{}, 1),
