@@ -5,14 +5,15 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/stretchr/testify/require"
 )
 
 func TestServiceHTTP_doDumpFile(t *testing.T) {
@@ -76,8 +77,8 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 	ch = s.InputChannel()
 	s.Start()
 	insertFun(100, 0)
-	s.Close()
 	time.Sleep(time.Millisecond)
+	s.Close()
 	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 100)
 
 	// append
@@ -86,7 +87,7 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 	ch = s2.InputChannel()
 	s2.Start()
 	insertFun(100, 100)
-	s2.Close()
 	time.Sleep(time.Millisecond)
+	s2.Close()
 	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 200)
 }

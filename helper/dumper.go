@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"io"
 	"os"
 	"path"
+	"sync"
 	"time"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type DumpDataReq struct {
@@ -34,11 +36,14 @@ type Dumper struct {
 	dumpDataKeepFiles []string
 	prefix            string
 	maxKeepFiles      int
+	wg                sync.WaitGroup
+	stop              chan struct{}
 }
 
 func (d *Dumper) Init() {
 	_ = os.MkdirAll(path.Join(util.GetCurrentBinaryPath(), "dump"), 0750)
-	d.input = make(chan *DumpData)
+	d.input = make(chan *DumpData, 10)
+	d.stop = make(chan struct{})
 	files, err := GetFileListByPrefix(path.Join(util.GetCurrentBinaryPath(), "dump"), d.prefix, true, 0)
 	if err != nil {
 		logger.Warning(context.Background(), "LIST_HISTORY_DUMP_ALARM", "err", err)
@@ -53,12 +58,15 @@ func (d *Dumper) Start() {
 		return
 	}
 	go func() {
+		d.wg.Add(1)
+		defer d.wg.Done()
 		d.doDumpFile()
 	}()
 }
 
 func (d *Dumper) Close() {
-	close(d.input)
+	close(d.stop)
+	d.wg.Wait()
 }
 
 func (d *Dumper) doDumpFile() {
@@ -88,29 +96,34 @@ func (d *Dumper) doDumpFile() {
 	}
 	lastHour := 0
 	offset := int64(0)
-	for d := range d.input {
-		if time.Now().Hour() != lastHour {
-			file, cerr := cutFile()
-			if cerr != nil {
-				logger.Error(context.Background(), "DUMP_FILE_ALARM", "cut new file error", err)
-			} else {
-				offset, _ = file.Seek(0, io.SeekEnd)
-				f = file
+	for {
+		select {
+		case data := <-d.input:
+			if time.Now().Hour() != lastHour {
+				file, cerr := cutFile()
+				if cerr != nil {
+					logger.Error(context.Background(), "DUMP_FILE_ALARM", "cut new file error", err)
+				} else {
+					offset, _ = file.Seek(0, io.SeekEnd)
+					f = file
+				}
 			}
-		}
-		if f != nil {
-			buffer := bytes.NewBuffer([]byte{})
-			b, _ := json.Marshal(d)
-			if err = binary.Write(buffer, binary.BigEndian, uint32(len(b))); err != nil {
-				continue
+			if f != nil {
+				buffer := bytes.NewBuffer([]byte{})
+				b, _ := json.Marshal(data)
+				if err = binary.Write(buffer, binary.BigEndian, uint32(len(b))); err != nil {
+					continue
+				}
+				if _, err = f.WriteAt(buffer.Bytes(), offset); err != nil {
+					continue
+				}
+				if _, err = f.WriteAt(b, offset+4); err != nil {
+					continue
+				}
+				offset += int64(4 + len(b))
 			}
-			if _, err = f.WriteAt(buffer.Bytes(), offset); err != nil {
-				continue
-			}
-			if _, err = f.WriteAt(b, offset+4); err != nil {
-				continue
-			}
-			offset += int64(4 + len(b))
+		case <-d.stop:
+			return
 		}
 	}
 }

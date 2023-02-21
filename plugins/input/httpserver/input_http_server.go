@@ -95,6 +95,7 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 
 	if s.DumpData {
 		s.dumper = helper.NewDumper(name, s.DumpDataKeepFiles)
+		s.dumper.Init()
 	}
 	return 0, nil
 }
@@ -132,7 +133,7 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if s.DumpData {
+	if s.dumper != nil {
 		s.dumper.InputChannel() <- &helper.DumpData{
 			Req: helper.DumpDataReq{
 				Body:   data,
