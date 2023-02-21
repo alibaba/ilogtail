@@ -27,8 +27,8 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	pluginmanager "github.com/alibaba/ilogtail/pluginmanager"
-	"github.com/stretchr/testify/require"
 
+	"github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 )
 
