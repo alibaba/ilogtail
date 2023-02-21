@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"github.com/gofrs/uuid"
@@ -19,6 +18,35 @@ type Input struct {
 type Stack struct {
 	Name  string
 	Stack []string
+}
+
+type Kind int
+
+const (
+	_ Kind = iota
+	CPUKind
+	MemKind
+	MutexKind
+	GoRoutinesKind
+	ExceptionKind
+	UnknownKind
+)
+
+func (p Kind) String() string {
+	switch p {
+	case CPUKind:
+		return "profile_cpu"
+	case MemKind:
+		return "profile_mem"
+	case MutexKind:
+		return "profile_mutex"
+	case GoRoutinesKind:
+		return "profile_goroutines"
+	case ExceptionKind:
+		return "profile_exception"
+	default:
+		return "profile_unknown"
+	}
 }
 
 type Format string
@@ -64,20 +92,20 @@ const (
 	LockSamplesUnits     Units = "local_samples"
 )
 
-func DetectProfileType(valType string) models.ProfileKind {
+func DetectProfileType(valType string) Kind {
 	switch valType {
 	case "inuse_space", "inuse_objects", "alloc_space", "alloc_objects", "alloc-size", "alloc-samples", "alloc_in_new_tlab_objects", "alloc_in_new_tlab_bytes", "alloc_outside_tlab_objects", "alloc_outside_tlab_bytes":
-		return models.ProfileMem
+		return MemKind
 	case "samples", "cpu", "itimer", "lock_count", "lock_duration", "wall":
-		return models.ProfileCPU
+		return CPUKind
 	case "mutex_count", "mutex_duration", "block_duration", "block_count", "contentions", "delay", "lock-time", "lock-count":
-		return models.ProfileMutex
+		return MemKind
 	case "goroutines", "goroutine":
-		return models.ProfileGoRoutines
+		return GoRoutinesKind
 	case "exception":
-		return models.ProfileException
+		return ExceptionKind
 	default:
-		return models.ProfileUnknown
+		return UnknownKind
 	}
 }
 
@@ -189,5 +217,4 @@ func (u Units) DetectValueType() string {
 
 type RawProfile interface {
 	Parse(ctx context.Context, meta *Meta, tags map[string]string) (logs []*protocol.Log, err error)
-	ParseV2(ctx context.Context, meta *Meta) (groups *models.PipelineGroupEvents, err error)
 }

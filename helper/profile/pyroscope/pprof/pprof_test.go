@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/plugins/test"
 )
 
@@ -53,49 +51,6 @@ var (
 		"_app_name_": "12",
 	}
 )
-
-func TestRawProfile_ParseV2(t *testing.T) {
-	te, err := readPprofFixture("testdata/cpu.pb.gz")
-	require.NoError(t, err)
-	p := Parser{
-		stackFrameFormatter: Formatter{},
-		sampleTypesFilter:   filterKnownSamples(DefaultSampleTypeMapping),
-	}
-	r := new(RawProfile)
-	r.group = new(models.PipelineGroupEvents)
-	meta := &profile.Meta{
-		Tags:            tags,
-		SpyName:         lanuage,
-		StartTime:       time.Now(),
-		EndTime:         time.Now(),
-		SampleRate:      99,
-		Units:           profile.NanosecondsUnit,
-		AggregationType: profile.SumAggType,
-	}
-	cb := r.extractProfileV2(meta)
-	err = r.extractLogs(context.Background(), te, p, meta, cb)
-	require.NoError(t, err)
-	group := r.group
-	require.Equal(t, 0, group.Group.Metadata.Len())
-	require.Equal(t, 0, group.Group.Tags.Len())
-	require.Equal(t, 6, len(group.Events))
-	event := test.PickEvent(group.Events, name)
-	require.True(t, event != nil)
-	m := event.(*models.Profile)
-
-	require.Equal(t, name, m.Name)
-	require.Equal(t, models.ProfileStack(strings.Split(stack, "\n")), m.Stack)
-	require.Equal(t, stackID, m.StackID)
-	require.Equal(t, int64(startTime), m.StartTime)
-	require.Equal(t, int64(endTime), m.EndTime)
-	require.Equal(t, lanuage, m.Language)
-	require.Equal(t, profileType, m.ProfileType.String())
-	require.Equal(t, dataType, m.DataType)
-	require.Equal(t, models.NewTagsWithMap(tags), m.Tags)
-	require.Equal(t, models.ProfileValues{
-		models.NewProfileValue(valType, unitType, aggType, val),
-	}, m.Values)
-}
 
 func TestRawProfile_Parse(t *testing.T) {
 	te, err := readPprofFixture("testdata/cpu.pb.gz")

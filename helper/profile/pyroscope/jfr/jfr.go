@@ -33,20 +33,6 @@ func NewRawProfile(data []byte, format string) *RawProfile {
 	}
 }
 
-func (r *RawProfile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {
-	reader, labels, err := r.extractProfileRaw()
-	if err != nil {
-		return nil, err
-	}
-	groups = new(models.PipelineGroupEvents)
-	r.group = groups
-	if err := r.ParseJFR(ctx, meta, reader, labels, r.extractProfileV2(meta)); err != nil {
-		return nil, err
-	}
-	r.group = nil
-	return
-}
-
 func (r *RawProfile) Parse(ctx context.Context, meta *profile.Meta, tags map[string]string) (logs []*protocol.Log, err error) {
 	reader, labels, err := r.extractProfileRaw()
 	if err != nil {
@@ -138,23 +124,6 @@ func (r *RawProfile) extractProfileV1(meta *profile.Meta, tags map[string]string
 				Contents: res,
 			})
 		}
-	}
-}
-
-func (r *RawProfile) extractProfileV2(meta *profile.Meta) profile.CallbackFunc {
-	if r.group.Group == nil {
-		r.group.Group = models.NewGroup(models.NewMetadata(), models.NewTags())
-	}
-	profileID := profile.GetProfileID(meta)
-	return func(id uint64, stack *profile.Stack, vals []uint64, types, units, aggs []string, startTime, endTime int64, labels map[string]string) {
-		var values models.ProfileValues
-		for i, val := range vals {
-			values = append(values, models.NewProfileValue(types[i], units[i], aggs[i], float64(val)))
-		}
-		newProfile := models.NewProfile(stack.Name, strconv.FormatUint(id, 16),
-			profileID, "CallStack", meta.SpyName, profile.DetectProfileType(types[0]),
-			stack.Stack, startTime, endTime, models.NewTagsWithMap(labels), values)
-		r.group.Events = append(r.group.Events, newProfile)
 	}
 }
 

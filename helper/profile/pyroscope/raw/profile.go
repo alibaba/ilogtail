@@ -32,17 +32,6 @@ func NewRawProfile(data []byte, format profile.Format) *Profile {
 	}
 }
 
-func (p *Profile) ParseV2(ctx context.Context, meta *profile.Meta) (groups *models.PipelineGroupEvents, err error) {
-	groups = new(models.PipelineGroupEvents)
-	p.group = groups
-	cb := p.extractProfileV2(meta)
-	if err := p.doParse(cb); err != nil {
-		return nil, err
-	}
-	p.group = nil
-	return
-}
-
 func (p *Profile) Parse(ctx context.Context, meta *profile.Meta, tags map[string]string) (logs []*protocol.Log, err error) {
 	cb := p.extractProfileV1(meta, tags)
 	if err := p.doParse(cb); err != nil {
@@ -80,23 +69,6 @@ func (p *Profile) doParse(cb func([]byte, int)) error {
 		}
 	}
 	return nil
-}
-
-func (p *Profile) extractProfileV2(meta *profile.Meta) func([]byte, int) {
-	if p.group.Group == nil {
-		p.group.Group = models.NewGroup(models.NewMetadata(), models.NewTags())
-	}
-	profileID := profile.GetProfileID(meta)
-	return func(k []byte, v int) {
-		name, stack := p.extractNameAndStacks(k, meta.SpyName)
-		stackID := strconv.FormatUint(xxhash.Sum64(k), 16)
-		newProfile := models.NewProfile(name, stackID,
-			profileID, "CallStack", meta.SpyName, profile.DetectProfileType(meta.Units.DetectValueType()),
-			stack, meta.StartTime.UnixNano(), meta.EndTime.UnixNano(), models.NewTagsWithMap(meta.Tags), []*models.ProfileValue{
-				models.NewProfileValue(meta.Units.DetectValueType(), string(meta.Units), string(meta.AggregationType), float64(v)),
-			})
-		p.group.Events = append(p.group.Events, newProfile)
-	}
 }
 
 func (p *Profile) extractProfileV1(meta *profile.Meta, tags map[string]string) func([]byte, int) {

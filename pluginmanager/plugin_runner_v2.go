@@ -20,7 +20,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/plugin_main/flags"
 )
 
 type pluginv2Runner struct {
@@ -70,13 +69,7 @@ func (p *pluginv2Runner) Initialized() error {
 			return err
 		}
 	}
-	if len(p.FlusherPlugins) == 0 {
-		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default flusher")
-		flusherType, options := flags.GetFlusherConfiguration()
-		if err := loadFlusher(flusherType, p.LogstoreConfig, options); err != nil {
-			return err
-		}
-	}
+	// TODO Implement default flusher v2
 	return nil
 }
 

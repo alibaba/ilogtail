@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
@@ -163,8 +162,6 @@ func (p *FlusherStdout) Export(in []*models.PipelineGroupEvents, context pipelin
 				writer.WriteString("log")
 			case models.EventTypeByteArray:
 				writer.WriteString("byteArray")
-			case models.EventTypeProfile:
-				writer.WriteString("profile")
 			}
 			_, _ = writer.Write([]byte{','})
 			writer.WriteObjectField("name")
@@ -198,10 +195,10 @@ func (p *FlusherStdout) Export(in []*models.PipelineGroupEvents, context pipelin
 				p.writeLogBody(writer, nil)
 			case models.EventTypeByteArray:
 				p.writeByteArray(writer, event.(models.ByteArray))
-			case models.EventTypeProfile:
-				p.writeProfile(writer, event.(*models.Profile))
 			}
+
 			writer.WriteObjectEnd()
+
 			if p.outLogger != nil {
 				p.outLogger.Infof("%s", writer.Buffer())
 			} else {
@@ -284,23 +281,6 @@ func (p *FlusherStdout) Stop() error {
 		p.outLogger.Close()
 	}
 	return nil
-}
-
-func (p *FlusherStdout) writeProfile(writer *jsoniter.Stream, t *models.Profile) {
-	_, _ = writer.Write([]byte{','})
-	writer.WriteObjectField("stack")
-	writer.WriteString(strings.Join(t.Stack, ","))
-	_, _ = writer.Write([]byte{','})
-	writer.WriteObjectField("stackID")
-	writer.WriteString(t.StackID)
-	_, _ = writer.Write([]byte{','})
-	writer.WriteObjectField("durationNs")
-	writer.WriteString(strconv.FormatInt(t.EndTime-t.StartTime, 10))
-	for i, value := range t.Values {
-		_, _ = writer.Write([]byte{','})
-		writer.WriteObjectField(fmt.Sprintf("value_%d", i))
-		writer.WriteString(value.String())
-	}
 }
 
 // Register the plugin to the Flushers array.

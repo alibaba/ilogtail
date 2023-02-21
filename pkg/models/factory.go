@@ -14,9 +14,7 @@
 
 package models
 
-import (
-	"github.com/alibaba/ilogtail/pkg/constraints"
-)
+import "github.com/alibaba/ilogtail/pkg/constraints"
 
 func NewTagsWithMap(tags map[string]string) Tags {
 	return &keyValuesImpl[string]{
@@ -151,21 +149,4 @@ func NewSpan(name, traceID, spanID string, kind SpanKind, startTime, endTime uin
 
 func NewByteArray(bytes []byte) ByteArray {
 	return ByteArray(bytes)
-}
-
-func NewProfile(name, stackID, profileID, dataType, language string, profileType ProfileKind, stack ProfileStack, startTime, endTime int64, tags Tags, values ProfileValues) *Profile {
-	return &Profile{
-		Name:        name,
-		ProfileID:   profileID,
-		DataType:    dataType,
-		Language:    language,
-		ProfileType: profileType,
-		Stack:       stack,
-		StackID:     stackID,
-		StartTime:   startTime,
-		EndTime:     endTime,
-		Tags:        tags,
-		Values:      values,
-	}
-
 }

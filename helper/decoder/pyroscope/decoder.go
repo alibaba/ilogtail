@@ -27,16 +27,8 @@ type Decoder struct {
 }
 
 func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
-	in, err := d.extractRawInput(data, req)
-	if err != nil {
-		return nil, err
-	}
-	v2, err := in.Profile.ParseV2(context.Background(), &in.Metadata)
-	if err != nil {
-		return nil, err
-	}
-	groups = append(groups, v2)
-	return groups, nil
+	// do nothing
+	return nil, nil
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error) {

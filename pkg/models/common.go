@@ -24,7 +24,6 @@ const (
 	EventTypeSpan
 	EventTypeLogging
 	EventTypeByteArray
-	EventTypeProfile
 )
 
 type ValueType int
