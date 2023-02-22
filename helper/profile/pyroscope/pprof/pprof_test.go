@@ -42,7 +42,7 @@ const (
 	dataType    = "CallStack"
 	val         = 250000000
 	valType     = "cpu"
-	unitType    = "count"
+	unitType    = "nanoseconds"
 	aggType     = "sum"
 )
 
@@ -88,5 +88,5 @@ func TestRawProfile_Parse(t *testing.T) {
 	require.Equal(t, test.ReadLogVal(log, "dataType"), dataType)
 	require.Equal(t, test.ReadLogVal(log, "durationNs"), strconv.Itoa(endTime-startTime))
 	require.Equal(t, test.ReadLogVal(log, "labels"), "{\"_app_name_\":\"12\",\"cluster\":\"cluster2\"}")
-	require.Equal(t, test.ReadLogVal(log, "val"), "25.00")
+	require.Equal(t, test.ReadLogVal(log, "val"), "250000000.00")
 }

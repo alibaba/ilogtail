@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/pyroscope-io/pyroscope/pkg/convert/pprof"
@@ -126,6 +127,22 @@ func (r *RawProfile) doParse(ctx context.Context, meta *profile.Meta, cb profile
 	})
 }
 
+func sampleRate(p *tree.Profile) int64 {
+	if p.Period <= 0 || p.PeriodType == nil {
+		return 0
+	}
+	sampleUnit := time.Nanosecond
+	switch p.StringTable[p.PeriodType.Unit] {
+	case "microseconds":
+		sampleUnit = time.Microsecond
+	case "milliseconds":
+		sampleUnit = time.Millisecond
+	case "seconds":
+		sampleUnit = time.Second
+	}
+	return p.Period * sampleUnit.Nanoseconds()
+}
+
 func (r *RawProfile) extractLogs(ctx context.Context, tp *tree.Profile, p Parser, meta *profile.Meta, cb profile.CallbackFunc) error {
 
 	stackMap := make(map[uint64]*profile.Stack)
@@ -145,7 +162,14 @@ func (r *RawProfile) extractLogs(ctx context.Context, tp *tree.Profile, p Parser
 		}
 		stype := tp.StringTable[vt.Type]
 		sunit := tp.StringTable[vt.Unit]
-
+		sconfig, ok := p.sampleTypes[stype]
+		if !ok {
+			return false, errors.New("unknown type")
+		}
+		var sampleDuration int64
+		if sconfig.Sampled {
+			sampleDuration = sampleRate(tp)
+		}
 		t.IterateStacks(func(name string, self uint64, stack []string) {
 			if name == "" {
 				return
@@ -157,6 +181,10 @@ func (r *RawProfile) extractLogs(ctx context.Context, tp *tree.Profile, p Parser
 			}
 			aggtypeMap[id] = append(aggtypeMap[id], p.getAggregationType(stype, string(meta.AggregationType)))
 			typeMap[id] = append(typeMap[id], p.getDisplayName(stype))
+			if sconfig.Sampled && sampleDuration != 0 && stype == string(profile.SamplesUnits) {
+				sunit = string(profile.NanosecondsUnit)
+				self *= uint64(sampleDuration)
+			}
 			unitMap[id] = append(unitMap[id], sunit)
 			valMap[id] = append(valMap[id], self)
 			labelMap[id] = buildKey(meta.Tags, tl, tp.StringTable).Labels()

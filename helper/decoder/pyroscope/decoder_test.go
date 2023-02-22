@@ -53,11 +53,11 @@ func TestDecoder_DecodeTire(t *testing.T) {
 	require.Equal(t, test.ReadLogVal(log, "stack"), "bar\nfoo")
 	require.Equal(t, test.ReadLogVal(log, "language"), "ebpf")
 	require.Equal(t, test.ReadLogVal(log, "type"), "profile_cpu")
-	require.Equal(t, test.ReadLogVal(log, "units"), "samples")
+	require.Equal(t, test.ReadLogVal(log, "units"), "nanoseconds")
 	require.Equal(t, test.ReadLogVal(log, "valueTypes"), "cpu")
 	require.Equal(t, test.ReadLogVal(log, "aggTypes"), "sum")
 	require.Equal(t, test.ReadLogVal(log, "dataType"), "CallStack")
 	require.Equal(t, test.ReadLogVal(log, "durationNs"), "10000000000")
 	require.Equal(t, test.ReadLogVal(log, "labels"), "{\"__name__\":\"demo\",\"a\":\"b\",\"cluster\":\"sls-mall\"}")
-	require.Equal(t, test.ReadLogVal(log, "val"), "1.00")
+	require.Equal(t, test.ReadLogVal(log, "val"), "10000000.00")
 }
