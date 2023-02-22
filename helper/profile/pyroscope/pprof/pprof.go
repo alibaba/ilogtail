@@ -27,9 +27,10 @@ const (
 )
 
 var DefaultSampleTypeMapping = map[string]*tree.SampleTypeConfig{
-	"cpu": {
-		Units:   metadata.SamplesUnits,
-		Sampled: true,
+	"samples": {
+		Units:       metadata.SamplesUnits,
+		DisplayName: "cpu",
+		Sampled:     true,
 	},
 	"inuse_objects": {
 		Units:       metadata.ObjectsUnits,
