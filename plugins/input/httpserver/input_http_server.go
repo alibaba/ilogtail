@@ -80,13 +80,17 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 		return 0, err
 	}
 
-	switch s.Format {
-	case common.ProtocolOTLPLogV1:
-		s.Path = "/v1/logs"
-	case common.ProtocolOTLPMetricV1:
-		s.Path = "/v1/metrics"
-	case common.ProtocolOTLPTraceV1:
-		s.Path = "/v1/traces"
+	if s.Path == "" {
+		switch s.Format {
+		case common.ProtocolOTLPLogV1:
+			s.Path = "/v1/logs"
+		case common.ProtocolOTLPMetricV1:
+			s.Path = "/v1/metrics"
+		case common.ProtocolOTLPTraceV1:
+			s.Path = "/v1/traces"
+		case common.ProtocolPyroscope:
+			s.Path = "/ingest"
+		}
 	}
 	s.Address += s.Path
 	logger.Infof(context.GetRuntimeContext(), "addr", s.Address, "format", s.Format)
@@ -94,7 +98,7 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	s.paramCount = len(s.QueryParams) + len(s.HeaderParams)
 
 	if s.DumpData {
-		s.dumper = helper.NewDumper(name, s.DumpDataKeepFiles)
+		s.dumper = helper.NewDumper(strings.Join([]string{name, context.GetProject(), context.GetConfigName()}, "-"), s.DumpDataKeepFiles)
 		s.dumper.Init()
 	}
 	return 0, nil
