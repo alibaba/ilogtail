@@ -13,7 +13,6 @@ import (
 
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -21,8 +20,7 @@ type Profile struct {
 	RawData []byte
 	Format  profile.Format
 
-	logs  []*protocol.Log             // v1 result
-	group *models.PipelineGroupEvents // v2 result
+	logs []*protocol.Log // v1 result
 }
 
 func NewRawProfile(data []byte, format profile.Format) *Profile {

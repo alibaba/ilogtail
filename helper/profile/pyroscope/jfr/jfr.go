@@ -14,7 +14,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -22,8 +21,7 @@ type RawProfile struct {
 	RawData             []byte
 	FormDataContentType string
 
-	logs  []*protocol.Log             // v1 result
-	group *models.PipelineGroupEvents // v2 result
+	logs []*protocol.Log // v1 result
 }
 
 func NewRawProfile(data []byte, format string) *RawProfile {

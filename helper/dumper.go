@@ -57,8 +57,8 @@ func (d *Dumper) Start() {
 	if d == nil {
 		return
 	}
+	d.wg.Add(1)
 	go func() {
-		d.wg.Add(1)
 		defer d.wg.Done()
 		d.doDumpFile()
 	}()

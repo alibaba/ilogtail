@@ -19,7 +19,6 @@ import (
 
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -29,7 +28,7 @@ const (
 
 var DefaultSampleTypeMapping = map[string]*tree.SampleTypeConfig{
 	"cpu": {
-		Units:   metadata.Units(profile.NanosecondsUnit),
+		Units:   metadata.SamplesUnits,
 		Sampled: true,
 	},
 	"inuse_objects": {
@@ -71,8 +70,7 @@ type RawProfile struct {
 	profile             []byte
 	sampleTypeConfig    map[string]*tree.SampleTypeConfig
 
-	logs  []*protocol.Log             // v1 result
-	group *models.PipelineGroupEvents // v2 result
+	logs []*protocol.Log // v1 result
 }
 
 func NewRawProfile(data []byte, format string) *RawProfile {

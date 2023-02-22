@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/util"
+
 	"github.com/stretchr/testify/require"
 )
 
