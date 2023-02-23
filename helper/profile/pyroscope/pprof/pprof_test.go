@@ -71,7 +71,8 @@ func TestRawProfile_Parse(t *testing.T) {
 		AggregationType: profile.SumAggType,
 	}
 	cb := r.extractProfileV1(meta, map[string]string{"cluster": "cluster2"})
-	err = r.extractLogs(context.Background(), te, p, meta, cb)
+	r.parser = &p
+	err = r.extractLogs(context.Background(), te, meta, cb)
 	require.NoError(t, err)
 	logs := r.logs
 	require.Equal(t, len(logs), 6)
