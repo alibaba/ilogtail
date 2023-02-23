@@ -24,7 +24,6 @@ import (
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
-	"strconv"
 )
 
 type FlusherElasticSearch struct {
@@ -151,13 +150,11 @@ func (f *FlusherElasticSearch) NormalFlush(projectName string, logstoreName stri
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", err)
 		}
-		documentID := 0
 		for _, log := range serializedLogs.([][]byte) {
 			req := esapi.IndexRequest{
-				Index:      f.Authentication.PlainText.Index,
-				DocumentID: strconv.Itoa(documentID + 1),
-				Body:       bytes.NewReader(log),
-				Refresh:    "true",
+				Index:   f.Authentication.PlainText.Index,
+				Body:    bytes.NewReader(log),
+				Refresh: "true",
 			}
 			res, err := req.Do(context.Background(), f.esClient)
 			if err != nil {
@@ -167,7 +164,6 @@ func (f *FlusherElasticSearch) NormalFlush(projectName string, logstoreName stri
 			if res.IsError() {
 				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "[%s] Error indexing document ID=%d", res.Status(), documentID+1)
 			}
-			documentID++
 		}
 		logger.Debug(f.context.GetRuntimeContext(), "elasticsearch success send events: messageID")
 	}
