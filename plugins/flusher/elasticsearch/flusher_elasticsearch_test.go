@@ -19,7 +19,7 @@ func TestFlusherElasticSearch_Flush(t *testing.T) {
 	f.Addresses = []string{"http://localhost:9200"}
 	f.Authentication.PlainText.Username = "elastic"
 	f.Authentication.PlainText.Password = "LhJU40CvwGczBA0M*c4P"
-	f.Authentication.PlainText.Index = "default"
+	f.Authentication.PlainText.Index = "default2"
 	f.flusher = f.NormalFlush
 	// Verify that we can connect to the ClickHouse
 	lctx := mock.NewEmptyContext("p", "l", "c")

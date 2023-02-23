@@ -17,7 +17,6 @@ package elasticsearch
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"fmt"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -25,9 +24,7 @@ import (
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
-	"net"
 	"strconv"
-	"time"
 )
 
 type FlusherElasticSearch struct {
@@ -37,13 +34,6 @@ type FlusherElasticSearch struct {
 	Addresses []string
 	// Authentication
 	Authentication Authentication
-
-	//Configuration of client's Transport
-	MaxIdleConnsPerHost   int
-	ResponseHeaderTimeout time.Duration
-	DialContext           net.Conn
-	//Tls min version
-	MinVersion int
 
 	context   pipeline.Context
 	converter *converter.Converter
@@ -74,12 +64,7 @@ func NewFlusherElasticSearch() *FlusherElasticSearch {
 				Password: "",
 				Index:    "",
 			},
-			cacertFilePath: "",
 		},
-		MaxIdleConnsPerHost:   10,
-		ResponseHeaderTimeout: time.Second,
-		DialContext:           nil,
-		MinVersion:            tls.VersionTLS12,
 		Convert: convertConfig{
 			Protocol: converter.ProtocolCustomSingle,
 			Encoding: converter.EncodingJSON,
@@ -104,12 +89,20 @@ func (f *FlusherElasticSearch) Init(context pipeline.Context) error {
 	// Init converter
 	convert, err := f.getConverter()
 	if err != nil {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher converter fail, error", err)
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher converter fail, error", err)
 		return err
 	}
 	f.converter = convert
 
-	cfg := f.initClientCfg()
+	cfg := elasticsearch.Config{
+		Addresses: f.Addresses,
+	}
+	if err := f.Authentication.ConfigureAuthentication(&cfg); err != nil {
+		err = fmt.Errorf("configure authenticationfailed, err: %w", err)
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher error", err)
+		return err
+	}
+
 	f.esClient, err = elasticsearch.NewClient(cfg)
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "create elasticsearch client error", err)
@@ -122,26 +115,10 @@ func (f *FlusherElasticSearch) Description() string {
 	return "ElasticSearch flusher for logtail"
 }
 
-func (f *FlusherElasticSearch) initClientCfg() elasticsearch.Config {
-	cfg := elasticsearch.Config{
-		Addresses: f.Addresses,
-	}
-	if f.Authentication.PlainText.Username != "" {
-		cfg.Username = f.Authentication.PlainText.Username
-	}
-	if f.Authentication.PlainText.Password != "" {
-		cfg.Password = f.Authentication.PlainText.Password
-	}
-	if len(f.Authentication.cert) != 0 {
-		cfg.CACert = f.Authentication.cert
-	}
-	return cfg
-}
-
 func (f *FlusherElasticSearch) Validate() error {
 	if f.Addresses == nil || len(f.Addresses) == 0 {
 		var err = fmt.Errorf("elasticsearch addrs is nil")
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init clickhouse flusher error", err)
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher error", err)
 		return err
 	}
 	return nil
@@ -192,7 +169,7 @@ func (f *FlusherElasticSearch) NormalFlush(projectName string, logstoreName stri
 			}
 			documentID++
 		}
-		logger.Debug(f.context.GetRuntimeContext(), "ClickHouse success send events: messageID")
+		logger.Debug(f.context.GetRuntimeContext(), "elasticsearch success send events: messageID")
 	}
 
 	return nil
