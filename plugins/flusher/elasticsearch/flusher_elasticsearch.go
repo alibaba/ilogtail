@@ -18,12 +18,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
-	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/elastic/go-elasticsearch/v8/esapi"
 )
 
 type FlusherElasticSearch struct {
@@ -96,7 +98,7 @@ func (f *FlusherElasticSearch) Init(context pipeline.Context) error {
 	cfg := elasticsearch.Config{
 		Addresses: f.Addresses,
 	}
-	if err := f.Authentication.ConfigureAuthentication(&cfg); err != nil {
+	if err = f.Authentication.ConfigureAuthentication(&cfg); err != nil {
 		err = fmt.Errorf("configure authenticationfailed, err: %w", err)
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher error", err)
 		return err

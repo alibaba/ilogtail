@@ -2,20 +2,22 @@ package elasticsearch
 
 import (
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/tlscommon"
-	"github.com/elastic/go-elasticsearch/v8"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/elastic/go-elasticsearch/v8"
+
+	"github.com/alibaba/ilogtail/pkg/tlscommon"
 )
 
 type Authentication struct {
-	//PlainTextConfig
+	// PlainTextConfig
 	PlainText *PlainTextConfig
 	// TLS authentication
 	TLS *tlscommon.TLSConfig
-	//HTTP config
-	HttpConfig *HttpConfig
+	// HTTP config
+	HTTPConfig *HTTPConfig
 }
 
 type PlainTextConfig struct {
@@ -27,7 +29,7 @@ type PlainTextConfig struct {
 	Index string
 }
 
-type HttpConfig struct {
+type HTTPConfig struct {
 	MaxIdleConnsPerHost   int
 	ResponseHeaderTimeout string
 }
@@ -38,8 +40,8 @@ func (config *Authentication) ConfigureAuthentication(opts *elasticsearch.Config
 			return err
 		}
 	}
-	if config.TLS != nil || config.HttpConfig != nil {
-		if err := configureTLSandHttp(config.HttpConfig, config.TLS, opts); err != nil {
+	if config.TLS != nil || config.HTTPConfig != nil {
+		if err := configureTLSandHTTP(config.HTTPConfig, config.TLS, opts); err != nil {
 			return err
 		}
 	}
@@ -56,7 +58,7 @@ func (plainTextConfig *PlainTextConfig) ConfigurePlaintext(opts *elasticsearch.C
 	return nil
 }
 
-func configureTLSandHttp(httpcfg *HttpConfig, config *tlscommon.TLSConfig, opts *elasticsearch.Config) error {
+func configureTLSandHTTP(httpcfg *HTTPConfig, config *tlscommon.TLSConfig, opts *elasticsearch.Config) error {
 	tlsConfig, err := config.LoadTLSConfig()
 	if err != nil {
 		return fmt.Errorf("error loading tls config: %w", err)
@@ -69,20 +71,22 @@ func configureTLSandHttp(httpcfg *HttpConfig, config *tlscommon.TLSConfig, opts 
 		transport.MaxIdleConnsPerHost = httpcfg.MaxIdleConnsPerHost
 	}
 	if httpcfg.ResponseHeaderTimeout != "" {
-		unit, err := convertTimeUnit(httpcfg.ResponseHeaderTimeout)
+		var unit time.Duration
+		unit, err = convertTimeUnit(httpcfg.ResponseHeaderTimeout)
 		if err == nil {
 			transport.ResponseHeaderTimeout = unit
+		} else {
+			return err
 		}
 	}
 	opts.Transport = &transport
 	if config.CAFile != "" {
-		opts.CACert, err = loadCert(config.CAFile)
+		opts.CACert, err = ioutil.ReadFile(config.CAFile)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
-}
-
-func loadCert(filePath string) ([]byte, error) {
-	return ioutil.ReadFile(filePath)
 }
 
 func convertTimeUnit(unit string) (time.Duration, error) {

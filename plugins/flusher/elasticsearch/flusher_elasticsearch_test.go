@@ -1,12 +1,14 @@
 package elasticsearch
 
 import (
+	"strconv"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
-	"github.com/stretchr/testify/require"
-	"strconv"
-	"testing"
 )
 
 // Invalid Test

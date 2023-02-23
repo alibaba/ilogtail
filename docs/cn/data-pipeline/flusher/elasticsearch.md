@@ -24,8 +24,8 @@
 | Authentication.TLS.KeyFile                      | String   | 否    | TLS 连接私钥文件路径                                                                       |
 | Authentication.TLS.MinVersion                   | String   | 否    | TLS 支持协议最小版本，可选配置：`1.0, 1.1, 1.2, 1.3`,默认：`1.2`                                    |
 | Authentication.TLS.MaxVersion                   | String   | 否    | TLS 支持协议最大版本,可选配置：`1.0, 1.1, 1.2, 1.3`,默认采用：`crypto/tls`支持的版本，当前`1.3`              |
-| Authentication.HttpConfig.MaxIdleConnsPerHost   | Int      | 否    | 每个host的连接池最大空闲连接数                                                                  |
-| Authentication.HttpConfig.ResponseHeaderTimeout | String   | 否    | 读取头部的时间限制，可选配置`Nanosecond`，`Microsecond`，`Millisecond`，`Second`，`Minute`，`Hour`    |
+| Authentication.HTTPConfig.MaxIdleConnsPerHost   | Int      | 否    | 每个host的连接池最大空闲连接数                                                                  |
+| Authentication.HTTPConfig.ResponseHeaderTimeout | String   | 否    | 读取头部的时间限制，可选配置`Nanosecond`，`Microsecond`，`Millisecond`，`Second`，`Minute`，`Hour`    |
  
 
 ## 样例
