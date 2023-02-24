@@ -1,4 +1,4 @@
-package decoder_register
+package decoderregister
 
 import (
 	"github.com/alibaba/ilogtail/helper/decoder"

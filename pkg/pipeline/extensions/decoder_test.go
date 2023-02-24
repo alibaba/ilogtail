@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateDecoder(t *testing.T) {
@@ -31,16 +32,16 @@ type mockDecoder struct {
 }
 
 func (m *mockDecoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m *mockDecoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m *mockDecoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }

@@ -38,7 +38,7 @@ func (b *basicAuthRoundTripper) RoundTrip(request *http.Request) (*http.Response
 }
 
 func init() {
-	pipeline.AddExtensionCreator("extension_basicauth", func() pipeline.Extension {
+	pipeline.AddExtensionCreator("ext_basicauth", func() pipeline.Extension {
 		return &ExtensionBasicAuth{}
 	})
 }

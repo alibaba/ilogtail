@@ -15,7 +15,6 @@
 package decoder
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -35,8 +34,6 @@ type Option struct {
 	FieldsExtend      bool
 	DisableUncompress bool
 }
-
-var errDecoderNotFound = errors.New("no such decoder")
 
 // GetDecoder return a new decoder for specific format
 func GetDecoder(format string) (extensions.Decoder, error) {
@@ -71,7 +68,7 @@ func GetDecoderWithOptions(format string, option Option) (extensions.Decoder, er
 	}
 }
 
-//RegisterDecodersAsExtension register builtin decoders as extension, to allow them available in external plugins
+// RegisterDecodersAsExtension register builtin decoders as extension, to allow them available in external plugins
 func RegisterDecodersAsExtension() {
 	creator := func(protocol string) extensions.Decoder {
 		d, err := GetDecoder(protocol)

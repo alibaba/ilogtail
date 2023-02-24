@@ -66,12 +66,14 @@ type FlusherHTTP struct {
 	Convert       helper.ConvertConfig // Convert defines which protocol and format to convert to
 	Concurrency   int                  // How many requests can be performed in concurrent
 	Authenticator string               // name of the extensions.ClientAuthenticator extension to use
+	Filter        string               // name of the extensions.Filter extension to use
 
 	varKeys []string
 
 	context   pipeline.Context
 	converter *converter.Converter
 	client    *http.Client
+	filter    extensions.Filter
 
 	queue   chan interface{}
 	counter sync.WaitGroup
@@ -102,6 +104,22 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 		return err
 	}
 	f.converter = converter
+
+	if f.Filter != "" {
+		ext, ok := f.context.GetExtension(f.Filter)
+		if !ok {
+			err = fmt.Errorf("filter(%s) not found", f.Filter)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init filter fail, error", err)
+			return err
+		}
+		filter, ok := ext.(extensions.Filter)
+		if !ok {
+			err = fmt.Errorf("filter(%s) not implement interface extensions.Filter", f.Filter)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init filter fail, error", err)
+			return err
+		}
+		f.filter = filter
+	}
 
 	err = f.initHTTPClient()
 	if err != nil {
