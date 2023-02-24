@@ -30,6 +30,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 )
 
 const (
@@ -43,7 +44,7 @@ const name = "service_http_server"
 type ServiceHTTP struct {
 	context     pipeline.Context
 	collector   pipeline.Collector
-	decoder     decoder.Decoder
+	decoder     extensions.Decoder
 	server      *http.Server
 	listener    net.Listener
 	wg          sync.WaitGroup

@@ -22,6 +22,7 @@ import (
 	"github.com/alibaba/ilogtail/helper/decoder"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -31,7 +32,7 @@ type UDPServer struct {
 	MaxBufferSize int
 
 	context   pipeline.Context
-	decoder   decoder.Decoder
+	decoder   extensions.Decoder
 	addr      *net.UDPAddr
 	conn      *net.UDPConn
 	collector pipeline.Collector

@@ -16,7 +16,7 @@ package decoder
 
 import (
 	"errors"
-	"net/http"
+	"fmt"
 	"strings"
 	"time"
 
@@ -28,19 +28,8 @@ import (
 	"github.com/alibaba/ilogtail/helper/decoder/raw"
 	"github.com/alibaba/ilogtail/helper/decoder/sls"
 	"github.com/alibaba/ilogtail/helper/decoder/statsd"
-	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 )
-
-// Decoder used to parse buffer to sls logs
-type Decoder interface {
-	// Decode reader to logs
-	Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error)
-	// DecodeV2 reader to groupEvents
-	DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error)
-	// ParseRequst gets the request's body raw data and status code.
-	ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error)
-}
 
 type Option struct {
 	FieldsExtend      bool
@@ -50,11 +39,11 @@ type Option struct {
 var errDecoderNotFound = errors.New("no such decoder")
 
 // GetDecoder return a new decoder for specific format
-func GetDecoder(format string) (Decoder, error) {
+func GetDecoder(format string) (extensions.Decoder, error) {
 	return GetDecoderWithOptions(format, Option{})
 }
 
-func GetDecoderWithOptions(format string, option Option) (Decoder, error) {
+func GetDecoderWithOptions(format string, option Option) (extensions.Decoder, error) {
 	switch strings.TrimSpace(strings.ToLower(format)) {
 	case common.ProtocolSLS:
 		return &sls.Decoder{}, nil
@@ -77,6 +66,48 @@ func GetDecoderWithOptions(format string, option Option) (Decoder, error) {
 
 	case common.ProtocolPyroscope:
 		return &pyroscope.Decoder{}, nil
+	default:
+		return extensions.CreateDecoder(format, option)
 	}
-	return nil, errDecoderNotFound
+}
+
+//RegisterDecodersAsExtension register builtin decoders as extension, to allow them available in external plugins
+func RegisterDecodersAsExtension() {
+	creator := func(protocol string) extensions.Decoder {
+		d, err := GetDecoder(protocol)
+		if err != nil {
+			panic(fmt.Sprintf("failed create decoder for protocol: %s", protocol))
+		}
+		return d
+	}
+	extensions.AddDecoderCreator(common.ProtocolSLS, func() extensions.Decoder {
+		return creator(common.ProtocolSLS)
+	})
+	extensions.AddDecoderCreator(common.ProtocolPrometheus, func() extensions.Decoder {
+		return creator(common.ProtocolPrometheus)
+	})
+	extensions.AddDecoderCreator(common.ProtocolInfluxdb, func() extensions.Decoder {
+		return creator(common.ProtocolInfluxdb)
+	})
+	extensions.AddDecoderCreator(common.ProtocolInflux, func() extensions.Decoder {
+		return creator(common.ProtocolInflux)
+	})
+	extensions.AddDecoderCreator(common.ProtocolStatsd, func() extensions.Decoder {
+		return creator(common.ProtocolStatsd)
+	})
+	extensions.AddDecoderCreator(common.ProtocolOTLPLogV1, func() extensions.Decoder {
+		return creator(common.ProtocolOTLPLogV1)
+	})
+	extensions.AddDecoderCreator(common.ProtocolOTLPMetricV1, func() extensions.Decoder {
+		return creator(common.ProtocolOTLPMetricV1)
+	})
+	extensions.AddDecoderCreator(common.ProtocolOTLPTraceV1, func() extensions.Decoder {
+		return creator(common.ProtocolOTLPTraceV1)
+	})
+	extensions.AddDecoderCreator(common.ProtocolRaw, func() extensions.Decoder {
+		return creator(common.ProtocolRaw)
+	})
+	extensions.AddDecoderCreator(common.ProtocolPyroscope, func() extensions.Decoder {
+		return creator(common.ProtocolPyroscope)
+	})
 }
