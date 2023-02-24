@@ -147,6 +147,12 @@ func (f *FlusherHTTP) Flush(projectName string, logstoreName string, configName 
 
 func (f *FlusherHTTP) Export(groupEventsArray []*models.PipelineGroupEvents, ctx pipeline.PipelineContext) error {
 	for _, groupEvents := range groupEventsArray {
+		if f.filter != nil {
+			groupEvents = f.filter.Filter(groupEvents)
+			if groupEvents == nil {
+				continue
+			}
+		}
 		f.addTask(groupEvents)
 	}
 	return nil

@@ -467,28 +467,35 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 
 	logstoreC.Statistics.Init(logstoreC.Context)
 
-	for pluginType, pluginConfig := range plugins {
-		if pluginType == "extensions" {
-			extensions, ok := pluginConfig.([]interface{})
+	// extensions should be initialized first
+	pluginConfig, ok := plugins["extensions"]
+	if ok {
+		extensions, ok := pluginConfig.([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid extension type: %s, not json array", "extensions")
+		}
+		for _, extensionInterface := range extensions {
+			extension, ok := extensionInterface.(map[string]interface{})
 			if !ok {
-				return nil, fmt.Errorf("invalid extension type: %s, not json array", pluginType)
+				return nil, fmt.Errorf("invalid extension type")
 			}
-			for _, extensionInterface := range extensions {
-				extension, ok := extensionInterface.(map[string]interface{})
-				if !ok {
-					return nil, fmt.Errorf("invalid extension type")
-				}
-				typeName, ok := extension["type"].(string)
-				if !ok {
-					return nil, fmt.Errorf("invalid extension type")
-				}
-				logger.Debug(contextImp.GetRuntimeContext(), "add extension", typeName)
-				err = loadExtension(getPluginTypeWithID(typeName), logstoreC, extension["detail"])
-				if err != nil {
-					return nil, err
-				}
-				contextImp.AddPlugin(typeName)
+			typeName, ok := extension["type"].(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid extension type")
 			}
+			logger.Debug(contextImp.GetRuntimeContext(), "add extension", typeName)
+			err = loadExtension(getPluginTypeWithID(typeName), logstoreC, extension["detail"])
+			if err != nil {
+				return nil, err
+			}
+			contextImp.AddPlugin(typeName)
+		}
+	}
+
+	for pluginType, pluginConfig := range plugins {
+
+		if pluginType == "extensions" {
+			continue
 		}
 
 		if pluginType == "inputs" {
