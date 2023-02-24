@@ -12,16 +12,16 @@ import (
 )
 
 // Invalid Test
-func TestFlusherElasticSearch_Flush(t *testing.T) {
+func InvalidTestConnectAndWrite(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
 
 	f := NewFlusherElasticSearch()
 	f.Addresses = []string{"http://localhost:9200"}
-	f.Authentication.PlainText.Username = "elastic"
-	f.Authentication.PlainText.Password = "LhJU40CvwGczBA0M*c4P"
-	f.Authentication.PlainText.Index = "default2"
+	f.Authentication.PlainText.Username = ""
+	f.Authentication.PlainText.Password = ""
+	f.Authentication.PlainText.Index = ""
 	f.flusher = f.NormalFlush
 	// Verify that we can connect to the ClickHouse
 	lctx := mock.NewEmptyContext("p", "l", "c")
