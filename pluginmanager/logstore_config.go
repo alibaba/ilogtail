@@ -766,7 +766,7 @@ func loadExtension(pluginType string, logstoreConfig *LogstoreConfig, configInte
 	}
 	extension := creator()
 	if err = applyPluginConfig(extension, configInterface); err != nil {
-		return nil
+		return err
 	}
 	if err = extension.Init(logstoreConfig.Context); err != nil {
 		return err

@@ -8,12 +8,18 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
-type ExtensionGroupInfoFilter struct {
-	Tags  map[string]string // match config for tags, the map value support regex
-	Metas map[string]string // match config for metas, the map value support regex
+type filterCondition struct {
+	Pattern string
+	Reverse bool
+	Reg     *regexp.Regexp
+}
 
-	tagsPattern  map[string]*regexp.Regexp
-	metasPattern map[string]*regexp.Regexp
+type ExtensionGroupInfoFilter struct {
+	Tags  map[string]*filterCondition // match config for tags, the map value support regex
+	Metas map[string]*filterCondition // match config for metas, the map value support regex
+
+	tagsPattern  map[string]*filterCondition
+	metasPattern map[string]*filterCondition
 	context      pipeline.Context
 }
 
@@ -23,25 +29,27 @@ func (e *ExtensionGroupInfoFilter) Description() string {
 
 func (e *ExtensionGroupInfoFilter) Init(context pipeline.Context) error {
 	e.context = context
-	e.tagsPattern = map[string]*regexp.Regexp{}
-	e.metasPattern = map[string]*regexp.Regexp{}
+	e.tagsPattern = map[string]*filterCondition{}
+	e.metasPattern = map[string]*filterCondition{}
 
 	for k, v := range e.Tags {
-		reg, err := regexp.Compile(v)
+		reg, err := regexp.Compile(v.Pattern)
 		if err != nil {
 			logger.Error(context.GetRuntimeContext(), "EXTENSION_FILTER_ALARM", "regex compile tags err, pattern", v, "error", err)
 			return err
 		}
-		e.tagsPattern[k] = reg
+		v.Reg = reg
+		e.tagsPattern[k] = v
 	}
 
 	for k, v := range e.Metas {
-		reg, err := regexp.Compile(v)
+		reg, err := regexp.Compile(v.Pattern)
 		if err != nil {
 			logger.Error(context.GetRuntimeContext(), "EXTENSION_FILTER_ALARM", "regex compile metas err, pattern", v, "error", err)
 			return err
 		}
-		e.metasPattern[k] = reg
+		v.Reg = reg
+		e.metasPattern[k] = v
 	}
 
 	return nil
@@ -55,14 +63,16 @@ func (e *ExtensionGroupInfoFilter) Filter(group *models.PipelineGroupEvents) *mo
 
 	for k, r := range e.metasPattern {
 		v := group.Group.GetMetadata().Get(k)
-		if !r.MatchString(v) {
+		isMatch := r.Reg.MatchString(v)
+		if isMatch != !r.Reverse {
 			return nil
 		}
 	}
 
 	for k, r := range e.tagsPattern {
 		v := group.Group.GetTags().Get(k)
-		if !r.MatchString(v) {
+		isMatch := r.Reg.MatchString(v)
+		if isMatch != !r.Reverse {
 			return nil
 		}
 	}
