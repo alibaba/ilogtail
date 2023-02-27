@@ -15,9 +15,9 @@
 version: '3.8'
 
 services:
-  clickhouse:
-    image: elasticsearch:8.6.2
-    hostname: es01
+  elasticsearch:
+    image: "elasticsearch:8.6.2"
+    hostname: elasticsearch
     ports:
       - "9200"
     healthcheck:
