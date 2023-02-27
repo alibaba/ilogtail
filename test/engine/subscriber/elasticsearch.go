@@ -127,7 +127,7 @@ func (i *ElasticSearchSubscriber) queryRecords() (logGroup *protocol.LogGroup, m
 		logger.Warning(context.Background(), "CLICKHOUSE_SUBSCRIBER_ALARM", "err", err)
 		return
 	}
-	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+	if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
 		log.Fatalf("Error parsing the response body: %s", err)
 	}
 
@@ -145,11 +145,14 @@ func (i *ElasticSearchSubscriber) queryRecords() (logGroup *protocol.LogGroup, m
 
 	for _, hit := range r["hits"].(map[string]interface{})["hits"].([]interface{}) {
 		
-		tmpJson, _ := json.Marshal(hit.(map[string]interface{})["_source"])
+		tmpJSON, _ := json.Marshal(hit.(map[string]interface{})["_source"])
 		lc := logContent{}
-		err = json.Unmarshal(tmpJson, &lc)
+		err = json.Unmarshal(tmpJSON, &lc)
 		if err != nil {
 			logger.Warning(context.Background(), "ELASTICSEARCH_SUBSCRIBER_ALARM", "err", err)
+		}
+		if int64(lc.Time) > maxTimestamp {
+			maxTimestamp = int64(lc.Time)
 		}
 
 		log := &protocol.Log{
