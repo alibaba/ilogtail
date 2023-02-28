@@ -21,7 +21,7 @@ services:
     ports:
       - "9200"
     healthcheck:
-      test: "curl -f http://localhost:9200/ping"
+      test: curl http://localhost:9200/_cat/health
       timeout: 5s
       interval: 10s
       retries: 3
