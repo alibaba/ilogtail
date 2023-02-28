@@ -76,6 +76,7 @@ namespace sdk {
     const char* const MACHINES = "/machines";
     const char* const MACHINEGROUPS = "/machinegroups";
     const char* const ACLS = "/acls";
+    const char* const CONFIGSERVERAGENT = "/Agent";
 
     const char* const HTTP_GET = "GET";
     const char* const HTTP_POST = "POST";
@@ -127,7 +128,8 @@ namespace sdk {
     const char* const LOGE_SHARD_NOT_EXIST = "ShardNotExist";
     const char* const LOGE_INVALID_CURSOR = "InvalidCursor";
     const char* const LOG_LZ4 = "lz4";
-
+    const char* const LOG_DEFLATE = "deflate";
+    const char* const LOG_ZSTD = "zstd";
     const char* const LOG_ERROR_CODE = "errorCode";
     const char* const LOG_ERROR_MESSAGE = "errorMessage";
 

@@ -66,7 +66,8 @@ DEFINE_FLAG_INT32(force_release_deleted_file_fd_timeout,
 namespace logtail {
 
 #define COMMON_READER_INFO \
-    ("log path", mLogPath)("real path", mRealLogPath)("config", mConfigName)("inode", mDevInode.inode)
+    ("project", mProjectName)("logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)( \
+        "file device", mDevInode.dev)("file inode", mDevInode.inode)("file signature", mLastFileSignatureHash)
 
 size_t LogFileReader::BUFFER_SIZE = 1024 * 512; // 512KB
 
@@ -74,15 +75,29 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
     if (checkConfigFlag) {
         size_t index = mLogPath.rfind(PATH_SEPARATOR);
         if (index == string::npos || index == mLogPath.size() - 1) {
-            LOG_INFO(sLogger, ("skip dump reader meta", "invalid log path")COMMON_READER_INFO);
+            LOG_INFO(sLogger,
+                     ("skip dump reader meta", "invalid log reader queue name")("project", mProjectName)(
+                         "logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
+                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature",
+                                                                                      mLastFileSignatureHash));
             return;
         }
         string dirPath = mLogPath.substr(0, index);
         string fileName = mLogPath.substr(index + 1, mLogPath.size() - index - 1);
         if (ConfigManager::GetInstance()->FindBestMatch(dirPath, fileName) == NULL) {
-            LOG_INFO(sLogger, ("skip dump reader meta", "best match not found")COMMON_READER_INFO);
+            LOG_INFO(sLogger,
+                     ("skip dump reader meta", "no config matches the file path")("project", mProjectName)(
+                         "logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
+                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature",
+                                                                                      mLastFileSignatureHash));
             return;
         }
+        LOG_INFO(
+            sLogger,
+            ("dump log reader meta, project", mProjectName)("logstore", mCategory)("config", mConfigName)(
+                "log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                "file signature", mLastFileSignatureHash)("real file path", mRealLogPath)("file size", mLastFileSize)(
+                "last file position", mLastFilePos)("is file opened", ToString(mLogFileOp.IsOpen())));
     }
     CheckPoint* checkPointPtr = new CheckPoint(mLogPath,
                                                mLastFilePos,
@@ -114,9 +129,9 @@ void LogFileReader::SetContainerStopped() {
 bool LogFileReader::ShouldForceReleaseDeletedFileFd() {
     time_t now = time(NULL);
     return INT32_FLAG(force_release_deleted_file_fd_timeout) >= 0
-        && (IsFileDeleted() && now - GetDeletedTime() >= INT32_FLAG(force_release_deleted_file_fd_timeout)
-            || IsContainerStopped()
-                && now - GetContainerStoppedTime() >= INT32_FLAG(force_release_deleted_file_fd_timeout));
+        && ((IsFileDeleted() && now - GetDeletedTime() >= INT32_FLAG(force_release_deleted_file_fd_timeout))
+            || (IsContainerStopped()
+                && now - GetContainerStoppedTime() >= INT32_FLAG(force_release_deleted_file_fd_timeout)));
 }
 
 void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t eoConcurrency) {
@@ -136,8 +151,12 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
             mLastFileSignatureSize = checkPointPtr->mSignatureSize;
             mRealLogPath = checkPointPtr->mRealFileName;
             mLastEventTime = checkPointPtr->mLastUpdateTime;
-            LOG_DEBUG(sLogger,
-                      ("init reader by checkpoint", mLogPath)(mRealLogPath, mLastFilePos)("config", mConfigName));
+            LOG_INFO(
+                sLogger,
+                ("recover log reader status from checkpoint, project", mProjectName)("logstore", mCategory)(
+                    "config", mConfigName)("log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
+                    "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                    "real file path", mRealLogPath)("file size", mLastFileSize)("last file position", mLastFilePos));
             // check if we should skip first modify
             // file is open or last update time is new
             if (checkPointPtr->mFileOpenFlag != 0
@@ -488,14 +507,18 @@ void LogFileReader::SetDockerPath(const std::string& dockerBasePath, size_t dock
             mDockerPath = dockerBasePath + mLogPath.substr(dockerReplaceSize);
         }
 
-        LOG_DEBUG(sLogger, ("convert docker file path", "")("host path", mLogPath)("final path", mDockerPath));
+        LOG_DEBUG(sLogger, ("convert docker file path", "")("host path", mLogPath)("docker path", mDockerPath));
     }
 }
 
 void LogFileReader::SetReadFromBeginning() {
     mLastFilePos = 0;
     mLastReadPos = 0;
-    LOG_DEBUG(sLogger, ("begin to read file", mLogPath)("start offset", mLastFilePos));
+    LOG_INFO(sLogger,
+             ("force reading file from the beginning, project", mProjectName)("logstore", mCategory)(
+                 "config", mConfigName)("log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
+                 "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)("file size",
+                                                                                                    mLastFileSize));
     mFirstWatched = false;
 }
 
@@ -690,7 +713,12 @@ bool LogFileReader::CheckForFirstOpen(FileReadPolicy policy) {
     if (op.IsOpen() == false) {
         mLastFilePos = 0;
         mLastReadPos = 0;
-        LOG_DEBUG(sLogger, ("begin to read file", mLogPath)("start offset", mLastFilePos));
+        LOG_INFO(sLogger,
+                 ("force reading file from the beginning",
+                  "open file failed when trying to find the start position for reading")("project", mProjectName)(
+                     "logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
+                     "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                     "file signature", mLastFileSignatureHash)("file size", mLastFileSize));
         auto error = GetErrno();
         if (fsutil::Dir::IsENOENT(error))
             return true;
@@ -721,7 +749,11 @@ bool LogFileReader::CheckForFirstOpen(FileReadPolicy policy) {
         LOG_ERROR(sLogger, ("invalid file read policy for file", mLogPath));
         return false;
     }
-    LOG_DEBUG(sLogger, ("begin to read file", mLogPath)("start offset", mLastFilePos));
+    LOG_INFO(sLogger,
+             ("set the starting position for reading, project", mProjectName)("logstore", mCategory)(
+                 "config", mConfigName)("log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
+                 "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)("start position",
+                                                                                                    mLastFilePos));
     return true;
 }
 
@@ -769,9 +801,12 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
         }
     }
 
-    LOG_INFO(sLogger,
-             ("file path", mLogPath)("can not fix last file pos, no begin line found from",
-                                     mLastFilePos)("to", mLastFilePos + readSizeReal));
+    LOG_WARNING(sLogger,
+                ("no begin line found", "most likely to have parse error when reading begins")("project", mProjectName)(
+                    "logstore", mCategory)("config", mConfigName)("log reader queue name",
+                                                                  mLogPath)("file device", ToString(mDevInode.dev))(
+                    "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                    "search start position", mLastFilePos)("search end position", mLastFilePos + readSizeReal));
 
     free(readBuf);
     return;
@@ -931,6 +966,7 @@ void LogFileReader::skipCheckpointRelayHole() {
 bool LogFileReader::ReadLog(LogBuffer*& logBuffer) {
     if (mLogFileOp.IsOpen() == false) {
         if (!ShouldForceReleaseDeletedFileFd()) {
+            // should never happen
             LOG_ERROR(sLogger, ("unknow error, log file not open", mLogPath));
         }
         return false;
@@ -1027,7 +1063,13 @@ bool LogFileReader::UpdateFilePtr() {
     // move last update time before check IsValidToPush
     mLastUpdateTime = time(NULL);
     if (mLogFileOp.IsOpen() == false) {
-        // we may have mislabeled the deleted flag and then closed fd. Correct it here.
+        // In several cases we should revert file deletion flag:
+        // 1. File is appended after deletion. This happens when app is still logging, but a user deleted the log file.
+        // 2. File was rename/moved, but is rename/moved back later.
+        // 3. Log rotated. But iLogtail's logic will not remove the reader from readerArray on delete event.
+        //    It will be removed while the new file has modify event. The reader is still the head of readerArray,
+        //    thus it will be open again for reading.
+        // However, if the user explicitly set a delete timeout. We should not revert the flag.
         if (INT32_FLAG(force_release_deleted_file_fd_timeout) < 0) {
             SetFileDeleted(false);
         }
@@ -1061,6 +1103,12 @@ bool LogFileReader::UpdateFilePtr() {
                 LOG_WARNING(sLogger, ("LogFileReader open real log file failed", mRealLogPath));
             } else if (CheckDevInode()) {
                 GloablFileDescriptorManager::GetInstance()->OnFileOpen(this);
+                LOG_INFO(sLogger,
+                         ("open file succeeded, project", mProjectName)("logstore", mCategory)("config", mConfigName)(
+                             "log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
+                             "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                             "real file path", mRealLogPath)("file size", mLastFileSize)("last file position",
+                                                                                         mLastFilePos));
                 return true;
             } else {
                 mLogFileOp.Close();
@@ -1089,6 +1137,11 @@ bool LogFileReader::UpdateFilePtr() {
             // the mLogPath's dev inode equal to mDevInode, so real log path is mLogPath
             mRealLogPath = mLogPath;
             GloablFileDescriptorManager::GetInstance()->OnFileOpen(this);
+            LOG_INFO(sLogger,
+                     ("open file succeeded, project", mProjectName)("logstore", mCategory)("config", mConfigName)(
+                         "log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
+                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                         "file size", mLastFileSize)("last file position", mLastFilePos));
             return true;
         } else {
             mLogFileOp.Close();
@@ -1108,8 +1161,12 @@ bool LogFileReader::CloseTimeoutFilePtr(int32_t curTime) {
             return false;
         }
         if ((int64_t)buf.GetFileSize() == mLastFilePos) {
-            LOG_DEBUG(sLogger,
-                      ("clost timeout fileptr", mLogPath)(mRealLogPath, mLastFilePos)("inode", mDevInode.inode));
+            LOG_INFO(sLogger,
+                     ("close the file", "current log file has not been updated for some time and has been read")(
+                         "project", mProjectName)("logstore", mCategory)("config", mConfigName)(
+                         "log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
+                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                         "file size", mLastFileSize)("last file position", mLastFilePos));
             CloseFilePtr();
             // delete item in LogFileCollectOffsetIndicator map
             LogFileCollectOffsetIndicator::GetInstance()->DeleteItem(mLogPath, mDevInode);
@@ -1126,10 +1183,15 @@ void LogFileReader::CloseFilePtr() {
         // if mLogPath is symbolic link, then we should not update it accrding to /dev/fd/xx
         if (!mSymbolicLinkFlag) {
             // retrieve file path from file descriptor in order to open it later
+            // this is important when file is moved when rotating
             string curRealLogPath = mLogFileOp.GetFilePath();
             if (!curRealLogPath.empty()) {
-                LOG_DEBUG(sLogger,
-                          ("reader update real log path", mLogPath)("from", mRealLogPath)("to", curRealLogPath));
+                LOG_INFO(sLogger,
+                         ("update the real file path of the log reader during closing, project", mProjectName)(
+                             "logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
+                             "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                             "file signature", mLastFileSignatureHash)("original file path",
+                                                                       mRealLogPath)("new file path", curRealLogPath));
                 mRealLogPath = curRealLogPath;
                 if (mEOOption && mRealLogPath != mEOOption->primaryCheckpoint.real_path()) {
                     updatePrimaryCheckpointRealPath();
@@ -1760,7 +1822,12 @@ LogFileReader::~LogFileReader() {
         delete mLogBeginRegPtr;
         mLogBeginRegPtr = NULL;
     }
-    LOG_DEBUG(sLogger, ("Delete LogFileReader ", mLogPath));
+    LOG_INFO(sLogger,
+             ("try to close the file and destruct the corresponding log reader, project",
+              mProjectName)("logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
+                 "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                 "file size", mLastFileSize)("file signature", mLastFileSignatureHash)("file size", mLastFileSize)(
+                 "last file position", mLastFilePos));
     CloseFilePtr();
 
     // Mark GC so that corresponding resources can be released.

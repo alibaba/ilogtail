@@ -17,6 +17,7 @@ package pluginmanager
 import (
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/plugin_main/flags"
 
 	"context"
@@ -29,6 +30,7 @@ import (
 // Following variables are exported so that tests of main package can reference them.
 var LogtailConfig map[string]*LogstoreConfig
 var LastLogtailConfig map[string]*LogstoreConfig
+var ContainerConfig *LogstoreConfig
 
 // Two built-in logtail configs to report statistics and alarm (from system and other logtail configs).
 var StatisticsConfig *LogstoreConfig
@@ -39,7 +41,7 @@ var DisabledLogtailConfigLock sync.Mutex
 var DisabledLogtailConfig = make(map[string]*LogstoreConfig)
 
 // StatisticsConfigJson, AlarmConfigJson
-var BaseVersion = "0.1.0"
+var BaseVersion = "0.1.0" // will be overwritten through ldflags at compile time
 
 var statisticsConfigJSON = `{
     "global": {
@@ -49,8 +51,8 @@ var statisticsConfigJSON = `{
         "DefaultLogQueueSize": 4,
 		"DefaultLogGroupQueueSize": 4,
 		"Tags" : {
-			"base_version" : "0.1.0",
-			"logtail_version" : "0.16.19"
+			"base_version" : "` + BaseVersion + `",
+			"logtail_version" : "` + BaseVersion + `"
 		}
 	},
 	"inputs" : [
@@ -69,13 +71,33 @@ var alarmConfigJSON = `{
         "DefaultLogQueueSize": 4,
 		"DefaultLogGroupQueueSize": 4,
 		"Tags" : {
-			"base_version" : "0.1.0",
-			"logtail_version" : "0.16.19"
+			"base_version" : "` + BaseVersion + `",
+			"logtail_version" : "` + BaseVersion + `"
 		}
     },
 	"inputs" : [
 		{
 			"type" : "metric_alarm",
+			"detail" : null
+		}
+	]
+}`
+
+var containerConfigJSON = `{
+    "global": {
+        "InputIntervalMs" :  30000,
+        "AggregatIntervalMs": 1000,
+        "FlushIntervalMs": 1000,
+        "DefaultLogQueueSize": 4,
+		"DefaultLogGroupQueueSize": 4,
+		"Tags" : {
+			"base_version" : "` + BaseVersion + `",
+			"logtail_version" : "` + BaseVersion + `"
+		}
+    },
+	"inputs" : [
+		{
+			"type" : "metric_container",
 			"detail" : null
 		}
 	]
@@ -106,6 +128,12 @@ func Init() (err error) {
 		logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load alarm config fail", err)
 		return
 	}
+	if ContainerConfig, err = loadBuiltinConfig("container", "sls-admin", "logtail_containers", "logtail_containers", containerConfigJSON); err != nil {
+		logger.Error(context.Background(), "LOAD_PLUGIN_ALARM", "load container config fail", err)
+		return
+	}
+	logger.Info(context.Background(), "loadBuiltinConfig container")
+	TimerFetchFuction()
 	return
 }
 
@@ -163,20 +191,29 @@ func HoldOn(exitFlag bool) error {
 	if StatisticsConfig != nil {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the static metrics")
-			for _, plugin := range StatisticsConfig.MetricPlugins {
-				_ = plugin.Input.Collect(plugin)
-			}
+			control := pipeline.NewAsyncControl()
+			StatisticsConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
+			control.WaitCancel()
 		}
 		_ = StatisticsConfig.Stop(exitFlag)
 	}
 	if AlarmConfig != nil {
 		if *flags.ForceSelfCollect {
 			logger.Info(context.Background(), "force collect the alarm metrics")
-			for _, plugin := range AlarmConfig.MetricPlugins {
-				_ = plugin.Input.Collect(plugin)
-			}
+			control := pipeline.NewAsyncControl()
+			AlarmConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
+			control.WaitCancel()
 		}
 		_ = AlarmConfig.Stop(exitFlag)
+	}
+	if ContainerConfig != nil {
+		if *flags.ForceSelfCollect {
+			logger.Info(context.Background(), "force collect the container metrics")
+			control := pipeline.NewAsyncControl()
+			ContainerConfig.PluginRunner.RunPlugins(pluginMetricInput, control)
+			control.WaitCancel()
+		}
+		_ = ContainerConfig.Stop(exitFlag)
 	}
 	// clear all config
 	LastLogtailConfig = LogtailConfig
@@ -194,7 +231,9 @@ func Resume() error {
 	if AlarmConfig != nil {
 		AlarmConfig.Start()
 	}
-
+	if ContainerConfig != nil {
+		ContainerConfig.Start()
+	}
 	// Remove deleted configs from online manager.
 	deletedCachedConfigs := GetAlwaysOnlineManager().GetDeletedConfigs(LogtailConfig)
 	for _, cfg := range deletedCachedConfigs {
@@ -205,7 +244,6 @@ func Resume() error {
 			logger.Infof(config.Context.GetRuntimeContext(), "always online config %v stopped, error: %v", config.ConfigName, err)
 		}(cfg)
 	}
-
 	for _, logstoreConfig := range LogtailConfig {
 		if logstoreConfig.alreadyStarted {
 			logstoreConfig.resume()

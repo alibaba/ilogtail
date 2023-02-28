@@ -1,6 +1,6 @@
 # 协议转换
 
-在开发Flusher插件时，用户往往需要将日志数据从sls协议转换成其他协议。为了加快开发插件流程，iLogtail提供了通用日志协议转换模块，用户只需要指定目标协议的名称和编码方式即可获得编码后的字节流。
+在开发Flusher插件时，用户往往需要将日志数据从sls协议转换成其他协议。在扩展Metric数据模型后，v2版本的Flusher插件还需要支持从PipelineGroupEvents数据转换成其他协议的场景。为了加快开发插件流程，iLogtail提供了通用协议转换模块，用户只需要指定目标协议的名称和编码方式即可获得编码后的字节流。
 
 ## Converter结构
 
@@ -42,6 +42,8 @@ func (c *Converter) ToByteStream(logGroup *sls.LogGroup) (stream interface{}, er
 func (c *Converter) DoWithSelectedFields(logGroup *sls.LogGroup, targetFields []string) (logs interface{}, values []map[string]string, err error)
 
 func (c *Converter) ToByteStreamWithSelectedFields(logGroup *sls.LogGroup, targetFields []string) (stream interface{}, values []map[string]string, err error)
+
+func (c *Converter) ToByteStreamWithSelectedFieldsV2(groupEvents *models.PipelineGroupEvents, targetFields []string) (stream interface{}, values []map[string]string, err error)
 ```
 
 各方法的用法如下：
@@ -49,9 +51,12 @@ func (c *Converter) ToByteStreamWithSelectedFields(logGroup *sls.LogGroup, targe
 - `Do`：给定日志组`logGroup`，根据`Converter`中设定的协议，将sls日志组中的各条日志分别转换为与目标协议相对应的数据结构，并将结果组装在`logs`中；
 - `ToByteStream`：在完成`Do`方法的基础上，根据`Converter`中设定的编码格式，对转换后的日志进行编码形成字节流，并将结果组装在`stream`中；
 - `DoWithSelectedFields`：在完成和`Do`方法一致的日志转换基础上，在各条日志及日志组tag中找到`targetFields`数组中指定字段的值，以map的形式将结果保存于`values`数组中。如果没有找到该字段，则`values`的各个map中将不包括该字段。`targetFields`中各字符串的的格式要求如下：
-  - 如果需要获取某个日志字段的值，则字符串的命名方式为“attribute.XXX"，其中XXX为该字段的键名；
+  - 如果需要获取某个日志字段的值，则字符串的命名方式为“content.XXX"，其中XXX为该字段的键名；
   - 如果需要获取某个日志tag的值，则字符串的命名方式为“tag.XXX"，其中XXX为该字段的键名。
 - `ToByteStreamWithSelectedFields`：与`DoWithSelectedFields`方法类似，在完成和`ToByteStream`方法一致的日志转换基础上，在各条日志及日志组tag中找到`targetFields`数组中指定字段的值，以map的形式将结果保存于`values`数组中，`targetFields`中各字符串的的格式要求同上。
+- `ToByteStreamWithSelectedFieldsV2`：作用与`ToByteStreamWithSelectedFields`方法一致，只是作用于v2版本的数据模版的协议转换
+
+
 
 ## 使用步骤
 
@@ -107,9 +112,12 @@ c, err := protocol.NewConverter("custom_single", "json", map[string]string{"host
 
 - 可选协议名
 
-    | 协议名 | 意义 |
-    | ------ | ------ |
-    | custom_single | 单条协议 |
+    | 协议名           | 意义                                       |
+    |------------------------------------------| ------ |
+    | custom_single | 单条协议                                     |
+    | influxdb      | Influxdb协议                               |
+    | raw           | 原始Byte流协议，仅支持v2版本中ByteArray类型的Event的协议转换 |
+
 
 - 可选编码方式
 
@@ -117,6 +125,7 @@ c, err := protocol.NewConverter("custom_single", "json", map[string]string{"host
     | ------ | ------ |
     | json | json编码方式 |
     | protobuf | protobuf编码方式 |
+    | custom | 自定义编码方式  |
 
 - sls协议中系统保留LogTag的Key默认值：
 

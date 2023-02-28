@@ -16,14 +16,13 @@ package pgsql
 
 import (
 	"fmt"
-
 	"net/url"
 	"strconv"
 	"strings"
 
 	_ "github.com/jackc/pgx/v4/stdlib" //
 
-	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input/rdb"
 )
@@ -32,7 +31,7 @@ type Pgsql struct {
 	rdb.Rdb
 }
 
-func (m *Pgsql) Init(context ilogtail.Context) (int, error) {
+func (m *Pgsql) Init(context pipeline.Context) (int, error) {
 	return m.Rdb.Init(context, func() error {
 		if m.Rdb.Limit && m.Rdb.PageSize > 0 {
 			if m.Rdb.CheckPoint {
@@ -90,14 +89,14 @@ func (m *Pgsql) dsnConfig() string {
 }
 
 // Start starts the ServiceInput's service, whatever that may be
-func (m *Pgsql) Start(collector ilogtail.Collector) error {
+func (m *Pgsql) Start(collector pipeline.Collector) error {
 	connStr := m.dsnConfig()
 	return m.Rdb.Start(collector, connStr, func() error {
 		return nil
 	}, nil)
 }
 
-func (m *Pgsql) Collect(collector ilogtail.Collector) error {
+func (m *Pgsql) Collect(collector pipeline.Collector) error {
 	return m.Rdb.Collect(collector, nil)
 }
 
@@ -107,7 +106,7 @@ func (m *Pgsql) Stop() error {
 }
 
 func init() {
-	ilogtail.ServiceInputs["service_pgsql"] = func() ilogtail.ServiceInput {
+	pipeline.ServiceInputs["service_pgsql"] = func() pipeline.ServiceInput {
 		return &Pgsql{
 			Rdb: rdb.Rdb{
 				ConnectionRetryTime:   3,

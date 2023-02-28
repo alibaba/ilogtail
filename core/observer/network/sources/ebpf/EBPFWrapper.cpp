@@ -23,13 +23,24 @@
 #include "metas/ConnectionMetaManager.h"
 #include "network/protocols/utils.h"
 #include <netinet/in.h>
+#include "interface/layerfour.h"
 
-DEFINE_FLAG_INT64(sls_observer_network_ebpf_min_kernel_version,
-                  "SLS Observer NetWork ebpf min support version, 4.19.0.0 -> 4019000000",
+DECLARE_FLAG_STRING(default_container_host_path);
+DEFINE_FLAG_INT64(sls_observer_ebpf_min_kernel_version,
+                  "the minimum kernel version that supported eBPF normal running, 4.19.0.0 -> 4019000000",
                   4019000000);
-DEFINE_FLAG_INT64(sls_observer_network_ebpf_no_btf_kernel_version,
-                  "SLS Observer NetWork do not need btf kernel version, 5.4.0.0 -> 5004000000",
-                  5004000000);
+DEFINE_FLAG_INT64(
+    sls_observer_ebpf_nobtf_kernel_version,
+    "the minimum kernel version that supported eBPF normal running without self BTF file, 5.4.0.0 -> 5004000000",
+    5004000000);
+DEFINE_FLAG_STRING(sls_observer_ebpf_host_path,
+                   "the backup real host path for store libebpf.so",
+                   "/etc/ilogtail/ebpf/");
+
+static const std::string kLowkernelCentosName = "CentOS";
+static const uint16_t kLowkernelCentosMinVersion = 7006;
+static const uint16_t kLowkernelSpecificVersion = 3010;
+
 
 namespace logtail {
 // copy from libbpf_print_level
@@ -64,6 +75,7 @@ enum sls_libbpf_print_level {
             res = LOAD_UPROBE_OFFSET_FAIL; \
         } else { \
             res = (long)dlinfo.dli_saddr - (long)dlinfo.dli_fbase; \
+            LOG_DEBUG(sLogger, ("func", #funcName)("offset", res)); \
         } \
         res; \
     })
@@ -207,19 +219,10 @@ static void ebpf_lost_callback(void* custom_data, enum callback_type_e type, uin
     ((EBPFWrapper*)custom_data)->OnLost(type, lost_count);
 }
 
-static std::string GetValidBTFPath(NetworkConfig* config) {
+static std::string GetValidBTFPath(const int64_t& kernelVersion, const std::string& kernelRelease) {
     char* configedBTFPath = getenv("ALIYUN_SLS_EBPF_BTF_PATH");
-    if (configedBTFPath != NULL) {
-        return std::string(configedBTFPath);
-    }
-    std::string kernelRelease;
-    int64_t kernelVersion = 0;
-    GetKernelInfo(kernelRelease, kernelVersion);
-    if (kernelVersion < INT64_FLAG(sls_observer_network_ebpf_min_kernel_version)) {
-        return "";
-    }
-    if (kernelRelease.empty()) {
-        return "";
+    if (configedBTFPath != nullptr) {
+        return {configedBTFPath};
     }
     std::string execDir = GetProcessExecutionDir();
     fsutil::Dir dir(execDir);
@@ -249,41 +252,108 @@ static std::string GetValidBTFPath(NetworkConfig* config) {
     return "";
 }
 
+bool EBPFWrapper::isSupportedOS(int64_t& kernelVersion, std::string& kernelRelease) {
+    GetKernelInfo(kernelRelease, kernelVersion);
+    LOG_INFO(sLogger, ("kernel version", kernelRelease));
+    if (kernelRelease.empty()) {
+        return false;
+    }
+    if (kernelVersion >= INT64_FLAG(sls_observer_ebpf_min_kernel_version)) {
+        return true;
+    }
+    if (kernelVersion / 1000000 != kLowkernelSpecificVersion) {
+        return false;
+    }
+    std::string os;
+    int64_t osVersion;
+
+    if (GetRedHatReleaseInfo(os, osVersion, STRING_FLAG(default_container_host_path))
+        || GetRedHatReleaseInfo(os, osVersion)) {
+        return os == kLowkernelCentosName && osVersion >= kLowkernelCentosMinVersion;
+    }
+    return false;
+}
+
+bool EBPFWrapper::loadEbpfLib(int64_t kernelVersion, std::string& soPath) {
+    if (mEBPFLib != nullptr) {
+        if (!EBPFLoadSuccess()) {
+            LOG_INFO(sLogger, ("load ebpf dynamic library", "failed")("error", "last load failed"));
+            LogtailAlarm::GetInstance()->SendAlarm(OBSERVER_INIT_ALARM, "cannot load ebpf dynamic library");
+            return false;
+        }
+        return true;
+    }
+    LOG_INFO(sLogger, ("load ebpf dynamic library", "begin"));
+    std::string dlPrefix = GetProcessExecutionDir();
+    soPath = dlPrefix + "libebpf.so";
+    if (kernelVersion < INT64_FLAG(sls_observer_ebpf_min_kernel_version)) {
+        fsutil::PathStat buf;
+        // overlayfs has a reference bug in low kernel version, so copy docker inner file to host path to avoid using
+        // overlay fs. detail: https://lore.kernel.org/lkml/20180228004014.445-1-hmclauchlan@fb.com/
+        if (fsutil::PathStat::stat(STRING_FLAG(default_container_host_path).c_str(), buf)) {
+            std::string cmd
+                = std::string("\\cp ").append(soPath).append(" ").append(STRING_FLAG(sls_observer_ebpf_host_path));
+            LOG_INFO(sLogger, ("invoke cp cmd:", cmd));
+            system(std::string("mkdir ").append(STRING_FLAG(sls_observer_ebpf_host_path)).c_str());
+            system(cmd.c_str());
+            dlPrefix = STRING_FLAG(sls_observer_ebpf_host_path);
+            soPath = STRING_FLAG(sls_observer_ebpf_host_path) + "libebpf.so";
+        }
+    }
+    LOG_INFO(sLogger, ("load ebpf, libebpf path", soPath));
+    mEBPFLib = new DynamicLibLoader;
+    std::string loadErr;
+    if (!mEBPFLib->LoadDynLib("ebpf", loadErr, dlPrefix)) {
+        LOG_ERROR(sLogger, ("load ebpf dynamic library path", soPath)("error", loadErr));
+        return false;
+    }
+    LOAD_EBPF_FUNC(ebpf_setup_net_data_process_func)
+    LOAD_EBPF_FUNC(ebpf_setup_net_event_process_func)
+    LOAD_EBPF_FUNC(ebpf_setup_net_statistics_process_func)
+    LOAD_EBPF_FUNC(ebpf_setup_net_lost_func)
+    LOAD_EBPF_FUNC(ebpf_setup_print_func)
+    LOAD_EBPF_FUNC(ebpf_config)
+    LOAD_EBPF_FUNC(ebpf_poll_events)
+    LOAD_EBPF_FUNC(ebpf_init)
+    LOAD_EBPF_FUNC(ebpf_start)
+    LOAD_EBPF_FUNC(ebpf_stop)
+    LOAD_EBPF_FUNC(ebpf_get_fd)
+    LOAD_EBPF_FUNC(ebpf_get_next_key)
+    LOAD_EBPF_FUNC(ebpf_delete_map_value)
+    LOAD_EBPF_FUNC(ebpf_cleanup_dog)
+    LOAD_EBPF_FUNC(ebpf_update_conn_addr)
+    LOAD_EBPF_FUNC(ebpf_disable_process)
+    LOAD_EBPF_FUNC(ebpf_update_conn_role)
+    LOG_INFO(sLogger, ("load ebpf dynamic library", "success"));
+    return true;
+}
+
 bool EBPFWrapper::Init(std::function<int(StringPiece)> processor) {
     if (mInitSuccess) {
         return true;
     }
     LOG_INFO(sLogger, ("init ebpf source", "begin"));
-    if (mEBPFLib == nullptr) {
-        LOG_INFO(sLogger, ("load ebpf dynamic library", "begin"));
-        mEBPFLib = new DynamicLibLoader;
-        std::string loadErr;
-        if (!mEBPFLib->LoadDynLib("ebpf", loadErr, GetProcessExecutionDir())) {
-            LOG_ERROR(sLogger, ("load ebpf dynamic library", "failed")("error", loadErr));
+    int64_t kernelVersion;
+    std::string kernelRelease;
+    if (!isSupportedOS(kernelVersion, kernelRelease)) {
+        LOG_ERROR(sLogger, ("init ebpf source", "failed")("reason", "not supported kernel or OS"));
+        LogtailAlarm::GetInstance()->SendAlarm(OBSERVER_INIT_ALARM, "not supported kernel or OS:" + kernelRelease);
+        return false;
+    }
+
+    std::string btfPath = "/sys/kernel/btf/vmlinux";
+    if (kernelVersion < INT64_FLAG(sls_observer_ebpf_nobtf_kernel_version)) {
+        btfPath = GetValidBTFPath(kernelVersion, kernelRelease);
+        if (btfPath.empty()) {
+            LOG_ERROR(sLogger, ("not found any btf files", kernelRelease));
+            LogtailAlarm::GetInstance()->SendAlarm(OBSERVER_INIT_ALARM, "not found any btf files:" + kernelRelease);
             return false;
         }
-        LOAD_EBPF_FUNC(ebpf_setup_net_data_process_func)
-        LOAD_EBPF_FUNC(ebpf_setup_net_event_process_func)
-        LOAD_EBPF_FUNC(ebpf_setup_net_statistics_process_func)
-        LOAD_EBPF_FUNC(ebpf_setup_net_lost_func)
-        LOAD_EBPF_FUNC(ebpf_setup_print_func)
-        LOAD_EBPF_FUNC(ebpf_config)
-        LOAD_EBPF_FUNC(ebpf_poll_events)
-        LOAD_EBPF_FUNC(ebpf_init)
-        LOAD_EBPF_FUNC(ebpf_start)
-        LOAD_EBPF_FUNC(ebpf_stop)
-        LOAD_EBPF_FUNC(ebpf_get_fd)
-        LOAD_EBPF_FUNC(ebpf_get_next_key)
-        LOAD_EBPF_FUNC(ebpf_delete_map_value)
-        LOAD_EBPF_FUNC(ebpf_cleanup_dog)
-        LOAD_EBPF_FUNC(ebpf_update_conn_addr)
-        LOAD_EBPF_FUNC(ebpf_disable_process)
-        LOAD_EBPF_FUNC(ebpf_update_conn_role)
-        LOG_INFO(sLogger, ("load ebpf dynamic library", "success"));
     }
-    if (!EBPFLoadSuccess()) {
-        LOG_INFO(sLogger, ("load ebpf dynamic library", "failed")("error", "last load failed"));
-        LogtailAlarm::GetInstance()->SendAlarm(OBSERVER_INIT_ALARM, "cannot load ebpf dynamic library");
+
+
+    std::string soPath;
+    if (!loadEbpfLib(kernelVersion, soPath)) {
         return false;
     }
     mPacketProcessor = processor;
@@ -294,45 +364,19 @@ bool EBPFWrapper::Init(std::function<int(StringPiece)> processor) {
     g_ebpf_setup_net_statistics_process_func_func(ebpf_stat_process_callback, this);
     g_ebpf_setup_net_lost_func_func(ebpf_lost_callback, this);
 
-    std::string soPath = GetProcessExecutionDir() + "libebpf.so";
-    std::string kernelRelease;
-    int64_t kernelVersion = 0;
-    GetKernelInfo(kernelRelease, kernelVersion);
-    std::string btfPath;
-    if (kernelVersion < INT64_FLAG(sls_observer_network_ebpf_no_btf_kernel_version)) {
-        btfPath = GetValidBTFPath(this->mConfig);
-        if (btfPath.empty()) {
-            LOG_ERROR(sLogger, ("get ebpf resource error, btf path", btfPath));
-            LogtailAlarm::GetInstance()->SendAlarm(OBSERVER_INIT_ALARM,
-                                                   "cannot get ebpf btf path, kernel version:" + kernelRelease);
-            return false;
-        } else {
-            LOG_INFO(sLogger, ("load ebpf, btf path", btfPath)("so path", soPath));
-        }
-    } else {
-        btfPath = "/sys/kernel/btf/vmlinux";
+    long cleanup_offset = LOAD_UPROBE_OFFSET(g_ebpf_cleanup_dog_func);
+    long update_conn_offset = LOAD_UPROBE_OFFSET(g_ebpf_update_conn_addr_func);
+    long disable_process_offset = LOAD_UPROBE_OFFSET(g_ebpf_disable_process_func);
+    long update_role_offset = LOAD_UPROBE_OFFSET(g_ebpf_update_conn_role_func);
+    if (cleanup_offset == LOAD_UPROBE_OFFSET_FAIL || update_conn_offset == LOAD_UPROBE_OFFSET_FAIL
+        || disable_process_offset == LOAD_UPROBE_OFFSET_FAIL || update_role_offset == LOAD_UPROBE_OFFSET_FAIL) {
+        return false;
     }
 
-    long cleanup_offset = LOAD_UPROBE_OFFSET(g_ebpf_cleanup_dog_func);
-    if (cleanup_offset == LOAD_UPROBE_OFFSET_FAIL) {
-        return false;
-    }
-    long update_conn_offset = LOAD_UPROBE_OFFSET(g_ebpf_update_conn_addr_func);
-    if (update_conn_offset == LOAD_UPROBE_OFFSET_FAIL) {
-        return false;
-    }
-    long disable_process_offset = LOAD_UPROBE_OFFSET(g_ebpf_disable_process_func);
-    if (disable_process_offset == LOAD_UPROBE_OFFSET_FAIL) {
-        return false;
-    }
-    long update_role_offset = LOAD_UPROBE_OFFSET(g_ebpf_update_conn_role_func);
-    if (update_role_offset == LOAD_UPROBE_OFFSET_FAIL) {
-        return false;
-    }
     int err = g_ebpf_init_func(&btfPath.at(0),
-                               btfPath.size(),
+                               static_cast<int32_t>(btfPath.size()),
                                &soPath.at(0),
-                               soPath.size(),
+                               static_cast<int32_t>(soPath.size()),
                                cleanup_offset,
                                update_conn_offset,
                                disable_process_offset,
@@ -347,7 +391,7 @@ bool EBPFWrapper::Init(std::function<int(StringPiece)> processor) {
     uint64_t nowTime = GetCurrentTimeInNanoSeconds();
     mDeltaTimeNs = nowTime - (uint64_t)ts.tv_sec * 1000000000ULL - (uint64_t)ts.tv_nsec;
     set_ebpf_int_config((int32_t)PROTOCOL_FILTER, 0, -1);
-    set_ebpf_int_config((int32_t)TGID_FILTER, 0, mConfig->mPid);
+    set_ebpf_int_config((int32_t)TGID_FILTER, 0, mConfig->mEBPFPid);
     set_ebpf_int_config((int32_t)SELF_FILTER, 0, getpid());
     set_ebpf_int_config((int32_t)DATA_SAMPLING, 0, mConfig->mSampling);
     set_ebpf_int_config((int32_t)PERF_BUFFER_PAGE, (int32_t)DATA_HAND, 512);
@@ -381,12 +425,6 @@ bool EBPFWrapper::Stop() {
     CleanAllDisableProcesses();
     mStartSuccess = false;
     return true;
-    // int err = g_ebpf_stop_func == NULL ? -100 : g_ebpf_stop_func();
-    // if (err) {
-    //     LOG_INFO(sLogger, ("stop ebpf", "failed")("error", err));
-    //     return false;
-    // }
-    // return true;
 }
 
 int32_t EBPFWrapper::ProcessPackets(int32_t maxProcessPackets, int32_t maxProcessDurationMs) {
@@ -623,22 +661,20 @@ void EBPFWrapper::OnCtrl(struct conn_ctrl_event_t* event) {
 }
 
 void EBPFWrapper::OnStat(struct conn_stats_event_t* event) {
-    NetStatisticsKey key;
-    key.SockCategory = ConvertSockAddress(event->addr, event->conn_id, key.DstAddr, key.DstPort);
-    EBPF_CONNECTION_FILTER(key.SockCategory, key.DstAddr, event->conn_id, event->addr);
+    logtail::NetStatisticsKey key;
+    key.SockCategory
+        = ConvertSockAddress(event->addr, event->conn_id, key.AddrInfo.RemoteAddr, key.AddrInfo.RemotePort);
+    EBPF_CONNECTION_FILTER(key.SockCategory, key.AddrInfo.RemoteAddr, event->conn_id, event->addr);
     key.PID = event->conn_id.tgid;
     key.SockHash = ConvertConnIdToSockHash(&(event->conn_id));
-    key.SrcPort = 0;
-    key.SrcAddr.Type = SockAddressType_IPV4;
-    key.SrcAddr.Addr.IPV4 = 0;
-    key.RoleType = DetectRole(event->role, event->conn_id, key.DstPort);
-    if (key.RoleType == PacketRoleType::Server) {
-        key.DstPort = 0;
-    }
+    key.AddrInfo.LocalPort = 0;
+    key.AddrInfo.LocalAddr.Type = SockAddressType_IPV4;
+    key.AddrInfo.LocalAddr.Addr.IPV4 = 0;
+    key.RoleType = DetectRole(event->role, event->conn_id, key.AddrInfo.RemotePort);
     LOG_TRACE(sLogger,
-              ("receive stat event,addr", SockAddressToString(key.DstAddr))("family", event->addr.sa.sa_family)(
-                  "socket_type", SocketCategoryToString(key.SockCategory))("port", key.DstPort)("pid", key.PID)(
-                  "fd", event->conn_id.fd));
+              ("receive stat event,addr", SockAddressToString(key.AddrInfo.RemoteAddr))(
+                  "family", event->addr.sa.sa_family)("socket_type", SocketCategoryToString(key.SockCategory))(
+                  "port", key.AddrInfo.RemotePort)("pid", key.PID)("fd", event->conn_id.fd));
     NetStatisticsTCP& item = mStatistics.GetStatisticsItem(key);
     item.Base.SendBytes += event->wr_bytes - event->last_output_wr_bytes;
     item.Base.RecvBytes += event->rd_bytes - event->last_output_rd_bytes;
@@ -757,5 +793,14 @@ int32_t EBPFWrapper::GetDisablesProcessCount() {
         return 0;
     }
     return mDisabledProcesses.size();
+}
+void EBPFWrapper::HoldOn(bool exitFlag) {
+    holdOnFlag = 1;
+    if (exitFlag) {
+        int err = g_ebpf_stop_func == NULL ? -100 : g_ebpf_stop_func();
+        if (err) {
+            LOG_INFO(sLogger, ("stop ebpf", "failed")("error", err));
+        }
+    }
 }
 } // namespace logtail

@@ -17,8 +17,9 @@ package rename
 import (
 	"fmt"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -28,13 +29,13 @@ type ProcessorRename struct {
 	DestKeys            []string
 	keyDictionary       map[string]int
 	noKeyErrorBoolArray []bool
-	context             ilogtail.Context
+	context             pipeline.Context
 }
 
 const pluginName = "processor_rename"
 
 // Init called for init some system resources, like socket, mutex...
-func (p *ProcessorRename) Init(context ilogtail.Context) error {
+func (p *ProcessorRename) Init(context pipeline.Context) error {
 	p.context = context
 	if len(p.SourceKeys) == 0 {
 		return fmt.Errorf("must specify SourceKeys for plugin %v", pluginName)
@@ -98,8 +99,34 @@ func (p *ProcessorRename) processLog(log *protocol.Log) {
 	}
 }
 
+func (p *ProcessorRename) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
+	if p.NoKeyError {
+		for idx := range p.noKeyErrorBoolArray {
+			p.noKeyErrorBoolArray[idx] = false
+		}
+	}
+	for _, event := range in.Events {
+		tags := event.GetTags()
+		for idx, key := range p.SourceKeys {
+			if tags.Contains(key) {
+				tags.Add(p.DestKeys[idx], tags.Get(key))
+				tags.Delete(key)
+				if p.NoKeyError {
+					p.noKeyErrorBoolArray[idx] = true
+				}
+			}
+		}
+	}
+	context.Collector().Collect(in.Group, in.Events...)
+	if p.NoKeyError {
+		if errorArray := p.checkNoKeyError(); errorArray != nil {
+			logger.Warningf(p.context.GetRuntimeContext(), "RENAME_FIND_ALARM", "cannot find key %v", errorArray)
+		}
+	}
+}
+
 func init() {
-	ilogtail.Processors[pluginName] = func() ilogtail.Processor {
+	pipeline.Processors[pluginName] = func() pipeline.Processor {
 		return &ProcessorRename{
 			NoKeyError: false,
 			SourceKeys: nil,

@@ -23,16 +23,21 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/golang/snappy"
 	"github.com/pierrec/lz4"
 )
 
 const (
-	ProtocolSLS        = "sls"
-	ProtocolPrometheus = "prometheus"
-	ProtocolInflux     = "influx"
-	ProtocolInfluxdb   = "influxdb"
-	ProtocolStatsd     = "statsd"
-	ProtocolOTLPLogV1  = "otlp_logv1"
+	ProtocolSLS          = "sls"
+	ProtocolPrometheus   = "prometheus"
+	ProtocolInflux       = "influx"
+	ProtocolInfluxdb     = "influxdb"
+	ProtocolStatsd       = "statsd"
+	ProtocolOTLPLogV1    = "otlp_logv1"
+	ProtocolOTLPMetricV1 = "otlp_metricv1"
+	ProtocolOTLPTraceV1  = "otlp_tracev1"
+	ProtocolRaw          = "raw"
+	ProtocolPyroscope    = "pyroscope"
 )
 
 func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) ([]byte, int, error) {
@@ -54,6 +59,13 @@ func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) 
 		return nil, http.StatusRequestEntityTooLarge, err
 	}
 
+	if req.Header.Get("Content-Encoding") == "snappy" {
+		bytes, err = snappy.Decode(nil, bytes)
+		if err != nil {
+			return nil, http.StatusBadRequest, err
+		}
+	}
+
 	if req.Header.Get("x-log-compresstype") == "lz4" {
 		rawBodySize, err := strconv.Atoi(req.Header.Get("x-log-bodyrawsize"))
 		if err != nil || rawBodySize <= 0 {
@@ -66,5 +78,15 @@ func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) 
 		return data, http.StatusOK, nil
 	}
 
+	return bytes, http.StatusOK, nil
+}
+
+func CollectRawBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) ([]byte, int, error) {
+	body := req.Body
+	body = http.MaxBytesReader(res, body, maxBodySize)
+	bytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		return nil, http.StatusRequestEntityTooLarge, err
+	}
 	return bytes, http.StatusOK, nil
 }

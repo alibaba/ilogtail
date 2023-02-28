@@ -29,6 +29,7 @@
 #include "metas/ContainerProcessGroup.h"
 #include "ConnectionObserver.h"
 #include "metas/ConnectionMetaManager.h"
+#include "interface/layerfour.h"
 
 namespace logtail {
 class ProcessObserver;
@@ -57,7 +58,9 @@ public:
 
 private:
     NetworkObserver() {
-        mLastGCTimeNs = mLastFlushTimeNs = GetCurrentTimeInNanoSeconds();
+        mLastGCTimeNs = GetCurrentTimeInNanoSeconds();
+        mLastL4FlushTimeNs = GetCurrentTimeInNanoSeconds();
+        mLastL7FlushTimeNs = GetCurrentTimeInNanoSeconds();
         mConfig = NetworkConfig::GetInstance();
         mNetworkStatistic = NetworkStatistic::GetInstance();
         mServiceMetaManager = ServiceMetaManager::GetInstance();
@@ -108,7 +111,7 @@ private:
      */
     void FlushOutMetrics(std::vector<sls_logs::Log>& allData);
 
-    void FlushStatistics(NetStaticticsMap& map, std::vector<sls_logs::Log>& logs);
+    void FlushStatistics(logtail::NetStaticticsMap& map, std::vector<sls_logs::Log>& logs);
 
     void ReloadSource();
 
@@ -120,7 +123,8 @@ private:
     ThreadPtr mEventLoopThread;
     ReadWriteLock mEventLoopThreadRWL;
     uint64_t mLastGCTimeNs = 0;
-    uint64_t mLastFlushTimeNs = 0;
+    uint64_t mLastL4FlushTimeNs = 0;
+    uint64_t mLastL7FlushTimeNs = 0;
     uint64_t mLastEbpfGCTimeNs = 0;
     uint64_t mLastFlushMetaTimeNs = 0;
     uint64_t mLastFlushNetlinkTimeNs = 0;

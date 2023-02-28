@@ -15,8 +15,8 @@
 package helper
 
 import (
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
 
 	"context"
@@ -27,13 +27,13 @@ import (
 )
 
 type ReaderMetricTracker struct {
-	OpenCounter        ilogtail.CounterMetric
-	CloseCounter       ilogtail.CounterMetric
-	FileSizeCounter    ilogtail.CounterMetric
-	FileRotatorCounter ilogtail.CounterMetric
-	ReadCounter        ilogtail.CounterMetric
-	ReadSizeCounter    ilogtail.CounterMetric
-	ProcessLatency     ilogtail.LatencyMetric
+	OpenCounter        pipeline.CounterMetric
+	CloseCounter       pipeline.CounterMetric
+	FileSizeCounter    pipeline.CounterMetric
+	FileRotatorCounter pipeline.CounterMetric
+	ReadCounter        pipeline.CounterMetric
+	ReadSizeCounter    pipeline.CounterMetric
+	ProcessLatency     pipeline.LatencyMetric
 }
 
 func NewReaderMetricTracker() *ReaderMetricTracker {
@@ -110,7 +110,9 @@ func NewLogFileReader(context context.Context, checkpoint LogFileReaderCheckPoin
 	if !checkpoint.State.IsEmpty() {
 		if deltaNano := time.Now().UnixNano() - int64(checkpoint.State.ModifyTime); deltaNano >= 0 && deltaNano < 180*1e9 {
 			readWhenStart = true
-			logger.Warning(context, "first read this file, need read when start flag", readWhenStart)
+			logger.Info(context, "read file", checkpoint.Path, "first read", readWhenStart)
+		} else {
+			logger.Info(context, "read file", checkpoint.Path, "since offset", checkpoint.Offset)
 		}
 	}
 	return &LogFileReader{
@@ -396,7 +398,7 @@ func (r *LogFileReader) Run() {
 		}
 		endProcessTime := time.Now()
 		sleepDuration := time.Millisecond*time.Duration(r.Config.ReadIntervalMs) - endProcessTime.Sub(startProcessTime)
-		logger.Debug(r.logContext, "sleep duration", sleepDuration, "normal", r.Config.ReadIntervalMs)
+		// logger.Debug(r.logContext, "sleep duration", sleepDuration, "normal", r.Config.ReadIntervalMs, "path", r.checkpoint.Path)
 		if util.RandomSleep(sleepDuration, 0.1, r.shutdown) {
 			r.ReadAndProcess(true)
 			if r.lastBufferSize > 0 {

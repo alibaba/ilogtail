@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux || windows
+// +build linux windows
+
 package pluginmanager
 
 import (
@@ -20,9 +23,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/input"
 	"github.com/alibaba/ilogtail/plugins/processor/regex"
@@ -108,9 +111,9 @@ func (s *logstoreConfigTestSuite) TestPluginGlobalConfig() {
 	s.Equal(config.GlobalConfig.DefaultLogQueueSize, 21)
 	s.Equal(config.GlobalConfig.InputIntervalMs, 9999)
 	s.Equal(config.GlobalConfig.FlushIntervalMs, 323)
-	s.Equal(config.MetricPlugins[0].Interval, time.Duration(9999)*time.Millisecond)
-	s.Equal(config.AggregatorPlugins[0].Interval, time.Duration(369)*time.Millisecond)
-	s.Equal(config.FlusherPlugins[0].Interval, time.Duration(323)*time.Millisecond)
+	s.Equal(config.PluginRunner.(*pluginv1Runner).MetricPlugins[0].Interval, time.Duration(9999)*time.Millisecond)
+	s.Equal(config.PluginRunner.(*pluginv1Runner).AggregatorPlugins[0].Interval, time.Duration(369)*time.Millisecond)
+	s.Equal(config.PluginRunner.(*pluginv1Runner).FlusherPlugins[0].Interval, time.Duration(323)*time.Millisecond)
 }
 
 func (s *logstoreConfigTestSuite) TestLoadConfig() {
@@ -126,16 +129,16 @@ func (s *logstoreConfigTestSuite) TestLoadConfig() {
 		s.Equal(config.ProjectName, "project")
 		s.Equal(config.LogstoreName, "logstore")
 		s.Equal(config.LogstoreKey, int64(666))
-		s.Equal(len(config.MetricPlugins), 0)
-		s.Equal(len(config.ServicePlugins), 1)
-		s.Equal(len(config.ProcessorPlugins), 1)
-		s.Equal(len(config.AggregatorPlugins), 1)
-		s.Equal(len(config.FlusherPlugins), 2)
+		s.Equal(len(config.PluginRunner.(*pluginv1Runner).MetricPlugins), 0)
+		s.Equal(len(config.PluginRunner.(*pluginv1Runner).ServicePlugins), 1)
+		s.Equal(len(config.PluginRunner.(*pluginv1Runner).ProcessorPlugins), 1)
+		s.Equal(len(config.PluginRunner.(*pluginv1Runner).AggregatorPlugins), 1)
+		s.Equal(len(config.PluginRunner.(*pluginv1Runner).FlusherPlugins), 2)
 		// global config
 		s.Equal(config.GlobalConfig, &LogtailGlobalConfig)
 
 		// check plugin inner info
-		reg, ok := config.ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
+		reg, ok := config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
 		s.True(ok)
 		// "SourceKey": "content",
 		// "Regex": "Active connections: (\\d+)\\s+server accepts handled requests\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+Reading: (\\d+) Writing: (\\d+) Waiting: (\\d+).*",
@@ -232,12 +235,14 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 	tags := []byte("")
 	str := helper.ZeroCopyString(rawLogs)
 	l := new(LogstoreConfig)
-	l.LogsChan = make(chan *ilogtail.LogWithContext, 10)
+	l.PluginRunner = &pluginv1Runner{
+		LogsChan: make(chan *pipeline.LogWithContext, 10),
+	}
 
 	{
 		assert.Equal(t, 0, l.ProcessRawLogV2(rawLogs, "", topic, tags))
-		assert.Equal(t, 1, len(l.LogsChan))
-		log := <-l.LogsChan
+		assert.Equal(t, 1, len(l.PluginRunner.(*pluginv1Runner).LogsChan))
+		log := <-l.PluginRunner.(*pluginv1Runner).LogsChan
 		assert.Equal(t, log.Log.Contents[0].GetValue(), str)
 		assert.Equal(t, log.Log.Contents[1].GetValue(), topic)
 		assert.True(t, helper.IsSafeString(log.Log.Contents[0].GetValue(), str))
@@ -248,8 +253,8 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 		tags = []byte("k1~=~v1^^^k2~=~v2")
 		tagsStr := helper.ZeroCopyString(tags)
 		assert.Equal(t, 0, l.ProcessRawLogV2(rawLogs, "", topic, tags))
-		assert.Equal(t, 1, len(l.LogsChan))
-		log := <-l.LogsChan
+		assert.Equal(t, 1, len(l.PluginRunner.(*pluginv1Runner).LogsChan))
+		log := <-l.PluginRunner.(*pluginv1Runner).LogsChan
 		assert.Equal(t, log.Log.Contents[0].GetValue(), str)
 		assert.Equal(t, log.Log.Contents[1].GetValue(), topic)
 		assert.Equal(t, 4, len(log.Log.Contents))
@@ -273,8 +278,8 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 		tags = []byte("^^^k2~=~v2")
 		tagsStr := helper.ZeroCopyString(tags)
 		assert.Equal(t, 0, l.ProcessRawLogV2(rawLogs, "", topic, tags))
-		assert.Equal(t, 1, len(l.LogsChan))
-		log := <-l.LogsChan
+		assert.Equal(t, 1, len(l.PluginRunner.(*pluginv1Runner).LogsChan))
+		log := <-l.PluginRunner.(*pluginv1Runner).LogsChan
 		assert.Equal(t, log.Log.Contents[0].GetValue(), str)
 		assert.Equal(t, log.Log.Contents[1].GetValue(), topic)
 		assert.Equal(t, 3, len(log.Log.Contents))
@@ -294,8 +299,8 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 		tags = []byte("^^^k2^^^k3")
 		tagsStr := helper.ZeroCopyString(tags)
 		assert.Equal(t, 0, l.ProcessRawLogV2(rawLogs, "", topic, tags))
-		assert.Equal(t, 1, len(l.LogsChan))
-		log := <-l.LogsChan
+		assert.Equal(t, 1, len(l.PluginRunner.(*pluginv1Runner).LogsChan))
+		log := <-l.PluginRunner.(*pluginv1Runner).LogsChan
 		assert.Equal(t, log.Log.Contents[0].GetValue(), str)
 		assert.Equal(t, log.Log.Contents[1].GetValue(), topic)
 		assert.Equal(t, 4, len(log.Log.Contents))
@@ -314,5 +319,4 @@ func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 		assert.True(t, helper.IsSafeString(log.Log.Contents[3].GetKey(), tagsStr))
 		assert.True(t, helper.IsSafeString(log.Log.Contents[3].GetValue(), tagsStr))
 	}
-
 }

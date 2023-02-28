@@ -28,10 +28,10 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input/udpserver"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
@@ -66,7 +66,7 @@ func createManager(agentDirPath string) *Manager {
 		jmxfetchdPath:    path.Join(agentDirPath, scriptsName),
 		jmxfetchConfPath: path.Join(agentDirPath, "conf.d"),
 		allLoadedCfgs:    make(map[string]*Cfg),
-		collectors:       make(map[string]ilogtail.Collector),
+		collectors:       make(map[string]pipeline.Collector),
 		managerMeta:      helper.NewmanagerMeta("jmxfetch"),
 		stopChan:         make(chan struct{}),
 	}
@@ -77,7 +77,7 @@ type Manager struct {
 	jmxfetchdPath    string
 	jmxfetchConfPath string
 	allLoadedCfgs    map[string]*Cfg
-	collectors       map[string]ilogtail.Collector
+	collectors       map[string]pipeline.Collector
 	managerMeta      *helper.ManagerMeta
 	stopChan         chan struct{}
 	uniqueCollectors string
@@ -89,7 +89,7 @@ type Manager struct {
 	sync.Mutex
 }
 
-func (m *Manager) RegisterCollector(ctx ilogtail.Context, key string, collector ilogtail.Collector, filters []*FilterInner) {
+func (m *Manager) RegisterCollector(ctx pipeline.Context, key string, collector pipeline.Collector, filters []*FilterInner) {
 	if !m.initSuccess {
 		return
 	}
@@ -113,6 +113,10 @@ func (m *Manager) UnregisterCollector(key string) {
 	logger.Debug(m.managerMeta.GetContext(), "unregister collector", key)
 	m.Lock()
 	defer m.Unlock()
+	if m.server != nil {
+		m.server.UnregisterCollectors(key)
+	}
+	_ = os.Remove(path.Join(m.jmxfetchConfPath, key+".yaml"))
 	delete(m.allLoadedCfgs, key)
 	delete(m.collectors, key)
 	if len(m.collectors) == 0 {
@@ -156,12 +160,12 @@ func (m *Manager) Register(key string, configs map[string]*InstanceInner, newGcM
 		todoAddCfgs = true
 		cfg.newGcMetrics = newGcMetrics
 	}
-	logger.Infof(m.managerMeta.GetContext(), "loaded %s instances after register: %d", key, len(cfg.instances))
+	logger.Debugf(m.managerMeta.GetContext(), "loaded %s instances after register: %d", key, len(cfg.instances))
 	cfg.change = cfg.change || todoDeleteCfgs || todoAddCfgs
 }
 
 func (m *Manager) startServer() {
-	logger.Info(m.managerMeta.GetContext(), "start", "server")
+	logger.Debug(m.managerMeta.GetContext(), "start", "server")
 	if m.server == nil {
 		m.port, _ = helper.GetFreePort()
 		m.server, _ = udpserver.NewSharedUDPServer(mock.NewEmptyContext("", "", "jmxfetchserver"), "statsd", ":"+strconv.Itoa(m.port), dispatchKey, 65535)
@@ -217,7 +221,10 @@ func (m *Manager) run() {
 		m.Lock()
 		defer m.Unlock()
 		var temp []string
-		for s := range m.allLoadedCfgs {
+		if len(m.collectors) == 0 {
+			return
+		}
+		for s := range m.collectors {
 			temp = append(temp, s)
 		}
 		sort.Strings(temp)
@@ -244,6 +251,7 @@ func (m *Manager) run() {
 			logger.Info(m.managerMeta.GetContext(), "stop jmxfetch process")
 			m.stop()
 			m.stopServer()
+			m.uniqueCollectors = ""
 		}
 	}
 
@@ -306,11 +314,11 @@ func (m *Manager) checkJavaPath(javaPath string) (string, error) {
 		if !exists {
 			cmd := exec.Command("which", "java")
 			bytes, err := util.CombinedOutputTimeout(cmd, time.Second)
-			logger.Info(m.managerMeta.GetContext(), "detect user default java path", string(bytes[:len(bytes)-1]))
 			if err != nil && !strings.Contains(err.Error(), "no child process") {
 				return "", fmt.Errorf("java path is illegal: %v", err)
 			}
 			javaPath = string(bytes[:len(bytes)-1]) // remove \n
+			logger.Info(m.managerMeta.GetContext(), "detect user default java path", javaPath)
 		} else {
 			javaPath = jdkHome
 		}

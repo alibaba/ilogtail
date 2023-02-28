@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build linux || windows
+// +build linux windows
+
 package main
 
 import (
@@ -20,9 +23,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	_ "github.com/alibaba/ilogtail/pkg/logger/test"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pluginmanager"
 
@@ -34,7 +37,7 @@ type BadFlusher struct {
 	Shutdown      chan int
 }
 
-func (f *BadFlusher) Init(ctx ilogtail.Context) error {
+func (f *BadFlusher) Init(ctx pipeline.Context) error {
 	return nil
 }
 
@@ -73,7 +76,7 @@ func (f *BadFlusher) Stop() error {
 }
 
 func init() {
-	ilogtail.Flushers["flusher_bad"] = func() ilogtail.Flusher {
+	pipeline.Flushers["flusher_bad"] = func() pipeline.Flusher {
 		return &BadFlusher{}
 	}
 }
@@ -99,7 +102,7 @@ func TestHangConfigWhenStop(t *testing.T) {
 	config, exists := pluginmanager.LogtailConfig[configName]
 	require.True(t, exists)
 	require.Equal(t, configName, config.ConfigName)
-	flusher, _ := config.FlusherPlugins[0].Flusher.(*BadFlusher)
+	flusher, _ := pluginmanager.GetConfigFluhsers(config.PluginRunner)[0].(*BadFlusher)
 	flusher.Shutdown = shutdown
 	Resume()
 	time.Sleep(time.Second * 2)
@@ -124,7 +127,7 @@ func TestHangConfigWhenStop(t *testing.T) {
 	config, exists = pluginmanager.LogtailConfig[configName]
 	require.True(t, exists)
 	require.Equal(t, configName, config.ConfigName)
-	flusher, _ = config.FlusherPlugins[0].Flusher.(*BadFlusher)
+	flusher, _ = pluginmanager.GetConfigFluhsers(config.PluginRunner)[0].(*BadFlusher)
 	shutdown = make(chan int)
 	flusher.Shutdown = shutdown
 	Resume()

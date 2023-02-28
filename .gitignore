@@ -18,6 +18,9 @@
 *.test
 plugin_logger.xml
 license_coverage.txt
+vendor
+go.work
+go.work.sum
 
 # C++
 CMakeFiles
@@ -46,6 +49,7 @@ e2e-test
 # vscode
 .vscode
 !.vscode/settings.json
+!.vscode/launch.json
 output
 dist
 
@@ -57,3 +61,13 @@ dist
 .testCoverage.txt
 plugin_main/*.dll
 plugin_main/*.so
+plugin_main/*.json
+
+# e2e report
+report
+
+# plugins
+plugins/all/
+/external_plugins.yml
+*.go.mod
+*.go.mod.sum

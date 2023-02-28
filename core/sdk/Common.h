@@ -90,6 +90,7 @@ namespace sdk {
     extern const char* const MACHINES; //= "/machines"
     extern const char* const MACHINEGROUPS; //= "/machinegroups"
     extern const char* const ACLS; //= "/acls"
+    extern const char* const CONFIGSERVERAGENT; //= "/Agent"
 
     extern const char* const HTTP_GET; //= "GET";
     extern const char* const HTTP_POST; //= "POST";
@@ -142,7 +143,9 @@ namespace sdk {
     extern const char* const LOGE_SHARD_WRITE_QUOTA_EXCEED;
     extern const char* const LOGE_SHARD_READ_QUOTA_EXCEED;
     extern const char* const LOG_LZ4; //= "lz4";
-
+    extern const char* const LOG_DEFLATE; //= "deflate";
+    extern const char* const LOG_ZSTD; //= "zstd";
+    
     extern const char* const LOG_ERROR_CODE; //= "errorCode";
     extern const char* const LOG_ERROR_MESSAGE; //= "errorMessage";
 

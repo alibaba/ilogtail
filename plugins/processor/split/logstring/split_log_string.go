@@ -15,8 +15,9 @@
 package logstring
 
 import (
-	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"strings"
@@ -24,16 +25,17 @@ import (
 )
 
 type ProcessorSplit struct {
-	SplitKey       string
-	SplitSep       string
-	PreserveOthers bool
-	NoKeyError     bool
+	SplitKey              string
+	SplitSep              string
+	PreserveOthers        bool
+	NoKeyError            bool
+	EnableLogPositionMeta bool
 
-	context ilogtail.Context
+	context pipeline.Context
 }
 
 // Init called for init some system resources, like socket, mutex...
-func (p *ProcessorSplit) Init(context ilogtail.Context) error {
+func (p *ProcessorSplit) Init(context pipeline.Context) error {
 	p.context = context
 	if len(p.SplitSep) == 0 {
 		p.SplitSep = "\u0000"
@@ -69,16 +71,21 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 			if len(strArray) == 0 {
 				return destArray
 			}
+			var offset int64
 			for i := 0; i < len(strArray)-1; i++ {
 				if len(strArray[i]) == 0 {
 					continue
 				}
 				copyLog := protocol.CloneLog(newLog)
 				copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{Key: destCont.Key, Value: strArray[i]})
+				helper.ReviseFileOffset(copyLog, offset, p.EnableLogPositionMeta)
+				offset += int64(len(strArray[i]) + len(p.SplitSep))
 				destArray = append(destArray, copyLog)
 			}
-			if (len(strArray[len(strArray)-1])) > 0 {
-				newLog.Contents = append(newLog.Contents, &protocol.Log_Content{Key: destCont.Key, Value: strArray[len(strArray)-1]})
+			newLogCont := strArray[len(strArray)-1]
+			if (len(newLogCont)) > 0 {
+				newLog.Contents = append(newLog.Contents, &protocol.Log_Content{Key: destCont.Key, Value: newLogCont})
+				helper.ReviseFileOffset(newLog, offset, p.EnableLogPositionMeta)
 				destArray = append(destArray, newLog)
 			}
 		} else {
@@ -95,7 +102,7 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 }
 
 func init() {
-	ilogtail.Processors["processor_split_log_string"] = func() ilogtail.Processor {
+	pipeline.Processors["processor_split_log_string"] = func() pipeline.Processor {
 		return &ProcessorSplit{SplitSep: "\n", PreserveOthers: true}
 	}
 }

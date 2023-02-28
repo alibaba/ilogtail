@@ -24,11 +24,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	pluginmanager "github.com/alibaba/ilogtail/pluginmanager"
 
 	"github.com/stretchr/testify/require"
-
 	"gotest.tools/assert"
 )
 
@@ -50,7 +50,7 @@ func (p *ContextTest) LogWarn(alarmType string, kvPairs ...interface{}) {
 	fmt.Println(alarmType, kvPairs)
 }
 
-func newInput(format string) (*ServiceHTTP, error) {
+func newInputWithOpts(format string, option func(input *ServiceHTTP)) (*ServiceHTTP, error) {
 	ctx := &ContextTest{}
 	ctx.ContextImp.InitContext("a", "b", "c")
 	input := &ServiceHTTP{
@@ -60,8 +60,15 @@ func newInput(format string) (*ServiceHTTP, error) {
 		Address:            ":0",
 		Format:             format,
 	}
+	if option != nil {
+		option(input)
+	}
 	_, err := input.Init(&ctx.ContextImp)
 	return input, err
+}
+
+func newInput(format string) (*ServiceHTTP, error) {
+	return newInputWithOpts(format, nil)
 }
 
 type mockLog struct {
@@ -240,6 +247,33 @@ func TestInputInfluxDB(t *testing.T) {
 	}
 }
 
+func TestInputInfluxDBWithFieldsExtend(t *testing.T) {
+	input, err := newInputWithOpts("influx", func(input *ServiceHTTP) {
+		input.FieldsExtend = true
+	})
+	require.NoError(t, err)
+	collector := &mockCollector{}
+	err = input.Start(collector)
+	require.NoError(t, err)
+	port := input.listener.Addr().(*net.TCPAddr).Port
+
+	defer func() {
+		require.NoError(t, input.Stop())
+	}()
+
+	err = sendRequest(textFormatInflux, port)
+	require.NoError(t, err)
+	err = sendRequest(textFormatInflux, port)
+	require.NoError(t, err)
+
+	time.Sleep(time.Second * 2)
+
+	assert.Equal(t, 36, len(collector.rawLogs))
+	for _, log := range collector.rawLogs {
+		fmt.Println(log.String())
+	}
+}
+
 func TestUnlinkUnixSock(t *testing.T) {
 	const sockPath = "test_service_http_server_unlink_unix_sock.run"
 	_ = syscall.Unlink(sockPath)
@@ -260,4 +294,102 @@ func TestUnlinkUnixSock(t *testing.T) {
 	collector := &mockCollector{}
 	require.NoError(t, input.Start(collector))
 	require.NoError(t, input.Stop())
+}
+
+func sendRequestWithParams(bodyToSend string, port int, headers map[string]string, queries map[string]string) error {
+	url := fmt.Sprintf("http://localhost:%d/notes", port)
+
+	var jsonStr = []byte(bodyToSend)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		return err
+	}
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+
+	query := req.URL.Query()
+	for key, value := range queries {
+		query.Add(key, value)
+	}
+	req.URL.RawQuery = query.Encode()
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(body))
+	return nil
+}
+
+func TestInputWithRequestParams(t *testing.T) {
+	input, err := newInput("raw")
+	require.NoError(t, err)
+	input.HeaderParamPrefix = "_header_prefix_"
+	input.HeaderParams = []string{"Test-A", "Test-B"}
+	input.QueryParamPrefix = "_query_prefix_"
+	input.QueryParams = []string{"db"}
+
+	inputCtx := pipeline.NewObservePipelineConext(10)
+	err = input.StartService(inputCtx)
+	require.NoError(t, err)
+
+	port := input.listener.Addr().(*net.TCPAddr).Port
+	mockHeader := map[string]string{"Test-A": "a", "Test-B": "b"}
+	mockQuery := map[string]string{"db": "test"}
+	err = sendRequestWithParams(textFormatInflux, port, mockHeader, mockQuery)
+	require.NoError(t, err)
+	err = sendRequestWithParams(textFormatInflux, port, mockHeader, mockQuery)
+	require.NoError(t, err)
+
+	time.Sleep(time.Second * 2)
+	res := inputCtx.Collector().ToArray()
+	assert.Equal(t, 2, len(res))
+	for _, groupEvents := range res {
+		for _, key := range input.HeaderParams {
+			assert.Equal(t, mockHeader[key], groupEvents.Group.Metadata.Get(input.HeaderParamPrefix+key))
+		}
+		for _, key := range input.QueryParams {
+			assert.Equal(t, mockQuery[key], groupEvents.Group.Metadata.Get(input.QueryParamPrefix+key))
+		}
+	}
+
+}
+
+func TestInputWithRequestParamsWithoutPrefix(t *testing.T) {
+	input, err := newInput("raw")
+	require.NoError(t, err)
+	input.HeaderParams = []string{"Test-A", "Test-B"}
+	input.QueryParams = []string{"db"}
+
+	inputCtx := pipeline.NewObservePipelineConext(10)
+	err = input.StartService(inputCtx)
+	require.NoError(t, err)
+
+	port := input.listener.Addr().(*net.TCPAddr).Port
+	mockHeader := map[string]string{"Test-A": "a", "Test-B": "b"}
+	mockQuery := map[string]string{"db": "test"}
+	err = sendRequestWithParams(textFormatInflux, port, mockHeader, mockQuery)
+	require.NoError(t, err)
+	err = sendRequestWithParams(textFormatInflux, port, mockHeader, mockQuery)
+	require.NoError(t, err)
+
+	time.Sleep(time.Second * 2)
+	res := inputCtx.Collector().ToArray()
+	assert.Equal(t, 2, len(res))
+	for _, groupEvents := range res {
+		for _, key := range input.HeaderParams {
+			assert.Equal(t, mockHeader[key], groupEvents.Group.Metadata.Get(key))
+		}
+		for _, key := range input.QueryParams {
+			assert.Equal(t, mockQuery[key], groupEvents.Group.Metadata.Get(key))
+		}
+	}
+
 }

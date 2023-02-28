@@ -15,8 +15,9 @@
 package logregex
 
 import (
-	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"regexp"
@@ -24,17 +25,18 @@ import (
 )
 
 type ProcessorSplitRegex struct {
-	SplitKey       string
-	SplitRegex     string
-	PreserveOthers bool
-	NoKeyError     bool
+	SplitKey              string
+	SplitRegex            string
+	PreserveOthers        bool
+	NoKeyError            bool
+	EnableLogPositionMeta bool
 
-	context ilogtail.Context
+	context pipeline.Context
 	regex   *regexp.Regexp
 }
 
 // Init called for init some system resources, like socket, mutex...
-func (p *ProcessorSplitRegex) Init(context ilogtail.Context) error {
+func (p *ProcessorSplitRegex) Init(context pipeline.Context) error {
 	p.context = context
 	var err error
 	if p.regex, err = regexp.Compile(p.SplitRegex); err != nil {
@@ -64,6 +66,7 @@ func (p *ProcessorSplitRegex) SplitLog(logArray []*protocol.Log, rawLog *protoco
 				copyLog := protocol.CloneLog(rawLog)
 				copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{
 					Key: cont.GetKey(), Value: valueStr[lastLineIndex:lastCheckIndex]})
+				helper.ReviseFileOffset(copyLog, int64(lastLineIndex), p.EnableLogPositionMeta)
 				logArray = append(logArray, copyLog)
 				lastLineIndex = lastCheckIndex
 			}
@@ -79,6 +82,7 @@ func (p *ProcessorSplitRegex) SplitLog(logArray []*protocol.Log, rawLog *protoco
 			copyLog := protocol.CloneLog(rawLog)
 			copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{
 				Key: cont.GetKey(), Value: valueStr[lastLineIndex:lastCheckIndex]})
+			helper.ReviseFileOffset(copyLog, int64(lastLineIndex), p.EnableLogPositionMeta)
 			logArray = append(logArray, copyLog)
 			lastLineIndex = lastCheckIndex
 		}
@@ -88,6 +92,7 @@ func (p *ProcessorSplitRegex) SplitLog(logArray []*protocol.Log, rawLog *protoco
 	if lastLineIndex < len(valueStr) {
 		rawLog.Contents = append(rawLog.Contents, &protocol.Log_Content{
 			Key: cont.GetKey(), Value: valueStr[lastLineIndex:]})
+		helper.ReviseFileOffset(rawLog, int64(lastLineIndex), p.EnableLogPositionMeta)
 		logArray = append(logArray, rawLog)
 	}
 	return logArray
@@ -127,7 +132,7 @@ func (p *ProcessorSplitRegex) ProcessLogs(logArray []*protocol.Log) []*protocol.
 }
 
 func init() {
-	ilogtail.Processors["processor_split_log_regex"] = func() ilogtail.Processor {
+	pipeline.Processors["processor_split_log_regex"] = func() pipeline.Processor {
 		return &ProcessorSplitRegex{SplitRegex: ".*", PreserveOthers: false}
 	}
 }

@@ -158,7 +158,15 @@ std::string GetHostName() {
 }
 
 std::string GetHostIpByHostName() {
-    struct hostent* entry = gethostbyname(GetHostName().c_str());
+    std::string hostname = GetHostName();
+
+    // if hostname is invalid, other methods should be used to get correct ip.
+    if (!IsDigitsDotsHostname(hostname.c_str())) {
+        LOG_INFO(sLogger, ("invalid hostname", "will use other methods to obtain ip")("hostname", hostname));
+        return "";
+    }
+
+    struct hostent* entry = gethostbyname(hostname.c_str());
     if (entry == NULL) {
         return "";
     }
@@ -378,4 +386,56 @@ void GetAllPids(std::unordered_set<int32_t>& pids) {
     }
 #endif
 }
+bool GetRedHatReleaseInfo(std::string& os, int64_t& osVersion, std::string bashPath) {
+    static const boost::regex sReg(R"(^(\S+)\s+\S+\s+\S+\s+(\d+)\.(\d+).*$)");
+    bashPath.append("/etc/redhat-release");
+    os.clear();
+    std::string content, exception;
+    if (!ReadFileContent(bashPath, content)) {
+        return false;
+    }
+    boost::match_results<const char*> what;
+    if (BoostRegexSearch(content.c_str(), sReg, exception, what) && what.size() > 1) {
+        os = what[1].str();
+        osVersion = strtol(what[2].begin(), nullptr, 10) * 1000;
+        osVersion += strtol(what[3].begin(), nullptr, 10);
+    }
+    LOG_DEBUG(sLogger, ("read /etc/redhat-release content", content));
+    return !os.empty() && osVersion != 0;
+}
+
+// For hostnames in the following format, gethostbyname will fake an IP (and thus return wrong IP):
+// 1. a, where a is a number between 0 and 2^32-1;
+// 2. a.b, where a & b are numbers, and a is between 0 and 2^8-1, b is between 0 and 2^24-1;
+// 3. a.b.c, where a, b & c are numbers, and a & b are between 0 and 2^8-1, c is between 0 and 2^16-1;
+// 4. a.b.c.d, where a, b, c & d are numbers between 0 and 2^8-1.
+// All numbers mentioned here can be both in base 8 or 10.
+//
+// see https://codebrowser.dev/glibc/glibc/nss/digits_dots.c.html#__nss_hostname_digits_dots_context for more details.
+bool IsDigitsDotsHostname(const char* hostname) {
+    if (hostname && *hostname != '\0') {
+        const char* cp = hostname;
+        int16_t digits = 32;
+        while (*cp != '\0' && digits > 0) {
+            char* endp;
+            uint64_t sum = strtoul(cp, &endp, 0);
+            if ((sum == ULONG_MAX && errno == ERANGE) || sum >= (1UL << digits)) {
+                break;
+            }
+            cp = endp;
+            if (*cp == '.' && sum <= 255) {
+                digits -= 8;
+                cp++;
+            } else {
+                break;
+            }
+        }
+        if (*cp == '\0' && *(cp - 1) != '.') {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
 } // namespace logtail

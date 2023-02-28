@@ -9,12 +9,13 @@ RUN source /tmp/.env && rm /tmp/.env; \
     if getent passwd $USERNAME; then userdel -f $USERNAME; fi; \
     if [ $HOST_OS = "Linux" ]; then \
     if getent group $GROUPNAME; then groupdel $GROUPNAME; fi; \
+    if getent group $GROUP_GID; then TMP_NAME=$(getent group $GROUP_GID | cut -d: -f1); groupdel $TMP_NAME; fi; \
     groupadd --gid $GROUP_GID $GROUPNAME; \
     fi; \
     useradd --uid $USER_UID --gid $GROUP_GID -m $USERNAME; \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME; \
     chmod 0440 /etc/sudoers.d/$USERNAME; \
-    chown -R $USERNAME:$GROUPNAME /opt/logtail $(eval echo ~$USERNAME); \
+    chown -R $USERNAME:$GROUPNAME /opt $(eval echo ~$USERNAME); \
     chmod -R 755 $(eval echo ~$USERNAME);
 
 USER $USERNAME

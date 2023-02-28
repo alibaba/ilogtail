@@ -25,7 +25,10 @@ if [ $? != 0 ]; then
 fi
 
 OUT_DIR=${1:-output}
+PLUGINS_CONFIG_FILE=${2:-${PLUGINS_CONFIG_FILE:-plugins.yml,external_plugins.yml}}
+GO_MOD_FILE=${3:-${GO_MOD_FILE:-go.mod}}
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
+CURRDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 if [ -d "$ROOTDIR/$OUT_DIR" ]; then
   rm -rf "$ROOTDIR/$OUT_DIR"
 fi
@@ -35,8 +38,13 @@ cd "$ROOTDIR"/plugin_main
 pwd
 
 if uname -s | grep Linux; then
-  cp ${ROOTDIR}/core/build/plugin/libPluginAdapter.so ${ROOTDIR}/vendor/github.com/alibaba/ilogtail/pkg/logtail/libPluginAdapter.so
-  goc build '--buildflags=-mod=vendor -buildmode=c-shared -ldflags="-extldflags "-Wl,--wrap=memcpy""' --center=http://goc:7777 -o "$ROOTDIR/$OUT_DIR/${NAME}"
+  LDFLAGS=
+  if uname -m | grep x86_64; then
+    LDFLAGS='-extldflags "-Wl,--wrap=memcpy"'
+  fi
+  # make plugins stuffs
+  "$CURRDIR/import_plugins.sh" "$PLUGINS_CONFIG_FILE" "$GO_MOD_FILE"
+  goc build '--buildflags=-mod=mod -modfile="'"$ROOTDIR/$GO_MOD_FILE"'" -buildmode=c-shared -ldflags="'"$LDFLAGS"'"' --center=http://goc:7777 -o "$ROOTDIR/$OUT_DIR/${NAME}"
 else
   echo "goc build only build a dynamic library in linux platform"
   exit 1

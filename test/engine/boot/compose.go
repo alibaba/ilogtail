@@ -31,6 +31,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"gopkg.in/yaml.v3"
 
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
 )
@@ -54,7 +55,7 @@ services:
       interval: 1s
       retries: 10
   ilogtailC:
-    image: aliyun/ilogtail:1.2.1
+    image: aliyun/ilogtail:1.3.1
     hostname: ilogtail
     privileged: true
     pid: host
@@ -111,7 +112,7 @@ func (c *ComposeBooter) Start() error {
 			"stdout", execError.Error.Error())
 		return execError.Error
 	}
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := helper.CreateDockerClient()
 	if err != nil {
 		return err
 	}
@@ -140,10 +141,12 @@ func (c *ComposeBooter) Start() error {
 		"-c",
 		"env |grep HOST_OS|grep Linux && ip -4 route list match 0/0|awk '{print $3\" host.docker.internal\"}' >> /etc/hosts",
 	}
-	if err := c.exec(c.logtailID, cmd); err != nil {
+	if err = c.exec(c.logtailID, cmd); err != nil {
 		return err
 	}
-	return registerDockerNetMapping(strategyWrappers)
+	err = registerDockerNetMapping(strategyWrappers)
+	logger.Debugf(context.Background(), "registered net mapping: %v", networkMapping)
+	return err
 }
 
 func (c *ComposeBooter) Stop() error {
@@ -277,6 +280,9 @@ func (c *ComposeBooter) getLogtailpluginConfig() map[string]interface{} {
 	ilogtail["depends_on"] = c.cfg.Ilogtail.DependsOn
 	for _, m := range c.cfg.Ilogtail.MountFiles {
 		ilogtail["volumes"] = append(ilogtail["volumes"].([]interface{}), m)
+	}
+	for _, port := range c.cfg.Ilogtail.Ports {
+		ilogtail["ports"] = append(ilogtail["ports"].([]interface{}), port)
 	}
 	bytes, _ := yaml.Marshal(cfg)
 	println(string(bytes))

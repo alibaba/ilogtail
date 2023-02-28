@@ -228,6 +228,7 @@ void ConfigManagerBase::MappingPluginConfig(const Json::Value& configValue, Conf
         detail["LogPath"] = Json::Value(config->mBasePath);
         detail["MaxDepth"] = Json::Value(config->mMaxDepth);
     }
+    detail["FileParttern"] = Json::Value(config->mFilePattern);
     if (configValue.isMember("docker_include_label") && configValue["docker_include_label"].isObject()) {
         detail["IncludeLabel"] = configValue["docker_include_label"];
     }
@@ -478,15 +479,22 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 pluginConfig.clear();
             }
 
+            Json::Value pluginConfigJson;
+            Json::Reader jsonReader;
+            if (!pluginConfig.empty() && !jsonReader.parse(pluginConfig, pluginConfigJson)) {
+                LOG_WARNING(sLogger,
+                            ("invalid plugin config, plugin config json parse error",
+                             pluginConfig)("project", projectName)("logstore", category)("config", logName));
+            }
+
             if (logType == PLUGIN_LOG) {
                 config = new Config(
                     "", "", logType, logName, "", projectName, false, 0, 0, category, false, "", discardUnmatch);
                 if (pluginConfig.empty()) {
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
-                Json::Reader jsonReader;
-                Json::Value pluginConfigJson;
-                if (jsonReader.parse(pluginConfig, pluginConfigJson)) {
+                if (!pluginConfigJson.isNull()) {
+                    pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
                     pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
                     if (pluginConfig.find("\"observer_ilogtail_") != string::npos) {
                         if (pluginConfigJson.isMember("inputs")) {
@@ -502,6 +510,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                 SetNotFoundJsonMember(pluginConfigJson, MIX_PROCESS_MODE, "observer");
                                 config->mPluginConfig = pluginConfigJson.toStyledString();
                             }
+
                         } else {
                             LOG_WARNING(sLogger,
                                         ("observer config is not a legal JSON object",
@@ -510,10 +519,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     } else {
                         config->mPluginConfig = pluginConfig;
                     }
-                    LOG_DEBUG(sLogger,
-                          ("load plugin config ", logName)("config", pluginConfig)("observer", config->mObserverFlag));
-                } else {
-                    LOG_WARNING(sLogger, ("invalid plugin config", pluginConfig)("project", projectName)("logstore", category)("config", logName));
                 }
             } else if (logType == STREAM_LOG) {
                 config = new Config("",
@@ -576,22 +581,18 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     discardUnmatch);
 
                 // normal log file config can have plugin too
-                Json::Value pluginConfigJSON;
-                if (!pluginConfig.empty()) {
+                if (!pluginConfig.empty() && !pluginConfigJson.isNull()) {
                     // check processors
-                    Json::Reader jsonReader;
-                    if (jsonReader.parse(pluginConfig, pluginConfigJSON)) {
-                        // set process flag when config have processors
-                        if (pluginConfigJSON.isMember("processors")
-                            && (pluginConfigJSON["processors"].isObject()
-                                || pluginConfigJSON["processors"].isArray())) {
-                            config->mPluginProcessFlag = true;
-                            pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJSON);
-                            config->mPluginConfig = pluginConfig;
-                        }
+                    // set process flag when config have processors
+                    if (pluginConfigJson.isMember("processors")
+                        && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())) {
+                        // patch enable_log_position_meta to split processor if exists ...
+                        config->mPluginProcessFlag = true;
+                        pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
+                        pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
+                        config->mPluginConfig = pluginConfig;
                     }
                 }
-
                 if (value.isMember("docker_file") && value["docker_file"].isBool() && value["docker_file"].asBool()) {
                     if (AppConfig::GetInstance()->IsPurageContainerMode()) {
                         // docker file is not supported in Logtail's container mode
@@ -609,7 +610,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                             // should not happen
                             throw ExceptionBase(std::string("docker file do not support wildcard path"));
                         }
-                        MappingPluginConfig(value, config, pluginConfigJSON);
+                        MappingPluginConfig(value, config, pluginConfigJson);
                     } else {
                         LOG_WARNING(sLogger,
                                     ("config is docker_file mode, but logtail is not a purage container",
@@ -622,7 +623,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                                                region);
                     }
                 }
-
                 if (AppConfig::GetInstance()->IsContainerMode()) {
                     // mapping config's path to real filePath
                     // use docker file flag
@@ -670,6 +670,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     config->mUnAcceptDirPattern = GetStringVector(value["dir_pattern_black_list"]);
                 }
 
+                // TODO: the following codes (line 673 - line 724) seem to be the same as the codes in line 816 - line
+                // 874. Remove the following codes in the future.
                 if (value.isMember("merge_type") && value["merge_type"].isString()) {
                     string mergeType = value["merge_type"].asString();
 
@@ -829,17 +831,35 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 string logTZ = value["log_tz"].asString();
                 int logTZSecond = 0;
                 bool adjustFlag = value["tz_adjust"].asBool();
-                if (adjustFlag && !ParseTimeZoneOffsetSecond(logTZ, logTZSecond)) {
-                    LOG_ERROR(sLogger, ("invalid log time zone set", logTZ));
-                    config->mTimeZoneAdjust = false;
+                if (adjustFlag) {
+                    if (config->mTimeFormat.empty()) {
+                        LOG_WARNING(sLogger,
+                                    ("choose to adjust log time zone, but time format is not specified",
+                                     "use system time as log time instead")("project", config->mProjectName)(
+                                        "logstore", config->mCategory)("config", config->mConfigName));
+                        config->mTimeZoneAdjust = false;
+                    } else if ((logType == DELIMITER_LOG || logType == JSON_LOG) && config->mTimeKey.empty()) {
+                        LOG_WARNING(sLogger,
+                                    ("choose to adjust log time zone, but time key is not specified",
+                                     "use system time as log time instead")("project", config->mProjectName)(
+                                        "logstore", config->mCategory)("config", config->mConfigName));
+                        config->mTimeZoneAdjust = false;
+                    } else if (!ParseTimeZoneOffsetSecond(logTZ, logTZSecond)) {
+                        LOG_WARNING(sLogger,
+                                    ("invalid log time zone specified, will parse log time without time zone adjusted",
+                                     logTZ)("project", config->mProjectName)("logstore", config->mCategory)(
+                                        "config", config->mConfigName));
+                        config->mTimeZoneAdjust = false;
+                    } else {
+                        config->mTimeZoneAdjust = adjustFlag;
+                        config->mLogTimeZoneOffsetSecond = logTZSecond;
+                        LOG_INFO(sLogger,
+                                 ("set log time zone", logTZ)("project", config->mProjectName)(
+                                     "logstore", config->mCategory)("config", config->mConfigName));
+                    }
                 } else {
                     config->mTimeZoneAdjust = adjustFlag;
                     config->mLogTimeZoneOffsetSecond = logTZSecond;
-                    if (adjustFlag) {
-                        LOG_INFO(sLogger,
-                                 ("set log timezone adjust, project", config->mProjectName)(
-                                     "logstore", config->mCategory)("time zone", logTZ)("offset seconds", logTZSecond));
-                    }
                 }
             }
 
@@ -871,6 +891,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             config->mLocalStorage = true; // Must be true, parameter local_storage is desperated.
             config->mVersion = version;
 
+            // default compress type is lz4. none if disable by gflag
+            config->mCompressType
+                = BOOL_FLAG(sls_client_send_compress) ? GetStringValue(value, "compressType", "") : "none";
             config->mDiscardNoneUtf8 = GetBoolValue(value, "discard_none_utf8", false);
 
             config->mAliuid = GetStringValue(value, "aliuid", "");
@@ -1263,9 +1286,11 @@ void ConfigManagerBase::RegisterWildcardPath(Config* config, const string& path,
             return;
         if (finish) {
             DirRegisterStatus registerStatus = EventDispatcher::GetInstance()->IsDirRegistered(item);
-            if (registerStatus == PATH_INODE_NOT_REGISTERED) {
-                if (EventDispatcher::GetInstance()->RegisterEventHandler(item.c_str(), config, mSharedHandler))
-                    RegisterDescendants(item, config, config->mMaxDepth < 0 ? 100 : config->mMaxDepth);
+            if (registerStatus == GET_REGISTER_STATUS_ERROR) {
+                return;
+            }
+            if (EventDispatcher::GetInstance()->RegisterEventHandler(item.c_str(), config, mSharedHandler)) {
+                RegisterDescendants(item, config, config->mMaxDepth < 0 ? 100 : config->mMaxDepth);
             }
         } else {
             RegisterWildcardPath(config, item, depth + 1);
@@ -1328,9 +1353,11 @@ void ConfigManagerBase::RegisterWildcardPath(Config* config, const string& path,
         if (fnmatch(&(config->mWildcardPaths[depth + 1].at(dirIndex)), ent.Name().c_str(), FNM_PATHNAME) == 0) {
             if (finish) {
                 DirRegisterStatus registerStatus = EventDispatcher::GetInstance()->IsDirRegistered(item);
-                if (registerStatus == PATH_INODE_NOT_REGISTERED) {
-                    if (EventDispatcher::GetInstance()->RegisterEventHandler(item.c_str(), config, mSharedHandler))
-                        RegisterDescendants(item, config, config->mMaxDepth < 0 ? 100 : config->mMaxDepth);
+                if (registerStatus == GET_REGISTER_STATUS_ERROR) {
+                    return;
+                }
+                if (EventDispatcher::GetInstance()->RegisterEventHandler(item.c_str(), config, mSharedHandler)) {
+                    RegisterDescendants(item, config, config->mMaxDepth < 0 ? 100 : config->mMaxDepth);
                 }
             } else {
                 RegisterWildcardPath(config, item, depth + 1);
@@ -1365,7 +1392,7 @@ bool ConfigManagerBase::RegisterHandlers(const string& basePath, Config* config)
         return result;
     }
     DirRegisterStatus registerStatus = EventDispatcher::GetInstance()->IsDirRegistered(basePath);
-    if (registerStatus == PATH_INODE_REGISTERED || registerStatus == GET_REGISTER_STATUS_ERROR)
+    if (registerStatus == GET_REGISTER_STATUS_ERROR)
         return result;
     // dir in config is valid by default, do not call pathValidator
     result = EventDispatcher::GetInstance()->RegisterEventHandler(basePath.c_str(), config, mSharedHandler);
@@ -1527,7 +1554,6 @@ Config* ConfigManagerBase::FindBestMatch(const string& path, const string& name)
     unordered_map<string, Config*>::iterator itr = mNameConfigMap.begin();
     Config* prevMatch = NULL;
     size_t prevLen = 0;
-    int32_t preCreateTime = INT_MAX;
     size_t curLen = 0;
     uint32_t nameRepeat = 0;
     string logNameList;
@@ -1557,12 +1583,10 @@ Config* ConfigManagerBase::FindBestMatch(const string& path, const string& name)
                 curLen = config->mBasePath.size();
                 if (prevLen < curLen) {
                     prevMatch = config;
-                    preCreateTime = config->mCreateTime;
                     prevLen = curLen;
                 } else if (prevLen == curLen && prevMatch != NULL) {
                     if (prevMatch->mCreateTime > config->mCreateTime) {
                         prevMatch = config;
-                        preCreateTime = config->mCreateTime;
                         prevLen = curLen;
                     }
                 }
@@ -2374,10 +2398,10 @@ bool ConfigManagerBase::GetYamlConfigDirUpdate() {
     std::vector<std::string> filepathes;
     std::unordered_map<std::string, int64_t> yamlConfigMTimeMap;
     static std::string localConfigDirPath = AppConfig::GetInstance()->GetLocalUserYamlConfigDirPath();
-    static std::string serverConfigDirPath = localConfigDirPath + "remote_config" + PATH_SEPARATOR;
+    updateFlag |= CheckYamlDirConfigUpdate(localConfigDirPath, false, filepathes, yamlConfigMTimeMap, true);
+    static std::string serverConfigDirPath = AppConfig::GetInstance()->GetRemoteUserYamlConfigDirPath();
+    updateFlag |= CheckYamlDirConfigUpdate(serverConfigDirPath, true, filepathes, yamlConfigMTimeMap, false);
 
-    updateFlag |= CheckYamlDirConfigUpdate(localConfigDirPath, false, filepathes, yamlConfigMTimeMap);
-    updateFlag |= CheckYamlDirConfigUpdate(serverConfigDirPath, true, filepathes, yamlConfigMTimeMap);
     if (mYamlConfigMTimeMap.size() != yamlConfigMTimeMap.size()) {
         updateFlag = true;
     }
@@ -2413,7 +2437,8 @@ bool ConfigManagerBase::GetYamlConfigDirUpdate() {
 bool ConfigManagerBase::CheckYamlDirConfigUpdate(const std::string& configDirPath,
                                                  bool isRemote,
                                                  std::vector<std::string>& filepathes,
-                                                 std::unordered_map<std::string, int64_t>& yamlConfigMTimeMap) {
+                                                 std::unordered_map<std::string, int64_t>& yamlConfigMTimeMap,
+                                                 bool createIfNotExist) {
     bool updateFlag = false;
     fsutil::Dir configDir(configDirPath);
     if (!configDir.Open()) {
@@ -2421,7 +2446,7 @@ bool ConfigManagerBase::CheckYamlDirConfigUpdate(const std::string& configDirPat
         if (fsutil::Dir::IsEACCES(savedErrno) || fsutil::Dir::IsENOTDIR(savedErrno)
             || fsutil::Dir::IsENOENT(savedErrno)) {
             LOG_DEBUG(sLogger, ("invalid yaml conf dir", configDirPath)("error", ErrnoToString(savedErrno)));
-            if (!Mkdir(configDirPath.c_str())) {
+            if (createIfNotExist && !Mkdir(configDirPath.c_str())) {
                 savedErrno = errno;
                 if (!IsEEXIST(savedErrno)) {
                     LOG_ERROR(sLogger, ("create conf yaml dir failed", configDirPath)("error", strerror(savedErrno)));

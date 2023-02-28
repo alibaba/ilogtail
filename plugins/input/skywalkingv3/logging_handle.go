@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/ilogtail"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	v3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/common/v3"
 	agent "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/language/agent/v3"
@@ -29,8 +29,8 @@ import (
 )
 
 type loggingHandler struct {
-	context   ilogtail.Context
-	collector ilogtail.Collector
+	context   pipeline.Context
+	collector pipeline.Collector
 }
 
 func (l *loggingHandler) collectorErrorLogs(logs []*agent.BrowserErrorLog) (*v3.Commands, error) {
@@ -107,8 +107,10 @@ func (l *loggingHandler) convertFormat(data *loggingV3.LogData) *protocol.Log {
 	})
 	r.Contents = append(r.Contents, &protocol.Log_Content{Key: "service", Value: data.Service})
 	r.Contents = append(r.Contents, &protocol.Log_Content{Key: "content", Value: convertContent(data.Body)})
-	r.Contents = append(r.Contents, &protocol.Log_Content{Key: "traceID", Value: data.TraceContext.TraceId})
-	r.Contents = append(r.Contents, &protocol.Log_Content{Key: "spanID", Value: fmt.Sprintf("%s.%d", data.TraceContext.TraceSegmentId, data.TraceContext.SpanId)})
+	if data.TraceContext != nil {
+		r.Contents = append(r.Contents, &protocol.Log_Content{Key: "traceID", Value: data.TraceContext.TraceId})
+		r.Contents = append(r.Contents, &protocol.Log_Content{Key: "spanID", Value: fmt.Sprintf("%s.%d", data.TraceContext.TraceSegmentId, data.TraceContext.SpanId)})
+	}
 	r.Contents = append(r.Contents, &protocol.Log_Content{Key: "resource", Value: convertResource(data)})
 	r.Contents = append(r.Contents, &protocol.Log_Content{Key: "timeUnixNano", Value: strconv.FormatInt(data.Timestamp, 10)})
 	return r
@@ -163,8 +165,10 @@ func convertContent(body *loggingV3.LogDataBody) string {
 func convertAttribute(data *loggingV3.LogData) string {
 	attribute := make(map[string]string)
 	attribute["endpoint"] = data.Endpoint
-	for _, tag := range data.Tags.GetData() {
-		attribute[tag.GetKey()] = tag.GetValue()
+	if data.Tags != nil {
+		for _, tag := range data.Tags.GetData() {
+			attribute[tag.GetKey()] = tag.GetValue()
+		}
 	}
 	if r, e := json.Marshal(attribute); e == nil {
 		return string(r)

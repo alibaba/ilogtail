@@ -437,6 +437,8 @@ public:
 
     virtual std::string CheckPluginFlusher(Json::Value& configJson) = 0;
 
+    virtual Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson) = 0;
+
 private:
     // no copy
     ConfigManagerBase(const ConfigManagerBase&);
@@ -481,7 +483,8 @@ private:
     bool CheckYamlDirConfigUpdate(const std::string& configDirPath,
                                   bool isRemote,
                                   std::vector<std::string>& filepathes,
-                                  std::unordered_map<std::string, int64_t>& yamlConfigMTimeMap);
+                                  std::unordered_map<std::string, int64_t>& yamlConfigMTimeMap,
+                                  bool createIfNotExist);
 
     /**
      * @brief Load a single data collection config and insert it into mNameConfigMap with name @name.

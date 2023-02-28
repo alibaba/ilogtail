@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"github.com/cihub/seelog"
@@ -51,13 +52,13 @@ type FlusherStdout struct {
 	Tags          bool
 	OnlyStdout    bool
 
-	context   ilogtail.Context
+	context   pipeline.Context
 	outLogger seelog.LoggerInterface
 }
 
 // Init method would be trigger before working. For the plugin, init method choose the log output
 // channel.
-func (p *FlusherStdout) Init(context ilogtail.Context) error {
+func (p *FlusherStdout) Init(context pipeline.Context) error {
 	p.context = context
 
 	pattern := ""
@@ -135,10 +136,138 @@ func (p *FlusherStdout) Flush(projectName string, logstoreName string, configNam
 	return nil
 }
 
-func (p *FlusherStdout) SetUrgent(flag bool) {
-	if p.outLogger != nil {
-		p.outLogger.Close()
+func (p *FlusherStdout) Export(in []*models.PipelineGroupEvents, context pipeline.PipelineContext) error {
+	for _, groupEvents := range in {
+
+		if p.Tags {
+			metadata := fmt.Sprintf("%v", groupEvents.Group.GetMetadata().Iterator())
+			tags := fmt.Sprintf("%v", groupEvents.Group.GetTags().Iterator())
+			if p.outLogger != nil {
+				p.outLogger.Infof("[Event] event %d, metadata %s, tags %s", len(groupEvents.Events), metadata, tags)
+			} else {
+				logger.Info(p.context.GetRuntimeContext(), "[Event] event", len(groupEvents.Events), "metadata", metadata, "tags", tags)
+			}
+		}
+
+		for _, event := range groupEvents.Events {
+			writer := jsoniter.NewStream(jsoniter.ConfigDefault, nil, 128)
+			writer.WriteObjectStart()
+			writer.WriteObjectField("eventType")
+			switch event.GetType() {
+			case models.EventTypeMetric:
+				writer.WriteString("metric")
+			case models.EventTypeSpan:
+				writer.WriteString("span")
+			case models.EventTypeLogging:
+				writer.WriteString("log")
+			case models.EventTypeByteArray:
+				writer.WriteString("byteArray")
+			}
+			_, _ = writer.Write([]byte{','})
+			writer.WriteObjectField("name")
+			writer.WriteString(event.GetName())
+			_, _ = writer.Write([]byte{','})
+			writer.WriteObjectField("timestamp")
+			writer.WriteUint64(event.GetTimestamp())
+			_, _ = writer.Write([]byte{','})
+			writer.WriteObjectField("observedTimestamp")
+			writer.WriteUint64(event.GetObservedTimestamp())
+			_, _ = writer.Write([]byte{','})
+			writer.WriteObjectField("tags")
+			writer.WriteObjectStart()
+			i := 0
+			for k, v := range event.GetTags().Iterator() {
+				writer.WriteObjectField(k)
+				writer.WriteString(v)
+				if i < event.GetTags().Len()-1 {
+					_, _ = writer.Write([]byte{','})
+				}
+				i++
+			}
+			writer.WriteObjectEnd()
+
+			switch event.GetType() {
+			case models.EventTypeMetric:
+				p.writeMetricValues(writer, event.(*models.Metric))
+			case models.EventTypeSpan:
+				p.writeSpan(writer, nil)
+			case models.EventTypeLogging:
+				p.writeLogBody(writer, nil)
+			case models.EventTypeByteArray:
+				p.writeByteArray(writer, event.(models.ByteArray))
+			}
+
+			writer.WriteObjectEnd()
+
+			if p.outLogger != nil {
+				p.outLogger.Infof("%s", writer.Buffer())
+			} else {
+				logger.Info(p.context.GetRuntimeContext(), string(writer.Buffer()))
+			}
+		}
 	}
+	return nil
+}
+
+func (p *FlusherStdout) writeMetricValues(writer *jsoniter.Stream, metric *models.Metric) {
+	_, _ = writer.Write([]byte{','})
+	writer.WriteObjectField("metricType")
+	writer.WriteString(models.MetricTypeTexts[metric.GetMetricType()])
+	_, _ = writer.Write([]byte{','})
+	if metric.GetValue().IsSingleValue() {
+		writer.WriteObjectField("value")
+		writer.WriteFloat64(metric.GetValue().GetSingleValue())
+	} else {
+		writer.WriteObjectField("values")
+		writer.WriteObjectStart()
+		values := metric.GetValue().GetMultiValues()
+		i := 0
+		for k, v := range values.Iterator() {
+			writer.WriteObjectField(k)
+			writer.WriteFloat64(v)
+			if i < values.Len()-1 {
+				_, _ = writer.Write([]byte{','})
+			}
+			i++
+		}
+		if metric.GetTypedValue().Len() > 0 {
+			_, _ = writer.Write([]byte{','})
+			i = 0
+			for k, v := range metric.GetTypedValue().Iterator() {
+				writer.WriteObjectField(k)
+				switch v.Type {
+				case models.ValueTypeString:
+					writer.WriteString(v.Value.(string))
+				case models.ValueTypeBoolean:
+					writer.WriteBool(v.Value.(bool))
+				}
+				if i < metric.GetTypedValue().Len()-1 {
+					_, _ = writer.Write([]byte{','})
+				}
+				i++
+			}
+		}
+		writer.WriteObjectEnd()
+	}
+}
+
+func (p *FlusherStdout) writeSpan(writer *jsoniter.Stream, metric *models.Span) {
+	// TODO
+}
+
+func (p *FlusherStdout) writeLogBody(writer *jsoniter.Stream, metric *models.Metric) {
+	// TODO
+}
+
+func (p FlusherStdout) writeByteArray(writer *jsoniter.Stream, metric models.ByteArray) {
+	_, _ = writer.Write([]byte{','})
+	writer.WriteObjectField("byteArray")
+	_, _ = writer.Write([]byte{'"'})
+	_, _ = writer.Write(metric)
+	_, _ = writer.Write([]byte{'"'})
+}
+
+func (p *FlusherStdout) SetUrgent(flag bool) {
 }
 
 // IsReady is ready to flush
@@ -147,13 +276,16 @@ func (*FlusherStdout) IsReady(projectName string, logstoreName string, logstoreK
 }
 
 // Stop ...
-func (*FlusherStdout) Stop() error {
+func (p *FlusherStdout) Stop() error {
+	if p.outLogger != nil {
+		p.outLogger.Close()
+	}
 	return nil
 }
 
 // Register the plugin to the Flushers array.
 func init() {
-	ilogtail.Flushers["flusher_stdout"] = func() ilogtail.Flusher {
+	pipeline.Flushers["flusher_stdout"] = func() pipeline.Flusher {
 		return &FlusherStdout{
 			KeyValuePairs: true,
 		}

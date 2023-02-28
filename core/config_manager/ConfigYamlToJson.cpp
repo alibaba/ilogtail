@@ -81,6 +81,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
 
     mFileConfigMap["ProjectName"] = "project_name";
     mFileConfigMap["LogstoreName"] = "category";
+    mFileConfigMap["CompressType"] = "compressType";
     mFileConfigMap["Endpoint"] = "defaultEndpoint";
     mFileConfigMap["Region"] = "region";
     mFileConfigMap["ShardHashKey"] = "shard_hash_key";
@@ -92,6 +93,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileAdvancedConfigMap["PreciseTimestampUnit"] = "precise_timestamp_unit";
     mFileAdvancedConfigMap["ForceMultiConfig"] = "force_multiconfig";
     mFileAdvancedConfigMap["TailSizeKB"] = "tail_size_kb";
+    mFileAdvancedConfigMap["EnableLogPositionMeta"] = "enable_log_position_meta";
 
     mFileK8sConfigMap["K8sNamespaceRegex"] = "K8sNamespaceRegex";
     mFileK8sConfigMap["K8sPodRegex"] = "K8sPodRegex";
@@ -223,8 +225,12 @@ bool ConfigYamlToJson::GenerateLocalJsonConfig(const string configName,
             return false;
         }
 
-        FillupDefalutUserJsonConfig(workMode, userJsonConfig);
+        FillupDefaultUserJsonConfig(workMode, userJsonConfig);
         if (!pluginJsonConfig.empty()) {
+            if (yamlConfig["version"])
+                pluginJsonConfig["version"] = yamlConfig["version"].as<std::string>();
+            else
+                pluginJsonConfig["version"] = "v1";
             userJsonConfig["plugin"] = pluginJsonConfig;
         }
         userJsonConfig["log_type"] = workMode.mLogType;
@@ -578,7 +584,7 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForSLSFulsher(const YAML::Node& ya
     return true;
 }
 
-bool ConfigYamlToJson::FillupDefalutUserJsonConfig(const WorkMode& workMode, Json::Value& userJsonConfig) {
+bool ConfigYamlToJson::FillupDefaultUserJsonConfig(const WorkMode& workMode, Json::Value& userJsonConfig) {
     if (workMode.mIsFileMode) {
         if (!userJsonConfig.isMember("max_depth")) {
             userJsonConfig["max_depth"] = 0;

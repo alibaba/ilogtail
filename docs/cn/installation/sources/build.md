@@ -17,13 +17,27 @@ Makefile描述了整个项目的所有编译目标，主要的包括：
 | all | 编译完整iLogtail |
 | dist | 打包发行 |
 | docker | 制作iLogtail镜像 |
-| vendor | 更新插件依赖 |
 | plugin_local | 本地编译Go插件 |
 
 使用`make <target>`命令编译所选目标，如果需要指定生成的版本号则在编译命令前加上VERSION环境变量，如：
 
 ```shell
 VERSION=1.1.1 make dist
+```
+
+如果发生编译错误，如
+
+``` shell
+/src/core/common/CompressTools.cpp:18:23: fatal error: zstd/zstd.h: No such file or directory
+ #include <zstd/zstd.h>
+                       ^
+compilation terminated.
+```
+
+请确保本地编译镜像为最新版本。可使用以下命令更新：
+
+``` shell
+docker pull sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-build-linux
 ```
 
 ## 使用镜像编译完整iLogtail
@@ -36,7 +50,7 @@ VERSION=1.1.1 make dist
 
 2\. 执行命令`make`。
 
-3\. `output`目录结果。
+3\. 查看`output`目录结果。
 
 ```text
 ./output
@@ -55,7 +69,7 @@ Go插件可以在主机上进行直接编译，编译前，需要安装基础的
 在安装完成后，为了方便后续地开发，请遵照[此文档](https://golang.org/doc/code#Organization)正确地设置你的开发目录以及 GOPATH 等环境变量。。
 
 ```bash
-make vendor       # 若需要更新插件依赖库
+go mod tidy       # 若需要更新插件依赖库
 make plugin_local # 每次更新插件代码后从这里开始
 ```
 

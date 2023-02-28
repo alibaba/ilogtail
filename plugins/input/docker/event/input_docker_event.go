@@ -15,28 +15,28 @@
 package event
 
 import (
-	"github.com/alibaba/ilogtail"
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 
 	"strconv"
 	"sync"
 	"time"
 
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/docker/docker/api/types/events"
 )
 
 type ServiceDockerEvents struct {
 	IgnoreAttributes bool
 	EventQueueSize   int
 
-	innerEventQueue chan *docker.APIEvents
+	innerEventQueue chan events.Message
 
 	shutdown  chan struct{}
 	waitGroup sync.WaitGroup
-	context   ilogtail.Context
+	context   pipeline.Context
 }
 
-func (p *ServiceDockerEvents) Init(context ilogtail.Context) (int, error) {
+func (p *ServiceDockerEvents) Init(context pipeline.Context) (int, error) {
 	p.context = context
 	helper.ContainerCenterInit()
 	return 0, nil
@@ -48,7 +48,7 @@ func (p *ServiceDockerEvents) Description() string {
 
 // Collect takes in an accumulator and adds the metrics that the Input
 // gathers. This is called every "interval"
-func (p *ServiceDockerEvents) Collect(ilogtail.Collector) error {
+func (p *ServiceDockerEvents) Collect(pipeline.Collector) error {
 	if p.EventQueueSize < 4 {
 		p.EventQueueSize = 4
 	}
@@ -58,7 +58,7 @@ func (p *ServiceDockerEvents) Collect(ilogtail.Collector) error {
 	return nil
 }
 
-func (p *ServiceDockerEvents) fire(c ilogtail.Collector, event *docker.APIEvents) {
+func (p *ServiceDockerEvents) fire(c pipeline.Collector, event events.Message) {
 	key := make([]string, len(event.Actor.Attributes)+4)
 	value := make([]string, len(key))
 	value[0] = strconv.FormatInt(event.TimeNano, 10)
@@ -83,10 +83,10 @@ func (p *ServiceDockerEvents) fire(c ilogtail.Collector, event *docker.APIEvents
 }
 
 // Start starts the ServiceInput's service, whatever that may be
-func (p *ServiceDockerEvents) Start(c ilogtail.Collector) error {
+func (p *ServiceDockerEvents) Start(c pipeline.Collector) error {
 	p.shutdown = make(chan struct{})
 	p.waitGroup.Add(1)
-	p.innerEventQueue = make(chan *docker.APIEvents, p.EventQueueSize)
+	p.innerEventQueue = make(chan events.Message, p.EventQueueSize)
 	helper.RegisterDockerEventListener(p.innerEventQueue)
 	defer func() {
 		helper.UnRegisterDockerEventListener(p.innerEventQueue)
@@ -98,9 +98,7 @@ func (p *ServiceDockerEvents) Start(c ilogtail.Collector) error {
 		case <-p.shutdown:
 			return nil
 		case event := <-p.innerEventQueue:
-			if event != nil {
-				p.fire(c, event)
-			}
+			p.fire(c, event)
 		}
 	}
 }
@@ -113,7 +111,7 @@ func (p *ServiceDockerEvents) Stop() error {
 }
 
 func init() {
-	ilogtail.ServiceInputs["service_docker_event"] = func() ilogtail.ServiceInput {
+	pipeline.ServiceInputs["service_docker_event"] = func() pipeline.ServiceInput {
 		return &ServiceDockerEvents{
 			EventQueueSize: 10,
 		}

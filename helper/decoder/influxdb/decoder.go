@@ -22,6 +22,7 @@ import (
 
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/decoder/common"
+	imodels "github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 
 	"github.com/influxdata/influxdb/models"
@@ -32,13 +33,25 @@ const (
 	labelsKey     = "__labels__"
 	timeNanoKey   = "__time_nano__"
 	valueKey      = "__value__"
+	typeKey       = "__type__"
+	fieldNameKey  = "__field__"
 )
+
+const (
+	valueTypeFloat  = "float"
+	valueTypeInt    = "int"
+	valueTypeBool   = "bool"
+	valueTypeString = "string"
+)
+
+const tagDB = "__tag__:db"
 
 // Decoder impl
 type Decoder struct {
+	FieldsExtend bool
 }
 
-func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, decodeErr error) {
+func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, decodeErr error) {
 	precision := req.FormValue("precision")
 	var points []models.Point
 	var err error
@@ -51,7 +64,8 @@ func (d *Decoder) Decode(data []byte, req *http.Request) (logs []*protocol.Log, 
 		return nil, err
 	}
 
-	logs = d.parsePointsToLogs(points)
+	logs = d.parsePointsToLogs(points, req)
+
 	return logs, err
 }
 
@@ -59,26 +73,50 @@ func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBo
 	return common.CollectBody(res, req, maxBodySize)
 }
 
-func (d *Decoder) parsePointsToLogs(points []models.Point) []*protocol.Log {
+func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*imodels.PipelineGroupEvents, err error) {
+	//TODO: Implement DecodeV2
+	return nil, nil
+}
+
+func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []*protocol.Log {
+	db := req.FormValue("db")
+	contentLen := 4
+	if d.FieldsExtend && len(db) > 0 {
+		contentLen++
+	}
+	if d.FieldsExtend {
+		contentLen += 2
+	}
+
 	logs := make([]*protocol.Log, 0, len(points))
 	for _, s := range points {
 		fields, err := s.Fields()
 		if err != nil {
 			continue
 		}
+		var valueType string
+		var value string
 		for field, v := range fields {
-			var value float64
 			switch v := v.(type) {
 			case float64:
-				value = v
+				value = strconv.FormatFloat(v, 'g', -1, 64)
+				valueType = valueTypeFloat
 			case int64:
-				value = float64(v)
+				value = strconv.FormatInt(v, 10)
+				valueType = valueTypeInt
 			case bool:
 				if v {
-					value = 1
+					value = "1"
 				} else {
-					value = 0
+					value = "0"
 				}
+				valueType = valueTypeBool
+			case string:
+				if !d.FieldsExtend {
+					continue
+				}
+				value = v
+				valueType = valueTypeString
 			default:
 				continue
 			}
@@ -90,39 +128,58 @@ func (d *Decoder) parsePointsToLogs(points []models.Point) []*protocol.Log {
 				name = string(s.Name()) + ":" + field
 			}
 
-			helper.ReplaceInvalidChars(&name)
+			if !d.FieldsExtend {
+				helper.ReplaceInvalidChars(&name)
+			}
 			var builder strings.Builder
 			for index, v := range s.Tags() {
 				if index != 0 {
 					builder.WriteByte('|')
 				}
-				key := string(v.Key)
-				helper.ReplaceInvalidChars(&key)
-				builder.WriteString(key)
+				if !d.FieldsExtend {
+					key := string(v.Key)
+					helper.ReplaceInvalidChars(&key)
+					builder.WriteString(key)
+				} else {
+					builder.Write(v.Key)
+				}
 				builder.WriteString("#$#")
 				builder.WriteString(string(v.Value))
 			}
 
+			contents := make([]*protocol.Log_Content, 0, contentLen)
+			contents = append(contents, &protocol.Log_Content{
+				Key:   metricNameKey,
+				Value: name,
+			}, &protocol.Log_Content{
+				Key:   labelsKey,
+				Value: builder.String(),
+			}, &protocol.Log_Content{
+				Key:   timeNanoKey,
+				Value: strconv.FormatInt(s.UnixNano(), 10),
+			}, &protocol.Log_Content{
+				Key:   valueKey,
+				Value: value,
+			})
+			if d.FieldsExtend {
+				contents = append(contents, &protocol.Log_Content{
+					Key:   typeKey,
+					Value: valueType,
+				}, &protocol.Log_Content{
+					Key:   fieldNameKey,
+					Value: field,
+				})
+			}
+			if d.FieldsExtend && len(db) > 0 {
+				contents = append(contents, &protocol.Log_Content{
+					Key:   tagDB,
+					Value: db,
+				})
+			}
+
 			log := &protocol.Log{
-				Time: uint32(s.Time().Unix()),
-				Contents: []*protocol.Log_Content{
-					{
-						Key:   metricNameKey,
-						Value: name,
-					},
-					{
-						Key:   labelsKey,
-						Value: builder.String(),
-					},
-					{
-						Key:   timeNanoKey,
-						Value: strconv.FormatInt(s.UnixNano(), 10),
-					},
-					{
-						Key:   valueKey,
-						Value: strconv.FormatFloat(value, 'g', -1, 64),
-					},
-				},
+				Time:     uint32(s.Time().Unix()),
+				Contents: contents,
 			}
 			logs = append(logs, log)
 

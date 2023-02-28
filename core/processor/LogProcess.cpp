@@ -28,6 +28,7 @@
 #include "reader/LogFileReader.h"
 #include "monitor/Monitor.h"
 #include "parser/LogParser.h"
+#include "sdk/Client.h"
 #include "sender/Sender.h"
 #include "log_pb/sls_logs.pb.h"
 #include "common/StringTools.h"
@@ -152,10 +153,12 @@ void LogProcess::HoldOn() {
                 break;
             }
         }
-        if (allThreadWait)
+        if (allThreadWait) {
+            LOG_INFO(sLogger, ("LogProcess", "hold on"));
             return;
+        }
         if (++tryTime % 100 == 0) {
-            LOG_ERROR(sLogger, ("LogProcess thread is too slow or  blocked with unknow error.", ""));
+            LOG_ERROR(sLogger, ("LogProcess thread is too slow or blocked with unknow error.", ""));
         }
         usleep(10 * 1000);
     }
@@ -165,6 +168,7 @@ void LogProcess::HoldOn() {
 void LogProcess::Resume() {
     mLogFeedbackQueue.Unlock();
     mAccessProcessThreadRWL.unlock();
+    LOG_INFO(sLogger, ("LogProcess", "resume"));
 }
 
 bool LogProcess::FlushOut(int32_t waitMs) {
@@ -287,8 +291,9 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             Config* config = ConfigManager::GetInstance()->FindConfigByName(logFileReader->GetConfigName());
             if (config == NULL) {
                 LOG_INFO(sLogger,
-                         ("can not find config while processing log, maybe config update",
-                          logPath)(logFileReader->GetProjectName(), logFileReader->GetCategory()));
+                         ("can not find config while processing log, maybe config updated. config",
+                          logFileReader->GetConfigName())("project", logFileReader->GetProjectName())(
+                             "logstore", logFileReader->GetCategory()));
                 delete[] logBuffer->buffer;
                 delete logBuffer;
                 continue;
@@ -331,6 +336,14 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                             .append(extraTags[i].key())
                             .append(TAG_SEPARATOR)
                             .append(extraTags[i].value());
+                    }
+
+                    if (config->mAdvancedConfig.mEnableLogPositionMeta) {
+                        passingTags.append(TAG_DELIMITER)
+                            .append(TAG_PREFIX)
+                            .append(LOG_RESERVED_KEY_FILE_OFFSET)
+                            .append(TAG_SEPARATOR)
+                            .append(std::to_string(logBuffer->beginOffset));
                     }
 
                     LogtailPlugin::GetInstance()->ProcessRawLogV2(logFileReader->GetConfigName(),
@@ -403,8 +416,9 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 int32_t successLogSize = 0;
                 int32_t parseStartTime = (int32_t)time(NULL);
                 for (uint32_t i = 0; i < lines; i++) {
-                    if (!logFileReader->ParseLogLine(
-                            buffer + logIndex[i], logGroup, error, lastLogLineTime, lastLogTimeStr, logGroupSize)) {
+                    bool successful = logFileReader->ParseLogLine(
+                        buffer + logIndex[i], logGroup, error, lastLogLineTime, lastLogTimeStr, logGroupSize);
+                    if (!successful) {
                         ++parseFailures;
                         if (error == PARSE_LOG_REGEX_ERROR)
                             ++regexMatchFailures;
@@ -423,7 +437,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                 LogParser::AddLog(
                                     logPtr, config->mAdvancedConfig.mRawLogTag, buffer + logIndex[i], logGroupSize);
                             }
-                            if (config->mTimeZoneAdjust) {
+                            if (successful && config->mTimeZoneAdjust) {
                                 LogParser::AdjustLogTime(
                                     logPtr, config->mLogTimeZoneOffsetSecond, localTimeZoneOffsetSecond);
                             }
@@ -539,10 +553,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                     }
                     IntegrityConfigPtr integrityConfigPtr(integrityConfig);
                     LineCountConfigPtr lineCountConfigPtr(lineCountConfig);
+                    sls_logs::SlsCompressType compressType = sdk::Client::GetCompressType(config->mCompressType);
 
                     LogGroupContext context(config->mRegion,
                                             projectName,
                                             config->mCategory,
+                                            compressType,
                                             logBuffer->fileInfo,
                                             integrityConfigPtr,
                                             lineCountConfigPtr,

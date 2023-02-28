@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <ostream>
+#include <numeric>
 #include <json/json.h>
 #include "config/Config.h"
 #if defined(_MSC_VER)
@@ -245,6 +246,7 @@ private:
     volatile bool mPluginValid;
     logtail::Config mPluginAlarmConfig;
     logtail::Config mPluginProfileConfig;
+    logtail::Config mPluginContainerConfig;
     ProcessLogsFun mProcessLogsFun;
     GetContainerMetaFun mGetContainerMetaFun;
 

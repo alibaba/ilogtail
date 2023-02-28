@@ -9,7 +9,7 @@ ConfigServer 就是这样的一款可观测 Agent 管控工具，目前支持：
 * 采集 Agent 注册到 ConfigServer
 * 以 Agent 组的形式对采集 Agent 进行统一管理
 * 远程批量配置采集 Agent 的采集配置
-* 监控采集 Agent 的运行状态，汇总告警信息
+* 监控采集 Agent 的运行状态
 
 ## 术语表
 
@@ -24,9 +24,10 @@ ConfigServer 就是这样的一款可观测 Agent 管控工具，目前支持：
 
 ### 实例注册
 
-* Agent启动后，定期向 ConfigServer 进行心跳注册，证明存活性。
-* 上报如下信息，供 ConfigServer 汇集后统一通过API对外呈现。
-  * Agent的instance_id，作为唯一标识。
+* Agent 侧配置已部署的 ConfigServer 信息。
+* Agent 启动后，定期向 ConfigServer 进行心跳注册，证明存活性。
+* 上报包括但不限于如下的信息，供 ConfigServer 汇集后统一通过API对外呈现。
+  * Agent 的 instance_id，作为唯一标识。
   * 版本号
   * 启动时间
   * 运行状态
@@ -45,12 +46,37 @@ ConfigServer 就是这样的一款可观测 Agent 管控工具，目前支持：
 
 ### 状态监控
 
-* Agent 定期向 ConfigServer 进行运行统计、Alarm等信息上报。
+* Agent 定期向 ConfigServer 发送心跳，上报运行信息。
 * ConfigServer 汇集后统一通过API对外呈现。
 
 ## 运行
 
 ConfigServer 分为 UI 和 Service 两部分，可以分别独立运行。
+
+### Agent 配置
+
+Agent 侧需要配置 ConfigServer 信息，才能使用管控功能。
+
+#### iLogtail 配置 ConfigServer
+
+打开 iLogtail 目录下的 ilogtail_config.json 文件，配置 ConfigServer 相关参数 `ilogtail_configserver_address` 和 `ilogtail_tags`。
+
+`ilogtail_configserver_address` 是 ConfigServer 部署的地址与端口号，可以配置多个 ConfigServer 地址， iLogtail 将自动切换选择可以链接的 ConfigServer。需要注意的是，目前的 ConfigServer 仅支持单机版，`ilogtail_configserver_address` 即使配置了多个地址，多个 ConfigServer 之间也并不支持数据同步。我们预留了 ConfigServer 支持分布式部署的扩展性，欢迎社区积极贡献开发。
+
+`ilogtail_tags` 是 iLogtail 在 ConfigServer 处的标签，支持配置多个。虽然该参数暂时无法使用，但我们同样预留了支持通过自定义标签分组管理 Agent 的扩展性。
+
+下面是一个简单的配置示例。
+
+```json
+{
+    ...
+    "ilogtail_configserver_address" : [
+      "127.0.0.1:8899"
+      ],
+    ...
+}
+```
+
 
 ### Service
 
@@ -58,7 +84,7 @@ Service 为分布式的结构，支持多地部署，负责与采集 Agent 和�
 
 #### 启动
 
-从 GitHub 下载 ilogtail 源码，进入 ConfigServer 后端目录下，编译运行代码。
+从 GitHub 下载 iLogtail 源码，进入 ConfigServer 后端目录下，编译运行代码。
 
 ``` bash
 cd config_server/service

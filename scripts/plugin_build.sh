@@ -24,20 +24,26 @@ function os() {
   fi
 }
 
-MOD=${1:-vendor}
+MOD=${1:-mod}
 BUILDMODE=${2:-default}
 OUT_DIR=${3:-output}
+VERSION=${4:-1.3.1}
+PLUGINS_CONFIG_FILE=${5:-${PLUGINS_CONFIG_FILE:-plugins.yml,external_plugins.yml}}
+GO_MOD_FILE=${6:-${GO_MOD_FILE:-go.mod}}
 NAME=ilogtail
-IDFLAGS=''
+LDFLAGS='-X "github.com/alibaba/ilogtail/pluginmanager.BaseVersion='$VERSION'"'
 
 os
 OS_FLAG=$?
 
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
+CURRDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
 mkdir -p "$ROOTDIR"/bin
 
 if [ $OS_FLAG = 1 ]; then
-  IDFLAGS='-extldflags "-Wl,--wrap=memcpy"'
+  if uname -m | grep x86_64; then
+    LDFLAGS=$LDFLAGS' -extldflags "-Wl,--wrap=memcpy"'
+  fi
   if [ $BUILDMODE = "c-shared" ]; then
     NAME=libPluginBase.so
   fi
@@ -51,4 +57,7 @@ elif [ $OS_FLAG = 2 ]; then
   BUILDMODE=default
 fi
 
-go build -mod="$MOD" -buildmode="$BUILDMODE" -ldflags="$IDFLAGS" -o "$ROOTDIR/$OUT_DIR/${NAME}" "$ROOTDIR"/plugin_main
+# make plugins stuffs
+"$CURRDIR/import_plugins.sh" "$PLUGINS_CONFIG_FILE" "$GO_MOD_FILE"
+
+go build -mod="$MOD" -modfile="$GO_MOD_FILE" -buildmode="$BUILDMODE" -ldflags="$LDFLAGS" -o "$ROOTDIR/$OUT_DIR/${NAME}" "$ROOTDIR"/plugin_main

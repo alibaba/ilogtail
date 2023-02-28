@@ -43,6 +43,9 @@ LogtailPlugin::LogtailPlugin() {
     mPluginProfileConfig.mCategory = "shennong_log_profile";
     mPluginProfileConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
     mPluginProfileConfig.mLogstoreKey = 0;
+    mPluginContainerConfig.mCategory = "logtail_containers";
+    mPluginContainerConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
+    mPluginContainerConfig.mLogstoreKey = 0;
 
     mPluginCfg["LogtailSysConfDir"] = AppConfig::GetInstance()->GetLogtailSysConfDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
@@ -212,6 +215,8 @@ int LogtailPlugin::SendPbV2(const char* configName,
                             int shardHashSize) {
     static Config* alarmConfig = &(LogtailPlugin::GetInstance()->mPluginAlarmConfig);
     static Config* profileConfig = &(LogtailPlugin::GetInstance()->mPluginProfileConfig);
+    static Config* containerConfig = &(LogtailPlugin::GetInstance()->mPluginContainerConfig);
+
     string configNameStr = string(configName, configNameSize);
 
     string logstore;
@@ -235,6 +240,13 @@ int LogtailPlugin::SendPbV2(const char* configName,
         if (0 == pConfig->mProjectName.size()) {
             return 0;
         }
+    } else if (configNameStr == containerConfig->mCategory) {
+        pConfig = containerConfig;
+        pConfig->mProjectName = ConfigManager::GetInstance()->GetDefaultProfileProjectName();
+        pConfig->mRegion = ConfigManager::GetInstance()->GetDefaultProfileRegion();
+        if (0 == pConfig->mProjectName.size()) {
+            return 0;
+        }
     } else {
         pConfig = ConfigManager::GetInstance()->FindConfigByName(configNameStr);
     }
@@ -245,7 +257,8 @@ int LogtailPlugin::SendPbV2(const char* configName,
         }
         return Sender::Instance()->SendPb(pConfig, pbBuffer, pbSize, lines, logstore, shardHashStr) ? 0 : -1;
     } else {
-        LOG_ERROR(sLogger, ("error", "SendPbV2 can not find config")("config", configNameStr));
+        LOG_INFO(sLogger,
+                 ("error", "SendPbV2 can not find config, maybe config updated")("config", configNameStr)("logstore", logstore));
     }
     return -2;
 }
@@ -296,7 +309,8 @@ bool LogtailPlugin::LoadPluginBase() {
     bool dockerEnvConfigEnabled = (dockerEnvConfig != NULL && strlen(dockerEnvConfig) > 0
                                    && (dockerEnvConfig[0] == 't' || dockerEnvConfig[0] == 'T'));
 
-    if (observerConfigs.size() == (size_t)0 && pluginConfigs.size() == (size_t)0 && !dockerEnvConfigEnabled) {
+    if (observerConfigs.size() == (size_t)0 && pluginConfigs.size() == (size_t)0 && !dockerEnvConfigEnabled
+        && !AppConfig::GetInstance()->IsPurageContainerMode()) {
         LOG_INFO(sLogger, ("no plugin config and no docker env config, do not load plugin base", ""));
         return true;
     }

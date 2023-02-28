@@ -15,23 +15,24 @@
 package stdout
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"sync"
 	"time"
 
-	"github.com/alibaba/ilogtail"
+	"github.com/docker/docker/api/types"
+
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input"
-
-	docker "github.com/fsouza/go-dockerclient"
 )
 
 const serviceDockerStdoutKey = "service_docker_stdout_v2"
 
-func logDriverSupported(container *docker.Container) bool {
+func logDriverSupported(container types.ContainerJSON) bool {
 	// containerd has no hostConfig, return true
 	if container.HostConfig == nil {
 		return true
@@ -52,7 +53,7 @@ type DockerFileSyner struct {
 
 func NewDockerFileSynerByFile(sds *ServiceDockerStdout, filePath string) *DockerFileSyner {
 	dockerInfoDetail := &helper.DockerInfoDetail{}
-	dockerInfoDetail.ContainerInfo = &docker.Container{}
+	dockerInfoDetail.ContainerInfo = types.ContainerJSON{}
 	dockerInfoDetail.ContainerInfo.LogPath = filePath
 	sds.LogtailInDocker = false
 	sds.StartLogMaxOffset = 10 * 1024 * 1024 * 1024
@@ -102,7 +103,8 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 		sds.CloseUnChangedSec = 10
 	}
 
-	logger.Info(sds.context.GetRuntimeContext(), "docker_id", info.ContainerInfo.ID,
+	logger.Info(sds.context.GetRuntimeContext(), "new stdout reader id", info.IDPrefix(),
+		"name", info.ContainerInfo.Name, "created", info.ContainerInfo.Created, "status", info.Status(),
 		"checkpoint_logpath", checkpoint.Path,
 		"in_docker", sds.LogtailInDocker)
 
@@ -157,17 +159,17 @@ type ServiceDockerStdout struct {
 
 	// for tracker
 	tracker           *helper.ReaderMetricTracker
-	avgInstanceMetric ilogtail.CounterMetric
-	addMetric         ilogtail.CounterMetric
-	deleteMetric      ilogtail.CounterMetric
+	avgInstanceMetric pipeline.CounterMetric
+	addMetric         pipeline.CounterMetric
+	deleteMetric      pipeline.CounterMetric
 
 	synerMap      map[string]*DockerFileSyner
 	checkpointMap map[string]helper.LogFileReaderCheckPoint
 	shutdown      chan struct {
 	}
 	waitGroup sync.WaitGroup
-	context   ilogtail.Context
-	collector ilogtail.Collector
+	context   pipeline.Context
+	collector pipeline.Collector
 
 	// Last return of GetAllAcceptedInfoV2
 	fullList       map[string]bool
@@ -175,7 +177,7 @@ type ServiceDockerStdout struct {
 	lastUpdateTime int64
 }
 
-func (sds *ServiceDockerStdout) Init(context ilogtail.Context) (int, error) {
+func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
 	sds.context = context
 	helper.ContainerCenterInit()
 	sds.fullList = make(map[string]bool)
@@ -244,11 +246,11 @@ func (sds *ServiceDockerStdout) Description() string {
 	return "the container stdout input plugin for iLogtail, which supports docker and containerd."
 }
 
-func (sds *ServiceDockerStdout) Collect(ilogtail.Collector) error {
+func (sds *ServiceDockerStdout) Collect(pipeline.Collector) error {
 	return nil
 }
 
-func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) error {
+func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) error {
 	newUpdateTime := helper.GetContainersLastUpdateTime()
 	if sds.lastUpdateTime != 0 {
 		if sds.lastUpdateTime >= newUpdateTime {
@@ -257,7 +259,7 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 	}
 
 	var err error
-	newCount, delCount := helper.GetContainerByAcceptedInfoV2(
+	newCount, delCount, addResultList, deleteResultList, addFullList, deleteFullList := helper.GetContainerByAcceptedInfoV2(
 		sds.fullList, sds.matchList,
 		sds.IncludeLabel, sds.ExcludeLabel,
 		sds.IncludeLabelRegex, sds.ExcludeLabelRegex,
@@ -265,6 +267,49 @@ func (sds *ServiceDockerStdout) FlushAll(c ilogtail.Collector, firstStart bool) 
 		sds.IncludeEnvRegex, sds.ExcludeEnvRegex,
 		sds.K8sFilter)
 	sds.lastUpdateTime = newUpdateTime
+
+	// record added container id
+	if len(addFullList) > 0 {
+		for _, id := range addFullList {
+			if len(id) > 0 {
+				util.RecordAddedContainerIDs(id)
+			}
+		}
+	}
+	// record deleted container id
+	if len(deleteFullList) > 0 {
+		for _, id := range deleteFullList {
+			if len(id) > 0 {
+				util.RecordDeletedContainerIDs(util.GetShortID(id))
+			}
+		}
+	}
+	// record config result
+	{
+		keys := make([]string, 0, len(sds.matchList))
+		for k := range sds.matchList {
+			if len(k) > 0 {
+				keys = append(keys, util.GetShortID(k))
+			}
+		}
+		configResult := &util.ConfigResult{
+			DataType:                   "container_config_result",
+			Project:                    sds.context.GetProject(),
+			Logstore:                   sds.context.GetLogstore(),
+			ConfigName:                 sds.context.GetConfigName(),
+			PathExistInputContainerIDs: util.GetStringFromList(keys),
+			SourceAddress:              "stdout",
+			InputType:                  input.ServiceDockerStdoutPluginName,
+			FlusherType:                "flusher_sls",
+			FlusherTargetAddress:       fmt.Sprintf("%s/%s", sds.context.GetProject(), sds.context.GetLogstore()),
+		}
+		util.RecordConfigResultMap(configResult)
+		if newCount != 0 || delCount != 0 {
+			util.RecordConfigResultIncrement(configResult)
+		}
+		logger.Debugf(sds.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
+	}
+
 	if !firstStart && newCount == 0 && delCount == 0 {
 		logger.Debugf(sds.context.GetRuntimeContext(), "update match list, firstStart: %v, new: %v, delete: %v",
 			firstStart, newCount, delCount)
@@ -339,7 +384,7 @@ func (sds *ServiceDockerStdout) ClearUselessCheckpoint() {
 }
 
 // Start starts the ServiceInput's service, whatever that may be
-func (sds *ServiceDockerStdout) Start(c ilogtail.Collector) error {
+func (sds *ServiceDockerStdout) Start(c pipeline.Collector) error {
 	sds.collector = c
 	sds.shutdown = make(chan struct{})
 	sds.waitGroup.Add(1)
@@ -381,7 +426,7 @@ func (sds *ServiceDockerStdout) Stop() error {
 }
 
 func init() {
-	ilogtail.ServiceInputs[input.ServiceDockerStdoutPluginName] = func() ilogtail.ServiceInput {
+	pipeline.ServiceInputs[input.ServiceDockerStdoutPluginName] = func() pipeline.ServiceInput {
 		return &ServiceDockerStdout{
 			FlushIntervalMs:      3000,
 			SaveCheckPointSec:    60,
