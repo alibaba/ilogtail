@@ -27,10 +27,10 @@ ilogtail:
                 Content: "hello"
           outputs:
             - Type: flusher_elasticsearch
-              Addresses: ["elasticsearch:9200"]
+              Addresses: ["localhost:9200"]
               Authentication:
                 PlainText:
-                  Index: default5
+                  Index: default
                   Username: elastic
                   Password: BtpoRTeyjmC=ruTIUoNN
   close_wait: 5s
@@ -40,10 +40,10 @@ ilogtail:
 subscriber:
   name: elasticsearch
   config:
-    address: http://elasticsearch:9200
+    address: http://localhost:9200
     username: elastic
-    password: default
-    index: BtpoRTeyjmC=ruTIUoNN
+    password: BtpoRTeyjmC=ruTIUoNN
+    index: default
 verify:
   log_rules:
     - name: kv-check

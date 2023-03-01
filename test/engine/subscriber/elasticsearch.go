@@ -32,15 +32,15 @@ import (
 )
 
 const elasticSearchName = "elasticsearch"
+
 var r map[string]interface{}
 
 type ElasticSearchSubscriber struct {
-	Address  string `mapstructure:"address" comment:"the elasticsearch address"`
-	Username string `mapstructure:"username" comment:"the elasticsearch username"`
-	Password string `mapstructure:"password" comment:"the elasticsearch password"`
-	Index    string `mapstructure:"index" comment:"the elasticsearch index name to query from"`
+	Address         string `mapstructure:"address" comment:"the elasticsearch address"`
+	Username        string `mapstructure:"username" comment:"the elasticsearch username"`
+	Password        string `mapstructure:"password" comment:"the elasticsearch password"`
+	Index           string `mapstructure:"index" comment:"the elasticsearch index name to query from"`
 	QueryIntervalMs int    `mapstructure:"query_interval_ms" comment:"interval between queries select upserts records from elasticsearch"`
-
 
 	client        *elasticsearch.Client
 	lastTimestamp int64
@@ -65,8 +65,8 @@ func (i *ElasticSearchSubscriber) Start() error {
 
 	cfg := elasticsearch.Config{
 		Addresses: []string{i.Address},
-		Username: i.Username,
-		Password: i.Password,
+		Username:  i.Username,
+		Password:  i.Password,
 	}
 	es, err := elasticsearch.NewClient(cfg)
 	if err != nil {
@@ -120,11 +120,11 @@ func (i *ElasticSearchSubscriber) queryRecords() (logGroup *protocol.LogGroup, m
 
 	res, err := i.client.Search(
 		i.client.Search.WithContext(context.Background()),
-		i.client.Search.WithIndex("test"),
+		i.client.Search.WithIndex(i.Index),
 		i.client.Search.WithBody(strings.NewReader(`{"query" : { "match_all" : { } }}`)),
 	)
 	if err != nil {
-		logger.Warning(context.Background(), "CLICKHOUSE_SUBSCRIBER_ALARM", "err", err)
+		logger.Warning(context.Background(), "ELASTICSEARCH_SUBSCRIBER_ALARM", "err", err)
 		return
 	}
 	if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
@@ -144,7 +144,7 @@ func (i *ElasticSearchSubscriber) queryRecords() (logGroup *protocol.LogGroup, m
 	}
 
 	for _, hit := range r["hits"].(map[string]interface{})["hits"].([]interface{}) {
-		
+
 		tmpJSON, _ := json.Marshal(hit.(map[string]interface{})["_source"])
 		lc := logContent{}
 		err = json.Unmarshal(tmpJSON, &lc)
@@ -168,8 +168,7 @@ func (i *ElasticSearchSubscriber) queryRecords() (logGroup *protocol.LogGroup, m
 
 func init() {
 	RegisterCreator(elasticSearchName, func(spec map[string]interface{}) (Subscriber, error) {
-		i := &ElasticSearchSubscriber{
-		}
+		i := &ElasticSearchSubscriber{}
 		if err := mapstructure.Decode(spec, i); err != nil {
 			return nil, err
 		}
@@ -192,4 +191,3 @@ func init() {
 	})
 	doc.Register("subscriber", elasticSearchName, new(ElasticSearchSubscriber))
 }
-
