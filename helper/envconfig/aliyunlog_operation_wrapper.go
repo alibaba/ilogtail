@@ -209,7 +209,30 @@ func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, pr
 	return nil
 }
 
-func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec, project, logstore string, shardCount, lifeCycle int, product, lang, mode string) error {
+func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) error {
+	project := o.project
+	if len(config.Project) != 0 {
+		project = config.Project
+	}
+	logstore := config.Logstore
+	shardCount := 0
+	if config.ShardCount != nil {
+		shardCount = int(*config.ShardCount)
+	}
+	lifeCycle := 0
+	if config.LifeCycle != nil {
+		lifeCycle = int(*config.LifeCycle)
+	}
+	mode := StandardMode
+	if len(config.LogstoreMode) != 0 {
+		if config.LogstoreMode == QueryMode {
+			mode = QueryMode
+		}
+	}
+
+	product := config.ProductCode
+	lang := config.ProductLang
+
 	if o.logstoreCacheExists(project, logstore) {
 		return nil
 	}
@@ -264,6 +287,31 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec, pr
 		MaxSplitShard: 32,
 		Mode:          mode,
 	}
+	if config.LogstoreHotTTL != nil {
+		logStore.HotTTL = uint32(*config.LogstoreHotTTL)
+	}
+
+	if len(config.LogstoreTelemetryType) > 0 {
+		if MetricsTelemetryType == config.LogstoreTelemetryType {
+			logStore.TelemetryType = config.LogstoreTelemetryType
+		}
+	}
+	if config.LogstoreAppendMeta {
+		logStore.AppendMeta = config.LogstoreAppendMeta
+	}
+	if config.LogstoreEnableTracking {
+		logStore.WebTracking = config.LogstoreEnableTracking
+	}
+	if config.LogstoreAutoSplit {
+		logStore.AutoSplit = config.LogstoreAutoSplit
+	}
+	if config.LogstoreMaxSplitShard != nil {
+		logStore.MaxSplitShard = int(*config.LogstoreMaxSplitShard)
+	}
+	if config.LogstoreEncryptConf.Enable {
+		logStore.EncryptConf = &config.LogstoreEncryptConf
+	}
+
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		err = o.logClient.CreateLogStoreV2(project, logStore)
 		if err != nil {
@@ -429,26 +477,7 @@ func checkFileConfigChanged(filePath, filePattern, includeEnv, includeLabel stri
 
 // nolint:govet,ineffassign
 func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error {
-	project := o.project
-	if len(config.Project) != 0 {
-		project = config.Project
-	}
-	logstore := config.Logstore
-	shardCount := 0
-	if config.ShardCount != nil {
-		shardCount = int(*config.ShardCount)
-	}
-	lifeCycle := 0
-	if config.LifeCycle != nil {
-		lifeCycle = int(*config.LifeCycle)
-	}
-	mode := StandardMode
-	if len(config.LogstoreMode) != 0 {
-		if config.LogstoreMode == QueryMode {
-			mode = QueryMode
-		}
-	}
-	err := o.makesureLogstoreExist(config, project, logstore, shardCount, lifeCycle, config.ProductCode, config.ProductLang, mode)
+	err := o.makesureLogstoreExist(config)
 	if err != nil {
 		return fmt.Errorf("Create logconfig error when update config, config : %s, error : %s", config.LogtailConfig.ConfigName, err.Error())
 	}
