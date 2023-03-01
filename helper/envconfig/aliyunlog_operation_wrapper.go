@@ -477,6 +477,11 @@ func checkFileConfigChanged(filePath, filePattern, includeEnv, includeLabel stri
 
 // nolint:govet,ineffassign
 func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error {
+	project := o.project
+	if len(config.Project) != 0 {
+		project = config.Project
+	}
+	logstore := config.Logstore
 	err := o.makesureLogstoreExist(config)
 	if err != nil {
 		return fmt.Errorf("Create logconfig error when update config, config : %s, error : %s", config.LogtailConfig.ConfigName, err.Error())
