@@ -795,7 +795,7 @@ func getPluginTypeWithID(pluginName string) string {
 
 func getPluginType(pluginName string) string {
 	if idx := strings.IndexByte(pluginName, '/'); idx != -1 {
-		return pluginName[idx+1:]
+		return pluginName[:idx]
 	}
 	return pluginName
 }
