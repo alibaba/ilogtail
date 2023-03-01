@@ -24,11 +24,12 @@ import (
 
 	"strings"
 
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/alibaba/ilogtail/pkg/doc"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/mitchellh/mapstructure"
 )
 
 const elasticSearchName = "elasticsearch"
