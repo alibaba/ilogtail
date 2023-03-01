@@ -70,3 +70,33 @@
 | `processor_delimiter_accelerate`<br>分隔符加速 | SLS官方 | 以加速模式实现分隔符日志的字段提取。           |
 | `processor_json_accelerate`<br>Json加速        | SLS官方 | 以加速模式实现`Json`格式日志的字段提取。       |
 | `processor_regex_accelerate`<br>正则加速       | SLS官方 | 通过正则匹配以加速模式实现文本日志的字段提取。 |
+
+
+## 扩展
+
+### ClientAuthenticator
+
+| 名称                          | 提供方                                             | 简介                             |
+|-----------------------------|-------------------------------------------------|--------------------------------|
+| `ext_basicauth`<br> Basic认证 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供 basic 认证能力 |
+
+### Filter
+
+| 名称                                     | 提供方                                             | 简介                                        |
+|----------------------------------------|-------------------------------------------------|-------------------------------------------|
+| `ext_groupinfo_filter`<br> GroupInfo过滤 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供根据GroupInfo筛选最终提交数据的能力 |
+
+### Decoder
+
+| 协议(Format)       | 提供方                                                 | 简介                                            |
+|------------------|-----------------------------------------------------|-----------------------------------------------|
+| `sls`            | SLS官方                                               | 解析sls日志                                       |
+| `prometheus`     | SLS官方                                               | 解析 prometheus expformat 和 remote-storage 协议数据 |
+| `influx`         | SLS官方                                               | 解析 influx 协议数据                                |
+| `influxdb`       | SLS官方                                               | 解析 influxdb 协议数据                              |
+| `statsd`         | SLS官方                                               | 解析 statsd 协议数据                                |
+| `otlp_logv1`     | SLS官方                                               | 解析 opentelemetry log 协议数据                     |
+| `otlp_metricsv1` | 社区<br>[`shunjiazhu`](https://github.com/shunjiazhu) | 解析 opentelemetry metrics 协议数据                 |
+| `otlp_tracev1`   | 社区<br>[`shunjiazhu`](https://github.com/shunjiazhu) | 解析 opentelemetry trace 协议数据                   |
+| `raw`            | 社区<br>[`urnotsally`](https://github.com/urnotsally) | 数据流直接封装为ByteArrayEvent                        |
+| `pyroscope`      | SLS官方                                               | 解析 pyroscope 数据                               |
