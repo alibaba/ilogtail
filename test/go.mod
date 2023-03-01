@@ -3,7 +3,6 @@ module github.com/alibaba/ilogtail/test
 go 1.18
 
 require (
-	github.com/ClickHouse/clickhouse-go v1.5.4
 	github.com/ClickHouse/clickhouse-go/v2 v2.6.0
 	github.com/alibaba/ilogtail v0.0.0-00010101000000-000000000000
 	github.com/alibaba/ilogtail/pkg v0.0.0
@@ -33,7 +32,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575 // indirect
 	github.com/cilium/ebpf v0.7.0 // indirect
-	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/containerd/containerd v1.6.8 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
