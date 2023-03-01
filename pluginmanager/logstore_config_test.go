@@ -23,6 +23,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -30,11 +34,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/input"
 	"github.com/alibaba/ilogtail/plugins/processor/regex"
-	"github.com/alibaba/ilogtail/plugins/test"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 func TestLogstroreConfig(t *testing.T) {
@@ -176,7 +175,7 @@ func (s *logstoreConfigTestSuite) TestLoadConfig() {
 }
 
 func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
-	jsonStr = `
+	jsonStr := `
 	{
 		"inputs": [
 			{
@@ -229,7 +228,7 @@ func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
 		],
 		"extensions": [
 			{
-				"type": "extension_basicauth/basicauth_user1"
+				"type": "ext_basicauth/basicauth_user1"
 				"detail": {
 					"Username": "user1",
 					"Password": "pwd1"
@@ -239,7 +238,7 @@ func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
 	}
 `
 
-	s.NoError(test.LoadMockConfig("project", "logstore", "test", ``))
+	s.NoError(LoadMockConfig("project", "logstore", "test", jsonStr))
 	s.Equal(len(LogtailConfig), 1)
 	config := LogtailConfig["test"]
 	s.Equal(config.ProjectName, "project")
@@ -256,9 +255,9 @@ func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
 	s.Equal(config.GlobalConfig, &LogtailGlobalConfig)
 
 	// check plugin inner info
-	reg, ok := config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
+	_, ok := config.PluginRunner.(*pluginv1Runner).ProcessorPlugins[0].Processor.(*regex.ProcessorRegex)
 	s.True(ok)
-	basicAuth, ok := config.PluginRunner.(*pluginv1Runner).ExtensionPlugins["extension_basicauth/basicauth_user1"].(*basicauth.ExtensionBasicAuth)
+	_, ok = config.PluginRunner.(*pluginv1Runner).ExtensionPlugins["ext_basicauth/basicauth_user1"].(*basicauth.ExtensionBasicAuth)
 	s.True(ok)
 }
 func Test_hasDockerStdoutInput(t *testing.T) {
