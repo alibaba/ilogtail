@@ -228,7 +228,7 @@ func (s *logstoreConfigTestSuite) TestLoadConfigWithExtension() {
 		],
 		"extensions": [
 			{
-				"type": "ext_basicauth/basicauth_user1"
+				"type": "ext_basicauth/basicauth_user1",
 				"detail": {
 					"Username": "user1",
 					"Password": "pwd1"
