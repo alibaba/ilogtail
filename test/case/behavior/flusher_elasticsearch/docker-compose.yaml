@@ -16,12 +16,17 @@ version: '3.8'
 
 services:
   elasticsearch:
-    image: elasticsearch:8.6.2
+    image: elasticsearch:7.17.9
     hostname: elasticsearch
+    container_name: elasticsearch
     ports:
-      - "9200"
+      - "9200:9200"
+      - "9300:9300"
     healthcheck:
       test: curl http://localhost:9200/_cat/health
       timeout: 5s
       interval: 10s
       retries: 3
+    environment:
+      discovery.type: single-node
+#      cluster.initial_master_nodes: "node-1"
