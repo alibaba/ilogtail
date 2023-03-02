@@ -154,9 +154,8 @@ func (f *FlusherElasticSearch) NormalFlush(projectName string, logstoreName stri
 		}
 		for _, log := range serializedLogs.([][]byte) {
 			req := esapi.IndexRequest{
-				Index:   f.Authentication.PlainText.Index,
-				Body:    bytes.NewReader(log),
-				Refresh: "true",
+				Index: f.Authentication.PlainText.Index,
+				Body:  bytes.NewReader(log),
 			}
 			res, err := req.Do(context.Background(), f.esClient)
 			if err != nil {

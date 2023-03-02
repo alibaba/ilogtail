@@ -8,6 +8,7 @@
 
 | 参数                                              | 类型       | 是否必选 | 说明                                                                                 |
 |-------------------------------------------------|----------|------|------------------------------------------------------------------------------------|
+| Type                                            | String   | 是    | 插件类型，固定为`flusher_elasticsearch`                                                    |
 | Addresses                                       | String数组 | 是    | ElasticSearch 地址                                                                   |
 | Convert                                         | Struct   | 否    | ilogtail数据转换协议配置                                                                   |
 | Convert.Protocol                                | String   | 否    | ilogtail数据转换协议，kafka flusher 可选值：`custom_single`,`otlp_log_v1`。默认值：`custom_single` |
