@@ -43,8 +43,8 @@ var DisabledLogtailConfigLock sync.Mutex
 var DisabledLogtailConfig = make(map[string]*LogstoreConfig)
 
 // StatisticsConfigJson, AlarmConfigJson
-var BaseVersion = "0.1.0" // will be overwritten through ldflags at compile time
-var UserAgent = fmt.Sprintf("ilogtail/%v (%v) ip/%v", BaseVersion, runtime.GOOS, LogtailGlobalConfig.HostIP)
+var BaseVersion = "0.1.0"                                                  // will be overwritten through ldflags at compile time
+var UserAgent = fmt.Sprintf("ilogtail/%v (%v)", BaseVersion, runtime.GOOS) // set in global config
 
 var statisticsConfigJSON = `{
     "global": {
