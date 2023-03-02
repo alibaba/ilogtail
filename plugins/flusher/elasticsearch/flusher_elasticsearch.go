@@ -162,9 +162,6 @@ func (f *FlusherElasticSearch) NormalFlush(projectName string, logstoreName stri
 				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request fail, error", err)
 			}
 			defer res.Body.Close()
-			if res.IsError() {
-				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "[%s] Error indexing logs", res.Status())
-			}
 		}
 		logger.Debug(f.context.GetRuntimeContext(), "elasticsearch success send events: messageID")
 	}
