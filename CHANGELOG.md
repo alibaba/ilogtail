@@ -59,3 +59,4 @@ your changes, such as:
 - [public] [both] [added] support config plugins to included in build, plugins.yml for builtin plugins, external_plugins.yml for external plugins
 - [public] [both] [added] add logs for container matching in stdout plugin
 - [public] [both] [updated] set user agent for SLS client
+- [public] [both] [updated] prometheus input add staleness output
