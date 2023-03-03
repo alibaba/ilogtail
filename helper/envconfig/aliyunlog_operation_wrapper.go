@@ -188,9 +188,9 @@ func (o *operationWrapper) retryCreateIndex(project, logstore string) {
 	}
 }
 
-func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, project, logstore, product, lang string) error {
+func (o *operationWrapper) createProductLogstore(config *AliyunLogConfigSpec, project, logstore, product, lang string, hotTTL int) error {
 	logger.Info(context.Background(), "begin to create product logstore, project", project, "logstore", logstore, "product", product, "lang", lang)
-	err := CreateProductLogstore(*flags.DefaultRegion, project, logstore, product, lang)
+	err := CreateProductLogstore(*flags.DefaultRegion, project, logstore, product, lang, hotTTL)
 
 	annotations := GetAnnotationByObject(config, project, logstore, product, config.LogtailConfig.ConfigName, false)
 
@@ -232,6 +232,10 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 
 	product := config.ProductCode
 	lang := config.ProductLang
+	hotTTL := 0
+	if config.LogstoreHotTTL != nil {
+		hotTTL = int(*config.LogstoreHotTTL)
+	}
 
 	if o.logstoreCacheExists(project, logstore) {
 		return nil
@@ -241,12 +245,12 @@ func (o *operationWrapper) makesureLogstoreExist(config *AliyunLogConfigSpec) er
 		if len(lang) == 0 {
 			lang = "cn"
 		}
-		return o.createProductLogstore(config, project, logstore, product, lang)
+		return o.createProductLogstore(config, project, logstore, product, lang, hotTTL)
 	}
 
 	// @note hardcode for k8s audit, eg audit-cfc281c9c4ca548638a1aaa765d8f220d
 	if strings.HasPrefix(logstore, "audit-") && len(logstore) == 39 {
-		return o.createProductLogstore(config, project, logstore, "k8s-audit", "cn")
+		return o.createProductLogstore(config, project, logstore, "k8s-audit", "cn", 0)
 	}
 
 	if project != o.project {
