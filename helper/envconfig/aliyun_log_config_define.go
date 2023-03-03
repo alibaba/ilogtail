@@ -347,8 +347,6 @@ func makeLogConfigSpec(dockerInfo *helper.DockerInfoDetail, envConfigInfo *helpe
 		hotTTL, _ := strconv.Atoi(val)
 		if hotTTL >= 30 {
 			config.LogstoreHotTTL = proto.Int32((int32)(hotTTL))
-		} else {
-			config.LogstoreHotTTL = proto.Int32(30)
 		}
 	}
 
