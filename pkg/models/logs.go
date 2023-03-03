@@ -2,7 +2,7 @@ package models
 
 import "github.com/alibaba/ilogtail/pkg/util"
 
-type Indices KeyValues[string]
+type Indices KeyValues[interface{}]
 
 type Log struct {
 	Name              string
