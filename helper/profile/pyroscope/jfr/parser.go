@@ -108,6 +108,10 @@ func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parse
 	}
 	cb := func(n string, labels tree.Labels, t *tree.Tree, u profile.Units) {
 		t.IterateStacks(func(name string, self uint64, stack []string) {
+			if u == SamplesUnits {
+				u = profile.NanosecondsUnit
+				self *= int(time.Second.Nanoseconds() / int64(meta.SampleRate))
+			}
 			id := xxhash.Sum64String(strings.Join(stack, ""))
 			stackMap[id] = &profile.Stack{
 				Name:  profile.FormatPositionAndName(name, profile.FormatType(meta.SpyName)),
