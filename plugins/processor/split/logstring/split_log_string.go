@@ -23,6 +23,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type ProcessorSplit struct {
@@ -115,7 +116,7 @@ func (p *ProcessorSplit) Process(in *models.PipelineGroupEvents, context pipelin
 				TraceID:   log.TraceID,
 			}
 			tmpLog.Tags = models.NewTags()
-			body := log.Body
+			body := util.ZeroCopyBytesToString(log.Body)
 			for k, v := range log.GetTags().Iterator() {
 				if len(body) == 0 && k == p.SplitKey {
 					body = v
@@ -142,7 +143,7 @@ func (p *ProcessorSplit) Process(in *models.PipelineGroupEvents, context pipelin
 					} else {
 						newLog = tmpLog
 					}
-					newLog.Body = strArray[i]
+					newLog.Body = util.ZeroCopyStringToBytes(strArray[i])
 					newLog.Offset += uint64(offset)
 					offset += int64(len(strArray[i]) + len(p.SplitSep))
 					context.Collector().Collect(in.Group, newLog)

@@ -270,7 +270,7 @@ func (p *FlusherStdout) writeLogBody(writer *jsoniter.Stream, log *models.Log) {
 	writer.WriteString(log.GetSpanID())
 	_, _ = writer.Write([]byte{','})
 	writer.WriteObjectField("body")
-	writer.WriteString(log.GetBody())
+	writer.Write(log.GetBody())
 }
 
 func (p FlusherStdout) writeByteArray(writer *jsoniter.Stream, bytes models.ByteArray) {

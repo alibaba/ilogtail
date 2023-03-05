@@ -14,7 +14,9 @@
 
 package models
 
-import "sort"
+import (
+	"sort"
+)
 
 type EventType int
 
@@ -37,9 +39,10 @@ const (
 )
 
 var (
-	NilStringValues = &keyValuesNil[string]{}
-	NilTypedValues  = &keyValuesNil[*TypedValue]{}
-	NilFloatValues  = &keyValuesNil[float64]{}
+	NilStringValues    = &keyValuesNil[string]{}
+	NilTypedValues     = &keyValuesNil[*TypedValue]{}
+	NilFloatValues     = &keyValuesNil[float64]{}
+	NilInterfaceValues = &keyValuesNil[interface{}]{}
 )
 
 type TypedValue struct {
@@ -47,18 +50,18 @@ type TypedValue struct {
 	Value interface{}
 }
 
-type KeyValue[TValue string | float64 | *TypedValue] struct {
+type KeyValue[TValue string | float64 | *TypedValue | any] struct {
 	Key   string
 	Value TValue
 }
 
-type KeyValueSlice[TValue string | float64 | *TypedValue] []KeyValue[TValue]
+type KeyValueSlice[TValue string | float64 | *TypedValue | any] []KeyValue[TValue]
 
 func (x KeyValueSlice[TValue]) Len() int           { return len(x) }
 func (x KeyValueSlice[TValue]) Less(i, j int) bool { return x[i].Key < x[j].Key }
 func (x KeyValueSlice[TValue]) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
-type KeyValues[TValue string | float64 | *TypedValue] interface {
+type KeyValues[TValue string | float64 | *TypedValue | any] interface {
 	Add(key string, value TValue)
 
 	AddAll(items map[string]TValue)
@@ -84,7 +87,7 @@ type Tags KeyValues[string]
 
 type Metadata KeyValues[string]
 
-type keyValuesImpl[TValue string | float64 | *TypedValue] struct {
+type keyValuesImpl[TValue string | float64 | *TypedValue | any] struct {
 	keyValues map[string]TValue
 }
 
@@ -176,7 +179,7 @@ func (kv *keyValuesImpl[TValue]) SortTo(buf []KeyValue[TValue]) []KeyValue[TValu
 	return buf
 }
 
-type keyValuesNil[TValue string | float64 | *TypedValue] struct {
+type keyValuesNil[TValue string | float64 | *TypedValue | any] struct {
 }
 
 func (kv *keyValuesNil[TValue]) Add(key string, value TValue) {
@@ -216,7 +219,7 @@ func (kv *keyValuesNil[TValue]) SortTo(buf []KeyValue[TValue]) []KeyValue[TValue
 	return nil
 }
 
-func NewKeyValues[TValue string | float64 | *TypedValue]() KeyValues[TValue] {
+func NewKeyValues[TValue string | float64 | *TypedValue | any]() KeyValues[TValue] {
 	return &keyValuesImpl[TValue]{
 		keyValues: make(map[string]TValue),
 	}

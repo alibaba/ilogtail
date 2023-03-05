@@ -1,7 +1,5 @@
 package models
 
-import "github.com/alibaba/ilogtail/pkg/util"
-
 type Indices KeyValues[interface{}]
 
 type Log struct {
@@ -13,7 +11,7 @@ type Log struct {
 	Timestamp         uint64
 	ObservedTimestamp uint64
 	Offset            uint64
-	Body              string
+	Body              []byte
 	Indices           Indices
 }
 
@@ -113,25 +111,17 @@ func (m *Log) SetTraceID(traceID string) {
 	}
 }
 
-func (m *Log) GetBody() string {
+func (m *Log) GetBody() []byte {
 	if m != nil {
 		return m.Body
 	}
-	return ""
+	return nil
 }
 
-func (m *Log) SetBody(body string) {
+func (m *Log) SetBody(body []byte) {
 	if m != nil {
 		m.Body = body
 	}
-}
-
-func (m *Log) GetBytesBody() []byte {
-	return util.ZeroCopyStringToBytes(m.GetBody())
-}
-
-func (m *Log) SetBytesBody(body []byte) {
-	m.SetBody(util.ZeroCopyBytesToString(body))
 }
 
 func (m *Log) SetIndices(indices Indices) {
@@ -144,7 +134,7 @@ func (m *Log) GetIndices() Indices {
 	if m != nil {
 		return m.Indices
 	}
-	return NilStringValues
+	return NilInterfaceValues
 }
 
 func (m *Log) Clone() PipelineEvent {

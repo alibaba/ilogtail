@@ -22,6 +22,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 var (
@@ -402,7 +403,7 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 	for i, content := range in.Log.Contents {
 		switch {
 		case content.Key == contentKey || i == 0:
-			log.Body = content.Value
+			log.Body = util.ZeroCopyStringToBytes(content.Value)
 		case content.Key == fileOffsetKey:
 			if offset, err := strconv.ParseInt(content.Value, 10, 64); err == nil {
 				log.Offset = uint64(offset)

@@ -147,7 +147,7 @@ func NewByteArray(bytes []byte) ByteArray {
 	return ByteArray(bytes)
 }
 
-func NewLog(name, body, level, spanID, traceID string, tags Tags, timestamp uint64) *Log {
+func NewLog(name string, body []byte, level, spanID, traceID string, tags Tags, timestamp uint64) *Log {
 	return &Log{
 		Name:      name,
 		Level:     level,
@@ -159,7 +159,7 @@ func NewLog(name, body, level, spanID, traceID string, tags Tags, timestamp uint
 	}
 }
 
-func NewSimpleLog(body string, tags Tags, timestamp uint64) *Log {
+func NewSimpleLog(body []byte, tags Tags, timestamp uint64) *Log {
 	return &Log{
 		Body:      body,
 		Tags:      tags,
@@ -167,7 +167,7 @@ func NewSimpleLog(body string, tags Tags, timestamp uint64) *Log {
 	}
 }
 
-func NewSimpleLevelLog(level, body string, tags Tags, timestamp uint64) *Log {
+func NewSimpleLevelLog(level string, body []byte, tags Tags, timestamp uint64) *Log {
 	return &Log{
 		Level:     level,
 		Body:      body,
@@ -177,5 +177,5 @@ func NewSimpleLevelLog(level, body string, tags Tags, timestamp uint64) *Log {
 }
 
 func NewLogIndices() Indices {
-	return NewKeyValues[string]()
+	return NewKeyValues[interface{}]()
 }
