@@ -149,11 +149,7 @@ func getName(sampleType int64, event string) string {
 	switch sampleType {
 	case sampleTypeCPU:
 		if event == "cpu" || event == "itimer" || event == "wall" {
-			profile := event
-			if event == "wall" {
-				profile = "cpu"
-			}
-			return profile
+			return event
 		}
 	case sampleTypeWall:
 		return "wall"
