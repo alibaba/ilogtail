@@ -55,6 +55,7 @@ func AlibabaCloudEcsPlatformMetaCollect(meta map[string]string, minimize bool) m
 	for k, v := range ecsMeta {
 		meta[k] = v
 	}
+	ecsLastFetchTime = now
 	return meta
 }
 
