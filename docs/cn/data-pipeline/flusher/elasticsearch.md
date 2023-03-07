@@ -15,10 +15,10 @@
 | Convert.Encoding                                | String   | 否    | ilogtail flusher数据转换编码，可选值：`json`、`none`、`protobuf`，默认值：`json`                     |
 | Convert.TagFieldsRename                         | Map      | 否    | 对日志中tags中的json字段重命名                                                                |
 | Convert.ProtocolFieldsRename                    | Map      | 否    | ilogtail日志协议字段重命名，可当前可重命名的字段：`contents`,`tags`和`time`                              |
+| Index                                           | String   | 是    | 插入数据目标索引                                                                           |          |      |                                                                                    |
 | Authentication                                  | Struct   | 是    | ElasticSearch 连接访问认证配置                                                             |
 | Authentication.PlainText.Username               | String   | 是    | ElasticSearch 用户名                                                                  |
 | Authentication.PlainText.Password               | String   | 是    | ElasticSearch 密码                                                                   |
-| Authentication.PlainText.Index                  | String   | 是    | 插入数据目标索引                                                                           |
 | Authentication.TLS.Enabled                      | Boolean  | 否    | 是否启用 TLS 安全连接,                                                                     |
 | Authentication.TLS.CAFile                       | String   | 否    | TLS CA 根证书文件路径                                                                     |
 | Authentication.TLS.CertFile                     | String   | 否    | TLS 连接证书文件路径                                                                       |

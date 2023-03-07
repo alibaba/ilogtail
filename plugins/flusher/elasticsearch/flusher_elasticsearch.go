@@ -35,6 +35,8 @@ type FlusherElasticSearch struct {
 	Addresses []string
 	// Authentication
 	Authentication Authentication
+	// The container of logs
+	Index string
 
 	context   pipeline.Context
 	converter *converter.Converter
@@ -63,9 +65,9 @@ func NewFlusherElasticSearch() *FlusherElasticSearch {
 			PlainText: &PlainTextConfig{
 				Username: "",
 				Password: "",
-				Index:    "",
 			},
 		},
+		Index: "",
 		Convert: convertConfig{
 			Protocol: converter.ProtocolCustomSingle,
 			Encoding: converter.EncodingJSON,
@@ -150,7 +152,7 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 		}
 		for _, log := range serializedLogs.([][]byte) {
 			req := esapi.IndexRequest{
-				Index: f.Authentication.PlainText.Index,
+				Index: f.Index,
 				Body:  bytes.NewReader(log),
 			}
 			res, err := req.Do(context.Background(), f.esClient)

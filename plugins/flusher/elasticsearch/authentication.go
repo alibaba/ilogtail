@@ -25,8 +25,6 @@ type PlainTextConfig struct {
 	Username string
 	// The password for connecting to clickhouse.
 	Password string
-	// The container of logs
-	Index string
 }
 
 type HTTPConfig struct {
