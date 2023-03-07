@@ -21,8 +21,7 @@ func InvalidTestConnectAndWrite(t *testing.T) {
 	f.Addresses = []string{"http://localhost:9200"}
 	f.Authentication.PlainText.Username = ""
 	f.Authentication.PlainText.Password = ""
-	f.Authentication.PlainText.Index = ""
-	f.flusher = f.NormalFlush
+	f.Index = ""
 	// Verify that we can connect to the ClickHouse
 	lctx := mock.NewEmptyContext("p", "l", "c")
 	err := f.Init(lctx)

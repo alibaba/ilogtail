@@ -27,10 +27,10 @@ ilogtail:
                 Content: "hello"
           outputs:
             - Type: flusher_elasticsearch
+              Index: default
               Addresses: ["localhost:9200"]
               Authentication:
                 PlainText:
-                  Index: default
                   Username: elastic
                   Password: BtpoRTeyjmC=ruTIUoNN
   close_wait: 5s
