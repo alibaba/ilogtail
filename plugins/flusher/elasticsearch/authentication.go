@@ -16,8 +16,6 @@ type Authentication struct {
 	PlainText *PlainTextConfig
 	// TLS authentication
 	TLS *tlscommon.TLSConfig
-	// HTTP config
-	HTTPConfig *HTTPConfig
 }
 
 type PlainTextConfig struct {
@@ -27,19 +25,14 @@ type PlainTextConfig struct {
 	Password string
 }
 
-type HTTPConfig struct {
-	MaxIdleConnsPerHost   int
-	ResponseHeaderTimeout string
-}
-
-func (config *Authentication) ConfigureAuthentication(opts *elasticsearch.Config) error {
+func (config *Authentication) ConfigureAuthenticationAndHTTP(httpcfg *HTTPConfig, opts *elasticsearch.Config) error {
 	if config.PlainText != nil {
 		if err := config.PlainText.ConfigurePlaintext(opts); err != nil {
 			return err
 		}
 	}
-	if config.TLS != nil || config.HTTPConfig != nil {
-		if err := configureTLSandHTTP(config.HTTPConfig, config.TLS, opts); err != nil {
+	if config.TLS != nil || httpcfg != nil {
+		if err := configureTLSandHTTP(httpcfg, config.TLS, opts); err != nil {
 			return err
 		}
 	}

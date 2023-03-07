@@ -37,11 +37,17 @@ type FlusherElasticSearch struct {
 	Authentication Authentication
 	// The container of logs
 	Index string
+	// HTTP config
+	HTTPConfig *HTTPConfig
 
 	context   pipeline.Context
 	converter *converter.Converter
 	esClient  *elasticsearch.Client
-	flusher   FlusherFunc
+}
+
+type HTTPConfig struct {
+	MaxIdleConnsPerHost   int
+	ResponseHeaderTimeout string
 }
 
 type convertConfig struct {
@@ -55,8 +61,6 @@ type convertConfig struct {
 	// The options are: 'json'
 	Encoding string
 }
-
-type FlusherFunc func(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error
 
 func NewFlusherElasticSearch() *FlusherElasticSearch {
 	return &FlusherElasticSearch{
@@ -100,7 +104,7 @@ func (f *FlusherElasticSearch) Init(context pipeline.Context) error {
 	cfg := elasticsearch.Config{
 		Addresses: f.Addresses,
 	}
-	if err = f.Authentication.ConfigureAuthentication(&cfg); err != nil {
+	if err = f.Authentication.ConfigureAuthenticationAndHTTP(f.HTTPConfig, &cfg); err != nil {
 		err = fmt.Errorf("configure authenticationfailed, err: %w", err)
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher error", err)
 		return err
