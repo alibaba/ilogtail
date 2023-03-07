@@ -42,9 +42,8 @@ func AlibabaCloudEcsPlatformMetaCollect(meta map[string]string, minimize bool) m
 		if ecsToken, err = AlibabaCloudEcsPlatformReadToken(); err != nil {
 			logger.Error(context.Background(), "ECS_ALARM", "read token error", err)
 			return meta
-		} else {
-			ecsLastFetchTokenTime = now
 		}
+		ecsLastFetchTokenTime = now
 	}
 	m, err := AlibabaCloudEcsPlatformReadMeta(minimize)
 	if err != nil {
@@ -97,24 +96,24 @@ func AlibabaCloudEcsPlatformRequest(api string, method string, f func(header *ht
 	if resp.StatusCode == 404 {
 		return "", error404
 	}
-	if bytes, err := ioutil.ReadAll(resp.Body); err != nil {
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
 		return "", err
-	} else {
-		return string(bytes), nil
 	}
+	return string(bytes), nil
 }
 
 func AlibabaCloudEcsPlatformReadMeta(minimize bool) (map[string]string, error) {
 	meta := make(map[string]string)
-	var err error
 	configFunc := func(api, name string) error {
-		if val, err := AlibabaCloudEcsPlatformReadMetaVal(api); err != nil {
+		val, err := AlibabaCloudEcsPlatformReadMetaVal(api)
+		if err != nil {
 			return err
-		} else {
-			meta[name] = val
 		}
+		meta[name] = val
 		return nil
 	}
+	var err error
 	if err = configFunc("/meta-data/instance-id", "ecs_instance_id"); err != nil {
 		return nil, err
 	}
@@ -147,26 +146,26 @@ func AlibabaCloudEcsPlatformReadMeta(minimize bool) (map[string]string, error) {
 		if err = configFunc("/meta-data/image-id", "ecs_image_id"); err != nil {
 			return nil, err
 		}
-		if val, err := AlibabaCloudEcsPlatformReadMetaVal("/meta-data/tags/instance/"); err != nil {
+		val, err := AlibabaCloudEcsPlatformReadMetaVal("/meta-data/tags/instance/")
+		if err != nil {
 			if err == error404 {
 				logger.Error(context.Background(), "ECS_ALARM", "tags api error code 404")
 				return meta, nil
 			}
 			return nil, err
-		} else {
-			keys := strings.Split(val, "\n")
-			for _, key := range keys {
-				if key == "" {
-					continue
-				}
-				key = strings.TrimSpace(key)
-				if kval, err := AlibabaCloudEcsPlatformReadMetaVal("/meta-data/tags/instance/" + key); err != nil {
-					logger.Errorf(context.Background(), "ECS_ALARM", "key: %s not found val", key)
-					continue
-				} else {
-					helper.ReplaceInvalidChars(&key)
-					meta["ecs_tag_"+key] = kval
-				}
+		}
+		keys := strings.Split(val, "\n")
+		for _, key := range keys {
+			if key == "" {
+				continue
+			}
+			key = strings.TrimSpace(key)
+			if kval, err := AlibabaCloudEcsPlatformReadMetaVal("/meta-data/tags/instance/" + key); err != nil {
+				logger.Errorf(context.Background(), "ECS_ALARM", "key: %s not found val", key)
+				continue
+			} else {
+				helper.ReplaceInvalidChars(&key) // nolint:gosec
+				meta["ecs_tag_"+key] = kval
 			}
 		}
 	}
