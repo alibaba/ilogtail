@@ -131,10 +131,6 @@ func (f *FlusherElasticSearch) getConverter() (*converter.Converter, error) {
 	return converter.NewConverter(f.Convert.Protocol, f.Convert.Encoding, f.Convert.TagFieldsRename, f.Convert.ProtocolFieldsRename)
 }
 
-func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
-	return f.flusher(projectName, logstoreName, configName, logGroupList)
-}
-
 func (f *FlusherElasticSearch) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
 	return f.esClient != nil
 }
@@ -145,7 +141,7 @@ func (f *FlusherElasticSearch) Stop() error {
 	return nil
 }
 
-func (f *FlusherElasticSearch) NormalFlush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
 		serializedLogs, err := f.converter.ToByteStream(logGroup)
@@ -172,7 +168,6 @@ func (f *FlusherElasticSearch) NormalFlush(projectName string, logstoreName stri
 func init() {
 	pipeline.Flushers["flusher_elasticsearch"] = func() pipeline.Flusher {
 		f := NewFlusherElasticSearch()
-		f.flusher = f.NormalFlush
 		return f
 	}
 }
