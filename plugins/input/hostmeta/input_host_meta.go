@@ -16,6 +16,7 @@ package hostmeta
 
 import (
 	"fmt"
+	"github.com/alibaba/ilogtail/helper/platformmeta"
 	"regexp"
 	"strconv"
 	"strings"
@@ -45,15 +46,18 @@ type InputNodeMeta struct {
 	ProcessNamesRegex    []string          // The regular expressions for matching processes.
 	Labels               map[string]string // The user custom labels.
 	ProcessIntervalRound int64             // The process metadata fetched once after round times.
+	Platform             string
 
-	count         int64
-	regexpList    []*regexp.Regexp
-	hostname      string
-	ip            string
-	hostCollects  []metaCollectFunc
-	context       pipeline.Context
-	hostInfo      *host.InfoStat
-	processLabels map[string]string
+	count              int64
+	regexpList         []*regexp.Regexp
+	hostname           string
+	ip                 string
+	hostCollects       []metaCollectFunc
+	context            pipeline.Context
+	hostInfo           *host.InfoStat
+	processLabels      map[string]string
+	platformLabels     map[string]string
+	platfprmCollectors platformmeta.CollectPlatformMeta
 }
 
 func (in *InputNodeMeta) Init(context pipeline.Context) (int, error) {
@@ -83,6 +87,11 @@ func (in *InputNodeMeta) Init(context pipeline.Context) (int, error) {
 			in.processLabels[k] = v
 		}
 	}
+
+	if pc := platformmeta.GetPlatformMetaCollectors(in.Platform); pc != nil {
+		in.platformLabels = make(map[string]string)
+		in.platfprmCollectors = pc
+	}
 	return 0, nil
 }
 
@@ -92,6 +101,12 @@ func (in *InputNodeMeta) Description() string {
 
 func (in *InputNodeMeta) Collect(collector pipeline.Collector) error {
 	now := time.Now()
+	if in.platfprmCollectors != nil {
+		for k := range in.platformLabels {
+			delete(in.platformLabels, k)
+		}
+		in.platformLabels = in.platfprmCollectors(in.platformLabels, false)
+	}
 	if len(in.hostCollects) > 0 {
 		node, err := in.collectHostMeta()
 		if err != nil {
@@ -130,6 +145,9 @@ func (in *InputNodeMeta) collectHostMeta() (node *helper.MetaNode, err error) {
 		WithLabel("virtualization_system", info.VirtualizationSystem).
 		WithLabel("virtualization_role", info.VirtualizationRole).
 		WithLabel("host_id", info.HostID)
+	for k, v := range in.platformLabels {
+		node = node.WithLabel(k, v)
+	}
 	for k, v := range in.Labels {
 		node.WithLabel(k, v)
 	}

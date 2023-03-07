@@ -16,6 +16,7 @@ package systemv2
 
 import (
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/helper/platformmeta"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -54,6 +55,7 @@ type InputSystem struct {
 	Labels            map[string]string
 	ExcludeDiskFsType string
 	ExcludeDiskPath   string
+	Platform          string
 
 	lastInfo               *host.InfoStat
 	lastCPUStat            cpu.TimesStat
@@ -67,6 +69,7 @@ type InputSystem struct {
 	lastDiskStat           disk.IOCountersStat
 	lastDiskStatAll        map[string]disk.IOCountersStat
 	lastDiskTime           time.Time
+	innerLabels            helper.KeyValues
 	commonLabels           helper.KeyValues
 	commonLabelsStr        string
 	collectTime            time.Time
@@ -74,6 +77,8 @@ type InputSystem struct {
 	excludeDiskFsTypeRegex *regexp.Regexp
 	excludeDiskPathRegex   *regexp.Regexp
 	fs                     *procfs.FS //nolint:unused
+	platformLabels         map[string]string
+	platfprmCollectors     platformmeta.CollectPlatformMeta
 }
 
 func (r *InputSystem) Description() string {
@@ -98,13 +103,16 @@ func (r *InputSystem) CommonInit(context pipeline.Context) (int, error) {
 		r.excludeDiskPathRegex = reg
 	}
 	r.context = context
-	r.commonLabels.Append("hostname", util.GetHostName())
-	r.commonLabels.Append("ip", util.GetIPAddress())
+	r.innerLabels.Append("hostname", util.GetHostName())
+	r.innerLabels.Append("ip", util.GetIPAddress())
 	for key, val := range r.Labels {
-		r.commonLabels.Append(key, val)
+		r.innerLabels.Append(key, val)
 	}
-	r.commonLabels.Sort()
-	r.commonLabelsStr = r.commonLabels.String()
+	if pc := platformmeta.GetPlatformMetaCollectors(r.Platform); pc != nil {
+		r.platformLabels = make(map[string]string)
+		r.platfprmCollectors = pc
+	}
+	r.innerLabels.Sort()
 	return 0, nil
 }
 
@@ -378,6 +386,18 @@ func (r *InputSystem) CollectProtocol(collector pipeline.Collector) {
 
 func (r *InputSystem) Collect(collector pipeline.Collector) error {
 	r.collectTime = time.Now()
+	r.commonLabels = r.innerLabels.Clone()
+	if r.platfprmCollectors != nil {
+		for k := range r.platformLabels {
+			delete(r.platformLabels, k)
+		}
+		r.platformLabels = r.platfprmCollectors(r.platformLabels, true)
+		for k, v := range r.platformLabels {
+			r.commonLabels.Append(k, v)
+		}
+	}
+	r.commonLabels.Sort()
+	r.commonLabelsStr = r.commonLabels.String()
 	r.CollectCore(collector)
 	if r.CPU {
 		r.CollectCPU(collector)

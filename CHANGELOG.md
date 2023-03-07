@@ -58,3 +58,4 @@ your changes, such as:
 - [public] [both] [added] support pyroscope input datasource
 - [public] [both] [added] support config plugins to included in build, plugins.yml for builtin plugins, external_plugins.yml for external plugins
 - [public] [both] [updated] prometheus input add staleness output
+- [public] [both] [updated] metric_meta_host, metric_process_v2 and metric_system_v2 support collect ecs meta

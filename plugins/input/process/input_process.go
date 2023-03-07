@@ -16,6 +16,7 @@ package process
 
 import (
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/helper/platformmeta"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -44,16 +45,18 @@ type InputProcess struct {
 	ProcessNamesRegex   []string          // The regular expressions for matching processes.
 	Labels              map[string]string // The user custom labels.
 	// The optional metric switches
-	OpenFD bool
-	Thread bool
-	NetIO  bool
-	IO     bool
+	OpenFD   bool
+	Thread   bool
+	NetIO    bool
+	IO       bool
+	Platform string
 
-	context       pipeline.Context
-	lastProcesses map[int]processCache
-	regexpList    []*regexp.Regexp
-	commonLabels  helper.KeyValues
-	collectTime   time.Time
+	context            pipeline.Context
+	lastProcesses      map[int]processCache
+	regexpList         []*regexp.Regexp
+	commonLabels       helper.KeyValues
+	collectTime        time.Time
+	platfprmCollectors platformmeta.CollectPlatformMeta
 }
 
 func (ip *InputProcess) Init(context pipeline.Context) (int, error) {
@@ -76,6 +79,9 @@ func (ip *InputProcess) Init(context pipeline.Context) (int, error) {
 	for key, val := range ip.Labels {
 		ip.commonLabels.Append(key, val)
 	}
+	if pc := platformmeta.GetPlatformMetaCollectors(ip.Platform); pc != nil {
+		ip.platfprmCollectors = pc
+	}
 	return 0, nil
 }
 
@@ -90,7 +96,15 @@ func (ip *InputProcess) Collect(collector pipeline.Collector) error {
 		return err
 	}
 	for _, pc := range matchedProcesses {
-		labels := pc.Labels(ip.commonLabels)
+		meta := ip.commonLabels.Clone()
+		if ip.platfprmCollectors != nil {
+			plabels := make(map[string]string)
+			plabels = ip.platfprmCollectors(plabels, true)
+			for k, v := range plabels {
+				meta.Append(k, v)
+			}
+		}
+		labels := pc.Labels(meta)
 		// add necessary metrics
 		ip.addCPUMetrics(pc, labels, collector)
 		ip.addMemMetrics(pc, labels, collector)
