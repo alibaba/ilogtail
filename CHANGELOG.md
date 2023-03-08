@@ -61,4 +61,4 @@ your changes, such as:
 - [public] [both] [added] add logs for container matching in stdout plugin
 - [public] [both] [updated] set user agent for SLS client
 - [public] [both] [updated] prometheus input add staleness output
-- [public] [both] [updated] metric_meta_host, metric_process_v2 and metric_system_v2 support collect ecs meta
+- [public] [both] [updated] metric_meta_host, processor_appender support collect ecs meta
