@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/alibaba/ilogtail/pkg/fmtstr"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
@@ -40,6 +41,7 @@ type FlusherElasticSearch struct {
 	// HTTP config
 	HTTPConfig *HTTPConfig
 
+	indexKeys []string
 	context   pipeline.Context
 	converter *converter.Converter
 	esClient  *elasticsearch.Client
@@ -101,6 +103,18 @@ func (f *FlusherElasticSearch) Init(context pipeline.Context) error {
 	}
 	f.converter = convert
 
+	if f.Index == "" {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "Index not set error", err)
+	}
+
+	// Obtain index keys from dynamic index expression
+	indexKeys, err := fmtstr.CompileKeys(f.Index)
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher index fail, error", err)
+		return err
+	}
+	f.indexKeys = indexKeys
+
 	cfg := elasticsearch.Config{
 		Addresses: f.Addresses,
 	}
@@ -150,13 +164,19 @@ func (f *FlusherElasticSearch) Stop() error {
 func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
+		_, values, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
 		serializedLogs, err := f.converter.ToByteStream(logGroup)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", err)
 		}
-		for _, log := range serializedLogs.([][]byte) {
+		for index, log := range serializedLogs.([][]byte) {
+			valueMap := values[index]
+			index, err := fmtstr.FormatIndex(valueMap, f.Index)
+			if err != nil {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch format index fail, error", err)
+			}
 			req := esapi.IndexRequest{
-				Index: f.Index,
+				Index: *index,
 				Body:  bytes.NewReader(log),
 			}
 			res, err := req.Do(context.Background(), f.esClient)
