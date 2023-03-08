@@ -16,10 +16,13 @@ package appender
 
 import (
 	"fmt"
+	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/helper/platformmeta/ecs"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -45,7 +48,7 @@ func (p *ProcessorAppender) Init(context pipeline.Context) error {
 	}
 	p.context = context
 	p.realValue = replaceReg.ReplaceAllStringFunc(p.Value, func(s string) string {
-		return util.ParseVariableValue(s[2 : len(s)-2])
+		return ParseVariableValue(s[2 : len(s)-2])
 	})
 	return nil
 }
@@ -97,6 +100,47 @@ func (p *ProcessorAppender) find(log *protocol.Log, key string) *protocol.Log_Co
 		}
 	}
 	return nil
+}
+
+// ParseVariableValue parse specific key with logic:
+//  1. if key start with '$', the get from env
+//  2. if key == __ip__, return local ip address
+//  3. if key == __host__, return hostName
+//     others return key
+func ParseVariableValue(key string) string {
+	if len(key) == 0 {
+		return key
+	}
+	if key[0] == '$' {
+		return os.Getenv(key[1:])
+	}
+	switch key {
+	case "__ip__":
+		return util.GetIPAddress()
+	case "__host__":
+		return util.GetHostName()
+	case "__ecs_instance_id__":
+		return ecs.GetInstanceID()
+	case "__ecs_instance_name__":
+		return ecs.GetInstanceName()
+	case "__ecs_image_id__":
+		return ecs.GetInstanceImageID()
+	case "__ecs_region_id__":
+		return ecs.GetInstanceRegion()
+	case "__ecs_instance_type__":
+		return ecs.GetInstanceType()
+	case "__ecs_zone_id__":
+		return ecs.GetInstanceZone()
+	case "__ecs_vpc_id__":
+		return ecs.GetInstanceVpcID()
+	case "__ecs_instance_max_net_engress__":
+		return strconv.FormatInt(ecs.GetInstanceMaxNetEngress(), 10)
+	case "__ecs_instance_max_net_ingress__":
+		return strconv.FormatInt(ecs.GetInstanceMaxNetIngress(), 10)
+	case "__ecs_vswitch_id__":
+		return ecs.GetInstanceVswitchID()
+	}
+	return key
 }
 
 func init() {
