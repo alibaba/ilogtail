@@ -31,7 +31,7 @@ func AlibabaCloudEcsPlatformRequest(api string, method string, f func(header *ht
 	defer func() {
 		_ = resp.Body.Close()
 	}()
-	logger.Info(context.Background(), "api", r.URL.Path)
+	logger.Debug(context.Background(), "api", r.URL.Path)
 	if resp.StatusCode == 404 {
 		return "", error404
 	}
