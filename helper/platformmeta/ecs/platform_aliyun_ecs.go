@@ -145,7 +145,6 @@ func (m *Manager) fetchAPI() {
 			}
 			configFunc(key, val)
 			m.resChan <- true
-			return
 		}()
 
 	}
