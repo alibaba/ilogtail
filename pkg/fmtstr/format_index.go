@@ -16,5 +16,6 @@ package fmtstr
 
 // FormatIndex return elasticsearch index dynamically by using a format string
 func FormatIndex(targetValues map[string]string, topicPattern string) (*string, error) {
+	//TODO this is not completed yet, should return dynamic index
 	return &topicPattern, nil
 }
