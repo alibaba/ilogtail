@@ -17,6 +17,7 @@ package elasticsearch
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
 
@@ -104,7 +105,7 @@ func (f *FlusherElasticSearch) Init(context pipeline.Context) error {
 	f.converter = convert
 
 	if f.Index == "" {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "Index not set error", err)
+		return errors.New("index can't be empty")
 	}
 
 	// Obtain index keys from dynamic index expression

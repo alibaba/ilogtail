@@ -22,12 +22,12 @@ func InvalidTestConnectAndWrite(t *testing.T) {
 	f.Authentication.PlainText.Username = ""
 	f.Authentication.PlainText.Password = ""
 	f.Index = ""
-	// Verify that we can connect to the ClickHouse
+	// Verify that we can connect to the ElasticSearch
 	lctx := mock.NewEmptyContext("p", "l", "c")
 	err := f.Init(lctx)
 	require.NoError(t, err)
 
-	// Verify that we can successfully write data to the ClickHouse buffer engine table
+	// Verify that we can successfully write data to the ElasticSearch buffer engine table
 	lgl := makeTestLogGroupList()
 	err = f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
 	require.NoError(t, err)

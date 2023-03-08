@@ -41,7 +41,7 @@ func (config *Authentication) ConfigureAuthenticationAndHTTP(httpcfg *HTTPConfig
 
 func (plainTextConfig *PlainTextConfig) ConfigurePlaintext(opts *elasticsearch.Config) error {
 	// Validate Auth info
-	if plainTextConfig.Username != "" || plainTextConfig.Password == "" {
+	if plainTextConfig.Username == "" || plainTextConfig.Password == "" {
 		return fmt.Errorf("PlainTextConfig username or password cannot be null")
 	}
 	opts.Username = plainTextConfig.Username
