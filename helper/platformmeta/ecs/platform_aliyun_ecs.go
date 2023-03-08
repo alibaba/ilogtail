@@ -54,22 +54,29 @@ func AlibabaCloudEcsPlatformReadMetaVal(api string, token string) (val string, e
 	return
 }
 
+type tag struct {
+	k string
+	v string
+}
 type Data struct {
-	id            string
+	// unchanged meta
+	id           string
+	region       string
+	zone         string
+	instanceType string
+	imageID      string
+
+	// dynamic changed meta
 	name          string
 	tags          map[string]string
-	region        string
-	zone          string
-	instanceType  string
 	maxNetEngress int64
 	maxNetIngress int64
 	vpcID         string
 	vswitchID     string
-	imageID       string
 }
 
 type Manager struct {
-	mutex                   sync.Mutex
+	mutex                   sync.RWMutex
 	data                    Data
 	ecsToken                string
 	ecsLastFetchTime        time.Time
@@ -78,6 +85,8 @@ type Manager struct {
 	ecsTokenExpireTime      int
 	fetchRes                bool
 	once                    sync.Once
+	unchangedAlreadyRead    bool
+	resChan                 chan bool
 }
 
 func (m *Manager) fetchToken() (err error) {
@@ -115,10 +124,6 @@ func (m *Manager) fetchAPI() {
 		logger.Debug(context.Background(), "fetch ecs meta api res", m.fetchRes)
 	}()
 	now := time.Now()
-	if now.Sub(m.ecsLastFetchTime) < m.ecsMinimumFetchInterval {
-		return
-	}
-	m.fetchRes = false // reset
 	if now.Sub(m.ecsLastFetchTokenTime).Seconds() > float64(m.ecsTokenExpireTime)*3/4 {
 		if err := m.fetchToken(); err != nil {
 			logger.Error(context.Background(), "ECS_ALARM", "read token error", err)
@@ -131,67 +136,73 @@ func (m *Manager) fetchAPI() {
 		delete(m.data.tags, k)
 	}
 
-	readMetaFunc := func(api string, configFunc func(val string)) bool {
-		val, err := AlibabaCloudEcsPlatformReadMetaVal(api, m.ecsToken)
-		if err != nil {
-			logger.Error(context.Background(), "ECS_ALARM", "read meta error", err)
-			return false
-		}
-		configFunc(val)
-		return true
-	}
-
-	if success := readMetaFunc("/meta-data/instance-id", func(val string) { m.data.id = val }); !success {
-		return
-	}
-	if success := readMetaFunc("/meta-data/instance/max-netbw-egress", func(val string) { m.data.maxNetEngress, _ = strconv.ParseInt(val, 10, 64) }); !success {
-		return
-	}
-	if success := readMetaFunc("/meta-data/instance/max-netbw-ingress", func(val string) { m.data.maxNetIngress, _ = strconv.ParseInt(val, 10, 64) }); !success {
-		return
-	}
-	if success := readMetaFunc("/meta-data/instance/instance-name", func(val string) { m.data.name = val }); !success {
-		return
-	}
-	if success := readMetaFunc("/meta-data/region-id", func(val string) { m.data.region = val }); !success {
-		return
-	}
-	if success := readMetaFunc("/meta-data/zone-id", func(val string) { m.data.zone = val }); !success {
-		return
-	}
-	if success := readMetaFunc("/meta-data/vswitch-id", func(val string) { m.data.vswitchID = val }); !success {
-		return
-	}
-	if success := readMetaFunc("/meta-data/vpc-id", func(val string) { m.data.vpcID = val }); !success {
-		return
-	}
-	if success := readMetaFunc("/meta-data/image-id", func(val string) { m.data.imageID = val }); !success {
-		return
-	}
-	if success := readMetaFunc("/meta-data/instance/instance-type", func(val string) { m.data.instanceType = val }); !success {
-		return
-	}
-	// tags is optional feature for ecs meta, so response code 404 is legal
-	val, err := AlibabaCloudEcsPlatformReadMetaVal("/meta-data/tags/instance/", m.ecsToken)
-	if err != nil {
-		if err == error404 {
-			m.fetchRes = true
+	asyncReadMetaFunc := func(api string, key string, configFunc func(key, val string)) {
+		go func() {
+			val, err := AlibabaCloudEcsPlatformReadMetaVal(api, m.ecsToken)
+			if err != nil && err != error404 {
+				logger.Error(context.Background(), "ECS_ALARM", "read meta error", err)
+				m.resChan <- false
+				return
+			}
+			configFunc(key, val)
+			m.resChan <- true
 			return
+		}()
+
+	}
+	success := true
+	if !m.unchangedAlreadyRead {
+		asyncReadMetaFunc("/meta-data/instance-id", "", func(key, val string) { m.data.id = val })
+		asyncReadMetaFunc("/meta-data/region-id", "", func(key, val string) { m.data.region = val })
+		asyncReadMetaFunc("/meta-data/zone-id", "", func(key, val string) { m.data.zone = val })
+		asyncReadMetaFunc("/meta-data/image-id", "", func(key, val string) { m.data.imageID = val })
+		asyncReadMetaFunc("/meta-data/instance/instance-type", "", func(key, val string) { m.data.instanceType = val })
+		for i := 0; i < 5; i++ {
+			ok := <-m.resChan
+			success = success && ok
 		}
-		logger.Error(context.Background(), "ECS_ALARM", "tags api error", err)
+	}
+	if !success {
 		return
 	}
-	keys := strings.Split(val, "\n")
-	for _, key := range keys {
-		if key == "" {
-			continue
+	var tags string
+	asyncReadMetaFunc("/meta-data/instance/max-netbw-egress", "", func(key, val string) { m.data.maxNetEngress, _ = strconv.ParseInt(val, 10, 64) })
+	asyncReadMetaFunc("/meta-data/instance/max-netbw-ingress", "", func(key, val string) { m.data.maxNetIngress, _ = strconv.ParseInt(val, 10, 64) })
+	asyncReadMetaFunc("/meta-data/instance/instance-name", "", func(key, val string) { m.data.name = val })
+	asyncReadMetaFunc("/meta-data/vswitch-id", "", func(key, val string) { m.data.vswitchID = val })
+	asyncReadMetaFunc("/meta-data/vpc-id", "", func(key, val string) { m.data.vpcID = val })
+	asyncReadMetaFunc("/meta-data/tags/instance/", "", func(key, val string) { tags = val })
+	for i := 0; i < 6; i++ {
+		ok := <-m.resChan
+		success = success && ok
+	}
+	if success && tags != "" {
+		keys := strings.Split(tags, "\n")
+		num := 0
+		for i, key := range keys {
+			key = strings.TrimSpace(key)
+			if key == "" {
+				continue
+			}
+			keys[num] = keys[i]
+			num++
 		}
-		key = strings.TrimSpace(key)
-		if kval, err := AlibabaCloudEcsPlatformReadMetaVal("/meta-data/tags/instance/"+key, m.ecsToken); err != nil {
-			logger.Errorf(context.Background(), "ECS_ALARM", "key: %s not found val", key)
-			continue
-		} else {
-			m.data.tags[key] = kval
+		keys = keys[:num]
+		res := make(chan *tag, len(keys))
+		for _, key := range keys {
+			asyncReadMetaFunc("/meta-data/tags/instance/"+key, key, func(key, val string) {
+				res <- &tag{
+					k: key,
+					v: val,
+				}
+			})
+		}
+		for i := 0; i < len(keys); i++ {
+			<-m.resChan
+		}
+		for i := 0; i < len(res); i++ {
+			t := <-res
+			m.data.tags[t.k] = t.v
 		}
 	}
 	m.fetchRes = true
@@ -200,6 +211,7 @@ func (m *Manager) fetchAPI() {
 func init() {
 	manager = new(Manager)
 	manager.data.tags = make(map[string]string)
+	manager.resChan = make(chan bool, 30) // max support qps 30
 	var val int
 	_ = util.InitFromEnvInt("ALIYUN_ECS_MINIMUM_REFLUSH_INTERVAL", &val, 30)
 	manager.ecsMinimumFetchInterval = time.Second * time.Duration(val)
