@@ -1,8 +1,9 @@
-package ecs
+package platformmeta
 
 import (
 	"context"
 	"errors"
+	"github.com/alibaba/ilogtail/pkg/util"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -11,13 +12,11 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 // global var
 var (
 	error404 = errors.New("404")
-	manager  *Manager
 )
 
 func AlibabaCloudEcsPlatformRequest(api string, method string, f func(header *http.Header)) (string, error) {
@@ -75,7 +74,7 @@ type Data struct {
 	vswitchID     string
 }
 
-type Manager struct {
+type ECSManager struct {
 	mutex                   sync.RWMutex
 	data                    Data
 	ecsToken                string
@@ -88,7 +87,7 @@ type Manager struct {
 	resChan                 chan bool
 }
 
-func (m *Manager) fetchToken() (err error) {
+func (m *ECSManager) fetchToken() (err error) {
 	var val string
 	for i := 0; i < 2; i++ {
 		val, err = AlibabaCloudEcsPlatformRequest("/api/token", http.MethodPut, func(header *http.Header) {
@@ -105,7 +104,7 @@ func (m *Manager) fetchToken() (err error) {
 	return nil
 }
 
-func (m *Manager) startFetch() {
+func (m *ECSManager) startFetch() {
 	m.once.Do(func() {
 		m.fetchAPI()
 		go func() {
@@ -118,7 +117,7 @@ func (m *Manager) startFetch() {
 	})
 }
 
-func (m *Manager) fetchAPI() {
+func (m *ECSManager) fetchAPI() {
 	defer func() {
 		logger.Debug(context.Background(), "fetch ecs meta api res", m.fetchRes)
 	}()
@@ -207,12 +206,113 @@ func (m *Manager) fetchAPI() {
 	m.fetchRes = true
 }
 
-func init() {
-	manager = new(Manager)
-	manager.data.tags = make(map[string]string)
-	manager.resChan = make(chan bool, 30) // max support qps 30
+func (m *ECSManager) StartCollect() {
+	m.startFetch()
+}
+
+func (m *ECSManager) GetInstanceID() string {
+	if !m.fetchRes {
+		return ""
+	}
+	return m.data.id
+}
+
+func (m *ECSManager) GetInstanceImageID() string {
+	if !m.fetchRes {
+		return ""
+	}
+	return m.data.imageID
+}
+
+func (m *ECSManager) GetInstanceRegion() string {
+	if !m.fetchRes {
+		return ""
+	}
+	return m.data.region
+}
+
+func (m *ECSManager) GetInstanceZone() string {
+	if !m.fetchRes {
+		return ""
+	}
+	return m.data.zone
+}
+
+func (m *ECSManager) GetInstanceType() string {
+	if !m.fetchRes {
+		return ""
+	}
+	return m.data.instanceType
+}
+
+func (m *ECSManager) GetInstanceName() string {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	if !m.fetchRes {
+		return ""
+	}
+	return m.data.name
+}
+
+func (m *ECSManager) GetInstanceMaxNetEgress() int64 {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	if !m.fetchRes {
+		return -1
+	}
+	return m.data.maxNetEngress
+}
+
+func (m *ECSManager) GetInstanceMaxNetIngress() int64 {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	if !m.fetchRes {
+		return -1
+	}
+	return m.data.maxNetIngress
+}
+
+func (m *ECSManager) GetInstanceVpcID() string {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	if !m.fetchRes {
+		return ""
+	}
+	return m.data.vpcID
+}
+
+func (m *ECSManager) GetInstanceVswitchID() string {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	if !m.fetchRes {
+		return ""
+	}
+	return m.data.vswitchID
+}
+
+func (m *ECSManager) GetInstanceTags() map[string]string {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	if !m.fetchRes {
+		return map[string]string{}
+	}
+	res := make(map[string]string)
+	for k, v := range m.data.tags {
+		res[k] = v
+	}
+	return res
+}
+
+func initAliyun() {
+	e := &ECSManager{
+		data: Data{
+			tags: map[string]string{},
+		},
+		resChan: make(chan bool, 30),
+	}
 	var val int
 	_ = util.InitFromEnvInt("ALIYUN_ECS_MINIMUM_REFLUSH_INTERVAL", &val, 30)
-	manager.ecsMinimumFetchInterval = time.Second * time.Duration(val)
-	_ = util.InitFromEnvInt("ALIYUN_ECS_TOKEN_EXPIRE_TIME", &manager.ecsTokenExpireTime, 300)
+	e.ecsMinimumFetchInterval = time.Second * time.Duration(val)
+	_ = util.InitFromEnvInt("ALIYUN_ECS_TOKEN_EXPIRE_TIME", &e.ecsTokenExpireTime, 300)
+	register[Aliyun] = e
 }

@@ -29,7 +29,7 @@ func newProcessor() (*ProcessorAppender, error) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	processor := &ProcessorAppender{
 		Key:   "a",
-		Value: "|host#$#{{__host__}}|ip#$#{{__ip__}}|env:{{$my}}",
+		Value: "|host#$#{{__host__}}|ip#$#{{__ip__}}|env:{{$my}}|switch#$#{{__cloudmeta_image_id__}}",
 	}
 	err := processor.Init(ctx)
 	return processor, err
@@ -42,18 +42,18 @@ func TestIgnoreIfExistTrue(t *testing.T) {
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "test_key", Value: "test_value"})
 	processor.processLog(log)
 	assert.Equal(t, "test_value", log.Contents[0].Value)
-	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my"), log.Contents[1].Value)
+	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#image_xxx", log.Contents[1].Value)
 	processor.processLog(log)
 	assert.Equal(t, "test_value", log.Contents[0].Value)
-	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my"), log.Contents[1].Value)
+	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#image_xxx"+"|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#image_xxx", log.Contents[1].Value)
 
 	processor.SortLabels = true
 	log.Contents[1].Value = ""
 	processor.processLog(log)
-	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress(), log.Contents[1].Value)
+	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#image_xxx", log.Contents[1].Value)
 	log.Contents[1].Value = "z#$#x"
 	processor.processLog(log)
-	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|z#$#x", log.Contents[1].Value)
+	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#image_xxx"+"|z#$#x", log.Contents[1].Value)
 }
 
 func TestParameterCheck(t *testing.T) {

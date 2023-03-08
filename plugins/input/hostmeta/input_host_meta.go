@@ -24,7 +24,6 @@ import (
 	"github.com/shirou/gopsutil/host"
 
 	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/helper/platformmeta/ecs"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -46,17 +45,15 @@ type InputNodeMeta struct {
 	ProcessNamesRegex    []string          // The regular expressions for matching processes.
 	Labels               map[string]string // The user custom labels.
 	ProcessIntervalRound int64             // The process metadata fetched once after round times.
-	Platform             string
 
-	count          int64
-	regexpList     []*regexp.Regexp
-	hostname       string
-	ip             string
-	hostCollects   []metaCollectFunc
-	context        pipeline.Context
-	hostInfo       *host.InfoStat
-	processLabels  map[string]string
-	platformLabels map[string]string
+	count         int64
+	regexpList    []*regexp.Regexp
+	hostname      string
+	ip            string
+	hostCollects  []metaCollectFunc
+	context       pipeline.Context
+	hostInfo      *host.InfoStat
+	processLabels map[string]string
 }
 
 func (in *InputNodeMeta) Init(context pipeline.Context) (int, error) {
@@ -86,7 +83,6 @@ func (in *InputNodeMeta) Init(context pipeline.Context) (int, error) {
 			in.processLabels[k] = v
 		}
 	}
-	in.platformLabels = make(map[string]string)
 	return 0, nil
 }
 
@@ -96,26 +92,6 @@ func (in *InputNodeMeta) Description() string {
 
 func (in *InputNodeMeta) Collect(collector pipeline.Collector) error {
 	now := time.Now()
-	for k := range in.platformLabels {
-		delete(in.platformLabels, k)
-	}
-	if in.Platform == "aliyun-ecs" {
-		in.platformLabels["ecs_instance_id"] = ecs.GetInstanceID()
-		in.platformLabels["ecs_instance_name"] = ecs.GetInstanceName()
-		in.platformLabels["ecs_image_id"] = ecs.GetInstanceImageID()
-		in.platformLabels["ecs_region_id"] = ecs.GetInstanceRegion()
-		in.platformLabels["ecs_instance_type"] = ecs.GetInstanceType()
-		in.platformLabels["ecs_zone_id"] = ecs.GetInstanceZone()
-		in.platformLabels["ecs_vpc_id"] = ecs.GetInstanceVpcID()
-		in.platformLabels["ecs_instance_max_net_engress"] = strconv.FormatInt(ecs.GetInstanceMaxNetEngress(), 10)
-		in.platformLabels["ecs_instance_max_net_ingress"] = strconv.FormatInt(ecs.GetInstanceMaxNetIngress(), 10)
-		in.platformLabels["ecs_vswitch_id"] = ecs.GetInstanceVswitchID()
-		for k, v := range ecs.GetInstanceTags() {
-			helper.ReplaceInvalidChars(&k) // nolint:gosec
-			in.platformLabels["ecs_tag_"+k] = v
-		}
-	}
-
 	if len(in.hostCollects) > 0 {
 		node, err := in.collectHostMeta()
 		if err != nil {
@@ -154,9 +130,6 @@ func (in *InputNodeMeta) collectHostMeta() (node *helper.MetaNode, err error) {
 		WithLabel("virtualization_system", info.VirtualizationSystem).
 		WithLabel("virtualization_role", info.VirtualizationRole).
 		WithLabel("host_id", info.HostID)
-	for k, v := range in.platformLabels {
-		node.WithLabel(k, v)
-	}
 	for k, v := range in.Labels {
 		node.WithLabel(k, v)
 	}

@@ -22,19 +22,22 @@ import (
 	"strings"
 
 	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/helper/platformmeta/ecs"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
 )
 
 type ProcessorAppender struct {
 	Key        string
 	Value      string
 	SortLabels bool
+	Platform   platformmeta.Platform
 
-	realValue string
-	context   pipeline.Context
+	cloudmetaManager platformmeta.Manager
+	realValue        string
+	replaceFuncs     []func(val string) string
+	context          pipeline.Context
 }
 
 const pluginName = "processor_appender"
@@ -47,8 +50,15 @@ func (p *ProcessorAppender) Init(context pipeline.Context) error {
 		return fmt.Errorf("must specify Key and Value for plugin %v", pluginName)
 	}
 	p.context = context
+	manager := platformmeta.GetManager(p.Platform)
+	if manager != nil {
+		p.cloudmetaManager = manager
+		p.cloudmetaManager.StartCollect()
+	} else {
+		p.cloudmetaManager = platformmeta.GetManager(platformmeta.Mock)
+	}
 	p.realValue = replaceReg.ReplaceAllStringFunc(p.Value, func(s string) string {
-		return ParseVariableValue(s[2 : len(s)-2])
+		return p.ParseVariableValue(s[2 : len(s)-2])
 	})
 	return nil
 }
@@ -76,7 +86,11 @@ func (p *ProcessorAppender) processLog(log *protocol.Log) {
 }
 
 func (p *ProcessorAppender) processField(c *protocol.Log_Content) {
-	c.Value += p.realValue
+	r := p.realValue
+	for _, replaceFunc := range p.replaceFuncs {
+		r = replaceFunc(r)
+	}
+	c.Value += r
 	if p.SortLabels {
 		labels := strings.Split(c.Value, "|")
 		var keyValue helper.KeyValues
@@ -107,7 +121,7 @@ func (p *ProcessorAppender) find(log *protocol.Log, key string) *protocol.Log_Co
 //  2. if key == __ip__, return local ip address
 //  3. if key == __host__, return hostName
 //     others return key
-func ParseVariableValue(key string) string {
+func (p *ProcessorAppender) ParseVariableValue(key string) string {
 	if len(key) == 0 {
 		return key
 	}
@@ -119,32 +133,54 @@ func ParseVariableValue(key string) string {
 		return util.GetIPAddress()
 	case "__host__":
 		return util.GetHostName()
-	case "__ecs_instance_id__":
-		return ecs.GetInstanceID()
-	case "__ecs_instance_name__":
-		return ecs.GetInstanceName()
-	case "__ecs_image_id__":
-		return ecs.GetInstanceImageID()
-	case "__ecs_region_id__":
-		return ecs.GetInstanceRegion()
-	case "__ecs_instance_type__":
-		return ecs.GetInstanceType()
-	case "__ecs_zone_id__":
-		return ecs.GetInstanceZone()
-	case "__ecs_vpc_id__":
-		return ecs.GetInstanceVpcID()
-	case "__ecs_instance_max_net_engress__":
-		return strconv.FormatInt(ecs.GetInstanceMaxNetEngress(), 10)
-	case "__ecs_instance_max_net_ingress__":
-		return strconv.FormatInt(ecs.GetInstanceMaxNetIngress(), 10)
-	case "__ecs_vswitch_id__":
-		return ecs.GetInstanceVswitchID()
+	case "__cloudmeta_instance_id__":
+		return p.cloudmetaManager.GetInstanceID()
+	case "__cloudmeta_instance_name__":
+		const tag = "{{__cloudmeta_instance_name__}}"
+		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
+			return strings.ReplaceAll(val, tag, p.cloudmetaManager.GetInstanceName())
+		})
+		return tag
+	case "__cloudmeta_image_id__":
+		return p.cloudmetaManager.GetInstanceImageID()
+	case "__cloudmeta_region_id__":
+		return p.cloudmetaManager.GetInstanceRegion()
+	case "__cloudmeta_instance_type__":
+		return p.cloudmetaManager.GetInstanceType()
+	case "__cloudmeta_zone_id__":
+		return p.cloudmetaManager.GetInstanceZone()
+	case "__cloudmeta_vpc_id__":
+		const tag = "{{__cloudmeta_vpc_id__}}"
+		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
+			return strings.ReplaceAll(val, tag, p.cloudmetaManager.GetInstanceVpcID())
+		})
+		return tag
+	case "__cloudmeta_instance_max_net_egress__":
+		const tag = "{{__cloudmeta_instance_max_net_egress__}}"
+		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
+			return strings.ReplaceAll(val, tag, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetEgress(), 10))
+		})
+		return tag
+	case "__cloudmeta_instance_max_net_ingress__":
+		const tag = "{{__cloudmeta_instance_max_net_ingress__}}"
+		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
+			return strings.ReplaceAll(val, tag, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetIngress(), 10))
+		})
+		return tag
+	case "__cloudmeta_vswitch_id__":
+		const tag = "{{__cloudmeta_vswitch_id__}}"
+		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
+			return strings.ReplaceAll(val, tag, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetEgress(), 10))
+		})
+		return tag
 	}
 	return key
 }
 
 func init() {
 	pipeline.Processors[pluginName] = func() pipeline.Processor {
-		return &ProcessorAppender{}
+		return &ProcessorAppender{
+			Platform: platformmeta.Mock,
+		}
 	}
 }
