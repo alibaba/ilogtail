@@ -155,7 +155,7 @@ func (in *InputNodeMeta) collectHostMeta() (node *helper.MetaNode, err error) {
 		WithLabel("virtualization_role", info.VirtualizationRole).
 		WithLabel("host_id", info.HostID)
 	for k, v := range in.platformLabels {
-		node = node.WithLabel(k, v)
+		node.WithLabel(k, v)
 	}
 	for k, v := range in.Labels {
 		node.WithLabel(k, v)
