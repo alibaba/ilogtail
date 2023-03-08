@@ -99,8 +99,7 @@ func (in *InputNodeMeta) Collect(collector pipeline.Collector) error {
 	for k := range in.platformLabels {
 		delete(in.platformLabels, k)
 	}
-	switch in.Platform {
-	case "aliyun-ecs":
+	if in.Platform == "aliyun-ecs" {
 		in.platformLabels["ecs_instance_id"] = ecs.GetInstanceID()
 		in.platformLabels["ecs_instance_name"] = ecs.GetInstanceName()
 		in.platformLabels["ecs_image_id"] = ecs.GetInstanceImageID()
