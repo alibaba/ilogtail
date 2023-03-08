@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
 
 	"github.com/elastic/go-elasticsearch/v8"
@@ -165,9 +166,9 @@ func (f *FlusherElasticSearch) Stop() error {
 func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
-		_, values, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
+		_, values, errConvert := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
 		serializedLogs, err := f.converter.ToByteStream(logGroup)
-		if err != nil {
+		if err != nil || errConvert != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", err)
 		}
 		for index, log := range serializedLogs.([][]byte) {
