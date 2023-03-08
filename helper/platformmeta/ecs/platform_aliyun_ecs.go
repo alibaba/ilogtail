@@ -79,7 +79,6 @@ type Manager struct {
 	mutex                   sync.RWMutex
 	data                    Data
 	ecsToken                string
-	ecsLastFetchTime        time.Time
 	ecsLastFetchTokenTime   time.Time
 	ecsMinimumFetchInterval time.Duration
 	ecsTokenExpireTime      int
@@ -165,6 +164,7 @@ func (m *Manager) fetchAPI() {
 	if !success {
 		return
 	}
+	m.unchangedAlreadyRead = true
 	var tags string
 	asyncReadMetaFunc("/meta-data/instance/max-netbw-egress", "", func(key, val string) { m.data.maxNetEngress, _ = strconv.ParseInt(val, 10, 64) })
 	asyncReadMetaFunc("/meta-data/instance/max-netbw-ingress", "", func(key, val string) { m.data.maxNetIngress, _ = strconv.ParseInt(val, 10, 64) })
