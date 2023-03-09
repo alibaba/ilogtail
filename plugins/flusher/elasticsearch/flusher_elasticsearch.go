@@ -167,18 +167,21 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 	for _, logGroup := range logGroupList {
 		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
 		_, values, errConvert := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
+		if errConvert != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", errConvert)
+		}
 		serializedLogs, err := f.converter.ToByteStream(logGroup)
-		if err != nil || errConvert != nil {
+		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", err)
 		}
 		for index, log := range serializedLogs.([][]byte) {
 			valueMap := values[index]
-			index, err := fmtstr.FormatIndex(valueMap, f.Index)
+			ESIndex, err := FormatIndex(valueMap, f.Index)
 			if err != nil {
 				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch format index fail, error", err)
 			}
 			req := esapi.IndexRequest{
-				Index: *index,
+				Index: *ESIndex,
 				Body:  bytes.NewReader(log),
 			}
 			res, err := req.Do(context.Background(), f.esClient)
@@ -198,4 +201,10 @@ func init() {
 		f := NewFlusherElasticSearch()
 		return f
 	}
+}
+
+// FormatIndex return elasticsearch index dynamically by using a format string
+func FormatIndex(targetValues map[string]string, topicPattern string) (*string, error) {
+	// TODO this is not completed yet, should return dynamic index
+	return &topicPattern, nil
 }
