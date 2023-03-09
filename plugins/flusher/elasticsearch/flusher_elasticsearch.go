@@ -166,11 +166,7 @@ func (f *FlusherElasticSearch) Stop() error {
 func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	for _, logGroup := range logGroupList {
 		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
-		_, values, errConvert := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
-		if errConvert != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", errConvert)
-		}
-		serializedLogs, err := f.converter.ToByteStream(logGroup)
+		serializedLogs, values, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", err)
 		}
