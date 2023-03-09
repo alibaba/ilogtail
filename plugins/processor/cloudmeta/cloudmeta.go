@@ -18,15 +18,15 @@ type Mode string
 
 const (
 	contentMode     Mode = "content"
-	contentJsonMode Mode = "json"
+	contentJSONMode Mode = "json"
 )
 
 type ProcessorCloudMeta struct {
-	Platform        platformmeta.Platform
-	Mode            Mode
-	JsonContentKey  string
-	JsonContentPath string
-	AddMetas        map[string]string
+	Platform platformmeta.Platform
+	Mode     Mode
+	JSONKey  string
+	JSONPath string
+	AddMetas map[string]string
 
 	keyPath     []string
 	m           platformmeta.Manager
@@ -76,21 +76,21 @@ func (c *ProcessorCloudMeta) Init(context pipeline.Context) error {
 	m := platformmeta.GetManager(c.Platform)
 	if m == nil {
 		logger.Error(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "not support platform", c.Platform)
-		return errors.New(fmt.Sprintf("not support collect %s metadata", c.Platform))
+		return fmt.Errorf("not support collect %s metadata", c.Platform)
 	}
 	m.StartCollect()
 	c.m = m
-	if c.Mode != contentMode && c.Mode != contentJsonMode {
+	if c.Mode != contentMode && c.Mode != contentJSONMode {
 		logger.Error(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "not support mode", c.Mode)
-		return errors.New(fmt.Sprintf("not support mode %s", c.Mode))
+		return fmt.Errorf("not support mode %s", c.Mode)
 	}
-	c.JsonContentKey = strings.TrimSpace(c.JsonContentKey)
-	if c.Mode == contentJsonMode && c.JsonContentKey == "" {
+	c.JSONKey = strings.TrimSpace(c.JSONKey)
+	if c.Mode == contentJSONMode && c.JSONKey == "" {
 		logger.Error(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "json mode key is required")
 		return errors.New("json mode key is required")
 	}
-	if c.JsonContentPath != "" {
-		c.keyPath = strings.Split(c.JsonContentPath, ".")
+	if c.JSONPath != "" {
+		c.keyPath = strings.Split(c.JSONPath, ".")
 	}
 	c.readMeta()
 	if c.Mode == contentMode {
@@ -114,10 +114,10 @@ func (c *ProcessorCloudMeta) ProcessLogs(logArray []*protocol.Log) []*protocol.L
 		for _, log := range logArray {
 			log.Contents = append(log.Contents, c.logcontents...)
 		}
-	case contentJsonMode:
+	case contentJSONMode:
 		for _, log := range logArray {
 			for _, con := range log.Contents {
-				if con.Key != c.JsonContentKey {
+				if con.Key != c.JSONKey {
 					continue
 				}
 				data := make(map[string]interface{})
@@ -130,16 +130,14 @@ func (c *ProcessorCloudMeta) ProcessLogs(logArray []*protocol.Log) []*protocol.L
 					logger.Warning(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "json path not exist")
 					continue
 				}
-				switch res.(type) {
+				switch t := res.(type) {
 				case map[string]string:
-					r := res.(map[string]string)
 					for k, v := range c.meta {
-						r[k] = v
+						t[k] = v
 					}
 				case map[string]interface{}:
-					r := res.(map[string]interface{})
 					for k, v := range c.meta {
-						r[k] = v
+						t[k] = v
 					}
 				}
 				added, _ := json.Marshal(data)
@@ -160,7 +158,7 @@ func findMapByPath(data map[string]interface{}, path []string) interface{} {
 	if !ok {
 		return nil
 	}
-	switch d.(type) {
+	switch t := d.(type) {
 	case map[string]string:
 		if len(path) == 1 {
 			return d
@@ -169,9 +167,8 @@ func findMapByPath(data map[string]interface{}, path []string) interface{} {
 	case map[string]interface{}:
 		if len(path) == 1 {
 			return d
-		} else {
-			return findMapByPath(d.(map[string]interface{}), path[1:])
 		}
+		return findMapByPath(t, path[1:])
 	default:
 		return nil
 	}

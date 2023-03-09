@@ -1,13 +1,15 @@
 package cloudmeta
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	_ "github.com/alibaba/ilogtail/pkg/logger/test"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_cloudMeta_ProcessLogs(t *testing.T) {
@@ -55,8 +57,8 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		"instance_tags": "__instance_tags__",
 	}
 	type fields struct {
-		JsonContentKey  string
-		JsonContentPath string
+		JSONContentKey  string
+		JSONContentPath string
 	}
 	tests := []struct {
 		name           string
@@ -76,7 +78,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "not exist key",
 			fields: fields{
-				JsonContentKey: "content",
+				JSONContentKey: "content",
 			},
 			initError:      false,
 			content:        "json",
@@ -91,7 +93,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "content val illegal",
 			fields: fields{
-				JsonContentKey: "content",
+				JSONContentKey: "content",
 			},
 			initError:      false,
 			content:        "json",
@@ -105,7 +107,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "not content path",
 			fields: fields{
-				JsonContentKey: "content",
+				JSONContentKey: "content",
 			},
 			initError:      false,
 			content:        `{"a":"b"}`,
@@ -119,8 +121,8 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "path type illegal",
 			fields: fields{
-				JsonContentKey:  "content",
-				JsonContentPath: "a",
+				JSONContentKey:  "content",
+				JSONContentPath: "a",
 			},
 			initError:      false,
 			content:        `{"a":"b"}`,
@@ -134,8 +136,8 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "path type illegal2",
 			fields: fields{
-				JsonContentKey:  "content",
-				JsonContentPath: "a.b.c",
+				JSONContentKey:  "content",
+				JSONContentPath: "a.b.c",
 			},
 			initError:      false,
 			content:        `{"a": { "b": {"c": "d"}}}`,
@@ -149,8 +151,8 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "path type legal",
 			fields: fields{
-				JsonContentKey:  "content",
-				JsonContentPath: "a.b.c",
+				JSONContentKey:  "content",
+				JSONContentPath: "a.b.c",
 			},
 			initError:      false,
 			content:        `{"a": { "b": {"c": {"d":"e"}}}}`,
@@ -167,16 +169,15 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := new(ProcessorCloudMeta)
 			c.Platform = platformmeta.Mock
-			c.Mode = contentJsonMode
+			c.Mode = contentJSONMode
 			c.AddMetas = metas
-			c.JsonContentKey = tt.fields.JsonContentKey
-			c.JsonContentPath = tt.fields.JsonContentPath
+			c.JSONKey = tt.fields.JSONContentKey
+			c.JSONPath = tt.fields.JSONContentPath
 			if tt.initError {
 				require.Error(t, c.Init(mock.NewEmptyContext("a", "b", "c")))
 				return
-			} else {
-				require.NoError(t, c.Init(mock.NewEmptyContext("a", "b", "c")))
 			}
+			require.NoError(t, c.Init(mock.NewEmptyContext("a", "b", "c")))
 			log := &protocol.Log{
 				Time: 1,
 				Contents: []*protocol.Log_Content{

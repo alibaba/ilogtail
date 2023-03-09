@@ -3,7 +3,6 @@ package platformmeta
 import (
 	"context"
 	"errors"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 // global var
