@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
 )
 
@@ -121,7 +121,7 @@ func (c *ProcessorCloudMeta) ProcessLogs(logArray []*protocol.Log) []*protocol.L
 					continue
 				}
 				data := make(map[string]interface{})
-				if err := json.Unmarshal(helper.ZeroCopySlice(con.Value), &data); err != nil {
+				if err := json.Unmarshal(util.ZeroCopyStringToBytes(con.Value), &data); err != nil {
 					logger.Warning(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "json deserialize err", err)
 					continue
 				}
