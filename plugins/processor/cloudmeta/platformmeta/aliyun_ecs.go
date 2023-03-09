@@ -134,7 +134,9 @@ func (m *ECSManager) fetchAPI() {
 		delete(m.data.tags, k)
 	}
 
+	asyncCount := 0
 	asyncReadMetaFunc := func(api string, key string, configFunc func(key, val string)) {
+		asyncCount++
 		go func() {
 			val, err := AlibabaCloudEcsPlatformReadMetaVal(api, m.ecsToken)
 			if err != nil && err != error404 {
@@ -148,16 +150,18 @@ func (m *ECSManager) fetchAPI() {
 
 	}
 	success := true
+
 	if !m.unchangedAlreadyRead {
 		asyncReadMetaFunc("/meta-data/instance-id", "", func(key, val string) { m.data.id = val })
 		asyncReadMetaFunc("/meta-data/region-id", "", func(key, val string) { m.data.region = val })
 		asyncReadMetaFunc("/meta-data/zone-id", "", func(key, val string) { m.data.zone = val })
 		asyncReadMetaFunc("/meta-data/image-id", "", func(key, val string) { m.data.imageID = val })
 		asyncReadMetaFunc("/meta-data/instance/instance-type", "", func(key, val string) { m.data.instanceType = val })
-		for i := 0; i < 5; i++ {
+		for i := 0; i < asyncCount; i++ {
 			ok := <-m.resChan
 			success = success && ok
 		}
+		asyncCount = 0
 	}
 	if !success {
 		return
@@ -170,10 +174,11 @@ func (m *ECSManager) fetchAPI() {
 	asyncReadMetaFunc("/meta-data/vswitch-id", "", func(key, val string) { m.data.vswitchID = val })
 	asyncReadMetaFunc("/meta-data/vpc-id", "", func(key, val string) { m.data.vpcID = val })
 	asyncReadMetaFunc("/meta-data/tags/instance/", "", func(key, val string) { tags = val })
-	for i := 0; i < 6; i++ {
+	for i := 0; i < asyncCount; i++ {
 		ok := <-m.resChan
 		success = success && ok
 	}
+	asyncCount = 0
 	if success && tags != "" {
 		keys := strings.Split(tags, "\n")
 		num := 0

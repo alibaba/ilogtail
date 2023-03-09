@@ -133,41 +133,41 @@ func (p *ProcessorAppender) ParseVariableValue(key string) string {
 		return util.GetIPAddress()
 	case "__host__":
 		return util.GetHostName()
-	case "__cloudmeta_instance_id__":
+	case platformmeta.FlagInstanceID:
 		return p.cloudmetaManager.GetInstanceID()
-	case "__cloudmeta_instance_name__":
+	case platformmeta.FlagInstanceName:
 		const tag = "{{__cloudmeta_instance_name__}}"
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
 			return strings.ReplaceAll(val, tag, p.cloudmetaManager.GetInstanceName())
 		})
 		return tag
-	case "__cloudmeta_image_id__":
+	case platformmeta.FlagInstanceImageID:
 		return p.cloudmetaManager.GetInstanceImageID()
-	case "__cloudmeta_region_id__":
+	case platformmeta.FlagInstanceRegion:
 		return p.cloudmetaManager.GetInstanceRegion()
-	case "__cloudmeta_instance_type__":
+	case platformmeta.FlagInstanceType:
 		return p.cloudmetaManager.GetInstanceType()
-	case "__cloudmeta_zone_id__":
+	case platformmeta.FlagInstanceZone:
 		return p.cloudmetaManager.GetInstanceZone()
-	case "__cloudmeta_vpc_id__":
+	case platformmeta.FlagInstanceVpcID:
 		const tag = "{{__cloudmeta_vpc_id__}}"
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
 			return strings.ReplaceAll(val, tag, p.cloudmetaManager.GetInstanceVpcID())
 		})
 		return tag
-	case "__cloudmeta_instance_max_net_egress__":
+	case platformmeta.FlagInstanceMaxEgress:
 		const tag = "{{__cloudmeta_instance_max_net_egress__}}"
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
 			return strings.ReplaceAll(val, tag, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetEgress(), 10))
 		})
 		return tag
-	case "__cloudmeta_instance_max_net_ingress__":
+	case platformmeta.FlagInstanceMaxIngress:
 		const tag = "{{__cloudmeta_instance_max_net_ingress__}}"
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
 			return strings.ReplaceAll(val, tag, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetIngress(), 10))
 		})
 		return tag
-	case "__cloudmeta_vswitch_id__":
+	case platformmeta.FlagInstanceVswitchID:
 		const tag = "{{__cloudmeta_vswitch_id__}}"
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
 			return strings.ReplaceAll(val, tag, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetEgress(), 10))

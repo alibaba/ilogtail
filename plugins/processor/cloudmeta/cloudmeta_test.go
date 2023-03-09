@@ -17,17 +17,17 @@ func Test_cloudMeta_ProcessLogs(t *testing.T) {
 	c.Platform = platformmeta.Mock
 	c.Mode = contentMode
 	c.AddMetas = map[string]string{
-		"instance_id":   "__instance_id__",
-		"instance_name": "__instance_name__",
-		"zone":          "__zone__",
-		"region":        "__region__",
-		"instance_type": "__instance_type__",
-		"vswitch_id":    "__vswitch_id__",
-		"vpc_id":        "__vpc_id__",
-		"image_id":      "__image_id__",
-		"max_ingress":   "__max_ingress__",
-		"max_egress":    "__max_egress__",
-		"instance_tags": "__instance_tags__",
+		platformmeta.FlagInstanceID:         "__instance_id__",
+		platformmeta.FlagInstanceName:       "__instance_name__",
+		platformmeta.FlagInstanceZone:       "__zone__",
+		platformmeta.FlagInstanceRegion:     "__region__",
+		platformmeta.FlagInstanceType:       "__instance_type__",
+		platformmeta.FlagInstanceVswitchID:  "__vswitch_id__",
+		platformmeta.FlagInstanceVpcID:      "__vpc_id__",
+		platformmeta.FlagInstanceImageID:    "__image_id__",
+		platformmeta.FlagInstanceMaxIngress: "__max_ingress__",
+		platformmeta.FlagInstanceMaxEgress:  "__max_egress__",
+		platformmeta.FlagInstanceTags:       "__instance_tags__",
 	}
 	require.NoError(t, c.Init(mock.NewEmptyContext("a", "b", "c")))
 
@@ -52,9 +52,9 @@ func Test_cloudMeta_ProcessLogs(t *testing.T) {
 
 func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 	metas := map[string]string{
-		"instance_id":   "__instance_id__",
-		"instance_name": "__instance_name__",
-		"instance_tags": "__instance_tags__",
+		platformmeta.FlagInstanceID:   "__instance_id__",
+		platformmeta.FlagInstanceName: "__instance_name__",
+		platformmeta.FlagInstanceTags: "__instance_tags__",
 	}
 	type fields struct {
 		JSONContentKey  string

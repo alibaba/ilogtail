@@ -41,27 +41,27 @@ func (c *ProcessorCloudMeta) readMeta() {
 	}
 	for k, name := range c.AddMetas {
 		switch k {
-		case "instance_id":
+		case platformmeta.FlagInstanceID:
 			c.meta[name] = c.m.GetInstanceID()
-		case "instance_name":
+		case platformmeta.FlagInstanceName:
 			c.meta[name] = c.m.GetInstanceName()
-		case "zone":
+		case platformmeta.FlagInstanceZone:
 			c.meta[name] = c.m.GetInstanceZone()
-		case "region":
+		case platformmeta.FlagInstanceRegion:
 			c.meta[name] = c.m.GetInstanceRegion()
-		case "instance_type":
+		case platformmeta.FlagInstanceType:
 			c.meta[name] = c.m.GetInstanceType()
-		case "vswitch_id":
+		case platformmeta.FlagInstanceVswitchID:
 			c.meta[name] = c.m.GetInstanceVswitchID()
-		case "vpc_id":
+		case platformmeta.FlagInstanceVpcID:
 			c.meta[name] = c.m.GetInstanceVpcID()
-		case "image_id":
+		case platformmeta.FlagInstanceImageID:
 			c.meta[name] = c.m.GetInstanceImageID()
-		case "max_ingress":
+		case platformmeta.FlagInstanceMaxIngress:
 			c.meta[name] = strconv.FormatInt(c.m.GetInstanceMaxNetIngress(), 10)
-		case "max_egress":
+		case platformmeta.FlagInstanceMaxEgress:
 			c.meta[name] = strconv.FormatInt(c.m.GetInstanceMaxNetEgress(), 10)
-		case "instance_tags":
+		case platformmeta.FlagInstanceTags:
 			for k, v := range c.m.GetInstanceTags() {
 				c.meta[name+"_"+k] = v
 			}

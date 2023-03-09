@@ -1,5 +1,19 @@
 package platformmeta
 
+const (
+	FlagInstanceID         = "__cloud_instance_id__"
+	FlagInstanceName       = "__cloud_instance_name__"
+	FlagInstanceRegion     = "__cloud_region__"
+	FlagInstanceZone       = "__cloud_zone__"
+	FlagInstanceVpcID      = "__cloud_vpc_id__"
+	FlagInstanceVswitchID  = "__cloud_vswitch_id__"
+	FlagInstanceTags       = "__cloud_instance_tags__"
+	FlagInstanceType       = "__cloud_instance_type__"
+	FlagInstanceImageID    = "__cloud_image_id__"
+	FlagInstanceMaxIngress = "__cloud_max_ingress__"
+	FlagInstanceMaxEgress  = "__cloud_max_egress__"
+)
+
 type Manager interface {
 	StartCollect()
 	GetInstanceID() string
