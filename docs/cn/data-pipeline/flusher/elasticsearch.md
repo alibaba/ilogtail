@@ -44,9 +44,9 @@ flushers:
     Addresses: 
       - 192.XX.XX.1:9092
       - 192.XX.XX.2:9092
+    Index: default
     Authentication:
       PlainText:
-        Index: default
         Username: user
         Password: 123456
 ```
