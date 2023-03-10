@@ -29,7 +29,7 @@ func newProcessor() (*ProcessorAppender, error) {
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	processor := &ProcessorAppender{
 		Key:   "a",
-		Value: "|host#$#{{__host__}}|ip#$#{{__ip__}}|env:{{$my}}|switch#$#{{__cloudmeta_image_id__}}",
+		Value: "|host#$#{{__host__}}|ip#$#{{__ip__}}|env:{{$my}}|switch#$#{{__cloud_image_id__}}",
 	}
 	err := processor.Init(ctx)
 	return processor, err
