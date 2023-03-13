@@ -15,16 +15,17 @@
 package appender
 
 import (
-	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
-	"github.com/alibaba/ilogtail/plugins/test"
-	"github.com/stretchr/testify/require"
 	"os"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
+	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
 
@@ -72,7 +73,7 @@ func TestReadDynamic(t *testing.T) {
 	processor.processLog(log)
 	require.Equal(t, test.ReadLogVal(log, "a"), "|__cloud_instance_id__#$#id_xxx|__cloud_instance_name__#$#name_xxx|__cloud_region__#$#region_xxx|__cloud_zone__#$#zone_xxx|__cloud_vpc_id__#$#vpc_xxx|__cloud_vswitch_id__#$#vswitch_xxx|__cloud_instance_type__#$#type_xxx|__cloud_image_id__#$#image_xxx|__cloud_max_ingress__#$#0|__cloud_max_egress__#$#0")
 
-	platformmeta.MockManagerNum.Add(100)
+	atomic.AddInt64(&platformmeta.MockManagerNum, 100)
 	log.Contents = log.Contents[:0]
 	processor.processLog(log)
 	require.Equal(t, test.ReadLogVal(log, "a"), "|__cloud_instance_id__#$#id_xxx|__cloud_instance_name__#$#name_xxx|__cloud_region__#$#region_xxx|__cloud_zone__#$#zone_xxx|__cloud_vpc_id__#$#vpc_xxx|__cloud_vswitch_id__#$#vswitch_xxx|__cloud_instance_type__#$#type_xxx|__cloud_image_id__#$#image_xxx|__cloud_max_ingress__#$#100|__cloud_max_egress__#$#1000")
@@ -94,7 +95,7 @@ func TestReadOnce(t *testing.T) {
 	require.Equal(t, test.ReadLogVal(log, "a"), "|__cloud_instance_id__#$#id_xxx|__cloud_instance_name__#$#name_xxx|__cloud_region__#$#region_xxx|__cloud_zone__#$#zone_xxx|__cloud_vpc_id__#$#vpc_xxx|__cloud_vswitch_id__#$#vswitch_xxx|__cloud_instance_type__#$#type_xxx|__cloud_image_id__#$#image_xxx|__cloud_max_ingress__#$#0|__cloud_max_egress__#$#0")
 
 	require.Equal(t, len(processor.replaceFuncs), 0)
-	platformmeta.MockManagerNum.Add(100)
+	atomic.AddInt64(&platformmeta.MockManagerNum, 100)
 	log.Contents = log.Contents[:0]
 	processor.processLog(log)
 	require.Equal(t, test.ReadLogVal(log, "a"), "|__cloud_instance_id__#$#id_xxx|__cloud_instance_name__#$#name_xxx|__cloud_region__#$#region_xxx|__cloud_zone__#$#zone_xxx|__cloud_vpc_id__#$#vpc_xxx|__cloud_vswitch_id__#$#vswitch_xxx|__cloud_instance_type__#$#type_xxx|__cloud_image_id__#$#image_xxx|__cloud_max_ingress__#$#0|__cloud_max_egress__#$#0")
