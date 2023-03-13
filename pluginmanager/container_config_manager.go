@@ -150,7 +150,7 @@ func refreshEnvAndLabel() {
 	logger.Debugf(context.Background(), "refreshEnvAndLabel", envSet, labelSet)
 }
 
-func compareEnvAndLabel() (diffEnvSet, diffLabelSet map[string]struct{}) {
+func compareEnvAndLabel() (diffEnvSet, diffLabelSet, diffK8sLabelSet map[string]struct{}) {
 	// get newest env label and compare with old
 	diffEnvSet = make(map[string]struct{})
 	diffLabelSet = make(map[string]struct{})

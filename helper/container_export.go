@@ -285,7 +285,7 @@ func GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, k8sLabelSet, di
 	return result
 }
 
-func CastContainerDetail(containerInfo *DockerIGetAllContainerIncludeEnvAndLabelToRecordnfoDetail, envSet, labelSet, CastContainerDetail map[string]struct{}) *DockerInfoDetailWithFilteredEnvAndLabel {
+func CastContainerDetail(containerInfo *DockerInfoDetail, envSet, labelSet, k8sLabelSet map[string]struct{}) *DockerInfoDetailWithFilteredEnvAndLabel {
 	newEnv := make(map[string]string)
 	for _, env := range containerInfo.ContainerInfo.Config.Env {
 		splitArray := strings.SplitN(env, "=", 2)
