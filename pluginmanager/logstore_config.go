@@ -402,7 +402,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 								continue
 							}
 							if strings.Contains(lowerKey, "k8slabel") {
-								for key, _ := range conditionMap {
+								for key := range conditionMap {
 									logstoreC.K8sLabelSet[key] = struct{}{}
 								}
 							} else if strings.Contains(lowerKey, "label") {
