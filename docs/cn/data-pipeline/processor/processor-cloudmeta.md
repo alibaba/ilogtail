@@ -10,10 +10,9 @@
 |----------|-------------------|------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Platform | String            | 是    | 云平台名称，目前支持aliyun、auto，auto 模式支持动态选择云平台。                                                                                                                   |
 | Mode     | String            | 否    | 支持 `add_fields` 与 `modify_json` 两种模式，`add_fields` 模式为protocol.Log 协议增加Log_Content字段，`modify_json` 模式为具体某个为json序列化的Log_Content增加元数据标签。默认为 `add_fields` 模式。 |
-| JSONKey  | String            | 否    | Mode为json模式生效，用来选取具体某个增加云平台元信息的Log_Content结构。                                                                                                             |
-| JSONPath | String            | 否    | Mode为json模式生效，支持多层结构增加云平台元信息，最内层结构需要为json结构                                                                                                               |
+| JSONPath | String            | 否    | Mode为json模式生效，支持多层结构增加云平台元信息，最内层结构需要为json结构，如存在 Log_Content 结构`a: {"b":{}}`，当在 a 子结构下追加是JSONPath为`a`，当在 b 子结构下追加时JSONPath 为 `a.b`                         |
 | AddMetas | map[string]string | 否    | 增加元信息配置。                                                                                                                                                  |
-| ReadOnce | bool              | 否    | 是否仅读取一次，不支持感知冬天变化，默认值false。                                                                                                                               |
+| ReadOnce | bool              | 否    | 是否仅读取一次，不支持感知动态变化，默认值false。                                                                                                                               |
 
 ## 支持元信息标签
 
@@ -33,13 +32,13 @@
 
 ## json Mode 配置举例
 
-| Data Input         | JSONPath | AddMetas              | JSONKey | Data Output                                                                     |
-|--------------------|----------|-----------------------|---------|---------------------------------------------------------------------------------|
-| `A:{}`             | ""       | {"cloud_zone":"zone"} | A       | 选中A字段，并且JSONPath为空数目第一层结构，且结构为json合法，因此输出数据为 `A:{"zone":"real zone data"}`      |
-| `B:{}`             | ""       | {"cloud_zone":"zone"} | A       | 选中A字段，但无具体字段，因此跳过追加，输出`B:{}`                                                    |
-| `A:""`             | ""       | {"cloud_zone":"zone"} | A       | 选中A字段，但A字段非json结构，因此跳过追加，输出`A:""`                                               |
-| `A:{"a":{"b":{}}}` | "a.b"    | {"cloud_zone":"zone"} | A       | 选中A字段，且JSONPath a.b 下为合法json 结构，因此输出数据`A:{"a":{"b":{"zone":"real zone data"}}}` |
-| `A:{"a":{"b":{}}}` | "a.b.c"  | {"cloud_zone":"zone"} | A       | 选中A字段，但JSONPath a.b.c 下无合法json 结构，因此输出数据`A:{"a":{"b":{}}}`                      |
+| Data Input         | JSONPath  | AddMetas              | Data Output                                                                     |
+|--------------------|-----------|-----------------------|---------------------------------------------------------------------------------|
+| `A:{}`             | ""        | {"cloud_zone":"zone"} | 选中A字段，并且JSONPath为空数目第一层结构，且结构为json合法，因此输出数据为 `A:{"zone":"real zone data"}`      |
+| `B:{}`             | ""        | {"cloud_zone":"zone"} | 选中A字段，但无具体字段，因此跳过追加，输出`B:{}`                                                    |
+| `A:""`             | ""        | {"cloud_zone":"zone"} | 选中A字段，但A字段非json结构，因此跳过追加，输出`A:""`                                               |
+| `A:{"a":{"b":{}}}` | "A.a.b"   | {"cloud_zone":"zone"} | 选中A字段，且JSONPath a.b 下为合法json 结构，因此输出数据`A:{"a":{"b":{"zone":"real zone data"}}}` |
+| `A:{"a":{"b":{}}}` | "A.a.b.c" | {"cloud_zone":"zone"} | 选中A字段，但JSONPath a.b.c 下无合法json 结构，因此输出数据`A:{"a":{"b":{}}}`                      |
 
 ## 样例
 
@@ -102,8 +101,7 @@ processors:
   - Type: processor_cloudmeta
     Platform: mock
     Mode: modify_json
-    JSONKey: content
-    JSONPath: "a.b"
+    JSONPath: "content.a.b"
     AddMetas:
         {{__cloud_instance_id__}}: instance_id_name
           {{__cloud_instance_tags__}}: instance_tag_prefix

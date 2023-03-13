@@ -84,7 +84,6 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		platformmeta.FlagInstanceTagsWrapper: "__instance_tags__",
 	}
 	type fields struct {
-		JSONContentKey  string
 		JSONContentPath string
 		Mode            platformmeta.Platform
 	}
@@ -106,7 +105,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "not exist key",
 			fields: fields{
-				JSONContentKey: "content",
+				JSONContentPath: "content",
 			},
 			initError:      false,
 			content:        "json",
@@ -121,7 +120,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "content val illegal",
 			fields: fields{
-				JSONContentKey: "content",
+				JSONContentPath: "content",
 			},
 			initError:      false,
 			content:        "json",
@@ -135,7 +134,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "not content path",
 			fields: fields{
-				JSONContentKey: "content",
+				JSONContentPath: "content",
 			},
 			initError:      false,
 			content:        `{"a":"b"}`,
@@ -149,8 +148,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "path type illegal",
 			fields: fields{
-				JSONContentKey:  "content",
-				JSONContentPath: "a",
+				JSONContentPath: "content.a",
 			},
 			initError:      false,
 			content:        `{"a":"b"}`,
@@ -164,8 +162,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "path type illegal2",
 			fields: fields{
-				JSONContentKey:  "content",
-				JSONContentPath: "a.b.c",
+				JSONContentPath: "content.a.b.c",
 			},
 			initError:      false,
 			content:        `{"a": { "b": {"c": "d"}}}`,
@@ -179,8 +176,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "path type legal",
 			fields: fields{
-				JSONContentKey:  "content",
-				JSONContentPath: "a.b.c",
+				JSONContentPath: "content.a.b.c",
 			},
 			initError:      false,
 			content:        `{"a": { "b": {"c": {"d":"e"}}}}`,
@@ -194,8 +190,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "test auto mode",
 			fields: fields{
-				JSONContentKey:  "content",
-				JSONContentPath: "a.b.c",
+				JSONContentPath: "content.a.b.c",
 				Mode:            platformmeta.Auto,
 			},
 			initError:      false,
@@ -219,7 +214,6 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 			}
 			c.Mode = contentJSONMode
 			c.AddMetas = metas
-			c.JSONKey = tt.fields.JSONContentKey
 			c.JSONPath = tt.fields.JSONContentPath
 			if tt.initError {
 				require.Error(t, c.Init(mock.NewEmptyContext("a", "b", "c")))
