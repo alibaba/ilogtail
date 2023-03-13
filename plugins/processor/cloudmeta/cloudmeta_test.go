@@ -2,6 +2,7 @@ package cloudmeta
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -17,17 +18,17 @@ func Test_cloudMeta_ProcessLogs(t *testing.T) {
 	c.Platform = platformmeta.Mock
 	c.Mode = contentMode
 	c.AddMetas = map[string]string{
-		platformmeta.FlagInstanceID:         "__instance_id__",
-		platformmeta.FlagInstanceName:       "__instance_name__",
-		platformmeta.FlagInstanceZone:       "__zone__",
-		platformmeta.FlagInstanceRegion:     "__region__",
-		platformmeta.FlagInstanceType:       "__instance_type__",
-		platformmeta.FlagInstanceVswitchID:  "__vswitch_id__",
-		platformmeta.FlagInstanceVpcID:      "__vpc_id__",
-		platformmeta.FlagInstanceImageID:    "__image_id__",
-		platformmeta.FlagInstanceMaxIngress: "__max_ingress__",
-		platformmeta.FlagInstanceMaxEgress:  "__max_egress__",
-		platformmeta.FlagInstanceTags:       "__instance_tags__",
+		platformmeta.FlagInstanceIDWrapper:         "__instance_id__",
+		platformmeta.FlagInstanceNameWrapper:       "__instance_name__",
+		platformmeta.FlagInstanceZoneWrapper:       "__zone__",
+		platformmeta.FlagInstanceRegionWrapper:     "__region__",
+		platformmeta.FlagInstanceTypeWrapper:       "__instance_type__",
+		platformmeta.FlagInstanceVswitchIDWrapper:  "__vswitch_id__",
+		platformmeta.FlagInstanceVpcIDWrapper:      "__vpc_id__",
+		platformmeta.FlagInstanceImageIDWrapper:    "__image_id__",
+		platformmeta.FlagInstanceMaxIngressWrapper: "__max_ingress__",
+		platformmeta.FlagInstanceMaxEgressWrapper:  "__max_egress__",
+		platformmeta.FlagInstanceTagsWrapper:       "__instance_tags__",
 	}
 	require.NoError(t, c.Init(mock.NewEmptyContext("a", "b", "c")))
 
@@ -45,20 +46,46 @@ func Test_cloudMeta_ProcessLogs(t *testing.T) {
 	require.Equal(t, test.ReadLogVal(logs[0], "__vswitch_id__"), "vswitch_xxx")
 	require.Equal(t, test.ReadLogVal(logs[0], "__vpc_id__"), "vpc_xxx")
 	require.Equal(t, test.ReadLogVal(logs[0], "__image_id__"), "image_xxx")
+	require.Equal(t, test.ReadLogVal(logs[0], "__max_ingress__"), "0")
+	require.Equal(t, test.ReadLogVal(logs[0], "__max_egress__"), "0")
+	require.Equal(t, test.ReadLogVal(logs[0], "__instance_tags___tag_key"), "tag_val")
+
+	log.Contents = log.Contents[:0]
+	platformmeta.MockManagerNum.Add(100)
+	time.Sleep(time.Second * 2)
+	logs = c.ProcessLogs([]*protocol.Log{log})
+	require.Equal(t, len(logs), 1)
+	require.Equal(t, len(logs[0].Contents), 11)
+	require.Equal(t, test.ReadLogVal(logs[0], "__instance_id__"), "id_xxx")
+	require.Equal(t, test.ReadLogVal(logs[0], "__instance_name__"), "name_xxx")
+	require.Equal(t, test.ReadLogVal(logs[0], "__zone__"), "zone_xxx")
+	require.Equal(t, test.ReadLogVal(logs[0], "__region__"), "region_xxx")
+	require.Equal(t, test.ReadLogVal(logs[0], "__instance_type__"), "type_xxx")
+	require.Equal(t, test.ReadLogVal(logs[0], "__vswitch_id__"), "vswitch_xxx")
+	require.Equal(t, test.ReadLogVal(logs[0], "__vpc_id__"), "vpc_xxx")
+	require.Equal(t, test.ReadLogVal(logs[0], "__image_id__"), "image_xxx")
 	require.Equal(t, test.ReadLogVal(logs[0], "__max_ingress__"), "100")
 	require.Equal(t, test.ReadLogVal(logs[0], "__max_egress__"), "1000")
 	require.Equal(t, test.ReadLogVal(logs[0], "__instance_tags___tag_key"), "tag_val")
+	lastRead := c.lastReadTime
+	log.Contents = log.Contents[:0]
+	platformmeta.MockManagerNum.Add(100)
+	logs = c.ProcessLogs([]*protocol.Log{log})
+	require.Equal(t, test.ReadLogVal(logs[0], "__max_ingress__"), "100")
+	require.Equal(t, test.ReadLogVal(logs[0], "__max_egress__"), "1000")
+	require.Equal(t, c.lastReadTime, lastRead)
 }
 
 func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 	metas := map[string]string{
-		platformmeta.FlagInstanceID:   "__instance_id__",
-		platformmeta.FlagInstanceName: "__instance_name__",
-		platformmeta.FlagInstanceTags: "__instance_tags__",
+		platformmeta.FlagInstanceIDWrapper:   "__instance_id__",
+		platformmeta.FlagInstanceNameWrapper: "__instance_name__",
+		platformmeta.FlagInstanceTagsWrapper: "__instance_tags__",
 	}
 	type fields struct {
 		JSONContentKey  string
 		JSONContentPath string
+		Mode            platformmeta.Platform
 	}
 	tests := []struct {
 		name           string
@@ -163,12 +190,32 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 				require.Equal(t, test.ReadLogVal(log, "content"), `{"a":{"b":{"c":{"__instance_id__":"id_xxx","__instance_name__":"name_xxx","__instance_tags___tag_key":"tag_val","d":"e"}}}}`)
 			},
 		},
+		{
+			name: "test auto mode",
+			fields: fields{
+				JSONContentKey:  "content",
+				JSONContentPath: "a.b.c",
+				Mode:            platformmeta.Auto,
+			},
+			initError:      false,
+			content:        `{"a": { "b": {"c": {"d":"e"}}}}`,
+			key:            "content",
+			logsLen:        1,
+			logsContentLen: 1,
+			validator: func(log *protocol.Log, t *testing.T) {
+				require.Equal(t, test.ReadLogVal(log, "content"), "{\"a\": { \"b\": {\"c\": {\"d\":\"e\"}}}}")
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := new(ProcessorCloudMeta)
-			c.Platform = platformmeta.Mock
+			if tt.fields.Mode == "" {
+				c.Platform = platformmeta.Mock
+			} else {
+				c.Platform = tt.fields.Mode
+			}
 			c.Mode = contentJSONMode
 			c.AddMetas = metas
 			c.JSONKey = tt.fields.JSONContentKey
@@ -193,5 +240,4 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 			tt.validator(logs[0], t)
 		})
 	}
-
 }

@@ -33,6 +33,7 @@ type ProcessorAppender struct {
 	Value      string
 	SortLabels bool
 	Platform   platformmeta.Platform
+	ReadOnce   bool
 
 	cloudmetaManager platformmeta.Manager
 	realValue        string
@@ -54,8 +55,6 @@ func (p *ProcessorAppender) Init(context pipeline.Context) error {
 	if manager != nil {
 		p.cloudmetaManager = manager
 		p.cloudmetaManager.StartCollect()
-	} else {
-		p.cloudmetaManager = platformmeta.GetManager(platformmeta.Mock)
 	}
 	p.realValue = replaceReg.ReplaceAllStringFunc(p.Value, func(s string) string {
 		return p.ParseVariableValue(s[2 : len(s)-2])
@@ -133,14 +132,21 @@ func (p *ProcessorAppender) ParseVariableValue(key string) string {
 		return util.GetIPAddress()
 	case "__host__":
 		return util.GetHostName()
+	}
+	if p.cloudmetaManager == nil {
+		return "empty"
+	}
+	switch key {
 	case platformmeta.FlagInstanceID:
 		return p.cloudmetaManager.GetInstanceID()
 	case platformmeta.FlagInstanceName:
-		const tag = "{{__cloudmeta_instance_name__}}"
+		if p.ReadOnce {
+			return p.cloudmetaManager.GetInstanceName()
+		}
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
-			return strings.ReplaceAll(val, tag, p.cloudmetaManager.GetInstanceName())
+			return strings.ReplaceAll(val, platformmeta.FlagInstanceNameWrapper, p.cloudmetaManager.GetInstanceName())
 		})
-		return tag
+		return platformmeta.FlagInstanceNameWrapper
 	case platformmeta.FlagInstanceImageID:
 		return p.cloudmetaManager.GetInstanceImageID()
 	case platformmeta.FlagInstanceRegion:
@@ -150,29 +156,37 @@ func (p *ProcessorAppender) ParseVariableValue(key string) string {
 	case platformmeta.FlagInstanceZone:
 		return p.cloudmetaManager.GetInstanceZone()
 	case platformmeta.FlagInstanceVpcID:
-		const tag = "{{__cloudmeta_vpc_id__}}"
+		if p.ReadOnce {
+			return p.cloudmetaManager.GetInstanceVpcID()
+		}
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
-			return strings.ReplaceAll(val, tag, p.cloudmetaManager.GetInstanceVpcID())
+			return strings.ReplaceAll(val, platformmeta.FlagInstanceVpcIDWrapper, p.cloudmetaManager.GetInstanceVpcID())
 		})
-		return tag
+		return platformmeta.FlagInstanceVpcIDWrapper
 	case platformmeta.FlagInstanceMaxEgress:
-		const tag = "{{__cloudmeta_instance_max_net_egress__}}"
+		if p.ReadOnce {
+			return strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetEgress(), 10)
+		}
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
-			return strings.ReplaceAll(val, tag, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetEgress(), 10))
+			return strings.ReplaceAll(val, platformmeta.FlagInstanceMaxEgressWrapper, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetEgress(), 10))
 		})
-		return tag
+		return platformmeta.FlagInstanceMaxEgressWrapper
 	case platformmeta.FlagInstanceMaxIngress:
-		const tag = "{{__cloudmeta_instance_max_net_ingress__}}"
+		if p.ReadOnce {
+			return strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetIngress(), 10)
+		}
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
-			return strings.ReplaceAll(val, tag, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetIngress(), 10))
+			return strings.ReplaceAll(val, platformmeta.FlagInstanceMaxIngressWrapper, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetIngress(), 10))
 		})
-		return tag
+		return platformmeta.FlagInstanceMaxIngressWrapper
 	case platformmeta.FlagInstanceVswitchID:
-		const tag = "{{__cloudmeta_vswitch_id__}}"
+		if p.ReadOnce {
+			return p.cloudmetaManager.GetInstanceVswitchID()
+		}
 		p.replaceFuncs = append(p.replaceFuncs, func(val string) string {
-			return strings.ReplaceAll(val, tag, strconv.FormatInt(p.cloudmetaManager.GetInstanceMaxNetEgress(), 10))
+			return strings.ReplaceAll(val, platformmeta.FlagInstanceVswitchIDWrapper, p.cloudmetaManager.GetInstanceVswitchID())
 		})
-		return tag
+		return platformmeta.FlagInstanceVswitchIDWrapper
 	}
 	return key
 }

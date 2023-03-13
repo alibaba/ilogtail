@@ -15,6 +15,9 @@
 package appender
 
 import (
+	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
+	"github.com/alibaba/ilogtail/plugins/test"
+	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 
@@ -42,18 +45,59 @@ func TestIgnoreIfExistTrue(t *testing.T) {
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "test_key", Value: "test_value"})
 	processor.processLog(log)
 	assert.Equal(t, "test_value", log.Contents[0].Value)
-	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#image_xxx", log.Contents[1].Value)
+	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#empty", log.Contents[1].Value)
 	processor.processLog(log)
 	assert.Equal(t, "test_value", log.Contents[0].Value)
-	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#image_xxx"+"|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#image_xxx", log.Contents[1].Value)
+	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#empty"+"|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#empty", log.Contents[1].Value)
 
 	processor.SortLabels = true
 	log.Contents[1].Value = ""
 	processor.processLog(log)
-	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#image_xxx", log.Contents[1].Value)
+	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#empty", log.Contents[1].Value)
 	log.Contents[1].Value = "z#$#x"
 	processor.processLog(log)
-	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#image_xxx"+"|z#$#x", log.Contents[1].Value)
+	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#empty"+"|z#$#x", log.Contents[1].Value)
+}
+
+func TestReadDynamic(t *testing.T) {
+	log := &protocol.Log{Time: 0}
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	processor := &ProcessorAppender{
+		Key:   "a",
+		Value: "|__cloud_instance_id__#$#{{__cloud_instance_id__}}|__cloud_instance_name__#$#{{__cloud_instance_name__}}|__cloud_region__#$#{{__cloud_region__}}|__cloud_zone__#$#{{__cloud_zone__}}|__cloud_vpc_id__#$#{{__cloud_vpc_id__}}|__cloud_vswitch_id__#$#{{__cloud_vswitch_id__}}|__cloud_instance_type__#$#{{__cloud_instance_type__}}|__cloud_image_id__#$#{{__cloud_image_id__}}|__cloud_max_ingress__#$#{{__cloud_max_ingress__}}|__cloud_max_egress__#$#{{__cloud_max_egress__}}",
+	}
+	processor.Platform = platformmeta.Mock
+	err := processor.Init(ctx)
+	require.NoError(t, err)
+	processor.processLog(log)
+	require.Equal(t, test.ReadLogVal(log, "a"), "|__cloud_instance_id__#$#id_xxx|__cloud_instance_name__#$#name_xxx|__cloud_region__#$#region_xxx|__cloud_zone__#$#zone_xxx|__cloud_vpc_id__#$#vpc_xxx|__cloud_vswitch_id__#$#vswitch_xxx|__cloud_instance_type__#$#type_xxx|__cloud_image_id__#$#image_xxx|__cloud_max_ingress__#$#0|__cloud_max_egress__#$#0")
+
+	platformmeta.MockManagerNum.Add(100)
+	log.Contents = log.Contents[:0]
+	processor.processLog(log)
+	require.Equal(t, test.ReadLogVal(log, "a"), "|__cloud_instance_id__#$#id_xxx|__cloud_instance_name__#$#name_xxx|__cloud_region__#$#region_xxx|__cloud_zone__#$#zone_xxx|__cloud_vpc_id__#$#vpc_xxx|__cloud_vswitch_id__#$#vswitch_xxx|__cloud_instance_type__#$#type_xxx|__cloud_image_id__#$#image_xxx|__cloud_max_ingress__#$#100|__cloud_max_egress__#$#1000")
+
+}
+
+func TestReadOnce(t *testing.T) {
+	log := &protocol.Log{Time: 0}
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	processor := &ProcessorAppender{
+		Key:   "a",
+		Value: "|__cloud_instance_id__#$#{{__cloud_instance_id__}}|__cloud_instance_name__#$#{{__cloud_instance_name__}}|__cloud_region__#$#{{__cloud_region__}}|__cloud_zone__#$#{{__cloud_zone__}}|__cloud_vpc_id__#$#{{__cloud_vpc_id__}}|__cloud_vswitch_id__#$#{{__cloud_vswitch_id__}}|__cloud_instance_type__#$#{{__cloud_instance_type__}}|__cloud_image_id__#$#{{__cloud_image_id__}}|__cloud_max_ingress__#$#{{__cloud_max_ingress__}}|__cloud_max_egress__#$#{{__cloud_max_egress__}}",
+	}
+	processor.ReadOnce = true
+	processor.Platform = platformmeta.Mock
+	err := processor.Init(ctx)
+	require.NoError(t, err)
+	processor.processLog(log)
+	require.Equal(t, test.ReadLogVal(log, "a"), "|__cloud_instance_id__#$#id_xxx|__cloud_instance_name__#$#name_xxx|__cloud_region__#$#region_xxx|__cloud_zone__#$#zone_xxx|__cloud_vpc_id__#$#vpc_xxx|__cloud_vswitch_id__#$#vswitch_xxx|__cloud_instance_type__#$#type_xxx|__cloud_image_id__#$#image_xxx|__cloud_max_ingress__#$#0|__cloud_max_egress__#$#0")
+
+	require.Equal(t, len(processor.replaceFuncs), 0)
+	platformmeta.MockManagerNum.Add(100)
+	log.Contents = log.Contents[:0]
+	processor.processLog(log)
+	require.Equal(t, test.ReadLogVal(log, "a"), "|__cloud_instance_id__#$#id_xxx|__cloud_instance_name__#$#name_xxx|__cloud_region__#$#region_xxx|__cloud_zone__#$#zone_xxx|__cloud_vpc_id__#$#vpc_xxx|__cloud_vswitch_id__#$#vswitch_xxx|__cloud_instance_type__#$#type_xxx|__cloud_image_id__#$#image_xxx|__cloud_max_ingress__#$#0|__cloud_max_egress__#$#0")
 }
 
 func TestParameterCheck(t *testing.T) {

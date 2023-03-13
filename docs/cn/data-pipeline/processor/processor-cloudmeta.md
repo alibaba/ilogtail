@@ -6,29 +6,30 @@
 
 ## 配置参数
 
-| 参数       | 类型                | 是否必选 | 说明                                                                                                                 |
-|----------|-------------------|------|--------------------------------------------------------------------------------------------------------------------|
-| Platform | String            | 是    | 云平台名称，目前支持aliyun。                                                                                                  |
-| Mode     | String            | 否    | 支持content与json 两种模式，content 模式为protocol.Log 协议增加Log_Content字段，json模式为具体某个为json序列化的Log_Content增加元数据标签。默认为content模式。 |
-| JSONKey  | String            | 否    | Mode为json模式生效，用来选取具体某个增加云平台元信息的Log_Content结构。                                                                      |
-| JSONPath | String            | 否    | Mode为json模式生效，支持多层结构增加云平台元信息，最内层结构需要为json结构                                                                        |
-| AddMetas | map[string]string | 否    | 增加元信息配置。                                                                                                           |
+| 参数       | 类型                | 是否必选 | 说明                                                                                                                                                        |
+|----------|-------------------|------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Platform | String            | 是    | 云平台名称，目前支持aliyun、auto，auto 模式支持动态选择云平台。                                                                                                                   |
+| Mode     | String            | 否    | 支持 `add_fields` 与 `modify_json` 两种模式，`add_fields` 模式为protocol.Log 协议增加Log_Content字段，`modify_json` 模式为具体某个为json序列化的Log_Content增加元数据标签。默认为 `add_fields` 模式。 |
+| JSONKey  | String            | 否    | Mode为json模式生效，用来选取具体某个增加云平台元信息的Log_Content结构。                                                                                                             |
+| JSONPath | String            | 否    | Mode为json模式生效，支持多层结构增加云平台元信息，最内层结构需要为json结构                                                                                                               |
+| AddMetas | map[string]string | 否    | 增加元信息配置。                                                                                                                                                  |
+| ReadOnce | bool              | 否    | 是否仅读取一次，不支持感知冬天变化，默认值false。                                                                                                                               |
 
 ## 支持元信息标签
 
-| 标签                      | 说明                                                                                       |
-|-------------------------|------------------------------------------------------------------------------------------|
-| __cloud_instance_id__   | 云服务器实例id                                                                                 |
-| __cloud_instance_name__ | 云服务器实例名                                                                                  |
-| __cloud_zone__          | 云服务器实例zone                                                                               |
-| __cloud_region__        | 云服务器实例region                                                                             |
-| __cloud_instance_type__ | 云服务器实例规格                                                                                 |
-| __cloud_vswitch_id__    | 云服务器实例vswitch id                                                                         |
-| __cloud_vpc_id__        | 云服务器实例vpcid                                                                              |
-| __cloud_image_id__      | 云服务器实例镜像id                                                                               |
-| __cloud_max_ingress__   | 云服务器实例最大内网入带宽                                                                            |
-| __cloud_max_egress__    | 云服务器实例最大内网出带宽                                                                            |
-| __cloud_instance_tags__ | 云服务器实例标签前缀，如配置 `cloud_instance_tags：custom_tag` ，当云实例存在标签`a：b` 时，将增加 `custom_tag_a:b` 数据 |
+| 标签                          | 说明                                                                                       |
+|-----------------------------|------------------------------------------------------------------------------------------|
+| {{__cloud_instance_id__}}   | 云服务器实例id                                                                                 |
+| {{__cloud_instance_name__}} | 云服务器实例名                                                                                  |
+| {{__cloud_zone__}}          | 云服务器实例zone                                                                               |
+| {{__cloud_region__}}        | 云服务器实例region                                                                             |
+| {{__cloud_instance_type__}} | 云服务器实例规格                                                                                 |
+| {{__cloud_vswitch_id__}}    | 云服务器实例vswitch id                                                                         |
+| {{__cloud_vpc_id__}}        | 云服务器实例vpcid                                                                              |
+| {{__cloud_image_id__}}      | 云服务器实例镜像id                                                                               |
+| {{__cloud_max_ingress__}}   | 云服务器实例最大内网入带宽                                                                            |
+| {{__cloud_max_egress__}}    | 云服务器实例最大内网出带宽                                                                            |
+| {{__cloud_instance_tags__}} | 云服务器实例标签前缀，如配置 `cloud_instance_tags：custom_tag` ，当云实例存在标签`a：b` 时，将增加 `custom_tag_a:b` 数据 |
 
 ## json Mode 配置举例
 
@@ -57,10 +58,10 @@ inputs:
 processors:
   - Type: processor_cloudmeta
     Platform: mock
-    Mode: content
+    Mode: add_fields
     AddMetas:
-      __cloud_instance_id__: instance_id_name
-      __cloud_instance_tags__: instance_tag_prefix
+        {{__cloud_instance_id__}}: instance_id_name
+          {{__cloud_instance_tags__}}: instance_tag_prefix
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true
@@ -68,7 +69,7 @@ flushers:
 
 * 输出
 
-```json
+```text
 2023-03-09 17:11: 17 {"content": "abc", "Index":"1", "instance_id_name": "id_xxx", "instance_tag_prefix_tag_key": "tag_val","__time__": "1678353077"
 }
 2023-03-09 17: 11: 17 {"content": "abc", "Index": "2", "instance_id_name": "id_xxx", "instance_tag_prefix_tag_key": "tag_val", "__time__": "1678353077"}
@@ -100,12 +101,12 @@ inputs:
 processors:
   - Type: processor_cloudmeta
     Platform: mock
-    Mode: content
+    Mode: modify_json
     JSONKey: content
     JSONPath: "a.b"
     AddMetas:
-      __cloud_instance_id__: instance_id_name
-      __cloud_instance_tags__: instance_tag_prefix
+        {{__cloud_instance_id__}}: instance_id_name
+          {{__cloud_instance_tags__}}: instance_tag_prefix
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true

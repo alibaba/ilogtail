@@ -12,6 +12,18 @@ const (
 	FlagInstanceImageID    = "__cloud_image_id__"
 	FlagInstanceMaxIngress = "__cloud_max_ingress__"
 	FlagInstanceMaxEgress  = "__cloud_max_egress__"
+
+	FlagInstanceIDWrapper         = "{{" + FlagInstanceID + "}}"
+	FlagInstanceNameWrapper       = "{{" + FlagInstanceName + "}}"
+	FlagInstanceRegionWrapper     = "{{" + FlagInstanceRegion + "}}"
+	FlagInstanceZoneWrapper       = "{{" + FlagInstanceZone + "}}"
+	FlagInstanceVpcIDWrapper      = "{{" + FlagInstanceVpcID + "}}"
+	FlagInstanceVswitchIDWrapper  = "{{" + FlagInstanceVswitchID + "}}"
+	FlagInstanceTagsWrapper       = "{{" + FlagInstanceTags + "}}"
+	FlagInstanceTypeWrapper       = "{{" + FlagInstanceType + "}}"
+	FlagInstanceImageIDWrapper    = "{{" + FlagInstanceImageID + "}}"
+	FlagInstanceMaxIngressWrapper = "{{" + FlagInstanceMaxIngress + "}}"
+	FlagInstanceMaxEgressWrapper  = "{{" + FlagInstanceMaxEgress + "}}"
 )
 
 type Manager interface {
@@ -27,6 +39,7 @@ type Manager interface {
 	GetInstanceMaxNetEgress() int64
 	GetInstanceMaxNetIngress() int64
 	GetInstanceTags() map[string]string
+	Ping() bool
 }
 
 type Platform string
@@ -35,11 +48,20 @@ type MetaType string
 const (
 	Aliyun Platform = "aliyun"
 	Mock   Platform = "mock"
+	Auto   Platform = "auto"
 )
 
 var register map[Platform]Manager
 
 func GetManager(platform Platform) Manager {
+	if platform == Auto {
+		for _, manager := range register {
+			if manager.Ping() {
+				return manager
+			}
+		}
+		return nil
+	}
 	return register[platform]
 }
 

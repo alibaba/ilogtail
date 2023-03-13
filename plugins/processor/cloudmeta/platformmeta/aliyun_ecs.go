@@ -23,7 +23,9 @@ func AlibabaCloudEcsPlatformRequest(api string, method string, f func(header *ht
 	r, _ := http.NewRequest(http.MethodPut, "http://100.100.100.200/latest"+api, nil)
 	r.Method = method
 	f(&r.Header)
-	resp, err := new(http.Client).Do(r)
+	c := new(http.Client)
+	c.Timeout = time.Second
+	resp, err := c.Do(r)
 	if err != nil {
 		return "", err
 	}
@@ -306,6 +308,15 @@ func (m *ECSManager) GetInstanceTags() map[string]string {
 		res[k] = v
 	}
 	return res
+}
+
+func (m *ECSManager) Ping() bool {
+	_, err := AlibabaCloudEcsPlatformRequest("/meta-data/instance-id", http.MethodGet, func(header *http.Header) {
+	})
+	if err != nil && strings.Contains(err.Error(), "Timeout") {
+		return false
+	}
+	return true
 }
 
 func initAliyun() {

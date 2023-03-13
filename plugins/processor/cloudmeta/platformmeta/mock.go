@@ -1,5 +1,9 @@
 package platformmeta
 
+import "sync/atomic"
+
+var MockManagerNum atomic.Int64
+
 type MockManager struct {
 }
 
@@ -40,17 +44,21 @@ func (m *MockManager) GetInstanceVswitchID() string {
 }
 
 func (m *MockManager) GetInstanceMaxNetEgress() int64 {
-	return 1000
+	return MockManagerNum.Load() * 10
 }
 
 func (m *MockManager) GetInstanceMaxNetIngress() int64 {
-	return 100
+	return MockManagerNum.Load()
 }
 
 func (m *MockManager) GetInstanceTags() map[string]string {
 	return map[string]string{
 		"tag_key": "tag_val",
 	}
+}
+
+func (m *MockManager) Ping() bool {
+	return false
 }
 
 func initMock() {
