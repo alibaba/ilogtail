@@ -205,7 +205,8 @@ func (m *ECSManager) fetchAPI() {
 		for i := 0; i < len(keys); i++ {
 			<-m.resChan
 		}
-		for i := 0; i < len(res); i++ {
+		count := len(res)
+		for i := 0; i < count; i++ {
 			t := <-res
 			m.data.tags[t.k] = t.v
 		}

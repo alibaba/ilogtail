@@ -142,6 +142,7 @@ func (c *ProcessorCloudMeta) ProcessLogs(logArray []*protocol.Log) []*protocol.L
 			log.Contents = append(log.Contents, c.logcontents...)
 		}
 	case contentJSONMode:
+		logger.Debugf(c.context.GetRuntimeContext(), "meta: %v", c.meta)
 		for _, log := range logArray {
 			for _, con := range log.Contents {
 				if con.Key != c.JSONKey {
