@@ -1,6 +1,7 @@
 package cloudmeta
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -51,7 +52,7 @@ func Test_cloudMeta_ProcessLogs(t *testing.T) {
 	require.Equal(t, test.ReadLogVal(logs[0], "__instance_tags___tag_key"), "tag_val")
 
 	log.Contents = log.Contents[:0]
-	platformmeta.MockManagerNum.Add(100)
+	atomic.AddInt64(&platformmeta.MockManagerNum, 100)
 	time.Sleep(time.Second * 2)
 	logs = c.ProcessLogs([]*protocol.Log{log})
 	require.Equal(t, len(logs), 1)
@@ -69,7 +70,7 @@ func Test_cloudMeta_ProcessLogs(t *testing.T) {
 	require.Equal(t, test.ReadLogVal(logs[0], "__instance_tags___tag_key"), "tag_val")
 	lastRead := c.lastReadTime
 	log.Contents = log.Contents[:0]
-	platformmeta.MockManagerNum.Add(100)
+	atomic.AddInt64(&platformmeta.MockManagerNum, 100)
 	logs = c.ProcessLogs([]*protocol.Log{log})
 	require.Equal(t, test.ReadLogVal(logs[0], "__max_ingress__"), "100")
 	require.Equal(t, test.ReadLogVal(logs[0], "__max_egress__"), "1000")
