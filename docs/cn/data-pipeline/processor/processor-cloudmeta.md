@@ -58,9 +58,12 @@ processors:
   - Type: processor_cloudmeta
     Platform: mock
     Mode: add_fields
-    AddMetas:
+    Metadata:
+    - "__cloud_instance_id__"
+    - "__cloud_instance_tags__"
+    RenameMetadata:
       __cloud_instance_id__: instance_id_name
-        __cloud_instance_tags__: instance_tag_prefix
+      __cloud_instance_tags__: instance_tag_prefix
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true
@@ -69,18 +72,12 @@ flushers:
 * 输出
 
 ```text
-2023-03-09 17:11: 17 {"content": "abc", "Index":"1", "instance_id_name": "id_xxx", "instance_tag_prefix_tag_key": "tag_val","__time__": "1678353077"
-}
-2023-03-09 17: 11: 17 {"content": "abc", "Index": "2", "instance_id_name": "id_xxx", "instance_tag_prefix_tag_key": "tag_val", "__time__": "1678353077"}
-2023-03-09 17: 11: 17 {
-"Index":"3", "content": "abc", "instance_id_name": "id_xxx","instance_tag_prefix_tag_key": "tag_val", "__time__": "1678353077"
-}
-2023-03-09 17: 11: 17 {"content": "abc", "Index": "4", "instance_id_name": "id_xxx", "instance_tag_prefix_tag_key": "tag_val", "__time__": "1678353077"
-}
-2023-03-09 17: 11:17 {"Index": "5", "content": "abc","instance_id_name": "id_xxx", "instance_tag_prefix_tag_key": "tag_val", "__time__":"1678353077"
-}
-2023-03-09 17: 11: 17 {
-"content": "abc", "Index": "6", "instance_id_name": "id_xxx", "instance_tag_prefix_tag_key": "tag_val", "__time__": "1678353077"
+2023-03-13 20:42:04 {"content":"{\"a\":{\"b\":{}}}","Index":"1","instance_id_name":"id_xxx","instance_tag_prefix_tag_key":"tag_val","__time__":"1678711324"}
+2023-03-13 20:42:04 {"content":"{\"a\":{\"b\":{}}}","Index":"2","instance_id_name":"id_xxx","instance_tag_prefix_tag_key":"tag_val","__time__":"1678711324"}
+2023-03-13 20:42:04 {"content":"{\"a\":{\"b\":{}}}","Index":"3","instance_id_name":"id_xxx","instance_tag_prefix_tag_key":"tag_val","__time__":"1678711324"}
+2023-03-13 20:42:04 {"content":"{\"a\":{\"b\":{}}}","Index":"4","instance_id_name":"id_xxx","instance_tag_prefix_tag_key":"tag_val","__time__":"1678711324"}
+2023-03-13 20:42:04 {"content":"{\"a\":{\"b\":{}}}","Index":"5","instance_id_name":"id_xxx","instance_tag_prefix_tag_key":"tag_val","__time__":"1678711324"}
+2023-03-13 20:42:04 {"content":"{\"a\":{\"b\":{}}}","Index":"6","instance_id_name":"id_xxx","instance_tag_prefix_tag_key":"tag_val","__time__":"1678711324"}
 }
 
 ``` 
@@ -100,10 +97,12 @@ inputs:
 processors:
   - Type: processor_cloudmeta
     Platform: mock
-    Mode: modify_json
     JSONPath: "content.a.b"
-    AddMetas:
-      "__cloud_instance_id__": instance_id_name
+    Metadata:
+      - "__cloud_instance_id__"
+      - "__cloud_instance_tags__"
+    RenameMetadata:
+        __cloud_instance_id__: instance_id_name
         __cloud_instance_tags__: instance_tag_prefix
 flushers:
   - Type: flusher_stdout
@@ -113,8 +112,9 @@ flushers:
 * 输出
 
 ```text
-2023-03-09 17:14:31 {"content":"{\"a\":{\"b\":{\"instance_id_name\":\"id_xxx\",\"instance_tag_prefix_tag_key\":\"tag_val\"}}}","Index":"1","__time__":"1678353271"}
-2023-03-09 17:14:31 {"content":"{\"a\":{\"b\":{\"instance_id_name\":\"id_xxx\",\"instance_tag_prefix_tag_key\":\"tag_val\"}}}","Index":"2","__time__":"1678353271"}
-2023-03-09 17:14:31 {"content":"{\"a\":{\"b\":{\"instance_id_name\":\"id_xxx\",\"instance_tag_prefix_tag_key\":\"tag_val\"}}}","Index":"3","__time__":"1678353271"}
-2023-03-09 17:14:31 {"content":"{\"a\":{\"b\":{\"instance_id_name\":\"id_xxx\",\"instance_tag_prefix_tag_key\":\"tag_val\"}}}","Index":"4","__time__":"1678353271"}
+2023-03-13 20:39:02 {"content":"{\"a\":{\"b\":{\"instance_id_name\":\"id_xxx\",\"instance_tag_prefix_tag_key\":\"tag_val\"}}}","Index":"1","__time__":"1678711142"}
+2023-03-13 20:39:02 {"content":"{\"a\":{\"b\":{\"instance_id_name\":\"id_xxx\",\"instance_tag_prefix_tag_key\":\"tag_val\"}}}","Index":"2","__time__":"1678711142"}
+2023-03-13 20:39:02 {"content":"{\"a\":{\"b\":{\"instance_id_name\":\"id_xxx\",\"instance_tag_prefix_tag_key\":\"tag_val\"}}}","Index":"3","__time__":"1678711142"}
+2023-03-13 20:39:02 {"content":"{\"a\":{\"b\":{\"instance_id_name\":\"id_xxx\",\"instance_tag_prefix_tag_key\":\"tag_val\"}}}","Index":"4","__time__":"1678711142"}
+2023-03-13 20:39:02 {"content":"{\"a\":{\"b\":{\"instance_id_name\":\"id_xxx\",\"instance_tag_prefix_tag_key\":\"tag_val\"}}}","Index":"5","__time__":"1678711142"}
 ```

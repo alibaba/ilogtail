@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/alibaba/ilogtail/helper/platformmeta"
 	_ "github.com/alibaba/ilogtail/pkg/logger/test"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
@@ -17,19 +17,31 @@ import (
 func Test_cloudMeta_ProcessLogs(t *testing.T) {
 	c := new(ProcessorCloudMeta)
 	c.Platform = platformmeta.Mock
-	c.Mode = contentMode
-	c.AddMetas = map[string]string{
-		platformmeta.FlagInstanceIDWrapper:         "__instance_id__",
-		platformmeta.FlagInstanceNameWrapper:       "__instance_name__",
-		platformmeta.FlagInstanceZoneWrapper:       "__zone__",
-		platformmeta.FlagInstanceRegionWrapper:     "__region__",
-		platformmeta.FlagInstanceTypeWrapper:       "__instance_type__",
-		platformmeta.FlagInstanceVswitchIDWrapper:  "__vswitch_id__",
-		platformmeta.FlagInstanceVpcIDWrapper:      "__vpc_id__",
-		platformmeta.FlagInstanceImageIDWrapper:    "__image_id__",
-		platformmeta.FlagInstanceMaxIngressWrapper: "__max_ingress__",
-		platformmeta.FlagInstanceMaxEgressWrapper:  "__max_egress__",
-		platformmeta.FlagInstanceTagsWrapper:       "__instance_tags__",
+	c.RenameMetadata = map[string]string{
+		platformmeta.FlagInstanceID:         "__instance_id__",
+		platformmeta.FlagInstanceName:       "__instance_name__",
+		platformmeta.FlagInstanceZone:       "__zone__",
+		platformmeta.FlagInstanceRegion:     "__region__",
+		platformmeta.FlagInstanceType:       "__instance_type__",
+		platformmeta.FlagInstanceVswitchID:  "__vswitch_id__",
+		platformmeta.FlagInstanceVpcID:      "__vpc_id__",
+		platformmeta.FlagInstanceImageID:    "__image_id__",
+		platformmeta.FlagInstanceMaxIngress: "__max_ingress__",
+		platformmeta.FlagInstanceMaxEgress:  "__max_egress__",
+		platformmeta.FlagInstanceTags:       "__instance_tags__",
+	}
+	c.Metadata = []string{
+		platformmeta.FlagInstanceID,
+		platformmeta.FlagInstanceName,
+		platformmeta.FlagInstanceRegion,
+		platformmeta.FlagInstanceZone,
+		platformmeta.FlagInstanceVpcID,
+		platformmeta.FlagInstanceVswitchID,
+		platformmeta.FlagInstanceTags,
+		platformmeta.FlagInstanceType,
+		platformmeta.FlagInstanceImageID,
+		platformmeta.FlagInstanceMaxIngress,
+		platformmeta.FlagInstanceMaxEgress,
 	}
 	require.NoError(t, c.Init(mock.NewEmptyContext("a", "b", "c")))
 
@@ -78,14 +90,14 @@ func Test_cloudMeta_ProcessLogs(t *testing.T) {
 }
 
 func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
-	metas := map[string]string{
-		platformmeta.FlagInstanceIDWrapper:   "__instance_id__",
-		platformmeta.FlagInstanceNameWrapper: "__instance_name__",
-		platformmeta.FlagInstanceTagsWrapper: "__instance_tags__",
+	metas := []string{
+		platformmeta.FlagInstanceID,
+		platformmeta.FlagInstanceName,
+		platformmeta.FlagInstanceTags,
 	}
 	type fields struct {
-		JSONContentPath string
-		Mode            platformmeta.Platform
+		JSONPath string
+		Mode     platformmeta.Platform
 	}
 	tests := []struct {
 		name           string
@@ -98,29 +110,37 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		validator      func(log *protocol.Log, t *testing.T)
 	}{
 		{
-			name:      "nokey",
-			fields:    fields{},
-			initError: true,
+			name:           "content mode",
+			fields:         fields{},
+			initError:      false,
+			logsLen:        1,
+			logsContentLen: 3,
+			validator: func(log *protocol.Log, t *testing.T) {
+				println(log.String())
+				require.Equal(t, test.ReadLogVal(log, platformmeta.FlagInstanceID), "id_xxx")
+				require.Equal(t, test.ReadLogVal(log, platformmeta.FlagInstanceName), "name_xxx")
+				require.Equal(t, test.ReadLogVal(log, platformmeta.FlagInstanceTags+"_tag_key"), "tag_val")
+			},
 		},
 		{
 			name: "not exist key",
 			fields: fields{
-				JSONContentPath: "content",
+				JSONPath: "content",
 			},
 			initError:      false,
 			content:        "json",
 			key:            "con",
 			logsLen:        1,
-			logsContentLen: 1,
+			logsContentLen: 2,
 			validator: func(log *protocol.Log, t *testing.T) {
 				require.Equal(t, test.ReadLogVal(log, "con"), "json")
-				require.Equal(t, test.ReadLogVal(log, "content"), "")
+				require.Equal(t, test.ReadLogVal(log, "content"), "{\"__cloud_instance_id__\":\"id_xxx\",\"__cloud_instance_name__\":\"name_xxx\",\"__cloud_instance_tags___tag_key\":\"tag_val\"}")
 			},
 		},
 		{
 			name: "content val illegal",
 			fields: fields{
-				JSONContentPath: "content",
+				JSONPath: "content",
 			},
 			initError:      false,
 			content:        "json",
@@ -132,23 +152,23 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 			},
 		},
 		{
-			name: "not content path",
+			name: "content val illegal 2",
 			fields: fields{
-				JSONContentPath: "content",
+				JSONPath: "content.a",
 			},
 			initError:      false,
-			content:        `{"a":"b"}`,
+			content:        `{"a":[]}`,
 			key:            "content",
 			logsLen:        1,
 			logsContentLen: 1,
 			validator: func(log *protocol.Log, t *testing.T) {
-				require.Equal(t, test.ReadLogVal(log, "content"), `{"__instance_id__":"id_xxx","__instance_name__":"name_xxx","__instance_tags___tag_key":"tag_val","a":"b"}`)
+				require.Equal(t, test.ReadLogVal(log, "content"), "{\"a\":[]}")
 			},
 		},
 		{
 			name: "path type illegal",
 			fields: fields{
-				JSONContentPath: "content.a",
+				JSONPath: "content.a",
 			},
 			initError:      false,
 			content:        `{"a":"b"}`,
@@ -162,7 +182,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 		{
 			name: "path type illegal2",
 			fields: fields{
-				JSONContentPath: "content.a.b.c",
+				JSONPath: "content.a.b.c",
 			},
 			initError:      false,
 			content:        `{"a": { "b": {"c": "d"}}}`,
@@ -170,13 +190,13 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 			logsLen:        1,
 			logsContentLen: 1,
 			validator: func(log *protocol.Log, t *testing.T) {
-				require.Equal(t, test.ReadLogVal(log, "content"), `{"a": { "b": {"c": "d"}}}`)
+				require.Equal(t, test.ReadLogVal(log, "content"), "{\"a\":{\"b\":{\"c\":\"d\"}}}")
 			},
 		},
 		{
 			name: "path type legal",
 			fields: fields{
-				JSONContentPath: "content.a.b.c",
+				JSONPath: "content.a.b.c",
 			},
 			initError:      false,
 			content:        `{"a": { "b": {"c": {"d":"e"}}}}`,
@@ -184,14 +204,14 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 			logsLen:        1,
 			logsContentLen: 1,
 			validator: func(log *protocol.Log, t *testing.T) {
-				require.Equal(t, test.ReadLogVal(log, "content"), `{"a":{"b":{"c":{"__instance_id__":"id_xxx","__instance_name__":"name_xxx","__instance_tags___tag_key":"tag_val","d":"e"}}}}`)
+				require.Equal(t, test.ReadLogVal(log, "content"), "{\"a\":{\"b\":{\"c\":{\"__cloud_instance_id__\":\"id_xxx\",\"__cloud_instance_name__\":\"name_xxx\",\"__cloud_instance_tags___tag_key\":\"tag_val\",\"d\":\"e\"}}}}")
 			},
 		},
 		{
 			name: "test auto mode",
 			fields: fields{
-				JSONContentPath: "content.a.b.c",
-				Mode:            platformmeta.Auto,
+				JSONPath: "content.a.b.c.f",
+				Mode:     platformmeta.Auto,
 			},
 			initError:      false,
 			content:        `{"a": { "b": {"c": {"d":"e"}}}}`,
@@ -200,6 +220,20 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 			logsContentLen: 1,
 			validator: func(log *protocol.Log, t *testing.T) {
 				require.Equal(t, test.ReadLogVal(log, "content"), "{\"a\": { \"b\": {\"c\": {\"d\":\"e\"}}}}")
+			},
+		},
+		{
+			name: "test append structure",
+			fields: fields{
+				JSONPath: "content.a.b.c.f",
+			},
+			initError:      false,
+			content:        `{"a": { "b": {"c": {"d":"e"}}}}`,
+			key:            "content",
+			logsLen:        1,
+			logsContentLen: 1,
+			validator: func(log *protocol.Log, t *testing.T) {
+				require.Equal(t, test.ReadLogVal(log, "content"), "{\"a\":{\"b\":{\"c\":{\"d\":\"e\",\"f\":{\"__cloud_instance_id__\":\"id_xxx\",\"__cloud_instance_name__\":\"name_xxx\",\"__cloud_instance_tags___tag_key\":\"tag_val\"}}}}}")
 			},
 		},
 	}
@@ -212,9 +246,8 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 			} else {
 				c.Platform = tt.fields.Mode
 			}
-			c.Mode = contentJSONMode
-			c.AddMetas = metas
-			c.JSONPath = tt.fields.JSONContentPath
+			c.Metadata = metas
+			c.JSONPath = tt.fields.JSONPath
 			if tt.initError {
 				require.Error(t, c.Init(mock.NewEmptyContext("a", "b", "c")))
 				return
@@ -222,12 +255,13 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 			require.NoError(t, c.Init(mock.NewEmptyContext("a", "b", "c")))
 			log := &protocol.Log{
 				Time: 1,
-				Contents: []*protocol.Log_Content{
-					{
-						Key:   tt.key,
-						Value: tt.content,
-					},
-				},
+			}
+			if tt.key != "" {
+				log.Contents = append(log.Contents, &protocol.Log_Content{
+					Key:   tt.key,
+					Value: tt.content,
+				})
+
 			}
 			logs := c.ProcessLogs([]*protocol.Log{log})
 			require.Equal(t, len(logs), tt.logsLen)

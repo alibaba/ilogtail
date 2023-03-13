@@ -13,15 +13,9 @@ const (
 	FlagInstanceMaxIngress = "__cloud_max_ingress__"
 	FlagInstanceMaxEgress  = "__cloud_max_egress__"
 
-	FlagInstanceIDWrapper         = "{{" + FlagInstanceID + "}}"
 	FlagInstanceNameWrapper       = "{{" + FlagInstanceName + "}}"
-	FlagInstanceRegionWrapper     = "{{" + FlagInstanceRegion + "}}"
-	FlagInstanceZoneWrapper       = "{{" + FlagInstanceZone + "}}"
 	FlagInstanceVpcIDWrapper      = "{{" + FlagInstanceVpcID + "}}"
 	FlagInstanceVswitchIDWrapper  = "{{" + FlagInstanceVswitchID + "}}"
-	FlagInstanceTagsWrapper       = "{{" + FlagInstanceTags + "}}"
-	FlagInstanceTypeWrapper       = "{{" + FlagInstanceType + "}}"
-	FlagInstanceImageIDWrapper    = "{{" + FlagInstanceImageID + "}}"
 	FlagInstanceMaxIngressWrapper = "{{" + FlagInstanceMaxIngress + "}}"
 	FlagInstanceMaxEgressWrapper  = "{{" + FlagInstanceMaxEgress + "}}"
 )
@@ -46,7 +40,7 @@ type Platform string
 type MetaType string
 
 const (
-	Aliyun Platform = "aliyun"
+	Aliyun Platform = "alibaba_cloud_ecs"
 	Mock   Platform = "mock"
 	Auto   Platform = "auto"
 )

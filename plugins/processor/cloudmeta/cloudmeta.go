@@ -3,33 +3,25 @@ package cloudmeta
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/cespare/xxhash/v2"
 
+	"github.com/alibaba/ilogtail/helper/platformmeta"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
-)
-
-type Mode string
-
-const (
-	contentMode     Mode = "add_fields"
-	contentJSONMode Mode = "modify_json"
 )
 
 type ProcessorCloudMeta struct {
-	Platform platformmeta.Platform
-	Mode     Mode
-	JSONPath string
-	AddMetas map[string]string
-	ReadOnce bool
+	Platform       platformmeta.Platform
+	Metadata       []string
+	RenameMetadata map[string]string
+	JSONPath       string
+	ReadOnce       bool
 
 	jsonKey      string
 	jsonPath     []string
@@ -41,85 +33,22 @@ type ProcessorCloudMeta struct {
 	lastReadTime time.Time
 }
 
-func (c *ProcessorCloudMeta) readMeta() {
-	now := time.Now()
-	if c.manager == nil || now.Sub(c.lastReadTime).Milliseconds() < 1000 || (c.ReadOnce && !c.lastReadTime.IsZero()) {
-		return
-	}
-	var strBuilder strings.Builder
-	newMeta := make(map[string]string)
-	wrapperFunc := func(name, val string) {
-		strBuilder.WriteString(name)
-		strBuilder.WriteString(val)
-		newMeta[name] = val
-	}
-	for k, name := range c.AddMetas {
-		switch k {
-		case platformmeta.FlagInstanceIDWrapper:
-			wrapperFunc(name, c.manager.GetInstanceID())
-		case platformmeta.FlagInstanceNameWrapper:
-			wrapperFunc(name, c.manager.GetInstanceName())
-		case platformmeta.FlagInstanceZoneWrapper:
-			wrapperFunc(name, c.manager.GetInstanceZone())
-		case platformmeta.FlagInstanceRegionWrapper:
-			wrapperFunc(name, c.manager.GetInstanceRegion())
-		case platformmeta.FlagInstanceTypeWrapper:
-			wrapperFunc(name, c.manager.GetInstanceType())
-		case platformmeta.FlagInstanceVswitchIDWrapper:
-			wrapperFunc(name, c.manager.GetInstanceVswitchID())
-		case platformmeta.FlagInstanceVpcIDWrapper:
-			wrapperFunc(name, c.manager.GetInstanceVpcID())
-		case platformmeta.FlagInstanceImageIDWrapper:
-			wrapperFunc(name, c.manager.GetInstanceImageID())
-		case platformmeta.FlagInstanceMaxIngressWrapper:
-			wrapperFunc(name, strconv.FormatInt(c.manager.GetInstanceMaxNetIngress(), 10))
-		case platformmeta.FlagInstanceMaxEgressWrapper:
-			wrapperFunc(name, strconv.FormatInt(c.manager.GetInstanceMaxNetEgress(), 10))
-		case platformmeta.FlagInstanceTagsWrapper:
-			for k, v := range c.manager.GetInstanceTags() {
-				newK := name + "_" + k
-				newMeta[newK] = v
-				strBuilder.WriteString(newK)
-				strBuilder.WriteString(v)
-			}
-		}
-	}
-	newHash := xxhash.Sum64(util.ZeroCopyStringToBytes(strBuilder.String()))
-	if newHash != c.metaHash {
-		c.metaHash = newHash
-		c.meta = newMeta
-		if c.Mode == contentMode {
-			c.logcontents = c.logcontents[:0]
-			for k, v := range c.meta {
-				c.logcontents = append(c.logcontents, &protocol.Log_Content{
-					Key:   k,
-					Value: v,
-				})
-			}
-		}
-	}
-	c.lastReadTime = now
-}
-
 func (c *ProcessorCloudMeta) Init(context pipeline.Context) error {
 	c.context = context
 	c.meta = make(map[string]string)
 	m := platformmeta.GetManager(c.Platform)
 	if m == nil {
+		// don't direct return to support still work on unknown host with auto mode.
 		logger.Error(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "not support platform", c.Platform)
 	} else {
 		c.manager = m
 		c.manager.StartCollect()
 	}
-	if c.Mode != contentMode && c.Mode != contentJSONMode {
-		logger.Error(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "not support mode", c.Mode)
-		return fmt.Errorf("not support mode %s", c.Mode)
+	if len(c.Metadata) == 0 {
+		logger.Error(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "metadata is required")
+		return errors.New("metadata is required")
 	}
 	c.JSONPath = strings.TrimSpace(c.JSONPath)
-	if c.Mode == contentJSONMode && c.JSONPath == "" {
-		logger.Error(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "json mode json path is required")
-		return errors.New("json mode json path is required")
-	}
 	parts := strings.Split(c.JSONPath, ".")
 	if len(parts) > 0 {
 		c.jsonKey = parts[0]
@@ -132,81 +61,144 @@ func (c *ProcessorCloudMeta) Init(context pipeline.Context) error {
 func (c *ProcessorCloudMeta) Description() string {
 	return "add cloud meta for log content or json log content"
 }
+func (c *ProcessorCloudMeta) ProcessLog(log *protocol.Log) {
+	if c.isAppendContent() {
+		log.Contents = append(log.Contents, c.logcontents...)
+		return
+	}
+	var content *protocol.Log_Content
+	for i := range log.Contents {
+		if log.Contents[i].Key == c.jsonKey {
+			content = log.Contents[i]
+			break
+		}
+	}
+	if content == nil {
+		content = &protocol.Log_Content{
+			Key:   c.jsonKey,
+			Value: "{}",
+		}
+		log.Contents = append(log.Contents, content)
+	}
+	res := make(map[string]interface{})
+	if err := json.Unmarshal(util.ZeroCopyStringToBytes(content.Value), &res); err != nil {
+		logger.Warning(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "json deserialize err", err)
+		return
+	}
+	// append metadata to json
+	c.appendMetadata2Json(res, c.jsonPath)
+	output, _ := json.Marshal(res)
+	content.Value = string(output)
+}
 
 func (c *ProcessorCloudMeta) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 	c.readMeta()
-	if len(c.meta) == 0 {
-		return logArray
-	}
-	switch c.Mode {
-	case contentMode:
-		for _, log := range logArray {
-			log.Contents = append(log.Contents, c.logcontents...)
-		}
-	case contentJSONMode:
+	if len(c.meta) != 0 {
 		logger.Debugf(c.context.GetRuntimeContext(), "meta: %v", c.meta)
 		for _, log := range logArray {
-			for _, con := range log.Contents {
-				if con.Key != c.jsonKey {
-					continue
-				}
-				data := make(map[string]interface{})
-				if err := json.Unmarshal(util.ZeroCopyStringToBytes(con.Value), &data); err != nil {
-					logger.Warning(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "json deserialize err", err)
-					continue
-				}
-				res := findMapByPath(data, c.jsonPath)
-				if res == nil {
-					logger.Warning(c.context.GetRuntimeContext(), "CLOUD_META_ALARM", "json path not exist")
-					continue
-				}
-				switch t := res.(type) {
-				case map[string]string:
-					for k, v := range c.meta {
-						t[k] = v
-					}
-				case map[string]interface{}:
-					for k, v := range c.meta {
-						t[k] = v
-					}
-				}
-				added, _ := json.Marshal(data)
-				con.Value = string(added)
-			}
+			c.ProcessLog(log)
 		}
 	}
 	return logArray
 }
 
-func findMapByPath(data map[string]interface{}, path []string) interface{} {
+func (c *ProcessorCloudMeta) appendMetadata2Json(res map[string]interface{}, path []string) {
 	if len(path) == 0 {
-		return data
+		for k, v := range c.meta {
+			res[k] = v
+		}
+		return
 	}
-	k := path[0]
-	d, ok := data[k]
+	head := path[0]
+	child, ok := res[head]
 	if !ok {
-		return nil
+		child = map[string]interface{}{}
+		res[head] = child
 	}
-	switch t := d.(type) {
-	case map[string]string:
-		if len(path) == 1 {
-			return d
-		}
-		return nil
+	switch t := child.(type) {
 	case map[string]interface{}:
-		if len(path) == 1 {
-			return d
-		}
-		return findMapByPath(t, path[1:])
+		c.appendMetadata2Json(t, path[1:])
 	default:
-		return nil
+		logger.Debug(c.context.GetRuntimeContext(), "append destination must be object ")
+		return
 	}
+}
+
+func (c *ProcessorCloudMeta) readMeta() {
+	now := time.Now()
+	if c.manager == nil || now.Sub(c.lastReadTime).Milliseconds() < 1000 || (c.ReadOnce && !c.lastReadTime.IsZero()) {
+		return
+	}
+	var strBuilder strings.Builder
+	newMeta := make(map[string]string)
+	wrapperFunc := func(name, val string) {
+		strBuilder.WriteString(name)
+		strBuilder.WriteString(val)
+		newName, ok := c.RenameMetadata[name]
+		if ok {
+			name = newName
+		}
+		newMeta[name] = val
+	}
+	for _, k := range c.Metadata {
+		switch k {
+		case platformmeta.FlagInstanceID:
+			wrapperFunc(platformmeta.FlagInstanceID, c.manager.GetInstanceID())
+		case platformmeta.FlagInstanceName:
+			wrapperFunc(platformmeta.FlagInstanceName, c.manager.GetInstanceName())
+		case platformmeta.FlagInstanceZone:
+			wrapperFunc(platformmeta.FlagInstanceZone, c.manager.GetInstanceZone())
+		case platformmeta.FlagInstanceRegion:
+			wrapperFunc(platformmeta.FlagInstanceRegion, c.manager.GetInstanceRegion())
+		case platformmeta.FlagInstanceType:
+			wrapperFunc(platformmeta.FlagInstanceType, c.manager.GetInstanceType())
+		case platformmeta.FlagInstanceVswitchID:
+			wrapperFunc(platformmeta.FlagInstanceVswitchID, c.manager.GetInstanceVswitchID())
+		case platformmeta.FlagInstanceVpcID:
+			wrapperFunc(platformmeta.FlagInstanceVpcID, c.manager.GetInstanceVpcID())
+		case platformmeta.FlagInstanceImageID:
+			wrapperFunc(platformmeta.FlagInstanceImageID, c.manager.GetInstanceImageID())
+		case platformmeta.FlagInstanceMaxIngress:
+			wrapperFunc(platformmeta.FlagInstanceMaxIngress, strconv.FormatInt(c.manager.GetInstanceMaxNetIngress(), 10))
+		case platformmeta.FlagInstanceMaxEgress:
+			wrapperFunc(platformmeta.FlagInstanceMaxEgress, strconv.FormatInt(c.manager.GetInstanceMaxNetEgress(), 10))
+		case platformmeta.FlagInstanceTags:
+			newName, ok := c.RenameMetadata[platformmeta.FlagInstanceTags]
+			if !ok {
+				newName = platformmeta.FlagInstanceTags
+			}
+			for k, v := range c.manager.GetInstanceTags() {
+				newK := newName + "_" + k
+				newMeta[newK] = v
+				strBuilder.WriteString(newK)
+				strBuilder.WriteString(v)
+			}
+		}
+	}
+	newHash := xxhash.Sum64(util.ZeroCopyStringToBytes(strBuilder.String()))
+	if newHash != c.metaHash {
+		c.metaHash = newHash
+		c.meta = newMeta
+		if c.isAppendContent() {
+			c.logcontents = c.logcontents[:0]
+			for k, v := range c.meta {
+				c.logcontents = append(c.logcontents, &protocol.Log_Content{
+					Key:   k,
+					Value: v,
+				})
+			}
+		}
+	}
+	c.lastReadTime = now
+}
+
+func (c *ProcessorCloudMeta) isAppendContent() bool {
+	return c.jsonKey == ""
 }
 
 func init() {
 	pipeline.Processors["processor_cloudmeta"] = func() pipeline.Processor {
 		return &ProcessorCloudMeta{
-			Mode:     contentMode,
 			Platform: platformmeta.Auto,
 		}
 	}

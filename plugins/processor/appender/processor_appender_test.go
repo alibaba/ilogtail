@@ -22,9 +22,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/alibaba/ilogtail/helper/platformmeta"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
@@ -81,6 +81,7 @@ func TestReadDynamic(t *testing.T) {
 }
 
 func TestReadOnce(t *testing.T) {
+	atomic.StoreInt64(&platformmeta.MockManagerNum, 0)
 	log := &protocol.Log{Time: 0}
 	ctx := mock.NewEmptyContext("p", "l", "c")
 	processor := &ProcessorAppender{

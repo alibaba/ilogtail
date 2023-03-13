@@ -22,10 +22,10 @@ import (
 	"strings"
 
 	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/helper/platformmeta"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/alibaba/ilogtail/plugins/processor/cloudmeta/platformmeta"
 )
 
 type ProcessorAppender struct {
