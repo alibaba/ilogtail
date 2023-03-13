@@ -36,7 +36,7 @@ var timerFetchRunning = false
 var envAndLabelMutex sync.Mutex
 
 var envSet map[string]struct{}
-var labelSet map[string]struct{}
+var containerLabelSet map[string]struct{}
 var k8sLabelSet map[string]struct{}
 
 func timerRecordData() {
@@ -67,7 +67,7 @@ func recordContainers(containerIDs map[string]struct{}) {
 	projectStr := util.GetStringFromList(keys)
 	// get add container
 	envAndLabelMutex.Lock()
-	result := helper.GetAllContainerToRecord(envSet, labelSet, k8sLabelSet, containerIDs)
+	result := helper.GetAllContainerToRecord(envSet, containerLabelSet, k8sLabelSet, containerIDs)
 	envAndLabelMutex.Unlock()
 	for _, containerInfo := range result {
 		var containerDetailToRecord util.ContainerDetail
@@ -87,7 +87,7 @@ func recordContainers(containerIDs map[string]struct{}) {
 		containerDetailToRecord.RawContainerName = containerInfo.Detail.ContainerInfo.Name
 
 		containerDetailToRecord.Env = containerInfo.Env
-		containerDetailToRecord.Labels = containerInfo.Labels
+		containerDetailToRecord.ContainerLabels = containerInfo.ContainerLabels
 		containerDetailToRecord.K8sLabels = containerInfo.K8sLabels
 		util.RecordAddedContainer(&containerDetailToRecord)
 	}
@@ -134,26 +134,26 @@ func refreshEnvAndLabel() {
 	envAndLabelMutex.Lock()
 	defer envAndLabelMutex.Unlock()
 	envSet = make(map[string]struct{})
-	labelSet = make(map[string]struct{})
+	containerLabelSet = make(map[string]struct{})
 	k8sLabelSet = make(map[string]struct{})
 	for _, logstoreConfig := range LogtailConfig {
 		for key := range logstoreConfig.EnvSet {
 			envSet[key] = struct{}{}
 		}
-		for key := range logstoreConfig.LabelSet {
-			labelSet[key] = struct{}{}
+		for key := range logstoreConfig.ContainerLabelSet {
+			containerLabelSet[key] = struct{}{}
 		}
 		for key := range logstoreConfig.K8sLabelSet {
 			k8sLabelSet[key] = struct{}{}
 		}
 	}
-	logger.Debugf(context.Background(), "refreshEnvAndLabel", envSet, labelSet)
+	logger.Debugf(context.Background(), "refreshEnvAndLabel", envSet, containerLabelSet, k8sLabelSet)
 }
 
-func compareEnvAndLabel() (diffEnvSet, diffLabelSet, diffK8sLabelSet map[string]struct{}) {
+func compareEnvAndLabel() (diffEnvSet, diffContainerLabelSet, diffK8sLabelSet map[string]struct{}) {
 	// get newest env label and compare with old
 	diffEnvSet = make(map[string]struct{})
-	diffLabelSet = make(map[string]struct{})
+	diffContainerLabelSet = make(map[string]struct{})
 	diffK8sLabelSet = make(map[string]struct{})
 	for _, logstoreConfig := range LogtailConfig {
 		for key := range logstoreConfig.EnvSet {
@@ -162,10 +162,10 @@ func compareEnvAndLabel() (diffEnvSet, diffLabelSet, diffK8sLabelSet map[string]
 				diffEnvSet[key] = struct{}{}
 			}
 		}
-		for key := range logstoreConfig.LabelSet {
-			if _, ok := labelSet[key]; !ok {
-				labelSet[key] = struct{}{}
-				diffLabelSet[key] = struct{}{}
+		for key := range logstoreConfig.ContainerLabelSet {
+			if _, ok := containerLabelSet[key]; !ok {
+				containerLabelSet[key] = struct{}{}
+				diffContainerLabelSet[key] = struct{}{}
 			}
 		}
 		for key := range logstoreConfig.K8sLabelSet {
@@ -175,17 +175,17 @@ func compareEnvAndLabel() (diffEnvSet, diffLabelSet, diffK8sLabelSet map[string]
 			}
 		}
 	}
-	return diffEnvSet, diffLabelSet, diffK8sLabelSet
+	return diffEnvSet, diffContainerLabelSet, diffK8sLabelSet
 }
 
 func compareEnvAndLabelAndRecordContainer() {
 	envAndLabelMutex.Lock()
 	defer envAndLabelMutex.Unlock()
 
-	diffEnvSet, diffLabelSet, diffK8sLabelSet := compareEnvAndLabel()
-	logger.Debugf(context.Background(), "compareEnvAndLabel", diffEnvSet, diffLabelSet)
+	diffEnvSet, diffContainerLabelSet, diffK8sLabelSet := compareEnvAndLabel()
+	logger.Debugf(context.Background(), "compareEnvAndLabel", diffEnvSet, diffContainerLabelSet, diffK8sLabelSet)
 
-	if len(diffEnvSet) != 0 || len(diffLabelSet) != 0 || len(diffK8sLabelSet) != 0 {
+	if len(diffEnvSet) != 0 || len(diffContainerLabelSet) != 0 || len(diffK8sLabelSet) != 0 {
 		projectSet := make(map[string]struct{})
 		for _, logstoreConfig := range LogtailConfig {
 			projectSet[logstoreConfig.ProjectName] = struct{}{}
@@ -197,7 +197,7 @@ func compareEnvAndLabelAndRecordContainer() {
 			}
 		}
 		projectStr := util.GetStringFromList(keys)
-		result := helper.GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, k8sLabelSet, diffEnvSet, diffLabelSet, diffK8sLabelSet)
+		result := helper.GetAllContainerIncludeEnvAndLabelToRecord(envSet, containerLabelSet, k8sLabelSet, diffEnvSet, diffContainerLabelSet, diffK8sLabelSet)
 		logger.Debugf(context.Background(), "GetAllContainerIncludeEnvAndLabelToRecord", result)
 
 		for _, containerInfo := range result {
@@ -218,7 +218,7 @@ func compareEnvAndLabelAndRecordContainer() {
 			containerDetailToRecord.RawContainerName = containerInfo.Detail.ContainerInfo.Name
 
 			containerDetailToRecord.Env = containerInfo.Env
-			containerDetailToRecord.Labels = containerInfo.Labels
+			containerDetailToRecord.ContainerLabels = containerInfo.ContainerLabels
 			containerDetailToRecord.K8sLabels = containerInfo.K8sLabels
 			util.RecordAddedContainer(&containerDetailToRecord)
 		}

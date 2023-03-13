@@ -38,10 +38,10 @@ type ContainerMeta struct {
 }
 
 type DockerInfoDetailWithFilteredEnvAndLabel struct {
-	Detail    *DockerInfoDetail
-	Env       map[string]string
-	Labels    map[string]string
-	K8sLabels map[string]string
+	Detail          *DockerInfoDetail
+	Env             map[string]string
+	ContainerLabels map[string]string
+	K8sLabels       map[string]string
 }
 
 func GetContainersLastUpdateTime() int64 {
@@ -314,9 +314,9 @@ func CastContainerDetail(containerInfo *DockerInfoDetail, envSet, labelSet, k8sL
 		}
 	}
 	return &DockerInfoDetailWithFilteredEnvAndLabel{
-		Detail:    containerInfo,
-		Env:       newEnv,
-		Labels:    newLabels,
-		K8sLabels: newK8sLabels,
+		Detail:          containerInfo,
+		Env:             newEnv,
+		ContainerLabels: newLabels,
+		K8sLabels:       newK8sLabels,
 	}
 }

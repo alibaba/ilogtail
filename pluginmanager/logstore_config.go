@@ -111,7 +111,7 @@ type LogstoreConfig struct {
 	pauseOrResumeWg sync.WaitGroup
 
 	K8sLabelSet           map[string]struct{}
-	LabelSet              map[string]struct{}
+	ContainerLabelSet     map[string]struct{}
 	EnvSet                map[string]struct{}
 	CollectContainersFlag bool
 }
@@ -368,7 +368,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	}
 
 	enableAlwaysOnline := enableAlwaysOnlineForStdout && hasDockerStdoutInput(plugins)
-	logstoreC.LabelSet = make(map[string]struct{})
+	logstoreC.ContainerLabelSet = make(map[string]struct{})
 	logstoreC.EnvSet = make(map[string]struct{})
 	logstoreC.K8sLabelSet = make(map[string]struct{})
 	// add env and label set to logstore config
@@ -407,7 +407,7 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 								}
 							} else if strings.Contains(lowerKey, "label") {
 								for key := range conditionMap {
-									logstoreC.LabelSet[key] = struct{}{}
+									logstoreC.ContainerLabelSet[key] = struct{}{}
 								}
 							}
 							if strings.Contains(lowerKey, "env") {

@@ -29,7 +29,7 @@ func (s *containerExportTestSuite) TestCastContainerDetail() {
 	cInfo := CastContainerDetail(info, envSet, labelSet, k8sLabelSet)
 
 	s.Equal(1, len(cInfo.Env))
-	s.Equal(0, len(cInfo.Labels))
+	s.Equal(0, len(cInfo.ContainerLabels))
 }
 
 func (s *containerExportTestSuite) TestGetAllContainerIncludeEnvAndLabelToRecord() {
