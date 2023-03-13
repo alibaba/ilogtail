@@ -32,9 +32,9 @@
 
 ## json Mode 配置举例
 
-| Data Input         | JSONPath  | AddMetas           | AddMetas                  | Data Output                         |
+| Data Input         | JSONPath  | AddMetas           | RenameMetas               | Data Output                         |
 |--------------------|-----------|--------------------|---------------------------|-------------------------------------|
-| `A:{}`             | ""        | ["__cloud_zone__"] | {"__cloud_zone__":"zone"} | `A:{},"zone":"xxxx"`                |
+| `A:{}`             | ""        | ["__cloud_zone__"] | {}                        | `A:{},"__cloud_zone__":"xxxx"`      |
 | `B:{}`             | "A"       | ["__cloud_zone__"] | {"__cloud_zone__":"zone"} | `B:{},A:{"zone":"xxxx"}`            |
 | `A:""`             | "A"       | ["__cloud_zone__"] | {"__cloud_zone__":"zone"} | 选中A字段，但A字段非json结构，因此跳过追加，输出`A:""`   |
 | `A:{"a":{"b":{}}}` | "A.a.b"   | ["__cloud_zone__"] | {"__cloud_zone__":"zone"} | `A:{"a":{"b":{"zone":"xxxx"}}}`     |
