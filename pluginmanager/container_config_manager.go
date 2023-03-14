@@ -137,14 +137,16 @@ func refreshEnvAndLabel() {
 	containerLabelSet = make(map[string]struct{})
 	k8sLabelSet = make(map[string]struct{})
 	for _, logstoreConfig := range LogtailConfig {
-		for key := range logstoreConfig.EnvSet {
-			envSet[key] = struct{}{}
-		}
-		for key := range logstoreConfig.ContainerLabelSet {
-			containerLabelSet[key] = struct{}{}
-		}
-		for key := range logstoreConfig.K8sLabelSet {
-			k8sLabelSet[key] = struct{}{}
+		if logstoreConfig.CollectContainersFlag {
+			for key := range logstoreConfig.EnvSet {
+				envSet[key] = struct{}{}
+			}
+			for key := range logstoreConfig.ContainerLabelSet {
+				containerLabelSet[key] = struct{}{}
+			}
+			for key := range logstoreConfig.K8sLabelSet {
+				k8sLabelSet[key] = struct{}{}
+			}
 		}
 	}
 	logger.Debugf(context.Background(), "refreshEnvAndLabel", envSet, containerLabelSet, k8sLabelSet)
@@ -156,22 +158,24 @@ func compareEnvAndLabel() (diffEnvSet, diffContainerLabelSet, diffK8sLabelSet ma
 	diffContainerLabelSet = make(map[string]struct{})
 	diffK8sLabelSet = make(map[string]struct{})
 	for _, logstoreConfig := range LogtailConfig {
-		for key := range logstoreConfig.EnvSet {
-			if _, ok := envSet[key]; !ok {
-				envSet[key] = struct{}{}
-				diffEnvSet[key] = struct{}{}
+		if logstoreConfig.CollectContainersFlag {
+			for key := range logstoreConfig.EnvSet {
+				if _, ok := envSet[key]; !ok {
+					envSet[key] = struct{}{}
+					diffEnvSet[key] = struct{}{}
+				}
 			}
-		}
-		for key := range logstoreConfig.ContainerLabelSet {
-			if _, ok := containerLabelSet[key]; !ok {
-				containerLabelSet[key] = struct{}{}
-				diffContainerLabelSet[key] = struct{}{}
+			for key := range logstoreConfig.ContainerLabelSet {
+				if _, ok := containerLabelSet[key]; !ok {
+					containerLabelSet[key] = struct{}{}
+					diffContainerLabelSet[key] = struct{}{}
+				}
 			}
-		}
-		for key := range logstoreConfig.K8sLabelSet {
-			if _, ok := k8sLabelSet[key]; !ok {
-				k8sLabelSet[key] = struct{}{}
-				diffK8sLabelSet[key] = struct{}{}
+			for key := range logstoreConfig.K8sLabelSet {
+				if _, ok := k8sLabelSet[key]; !ok {
+					k8sLabelSet[key] = struct{}{}
+					diffK8sLabelSet[key] = struct{}{}
+				}
 			}
 		}
 	}
