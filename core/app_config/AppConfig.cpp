@@ -39,7 +39,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
 
     // configserver path
     if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isArray()) {
-        for (int i = 0; i < confJson["ilogtail_configserver_address"].size(); i++) {
+        for (Json::Value::ArrayIndex i = 0; i < confJson["ilogtail_configserver_address"].size(); ++i) {
             vector<string> configServerAddress = SplitString(TrimString(confJson["ilogtail_configserver_address"][i].asString()), ":");
      
             if (configServerAddress.size() !=2) {
