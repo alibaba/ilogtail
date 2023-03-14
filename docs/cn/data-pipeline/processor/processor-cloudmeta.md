@@ -2,14 +2,14 @@
 
 ## 简介
 
-`processor_cloudmeta`插件可以添加为日志增加云平台元数据信息。
+`processor_cloud_meta`插件可以添加为日志增加云平台元数据信息。
 
 ## 配置参数
 
 | 参数             | 类型                | 是否必选 | 说明                                                                                                                                                    |
 |----------------|-------------------|------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Platform       | String            | 是    | 云平台名称，目前支持 alibaba_cloud_ecs、auto，auto 模式支持动态选择云平台。                                                                                                   |
 | Metadata       | []string          | 是    | 增加元信息配置,，默认追加名字为元信息标签名，支持标签请参考支持元信息标签。                                                                                                                |
+| Platform       | String            | 否    | 云平台名称，目前支持 alibaba_cloud_ecs、auto，auto 模式支持动态选择云平台，默认值auto。                                                                                           |
 | JSONPath       | String            | 否    | 为空时直接添加字段，不为空时表示为json序列化字段增加元数据标签，支持多层结构增加云平台元信息，最内层结构需要为json结构，如存在 Log_Content 结构`a: {"b":{}}`，当在 a 子结构下追加是JSONPath为`a`，当在 b 子结构下追加时JSONPath 为 `a.b` |
 | RenameMetadata | map[string]string | 否    | 重命名Metadata名称                                                                                                                                         |
 | ReadOnce       | bool              | 否    | true表示仅读取一次，不支持感知动态变化，默认值false。                                                                                                                       |
@@ -55,12 +55,12 @@ inputs:
     Fields:
       content: "abc"
 processors:
-  - Type: processor_cloudmeta
+  - Type: processor_cloud_meta
     Platform: mock
     Mode: add_fields
     Metadata:
-    - "__cloud_instance_id__"
-    - "__cloud_instance_tags__"
+      - "__cloud_instance_id__"
+      - "__cloud_instance_tags__"
     RenameMetadata:
       __cloud_instance_id__: instance_id_name
       __cloud_instance_tags__: instance_tag_prefix
@@ -95,15 +95,15 @@ inputs:
     Fields:
       content: "{\"a\":{\"b\":{}}}"
 processors:
-  - Type: processor_cloudmeta
+  - Type: processor_cloud_meta
     Platform: mock
     JSONPath: "content.a.b"
     Metadata:
       - "__cloud_instance_id__"
       - "__cloud_instance_tags__"
     RenameMetadata:
-        __cloud_instance_id__: instance_id_name
-        __cloud_instance_tags__: instance_tag_prefix
+      __cloud_instance_id__: instance_id_name
+      __cloud_instance_tags__: instance_tag_prefix
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true

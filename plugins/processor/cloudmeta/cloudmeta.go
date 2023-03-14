@@ -197,9 +197,10 @@ func (c *ProcessorCloudMeta) isAppendContent() bool {
 }
 
 func init() {
-	pipeline.Processors["processor_cloudmeta"] = func() pipeline.Processor {
+	pipeline.Processors["processor_cloud_meta"] = func() pipeline.Processor {
 		return &ProcessorCloudMeta{
-			Platform: platformmeta.Auto,
+			Platform:       platformmeta.Auto,
+			RenameMetadata: map[string]string{},
 		}
 	}
 }
