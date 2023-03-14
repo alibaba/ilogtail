@@ -136,6 +136,7 @@ func loadMockConfig() error {
 		"inputs": [{
 			"detail": {
 				"Stderr": true,
+				"CollectContainersFlag": true,
 				"IncludeLabel": {
 					"app": "^.*$"
 				},
