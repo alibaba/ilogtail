@@ -134,7 +134,7 @@ func (p *ProcessorAppender) ParseVariableValue(key string) string {
 		return util.GetHostName()
 	}
 	if p.cloudmetaManager == nil {
-		return "empty"
+		return key
 	}
 	switch key {
 	case platformmeta.FlagInstanceID:
