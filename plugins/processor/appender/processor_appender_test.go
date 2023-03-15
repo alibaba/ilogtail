@@ -46,18 +46,18 @@ func TestIgnoreIfExistTrue(t *testing.T) {
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "test_key", Value: "test_value"})
 	processor.processLog(log)
 	assert.Equal(t, "test_value", log.Contents[0].Value)
-	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#empty", log.Contents[1].Value)
+	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#__cloud_image_id__", log.Contents[1].Value)
 	processor.processLog(log)
 	assert.Equal(t, "test_value", log.Contents[0].Value)
-	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#empty"+"|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#empty", log.Contents[1].Value)
+	assert.Equal(t, "|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#__cloud_image_id__"+"|host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|env:"+os.Getenv("my")+"|switch#$#__cloud_image_id__", log.Contents[1].Value)
 
 	processor.SortLabels = true
 	log.Contents[1].Value = ""
 	processor.processLog(log)
-	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#empty", log.Contents[1].Value)
+	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#__cloud_image_id__", log.Contents[1].Value)
 	log.Contents[1].Value = "z#$#x"
 	processor.processLog(log)
-	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#empty"+"|z#$#x", log.Contents[1].Value)
+	assert.Equal(t, "host#$#"+util.GetHostName()+"|ip#$#"+util.GetIPAddress()+"|switch#$#__cloud_image_id__"+"|z#$#x", log.Contents[1].Value)
 }
 
 func TestReadDynamic(t *testing.T) {
