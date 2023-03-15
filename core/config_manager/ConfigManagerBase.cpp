@@ -1891,6 +1891,14 @@ void ConfigManagerBase::GetAliuidSet(Json::Value& aliuidArray) {
         aliuidArray.append(Json::Value(*iter));
 }
 
+void ConfigManagerBase::GetAliuidSet(std::vector<std::string>& aliuidVector) {
+    ScopedSpinLock lock(mAliuidSetLock);
+    for (const auto &uid: mAliuidSet) {
+        aliuidVector.push_back(uid);
+    }
+}
+
+
 std::string ConfigManagerBase::GetAliuidSet() {
     ScopedSpinLock lock(mAliuidSetLock);
     string aliuids = "";

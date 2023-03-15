@@ -265,6 +265,7 @@ public:
     void InsertAliuidSet(const std::string& aliuid);
     void SetAliuidSet(const std::vector<std::string>& aliuidList);
     void GetAliuidSet(Json::Value& aliuidArray);
+    void GetAliuidSet(std::vector<std::string>& aliuidVector);
     std::string GetAliuidSet();
 
     void SetUserDefinedIdSet(const std::vector<std::string>& userDefinedIdList);

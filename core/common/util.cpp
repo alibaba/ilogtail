@@ -61,6 +61,15 @@ std::string CalculateRandomUUID() {
 #endif
 }
 
+EndpointAddressType GetEndpointAddressType(const std::string& address) {
+    if (EndWith(address, "-intranet.log.aliyuncs.com")) {
+        return EndpointAddressType::INTRANET;
+    } else if (!EndWith(address, "-share.log.aliyuncs.com") && EndWith(address, ".log.aliyuncs.com")) {
+        return EndpointAddressType::PUBLIC;
+    }
+    return EndpointAddressType::INNER;
+}
+
 namespace util {
 
     const std::string kConfigPrefix = "/etc/ilogtail/conf/";
