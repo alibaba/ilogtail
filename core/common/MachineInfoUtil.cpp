@@ -465,6 +465,7 @@ ECSMeta FetchECSMeta() {
     ECSMeta metaObj;
     metaObj.instanceID = "";
     metaObj.userID = "";
+    metaObj.regionID = "";
     if (curl) {
         std::string meta;
         curl_easy_setopt(curl, CURLOPT_URL, "http://100.100.100.200/latest/dynamic/instance-identity/document");
@@ -489,6 +490,11 @@ ECSMeta FetchECSMeta() {
                 rapidjson::Value::ConstMemberIterator userItr = doc.FindMember("owner-account-id");
                 if (userItr != doc.MemberEnd() && userItr->value.IsString()) {
                     metaObj.userID = userItr->value.GetString();
+                }
+
+                rapidjson::Value::ConstMemberIterator regionItr = doc.FindMember("region-id");
+                if (regionItr != doc.MemberEnd() && regionItr->value.IsString()) {
+                    metaObj.regionID = regionItr->value.GetString();
                 }
             }
         }
