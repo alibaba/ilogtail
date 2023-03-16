@@ -246,6 +246,7 @@ func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 							if err == nil {
 								break
 							}
+
 							// wait until shutdown is active
 							if tryCount%100 == 0 {
 								logger.Warning(p.LogstoreConfig.Context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
