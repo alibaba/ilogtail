@@ -163,7 +163,7 @@ public:
         generateYamlConfig("inputs", {"file_log", "service_syslog"}, yamlConfig);
         generateYamlConfig("flushers", {"flusher_sls"}, yamlConfig);
         ret = ConfigYamlToJson::GetInstance()->CheckPluginConfig("", yamlConfig, workMode);
-        EXPECT_EQ(ret, false);
+        EXPECT_EQ(ret, true);
 
         // service_syslog and processor_regex_accelerate are not matched
         yamlConfig.reset();

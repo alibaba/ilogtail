@@ -284,13 +284,6 @@ bool ConfigYamlToJson::CheckPluginConfig(const string configName, const YAML::No
         return false;
     }
 
-    if (inputPluginsInfo.size() != 1) {
-        LOG_ERROR(sLogger,
-                  ("CheckPluginConfig failed", "inputPluginsInfo size is not 1.")("config_name", configName)(
-                      "input_plugin_size", inputPluginsInfo.size()));
-        return false;
-    }
-
     workMode.mInputPluginType = inputPluginsInfo.begin()->first;
 
     workMode.mHasAccelerateProcessor = false;
