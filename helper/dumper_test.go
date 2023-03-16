@@ -78,7 +78,7 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 	ch = s.InputChannel()
 	s.Start()
 	insertFun(100, 0)
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Second * 2)
 	s.Close()
 	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 100)
 
@@ -88,7 +88,7 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 	ch = s2.InputChannel()
 	s2.Start()
 	insertFun(100, 100)
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Second * 2)
 	s2.Close()
 	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 200)
 }
