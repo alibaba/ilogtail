@@ -474,12 +474,12 @@ ECSMeta FetchECSMeta() {
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, FetchECSMetaCallback);
         CURLcode res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-            LOG_INFO(sLogger, ("fetch ecs meta fail", curl_easy_strerror(res)));
+            LOG_DEBUG(sLogger, ("fetch ecs meta fail", curl_easy_strerror(res)));
         } else {
             rapidjson::Document doc;
             doc.Parse(meta.c_str());
             if (doc.HasParseError() || !doc.IsObject()) {
-                LOG_INFO(sLogger, ("fetch ecs meta fail", meta));
+                LOG_DEBUG(sLogger, ("fetch ecs meta fail", meta));
             } else {
                 rapidjson::Value::ConstMemberIterator instanceItr = doc.FindMember("instance-id");
                 if (instanceItr != doc.MemberEnd() && (instanceItr->value.IsString())) {
@@ -495,6 +495,9 @@ ECSMeta FetchECSMeta() {
         curl_easy_cleanup(curl);
         return metaObj;
     }
+    LOG_WARNING(
+        sLogger,
+        ("curl handler cannot be initialized during user environment identification", "ecs meta may be mislabeled"));
     return metaObj;
 }
 
