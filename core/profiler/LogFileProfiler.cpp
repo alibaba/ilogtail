@@ -38,6 +38,8 @@ string LogFileProfiler::mIpAddr;
 string LogFileProfiler::mOsDetail;
 string LogFileProfiler::mUsername;
 int32_t LogFileProfiler::mSystemBootTime = -1;
+string LogFileProfiler::mECSInstanceID;
+string LogFileProfiler::mECSUserID;
 
 LogFileProfiler::LogFileProfiler() {
     srand(time(NULL));
@@ -53,6 +55,9 @@ LogFileProfiler::LogFileProfiler() {
     mIpAddr = GetHostIp();
     mOsDetail = GetOsDetail();
     mUsername = GetUsername();
+    ECSMeta ecsMeta = FetchECSMeta();
+    mECSInstanceID = ecsMeta.instanceID;
+    mECSUserID = ecsMeta.userID;
 }
 
 bool LogFileProfiler::GetProfileData(LogGroup& logGroup, LogStoreStatistic* statistic) {

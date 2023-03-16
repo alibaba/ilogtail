@@ -83,6 +83,8 @@ public:
     static std::string mOsDetail;
     static std::string mUsername;
     static int32_t mSystemBootTime;
+    static std::string mECSInstanceID;
+    static std::string mECSUserID;
 
 private:
     struct LogStoreStatistic {
