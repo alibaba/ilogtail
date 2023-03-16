@@ -23,4 +23,4 @@ RUN go build
 
 RUN mv /src/simulator /src/simulatorclient
 
-CMD ["/src/simulatorclient","-protocol=dns","-client=true","-port=11801","-address=mockserver","-count=100","-concurrency=1"," -qps=50","-delay=10"]
+CMD ["/src/simulatorclient","-protocol=dns","-client=true","-port=11801","-address=mockserver","-count=100","-concurrency=1"," -qps=50","-delay=3"]
