@@ -15,32 +15,38 @@
 package async
 
 import (
-	"errors"
+	"fmt"
 	"sync/atomic"
 	"time"
 )
 
 type UnittestCounter interface {
-	BeginUnittest() bool
-	StopUnittest(timeout time.Duration, expectNum int64) error
+	Begin(callback func()) bool
+	End(timeout time.Duration, expectNum int64) error
 	AddDelta(num int64)
 }
 
 type UnitTestCounterHelper struct {
-	signal chan struct{}
-	num    int64
+	signal   chan struct{}
+	num      int64
+	callback func()
 }
 
-func (a *UnitTestCounterHelper) BeginUnittest() bool {
+func (a *UnitTestCounterHelper) Begin(callback func()) bool {
 	a.signal = make(chan struct{})
+	a.callback = callback
+	go func() {
+		<-a.signal
+		a.callback()
+	}()
 	return true
 }
 
-func (a *UnitTestCounterHelper) StopUnittest(timeout time.Duration, expectNum int64) error {
+func (a *UnitTestCounterHelper) End(timeout time.Duration, expectNum int64) error {
 	begin := time.Now()
 	for {
 		if time.Since(begin).Nanoseconds() > timeout.Nanoseconds() {
-			return errors.New("timeout")
+			return fmt.Errorf("timeout because unable to go enough events, expect: %d, current: %d", expectNum, atomic.LoadInt64(&a.num))
 		}
 		if atomic.LoadInt64(&a.num) == expectNum {
 			close(a.signal)

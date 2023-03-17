@@ -91,9 +91,9 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 	s.Init()
 	ch = s.InputChannel()
 	s.Start()
-	s.BeginUnittest()
+	s.Begin(func() {})
 	insertFun(100, 0)
-	require.NoError(t, s.StopUnittest(time.Second*2, 100))
+	require.NoError(t, s.End(time.Second*2, 100))
 	s.Close()
 	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 100)
 
@@ -102,9 +102,9 @@ func TestServiceHTTP_doDumpFile(t *testing.T) {
 	s2.Init()
 	ch = s2.InputChannel()
 	s2.Start()
-	s2.BeginUnittest()
+	s2.Begin(func() {})
 	insertFun(100, 100)
-	require.NoError(t, s2.StopUnittest(time.Second*2, 100))
+	require.NoError(t, s2.End(time.Second*2, 100))
 	s2.Close()
 	readFunc(s.dumpDataKeepFiles[len(s.dumpDataKeepFiles)-1], 200)
 }

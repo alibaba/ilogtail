@@ -157,14 +157,14 @@ func NewDumper(prefix string, maxFiles int) *Dumper {
 	}
 }
 
-func (d *Dumper) BeginUnittest() bool {
+func (d *Dumper) Begin(callback func()) bool {
 	d.writeCounter = new(async.UnitTestCounterHelper)
-	d.writeCounter.BeginUnittest()
+	d.writeCounter.Begin(callback)
 	return true
 }
 
-func (d *Dumper) StopUnittest(timeout time.Duration, expectNum int64) error {
-	return d.writeCounter.StopUnittest(timeout, expectNum)
+func (d *Dumper) End(timeout time.Duration, expectNum int64) error {
+	return d.writeCounter.End(timeout, expectNum)
 }
 
 func (d *Dumper) AddDelta(num int64) {
