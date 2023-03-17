@@ -26,9 +26,9 @@ Stable
 
 采集主机上CPU、Memory、Net、Disk、Process等Meta信息。
 
-#### 采集配置
+### 采集配置
 
-```
+```yaml
 enable: true
 inputs:
   - Type: metric_meta_host
@@ -50,8 +50,10 @@ flushers:
 ```
 
 #### 输出
+
 * 主机Meta信息
-```
+
+```json
 {
     "__time__": 1658364854,
     "type": "HOST",
@@ -64,8 +66,9 @@ flushers:
 }
 ```
 
-* 进程Meta信息 
-```
+* 进程Meta信息
+
+```json
 {
     "__time__": 1658364348,
     "type": "PROCESS",
