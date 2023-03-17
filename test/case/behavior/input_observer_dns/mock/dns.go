@@ -104,6 +104,7 @@ func mockDnsClient() {
 					// request
 					rst, err := searchServerIP("sls.test.ebpf", 4, *address+":"+strconv.Itoa(*port))
 					if *print {
+						fmt.Printf(time.Now().Format("2006-01-02 15:04:05"))
 						if err == nil {
 							fmt.Printf("request : sls.test.ebpf , response : %s \n", rst.String())
 						} else {
