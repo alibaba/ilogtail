@@ -38,10 +38,9 @@ type ContainerMeta struct {
 }
 
 type DockerInfoDetailWithFilteredEnvAndLabel struct {
-	Detail          *DockerInfoDetail
-	Env             map[string]string
-	ContainerLabels map[string]string
-	K8sLabels       map[string]string
+	Detail *DockerInfoDetail
+	Env    map[string]string
+	Labels map[string]string
 }
 
 func GetContainersLastUpdateTime() int64 {
@@ -217,7 +216,7 @@ func GetContainerMap() map[string]*DockerInfoDetail {
 	return instance.containerMap
 }
 
-func GetAllContainerToRecord(envSet, labelSet, k8sLabelSet map[string]struct{}, containerIds map[string]struct{}) []*DockerInfoDetailWithFilteredEnvAndLabel {
+func GetAllContainerToRecord(envSet, labelSet map[string]struct{}, containerIds map[string]struct{}) []*DockerInfoDetailWithFilteredEnvAndLabel {
 	instance := getDockerCenterInstance()
 	instance.lock.RLock()
 	defer instance.lock.RUnlock()
@@ -228,17 +227,17 @@ func GetAllContainerToRecord(envSet, labelSet, k8sLabelSet map[string]struct{}, 
 			if !ok {
 				continue
 			}
-			result = append(result, CastContainerDetail(value, envSet, labelSet, k8sLabelSet))
+			result = append(result, CastContainerDetail(value, envSet, labelSet))
 		}
 	} else {
 		for _, value := range instance.containerMap {
-			result = append(result, CastContainerDetail(value, envSet, labelSet, k8sLabelSet))
+			result = append(result, CastContainerDetail(value, envSet, labelSet))
 		}
 	}
 	return result
 }
 
-func GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, k8sLabelSet, diffEnvSet, diffLabelSet, diffK8sLabelSet map[string]struct{}) []*DockerInfoDetailWithFilteredEnvAndLabel {
+func GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, diffEnvSet, diffLabelSet map[string]struct{}) []*DockerInfoDetailWithFilteredEnvAndLabel {
 	instance := getDockerCenterInstance()
 	instance.lock.RLock()
 	defer instance.lock.RUnlock()
@@ -268,24 +267,14 @@ func GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, k8sLabelSet, di
 				}
 			}
 		}
-		if len(diffK8sLabelSet) > 0 {
-			if !match {
-				for key := range value.K8SInfo.Labels {
-					_, ok := diffK8sLabelSet[key]
-					if ok {
-						match = true
-					}
-				}
-			}
-		}
 		if match {
-			result = append(result, CastContainerDetail(value, envSet, labelSet, k8sLabelSet))
+			result = append(result, CastContainerDetail(value, envSet, labelSet))
 		}
 	}
 	return result
 }
 
-func CastContainerDetail(containerInfo *DockerInfoDetail, envSet, labelSet, k8sLabelSet map[string]struct{}) *DockerInfoDetailWithFilteredEnvAndLabel {
+func CastContainerDetail(containerInfo *DockerInfoDetail, envSet, labelSet map[string]struct{}) *DockerInfoDetailWithFilteredEnvAndLabel {
 	newEnv := make(map[string]string)
 	for _, env := range containerInfo.ContainerInfo.Config.Env {
 		splitArray := strings.SplitN(env, "=", 2)
@@ -306,17 +295,9 @@ func CastContainerDetail(containerInfo *DockerInfoDetail, envSet, labelSet, k8sL
 			newLabels[key] = value
 		}
 	}
-	newK8sLabels := make(map[string]string)
-	for key, value := range containerInfo.K8SInfo.Labels {
-		_, ok := k8sLabelSet[key]
-		if ok {
-			newK8sLabels[key] = value
-		}
-	}
 	return &DockerInfoDetailWithFilteredEnvAndLabel{
-		Detail:          containerInfo,
-		Env:             newEnv,
-		ContainerLabels: newLabels,
-		K8sLabels:       newK8sLabels,
+		Detail: containerInfo,
+		Env:    newEnv,
+		Labels: newLabels,
 	}
 }

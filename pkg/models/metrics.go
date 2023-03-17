@@ -84,7 +84,7 @@ func (v *MetricSingleValue) GetSingleValue() float64 {
 }
 
 func (v *MetricSingleValue) GetMultiValues() MetricFloatValues {
-	return NilFloatValues
+	return noopFloatValues
 }
 
 type MetricMultiValue struct {
@@ -111,7 +111,7 @@ func (v *MetricMultiValue) GetMultiValues() MetricFloatValues {
 	if v != nil && v.Values != nil {
 		return v.Values
 	}
-	return NilFloatValues
+	return noopFloatValues
 }
 
 type EmptyMetricValue struct {
@@ -130,7 +130,7 @@ func (v *EmptyMetricValue) GetSingleValue() float64 {
 }
 
 func (v *EmptyMetricValue) GetMultiValues() MetricFloatValues {
-	return NilFloatValues
+	return noopFloatValues
 }
 
 type MetricFloatValues interface {
@@ -180,7 +180,7 @@ func (m *Metric) GetTags() Tags {
 	if m != nil {
 		return m.Tags
 	}
-	return NilStringValues
+	return noopStringValues
 }
 
 func (m *Metric) GetType() EventType {
@@ -239,21 +239,5 @@ func (m *Metric) GetTypedValue() MetricTypedValues {
 	if m != nil && m.TypedValue != nil {
 		return m.TypedValue
 	}
-	return NilTypedValues
-}
-
-func (m *Metric) Clone() PipelineEvent {
-	if m != nil {
-		return &Metric{
-			Name:              m.Name,
-			Description:       m.Description,
-			Timestamp:         m.Timestamp,
-			ObservedTimestamp: m.ObservedTimestamp,
-			Tags:              m.Tags,
-			MetricType:        m.MetricType,
-			Value:             m.Value,
-			TypedValue:        m.TypedValue,
-		}
-	}
-	return nil
+	return noopTypedValues
 }

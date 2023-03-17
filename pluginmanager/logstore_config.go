@@ -110,10 +110,8 @@ type LogstoreConfig struct {
 	// flushWaitSema    sync.WaitGroup
 	pauseOrResumeWg sync.WaitGroup
 
-	K8sLabelSet           map[string]struct{}
-	ContainerLabelSet     map[string]struct{}
-	EnvSet                map[string]struct{}
-	CollectContainersFlag bool
+	LabelSet map[string]struct{}
+	EnvSet   map[string]struct{}
 }
 
 func (p *LogstoreStatistics) Init(context pipeline.Context) {
@@ -368,9 +366,8 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	}
 
 	enableAlwaysOnline := enableAlwaysOnlineForStdout && hasDockerStdoutInput(plugins)
-	logstoreC.ContainerLabelSet = make(map[string]struct{})
+	logstoreC.LabelSet = make(map[string]struct{})
 	logstoreC.EnvSet = make(map[string]struct{})
-	logstoreC.K8sLabelSet = make(map[string]struct{})
 	// add env and label set to logstore config
 	inputs, exists := plugins["inputs"]
 	if exists {
@@ -395,33 +392,21 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 						continue
 					}
 					for key, value := range detailMap {
-						lowerKey := strings.ToLower(key)
-						if strings.Contains(lowerKey, "include") || strings.Contains(lowerKey, "exclude") {
+						if strings.Contains(strings.ToLower(key), "include") || strings.Contains(strings.ToLower(key), "exclude") {
 							conditionMap, valid := value.(map[string]interface{})
 							if !valid {
 								continue
 							}
-							if strings.Contains(lowerKey, "k8slabel") {
+							if strings.Contains(strings.ToLower(key), "label") {
 								for key := range conditionMap {
-									logstoreC.K8sLabelSet[key] = struct{}{}
-								}
-							} else if strings.Contains(lowerKey, "label") {
-								for key := range conditionMap {
-									logstoreC.ContainerLabelSet[key] = struct{}{}
+									logstoreC.LabelSet[key] = struct{}{}
 								}
 							}
-							if strings.Contains(lowerKey, "env") {
+							if strings.Contains(strings.ToLower(key), "env") {
 								for key := range conditionMap {
 									logstoreC.EnvSet[key] = struct{}{}
 								}
 							}
-						}
-						if strings.Contains(lowerKey, "collectcontainersflag") {
-							collectContainersFlag, valid := value.(bool)
-							if !valid {
-								continue
-							}
-							logstoreC.CollectContainersFlag = collectContainersFlag
 						}
 					}
 				}

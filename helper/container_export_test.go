@@ -20,52 +20,49 @@ func (s *containerExportTestSuite) TestCastContainerDetail() {
 
 	envSet := make(map[string]struct{})
 	labelSet := make(map[string]struct{})
-	k8sLabelSet := make(map[string]struct{})
 
 	envSet["testEnv1"] = struct{}{}
 	labelSet["testLebel1"] = struct{}{}
 
 	info := mockDockerInfoDetail("testConfig", []string{"testEnv1=stdout"})
-	cInfo := CastContainerDetail(info, envSet, labelSet, k8sLabelSet)
+	cInfo := CastContainerDetail(info, envSet, labelSet)
 
 	s.Equal(1, len(cInfo.Env))
-	s.Equal(0, len(cInfo.ContainerLabels))
+	s.Equal(0, len(cInfo.Labels))
 }
 
 func (s *containerExportTestSuite) TestGetAllContainerIncludeEnvAndLabelToRecord() {
 	envSet := make(map[string]struct{})
 	labelSet := make(map[string]struct{})
-	k8sLabelSet := make(map[string]struct{})
 
 	diffEnvSet := make(map[string]struct{})
 	diffLabelSet := make(map[string]struct{})
-	diffK8sLabelSet := make(map[string]struct{})
 
 	envSet["testEnv1"] = struct{}{}
-	labelSet["testLabel1"] = struct{}{}
+	labelSet["testLebel1"] = struct{}{}
+
 	diffEnvSet["testEnv1"] = struct{}{}
 
 	info := mockDockerInfoDetail("testConfig", []string{"testEnv1=stdout"})
 	cMap := GetContainerMap()
 	cMap["test"] = info
 
-	result := GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, k8sLabelSet, diffEnvSet, diffLabelSet, diffK8sLabelSet)
+	result := GetAllContainerIncludeEnvAndLabelToRecord(envSet, labelSet, diffEnvSet, diffLabelSet)
 	s.Equal(1, len(result))
 }
 
 func (s *containerExportTestSuite) TestGetAllContainerToRecord() {
 	envSet := make(map[string]struct{})
 	labelSet := make(map[string]struct{})
-	k8sLabelSet := make(map[string]struct{})
 
 	envSet["testEnv1"] = struct{}{}
-	labelSet["testLabel1"] = struct{}{}
+	labelSet["testLebel1"] = struct{}{}
 
 	info := mockDockerInfoDetail("testConfig", []string{"testEnv1=stdout"})
 	cMap := GetContainerMap()
 	cMap["test"] = info
 
-	result := GetAllContainerToRecord(envSet, labelSet, k8sLabelSet, make(map[string]struct{}))
+	result := GetAllContainerToRecord(envSet, labelSet, make(map[string]struct{}))
 	s.Equal(1, len(result))
 }
 

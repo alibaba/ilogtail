@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package util
+package helper
 
 import (
 	"reflect"
@@ -20,7 +20,7 @@ import (
 )
 
 //nolint:gosec
-func ZeroCopyBytesToString(b []byte) (s string) {
+func ZeroCopyString(b []byte) (s string) {
 	pbytes := (*reflect.SliceHeader)(unsafe.Pointer(&b))
 	pstring := (*reflect.StringHeader)(unsafe.Pointer(&s))
 	pstring.Data = pbytes.Data
@@ -29,7 +29,7 @@ func ZeroCopyBytesToString(b []byte) (s string) {
 }
 
 //nolint:gosec
-func ZeroCopyStringToBytes(s string) (b []byte) {
+func ZeroCopySlice(s string) (b []byte) {
 	pbytes := (*reflect.SliceHeader)(unsafe.Pointer(&b))
 	pstring := (*reflect.StringHeader)(unsafe.Pointer(&s))
 	pbytes.Data = pstring.Data
@@ -39,8 +39,8 @@ func ZeroCopyStringToBytes(s string) (b []byte) {
 }
 
 func IsSafeString(str1, str2 string) bool {
-	slice1 := ZeroCopyStringToBytes(str1)
-	slice2 := ZeroCopyStringToBytes(str2)
+	slice1 := ZeroCopySlice(str1)
+	slice2 := ZeroCopySlice(str2)
 	isIn := func(bytes1, bytes2 []byte) bool {
 		for i := range bytes2 {
 			if &bytes2[i] == &bytes1[0] || &bytes2[i] == &bytes1[len(bytes1)-1] {

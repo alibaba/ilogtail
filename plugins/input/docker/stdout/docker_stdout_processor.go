@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -175,7 +176,7 @@ func parseDockerJSONLog(line []byte) (*LogMessage, error) {
 	l := &LogMessage{
 		Time:       dockerLog.Time,
 		StreamType: dockerLog.StreamType,
-		Content:    util.ZeroCopyStringToBytes(dockerLog.LogContent),
+		Content:    helper.ZeroCopySlice(dockerLog.LogContent),
 		Safe:       true,
 	}
 	dockerLog.LogContent = ""
@@ -291,7 +292,7 @@ func (p *DockerStdoutProcessor) newRawLogBySingleLine(msg *LogMessage) *protocol
 	msg.safeContent()
 	log.Contents = append(log.Contents, &protocol.Log_Content{
 		Key:   "content",
-		Value: util.ZeroCopyBytesToString(msg.Content),
+		Value: helper.ZeroCopyString(msg.Content),
 	})
 	log.Contents = append(log.Contents, &protocol.Log_Content{
 		Key:   "_time_",

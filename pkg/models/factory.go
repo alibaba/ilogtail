@@ -36,12 +36,14 @@ func NewTagsWithKeyValues(keyValues ...string) Tags {
 }
 
 func NewTags() Tags {
-	return NewKeyValues[string]()
+	return &keyValuesImpl[string]{
+		keyValues: make(map[string]string),
+	}
 }
 
-func NewMetadataWithMap(md map[string]string) Metadata {
+func NewMetadataWithMap(tags map[string]string) Metadata {
 	return &keyValuesImpl[string]{
-		keyValues: md,
+		keyValues: tags,
 	}
 }
 
@@ -49,17 +51,19 @@ func NewMetadataWithKeyValues(keyValues ...string) Metadata {
 	if len(keyValues)%2 != 0 {
 		keyValues = keyValues[:len(keyValues)-1]
 	}
-	md := make(map[string]string)
+	tags := make(map[string]string)
 	for i := 0; i < len(keyValues); i += 2 {
-		md[keyValues[i]] = keyValues[i+1]
+		tags[keyValues[i]] = keyValues[i+1]
 	}
 	return &keyValuesImpl[string]{
-		keyValues: md,
+		keyValues: tags,
 	}
 }
 
 func NewMetadata() Metadata {
-	return NewKeyValues[string]()
+	return &keyValuesImpl[string]{
+		keyValues: make(map[string]string),
+	}
 }
 
 func NewGroup(meta Metadata, tags Tags) *GroupInfo {
@@ -86,7 +90,7 @@ func NewSingleValueMetric[T constraints.IntUintFloat](name string, metricType Me
 		Timestamp:  uint64(timestamp),
 		Tags:       tags,
 		Value:      &MetricSingleValue{Value: float64(value)},
-		TypedValue: NilTypedValues,
+		TypedValue: noopTypedValues,
 	}
 }
 
@@ -97,7 +101,7 @@ func NewMultiValuesMetric(name string, metricType MetricType, tags Tags, timesta
 		Timestamp:  uint64(timestamp),
 		Tags:       tags,
 		Value:      &MetricMultiValue{Values: values},
-		TypedValue: NilTypedValues,
+		TypedValue: noopTypedValues,
 	}
 }
 
@@ -145,37 +149,4 @@ func NewSpan(name, traceID, spanID string, kind SpanKind, startTime, endTime uin
 
 func NewByteArray(bytes []byte) ByteArray {
 	return ByteArray(bytes)
-}
-
-func NewLog(name string, body []byte, level, spanID, traceID string, tags Tags, timestamp uint64) *Log {
-	return &Log{
-		Name:      name,
-		Level:     level,
-		Body:      body,
-		Tags:      tags,
-		Timestamp: timestamp,
-		SpanID:    spanID,
-		TraceID:   traceID,
-	}
-}
-
-func NewSimpleLog(body []byte, tags Tags, timestamp uint64) *Log {
-	return &Log{
-		Body:      body,
-		Tags:      tags,
-		Timestamp: timestamp,
-	}
-}
-
-func NewSimpleLevelLog(level string, body []byte, tags Tags, timestamp uint64) *Log {
-	return &Log{
-		Level:     level,
-		Body:      body,
-		Tags:      tags,
-		Timestamp: timestamp,
-	}
-}
-
-func NewLogIndices() Indices {
-	return NewKeyValues[interface{}]()
 }
