@@ -39,7 +39,7 @@ verify:
         field: count
         filter_key: req_resource
         filter_val: sls.test.ebpf
-testing_interval: 10s
+testing_interval: 40s
 retry:
   times: 0
   interval: 10s
