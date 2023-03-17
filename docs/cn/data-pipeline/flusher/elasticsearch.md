@@ -4,6 +4,10 @@
 
 `flusher_elasticsearch` `flusher`插件可以实现将采集到的数据，经过处理后，发送到 ElasticSearch，需要 ElasticSearch 版本至少为 `8`。
 
+## 版本
+
+Alpha
+
 ## 配置参数
 
 | 参数                                | 类型       | 是否必选 | 说明                                                                                 |
