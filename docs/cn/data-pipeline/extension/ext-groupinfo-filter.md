@@ -1,8 +1,8 @@
-# GroupInfo Filter 扩展
+# GroupInfoFilter FlushInterceptor 扩展
 
 ## 简介
 
-`ext_groupinfo_filter` 扩展插件，实现了 [extensions.Filter](https://github.com/alibaba/ilogtail/blob/main/pkg/pipeline/extensions/filter.go) 接口，可以在 http_flusher 插件中引用，提供在向远端最终提交前筛选数据的能力。
+`ext_groupinfo_filter` 扩展插件，实现了 [extensions.FlushInterceptor](https://github.com/alibaba/ilogtail/blob/main/pkg/pipeline/extensions/flushinterceptor.go) 接口，可以在 http_flusher 插件中引用，提供在向远端最终提交前筛选数据的能力。
 
 ## 配置参数
 
@@ -47,7 +47,7 @@ flushers:
     Convert:
       Protocol: custom_single
       Encoding: json
-    Filter: ext_groupinfo_filter
+    FlushInterceptor: ext_groupinfo_filter
 extensions:
   - Type: ext_groupinfo_filter
     Tags:
@@ -79,13 +79,13 @@ flushers:
     Convert:
       Protocol: custom_single
       Encoding: json
-    Filter: ext_groupinfo_filter/tag1
+    FlushInterceptor: ext_groupinfo_filter/tag1
   - Type: flusher_http
     RemoteURL: "http://localhost:8086/write_select_tag2"
     Convert:
       Protocol: custom_single
       Encoding: json
-    Filter: ext_groupinfo_filter/tag2
+    FlushInterceptor: ext_groupinfo_filter/tag2
 extensions:
   - Type: ext_groupinfo_filter/tag1
     Tags:

@@ -58,22 +58,22 @@ type retryConfig struct {
 }
 
 type FlusherHTTP struct {
-	RemoteURL     string               // RemoteURL to request
-	Headers       map[string]string    // Headers to append to the http request
-	Query         map[string]string    // Query parameters to append to the http request
-	Timeout       time.Duration        // Request timeout, default is 60s
-	Retry         retryConfig          // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
-	Convert       helper.ConvertConfig // Convert defines which protocol and format to convert to
-	Concurrency   int                  // How many requests can be performed in concurrent
-	Authenticator string               // name of the extensions.ClientAuthenticator extension to use
-	Filter        string               // name of the extensions.Filter extension to use
+	RemoteURL        string               // RemoteURL to request
+	Headers          map[string]string    // Headers to append to the http request
+	Query            map[string]string    // Query parameters to append to the http request
+	Timeout          time.Duration        // Request timeout, default is 60s
+	Retry            retryConfig          // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
+	Convert          helper.ConvertConfig // Convert defines which protocol and format to convert to
+	Concurrency      int                  // How many requests can be performed in concurrent
+	Authenticator    string               // name of the extensions.ClientAuthenticator extension to use
+	FlushInterceptor string               // name of the extensions.FlushInterceptor extension to use
 
 	varKeys []string
 
-	context   pipeline.Context
-	converter *converter.Converter
-	client    *http.Client
-	filter    extensions.Filter
+	context     pipeline.Context
+	converter   *converter.Converter
+	client      *http.Client
+	interceptor extensions.FlushInterceptor
 
 	queue   chan interface{}
 	counter sync.WaitGroup
@@ -105,20 +105,20 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	}
 	f.converter = converter
 
-	if f.Filter != "" {
-		ext, ok := f.context.GetExtension(f.Filter)
+	if f.FlushInterceptor != "" {
+		ext, ok := f.context.GetExtension(f.FlushInterceptor)
 		if !ok {
-			err = fmt.Errorf("filter(%s) not found", f.Filter)
+			err = fmt.Errorf("filter(%s) not found", f.FlushInterceptor)
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init filter fail, error", err)
 			return err
 		}
-		filter, ok := ext.(extensions.Filter)
+		interceptor, ok := ext.(extensions.FlushInterceptor)
 		if !ok {
-			err = fmt.Errorf("filter(%s) not implement interface extensions.Filter", f.Filter)
+			err = fmt.Errorf("filter(%s) not implement interface extensions.FlushInterceptor", f.FlushInterceptor)
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init filter fail, error", err)
 			return err
 		}
-		f.filter = filter
+		f.interceptor = interceptor
 	}
 
 	err = f.initHTTPClient()
@@ -147,8 +147,8 @@ func (f *FlusherHTTP) Flush(projectName string, logstoreName string, configName 
 
 func (f *FlusherHTTP) Export(groupEventsArray []*models.PipelineGroupEvents, ctx pipeline.PipelineContext) error {
 	for _, groupEvents := range groupEventsArray {
-		if f.filter != nil {
-			groupEvents = f.filter.Filter(groupEvents)
+		if f.interceptor != nil {
+			groupEvents = f.interceptor.Intercept(groupEvents)
 			if groupEvents == nil {
 				continue
 			}
