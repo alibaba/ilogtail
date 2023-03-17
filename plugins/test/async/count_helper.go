@@ -39,7 +39,7 @@ func (a *UnitTestCounterHelper) BeginUnittest() bool {
 func (a *UnitTestCounterHelper) StopUnittest(timeout time.Duration, expectNum int64) error {
 	begin := time.Now()
 	for {
-		if time.Now().Sub(begin).Nanoseconds() > timeout.Nanoseconds() {
+		if time.Since(begin).Nanoseconds() > timeout.Nanoseconds() {
 			return errors.New("timeout")
 		}
 		if atomic.LoadInt64(&a.num) == expectNum {
