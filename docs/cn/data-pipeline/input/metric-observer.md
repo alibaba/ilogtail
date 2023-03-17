@@ -6,7 +6,7 @@
 
 ## 版本
 
-Stable
+Beta
 
 ## 前提
 
