@@ -1,23 +1,30 @@
 # 原始
 
 ## 简介
+
 `processor_default`插件不对数据任何操作，只是简单的数据透传。
+
+## 版本
+
+Stable
 
 ## 配置参数
 
 `processor_default`插件不需要配置参数
 
-
 ## 样例
+
 采集`/home/test-log/`路径下的`default.log`文件，提取文件的原始数据。
 
 * 输入
-```
+
+```bash
 echo "2022/07/14/11:32:47 test log" >> /home/test-log/default.log
 ```
 
 * 采集配置
-```
+
+```yaml
 enable: true
 inputs:
   - Type: file_log
@@ -36,10 +43,11 @@ flushers:
 ```
 
 * 输出
-```
+
+```json
 {
     "__tag__:__path__":"/home/test-log/default.log",
     "content":"2022/07/14/11:32:47 test log",
-    "__time__":"1657769827"}
+    "__time__":"1657769827"
 }
 ```

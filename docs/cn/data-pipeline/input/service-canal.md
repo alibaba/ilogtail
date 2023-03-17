@@ -4,6 +4,10 @@
 
 `service_canal` `input`插件可以采集MySQL Binlog。
 
+## 版本
+
+Stable
+
 ## 配置参数
 
 | 参数 | 类型，默认值 | 说明 |

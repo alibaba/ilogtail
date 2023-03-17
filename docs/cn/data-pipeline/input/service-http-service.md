@@ -4,6 +4,10 @@
 
 `service_http_server` `input`插件可以接收来自unix socket、http/https、tcp的请求，并支持sls协议、otlp等多种协议。
 
+## 版本
+
+Stable
+
 ## 配置参数
 
 | 参数                 | 类型                | 是否必选 | 说明                                                                                                                                                                            |
