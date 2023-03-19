@@ -38,7 +38,7 @@ require (
 	github.com/juju/errors v0.0.0-20170703010042-c7d06af17c68
 	github.com/knz/strtime v0.0.0-20181018220328-af2256ee352c
 	github.com/mailru/easyjson v0.7.7
-	github.com/mindprince/gonvml v0.0.0-20180514031326-b364b296c732
+	github.com/iLogtail/gonvml v1.0.0
 	github.com/narqo/go-dogstatsd-parser v0.2.0
 	github.com/oschwald/geoip2-golang v1.1.0
 	github.com/paulbellamy/ratecounter v0.2.1-0.20170719102518-a803f0e4f071
@@ -137,7 +137,7 @@ require (
 	github.com/Microsoft/hcsshim v0.9.4 // indirect
 	github.com/VictoriaMetrics/fasthttp v1.1.0 // indirect
 	github.com/VictoriaMetrics/metricsql v0.45.0 // indirect
-	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20181127062202-5462e9f9dc05 // indirect
+	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20181127062202-5462e9f9dc05
 	github.com/andrewkroh/sys v0.0.0-20151128191922-287798fe3e43 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect

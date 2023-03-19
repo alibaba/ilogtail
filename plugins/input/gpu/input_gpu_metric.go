@@ -22,7 +22,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 
-	"github.com/mindprince/gonvml"
+	"github.com/iLogtail/gonvml"
 )
 
 type InputGpuMetric struct {
