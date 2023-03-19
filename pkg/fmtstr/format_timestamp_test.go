@@ -15,33 +15,20 @@
 package fmtstr
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFormatString(t *testing.T) {
-	topic := "kafka_%{app_name}"
-	fields := map[string]string{
-		"app_name": "ilogtail",
-	}
+func TestFormatTime(t *testing.T) {
+	someTime := time.Now().Local()
+	currentStrTime := FormatTimestamp(&someTime, "yyyyMMdd")
+	expectTime := time.Now().Format("20060102")
+	assert.Equal(t, expectTime, currentStrTime)
 
-	expectTopic := "kafka_ilogtail"
-
-	sf, _ := Compile(topic, func(key string, ops []VariableOp) (FormatEvaler, error) {
-		if v, found := fields[key]; found {
-			return StringElement{v}, nil
-		}
-		return StringElement{key}, nil
-	})
-	actualTopic, _ := sf.Run(nil)
-
-	assert.Equal(t, expectTopic, actualTopic)
-}
-
-func TestCompileKeys(t *testing.T) {
-	topic := "kafka_%{app_name}"
-	expectTopicKeys := []string{"app_name"}
-	topicKeys, _ := CompileKeys(topic)
-	assert.Equal(t, expectTopicKeys, topicKeys)
+	currentWeekNumber := FormatTimestamp(&someTime, "yyyy.ww")
+	expectWeekNumber := fmt.Sprintf("%s.%d", someTime.Format("2006"), GetWeek(&someTime))
+	assert.Equal(t, expectWeekNumber, currentWeekNumber)
 }
