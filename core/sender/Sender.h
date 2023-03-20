@@ -335,7 +335,7 @@ private:
     void AddTruncateInfo(int64_t key, const std::string& truncateinfo);
     std::string GetTruncateInfo(int64_t key);
     void DelTruncateInfo(int64_t key);
-    void ResetPort(const string& region, sdk::Client* sendClient);
+    void ResetPort(const std::string& region, sdk::Client* sendClient);
 
 public:
     static Sender* Instance();
