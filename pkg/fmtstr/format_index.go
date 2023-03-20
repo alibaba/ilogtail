@@ -16,12 +16,11 @@ package fmtstr
 
 import "time"
 
-func FormatIndex(targetValues map[string]string, topicPattern string) (*string, error) {
-	sf, err := Compile(topicPattern, func(key string, ops []VariableOp) (FormatEvaler, error) {
-		// with timestamp expression
+func FormatIndex(targetValues map[string]string, indexPattern string, indexTimestamp *time.Time) (*string, error) {
+	sf, err := Compile(indexPattern, func(key string, ops []VariableOp) (FormatEvaler, error) {
+		// with timestamp expression, like %{+yyyyMM}
 		if key[0] == '+' {
-			nowTime := time.Now().Local()
-			index := FormatTimestamp(&nowTime, key[1:])
+			index := FormatTimestamp(indexTimestamp, key[1:])
 			return StringElement{S: index}, nil
 		}
 		if value, ok := targetValues[key]; ok {

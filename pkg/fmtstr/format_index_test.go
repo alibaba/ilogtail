@@ -29,12 +29,12 @@ func TestFormatIndex(t *testing.T) {
 			"app": "ilogtail",
 		}
 		elasticsearchIndex := "test_%{app}_%{+yyyy.ww}" // Generate index weekly
-		actualIndex, _ := FormatIndex(targetValues, elasticsearchIndex)
+		actualIndex, _ := FormatIndex(targetValues, elasticsearchIndex, &nowTime)
 		desiredIndex := fmt.Sprintf("test_ilogtail_%s.%d", nowTime.Format("2006"), GetWeek(&nowTime))
 		convey.So(*actualIndex, convey.ShouldEqual, desiredIndex)
 
 		elasticsearchIndexDaily := "test_%{app}_%{+yyyyMMdd}" // Generate index daily
-		actualIndex, _ = FormatIndex(targetValues, elasticsearchIndexDaily)
+		actualIndex, _ = FormatIndex(targetValues, elasticsearchIndexDaily, &nowTime)
 		desiredIndex = fmt.Sprintf("test_ilogtail_%s", nowTime.Format("20060102"))
 		convey.So(*actualIndex, convey.ShouldEqual, desiredIndex)
 	})
