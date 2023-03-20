@@ -6,7 +6,7 @@
 
 ## 版本
 
-Beta
+[Beta](../stability-level.md)
 
 ## 配置参数
 

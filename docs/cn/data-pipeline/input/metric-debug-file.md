@@ -5,7 +5,7 @@
 
 ## 版本
 
-Stable
+[Stable](../stability-level.md)
 
 ## 配置参数
 | 参数 | 类型，默认值 | 说明 |

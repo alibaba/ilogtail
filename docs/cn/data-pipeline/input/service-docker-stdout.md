@@ -25,7 +25,7 @@
 
 ## 版本
 
-Stable
+[Stable](../stability-level.md)
 
 ## 配置参数
 

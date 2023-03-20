@@ -6,7 +6,7 @@
 
 ## 版本
 
-Stable
+[Stable](../stability-level.md)
 
 ### 条件判断
 
