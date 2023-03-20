@@ -367,7 +367,9 @@ func TestHttpFlusherFlushWithAuthenticator(t *testing.T) {
 			Query: map[string]string{
 				"db": "%{tag.db}",
 			},
-			Authenticator: "ext_basicauth",
+			Authenticator: &helper.ExtensionConfig{
+				Type: "ext_basicauth",
+			},
 		}
 
 		err := flusher.Init(mockContext{basicAuth: authenticator})
