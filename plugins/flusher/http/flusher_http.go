@@ -106,7 +106,8 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.converter = converter
 
 	if f.FlushInterceptor != nil {
-		ext, err := f.context.GetExtension(f.FlushInterceptor.Type, f.FlushInterceptor.Options)
+		var ext pipeline.Extension
+		ext, err = f.context.GetExtension(f.FlushInterceptor.Type, f.FlushInterceptor.Options)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init filter fail, error", err)
 			return err

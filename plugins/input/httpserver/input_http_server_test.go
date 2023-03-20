@@ -57,16 +57,15 @@ func (p *ContextTest) GetExtension(name string, cfg any) (pipeline.Extension, er
 	if !ok {
 		return nil, fmt.Errorf("extension not found")
 	}
-	ext := creator()
+	extension := creator()
 	config, err := json.Marshal(cfg)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(config, ext)
+	err = json.Unmarshal(config, extension)
 	if err != nil {
 		return nil, err
 	}
-	extension := ext.(pipeline.Extension)
 	extension.Init(&p.ContextImp)
 	return extension, nil
 }
