@@ -61,13 +61,11 @@ std::string CalculateRandomUUID() {
 #endif
 }
 
-EndpointAddressType GetEndpointAddressType(const std::string& address) {
-    if (EndWith(address, "-intranet.log.aliyuncs.com")) {
-        return EndpointAddressType::INTRANET;
-    } else if (!EndWith(address, "-share.log.aliyuncs.com") && EndWith(address, ".log.aliyuncs.com")) {
-        return EndpointAddressType::PUBLIC;
+bool IsHttpsEndpoint(const string& endpoint) {
+    if (endpoint.rfind("https://") == 0) {
+        return true;
     }
-    return EndpointAddressType::INNER;
+    return false;
 }
 
 namespace util {

@@ -714,9 +714,9 @@ sdk::Client* Sender::GetSendClient(const std::string& region, const std::string&
 
     int32_t lastUpdateTime;
     string endpoint = GetRegionCurrentEndpoint(region);
-    if ((STRING_FLAG(data_endpoint_policy) == "intranet_first" || STRING_FLAG(data_endpoint_policy) == "intranet_locked") && !EndWith(region, "-corp")) {
-        endpoint = region + "-intranet.log.aliyuncs.com";
-    }
+    // if ((STRING_FLAG(data_endpoint_policy) == "intranet_first" || STRING_FLAG(data_endpoint_policy) == "intranet_locked") && !EndWith(region, "-corp")) {
+    //     endpoint = region + "-intranet.log.aliyuncs.com";
+    // }
     sdk::Client* sendClient = new sdk::Client(endpoint,
                                               "",
                                               "",
@@ -724,6 +724,7 @@ sdk::Client* Sender::GetSendClient(const std::string& region, const std::string&
                                               LogFileProfiler::mIpAddr,
                                               AppConfig::GetInstance()->GetBindInterface());
     SLSControl::Instance()->SetSlsSendClientCommonParam(sendClient);
+    ResetPort(region, sendClient);
     SLSControl::Instance()->SetSlsSendClientAuth(aliuid, true, sendClient, lastUpdateTime);
     SlsClientInfo* clientInfo = new SlsClientInfo(sendClient, time(NULL));
     {
@@ -745,7 +746,26 @@ bool Sender::ResetSendClientEndpoint(const std::string aliuid, const std::string
         mSenderQueue.OnRegionRecover(region);
     }
     sendClient->SetSlsHost(endpoint);
+    ResetPort(region, sendClient);
     return true;
+}
+
+void Sender::ResetPort(const string& region, sdk::Client* sendClient) {
+    if (AppConfig::GetInstance()->GetDataServerPort() == 80) {
+        PTScopedLock lock(mRegionEndpointEntryMapLock);
+        if (mRegionEndpointEntryMap.find(region) != mRegionEndpointEntryMap.end()) {
+            string defaultEndpoint = mRegionEndpointEntryMap.at(region)->mDefaultEndpoint;
+            if (defaultEndpoint.size() != 0) {
+                if (IsHttpsEndpoint(defaultEndpoint)) {
+                    sendClient->SetPort(443);
+                }
+            } else {
+                if (IsHttpsEndpoint(sendClient->GetRawSlsHost())) {
+                    sendClient->SetPort(443);
+                }
+            }
+        }
+    }
 }
 
 void Sender::CleanTimeoutSendClient() {
@@ -1701,14 +1721,14 @@ void Sender::TestNetwork() {
                             } else {
                                 unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
                             }
-                        } else if (STRING_FLAG(data_endpoint_policy) == "intranet_first" && !EndWith(iter->first, "-corp")) {
-                            if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INTRANET) {
-                                unavaliableEndpoints[iter->first].emplace_back(0, epIter->first);
-                            } else if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INNER) {
-                                unavaliableEndpoints[iter->first].emplace_back(1, epIter->first);
-                            } else {
-                                unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
-                            }
+                        // } else if (STRING_FLAG(data_endpoint_policy) == "intranet_first" && !EndWith(iter->first, "-corp")) {
+                        //     if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INTRANET) {
+                        //         unavaliableEndpoints[iter->first].emplace_back(0, epIter->first);
+                        //     } else if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INNER) {
+                        //         unavaliableEndpoints[iter->first].emplace_back(1, epIter->first);
+                        //     } else {
+                        //         unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
+                        //     }
                         } else {
                             unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
                         }
@@ -1785,6 +1805,7 @@ bool Sender::TestEndpoint(const std::string& region, const std::string& endpoint
         return false;
     static LogGroup logGroup;
     mTestNetworkClient->SetSlsHost(endpoint);
+    ResetPort(region, mTestNetworkClient);
     bool status = true;
     int64_t beginTime = GetCurrentTimeInMicroSeconds();
     try {
