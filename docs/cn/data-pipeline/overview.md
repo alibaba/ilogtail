@@ -88,15 +88,6 @@
 
 ### Decoder
 
-| 协议(Format)       | 提供方                                                 | 简介                                            |
-|------------------|-----------------------------------------------------|-----------------------------------------------|
-| `sls`            | SLS官方                                               | 解析sls日志                                       |
-| `prometheus`     | SLS官方                                               | 解析 prometheus expformat 和 remote-storage 协议数据 |
-| `influx`         | SLS官方                                               | 解析 influx 协议数据                                |
-| `influxdb`       | SLS官方                                               | 解析 influxdb 协议数据                              |
-| `statsd`         | SLS官方                                               | 解析 statsd 协议数据                                |
-| `otlp_logv1`     | SLS官方                                               | 解析 opentelemetry log 协议数据                     |
-| `otlp_metricsv1` | 社区<br>[`shunjiazhu`](https://github.com/shunjiazhu) | 解析 opentelemetry metrics 协议数据                 |
-| `otlp_tracev1`   | 社区<br>[`shunjiazhu`](https://github.com/shunjiazhu) | 解析 opentelemetry trace 协议数据                   |
-| `raw`            | 社区<br>[`urnotsally`](https://github.com/urnotsally) | 数据流直接封装为ByteArrayEvent                        |
-| `pyroscope`      | SLS官方                                               | 解析 pyroscope 数据                               |
+| 名称                                     | 提供方                                             | 简介                          |
+|----------------------------------------|-------------------------------------------------|-----------------------------|
+| `ext_default_decoder`<br> 默认的decoder扩展 | 社区<br>[`snakorse`](https://github.com/snakorse) | 将内置支持的Format以Decoder扩展的形式封装 |

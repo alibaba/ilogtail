@@ -29,7 +29,8 @@ flushers:
     Convert:
       Protocol: custom_single
       Encoding: json
-    Authenticator: ext_basicauth
+    Authenticator: 
+      Type: ext_basicauth
 extensions:
   - Type: ext_basicauth
     Username: user1
@@ -53,7 +54,8 @@ flushers:
     Convert:
       Protocol: custom_single
       Encoding: json
-    Authenticator: ext_basicauth/user1
+    Authenticator: 
+      Type: ext_basicauth/user1
 extensions:
   - Type: ext_basicauth/user1
     Username: user1
