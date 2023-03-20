@@ -15,11 +15,11 @@
 package udpserver
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/ilogtail/helper/decoder"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
@@ -27,6 +27,7 @@ import (
 )
 
 type UDPServer struct {
+	Decoder       string
 	Format        string
 	Address       string
 	MaxBufferSize int
@@ -40,10 +41,15 @@ type UDPServer struct {
 
 func (u *UDPServer) Init(context pipeline.Context) (int, error) {
 	u.context = context
-	var err error
-	if u.decoder, err = decoder.GetDecoder(u.Format); err != nil {
+	ext, err := context.GetExtension(u.Decoder, u)
+	if err != nil {
 		return 0, err
 	}
+	decoder, ok := ext.(extensions.Decoder)
+	if !ok {
+		return 0, fmt.Errorf("extension %s with type %T not implement extensions.Decoder", u.Decoder, ext)
+	}
+	u.decoder = decoder
 
 	host, portStr, err := net.SplitHostPort(u.Address)
 	if err != nil {
@@ -135,6 +141,7 @@ func init() {
 	pipeline.ServiceInputs["service_udp_server"] = func() pipeline.ServiceInput {
 		return &UDPServer{
 			MaxBufferSize: 65535,
+			Decoder:       "ext_default_decoder",
 		}
 	}
 }

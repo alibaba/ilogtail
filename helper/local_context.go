@@ -67,8 +67,8 @@ func (p *LocalContext) GetRuntimeContext() context.Context {
 	return p.ctx
 }
 
-func (p *LocalContext) GetExtension(name string) (pipeline.Extension, bool) {
-	return nil, false
+func (p *LocalContext) GetExtension(name string, cfg any) (pipeline.Extension, error) {
+	return nil, nil
 }
 
 func (p *LocalContext) RegisterCounterMetric(metric pipeline.CounterMetric) {

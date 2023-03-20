@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -34,6 +35,7 @@ import (
 )
 
 var maxFlushOutTime = 5
+var embeddedNamingCnt = int64(0)
 
 const mixProcessModeFlag = "mix_process_mode"
 
@@ -809,6 +811,11 @@ func GetPluginPriority(pluginName string) int {
 		return val
 	}
 	return 0
+}
+
+func genEmbeddedPluginName(pluginType string) string {
+	id := atomic.AddInt64(&embeddedNamingCnt, 1)
+	return fmt.Sprintf("%s/_gen_embedded_%v", pluginType, id)
 }
 
 func init() {

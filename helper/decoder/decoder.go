@@ -64,47 +64,6 @@ func GetDecoderWithOptions(format string, option Option) (extensions.Decoder, er
 	case common.ProtocolPyroscope:
 		return &pyroscope.Decoder{}, nil
 	default:
-		return extensions.CreateDecoder(format, option)
+		return nil, fmt.Errorf("not supported format: %s", format)
 	}
-}
-
-// RegisterDecodersAsExtension register builtin decoders as extension, to allow them available in external plugins
-func RegisterDecodersAsExtension() {
-	creator := func(protocol string) extensions.Decoder {
-		d, err := GetDecoder(protocol)
-		if err != nil {
-			panic(fmt.Sprintf("failed create decoder for protocol: %s", protocol))
-		}
-		return d
-	}
-	extensions.AddDecoderCreator(common.ProtocolSLS, func() extensions.Decoder {
-		return creator(common.ProtocolSLS)
-	})
-	extensions.AddDecoderCreator(common.ProtocolPrometheus, func() extensions.Decoder {
-		return creator(common.ProtocolPrometheus)
-	})
-	extensions.AddDecoderCreator(common.ProtocolInfluxdb, func() extensions.Decoder {
-		return creator(common.ProtocolInfluxdb)
-	})
-	extensions.AddDecoderCreator(common.ProtocolInflux, func() extensions.Decoder {
-		return creator(common.ProtocolInflux)
-	})
-	extensions.AddDecoderCreator(common.ProtocolStatsd, func() extensions.Decoder {
-		return creator(common.ProtocolStatsd)
-	})
-	extensions.AddDecoderCreator(common.ProtocolOTLPLogV1, func() extensions.Decoder {
-		return creator(common.ProtocolOTLPLogV1)
-	})
-	extensions.AddDecoderCreator(common.ProtocolOTLPMetricV1, func() extensions.Decoder {
-		return creator(common.ProtocolOTLPMetricV1)
-	})
-	extensions.AddDecoderCreator(common.ProtocolOTLPTraceV1, func() extensions.Decoder {
-		return creator(common.ProtocolOTLPTraceV1)
-	})
-	extensions.AddDecoderCreator(common.ProtocolRaw, func() extensions.Decoder {
-		return creator(common.ProtocolRaw)
-	})
-	extensions.AddDecoderCreator(common.ProtocolPyroscope, func() extensions.Decoder {
-		return creator(common.ProtocolPyroscope)
-	})
 }

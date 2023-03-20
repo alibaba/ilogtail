@@ -16,6 +16,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sort"
@@ -681,9 +682,11 @@ type mockContext struct {
 	basicAuth *basicAuth
 }
 
-func (c mockContext) GetExtension(name string) (pipeline.Extension, bool) {
-	ok := c.basicAuth != nil
-	return c.basicAuth, ok
+func (c mockContext) GetExtension(name string, cfg any) (pipeline.Extension, error) {
+	if c.basicAuth == nil {
+		return nil, fmt.Errorf("basicAuth not set")
+	}
+	return c.basicAuth, nil
 }
 
 func (c mockContext) GetConfigName() string {

@@ -106,9 +106,8 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.converter = converter
 
 	if f.FlushInterceptor != "" {
-		ext, ok := f.context.GetExtension(f.FlushInterceptor)
-		if !ok {
-			err = fmt.Errorf("filter(%s) not found", f.FlushInterceptor)
+		ext, err := f.context.GetExtension(f.FlushInterceptor, f)
+		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init filter fail, error", err)
 			return err
 		}
@@ -173,7 +172,6 @@ func (f *FlusherHTTP) Stop() error {
 
 func (f *FlusherHTTP) initHTTPClient() error {
 	transport := http.DefaultTransport
-	var err error
 	if dt, ok := transport.(*http.Transport); ok {
 		dt = dt.Clone()
 		if f.Concurrency > dt.MaxIdleConnsPerHost {
@@ -182,9 +180,8 @@ func (f *FlusherHTTP) initHTTPClient() error {
 		transport = dt
 	}
 	if f.Authenticator != "" {
-		auth, ok := f.context.GetExtension(f.Authenticator)
-		if !ok {
-			err = fmt.Errorf("not found authenticator[%s]", f.Authenticator)
+		auth, err := f.context.GetExtension(f.Authenticator, f)
+		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init authenticator fail, error", err)
 			return err
 		}

@@ -167,6 +167,6 @@ func (p *EmptyContext) GetRuntimeContext() context.Context {
 	return p.ctx
 }
 
-func (p *EmptyContext) GetExtension(name string) (pipeline.Extension, bool) {
-	return nil, false
+func (p *EmptyContext) GetExtension(name string, cfg any) (pipeline.Extension, error) {
+	return nil, nil
 }
