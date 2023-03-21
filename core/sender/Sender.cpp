@@ -714,7 +714,8 @@ sdk::Client* Sender::GetSendClient(const std::string& region, const std::string&
 
     int32_t lastUpdateTime;
     string endpoint = GetRegionCurrentEndpoint(region);
-    // if ((STRING_FLAG(data_endpoint_policy) == "intranet_first" || STRING_FLAG(data_endpoint_policy) == "intranet_locked") && !EndWith(region, "-corp")) {
+    // if ((STRING_FLAG(data_endpoint_policy) == "intranet_first" || STRING_FLAG(data_endpoint_policy) ==
+    // "intranet_locked") && !EndWith(region, "-corp")) {
     //     endpoint = region + "-intranet.log.aliyuncs.com";
     // }
     sdk::Client* sendClient = new sdk::Client(endpoint,
@@ -725,6 +726,7 @@ sdk::Client* Sender::GetSendClient(const std::string& region, const std::string&
                                               AppConfig::GetInstance()->GetBindInterface());
     SLSControl::Instance()->SetSlsSendClientCommonParam(sendClient);
     ResetPort(region, sendClient);
+    LOG_INFO(sLogger, ("init endpoint for sender, region", region)("uid", aliuid)("endpoint", endpoint)("use https",ToString(sendClient->IsUsingHTTPS())));
     SLSControl::Instance()->SetSlsSendClientAuth(aliuid, true, sendClient, lastUpdateTime);
     SlsClientInfo* clientInfo = new SlsClientInfo(sendClient, time(NULL));
     {
@@ -742,11 +744,13 @@ bool Sender::ResetSendClientEndpoint(const std::string aliuid, const std::string
     string endpoint = GetRegionCurrentEndpoint(region);
     if (endpoint.empty())
         return false;
-    if (sendClient->GetRawSlsHost() != endpoint) {
-        mSenderQueue.OnRegionRecover(region);
+    if (sendClient->GetRawSlsHost() == endpoint) {
+        return false;
     }
+    mSenderQueue.OnRegionRecover(region);
     sendClient->SetSlsHost(endpoint);
     ResetPort(region, sendClient);
+    LOG_INFO(sLogger, ("reset endpoint for sender, region", region)("uid", aliuid)("from", sendClient->GetRawSlsHost())("to", endpoint)("use https",ToString(sendClient->IsUsingHTTPS())));
     return true;
 }
 
@@ -1679,18 +1683,31 @@ void Sender::AddEndpointEntry(const std::string& region, const std::string& endp
                 string subRegionEndpoint = mainRegionEndpoint;
                 size_t pos = mainRegionEndpoint.find(possibleMainRegion);
                 if (pos != string::npos) {
-                    subRegionEndpoint = mainRegionEndpoint.substr(0, pos) + region + mainRegionEndpoint.substr(pos + possibleMainRegion.size());
+                    subRegionEndpoint = mainRegionEndpoint.substr(0, pos) + region
+                        + mainRegionEndpoint.substr(pos + possibleMainRegion.size());
                 }
-                entryPtr->AddDefaultEndpoint(subRegionEndpoint);
+                if (entryPtr->AddDefaultEndpoint(subRegionEndpoint)) {
+                    LOG_INFO(sLogger,
+                             ("add default data server endpoint, region", region)("endpoint", endpoint)(
+                                 "isProxy", "false")("#endpoint", entryPtr->mEndpointDetailMap.size()));
+                }
             }
         }
     } else
         entryPtr = iter->second;
 
-    if (isDefault)
-        entryPtr->AddDefaultEndpoint(endpoint);
-    else {
-        entryPtr->AddEndpoint(endpoint, true, -1, isProxy);
+    if (isDefault) {
+        if (entryPtr->AddDefaultEndpoint(endpoint)) {
+            LOG_INFO(sLogger,
+                     ("add default data server endpoint, region", region)("endpoint", endpoint)("isProxy", "false")(
+                         "#endpoint", entryPtr->mEndpointDetailMap.size()));
+        }
+    } else {
+        if (entryPtr->AddEndpoint(endpoint, true, -1, isProxy)) {
+            LOG_INFO(sLogger,
+                     ("add data server endpoint, region", region)("endpoint", endpoint)("isProxy", ToString(isProxy))(
+                         "#endpoint", entryPtr->mEndpointDetailMap.size()));
+        }
     }
 }
 
@@ -1721,14 +1738,16 @@ void Sender::TestNetwork() {
                             } else {
                                 unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
                             }
-                        // } else if (STRING_FLAG(data_endpoint_policy) == "intranet_first" && !EndWith(iter->first, "-corp")) {
-                        //     if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INTRANET) {
-                        //         unavaliableEndpoints[iter->first].emplace_back(0, epIter->first);
-                        //     } else if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INNER) {
-                        //         unavaliableEndpoints[iter->first].emplace_back(1, epIter->first);
-                        //     } else {
-                        //         unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
-                        //     }
+                            // } else if (STRING_FLAG(data_endpoint_policy) == "intranet_first" &&
+                            // !EndWith(iter->first,
+                            // "-corp")) {
+                            //     if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INTRANET) {
+                            //         unavaliableEndpoints[iter->first].emplace_back(0, epIter->first);
+                            //     } else if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INNER) {
+                            //         unavaliableEndpoints[iter->first].emplace_back(1, epIter->first);
+                            //     } else {
+                            //         unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
+                            //     }
                         } else {
                             unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
                         }

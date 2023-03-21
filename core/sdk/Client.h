@@ -84,6 +84,7 @@ namespace sdk {
         int32_t GetSlsRealIpUpdateTime() { return mSlsRealIpUpdateTime; }
 
         void SetUsingHTTPS(bool flag) { mUsingHTTPS = flag; }
+        bool IsUsingHTTPS() { return mUsingHTTPS; }
 
         /////////////////////////////////////Internal Interface For Logtail////////////////////////////////////////
         /** Sync Put data to LOG service. Unsuccessful opertaion will cause an LOGException.

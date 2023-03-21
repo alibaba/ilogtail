@@ -75,14 +75,17 @@ struct RegionEndpointEntry {
         mEndpointDetailMap.clear();
     }
 
-    void AddDefaultEndpoint(const std::string& endpoint) {
+    bool AddDefaultEndpoint(const std::string& endpoint) {
         mDefaultEndpoint = endpoint;
-        AddEndpoint(endpoint, true, 0, false);
+        return AddEndpoint(endpoint, true, 0, false);
     }
 
-    void AddEndpoint(const std::string& endpoint, bool status, int32_t latency, bool proxy = false) {
-        if (mEndpointDetailMap.find(endpoint) == mEndpointDetailMap.end())
+    bool AddEndpoint(const std::string& endpoint, bool status, int32_t latency, bool proxy = false) {
+        if (mEndpointDetailMap.find(endpoint) == mEndpointDetailMap.end()) {
             mEndpointDetailMap.insert(std::make_pair(endpoint, EndpointDetail(status, latency, proxy)));
+            return true;
+        }
+        return false;
     }
 
     void RemoveEndpoint(const std::string& endpoint) {
@@ -332,9 +335,6 @@ private:
     std::string GetRegionCurrentEndpoint(const std::string& region);
     std::string GetRegionFromEndpoint(const std::string& endpoint);
 
-    void AddTruncateInfo(int64_t key, const std::string& truncateinfo);
-    std::string GetTruncateInfo(int64_t key);
-    void DelTruncateInfo(int64_t key);
     void ResetPort(const std::string& region, sdk::Client* sendClient);
 
 public:
