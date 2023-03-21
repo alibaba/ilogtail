@@ -58,15 +58,16 @@ type retryConfig struct {
 }
 
 type FlusherHTTP struct {
-	RemoteURL        string                  // RemoteURL to request
-	Headers          map[string]string       // Headers to append to the http request
-	Query            map[string]string       // Query parameters to append to the http request
-	Timeout          time.Duration           // Request timeout, default is 60s
-	Retry            retryConfig             // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
-	Convert          helper.ConvertConfig    // Convert defines which protocol and format to convert to
-	Concurrency      int                     // How many requests can be performed in concurrent
-	Authenticator    *helper.ExtensionConfig // name and options of the extensions.ClientAuthenticator extension to use
-	FlushInterceptor *helper.ExtensionConfig // name and options of the extensions.FlushInterceptor extension to use
+	RemoteURL           string                   // RemoteURL to request
+	Headers             map[string]string        // Headers to append to the http request
+	Query               map[string]string        // Query parameters to append to the http request
+	Timeout             time.Duration            // Request timeout, default is 60s
+	Retry               retryConfig              // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
+	Convert             helper.ConvertConfig     // Convert defines which protocol and format to convert to
+	Concurrency         int                      // How many requests can be performed in concurrent
+	Authenticator       *helper.ExtensionConfig  // name and options of the extensions.ClientAuthenticator extension to use
+	FlushInterceptor    *helper.ExtensionConfig  // name and options of the extensions.FlushInterceptor extension to use
+	RequestInterceptors []helper.ExtensionConfig // custom request interceptor settings
 
 	varKeys []string
 
@@ -180,8 +181,16 @@ func (f *FlusherHTTP) initHTTPClient() error {
 		}
 		transport = dt
 	}
+
+	var err error
+	transport, err = f.initRequestInterceptors(transport)
+	if err != nil {
+		return err
+	}
+
 	if f.Authenticator != nil {
-		auth, err := f.context.GetExtension(f.Authenticator.Type, f.Authenticator.Options)
+		var auth pipeline.Extension
+		auth, err = f.context.GetExtension(f.Authenticator.Type, f.Authenticator.Options)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init authenticator fail, error", err)
 			return err
@@ -204,6 +213,29 @@ func (f *FlusherHTTP) initHTTPClient() error {
 		Transport: transport,
 	}
 	return nil
+}
+
+func (f *FlusherHTTP) initRequestInterceptors(transport http.RoundTripper) (http.RoundTripper, error) {
+	for i := len(f.RequestInterceptors) - 1; i >= 0; i-- {
+		setting := f.RequestInterceptors[i]
+		ext, err := f.context.GetExtension(setting.Type, setting.Options)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init request interceptor fail, error", err)
+			return nil, err
+		}
+		interceptor, ok := ext.(extensions.RequestInterceptor)
+		if !ok {
+			err = fmt.Errorf("interceptor(%s) with type %T not implement interface extensions.RequestInterceptor", setting.Type, ext)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init request interceptor fail, error", err)
+			return nil, err
+		}
+		transport, err = interceptor.RoundTripper(transport)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "http flusher init request interceptor fail, error", err)
+			return nil, err
+		}
+	}
+	return transport, nil
 }
 
 func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {

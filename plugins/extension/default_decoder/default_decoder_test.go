@@ -10,7 +10,7 @@ import (
 )
 
 func TestInit_Should_Pass_The_Config_To_Real_Decoder(t *testing.T) {
-	d := &DefaultDecoder{}
+	d := &ExtensionDefaultDecoder{}
 	err := json.Unmarshal([]byte(`{"Format":"influxdb","FieldsExtend":true}`), d)
 	assert.Nil(t, err)
 	assert.Equal(t, map[string]interface{}{"FieldsExtend": true}, d.options)
