@@ -86,6 +86,14 @@
 |----------------------------------------|-------------------------------------------------|-------------------------------------------|
 | `ext_groupinfo_filter`<br> GroupInfo过滤 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供根据GroupInfo筛选最终提交数据的能力 |
 
+
+### RequestInterceptor
+
+| 名称                              | 提供方                                             | 简介                        |
+|---------------------------------|-------------------------------------------------|---------------------------|
+| `ext_request_breaker`<br> 请求熔断器 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供请求熔断能力 |
+
+
 ### Decoder
 
 | 名称                                     | 提供方                                             | 简介                          |
