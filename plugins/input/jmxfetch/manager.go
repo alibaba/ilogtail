@@ -33,9 +33,10 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
-	_ "github.com/alibaba/ilogtail/plugins/extension/default_decoder"
 	"github.com/alibaba/ilogtail/plugins/input/udpserver"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
+
+	_ "github.com/alibaba/ilogtail/plugins/extension/default_decoder" // jmxfetch depends on the statsd format from ext_default_decoder
 )
 
 var once sync.Once
