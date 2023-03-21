@@ -33,6 +33,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
+	_ "github.com/alibaba/ilogtail/plugins/extension/default_decoder"
 	"github.com/alibaba/ilogtail/plugins/input/udpserver"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
@@ -168,7 +169,7 @@ func (m *Manager) startServer() {
 	logger.Debug(m.managerMeta.GetContext(), "start", "server")
 	if m.server == nil {
 		m.port, _ = helper.GetFreePort()
-		m.server, _ = udpserver.NewSharedUDPServer(mock.NewEmptyContext("", "", "jmxfetchserver"), "statsd", ":"+strconv.Itoa(m.port), dispatchKey, 65535)
+		m.server, _ = udpserver.NewSharedUDPServer(mock.NewEmptyContext("", "", "jmxfetchserver"), "ext_default_decoder", "statsd", ":"+strconv.Itoa(m.port), dispatchKey, 65535)
 	}
 	if !m.server.IsRunning() {
 		if err := m.server.Start(); err != nil {

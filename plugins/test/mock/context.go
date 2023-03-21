@@ -17,6 +17,7 @@ package mock
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/alibaba/ilogtail/pkg"
@@ -168,5 +169,22 @@ func (p *EmptyContext) GetRuntimeContext() context.Context {
 }
 
 func (p *EmptyContext) GetExtension(name string, cfg any) (pipeline.Extension, error) {
-	return nil, nil
+	creator, ok := pipeline.Extensions[name]
+	if !ok {
+		return nil, fmt.Errorf("extension %s not found", name)
+	}
+	extension := creator()
+	config, err := json.Marshal(cfg)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(config, extension)
+	if err != nil {
+		return nil, err
+	}
+	err = extension.Init(p)
+	if err != nil {
+		return nil, err
+	}
+	return extension, nil
 }
