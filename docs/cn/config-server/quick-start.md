@@ -65,6 +65,8 @@ Agent 侧需要配置 ConfigServer 信息，才能使用管控功能。
 
 `ilogtail_tags` 是 iLogtail 在 ConfigServer 处的标签，支持配置多个。虽然该参数暂时无法使用，但我们同样预留了支持通过自定义标签分组管理 Agent 的扩展性。
 
+`ilogtail_api_prefixy` ConfigServer中相关API的前缀。
+
 下面是一个简单的配置示例。
 
 ```json
@@ -73,6 +75,8 @@ Agent 侧需要配置 ConfigServer 信息，才能使用管控功能。
     "ilogtail_configserver_address" : [
       "127.0.0.1:8899"
       ],
+    "ilogtail_tags": "default",
+    "ilogtail_api_prefix": "/config_server"
     ...
 }
 ```

@@ -580,9 +580,9 @@ void AppConfigBase::LoadResourceConf(const Json::Value& confJson) {
     // first set buffer_file_path, if buffer_file_path is null then set default_buffer_file_path
     if (confJson.isMember("buffer_file_path") && confJson["buffer_file_path"].isString())
         mBufferFilePath = confJson["buffer_file_path"].asString();
-    else if (STRING_FLAG(buffer_file_path) != "") 
+    else if (STRING_FLAG(buffer_file_path) != "")
         mBufferFilePath = STRING_FLAG(buffer_file_path);
-    else 
+    else
         mBufferFilePath = STRING_FLAG(default_buffer_file_path);
 
     if (confJson.isMember("check_point_filename") && confJson["check_point_filename"].isString())
@@ -1121,11 +1121,10 @@ void AppConfigBase::SetLogtailSysConfDir(const std::string& dirPath) {
     mUserRemoteYamlConfigDirPath
         = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
     LOG_INFO(sLogger,
-             ("set logtail sys conf dir", mLogtailSysConfDir)
-             ("user local config path", mUserLocalConfigPath)
-             ("user local config dir path", mUserLocalConfigDirPath)
-             ("user local yaml config dir path",mUserLocalYamlConfigDirPath)
-             ("user remote yaml config dir path",mUserRemoteYamlConfigDirPath));
+             ("set logtail sys conf dir", mLogtailSysConfDir)("user local config path", mUserLocalConfigPath)(
+                 "user local config dir path", mUserLocalConfigDirPath)(
+                 "user local yaml config dir path", mUserLocalYamlConfigDirPath)("user remote yaml config dir path",
+                                                                                 mUserRemoteYamlConfigDirPath));
 }
 
 } // namespace logtail

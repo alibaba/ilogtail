@@ -71,3 +71,7 @@ plugins/all/
 /external_plugins.yml
 *.go.mod
 *.go.mod.sum
+
+# clang
+.cache
+core/.cache

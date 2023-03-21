@@ -34,6 +34,8 @@ public:
 private:
     void LoadAddrConfig(const Json::Value& confJson) override;
 
+    std::string mApiPrefix = "";
+
 public:
     AppConfig();
     ~AppConfig();
@@ -58,6 +60,8 @@ public:
     const std::string& GetBindInterface() const { return mBindInterface; }
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
     const std::vector<std::string>& GetConfigServerTags() const { return mConfigServerTags; }
+
+    const std::string GetApiPrefix() const { return mApiPrefix; }
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;
