@@ -413,7 +413,11 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "flusher plugins stop", "done")
 
 	for _, extension := range p.ExtensionPlugins {
-		_ = extension.Stop()
+		err := extension.Stop()
+		if err != nil {
+			logger.Warningf(p.LogstoreConfig.Context.GetRuntimeContext(), "STOP_EXTENSION_ALARM",
+				"failed to stop extension (description: %v): %v", extension.Description(), err)
+		}
 	}
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "extension plugins stop", "done")
 
