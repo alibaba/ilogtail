@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -69,4 +70,20 @@ func TestNormal(t *testing.T) {
 	for _, log := range logs {
 		fmt.Printf("%s \n", log.String())
 	}
+}
+
+func TestDecodeV2(t *testing.T) {
+	decoder := &Decoder{}
+	req, _ := http.NewRequest("GET", "http://localhost", nil)
+	groupeEventsSlice, err := decoder.DecodeV2([]byte(textFormat), req)
+	assert.Nil(t, err)
+	metricCount := 0
+	for _, pg := range groupeEventsSlice {
+		for _, event := range pg.Events {
+			metricCount++
+			fmt.Printf("%s \n", event.(*models.Metric).String())
+		}
+	}
+
+	assert.Equal(t, 20, metricCount)
 }

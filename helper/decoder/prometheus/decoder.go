@@ -39,7 +39,11 @@ const (
 	valueKey      = "__value__"
 )
 
-const tagDB = "__tag__:db"
+const (
+	tagDB     = "__tag__:db"
+	metaDBKey = "db"
+	labelKey  = "label"
+)
 
 // Decoder impl
 type Decoder struct {
@@ -200,6 +204,124 @@ func (d *Decoder) parsePbLabels(labels []prompb.Label) (metricName, labelsValue 
 }
 
 func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
-	//TODO: Implement DecodeV2
-	return nil, nil
+	if len(data) == 0 {
+		return nil, nil
+	}
+
+	meta := models.NewMetadata()
+	commonTags := models.NewTags()
+
+	if db := req.FormValue("db"); len(db) > 0 {
+		meta.Add(metaDBKey, db)
+	}
+
+	if req.Header.Get("Content-Encoding") == "snappy" && strings.HasPrefix(req.Header.Get("Content-Type"), "application/x-protobuf") {
+		var promRequest prompb.WriteRequest
+		err = proto.Unmarshal(data, &promRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		groupEvents, err := ConvertPromRequestToPipelineGroupEvents(&promRequest, meta, commonTags)
+		if err != nil {
+			return nil, err
+		}
+		return []*models.PipelineGroupEvents{groupEvents}, nil
+	}
+
+	return ConvertExpFmtDataToPipelineGroupEvents(data, meta, commonTags)
+}
+
+func ConvertExpFmtDataToPipelineGroupEvents(data []byte, metaInfo models.Metadata, commonTags models.Tags) (pg []*models.PipelineGroupEvents, err error) {
+	decoder := expfmt.NewDecoder(bytes.NewReader(data), expfmt.FmtText)
+	sampleDecoder := expfmt.SampleDecoder{
+		Dec: decoder,
+		Opts: &expfmt.DecodeOptions{
+			Timestamp: model.Now(),
+		},
+	}
+
+	for {
+		s := model.Vector{}
+		if err = sampleDecoder.Decode(&s); err != nil {
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			break
+		}
+		groupEvents, err := ConvertVectorToPipelineGroupEvents(&s, metaInfo, commonTags)
+		if err == nil {
+			pg = append(pg, groupEvents)
+		}
+	}
+
+	return
+}
+
+func ConvertVectorToPipelineGroupEvents(s *model.Vector, metaInfo models.Metadata, commonTags models.Tags) (*models.PipelineGroupEvents, error) {
+	groupEvent := &models.PipelineGroupEvents{
+		Group: models.NewGroup(metaInfo, commonTags),
+	}
+
+	for _, sample := range *s {
+		metricName, tags := parseModelMetric(sample.Metric)
+		metric := models.NewSingleValueMetric(
+			metricName,
+			models.MetricTypeGauge,
+			tags,
+			sample.Timestamp.UnixNano(),
+			sample.Value,
+		)
+		groupEvent.Events = append(groupEvent.Events, metric)
+	}
+
+	return groupEvent, nil
+}
+
+func parseModelMetric(metric model.Metric) (string, models.Tags) {
+	var metricName string
+	tags := models.NewTags()
+	labels := (model.LabelSet)(metric)
+
+	for k, v := range labels {
+		if k == model.MetricNameLabel {
+			metricName = string(v)
+			continue
+		}
+		tags.Add(string(k), string(v))
+	}
+
+	return metricName, tags
+}
+
+func ConvertPromRequestToPipelineGroupEvents(promRequest *prompb.WriteRequest, metaInfo models.Metadata, commonTags models.Tags) (*models.PipelineGroupEvents, error) {
+	groupEvent := &models.PipelineGroupEvents{
+		Group: models.NewGroup(metaInfo, commonTags),
+	}
+
+	for _, ts := range promRequest.Timeseries {
+		var metricName string
+		tags := models.NewTags()
+		for _, label := range ts.Labels {
+			if label.Name == metricNameKey {
+				metricName = label.Value
+				continue
+			}
+			tags.Add(label.Name, label.Value)
+		}
+
+		for _, dataPoint := range ts.Samples {
+			metric := models.NewSingleValueMetric(
+				metricName,
+				models.MetricTypeGauge,
+				tags,
+				model.Time(dataPoint.GetTimestamp()).Time().UnixNano(),
+				dataPoint.GetValue(),
+			)
+			groupEvent.Events = append(groupEvent.Events, metric)
+		}
+	}
+
+	return groupEvent, nil
 }
