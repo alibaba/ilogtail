@@ -79,7 +79,16 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	s.context = context
 	var err error
 
-	ext, err := context.GetExtension(s.Decoder, s)
+	options := &struct {
+		Format            string
+		FieldsExtend      bool
+		DisableUncompress bool
+	}{
+		Format:            s.Format,
+		FieldsExtend:      s.FieldsExtend,
+		DisableUncompress: s.DisableUncompress,
+	}
+	ext, err := context.GetExtension(s.Decoder, options)
 	if err != nil {
 		return 0, err
 	}

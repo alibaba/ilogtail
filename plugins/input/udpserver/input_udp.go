@@ -41,7 +41,12 @@ type UDPServer struct {
 
 func (u *UDPServer) Init(context pipeline.Context) (int, error) {
 	u.context = context
-	ext, err := context.GetExtension(u.Decoder, u)
+	options := &struct {
+		Format string
+	}{
+		Format: u.Format,
+	}
+	ext, err := context.GetExtension(u.Decoder, options)
 	if err != nil {
 		return 0, err
 	}
