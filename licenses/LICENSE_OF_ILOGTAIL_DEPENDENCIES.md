@@ -242,4 +242,4 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/iLogtail/metrics fork from github.com/VictoriaMetrics/metrics](http://github.com/iLogtail/metrics) based on MIT
 - [github.com/iLogtail/parser fork from github.com/pingcap/parser](http://github.com/iLogtail/parser) based on Apache-2.0
 - [github.com/iLogtail/pyroscope-lib fork from github.com/pyroscope-io/pyroscope](http://github.com/iLogtail/pyroscope-lib) based on Apache-2.0
-- [github.com/iLogtail/gonvml fork from github.com/mindprince/gonvml](https://github.com/mindprince/gonvml) based on Apache-2.0
+- [github.com/iLogtail/gonvml fork from github.com/mindprince/gonvml](https://github.com/iLogtail/gonvml) based on Apache-2.0
