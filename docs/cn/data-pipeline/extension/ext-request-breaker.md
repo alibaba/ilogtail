@@ -4,6 +4,10 @@
 
 `ext_request_breaker` 扩展插件，实现了 [extensions.RequestInterceptor](https://github.com/alibaba/ilogtail/blob/main/pkg/pipeline/extensions/request_interceptor.go) 接口，课题在 http_flusher 插件中引用，提供请求熔断的能力。
 
+## 版本
+
+[Alpha](../stability-level.md)
+
 ## 配置参数
 
 | 参数              | 类型    | 是否必选 | 说明                                              |

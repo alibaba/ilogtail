@@ -4,6 +4,10 @@
 
 `ext_basicauth` 扩展插件，实现了 [extensions.ClientAuthenticator](https://github.com/alibaba/ilogtail/blob/main/pkg/pipeline/extensions/authenticator.go) 接口，可以在 http_flusher 插件中引用，提供向请求中添加 basic auth Header 的能力。
 
+## 版本
+
+[Alpha](../stability-level.md)
+
 ## 配置参数
 
 | 参数       | 类型     | 是否必选 | 说明  |

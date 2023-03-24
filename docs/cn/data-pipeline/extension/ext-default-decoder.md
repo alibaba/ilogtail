@@ -4,6 +4,10 @@
 
 [ext_default_decoder](https://github.com/alibaba/ilogtail/blob/main/plugins/extension/default_decoder/default_decoder.go) 扩展，实现了 [Decoder](https://github.com/alibaba/ilogtail/blob/main/pkg/pipeline/extensions/decoder.go) 接口，可以用在 `service_http_server`、`udp_server` 等插件中用于解析不同的协议数据。
 
+## 版本
+
+[Alpha](../stability-level.md)
+
 
 ## 配置参数
 | 参数                | 类型      | 是否必选 | 说明                                                                                                  |
