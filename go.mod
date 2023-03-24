@@ -30,6 +30,7 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/gosnmp/gosnmp v1.31.0
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/ilogtail/handy v0.0.0-20230324021216-9312f18374de
 	github.com/influxdata/go-syslog v1.0.1
 	github.com/influxdata/influxdb v1.10.0
 	github.com/jackc/pgx/v4 v4.16.1
@@ -55,7 +56,6 @@ require (
 	github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/snakorse/handy v0.0.0-20230321120412-1670249b0c54
 	github.com/stretchr/testify v1.8.1
 	github.com/syndtr/goleveldb v0.0.0-20170725064836-b89cc31ef797
 	github.com/xdg-go/scram v1.1.1

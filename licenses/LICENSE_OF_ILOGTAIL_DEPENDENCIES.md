@@ -116,7 +116,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/jcmturner/gofork](https://pkg.go.dev/github.com/jcmturner/gofork?tab=licenses)
 - [github.com/pierrec/lz4](https://pkg.go.dev/github.com/pierrec/lz4?tab=licenses)
 - [github.com/shirou/gopsutil](https://pkg.go.dev/github.com/shirou/gopsutil?tab=licenses)
-- [github.com/snakorse/handy](https://pkg.go.dev/github.com/snakorse/handy?tab=licenses)
+- [github.com/ilogtail/handy](https://pkg.go.dev/github.com/ilogtail/handy?tab=licenses)
 - [github.com/gosnmp/gosnmp](https://pkg.go.dev/github.com/gosnmp/gosnmp)
 - [github.com/spf13/pflag](https://pkg.go.dev/github.com/spf13/pflag?tab=licenses)
 - [github.com/tklauser/go-sysconf](https://pkg.go.dev/github.com/tklauser/go-sysconf?tab=licenses)

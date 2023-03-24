@@ -918,6 +918,8 @@ github.com/iLogtail/pyroscope-lib v0.35.1-ilogtail h1:ykz2XWHVp5ZBvb7OZ1xWSJ5HHe
 github.com/iLogtail/pyroscope-lib v0.35.1-ilogtail/go.mod h1:0XCJ3eS5qviq+PNhjBB5T/MPE54OUejhsxdL0405mOQ=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
+github.com/ilogtail/handy v0.0.0-20230324021216-9312f18374de h1:Zb5+64qjt5oTfS0aUP8v7TLFPXeWVer4QLHyfBAkDX8=
+github.com/ilogtail/handy v0.0.0-20230324021216-9312f18374de/go.mod h1:Tjd4nNt4PmkhnwOzRlT6b0lynyrYAjArzd4OqrBLERU=
 github.com/imdario/mergo v0.3.5/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.8/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.10/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH0dnCYA=
@@ -1489,8 +1491,6 @@ github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a/go.mod h1:s
 github.com/smartystreets/goconvey v1.6.4/go.mod h1:syvi0/a8iFYH4r/RixwvyeAJjdLS9QV7WQ/tjFTllLA=
 github.com/smartystreets/goconvey v1.7.2 h1:9RBaZCeXEQ3UselpuwUQHltGVXvdwm6cv1hgR6gDIPg=
 github.com/smartystreets/goconvey v1.7.2/go.mod h1:Vw0tHAZW6lzCRk3xgdin6fKYcG+G3Pg9vgXWeJpQFMM=
-github.com/snakorse/handy v0.0.0-20230321120412-1670249b0c54 h1:S+ExF44tzp0tsInldnD5HqXKUtNvCqdX9yXLWp4t+iE=
-github.com/snakorse/handy v0.0.0-20230321120412-1670249b0c54/go.mod h1:kw0Dikc6Lvl+IP0YJ2q0K34TtoU9lHfvdN9rzivTu3I=
 github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4kGIyLM=
 github.com/soheilhy/cmux v0.1.5/go.mod h1:T7TcVDs9LWfQgPlPsdngu6I6QIoyIFZDDC6sNE1GqG0=
 github.com/sony/gobreaker v0.4.1/go.mod h1:ZKptC7FHNvhBz7dN2LGjPVBz2sZJmc0/PkyDJOjmxWY=
