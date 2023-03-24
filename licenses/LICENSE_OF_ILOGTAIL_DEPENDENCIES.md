@@ -244,4 +244,4 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/iLogtail/parser fork from github.com/pingcap/parser](http://github.com/iLogtail/parser) based on Apache-2.0
 - [github.com/iLogtail/pyroscope-lib fork from github.com/pyroscope-io/pyroscope](http://github.com/iLogtail/pyroscope-lib) based on Apache-2.0
 - [github.com/iLogtail/gonvml fork from github.com/mindprince/gonvml](https://github.com/iLogtail/gonvml) based on Apache-2.0
-- [github.com/iLogtail/handy fork from github.com/snakorse/handy](http://github.com/snakorse/handy) based on BSD-2-Clause
+- [github.com/iLogtail/handy fork from github.com/streadway/handy](http://github.com/streadway/handy) based on BSD-2-Clause
