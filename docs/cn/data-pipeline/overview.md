@@ -76,26 +76,26 @@
 
 ### ClientAuthenticator
 
-| 名称                          | 提供方                                             | 简介                             |
-|-----------------------------|-------------------------------------------------|--------------------------------|
-| `ext_basicauth`<br> Basic认证 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供 basic 认证能力 |
+| 名称                                                        | 提供方                                             | 简介                             |
+|-----------------------------------------------------------|-------------------------------------------------|--------------------------------|
+| [`ext_basicauth`](extension/ext-basicauth.md)<br> Basic认证 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供 basic 认证能力 |
 
 ### FlushInterceptor
 
-| 名称                                     | 提供方                                             | 简介                                        |
-|----------------------------------------|-------------------------------------------------|-------------------------------------------|
-| `ext_groupinfo_filter`<br> GroupInfo过滤 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供根据GroupInfo筛选最终提交数据的能力 |
+| 名称                                                                          | 提供方                                             | 简介                                        |
+|-----------------------------------------------------------------------------|-------------------------------------------------|-------------------------------------------|
+| [`ext_groupinfo_filter`](extension/ext-groupinfo-filter.md)<br> GroupInfo过滤 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供根据GroupInfo筛选最终提交数据的能力 |
 
 
 ### RequestInterceptor
 
-| 名称                              | 提供方                                             | 简介                        |
-|---------------------------------|-------------------------------------------------|---------------------------|
-| `ext_request_breaker`<br> 请求熔断器 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供请求熔断能力 |
+| 名称                                                                  | 提供方                                             | 简介                        |
+|---------------------------------------------------------------------|-------------------------------------------------|---------------------------|
+| [`ext_request_breaker`](extension/ext-request-breaker.md)<br> 请求熔断器 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供请求熔断能力 |
 
 
 ### Decoder
 
-| 名称                                     | 提供方                                             | 简介                          |
-|----------------------------------------|-------------------------------------------------|-----------------------------|
-| `ext_default_decoder`<br> 默认的decoder扩展 | 社区<br>[`snakorse`](https://github.com/snakorse) | 将内置支持的Format以Decoder扩展的形式封装 |
+| 名称                                                                         | 提供方                                             | 简介                          |
+|----------------------------------------------------------------------------|-------------------------------------------------|-----------------------------|
+| [`ext_default_decoder`](extension/ext-default-decoder.md)<br> 默认的decoder扩展 | 社区<br>[`snakorse`](https://github.com/snakorse) | 将内置支持的Format以Decoder扩展的形式封装 |
