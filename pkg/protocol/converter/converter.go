@@ -232,6 +232,18 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 			}
 		}
 	}
+	hostIpTag := &protocol.LogTag{
+		Key:   tagHostIP,
+		Value: src,
+	}
+	logTags = append(logTags, hostIpTag)
+	if topic != "" {
+		topicTag := &protocol.LogTag{
+			Key:   tagLogTopic,
+			Value: src,
+		}
+		logTags = append(logTags, topicTag)
+	}
 
 	for _, logTag := range logTags {
 		if logTag.Key == "__user_defined_id__" || logTag.Key == "__pack_id__" {
@@ -249,11 +261,6 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 		} else if !ok {
 			tags[tagName] = logTag.Value
 		}
-	}
-
-	tags[tagHostIP] = src
-	if topic != "" {
-		tags[tagLogTopic] = topic
 	}
 
 	return contents, tags
