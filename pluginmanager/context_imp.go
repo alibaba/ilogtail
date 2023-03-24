@@ -48,6 +48,7 @@ func (p *ContextImp) GetExtension(name string, cfg any) (pipeline.Extension, err
 	if p.logstoreC == nil || p.logstoreC.PluginRunner == nil {
 		return nil, fmt.Errorf("pipeline not initialized")
 	}
+	// try to find in extensions that explicitly defined in pipeline
 	exists, ok := p.logstoreC.PluginRunner.GetExtension(name)
 	if ok {
 		return exists, nil
@@ -65,6 +66,7 @@ func (p *ContextImp) GetExtension(name string, cfg any) (pipeline.Extension, err
 		return nil, err
 	}
 
+	// get the new created extension
 	exists, ok = p.logstoreC.PluginRunner.GetExtension(typeWithID)
 	if !ok {
 		return nil, fmt.Errorf("failed to load extension: %s", typeWithID)
