@@ -144,8 +144,7 @@ flushers:
 ```
 
 ### 动态topic
-
-针对上面写入的这种日志格式，如果想根据`application`名称针对不用的应用推送到不通的`topic`，
+针对上面写入的这种日志格式，如果想根据`application`名称针对不用的应用推送到不同的`topic`，
 则`topic`可以这样配置。
 
 ```yaml
@@ -158,7 +157,66 @@ Topic: test_%{content.application}
 
 - `%{content.fieldname}`。`content`代表从`contents`中取指定字段值
 - `%{tag.fieldname}`,`tag`表示从`tags`中取指定字段值，例如：`%{tag.k8s.namespace.name}`
+- `${env_name}`, 读取系统变量绑定到动态`topic`上，`ilogtail 1.5.0`开始支持。
 - 其它方式暂不支持
+
+#### 动态topic中使用系统变量
+在一些使用场景中，如果想使用系统变量作为动态`topic`去推送数据，`ilogtail`也可以支持。
+
+**（1）从日志内容中将系统变量绑定到动态`topic`**
+
+配置参考案例如下：
+
+第一种：在使用`daemonse`t或者`sidecar`部署`ilogtail`容器的`env`配置部分添加自己的想要添加的系统
+```yaml
+env:
+  - name: ALIYUN_LOG_ENV_TAGS       # add log tags from env
+    value: _node_name_|_node_ip_|_app_name_ 
+  - name: app_name  # 添加自定义_app_变量，
+    value: kafka
+```
+- 将自定义的变量`_app_`添加到`ALIYUN_LOG_ENV_TAGS`后日志的`tags`中就会看到自定义的变量。
+这时动态 `topic`采用`%{tag.fieldname}`这种规则配置即可。
+
+第二种：使用`processor_add_fields` 插件添加
+```yaml
+processors:
+ - Type: processor_add_fields
+   Fields:
+   service: ${env_name}
+   IgnoreIfExist: false
+```
+- `${env_name}`生效依赖于`ilogtail`的`enable_env_ref_in_config`配置，从`ilogtail 1.5.0`开始支持。
+
+**（2）直接使用系统变量绑定到动态`topic`**
+
+在使用`daemonset`或者`sidecar`部署`ilogtail`容器的`env`配置部分添加自己的想要添加的系统变量，配置参考如下：
+```yaml
+env:
+  - name: ALIYUN_LOG_ENV_TAGS       # add log tags from env
+    value: _node_name_|_node_ip_
+  - name: app_name  # 添加自定义_app_变量，
+    value: kafka
+```
+- 如果不需要`app_name`将值采集到添加到日志中，则无需在到`ALIYUN_LOG_ENV_TAGS`系统变量上追加。配置好自定义系统变量后。
+直接使用`${env_name}`即可绑定
+
+```yaml
+enable: true
+inputs:
+  - Type: file_log
+    LogPath: /home/test_log
+    FilePattern: "*.log"
+flushers:
+  - Type: flusher_kafka
+    Brokers: 
+      - 192.XX.XX.1:9092
+      - 192.XX.XX.2:9092
+      - 192.XX.XX.3:9092
+    Topic: ilogtail_${app_name}
+```
+- `${env_name}`这种动态`topic`的规则从`ilogtail 1.5.0`开始支持。
+
 
 ### TagFieldsRename
 

@@ -232,11 +232,11 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 			}
 		}
 	}
-	hostIpTag := &protocol.LogTag{
+	hostIPTag := &protocol.LogTag{
 		Key:   tagHostIP,
 		Value: src,
 	}
-	logTags = append(logTags, hostIpTag)
+	logTags = append(logTags, hostIPTag)
 	if topic != "" {
 		topicTag := &protocol.LogTag{
 			Key:   tagLogTopic,
