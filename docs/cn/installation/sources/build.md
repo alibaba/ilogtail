@@ -87,7 +87,7 @@ make plugin_local # 每次更新插件代码后从这里开始
   - [boost_1_68_0-msvc-14.1-64.exe](https://sourceforge.net/projects/boost/files/boost-binaries/1.68.0/boost_1_68_0-msvc-14.1-64.exe/download)
   - [boost_1_68_0-msvc-14.1-32.exe](https://sourceforge.net/projects/boost/files/boost-binaries/1.68.0/boost_1_68_0-msvc-14.1-32.exe/download)
 - 下载ilogtail-deps编译依赖，放到与ilogtail同级目录
-  - [32位依赖](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuiltdependencies/ilogtail-deps.windows-386.zip)
+  - [32位依赖](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuilt-dependencies/ilogtail-deps.windows-386.zip)
   - [64位依赖](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuilt-dependencies/ilogtail-deps.windows-x64.tar)
 
 ## 修改编译脚本
