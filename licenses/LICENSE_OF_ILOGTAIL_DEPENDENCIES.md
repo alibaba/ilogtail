@@ -116,7 +116,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/jcmturner/gofork](https://pkg.go.dev/github.com/jcmturner/gofork?tab=licenses)
 - [github.com/pierrec/lz4](https://pkg.go.dev/github.com/pierrec/lz4?tab=licenses)
 - [github.com/shirou/gopsutil](https://pkg.go.dev/github.com/shirou/gopsutil?tab=licenses)
-- [github.com/ilogtail/handy](https://pkg.go.dev/github.com/ilogtail/handy?tab=licenses)
 - [github.com/gosnmp/gosnmp](https://pkg.go.dev/github.com/gosnmp/gosnmp)
 - [github.com/spf13/pflag](https://pkg.go.dev/github.com/spf13/pflag?tab=licenses)
 - [github.com/tklauser/go-sysconf](https://pkg.go.dev/github.com/tklauser/go-sysconf?tab=licenses)
@@ -244,4 +243,4 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/iLogtail/parser fork from github.com/pingcap/parser](http://github.com/iLogtail/parser) based on Apache-2.0
 - [github.com/iLogtail/pyroscope-lib fork from github.com/pyroscope-io/pyroscope](http://github.com/iLogtail/pyroscope-lib) based on Apache-2.0
 - [github.com/iLogtail/gonvml fork from github.com/mindprince/gonvml](https://github.com/iLogtail/gonvml) based on Apache-2.0
-- [github.com/iLogtail/handy fork from github.com/streadway/handy](http://github.com/streadway/handy) based on BSD-2-Clause
+- [github.com/iLogtail/handy fork from github.com/streadway/handy](http://github.com/iLogtail/handy) based on BSD-2-Clause

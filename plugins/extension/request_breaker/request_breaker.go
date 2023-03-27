@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ilogtail/handy/breaker"
+	"github.com/streadway/handy/breaker"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
