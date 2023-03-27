@@ -42,7 +42,6 @@ const (
 const (
 	tagDB     = "__tag__:db"
 	metaDBKey = "db"
-	labelKey  = "label"
 )
 
 // Decoder impl
