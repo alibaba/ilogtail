@@ -1,4 +1,4 @@
-# 编译
+# Linux版本编译
 
 ## 编译前准备
 
@@ -74,3 +74,33 @@ make plugin_local # 每次更新插件代码后从这里开始
 ```
 
 如果未对只是对插件依赖库进行修改，则只需要执行最后一行命令即可。
+
+
+# Windows版本编译
+
+## 编译前准备
+- 装备一台windows机器
+- 安装Visual Studio Community Edition，推荐2017版本
+- 安装golang
+- 安装MinGW(根据windows机器位数选择对应版本)
+- 下载安装C++ boost库，安装到与ilogtail同级目录，选择相应位数的的安装包
+  - [boost_1_68_0-msvc-14.1-64.exe](https://sourceforge.net/projects/boost/files/boost-binaries/1.68.0/boost_1_68_0-msvc-14.1-64.exe/download)
+  - [boost_1_68_0-msvc-14.1-32.exe](https://sourceforge.net/projects/boost/files/boost-binaries/1.68.0/boost_1_68_0-msvc-14.1-32.exe/download)
+- 下载ilogtail-deps编译依赖，放到与ilogtail同级目录
+  - [32位依赖](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuiltdependencies/ilogtail-deps.windows-386.zip)
+  - [64位依赖](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuilt-dependencies/ilogtail-deps.windows-x64.tar)
+
+## 修改编译脚本
+将ilogtail/scripts/windows32_build.bat(windows64_build.bat)脚本中的的CMAKE_BIN、DEVENV_BIN两个环境变量值替换成编译机器上实际的路径
+```shell
+set CMAKE_BIN=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake
+set DEVENV_BIN=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\devenv.com
+```
+
+## 执行编译脚本
+cd 到ilogtail/scripts目录下，执行windows32_build.bat或者windows64_build.bat脚本，等待约6分钟，完成编译。
+编译产物列表：
+- ilogtail.exe (主程序)
+- PluginAdapter.dll (插件接口)
+- PluginBase.dll (插件lib)
+- PluginBase.h
