@@ -18,7 +18,11 @@ import (
 	"net/http"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 )
+
+// ensure ExtensionBasicAuth implements the extensions.ClientAuthenticator interface
+var _ extensions.ClientAuthenticator = (*ExtensionBasicAuth)(nil)
 
 type ExtensionBasicAuth struct {
 	Username string

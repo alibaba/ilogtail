@@ -22,7 +22,11 @@ import (
 	"github.com/streadway/handy/breaker"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 )
+
+// ensure ExtensionRequestBreaker implements the extensions.RequestInterceptor interface
+var _ extensions.RequestInterceptor = (*ExtensionRequestBreaker)(nil)
 
 type ExtensionRequestBreaker struct {
 	FailureRatio    float64

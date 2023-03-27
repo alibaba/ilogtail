@@ -25,6 +25,9 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 )
 
+// ensure ExtensionDefaultDecoder implements the extensions.Decoder interface
+var _ extensions.Decoder = (*ExtensionDefaultDecoder)(nil)
+
 type ExtensionDefaultDecoder struct {
 	extensions.Decoder
 

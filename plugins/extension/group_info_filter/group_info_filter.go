@@ -20,7 +20,11 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 )
+
+// ensure ExtensionGroupInfoFilter implements the extensions.FlushInterceptor interface
+var _ extensions.FlushInterceptor = (*ExtensionGroupInfoFilter)(nil)
 
 type filterCondition struct {
 	Pattern string
@@ -69,8 +73,8 @@ func (e *ExtensionGroupInfoFilter) Init(context pipeline.Context) error {
 	return nil
 }
 
-// Filter returns original event if matched, nil if not
-func (e *ExtensionGroupInfoFilter) Filter(group *models.PipelineGroupEvents) *models.PipelineGroupEvents {
+// Intercept returns original event if matched, nil if not
+func (e *ExtensionGroupInfoFilter) Intercept(group *models.PipelineGroupEvents) *models.PipelineGroupEvents {
 	if group == nil {
 		return nil
 	}
