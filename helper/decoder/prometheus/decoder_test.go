@@ -19,8 +19,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/prometheus/prometheus/prompb"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/alibaba/ilogtail/pkg/models"
 )
 
 var textFormat = `# HELP http_requests_total The total number of HTTP requests.
@@ -86,4 +88,56 @@ func TestDecodeV2(t *testing.T) {
 	}
 
 	assert.Equal(t, 20, metricCount)
+}
+
+func TestConvertPromRequestToPipelineGroupEvents(t *testing.T) {
+	// Create a sample prometheus write request
+	promRequest := &prompb.WriteRequest{
+		Timeseries: []prompb.TimeSeries{
+			{
+				Labels: []prompb.Label{
+					{Name: metricNameKey, Value: "test_metric"},
+					{Name: "label1", Value: "value1"}},
+				Samples: []prompb.Sample{
+					{Timestamp: 1234567890, Value: 1.23},
+					{Timestamp: 1234567891, Value: 2.34}}}},
+	}
+
+	metaInfo := models.NewMetadataWithKeyValues("meta_name", "test_meta_name")
+	commonTags := models.NewTagsWithKeyValues(
+		"common_tag1", "common_value1",
+		"common_tag2", "common_value2")
+
+	groupEvent, err := ConvertPromRequestToPipelineGroupEvents(promRequest, metaInfo, commonTags)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "test_meta_name", groupEvent.Group.Metadata.Get("meta_name"))
+	assert.Equal(t, 2, groupEvent.Group.Tags.Len())
+	assert.Equal(t, "common_value1", groupEvent.Group.Tags.Get("common_tag1"))
+	assert.Equal(t, "common_value2", groupEvent.Group.Tags.Get("common_tag2"))
+
+	// Assert that the events were created correctly
+	if len(groupEvent.Events) != 2 {
+		t.Errorf("Expected 2 events, but got %d", len(groupEvent.Events))
+	}
+	if groupEvent.Events[0].GetName() != "test_metric" {
+		t.Errorf("Expected event name to be 'test_metric', but got '%s'", groupEvent.Events[0].GetName())
+	}
+
+	metric1, ok := groupEvent.Events[0].(*models.Metric)
+	assert.True(t, ok)
+
+	assert.Equal(t, models.MetricTypeGauge, metric1.MetricType)
+	assert.Equal(t, 1, metric1.Tags.Len())
+	assert.Equal(t, "value1", metric1.Tags.Get("label1"))
+	assert.Equal(t, uint64(1234567890000000), metric1.Timestamp)
+	assert.Equal(t, 1.23, metric1.Value.GetSingleValue())
+
+	metric2, ok := groupEvent.Events[1].(*models.Metric)
+	assert.True(t, ok)
+	assert.Equal(t, models.MetricTypeGauge, metric2.MetricType)
+	assert.Equal(t, 1, metric2.Tags.Len())
+	assert.Equal(t, "value1", metric1.Tags.Get("label1"))
+	assert.Equal(t, uint64(1234567891000000), metric2.Timestamp)
+	assert.Equal(t, 2.34, metric2.Value.GetSingleValue())
 }
