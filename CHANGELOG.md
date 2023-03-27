@@ -37,4 +37,4 @@ your changes, such as:
 ## [Unreleased]
 
 - [public] [both] [added] add new plugin type: extension
-- [public] [both] [updated] http flusher support custom authenticator and filter via the extension plugin mechanism
+- [public] [both] [updated] http flusher support custom authenticator, filter and request circuit-breaker via the extension plugin mechanism
