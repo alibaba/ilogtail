@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/helper/decoder/common"
 	imodels "github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 
 	"github.com/influxdata/influxdb/models"
 )

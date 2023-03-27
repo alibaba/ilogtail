@@ -25,7 +25,6 @@ import (
 	"github.com/pyroscope-io/pyroscope/pkg/storage/segment"
 	"github.com/pyroscope-io/pyroscope/pkg/util/attime"
 
-	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/jfr"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/pprof"
@@ -33,6 +32,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 )
 
 const AlarmType = "PYROSCOPE_ALARM"

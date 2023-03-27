@@ -24,10 +24,10 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 
 	dogstatsd "github.com/narqo/go-dogstatsd-parser"
 	"github.com/prometheus/common/model"

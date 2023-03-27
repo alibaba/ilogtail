@@ -22,9 +22,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/ilogtail/helper/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/prometheus/common/expfmt"
