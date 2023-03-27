@@ -58,16 +58,16 @@ type retryConfig struct {
 }
 
 type FlusherHTTP struct {
-	RemoteURL           string                   // RemoteURL to request
-	Headers             map[string]string        // Headers to append to the http request
-	Query               map[string]string        // Query parameters to append to the http request
-	Timeout             time.Duration            // Request timeout, default is 60s
-	Retry               retryConfig              // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
-	Convert             helper.ConvertConfig     // Convert defines which protocol and format to convert to
-	Concurrency         int                      // How many requests can be performed in concurrent
-	Authenticator       *helper.ExtensionConfig  // name and options of the extensions.ClientAuthenticator extension to use
-	FlushInterceptor    *helper.ExtensionConfig  // name and options of the extensions.FlushInterceptor extension to use
-	RequestInterceptors []helper.ExtensionConfig // custom request interceptor settings
+	RemoteURL           string                       // RemoteURL to request
+	Headers             map[string]string            // Headers to append to the http request
+	Query               map[string]string            // Query parameters to append to the http request
+	Timeout             time.Duration                // Request timeout, default is 60s
+	Retry               retryConfig                  // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
+	Convert             helper.ConvertConfig         // Convert defines which protocol and format to convert to
+	Concurrency         int                          // How many requests can be performed in concurrent
+	Authenticator       *extensions.ExtensionConfig  // name and options of the extensions.ClientAuthenticator extension to use
+	FlushInterceptor    *extensions.ExtensionConfig  // name and options of the extensions.FlushInterceptor extension to use
+	RequestInterceptors []extensions.ExtensionConfig // custom request interceptor settings
 
 	varKeys []string
 

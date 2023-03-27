@@ -31,6 +31,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
@@ -367,7 +368,7 @@ func TestHttpFlusherFlushWithAuthenticator(t *testing.T) {
 			Query: map[string]string{
 				"db": "%{tag.db}",
 			},
-			Authenticator: &helper.ExtensionConfig{
+			Authenticator: &extensions.ExtensionConfig{
 				Type: "ext_basicauth",
 			},
 		}
