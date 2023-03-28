@@ -69,6 +69,7 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [github.com/ClickHouse/ch-go](https://pkg.go.dev/github.com/ClickHouse/ch-go?tab=licenses)
 - [go.opentelemetry.io/otel](https://pkg.go.dev/go.opentelemetry.io/otel?tab=licenses)
 - [go.opentelemetry.io/otel/trace](https://pkg.go.dev/go.opentelemetry.io/otel/trace?tab=licenses)
+- [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
 
 ## BSD licenses
 
@@ -86,7 +87,6 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [golang.org/x/text](https://pkg.go.dev/golang.org/x/text?tab=licenses)
 - [google.golang.org/protobuf](https://pkg.go.dev/google.golang.org/protobuf?tab=licenses)
 - [github.com/godbus/dbus](https://pkg.go.dev/github.com/godbus/dbus?tab=licenses)
-- [github.com/google/go-cmp](https://pkg.go.dev/github.com/google/go-cmp?tab=licenses)
 - [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto?tab=licenses)
 - [golang.org/x/oauth2](https://pkg.go.dev/golang.org/x/oauth2?tab=licenses)
 - [golang.org/x/sync](https://pkg.go.dev/golang.org/x/sync?tab=licenses)

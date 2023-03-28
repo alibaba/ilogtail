@@ -33,7 +33,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/golang/groupcache](https://pkg.go.dev/github.com/golang/groupcache?tab=licenses)
 - [github.com/golang-sql/civil](https://pkg.go.dev/github.com/golang-sql/civil?tab=licenses)
 - [github.com/google/gofuzz](https://pkg.go.dev/github.com/google/gofuzz?tab=licenses)
-- [github.com/googleapis/gnostic](https://pkg.go.dev/github.com/googleapis/gnostic?tab=licenses)
 - [github.com/jcmturner/aescts](https://pkg.go.dev/github.com/jcmturner/aescts?tab=licenses)
 - [github.com/jcmturner/dnsutils](https://pkg.go.dev/github.com/jcmturner/dnsutils?tab=licenses)
 - [github.com/jcmturner/gokrb5](https://pkg.go.dev/github.com/jcmturner/gokrb5?tab=licenses)
@@ -91,6 +90,12 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/elastic/go-elasticsearch](https://pkg.go.dev/github.com/elastic/go-elasticsearch?tab=licenses)
 - [github.com/elastic/elastic-transport-go](https://pkg.go.dev/github.com/elastic/elastic-transport-go?tab=licenses)
 - [go.opentelemetry.io/collector/consumer](https://pkg.go.dev/go.opentelemetry.io/collector/consumer?tab=licenses)
+- [github.com/google/gnostic](https://pkg.go.dev/github.com/google/gnostic?tab=licenses)
+- [github.com/go-openapi/jsonpointer](https://pkg.go.dev/github.com/go-openapi/jsonpointer?tab=licenses)
+- [github.com/go-openapi/jsonreference](https://pkg.go.dev/github.com/go-openapi/jsonreference?tab=licenses)
+- [github.com/go-openapi/swag](https://pkg.go.dev/github.com/go-openapi/swag?tab=licenses)
+- [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
+
 
 ## BSD licenses
 
@@ -133,6 +138,9 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [gopkg.in/inf.v0](https://pkg.go.dev/gopkg.in/inf.v0?tab=licenses)
 - [github.com/go-faster/errors](https://pkg.go.dev/github.com/go-faster/errors?tab=licenses)
 - [github.com/miekg/pkcs11](https://pkg.go.dev/github.com/miekg/pkcs11?tab=licenses)
+- [github.com/munnerz/goautoneg](https://pkg.go.dev/github.com/munnerz/goautoneg?tab=licenses)
+- [github.com/PuerkitoBio/purell](https://pkg.go.dev/github.com/PuerkitoBio/purell?tab=licenses)
+- [github.com/PuerkitoBio/urlesc](https://pkg.go.dev/github.com/PuerkitoBio/urlesc?tab=licenses)
 
 ## MIT licenses
 
