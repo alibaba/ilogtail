@@ -12,7 +12,6 @@ require (
 	github.com/apache/pulsar-client-go v0.9.0
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/buger/jsonparser v1.1.1
-	github.com/cespare/xxhash v1.1.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
@@ -26,7 +25,6 @@ require (
 	github.com/go-mysql-org/go-mysql v1.3.0
 	github.com/go-ping/ping v0.0.0-20211130115550-779d1e919534
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/gogo/protobuf v1.3.2
 	github.com/gosnmp/gosnmp v1.31.0
 	github.com/hashicorp/golang-lru v0.5.4
@@ -44,8 +42,6 @@ require (
 	github.com/pingcap/check v0.0.0-20200212061837-5e12011dc712
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.8.0
-	github.com/pyroscope-io/jfr-parser v0.6.0
-	github.com/pyroscope-io/pyroscope v0.37.2
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba
 	github.com/sirupsen/logrus v1.8.1
@@ -66,6 +62,13 @@ require (
 	k8s.io/apimachinery v0.24.0
 	k8s.io/client-go v0.24.0
 	k8s.io/cri-api v0.23.1
+)
+
+require (
+	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/gofrs/uuid v4.0.0+incompatible // indirect
+	github.com/pyroscope-io/jfr-parser v0.6.0 // indirect
+	github.com/pyroscope-io/pyroscope v0.37.2 // indirect
 )
 
 require (
