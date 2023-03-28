@@ -16,6 +16,7 @@ package fmtstr
 
 import "time"
 
+// FormatIndex name Elasticsearch index base on time like Logstash and Beats
 func FormatIndex(targetValues map[string]string, indexPattern string, indexTimestamp uint32) (*string, error) {
 	sf, err := Compile(indexPattern, func(key string, ops []VariableOp) (FormatEvaler, error) {
 		// with timestamp expression, like %{+yyyyMM}

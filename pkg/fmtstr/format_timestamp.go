@@ -33,7 +33,7 @@ type TimestampFormatMapping struct {
 	GeneralFormat string
 }
 
-func nweTimestampFormatMappings() []*TimestampFormatMapping {
+func newTimestampFormatMappings() []*TimestampFormatMapping {
 	return []*TimestampFormatMapping{
 		newTimestampFormatMapping("January", "MMMM"),
 		newTimestampFormatMapping("Jan", "MMM"),
@@ -67,7 +67,7 @@ func nweTimestampFormatMappings() []*TimestampFormatMapping {
 }
 
 func FormatTimestamp(t *time.Time, format string) string {
-	mappings := nweTimestampFormatMappings()
+	mappings := newTimestampFormatMappings()
 	goFormat := GeneralToGoFormat(mappings, format)
 	// format with week
 	if strings.Contains(goFormat, "ww") {
