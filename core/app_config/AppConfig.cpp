@@ -38,6 +38,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
     }
 
     // configserver path
+    mConfigServerAvailable = false;
     if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isArray()) {
         for (Json::Value::ArrayIndex i = 0; i < confJson["ilogtail_configserver_address"].size(); ++i) {
             vector<string> configServerAddress
@@ -65,6 +66,8 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
             else
                 mConfigServerAddresses.push_back(ConfigServerAddress(host, port));
         }
+
+        mConfigServerAvailable = true;
         LOG_INFO(sLogger,
                  ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
     }
@@ -81,8 +84,9 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
 }
 
 AppConfig::ConfigServerAddress AppConfig::GetOneConfigServerAddress(bool changeConfigServer) {
-    if (0 == mConfigServerAddresses.size())
+    if (0 == mConfigServerAddresses.size()) {
         return AppConfig::ConfigServerAddress("", -1); // No address available
+    }
 
     // Return a random address
     if (changeConfigServer) {

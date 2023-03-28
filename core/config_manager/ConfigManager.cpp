@@ -147,9 +147,9 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
         int32_t curTime = time(NULL);
 
         if (curTime - lastCheckTime >= checkInterval) {
-            AppConfig::ConfigServerAddress configServerAddress
-                = AppConfig::GetInstance()->GetOneConfigServerAddress(false);
-            if ("" != configServerAddress.host) {
+            if (AppConfig::GetInstance()->GetConfigServerAvailable()) {
+                AppConfig::ConfigServerAddress configServerAddress
+                    = AppConfig::GetInstance()->GetOneConfigServerAddress(false);
                 google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> checkResults;
                 google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> configDetails;
 
@@ -252,11 +252,10 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     for (std::unordered_map<std::string, int64_t>::iterator it = mServerYamlConfigVersionMap.begin();
          it != mServerYamlConfigVersionMap.end();
          it++) {
-        configserver::proto::ConfigInfo info;
-        info.set_type(configserver::proto::PIPELINE_CONFIG);
-        info.set_name(it->first);
-        info.set_version(it->second);
-        pipelineConfigs.AddAllocated(&info);
+        configserver::proto::ConfigInfo* info = pipelineConfigs.Add();
+        info->set_type(configserver::proto::PIPELINE_CONFIG);
+        info->set_name(it->first);
+        info->set_version(it->second);
     }
     heartBeatReq.mutable_pipeline_configs()->MergeFrom(pipelineConfigs);
 
@@ -313,12 +312,11 @@ google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> ConfigMana
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigInfo> configInfos;
     for (int i = 0; i < requestConfigs.size(); i++) {
         if (requestConfigs[i].check_status() != configserver::proto::DELETED) {
-            configserver::proto::ConfigInfo info;
-            info.set_type(configserver::proto::PIPELINE_CONFIG);
-            info.set_name(requestConfigs[i].name());
-            info.set_version(requestConfigs[i].new_version());
-            info.set_context(requestConfigs[i].context());
-            configInfos.AddAllocated(&info);
+            configserver::proto::ConfigInfo* info = configInfos.Add();
+            info->set_type(configserver::proto::PIPELINE_CONFIG);
+            info->set_name(requestConfigs[i].name());
+            info->set_version(requestConfigs[i].new_version());
+            info->set_context(requestConfigs[i].context());
         }
     }
     fetchConfigReq.mutable_req_configs()->MergeFrom(configInfos);
@@ -374,7 +372,8 @@ void ConfigManager::UpdateRemoteConfig(
     if (!boost::filesystem::exists(serverConfigDirPath)) {
         bool res = boost::filesystem::create_directories(serverConfigDirPath);
         if (!res) {
-            LOG_ERROR(sLogger, ("create directory failed", serverConfigDirPath));
+            LOG_ERROR(sLogger, ("create remote config directory failed", serverConfigDirPath));
+            AppConfig::GetInstance()->StopUsingConfigServer();
             return;
         }
     }
