@@ -18,7 +18,7 @@
 | `service_mssql`<br>SqlServer查询数据            | SLS官方                                                      | 将Sql Server数据输入到iLogtail。                 |
 | `service_pgsql`<br>PostgreSQL查询数据           | SLS官方                                                      | 将PostgresSQL数据输入到iLogtail。                |
 | `service_syslog`<br>Syslog数据                | SLS官方                                                      | 采集syslog数据。                               |
-| `service_gpu_metric`<br>GPU数据               | SLS官方                                                      | 支持手机英伟达GPU指标。                             |
+| `service_gpu_metric`<br>GPU数据               | SLS官方                                                      | 支持收集英伟达GPU指标。                             |
 | `observer_ilogtail_network`<br>无侵入网络调用数据    | SLS官方                                                      | 支持从网络系统调用中收集四层网络调用，并借助网络解析模块，可以观测七层网络调用细节。 |
 | `service_http_server otlp`<br>HTTP OTLP数据 | SLS官方 | 通过http协议，接收OTLP数据。 |
 
@@ -48,18 +48,20 @@
 |----------------------------------|-----------------------------------------------------|---------------------------------------------|
 | `aggregator_content_value_group` | 社区<br>[`snakorse`](https://github.com/snakorse)     | 按照指定的Key对采集到的数据进行分组聚合           |
 | `aggregator_metadata_group`      | 社区<br>[`urnotsally`](https://github.com/urnotsally) | 按照指定的Metadata Keys对采集到的数据进行重新分组聚合|
+
 ## 输出
 
-| 名称                           | 提供方                                                 | 简介                                        |
-|------------------------------|-----------------------------------------------------|-------------------------------------------|
-| `flusher_kafka`<br>Kafka     | 社区                                                  | 将采集到的数据输出到Kafka。推荐使用下面的flusher_kafka_v2   |
-| `flusher_kafka_v2`<br>Kafka  | 社区<br>[`shalousun`](https://github.com/shalousun)   | 将采集到的数据输出到Kafka。                          |
-| `flusher_sls`<br>SLS         | SLS官方                                               | 将采集到的数据输出到SLS。                            |
-| `flusher_stdout`<br>标准输出/文件  | SLS官方                                               | 将采集到的数据输出到标准输出或文件。                        |
-| `flusher_otlp_log`<br>OTLP日志 | 社区<br>[`liuhaoyang`](https://github.com/liuhaoyang) | 将采集到的数据支持`Opentelemetry log protocol`的后端。 |
-| `flusher_http`<br>HTTP       | 社区<br>[`snakorse`](https://github.com/snakorse)     | 将采集到的数据以http方式输出到指定的后端。                   |
-| `flusher_pulsar`<br>Kafka    | 社区<br>[`shalousun`](https://github.com/shalousun)   | 将采集到的数据输出到Pulsar。                         |
-| `flusher_clickhouse`<br>ClickHouse | 社区<br>[`kl7sn`](https://github.com/kl7sn)           | 将采集到的数据输出到ClickHouse。                     |
+| 名称                                       | 提供方                                                 | 简介                                        |
+|------------------------------------------|-----------------------------------------------------|-------------------------------------------|
+| `flusher_kafka`<br>Kafka                 | 社区                                                  | 将采集到的数据输出到Kafka。推荐使用下面的flusher_kafka_v2   |
+| `flusher_kafka_v2`<br>Kafka              | 社区<br>[`shalousun`](https://github.com/shalousun)   | 将采集到的数据输出到Kafka。                          |
+| `flusher_sls`<br>SLS                     | SLS官方                                               | 将采集到的数据输出到SLS。                            |
+| `flusher_stdout`<br>标准输出/文件              | SLS官方                                               | 将采集到的数据输出到标准输出或文件。                        |
+| `flusher_otlp_log`<br>OTLP日志             | 社区<br>[`liuhaoyang`](https://github.com/liuhaoyang) | 将采集到的数据支持`Opentelemetry log protocol`的后端。 |
+| `flusher_http`<br>HTTP                   | 社区<br>[`snakorse`](https://github.com/snakorse)     | 将采集到的数据以http方式输出到指定的后端。                   |
+| `flusher_pulsar`<br>Kafka                | 社区<br>[`shalousun`](https://github.com/shalousun)   | 将采集到的数据输出到Pulsar。                         |
+| `flusher_clickhouse`<br>ClickHouse       | 社区<br>[`kl7sn`](https://github.com/kl7sn)           | 将采集到的数据输出到ClickHouse。                     |
+| `flusher_elasticsearch`<br>ElasticSearch | 社区<br>[`joeCarf`](https://github.com/joeCarf)       | 将采集到的数据输出到ElasticSearch。                  |
 
 ## 加速
 
@@ -68,3 +70,32 @@
 | `processor_delimiter_accelerate`<br>分隔符加速 | SLS官方 | 以加速模式实现分隔符日志的字段提取。           |
 | `processor_json_accelerate`<br>Json加速        | SLS官方 | 以加速模式实现`Json`格式日志的字段提取。       |
 | `processor_regex_accelerate`<br>正则加速       | SLS官方 | 通过正则匹配以加速模式实现文本日志的字段提取。 |
+
+
+## 扩展
+
+### ClientAuthenticator
+
+| 名称                                                        | 提供方                                             | 简介                             |
+|-----------------------------------------------------------|-------------------------------------------------|--------------------------------|
+| [`ext_basicauth`](extension/ext-basicauth.md)<br> Basic认证 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供 basic 认证能力 |
+
+### FlushInterceptor
+
+| 名称                                                                          | 提供方                                             | 简介                                        |
+|-----------------------------------------------------------------------------|-------------------------------------------------|-------------------------------------------|
+| [`ext_groupinfo_filter`](extension/ext-groupinfo-filter.md)<br> GroupInfo过滤 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供根据GroupInfo筛选最终提交数据的能力 |
+
+
+### RequestInterceptor
+
+| 名称                                                                  | 提供方                                             | 简介                        |
+|---------------------------------------------------------------------|-------------------------------------------------|---------------------------|
+| [`ext_request_breaker`](extension/ext-request-breaker.md)<br> 请求熔断器 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供请求熔断能力 |
+
+
+### Decoder
+
+| 名称                                                                         | 提供方                                             | 简介                          |
+|----------------------------------------------------------------------------|-------------------------------------------------|-----------------------------|
+| [`ext_default_decoder`](extension/ext-default-decoder.md)<br> 默认的decoder扩展 | 社区<br>[`snakorse`](https://github.com/snakorse) | 将内置支持的Format以Decoder扩展的形式封装 |

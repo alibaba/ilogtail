@@ -37,6 +37,7 @@
 ## 数据流水线 <a href="#data-pipeline" id="data-pipeline"></a>
 
 * [概览](data-pipeline/overview.md)
+* [插件版本管理](data-pipeline/stability-level.md)
 * [输入](data-pipeline/input/README.md)
   * [文本日志](data-pipeline/input/file-log.md)
   * [容器标准输出](data-pipeline/input/input-docker-stdout.md)
@@ -79,6 +80,7 @@
   * [Kafka（Deprecated）](data-pipeline/flusher/kafka.md)
   * [kafkaV2](data-pipeline/flusher/kafka_v2.md)
   * [ClickHouse](data-pipeline/flusher/clickhouse.md)
+  * [ElasticSearch](data-pipeline/flusher/elasticsearch.md)
   * [SLS](data-pipeline/flusher/sls.md)
   * [标准输出/文件](data-pipeline/flusher/stdout.md)
   * [OTLP日志](data-pipeline/flusher/otlp-log.md)
@@ -109,7 +111,7 @@
     * [单条协议](developer-guide/log-protocol/protocol-spec/single.md)
 * [代码风格](developer-guide/codestyle.md)
 
-* [数据结构](developer-guide/data-structure.md)
+* [数据模型](developer-guide/data-model.md)
 * [插件开发](developer-guide/plugin-development/README.md)
   * [开源插件开发引导](docs/cn/developer-guide/plugin-development/plugin-development-guide.md)
   * [Checkpoint接口](developer-guide/plugin-development/checkpoint-api.md)

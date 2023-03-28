@@ -15,11 +15,20 @@
 package pluginmanager
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/util"
+)
+
+var (
+	tagPrefix     = "__tag__:"
+	fileOffsetKey = tagPrefix + "__file_offset__"
+	contentKey    = "content"
 )
 
 type pluginv2Runner struct {
@@ -38,6 +47,7 @@ type pluginv2Runner struct {
 	ProcessorPlugins  []pipeline.ProcessorV2
 	AggregatorPlugins []pipeline.AggregatorV2
 	FlusherPlugins    []pipeline.FlusherV2
+	ExtensionPlugins  map[string]pipeline.Extension
 	TimerRunner       []*timerRunner
 
 	FlushOutStore  *FlushOutStore[models.PipelineGroupEvents]
@@ -54,6 +64,7 @@ func (p *pluginv2Runner) Init(inputQueueSize int, flushQueueSize int) error {
 	p.ProcessorPlugins = make([]pipeline.ProcessorV2, 0)
 	p.AggregatorPlugins = make([]pipeline.AggregatorV2, 0)
 	p.FlusherPlugins = make([]pipeline.FlusherV2, 0)
+	p.ExtensionPlugins = make(map[string]pipeline.Extension, 0)
 	p.InputPipeContext = pipeline.NewObservePipelineConext(inputQueueSize)
 	p.ProcessPipeContext = pipeline.NewGroupedPipelineConext()
 	p.AggregatePipeContext = pipeline.NewObservePipelineConext(flushQueueSize)
@@ -95,10 +106,19 @@ func (p *pluginv2Runner) AddPlugin(pluginName string, category pluginCategory, p
 		if flusher, ok := plugin.(pipeline.FlusherV2); ok {
 			return p.addFlusher(flusher)
 		}
+	case pluginExtension:
+		if extension, ok := plugin.(pipeline.Extension); ok {
+			return p.addExtension(pluginName, extension)
+		}
 	default:
 		return pluginCategoryUndefinedError(category)
 	}
 	return pluginUnImplementError(category, v2, pluginName)
+}
+
+func (p *pluginv2Runner) GetExtension(name string) (pipeline.Extension, bool) {
+	extension, ok := p.ExtensionPlugins[name]
+	return extension, ok
 }
 
 func (p *pluginv2Runner) Run() {
@@ -158,6 +178,11 @@ func (p *pluginv2Runner) addAggregator(aggregator pipeline.AggregatorV2) error {
 
 func (p *pluginv2Runner) addFlusher(flusher pipeline.FlusherV2) error {
 	p.FlusherPlugins = append(p.FlusherPlugins, flusher)
+	return nil
+}
+
+func (p *pluginv2Runner) addExtension(name string, extension pipeline.Extension) error {
+	p.ExtensionPlugins[name] = extension
 	return nil
 }
 
@@ -379,11 +404,49 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 		}
 	}
 	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "Flusher plugins stop", "done")
+
+	for _, extension := range p.ExtensionPlugins {
+		err := extension.Stop()
+		if err != nil {
+			logger.Warningf(p.LogstoreConfig.Context.GetRuntimeContext(), "STOP_EXTENSION_ALARM",
+				"failed to stop extension (description: %v): %v", extension.Description(), err)
+		}
+	}
+	logger.Info(p.LogstoreConfig.Context.GetRuntimeContext(), "extension plugins stop", "done")
+
 	return nil
 }
 
-func (p *pluginv2Runner) ReceiveRawLog(log *pipeline.LogWithContext) {
-	// TODO
+func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
+	md := models.NewMetadata()
+	if in.Context != nil {
+		for k, v := range in.Context {
+			md.Add(k, v.(string))
+		}
+	}
+	log := &models.Log{}
+	log.Tags = models.NewTags()
+	for i, content := range in.Log.Contents {
+		switch {
+		case content.Key == contentKey || i == 0:
+			log.Body = util.ZeroCopyStringToBytes(content.Value)
+		case content.Key == fileOffsetKey:
+			if offset, err := strconv.ParseInt(content.Value, 10, 64); err == nil {
+				log.Offset = uint64(offset)
+			}
+		case strings.Contains(content.Key, tagPrefix):
+			log.Tags.Add(content.Key[len(tagPrefix)-1:], content.Value)
+		default:
+			log.Tags.Add(content.Key, content.Value)
+		}
+	}
+	if in.Log.Time != uint32(0) {
+		log.Timestamp = uint64(time.Second * time.Duration(in.Log.Time))
+	} else {
+		log.Timestamp = uint64(time.Now().UnixNano())
+	}
+	group := models.NewGroup(md, models.NewTags())
+	p.InputPipeContext.Collector().Collect(group, log)
 }
 
 func (p *pluginv2Runner) Merge(r PluginRunner) {

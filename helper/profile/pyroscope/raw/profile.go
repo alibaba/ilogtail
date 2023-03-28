@@ -1,3 +1,17 @@
+// Copyright 2023 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package raw
 
 import (
@@ -7,6 +21,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/pyroscope-io/pyroscope/pkg/structs/transporttrie"
@@ -79,6 +94,11 @@ func (p *Profile) extractProfileV1(meta *profile.Meta, tags map[string]string) f
 		name, stack := p.extractNameAndStacks(k, meta.SpyName)
 		stackID := strconv.FormatUint(xxhash.Sum64(k), 16)
 		var content []*protocol.Log_Content
+		u := meta.Units
+		if meta.Units == profile.SamplesUnits {
+			u = profile.NanosecondsUnit
+			v *= int(time.Second.Nanoseconds() / int64(meta.SampleRate))
+		}
 		content = append(content,
 			&protocol.Log_Content{
 				Key:   "name",
@@ -102,7 +122,7 @@ func (p *Profile) extractProfileV1(meta *profile.Meta, tags map[string]string) f
 			},
 			&protocol.Log_Content{
 				Key:   "units",
-				Value: string(meta.Units),
+				Value: string(u),
 			},
 			&protocol.Log_Content{
 				Key:   "valueTypes",

@@ -20,6 +20,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.12.2
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/elastic/beats/v7 v7.7.1
+	github.com/elastic/go-elasticsearch/v8 v8.6.0
 	github.com/elastic/go-lumber v0.1.0
 	github.com/go-kit/kit v0.12.0
 	github.com/go-mysql-org/go-mysql v1.3.0
@@ -54,6 +55,7 @@ require (
 	github.com/siddontang/go-mysql v0.0.0-20180725024449-535abe8f2eba
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/goconvey v1.7.2
+	github.com/streadway/handy v0.0.0-20230327021402-6a47ec586270
 	github.com/stretchr/testify v1.8.1
 	github.com/syndtr/goleveldb v0.0.0-20170725064836-b89cc31ef797
 	github.com/xdg-go/scram v1.1.1
@@ -91,6 +93,7 @@ require (
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.0.0-20211216131617-bbee439d559c // indirect
 	github.com/frankban/quicktest v1.14.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.6.1 // indirect
@@ -103,6 +106,7 @@ require (
 	github.com/intel/goresctrl v0.2.0 // indirect
 	github.com/linkedin/goavro/v2 v2.9.8 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/sys/signal v0.6.0 // indirect
@@ -137,7 +141,7 @@ require (
 	github.com/Microsoft/hcsshim v0.9.4 // indirect
 	github.com/VictoriaMetrics/fasthttp v1.1.0 // indirect
 	github.com/VictoriaMetrics/metricsql v0.45.0 // indirect
-	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20181127062202-5462e9f9dc05 // indirect
+	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20181127062202-5462e9f9dc05
 	github.com/andrewkroh/sys v0.0.0-20151128191922-287798fe3e43 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
@@ -261,8 +265,11 @@ replace (
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner => ./external/github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner
 	github.com/elastic/beats/v7 => ./external/github.com/elastic/beats/v7
 	github.com/jeromer/syslogparser => ./external/github.com/jeromer/syslogparser
+	github.com/mindprince/gonvml => github.com/iLogtail/gonvml v1.0.0
 	github.com/pingcap/parser => github.com/iLogtail/parser v0.0.0-20210415081931-48e7f467fd74-ilogtail
-	github.com/pyroscope-io/pyroscope => github.com/evanljp/pyroscope v0.35.1-ilogtail
+	github.com/pyroscope-io/jfr-parser => github.com/iLogtail/jfr-parser v0.6.0
+	github.com/pyroscope-io/pyroscope => github.com/iLogtail/pyroscope-lib v0.35.1-ilogtail
 	github.com/satori/go.uuid => github.com/satori/go.uuid v1.2.0
 	github.com/siddontang/go-mysql => github.com/iLogtail/go-mysql v0.0.0-20180725024449-535abe8f2eba-ilogtail
+	github.com/streadway/handy => github.com/iLogtail/handy v0.0.0-20230327021402-6a47ec586270
 )

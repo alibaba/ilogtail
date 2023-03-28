@@ -4,8 +4,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 
 ## Apache 2.0 licenses
 
-- [github.com/pyroscope-io/jfr-parser](https://pkg.go.dev/github.com/pyroscope-io/jfr-parser?tab=licenses)
-- [github.com/pyroscope-io/pyroscope](https://pkg.go.dev/github.com/pyroscope-io/pyroscope?tab=licenses)
 - [cloud.google.com/go/compute/metadata](https://pkg.go.dev/cloud.google.com/go/compute/metadata?tab=licenses)
 - [github.com/aliyun/alibaba-cloud-sdk-go](https://pkg.go.dev/github.com/aliyun/alibaba-cloud-sdk-go?tab=licenses)
 - [github.com/containerd/cgroups](https://pkg.go.dev/github.com/containerd/cgroups?tab=licenses)
@@ -42,7 +40,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/jcmturner/rpc](https://pkg.go.dev/github.com/jcmturner/rpc?tab=licenses)
 - [github.com/jmespath/go-jmespath](https://pkg.go.dev/github.com/jmespath/go-jmespath?tab=licenses)
 - [github.com/matttproud/golang\_protobuf\_extensions](https://pkg.go.dev/github.com/matttproud/golang_protobuf_extensions?tab=licenses)
-- [github.com/mindprince/gonvml](https://pkg.go.dev/github.com/mindprince/gonvml?tab=licenses)
 - [github.com/moby/locker](https://pkg.go.dev/github.com/moby/locker?tab=licenses)
 - [github.com/moby/spdystream](https://pkg.go.dev/github.com/moby/spdystream?tab=licenses)
 - [github.com/moby/sys/mountinfo](https://pkg.go.dev/github.com/moby/sys/mountinfo?tab=licenses)
@@ -56,7 +53,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/opencontainers/runtime-spec](https://pkg.go.dev/github.com/opencontainers/runtime-spec?tab=licenses)
 - [github.com/opencontainers/selinux](https://pkg.go.dev/github.com/opencontainers/selinux?tab=licenses)
 - [github.com/pingcap/log](https://pkg.go.dev/github.com/pingcap/log?tab=licenses)
-- [github.com/pingcap/parser](https://pkg.go.dev/github.com/pingcap/parser?tab=licenses)
 - [github.com/prometheus/client\_golang](https://pkg.go.dev/github.com/prometheus/client_golang?tab=licenses)
 - [github.com/prometheus/client\_model](https://pkg.go.dev/github.com/prometheus/client_model?tab=licenses)
 - [github.com/prometheus/common](https://pkg.go.dev/github.com/prometheus/common?tab=licenses)
@@ -92,6 +88,8 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [go.opentelemetry.io/otel](https://pkg.go.dev/go.opentelemetry.io/otel?tab=licenses)
 - [go.opentelemetry.io/otel/trace](https://pkg.go.dev/go.opentelemetry.io/otel/trace?tab=licenses)
 - [github.com/ClickHouse/ch-go](https://pkg.go.dev/github.com/ClickHouse/ch-go?tab=licenses)
+- [github.com/elastic/go-elasticsearch](https://pkg.go.dev/github.com/elastic/go-elasticsearch?tab=licenses)
+- [github.com/elastic/elastic-transport-go](https://pkg.go.dev/github.com/elastic/elastic-transport-go?tab=licenses)
 - [go.opentelemetry.io/collector/consumer](https://pkg.go.dev/go.opentelemetry.io/collector/consumer?tab=licenses)
 
 ## BSD licenses
@@ -148,7 +146,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/Microsoft/hcsshim](https://pkg.go.dev/github.com/Microsoft/hcsshim?tab=licenses)
 - [github.com/Shopify/sarama](https://pkg.go.dev/github.com/Shopify/sarama?tab=licenses)
 - [github.com/VictoriaMetrics/fasthttp](https://pkg.go.dev/github.com/VictoriaMetrics/fasthttp?tab=licenses)
-- [github.com/VictoriaMetrics/metrics](https://pkg.go.dev/github.com/VictoriaMetrics/metrics?tab=licenses)
 - [github.com/aliyun/aliyun-log-go-sdk](https://pkg.go.dev/github.com/aliyun/aliyun-log-go-sdk?tab=licenses)
 - [github.com/bsm/sarama-cluster](https://pkg.go.dev/github.com/bsm/sarama-cluster?tab=licenses)
 - [github.com/buger/jsonparser](https://pkg.go.dev/github.com/buger/jsonparser?tab=licenses)
@@ -177,6 +174,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/josharian/intern](https://pkg.go.dev/github.com/josharian/intern?tab=licenses)
 - [github.com/json-iterator/go](https://pkg.go.dev/github.com/json-iterator/go?tab=licenses)
 - [github.com/mailru/easyjson](https://pkg.go.dev/github.com/mailru/easyjson?tab=licenses)
+- [github.com/mitchellh/mapstructure](https://pkg.go.dev/github.com/mitchellh/mapstructure?tab=licenses)
 - [github.com/paulbellamy/ratecounter](https://pkg.go.dev/github.com/paulbellamy/ratecounter?tab=licenses)
 - [github.com/satori/go.uuid](https://pkg.go.dev/github.com/satori/go.uuid?tab=licenses)
 - [github.com/shopspring/decimal](https://pkg.go.dev/github.com/shopspring/decimal?tab=licenses)
@@ -238,8 +236,11 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 ## EPL V2 licenses
 
 ## iLogtail used or modified source code from these projects
-
-- [github.com/elastic/beats](./LICENSE-beats)
-- [github.com/jeromer/syslogparser](./LICENSE-syslogparser)
-- [github.com/siddontang/go-mysql](./LICENSE-go-mysql)
-- [github.com/VictoriaMetrics/VictoriaMetrics](./LICENSE-VictoriaMetrics)
+- [github.com/iLogtail/VictoriaMetrics fork from github.com/VictoriaMetrics/VictoriaMetrics](http://github.com/iLogtail/VictoriaMetrics) based on Apache-2.0
+- [github.com/iLogtail/go-mysql fork from github.com/siddontang/go-mysql](http://github.com/iLogtail/go-mysql) based on MIT
+- [github.com/iLogtail/jfr-parser fork from github.com/pyroscope-io/jfr-parser](http://github.com/iLogtail/jfr-parser) based on Apache-2.0
+- [github.com/iLogtail/metrics fork from github.com/VictoriaMetrics/metrics](http://github.com/iLogtail/metrics) based on MIT
+- [github.com/iLogtail/parser fork from github.com/pingcap/parser](http://github.com/iLogtail/parser) based on Apache-2.0
+- [github.com/iLogtail/pyroscope-lib fork from github.com/pyroscope-io/pyroscope](http://github.com/iLogtail/pyroscope-lib) based on Apache-2.0
+- [github.com/iLogtail/gonvml fork from github.com/mindprince/gonvml](https://github.com/iLogtail/gonvml) based on Apache-2.0
+- [github.com/iLogtail/handy fork from github.com/streadway/handy](http://github.com/iLogtail/handy) based on BSD-2-Clause

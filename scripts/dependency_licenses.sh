@@ -34,23 +34,41 @@ function find_go_dependencies() {
   		*) continue;;
   	esac
     cd  $main_path
-  	GOOS=${target%%/*} GOARCH=${target##*/} go list -deps -f '{{with .Module}}{{.Path}}{{end}}' . >> "${output_file}"
+  	GOOS=${target%%/*} GOARCH=${target##*/} go list -deps -f '{{with .Module}}{{.Path}}@@@{{.Replace}}{{end}}' . >> "${output_file}-temp"
   	cd -
   done
+  LC_ALL=C sort -u "${output_file}-temp" > "${output_file}-compress"
+  cat "${output_file}-compress" | while read dep
+  do
+    module=`echo $dep|awk -F '@@@' '{print $1}'`
+    replace=`echo $dep|awk -F '@@@' '{print $2}'|awk '{print $1}'`
+       if [[ "$module" == *ilogtail* || "$replace" == ./* ]]; then
+           continue
+       fi
+       if [[ "$replace" = '<nil>' || "$replace" != *iLogtail* ]]; then
+           echo "$module" >>"${output_file}"
+       else
+            echo "$replace fork from $module" >>"${output_file}"
+       fi
+  done
+   rm -f "${output_file}-temp"
+   rm -f "${output_file}-compress"
 }
 
 
 function filter_dependencies() {
   input_file=$1
   output_file=$2
-
-  for dep in $(LC_ALL=C sort -u "${input_file}"); do
+#  LC_ALL=C sort -u "${input_file}" > "${input_file}"-compress
+  cat "${input_file}" | while read dep
+  do
   	case "${dep}" in
   		# ignore ourselves
   		github.com/alibaba/ilogtail) continue;;
-  		github.com/alibaba/ilogtail/pkg) continue;;
   		github.com/alibaba/ilogtail/test) continue;;
-      github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner) continue;;
+  		./pkg) continue;;
+  		../pkg) continue;;
+  		../) continue;;
   	esac
     dep="${dep%%/v[0-9]}"
     dep="${dep%%/v[0-9][0-9]}"
@@ -61,6 +79,7 @@ function filter_dependencies() {
   mv "$output_file" "$tmpdir"/old
   uniq "$tmpdir"/old | sort > "$output_file"
   rm -rf "$tmpdir"
+#  rm -rf "${input_file}"-compress
 }
 
 function find_licenses() {
@@ -70,16 +89,27 @@ function find_licenses() {
   tmpdir="$(mktemp -d)"
   cat $input_file | while read line
   do
-    url="https://pkg.go.dev/$line?tab=licenses"
+    if [[ $line == *iLogtail* ]]; then
+        forkRepo=$(echo $line|awk '{print $1}')
+        url="http://$forkRepo"
+    else
+       url="https://pkg.go.dev/$line?tab=licenses"
+    fi
     wget $url -O "$tmpdir"/LICENSE
     if [ ! -s "$tmpdir"/LICENSE ]; then
        echo "NOT_SUPPORT_SEARCH: - $line"
        echo "NOT_SUPPORT_SEARCH: - $line"  >> "$output_file_prefix-NOT_FOUND"
        continue
     fi
-    license_type=`cat "$tmpdir"/LICENSE|grep "#lic-0"|cut -f 2 -d ">"|cut -f 1 -d "<"`
+
     line=$(echo $line | sed 's/_/\\_/g')
-    echo "- [$line]($url)" >> "$output_file_prefix-$license_type"
+    if [[ $line == *iLogtail* ]]; then
+      license_type=`cat "$tmpdir"/LICENSE|grep "license"|sort|uniq|grep -e ".*\s\(licenses\sfound\|license\)$"| awk '{print $1}'`
+      echo "- [$line]($url) based on $license_type" >> "$output_file_prefix-fork"
+    else
+      license_type=`cat "$tmpdir"/LICENSE|grep "#lic-0"|cut -f 2 -d ">"|cut -f 1 -d "<"`
+      echo "- [$line]($url)" >> "$output_file_prefix-$license_type"
+    fi
   done
 }
 

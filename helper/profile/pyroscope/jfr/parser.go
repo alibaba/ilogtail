@@ -1,3 +1,17 @@
+// Copyright 2023 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package jfr
 
 import (
@@ -7,6 +21,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cespare/xxhash"
 	"github.com/pyroscope-io/jfr-parser/parser"
@@ -108,6 +123,12 @@ func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parse
 	}
 	cb := func(n string, labels tree.Labels, t *tree.Tree, u profile.Units) {
 		t.IterateStacks(func(name string, self uint64, stack []string) {
+			unit := u
+			if u == profile.SamplesUnits {
+				unit = profile.NanosecondsUnit
+				self *= uint64(time.Second.Nanoseconds() / int64(meta.SampleRate))
+			}
+
 			id := xxhash.Sum64String(strings.Join(stack, ""))
 			stackMap[id] = &profile.Stack{
 				Name:  profile.FormatPositionAndName(name, profile.FormatType(meta.SpyName)),
@@ -115,7 +136,7 @@ func (r *RawProfile) parseChunk(ctx context.Context, meta *profile.Meta, c parse
 			}
 			aggtypeMap[id] = append(aggtypeMap[id], string(meta.AggregationType))
 			typeMap[id] = append(typeMap[id], n)
-			unitMap[id] = append(unitMap[id], string(u))
+			unitMap[id] = append(unitMap[id], string(unit))
 			valMap[id] = append(valMap[id], self)
 			labelMap[id] = buildKey(meta.Tags, labels, jfrLabels).Labels()
 		})

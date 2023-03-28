@@ -1,3 +1,17 @@
+// Copyright 2023 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package pprof
 
 import (
@@ -35,6 +49,7 @@ type Parser struct {
 	stackFrameFormatter StackFrameFormatter
 	sampleTypesFilter   func(string) bool
 	sampleTypes         map[string]*tree.SampleTypeConfig
+	cache               tree.LabelsCache
 }
 
 func (p *Parser) getDisplayName(defaultName string) string {
@@ -76,7 +91,16 @@ func (p *Parser) iterate(x *tree.Profile, fn func(vt *tree.ValueType, l tree.Lab
 			}
 		}
 	}
+	p.cache = c
 	return nil
+}
+
+func (p *Parser) load(sampleType int64, labels tree.Labels) (*tree.Tree, bool) {
+	e, ok := p.cache.Get(sampleType, labels.Hash())
+	if !ok {
+		return nil, false
+	}
+	return e.Tree, true
 }
 
 // readTrees generates trees from the profile populating c.
@@ -131,7 +155,6 @@ func (p *Parser) readTrees(x *tree.Profile, c tree.LabelsCache, f tree.Finder) {
 				// Regardless of whether we should skip exemplars or not, the value
 				// should be appended to the exemplar baseline profile (w/o ProfileID label).
 				c.GetOrCreateTree(types[i], tree.CutLabel(s.Label, j)).InsertStack(stack, v)
-				continue
 			}
 			c.GetOrCreateTree(types[i], s.Label).InsertStack(stack, v)
 		}
