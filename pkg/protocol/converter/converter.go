@@ -245,7 +245,7 @@ func convertLogToMap(log *protocol.Log, logTags []*protocol.LogTag, src, topic s
 
 	addTagIfRequired(tags, tagKeyRenameMap, tagHostIP, src)
 	if topic != "" {
-		addTagIfRequired(tags, tagKeyRenameMap, tagLogTopic, src)
+		addTagIfRequired(tags, tagKeyRenameMap, tagLogTopic, topic)
 	}
 
 	return contents, tags
