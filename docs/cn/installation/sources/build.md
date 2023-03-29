@@ -84,11 +84,11 @@ make plugin_local # 每次更新插件代码后从这里开始
 - 安装golang
 - 安装MinGW(根据windows机器位数选择对应版本)
 - 下载安装C++ boost库，安装到与ilogtail同级目录，选择相应位数的的安装包
-  - [boost_1_68_0-msvc-14.1-64.exe](https://sourceforge.net/projects/boost/files/boost-binaries/1.68.0/boost_1_68_0-msvc-14.1-64.exe/download)
-  - [boost_1_68_0-msvc-14.1-32.exe](https://sourceforge.net/projects/boost/files/boost-binaries/1.68.0/boost_1_68_0-msvc-14.1-32.exe/download)
+  - [boost_1_68_0-msvc-14.1-64.exe](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuilt-dependencies/boost_1_68_0-msvc-14.1-64.exe)
+  - [boost_1_68_0-msvc-14.1-32.exe](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuilt-dependencies/boost_1_68_0-msvc-14.1-32.exe)
 - 下载ilogtail-deps编译依赖，放到与ilogtail同级目录
   - [32位依赖](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuilt-dependencies/ilogtail-deps.windows-386.zip)
-  - [64位依赖](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuilt-dependencies/ilogtail-deps.windows-x64.tar)
+  - [64位依赖](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuilt-dependencies/ilogtail-deps.windows-x64.zip)
 
 ## 修改编译脚本
 将ilogtail/scripts/windows32_build.bat(windows64_build.bat)脚本中的的CMAKE_BIN、DEVENV_BIN两个环境变量值替换成编译机器上实际的路径
