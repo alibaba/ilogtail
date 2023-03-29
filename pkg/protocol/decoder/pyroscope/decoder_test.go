@@ -23,8 +23,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/protocol/helper"
 
 	"github.com/pyroscope-io/pyroscope/pkg/structs/transporttrie"
 	"github.com/stretchr/testify/assert"

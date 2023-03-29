@@ -144,7 +144,7 @@ func (d *Decoder) decodeInRemoteWriteFormat(data []byte, req *http.Request) (log
 		return nil, err
 	}
 
-	db := req.FormValue("db")
+	db := req.FormValue(metaDBKey)
 	contentLen := 4
 	if len(db) > 0 {
 		contentLen++
@@ -210,7 +210,7 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 	meta := models.NewMetadata()
 	commonTags := models.NewTags()
 
-	if db := req.FormValue("db"); len(db) > 0 {
+	if db := req.FormValue(metaDBKey); len(db) > 0 {
 		meta.Add(metaDBKey, db)
 	}
 

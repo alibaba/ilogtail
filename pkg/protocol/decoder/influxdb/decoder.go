@@ -22,10 +22,10 @@ import (
 
 	"github.com/influxdata/influxdb/models"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	imodels "github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
-	"github.com/alibaba/ilogtail/pkg/protocol/helper"
 )
 
 const (

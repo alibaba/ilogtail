@@ -25,8 +25,8 @@ import (
 	"github.com/pyroscope-io/pyroscope/pkg/storage/tree"
 	"github.com/stretchr/testify/require"
 
+	"github.com/alibaba/ilogtail/pkg/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/protocol/helper/profile"
 )
 
 func readPprofFixture(path string) (*tree.Profile, error) {

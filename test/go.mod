@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.6.0
-	github.com/alibaba/ilogtail v1.4.0
 	github.com/alibaba/ilogtail/pkg v0.0.0
 	github.com/docker/docker v20.10.22+incompatible
 	github.com/docker/go-connections v0.4.0
@@ -25,6 +24,7 @@ require (
 	github.com/ClickHouse/ch-go v0.51.2 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Microsoft/hcsshim v0.9.4 // indirect
+	github.com/alibaba/ilogtail v1.4.0 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect

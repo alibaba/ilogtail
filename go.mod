@@ -21,7 +21,6 @@ require (
 	github.com/elastic/beats/v7 v7.7.1
 	github.com/elastic/go-elasticsearch/v8 v8.6.0
 	github.com/elastic/go-lumber v0.1.0
-	github.com/go-kit/kit v0.12.0
 	github.com/go-mysql-org/go-mysql v1.3.0
 	github.com/go-ping/ping v0.0.0-20211130115550-779d1e919534
 	github.com/go-sql-driver/mysql v1.5.0
@@ -61,14 +60,15 @@ require (
 	k8s.io/api v0.24.0
 	k8s.io/apimachinery v0.24.0
 	k8s.io/client-go v0.24.0
-	k8s.io/cri-api v0.23.1
 )
 
 require (
 	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/pyroscope-io/jfr-parser v0.6.0 // indirect
 	github.com/pyroscope-io/pyroscope v0.37.2 // indirect
+	k8s.io/cri-api v0.23.1 // indirect
 )
 
 require (
@@ -156,7 +156,7 @@ require (
 	github.com/andrewkroh/sys v0.0.0-20151128191922-287798fe3e43 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
-	github.com/containerd/containerd v1.6.8
+	github.com/containerd/containerd v1.6.8 // indirect
 	github.com/containerd/continuity v0.2.2 // indirect
 	github.com/containerd/fifo v1.0.0 // indirect
 	github.com/containerd/go-cni v1.1.6 // indirect
@@ -252,7 +252,7 @@ require (
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4
+	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
 	gopkg.in/birkirb/loggers.v1 v1.0.3 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect

@@ -27,8 +27,8 @@ import (
 	"github.com/pyroscope-io/pyroscope/pkg/util/form"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/alibaba/ilogtail/pkg/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/protocol/helper/profile"
 )
 
 type RawProfile struct {
