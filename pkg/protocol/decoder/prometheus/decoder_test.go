@@ -17,6 +17,7 @@ package prometheus
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/prometheus/prometheus/prompb"
@@ -140,4 +141,81 @@ func TestConvertPromRequestToPipelineGroupEvents(t *testing.T) {
 	assert.Equal(t, "value1", metric1.Tags.Get("label1"))
 	assert.Equal(t, uint64(1234567891000000), metric2.Timestamp)
 	assert.Equal(t, 2.34, metric2.Value.GetSingleValue())
+}
+
+func TestConvertExpFmtDataToPipelineGroupEvents(t *testing.T) {
+	var data = `# HELP http_requests_total The total number of HTTP requests. 
+# TYPE http_requests_total counter
+http_requests_total{method="GET",code="200"} 100 1680073018671516463
+http_requests_total{method="POST",code="200"} 50 1680073018671516463
+http_requests_total{method="GET",code="404"} 10 1680073018671516463
+`
+
+	inputData := []byte(data)
+	metaInfo := models.NewMetadataWithKeyValues("meta_name", "test_meta_name")
+	commonTags := models.NewTagsWithKeyValues(
+		"common_tag1", "common_value1",
+		"common_tag2", "common_value2")
+
+	// Expected output
+	expectedPG := []*models.PipelineGroupEvents{
+		{
+			Group: &models.GroupInfo{
+				Metadata: metaInfo,
+				Tags:     commonTags,
+			},
+			Events: []models.PipelineEvent{
+				models.NewSingleValueMetric(
+					"http_requests_total",
+					models.MetricTypeGauge,
+					models.NewTagsWithKeyValues("method", "GET", "code", "200"),
+					1680073018671516463,
+					100,
+				),
+
+				models.NewSingleValueMetric(
+					"http_requests_total",
+					models.MetricTypeGauge,
+					models.NewTagsWithKeyValues("method", "POST", "code", "200"),
+					1680073018671516463,
+					50,
+				),
+
+				models.NewSingleValueMetric(
+					"http_requests_total",
+					models.MetricTypeGauge,
+					models.NewTagsWithKeyValues("method", "GET", "code", "404"),
+					1680073018671516463,
+					10,
+				),
+			},
+		},
+	}
+
+	pg, err := ConvertExpFmtDataToPipelineGroupEvents(inputData, metaInfo, commonTags)
+	assert.NoError(t, err)
+	assert.Equal(t, len(pg), len(expectedPG))
+
+	for i, expected := range expectedPG {
+		actual := pg[i]
+
+		if !reflect.DeepEqual(expected.Group, actual.Group) {
+			t.Errorf("Expected metadata %v, but got %v", expected.Group, actual.Group)
+		}
+
+		assert.Equal(t, len(expected.Events), len(actual.Events))
+
+		for j, expectedEvent := range expected.Events {
+			fmt.Print(j)
+			actualEvent := actual.Events[j]
+			assert.Equal(t, expectedEvent.GetName(), actualEvent.GetName())
+			expectedMetric, ok := expectedEvent.(*models.Metric)
+			assert.True(t, ok)
+			actualMetric, ok := actualEvent.(*models.Metric)
+			assert.True(t, ok)
+			assert.Equal(t, expectedMetric.Value.GetSingleValue(), actualMetric.Value.GetSingleValue())
+			assert.Equal(t, expectedMetric.Tags, actualMetric.Tags)
+		}
+
+	}
 }
