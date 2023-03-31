@@ -248,7 +248,7 @@ private:
 
     int64_t mCheckPeriod;
     SpinLock mBufferFileLock; // get set bufferfilepath and buffer filename
-    std::string mDataServerSwitchPolicy;
+    dataServerSwitchPolicy mDataServerSwitchPolicy;
 
     struct RealIpInfo {
         RealIpInfo() : mLastUpdateTime(0), mForceFlushFlag(false) {}

@@ -204,7 +204,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
                 if (!BOOL_FLAG(send_prefer_real_ip) || !mDataPtr->mRealIpFlag) {
                     Sender::Instance()->SetNetworkStat(mDataPtr->mRegion, mDataPtr->mCurrentEndpoint, false);
                     recordRst = LogstoreSenderInfo::SendResult_NetworkFail;
-                    if (!EndWith(STRING_FLAG(data_endpoint_policy), "locked")) {
+                    if (Sender::Instance()->mDataServerSwitchPolicy == dataServerSwitchPolicy::DESIGNATED_FIRST) {
                         Sender::Instance()->ResetSendClientEndpoint(mDataPtr->mAliuid, mDataPtr->mRegion, curTime);
                     }
                 }
@@ -1740,22 +1740,12 @@ void Sender::TestNetwork() {
                      epIter != ((iter->second)->mEndpointDetailMap).end();
                      ++epIter) {
                     if (!(epIter->second).mStatus) {
-                        if (STRING_FLAG(data_endpoint_policy) == "designated_first") {
+                        if (mDataServerSwitchPolicy == dataServerSwitchPolicy::DESIGNATED_FIRST) {
                             if (epIter->first == iter->second->mDefaultEndpoint) {
                                 unavaliableEndpoints[iter->first].emplace_back(0, epIter->first);
                             } else {
                                 unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
                             }
-                            // } else if (STRING_FLAG(data_endpoint_policy) == "intranet_first" &&
-                            // !EndWith(iter->first,
-                            // "-corp")) {
-                            //     if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INTRANET) {
-                            //         unavaliableEndpoints[iter->first].emplace_back(0, epIter->first);
-                            //     } else if (GetEndpointAddressType(epIter->first) == EndpointAddressType::INNER) {
-                            //         unavaliableEndpoints[iter->first].emplace_back(1, epIter->first);
-                            //     } else {
-                            //         unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
-                            //     }
                         } else {
                             unavaliableEndpoints[iter->first].emplace_back(10, epIter->first);
                         }
