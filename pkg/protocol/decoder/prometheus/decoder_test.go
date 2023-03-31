@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/stretchr/testify/assert"
 
@@ -206,7 +207,95 @@ http_requests_total{method="GET",code="404"} 10 1680073018671516463
 		assert.Equal(t, len(expected.Events), len(actual.Events))
 
 		for j, expectedEvent := range expected.Events {
-			fmt.Print(j)
+			actualEvent := actual.Events[j]
+			assert.Equal(t, expectedEvent.GetName(), actualEvent.GetName())
+			expectedMetric, ok := expectedEvent.(*models.Metric)
+			assert.True(t, ok)
+			actualMetric, ok := actualEvent.(*models.Metric)
+			assert.True(t, ok)
+			assert.Equal(t, expectedMetric.Value.GetSingleValue(), actualMetric.Value.GetSingleValue())
+			assert.Equal(t, expectedMetric.Tags, actualMetric.Tags)
+		}
+
+	}
+}
+
+func TestConvertVectorToPipelineGroupEvents(t *testing.T) {
+	// Create a sample vector with three metrics
+	vector := &model.Vector{
+		&model.Sample{
+			Metric:    model.Metric{model.MetricNameLabel: "http_requests_total", "method": "GET", "code": "200"},
+			Timestamp: model.Time(1680073018671516463),
+			Value:     100,
+		},
+		&model.Sample{
+			Metric:    model.Metric{model.MetricNameLabel: "http_requests_total", "method": "POST", "code": "200"},
+			Timestamp: model.Time(1680073018671516463),
+			Value:     50,
+		},
+		&model.Sample{
+			Metric:    model.Metric{model.MetricNameLabel: "http_requests_total", "method": "GET", "code": "404"},
+			Timestamp: model.Time(1680073018671516463),
+			Value:     10,
+		},
+	}
+
+	// Create some sample metadata and tags
+	metaInfo := models.NewMetadataWithKeyValues("meta_name", "test_meta_name")
+	commonTags := models.NewTagsWithKeyValues(
+		"common_tag1", "common_value1",
+		"common_tag2", "common_value2")
+
+	// Expected output
+	expectedPG := []*models.PipelineGroupEvents{
+		{
+			Group: &models.GroupInfo{
+				Metadata: metaInfo,
+				Tags:     commonTags,
+			},
+			Events: []models.PipelineEvent{
+				models.NewSingleValueMetric(
+					"http_requests_total",
+					models.MetricTypeGauge,
+					models.NewTagsWithKeyValues("method", "GET", "code", "200"),
+					1680073018671516463,
+					100,
+				),
+
+				models.NewSingleValueMetric(
+					"http_requests_total",
+					models.MetricTypeGauge,
+					models.NewTagsWithKeyValues("method", "POST", "code", "200"),
+					1680073018671516463,
+					50,
+				),
+
+				models.NewSingleValueMetric(
+					"http_requests_total",
+					models.MetricTypeGauge,
+					models.NewTagsWithKeyValues("method", "GET", "code", "404"),
+					1680073018671516463,
+					10,
+				),
+			},
+		},
+	}
+
+	g, err := ConvertVectorToPipelineGroupEvents(vector, metaInfo, commonTags)
+	pg := []*models.PipelineGroupEvents{g}
+	assert.NoError(t, err)
+	assert.Equal(t, len(pg), len(expectedPG))
+
+	for i, expected := range expectedPG {
+		actual := pg[i]
+
+		if !reflect.DeepEqual(expected.Group, actual.Group) {
+			t.Errorf("Expected metadata %v, but got %v", expected.Group, actual.Group)
+		}
+
+		assert.Equal(t, len(expected.Events), len(actual.Events))
+
+		for j, expectedEvent := range expected.Events {
 			actualEvent := actual.Events[j]
 			assert.Equal(t, expectedEvent.GetName(), actualEvent.GetName())
 			expectedMetric, ok := expectedEvent.(*models.Metric)

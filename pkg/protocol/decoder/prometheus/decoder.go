@@ -37,16 +37,15 @@ const (
 	labelsKey     = "__labels__"
 	timeNanoKey   = "__time_nano__"
 	valueKey      = "__value__"
+	tagDB         = "__tag__:db"
+	metaDBKey     = "db"
 )
 
 const (
-	tagDB     = "__tag__:db"
-	metaDBKey = "db"
-)
-
-const (
-	pbContentType  = "application/x-protobuf"
-	snappyEncoding = "snappy"
+	contentEncodingKey = "Content-Encoding"
+	contentTypeKey     = "Content-Type"
+	pbContentType      = "application/x-protobuf"
+	snappyEncoding     = "snappy"
 )
 
 // Decoder impl
@@ -84,8 +83,8 @@ func parseLabels(metric model.Metric) (metricName, labelsValue string) {
 
 // Decode impl
 func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error) {
-	if req.Header.Get("Content-Encoding") == snappyEncoding &&
-		strings.HasPrefix(req.Header.Get("Content-Type"), pbContentType) {
+	if req.Header.Get(contentEncodingKey) == snappyEncoding &&
+		strings.HasPrefix(req.Header.Get(contentTypeKey), pbContentType) {
 		return d.decodeInRemoteWriteFormat(data, req)
 	}
 	return d.decodeInExpFmt(data, req)
@@ -220,8 +219,8 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 		meta.Add(metaDBKey, db)
 	}
 
-	if req.Header.Get("Content-Encoding") == snappyEncoding &&
-		strings.HasPrefix(req.Header.Get("Content-Type"), pbContentType) {
+	if req.Header.Get(contentEncodingKey) == snappyEncoding &&
+		strings.HasPrefix(req.Header.Get(contentTypeKey), pbContentType) {
 		var promRequest prompb.WriteRequest
 		err = proto.Unmarshal(data, &promRequest)
 		if err != nil {
