@@ -96,7 +96,6 @@ clean:
 	rm -rf plugins/all/all_windows.go
 	rm -rf plugins/all/all_linux.go
 	go mod tidy -modfile $(GO_MOD_FILE) || true
-	echo $(DOCKER_BUILD_USE_BUILDKIT)
 
 .PHONY: license
 license:  clean tools import_plugins
