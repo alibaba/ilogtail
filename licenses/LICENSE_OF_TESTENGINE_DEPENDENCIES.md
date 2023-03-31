@@ -99,6 +99,7 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [github.com/miekg/pkcs11](https://pkg.go.dev/github.com/miekg/pkcs11?tab=licenses)
 - [github.com/elastic/elastic-transport-go](https://pkg.go.dev/github.com/elastic/elastic-transport-go?tab=licenses)
 - [github.com/elastic/go-elasticsearch](https://pkg.go.dev/github.com/elastic/go-elasticsearch?tab=licenses)
+- [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
 
 ## MIT licenses
 
