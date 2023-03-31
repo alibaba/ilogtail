@@ -42,6 +42,8 @@ enum SEND_THREAD_TYPE { REALTIME_SEND_THREAD = 0, REPLAY_SEND_THREAD = 1, SEND_T
 
 enum EndpointStatus { STATUS_OK_WITH_IP = 0, STATUS_OK_WITH_ENDPOINT, STATUS_ERROR };
 
+enum dataServerSwitchPolicy { DESIGNATED_FIRST, DESIGNATED_LOCKED };
+
 struct EndpointDetail {
     bool mStatus;
     bool mProxyFlag;
@@ -163,6 +165,7 @@ private:
     Sender();
     Sender(const Sender&);
     Sender& operator=(const Sender&);
+    void CheckConfig();
     bool WriteToFile(const std::string& projectName, const sls_logs::LogGroup& logGroup, bool sendPerformance);
     bool WriteToFile(LoggroupTimeValue* value, bool sendPerformance);
     bool DumpDebugFile(LoggroupTimeValue* value, bool sendPerformance = false);
@@ -245,6 +248,7 @@ private:
 
     int64_t mCheckPeriod;
     SpinLock mBufferFileLock; // get set bufferfilepath and buffer filename
+    std::string mDataServerSwitchPolicy;
 
     struct RealIpInfo {
         RealIpInfo() : mLastUpdateTime(0), mForceFlushFlag(false) {}

@@ -426,6 +426,7 @@ SendResult ConvertErrorCode(const std::string& errorCode) {
 }
 
 Sender::Sender() {
+    CheckConfig();
     srand(time(NULL));
     mFlushLog = false;
     SetBufferFilePath(AppConfig::GetInstance()->GetBufferFilePath());
@@ -466,6 +467,16 @@ Sender::Sender() {
 Sender* Sender::Instance() {
     static Sender* senderPtr = new Sender();
     return senderPtr;
+}
+
+void Sender::CheckConfig() {
+    if (STRING_FLAG(data_endpoint_policy) == "designated_locked") {
+        mDataServerSwitchPolicy = dataServerSwitchPolicy::DESIGNATED_LOCKED;
+    } else if (STRING_FLAG(data_endpoint_policy) == "designated_first") {
+        mDataServerSwitchPolicy = dataServerSwitchPolicy::DESIGNATED_FIRST;
+    } else {
+        mDataServerSwitchPolicy = dataServerSwitchPolicy::DESIGNATED_FIRST;
+    }
 }
 
 ///////////////////////////////for debug & ut//////////////////////////////////
@@ -714,10 +725,6 @@ sdk::Client* Sender::GetSendClient(const std::string& region, const std::string&
 
     int32_t lastUpdateTime;
     string endpoint = GetRegionCurrentEndpoint(region);
-    // if ((STRING_FLAG(data_endpoint_policy) == "intranet_first" || STRING_FLAG(data_endpoint_policy) ==
-    // "intranet_locked") && !EndWith(region, "-corp")) {
-    //     endpoint = region + "-intranet.log.aliyuncs.com";
-    // }
     sdk::Client* sendClient = new sdk::Client(endpoint,
                                               "",
                                               "",
@@ -1715,6 +1722,7 @@ void Sender::TestNetwork() {
 #ifdef LOGTAIL_RUNTIME_PLUGIN
     return;
 #endif
+    // pair<int32_t, string> represents the weight of each endpoint
     map<string, vector<pair<int32_t, string>>> unavaliableEndpoints;
     set<string> unavaliableRegions;
     int32_t lastCheckAllTime = 0;

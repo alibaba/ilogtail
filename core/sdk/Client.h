@@ -82,8 +82,6 @@ namespace sdk {
 
         void SetSlsRealIpUpdateTime(int32_t uptime) { mSlsRealIpUpdateTime = uptime; }
         int32_t GetSlsRealIpUpdateTime() { return mSlsRealIpUpdateTime; }
-
-        void SetUsingHTTPS(bool flag) { mUsingHTTPS = flag; }
         bool IsUsingHTTPS() { return mUsingHTTPS; }
 
         /////////////////////////////////////Internal Interface For Logtail////////////////////////////////////////
