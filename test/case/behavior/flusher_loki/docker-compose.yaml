@@ -1,4 +1,4 @@
-# Copyright 2021 iLogtail Authors
+# Copyright 2023 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: '3.8'
+version: "3.8"
 
 services:
-  nginx:
-    image: nginx:stable-alpine
-    hostname: nginx
-    volumes:
-      - ./nginx_default.conf:/etc/nginx/conf.d/default.conf
+  loki:
+    # There is no `curl` or other alternatives in official Loki image
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: loki
     ports:
-      - "80"
+      - "3100"
+    # Custom configuration to test multi-tenant
+    command: -config.file=/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/local-config.yaml
     healthcheck:
-      test: [ "CMD-SHELL", "curl -O /dev/null http://localhost || exit 1" ]
+      test: "curl http://localhost:3100/ready"
       timeout: 5s
-      interval: 10s
+      interval: 15s
       retries: 3
