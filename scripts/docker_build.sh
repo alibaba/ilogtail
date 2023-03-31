@@ -27,16 +27,23 @@ function arch() {
   fi
 }
 
-function check_docker_version {
+function check_docker_buildkit_support {
+  support="true"
+
+  # docker BuildKit supported start from 19.03
     docker_version=$(docker version --format '{{.Server.Version}}' | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
     least_version="19.03"
+  if [[ $(printf "%s\n%s" "$least_version" "$docker_version" | sort -V | tail -n 1) == "$least_version" ]]; then
+    support="false"
+  fi
 
-    # docker BuildKit supported start from 19.03
-    if [[ $(printf "%s\n%s" "$least_version" "$docker_version" | sort -V | tail -n 1) == "$least_version" ]]; then
-        echo "false"
-    else
-        echo "true"
-    fi
+  # check if SSH_AUTH_SOCK env set which means ssh-agent running
+  ssh_agent_running="${SSH_AUTH_SOCK:-}"
+  if [[ -z "$ssh_agent_running" ]]; then
+    support="false"
+  fi
+
+  echo "$support"
 }
 
 # Currently, there are 4 supported docker categories, which are goc, build, development and production.
@@ -52,7 +59,7 @@ GENERATED_HOME=$2
 VERSION=${3:-1.4.0}
 REPOSITORY=${4:-aliyun/ilogtail}
 PUSH=${5:-false}
-USE_DOCKER_BUILDKIT=${6:-${DOCKER_BUILD_USE_BUILDKIT:-$(check_docker_version)}}
+USE_DOCKER_BUILDKIT=${6:-${DOCKER_BUILD_USE_BUILDKIT:-$(check_docker_buildkit_support)}}
 
 HOST_OS=`uname -s`
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
