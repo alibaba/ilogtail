@@ -68,6 +68,7 @@
   * [Grok](data-pipeline/processor/processor-grok.md)
   * [Json](data-pipeline/processor/processor-json.md)
   * [正则](data-pipeline/processor/processor-regex.md)
+  * [正则替换](data-pipeline/processor/processor-regex-replace.md)
   * [重命名字段](data-pipeline/processor/processor-rename.md)
   * [分隔符](data-pipeline/processor/processor-delimiter.md)
   * [键值对](data-pipeline/processor/processor-split-key-value.md)
