@@ -44,7 +44,7 @@ var (
 	MemType       = Type{Name: "mem", Kind: "profile_mem"}
 	MutexType     = Type{Name: "mutex", Kind: "profile_mutex"}
 	BlockType     = Type{Name: "block", Kind: "profile_block"}
-	ExceptionType = Type{Name: "block", Kind: "profile_exception"}
+	ExceptionType = Type{Name: "exception", Kind: "profile_exception"}
 	GoroutineType = Type{Name: "goroutines", Kind: "profile_goroutines"}
 	UnknownType   = Type{Name: "unknown", Kind: "profile_unknown"}
 )

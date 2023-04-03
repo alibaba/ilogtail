@@ -28,17 +28,13 @@ type KubernetesConfig struct {
 	K8sPodRegex           string
 	K8sContainerRegex     string
 
-	IncludeContainerLabelRegex map[string]*regexp.Regexp
-	ExcludeContainerLabelRegex map[string]*regexp.Regexp
-	IncludeEnvRegex            map[string]*regexp.Regexp
-	ExcludeEnvRegex            map[string]*regexp.Regexp
-	K8sFilter                  *helper.K8SFilter
+	includeContainerLabelRegex map[string]*regexp.Regexp
+	excludeContainerLabelRegex map[string]*regexp.Regexp
+	includeEnvRegex            map[string]*regexp.Regexp
+	excludeEnvRegex            map[string]*regexp.Regexp
+	k8sFilter                  *helper.K8SFilter
 
-	// Last return of GetAllAcceptedInfoV2
-	fullList      map[string]bool
-	matchList     map[string]*helper.DockerInfoDetail
-	lastClearTime time.Time
-	labelSet      model.LabelSet
+	labelSet model.LabelSet
 }
 
 func (k *KubernetesConfig) Name() string {
@@ -51,28 +47,25 @@ func (k *KubernetesConfig) NewDiscoverer(options discovery.DiscovererOptions) (d
 }
 
 func (k *KubernetesConfig) InitDiscoverer() {
-	k.fullList = make(map[string]bool)
-	k.matchList = make(map[string]*helper.DockerInfoDetail)
-	k.lastClearTime = time.Now()
 	helper.ContainerCenterInit()
 	var err error
-	k.IncludeEnv, k.IncludeEnvRegex, err = helper.SplitRegexFromMap(k.IncludeEnv)
+	k.IncludeEnv, k.includeEnvRegex, err = helper.SplitRegexFromMap(k.IncludeEnv)
 	if err != nil {
 		logger.Warning(context.Background(), "INVALID_REGEX_ALARM", "init include env regex error", err)
 	}
-	k.ExcludeEnv, k.ExcludeEnvRegex, err = helper.SplitRegexFromMap(k.ExcludeEnv)
+	k.ExcludeEnv, k.excludeEnvRegex, err = helper.SplitRegexFromMap(k.ExcludeEnv)
 	if err != nil {
 		logger.Warning(context.Background(), "INVALID_REGEX_ALARM", "init exclude env regex error", err)
 	}
-	k.IncludeContainerLabel, k.IncludeContainerLabelRegex, err = helper.SplitRegexFromMap(k.IncludeContainerLabel)
+	k.IncludeContainerLabel, k.includeContainerLabelRegex, err = helper.SplitRegexFromMap(k.IncludeContainerLabel)
 	if err != nil {
 		logger.Warning(context.Background(), "INVALID_REGEX_ALARM", "init include label regex error", err)
 	}
-	k.ExcludeContainerLabel, k.ExcludeContainerLabelRegex, err = helper.SplitRegexFromMap(k.ExcludeContainerLabel)
+	k.ExcludeContainerLabel, k.excludeContainerLabelRegex, err = helper.SplitRegexFromMap(k.ExcludeContainerLabel)
 	if err != nil {
 		logger.Warning(context.Background(), "INVALID_REGEX_ALARM", "init exclude label regex error", err)
 	}
-	k.K8sFilter, err = helper.CreateK8SFilter(k.K8sNamespaceRegex, k.K8sPodRegex, k.K8sContainerRegex, k.IncludeK8sLabel, k.ExcludeK8sLabel)
+	k.k8sFilter, err = helper.CreateK8SFilter(k.K8sNamespaceRegex, k.K8sPodRegex, k.K8sContainerRegex, k.IncludeK8sLabel, k.ExcludeK8sLabel)
 	if err != nil {
 		logger.Warning(context.Background(), "INVALID_REGEX_ALARM", "init k8s filter error", err)
 	}
@@ -90,8 +83,8 @@ func (k *KubernetesConfig) Run(ctx context.Context, up chan<- []*targetgroup.Gro
 			return
 		case <-ticker.C:
 			containers := helper.GetContainerByAcceptedInfo(k.IncludeContainerLabel, k.ExcludeContainerLabel,
-				k.IncludeContainerLabelRegex, k.ExcludeContainerLabelRegex, k.IncludeEnv, k.ExcludeEnv,
-				k.IncludeEnvRegex, k.ExcludeEnvRegex, k.K8sFilter)
+				k.includeContainerLabelRegex, k.excludeContainerLabelRegex, k.IncludeEnv, k.ExcludeEnv,
+				k.includeEnvRegex, k.excludeEnvRegex, k.k8sFilter)
 			if logger.DebugFlag() {
 				for id, detail := range containers {
 					logger.Debugf(context.Background(), "go profile found containers: %s %+v", id, detail)
