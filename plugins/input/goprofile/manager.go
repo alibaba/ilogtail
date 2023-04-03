@@ -3,10 +3,16 @@ package goprofile
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/helper/profile"
 	"github.com/alibaba/ilogtail/helper/profile/pyroscope/pprof"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/pyroscope-io/pyroscope/pkg/ingestion"
@@ -17,8 +23,6 @@ import (
 	"github.com/pyroscope-io/pyroscope/pkg/storage/metadata"
 	"github.com/pyroscope-io/pyroscope/pkg/util/bytesize"
 	"github.com/sirupsen/logrus"
-	"os"
-	"time"
 )
 
 type Mode string
@@ -104,7 +108,9 @@ func (m *Manager) Stop() {
 
 func (m *Manager) Start(p *GoProfile) error {
 	c := config.DefaultConfig()
-	c.JobName = p.ctx.GetLogstore() + "_" + p.ctx.GetConfigName()
+	name := strings.ToLower(p.ctx.GetConfigName())
+	helper.ReplaceInvalidChars(&name)
+	c.JobName = name
 	c.ScrapeInterval = time.Second * time.Duration(p.Interval)
 	c.ScrapeTimeout = time.Second * time.Duration(p.Timeout)
 	c.BodySizeLimit = bytesize.KB * bytesize.ByteSize(p.BodyLimitSize)

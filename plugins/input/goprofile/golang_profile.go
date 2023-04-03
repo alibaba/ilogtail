@@ -2,17 +2,18 @@ package goprofile
 
 import (
 	"errors"
+
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
 type GoProfile struct {
 	Mode            Mode
-	Config          map[string]interface{}
 	Interval        int32 // unit second
 	Timeout         int32 // unit second
 	BodyLimitSize   int32 // unit KB
 	EnabledProfiles []string
 	Labels          map[string]string
+	Config          map[string]interface{}
 
 	ctx     pipeline.Context
 	manager *Manager
@@ -20,6 +21,9 @@ type GoProfile struct {
 
 func (g *GoProfile) Init(context pipeline.Context) (int, error) {
 	g.ctx = context
+	if g.Mode == "" {
+		return 0, errors.New("mode is empty")
+	}
 	if len(g.Config) == 0 {
 		return 0, errors.New("config is empty")
 	}
@@ -46,7 +50,8 @@ func init() {
 			// here you could set default value.
 			Interval:        10,
 			Timeout:         15,
-			EnabledProfiles: []string{"mem"},
+			BodyLimitSize:   10240,
+			EnabledProfiles: []string{"cpu", "mem", "goroutines", "mutex", "block"},
 			Labels:          map[string]string{},
 		}
 	}

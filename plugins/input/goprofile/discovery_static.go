@@ -2,15 +2,16 @@ package goprofile
 
 import (
 	"errors"
+	"net"
+	"strconv"
+
 	"github.com/pyroscope-io/pyroscope/pkg/scrape/discovery"
 	"github.com/pyroscope-io/pyroscope/pkg/scrape/discovery/targetgroup"
 	"github.com/pyroscope-io/pyroscope/pkg/scrape/model"
-	"net"
-	"strconv"
 )
 
 type StaticConfig struct {
-	Address []Address
+	Addresses []Address
 
 	labelSet model.LabelSet
 }
@@ -34,8 +35,8 @@ func (k *StaticConfig) NewDiscoverer(options discovery.DiscovererOptions) (disco
 }
 
 func (k *StaticConfig) convertStaticConfig() (discovery.StaticConfig, error) {
-	cfg := make(discovery.StaticConfig, 0, len(k.Address))
-	for _, address := range k.Address {
+	cfg := make(discovery.StaticConfig, 0, len(k.Addresses))
+	for _, address := range k.Addresses {
 
 		var appName model.LabelValue
 		if value, ok := k.labelSet[model.LabelName("service")]; ok {

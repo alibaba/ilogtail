@@ -5,13 +5,14 @@ import (
 	"net"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
+
 	"github.com/pyroscope-io/pyroscope/pkg/scrape/discovery"
 	"github.com/pyroscope-io/pyroscope/pkg/scrape/discovery/targetgroup"
 	"github.com/pyroscope-io/pyroscope/pkg/scrape/model"
-	"time"
 )
 
 type KubernetesConfig struct {
@@ -72,7 +73,9 @@ func (k *KubernetesConfig) InitDiscoverer() {
 		logger.Warning(context.Background(), "INVALID_REGEX_ALARM", "init exclude label regex error", err)
 	}
 	k.K8sFilter, err = helper.CreateK8SFilter(k.K8sNamespaceRegex, k.K8sPodRegex, k.K8sContainerRegex, k.IncludeK8sLabel, k.ExcludeK8sLabel)
-
+	if err != nil {
+		logger.Warning(context.Background(), "INVALID_REGEX_ALARM", "init k8s filter error", err)
+	}
 	logger.Debug(context.Background(), "profile_go_kubernetes inited successfully")
 }
 
@@ -89,7 +92,18 @@ func (k *KubernetesConfig) Run(ctx context.Context, up chan<- []*targetgroup.Gro
 			containers := helper.GetContainerByAcceptedInfo(k.IncludeContainerLabel, k.ExcludeContainerLabel,
 				k.IncludeContainerLabelRegex, k.ExcludeContainerLabelRegex, k.IncludeEnv, k.ExcludeEnv,
 				k.IncludeEnvRegex, k.ExcludeEnvRegex, k.K8sFilter)
-			up <- k.convertContainers2Group(containers)
+			if logger.DebugFlag() {
+				for id, detail := range containers {
+					logger.Debugf(context.Background(), "go profile found containers: %s %+v", id, detail)
+				}
+			}
+			groups := k.convertContainers2Group(containers)
+			if logger.DebugFlag() {
+				for _, group := range groups {
+					logger.Debugf(context.Background(), "go profile detect groups:%+v", group)
+				}
+			}
+			up <- groups
 		}
 	}
 }
@@ -106,31 +120,28 @@ func (k *KubernetesConfig) convertContainers2Group(containers map[string]*helper
 			logger.Debug(context.Background(), "ignore container because invalid ", detail.PodName())
 			continue
 		}
+		if detail.K8SInfo.Pod == "" {
+			logger.Debug(context.Background(), "kubernetes pod name not found ", id)
+			continue
+		}
 		var g targetgroup.Group
 		addr := net.JoinHostPort(detail.ContainerIP, val)
 		target := model.LabelSet{
 			model.AddressLabel: model.LabelValue(addr),
+			model.AppNameLabel: model.LabelValue(helper.ExtractPodWorkload(detail.K8SInfo.Pod)),
+			"namespace":        model.LabelValue(detail.K8SInfo.Namespace),
+			"pod":              model.LabelValue(detail.K8SInfo.Pod),
+			"container":        model.LabelValue(detail.K8SInfo.ContainerName),
 		}
 		tags := make(map[string]string)
 		detail.GetCustomExternalTags(tags, k.ExternalEnvTag, k.ExternalK8sLabelTag)
 		for k, v := range tags {
 			target[model.LabelName(k)] = model.LabelValue(v)
 		}
-		if detail.K8SInfo.Pod != "" {
-			if detail.K8SInfo.ContainerName == "" {
-				target["container"] = model.LabelValue(detail.ContainerNameTag["_container_name_"])
-			} else {
-				target["container"] = model.LabelValue(detail.K8SInfo.ContainerName)
-			}
-			if detail.K8SInfo.Pod != "" {
-				target["namespace"] = model.LabelValue(detail.K8SInfo.Namespace)
-				target["pod"] = model.LabelValue(detail.K8SInfo.Pod)
-				target["service"] = model.LabelValue(helper.ExtractPodWorkload(detail.K8SInfo.Pod))
-			}
-		}
 		g.Targets = append(g.Targets, target)
 		g.Labels = k.labelSet
 		g.Source = id
+		res = append(res, &g)
 	}
 	return res
 }
