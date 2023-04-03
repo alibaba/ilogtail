@@ -17,11 +17,12 @@ package regexreplace
 import (
 	"errors"
 
+	"github.com/dlclark/regexp2"
+
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/dlclark/regexp2"
 )
 
 type ProcessorRegexReplace struct {
