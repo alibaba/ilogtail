@@ -37,7 +37,7 @@
 | [`processor_grok`](processor/processor-grok.md)<br>Grok                          | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 通过 Grok 语法对数据进行处理              |
 | [`processor_json`](processor/processor-json.md)<br>Json                           | SLS官方                                             | 实现对Json格式日志的解析。                       |
 | [`processor_regex`](processor/processor-regex.md)<br>正则                          | SLS官方                                             | 通过正则匹配的模式实现文本日志的字段提取。       |
-| [`processor_regex_replace`](processor/processor-regex-replace.md)<br>正则替换                  | SLS官方<br>[`pj1987111`](https://github.com/pj1987111)            | 通过正则匹配文本日志并进行内容替换。       |
+| [`processor_string_replace`](processor/processor-string-replace.md)<br>正则替换                  | SLS官方<br>[`pj1987111`](https://github.com/pj1987111)            | 通过全文匹配、正则匹配、去转义字符等方式对文本日志进行内容替换。       |
 | [`processor_rename`](processor/processor-rename.md)<br>重命名字段                   | SLS官方                                             | 重命名字段。                                     |
 | [`processor_split_char`]()<br>分隔符                   | SLS官方                                             | 通过单字符的分隔符提取字段。                     |
 | [`processor_split_key_value`](processor/processor-split-key-value.md)<br>键值对              | SLS官方                                             | 通过切分键值对的方式提取字段。                   |
