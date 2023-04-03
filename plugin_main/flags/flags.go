@@ -28,8 +28,8 @@ import (
 
 const (
 	defaultGlobalConfig  = `{"InputIntervalMs":5000,"AggregatIntervalMs":30,"FlushIntervalMs":30,"DefaultLogQueueSize":11,"DefaultLogGroupQueueSize":12}`
-	defaultPluginConfig  = `{"inputs":[{"type":"metric_mock","detail":{"Tags":{"tag1":"aaaa","tag2":"bbb"},"Fields":{"content":"xxxxx","time":"2017.09.12 20:55:36"}}}],"flushers":[{"type":"flusher_sls"}]}`
-	defaultFlusherConfig = `{"type":"flusher_stdout","detail":{}}`
+	defaultPluginConfig  = `{"inputs":[{"type":"metric_mock","detail":{"Tags":{"tag1":"aaaa","tag2":"bbb"},"Fields":{"content":"xxxxx","time":"2017.09.12 20:55:36"}}}],"flushers":[{"type":"flusher_stdout"}]}`
+	defaultFlusherConfig = `{"type":"flusher_sls","detail":{}}`
 )
 
 // flags used to control ilogtail.
