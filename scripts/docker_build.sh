@@ -90,15 +90,16 @@ else
   REMOVE_SSH_MOUNT='sed s/--mount=type=ssh//'
 fi
 
+echo "# syntax=docker/dockerfile:1.5" > $GEN_DOCKERFILE;
 if [[ $CATEGORY = "goc" || $CATEGORY = "build" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_$CATEGORY | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" | $REMOVE_SSH_MOUNT > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_$CATEGORY | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" | $REMOVE_SSH_MOUNT >> $GEN_DOCKERFILE;
 elif [[ $CATEGORY = "development" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_build | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" | $REMOVE_SSH_MOUNT > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_build | grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" | $REMOVE_SSH_MOUNT >> $GEN_DOCKERFILE;
     cat $ROOTDIR/docker/Dockerfile_development_part |grep -v "^#" | sed "s/$CN_REGION/$REG_REGION/" >> $GEN_DOCKERFILE;
 elif [[ $CATEGORY = "production" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_production | grep -v "^#" | sed 's/ --platform=$TARGETPLATFORM//' > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_production | grep -v "^#" | sed 's/ --platform=$TARGETPLATFORM//' >> $GEN_DOCKERFILE;
 elif [[ $CATEGORY = "multi-arch-production" ]]; then
-    cat $ROOTDIR/docker/Dockerfile_production | grep -v "^#" > $GEN_DOCKERFILE;
+    cat $ROOTDIR/docker/Dockerfile_production | grep -v "^#" >> $GEN_DOCKERFILE;
 fi
 
 echo "=============DOCKERFILE=================="
