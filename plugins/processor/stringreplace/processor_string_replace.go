@@ -16,6 +16,8 @@ package regexreplace
 
 import (
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/dlclark/regexp2"
 
@@ -27,7 +29,8 @@ import (
 
 type ProcessorRegexReplace struct {
 	SourceKey     string
-	Regex         string
+	Method        string
+	Match         string
 	ReplaceString string
 
 	re            *regexp2.Regexp
@@ -35,19 +38,39 @@ type ProcessorRegexReplace struct {
 	logPairMetric pipeline.CounterMetric
 }
 
+const (
+	PluginName = "processor_string_replace"
+
+	MethodRegex   = "regex"
+	MethodConst   = "const"
+	MethodUnquote = "unquote"
+)
+
+var errNoMethod = errors.New("no method error")
+var errNoMatch = errors.New("no match error")
 var errNoSourceKey = errors.New("no source key error")
 
 // Init called for init some system resources, like socket, mutex...
 func (p *ProcessorRegexReplace) Init(context pipeline.Context) error {
 	p.context = context
-	var err error
-	p.re, err = regexp2.Compile(p.Regex, regexp2.RE2)
-	if err != nil {
-		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init regex error", err, "regex", p.Regex)
-		return err
-	}
 	if len(p.SourceKey) == 0 {
 		return errNoSourceKey
+	}
+	var err error
+	switch p.Method {
+	case MethodConst:
+		if len(p.Match) == 0 {
+			return errNoMatch
+		}
+	case MethodRegex:
+		p.re, err = regexp2.Compile(p.Match, regexp2.RE2)
+		if err != nil {
+			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init regex error", err, "regex", p.Match)
+			return err
+		}
+	case MethodUnquote:
+	default:
+		return errNoMethod
 	}
 
 	p.logPairMetric = helper.NewAverageMetric("regex_replace_pairs_per_log")
@@ -66,12 +89,22 @@ func (p *ProcessorRegexReplace) ProcessLogs(logArray []*protocol.Log) []*protoco
 			if p.SourceKey != cont.Key {
 				continue
 			}
-			if ok, _ := p.re.MatchString(cont.Value); ok {
-				newContVal, err := p.re.Replace(cont.Value, p.ReplaceString, -1, -1)
-				if err == nil {
-					cont.Value = newContVal
-					replaceCount++
+			var newContVal string
+			switch p.Method {
+			case MethodConst:
+				newContVal = strings.ReplaceAll(cont.Value, p.Match, p.ReplaceString)
+			case MethodRegex:
+				if ok, _ := p.re.MatchString(cont.Value); ok {
+					newContVal, _ = p.re.Replace(cont.Value, p.ReplaceString, -1, -1)
 				}
+			case MethodUnquote:
+				newContVal, _ = strconv.Unquote(strings.ReplaceAll(strconv.Quote(cont.Value), "\\\\", "\\"))
+			default:
+				newContVal = cont.Value
+			}
+			if cont.Value != newContVal {
+				cont.Value = newContVal
+				replaceCount++
 			}
 		}
 		p.logPairMetric.Add(int64(replaceCount))
@@ -80,7 +113,7 @@ func (p *ProcessorRegexReplace) ProcessLogs(logArray []*protocol.Log) []*protoco
 }
 
 func init() {
-	pipeline.Processors["processor_regex_replace"] = func() pipeline.Processor {
+	pipeline.Processors[PluginName] = func() pipeline.Processor {
 		return &ProcessorRegexReplace{}
 	}
 }
