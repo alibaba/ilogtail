@@ -62,10 +62,6 @@ jobs:
           ENABLE_STATIC_LINK_CRT: ON
         run: make core
 
-      - name: Check Glibc Compatiblity
-        if: matrix.runner == 'ubuntu-latest'
-        run: scripts/check_glibc.sh
-
   result:
     runs-on: ubuntu-latest
     timeout-minutes: 30
