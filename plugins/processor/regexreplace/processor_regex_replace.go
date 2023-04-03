@@ -16,52 +16,37 @@ package regexreplace
 
 import (
 	"errors"
-	"regexp"
 
 	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/dlclark/regexp2"
 )
 
 type ProcessorRegexReplace struct {
-	Fields []Field
+	SourceKey     string
+	Regex         string
+	ReplaceString string
 
-	fieldMap      map[string]Field
+	re            *regexp2.Regexp
 	context       pipeline.Context
 	logPairMetric pipeline.CounterMetric
 }
 
-type Field struct {
-	SourceKey   string
-	Regex       string
-	Replacement string
-	DestKey     string
-
-	re *regexp.Regexp
-}
-
-var errNoRegexReplaceFields = errors.New("no regex replace fields error")
 var errNoSourceKey = errors.New("no source key error")
 
 // Init called for init some system resources, like socket, mutex...
 func (p *ProcessorRegexReplace) Init(context pipeline.Context) error {
 	p.context = context
-	if len(p.Fields) == 0 {
-		return errNoRegexReplaceFields
+	var err error
+	p.re, err = regexp2.Compile(p.Regex, regexp2.RE2)
+	if err != nil {
+		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init regex error", err, "regex", p.Regex)
+		return err
 	}
-	p.fieldMap = make(map[string]Field)
-	for _, field := range p.Fields {
-		var err error
-		field.re, err = regexp.Compile(field.Regex)
-		if err != nil {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init regex error", err, "regex", field.Regex)
-			return err
-		}
-		if len(field.SourceKey) == 0 {
-			return errNoSourceKey
-		}
-		p.fieldMap[field.SourceKey] = field
+	if len(p.SourceKey) == 0 {
+		return errNoSourceKey
 	}
 
 	p.logPairMetric = helper.NewAverageMetric("regex_replace_pairs_per_log")
@@ -74,23 +59,21 @@ func (*ProcessorRegexReplace) Description() string {
 }
 
 func (p *ProcessorRegexReplace) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
+	replaceCount := 0
 	for _, log := range logArray {
-		beginLen := len(log.Contents)
 		for _, cont := range log.Contents {
-			if regexField, ok := p.fieldMap[cont.Key]; ok && regexField.re.MatchString(cont.Value) {
-				newContVal := regexField.re.ReplaceAllString(cont.Value, regexField.Replacement)
-				if len(regexField.DestKey) > 0 {
-					newContent := &protocol.Log_Content{
-						Key:   regexField.DestKey,
-						Value: newContVal,
-					}
-					log.Contents = append(log.Contents, newContent)
-				} else {
+			if p.SourceKey != cont.Key {
+				continue
+			}
+			if ok, _ := p.re.MatchString(cont.Value); ok {
+				newContVal, err := p.re.Replace(cont.Value, p.ReplaceString, -1, -1)
+				if err == nil {
 					cont.Value = newContVal
+					replaceCount++
 				}
 			}
 		}
-		p.logPairMetric.Add(int64(len(log.Contents) - beginLen + 1))
+		p.logPairMetric.Add(int64(replaceCount))
 	}
 	return logArray
 }

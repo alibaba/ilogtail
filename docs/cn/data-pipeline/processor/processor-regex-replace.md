@@ -13,11 +13,9 @@
 | 参数           | 类型       | 是否必选 | 说明                                                                        |
 | ------------ | -------- | ---- | ------------------------------------------------------------------------- |
 | Type         | String   | 是    | 插件类型                                                                      |
-| Fields       | Field   | 是    | 正则匹配与替换的字段集合                                                            |
 | SourceKey    | String   | 是    | 匹配字段名                                                       |
 | Regex         | String | 是    | 匹配字段值对应的正则表达式                                       |
-| Replacement   | String  | 否    | 正则表达式匹配后替换的字符串                               |
-| DestKey | String  | 否    | 正则表达式匹配并替换后的值存储的新字段，默认不存储新字段。                         |
+| ReplaceString   | String  | 否    | 正则表达式匹配后替换的字符串                               |
 
 ## 样例
 
@@ -41,10 +39,9 @@ inputs:
     FilePattern: regex_replace.log
 processors:
   - Type: processor_regex_replace
-    Fields: 
-      - SourceKey: content
-        Regex: \\u\w+\[\d{1,3};*\d{1,3}m|N/A
-        Replacement: ''
+    SourceKey: content
+    Regex: \\u\w+\[\d{1,3};*\d{1,3}m|N/A
+    ReplaceString: ''
 flushers:
   - Type: flusher_sls
     Endpoint: cn-xxx.log.aliyuncs.com
@@ -84,11 +81,9 @@ inputs:
     FilePattern: regex_replace.log
 processors:
   - Type: processor_regex_replace
-    Fields: 
-      - SourceKey: content
-        Regex: (\d.*\.)\d+
-        Replacement: ${1}0/24
-        DestKey: ip_subnet
+    SourceKey: content
+    Regex: (\d.*\.)\d+
+    ReplaceString: ${1}0/24
 flushers:
   - Type: flusher_sls
     Endpoint: cn-xxx.log.aliyuncs.com
@@ -103,8 +98,7 @@ flushers:
 ```json
 {
     "__tag__:__path__": "/home/test_log/regex_replace.log",
-    "content": "10.10.239.16",
-    "ip_subnet": "10.10.239.0/24",
+    "content": "10.10.239.0/24",
     "__time__": "1680353730"
 }
 ```

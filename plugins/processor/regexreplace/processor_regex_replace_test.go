@@ -23,59 +23,25 @@ import (
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
 
-func newProcessor() *ProcessorRegexReplace {
-	processor := &ProcessorRegexReplace{
-		Fields: []Field{
-			{
-				SourceKey:   "content",
-				Regex:       "\\\\u\\w+\\[\\d{1,3};*\\d{1,3}m|N/A",
-				Replacement: "",
-			},
-			{
-				SourceKey:   "ip",
-				Regex:       "(\\d.*\\.)\\d+",
-				Replacement: "${1}0/24",
-				DestKey:     "ip_subnet",
-			},
-		},
-	}
-	return processor
-}
-
 func TestInitError(t *testing.T) {
 	Convey("Init error.", t, func() {
 		Convey("Regex error", func() {
 			processor := &ProcessorRegexReplace{
-				Fields: []Field{
-					{
-						SourceKey:   "content",
-						Regex:       "{\\",
-						Replacement: "",
-					},
-				},
+				SourceKey:     "content",
+				Regex:         "{\\",
+				ReplaceString: "",
 			}
-			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("No Fields error", func() {
-			processor := &ProcessorRegexReplace{}
 			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("No SourceKey error", func() {
 			processor := &ProcessorRegexReplace{
-				Fields: []Field{
-					{
-						Regex: "{}",
-					},
-				},
+				Regex: "{}",
 			}
 			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
 			So(err, ShouldNotBeNil)
-			So(processor.Fields[0].Replacement, ShouldEqual, "")
-			So(processor.Fields[0].DestKey, ShouldEqual, "")
+			So(processor.ReplaceString, ShouldEqual, "")
 		})
 	})
 
@@ -83,26 +49,65 @@ func TestInitError(t *testing.T) {
 
 func TestProcessorWork(t *testing.T) {
 	Convey("Test Match = regex.", t, func() {
-		processor := newProcessor()
+		processor := &ProcessorRegexReplace{
+			SourceKey:     "content",
+			Regex:         "\\\\u\\w+\\[\\d{1,3};*\\d{1,3}m|N/A",
+			ReplaceString: "",
+		}
 		err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
 		So(err, ShouldBeNil)
 
 		Convey("Test regex1", func() {
 			record := `2022-09-16 09:03:31.013 \u001b[32mINFO \u001b[0;39m \u001b[34m[TID: N/A]\u001b[0;39m [\u001b[35mThread-30\u001b[0;39m] \u001b[36mc.s.govern.polygonsync.job.BlockTask\u001b[0;39m : 区块采集------结束------\r`
-			ipRecord := `10.10.239.16`
 			log := &protocol.Log{Time: 0}
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
+			logs := []*protocol.Log{}
+			logs = append(logs, log)
+			logs = processor.ProcessLogs(logs)
+			So(logs[0].Contents[0].Key, ShouldEqual, `content`)
+			So(logs[0].Contents[0].Value, ShouldEqual, `2022-09-16 09:03:31.013 INFO  [TID: ] [Thread-30] c.s.govern.polygonsync.job.BlockTask : 区块采集------结束------\r`)
+		})
+
+		processor = &ProcessorRegexReplace{
+			SourceKey:     "ip",
+			Regex:         "(\\d.*\\.)\\d+",
+			ReplaceString: "${1}0/24",
+		}
+		err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
+		So(err, ShouldBeNil)
+
+		Convey("Test regex2", func() {
+			ipRecord := `10.10.239.16`
+			log := &protocol.Log{Time: 0}
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: ipRecord})
 			logs := []*protocol.Log{}
 			logs = append(logs, log)
 			logs = processor.ProcessLogs(logs)
-			So(len(logs[0].Contents), ShouldEqual, 3)
+			So(logs[0].Contents[0].Key, ShouldEqual, `ip`)
+			So(logs[0].Contents[0].Value, ShouldEqual, `10.10.239.0/24`)
+		})
+	})
+}
+
+func TestProcessorChinessCharacters(t *testing.T) {
+	Convey("Test Chinese Match = regex.", t, func() {
+		processor := &ProcessorRegexReplace{
+			SourceKey:     "content",
+			Regex:         "\uff08[^）]*\uff09",
+			ReplaceString: "",
+		}
+		err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+		So(err, ShouldBeNil)
+
+		Convey("Test regex1", func() {
+			record := `替换前（需要被替换的字符）12345`
+			log := &protocol.Log{Time: 0}
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
+			logs := []*protocol.Log{}
+			logs = append(logs, log)
+			logs = processor.ProcessLogs(logs)
 			So(logs[0].Contents[0].Key, ShouldEqual, `content`)
-			So(logs[0].Contents[0].Value, ShouldEqual, `2022-09-16 09:03:31.013 INFO  [TID: ] [Thread-30] c.s.govern.polygonsync.job.BlockTask : 区块采集------结束------\r`)
-			So(logs[0].Contents[1].Key, ShouldEqual, `ip`)
-			So(logs[0].Contents[1].Value, ShouldEqual, `10.10.239.16`)
-			So(logs[0].Contents[2].Key, ShouldEqual, `ip_subnet`)
-			So(logs[0].Contents[2].Value, ShouldEqual, `10.10.239.0/24`)
+			So(logs[0].Contents[0].Value, ShouldEqual, `替换前12345`)
 		})
 	})
 }
