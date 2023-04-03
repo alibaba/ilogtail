@@ -71,12 +71,12 @@ func TestProcessorWork(t *testing.T) {
 		processor = &ProcessorRegexReplace{
 			SourceKey:     "ip",
 			Regex:         "(\\d.*\\.)\\d+",
-			ReplaceString: "${1}0/24",
+			ReplaceString: "$1*/24",
 		}
 		err = processor.Init(mock.NewEmptyContext("p", "l", "c"))
 		So(err, ShouldBeNil)
 
-		Convey("Test regex2", func() {
+		Convey("Test regex2 Group", func() {
 			ipRecord := `10.10.239.16`
 			log := &protocol.Log{Time: 0}
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: ipRecord})
@@ -84,7 +84,7 @@ func TestProcessorWork(t *testing.T) {
 			logs = append(logs, log)
 			logs = processor.ProcessLogs(logs)
 			So(logs[0].Contents[0].Key, ShouldEqual, `ip`)
-			So(logs[0].Contents[0].Value, ShouldEqual, `10.10.239.0/24`)
+			So(logs[0].Contents[0].Value, ShouldEqual, `10.10.239.*/24`)
 		})
 	})
 }

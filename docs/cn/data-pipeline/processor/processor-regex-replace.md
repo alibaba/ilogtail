@@ -63,7 +63,8 @@ flushers:
 
 ### 示例 2：根据正则分组匹配与替换
 
-采集`/home/test-log/`路径下的`regex_replace.log`文件，测试日志内容的正则匹配与替换功能。
+采集`/home/test-log/`路径下的`regex_replace.log`文件，测试日志内容的正则分组匹配与替换功能。
+注：分组替换ReplaceString中不能存在{}，选择分组只能使用$1、$2 这种方式。
 
 * 输入
 
@@ -83,7 +84,7 @@ processors:
   - Type: processor_regex_replace
     SourceKey: content
     Regex: (\d.*\.)\d+
-    ReplaceString: ${1}0/24
+    ReplaceString: $1*/24
 flushers:
   - Type: flusher_sls
     Endpoint: cn-xxx.log.aliyuncs.com
@@ -98,7 +99,7 @@ flushers:
 ```json
 {
     "__tag__:__path__": "/home/test_log/regex_replace.log",
-    "content": "10.10.239.0/24",
+    "content": "10.10.239.*/24",
     "__time__": "1680353730"
 }
 ```
