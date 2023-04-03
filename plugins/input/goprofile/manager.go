@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alibaba/ilogtail/helper"
-	"github.com/alibaba/ilogtail/helper/profile"
-	"github.com/alibaba/ilogtail/helper/profile/pyroscope/pprof"
+	"github.com/alibaba/ilogtail/pkg/helper"
+	"github.com/alibaba/ilogtail/pkg/helper/profile"
+	"github.com/alibaba/ilogtail/pkg/helper/profile/pyroscope/pprof"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 

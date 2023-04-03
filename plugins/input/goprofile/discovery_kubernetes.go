@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alibaba/ilogtail/helper"
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 
 	"github.com/pyroscope-io/pyroscope/pkg/scrape/discovery"
