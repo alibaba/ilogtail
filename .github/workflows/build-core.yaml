@@ -1,0 +1,71 @@
+# Copyright 2021 iLogtail Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Build Core
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 1.*
+jobs:
+  CI:
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        go-version: [1.18]
+        # https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idruns-on
+        runner: [ubuntu-latest, macos-latest, windows-2019]
+      fail-fast: true
+    steps:
+      # prepare ubuntu environment
+      - name: prepare ubuntu environment
+        if: matrix.runner == 'ubuntu-latest'
+        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev
+
+      # prepare windows environment
+      # https://github.com/actions/virtual-environments/issues/2549
+      - name: add mingw32 to path
+        if: matrix.runner == 'windows-2019'
+        shell: bash
+        run: |
+          echo "C:\msys64\mingw32\bin" >> $GITHUB_PATH
+
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Build Binary
+        if: matrix.runner == 'ubuntu-latest'
+        env:
+          BUILD_LOGTAIL_UT: ON
+          ENABLE_COMPATIBLE_MODE: ON
+          ENABLE_STATIC_LINK_CRT: ON
+        run: make core
+
+  result:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [CI]
+    steps:
+      - name: Build Result
+        run: echo "Just to make the GitHub merge button green"

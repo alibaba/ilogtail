@@ -3,7 +3,6 @@
 When distributed in a binary form, iLogtail may contain portions of the following works:
 
 ## Apache 2.0 licenses
-
 - [cloud.google.com/go/compute/metadata](https://pkg.go.dev/cloud.google.com/go/compute/metadata?tab=licenses)
 - [github.com/aliyun/alibaba-cloud-sdk-go](https://pkg.go.dev/github.com/aliyun/alibaba-cloud-sdk-go?tab=licenses)
 - [github.com/containerd/cgroups](https://pkg.go.dev/github.com/containerd/cgroups?tab=licenses)
@@ -33,7 +32,6 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/golang/groupcache](https://pkg.go.dev/github.com/golang/groupcache?tab=licenses)
 - [github.com/golang-sql/civil](https://pkg.go.dev/github.com/golang-sql/civil?tab=licenses)
 - [github.com/google/gofuzz](https://pkg.go.dev/github.com/google/gofuzz?tab=licenses)
-- [github.com/googleapis/gnostic](https://pkg.go.dev/github.com/googleapis/gnostic?tab=licenses)
 - [github.com/jcmturner/aescts](https://pkg.go.dev/github.com/jcmturner/aescts?tab=licenses)
 - [github.com/jcmturner/dnsutils](https://pkg.go.dev/github.com/jcmturner/dnsutils?tab=licenses)
 - [github.com/jcmturner/gokrb5](https://pkg.go.dev/github.com/jcmturner/gokrb5?tab=licenses)
@@ -91,9 +89,16 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/elastic/go-elasticsearch](https://pkg.go.dev/github.com/elastic/go-elasticsearch?tab=licenses)
 - [github.com/elastic/elastic-transport-go](https://pkg.go.dev/github.com/elastic/elastic-transport-go?tab=licenses)
 - [go.opentelemetry.io/collector/consumer](https://pkg.go.dev/go.opentelemetry.io/collector/consumer?tab=licenses)
+- [github.com/go-openapi/jsonpointer](https://pkg.go.dev/github.com/go-openapi/jsonpointer?tab=licenses)
+- [github.com/go-openapi/jsonreference](https://pkg.go.dev/github.com/go-openapi/jsonreference?tab=licenses)
+- [github.com/go-openapi/swag](https://pkg.go.dev/github.com/go-openapi/swag?tab=licenses)
+- [github.com/google/gnostic](https://pkg.go.dev/github.com/google/gnostic?tab=licenses)
+- [github.com/grafana/loki-client-go](https://pkg.go.dev/github.com/grafana/loki-client-go?tab=licenses)
+- [github.com/mwitkow/go-conntrack](https://pkg.go.dev/github.com/mwitkow/go-conntrack?tab=licenses)
+- [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
+
 
 ## BSD licenses
-
 - [github.com/klauspost/compress](https://pkg.go.dev/github.com/klauspost/compress?tab=licenses)
 - [github.com/danwakefield/fnmatch](https://pkg.go.dev/github.com/danwakefield/fnmatch?tab=licenses)
 - [github.com/denisenkom/go-mssqldb](https://pkg.go.dev/github.com/denisenkom/go-mssqldb?tab=licenses)
@@ -133,6 +138,10 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [gopkg.in/inf.v0](https://pkg.go.dev/gopkg.in/inf.v0?tab=licenses)
 - [github.com/go-faster/errors](https://pkg.go.dev/github.com/go-faster/errors?tab=licenses)
 - [github.com/miekg/pkcs11](https://pkg.go.dev/github.com/miekg/pkcs11?tab=licenses)
+- [github.com/grafana/regexp](https://pkg.go.dev/github.com/grafana/regexp?tab=licenses)
+- [github.com/munnerz/goautoneg](https://pkg.go.dev/github.com/munnerz/goautoneg?tab=licenses)
+- [github.com/pmezard/go-difflib](https://pkg.go.dev/github.com/pmezard/go-difflib?tab=licenses)
+
 
 ## MIT licenses
 
@@ -216,6 +225,12 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/paulmach/orb](https://pkg.go.dev/github.com/paulmach/orb?tab=licenses)
 - [github.com/segmentio/asm](https://pkg.go.dev/github.com/segmentio/asm?tab=licenses)
 - [github.com/yusufpapurcu/wmi](https://pkg.go.dev/github.com/yusufpapurcu/wmi?tab=licenses)
+- [github.com/dennwc/varint](https://pkg.go.dev/github.com/dennwc/varint?tab=licenses)
+- [github.com/jpillora/backoff](https://pkg.go.dev/github.com/jpillora/backoff?tab=licenses)
+- [github.com/mitchellh/mapstructure](https://pkg.go.dev/github.com/mitchellh/mapstructure?tab=licenses)
+- [github.com/stretchr/testify](https://pkg.go.dev/github.com/stretchr/testify?tab=licenses)
+- [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak?tab=licenses)
+
 
 ## ISC licenses
 

@@ -9,6 +9,7 @@
 | `metric_debug_file`<br>文本日志（debug）          | SLS官方                                                      | 用于调试的读取文件内容的插件。                           |
 | `metric_input_example`<br>MetricInput示例插件   | SLS官方                                                      | MetricInput示例插件。                          |
 | `metric_meta_host`<br>主机Meta数据              | SLS官方                                                      | 主机Meta数据。                                 |
+| `metric_system_v2`<br>主机监控数据 | SLS官方 | 主机监控数据。 |
 | `metric_mock`<br>Mock数据-Metric              | SLS官方                                                      | 生成metric模拟数据的插件。                          |
 | `service_canal`<br>MySQL Binlog             | SLS官方                                                      | 将MySQL Binlog输入到iLogtail。                 |
 | `service_input_example`<br>ServiceInput示例插件 | SLS官方                                                      | ServiceInput示例插件。                         |
@@ -62,6 +63,7 @@
 | `flusher_pulsar`<br>Kafka                | 社区<br>[`shalousun`](https://github.com/shalousun)   | 将采集到的数据输出到Pulsar。                         |
 | `flusher_clickhouse`<br>ClickHouse       | 社区<br>[`kl7sn`](https://github.com/kl7sn)           | 将采集到的数据输出到ClickHouse。                     |
 | `flusher_elasticsearch`<br>ElasticSearch | 社区<br>[`joeCarf`](https://github.com/joeCarf)       | 将采集到的数据输出到ElasticSearch。                  |
+| `flusher_loki`<br>Loki | 社区<br>[`abingcbc`](https://github.com/abingcbc) | 将采集到的数据输出到Loki。
 
 ## 加速
 
