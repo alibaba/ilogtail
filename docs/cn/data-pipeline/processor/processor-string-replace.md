@@ -158,6 +158,7 @@ flushers:
 
 ```bash
 echo '{\\x22UNAME\\x22:\\x22\\x22,\\x22GID\\x22:\\x22\\x22,\\x22PAID\\x22:\\x22\\x22,\\x22UUID\\x22:\\x22\\x22,\\x22STARTTIME\\x22:\\x22\\x22,\\x22ENDTIME\\x22:\\x22\\x22,\\x22UID\\x22:\\x222154212790\\x22,\\x22page_num\\x22:1,\\x22page_size\\x22:10}' >> /home/test-log/string_replace.log
+echo '\\u554a\\u554a\\u554a' >> /home/test-log/string_replace.log
 ```
 
 * 采集配置
@@ -187,6 +188,11 @@ flushers:
 {
     "__tag__:__path__": "/home/test_log/string_replace.log",
     "content": "{\"UNAME\":\"\",\"GID\":\"\",\"PAID\":\"\",\"UUID\":\"\",\"STARTTIME\":\"\",\"ENDTIME\":\"\",\"UID\":\"2154212790\",\"page_num\":1,\"page_size\":10}",
+    "__time__": "1680353730"
+}
+{
+    "__tag__:__path__": "/home/test_log/string_replace.log",
+    "content": "啊啊啊",
     "__time__": "1680353730"
 }
 ```
