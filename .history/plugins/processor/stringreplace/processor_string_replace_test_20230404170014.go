@@ -15,6 +15,8 @@
 package stringreplace
 
 import (
+	"strconv"
+	"strings"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -188,18 +190,6 @@ func TestProcessorUnquoteReplaceWork(t *testing.T) {
 			So(logs[0].Contents[0].Key, ShouldEqual, `content`)
 			So(logs[0].Contents[0].Value, ShouldEqual, `aaa"啊`)
 		})
-
-		Convey("Test unquote3", func() {
-			record := "\"message\""
-			log := &protocol.Log{Time: 0}
-			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
-			logs := []*protocol.Log{}
-			logs = append(logs, log)
-			logs = processor.ProcessLogs(logs)
-			So(len(logs[0].Contents), ShouldEqual, 1)
-			So(logs[0].Contents[0].Key, ShouldEqual, `content`)
-			So(logs[0].Contents[0].Value, ShouldEqual, `message`)
-		})
 	})
 }
 
@@ -333,7 +323,7 @@ func BenchmarkSplit_Const_10_0_100(b *testing.B) {
 	benchmarkReplace(b, s, 10, 0, 100)
 }
 
-// 1321136         772.7 ns/op         408 B/op         5 allocs/op
+// 473538	      2207 ns/op	     656 B/op	       5 allocs/op
 func BenchmarkSplit_Unquote_0_10_100(b *testing.B) {
 	s := &ProcessorStringReplace{
 		SourceKey: "content",
@@ -376,7 +366,7 @@ func BenchmarkSplit_Const_100_0_1000(b *testing.B) {
 	benchmarkReplace(b, s, 100, 0, 1000)
 }
 
-// 181201           5798 ns/op       3624 B/op          5 allocs/op
+// 55248	     19929 ns/op	    6400 B/op	       5 allocs/op
 func BenchmarkSplit_Unquote_0_100_1000(b *testing.B) {
 	s := &ProcessorStringReplace{
 		SourceKey: "content",
@@ -419,7 +409,7 @@ func BenchmarkSplit_Const_1_0_512(b *testing.B) {
 	benchmarkReplace(b, s, 1, 0, 512)
 }
 
-// 283285           3819 ns/op        2024 B/op          5 allocs/op
+// 111992	      9384 ns/op	    3368 B/op	       7 allocs/op
 func BenchmarkSplit_Unquote_0_1_512(b *testing.B) {
 	s := &ProcessorStringReplace{
 		SourceKey: "content",
@@ -430,4 +420,13 @@ func BenchmarkSplit_Unquote_0_1_512(b *testing.B) {
 	_ = s.Init(ctx)
 
 	benchmarkReplace(b, s, 0, 1, 512)
+}
+
+func Test123(t *testing.T) {
+	// record := "aaa\"\\u554a"
+	record := "aaa\\u554a"
+	out, _ := strconv.Unquote("\"" + record + "\"")
+	out, _ = strconv.Unquote(strings.ReplaceAll(strconv.Quote(record), "\\\\", "\\"))
+	Println()
+	Println()
 }

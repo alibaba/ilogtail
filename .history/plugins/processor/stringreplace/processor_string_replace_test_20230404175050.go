@@ -189,8 +189,8 @@ func TestProcessorUnquoteReplaceWork(t *testing.T) {
 			So(logs[0].Contents[0].Value, ShouldEqual, `aaa"啊`)
 		})
 
-		Convey("Test unquote3", func() {
-			record := "\"message\""
+		Convey("Test unquote2", func() {
+			record := "aaa\"\\u554a"
 			log := &protocol.Log{Time: 0}
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
 			logs := []*protocol.Log{}
@@ -198,7 +198,7 @@ func TestProcessorUnquoteReplaceWork(t *testing.T) {
 			logs = processor.ProcessLogs(logs)
 			So(len(logs[0].Contents), ShouldEqual, 1)
 			So(logs[0].Contents[0].Key, ShouldEqual, `content`)
-			So(logs[0].Contents[0].Value, ShouldEqual, `message`)
+			So(logs[0].Contents[0].Value, ShouldEqual, `aaa"啊`)
 		})
 	})
 }

@@ -99,11 +99,8 @@ func (p *ProcessorStringReplace) ProcessLogs(logArray []*protocol.Log) []*protoc
 					newContVal, _ = p.re.Replace(cont.Value, p.ReplaceString, -1, -1)
 				}
 			case MethodUnquote:
-				if strings.HasPrefix(cont.Value, "\"") && strings.HasSuffix(cont.Value, "\"") {
-					newContVal, _ = strconv.Unquote(cont.Value)
-				} else {
-					newContVal, _ = strconv.Unquote("\"" + strings.ReplaceAll(cont.Value, "\"", "\\x22") + "\"")
-				}
+				// newContVal, _ = strconv.Unquote(strings.ReplaceAll(strconv.Quote(cont.Value), "\\\\", "\\"))
+				newContVal, _ = strconv.Unquote(strings.ReplaceAll(cont.Value, "\\\\", "\\"))
 			default:
 				newContVal = cont.Value
 			}
