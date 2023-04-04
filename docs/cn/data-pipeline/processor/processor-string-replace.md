@@ -14,9 +14,10 @@
 | ------------ | -------- | ---- | ------------------------------------------------------------------------- |
 | Type         | String   | 是    | 插件类型                                                                      |
 | SourceKey    | String   | 是    | 匹配字段名                                                       |
-| Method         | String，无默认值(必填) | 匹配方式。可选值如下：<br>const：字符串全文替换。<br>regex：使用正则提取替换。<br>unquote：去除转义符。 |
-| Match           | String，无默认值 | 匹配指定数据。<br>如果是字符串全文替换输入需要匹配的字符串。<br>如果是正则替换输入需要匹配的正则表达式。<br>unquote去除转义符不需要输入 |
-| ReplaceString   | String  | 否    | 正则表达式匹配后替换的字符串。<br>unquote去除转义符不需要输入                               |
+| Method         | String | 是  | 无默认值。匹配方式，可选值如下：<br>const：字符串全文替换。<br>regex：使用正则提取替换。<br>unquote：去除转义符。 |
+| Match           | String | 否  | 无默认值。匹配指定数据。<br>const：输入需要匹配的字符串。当多个子串符合匹配条件时全部替换。<br>regex：输入需要匹配的正则表达式。当多个子串符合匹配条件时全部替换，也可以用正则分组的方式匹配指定分组。<br>unquote：去除转义符不需要输入。 |
+| ReplaceString   | String  | 否    | 默认值""。替换数据。<br>const：为匹配后替换的字符串。<br>regex：为匹配后替换的字符串，支持分组替换。<br>unquote：去除转义符不需要输入。                               |
+| DestKey | String  | 否    | 无默认值。字符串替换后的值存储的新字段，默认不存储新字段。                         |
 
 ## 样例
 
@@ -106,7 +107,7 @@ flushers:
 }
 ```
 
-### 示例 3：根据正则分组匹配与替换
+### 示例 3：根据正则分组匹配与替换并输出到新的字段
 
 采集`/home/test-log/`路径下的`string_replace.log`文件，测试日志内容的正则分组匹配与替换功能。
 注：分组替换ReplaceString中不能存在{}，选择分组只能使用$1、$2 这种方式。
@@ -131,6 +132,7 @@ processors:
     Method: regex
     Match: (\d.*\.)\d+
     ReplaceString: $1*/24
+    DestKey: new_ip
 flushers:
   - Type: flusher_sls
     Endpoint: cn-xxx.log.aliyuncs.com
@@ -145,7 +147,8 @@ flushers:
 ```json
 {
     "__tag__:__path__": "/home/test_log/string_replace.log",
-    "content": "10.10.239.*/24",
+    "content": "10.10.239.16",
+    "new_ip": "10.10.239.*/24",
     "__time__": "1680353730"
 }
 ```

@@ -1,4 +1,4 @@
-// Copyright 2021 iLogtail Authors
+// Copyright 2023 iLogtail Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package regexreplace
+package stringreplace
 
 import (
 	"errors"
@@ -27,11 +27,12 @@ import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-type ProcessorRegexReplace struct {
+type ProcessorStringReplace struct {
 	SourceKey     string
 	Method        string
 	Match         string
 	ReplaceString string
+	DestKey       string
 
 	re            *regexp2.Regexp
 	context       pipeline.Context
@@ -51,7 +52,7 @@ var errNoMatch = errors.New("no match error")
 var errNoSourceKey = errors.New("no source key error")
 
 // Init called for init some system resources, like socket, mutex...
-func (p *ProcessorRegexReplace) Init(context pipeline.Context) error {
+func (p *ProcessorStringReplace) Init(context pipeline.Context) error {
 	p.context = context
 	if len(p.SourceKey) == 0 {
 		return errNoSourceKey
@@ -78,11 +79,11 @@ func (p *ProcessorRegexReplace) Init(context pipeline.Context) error {
 	return nil
 }
 
-func (*ProcessorRegexReplace) Description() string {
+func (*ProcessorStringReplace) Description() string {
 	return "regex replace processor for logtail"
 }
 
-func (p *ProcessorRegexReplace) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
+func (p *ProcessorStringReplace) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 	replaceCount := 0
 	for _, log := range logArray {
 		for _, cont := range log.Contents {
@@ -103,7 +104,11 @@ func (p *ProcessorRegexReplace) ProcessLogs(logArray []*protocol.Log) []*protoco
 				newContVal = cont.Value
 			}
 			if cont.Value != newContVal {
-				cont.Value = newContVal
+				if len(p.DestKey) > 0 {
+					log.Contents = append(log.Contents, &protocol.Log_Content{Key: p.DestKey, Value: newContVal})
+				} else {
+					cont.Value = newContVal
+				}
 				replaceCount++
 			}
 		}
@@ -114,6 +119,6 @@ func (p *ProcessorRegexReplace) ProcessLogs(logArray []*protocol.Log) []*protoco
 
 func init() {
 	pipeline.Processors[PluginName] = func() pipeline.Processor {
-		return &ProcessorRegexReplace{}
+		return &ProcessorStringReplace{}
 	}
 }
