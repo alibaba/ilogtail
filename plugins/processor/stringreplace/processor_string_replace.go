@@ -91,33 +91,36 @@ func (p *ProcessorStringReplace) ProcessLogs(logArray []*protocol.Log) []*protoc
 				continue
 			}
 			var newContVal string
+			var err error
 			switch p.Method {
 			case MethodConst:
 				newContVal = strings.ReplaceAll(cont.Value, p.Match, p.ReplaceString)
 			case MethodRegex:
 				if ok, _ := p.re.MatchString(cont.Value); ok {
-					newContVal, _ = p.re.Replace(cont.Value, p.ReplaceString, -1, -1)
+					newContVal, err = p.re.Replace(cont.Value, p.ReplaceString, -1, -1)
 				}
 			case MethodUnquote:
 				if strings.HasPrefix(cont.Value, "\"") && strings.HasSuffix(cont.Value, "\"") {
-					newContVal, _ = strconv.Unquote(cont.Value)
+					newContVal, err = strconv.Unquote(cont.Value)
 				} else {
-					newContVal, _ = strconv.Unquote("\"" + strings.ReplaceAll(cont.Value, "\"", "\\x22") + "\"")
+					newContVal, err = strconv.Unquote("\"" + strings.ReplaceAll(cont.Value, "\"", "\\x22") + "\"")
 				}
 			default:
 				newContVal = cont.Value
 			}
-			if cont.Value != newContVal {
-				if len(p.DestKey) > 0 {
-					log.Contents = append(log.Contents, &protocol.Log_Content{Key: p.DestKey, Value: newContVal})
-				} else {
-					cont.Value = newContVal
-				}
-				replaceCount++
+			if err != nil {
+				logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", err)
+				newContVal = cont.Value
 			}
+			if len(p.DestKey) > 0 {
+				log.Contents = append(log.Contents, &protocol.Log_Content{Key: p.DestKey, Value: newContVal})
+			} else {
+				cont.Value = newContVal
+			}
+			replaceCount++
 		}
-		p.logPairMetric.Add(int64(replaceCount))
 	}
+	p.logPairMetric.Add(int64(replaceCount))
 	return logArray
 }
 
