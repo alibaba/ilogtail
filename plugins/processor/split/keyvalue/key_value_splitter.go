@@ -100,7 +100,7 @@ func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 	emptyKeyIndex := 0
 	noSeparatorKeyIndex := 0
 	dIdx := 0
-	for dIdx < len(content) {
+	for {
 		dIdx = strings.Index(content, s.Delimiter)
 		var pair string
 		if dIdx == -1 {
@@ -136,10 +136,9 @@ func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: key, Value: value})
 		}
 
-		if dIdx == -1 {
+		if dIdx == -1 || dIdx+len(s.Delimiter) > len(content) {
 			break
-		}
-		if dIdx+len(s.Delimiter) <= len(content) {
+		} else {
 			content = content[dIdx+len(s.Delimiter):]
 		}
 	}
