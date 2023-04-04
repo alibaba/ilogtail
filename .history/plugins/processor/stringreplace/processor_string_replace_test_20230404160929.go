@@ -178,7 +178,7 @@ func TestProcessorUnquoteReplaceWork(t *testing.T) {
 		})
 
 		Convey("Test unquote2", func() {
-			record := "aaa\"\\u554a"
+			record := "\"\\u554a"
 			log := &protocol.Log{Time: 0}
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: record})
 			logs := []*protocol.Log{}
