@@ -219,6 +219,46 @@ func TestSplitWithChineseCharacter(t *testing.T) {
 	}
 }
 
+func TestSplitWithQuote(t *testing.T) {
+	s := newKeyValueSplitter()
+	s.KeepSource = true
+	s.SourceKey = "content"
+	s.NoSeparatorKeyPrefix = "MySeparatorPrefix_"
+	s.QuoteFlag = true
+	s.Quote = "\""
+	s.Delimiter = " "
+	ctx := &pm.ContextImp{}
+	ctx.InitContext("test", "test", "test")
+	_ = s.Init(ctx)
+
+	log := &protocol.Log{}
+	log.Contents = append(log.Contents, &protocol.Log_Content{
+		Key:   s.SourceKey,
+		Value: "class:main userid:123456 method:get http_user_agent:\"User Agent\" message:\"wrong user\" 100 empty key\n\nhello no separator again",
+	})
+	logArray := []*protocol.Log{log}
+
+	outLogArray := s.ProcessLogs(logArray)
+	require.Equal(t, len(outLogArray), 1)
+	outLog := logArray[0]
+	require.Equalf(t, len(outLog.Contents), 7, "%v", outLog.Contents)
+	contents := outLog.Contents
+	expectedPairs := []struct {
+		Key   string
+		Value string
+	}{
+		{"class", "main"},
+		{"userid", "123456"},
+		{"method", "get"},
+		{"message", "\"wrong user\""},
+		{s.NoSeparatorKeyPrefix + "0", "100 empty key\n\nhello"},
+		{s.NoSeparatorKeyPrefix + "1", "no separator again"},
+	}
+	for _, p := range expectedPairs {
+		require.Truef(t, searchPair(contents, p.Key, p.Value), "%v:%v", p, contents)
+	}
+}
+
 func benchmarkSplit(b *testing.B, s *KeyValueSplitter, totalPartCount int, partLength int) {
 	value := ""
 	for countIdx := 0; countIdx < totalPartCount; countIdx++ {

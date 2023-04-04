@@ -15,12 +15,12 @@
 package kvsplitter
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-
-	"strconv"
-	"strings"
 )
 
 type KeyValueSplitter struct {
@@ -32,6 +32,8 @@ type KeyValueSplitter struct {
 	KeepSource           bool
 	EmptyKeyPrefix       string
 	NoSeparatorKeyPrefix string
+	QuoteFlag            bool
+	Quote                string
 
 	DiscardWhenSeparatorNotFound bool
 	ErrIfSourceKeyNotFound       bool
@@ -106,6 +108,7 @@ func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 			pair = content[:dIdx]
 		}
 
+		pair, dIdx = s.concatQuotePair(pair, content, dIdx)
 		pos := strings.Index(pair, s.Separator)
 		if pos == -1 {
 			if s.ErrIfSeparatorNotFound {
@@ -137,6 +140,20 @@ func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 		}
 		content = content[dIdx+len(s.Delimiter):]
 	}
+}
+
+func (s *KeyValueSplitter) concatQuotePair(pair string, content string, dIdx int) (string, int) {
+	if s.QuoteFlag && len(s.Quote) > 0 {
+		startQ := strings.Index(pair, s.Separator+s.Quote)
+		if startQ > 0 && !strings.HasSuffix(pair, s.Quote) {
+			lastQuote := strings.Index(content[dIdx+1:], s.Quote) + len(s.Separator+s.Quote)
+			if lastQuote > 0 {
+				dIdx += lastQuote
+				pair = content[:dIdx]
+			}
+		}
+	}
+	return pair, dIdx
 }
 
 func newKeyValueSplitter() *KeyValueSplitter {
