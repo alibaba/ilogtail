@@ -99,8 +99,9 @@ func (s *KeyValueSplitter) processLog(log *protocol.Log) {
 func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 	emptyKeyIndex := 0
 	noSeparatorKeyIndex := 0
-	for {
-		dIdx := strings.Index(content, s.Delimiter)
+	dIdx := 0
+	for dIdx < len(content) {
+		dIdx = strings.Index(content, s.Delimiter)
 		var pair string
 		if dIdx == -1 {
 			pair = content
@@ -117,13 +118,13 @@ func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 			if !s.DiscardWhenSeparatorNotFound {
 				log.Contents = append(log.Contents, &protocol.Log_Content{
 					Key:   s.NoSeparatorKeyPrefix + strconv.Itoa(noSeparatorKeyIndex),
-					Value: pair,
+					Value: s.getValue(pair),
 				})
 				noSeparatorKeyIndex++
 			}
 		} else {
 			key := pair[:pos]
-			value := pair[pos+len(s.Separator):]
+			value := s.getValue(pair[pos+len(s.Separator):])
 			if len(key) == 0 {
 				key = s.EmptyKeyPrefix + strconv.Itoa(emptyKeyIndex)
 				emptyKeyIndex++
@@ -138,15 +139,20 @@ func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 		if dIdx == -1 {
 			break
 		}
-		content = content[dIdx+len(s.Delimiter):]
+		if dIdx+len(s.Delimiter) <= len(content) {
+			content = content[dIdx+len(s.Delimiter):]
+		}
 	}
 }
 
 func (s *KeyValueSplitter) concatQuotePair(pair string, content string, dIdx int) (string, int) {
-	if s.QuoteFlag && len(s.Quote) > 0 {
-		startQ := strings.Index(pair, s.Separator+s.Quote)
-		if startQ > 0 && !strings.HasSuffix(pair, s.Quote) {
-			lastQuote := strings.Index(content[dIdx+1:], s.Quote) + len(s.Separator+s.Quote)
+	// If Pair not end with quote,try to reIndex the pair
+	if s.QuoteFlag && len(s.Quote) > 0 && !strings.HasSuffix(pair, s.Quote) {
+		// ReIndex from last delimiter to find next quote index
+		lastQuote := strings.Index(content[dIdx+1:], s.Quote)
+		// Separator+Quote or Quote in prefix
+		if strings.Index(pair, s.Separator+s.Quote) > 0 || strings.HasPrefix(pair, s.Quote) {
+			lastQuote += len(s.Separator + s.Quote)
 			if lastQuote > 0 {
 				dIdx += lastQuote
 				pair = content[:dIdx]
@@ -154,6 +160,16 @@ func (s *KeyValueSplitter) concatQuotePair(pair string, content string, dIdx int
 		}
 	}
 	return pair, dIdx
+}
+
+func (s *KeyValueSplitter) getValue(value string) string {
+	if s.QuoteFlag && len(s.Quote) > 0 {
+		// remove quote
+		if len(value) >= 2*len(s.Quote) && strings.HasPrefix(value, s.Quote) && strings.HasSuffix(value, s.Quote) {
+			value = value[len(s.Quote) : len(value)-len(s.Quote)]
+		}
+	}
+	return value
 }
 
 func newKeyValueSplitter() *KeyValueSplitter {
