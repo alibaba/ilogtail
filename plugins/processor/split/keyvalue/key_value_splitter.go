@@ -32,7 +32,6 @@ type KeyValueSplitter struct {
 	KeepSource           bool
 	EmptyKeyPrefix       string
 	NoSeparatorKeyPrefix string
-	QuoteFlag            bool
 	Quote                string
 
 	DiscardWhenSeparatorNotFound bool
@@ -44,7 +43,6 @@ type KeyValueSplitter struct {
 }
 
 const (
-	defaultQuote                = "\""
 	defaultDelimiter            = "\t"
 	defaultSeparator            = ":"
 	defaultEmptyKeyPrefix       = "empty_key_"
@@ -146,7 +144,7 @@ func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 
 func (s *KeyValueSplitter) concatQuotePair(pair string, content string, dIdx int) (string, int) {
 	// If Pair not end with quote,try to reIndex the pair
-	if s.QuoteFlag && len(s.Quote) > 0 && !strings.HasSuffix(pair, s.Quote) {
+	if len(s.Quote) > 0 && !strings.HasSuffix(pair, s.Quote) {
 		// ReIndex from last delimiter to find next quote index
 		lastQuote := strings.Index(content[dIdx+1:], s.Quote)
 		// Separator+Quote or Quote in prefix
@@ -162,7 +160,7 @@ func (s *KeyValueSplitter) concatQuotePair(pair string, content string, dIdx int
 }
 
 func (s *KeyValueSplitter) getValue(value string) string {
-	if s.QuoteFlag && len(s.Quote) > 0 {
+	if len(s.Quote) > 0 {
 		// remove quote
 		if len(value) >= 2*len(s.Quote) && strings.HasPrefix(value, s.Quote) && strings.HasSuffix(value, s.Quote) {
 			value = value[len(s.Quote) : len(value)-len(s.Quote)]
@@ -182,8 +180,6 @@ func newKeyValueSplitter() *KeyValueSplitter {
 		ErrIfSeparatorNotFound:       true,
 		ErrIfKeyIsEmpty:              true,
 		DiscardWhenSeparatorNotFound: false,
-		QuoteFlag:                    false,
-		Quote:                        defaultQuote,
 	}
 }
 
