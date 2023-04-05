@@ -44,6 +44,7 @@ type KeyValueSplitter struct {
 }
 
 const (
+	defaultQuote                = "\""
 	defaultDelimiter            = "\t"
 	defaultSeparator            = ":"
 	defaultEmptyKeyPrefix       = "empty_key_"
@@ -99,9 +100,8 @@ func (s *KeyValueSplitter) processLog(log *protocol.Log) {
 func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 	emptyKeyIndex := 0
 	noSeparatorKeyIndex := 0
-	dIdx := 0
 	for {
-		dIdx = strings.Index(content, s.Delimiter)
+		dIdx := strings.Index(content, s.Delimiter)
 		var pair string
 		if dIdx == -1 {
 			pair = content
@@ -182,6 +182,8 @@ func newKeyValueSplitter() *KeyValueSplitter {
 		ErrIfSeparatorNotFound:       true,
 		ErrIfKeyIsEmpty:              true,
 		DiscardWhenSeparatorNotFound: false,
+		QuoteFlag:                    false,
+		Quote:                        defaultQuote,
 	}
 }
 
