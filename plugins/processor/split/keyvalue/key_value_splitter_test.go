@@ -226,7 +226,7 @@ func TestSplitWithQuote(t *testing.T) {
 	s.NoSeparatorKeyPrefix = "MySeparatorPrefix_"
 	s.QuoteFlag = true
 	s.Delimiter = " "
-	var Quotes [2]string = [2]string{"\"", "\"\""}
+	Quotes := [2]string{"\"", "\"\""}
 	for _, quote := range Quotes {
 		s.Quote = quote
 		ctx := &pm.ContextImp{}
