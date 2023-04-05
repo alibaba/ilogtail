@@ -234,14 +234,14 @@ func TestSplitWithQuote(t *testing.T) {
 	log := &protocol.Log{}
 	log.Contents = append(log.Contents, &protocol.Log_Content{
 		Key:   s.SourceKey,
-		Value: "class:main userid:123456 method:get http_user_agent:\"User Agent\" message:\"wrong user\" 100 empty key\n\nhello \"no separator again\"",
+		Value: "class:main userid:123456 method:get \"\" nullval:\"\" http_user_agent:\"User Agent\" message:\"wrong user\" 100 empty key\n\nhello \"no separator again\"",
 	})
 	logArray := []*protocol.Log{log}
 
 	outLogArray := s.ProcessLogs(logArray)
 	require.Equal(t, len(outLogArray), 1)
 	outLog := logArray[0]
-	require.Equalf(t, len(outLog.Contents), 10, "%v", outLog.Contents)
+	require.Equalf(t, len(outLog.Contents), 12, "%v", outLog.Contents)
 	contents := outLog.Contents
 	expectedPairs := []struct {
 		Key   string
@@ -252,10 +252,12 @@ func TestSplitWithQuote(t *testing.T) {
 		{"method", "get"},
 		{"http_user_agent", "User Agent"},
 		{"message", "wrong user"},
-		{s.NoSeparatorKeyPrefix + "0", "100"},
-		{s.NoSeparatorKeyPrefix + "1", "empty"},
-		{s.NoSeparatorKeyPrefix + "2", "key\n\nhello"},
-		{s.NoSeparatorKeyPrefix + "3", "no separator again"},
+		{"nullval", ""},
+		{s.NoSeparatorKeyPrefix + "0", ""},
+		{s.NoSeparatorKeyPrefix + "1", "100"},
+		{s.NoSeparatorKeyPrefix + "2", "empty"},
+		{s.NoSeparatorKeyPrefix + "3", "key\n\nhello"},
+		{s.NoSeparatorKeyPrefix + "4", "no separator again"},
 	}
 	for _, p := range expectedPairs {
 		require.Truef(t, searchPair(contents, p.Key, p.Value), "%v:%v", p, contents)
