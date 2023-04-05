@@ -239,14 +239,15 @@ func TestSplitWithQuote(t *testing.T) {
 		log := &protocol.Log{}
 		log.Contents = append(log.Contents, &protocol.Log_Content{
 			Key:   s.SourceKey,
-			Value: "class:main userid:123456 " + "half_quote:\" " + buildQValue("多  分  隔 ", quote) + " method:get " + buildQValue("中文", quote) + " chinesekey:" + buildQValue("中文", quote) + " " + buildQValue("", quote) + " nullval:" + buildQValue("", quote) + " http_user_agent:" + buildQValue("User Agent", quote) + " message:" + buildQValue("wrong user", quote) + " 100 empty key\n\nhello " + buildQValue("no separator again", quote),
+			Value: "class:main userid:123456 " + "half_quote:\" " + buildQValue("多  分  隔 ", quote) + " method:get " + buildQValue("中文", quote) + " chinesekey:" + buildQValue("中文", quote) + " " + buildQValue("", quote) + " nullval:" + buildQValue("", quote) + " http_user_agent:" + buildQValue("User Agent", quote) + " message:" + buildQValue("wrong user", quote) + " 100 empty key\n\nhello " + buildQValue("no separator again", quote) + " \"123",
+			// Value: "\"123 aa:\" bb",
 		})
 		logArray := []*protocol.Log{log}
 
 		outLogArray := s.ProcessLogs(logArray)
 		require.Equal(t, len(outLogArray), 1)
 		outLog := logArray[0]
-		require.Equalf(t, len(outLog.Contents), 16, "%v", outLog.Contents)
+		require.Equalf(t, len(outLog.Contents), 17, "%v", outLog.Contents)
 		contents := outLog.Contents
 		expectedPairs := []struct {
 			Key   string
@@ -267,6 +268,7 @@ func TestSplitWithQuote(t *testing.T) {
 			{s.NoSeparatorKeyPrefix + "4", "empty"},
 			{s.NoSeparatorKeyPrefix + "5", "key\n\nhello"},
 			{s.NoSeparatorKeyPrefix + "6", "no separator again"},
+			{s.NoSeparatorKeyPrefix + "7", "\"123"},
 		}
 		for _, p := range expectedPairs {
 			require.Truef(t, searchPair(contents, p.Key, p.Value), "%v:%v", p, contents)
