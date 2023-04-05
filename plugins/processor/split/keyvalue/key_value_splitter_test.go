@@ -225,42 +225,47 @@ func TestSplitWithQuote(t *testing.T) {
 	s.SourceKey = "content"
 	s.NoSeparatorKeyPrefix = "MySeparatorPrefix_"
 	s.QuoteFlag = true
-	s.Quote = "\""
 	s.Delimiter = " "
-	ctx := &pm.ContextImp{}
-	ctx.InitContext("test", "test", "test")
-	_ = s.Init(ctx)
+	var Quotes [2]string = [2]string{"\"", "\"\""}
+	for _, quote := range Quotes {
+		s.Quote = quote
+		ctx := &pm.ContextImp{}
+		ctx.InitContext("test", "test", "test")
+		_ = s.Init(ctx)
 
-	log := &protocol.Log{}
-	log.Contents = append(log.Contents, &protocol.Log_Content{
-		Key:   s.SourceKey,
-		Value: "class:main userid:123456 method:get \"\" nullval:\"\" http_user_agent:\"User Agent\" message:\"wrong user\" 100 empty key\n\nhello \"no separator again\"",
-	})
-	logArray := []*protocol.Log{log}
+		log := &protocol.Log{}
+		log.Contents = append(log.Contents, &protocol.Log_Content{
+			Key:   s.SourceKey,
+			Value: "class:main userid:123456 method:get " + quote + "中文" + quote + " chinesekey:" + quote + "中文" + quote + " " + quote + "" + quote + " nullval:" + quote + "" + quote + " http_user_agent:" + quote + "User Agent" + quote + " message:" + quote + "wrong user" + quote + " 100 empty key\n\nhello " + quote + "no separator again" + quote + "",
+		})
+		logArray := []*protocol.Log{log}
 
-	outLogArray := s.ProcessLogs(logArray)
-	require.Equal(t, len(outLogArray), 1)
-	outLog := logArray[0]
-	require.Equalf(t, len(outLog.Contents), 12, "%v", outLog.Contents)
-	contents := outLog.Contents
-	expectedPairs := []struct {
-		Key   string
-		Value string
-	}{
-		{"class", "main"},
-		{"userid", "123456"},
-		{"method", "get"},
-		{"http_user_agent", "User Agent"},
-		{"message", "wrong user"},
-		{"nullval", ""},
-		{s.NoSeparatorKeyPrefix + "0", ""},
-		{s.NoSeparatorKeyPrefix + "1", "100"},
-		{s.NoSeparatorKeyPrefix + "2", "empty"},
-		{s.NoSeparatorKeyPrefix + "3", "key\n\nhello"},
-		{s.NoSeparatorKeyPrefix + "4", "no separator again"},
-	}
-	for _, p := range expectedPairs {
-		require.Truef(t, searchPair(contents, p.Key, p.Value), "%v:%v", p, contents)
+		outLogArray := s.ProcessLogs(logArray)
+		require.Equal(t, len(outLogArray), 1)
+		outLog := logArray[0]
+		require.Equalf(t, len(outLog.Contents), 14, "%v", outLog.Contents)
+		contents := outLog.Contents
+		expectedPairs := []struct {
+			Key   string
+			Value string
+		}{
+			{"class", "main"},
+			{"userid", "123456"},
+			{"method", "get"},
+			{"http_user_agent", "User Agent"},
+			{"message", "wrong user"},
+			{"nullval", ""},
+			{"chinesekey", "中文"},
+			{s.NoSeparatorKeyPrefix + "0", "中文"},
+			{s.NoSeparatorKeyPrefix + "1", ""},
+			{s.NoSeparatorKeyPrefix + "2", "100"},
+			{s.NoSeparatorKeyPrefix + "3", "empty"},
+			{s.NoSeparatorKeyPrefix + "4", "key\n\nhello"},
+			{s.NoSeparatorKeyPrefix + "5", "no separator again"},
+		}
+		for _, p := range expectedPairs {
+			require.Truef(t, searchPair(contents, p.Key, p.Value), "%v:%v", p, contents)
+		}
 	}
 }
 
