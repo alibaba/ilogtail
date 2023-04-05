@@ -160,10 +160,10 @@ func (s *KeyValueSplitter) concatQuotePair(pair string, content string, dIdx int
 }
 
 func (s *KeyValueSplitter) getValue(value string) string {
-	if len(s.Quote) > 0 {
+	if lenQ := len(s.Quote); lenQ > 0 {
 		// remove quote
-		if len(value) >= 2*len(s.Quote) && strings.HasPrefix(value, s.Quote) && strings.HasSuffix(value, s.Quote) {
-			value = value[len(s.Quote) : len(value)-len(s.Quote)]
+		if len(value) >= 2*lenQ && strings.HasPrefix(value, s.Quote) && strings.HasSuffix(value, s.Quote) {
+			value = value[lenQ : len(value)-lenQ]
 		}
 	}
 	return value
