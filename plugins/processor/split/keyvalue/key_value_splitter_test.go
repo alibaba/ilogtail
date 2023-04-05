@@ -236,14 +236,14 @@ func TestSplitWithQuote(t *testing.T) {
 		log := &protocol.Log{}
 		log.Contents = append(log.Contents, &protocol.Log_Content{
 			Key:   s.SourceKey,
-			Value: "class:main userid:123456 method:get " + quote + "中文" + quote + " chinesekey:" + quote + "中文" + quote + " " + quote + "" + quote + " nullval:" + quote + "" + quote + " http_user_agent:" + quote + "User Agent" + quote + " message:" + quote + "wrong user" + quote + " 100 empty key\n\nhello " + quote + "no separator again" + quote + "",
+			Value: "class:main userid:123456 " + quote + "多  分  隔 " + quote + " method:get " + quote + "中文" + quote + " chinesekey:" + quote + "中文" + quote + " " + quote + "" + quote + " nullval:" + quote + "" + quote + " http_user_agent:" + quote + "User Agent" + quote + " message:" + quote + "wrong user" + quote + " 100 empty key\n\nhello " + quote + "no separator again" + quote + "",
 		})
 		logArray := []*protocol.Log{log}
 
 		outLogArray := s.ProcessLogs(logArray)
 		require.Equal(t, len(outLogArray), 1)
 		outLog := logArray[0]
-		require.Equalf(t, len(outLog.Contents), 14, "%v", outLog.Contents)
+		require.Equalf(t, len(outLog.Contents), 15, "%v", outLog.Contents)
 		contents := outLog.Contents
 		expectedPairs := []struct {
 			Key   string
@@ -256,12 +256,13 @@ func TestSplitWithQuote(t *testing.T) {
 			{"message", "wrong user"},
 			{"nullval", ""},
 			{"chinesekey", "中文"},
-			{s.NoSeparatorKeyPrefix + "0", "中文"},
-			{s.NoSeparatorKeyPrefix + "1", ""},
-			{s.NoSeparatorKeyPrefix + "2", "100"},
-			{s.NoSeparatorKeyPrefix + "3", "empty"},
-			{s.NoSeparatorKeyPrefix + "4", "key\n\nhello"},
-			{s.NoSeparatorKeyPrefix + "5", "no separator again"},
+			{s.NoSeparatorKeyPrefix + "0", "多  分  隔 "},
+			{s.NoSeparatorKeyPrefix + "1", "中文"},
+			{s.NoSeparatorKeyPrefix + "2", ""},
+			{s.NoSeparatorKeyPrefix + "3", "100"},
+			{s.NoSeparatorKeyPrefix + "4", "empty"},
+			{s.NoSeparatorKeyPrefix + "5", "key\n\nhello"},
+			{s.NoSeparatorKeyPrefix + "6", "no separator again"},
 		}
 		for _, p := range expectedPairs {
 			require.Truef(t, searchPair(contents, p.Key, p.Value), "%v:%v", p, contents)
