@@ -41,3 +41,4 @@ your changes, such as:
 - [public] [both] [added] add new plugin type: extension
 - [public] [both] [updated] http flusher support custom authenticator, filter and request circuit-breaker via the extension plugin mechanism
 - [public] [both] [added] add new plugin: flusher_loki
+- [public] [both] [update] Optimize flusher pulsar to improve performance in static topic scenarios
