@@ -41,5 +41,8 @@ your changes, such as:
 - [public] [both] [added] add new plugin type: extension
 - [public] [both] [updated] http flusher support custom authenticator, filter and request circuit-breaker via the extension plugin mechanism
 - [public] [both] [added] add new plugin: flusher_loki
+<<<<<<< HEAD
 - [public] [both] [updated] processor_split_key_value plugin support separating the key value when the value is surrounded by quotes
+=======
+>>>>>>> origin/main
 - [public] [both] [added] add new plugin: processor_string_replace
