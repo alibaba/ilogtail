@@ -23,7 +23,7 @@
 | NoSeparatorKeyPrefix         | Boolean | 否       | 无匹配的原始字段时，如果保留该键值对，可通过该参数设置key的前缀，默认为"no_separator_key_", 最终保存下来的格式为前缀+序号:报错键值对，比如"no_separator_key_0":"报错键值对" |
 | ErrIfSourceKeyNotFound       | Boolean | 否       | 无匹配的原始字段时是否告警。如果未添加该参数，则默认使用true，表示告警。                                                                                                    |
 | ErrIfSeparatorNotFound       | Boolean | 否       | 当指定的分隔符（Separator）不存在时是否告警。如果未添加该参数，则默认使用true，表示告警。                                                                                   |
-| Quote                        | String | 否       | 引用符，当设定后若值被引用符包含，就提取引用符内的值。 默认不开启引用符功能。  |
+| Quote                        | String | 否       | 引用符，当设定后若值被引用符包含，就提取引用符内的值。注意引用符若为双引号，需要加转义符\。默认不开启引用符功能。  |
 
 ## 样例
 
