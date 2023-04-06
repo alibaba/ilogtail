@@ -46,3 +46,8 @@ systemctl status ilogtaild
 ```
 
 在服务启动后，可以在ilogtail-<version>目录下查看ilogtail.LOG。
+
+5. 停止服务
+```
+systemctl stop ilogtaild
+```
