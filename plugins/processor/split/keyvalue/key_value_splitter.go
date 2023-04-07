@@ -144,15 +144,13 @@ func (s *KeyValueSplitter) splitKeyValue(log *protocol.Log, content string) {
 
 func (s *KeyValueSplitter) concatQuotePair(pair string, content string, dIdx int) (string, int) {
 	// If Pair not end with quote,try to reIndex the pair
-	if dIdx >= 0 && len(s.Quote) > 0 && !strings.HasSuffix(pair, s.Quote) {
-		// Separator+Quote or Quote in prefix
-		if strings.Index(pair, s.Separator+s.Quote) > 0 || strings.HasPrefix(pair, s.Quote) {
-			// ReIndex from last delimiter to find next quote index
-			lastQuote := strings.Index(content[dIdx+1:], s.Quote)
-			if lastQuote > 0 {
-				dIdx += (lastQuote + len(s.Separator+s.Quote))
-				pair = content[:dIdx]
-			}
+	// Separator+Quote or Quote in prefix
+	if dIdx >= 0 && len(s.Quote) > 0 && !strings.HasSuffix(pair, s.Quote) &&
+		(strings.Index(pair, s.Separator+s.Quote) > 0 || strings.HasPrefix(pair, s.Quote)) {
+		// ReIndex from last delimiter to find next quote index
+		if lastQuote := strings.Index(content[dIdx+1:], s.Quote); lastQuote >= 0 {
+			dIdx += (lastQuote + len(s.Separator+s.Quote))
+			pair = content[:dIdx]
 		}
 	}
 	return pair, dIdx

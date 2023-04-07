@@ -239,7 +239,7 @@ func TestSplitWithQuote(t *testing.T) {
 		log := &protocol.Log{}
 		log.Contents = append(log.Contents, &protocol.Log_Content{
 			Key:   s.SourceKey,
-			Value: "class:main userid:123456 " + "half_quote:\" " + buildQValue("多  分  隔 ", quote) + " method:get " + buildQValue("中文", quote) + " chinesekey:" + buildQValue("中文", quote) + " " + buildQValue("", quote) + " nullval:" + buildQValue("", quote) + " http_user_agent:" + buildQValue("User Agent", quote) + " message:" + buildQValue("wrong user", quote) + " 100 empty key\n\nhello " + buildQValue("no separator again", quote) + " \"123",
+			Value: "a:" + buildQValue("b "+quote+" c", quote) + " class:main userid:123456 " + "half_quote:\" " + buildQValue("多  分  隔 ", quote) + " method:get " + buildQValue("中文", quote) + " chinesekey:" + buildQValue("中文", quote) + " " + buildQValue("", quote) + " nullval:" + buildQValue("", quote) + " http_user_agent:" + buildQValue("User Agent", quote) + " message:" + buildQValue("wrong user", quote) + " 100 empty key\n\nhello " + buildQValue("no separator again", quote) + " \"123",
 			// Value: "\"123 aa:\" bb",
 		})
 		logArray := []*protocol.Log{log}
@@ -247,12 +247,13 @@ func TestSplitWithQuote(t *testing.T) {
 		outLogArray := s.ProcessLogs(logArray)
 		require.Equal(t, len(outLogArray), 1)
 		outLog := logArray[0]
-		require.Equalf(t, len(outLog.Contents), 17, "%v", outLog.Contents)
+		require.Equalf(t, len(outLog.Contents), 19, "%v", outLog.Contents)
 		contents := outLog.Contents
 		expectedPairs := []struct {
 			Key   string
 			Value string
 		}{
+			{"a", "b "},
 			{"class", "main"},
 			{"userid", "123456"},
 			{"method", "get"},
@@ -261,14 +262,15 @@ func TestSplitWithQuote(t *testing.T) {
 			{"nullval", ""},
 			{"chinesekey", "中文"},
 			{"half_quote", "\""},
-			{s.NoSeparatorKeyPrefix + "0", "多  分  隔 "},
-			{s.NoSeparatorKeyPrefix + "1", "中文"},
-			{s.NoSeparatorKeyPrefix + "2", ""},
-			{s.NoSeparatorKeyPrefix + "3", "100"},
-			{s.NoSeparatorKeyPrefix + "4", "empty"},
-			{s.NoSeparatorKeyPrefix + "5", "key\n\nhello"},
-			{s.NoSeparatorKeyPrefix + "6", "no separator again"},
-			{s.NoSeparatorKeyPrefix + "7", "\"123"},
+			{s.NoSeparatorKeyPrefix + "0", "c" + quote},
+			{s.NoSeparatorKeyPrefix + "1", "多  分  隔 "},
+			{s.NoSeparatorKeyPrefix + "2", "中文"},
+			{s.NoSeparatorKeyPrefix + "3", ""},
+			{s.NoSeparatorKeyPrefix + "4", "100"},
+			{s.NoSeparatorKeyPrefix + "5", "empty"},
+			{s.NoSeparatorKeyPrefix + "6", "key\n\nhello"},
+			{s.NoSeparatorKeyPrefix + "7", "no separator again"},
+			{s.NoSeparatorKeyPrefix + "8", "\"123"},
 		}
 		for _, p := range expectedPairs {
 			require.Truef(t, searchPair(contents, p.Key, p.Value), "%v:%v", p, contents)
