@@ -148,12 +148,41 @@ func (s *KeyValueSplitter) concatQuotePair(pair string, content string, dIdx int
 	if dIdx >= 0 && len(s.Quote) > 0 && !strings.HasSuffix(pair, s.Quote) &&
 		(strings.Index(pair, s.Separator+s.Quote) > 0 || strings.HasPrefix(pair, s.Quote)) {
 		// ReIndex from last delimiter to find next quote index
-		if lastQuote := strings.Index(content[dIdx+1:], s.Quote); lastQuote >= 0 {
-			dIdx += (lastQuote + len(s.Separator+s.Quote))
+		// Ignore \Quote situation
+		if lastQuote := s.getNearestQuote(content, dIdx); lastQuote >= 0 {
+			dIdx = lastQuote
 			pair = content[:dIdx]
 		}
 	}
 	return pair, dIdx
+}
+
+func (s *KeyValueSplitter) getNearestQuote(content string, startPos int) int {
+	for startPos < len(content) {
+		if len(s.Quote) == 1 {
+			lastQuoteContent := strings.Index(content[startPos:], " \\"+s.Quote)
+			lastQuote := strings.Index(content[startPos+1:], s.Quote)
+			//relate to last quote real position
+			startPos = (lastQuote + startPos + 1 + len(s.Quote))
+			if lastQuoteContent >= 0 {
+				if lastQuoteContent+1 == lastQuote { // hit latent content
+					continue
+				} else if lastQuote >= 0 { // hit latent content,but quote comes first
+					return startPos
+				}
+			} else { // no \\quote and has next quote
+				if lastQuote >= 0 {
+					return startPos
+				} else { // nerver hit
+					return lastQuote
+				}
+			}
+		} else {
+			startPos += (strings.Index(content[startPos+1:], s.Quote) + len(s.Separator+s.Quote))
+			return startPos
+		}
+	}
+	return startPos
 }
 
 func (s *KeyValueSplitter) getValue(value string) string {

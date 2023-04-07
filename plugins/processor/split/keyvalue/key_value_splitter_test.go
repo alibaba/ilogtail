@@ -229,18 +229,28 @@ func TestSplitWithQuote(t *testing.T) {
 	s.SourceKey = "content"
 	s.NoSeparatorKeyPrefix = "MySeparatorPrefix_"
 	s.Delimiter = " "
-	Quotes := []string{"\"", "\"\""}
+	Quotes := []string{"\"", "\"\"", "\"\"\""}
 	for _, quote := range Quotes {
 		s.Quote = quote
 		ctx := &pm.ContextImp{}
 		ctx.InitContext("test", "test", "test")
 		_ = s.Init(ctx)
-
 		log := &protocol.Log{}
 		log.Contents = append(log.Contents, &protocol.Log_Content{
-			Key:   s.SourceKey,
-			Value: "a:" + buildQValue("b "+quote+" c", quote) + " class:main userid:123456 " + "half_quote:\" " + buildQValue("多  分  隔 ", quote) + " method:get " + buildQValue("中文", quote) + " chinesekey:" + buildQValue("中文", quote) + " " + buildQValue("", quote) + " nullval:" + buildQValue("", quote) + " http_user_agent:" + buildQValue("User Agent", quote) + " message:" + buildQValue("wrong user", quote) + " 100 empty key\n\nhello " + buildQValue("no separator again", quote) + " \"123",
-			// Value: "\"123 aa:\" bb",
+			Key: s.SourceKey,
+			Value: "a1:" + buildQValue("b \\\" c", quote) +
+				" a2:" + buildQValue("b \\\" \\\" c \\\\", quote) +
+				" class:main userid:123456" +
+				" half_quote:\" " +
+				buildQValue("多  分  隔 ", quote) +
+				" method:get " + buildQValue("中文", quote) +
+				" chinesekey:" + buildQValue("中文", quote) +
+				" " + buildQValue("", quote) +
+				" nullval:" + buildQValue("", quote) +
+				" http_user_agent:" + buildQValue("User Agent", quote) +
+				" message:" + buildQValue("wrong user", quote) +
+				" 100 empty key\n\nhello " +
+				buildQValue("no separator again", quote) + " \"123",
 		})
 		logArray := []*protocol.Log{log}
 
@@ -253,7 +263,8 @@ func TestSplitWithQuote(t *testing.T) {
 			Key   string
 			Value string
 		}{
-			{"a", "b "},
+			{"a1", "b \\\" c"},
+			{"a2", "b \\\" \\\" c \\\\"},
 			{"class", "main"},
 			{"userid", "123456"},
 			{"method", "get"},
@@ -262,15 +273,14 @@ func TestSplitWithQuote(t *testing.T) {
 			{"nullval", ""},
 			{"chinesekey", "中文"},
 			{"half_quote", "\""},
-			{s.NoSeparatorKeyPrefix + "0", "c" + quote},
-			{s.NoSeparatorKeyPrefix + "1", "多  分  隔 "},
-			{s.NoSeparatorKeyPrefix + "2", "中文"},
-			{s.NoSeparatorKeyPrefix + "3", ""},
-			{s.NoSeparatorKeyPrefix + "4", "100"},
-			{s.NoSeparatorKeyPrefix + "5", "empty"},
-			{s.NoSeparatorKeyPrefix + "6", "key\n\nhello"},
-			{s.NoSeparatorKeyPrefix + "7", "no separator again"},
-			{s.NoSeparatorKeyPrefix + "8", "\"123"},
+			{s.NoSeparatorKeyPrefix + "0", "多  分  隔 "},
+			{s.NoSeparatorKeyPrefix + "1", "中文"},
+			{s.NoSeparatorKeyPrefix + "2", ""},
+			{s.NoSeparatorKeyPrefix + "3", "100"},
+			{s.NoSeparatorKeyPrefix + "4", "empty"},
+			{s.NoSeparatorKeyPrefix + "5", "key\n\nhello"},
+			{s.NoSeparatorKeyPrefix + "6", "no separator again"},
+			{s.NoSeparatorKeyPrefix + "7", "\"123"},
 		}
 		for _, p := range expectedPairs {
 			require.Truef(t, searchPair(contents, p.Key, p.Value), "%v:%v", p, contents)
