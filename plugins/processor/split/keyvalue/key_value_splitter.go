@@ -162,7 +162,7 @@ func (s *KeyValueSplitter) getNearestQuote(content string, startPos int) int {
 		if len(s.Quote) == 1 {
 			lastQuoteContent := strings.Index(content[startPos:], " \\"+s.Quote)
 			lastQuote := strings.Index(content[startPos+1:], s.Quote)
-			//relate to last quote real position
+			// relate to last quote real position
 			startPos = (lastQuote + startPos + 1 + len(s.Quote))
 			if lastQuoteContent >= 0 {
 				if lastQuoteContent+1 == lastQuote { // hit latent content
@@ -171,11 +171,7 @@ func (s *KeyValueSplitter) getNearestQuote(content string, startPos int) int {
 					return startPos
 				}
 			} else { // no \\quote and has next quote
-				if lastQuote >= 0 {
-					return startPos
-				} else { // nerver hit
-					return lastQuote
-				}
+				return startPos
 			}
 		} else {
 			startPos += (strings.Index(content[startPos+1:], s.Quote) + len(s.Separator+s.Quote))
