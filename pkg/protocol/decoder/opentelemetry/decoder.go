@@ -265,7 +265,8 @@ func ConvertOtlpLogsToGroupEvents(logs plog.Logs) (groupEventsSlice []*models.Pi
 					attrs2Tags(logRecord.Attributes()),
 					uint64(logRecord.Timestamp().AsTime().UnixNano()),
 				)
-
+				event.ObservedTimestamp = uint64(logRecord.ObservedTimestamp().AsTime().UnixNano())
+				event.Tags.Add(otlp.TagKeyLogFlag, strconv.Itoa(int(logRecord.Flags())))
 				groupEvents.Events = append(groupEvents.Events, event)
 			}
 

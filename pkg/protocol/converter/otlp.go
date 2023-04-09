@@ -147,6 +147,7 @@ func ConvertPipelineGroupEvenstsToOtlpEvents(ps *models.PipelineGroupEvents, rsL
 				setScope(scopeLog, groupTags)
 				hasLogs = true
 			}
+			err = ConvertPipelineEventToOtlpLog(v, scopeLog)
 		case models.EventTypeMetric:
 			if !hasMetrics {
 				setAttributes(rsMetrics.Resource().Attributes(), meta)
@@ -181,6 +182,41 @@ func ConvertPipelineGroupEvenstsToOtlpEvents(ps *models.PipelineGroupEvents, rsL
 		scopeTrace.MoveTo(newScopeTrace)
 	}
 
+	return err
+}
+
+// log event -> otlp log
+func ConvertPipelineEventToOtlpLog(event models.PipelineEvent, scopeLog plog.ScopeLogs) (err error) {
+	if event.GetType() != models.EventTypeLogging {
+		return fmt.Errorf("pipeline_event:%s is not a log", event.GetName())
+	}
+
+	logEvent, ok := event.(*models.Log)
+
+	if !ok {
+		return fmt.Errorf("pipeline_event:%s is not a log", event.GetName())
+	}
+
+	log := scopeLog.LogRecords().AppendEmpty()
+	setAttributes(log.Attributes(), logEvent.Tags)
+	log.SetTimestamp(pcommon.Timestamp(logEvent.Timestamp))
+	log.SetObservedTimestamp(pcommon.Timestamp(logEvent.ObservedTimestamp))
+	log.SetSeverityText(logEvent.Level)
+	log.SetSeverityNumber(otlp.SeverityTextToSeverityNumber(logEvent.Level))
+
+	if logEvent.Tags.Contains(otlp.TagKeyLogFlag) {
+		if flag, err := strconv.Atoi(logEvent.Tags.Get(otlp.TagKeyLogFlag)); err == nil {
+			log.SetFlags(plog.LogRecordFlags(flag))
+		}
+	}
+
+	if traceID, err := convertTraceID(logEvent.TraceID); err == nil {
+		log.SetTraceID(traceID)
+	}
+
+	if spanID, err := convertSpanID(logEvent.SpanID); err == nil {
+		log.SetSpanID(spanID)
+	}
 	return err
 }
 
