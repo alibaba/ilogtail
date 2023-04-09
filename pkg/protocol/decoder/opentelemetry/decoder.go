@@ -42,6 +42,10 @@ const (
 	jsonContentType = "application/json"
 )
 
+const (
+	logEventName = "log_event"
+)
+
 // Decoder impl
 type Decoder struct {
 	Format string
@@ -214,9 +218,62 @@ func ConvertOtlpTraceRequestToGroupEvents(otlpTraceReq ptraceotlp.ExportRequest)
 }
 
 func ConvertOtlpLogsToGroupEvents(logs plog.Logs) (groupEventsSlice []*models.PipelineGroupEvents, err error) {
-	// TODO:
-	// waiting for log event definition.
-	return nil, fmt.Errorf("v2_not_support_log_event")
+	resLogs := logs.ResourceLogs()
+	resLogsLen := resLogs.Len()
+
+	if resLogsLen == 0 {
+		return
+	}
+
+	for i := 0; i < resLogsLen; i++ {
+		resourceLog := resLogs.At(i)
+		resourceAttrs := resourceLog.Resource().Attributes()
+		scopeLogs := resourceLog.ScopeLogs()
+		scopeLogsLen := scopeLogs.Len()
+
+		for j := 0; j < scopeLogsLen; j++ {
+			scopeLog := scopeLogs.At(j)
+			scope := scopeLog.Scope()
+			scopeTags := genScopeTags(scope)
+			otLogs := scopeLog.LogRecords()
+			otLogsLen := otLogs.Len()
+
+			groupEvents := &models.PipelineGroupEvents{
+				Group:  models.NewGroup(attrs2Meta(resourceAttrs), scopeTags),
+				Events: make([]models.PipelineEvent, 0, otLogs.Len()),
+			}
+
+			for k := 0; k < otLogsLen; k++ {
+				logRecord := otLogs.At(k)
+
+				var body []byte
+				switch logRecord.Body().Type() {
+				case pcommon.ValueTypeBytes:
+					body = logRecord.Body().Bytes().AsRaw()
+				case pcommon.ValueTypeStr:
+					body = []byte(logRecord.Body().AsString())
+				default:
+					body = []byte(fmt.Sprintf("%#v", logRecord.Body().AsRaw()))
+				}
+
+				event := models.NewLog(
+					logEventName,
+					body,
+					logRecord.SeverityText(),
+					logRecord.SpanID().String(),
+					logRecord.TraceID().String(),
+					attrs2Tags(logRecord.Attributes()),
+					uint64(logRecord.Timestamp().AsTime().UnixNano()),
+				)
+
+				groupEvents.Events = append(groupEvents.Events, event)
+			}
+
+			groupEventsSlice = append(groupEventsSlice, groupEvents)
+		}
+	}
+
+	return groupEventsSlice, err
 }
 
 func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice []*models.PipelineGroupEvents, err error) {
