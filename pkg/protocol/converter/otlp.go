@@ -116,6 +116,7 @@ func ConvertPipelineEventToOtlpEvent[
 	return
 }
 
+// PipelineGroupEvents -> OTLP Logs/Metrics/Traces
 func (c *Converter) ConvertPipelineGroupEventsToOTLPEventsV1(ps *models.PipelineGroupEvents) (plog.ResourceLogs, pmetric.ResourceMetrics, ptrace.ResourceSpans, error) {
 	var err error
 	rsLogs := plog.NewResourceLogs()
@@ -185,7 +186,6 @@ func ConvertPipelineGroupEvenstsToOtlpEvents(ps *models.PipelineGroupEvents, rsL
 	return err
 }
 
-// log event -> otlp log
 func ConvertPipelineEventToOtlpLog(event models.PipelineEvent, scopeLog plog.ScopeLogs) (err error) {
 	if event.GetType() != models.EventTypeLogging {
 		return fmt.Errorf("pipeline_event:%s is not a log", event.GetName())
@@ -223,7 +223,6 @@ func ConvertPipelineEventToOtlpLog(event models.PipelineEvent, scopeLog plog.Sco
 	return err
 }
 
-// metric event -> datapoint
 func ConvertPipelineEventToOtlpMetric(event models.PipelineEvent, scopeMetric pmetric.ScopeMetrics) (err error) {
 	if event.GetType() != models.EventTypeMetric {
 		return fmt.Errorf("pipeline_event:%s is not a metric", event.GetName())
