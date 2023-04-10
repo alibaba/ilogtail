@@ -35,6 +35,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/protocol/otlp"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 const (
@@ -251,9 +252,9 @@ func ConvertOtlpLogsToGroupEvents(logs plog.Logs) (groupEventsSlice []*models.Pi
 				case pcommon.ValueTypeBytes:
 					body = logRecord.Body().Bytes().AsRaw()
 				case pcommon.ValueTypeStr:
-					body = []byte(logRecord.Body().AsString())
+					body = util.ZeroCopyStringToBytes(logRecord.Body().AsString())
 				default:
-					body = []byte(fmt.Sprintf("%#v", logRecord.Body().AsRaw()))
+					body = util.ZeroCopyStringToBytes(fmt.Sprintf("%#v", logRecord.Body().AsRaw()))
 				}
 
 				event := models.NewLog(

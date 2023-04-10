@@ -199,6 +199,9 @@ func ConvertPipelineEventToOtlpLog(event models.PipelineEvent, scopeLog plog.Sco
 
 	log := scopeLog.LogRecords().AppendEmpty()
 	setAttributes(log.Attributes(), logEvent.Tags)
+
+	// set body as bytes
+	log.Body().SetEmptyBytes().Append(logEvent.GetBody()...)
 	log.SetTimestamp(pcommon.Timestamp(logEvent.Timestamp))
 	log.SetObservedTimestamp(pcommon.Timestamp(logEvent.ObservedTimestamp))
 	log.SetSeverityText(logEvent.Level)
