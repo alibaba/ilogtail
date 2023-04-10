@@ -1,4 +1,4 @@
-# Canal
+# GO Profile
 
 ## 简介
 
@@ -30,11 +30,11 @@
 
 2. Address 配置
 
-| 参数     | 类型，默认值                 | 说明           |
-|--------|------------------------|--------------|
-| Host   | string，无默认值（必填）        | 实例地址         |
-| Port   | int，无默认值（必填）           | 实例端口         |
-| Labels | map[string]string，`{}` | 具体实例性能数据追加标签 |
+| 参数             | 类型，默认值                 | 说明           |
+|----------------|------------------------|--------------|
+| Host           | string，无默认值（必填）        | 实例地址         |
+| Port           | int，无默认值（必填）           | 实例端口         |
+| InstanceLabels | map[string]string，`{}` | 具体实例性能数据追加标签 |
 
 ### kubernetes模式子配置
 
@@ -71,7 +71,7 @@
           Addresses:
             - Host: "127.0.0.1"
               Port: 18689
-              Labels:
+              InstanceLabels:
                 service: inner
 ```
 
@@ -91,11 +91,12 @@
           IncludeK8sLabel:
             app: golang-pull
         Labels:
-          global: outer   
+          global: outer
 
 ```
 
 2. 采集结果
+
 ```text
 2023-04-03 06:07:13 [INF] [flusher_stdout.go:120] [Flush] [1.0#PluginProject_0##Config0,PluginLogstore_0]       {"name":"runtime.memclrNoHeapPointers /usr/local/go/src/runtime/memclr_amd64.s","stack":"runtime.mallocgc /usr/local/go/src/runtime/malloc.go\nruntime.makeslice /usr/local/go/src/runtime/slice.go\nmain.memNormal /output/main.go\nmain.main.func1 /output/main.go","stackID":"36108813ff189cc4","language":"go","type":"profile_cpu","dataType":"CallStack","durationNs":"10000045532","profileID":"7bb6291c-b358-43fa-888a-dec7676552e4","labels":"{\"__name__\":\"golang-pull\",\"container\":\"golang-pull\",\"instance\":\"10.175.2.230:8080\",\"job\":\"1_0_pluginproject_0__config0\",\"label\":\"outer\",\"namespace\":\"profile\",\"pod\":\"golang-pull-6b946f8f6c-vhv9t\"}","units":"nanoseconds","valueTypes":"cpu","aggTypes":"sum","val":"20000000.00","__time__":"1680502023"}:
 ```

@@ -17,9 +17,9 @@ type StaticConfig struct {
 }
 
 type Address struct {
-	Host   string
-	Port   int32
-	Labels map[string]string
+	Host           string
+	Port           int32
+	InstanceLabels map[string]string
 }
 
 func (k *StaticConfig) Name() string {
@@ -42,9 +42,9 @@ func (k *StaticConfig) convertStaticConfig() (discovery.StaticConfig, error) {
 		if value, ok := k.labelSet[model.LabelName("service")]; ok {
 			appName = value
 			delete(k.labelSet, "service")
-		} else if value, ok := address.Labels["service"]; ok {
+		} else if value, ok := address.InstanceLabels["service"]; ok {
 			appName = model.LabelValue(value)
-			delete(address.Labels, "service")
+			delete(address.InstanceLabels, "service")
 		} else {
 			return nil, errors.New("not found required service labels")
 		}
@@ -53,7 +53,7 @@ func (k *StaticConfig) convertStaticConfig() (discovery.StaticConfig, error) {
 		innerLabels[model.AddressLabel] = model.LabelValue(addr)
 		innerLabels[model.AppNameLabel] = appName
 
-		for key, val := range address.Labels {
+		for key, val := range address.InstanceLabels {
 			innerLabels[model.LabelName(key)] = model.LabelValue(val)
 		}
 		cfg = append(cfg, &targetgroup.Group{
