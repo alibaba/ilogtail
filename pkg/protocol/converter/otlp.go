@@ -205,16 +205,16 @@ func ConvertPipelineEventToOtlpLog(event models.PipelineEvent, scopeLog plog.Sco
 	log.SetSeverityNumber(otlp.SeverityTextToSeverityNumber(logEvent.Level))
 
 	if logEvent.Tags.Contains(otlp.TagKeyLogFlag) {
-		if flag, err := strconv.Atoi(logEvent.Tags.Get(otlp.TagKeyLogFlag)); err == nil {
+		if flag, errConvert := strconv.Atoi(logEvent.Tags.Get(otlp.TagKeyLogFlag)); errConvert == nil {
 			log.SetFlags(plog.LogRecordFlags(flag))
 		}
 	}
 
-	if traceID, err := convertTraceID(logEvent.TraceID); err == nil {
+	if traceID, errConvert := convertTraceID(logEvent.TraceID); errConvert == nil {
 		log.SetTraceID(traceID)
 	}
 
-	if spanID, err := convertSpanID(logEvent.SpanID); err == nil {
+	if spanID, errConvert := convertSpanID(logEvent.SpanID); errConvert == nil {
 		log.SetSpanID(spanID)
 	}
 	return err

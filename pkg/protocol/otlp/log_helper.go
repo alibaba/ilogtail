@@ -20,9 +20,12 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 )
 
+// SeverityTextToSeverityNumber converts a serverityText to its corresponding serverity number
+// It returns info by default.
 func SeverityTextToSeverityNumber(severityText string) plog.SeverityNumber {
 	severity := strings.ToLower(severityText)
 
+	// using switch is a little faster than using hashmap when the count of cases is about 20.
 	switch severity {
 	case "trace":
 		return plog.SeverityNumberTrace
