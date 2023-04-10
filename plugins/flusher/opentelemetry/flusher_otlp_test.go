@@ -177,6 +177,7 @@ func Test_Flusher_Export_Logs(t *testing.T) {
 							convey.So(3, convey.ShouldEqual, actual.Attributes().Len())
 							convey.So(expected.Attributes().Len(), convey.ShouldEqual, actual.Attributes().Len())
 							convey.So(expected.Timestamp(), convey.ShouldEqual, actual.Timestamp())
+							convey.So(expected.Body().Bytes().AsRaw(), convey.ShouldResemble, actual.Body().Bytes().AsRaw())
 						}
 					}
 				}
