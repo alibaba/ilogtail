@@ -20,8 +20,13 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 )
 
-// SeverityTextToSeverityNumber converts a serverityText to its corresponding serverity number
-// It returns info by default.
+// SeverityTextToSeverityNumber can convert a provided serverityText into its corresponding serverity number.
+// It is case-insensitive and can accept the following serverityText values:
+// Trace, Trace2, Trace3, Trace4, Debug, Debug2, Debug3, Debug4,
+// Info, Info2, Info3, Info4, Infomation, Infomation2, Infomation3, Infomation4,
+// Warn, Warn2, Warn3, Warn4, Warning, Warning2, Warning3, Warning4,
+// Error, Error2, Error3, Error4, Fatal, Fatal2, Fatal3, Fatal4, and Unspecified.
+// If the provided serverityText is not in this list, the function will return Unspecified by default.
 func SeverityTextToSeverityNumber(severityText string) plog.SeverityNumber {
 	severity := strings.ToLower(severityText)
 
@@ -76,6 +81,6 @@ func SeverityTextToSeverityNumber(severityText string) plog.SeverityNumber {
 	case "fatal4":
 		return plog.SeverityNumberFatal4
 	default:
-		return plog.SeverityNumberInfo
+		return plog.SeverityNumberUnspecified
 	}
 }
