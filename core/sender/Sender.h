@@ -375,7 +375,7 @@ public:
     bool HasNetworkAvailable();
     void SetNetworkStat(const std::string& region, const std::string& endpoint, bool status, int32_t latency = -1);
 
-    sdk::Client* GetSendClient(const std::string& region, const std::string& aliuid);
+    sdk::Client* GetSendClient(const std::string& region, const std::string& aliuid, bool createIfNotFound = true);
 
     bool ResetSendClientEndpoint(const std::string aliuid, const std::string region, int32_t curTime);
     void CleanTimeoutSendClient();

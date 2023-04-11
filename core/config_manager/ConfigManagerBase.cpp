@@ -900,6 +900,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             config->mDiscardNoneUtf8 = GetBoolValue(value, "discard_none_utf8", false);
 
             config->mAliuid = GetStringValue(value, "aliuid", "");
+            InsertAliuidSet(config->mAliuid);
             if (AppConfig::GetInstance()->IsDataServerPrivateCloud())
                 config->mRegion = STRING_FLAG(default_region_name);
             else {

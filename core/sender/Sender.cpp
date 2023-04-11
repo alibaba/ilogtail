@@ -711,7 +711,7 @@ bool Sender::HasNetworkAvailable() {
     return false;
 }
 
-sdk::Client* Sender::GetSendClient(const std::string& region, const std::string& aliuid) {
+sdk::Client* Sender::GetSendClient(const std::string& region, const std::string& aliuid, bool createIfNotFound) {
     string key = region + "_" + aliuid;
     {
         PTScopedLock lock(mSendClientLock);
@@ -721,6 +721,9 @@ sdk::Client* Sender::GetSendClient(const std::string& region, const std::string&
 
             return (iter->second)->sendClient;
         }
+    }
+    if (!createIfNotFound) {
+        return nullptr;
     }
 
     int32_t lastUpdateTime;
@@ -744,7 +747,10 @@ sdk::Client* Sender::GetSendClient(const std::string& region, const std::string&
 }
 
 bool Sender::ResetSendClientEndpoint(const std::string aliuid, const std::string region, int32_t curTime) {
-    sdk::Client* sendClient = GetSendClient(region, aliuid);
+    sdk::Client* sendClient = GetSendClient(region, aliuid, false);
+    if (sendClient == nullptr) {
+        return false;
+    }
     if (curTime - sendClient->GetSlsHostUpdateTime() < INT32_FLAG(sls_host_update_interval))
         return false;
     sendClient->SetSlsHostUpdateTime(curTime);
@@ -1683,23 +1689,23 @@ void Sender::AddEndpointEntry(const std::string& region, const std::string& endp
     if (iter == mRegionEndpointEntryMap.end()) {
         entryPtr = new RegionEndpointEntry();
         mRegionEndpointEntryMap.insert(std::make_pair(region, entryPtr));
-        if (!isDefault && region.size() > 2) {
-            string possibleMainRegion = region.substr(0, region.size() - 2);
-            if (mRegionEndpointEntryMap.find(possibleMainRegion) != mRegionEndpointEntryMap.end()) {
-                string mainRegionEndpoint = mRegionEndpointEntryMap[possibleMainRegion]->mDefaultEndpoint;
-                string subRegionEndpoint = mainRegionEndpoint;
-                size_t pos = mainRegionEndpoint.find(possibleMainRegion);
-                if (pos != string::npos) {
-                    subRegionEndpoint = mainRegionEndpoint.substr(0, pos) + region
-                        + mainRegionEndpoint.substr(pos + possibleMainRegion.size());
-                }
-                if (entryPtr->AddDefaultEndpoint(subRegionEndpoint)) {
-                    LOG_INFO(sLogger,
-                             ("add default data server endpoint, region", region)("endpoint", endpoint)(
-                                 "isProxy", "false")("#endpoint", entryPtr->mEndpointDetailMap.size()));
-                }
-            }
-        }
+        // if (!isDefault && region.size() > 2) {
+        //     string possibleMainRegion = region.substr(0, region.size() - 2);
+        //     if (mRegionEndpointEntryMap.find(possibleMainRegion) != mRegionEndpointEntryMap.end()) {
+        //         string mainRegionEndpoint = mRegionEndpointEntryMap[possibleMainRegion]->mDefaultEndpoint;
+        //         string subRegionEndpoint = mainRegionEndpoint;
+        //         size_t pos = mainRegionEndpoint.find(possibleMainRegion);
+        //         if (pos != string::npos) {
+        //             subRegionEndpoint = mainRegionEndpoint.substr(0, pos) + region
+        //                 + mainRegionEndpoint.substr(pos + possibleMainRegion.size());
+        //         }
+        //         if (entryPtr->AddDefaultEndpoint(subRegionEndpoint)) {
+        //             LOG_INFO(sLogger,
+        //                      ("add default data server endpoint, region", region)("endpoint", endpoint)(
+        //                          "isProxy", "false")("#endpoint", entryPtr->mEndpointDetailMap.size()));
+        //         }
+        //     }
+        // }
     } else
         entryPtr = iter->second;
 
