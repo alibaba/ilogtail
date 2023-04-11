@@ -257,10 +257,15 @@ func ConvertOtlpLogsToGroupEvents(logs plog.Logs) (groupEventsSlice []*models.Pi
 					body = util.ZeroCopyStringToBytes(fmt.Sprintf("%#v", logRecord.Body().AsRaw()))
 				}
 
+				level := logRecord.SeverityText()
+				if level == "" {
+					level = logRecord.SeverityNumber().String()
+				}
+
 				event := models.NewLog(
 					logEventName,
 					body,
-					logRecord.SeverityText(),
+					level,
 					logRecord.SpanID().String(),
 					logRecord.TraceID().String(),
 					attrs2Tags(logRecord.Attributes()),

@@ -71,7 +71,6 @@ func TestConvertOtlpLogsToGroupEvents(t *testing.T) {
 
 	logRecord := scopeLog.LogRecords().AppendEmpty()
 	logRecord.Body().SetStr("some log message")
-	logRecord.SetSeverityText("INFO")
 	logRecord.SetSeverityNumber(plog.SeverityNumberInfo)
 	logRecord.SetTimestamp(1234567890)
 	logRecord.Attributes().PutStr("process", "process_name")
@@ -98,7 +97,7 @@ func TestConvertOtlpLogsToGroupEvents(t *testing.T) {
 	actualLog := events[0].(*models.Log)
 	assert.Equal(t, models.EventTypeLogging, events[0].GetType())
 	assert.Equal(t, []byte("some log message"), actualLog.Body)
-	assert.Equal(t, "INFO", actualLog.Level)
+	assert.Equal(t, "Info", actualLog.Level)
 	assert.Equal(t, "0102030405060708", actualLog.SpanID)
 	assert.Equal(t, "0102030405060708090a0b0c0d0e0f10", actualLog.TraceID)
 	assert.Equal(t, uint64(1234567890), actualLog.Timestamp)
