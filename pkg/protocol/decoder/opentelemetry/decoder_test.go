@@ -60,10 +60,8 @@ func TestNormal(t *testing.T) {
 }
 
 func TestConvertOtlpLogsToGroupEvents(t *testing.T) {
-	// Create some example data
 	plogs := plog.NewLogs()
 	rsLogs := plogs.ResourceLogs().AppendEmpty()
-	// rsLogs := plog.NewResourceLogs()
 	rsLogs.Resource().Attributes().PutStr("meta_attr1", "attr_value1")
 	rsLogs.Resource().Attributes().PutStr("meta_attr2", "attr_value2")
 	scopeLog := rsLogs.ScopeLogs().AppendEmpty()
@@ -105,7 +103,6 @@ func TestConvertOtlpLogsToGroupEvents(t *testing.T) {
 }
 
 func TestDecoder_DecodeV2_Logs(t *testing.T) {
-
 	// complcated case
 	encoder := &plog.JSONMarshaler{}
 	jsonBuf, err := encoder.MarshalLogs(logsOTLP)
