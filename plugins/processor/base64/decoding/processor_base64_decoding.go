@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
@@ -65,6 +66,23 @@ func (p *ProcessorBase64Decoding) ProcessLogs(logArray []*protocol.Log) []*proto
 		}
 	}
 	return logArray
+}
+
+func (p *ProcessorBase64Decoding) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
+	for _, event := range in.Events {
+		tags := event.GetTags()
+		if tags.Contains(p.SourceKey) {
+			newVal, err := base64.StdEncoding.DecodeString(tags.Get(p.SourceKey))
+			if err == nil {
+				tags.Add(p.NewKey, string(newVal))
+			} else if p.DecodeError {
+				logger.Warning(p.context.GetRuntimeContext(), "BASE64_D_ALARM", "decode base64 error", err)
+			}
+		} else if p.NoKeyError {
+			logger.Warning(p.context.GetRuntimeContext(), "BASE64_D_FIND_ALARM", "cannot find key", p.SourceKey)
+		}
+	}
+	context.Collector().Collect(in.Group, in.Events...)
 }
 
 func init() {

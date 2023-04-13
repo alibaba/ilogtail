@@ -23,6 +23,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/helper/platformmeta"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -189,6 +190,34 @@ func (p *ProcessorAppender) ParseVariableValue(key string) string {
 		return platformmeta.FlagInstanceVswitchIDWrapper
 	}
 	return key
+}
+
+func (p *ProcessorAppender) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
+	for _, event := range in.Events {
+		tags := event.GetTags()
+		if !tags.Contains(p.Key) {
+			tagV := p.realValue
+			for _, replaceFunc := range p.replaceFuncs {
+				tagV = replaceFunc(tagV)
+			}
+			if p.SortLabels {
+				labels := strings.Split(tagV, "|")
+				var keyValue helper.KeyValues
+				for _, labelStr := range labels {
+					kv := strings.SplitN(labelStr, "#$#", 2)
+					if len(kv) == 2 {
+						keyValue.Append(kv[0], kv[1])
+					}
+				}
+				if keyValue.Len() > 0 {
+					keyValue.Sort()
+					tagV = keyValue.String()
+				}
+			}
+			tags.Add(p.Key, tagV)
+		}
+	}
+	context.Collector().Collect(in.Group, in.Events...)
 }
 
 func init() {

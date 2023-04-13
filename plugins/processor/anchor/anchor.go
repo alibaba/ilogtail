@@ -17,13 +17,13 @@ package anchor
 import (
 	"strings"
 
+	"github.com/buger/jsonparser"
+
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
-
-	"github.com/buger/jsonparser"
 )
 
 const (
