@@ -305,7 +305,6 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 			if event == nil {
 				continue
 			}
-
 			// Check pause status if config is still alive, if paused, wait for resume.
 			select {
 			case <-p.LogstoreConfig.pauseChan:

@@ -94,13 +94,11 @@ func (p *ProcessorAddFields) isExist(log *protocol.Log, key string) bool {
 }
 
 func (p *ProcessorAddFields) Process(in *models.PipelineGroupEvents, context pipeline.PipelineContext) {
-	if p.IgnoreIfExist && len(p.Fields) > 1 {
-		for _, event := range in.Events {
-			tags := event.GetTags()
-			for k, v := range p.Fields {
-				if !tags.Contains(k) {
-					tags.Add(k, v)
-				}
+	for _, event := range in.Events {
+		tags := event.GetTags()
+		for k, v := range p.Fields {
+			if !p.IgnoreIfExist || !tags.Contains(k) {
+				tags.Add(k, v)
 			}
 		}
 	}
