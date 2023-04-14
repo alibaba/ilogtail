@@ -62,6 +62,15 @@ inline std::string ToString(const std::string& str) {
     return str;
 }
 inline std::string ToString(const char* str) {
+    if (str == nullptr) {
+        return "";
+    }
+    return std::string(str);
+}
+inline std::string ToString(char* str) {
+    if (str == nullptr) {
+        return "";
+    }
     return std::string(str);
 }
 inline std::string ToString(bool value) {
