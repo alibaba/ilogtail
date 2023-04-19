@@ -100,7 +100,7 @@ DEFINE_FLAG_INT32(sending_cost_time_alarm_interval, "sending log group cost too 
 DEFINE_FLAG_INT32(log_group_wait_in_queue_alarm_interval,
                   "log group wait in queue alarm interval, may blocked by concurrency or quota, second",
                   3);
-DEFINE_FLAG_STRING(data_endpoint_policy, "policy for switching between data server endpoints", "designated_first");
+DEFINE_FLAG_STRING(data_endpoint_policy, "policy for switching between data server endpoints, possible options include 'designated_first'(default) and 'designated_locked'", "designated_first");
 
 namespace logtail {
 const string Sender::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";
@@ -426,7 +426,7 @@ SendResult ConvertErrorCode(const std::string& errorCode) {
 }
 
 Sender::Sender() {
-    CheckConfig();
+    setupServerSwitchPolicy();
     srand(time(NULL));
     mFlushLog = false;
     SetBufferFilePath(AppConfig::GetInstance()->GetBufferFilePath());
@@ -469,7 +469,7 @@ Sender* Sender::Instance() {
     return senderPtr;
 }
 
-void Sender::CheckConfig() {
+void Sender::setupServerSwitchPolicy() {
     if (STRING_FLAG(data_endpoint_policy) == "designated_locked") {
         mDataServerSwitchPolicy = dataServerSwitchPolicy::DESIGNATED_LOCKED;
     } else if (STRING_FLAG(data_endpoint_policy) == "designated_first") {

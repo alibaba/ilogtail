@@ -165,7 +165,7 @@ private:
     Sender();
     Sender(const Sender&);
     Sender& operator=(const Sender&);
-    void CheckConfig();
+    void setupServerSwitchPolicy();
     bool WriteToFile(const std::string& projectName, const sls_logs::LogGroup& logGroup, bool sendPerformance);
     bool WriteToFile(LoggroupTimeValue* value, bool sendPerformance);
     bool DumpDebugFile(LoggroupTimeValue* value, bool sendPerformance = false);

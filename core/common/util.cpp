@@ -62,7 +62,7 @@ std::string CalculateRandomUUID() {
 }
 
 bool IsHttpsEndpoint(const string& endpoint) {
-    if (endpoint.rfind("https://") == 0) {
+    if (endpoint.find("https://") == 0) {
         return true;
     }
     return false;
