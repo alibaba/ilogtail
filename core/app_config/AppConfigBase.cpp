@@ -793,9 +793,10 @@ bool AppConfigBase::CheckProxyEnv() {
         }
         // libcurl do not recognize env HTTP_PROXY, thus env http_proxy need to be copied to env HTTP_PROXY if present
         if (!httpProxy.empty()) {
-            setEnv("http_proxy", httpProxy.c_str());
+            SetEnv("http_proxy", httpProxy.c_str());
         }
     } else {
+        UnsetEnv("HTTP_PROXY");
         if (!CheckProxyAddress("http_proxy", httpProxy)) {
             LOG_WARNING(sLogger,
                         ("proxy mode", "off")("reason", "http proxy env value not valid")("http proxy", httpProxy));
@@ -803,10 +804,11 @@ bool AppConfigBase::CheckProxyEnv() {
         }
     }
 
-    string httpsProxy;
-    httpsProxy = ToString(getenv("https_proxy"));
+    string httpsProxy = ToString(getenv("https_proxy"));
     if (httpsProxy.empty()) {
         httpsProxy = ToString(getenv("HTTPS_PROXY"));
+    } else {
+        UnsetEnv("HTTPS_PROXY");
     }
     if (!CheckProxyAddress("https_proxy", httpsProxy)) {
         LOG_WARNING(sLogger,
@@ -817,6 +819,8 @@ bool AppConfigBase::CheckProxyEnv() {
     string allProxy = ToString(getenv("all_proxy"));
     if (allProxy.empty()) {
         allProxy = ToString(getenv("ALL_PROXY"));
+    } else {
+        UnsetEnv("ALL_PROXY");
     }
     if (!CheckProxyAddress("all_proxy", allProxy)) {
         LOG_WARNING(sLogger, ("proxy mode", "off")("reason", "all proxy env value not valid")("all proxy", allProxy));
@@ -826,6 +830,8 @@ bool AppConfigBase::CheckProxyEnv() {
     string noProxy = ToString(getenv("no_proxy"));
     if (noProxy.empty()) {
         noProxy = ToString(getenv("NO_PROXY"));
+    } else {
+        UnsetEnv("NO_PROXY");
     }
 
     if (!httpProxy.empty() || !httpsProxy.empty() || !allProxy.empty()) {
@@ -857,7 +863,7 @@ bool AppConfigBase::CheckProxyAddress(const char* envKey, string& address) {
     }
     if (address.find(":", pos) == string::npos) {
         address += ":80";
-        setEnv(envKey, address.c_str());
+        SetEnv(envKey, address.c_str());
     }
     return true;
 }

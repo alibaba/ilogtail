@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 iLogtail Authors
+ * Copyright 2023 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,19 @@
 
 namespace logtail {
 
-void setEnv(const char* key, const char* value) {
+void SetEnv(const char* key, const char* value) {
 #if defined(__linux__)
     setenv(key, value, 1);
 #elif defined(_MSC_VER)
     _putenv_s(key, value);
+#endif
+}
+
+void UnsetEnv(const char* key) {
+#if defined(__linux__)
+    unsetenv(key);
+#elif defined(_MSC_VER)
+    _putenv_s(key, "");
 #endif
 }
 
