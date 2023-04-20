@@ -298,7 +298,7 @@ void AppConfigBase::LoadAppConfig(const std::string& ilogtailConfigFile) {
     LoadOtherConf(confJson);
 
     LoadGlobalFuseConf(confJson);
-    CheckProxyEnv();
+    CheckAndResetProxyEnv();
 }
 
 std::string AppConfigBase::GetDefaultRegion() const {
@@ -781,12 +781,13 @@ void AppConfigBase::LoadResourceConf(const Json::Value& confJson) {
     CheckAndAdjustParameters();
 }
 
-bool AppConfigBase::CheckProxyEnv() {
+bool AppConfigBase::CheckAndResetProxyEnv() {
     // envs in lower case prioritize those capitalized
     string httpProxy = ToString(getenv("http_proxy"));
     if (httpProxy.empty()) {
         httpProxy = ToString(getenv("HTTP_PROXY"));
-        if (!CheckProxyAddress("http_proxy", httpProxy)) {
+        if (!CheckAndResetProxyAddress("http_proxy", httpProxy)) {
+            UnsetEnv("HTTP_PROXY");
             LOG_WARNING(sLogger,
                         ("proxy mode", "off")("reason", "http proxy env value not valid")("http proxy", httpProxy));
             return false;
@@ -797,7 +798,8 @@ bool AppConfigBase::CheckProxyEnv() {
         }
     } else {
         UnsetEnv("HTTP_PROXY");
-        if (!CheckProxyAddress("http_proxy", httpProxy)) {
+        if (!CheckAndResetProxyAddress("http_proxy", httpProxy)) {
+            UnsetEnv("http_PROXY");
             LOG_WARNING(sLogger,
                         ("proxy mode", "off")("reason", "http proxy env value not valid")("http proxy", httpProxy));
             return false;
@@ -810,7 +812,9 @@ bool AppConfigBase::CheckProxyEnv() {
     } else {
         UnsetEnv("HTTPS_PROXY");
     }
-    if (!CheckProxyAddress("https_proxy", httpsProxy)) {
+    if (!CheckAndResetProxyAddress("https_proxy", httpsProxy)) {
+        UnsetEnv("https_proxy");
+        UnsetEnv("HTTPS_PROXY");
         LOG_WARNING(sLogger,
                     ("proxy mode", "off")("reason", "https proxy env value not valid")("https proxy", httpsProxy));
         return false;
@@ -822,7 +826,9 @@ bool AppConfigBase::CheckProxyEnv() {
     } else {
         UnsetEnv("ALL_PROXY");
     }
-    if (!CheckProxyAddress("all_proxy", allProxy)) {
+    if (!CheckAndResetProxyAddress("all_proxy", allProxy)) {
+        UnsetEnv("all_proxy");
+        UnsetEnv("ALL_PROXY");
         LOG_WARNING(sLogger, ("proxy mode", "off")("reason", "all proxy env value not valid")("all proxy", allProxy));
         return false;
     }
@@ -843,9 +849,9 @@ bool AppConfigBase::CheckProxyEnv() {
     return true;
 }
 
-// valid proxy address format:
-// [scheme://[user:pwd@]]address[:port], 'http' and '80' assumed if no scheme or port provided
-bool AppConfigBase::CheckProxyAddress(const char* envKey, string& address) {
+// valid proxy address format: [scheme://[user:pwd\@]]address[:port], 'http' and '80' assumed if no scheme or port
+// provided
+bool AppConfigBase::CheckAndResetProxyAddress(const char* envKey, string& address) {
     if (address.empty()) {
         return true;
     }

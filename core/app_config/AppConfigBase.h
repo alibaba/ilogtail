@@ -217,8 +217,8 @@ private:
     // logtail is in purage container mode when STRING_FLAG(ilogtail_user_defined_id_env_name) exist and /logtail_host
     // exist
     void CheckPurageContainerMode();
-    bool CheckProxyEnv();
-    bool CheckProxyAddress(const char* envKey, std::string& address);
+    bool CheckAndResetProxyEnv();
+    bool CheckAndResetProxyAddress(const char* envKey, std::string& address);
 
     static void InitEnvMapping(const std::string& envStr, std::map<std::string, std::string>& envMapping);
     static void SetConfigFlag(const std::string& flagName, const std::string& value);
