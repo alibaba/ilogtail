@@ -782,69 +782,71 @@ void AppConfigBase::LoadResourceConf(const Json::Value& confJson) {
 }
 
 bool AppConfigBase::CheckAndResetProxyEnv() {
-    // envs in lower case prioritize those capitalized
-    string httpProxy = ToString(getenv("http_proxy"));
+    // envs capitalized prioritize those in lower case
+    string httpProxy = ToString(getenv("HTTP_PROXY"));
     if (httpProxy.empty()) {
-        httpProxy = ToString(getenv("HTTP_PROXY"));
+        httpProxy = ToString(getenv("http_proxy"));
         if (!CheckAndResetProxyAddress("http_proxy", httpProxy)) {
+            UnsetEnv("http_proxy");
+            LOG_WARNING(sLogger,
+                        ("proxy mode", "off")("reason", "http proxy env value not valid")("http proxy", httpProxy));
+            return false;
+        }
+    } else {
+        if (!CheckAndResetProxyAddress("HTTP_PROXY", httpProxy)) {
+            UnsetEnv("http_proxy");
             UnsetEnv("HTTP_PROXY");
             LOG_WARNING(sLogger,
                         ("proxy mode", "off")("reason", "http proxy env value not valid")("http proxy", httpProxy));
             return false;
         }
         // libcurl do not recognize env HTTP_PROXY, thus env http_proxy need to be copied to env HTTP_PROXY if present
-        if (!httpProxy.empty()) {
-            SetEnv("http_proxy", httpProxy.c_str());
-        }
-    } else {
-        UnsetEnv("HTTP_PROXY");
-        if (!CheckAndResetProxyAddress("http_proxy", httpProxy)) {
-            UnsetEnv("http_PROXY");
-            LOG_WARNING(sLogger,
-                        ("proxy mode", "off")("reason", "http proxy env value not valid")("http proxy", httpProxy));
-            return false;
-        }
+        SetEnv("http_proxy", httpProxy.c_str());
     }
 
-    string httpsProxy = ToString(getenv("https_proxy"));
-    if (httpsProxy.empty()) {
-        httpsProxy = ToString(getenv("HTTPS_PROXY"));
+    char* httpsProxyKey = "HTTPS_PROXY";
+    string httpsProxyValue = ToString(getenv(httpsProxyKey));
+    if (httpsProxyValue.empty()) {
+        httpsProxyKey = "https_proxy";
+        httpsProxyValue = ToString(getenv(httpsProxyKey));
     } else {
-        UnsetEnv("HTTPS_PROXY");
+        UnsetEnv("https_proxy");
     }
-    if (!CheckAndResetProxyAddress("https_proxy", httpsProxy)) {
+    if (!CheckAndResetProxyAddress(httpsProxyKey, httpsProxyValue)) {
         UnsetEnv("https_proxy");
         UnsetEnv("HTTPS_PROXY");
         LOG_WARNING(sLogger,
-                    ("proxy mode", "off")("reason", "https proxy env value not valid")("https proxy", httpsProxy));
+                    ("proxy mode", "off")("reason", "https proxy env value not valid")("https proxy", httpsProxyValue));
         return false;
     }
 
-    string allProxy = ToString(getenv("all_proxy"));
+    char *allProxyKey = "ALL_PROXY";
+    string allProxy = ToString(getenv(allProxyKey));
     if (allProxy.empty()) {
-        allProxy = ToString(getenv("ALL_PROXY"));
+        char *allProxyKey = "all_proxy";
+        allProxy = ToString(getenv(allProxyKey));
     } else {
-        UnsetEnv("ALL_PROXY");
+        UnsetEnv("all_proxy");
     }
-    if (!CheckAndResetProxyAddress("all_proxy", allProxy)) {
+    if (!CheckAndResetProxyAddress(allProxyKey, allProxy)) {
         UnsetEnv("all_proxy");
         UnsetEnv("ALL_PROXY");
         LOG_WARNING(sLogger, ("proxy mode", "off")("reason", "all proxy env value not valid")("all proxy", allProxy));
         return false;
     }
 
-    string noProxy = ToString(getenv("no_proxy"));
+    string noProxy = ToString(getenv("NO_PROXY"));
     if (noProxy.empty()) {
-        noProxy = ToString(getenv("NO_PROXY"));
+        noProxy = ToString(getenv("no_proxy"));
     } else {
-        UnsetEnv("NO_PROXY");
+        UnsetEnv("no_proxy");
     }
 
-    if (!httpProxy.empty() || !httpsProxy.empty() || !allProxy.empty()) {
+    if (!httpProxy.empty() || !httpsProxyValue.empty() || !allProxy.empty()) {
         mEnableHostIPReplace = false;
         LOG_INFO(sLogger,
-                 ("proxy mode", "on")("http proxy", httpProxy)("https proxy",
-                                                               httpsProxy)("all proxy", allProxy)("no proxy", noProxy));
+                 ("proxy mode", "on")("http proxy", httpProxy)("https proxy", httpsProxyValue)("all proxy", allProxy)(
+                     "no proxy", noProxy));
     }
     return true;
 }
