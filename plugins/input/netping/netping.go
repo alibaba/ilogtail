@@ -123,7 +123,7 @@ type NetPing struct {
 	ICMPConfigs      []ICMPConfig `json:"icmp" comment:"the icmping config list, example:  {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${REMOTE_HOST}\", \"count\" : 3}"`
 	TCPConfigs       []TCPConfig  `json:"tcp" comment:"the tcping config list, example: {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${REMOTE_HOST}\", \"port\" : ${PORT}, \"count\" : 3}"`
 	HTTPConfigs      []HTTPConfig `json:"http" comment:"the http config list, example: {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${http url}\"}"`
-	LocalTriggerMode bool         `json:"local_node_mode" comment:"use local node as trigger node when not found source node in previous configs"`
+	LocalTriggerMode bool         `json:"local_trigger_mode" comment:"use local node as trigger node when not found source node in previous configs"`
 }
 
 func (m *NetPing) processTimeoutAndInterval() {
