@@ -154,6 +154,9 @@ protected:
 
     bool mHaveFuseConfigFlag = false;
 
+    PTMutex mRegionAliuidMapLock;
+    std::map<std::string, std::set<std::string>> mRegionAliuidMap;
+
     /**
      * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map
      * @return
@@ -265,7 +268,6 @@ public:
     void InsertAliuidSet(const std::string& aliuid);
     void SetAliuidSet(const std::vector<std::string>& aliuidList);
     void GetAliuidSet(Json::Value& aliuidArray);
-    void GetAliuidSet(std::vector<std::string>& aliuidVector);
     std::string GetAliuidSet();
 
     void SetUserDefinedIdSet(const std::vector<std::string>& userDefinedIdList);
@@ -439,6 +441,10 @@ public:
     virtual std::string CheckPluginFlusher(Json::Value& configJson) = 0;
 
     virtual Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson) = 0;
+
+    const std::set<std::string>& GetRegionAliuids(const std::string& region);
+    void InsertRegionAliuidMap(const std::string& region, const std::string& aliuid);
+    void ClearRegionAliuidMap();
 
 private:
     // no copy

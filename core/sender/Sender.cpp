@@ -1771,11 +1771,10 @@ void Sender::TestNetwork() {
         int32_t curTime = time(NULL);
         bool flag = false;
         bool wakeUp = false;
-        vector<string> uids;
-        ConfigManager::GetInstance()->GetAliuidSet(uids);
         for (const auto& value : unavaliableEndpoints) {
             const string& region = value.first;
             bool endpointChanged = false;
+            set<string> uids = ConfigManager::GetInstance()->GetRegionAliuids(region);
             for (const auto& item : value.second) {
                 const string& endpoint = item.second;
                 const int32_t priority = item.first;

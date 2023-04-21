@@ -55,6 +55,7 @@
 #include "sender/Sender.h"
 #include "processor/LogProcess.h"
 #include "processor/LogFilter.h"
+#include "ConfigManagerBase.h"
 
 using namespace std;
 using namespace logtail;
@@ -241,7 +242,8 @@ void ConfigManagerBase::MappingPluginConfig(const Json::Value& configValue, Conf
     if (configValue.isMember("docker_exclude_env") && configValue["docker_exclude_env"].isObject()) {
         detail["ExcludeEnv"] = configValue["docker_exclude_env"];
     }
-    if (configValue.isMember("advanced") && configValue["advanced"].isObject() && configValue["advanced"].isMember("collect_containers_flag")) {
+    if (configValue.isMember("advanced") && configValue["advanced"].isObject()
+        && configValue["advanced"].isMember("collect_containers_flag")) {
         detail["CollectContainersFlag"] = configValue["advanced"]["collect_containers_flag"];
     }
     // parse k8s flags
@@ -900,7 +902,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             config->mDiscardNoneUtf8 = GetBoolValue(value, "discard_none_utf8", false);
 
             config->mAliuid = GetStringValue(value, "aliuid", "");
-            InsertAliuidSet(config->mAliuid);
             if (AppConfig::GetInstance()->IsDataServerPrivateCloud())
                 config->mRegion = STRING_FLAG(default_region_name);
             else {
@@ -922,6 +923,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     }
                 }
             }
+            InsertRegionAliuidMap(config->mRegion, config->mAliuid);
 
             config->mShardHashKey.clear();
             if (value.isMember("shard_hash_key")) {
@@ -1825,6 +1827,7 @@ void ConfigManagerBase::RemoveAllConfigs() {
     mCacheFileAllConfigMap.clear();
     ClearProjects();
     ClearRegions();
+    ClearRegionAliuidMap();
 }
 
 std::string ConfigManagerBase::GetDefaultPubAliuid() {
@@ -1891,14 +1894,6 @@ void ConfigManagerBase::GetAliuidSet(Json::Value& aliuidArray) {
     for (set<string>::iterator iter = mAliuidSet.begin(); iter != mAliuidSet.end(); ++iter)
         aliuidArray.append(Json::Value(*iter));
 }
-
-void ConfigManagerBase::GetAliuidSet(std::vector<std::string>& aliuidVector) {
-    ScopedSpinLock lock(mAliuidSetLock);
-    for (const auto &uid: mAliuidSet) {
-        aliuidVector.push_back(uid);
-    }
-}
-
 
 std::string ConfigManagerBase::GetAliuidSet() {
     ScopedSpinLock lock(mAliuidSetLock);
@@ -3037,6 +3032,21 @@ std::string replaceEnvVarRefInStr(const std::string& inStr) {
     }
     outStr.append(unescapeDollar(lastMatchEnd, inStr.end())); // original part
     return outStr;
+}
+
+const set<string>& ConfigManagerBase::GetRegionAliuids(const std::string& region) {
+    PTScopedLock lock(mRegionAliuidMapLock);
+    return mRegionAliuidMap[region];
+}
+
+void ConfigManagerBase::InsertRegionAliuidMap(const std::string& region, const std::string& aliuid) {
+    PTScopedLock lock(mRegionAliuidMapLock);
+    mRegionAliuidMap[region].insert(aliuid);
+}
+
+void ConfigManagerBase::ClearRegionAliuidMap() {
+    PTScopedLock lock(mRegionAliuidMapLock);
+    mRegionAliuidMap.clear();
 }
 
 } // namespace logtail
