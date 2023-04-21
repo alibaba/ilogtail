@@ -117,13 +117,13 @@ type NetPing struct {
 	resolveHostMap *sync.Map
 	resolveChannel chan *ResolveResult
 
-	DisableDNS      bool         `json:"disable_dns_metric" comment:"disable dns resolve metric, default is false"`
-	TimeoutSeconds  int          `json:"timeout_seconds" comment:"the timeout of ping/tcping, unit is second,must large than or equal 1, less than  30, default is 5"`
-	IntervalSeconds int          `json:"interval_seconds" comment:"the interval of ping/tcping, unit is second,must large than or equal 5, less than 86400 and timeout_seconds, default is 60"`
-	ICMPConfigs     []ICMPConfig `json:"icmp" comment:"the icmping config list, example:  {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${REMOTE_HOST}\", \"count\" : 3}"`
-	TCPConfigs      []TCPConfig  `json:"tcp" comment:"the tcping config list, example: {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${REMOTE_HOST}\", \"port\" : ${PORT}, \"count\" : 3}"`
-	HTTPConfigs     []HTTPConfig `json:"http" comment:"the http config list, example: {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${http url}\"}"`
-	LocalAsSrc      bool         `json:"local_node_mode" comment:"use local node as trigger node when not found source node in previous configs"`
+	DisableDNS       bool         `json:"disable_dns_metric" comment:"disable dns resolve metric, default is false"`
+	TimeoutSeconds   int          `json:"timeout_seconds" comment:"the timeout of ping/tcping, unit is second,must large than or equal 1, less than  30, default is 5"`
+	IntervalSeconds  int          `json:"interval_seconds" comment:"the interval of ping/tcping, unit is second,must large than or equal 5, less than 86400 and timeout_seconds, default is 60"`
+	ICMPConfigs      []ICMPConfig `json:"icmp" comment:"the icmping config list, example:  {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${REMOTE_HOST}\", \"count\" : 3}"`
+	TCPConfigs       []TCPConfig  `json:"tcp" comment:"the tcping config list, example: {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${REMOTE_HOST}\", \"port\" : ${PORT}, \"count\" : 3}"`
+	HTTPConfigs      []HTTPConfig `json:"http" comment:"the http config list, example: {\"src\" : \"${IP_ADDR}\",  \"target\" : \"${http url}\"}"`
+	LocalTriggerMode bool         `json:"local_node_mode" comment:"use local node as trigger node when not found source node in previous configs"`
 }
 
 func (m *NetPing) processTimeoutAndInterval() {
@@ -162,7 +162,7 @@ func (m *NetPing) Init(context pipeline.Context) (int, error) {
 	m.resolveHostMap = &sync.Map{}
 
 	for _, c := range m.ICMPConfigs {
-		if c.Src == "" && m.LocalAsSrc {
+		if c.Src == "" && m.LocalTriggerMode {
 			c.Src = m.ip
 		}
 		if c.Src == m.ip {
@@ -182,7 +182,7 @@ func (m *NetPing) Init(context pipeline.Context) (int, error) {
 	// get tcp target
 	localTCPConfigs := make([]TCPConfig, 0)
 	for _, c := range m.TCPConfigs {
-		if c.Src == "" && m.LocalAsSrc {
+		if c.Src == "" && m.LocalTriggerMode {
 			c.Src = m.ip
 		}
 		if c.Src == m.ip {
@@ -202,7 +202,7 @@ func (m *NetPing) Init(context pipeline.Context) (int, error) {
 	// get http target
 	localHTTPConfigs := make([]HTTPConfig, 0)
 	for _, c := range m.HTTPConfigs {
-		if c.Src == "" && m.LocalAsSrc {
+		if c.Src == "" && m.LocalTriggerMode {
 			c.Src = m.ip
 		}
 		if c.Src == m.ip {
