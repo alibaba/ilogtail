@@ -147,6 +147,16 @@ bool Aggregator::Add(const std::string& projectName,
             logTagPtr->set_value(sEnvTags[i].value());
         }
     }
+
+    const vector<sls_logs::LogTag>& sFileTags = ConfigManager::GetInstance()->GetFileTags();
+    if (!sFileTags.empty()) {
+        for (size_t i = 0; i < sFileTags.size(); ++i) {
+            sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
+            logTagPtr->set_key(sFileTags[i].key());
+            logTagPtr->set_value(sFileTags[i].value());
+        }
+    }
+
     vector<int32_t> neededLogs;
     int32_t neededLogSize = FilterNoneUtf8Metric(logGroup, config, neededLogs, context);
     if (neededLogSize == 0)

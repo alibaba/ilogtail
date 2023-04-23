@@ -62,6 +62,7 @@ protected:
 
     Json::Value mConfigJson;
     Json::Value mLocalConfigJson;
+    Json::Value mFileTagsJson;
     std::unordered_map<std::string, Json::Value> mLocalConfigDirMap;
     std::unordered_map<std::string, YAML::Node> mYamlConfigDirMap;
 
@@ -439,6 +440,12 @@ public:
 
     virtual Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson) = 0;
 
+    const std::vector<sls_logs::LogTag>& GetFileTags() const {
+        return mFileTags[read_index];
+    }
+
+    bool UpdateFileTags();
+
 private:
     // no copy
     ConfigManagerBase(const ConfigManagerBase&);
@@ -505,6 +512,11 @@ private:
     void InsertProject(const std::string& project);
 
     void ClearProjects();
+
+    std::vector<std::vector<sls_logs::LogTag>> mFileTags;
+    #define BUFFER_NUM 2
+    int32_t write_index = 0;
+    int32_t read_index = 1;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     void CleanEnviroments();

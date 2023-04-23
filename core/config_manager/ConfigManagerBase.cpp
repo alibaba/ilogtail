@@ -105,6 +105,8 @@ DECLARE_FLAG_BOOL(default_global_mark_offset_flag);
 DECLARE_FLAG_BOOL(enable_collection_mark);
 DECLARE_FLAG_BOOL(enable_env_ref_in_config);
 
+DEFINE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS, "default env file key to load tags", "");
+
 namespace logtail {
 
 static bool ReadAliuidsFile(std::vector<std::string>& aliuids) {
@@ -1179,6 +1181,8 @@ ConfigManagerBase::ConfigManagerBase() {
     mUserDefinedId.clear();
     mUserDefinedIdSet.clear();
     mAliuidSet.clear();
+
+    mFileTags.resize(BUFFER_NUM);
 
     SetDefaultPubAccessKeyId(STRING_FLAG(default_access_key_id));
     SetDefaultPubAccessKey(STRING_FLAG(default_access_key));
@@ -2322,6 +2326,48 @@ bool ConfigManagerBase::GetLocalConfigFileUpdate() {
             LOG_INFO(sLogger, ("local config update, old config", mLocalConfigJson.toStyledString()));
             mLocalConfigJson = localLogJson;
             LOG_INFO(sLogger, ("local config update, new config", mLocalConfigJson.toStyledString()));
+            updateFlag = true;
+        }
+    }
+    return updateFlag;
+}
+
+bool ConfigManagerBase::UpdateFileTags() {
+    bool updateFlag = false;
+    // read local config
+    Json::Value localFileTagsJson;
+    const char* file_tags_dir = STRING_FLAG(ALIYUN_LOG_FILE_TAGS).c_str();
+    if (STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
+        file_tags_dir = "ilogtail_file_tags.json";
+    }
+
+    ParseConfResult userLogRes = ParseConfig(file_tags_dir, localFileTagsJson);
+    if (userLogRes != CONFIG_OK) {
+        if (userLogRes == CONFIG_NOT_EXIST)
+            LOG_ERROR(sLogger, ("load file tags fail, file not exist", file_tags_dir));
+        else if (userLogRes == CONFIG_INVALID_FORMAT) {
+            LOG_ERROR(sLogger, ("load file tags fail, file content is not valid json", file_tags_dir));
+        }
+    } else {
+        if (localFileTagsJson != mFileTagsJson) {
+            mFileTags[write_index].clear();
+            int32_t i = 0;
+            vector<sls_logs::LogTag>& sFileTags = mFileTags[write_index];
+            sFileTags.resize(localFileTagsJson.size());
+            for (auto it = localFileTagsJson.begin(); it != localFileTagsJson.end(); ++it) {
+                if (it->isString()) {
+                    sFileTags[i].set_key(it.key().asString());
+                    sFileTags[i].set_value(it->asString());
+                    ++i;
+                }
+            }
+            ++write_index;
+            ++read_index;
+            write_index %= BUFFER_NUM;
+            read_index  %= BUFFER_NUM;
+            LOG_INFO(sLogger, ("local file tags update, old config", mFileTagsJson.toStyledString()));
+            mFileTagsJson = localFileTagsJson;
+            LOG_INFO(sLogger, ("local file tags update, new config", mFileTagsJson.toStyledString()));
             updateFlag = true;
         }
     }
