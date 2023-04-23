@@ -757,13 +757,14 @@ bool Sender::ResetSendClientEndpoint(const std::string aliuid, const std::string
     string endpoint = GetRegionCurrentEndpoint(region);
     if (endpoint.empty())
         return false;
-    if (sendClient->GetRawSlsHost() == endpoint) {
+    string originalEndpoint = sendClient->GetRawSlsHost();
+    if (originalEndpoint == endpoint) {
         return false;
     }
     mSenderQueue.OnRegionRecover(region);
     sendClient->SetSlsHost(endpoint);
     ResetPort(region, sendClient);
-    LOG_INFO(sLogger, ("reset endpoint for sender, region", region)("uid", aliuid)("from", sendClient->GetRawSlsHost())("to", endpoint)("use https",ToString(sendClient->IsUsingHTTPS())));
+    LOG_INFO(sLogger, ("reset endpoint for sender, region", region)("uid", aliuid)("from", originalEndpoint)("to", endpoint)("use https",ToString(sendClient->IsUsingHTTPS())));
     return true;
 }
 
