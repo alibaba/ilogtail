@@ -7,11 +7,6 @@ REM 3. Build iLogtail plugin.
 REM 4. Make package.
 
 
-set ILOGTAIL_VERSION=%1
-if "%ILOGTAIL_VERSION%" == "" (
-    echo Must specify iLogtail version.
-    goto quit
-)
 set CurrentPath=%~dp0
 set P1Path=
 set P2Path=
@@ -77,8 +72,7 @@ echo Begin to build plugins...
 IF exist %OUTPUT_DIR% ( rd /s /q %OUTPUT_DIR% )
 mkdir %OUTPUT_DIR%
 xcopy /Y %ILOGTAIL_CORE_BUILD_PATH%\plugin\Release\PluginAdapter.dll %ILOGTAIL_PLUGIN_SRC_PATH%\pkg\logtail
-set LDFLAGS="-X "github.com/alibaba/ilogtail/pluginmanager.BaseVersion=%LOGTAIL_VERSION%""
-go build -mod=mod -buildmode=c-shared -ldflags=%LDFLAGS% -o output\PluginBase.dll %LOGTAIL_PLUGIN_SRC_PATH%/plugin_main
+go build -mod=mod -buildmode=c-shared -o %OUTPUT_DIR%\PluginBase.dll %ILOGTAIL_PLUGIN_SRC_PATH%/plugin_main
 if not %ERRORLEVEL% == 0 (
     echo Build iLogtail plugin source failed.
     goto quit
