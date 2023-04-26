@@ -6,6 +6,7 @@ REM 2. Build iLogtail.
 REM 3. Build iLogtail plugin.
 REM 4. Make package.
 
+
 set ILOGTAIL_VERSION=%1
 if "%ILOGTAIL_VERSION%" == "" (
     echo Must specify iLogtail version.
