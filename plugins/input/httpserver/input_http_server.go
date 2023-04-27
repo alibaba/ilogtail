@@ -247,18 +247,18 @@ func (s *ServiceHTTP) StartService(context pipeline.PipelineContext) error {
 	return s.start()
 }
 
-func (f *ServiceHTTP) buildHandlerChain(handler http.Handler) (http.Handler, error) {
-	for i := len(f.Middlewares) - 1; i >= 0; i-- {
-		setting := f.Middlewares[i]
-		ext, err := f.context.GetExtension(setting.Type, setting.Options)
+func (s *ServiceHTTP) buildHandlerChain(handler http.Handler) (http.Handler, error) {
+	for i := len(s.Middlewares) - 1; i >= 0; i-- {
+		setting := s.Middlewares[i]
+		ext, err := s.context.GetExtension(setting.Type, setting.Options)
 		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "SERVICEHTTP_INIT_ALARM", "service http init request handler fail, error", err)
+			logger.Error(s.context.GetRuntimeContext(), "SERVICEHTTP_INIT_ALARM", "service http init request handler fail, error", err)
 			return nil, err
 		}
 		middleware, ok := ext.(extensions.HTTPServerMiddleware)
 		if !ok {
 			err = fmt.Errorf("middleware(%s) with type %T not implement interface extensions.HTTPServerMiddleware", setting.Type, ext)
-			logger.Error(f.context.GetRuntimeContext(), "SERVICEHTTP_INIT_ALARM", "service http init request handler fail, error", err)
+			logger.Error(s.context.GetRuntimeContext(), "SERVICEHTTP_INIT_ALARM", "service http init request handler fail, error", err)
 			return nil, err
 		}
 		handler = middleware.Handler(handler)

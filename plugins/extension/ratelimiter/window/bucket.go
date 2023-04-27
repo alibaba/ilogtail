@@ -81,8 +81,8 @@ type bucketSampleWindow struct {
 	lastUpdateTime time.Time
 
 	lastAggResult uint64 // use uint64 store float64 bits
-	lastAggTime   time.Time
-	lock          sync.RWMutex
+	// lastAggTime   time.Time
+	lock sync.RWMutex
 }
 
 func (b *bucketSampleWindow) Add(value float64) {
@@ -114,15 +114,15 @@ func (b *bucketSampleWindow) Get() float64 {
 	b.lock.RLock()
 	defer b.lock.RUnlock()
 
-	//lastResult := math.Float64frombits(atomic.LoadUint64(&b.lastAggResult))
-	//if lastResult > 0 {
-	//	now := time.Now()
-	//	// todo: b.lastAggTime has race
-	//	elapsed := int(now.Sub(b.lastAggTime) / b.bucketDuration)
-	//	if elapsed == 0 {
-	//		return lastResult
-	//	}
-	//}
+	// lastResult := math.Float64frombits(atomic.LoadUint64(&b.lastAggResult))
+	// if lastResult > 0 {
+	// 	now := time.Now()
+	// 	// todo: b.lastAggTime has race
+	// 	elapsed := int(now.Sub(b.lastAggTime) / b.bucketDuration)
+	// 	if elapsed == 0 {
+	// 		return lastResult
+	// 	}
+	// }
 
 	var lastResult float64
 
@@ -150,10 +150,10 @@ func (b *bucketSampleWindow) Get() float64 {
 	}
 
 	if b.scale > 0 {
-		lastResult = lastResult * b.scale
+		lastResult *= b.scale
 	}
 
 	atomic.StoreUint64(&b.lastAggResult, math.Float64bits(lastResult))
-	//b.lastAggTime = time.Now()
+	// b.lastAggTime = time.Now()
 	return lastResult
 }

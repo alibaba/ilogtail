@@ -23,7 +23,7 @@ type ExtensionRateLimiter struct {
 	CPUUsageThreshold    int       // CPU usage, percent in range of (0,100], 0 means no limit, 80 by default
 	MemUsedThresholdInMB int       // process rss memory threshold in MB, 0 means no limit
 	RTTThresholdInMillis int64     // request processing time in milliseconds, 0 means no limit
-	HttpCodeOnLimit      int       // http status code to return when limit, 503 by default
+	HTTPCodeOnLimit      int       // http status code to return when limit, 503 by default
 
 	context pipeline.Context
 	trigger trigger.Trigger
@@ -36,8 +36,8 @@ func (e *ExtensionRateLimiter) Description() string {
 
 func (e *ExtensionRateLimiter) Init(context pipeline.Context) error {
 	e.context = context
-	if e.HttpCodeOnLimit <= 0 {
-		return fmt.Errorf("invalid HttpCodeOnLimit value: %v", e.HttpCodeOnLimit)
+	if e.HTTPCodeOnLimit <= 0 {
+		return fmt.Errorf("invalid HTTPCodeOnLimit value: %v", e.HTTPCodeOnLimit)
 	}
 	switch e.Algorithm {
 	case AlgorithmBBR:
@@ -72,7 +72,7 @@ func (e *ExtensionRateLimiter) Handler(handler http.Handler) http.Handler {
 		limiter:   l,
 		rttFeed:   e.rttFeed,
 		next:      handler,
-		errorCode: e.HttpCodeOnLimit,
+		errorCode: e.HTTPCodeOnLimit,
 	}
 	return h
 }
@@ -99,7 +99,7 @@ func init() {
 	pipeline.AddExtensionCreator("ext_ratelimiter", func() pipeline.Extension {
 		return &ExtensionRateLimiter{
 			Algorithm:         AlgorithmBBR,
-			HttpCodeOnLimit:   503,
+			HTTPCodeOnLimit:   503,
 			MaxInflight:       2000,
 			CPUUsageThreshold: 80,
 		}
