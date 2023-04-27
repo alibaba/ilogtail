@@ -182,9 +182,7 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
         }
 
         if (curTime - lastCheckTagsTime >= checkTagsInterval) {
-            if (ConfigManagerBase::UpdateFileTags()) {
-                ;
-            }
+            ConfigManagerBase::UpdateFileTags();
             lastCheckTagsTime = curTime;
         }
 

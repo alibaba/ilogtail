@@ -56,6 +56,27 @@ class EventDispatcher;
 class EventHandler;
 struct LogFilterRule;
 
+template<class T>
+class DoubleBuffer {
+public:
+    DoubleBuffer() : currentBuffer(0) {}
+
+    T& getCurrentBuffer() {
+        return buffers[currentBuffer];
+    }
+
+    T& getAlternateBuffer() {
+        return buffers[1 - currentBuffer];
+    }
+
+    void swap() {
+        currentBuffer = 1 - currentBuffer;
+    }
+private:
+    T buffers[2];
+    int currentBuffer;
+};
+
 class ConfigManagerBase {
 protected:
     int32_t mStartTime;
@@ -440,11 +461,13 @@ public:
 
     virtual Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson) = 0;
 
-    const std::vector<sls_logs::LogTag>& GetFileTags() const {
-        return mFileTags[read_index];
+    std::vector<sls_logs::LogTag>& GetFileTags() {
+        return mFileTags.getAlternateBuffer();
     }
 
-    bool UpdateFileTags();
+    void UpdateFileTags();
+
+    bool mFileFlag = true;
 
 private:
     // no copy
@@ -513,10 +536,7 @@ private:
 
     void ClearProjects();
 
-    std::vector<std::vector<sls_logs::LogTag>> mFileTags;
-    #define BUFFER_NUM 2
-    int32_t write_index = 0;
-    int32_t read_index = 1;
+    class DoubleBuffer <std::vector<sls_logs::LogTag>>mFileTags;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     void CleanEnviroments();

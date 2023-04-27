@@ -1182,8 +1182,6 @@ ConfigManagerBase::ConfigManagerBase() {
     mUserDefinedIdSet.clear();
     mAliuidSet.clear();
 
-    mFileTags.resize(BUFFER_NUM);
-
     SetDefaultPubAccessKeyId(STRING_FLAG(default_access_key_id));
     SetDefaultPubAccessKey(STRING_FLAG(default_access_key));
     SetDefaultPubAliuid("");
@@ -2332,13 +2330,12 @@ bool ConfigManagerBase::GetLocalConfigFileUpdate() {
     return updateFlag;
 }
 
-bool ConfigManagerBase::UpdateFileTags() {
-    bool updateFlag = false;
+void ConfigManagerBase::UpdateFileTags() {
     // read local config
     Json::Value localFileTagsJson;
     const char* file_tags_dir = STRING_FLAG(ALIYUN_LOG_FILE_TAGS).c_str();
     if (STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
-        file_tags_dir = "ilogtail_file_tags.json";
+        mFileFlag = false;
     }
 
     ParseConfResult userLogRes = ParseConfig(file_tags_dir, localFileTagsJson);
@@ -2350,9 +2347,9 @@ bool ConfigManagerBase::UpdateFileTags() {
         }
     } else {
         if (localFileTagsJson != mFileTagsJson) {
-            mFileTags[write_index].clear();
             int32_t i = 0;
-            vector<sls_logs::LogTag>& sFileTags = mFileTags[write_index];
+            vector<sls_logs::LogTag>& sFileTags = mFileTags.getCurrentBuffer();
+            sFileTags.clear();
             sFileTags.resize(localFileTagsJson.size());
             for (auto it = localFileTagsJson.begin(); it != localFileTagsJson.end(); ++it) {
                 if (it->isString()) {
@@ -2361,17 +2358,13 @@ bool ConfigManagerBase::UpdateFileTags() {
                     ++i;
                 }
             }
-            ++write_index;
-            ++read_index;
-            write_index %= BUFFER_NUM;
-            read_index  %= BUFFER_NUM;
+            mFileTags.swap();
             LOG_INFO(sLogger, ("local file tags update, old config", mFileTagsJson.toStyledString()));
             mFileTagsJson = localFileTagsJson;
             LOG_INFO(sLogger, ("local file tags update, new config", mFileTagsJson.toStyledString()));
-            updateFlag = true;
         }
     }
-    return updateFlag;
+    return;
 }
 
 bool ConfigManagerBase::GetLocalConfigDirUpdate() {

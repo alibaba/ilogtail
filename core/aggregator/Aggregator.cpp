@@ -148,12 +148,14 @@ bool Aggregator::Add(const std::string& projectName,
         }
     }
 
-    const vector<sls_logs::LogTag>& sFileTags = ConfigManager::GetInstance()->GetFileTags();
-    if (!sFileTags.empty()) {
-        for (size_t i = 0; i < sFileTags.size(); ++i) {
-            sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
-            logTagPtr->set_key(sFileTags[i].key());
-            logTagPtr->set_value(sFileTags[i].value());
+    if (ConfigManager::GetInstance()->mFileFlag) {
+        vector<sls_logs::LogTag>& sFileTags = ConfigManager::GetInstance()->GetFileTags();
+        if (!sFileTags.empty()) {
+            for (size_t i = 0; i < sFileTags.size(); ++i) {
+                sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
+                logTagPtr->set_key(sFileTags[i].key());
+                logTagPtr->set_value(sFileTags[i].value());
+            }
         }
     }
 
