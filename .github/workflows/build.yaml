@@ -57,14 +57,14 @@ jobs:
       - name: Build Binary
         if: matrix.runner == 'ubuntu-latest'
         env:
-          BUILD_LOGTAIL_UT: ON
+          BUILD_LOGTAIL_UT: OFF
           ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
-        run: make dist
+        run: make dist && scripts/check_glibc.sh
 
       - name: Build Docker
         if: matrix.runner == 'ubuntu-latest'
-        run: scripts/check_glibc.sh && make docker
+        run: make docker
 
   result:
     runs-on: ubuntu-latest

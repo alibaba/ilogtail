@@ -10,10 +10,10 @@
 
 ## 配置参数
 
-| 参数       | 类型                    | 是否必选 | 说明                                 |
-|----------|-----------------------|------|------------------------------------|
-| Tags     | Map<String,Condition> | 否    | 需要过滤的GroupInfo.Tags的 key,value     |
-| Password | Map<String,Condition> | 否    | 需要过滤的GroupInfo.Metadata的 key,value |
+| 参数    | 类型                    | 是否必选 | 说明                                 |
+|-------|-----------------------|------|------------------------------------|
+| Tags  | Map<String,Condition> | 否    | 需要过滤的GroupInfo.Tags的 key,value     |
+| Metas | Map<String,Condition> | 否    | 需要过滤的GroupInfo.Metadata的 key,value |
 
 
 其中，**Condition** 的字段结构如下：
@@ -56,7 +56,8 @@ flushers:
 extensions:
   - Type: ext_groupinfo_filter
     Tags:
-      tag1: tag1
+      tag1: 
+        Pattern: tag1
 ```
 
 ## 使用命名扩展
@@ -96,10 +97,12 @@ flushers:
 extensions:
   - Type: ext_groupinfo_filter/tag1
     Tags:
-      tag1: tag1
+      tag1: 
+        Pattern: tag1
   - Type: ext_groupinfo_filter/tag2
     Tags:
-      tag2: tag2
+      tag2:
+        Pattern: tag2
 ```
 
 

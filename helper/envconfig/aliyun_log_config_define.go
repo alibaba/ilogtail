@@ -25,8 +25,8 @@ import (
 	aliyunlog "github.com/aliyun/aliyun-log-go-sdk"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/alibaba/ilogtail/helper"
 	"github.com/alibaba/ilogtail/pkg/flags"
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
@@ -366,7 +366,7 @@ func makeLogConfigSpec(dockerInfo *helper.DockerInfoDetail, envConfigInfo *helpe
 	if val, ok := envConfigInfo.ConfigItemMap["logstoremaxsplitshard"]; ok {
 		totalConfig += val
 		maxSplitShard, _ := strconv.Atoi(val)
-		if maxSplitShard >= 1 && maxSplitShard <= 64 {
+		if maxSplitShard >= 1 && maxSplitShard <= 256 {
 			config.LogstoreMaxSplitShard = proto.Int32((int32)(maxSplitShard))
 		}
 	}
