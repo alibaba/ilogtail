@@ -23,7 +23,7 @@ func (h *httpServerHandler) ServeHTTP(writer http.ResponseWriter, request *http.
 	}
 	defer done(nil)
 	start := time.Now().UnixNano()
-	h.next(writer, request)
+	h.next.ServeHTTP(writer, request)
 	if h.rttFeed != nil {
 		h.rttFeed.Feed(float64(time.Now().UnixNano() - start))
 	}
