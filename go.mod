@@ -67,13 +67,10 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute v1.14.0 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-  github.com/bits-and-blooms/bitset v1.4.0 // indirect
+	github.com/bits-and-blooms/bitset v1.4.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/pyroscope-io/jfr-parser v0.6.0 // indirect
 	github.com/pyroscope-io/pyroscope v0.37.2
-  golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	k8s.io/cri-api v0.23.1 // indirect
 )
 
@@ -278,6 +275,7 @@ require (
 	github.com/valyala/gozstd v1.17.0 // indirect
 	github.com/valyala/histogram v1.2.0 // indirect
 	github.com/valyala/quicktemplate v1.7.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
 )
 
 replace (

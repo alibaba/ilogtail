@@ -134,6 +134,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [golang.org/x/term](https://pkg.go.dev/golang.org/x/term?tab=licenses)
 - [golang.org/x/text](https://pkg.go.dev/golang.org/x/text?tab=licenses)
 - [golang.org/x/time](https://pkg.go.dev/golang.org/x/time?tab=licenses)
+- [golang.org/x/mod](https://pkg.go.dev/golang.org/x/mod?tab=licenses)
 - [google.golang.org/protobuf](https://pkg.go.dev/google.golang.org/protobuf?tab=licenses)
 - [gopkg.in/inf.v0](https://pkg.go.dev/gopkg.in/inf.v0?tab=licenses)
 - [github.com/go-faster/errors](https://pkg.go.dev/github.com/go-faster/errors?tab=licenses)
