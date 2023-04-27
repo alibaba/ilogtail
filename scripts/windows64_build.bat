@@ -6,11 +6,8 @@ REM 2. Build iLogtail.
 REM 3. Build iLogtail plugin.
 REM 4. Make package.
 
-set ILOGTAIL_VERSION=%1
-if "%ILOGTAIL_VERSION%" == "" (
-    echo Must specify iLogtail version.
-    goto quit
-)
+set ILOGTAIL_VERSION=1.4.0
+if not "%1" == "" set ILOGTAIL_VERSION=%1
 set CurrentPath=%~dp0
 set P1Path=
 set P2Path=
@@ -22,13 +19,18 @@ set P1Path=%P1Path%%content%\
 goto begin
 :end
 
-set ILOGTAIL_PLUGIN_SRC_PATH=%P2Path%\ilogtail
-REM boost_1_68_0_win64依赖包与ilogtail放在同一级目录
-set BOOST_ROOT=%CURRENT_DIR%\boost_1_68_0_win64
-REM 设置ilogtail-deps.windows-x64编译依赖包路径
-set ILOGTAIL_DEPS_PATH=E:/pipeline/win64/ilogtail-deps.windows-x64
+set ILOGTAIL_PLUGIN_SRC_PATH=%P1Path%
+REM Change to where boost_1_68_0 locates
+set BOOST_ROOT=C:\workspace\boost_1_68_0
+REM Change to where ilogtail-deps.windows-x64 locates, path seperator must be /
+set ILOGTAIL_DEPS_PATH=C:/workspace/ilogtail-deps.windows-x64
+REM Change to where cmake locates
 set CMAKE_BIN=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake
+REM Change to where devenv locates
 set DEVENV_BIN=C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\devenv.com
+REM Change to where mingw locates
+set MINGW_PATH=C:\workspace\mingw64\bin
+
 set OUTPUT_DIR=%ILOGTAIL_PLUGIN_SRC_PATH%\output
 set ILOGTAIL_CORE_BUILD_PATH=%ILOGTAIL_PLUGIN_SRC_PATH%\core\build
 
@@ -37,7 +39,7 @@ set GOARCH=amd64
 set GOFLAGS=-buildvcs=false
 set CGO_ENABLED=1
 
-set PATH=%PATH%;%DEVENV_BIN%
+set PATH=%DEVENV_BIN%;%MINGW_PATH%;%PATH%
 
 REM Clean up
 IF exist %OUTPUT_DIR% ( rd /s /q %OUTPUT_DIR% )
@@ -49,7 +51,7 @@ cd %ILOGTAIL_PLUGIN_SRC_PATH%\core
 IF exist build ( rd /s /q build )
 mkdir build
 cd build
-"%CMAKE_BIN%" -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DLOGTAIL_VERSION=Bytedance -DDEPS_ROOT=%ILOGTAIL_DEPS_PATH% ..
+"%CMAKE_BIN%" -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release -DLOGTAIL_VERSION=%ILOGTAIL_VERSION% -DDEPS_ROOT=%ILOGTAIL_DEPS_PATH% ..
 if not %ERRORLEVEL% == 0 (
     echo Run cmake failed.
     goto quit
@@ -61,7 +63,7 @@ if not %ERRORLEVEL% == 0 (
 )
 echo Build core success
 
-REM import plugins
+REM Import plugins
 cd %ILOGTAIL_PLUGIN_SRC_PATH%
 echo ===============GENERATING PLUGINS IMPORT==================
 del /f/s/q %ILOGTAIL_PLUGIN_SRC_PATH%\plugins\all\all.go
@@ -76,8 +78,8 @@ echo Begin to build plugins...
 IF exist %OUTPUT_DIR% ( rd /s /q %OUTPUT_DIR% )
 mkdir %OUTPUT_DIR%
 xcopy /Y %ILOGTAIL_CORE_BUILD_PATH%\plugin\Release\PluginAdapter.dll %ILOGTAIL_PLUGIN_SRC_PATH%\pkg\logtail
-set LDFLAGS="-X "github.com/alibaba/ilogtail/pluginmanager.BaseVersion=%LOGTAIL_VERSION%""
-go build -mod=mod -buildmode=c-shared -ldflags=%LDFLAGS% -o output\PluginBase.dll %LOGTAIL_PLUGIN_SRC_PATH%/plugin_main
+set LDFLAGS="-X "github.com/alibaba/ilogtail/pluginmanager.BaseVersion=%ILOGTAIL_VERSION%""
+go build -mod=mod -buildmode=c-shared -ldflags=%LDFLAGS% -o output\PluginBase.dll %ILOGTAIL_PLUGIN_SRC_PATH%/plugin_main
 if not %ERRORLEVEL% == 0 (
     echo Build iLogtail plugin source failed.
     goto quit
@@ -87,7 +89,6 @@ echo Build plugins success
 REM Copy artifacts
 xcopy /Y %ILOGTAIL_CORE_BUILD_PATH%\Release\ilogtail.exe %OUTPUT_DIR%
 xcopy /Y %ILOGTAIL_CORE_BUILD_PATH%\plugin\Release\PluginAdapter.dll %OUTPUT_DIR%
-xcopy /Y E:\pipeline\win64\oneAgent.exe %OUTPUT_DIR%
 cd %OUTPUT_DIR%
 dir
 
