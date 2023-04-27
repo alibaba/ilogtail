@@ -126,6 +126,7 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/tklauser/go-sysconf](https://pkg.go.dev/github.com/tklauser/go-sysconf?tab=licenses)
 - [github.com/DataDog/zstd](https://pkg.go.dev/github.com/DataDog/zstd?tab=licenses)
 - [github.com/spaolacci/murmur3](https://pkg.go.dev/github.com/spaolacci/murmur3?tab=licenses)
+- [github.com/bits-and-blooms/bitset](https://pkg.go.dev/github.com/bits-and-blooms/bitset?tab=licenses)
 - [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto?tab=licenses)
 - [golang.org/x/net](https://pkg.go.dev/golang.org/x/net?tab=licenses)
 - [golang.org/x/oauth2](https://pkg.go.dev/golang.org/x/oauth2?tab=licenses)
