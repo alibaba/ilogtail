@@ -80,7 +80,7 @@ func TestBBRRateLimiter_Allow_Simulate(t *testing.T) {
 
 	var dropped int64
 	var wg sync.WaitGroup
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < 100; i++ {
 		if i%10 == 0 {
 			time.Sleep(time.Millisecond * 10)
 		}

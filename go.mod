@@ -263,21 +263,12 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-require code.byted.org/aiops/oneagent-volc-plugins v0.0.0-20230403090139-51389b67c4a1
-
 require (
 	cloud.google.com/go/compute v1.18.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	code.byted.org/aiops/apm_vendor_byted v0.0.8 // indirect
-	code.byted.org/aiops/metrics_codec v0.0.8 // indirect
-	code.byted.org/gopkg/apm_vendor_interface v0.0.2 // indirect
-	code.byted.org/gopkg/consul v1.2.4 // indirect
-	code.byted.org/gopkg/env v1.5.8 // indirect
-	code.byted.org/gopkg/net2 v1.5.0 // indirect
 	github.com/VictoriaMetrics/fasthttp v1.1.0 // indirect
 	github.com/VictoriaMetrics/metrics v1.23.0 // indirect
 	github.com/VictoriaMetrics/metricsql v0.45.0 // indirect
-	github.com/snakorse/pool v0.2.5-0.20230322042441-a4f760908421 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
 	github.com/valyala/fastrand v1.1.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
