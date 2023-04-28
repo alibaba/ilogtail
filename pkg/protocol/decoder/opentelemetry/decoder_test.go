@@ -31,7 +31,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
 	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 	"github.com/alibaba/ilogtail/pkg/protocol/otlp"
 )
@@ -114,8 +113,7 @@ func TestConvertOtlpLogV1(t *testing.T) {
 	// Check if the attribute is correct
 	assert.Equal(t, "attributes", log1.Contents[4].Key)
 
-	var expectedAttr map[string]interface{}
-	expectedAttr = make(map[string]interface{})
+	expectedAttr := make(map[string]interface{})
 	expectedAttr["attr1"] = float64(123)
 	expectedAttr["attr2"] = true
 
@@ -129,8 +127,7 @@ func TestConvertOtlpLogV1(t *testing.T) {
 	// Check if the resources is correct
 	assert.Equal(t, "resources", log1.Contents[5].Key)
 
-	var expectedRes map[string]interface{}
-	expectedRes = make(map[string]interface{})
+	expectedRes := make(map[string]interface{})
 	expectedRes["serviceName"] = "test-service"
 
 	expectedResBytes, err := json.Marshal(expectedRes)
@@ -179,8 +176,7 @@ func TestDecoder_Decode_Logs(t *testing.T) {
 		assert.Equal(t, string(expectedAttrBytes), log.Contents[4].Value)
 
 		assert.Equal(t, "resources", log.Contents[5].Key)
-		var expectedRes map[string]interface{}
-		expectedRes = make(map[string]interface{})
+		expectedRes := make(map[string]interface{})
 		expectedRes["host.name"] = "testHost"
 		expectedResBytes, err := json.Marshal(expectedRes)
 		if err != nil {
@@ -210,14 +206,6 @@ func TestDecoder_Decode_MetricsUntyped(t *testing.T) {
 		assert.Equal(t, "__time_nano__", log.Contents[2].Key)
 		assert.Equal(t, "__value__", log.Contents[3].Key)
 		assert.Equal(t, "", log.Contents[3].Value)
-	}
-}
-
-func printLogs(logs []*protocol.Log) {
-	fmt.Println("len:", len(logs))
-	for i, log := range logs {
-		fmt.Println("index:", i)
-		fmt.Println(log)
 	}
 }
 
@@ -297,13 +285,13 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 								for l := 0; l < metric.Histogram().DataPoints().Len(); l++ {
 									dataPoint := metric.Histogram().DataPoints().At(l)
 									if dataPoint.HasSum() {
-										count += 1
+										count++
 									}
 									if dataPoint.HasMin() {
-										count += 1
+										count++
 									}
 									if dataPoint.HasMax() {
-										count += 1
+										count++
 									}
 									count += 1
 									count += dataPoint.BucketCounts().Len()
@@ -312,13 +300,13 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 								for l := 0; l < metric.ExponentialHistogram().DataPoints().Len(); l++ {
 									dataPoint := metric.ExponentialHistogram().DataPoints().At(l)
 									if dataPoint.HasSum() {
-										count += 1
+										count++
 									}
 									if dataPoint.HasMin() {
-										count += 1
+										count++
 									}
 									if dataPoint.HasMax() {
-										count += 1
+										count++
 									}
 									count += 1
 									count += dataPoint.Negative().BucketCounts().Len() + dataPoint.Positive().BucketCounts().Len() + 3
