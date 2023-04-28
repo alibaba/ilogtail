@@ -61,11 +61,11 @@ class DoubleBuffer {
 public:
     DoubleBuffer() : currentBuffer(0) {}
 
-    T& getCurrentBuffer() {
+    T& getWriteBuffer() {
         return buffers[currentBuffer];
     }
 
-    T& getAlternateBuffer() {
+    T& getReadBuffer() {
         return buffers[1 - currentBuffer];
     }
 
@@ -462,12 +462,10 @@ public:
     virtual Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson) = 0;
 
     std::vector<sls_logs::LogTag>& GetFileTags() {
-        return mFileTags.getAlternateBuffer();
+        return mFileTags.getReadBuffer();
     }
 
     void UpdateFileTags();
-
-    bool mFileFlag = true;
 
 private:
     // no copy

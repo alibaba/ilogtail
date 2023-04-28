@@ -2335,7 +2335,7 @@ void ConfigManagerBase::UpdateFileTags() {
     Json::Value localFileTagsJson;
     const char* file_tags_dir = STRING_FLAG(ALIYUN_LOG_FILE_TAGS).c_str();
     if (STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
-        mFileFlag = false;
+        return;
     }
 
     ParseConfResult userLogRes = ParseConfig(file_tags_dir, localFileTagsJson);
@@ -2348,7 +2348,7 @@ void ConfigManagerBase::UpdateFileTags() {
     } else {
         if (localFileTagsJson != mFileTagsJson) {
             int32_t i = 0;
-            vector<sls_logs::LogTag>& sFileTags = mFileTags.getCurrentBuffer();
+            vector<sls_logs::LogTag>& sFileTags = mFileTags.getWriteBuffer();
             sFileTags.clear();
             sFileTags.resize(localFileTagsJson.size());
             for (auto it = localFileTagsJson.begin(); it != localFileTagsJson.end(); ++it) {

@@ -30,6 +30,7 @@ using namespace sls_logs;
 DECLARE_FLAG_INT32(merge_log_count_limit);
 DECLARE_FLAG_INT32(same_topic_merge_send_count);
 DECLARE_FLAG_INT32(max_send_log_group_size);
+DECLARE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS);
 
 namespace logtail {
 
@@ -148,7 +149,7 @@ bool Aggregator::Add(const std::string& projectName,
         }
     }
 
-    if (ConfigManager::GetInstance()->mFileFlag) {
+    if (!STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
         vector<sls_logs::LogTag>& sFileTags = ConfigManager::GetInstance()->GetFileTags();
         if (!sFileTags.empty()) {
             for (size_t i = 0; i < sFileTags.size(); ++i) {
