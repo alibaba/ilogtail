@@ -165,8 +165,7 @@ func TestDecoder_Decode_Logs(t *testing.T) {
 		assert.Equal(t, "hello world", log.Contents[3].Value)
 
 		assert.Equal(t, "attributes", log.Contents[4].Key)
-		var expectedAttr map[string]interface{}
-		expectedAttr = make(map[string]interface{})
+		expectedAttr := make(map[string]interface{})
 		expectedAttr["sdkVersion"] = "1.0.1"
 		expectedAttrBytes, err := json.Marshal(expectedAttr)
 		if err != nil {
@@ -293,8 +292,7 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 									if dataPoint.HasMax() {
 										count++
 									}
-									count += 1
-									count += dataPoint.BucketCounts().Len()
+									count += dataPoint.BucketCounts().Len() + 1
 								}
 							case pmetric.MetricTypeExponentialHistogram:
 								for l := 0; l < metric.ExponentialHistogram().DataPoints().Len(); l++ {
@@ -308,8 +306,7 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 									if dataPoint.HasMax() {
 										count++
 									}
-									count += 1
-									count += dataPoint.Negative().BucketCounts().Len() + dataPoint.Positive().BucketCounts().Len() + 3
+									count += dataPoint.Negative().BucketCounts().Len() + dataPoint.Positive().BucketCounts().Len() + 4
 								}
 							}
 						}
