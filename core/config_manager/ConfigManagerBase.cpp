@@ -2335,13 +2335,12 @@ bool ConfigManagerBase::GetLocalConfigFileUpdate() {
 }
 
 void ConfigManagerBase::UpdateFileTags() {
-    // read local config
-    Json::Value localFileTagsJson;
-    const char* file_tags_dir = STRING_FLAG(ALIYUN_LOG_FILE_TAGS).c_str();
     if (STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
         return;
     }
-
+    // read local config
+    Json::Value localFileTagsJson;
+    const char* file_tags_dir = STRING_FLAG(ALIYUN_LOG_FILE_TAGS).c_str();
     ParseConfResult userLogRes = ParseConfig(file_tags_dir, localFileTagsJson);
     if (userLogRes != CONFIG_OK) {
         if (userLogRes == CONFIG_NOT_EXIST)
