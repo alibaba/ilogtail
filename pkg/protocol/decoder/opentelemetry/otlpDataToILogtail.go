@@ -1,16 +1,18 @@
 package opentelemetry
 
 import (
+	"fmt"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 	"unicode"
 
-	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/protocol/otlp"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+
+	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/protocol/otlp"
 )
 
 const (
@@ -32,11 +34,17 @@ type KeyValues struct {
 	keyValues []KeyValue
 }
 
-func (kv *KeyValues) Len() int { return len(kv.keyValues) }
+func (kv *KeyValues) Len() int {
+	return len(kv.keyValues)
+}
+
 func (kv *KeyValues) Swap(i, j int) {
 	kv.keyValues[i], kv.keyValues[j] = kv.keyValues[j], kv.keyValues[i]
 }
-func (kv *KeyValues) Less(i, j int) bool { return kv.keyValues[i].Key < kv.keyValues[j].Key }
+
+func (kv *KeyValues) Less(i, j int) bool {
+	return kv.keyValues[i].Key < kv.keyValues[j].Key
+}
 
 func (kv *KeyValues) Sort() {
 	sort.Sort(kv)
@@ -168,6 +176,19 @@ func res2Labels(labels *KeyValues, resource pcommon.Resource) {
 	})
 }
 
+func exemplar2Labels(labels *KeyValues, exemplars pmetric.ExemplarSlice) {
+	for i := 0; i < exemplars.Len(); i++ {
+		exemplar := exemplars.At(i)
+		name := "exemplar_" + fmt.Sprint(i)
+		if !exemplar.SpanID().IsEmpty() {
+			labels.Append(name+"_spanID", exemplar.SpanID().String())
+		}
+		if !exemplar.TraceID().IsEmpty() {
+			labels.Append(name+"_traceID", exemplar.SpanID().String())
+		}
+	}
+}
+
 func GaugeToLogs(name string, data pmetric.NumberDataPointSlice, defaultLabels KeyValues) (logs []*protocol.Log) {
 	for i := 0; i < data.Len(); i++ {
 		dataPoint := data.At(i)
@@ -177,6 +198,7 @@ func GaugeToLogs(name string, data pmetric.NumberDataPointSlice, defaultLabels K
 			labels.Append(k, v.AsString())
 			return true
 		})
+		exemplar2Labels(&labels, dataPoint.Exemplars())
 
 		value := dataPoint.DoubleValue()
 		if dataPoint.IntValue() != 0 {
@@ -196,6 +218,7 @@ func SumToLogs(name string, aggregationTemporality pmetric.AggregationTemporalit
 			labels.Append(k, v.AsString())
 			return true
 		})
+		exemplar2Labels(&labels, dataPoint.Exemplars())
 		labels.Append(otlp.TagKeyMetricIsMonotonic, isMonotonic)
 		labels.Append(otlp.TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 
@@ -244,6 +267,7 @@ func HistogramToLogs(name string, data pmetric.HistogramDataPointSlice, aggregat
 			labels.Append(k, v.AsString())
 			return true
 		})
+		exemplar2Labels(&labels, dataPoint.Exemplars())
 		labels.Append(otlp.TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 		labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeHistogram.String())
 
@@ -289,6 +313,7 @@ func ExponentialHistogramToLogs(name string, data pmetric.ExponentialHistogramDa
 			labels.Append(k, v.AsString())
 			return true
 		})
+		exemplar2Labels(&labels, dataPoint.Exemplars())
 		labels.Append(otlp.TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 		labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeExponentialHistogram.String())
 
