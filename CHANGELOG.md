@@ -43,3 +43,5 @@ your changes, such as:
 - [public] [both] [added] add new plugin: flusher_loki
 - [public] [both] [updated] processor_split_key_value plugin support separating the key value when the value is surrounded by quotes 
 - [public] [both] [added] add new plugin: processor_string_replace
+- [public] [both] [updated] upgrade sarama version to 1.38.1, Rewrite service_kafka input plugin
+- [public] [both] [updated] Optimize flusher kafka v2 to improve performance in static topic scenarios
