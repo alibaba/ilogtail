@@ -19,7 +19,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
-
 	"math"
 	"os"
 	"regexp"
@@ -233,6 +232,14 @@ func (r *InputSystem) CollectDisk(collector pipeline.Collector) {
 	if err == nil {
 		totalIoCount := disk.IOCountersStat{}
 		for _, ioCount := range allIoCounters {
+			if ioCount.Name == "" {
+				continue
+			}
+			lastChar := ioCount.Name[len(ioCount.Name)-1]
+			if lastChar >= '0' && lastChar <= '9' {
+				// means disk partition, don't need to record to total metrics
+				continue
+			}
 			totalIoCount.ReadBytes += ioCount.ReadBytes
 			totalIoCount.WriteBytes += ioCount.WriteBytes
 			totalIoCount.ReadCount += ioCount.ReadCount
@@ -241,7 +248,6 @@ func (r *InputSystem) CollectDisk(collector pipeline.Collector) {
 			totalIoCount.WriteTime += ioCount.WriteTime
 			totalIoCount.IopsInProgress += ioCount.IopsInProgress
 			totalIoCount.IoTime += ioCount.IoTime
-
 		}
 
 		nowTime := time.Now()
