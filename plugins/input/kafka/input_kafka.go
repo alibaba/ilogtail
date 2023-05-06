@@ -15,15 +15,23 @@
 package kafka
 
 import (
-	"context"
+	ctx "context"
 	"fmt"
 	"strings"
 	"sync"
 
+	"github.com/Shopify/sarama"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
+	"github.com/alibaba/ilogtail/pkg/protocol/decoder"
+	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
+)
 
-	"github.com/Shopify/sarama"
+const (
+	v1 = iota
+	v2
 )
 
 type InputKafka struct {
@@ -38,6 +46,11 @@ type InputKafka struct {
 	SASLPassword  string
 	// Assignor Consumer group partition assignment strategy (range, roundrobin, sticky)
 	Assignor string
+	// Decoder the decoder to use, default is "ext_default_decoder"
+	Decoder           string
+	Format            string
+	FieldsExtend      bool
+	DisableUncompress bool
 
 	ready               chan bool
 	readyCloser         sync.Once
@@ -45,7 +58,11 @@ type InputKafka struct {
 	wg                  *sync.WaitGroup
 	messages            chan *sarama.ConsumerMessage
 	context             pipeline.Context
-	cancelConsumer      context.CancelFunc
+	cancelConsumer      ctx.CancelFunc
+	collectorV2         pipeline.PipelineCollector
+	decoder             extensions.Decoder
+	collectorV1         pipeline.Collector
+	version             int8
 }
 
 const (
@@ -53,8 +70,8 @@ const (
 	pluginName       = "service_kafka"
 )
 
-func (k *InputKafka) Init(pipContext pipeline.Context) (int, error) {
-	k.context = pipContext
+func (k *InputKafka) Init(context pipeline.Context) (int, error) {
+	k.context = context
 
 	if len(k.Brokers) == 0 {
 		return 0, fmt.Errorf("must specify Brokers for plugin %v", pluginName)
@@ -73,14 +90,24 @@ func (k *InputKafka) Init(pipContext pipeline.Context) (int, error) {
 			maxInputKafkaLen, pluginName)
 	}
 
+	// init decoder
+	if k.Format == "" {
+		k.Format = common.ProtocolRaw
+	}
+	var err error
+	if k.decoder, err = decoder.GetDecoderWithOptions(k.Format, decoder.Option{
+		FieldsExtend:      k.FieldsExtend,
+		DisableUncompress: k.DisableUncompress,
+	}); err != nil {
+		return 0, err
+	}
+
 	config := sarama.NewConfig()
 
 	if k.Version != "" {
-		version, err := sarama.ParseKafkaVersion(k.Version)
-		if err != nil {
+		if config.Version, err = sarama.ParseKafkaVersion(k.Version); err != nil {
 			return 0, err
 		}
-		config.Version = version
 	}
 	config.Consumer.Return.Errors = true
 
@@ -129,19 +156,19 @@ func (k *InputKafka) Init(pipContext pipeline.Context) (int, error) {
 		return 0, err
 	}
 	k.consumerGroupClient = consumerGroup
-	ctx, cancel := context.WithCancel(k.context.GetRuntimeContext())
+	cancelCtx, cancel := ctx.WithCancel(k.context.GetRuntimeContext())
 	k.cancelConsumer = cancel
 	k.wg = &sync.WaitGroup{}
 	k.wg.Add(1)
 	go func() {
 		defer k.wg.Done()
 		for {
-			if err := k.consumerGroupClient.Consume(ctx, k.Topics, k); err != nil {
+			if err := k.consumerGroupClient.Consume(cancelCtx, k.Topics, k); err != nil {
 				logger.Error(k.context.GetRuntimeContext(), "INPUT_KAFKA_ALARM", "Error from kafka consumer", err)
 				return
 			}
 			// check if context was canceled, signaling that the consumer should stop
-			if ctx.Err() != nil {
+			if cancelCtx.Err() != nil {
 				logger.Info(k.context.GetRuntimeContext(), "Consumer was canceled. Leaving consumer group")
 				return
 			}
@@ -157,18 +184,30 @@ func (k *InputKafka) Description() string {
 }
 
 func (k *InputKafka) Start(collector pipeline.Collector) error {
+	k.collectorV1 = collector
+	k.version = v1
 	go func() {
-		k.receiver(collector)
+		k.receiver()
 	}()
 	return nil
 }
 
-func (k *InputKafka) receiver(collector pipeline.Collector) {
+func (k *InputKafka) StartService(context pipeline.PipelineContext) error {
+	k.collectorV2 = context.Collector()
+	k.version = v2
+	go func() {
+		k.receiver()
+	}()
+	return nil
+}
+
+func (k *InputKafka) receiver() {
 	for msg := range k.messages {
-		k.onMessage(collector, msg)
+		k.onMessage(msg)
 	}
 }
 
+// Setup implements ConsumerGroupHandler
 func (k *InputKafka) Setup(session sarama.ConsumerGroupSession) error {
 	k.readyCloser.Do(func() {
 		close(k.ready)
@@ -176,11 +215,12 @@ func (k *InputKafka) Setup(session sarama.ConsumerGroupSession) error {
 	return nil
 }
 
+// Cleanup implements ConsumerGroupHandler
 func (k *InputKafka) Cleanup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-// ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
+// ConsumeClaim implements ConsumerGroupHandler, must start a consumer loop of ConsumerGroupClaim's Messages().
 func (k *InputKafka) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	logger.Debug(k.context.GetRuntimeContext(), "Consuming messages [partition]", claim.Partition(), "[topic]", claim.Topic(),
 		"init [offset]", claim.InitialOffset())
@@ -199,16 +239,26 @@ func (k *InputKafka) ConsumeClaim(session sarama.ConsumerGroupSession, claim sar
 	}
 }
 
-func (k *InputKafka) onMessage(collector pipeline.Collector, msg *sarama.ConsumerMessage) {
+func (k *InputKafka) onMessage(msg *sarama.ConsumerMessage) {
 	if len(msg.Value) > k.MaxMessageLen {
 		logger.Errorf(k.context.GetRuntimeContext(), "INPUT_KAFKA_ALARM", "Message longer than max_message_len (%d > %d)",
 			len(msg.Value), k.MaxMessageLen)
 	}
 
 	if msg != nil {
-		fields := make(map[string]string)
-		fields[string(msg.Key)] = string(msg.Value)
-		collector.AddData(nil, fields)
+		switch k.version {
+		case v1:
+			fields := make(map[string]string)
+			fields[string(msg.Key)] = string(msg.Value)
+			k.collectorV1.AddData(nil, fields)
+		case v2:
+			data, err := k.decoder.DecodeV2(msg.Value, nil)
+			if err != nil {
+				logger.Warning(k.context.GetRuntimeContext(), "DECODE_MESSAGE_FAIL_ALARM", "decode message failed", err)
+				return
+			}
+			k.collectorV2.CollectList(data...)
+		}
 	}
 }
 

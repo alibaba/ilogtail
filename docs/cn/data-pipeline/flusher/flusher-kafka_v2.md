@@ -355,7 +355,7 @@ flushers:
 
 **注:** 配置仅供参考，证书文件请自行生成后根据事情情况配置。
 
-## Kerberos配置参考(待验证)
+## Kerberos配置参考
 
 ```yaml
 enable: true
@@ -381,5 +381,3 @@ flushers:
         KeyTabPath: "/etc/security/kafka.keytab"
     Topic: KafkaTestTopic
 ```
-
-**注:** Kerberos认证由于缺乏环境，目前待测试验证，使用中如有问题请及时向社区反馈修复。
