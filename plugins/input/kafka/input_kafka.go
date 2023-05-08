@@ -203,8 +203,6 @@ func (k *InputKafka) StartService(context pipeline.PipelineContext) error {
 
 func (k *InputKafka) receiver() {
 	for msg := range k.messages {
-		logger.Infof(k.context.GetRuntimeContext(), "[topic:%s] [partiton:%d] [offset:%d] [value:%s] [time:%v]",
-			msg.Topic, msg.Partition, msg.Offset, string(msg.Value), msg.Timestamp)
 		k.onMessage(msg)
 	}
 }

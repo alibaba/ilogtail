@@ -105,7 +105,7 @@ type FlusherKafka struct {
 	topicKeys    []string
 	isTerminal   chan bool
 	producer     sarama.AsyncProducer
-	hashKeyMap   map[string]interface{}
+	hashKeyMap   map[string]struct{}
 	hashKey      sarama.StringEncoder
 	flusher      FlusherFunc
 	selectFields []string
@@ -503,7 +503,7 @@ func makePartitioner(k *FlusherKafka) (partitioner sarama.PartitionerConstructor
 		partitioner = sarama.NewRoundRobinPartitioner
 	case PartitionerTypeRoundHash:
 		partitioner = sarama.NewHashPartitioner
-		k.hashKeyMap = make(map[string]interface{})
+		k.hashKeyMap = make(map[string]struct{})
 		k.hashKey = ""
 		for _, key := range k.HashKeys {
 			k.hashKeyMap[key] = struct{}{}
