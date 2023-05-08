@@ -36,4 +36,4 @@ your changes, such as:
 
 ## [Unreleased]
 
-- [public] [both] [updated]  Decoder support Opentelemetry metrix to SLS Log Protocol
+- [public] [both] [updated]  Decoder support Opentelemetry metric to SLS Log Protocol, service_otlp supports v1 pipeline, service_http_server v1 pipeline supports otlp metric

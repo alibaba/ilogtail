@@ -1,15 +1,22 @@
 package opentelemetry
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
+	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
+	"go.opentelemetry.io/collector/pdata/ptrace"
+	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/otlp"
@@ -168,37 +175,19 @@ func sanitizeRune(r rune) rune {
 	return '_'
 }
 
-func res2Labels(labels *KeyValues, resource pcommon.Resource) {
-	attrs := resource.Attributes()
+func attrs2Labels(labels *KeyValues, attrs pcommon.Map) {
 	attrs.Range(func(k string, v pcommon.Value) bool {
 		labels.Append(k, v.AsString())
 		return true
 	})
 }
 
-func exemplar2Labels(labels *KeyValues, exemplars pmetric.ExemplarSlice) {
-	for i := 0; i < exemplars.Len(); i++ {
-		exemplar := exemplars.At(i)
-		name := "exemplar_" + fmt.Sprint(i)
-		if !exemplar.SpanID().IsEmpty() {
-			labels.Append(name+"_spanID", exemplar.SpanID().String())
-		}
-		if !exemplar.TraceID().IsEmpty() {
-			labels.Append(name+"_traceID", exemplar.SpanID().String())
-		}
-	}
-}
-
 func GaugeToLogs(name string, data pmetric.NumberDataPointSlice, defaultLabels KeyValues) (logs []*protocol.Log) {
 	for i := 0; i < data.Len(); i++ {
 		dataPoint := data.At(i)
-		attributeMap := dataPoint.Attributes()
+
 		labels := defaultLabels.Clone()
-		attributeMap.Range(func(k string, v pcommon.Value) bool {
-			labels.Append(k, v.AsString())
-			return true
-		})
-		exemplar2Labels(&labels, dataPoint.Exemplars())
+		attrs2Labels(&labels, dataPoint.Attributes())
 
 		value := dataPoint.DoubleValue()
 		if dataPoint.IntValue() != 0 {
@@ -212,13 +201,9 @@ func GaugeToLogs(name string, data pmetric.NumberDataPointSlice, defaultLabels K
 func SumToLogs(name string, aggregationTemporality pmetric.AggregationTemporality, isMonotonic string, data pmetric.NumberDataPointSlice, defaultLabels KeyValues) (logs []*protocol.Log) {
 	for i := 0; i < data.Len(); i++ {
 		dataPoint := data.At(i)
-		attributeMap := dataPoint.Attributes()
+
 		labels := defaultLabels.Clone()
-		attributeMap.Range(func(k string, v pcommon.Value) bool {
-			labels.Append(k, v.AsString())
-			return true
-		})
-		exemplar2Labels(&labels, dataPoint.Exemplars())
+		attrs2Labels(&labels, dataPoint.Attributes())
 		labels.Append(otlp.TagKeyMetricIsMonotonic, isMonotonic)
 		labels.Append(otlp.TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 
@@ -234,12 +219,9 @@ func SumToLogs(name string, aggregationTemporality pmetric.AggregationTemporalit
 func SummaryToLogs(name string, data pmetric.SummaryDataPointSlice, defaultLabels KeyValues) (logs []*protocol.Log) {
 	for i := 0; i < data.Len(); i++ {
 		dataPoint := data.At(i)
-		attributeMap := dataPoint.Attributes()
+
 		labels := defaultLabels.Clone()
-		attributeMap.Range(func(k string, v pcommon.Value) bool {
-			labels.Append(k, v.AsString())
-			return true
-		})
+		attrs2Labels(&labels, dataPoint.Attributes())
 
 		logs = append(logs, newMetricLogFromRaw(name+"_sum", labels, int64(dataPoint.Timestamp()), dataPoint.Sum()))
 		logs = append(logs, newMetricLogFromRaw(name+"_count", labels, int64(dataPoint.Timestamp()), float64(dataPoint.Count())))
@@ -261,13 +243,9 @@ func SummaryToLogs(name string, data pmetric.SummaryDataPointSlice, defaultLabel
 func HistogramToLogs(name string, data pmetric.HistogramDataPointSlice, aggregationTemporality pmetric.AggregationTemporality, defaultLabels KeyValues) (logs []*protocol.Log) {
 	for i := 0; i < data.Len(); i++ {
 		dataPoint := data.At(i)
-		attributeMap := dataPoint.Attributes()
+
 		labels := defaultLabels.Clone()
-		attributeMap.Range(func(k string, v pcommon.Value) bool {
-			labels.Append(k, v.AsString())
-			return true
-		})
-		exemplar2Labels(&labels, dataPoint.Exemplars())
+		attrs2Labels(&labels, dataPoint.Attributes())
 		labels.Append(otlp.TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 		labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeHistogram.String())
 
@@ -307,13 +285,9 @@ func HistogramToLogs(name string, data pmetric.HistogramDataPointSlice, aggregat
 func ExponentialHistogramToLogs(name string, data pmetric.ExponentialHistogramDataPointSlice, aggregationTemporality pmetric.AggregationTemporality, defaultLabels KeyValues) (logs []*protocol.Log) {
 	for i := 0; i < data.Len(); i++ {
 		dataPoint := data.At(i)
-		attributeMap := dataPoint.Attributes()
+
 		labels := defaultLabels.Clone()
-		attributeMap.Range(func(k string, v pcommon.Value) bool {
-			labels.Append(k, v.AsString())
-			return true
-		})
-		exemplar2Labels(&labels, dataPoint.Exemplars())
+		attrs2Labels(&labels, dataPoint.Attributes())
 		labels.Append(otlp.TagKeyMetricAggregationTemporality, aggregationTemporality.String())
 		labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeExponentialHistogram.String())
 
@@ -348,4 +322,159 @@ func ExponentialHistogramToLogs(name string, data pmetric.ExponentialHistogramDa
 		}
 	}
 	return logs
+}
+
+func ConvertOtlpLogRequestV1(otlpLogReq plogotlp.ExportRequest) (logs []*protocol.Log, err error) {
+	return ConvertOtlpLogV1(otlpLogReq.Logs())
+}
+
+func ConvertOtlpLogV1(otlpLogs plog.Logs) (logs []*protocol.Log, err error) {
+	resLogs := otlpLogs.ResourceLogs()
+	for i := 0; i < resLogs.Len(); i++ {
+		resourceLog := resLogs.At(i)
+		sLogs := resourceLog.ScopeLogs()
+		for j := 0; j < sLogs.Len(); j++ {
+			scopeLog := sLogs.At(j)
+			lRecords := scopeLog.LogRecords()
+			for k := 0; k < lRecords.Len(); k++ {
+				logRecord := lRecords.At(k)
+
+				protoContents := []*protocol.Log_Content{
+					{
+						Key:   "time_unix_nano",
+						Value: strconv.FormatInt(logRecord.Timestamp().AsTime().UnixNano(), 10),
+					},
+					{
+						Key:   "severity_number",
+						Value: strconv.FormatInt(int64(logRecord.SeverityNumber()), 10),
+					},
+					{
+						Key:   "severity_text",
+						Value: logRecord.SeverityText(),
+					},
+					{
+						Key:   "content",
+						Value: logRecord.Body().AsString(),
+					},
+				}
+
+				if logRecord.Attributes().Len() != 0 {
+					if d, err := json.Marshal(logRecord.Attributes().AsRaw()); err == nil {
+						protoContents = append(protoContents, &protocol.Log_Content{
+							Key:   "attributes",
+							Value: string(d),
+						})
+					}
+				}
+
+				if resourceLog.Resource().Attributes().Len() != 0 {
+					if d, err := json.Marshal(resourceLog.Resource().Attributes().AsRaw()); err == nil {
+						protoContents = append(protoContents, &protocol.Log_Content{
+							Key:   "resources",
+							Value: string(d),
+						})
+					}
+				}
+
+				protoLog := &protocol.Log{
+					Time:     uint32(logRecord.Timestamp().AsTime().Unix()),
+					Contents: protoContents,
+				}
+				logs = append(logs, protoLog)
+			}
+		}
+	}
+
+	return logs, nil
+}
+
+func ConvertOtlpMetricRequestV1(otlpMetricReq pmetricotlp.ExportRequest) (logs []*protocol.Log, err error) {
+	return ConvertOtlpMetricV1(otlpMetricReq.Metrics())
+}
+
+func ConvertOtlpMetricV1(otlpMetrics pmetric.Metrics) (logs []*protocol.Log, err error) {
+	resMetrics := otlpMetrics.ResourceMetrics()
+	resMetricsLen := resMetrics.Len()
+
+	if 0 == resMetricsLen {
+		return
+	}
+
+	for i := 0; i < resMetricsLen; i++ {
+		resMetricsSlice := resMetrics.At(i)
+		var labels KeyValues
+		attrs2Labels(&labels, resMetricsSlice.Resource().Attributes())
+
+		scopeMetrics := resMetricsSlice.ScopeMetrics()
+		for j := 0; j < scopeMetrics.Len(); j++ {
+			otMetrics := scopeMetrics.At(j).Metrics()
+
+			for k := 0; k < otMetrics.Len(); k++ {
+				otMetric := otMetrics.At(k)
+				metricName := otMetric.Name()
+
+				switch otMetric.Type() {
+				case pmetric.MetricTypeGauge:
+					otGauge := otMetric.Gauge()
+					otDatapoints := otGauge.DataPoints()
+					logs = append(logs, GaugeToLogs(metricName, otDatapoints, labels)...)
+				case pmetric.MetricTypeSum:
+					otSum := otMetric.Sum()
+					isMonotonic := strconv.FormatBool(otSum.IsMonotonic())
+					aggregationTemporality := otSum.AggregationTemporality()
+					otDatapoints := otSum.DataPoints()
+					logs = append(logs, SumToLogs(metricName, aggregationTemporality, isMonotonic, otDatapoints, labels)...)
+				case pmetric.MetricTypeSummary:
+					otSummary := otMetric.Summary()
+					otDatapoints := otSummary.DataPoints()
+					logs = append(logs, SummaryToLogs(metricName, otDatapoints, labels)...)
+				case pmetric.MetricTypeHistogram:
+					otHistogram := otMetric.Histogram()
+					aggregationTemporality := otHistogram.AggregationTemporality()
+					otDatapoints := otHistogram.DataPoints()
+					logs = append(logs, HistogramToLogs(metricName, otDatapoints, aggregationTemporality, labels)...)
+				case pmetric.MetricTypeExponentialHistogram:
+					otExponentialHistogram := otMetric.ExponentialHistogram()
+					aggregationTemporality := otExponentialHistogram.AggregationTemporality()
+					otDatapoints := otExponentialHistogram.DataPoints()
+					logs = append(logs, ExponentialHistogramToLogs(metricName, otDatapoints, aggregationTemporality, labels)...)
+				default:
+					// TODO:
+					// find a better way to handle metric with type MetricTypeEmpty.
+					log := &protocol.Log{
+						Time: uint32(time.Now().Unix()),
+						Contents: []*protocol.Log_Content{
+							{
+								Key:   metricNameKey,
+								Value: otMetric.Name(),
+							},
+							{
+								Key:   labelsKey,
+								Value: otMetric.Type().String(),
+							},
+							{
+								Key:   timeNanoKey,
+								Value: strconv.FormatInt(time.Now().UnixNano(), 10),
+							},
+							{
+								Key:   valueKey,
+								Value: otMetric.Description(),
+							},
+						},
+					}
+					logs = append(logs, log)
+				}
+			}
+		}
+	}
+
+	return logs, err
+}
+
+func ConvertOtlpTraceRequestV1(otlpTraceReq ptraceotlp.ExportRequest) (logs []*protocol.Log, err error) {
+	return ConvertOtlpTraceV1(otlpTraceReq.Traces())
+}
+
+func ConvertOtlpTraceV1(otlpTrace ptrace.Traces) (logs []*protocol.Log, err error) {
+	return logs, fmt.Errorf("does_not_support_otlptraces")
 }

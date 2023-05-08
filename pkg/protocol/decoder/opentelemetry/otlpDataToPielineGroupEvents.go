@@ -1,15 +1,22 @@
 package opentelemetry
 
 import (
+	"fmt"
 	"math"
 	"strconv"
+	"time"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
+	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
 	"go.opentelemetry.io/collector/pdata/ptrace"
+	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
 
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol/otlp"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 func genScopeTags(scope pcommon.InstrumentationScope) models.Tags {
@@ -266,4 +273,230 @@ func genExponentialHistogramValues(isPositive bool, base float64, buckets pmetri
 		res[otlp.FieldNegativeOffset] = float64(offset)
 	}
 	return res
+}
+
+func ConvertOtlpLogRequestToGroupEvents(otlpLogReq plogotlp.ExportRequest) ([]*models.PipelineGroupEvents, error) {
+	return ConvertOtlpLogsToGroupEvents(otlpLogReq.Logs())
+}
+
+func ConvertOtlpMetricRequestToGroupEvents(otlpMetricReq pmetricotlp.ExportRequest) ([]*models.PipelineGroupEvents, error) {
+	return ConvertOtlpMetricsToGroupEvents(otlpMetricReq.Metrics())
+}
+
+func ConvertOtlpTraceRequestToGroupEvents(otlpTraceReq ptraceotlp.ExportRequest) ([]*models.PipelineGroupEvents, error) {
+	return ConvertOtlpTracesToGroupEvents(otlpTraceReq.Traces())
+}
+
+func ConvertOtlpLogsToGroupEvents(logs plog.Logs) (groupEventsSlice []*models.PipelineGroupEvents, err error) {
+	resLogs := logs.ResourceLogs()
+	resLogsLen := resLogs.Len()
+
+	if resLogsLen == 0 {
+		return
+	}
+
+	for i := 0; i < resLogsLen; i++ {
+		resourceLog := resLogs.At(i)
+		resourceAttrs := resourceLog.Resource().Attributes()
+		scopeLogs := resourceLog.ScopeLogs()
+		scopeLogsLen := scopeLogs.Len()
+
+		for j := 0; j < scopeLogsLen; j++ {
+			scopeLog := scopeLogs.At(j)
+			scope := scopeLog.Scope()
+			scopeTags := genScopeTags(scope)
+			otLogs := scopeLog.LogRecords()
+			otLogsLen := otLogs.Len()
+
+			groupEvents := &models.PipelineGroupEvents{
+				Group:  models.NewGroup(attrs2Meta(resourceAttrs), scopeTags),
+				Events: make([]models.PipelineEvent, 0, otLogs.Len()),
+			}
+
+			for k := 0; k < otLogsLen; k++ {
+				logRecord := otLogs.At(k)
+
+				var body []byte
+				switch logRecord.Body().Type() {
+				case pcommon.ValueTypeBytes:
+					body = logRecord.Body().Bytes().AsRaw()
+				case pcommon.ValueTypeStr:
+					body = util.ZeroCopyStringToBytes(logRecord.Body().AsString())
+				default:
+					body = util.ZeroCopyStringToBytes(fmt.Sprintf("%#v", logRecord.Body().AsRaw()))
+				}
+
+				level := logRecord.SeverityText()
+				if level == "" {
+					level = logRecord.SeverityNumber().String()
+				}
+
+				event := models.NewLog(
+					logEventName,
+					body,
+					level,
+					logRecord.SpanID().String(),
+					logRecord.TraceID().String(),
+					attrs2Tags(logRecord.Attributes()),
+					uint64(logRecord.Timestamp().AsTime().UnixNano()),
+				)
+				event.ObservedTimestamp = uint64(logRecord.ObservedTimestamp().AsTime().UnixNano())
+				event.Tags.Add(otlp.TagKeyLogFlag, strconv.Itoa(int(logRecord.Flags())))
+				groupEvents.Events = append(groupEvents.Events, event)
+			}
+
+			groupEventsSlice = append(groupEventsSlice, groupEvents)
+		}
+	}
+
+	return groupEventsSlice, err
+}
+
+func ConvertOtlpMetricsToGroupEvents(metrics pmetric.Metrics) (groupEventsSlice []*models.PipelineGroupEvents, err error) {
+	resMetrics := metrics.ResourceMetrics()
+	if resMetrics.Len() == 0 {
+		return
+	}
+
+	for i := 0; i < resMetrics.Len(); i++ {
+		resourceMetric := resMetrics.At(i)
+		resourceAttrs := resourceMetric.Resource().Attributes()
+		scopeMetrics := resourceMetric.ScopeMetrics()
+
+		for j := 0; j < scopeMetrics.Len(); j++ {
+			scopeMetric := scopeMetrics.At(j)
+			scope := scopeMetric.Scope()
+			scopeTags := genScopeTags(scope)
+			otMetrics := scopeMetric.Metrics()
+
+			groupEvents := &models.PipelineGroupEvents{
+				Group:  models.NewGroup(attrs2Meta(resourceAttrs), scopeTags),
+				Events: make([]models.PipelineEvent, 0, otMetrics.Len()),
+			}
+
+			for k := 0; k < otMetrics.Len(); k++ {
+				otMetric := otMetrics.At(k)
+				metricName := otMetric.Name()
+				metricUnit := otMetric.Unit()
+				metricDescription := otMetric.Description()
+
+				switch otMetric.Type() {
+				case pmetric.MetricTypeGauge:
+					otGauge := otMetric.Gauge()
+					otDatapoints := otGauge.DataPoints()
+					for l := 0; l < otDatapoints.Len(); l++ {
+						datapoint := otDatapoints.At(l)
+						metric := newMetricFromGaugeDatapoint(datapoint, metricName, metricUnit, metricDescription)
+						groupEvents.Events = append(groupEvents.Events, metric)
+					}
+				case pmetric.MetricTypeSum:
+					otSum := otMetric.Sum()
+					isMonotonic := strconv.FormatBool(otSum.IsMonotonic())
+					aggregationTemporality := otSum.AggregationTemporality()
+					otDatapoints := otSum.DataPoints()
+
+					for l := 0; l < otDatapoints.Len(); l++ {
+						datapoint := otDatapoints.At(l)
+						metric := newMetricFromSumDatapoint(datapoint, aggregationTemporality, isMonotonic, metricName, metricUnit, metricDescription)
+						groupEvents.Events = append(groupEvents.Events, metric)
+					}
+				case pmetric.MetricTypeSummary:
+					otSummary := otMetric.Summary()
+					otDatapoints := otSummary.DataPoints()
+					for l := 0; l < otDatapoints.Len(); l++ {
+						datapoint := otDatapoints.At(l)
+						metric := newMetricFromSummaryDatapoint(datapoint, metricName, metricUnit, metricDescription)
+						groupEvents.Events = append(groupEvents.Events, metric)
+					}
+				case pmetric.MetricTypeHistogram:
+					otHistogram := otMetric.Histogram()
+					aggregationTemporality := otHistogram.AggregationTemporality()
+					otDatapoints := otHistogram.DataPoints()
+
+					for l := 0; l < otDatapoints.Len(); l++ {
+						datapoint := otDatapoints.At(l)
+						metric := newMetricFromHistogramDatapoint(datapoint, aggregationTemporality, metricName, metricUnit, metricDescription)
+						groupEvents.Events = append(groupEvents.Events, metric)
+					}
+				case pmetric.MetricTypeExponentialHistogram:
+					otExponentialHistogram := otMetric.ExponentialHistogram()
+					aggregationTemporality := otExponentialHistogram.AggregationTemporality()
+					otDatapoints := otExponentialHistogram.DataPoints()
+
+					for l := 0; l < otDatapoints.Len(); l++ {
+						datapoint := otDatapoints.At(l)
+						metric := newMetricFromExponentialHistogramDatapoint(datapoint, aggregationTemporality, metricName, metricUnit, metricDescription)
+						groupEvents.Events = append(groupEvents.Events, metric)
+					}
+				default:
+					// TODO:
+					// find a better way to handle metric with type MetricTypeEmpty.
+					metric := models.NewSingleValueMetric(metricName, models.MetricTypeUntyped, models.NewTags(), time.Now().Unix(), 0)
+					metric.Unit = metricUnit
+					metric.Description = otMetric.Description()
+					groupEvents.Events = append(groupEvents.Events, metric)
+				}
+
+			}
+			groupEventsSlice = append(groupEventsSlice, groupEvents)
+		}
+	}
+	return groupEventsSlice, err
+}
+
+func ConvertOtlpTracesToGroupEvents(traces ptrace.Traces) (groupEventsSlice []*models.PipelineGroupEvents, err error) {
+	resSpans := traces.ResourceSpans()
+
+	for i := 0; i < resSpans.Len(); i++ {
+		resourceSpan := resSpans.At(i)
+		// A Resource is an immutable representation of the entity producing telemetry as Attributes.
+		// These attributes should be stored in meta.
+		resourceAttrs := resourceSpan.Resource().Attributes()
+		scopeSpans := resourceSpan.ScopeSpans()
+
+		for j := 0; j < scopeSpans.Len(); j++ {
+			scopeSpan := scopeSpans.At(j)
+			scope := scopeSpan.Scope()
+			scopeTags := genScopeTags(scope)
+			otSpans := scopeSpan.Spans()
+
+			groupEvents := &models.PipelineGroupEvents{
+				Group:  models.NewGroup(attrs2Meta(resourceAttrs), scopeTags),
+				Events: make([]models.PipelineEvent, 0, otSpans.Len()),
+			}
+
+			for k := 0; k < otSpans.Len(); k++ {
+				otSpan := otSpans.At(k)
+
+				spanName := otSpan.Name()
+				traceID := otSpan.TraceID().String()
+				spanID := otSpan.SpanID().String()
+				spanKind := models.SpanKind(otSpan.Kind())
+				startTs := otSpan.StartTimestamp()
+				endTs := otSpan.EndTimestamp()
+				spanAttrs := otSpan.Attributes()
+				events := convertSpanEvents(otSpan.Events())
+				links := convertSpanLinks(otSpan.Links())
+
+				span := models.NewSpan(spanName, traceID, spanID, spanKind,
+					uint64(startTs), uint64(endTs), attrs2Tags(spanAttrs), events, links)
+
+				span.ParentSpanID = otSpan.ParentSpanID().String()
+				span.Status = models.StatusCode(otSpan.Status().Code())
+
+				if message := otSpan.Status().Message(); len(message) > 0 {
+					span.Tags.Add(otlp.TagKeySpanStatusMessage, message)
+				}
+
+				span.Tags.Add(otlp.TagKeySpanDroppedEventsCount, strconv.Itoa(int(otSpan.DroppedEventsCount())))
+				span.Tags.Add(otlp.TagKeySpanDroppedAttrsCount, strconv.Itoa(int(otSpan.DroppedAttributesCount())))
+				span.Tags.Add(otlp.TagKeySpanDroppedLinksCount, strconv.Itoa(int(otSpan.DroppedLinksCount())))
+
+				groupEvents.Events = append(groupEvents.Events, span)
+			}
+			groupEventsSlice = append(groupEventsSlice, groupEvents)
+		}
+
+	}
+	return groupEventsSlice, err
 }
