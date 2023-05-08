@@ -32,9 +32,11 @@ your changes, such as:
 
 ## Example
 
-- [public] [both] [fix] do not read env config from exited containers
+- [public] [both] [updated] add a new feature
 
 ## [Unreleased]
 
-- [public] [both] [updated] Optimize flusher pulsar to improve performance in static topic scenarios
 - [public] [both] [updated] Decoder support Opentelemetry metric to SLS Log Protocol, service_otlp supports v1 pipeline, service_http_server v1 pipeline supports otlp metric
+- [public] [both] [fixed] Resolved issue of double counting disk total metrics in the disk partition condition of metric_system_v2
+- [public] [both] [fixed] do not read env config from exited containers
+- [public] [both] [updated] Optimize flusher pulsar to improve performance in static topic scenarios
