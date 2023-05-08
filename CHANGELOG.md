@@ -36,12 +36,8 @@ your changes, such as:
 
 ## [Unreleased]
 
-- [public] [both] [updated] Enable enable_env_ref_in_config configuration to support system variable binding
-- [public] [both] [fixed] When using the TagFieldsRename configuration in flusher_kafka_v2/flusher_pulsar, some fields in tags cannot be renamed
-- [public] [both] [added] add new plugin type: extension
-- [public] [both] [updated] http flusher support custom authenticator, filter and request circuit-breaker via the extension plugin mechanism
-- [public] [both] [added] add new plugin: flusher_loki
-- [public] [both] [updated] processor_split_key_value plugin support separating the key value when the value is surrounded by quotes 
-- [public] [both] [added] add new plugin: processor_string_replace
+- [public] [both] [fixed] Resolved issue of double counting disk total metrics in the disk partition condition of metric_system_v2
+- [public] [both] [fixed] do not read env config from exited containers
+- [public] [both] [updated] Optimize flusher pulsar to improve performance in static topic scenarios
 - [public] [both] [updated] upgrade sarama version to 1.38.1, Rewrite service_kafka input plugin
 - [public] [both] [updated] Optimize flusher kafka v2 to improve performance in static topic scenarios
