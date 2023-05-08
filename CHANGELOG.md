@@ -36,4 +36,5 @@ your changes, such as:
 
 ## [Unreleased]
 
-- [public] [both] [updated]  Decoder support Opentelemetry metric to SLS Log Protocol, service_otlp supports v1 pipeline, service_http_server v1 pipeline supports otlp metric
+- [public] [both] [updated] Optimize flusher pulsar to improve performance in static topic scenarios
+- [public] [both] [updated] Decoder support Opentelemetry metric to SLS Log Protocol, service_otlp supports v1 pipeline, service_http_server v1 pipeline supports otlp metric
