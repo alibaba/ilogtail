@@ -112,7 +112,8 @@ func DecodeOtlpRequest[P interface {
 	UnmarshalJSON(data []byte) error
 }](des P, data []byte, req *http.Request) (P, error) {
 	var err error
-	switch req.Header.Get("Content-Type") {
+	contentType := req.Header.Get("Content-Type")
+	switch contentType {
 	case pbContentType:
 		if err = des.UnmarshalProto(data); err != nil {
 			return des, err
@@ -122,7 +123,7 @@ func DecodeOtlpRequest[P interface {
 			return des, err
 		}
 	default:
-		err = errors.New("Invalid ContentType: " + req.Header.Get("Content-Type"))
+		err = errors.New("Invalid ContentType: " + contentType)
 	}
 	return des, err
 }

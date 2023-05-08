@@ -32,6 +32,14 @@ const (
 	summaryLabelKey    = "quantile"
 )
 
+const (
+	metricNameSuffixSum    = "_sum"
+	metricNameSuffixCount  = "_count"
+	metricNameSuffixMax    = "_max"
+	metricNameSuffixMin    = "_min"
+	metricNameSuffixBucket = "_bucket"
+)
+
 type KeyValue struct {
 	Key   string
 	Value string
@@ -223,8 +231,8 @@ func SummaryToLogs(name string, data pmetric.SummaryDataPointSlice, defaultLabel
 		labels := defaultLabels.Clone()
 		attrs2Labels(&labels, dataPoint.Attributes())
 
-		logs = append(logs, newMetricLogFromRaw(name+"_sum", labels, int64(dataPoint.Timestamp()), dataPoint.Sum()))
-		logs = append(logs, newMetricLogFromRaw(name+"_count", labels, int64(dataPoint.Timestamp()), float64(dataPoint.Count())))
+		logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixSum, labels, int64(dataPoint.Timestamp()), dataPoint.Sum()))
+		logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixCount, labels, int64(dataPoint.Timestamp()), float64(dataPoint.Count())))
 
 		summaryLabels := labels.Clone()
 		summaryLabels.Append(summaryLabelKey, "")
@@ -250,15 +258,15 @@ func HistogramToLogs(name string, data pmetric.HistogramDataPointSlice, aggregat
 		labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeHistogram.String())
 
 		if dataPoint.HasSum() {
-			logs = append(logs, newMetricLogFromRaw(name+"_sum", labels, int64(dataPoint.Timestamp()), dataPoint.Sum()))
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixSum, labels, int64(dataPoint.Timestamp()), dataPoint.Sum()))
 		}
 		if dataPoint.HasMin() {
-			logs = append(logs, newMetricLogFromRaw(name+"_min", labels, int64(dataPoint.Timestamp()), dataPoint.Min()))
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixMin, labels, int64(dataPoint.Timestamp()), dataPoint.Min()))
 		}
 		if dataPoint.HasMax() {
-			logs = append(logs, newMetricLogFromRaw(name+"_max", labels, int64(dataPoint.Timestamp()), dataPoint.Max()))
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixMax, labels, int64(dataPoint.Timestamp()), dataPoint.Max()))
 		}
-		logs = append(logs, newMetricLogFromRaw(name+"_count", labels, int64(dataPoint.Timestamp()), float64(dataPoint.Count())))
+		logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixCount, labels, int64(dataPoint.Timestamp()), float64(dataPoint.Count())))
 
 		bounds := dataPoint.ExplicitBounds()
 		boundsStr := make([]string, bounds.Len()+1)
@@ -276,7 +284,7 @@ func HistogramToLogs(name string, data pmetric.HistogramDataPointSlice, aggregat
 			bucket := dataPoint.BucketCounts().At(j)
 			bucketLabels.Replace(bucketLabelKey, boundsStr[j])
 
-			logs = append(logs, newMetricLogFromRaw(name+"_bucket", bucketLabels, int64(dataPoint.Timestamp()), float64(bucket)))
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixBucket, bucketLabels, int64(dataPoint.Timestamp()), float64(bucket)))
 		}
 	}
 	return logs
@@ -292,15 +300,15 @@ func ExponentialHistogramToLogs(name string, data pmetric.ExponentialHistogramDa
 		labels.Append(otlp.TagKeyMetricHistogramType, pmetric.MetricTypeExponentialHistogram.String())
 
 		if dataPoint.HasSum() {
-			logs = append(logs, newMetricLogFromRaw(name+"_sum", labels, int64(dataPoint.Timestamp()), dataPoint.Sum()))
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixSum, labels, int64(dataPoint.Timestamp()), dataPoint.Sum()))
 		}
 		if dataPoint.HasMin() {
-			logs = append(logs, newMetricLogFromRaw(name+"_min", labels, int64(dataPoint.Timestamp()), dataPoint.Min()))
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixMin, labels, int64(dataPoint.Timestamp()), dataPoint.Min()))
 		}
 		if dataPoint.HasMax() {
-			logs = append(logs, newMetricLogFromRaw(name+"_max", labels, int64(dataPoint.Timestamp()), dataPoint.Max()))
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixMax, labels, int64(dataPoint.Timestamp()), dataPoint.Max()))
 		}
-		logs = append(logs, newMetricLogFromRaw(name+"_count", labels, int64(dataPoint.Timestamp()), float64(dataPoint.Count())))
+		logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixCount, labels, int64(dataPoint.Timestamp()), float64(dataPoint.Count())))
 
 		scale := dataPoint.Scale()
 		base := math.Pow(2, math.Pow(2, float64(-scale)))
@@ -312,13 +320,13 @@ func ExponentialHistogramToLogs(name string, data pmetric.ExponentialHistogramDa
 		bucketLabels.Sort()
 		for k, v := range postiveFields {
 			bucketLabels.Replace(bucketLabelKey, k)
-			logs = append(logs, newMetricLogFromRaw(name+"_bucket", bucketLabels, int64(dataPoint.Timestamp()), v))
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixBucket, bucketLabels, int64(dataPoint.Timestamp()), v))
 		}
 		bucketLabels.Replace(bucketLabelKey, otlp.FieldZeroCount)
-		logs = append(logs, newMetricLogFromRaw(name+"_bucket", bucketLabels, int64(dataPoint.Timestamp()), float64(dataPoint.ZeroCount())))
+		logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixBucket, bucketLabels, int64(dataPoint.Timestamp()), float64(dataPoint.ZeroCount())))
 		for k, v := range negativeFields {
 			bucketLabels.Replace(bucketLabelKey, k)
-			logs = append(logs, newMetricLogFromRaw(name+"_bucket", bucketLabels, int64(dataPoint.Timestamp()), v))
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixBucket, bucketLabels, int64(dataPoint.Timestamp()), v))
 		}
 	}
 	return logs

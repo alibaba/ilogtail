@@ -69,7 +69,7 @@ func TestOtlpGRPC_Logs_V1(t *testing.T) {
 			assert.Equal(t, "resources", log.Contents[4].Key)
 			assert.Equal(t, "{\"resource-attr\":\"resource-attr-val-1\"}", log.Contents[4].Value)
 		}
-		pos = pos + count
+		pos += count
 	}
 }
 
@@ -101,7 +101,7 @@ func TestOtlpGRPC_Metrics_V1(t *testing.T) {
 	for _, log := range collector.Logs {
 		assert.Equal(t, "__name__", log.Contents[0].Key)
 		assert.Equal(t, "__labels__", log.Contents[1].Key)
-		types[string(log.Contents[0].Value)]++
+		types[log.Contents[0].Value]++
 	}
 	assert.Equal(t, 26, types["gauge_int"])
 	assert.Equal(t, 22, types["gauge_double"])
@@ -182,7 +182,7 @@ func TestOtlpHTTP_Logs_V1(t *testing.T) {
 			assert.Equal(t, "resources", log.Contents[4].Key)
 			assert.Equal(t, "{\"resource-attr\":\"resource-attr-val-1\"}", log.Contents[4].Value)
 		}
-		pos = pos + count
+		pos += count
 	}
 }
 
@@ -211,7 +211,7 @@ func TestOtlpHTTP_Metrics_V1(t *testing.T) {
 	for _, log := range collector.Logs {
 		assert.Equal(t, "__name__", log.Contents[0].Key)
 		assert.Equal(t, "__labels__", log.Contents[1].Key)
-		types[string(log.Contents[0].Value)]++
+		types[log.Contents[0].Value]++
 	}
 	assert.Equal(t, 26, types["gauge_int"])
 	assert.Equal(t, 22, types["gauge_double"])
