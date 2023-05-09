@@ -21,7 +21,7 @@
 | [`service_kafka`](input/service-kafka.md)<br>Kafka                    | SLS官方 | 将Kafka数据输入到iLogtail。                      |
 | [`service_mock`](input/service-mock.md)<br>Mock数据-Service            | SLS官方 | 生成service模拟数据的插件。                         |
 | [`service_mssql`](input/service-mssql.md)<br>SqlServer查询数据            | SLS官方 | 将Sql Server数据输入到iLogtail。                 |
-| [`service_otlp`](input/service-otlp.md)<br>OTLP数据 | 社区<br>[Zhu Shunjia](https://github.com/shunjiazhu) | 通过http/grpc协议，接收OTLP数据。 |
+| [`service_otlp`](input/service-otlp.md)<br>OTLP数据 | 社区<br>[`Zhu Shunjia`](https://github.com/shunjiazhu) | 通过http/grpc协议，接收OTLP数据。 |
 | [`service_pgsql`](input/service-pgsql.md)<br>PostgreSQL查询数据           | SLS官方 | 将PostgresSQL数据输入到iLogtail。                |
 | [`service_syslog`](input/service-syslog.md)<br>Syslog数据                | SLS官方 | 采集syslog数据。                               |
 
