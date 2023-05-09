@@ -62,7 +62,7 @@ type Server struct {
 	serverHTTP      *http.Server
 	grpcListener    net.Listener
 	httpListener    net.Listener
-	logsReceiver    plogotlp.GRPCServer   // currently logs are not supported when using the v2 pipeline
+	logsReceiver    plogotlp.GRPCServer
 	tracesReceiver  ptraceotlp.GRPCServer // currently traces are not supported when using the v1 pipeline
 	metricsReceiver pmetricotlp.GRPCServer
 	wg              sync.WaitGroup
