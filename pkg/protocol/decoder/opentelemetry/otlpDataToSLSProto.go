@@ -33,11 +33,12 @@ const (
 )
 
 const (
-	metricNameSuffixSum    = "_sum"
-	metricNameSuffixCount  = "_count"
-	metricNameSuffixMax    = "_max"
-	metricNameSuffixMin    = "_min"
-	metricNameSuffixBucket = "_bucket"
+	metricNameSuffixSum       = "_sum"
+	metricNameSuffixCount     = "_count"
+	metricNameSuffixMax       = "_max"
+	metricNameSuffixMin       = "_min"
+	metricNameSuffixBucket    = "_bucket"
+	metricNameSuffixExemplars = "_exemplars"
 )
 
 type KeyValue struct {
@@ -190,12 +191,56 @@ func attrs2Labels(labels *KeyValues, attrs pcommon.Map) {
 	})
 }
 
+func newExemplarMetricLogFromRaw(name string, exemplar pmetric.Exemplar, labels KeyValues) *protocol.Log {
+	metricName := name + metricNameSuffixExemplars
+	if !exemplar.TraceID().IsEmpty() {
+		labels.Append("traceId", exemplar.TraceID().String())
+	}
+
+	if !exemplar.SpanID().IsEmpty() {
+		labels.Append("spanId", exemplar.SpanID().String())
+	}
+
+	filterAttributeMap := pcommon.NewMap()
+	exemplar.FilteredAttributes().CopyTo(filterAttributeMap)
+
+	for key, value := range filterAttributeMap.AsRaw() {
+		labels.Append(key, fmt.Sprintf("%v", value))
+	}
+
+	labels.Sort()
+	return &protocol.Log{
+		Time: uint32(exemplar.Timestamp() / 1e9),
+		Contents: []*protocol.Log_Content{
+			{
+				Key:   metricNameKey,
+				Value: formatMetricName(metricName),
+			},
+			{
+				Key:   labelsKey,
+				Value: labels.String(),
+			},
+			{
+				Key:   timeNanoKey,
+				Value: strconv.FormatInt(exemplar.Timestamp().AsTime().Unix(), 10),
+			}, {
+				Key:   valueKey,
+				Value: strconv.FormatFloat(exemplar.DoubleValue(), 'g', -1, 64),
+			},
+		},
+	}
+}
+
 func GaugeToLogs(name string, data pmetric.NumberDataPointSlice, defaultLabels KeyValues) (logs []*protocol.Log) {
 	for i := 0; i < data.Len(); i++ {
 		dataPoint := data.At(i)
 
 		labels := defaultLabels.Clone()
 		attrs2Labels(&labels, dataPoint.Attributes())
+
+		for j := 0; j < dataPoint.Exemplars().Len(); j++ {
+			logs = append(logs, newExemplarMetricLogFromRaw(name, dataPoint.Exemplars().At(j), labels.Clone()))
+		}
 
 		value := dataPoint.DoubleValue()
 		if dataPoint.IntValue() != 0 {
@@ -214,6 +259,10 @@ func SumToLogs(name string, aggregationTemporality pmetric.AggregationTemporalit
 		attrs2Labels(&labels, dataPoint.Attributes())
 		labels.Append(otlp.TagKeyMetricIsMonotonic, isMonotonic)
 		labels.Append(otlp.TagKeyMetricAggregationTemporality, aggregationTemporality.String())
+
+		for j := 0; j < dataPoint.Exemplars().Len(); j++ {
+			logs = append(logs, newExemplarMetricLogFromRaw(name, dataPoint.Exemplars().At(j), labels.Clone()))
+		}
 
 		value := dataPoint.DoubleValue()
 		if dataPoint.IntValue() != 0 {
@@ -268,6 +317,10 @@ func HistogramToLogs(name string, data pmetric.HistogramDataPointSlice, aggregat
 		}
 		logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixCount, labels, int64(dataPoint.Timestamp()), float64(dataPoint.Count())))
 
+		for j := 0; j < dataPoint.Exemplars().Len(); j++ {
+			logs = append(logs, newExemplarMetricLogFromRaw(name, dataPoint.Exemplars().At(j), labels.Clone()))
+		}
+
 		bounds := dataPoint.ExplicitBounds()
 		boundsStr := make([]string, bounds.Len()+1)
 		for j := 0; j < bounds.Len(); j++ {
@@ -280,11 +333,13 @@ func HistogramToLogs(name string, data pmetric.HistogramDataPointSlice, aggregat
 		bucketLabels := labels.Clone()
 		bucketLabels.Append(bucketLabelKey, "")
 		bucketLabels.Sort()
+
+		sumCount := uint64(0)
 		for j := 0; j < bucketCount; j++ {
 			bucket := dataPoint.BucketCounts().At(j)
 			bucketLabels.Replace(bucketLabelKey, boundsStr[j])
-
-			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixBucket, bucketLabels, int64(dataPoint.Timestamp()), float64(bucket)))
+			sumCount += bucket
+			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixBucket, bucketLabels, int64(dataPoint.Timestamp()), float64(sumCount)))
 		}
 	}
 	return logs
@@ -309,6 +364,10 @@ func ExponentialHistogramToLogs(name string, data pmetric.ExponentialHistogramDa
 			logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixMax, labels, int64(dataPoint.Timestamp()), dataPoint.Max()))
 		}
 		logs = append(logs, newMetricLogFromRaw(name+metricNameSuffixCount, labels, int64(dataPoint.Timestamp()), float64(dataPoint.Count())))
+
+		for j := 0; j < dataPoint.Exemplars().Len(); j++ {
+			logs = append(logs, newExemplarMetricLogFromRaw(name, dataPoint.Exemplars().At(j), labels.Clone()))
+		}
 
 		scale := dataPoint.Scale()
 		base := math.Pow(2, math.Pow(2, float64(-scale)))

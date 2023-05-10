@@ -270,8 +270,14 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 							switch metric.Type() {
 							case pmetric.MetricTypeGauge:
 								count += metric.Gauge().DataPoints().Len()
+								for i := 0; i < metric.Gauge().DataPoints().Len(); i++ {
+									count += metric.Gauge().DataPoints().At(i).Exemplars().Len()
+								}
 							case pmetric.MetricTypeSum:
 								count += metric.Sum().DataPoints().Len()
+								for i := 0; i < metric.Sum().DataPoints().Len(); i++ {
+									count += metric.Sum().DataPoints().At(i).Exemplars().Len()
+								}
 							case pmetric.MetricTypeSummary:
 								for l := 0; l < metric.Summary().DataPoints().Len(); l++ {
 									dataPoint := metric.Summary().DataPoints().At(l)
@@ -281,6 +287,7 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 							case pmetric.MetricTypeHistogram:
 								for l := 0; l < metric.Histogram().DataPoints().Len(); l++ {
 									dataPoint := metric.Histogram().DataPoints().At(l)
+									count += dataPoint.Exemplars().Len()
 									if dataPoint.HasSum() {
 										count++
 									}
@@ -295,6 +302,7 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 							case pmetric.MetricTypeExponentialHistogram:
 								for l := 0; l < metric.ExponentialHistogram().DataPoints().Len(); l++ {
 									dataPoint := metric.ExponentialHistogram().DataPoints().At(l)
+									count += dataPoint.Exemplars().Len()
 									if dataPoint.HasSum() {
 										count++
 									}
@@ -318,28 +326,44 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 			switch metric.Type() {
 			case pmetric.MetricTypeGauge:
 				assert.Equal(t, "__name__", logs[0].Contents[0].Key)
-				assert.Equal(t, "test_gauge", logs[0].Contents[0].Value)
+				assert.Equal(t, "test_gauge_exemplars", logs[0].Contents[0].Value)
 				assert.Equal(t, "__labels__", logs[0].Contents[1].Key)
-				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|service_name#$#testService|string#$#value", logs[0].Contents[1].Value)
+				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|service_name#$#testService|service_name#$#testService|spanId#$#1112131415161718|string#$#value|traceId#$#0102030405060708090a0b0c0d0e0f10", logs[0].Contents[1].Value)
 				assert.Equal(t, "__time_nano__", logs[0].Contents[2].Key)
 				assert.Equal(t, "__value__", logs[0].Contents[3].Key)
-				assert.Equal(t, "10.2", logs[0].Contents[3].Value)
+				assert.Equal(t, "99.3", logs[0].Contents[3].Value)
+
+				assert.Equal(t, "__name__", logs[1].Contents[0].Key)
+				assert.Equal(t, "test_gauge", logs[1].Contents[0].Value)
+				assert.Equal(t, "__labels__", logs[1].Contents[1].Key)
+				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|service_name#$#testService|string#$#value", logs[1].Contents[1].Value)
+				assert.Equal(t, "__time_nano__", logs[1].Contents[2].Key)
+				assert.Equal(t, "__value__", logs[1].Contents[3].Key)
+				assert.Equal(t, "10.2", logs[1].Contents[3].Value)
 			case pmetric.MetricTypeSum:
 				assert.Equal(t, "__name__", logs[0].Contents[0].Key)
-				assert.Equal(t, "test_sum", logs[0].Contents[0].Value)
+				assert.Equal(t, "test_sum_exemplars", logs[0].Contents[0].Value)
 				assert.Equal(t, "__labels__", logs[0].Contents[1].Key)
-				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_ismonotonic#$#true|service_name#$#testService|string#$#value", logs[0].Contents[1].Value)
+				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_ismonotonic#$#true|service_name#$#testService|service_name#$#testService|spanId#$#1112131415161718|string#$#value|traceId#$#0102030405060708090a0b0c0d0e0f10", logs[0].Contents[1].Value)
 				assert.Equal(t, "__time_nano__", logs[0].Contents[2].Key)
 				assert.Equal(t, "__value__", logs[0].Contents[3].Key)
-				assert.Equal(t, "100", logs[0].Contents[3].Value)
+				assert.Equal(t, "99.3", logs[0].Contents[3].Value)
 
 				assert.Equal(t, "__name__", logs[1].Contents[0].Key)
 				assert.Equal(t, "test_sum", logs[1].Contents[0].Value)
 				assert.Equal(t, "__labels__", logs[1].Contents[1].Key)
-				assert.Equal(t, "bool#$#false|bytes#$#YmFy|double#$#2.2|host_name#$#testHost|int#$#2|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_ismonotonic#$#true|service_name#$#testService|string#$#value2", logs[1].Contents[1].Value)
+				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_ismonotonic#$#true|service_name#$#testService|string#$#value", logs[1].Contents[1].Value)
 				assert.Equal(t, "__time_nano__", logs[1].Contents[2].Key)
 				assert.Equal(t, "__value__", logs[1].Contents[3].Key)
-				assert.Equal(t, "50", logs[1].Contents[3].Value)
+				assert.Equal(t, "100", logs[1].Contents[3].Value)
+
+				assert.Equal(t, "__name__", logs[2].Contents[0].Key)
+				assert.Equal(t, "test_sum", logs[2].Contents[0].Value)
+				assert.Equal(t, "__labels__", logs[2].Contents[1].Key)
+				assert.Equal(t, "bool#$#false|bytes#$#YmFy|double#$#2.2|host_name#$#testHost|int#$#2|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_ismonotonic#$#true|service_name#$#testService|string#$#value2", logs[2].Contents[1].Value)
+				assert.Equal(t, "__time_nano__", logs[2].Contents[2].Key)
+				assert.Equal(t, "__value__", logs[2].Contents[3].Key)
+				assert.Equal(t, "50", logs[2].Contents[3].Value)
 			case pmetric.MetricTypeSummary:
 				assert.Equal(t, "__name__", logs[0].Contents[0].Key)
 				assert.Equal(t, "test_summary_sum", logs[0].Contents[0].Value)
@@ -398,17 +422,17 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 				assert.Equal(t, fmt.Sprint(metric.Histogram().DataPoints().At(0).Count()), logs[3].Contents[3].Value)
 
 				assert.Equal(t, "__name__", logs[4].Contents[0].Key)
-				assert.Equal(t, "test_Histogram_bucket", logs[4].Contents[0].Value)
+				assert.Equal(t, "test_Histogram_exemplars", logs[4].Contents[0].Value)
 				assert.Equal(t, "__labels__", logs[4].Contents[1].Key)
-				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|le#$#10|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_histogram_type#$#Histogram|service_name#$#testService|string#$#value", logs[4].Contents[1].Value)
+				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_histogram_type#$#Histogram|service_name#$#testService|service_name#$#testService|spanId#$#1112131415161718|string#$#value|traceId#$#0102030405060708090a0b0c0d0e0f10", logs[4].Contents[1].Value)
 				assert.Equal(t, "__time_nano__", logs[4].Contents[2].Key)
 				assert.Equal(t, "__value__", logs[4].Contents[3].Key)
-				assert.Equal(t, "1", logs[4].Contents[3].Value)
+				assert.Equal(t, "99.3", logs[4].Contents[3].Value)
 
 				assert.Equal(t, "__name__", logs[5].Contents[0].Key)
 				assert.Equal(t, "test_Histogram_bucket", logs[5].Contents[0].Value)
 				assert.Equal(t, "__labels__", logs[5].Contents[1].Key)
-				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|le#$#100|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_histogram_type#$#Histogram|service_name#$#testService|string#$#value", logs[5].Contents[1].Value)
+				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|le#$#10|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_histogram_type#$#Histogram|service_name#$#testService|string#$#value", logs[5].Contents[1].Value)
 				assert.Equal(t, "__time_nano__", logs[5].Contents[2].Key)
 				assert.Equal(t, "__value__", logs[5].Contents[3].Key)
 				assert.Equal(t, "1", logs[5].Contents[3].Value)
@@ -416,10 +440,18 @@ func TestDecoder_Decode_MetricsAll(t *testing.T) {
 				assert.Equal(t, "__name__", logs[6].Contents[0].Key)
 				assert.Equal(t, "test_Histogram_bucket", logs[6].Contents[0].Value)
 				assert.Equal(t, "__labels__", logs[6].Contents[1].Key)
-				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|le#$#+Inf|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_histogram_type#$#Histogram|service_name#$#testService|string#$#value", logs[6].Contents[1].Value)
+				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|le#$#100|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_histogram_type#$#Histogram|service_name#$#testService|string#$#value", logs[6].Contents[1].Value)
 				assert.Equal(t, "__time_nano__", logs[6].Contents[2].Key)
 				assert.Equal(t, "__value__", logs[6].Contents[3].Key)
 				assert.Equal(t, "2", logs[6].Contents[3].Value)
+
+				assert.Equal(t, "__name__", logs[7].Contents[0].Key)
+				assert.Equal(t, "test_Histogram_bucket", logs[7].Contents[0].Value)
+				assert.Equal(t, "__labels__", logs[7].Contents[1].Key)
+				assert.Equal(t, "bool#$#true|bytes#$#Zm9v|double#$#1.1|host_name#$#testHost|int#$#1|le#$#+Inf|otlp_metric_aggregation_temporality#$#Cumulative|otlp_metric_histogram_type#$#Histogram|service_name#$#testService|string#$#value", logs[7].Contents[1].Value)
+				assert.Equal(t, "__time_nano__", logs[7].Contents[2].Key)
+				assert.Equal(t, "__value__", logs[7].Contents[3].Key)
+				assert.Equal(t, "4", logs[7].Contents[3].Value)
 			case pmetric.MetricTypeExponentialHistogram:
 				assert.Equal(t, "__name__", logs[0].Contents[0].Key)
 				assert.Equal(t, "test_ExponentialHistogram_sum", logs[0].Contents[0].Value)
