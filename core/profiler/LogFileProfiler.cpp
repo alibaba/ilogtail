@@ -360,6 +360,7 @@ void LogFileProfiler::AddProfilingSkipBytes(const std::string& configName,
         (iter->second)->mSkipBytes += skipBytes;
         (iter->second)->mLastUpdateTime = time(NULL);
     } else {
+        LogStoreStatistic* statistic;
         if (filename.size() == (size_t)0) {
             std::vector<sls_logs::LogTag> empty;
             statistic = new LogStoreStatistic(configName, projectName, category, filename, empty);
