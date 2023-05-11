@@ -19,9 +19,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
