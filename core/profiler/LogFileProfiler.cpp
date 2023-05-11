@@ -302,7 +302,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
             (iter->second)->mErrorLine = errorLine;
         (iter->second)->mLastUpdateTime = time(NULL);
     } else {
-        LogStoreStatistic* statistic = null;
+        LogStoreStatistic* statistic = NULL;
         if (filename.empty()) {
             std::vector<sls_logs::LogTag> empty;
             statistic = new LogStoreStatistic(configName,
@@ -358,7 +358,7 @@ void LogFileProfiler::AddProfilingSkipBytes(const std::string& configName,
         (iter->second)->mSkipBytes += skipBytes;
         (iter->second)->mLastUpdateTime = time(NULL);
     } else {
-        LogStoreStatistic* statistic = null;
+        LogStoreStatistic* statistic = NULL;
         if (filename.empty()) {
             std::vector<sls_logs::LogTag> empty;
             statistic = new LogStoreStatistic(configName, projectName, category, filename, empty);
@@ -393,7 +393,7 @@ void LogFileProfiler::AddProfilingReadBytes(const std::string& configName,
     if (iter != statisticsMap.end()) {
         (iter->second)->UpdateReadInfo(dev, inode, fileSize, readOffset, lastReadTime);
     } else {
-        LogStoreStatistic* statistic = null;
+        LogStoreStatistic* statistic = NULL;
         if (filename.empty()) {
             std::vector<sls_logs::LogTag> empty;
             statistic = new LogStoreStatistic(configName, projectName, category, filename, empty);
