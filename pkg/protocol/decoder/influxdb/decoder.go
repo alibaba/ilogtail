@@ -47,6 +47,13 @@ const (
 
 const tagDB = "__tag__:db"
 
+const metadataKeyDB = "db"
+
+const (
+	formDataKeyDB        = "db"
+	formDataKeyPrecision = "precision"
+)
+
 // Decoder impl
 type Decoder struct {
 	FieldsExtend bool
@@ -74,7 +81,7 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) ([]*imodels.PipelineG
 }
 
 func (d *Decoder) decodeToInfluxdbPoints(data []byte, req *http.Request) ([]models.Point, error) {
-	precision := req.FormValue("precision")
+	precision := req.FormValue(formDataKeyPrecision)
 	var points []models.Point
 	var err error
 	if precision != "" {
@@ -93,8 +100,8 @@ func (d *Decoder) parsePointsToEvents(points []models.Point, req *http.Request) 
 		Group:  imodels.NewGroup(imodels.NewMetadata(), imodels.NewTags()),
 		Events: make([]imodels.PipelineEvent, 0, len(points)),
 	}
-	if db := req.FormValue("db"); len(db) > 0 {
-		group.Group.Metadata.Add("db", db)
+	if db := req.FormValue(formDataKeyDB); len(db) > 0 {
+		group.Group.Metadata.Add(metadataKeyDB, db)
 	}
 	for _, point := range points {
 		tags := imodels.NewTags()
