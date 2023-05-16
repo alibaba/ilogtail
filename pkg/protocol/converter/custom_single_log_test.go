@@ -883,17 +883,17 @@ func TestConvertToSimple(t *testing.T) {
 	})
 }
 
-func TestJsonMarshalAndMarshalNotEscapeHTMLBytes(t *testing.T)  {
+func TestJsonMarshalAndMarshalWithoutHTMLEscaped(t *testing.T)  {
 
-	Convey("test json marshal and marchal not escape html", t, func() {
+	Convey("test json marshal and marchal without html escaped", t, func() {
 		data := TestData{
 			Id:   0,
 			Msg:  ">>>><<<)(*&^%$#@!$@#hello+1447138058167839254",
 			Data: nil,
 		}
 
-		Convey("test marshalNotEscapeHTMLBytes", func() {
-			v, _ := marshalNotEscapeHTMLBytes(data)
+		Convey("test marshalWithoutHTMLEscaped", func() {
+			v, _ := marshalWithoutHTMLEscaped(data)
 
 			str := string(v)
 			fmt.Println(str)
