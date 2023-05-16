@@ -885,6 +885,12 @@ func TestConvertToSimple(t *testing.T) {
 
 func TestJsonMarshalAndMarshalWithoutHTMLEscaped(t *testing.T)  {
 
+	type TestData struct {
+		Id   int
+		Msg  string
+		Data interface{}
+	}
+
 	Convey("test json marshal and marchal without html escaped", t, func() {
 		data := TestData{
 			Id:   0,
