@@ -578,8 +578,8 @@ func initExponentialHistogramMetric(hm pmetric.Metric) {
 
 	// The above will print:
 	// Bucket [0, 0], Count: 1
-	// Bucket [0.250000, 1.000000), Count: 1
-	// Bucket [1.000000, 4.000000), Count: 1
+	// Bucket (0.250000, 1.000000], Count: 1
+	// Bucket (1.000000, 4.000000], Count: 1
 
 	exemplar := hdp1.Exemplars().AppendEmpty()
 	exemplar.SetTimestamp(metricExemplarTimestamp)
