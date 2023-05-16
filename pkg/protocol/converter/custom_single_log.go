@@ -90,5 +90,6 @@ func marshalNotEscapeHTMLBytes(data interface{}) ([]byte, error) {
 	if err := jsonEncoder.Encode(data); err != nil {
 		return nil, err
 	}
-	return bf.Bytes(), nil
+	b := bytes.TrimRight(bf.Bytes(), "\n")
+	return b, nil
 }
