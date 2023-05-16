@@ -96,10 +96,9 @@ func createAliyunLogOperationWrapper(endpoint, project, accessKeyID, accessKeySe
 			clientInterface, err = aliyunlog.CreateTokenAutoUpdateClient(endpoint, UpdateTokenFunction, shutdown)
 			if err != nil {
 				return nil, err
-			} else {
-				isAutoUpdateClientCreated = true
-				autoUpdateClientInterface = clientInterface
 			}
+			isAutoUpdateClientCreated = true
+			autoUpdateClientInterface = clientInterface
 		} else {
 			clientInterface = autoUpdateClientInterface
 		}
