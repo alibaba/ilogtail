@@ -34,8 +34,9 @@ import (
 )
 
 const (
-	aliyunECSRamURL      = "http://100.100.100.200/latest/meta-data/ram/security-credentials/"
-	expirationTimeFormat = "2006-01-02T15:04:05Z"
+	aliyunECSRamURL       = "http://100.100.100.200/latest/meta-data/ram/security-credentials/"
+	expirationTimeFormat  = "2006-01-02T15:04:05Z"
+	getTokenRetryInterval = 60 * 2
 )
 
 var errNoFile = errors.New("no secret file")
@@ -211,6 +212,7 @@ func UpdateTokenFunction() (accessKeyID, accessKeySecret, securityToken string, 
 	for tryTime := 0; tryTime < 3; tryTime++ {
 		tokenResultBuffer, err = getToken()
 		if err != nil {
+			time.Sleep(time.Second * time.Duration((tryTime+1)*getTokenRetryInterval))
 			continue
 		}
 		var tokenResult SecurityTokenResult
