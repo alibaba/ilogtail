@@ -886,14 +886,14 @@ func TestConvertToSimple(t *testing.T) {
 func TestJsonMarshalAndMarshalWithoutHTMLEscaped(t *testing.T)  {
 
 	type TestData struct {
-		Id   int
+		ID   int
 		Msg  string
 		Data interface{}
 	}
 
 	Convey("test json marshal and marchal without html escaped", t, func() {
 		data := TestData{
-			Id:   0,
+			ID:   0,
 			Msg:  ">>>><<<)(*&^%$#@!$@#hello+1447138058167839254",
 			Data: nil,
 		}
@@ -904,7 +904,7 @@ func TestJsonMarshalAndMarshalWithoutHTMLEscaped(t *testing.T)  {
 			str := string(v)
 			fmt.Println(str)
 
-			So(str, ShouldEqual, `{"Id":0,"Msg":">>>><<<)(*&^%$#@!$@#hello+1447138058167839254","Data":null}`)
+			So(str, ShouldEqual, `{"ID":0,"Msg":">>>><<<)(*&^%$#@!$@#hello+1447138058167839254","Data":null}`)
 		})
 
 		Convey("test json marshal", func() {
@@ -913,7 +913,7 @@ func TestJsonMarshalAndMarshalWithoutHTMLEscaped(t *testing.T)  {
 			str := string(v)
 			fmt.Println(str)
 
-			So(str, ShouldNotEqual, `{"Id":0,"Msg":">>>><<<)(*&^%$#@!$@#hello+1447138058167839254","Data":null}`)
+			So(str, ShouldNotEqual, `{"ID":0,"Msg":">>>><<<)(*&^%$#@!$@#hello+1447138058167839254","Data":null}`)
 		})
 	})
 }
