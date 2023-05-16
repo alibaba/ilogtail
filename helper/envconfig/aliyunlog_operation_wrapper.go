@@ -44,6 +44,9 @@ type operationWrapper struct {
 	configCacheMap   map[string]time.Time
 }
 
+var isAutoUpdateClientCreated = false
+var autoUpdateClientInterface aliyunlog.ClientInterface
+
 func createDefaultK8SIndex(logstoremode string) *aliyunlog.Index {
 	docvalue := logstoremode == StandardMode
 	normalIndexKey := aliyunlog.IndexKey{
@@ -89,9 +92,16 @@ func createAliyunLogOperationWrapper(endpoint, project, accessKeyID, accessKeySe
 	var err error
 	if *flags.AliCloudECSFlag {
 		// use UpdateTokenFunction to update token
-		clientInterface, err = aliyunlog.CreateTokenAutoUpdateClient(endpoint, UpdateTokenFunction, shutdown)
-		if err != nil {
-			return nil, err
+		if !isAutoUpdateClientCreated {
+			clientInterface, err = aliyunlog.CreateTokenAutoUpdateClient(endpoint, UpdateTokenFunction, shutdown)
+			if err != nil {
+				return nil, err
+			} else {
+				isAutoUpdateClientCreated = true
+				autoUpdateClientInterface = clientInterface
+			}
+		} else {
+			clientInterface = autoUpdateClientInterface
 		}
 	} else {
 		clientInterface = aliyunlog.CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, stsToken)
