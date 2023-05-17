@@ -223,7 +223,7 @@ func UpdateTokenFunction() (accessKeyID, accessKeySecret, securityToken string, 
 			tokenResult.AccessKeySecret = "xxxxx"
 			tokenResult.SecurityToken = "xxxxx"
 			logger.Warning(context.Background(), "UPDATE_STS_ALARM", "token code not success", err, "result", tokenResult)
-			return accessKeyID, accessKeySecret, securityToken, expireTime, errors.New("fetch token unsuccess")
+			return accessKeyID, accessKeySecret, securityToken, expireTime, errors.New("token code not success")
 		}
 		expireTime, err = time.Parse(expirationTimeFormat, tokenResult.Expiration)
 		if err != nil {
