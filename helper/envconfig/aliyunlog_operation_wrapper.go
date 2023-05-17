@@ -44,9 +44,6 @@ type operationWrapper struct {
 	configCacheMap   map[string]time.Time
 }
 
-var isAutoUpdateClientCreated = false
-var autoUpdateClientInterface aliyunlog.ClientInterface
-
 func createDefaultK8SIndex(logstoremode string) *aliyunlog.Index {
 	docvalue := logstoremode == StandardMode
 	normalIndexKey := aliyunlog.IndexKey{
@@ -87,25 +84,23 @@ func addNecessaryInputConfigField(inputConfigDetail map[string]interface{}) map[
 	return *inputConfigDetailCopy
 }
 
-func createAliyunLogOperationWrapper(endpoint, project, accessKeyID, accessKeySecret, stsToken string, shutdown <-chan struct{}) (*operationWrapper, error) {
+func createClientInterface(endpoint, accessKeyID, accessKeySecret, stsToken string, shutdown <-chan struct{}) (aliyunlog.ClientInterface, error) {
 	var clientInterface aliyunlog.ClientInterface
 	var err error
 	if *flags.AliCloudECSFlag {
-		// use UpdateTokenFunction to update token
-		if !isAutoUpdateClientCreated {
-			clientInterface, err = aliyunlog.CreateTokenAutoUpdateClient(endpoint, UpdateTokenFunction, shutdown)
-			if err != nil {
-				return nil, err
-			}
-			isAutoUpdateClientCreated = true
-			autoUpdateClientInterface = clientInterface
-		} else {
-			clientInterface = autoUpdateClientInterface
+		clientInterface, err = aliyunlog.CreateTokenAutoUpdateClient(endpoint, UpdateTokenFunction, shutdown)
+		if err != nil {
+			return nil, err
 		}
 	} else {
 		clientInterface = aliyunlog.CreateNormalInterface(endpoint, accessKeyID, accessKeySecret, stsToken)
 	}
 	clientInterface.SetUserAgent(pluginmanager.UserAgent)
+	return clientInterface, err
+}
+
+func createAliyunLogOperationWrapper(project string, clientInterface aliyunlog.ClientInterface) (*operationWrapper, error) {
+	var err error
 	wrapper := &operationWrapper{
 		logClient: clientInterface,
 		project:   project,
