@@ -1,9 +1,11 @@
 package ratelimiter
 
 import (
+	"context"
 	"net/http"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/plugins/extension/ratelimiter/limiter"
 	"github.com/alibaba/ilogtail/plugins/extension/ratelimiter/trigger"
 )
@@ -18,6 +20,7 @@ type httpServerHandler struct {
 func (h *httpServerHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	allow, done := h.limiter.Allow()
 	if !allow {
+		logger.Warning(context.Background(), "RATE_LIMITER_ALARM", "rate limiter triggered", "request rejected")
 		http.Error(writer, "too many requests", h.errorCode)
 		return
 	}
