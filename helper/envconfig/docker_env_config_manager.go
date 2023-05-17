@@ -71,11 +71,12 @@ func (decm *Manager) run() {
 	var err error
 	var clientInterface aliyunlog.ClientInterface
 	// always retry when create client interface fail
-	for i := 0; i < 100000000; i++ {
+	sleepInterval := 0
+	for {
 		clientInterface, err = createClientInterface(*flags.LogServiceEndpoint, *flags.DefaultAccessKeyID, *flags.DefaultAccessKeySecret, *flags.DefaultSTSToken, decm.shutdown)
 		if err != nil {
 			logger.Error(context.Background(), "DOCKER_ENV_CONFIG_INIT_ALARM", "create log clien interface, err", err)
-			sleepInterval := i * 5
+			sleepInterval += 5
 			if sleepInterval > 3600 {
 				sleepInterval = 3600
 			}
@@ -87,12 +88,14 @@ func (decm *Manager) run() {
 	if clientInterface == nil {
 		return
 	}
+	logger.Info(context.Background(), "create client interface success", "")
 	// always retry when create operator wrapper fail
-	for i := 0; i < 100000000; i++ {
+	sleepInterval = 0
+	for {
 		decm.operationWrapper, err = createAliyunLogOperationWrapper(*flags.DefaultLogProject, clientInterface)
 		if err != nil {
 			logger.Error(context.Background(), "DOCKER_ENV_CONFIG_INIT_ALARM", "create log operation wrapper, err", err)
-			sleepInterval := i * 5
+			sleepInterval += 5
 			if sleepInterval > 3600 {
 				sleepInterval = 3600
 			}

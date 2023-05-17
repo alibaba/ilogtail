@@ -34,9 +34,8 @@ import (
 )
 
 const (
-	aliyunECSRamURL       = "http://100.100.100.200/latest/meta-data/ram/security-credentials/"
-	expirationTimeFormat  = "2006-01-02T15:04:05Z"
-	getTokenRetryInterval = 60 * 2
+	aliyunECSRamURL      = "http://100.100.100.200/latest/meta-data/ram/security-credentials/"
+	expirationTimeFormat = "2006-01-02T15:04:05Z"
 )
 
 var errNoFile = errors.New("no secret file")

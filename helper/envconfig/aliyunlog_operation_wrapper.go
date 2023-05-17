@@ -116,7 +116,7 @@ func createAliyunLogOperationWrapper(project string, clientInterface aliyunlog.C
 		time.Sleep(time.Second * time.Duration(30))
 	}
 
-	// retry when make project fail
+	// retry when make machine group fail
 	for i := 0; i < 3; i++ {
 		err = wrapper.makesureMachineGroupExist(project, *flags.DefaultLogMachineGroup)
 		if err == nil {
