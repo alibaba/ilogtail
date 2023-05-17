@@ -41,4 +41,3 @@ your changes, such as:
 - [public] [both] [fixed] do not read env config from exited containers
 - [public] [both] [updated] Optimize flusher pulsar to improve performance in static topic scenarios
 - [public] [both] [fix] json converter marshal without HTML escaped
-
