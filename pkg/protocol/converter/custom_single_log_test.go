@@ -883,8 +883,7 @@ func TestConvertToSimple(t *testing.T) {
 	})
 }
 
-func TestJsonMarshalAndMarshalWithoutHTMLEscaped(t *testing.T)  {
-
+func TestJsonMarshalAndMarshalWithoutHTMLEscaped(t *testing.T) {
 	type TestData struct {
 		ID   int
 		Msg  string
