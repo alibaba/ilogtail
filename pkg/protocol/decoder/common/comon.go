@@ -22,8 +22,10 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strconv"
 	"sync"
+	"unsafe"
 
 	"github.com/golang/snappy"
 	"github.com/pierrec/lz4"
@@ -75,6 +77,8 @@ func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) 
 	body = http.MaxBytesReader(res, body, maxBodySize)
 	reqBuf := bytes.NewBuffer(*GetPooledBuf())
 	readBuf := GetPooledBuf()
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(readBuf))
+	sh.Len = sh.Cap
 	defer PutPooledBuf(readBuf)
 	_, err := io.CopyBuffer(reqBuf, req.Body, *readBuf)
 	if err != nil {
