@@ -15,6 +15,7 @@
 package common
 
 import (
+	"bytes"
 	"compress/gzip"
 	"errors"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"github.com/golang/snappy"
 	"github.com/pierrec/lz4"
@@ -40,6 +42,23 @@ const (
 	ProtocolPyroscope    = "pyroscope"
 )
 
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		buf := make([]byte, 0, 32*1024)
+		return &buf
+	},
+}
+
+func GetPooledBuf() *[]byte {
+	buf := bufPool.Get().(*[]byte)
+	return buf
+}
+
+func PutPooledBuf(buf *[]byte) {
+	*buf = (*buf)[:0]
+	bufPool.Put(buf)
+}
+
 func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) ([]byte, int, error) {
 	body := req.Body
 
@@ -54,16 +73,29 @@ func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) 
 	}
 
 	body = http.MaxBytesReader(res, body, maxBodySize)
-	bytes, err := ioutil.ReadAll(body)
+	reqBuf := bytes.NewBuffer(*GetPooledBuf())
+	readBuf := GetPooledBuf()
+	defer PutPooledBuf(readBuf)
+	_, err := io.CopyBuffer(reqBuf, req.Body, *readBuf)
 	if err != nil {
+		reqBuf.Reset()
+		buf := reqBuf.Bytes()
+		PutPooledBuf(&buf)
 		return nil, http.StatusRequestEntityTooLarge, err
 	}
 
+	reqBytes := reqBuf.Bytes()
 	if req.Header.Get("Content-Encoding") == "snappy" {
-		bytes, err = snappy.Decode(nil, bytes)
+		data := GetPooledBuf()
+		reqBytes, err = snappy.Decode(*data, reqBytes)
+		reqBuf.Reset()
+		buf := reqBuf.Bytes()
+		PutPooledBuf(&buf)
 		if err != nil {
+			PutPooledBuf(data)
 			return nil, http.StatusBadRequest, err
 		}
+		return reqBytes, http.StatusOK, nil
 	}
 
 	if req.Header.Get("x-log-compresstype") == "lz4" {
@@ -72,13 +104,13 @@ func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) 
 			return nil, http.StatusBadRequest, errors.New("invalid x-log-compresstype header " + req.Header.Get("x-log-bodyrawsize"))
 		}
 		data := make([]byte, rawBodySize)
-		if readSize, err := lz4.UncompressBlock(bytes, data); readSize != rawBodySize || (err != nil && err != io.EOF) {
+		if readSize, err := lz4.UncompressBlock(reqBytes, data); readSize != rawBodySize || (err != nil && err != io.EOF) {
 			return nil, http.StatusBadRequest, fmt.Errorf("uncompress lz4 error, expect : %d, real : %d, error : %v ", readSize, rawBodySize, err)
 		}
 		return data, http.StatusOK, nil
 	}
 
-	return bytes, http.StatusOK, nil
+	return reqBytes, http.StatusOK, nil
 }
 
 func CollectRawBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) ([]byte, int, error) {

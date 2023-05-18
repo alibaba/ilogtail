@@ -21,6 +21,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -207,11 +208,30 @@ func (d *Decoder) parsePbLabels(labels []prompb.Label) (metricName, labelsValue 
 	return metricName, builder.String()
 }
 
+var pbRequestPool = sync.Pool{
+	New: func() interface{} {
+		return &prompb.WriteRequest{}
+	},
+}
+
+func getPooledPbRequest() *prompb.WriteRequest {
+	return pbRequestPool.Get().(*prompb.WriteRequest)
+}
+
+func putPooledPbRequest(req *prompb.WriteRequest) {
+	for i := 0; i < len(req.Timeseries); i++ {
+		req.Timeseries[i].Labels = req.Timeseries[i].Labels[:0]
+		req.Timeseries[i].Samples = req.Timeseries[i].Samples[:0]
+	}
+	pbRequestPool.Put(req)
+}
+
 func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
 	if len(data) == 0 {
 		return nil, nil
 	}
 
+	defer common.PutPooledBuf(&data)
 	meta := models.NewMetadata()
 	commonTags := models.NewTags()
 
@@ -221,13 +241,14 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 
 	if req.Header.Get(contentEncodingKey) == snappyEncoding &&
 		strings.HasPrefix(req.Header.Get(contentTypeKey), pbContentType) {
-		var promRequest prompb.WriteRequest
-		err = proto.Unmarshal(data, &promRequest)
+		promRequest := getPooledPbRequest()
+		defer putPooledPbRequest(promRequest)
+		err = proto.Unmarshal(data, promRequest)
 		if err != nil {
 			return nil, err
 		}
 
-		groupEvents, err := ConvertPromRequestToPipelineGroupEvents(&promRequest, meta, commonTags)
+		groupEvents, err := ConvertPromRequestToPipelineGroupEvents(promRequest, meta, commonTags)
 		if err != nil {
 			return nil, err
 		}
