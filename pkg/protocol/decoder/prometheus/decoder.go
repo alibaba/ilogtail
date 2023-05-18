@@ -223,6 +223,7 @@ func putPooledPbRequest(req *prompb.WriteRequest) {
 		req.Timeseries[i].Labels = req.Timeseries[i].Labels[:0]
 		req.Timeseries[i].Samples = req.Timeseries[i].Samples[:0]
 	}
+	req.Timeseries = req.Timeseries[:0]
 	pbRequestPool.Put(req)
 }
 
