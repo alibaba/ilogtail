@@ -52,6 +52,13 @@ func (g *GroupInfo) GetTags() Tags {
 }
 
 type PipelineGroupEvents struct {
-	Group  *GroupInfo
-	Events []PipelineEvent
+	Group      *GroupInfo
+	Events     []PipelineEvent
+	Finalizers []func()
+}
+
+func (p *PipelineGroupEvents) Release() {
+	for _, finalizer := range p.Finalizers {
+		finalizer()
+	}
 }

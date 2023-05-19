@@ -21,16 +21,17 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
-
-	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
+	"github.com/richardartoul/molecule"
+	"github.com/richardartoul/molecule/src/codec"
+
+	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 )
 
 const (
@@ -208,51 +209,27 @@ func (d *Decoder) parsePbLabels(labels []prompb.Label) (metricName, labelsValue 
 	return metricName, builder.String()
 }
 
-var pbRequestPool = sync.Pool{
-	New: func() interface{} {
-		return &prompb.WriteRequest{}
-	},
-}
-
-func getPooledPbRequest() *prompb.WriteRequest {
-	return pbRequestPool.Get().(*prompb.WriteRequest)
-}
-
-func putPooledPbRequest(req *prompb.WriteRequest) {
-	for i := 0; i < len(req.Timeseries); i++ {
-		req.Timeseries[i].Labels = req.Timeseries[i].Labels[:0]
-		req.Timeseries[i].Samples = req.Timeseries[i].Samples[:0]
-	}
-	req.Timeseries = req.Timeseries[:0]
-	pbRequestPool.Put(req)
-}
-
 func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.PipelineGroupEvents, err error) {
 	if len(data) == 0 {
 		return nil, nil
 	}
 
-	defer common.PutPooledBuf(&data)
 	meta := models.NewMetadata()
 	commonTags := models.NewTags()
-
 	if db := req.FormValue(metaDBKey); len(db) > 0 {
 		meta.Add(metaDBKey, db)
 	}
 
 	if req.Header.Get(contentEncodingKey) == snappyEncoding &&
 		strings.HasPrefix(req.Header.Get(contentTypeKey), pbContentType) {
-		promRequest := getPooledPbRequest()
-		defer putPooledPbRequest(promRequest)
-		err = proto.Unmarshal(data, promRequest)
+		groupEvents, err := ParsePromPbToPipelineGroupEventsUnsafe(data, meta, commonTags)
 		if err != nil {
+			common.PutPooledBuf(&data)
 			return nil, err
 		}
-
-		groupEvents, err := ConvertPromRequestToPipelineGroupEvents(promRequest, meta, commonTags)
-		if err != nil {
-			return nil, err
-		}
+		groupEvents.Finalizers = append(groupEvents.Finalizers, func() {
+			common.PutPooledBuf(&data)
+		})
 		return []*models.PipelineGroupEvents{groupEvents}, nil
 	}
 
@@ -350,5 +327,107 @@ func ConvertPromRequestToPipelineGroupEvents(promRequest *prompb.WriteRequest, m
 		}
 	}
 
+	return groupEvent, nil
+}
+
+func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadata, commonTags models.Tags) (*models.PipelineGroupEvents, error) {
+	groupEvent := &models.PipelineGroupEvents{
+		Group: models.NewGroup(metaInfo, commonTags),
+	}
+
+	buffer := codec.NewBuffer(data)
+	err := molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+		if fieldNum == 1 {
+			serieBytes, err := v.AsBytesUnsafe()
+			if err != nil {
+				return false, err
+			}
+
+			var metricName string
+			metricTags := models.NewTags()
+
+			buffer := codec.NewBuffer(serieBytes)
+			err = molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+				if fieldNum == 1 { // Labels
+					labelBytes, err := v.AsBytesUnsafe()
+					if err != nil {
+						return false, err
+					}
+
+					var name, value string
+
+					buffer := codec.NewBuffer(labelBytes)
+					err = molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+						if fieldNum == 1 { // Name
+							name, err = v.AsStringUnsafe()
+							if err != nil {
+								return false, err
+							}
+						} else if fieldNum == 2 { // Value
+							value, err = v.AsStringUnsafe()
+							if err != nil {
+								return false, err
+							}
+						}
+						return true, nil
+					})
+					if err != nil {
+						return false, err
+					}
+
+					if name == metricNameKey {
+						metricName = value
+					} else {
+						metricTags.Add(name, value)
+					}
+				} else if fieldNum == 2 { // Samples
+					sampleBytes, err := v.AsBytesUnsafe()
+					if err != nil {
+						return false, err
+					}
+
+					var value float64
+					var timestamp int64
+
+					buffer := codec.NewBuffer(sampleBytes)
+					err = molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+						if fieldNum == 1 { // Value
+							value, err = v.AsDouble()
+							if err != nil {
+								return false, err
+							}
+						} else if fieldNum == 2 { // Timestamp
+							timestamp, err = v.AsInt64()
+							if err != nil {
+								return false, err
+							}
+						}
+						return true, nil
+					})
+					if err != nil {
+						return false, err
+					}
+
+					metric := models.NewSingleValueMetric(
+						metricName,
+						models.MetricTypeGauge,
+						metricTags,
+						timestamp*1e6,
+						value,
+					)
+					groupEvent.Events = append(groupEvent.Events, metric)
+				}
+
+				return true, nil
+			})
+			if err != nil {
+				return false, err
+			}
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
 	return groupEvent, nil
 }
