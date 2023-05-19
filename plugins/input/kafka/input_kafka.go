@@ -66,8 +66,7 @@ type InputKafka struct {
 }
 
 const (
-	maxInputKafkaLen = 512 * 1024
-	pluginName       = "service_kafka"
+	pluginName = "service_kafka"
 )
 
 func (k *InputKafka) Init(context pipeline.Context) (int, error) {
@@ -84,10 +83,6 @@ func (k *InputKafka) Init(context pipeline.Context) (int, error) {
 	}
 	if k.ClientID == "" {
 		return 0, fmt.Errorf("must specify ClientID for plugin %v", pluginName)
-	}
-	if k.MaxMessageLen > maxInputKafkaLen || k.MaxMessageLen < 1 {
-		return 0, fmt.Errorf("MaxMessageLen must be between 1 and %v for plugin %v",
-			maxInputKafkaLen, pluginName)
 	}
 
 	// init decoder
@@ -240,11 +235,6 @@ func (k *InputKafka) ConsumeClaim(session sarama.ConsumerGroupSession, claim sar
 }
 
 func (k *InputKafka) onMessage(msg *sarama.ConsumerMessage) {
-	if len(msg.Value) > k.MaxMessageLen {
-		logger.Errorf(k.context.GetRuntimeContext(), "INPUT_KAFKA_ALARM", "Message longer than max_message_len (%d > %d)",
-			len(msg.Value), k.MaxMessageLen)
-	}
-
 	if msg != nil {
 		switch k.version {
 		case v1:
@@ -288,7 +278,6 @@ func init() {
 			ClientID:      "",
 			Topics:        nil,
 			Brokers:       nil,
-			MaxMessageLen: maxInputKafkaLen,
 			Version:       "",
 			Offset:        "oldest",
 			SASLUsername:  "",
