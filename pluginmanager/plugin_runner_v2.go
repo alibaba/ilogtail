@@ -354,9 +354,6 @@ func (p *pluginv2Runner) runFlusherInternal(cc *pipeline.AsyncControl) {
 								p.LogstoreConfig.ProjectName, p.LogstoreConfig.LogstoreName, err)
 						}
 					}
-					for _, group := range data {
-						group.Release()
-					}
 					break
 				}
 				if !p.LogstoreConfig.FlushOutFlag {

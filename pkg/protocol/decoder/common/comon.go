@@ -90,13 +90,11 @@ func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) 
 
 	reqBytes := reqBuf.Bytes()
 	if req.Header.Get("Content-Encoding") == "snappy" {
-		data := GetPooledBuf()
-		reqBytes, err = snappy.Decode(*data, reqBytes)
+		reqBytes, err = snappy.Decode(nil, reqBytes)
 		reqBuf.Reset()
 		buf := reqBuf.Bytes()
 		PutPooledBuf(&buf)
 		if err != nil {
-			PutPooledBuf(data)
 			return nil, http.StatusBadRequest, err
 		}
 		return reqBytes, http.StatusOK, nil

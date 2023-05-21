@@ -224,12 +224,8 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 		strings.HasPrefix(req.Header.Get(contentTypeKey), pbContentType) {
 		groupEvents, err := ParsePromPbToPipelineGroupEventsUnsafe(data, meta, commonTags)
 		if err != nil {
-			common.PutPooledBuf(&data)
 			return nil, err
 		}
-		groupEvents.Finalizers = append(groupEvents.Finalizers, func() {
-			common.PutPooledBuf(&data)
-		})
 		return []*models.PipelineGroupEvents{groupEvents}, nil
 	}
 
