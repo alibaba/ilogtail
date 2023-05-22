@@ -129,12 +129,15 @@ func TestConvertPromRequestToPipelineGroupEvents(t *testing.T) {
 					{Timestamp: 1234567891, Value: 2.34}}}},
 	}
 
+	data, err := promRequest.Marshal()
+	assert.Nil(t, err)
+
 	metaInfo := models.NewMetadataWithKeyValues("meta_name", "test_meta_name")
 	commonTags := models.NewTagsWithKeyValues(
 		"common_tag1", "common_value1",
 		"common_tag2", "common_value2")
 
-	groupEvent, err := ConvertPromRequestToPipelineGroupEvents(promRequest, metaInfo, commonTags)
+	groupEvent, err := ConvertPromRequestToPipelineGroupEvents(data, metaInfo, commonTags)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "test_meta_name", groupEvent.Group.Metadata.Get("meta_name"))

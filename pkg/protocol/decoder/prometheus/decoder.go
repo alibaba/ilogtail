@@ -63,6 +63,7 @@ const (
 
 // Decoder impl
 type Decoder struct {
+	AllowUnsafeMode bool
 }
 
 func parseLabels(metric model.Metric) (metricName, labelsValue string) {
@@ -233,7 +234,12 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 
 	if req.Header.Get(contentEncodingKey) == snappyEncoding &&
 		strings.HasPrefix(req.Header.Get(contentTypeKey), pbContentType) {
-		groupEvents, err := ParsePromPbToPipelineGroupEventsUnsafe(data, meta, commonTags)
+		var groupEvents *models.PipelineGroupEvents
+		if d.AllowUnsafeMode {
+			groupEvents, err = ParsePromPbToPipelineGroupEventsUnsafe(data, meta, commonTags)
+		} else {
+			groupEvents, err = ConvertPromRequestToPipelineGroupEvents(data, meta, commonTags)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -306,7 +312,13 @@ func parseModelMetric(metric model.Metric) (string, models.Tags) {
 	return metricName, tags
 }
 
-func ConvertPromRequestToPipelineGroupEvents(promRequest *prompb.WriteRequest, metaInfo models.Metadata, commonTags models.Tags) (*models.PipelineGroupEvents, error) {
+func ConvertPromRequestToPipelineGroupEvents(data []byte, metaInfo models.Metadata, commonTags models.Tags) (*models.PipelineGroupEvents, error) {
+	var promRequest prompb.WriteRequest
+	err := proto.Unmarshal(data, &promRequest)
+	if err != nil {
+		return nil, err
+	}
+
 	groupEvent := &models.PipelineGroupEvents{
 		Group: models.NewGroup(metaInfo, commonTags),
 	}
