@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"sort"
@@ -48,6 +49,16 @@ const (
 	contentTypeKey     = "Content-Type"
 	pbContentType      = "application/x-protobuf"
 	snappyEncoding     = "snappy"
+)
+
+const (
+	promPbFieldIndexTimeSeries      = 1
+	promPbFieldIndexLabels          = 1
+	promPbFieldIndexSamples         = 2
+	promPbFieldIndexLabelName       = 1
+	promPbFieldIndexLabelValue      = 2
+	promPbFieldIndexSampleValue     = 1
+	promPbFieldIndexSampleTimestamp = 2
 )
 
 // Decoder impl
@@ -333,7 +344,8 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 
 	buffer := codec.NewBuffer(data)
 	err := molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
-		if fieldNum == 1 {
+		switch fieldNum {
+		case promPbFieldIndexTimeSeries:
 			serieBytes, err := v.AsBytesUnsafe()
 			if err != nil {
 				return false, err
@@ -344,7 +356,8 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 
 			buffer := codec.NewBuffer(serieBytes)
 			err = molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
-				if fieldNum == 1 { // Labels
+				switch fieldNum {
+				case promPbFieldIndexLabels: // Labels
 					labelBytes, err := v.AsBytesUnsafe()
 					if err != nil {
 						return false, err
@@ -354,12 +367,13 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 
 					buffer := codec.NewBuffer(labelBytes)
 					err = molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
-						if fieldNum == 1 { // Name
+						switch fieldNum {
+						case promPbFieldIndexLabelName: // Name
 							name, err = v.AsStringUnsafe()
 							if err != nil {
 								return false, err
 							}
-						} else if fieldNum == 2 { // Value
+						case promPbFieldIndexLabelValue: // Value
 							value, err = v.AsStringUnsafe()
 							if err != nil {
 								return false, err
@@ -376,7 +390,7 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 					} else {
 						metricTags.Add(name, value)
 					}
-				} else if fieldNum == 2 { // Samples
+				case promPbFieldIndexSamples: // Samples
 					sampleBytes, err := v.AsBytesUnsafe()
 					if err != nil {
 						return false, err
@@ -387,12 +401,13 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 
 					buffer := codec.NewBuffer(sampleBytes)
 					err = molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
-						if fieldNum == 1 { // Value
+						switch fieldNum {
+						case promPbFieldIndexSampleValue: // Value
 							value, err = v.AsDouble()
 							if err != nil {
 								return false, err
 							}
-						} else if fieldNum == 2 { // Timestamp
+						case promPbFieldIndexSampleTimestamp: // Timestamp
 							timestamp, err = v.AsInt64()
 							if err != nil {
 								return false, err
@@ -404,6 +419,10 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 						return false, err
 					}
 
+					if metricName == "" {
+						return false, fmt.Errorf("fields in mix order")
+					}
+
 					metric := models.NewSingleValueMetric(
 						metricName,
 						models.MetricTypeGauge,
@@ -413,7 +432,6 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 					)
 					groupEvent.Events = append(groupEvent.Events, metric)
 				}
-
 				return true, nil
 			})
 			if err != nil {
