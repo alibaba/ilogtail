@@ -355,46 +355,46 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 	}
 
 	buffer := codec.NewBuffer(data)
-	err := molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
-		switch fieldNum {
-		case promPbFieldIndexTimeSeries:
-			serieBytes, err := v.AsBytesUnsafe()
-			if err != nil {
-				return false, err
+	err1 := molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+		if fieldNum == promPbFieldIndexTimeSeries {
+			serieBytes, err2 := v.AsBytesUnsafe()
+			if err2 != nil {
+				return false, err2
 			}
 
 			var metricName string
 			metricTags := models.NewTags()
 
-			buffer := codec.NewBuffer(serieBytes)
-			err = molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+			serieBuffer := codec.NewBuffer(serieBytes)
+			err2 = molecule.MessageEach(serieBuffer, func(fieldNum int32, v molecule.Value) (bool, error) {
 				switch fieldNum {
 				case promPbFieldIndexLabels: // Labels
-					labelBytes, err := v.AsBytesUnsafe()
-					if err != nil {
-						return false, err
+					labelBytes, err3 := v.AsBytesUnsafe()
+					if err3 != nil {
+						return false, err3
 					}
 
 					var name, value string
 
-					buffer := codec.NewBuffer(labelBytes)
-					err = molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+					labelBuffer := codec.NewBuffer(labelBytes)
+					err3 = molecule.MessageEach(labelBuffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+						var err4 error
 						switch fieldNum {
 						case promPbFieldIndexLabelName: // Name
-							name, err = v.AsStringUnsafe()
-							if err != nil {
-								return false, err
+							name, err4 = v.AsStringUnsafe()
+							if err4 != nil {
+								return false, err4
 							}
 						case promPbFieldIndexLabelValue: // Value
-							value, err = v.AsStringUnsafe()
-							if err != nil {
-								return false, err
+							value, err4 = v.AsStringUnsafe()
+							if err4 != nil {
+								return false, err4
 							}
 						}
 						return true, nil
 					})
-					if err != nil {
-						return false, err
+					if err3 != nil {
+						return false, err3
 					}
 
 					if name == metricNameKey {
@@ -403,32 +403,33 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 						metricTags.Add(name, value)
 					}
 				case promPbFieldIndexSamples: // Samples
-					sampleBytes, err := v.AsBytesUnsafe()
-					if err != nil {
-						return false, err
+					sampleBytes, err3 := v.AsBytesUnsafe()
+					if err3 != nil {
+						return false, err3
 					}
 
 					var value float64
 					var timestamp int64
 
-					buffer := codec.NewBuffer(sampleBytes)
-					err = molecule.MessageEach(buffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+					sampleBuffer := codec.NewBuffer(sampleBytes)
+					err3 = molecule.MessageEach(sampleBuffer, func(fieldNum int32, v molecule.Value) (bool, error) {
+						var err4 error
 						switch fieldNum {
 						case promPbFieldIndexSampleValue: // Value
-							value, err = v.AsDouble()
-							if err != nil {
-								return false, err
+							value, err4 = v.AsDouble()
+							if err4 != nil {
+								return false, err4
 							}
 						case promPbFieldIndexSampleTimestamp: // Timestamp
-							timestamp, err = v.AsInt64()
-							if err != nil {
-								return false, err
+							timestamp, err4 = v.AsInt64()
+							if err4 != nil {
+								return false, err4
 							}
 						}
 						return true, nil
 					})
-					if err != nil {
-						return false, err
+					if err3 != nil {
+						return false, err3
 					}
 
 					if metricName == "" {
@@ -446,14 +447,14 @@ func ParsePromPbToPipelineGroupEventsUnsafe(data []byte, metaInfo models.Metadat
 				}
 				return true, nil
 			})
-			if err != nil {
-				return false, err
+			if err2 != nil {
+				return false, err2
 			}
 		}
 		return true, nil
 	})
-	if err != nil {
-		return nil, err
+	if err1 != nil {
+		return nil, err1
 	}
 	return groupEvent, nil
 }

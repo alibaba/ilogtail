@@ -78,7 +78,7 @@ func CollectBody(res http.ResponseWriter, req *http.Request, maxBodySize int64) 
 		// for snappy encoding, use pooled buf to read compressed request body
 		buf := GetPooledBuf()
 		defer PutPooledBuf(buf)
-		_, err := io.Copy(buf, body)
+		_, err := io.Copy(buf, body) // nolint
 		if err != nil {
 			return nil, http.StatusBadRequest, err
 		}
