@@ -42,4 +42,5 @@ your changes, such as:
 - [public] [both] [updated] Optimize flusher pulsar to improve performance in static topic scenarios
 - [public] [both] [updated] upgrade sarama version to 1.38.1, Rewrite service_kafka input plugin
 - [public] [both] [updated] Optimize flusher kafka v2 to improve performance in static topic scenarios
+- [public] [both] [fix] json converter marshal without HTML escaped
 
