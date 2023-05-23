@@ -15,28 +15,30 @@
 package debugfile
 
 import (
-	"io/ioutil"
+	"bufio"
+	"io"
+	"os"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
-// InputDebugFile can reads all data in specified file, and set them as single field.
+// InputDebugFile can reads all data in specified file, then split them by \n and set them as same field.
 type InputDebugFile struct {
 	InputFilePath string
 	FieldName     string
 
 	context pipeline.Context
-	content string
+	reader  *bufio.Reader
 }
 
 // Init ...
 func (r *InputDebugFile) Init(context pipeline.Context) (int, error) {
 	r.context = context
-	content, err := ioutil.ReadFile(r.InputFilePath)
+	file, err := os.Open(r.InputFilePath)
 	if err != nil {
 		return 0, err
 	}
-	r.content = string(content)
+	r.reader = bufio.NewReader(file)
 	return 0, nil
 }
 
@@ -47,9 +49,16 @@ func (r *InputDebugFile) Description() string {
 
 // Collect ...
 func (r *InputDebugFile) Collect(collector pipeline.Collector) error {
-	log := map[string]string{}
-	log[r.FieldName] = r.content
-	collector.AddData(nil, log)
+	for {
+		content, _, c := r.reader.ReadLine()
+		if c == io.EOF {
+			break
+		}
+		log := map[string]string{}
+		log[r.FieldName] = string(content)
+		collector.AddData(nil, log)
+	}
+
 	return nil
 }
 
