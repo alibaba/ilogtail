@@ -22,6 +22,13 @@ type emaSampleWindow struct {
 	lock sync.RWMutex
 }
 
+func (e *emaSampleWindow) Set(fn func(float64) float64) {
+	e.lock.Lock()
+	defer e.lock.Unlock()
+	v := fn(e.value)
+	e.value = v
+}
+
 func (e *emaSampleWindow) Add(value float64) {
 	e.lock.Lock()
 	defer e.lock.Unlock()

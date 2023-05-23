@@ -41,6 +41,7 @@ func (e *ExtensionRateLimiter) Init(context pipeline.Context) error {
 	}
 	switch e.Algorithm {
 	case AlgorithmBBR:
+	case AlgorithmGradient2:
 	default:
 		return fmt.Errorf("not supported algorithm: %v", e.Algorithm)
 	}
@@ -61,7 +62,12 @@ func (e *ExtensionRateLimiter) Handler(handler http.Handler) http.Handler {
 	switch e.Algorithm {
 	case AlgorithmBBR:
 		l = limiter.NewBBRRateLimiter(
-			limiter.WithMaxInflight(e.MaxInflight),
+			limiter.WithMaxLimit(e.MaxInflight),
+			limiter.WithTrigger(e.trigger),
+		)
+	case AlgorithmGradient2:
+		l = limiter.NewGradient2RateLimiter(
+			limiter.WithMaxLimit(e.MaxInflight),
 			limiter.WithTrigger(e.trigger),
 		)
 	default:
@@ -98,7 +104,7 @@ func (e *ExtensionRateLimiter) createTrigger() {
 func init() {
 	pipeline.AddExtensionCreator("ext_ratelimiter", func() pipeline.Extension {
 		return &ExtensionRateLimiter{
-			Algorithm:         AlgorithmBBR,
+			Algorithm:         AlgorithmGradient2,
 			HTTPCodeOnLimit:   503,
 			MaxInflight:       2000,
 			CPUUsageThreshold: 80,
