@@ -46,7 +46,7 @@ public:
     void SetColumnKeys(const std::vector<std::string>& columnKeys, const std::string& timeKey);
 
 protected:
-    bool ParseLogLine(const char* buffer,
+    bool ParseLogLine(StringView buffer,
                       sls_logs::LogGroup& logGroup,
                       ParseLogError& error,
                       time_t& lastLogLineTime,
