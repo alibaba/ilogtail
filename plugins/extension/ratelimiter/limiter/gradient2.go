@@ -115,6 +115,13 @@ func (g *gradient2RateLimiter) shouldDrop() bool {
 func (g *gradient2RateLimiter) updateLimit(rtt time.Duration) {
 	g.longRtt.Add(float64(rtt))
 	g.shortRtt.Add(float64(rtt))
+
+	// exit if other goroutine is updating
+	if !atomic.CompareAndSwapInt32(&g.updating, 0, 1) {
+		return
+	}
+	defer atomic.StoreInt32(&g.updating, 0)
+
 	longRtt := g.longRtt.Get()
 	shortRtt := g.shortRtt.Get()
 	if shortRtt == 0 {
@@ -138,12 +145,6 @@ func (g *gradient2RateLimiter) updateLimit(rtt time.Duration) {
 		}
 		longRtt = g.longRtt.Get()
 	}
-
-	// exit if other goroutine is updating
-	if !atomic.CompareAndSwapInt32(&g.updating, 0, 1) {
-		return
-	}
-	defer atomic.StoreInt32(&g.updating, 0)
 
 	// Rtt could be higher than rtt_noload because of smoothing rtt noload updates
 	// so set to 1.0 to indicate no queuing.  Otherwise calculate the slope and don't
