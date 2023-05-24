@@ -2,7 +2,6 @@ package trigger
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -65,7 +64,5 @@ func (m *memUsedTrigger) start() {
 
 		rss := mem.RSS / uint64(m.scale)
 		m.used.Add(float64(rss))
-
-		fmt.Println("mem rss", rss)
 	}
 }
