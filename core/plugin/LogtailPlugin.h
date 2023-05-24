@@ -21,6 +21,7 @@
 #include <numeric>
 #include <json/json.h>
 #include "config/Config.h"
+#include "reader/SourceBuffer.h"
 #if defined(_MSC_VER)
 #include <stddef.h>
 #endif
@@ -190,14 +191,12 @@ public:
     bool IsPluginOpened() { return mPluginValid; }
 
     void ProcessRawLog(const std::string& configName,
-                       char* rawLog,
-                       int32_t rawLogSize,
+                       logtail::StringView rawLog,
                        const std::string& packId,
                        const std::string& topic);
 
     void ProcessRawLogV2(const std::string& configName,
-                         char* rawLog,
-                         int32_t rawLogSize,
+                         logtail::StringView rawLog,
                          const std::string& packId,
                          const std::string& topic,
                          const std::string& tags);

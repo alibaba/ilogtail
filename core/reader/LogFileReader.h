@@ -32,6 +32,7 @@
 #include "config/LogType.h"
 #include "common/FileInfo.h"
 #include "checkpoint/RangeCheckpoint.h"
+#include "reader/SourceBuffer.h"
 
 namespace logtail {
 
@@ -79,7 +80,7 @@ public:
                   bool discardUnmatch,
                   bool dockerFileFlag);
 
-    virtual bool ReadLog(LogBuffer*& logBuffer);
+    bool ReadLog(LogBuffer& logBuffer);
     time_t GetLastUpdateTime() const // actually it's the time whenever ReadLogs is called
     {
         return mLastUpdateTime;
@@ -225,14 +226,14 @@ public:
     void SetReaderArray(LogFileReaderPtrArray* readerArray);
 
     // some Reader will overide these functions (eg. JsonLogFileReader)
-    virtual bool ParseLogLine(const char* buffer,
+    virtual bool ParseLogLine(StringView buffer,
                               sls_logs::LogGroup& logGroup,
                               ParseLogError& error,
                               time_t& lastLogLineTime,
                               std::string& lastLogTimeStr,
                               uint32_t& logGroupSize)
         = 0;
-    virtual std::vector<int32_t> LogSplit(char* buffer, int32_t size, int32_t& lineFeed);
+    virtual std::vector<StringView> LogSplit(const char* buffer, int32_t size, int32_t& lineFeed);
 
     // added by xianzhi(bowen.gbw@antfin.com)
     static bool ParseLogTime(const char* buffer,
@@ -308,10 +309,9 @@ public:
     }
 
 protected:
-    virtual bool
-    GetRawData(char*& bufferptr, size_t* size, int64_t fileSize, FileInfo*& fileInfo, TruncateInfo*& trncateInfo);
-    void ReadUTF8(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo);
-    void ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo);
+    bool GetRawData(LogBuffer& logBuffer, int64_t fileSize);
+    void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData);
+    void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData);
 
     size_t
     ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL);
@@ -514,9 +514,8 @@ private:
 #endif
 };
 
-struct LogBuffer {
-    char* buffer;
-    int32_t bufferSize;
+struct LogBuffer : public SourceBuffer {
+    StringView rawBuffer;
     LogFileReaderPtr logFileReader;
     FileInfoPtr fileInfo;
     TruncateInfoPtr truncateInfo;
@@ -525,11 +524,7 @@ struct LogBuffer {
     // Current buffer's offset in file, for log position meta feature.
     uint64_t beginOffset;
 
-    LogBuffer(char* buf,
-              int32_t size,
-              const FileInfoPtr& fileInfo = FileInfoPtr(),
-              const TruncateInfoPtr& truncateInfo = TruncateInfoPtr())
-        : buffer(buf), bufferSize(size), fileInfo(fileInfo), truncateInfo(truncateInfo) {}
+    LogBuffer() {}
     void SetDependecy(const LogFileReaderPtr& reader) { logFileReader = reader; }
 };
 
@@ -552,7 +547,7 @@ public:
     bool AddUserDefinedFormat(const std::string& regStr, const std::string& keys);
 
 protected:
-    bool ParseLogLine(const char* buffer,
+    bool ParseLogLine(StringView buffer,
                       sls_logs::LogGroup& logGroup,
                       ParseLogError& error,
                       time_t& lastLogLineTime,
@@ -583,7 +578,7 @@ public:
                         bool dockerFileFlag = false);
 
 private:
-    bool ParseLogLine(const char* buffer,
+    bool ParseLogLine(StringView buffer,
                       sls_logs::LogGroup& logGroup,
                       ParseLogError& error,
                       time_t& lastLogLineTime,

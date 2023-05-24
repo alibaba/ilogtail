@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "LogtailPlugin.h"
-//#include "LogtailPluginAdapter.h"
+// #include "LogtailPluginAdapter.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
@@ -123,13 +123,12 @@ void LogtailPlugin::Resume() {
 }
 
 void LogtailPlugin::ProcessRawLog(const std::string& configName,
-                                  char* rawLog,
-                                  int32_t rawLogSize,
+                                  StringView rawLog,
                                   const std::string& packId,
                                   const std::string& topic) {
-    if (rawLogSize <= 0)
+    if (rawLog.empty()) {
         return;
-
+    }
     if (mPluginValid && mProcessRawLogFun != NULL) {
         GoString goConfigName;
         GoSlice goRawLog;
@@ -138,9 +137,9 @@ void LogtailPlugin::ProcessRawLog(const std::string& configName,
 
         goConfigName.n = configName.size();
         goConfigName.p = configName.c_str();
-        goRawLog.len = rawLogSize - 1;
-        goRawLog.cap = rawLogSize - 1;
-        goRawLog.data = (void*)rawLog;
+        goRawLog.len = rawLog.size();
+        goRawLog.cap = rawLog.size();
+        goRawLog.data = (void*)rawLog.data();
         goPackId.n = packId.size();
         goPackId.p = packId.c_str();
         goTopic.n = topic.size();
@@ -157,12 +156,11 @@ const std::string tagSeparator = "~=~";
 const std::string tagPrefix = "__tag__:";
 
 void LogtailPlugin::ProcessRawLogV2(const std::string& configName,
-                                    char* rawLog,
-                                    int32_t rawLogSize,
+                                    StringView rawLog,
                                     const std::string& packId,
                                     const std::string& topic,
                                     const std::string& tags) {
-    if (rawLogSize <= 0 || !(mPluginValid && mProcessRawLogV2Fun != NULL)) {
+    if (rawLog.empty() || !(mPluginValid && mProcessRawLogV2Fun != NULL)) {
         return;
     }
 
@@ -174,9 +172,9 @@ void LogtailPlugin::ProcessRawLogV2(const std::string& configName,
 
     goConfigName.n = configName.size();
     goConfigName.p = configName.c_str();
-    goRawLog.data = (void*)rawLog;
-    goRawLog.len = rawLogSize - 1;
-    goRawLog.cap = rawLogSize - 1;
+    goRawLog.data = (void*)rawLog.data();
+    goRawLog.len = rawLog.size();
+    goRawLog.cap = rawLog.size();
     goPackId.n = packId.size();
     goPackId.p = packId.c_str();
     goTopic.n = topic.size();
@@ -258,7 +256,8 @@ int LogtailPlugin::SendPbV2(const char* configName,
         return Sender::Instance()->SendPb(pConfig, pbBuffer, pbSize, lines, logstore, shardHashStr) ? 0 : -1;
     } else {
         LOG_INFO(sLogger,
-                 ("error", "SendPbV2 can not find config, maybe config updated")("config", configNameStr)("logstore", logstore));
+                 ("error", "SendPbV2 can not find config, maybe config updated")("config", configNameStr)("logstore",
+                                                                                                          logstore));
     }
     return -2;
 }
