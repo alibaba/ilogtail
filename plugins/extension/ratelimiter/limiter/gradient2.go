@@ -1,10 +1,12 @@
 package limiter
 
 import (
+	"context"
 	"math"
 	"sync/atomic"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/plugins/extension/ratelimiter/trigger"
 	"github.com/alibaba/ilogtail/plugins/extension/ratelimiter/window"
 )
@@ -182,4 +184,9 @@ func (g *gradient2RateLimiter) updateLimit() {
 	newLimit = math.Ceil(newLimit)
 
 	atomic.StoreInt64(&g.estimatedLimit, int64(newLimit))
+
+	if logger.DebugFlag() {
+		logger.Debugf(context.Background(), "[ratelimiter] update estimateLimit: %d, lastRtt: %d, longRtt: %d, shortRtt: %d, minLimit: %d, maxLimit: %d, oldLimit: %d",
+			newLimit, rtt, longRtt, shortRtt, g.minLimit, g.maxLimit, estimated)
+	}
 }

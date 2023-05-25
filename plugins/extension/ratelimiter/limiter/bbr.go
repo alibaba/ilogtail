@@ -1,10 +1,12 @@
 package limiter
 
 import (
+	"context"
 	"math"
 	"sync/atomic"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/plugins/extension/ratelimiter/trigger"
 	"github.com/alibaba/ilogtail/plugins/extension/ratelimiter/window"
 )
@@ -16,8 +18,8 @@ func NewBBRRateLimiter(ops ...Option) RateLimiter {
 	}
 
 	l := &bbrRateLimiter{
-		maxDelivered:   window.NewBucketWindow(time.Second*10, 100, window.AggregateOpMax, window.BucketOpSum, time.Second),
-		minRTT:         window.NewBucketWindow(time.Second*10, 100, window.AggregateOpMin, window.BucketOpAvg, 0),
+		maxDelivered:   window.NewBucketWindow(time.Minute*5, 100, window.AggregateOpMax, window.BucketOpSum, time.Second),
+		minRTT:         window.NewBucketWindow(time.Minute*5, 100, window.AggregateOpMin, window.BucketOpAvg, 0),
 		estimatedLimit: int64(conf.initialLimit),
 		initLimit:      int64(conf.initialLimit),
 		maxLimit:       int64(conf.maxLimit),
@@ -100,7 +102,12 @@ func (r *bbrRateLimiter) updateLimit() {
 	if delivered == 0 || minRTT == 0 {
 		return
 	}
-	limit := math.Ceil(delivered * minRTT / 1000.0)
+	limit := math.Ceil(delivered * (minRTT / 1000.0))
 	limit = math.Max(float64(r.minLimit), math.Min(float64(r.maxLimit), limit))
 	atomic.StoreInt64(&r.estimatedLimit, int64(limit))
+
+	if logger.DebugFlag() {
+		logger.Debugf(context.Background(), "[ratelimiter] update estimatedLimit: %d, maxDeliverPerSecond: %d, minRTTInMillis: %d, minLimit: %d, maxLimit: %d",
+			limit, delivered, minRTT, r.minLimit, r.maxLimit)
+	}
 }
