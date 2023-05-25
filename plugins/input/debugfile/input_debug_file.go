@@ -15,7 +15,6 @@
 package debugfile
 
 import (
-	"bufio"
 	"io"
 	"os"
 
@@ -26,9 +25,10 @@ import (
 type InputDebugFile struct {
 	InputFilePath string
 	FieldName     string
+	LineLimit     int
 
 	context pipeline.Context
-	reader  *bufio.Reader
+	logs    []string
 }
 
 // Init ...
@@ -38,7 +38,51 @@ func (r *InputDebugFile) Init(context pipeline.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	r.reader = bufio.NewReader(file)
+	defer file.Close()
+
+	buff := make([]byte, 0, 4096)
+	char := make([]byte, 1)
+
+	// 查询文件大小
+	stat, _ := file.Stat()
+	filesize := stat.Size()
+
+	var cursor int64 = 0
+	cnt := 0
+	for {
+		cursor -= 1
+		_, _ = file.Seek(cursor, io.SeekEnd)
+		_, err := file.Read(char)
+		if err != nil {
+			panic(err)
+		}
+
+		if char[0] == '\n' || cursor == -filesize {
+			if cursor == -filesize {
+				buff = append(buff, char[0])
+			}
+			if len(buff) > 0 {
+				revers(buff)
+				// 读取到的行
+				r.logs = append(r.logs, string(buff))
+
+				cnt++
+				if cnt == r.LineLimit {
+					// 超过数量退出
+					break
+				}
+
+			}
+			buff = buff[:0]
+		} else {
+			buff = append(buff, char[0])
+		}
+
+		if cursor == -filesize {
+			break
+		}
+	}
+
 	return 0, nil
 }
 
@@ -49,21 +93,26 @@ func (r *InputDebugFile) Description() string {
 
 // Collect ...
 func (r *InputDebugFile) Collect(collector pipeline.Collector) error {
-	for {
-		content, _, c := r.reader.ReadLine()
-		if c == io.EOF {
-			break
-		}
+	for i := len(r.logs) - 1; i >= 0; i-- {
 		log := map[string]string{}
-		log[r.FieldName] = string(content)
+		log[r.FieldName] = r.logs[i]
 		collector.AddData(nil, log)
 	}
 
 	return nil
 }
 
+func revers(s []byte) {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+}
+
 func init() {
 	pipeline.MetricInputs["metric_debug_file"] = func() pipeline.MetricInput {
-		return &InputDebugFile{FieldName: "content"}
+		return &InputDebugFile{
+			FieldName: "content",
+			LineLimit: 1000,
+		}
 	}
 }

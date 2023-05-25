@@ -48,6 +48,8 @@ var (
 	HTTPLoadFlag     = flag.Bool("http-load", false, "export http endpoint for load plugin config.")
 	FileIOFlag       = flag.Bool("file-io", false, "use file for input or output.")
 	InputFile        = flag.String("input-file", "./input.log", "input file")
+	InputField       = flag.String("input-field", "content", "input file")
+	InputLineLimit   = flag.Int("input-line-limit", 1000, "input file")
 	OutputFile       = flag.String("output-file", "./output.log", "output file")
 )
 
@@ -151,6 +153,7 @@ var (
 		"detail": map[string]interface{}{
 			"InputFilePath": "./input.log",
 			"FieldName":     "content",
+			"LineLimit":     1000,
 		},
 	}
 	fileOutput = map[string]interface{}{
@@ -167,6 +170,8 @@ func changePluginConfigIO(pluginCfg string) string {
 		if err := json.Unmarshal([]byte(pluginCfg), &newCfg); err == nil {
 			// Input
 			fileInput["detail"].(map[string]interface{})["InputFilePath"] = *InputFile
+			fileInput["detail"].(map[string]interface{})["FieldName"] = *InputField
+			fileInput["detail"].(map[string]interface{})["LineLimit"] = *InputLineLimit
 			newCfg.Inputs = []interface{}{fileInput}
 			// Processors
 			if newCfg.Processors == nil {

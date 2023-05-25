@@ -10,11 +10,12 @@
 
 ## 配置参数
 
-| 参数 | 类型，默认值 | 说明 |
-| - | - | - |
-| Type | String，无默认值（必填） | 插件类型，固定为`metric_debug_file`。 |
-| InputFilePath | String，无默认值（必填） | 要读入的文件路径。 |
-| FieldName | String，`content` | 生成的字段的字段名。 |
+| 参数                | 类型      | 是否必选 | 说明                                                                         |
+| ----------------- | ------- | ---- | -------------------------------------------------------------------------- |
+| Type              | String  | 是    | 插件类型，固定为`metric_debug_file`。                                           |
+| InputFilePath     | String  | 是    | 要读入的文件路径。                      |
+| FieldName         | String  | 否    | 生成的字段的字段名。默认取值为`content`。                   |
+| LineLimit         | Integer | 否    | 读取文件的行数（倒序）。默认取值为1000行。 |
 
 ## 样例
 
