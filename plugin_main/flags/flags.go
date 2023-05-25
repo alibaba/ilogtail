@@ -172,7 +172,7 @@ func changePluginConfigIO(pluginCfg string) string {
 			fileInput["detail"].(map[string]interface{})["InputFilePath"] = *InputFile
 			fileInput["detail"].(map[string]interface{})["FieldName"] = *InputField
 			fileInput["detail"].(map[string]interface{})["LineLimit"] = *InputLineLimit
-			newCfg.Inputs = append(newCfg.Inputs, fileInput)
+			newCfg.Inputs = []interface{}{fileInput}
 			// Processors
 			if newCfg.Processors == nil {
 				newCfg.Processors = make([]interface{}, 0)

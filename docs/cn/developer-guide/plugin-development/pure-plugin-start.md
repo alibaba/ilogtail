@@ -115,9 +115,9 @@ iLogtail 目前提供以下4种模式进行配置设置：
 ./output/ilogtail --plugin=plugin.json --file-io=true
 ```
 
-在测试前，需要创建上文所说的json格式的配置文件。与上文不同的是，这里的配置文件不需要配置inputs和flushers（如果配置了，会同时存在多个input和flushers）。当file-io开关被打开时，会自动指定为文件输入，并输出到文件。默认的输入文件是input.log，默认的输出文件是output.log，也可以设置input-file和output-file参数来修改输入和输出文件。
+在测试前，需要创建上文所说的json格式的配置文件。与上文不同的是，这里的配置文件不需要配置inputs和flushers（如果配置，inputs会失效，flushers会保留）。当file-io开关被打开时，会自动指定为文件输入，并输出到文件。默认的输入文件是input.log，默认的输出文件是output.log，也可以设置input-file和output-file参数来修改输入和输出文件。
 
-需要说明的是，读取的每行数据的fieldKey默认都是content，可以通过input-field参数来修改Field名称。输入文件并不是全部读入，而是倒序读取1000行，可以通过修改input-line-limit参数读取需要的行数。
+需要说明的是，读取的每行数据的fieldKey默认都是content，可以通过input-field参数来修改Field名称。输入文件并不是全部读入，而是默认从头读取1000行，可以通过修改input-line-limit参数读取需要的行数。
 
 下面是一个简单的例子，创建一个采集配置plugin.file2filetest.json进行json解析，输入源文件是stdin.log，输出结果到stdout.log文件。
 
