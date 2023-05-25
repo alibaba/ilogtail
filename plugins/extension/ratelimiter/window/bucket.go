@@ -137,6 +137,9 @@ func (b *bucketSampleWindow) Get() float64 {
 	}
 
 	if b.aggOp == AggregateOpAvg {
+		if count == 0 {
+			return 0
+		}
 		return sum / count
 	}
 
