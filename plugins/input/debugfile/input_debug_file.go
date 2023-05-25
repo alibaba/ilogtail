@@ -15,13 +15,13 @@
 package debugfile
 
 import (
-	"io"
+	"bufio"
 	"os"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
-// InputDebugFile can reads all data in specified file, then split them by \n and set them as same field.
+// InputDebugFile can reads some lines from head in specified file, then set them as same field.
 type InputDebugFile struct {
 	InputFilePath string
 	FieldName     string
@@ -40,45 +40,15 @@ func (r *InputDebugFile) Init(context pipeline.Context) (int, error) {
 	}
 	defer file.Close() //nolint:gosec
 
-	buff := make([]byte, 0, 4096)
-	char := make([]byte, 1)
+	scanner := bufio.NewScanner(file)
+	var count int
 
-	// 查询文件大小
-	stat, _ := file.Stat()
-	filesize := stat.Size()
+	for scanner.Scan() {
+		line := scanner.Text()
+		r.logs = append(r.logs, line)
+		count++
 
-	var cursor int64
-	cnt := 0
-	for {
-		cursor--
-		_, _ = file.Seek(cursor, io.SeekEnd)
-		_, err := file.Read(char)
-		if err != nil {
-			panic(err)
-		}
-
-		if char[0] == '\n' || cursor == -filesize {
-			if cursor == -filesize {
-				buff = append(buff, char[0])
-			}
-			if len(buff) > 0 {
-				revers(buff)
-				// 读取到的行
-				r.logs = append(r.logs, string(buff))
-
-				cnt++
-				if cnt == r.LineLimit {
-					// 超过数量退出
-					break
-				}
-
-			}
-			buff = buff[:0]
-		} else {
-			buff = append(buff, char[0])
-		}
-
-		if cursor == -filesize {
+		if count == r.LineLimit {
 			break
 		}
 	}
@@ -93,19 +63,13 @@ func (r *InputDebugFile) Description() string {
 
 // Collect ...
 func (r *InputDebugFile) Collect(collector pipeline.Collector) error {
-	for i := len(r.logs) - 1; i >= 0; i-- {
+	for _, l := range r.logs {
 		log := map[string]string{}
-		log[r.FieldName] = r.logs[i]
+		log[r.FieldName] = l
 		collector.AddData(nil, log)
 	}
 
 	return nil
-}
-
-func revers(s []byte) {
-	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-		s[i], s[j] = s[j], s[i]
-	}
 }
 
 func init() {

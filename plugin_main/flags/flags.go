@@ -172,7 +172,7 @@ func changePluginConfigIO(pluginCfg string) string {
 			fileInput["detail"].(map[string]interface{})["InputFilePath"] = *InputFile
 			fileInput["detail"].(map[string]interface{})["FieldName"] = *InputField
 			fileInput["detail"].(map[string]interface{})["LineLimit"] = *InputLineLimit
-			newCfg.Inputs = []interface{}{fileInput}
+			newCfg.Inputs = append(newCfg.Inputs, fileInput)
 			// Processors
 			if newCfg.Processors == nil {
 				newCfg.Processors = make([]interface{}, 0)
@@ -183,7 +183,7 @@ func changePluginConfigIO(pluginCfg string) string {
 			}
 			// Flushers
 			fileOutput["detail"].(map[string]interface{})["FileName"] = *OutputFile
-			newCfg.Flushers = []interface{}{fileOutput}
+			newCfg.Flushers = append(newCfg.Flushers, fileOutput)
 
 			cfg, _ := json.Marshal(newCfg)
 			pluginCfg = string(cfg)
