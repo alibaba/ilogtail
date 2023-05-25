@@ -107,7 +107,7 @@ func (r *bbrRateLimiter) updateLimit() {
 	atomic.StoreInt64(&r.estimatedLimit, int64(limit))
 
 	if logger.DebugFlag() {
-		logger.Debugf(context.Background(), "[ratelimiter] update estimatedLimit: %d, maxDeliverPerSecond: %d, minRTTInMillis: %d, minLimit: %d, maxLimit: %d",
-			limit, delivered, minRTT, r.minLimit, r.maxLimit)
+		logger.Debugf(context.Background(), "[ratelimiter] update estimatedLimit: %d, inflight: %d, maxDeliverPerSecond: %d, minRTTInMillis: %d, minLimit: %d, maxLimit: %d",
+			limit, atomic.LoadInt64(&r.inflight), delivered, minRTT, r.minLimit, r.maxLimit)
 	}
 }

@@ -186,7 +186,7 @@ func (g *gradient2RateLimiter) updateLimit() {
 	atomic.StoreInt64(&g.estimatedLimit, int64(newLimit))
 
 	if logger.DebugFlag() {
-		logger.Debugf(context.Background(), "[ratelimiter] update estimateLimit: %d, lastRtt: %d, longRtt: %d, shortRtt: %d, minLimit: %d, maxLimit: %d, oldLimit: %d",
-			newLimit, rtt, longRtt, shortRtt, g.minLimit, g.maxLimit, estimated)
+		logger.Debugf(context.Background(), "[ratelimiter] update estimateLimit: %d, inflight: %d, lastRtt: %d, longRtt: %d, shortRtt: %d, minLimit: %d, maxLimit: %d, oldLimit: %d",
+			newLimit, atomic.LoadInt64(&g.inflight), rtt, longRtt, shortRtt, g.minLimit, g.maxLimit, estimated)
 	}
 }
