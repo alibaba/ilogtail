@@ -67,7 +67,7 @@ func main() {
 	Resume()
 
 	// handle the first shutdown signal gracefully, and exit directly if FileIOFlag is true
-	if *flags.FileIOFlag == false {
+	if !*flags.FileIOFlag {
 		<-signals.SetupSignalHandler()
 	}
 	logger.Info(context.Background(), "########################## exit process begin ##########################")

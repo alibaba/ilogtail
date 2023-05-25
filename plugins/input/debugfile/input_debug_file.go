@@ -38,7 +38,7 @@ func (r *InputDebugFile) Init(context pipeline.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer file.Close()
+	defer file.Close() //nolint:gosec
 
 	buff := make([]byte, 0, 4096)
 	char := make([]byte, 1)
@@ -47,10 +47,10 @@ func (r *InputDebugFile) Init(context pipeline.Context) (int, error) {
 	stat, _ := file.Stat()
 	filesize := stat.Size()
 
-	var cursor int64 = 0
+	var cursor int64
 	cnt := 0
 	for {
-		cursor -= 1
+		cursor--
 		_, _ = file.Seek(cursor, io.SeekEnd)
 		_, err := file.Read(char)
 		if err != nil {
