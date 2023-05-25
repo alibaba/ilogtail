@@ -27,42 +27,22 @@ func TestNewBBRRateLimiter(t *testing.T) {
 func TestBBRRateLimiter_Allow(t *testing.T) {
 	l := NewBBRRateLimiter(WithTrigger(mockTrigger{})).(*bbrRateLimiter)
 
-	maxInflight := l.calcLimit()
 	allow, done := l.Allow()
 	time.Sleep(time.Millisecond)
-	assert.EqualValues(t, math.MaxInt, maxInflight)
+	assert.EqualValues(t, 100, l.estimatedLimit)
 	assert.True(t, allow)
 	done(nil)
 
+	l.updateLimit()
 	minRTT := l.minRTT.Get()
 	maxDelivered := l.maxDelivered.Get()
 	assert.Greater(t, minRTT, float64(0))
 	assert.Greater(t, maxDelivered, float64(0))
 
-	maxInflight = l.calcLimit()
-	fmt.Println(maxDelivered, minRTT, maxInflight)
-	assert.NotEqualValues(t, 0, maxInflight)
-	assert.NotEqualValues(t, math.MaxInt, maxInflight)
-}
-
-func TestBBRRateLimiter_Allow_MaxInflight(t *testing.T) {
-	l := NewBBRRateLimiter(WithMaxLimit(10), WithTrigger(mockTrigger{})).(*bbrRateLimiter)
-
-	maxInflight := l.calcLimit()
-	allow, done := l.Allow()
-	assert.EqualValues(t, 10, maxInflight)
-	assert.True(t, allow)
-	done(nil)
-
-	minRTT := l.minRTT.Get()
-	maxDelivered := l.maxDelivered.Get()
-	assert.Greater(t, minRTT, float64(0))
-	assert.Greater(t, maxDelivered, float64(0))
-
-	maxInflight = l.calcLimit()
-	fmt.Println(maxDelivered, minRTT, maxInflight)
-	assert.NotEqualValues(t, 0, maxInflight)
-	assert.NotEqualValues(t, math.MaxInt, maxInflight)
+	l.updateLimit()
+	fmt.Println(maxDelivered, minRTT, l.estimatedLimit)
+	assert.NotEqualValues(t, 0, l.estimatedLimit)
+	assert.NotEqualValues(t, math.MaxInt, l.estimatedLimit)
 }
 
 type mockTrigger struct {

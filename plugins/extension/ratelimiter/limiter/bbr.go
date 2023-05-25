@@ -10,30 +10,37 @@ import (
 )
 
 func NewBBRRateLimiter(ops ...Option) RateLimiter {
-	conf := &config{maxLimit: math.MaxInt, minLimit: 20}
+	conf := &config{maxLimit: math.MaxInt, minLimit: 20, initialLimit: 100}
 	for _, op := range ops {
 		op(conf)
 	}
 
-	return &bbrRateLimiter{
+	l := &bbrRateLimiter{
 		maxDelivered:   window.NewBucketWindow(time.Second*10, 100, window.AggregateOpMax, window.BucketOpSum, time.Second),
 		minRTT:         window.NewBucketWindow(time.Second*10, 100, window.AggregateOpMin, window.BucketOpAvg, 0),
+		estimatedLimit: int64(conf.initialLimit),
+		initLimit:      int64(conf.initialLimit),
 		maxLimit:       int64(conf.maxLimit),
 		minLimit:       int64(conf.minLimit),
 		urgentDuration: time.Second,
 		trigger:        conf.trigger,
+		ctx:            make(chan struct{}, 1),
 	}
+	go l.daemon()
+	return l
 }
 
 type bbrRateLimiter struct {
-	inflight           int64
-	estimatedLimit     int64
-	maxDelivered       window.SampleWindow // delivered per second
-	minRTT             window.SampleWindow // rtt in milliseconds
-	trigger            trigger.Trigger
-	maxLimit, minLimit int64
-	urgentDuration     time.Duration
-	lastDropTime       int64 // timestamp in nanos
+	inflight                      int64
+	estimatedLimit                int64
+	maxDelivered                  window.SampleWindow // delivered per second
+	minRTT                        window.SampleWindow // rtt in milliseconds
+	trigger                       trigger.Trigger
+	maxLimit, initLimit, minLimit int64
+	urgentDuration                time.Duration
+	lastDropTime                  int64 // timestamp in nanos
+
+	ctx chan struct{}
 }
 
 func (r *bbrRateLimiter) Allow() (bool, DoneFunc) {
@@ -53,6 +60,10 @@ func (r *bbrRateLimiter) Allow() (bool, DoneFunc) {
 	}
 }
 
+func (r *bbrRateLimiter) Stop() {
+	r.ctx <- struct{}{}
+}
+
 func (r *bbrRateLimiter) shouldDrop() bool {
 	inflight := atomic.LoadInt64(&r.inflight)
 	now := time.Now().UnixNano()
@@ -62,22 +73,34 @@ func (r *bbrRateLimiter) shouldDrop() bool {
 		return inflight > r.maxLimit
 	}
 
-	limit := r.calcLimit()
-	drop := inflight > limit
+	drop := inflight > atomic.LoadInt64(&r.estimatedLimit)
 	if drop && !inUrgentState {
 		atomic.StoreInt64(&r.lastDropTime, now)
 	}
 	return drop
 }
 
-func (r *bbrRateLimiter) calcLimit() int64 {
+// daemon will calculate the new limit per second
+func (r *bbrRateLimiter) daemon() {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-r.ctx:
+			return
+		case <-ticker.C:
+			r.updateLimit()
+		}
+	}
+}
+
+func (r *bbrRateLimiter) updateLimit() {
 	delivered := r.maxDelivered.Get()
 	minRTT := r.minRTT.Get()
 	if delivered == 0 || minRTT == 0 {
-		return r.maxLimit
+		return
 	}
 	limit := math.Ceil(delivered * minRTT / 1000.0)
 	limit = math.Max(float64(r.minLimit), math.Min(float64(r.maxLimit), limit))
 	atomic.StoreInt64(&r.estimatedLimit, int64(limit))
-	return int64(limit)
 }

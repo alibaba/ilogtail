@@ -19,7 +19,7 @@ func NewMemUsedTrigger(threshold float64) Trigger {
 		scale:     1024 * 1024,
 		interval:  time.Second,
 		ctx:       make(chan struct{}, 1),
-		used:      window.NewEMASampleWindow(0.05, 10),
+		used:      window.NewEMASampleWindow(10*time.Second.Seconds()*2, 10),
 	}
 	go t.start()
 	return t
@@ -50,6 +50,7 @@ func (m *memUsedTrigger) start() {
 		return
 	}
 	ticker := time.NewTicker(m.interval)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-m.ctx:

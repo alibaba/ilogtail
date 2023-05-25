@@ -15,9 +15,11 @@ func NewGradient2RateLimiter(ops ...Option) RateLimiter {
 		op(conf)
 	}
 
-	return &gradient2RateLimiter{
-		longRtt:        window.NewEMASampleWindow(2.0/(600.0+1.0), 10),
-		shortRtt:       window.NewEMASampleWindow(2.0/(5.0+1.0), 10),
+	l := &gradient2RateLimiter{
+		ctx:            make(chan struct{}, 1),
+		lastRtt:        window.NewBucketWindow(time.Second, 10, window.AggregateOpAvg, window.BucketOpAvg, time.Second), // avg on last 1 second
+		longRtt:        window.NewEMASampleWindow(5*time.Minute.Seconds(), 10),                                          // count for last 5 minutes
+		shortRtt:       window.NewEMASampleWindow(5*time.Second.Seconds(), 10),                                          // count for last 5 seconds
 		estimatedLimit: int64(conf.initialLimit),
 		initLimit:      int64(conf.initialLimit),
 		minLimit:       int64(conf.minLimit),
@@ -39,6 +41,8 @@ func NewGradient2RateLimiter(ops ...Option) RateLimiter {
 			}
 		},
 	}
+	go l.daemon()
+	return l
 }
 
 type gradient2RateLimiter struct {
@@ -50,6 +54,12 @@ type gradient2RateLimiter struct {
 		 * Need volatile
 	*/
 	estimatedLimit int64
+
+	/**
+	 * Tracks a measurement of the realtime rtt, consider the concurrent requests, realtime meant the average rtt in a
+	 * very short time window, by default, it's 1 second
+	 */
+	lastRtt window.SampleWindow
 
 	/**
 	 * Tracks a measurement of the short time, and more volatile, RTT meant to represent the current system latency
@@ -79,7 +89,7 @@ type gradient2RateLimiter struct {
 	urgentDuration time.Duration
 	lastDropTime   int64 // timestamp in nanos
 
-	updating int32
+	ctx chan struct{}
 }
 
 func (g *gradient2RateLimiter) Allow() (bool, DoneFunc) {
@@ -91,9 +101,13 @@ func (g *gradient2RateLimiter) Allow() (bool, DoneFunc) {
 	return true, func(err error) time.Duration {
 		atomic.AddInt64(&g.inflight, -1)
 		rttNanos := time.Duration(time.Now().UnixNano() - start)
-		g.updateLimit(rttNanos)
+		g.lastRtt.Add(float64(rttNanos))
 		return rttNanos
 	}
+}
+
+func (g *gradient2RateLimiter) Stop() {
+	g.ctx <- struct{}{}
 }
 
 func (g *gradient2RateLimiter) shouldDrop() bool {
@@ -105,22 +119,31 @@ func (g *gradient2RateLimiter) shouldDrop() bool {
 		return inflight > g.maxLimit
 	}
 
-	drop := g.inflight > g.estimatedLimit
+	drop := g.inflight > atomic.LoadInt64(&g.estimatedLimit)
 	if drop && !inUrgentState {
 		atomic.StoreInt64(&g.lastDropTime, now)
 	}
 	return drop
 }
 
-func (g *gradient2RateLimiter) updateLimit(rtt time.Duration) {
-	g.longRtt.Add(float64(rtt))
-	g.shortRtt.Add(float64(rtt))
-
-	// exit if other goroutine is updating
-	if !atomic.CompareAndSwapInt32(&g.updating, 0, 1) {
-		return
+// daemon will calculate the new limit per second
+func (g *gradient2RateLimiter) daemon() {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-g.ctx:
+			return
+		case <-ticker.C:
+			g.updateLimit()
+		}
 	}
-	defer atomic.StoreInt32(&g.updating, 0)
+}
+
+func (g *gradient2RateLimiter) updateLimit() {
+	rtt := g.lastRtt.Get()
+	g.longRtt.Add(rtt)
+	g.shortRtt.Add(rtt)
 
 	longRtt := g.longRtt.Get()
 	shortRtt := g.shortRtt.Get()

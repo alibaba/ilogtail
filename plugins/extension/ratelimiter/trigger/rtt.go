@@ -11,7 +11,7 @@ func NewRTTTrigger(threshold time.Duration) FeedTrigger {
 	return &rttTrigger{
 		threshold: threshold / scale,
 		scale:     scale,
-		rtt:       window.NewEMASampleWindow(0.05, 10),
+		rtt:       window.NewEMASampleWindow(10*time.Second.Seconds()*2, 10),
 	}
 }
 

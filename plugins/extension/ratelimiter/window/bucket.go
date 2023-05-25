@@ -2,15 +2,14 @@ package window
 
 import (
 	"fmt"
-	"math"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
 const (
 	AggregateOpMin AggregateOp = iota
 	AggregateOpMax
+	AggregateOpAvg
 )
 
 const (
@@ -80,8 +79,6 @@ type bucketSampleWindow struct {
 	lastOffset     int
 	lastUpdateTime time.Time
 
-	lastAggResult uint64 // use uint64 store float64 bits
-	// lastAggTime   time.Time
 	lock sync.RWMutex
 }
 
@@ -114,17 +111,8 @@ func (b *bucketSampleWindow) Get() float64 {
 	b.lock.RLock()
 	defer b.lock.RUnlock()
 
-	// lastResult := math.Float64frombits(atomic.LoadUint64(&b.lastAggResult))
-	// if lastResult > 0 {
-	// 	now := time.Now()
-	// 	// todo: b.lastAggTime has race
-	// 	elapsed := int(now.Sub(b.lastAggTime) / b.bucketDuration)
-	// 	if elapsed == 0 {
-	// 		return lastResult
-	// 	}
-	// }
-
 	var lastResult float64
+	var sum, count float64
 
 	for i := 0; i < b.size; i++ {
 		if b.buckets[i].count == 0 {
@@ -140,9 +128,16 @@ func (b *bucketSampleWindow) Get() float64 {
 			if bv < lastResult || lastResult == 0 {
 				lastResult = bv
 			}
+		case AggregateOpAvg:
+			sum += b.buckets[i].sum
+			count += float64(b.buckets[i].count)
 		default:
 			panic(fmt.Sprintf("unsupported aggregate Op: %v", b.aggOp))
 		}
+	}
+
+	if b.aggOp == AggregateOpAvg {
+		return sum / count
 	}
 
 	if lastResult == 0 {
@@ -153,7 +148,5 @@ func (b *bucketSampleWindow) Get() float64 {
 		lastResult *= b.scale
 	}
 
-	atomic.StoreUint64(&b.lastAggResult, math.Float64bits(lastResult))
-	// b.lastAggTime = time.Now()
 	return lastResult
 }

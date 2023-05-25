@@ -7,7 +7,7 @@ import (
 )
 
 func TestEMAWindow(t *testing.T) {
-	w := NewEMASampleWindow(0.05, 10).(*emaSampleWindow)
+	w := NewEMASampleWindow(10, 10).(*emaSampleWindow)
 	for i := 0; i < 10; i++ {
 		w.Add(200)
 	}
@@ -17,5 +17,6 @@ func TestEMAWindow(t *testing.T) {
 	assert.EqualValues(t, 200, w.Get())
 
 	w.Add(100)
-	assert.EqualValues(t, w.Get(), 200*(1-0.05)+100*0.05)
+	decay := 2 / (float64(10) + 1)
+	assert.EqualValues(t, w.Get(), 200*(1-decay)+100*decay)
 }

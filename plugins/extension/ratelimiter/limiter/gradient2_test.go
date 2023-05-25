@@ -3,7 +3,6 @@ package limiter
 import (
 	"fmt"
 	"math"
-	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +16,7 @@ func TestNewGradient2RateLimiter(t *testing.T) {
 		WithTrigger(trigger.NewRTTTrigger(time.Second)),
 	).(*gradient2RateLimiter)
 	assert.NotNil(t, l)
+	assert.NotNil(t, l.lastRtt)
 	assert.NotNil(t, l.shortRtt)
 	assert.NotNil(t, l.longRtt)
 	assert.NotNil(t, l.trigger)
@@ -53,6 +53,7 @@ func TestGradient2RateLimiter_Allow(t *testing.T) {
 	assert.True(t, allow)
 	done(nil)
 
+	l.updateLimit()
 	longRTT := l.longRtt.Get()
 	shortRTT := l.shortRtt.Get()
 	assert.Greater(t, longRTT, float64(0))
@@ -61,27 +62,23 @@ func TestGradient2RateLimiter_Allow(t *testing.T) {
 	// app limited
 	estimated := l.estimatedLimit
 	fmt.Println(estimated)
-	for i := 0; i < 11; i++ {
+	for i := 0; i < 9; i++ {
 		allow, _ = l.Allow()
 		assert.True(t, allow)
 	}
+	l.updateLimit()
 	assert.EqualValues(t, estimated, l.estimatedLimit)
 
 	// limit should grow if in tolerance and not in app-limited
-	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
 		allow, done = l.Allow()
 		assert.True(t, allow)
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			time.Sleep(time.Millisecond)
-			done(nil)
-		}()
 		time.Sleep(time.Millisecond)
-		done(nil)
+		if i > 5 {
+			done(nil)
+		}
+		l.updateLimit()
 	}
-	wg.Wait()
 	assert.Greater(t, l.estimatedLimit, estimated)
 }
 
@@ -91,9 +88,6 @@ func BenchmarkGradient2RateLimiter_Allow(b *testing.B) {
 		WithInitialLimit(20),
 		WithTrigger(mockTrigger{}),
 	).(*gradient2RateLimiter)
-
-	// set inflight to trigger the limit logic
-	l.inflight = 15
 
 	allow, done := l.Allow()
 	assert.True(b, allow)

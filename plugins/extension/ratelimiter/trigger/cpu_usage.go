@@ -16,7 +16,7 @@ func NewCPUUsageTrigger(threshold int) Trigger {
 		interval:  time.Millisecond * 500,
 		scale:     10,
 		ctx:       make(chan struct{}, 1),
-		usage:     window.NewEMASampleWindow(0.05, 10),
+		usage:     window.NewEMASampleWindow(10*time.Second.Seconds()*2, 10),
 	}
 	go t.start()
 	return t
@@ -41,6 +41,7 @@ func (c *cpuUsageTrigger) Stop() {
 
 func (c *cpuUsageTrigger) start() {
 	ticker := time.NewTicker(c.interval)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-c.ctx:

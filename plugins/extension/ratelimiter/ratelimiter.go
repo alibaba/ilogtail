@@ -28,6 +28,8 @@ type ExtensionRateLimiter struct {
 	context pipeline.Context
 	trigger trigger.Trigger
 	rttFeed trigger.FeedTrigger
+
+	limiters []limiter.RateLimiter
 }
 
 func (e *ExtensionRateLimiter) Description() string {
@@ -50,6 +52,9 @@ func (e *ExtensionRateLimiter) Init(context pipeline.Context) error {
 }
 
 func (e *ExtensionRateLimiter) Stop() error {
+	for _, rateLimiter := range e.limiters {
+		rateLimiter.Stop()
+	}
 	if e.trigger != nil {
 		e.trigger.Stop()
 	}
@@ -74,6 +79,7 @@ func (e *ExtensionRateLimiter) Handler(handler http.Handler) http.Handler {
 		panic(fmt.Sprintf("not supported algorithm: %v", e.Algorithm))
 	}
 
+	e.limiters = append(e.limiters, l)
 	h := &httpServerHandler{
 		limiter:   l,
 		rttFeed:   e.rttFeed,
