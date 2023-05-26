@@ -52,6 +52,7 @@ type ServiceHTTP struct {
 	version     int8
 	paramCount  int
 	dumper      *helper.Dumper
+	handleChain http.Handler
 
 	DumpDataKeepFiles  int
 	DumpData           bool   // would dump the received data to a local file, which is only used to valid data by the developers.
@@ -65,7 +66,8 @@ type ServiceHTTP struct {
 	UnlinkUnixSock     bool
 	FieldsExtend       bool
 	DisableUncompress  bool
-	Tags               map[string]string // todo for v2
+	Tags               map[string]string            // todo for v2
+	Middlewares        []extensions.ExtensionConfig // custom http handlers to intercept the request
 
 	// params below works only for version v2
 	QueryParams       []string
@@ -119,6 +121,13 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 		s.dumper = helper.NewDumper(strings.Join([]string{name, context.GetProject(), context.GetConfigName()}, "-"), s.DumpDataKeepFiles)
 		s.dumper.Init()
 	}
+
+	handler, err := s.buildHandlerChain(s)
+	if err != nil {
+		return 0, err
+	}
+	s.handleChain = handler
+
 	return 0, nil
 }
 
@@ -238,12 +247,31 @@ func (s *ServiceHTTP) StartService(context pipeline.PipelineContext) error {
 	return s.start()
 }
 
+func (s *ServiceHTTP) buildHandlerChain(handler http.Handler) (http.Handler, error) {
+	for i := len(s.Middlewares) - 1; i >= 0; i-- {
+		setting := s.Middlewares[i]
+		ext, err := s.context.GetExtension(setting.Type, setting.Options)
+		if err != nil {
+			logger.Error(s.context.GetRuntimeContext(), "SERVICEHTTP_INIT_ALARM", "service http init request handler fail, error", err)
+			return nil, err
+		}
+		middleware, ok := ext.(extensions.HTTPServerMiddleware)
+		if !ok {
+			err = fmt.Errorf("middleware(%s) with type %T not implement interface extensions.HTTPServerMiddleware", setting.Type, ext)
+			logger.Error(s.context.GetRuntimeContext(), "SERVICEHTTP_INIT_ALARM", "service http init request handler fail, error", err)
+			return nil, err
+		}
+		handler = middleware.Handler(handler)
+	}
+	return handler, nil
+}
+
 func (s *ServiceHTTP) start() error {
 	s.wg.Add(1)
 
 	server := &http.Server{
 		Addr:        s.Address,
-		Handler:     s,
+		Handler:     s.handleChain,
 		ReadTimeout: time.Duration(s.ReadTimeoutSec) * time.Second,
 	}
 	var listener net.Listener
