@@ -51,6 +51,8 @@ const (
 	snappyEncoding     = "snappy"
 )
 
+// field index of the proto message models
+// ref: https://github.com/prometheus/prometheus/blob/cb045c0e4b94bbf3eee174d91b5ef2b8553948d5/prompb/types.proto#L123
 const (
 	promPbFieldIndexTimeSeries      = 1
 	promPbFieldIndexLabels          = 1
