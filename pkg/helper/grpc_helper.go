@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	tls_helper "github.com/influxdata/telegraf/plugins/common/tls"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -209,6 +210,8 @@ type GRPCServerSettings struct {
 	Compression string `json:"Compression"`
 
 	Decompression string `json:"Decompression"`
+
+	TLSConfig tls_helper.ServerConfig `json:"TLSConfig"`
 }
 
 func (cfg *GRPCServerSettings) GetServerOption() ([]grpc.ServerOption, error) {
@@ -228,6 +231,12 @@ func (cfg *GRPCServerSettings) GetServerOption() ([]grpc.ServerOption, error) {
 
 		if cfg.WriteBufferSize > 0 {
 			opts = append(opts, grpc.WriteBufferSize(cfg.WriteBufferSize))
+		}
+
+		var tlsConfig *tls.Config
+		tlsConfig, err = cfg.TLSConfig.TLSConfig()
+		if err == nil && tlsConfig != nil {
+			opts = append(opts, grpc.Creds(credentials.NewTLS(tlsConfig)))
 		}
 
 		dc := strings.ToLower(cfg.Decompression)
@@ -250,6 +259,7 @@ func (cfg *GRPCServerSettings) GetServerOption() ([]grpc.ServerOption, error) {
 				err = fmt.Errorf("invalid compression: %s", cfg.Compression)
 			}
 		}
+
 	}
 
 	return opts, err
