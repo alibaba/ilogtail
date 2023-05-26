@@ -230,7 +230,8 @@ func (cfg *GRPCServerSettings) GetServerOption() ([]grpc.ServerOption, error) {
 			opts = append(opts, grpc.WriteBufferSize(cfg.WriteBufferSize))
 		}
 
-		if cfg.Decompression != "" && cfg.Decompression != "none" {
+		dc := strings.ToLower(cfg.Decompression)
+		if dc != "" && dc != "none" {
 			dc := strings.ToLower(cfg.Decompression)
 			switch dc {
 			case "gzip":
@@ -240,8 +241,8 @@ func (cfg *GRPCServerSettings) GetServerOption() ([]grpc.ServerOption, error) {
 			}
 		}
 
-		if cfg.Compression != "" && cfg.Compression != "none" {
-			cp := strings.ToLower(cfg.Compression)
+		cp := strings.ToLower(cfg.Compression)
+		if cp != "" && cp != "none" {
 			switch cp {
 			case "gzip":
 				opts = append(opts, grpc.RPCCompressor(grpc.NewGZIPCompressor()))
