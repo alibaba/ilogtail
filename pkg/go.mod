@@ -15,7 +15,7 @@ require (
 	github.com/golang/snappy v0.0.4
 	github.com/influxdata/influxdb v1.11.0
 	github.com/influxdata/line-protocol/v2 v2.2.1
-	github.com/influxdata/telegraf v1.22.0
+	github.com/influxdata/telegraf v1.16.0
 	github.com/mailru/easyjson v0.7.7
 	github.com/narqo/go-dogstatsd-parser v0.2.0
 	github.com/pierrec/lz4 v2.6.1+incompatible
