@@ -26,6 +26,7 @@
 #include "app_config/AppConfig.h"
 #include "config_manager/ConfigManagerBase.h"
 #include "config_server_pb/agent.pb.h"
+#include "sdk/BytedanceSign.h"
 
 namespace logtail {
 
@@ -62,6 +63,7 @@ public:
 
     Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson);
 
+    void InitConfigServiceClient();
 private:
     ThreadPtr mCheckUpdateThreadPtr;
 
@@ -95,6 +97,8 @@ private:
      * @return
      */
     void CreateCustomizedFuseConfig() override;
+
+    ConfigServiceClientBase* mConfigServiceClient;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class SenderUnittest;
@@ -107,6 +111,15 @@ private:
     friend class FuseFileUnittest;
     friend class MultiServerConfigUpdatorUnitest;
 #endif
+};
+
+class ConfigServiceClient: public ConfigServiceClientBase {
+public:
+    void initClient(){};
+    bool flushCredential(){ return true; };
+    void signHeader(sdk::AsynRequest& request){};
+	void SendMetadata(){};
+	sdk::AsynRequest GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId);
 };
 
 } // namespace logtail

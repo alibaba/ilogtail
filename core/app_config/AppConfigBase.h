@@ -137,6 +137,22 @@ private:
     //   local time to adjust logs' time automatically.
     bool mEnableLogTimeAutoAdjust = false;
 
+    // for case that some code need to run in specific environment
+    std::string mEnvironmentCategory;
+
+    std::string mRegion;
+
+    std::string mAvailableZone;
+
+    std::string mAccountId;
+
+    std::string mGatewayService;
+
+    std::string mAgentMachineId;
+
+    std::string mMetaServiceHost;
+
+    std::string mServiceRoleUri;
     /**
      * @brief Load ConfigServer, DataServer and network interface
      *
@@ -369,6 +385,22 @@ public:
     inline bool EnableCheckpointSyncWrite() const { return mEnableCheckpointSyncWrite; }
 
     inline bool EnableLogTimeAutoAdjust() const { return mEnableLogTimeAutoAdjust; }
+
+    const std::string& GetEnvironmentCategory() const { return mEnvironmentCategory; }
+
+    const std::string& GetRegion() const { return mRegion; }
+
+    const std::string& GetAvailableZone() const { return mAvailableZone; }
+
+    const std::string& GetAccountId() const { return mAccountId; }
+
+    const std::string& GetGatewayService() const { return mGatewayService; }
+
+    const std::string& GetAgentMachineId() const { return mAgentMachineId; }
+
+    const std::string& GetMetaServiceHost() const { return mMetaServiceHost; }
+
+    const std::string& GetServiceRoleUri() const { return mServiceRoleUri; }
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;

@@ -776,6 +776,14 @@ void AppConfigBase::LoadResourceConf(const Json::Value& confJson) {
                          confJson,
                          "enable_response_verification",
                          "ALIYUN_LOGTAIL_ENABLE_RESPONSE_VERIFICATION");
+    LoadStringParameter(mEnvironmentCategory, confJson, "environment_category", "ENVIROMENT_CATEGORY");
+    LoadStringParameter(mRegion, confJson, "region", "REGION");
+    LoadStringParameter(mAvailableZone, confJson, "available_zone", "AVALIABLE_ZONE");
+    LoadStringParameter(mAccountId, confJson, "account_id", "ACCOUNT_ID");
+    LoadStringParameter(mGatewayService, confJson, "gateway_service", "GATEWAY_SERVICE");
+    LoadStringParameter(mAgentMachineId, confJson, "agent_machine_id", "AGENT_MACHINE_ID");
+    LoadStringParameter(mMetaServiceHost, confJson, "meta_service_host", "META_SERVICE_HOST");
+    LoadStringParameter(mServiceRoleUri, confJson, "service_role_uri", "SERVICE_ROLE_URI");
 
     LoadEnvResourceLimit();
     CheckAndAdjustParameters();

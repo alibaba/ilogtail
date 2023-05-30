@@ -32,6 +32,7 @@
 #include "common/Lock.h"
 #include "common/Thread.h"
 #include "event/Event.h"
+#include "sdk/Common.h"
 
 DECLARE_FLAG_BOOL(https_verify_peer);
 DECLARE_FLAG_STRING(https_ca_cert);
@@ -474,6 +475,7 @@ public:
     void InsertRegionAliuidMap(const std::string& region, const std::string& aliuid);
     void ClearRegionAliuidMap();
 
+    std::unordered_map<std::string, int64_t> GetMServerYamlConfigVersionMap(){ return mServerYamlConfigVersionMap; };
 private:
     // no copy
     ConfigManagerBase(const ConfigManagerBase&);
@@ -558,6 +560,17 @@ private:
     friend class MultiServerConfigUpdatorUnitest;
     friend class CreateModifyHandlerUnittest;
 #endif
+};
+
+class ConfigServiceClientBase {
+public:
+    ConfigServiceClientBase() = default;
+
+    virtual void initClient() = 0;
+    virtual bool flushCredential() = 0;
+    virtual void signHeader(sdk::AsynRequest& request) = 0;
+	virtual void SendMetadata() = 0;
+	virtual sdk::AsynRequest GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId) = 0;
 };
 
 } // namespace logtail

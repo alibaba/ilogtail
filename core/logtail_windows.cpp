@@ -201,6 +201,7 @@ void do_worker_process() {
     OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
     APSARA_LOG_INFO(sLogger, ("Logtail started, appInfo", appInfo));
 
+    ConfigManager::GetInstance()->InitConfigServiceClient();
     ConfigManager::GetInstance()->InitUpdateConfig(configExistFlag);
     ConfigManager::GetInstance()->RegisterHandlers();
     EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();

@@ -60,6 +60,10 @@
 #include "processor/LogProcess.h"
 #include "processor/LogFilter.h"
 #include <boost/filesystem.hpp>
+#include "sdk/BytedanceSign.h"
+#include "BytedanceConfigService.h"
+#include <string>
+#include <chrono>
 
 using namespace std;
 using namespace logtail;
@@ -85,6 +89,7 @@ ConfigManager::ConfigManager() {
 
 ConfigManager::~ConfigManager() {
     try {
+        delete mConfigServiceClient;
         if (mCheckUpdateThreadPtr.get() != NULL)
             mCheckUpdateThreadPtr->GetValue(100);
     } catch (...) {
@@ -147,9 +152,9 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
     int32_t checkInterval = INT32_FLAG(config_update_interval);
     int32_t lastCheckTagsTime = 0;
     int32_t checkTagsInterval = INT32_FLAG(file_tags_update_interval);
+    mConfigServiceClient->SendMetadata();
     while (mThreadIsRunning) {
         int32_t curTime = time(NULL);
-
         if (curTime - lastCheckTime >= checkInterval) {
             if (AppConfig::GetInstance()->GetConfigServerAvailable()) {
                 AppConfig::ConfigServerAddress configServerAddress
@@ -192,6 +197,15 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
             break;
     }
     return true;
+}
+
+void ConfigManager::InitConfigServiceClient() {
+    if (strcmp(AppConfig::GetInstance()->GetEnvironmentCategory().c_str(), "volcengine") == 0) {
+        this->mConfigServiceClient = new BytedanceConfigServiceClient();
+    } else {
+		this->mConfigServiceClient = new ConfigServiceClient();
+	}
+    mConfigServiceClient->initClient();
 }
 
 void ConfigManager::InitUpdateConfig(bool configExistFlag) {
@@ -239,14 +253,11 @@ Json::Value& ConfigManager::CheckPluginProcessor(Json::Value& pluginConfigJson, 
     return pluginConfigJson;
 }
 
-// ConfigServer
-google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
-ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerAddress) {
-    configserver::proto::HeartBeatRequest heartBeatReq;
+sdk::AsynRequest ConfigServiceClient::GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId) {
+	configserver::proto::HeartBeatRequest heartBeatReq;
     configserver::proto::AgentAttributes attributes;
-    std::string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
-    heartBeatReq.set_request_id(requestID);
-    heartBeatReq.set_agent_id(GetInstanceId());
+    heartBeatReq.set_request_id(requestId);
+    heartBeatReq.set_agent_id(ConfigManager::GetInstance()->GetInstanceId());
     heartBeatReq.set_agent_type("iLogtail");
     attributes.set_version(ILOGTAIL_VERSION);
     attributes.set_ip(LogFileProfiler::mIpAddr);
@@ -258,8 +269,8 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     heartBeatReq.set_interval(INT32_FLAG(config_update_interval));
 
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigInfo> pipelineConfigs;
-    for (std::unordered_map<std::string, int64_t>::iterator it = mServerYamlConfigVersionMap.begin();
-         it != mServerYamlConfigVersionMap.end();
+    for (std::unordered_map<std::string, int64_t>::iterator it = ConfigManager::GetInstance()->GetMServerYamlConfigVersionMap().begin();
+         it != ConfigManager::GetInstance()->GetMServerYamlConfigVersionMap().end();
          it++) {
         configserver::proto::ConfigInfo* info = pipelineConfigs.Add();
         info->set_type(configserver::proto::PIPELINE_CONFIG);
@@ -274,38 +285,54 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
     std::string reqBody;
     heartBeatReq.SerializeToString(&reqBody);
+	sdk::AsynRequest request(sdk::HTTP_POST, configServerAddress.host, configServerAddress.port, operation, "", 
+		httpHeader, reqBody, INT32_FLAG(sls_client_send_timeout), "", false, NULL, NULL);
+	return request;
+}
+
+// ConfigServer
+google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
+ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerAddress) {
+    std::string requestId = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
+    sdk::AsynRequest request = mConfigServiceClient->GenerateHeartBeatRequest(configServerAddress, requestId);
+    mConfigServiceClient->signHeader(request);
     sdk::HttpMessage httpResponse;
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "ConfigServer";
-
     sdk::CurlClient client;
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> emptyResult;
     try {
-        client.Send(sdk::HTTP_POST,
-                    configServerAddress.host,
-                    configServerAddress.port,
-                    operation,
-                    "",
-                    httpHeader,
-                    reqBody,
-                    INT32_FLAG(sls_client_send_timeout),
-                    httpResponse,
-                    "",
-                    false);
+        client.Send(request.mHTTPMethod, request.mHost, request.mPort, request.mUrl, request.mQueryString,
+                    request.mHeader, request.mBody, request.mTimeout, httpResponse, "", false);
+
+        if (httpResponse.statusCode == 400 || httpResponse.statusCode == 401 || httpResponse.statusCode == 403) {
+			LOG_WARNING(sLogger, ("SendHeartbeat", "failed")("response", httpResponse.content));
+			if (!mConfigServiceClient->flushCredential()) {
+				LOG_WARNING(sLogger, ("flushCredential", "failed"));
+				return emptyResult;
+			}
+			LOG_WARNING(sLogger, ("flushCredential", "success"));
+            try {
+                mConfigServiceClient->signHeader(request);
+                client.Send(request.mHTTPMethod, request.mHost, request.mPort, request.mUrl, request.mQueryString,
+                            request.mHeader, request.mBody, request.mTimeout, httpResponse, "", false);
+            } catch(const sdk::LOGException& e) {
+                LOG_WARNING(sLogger, ("SendHeartBeat", "fail")("reqBody", request.mBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
+                return emptyResult;
+            }
+		}
         configserver::proto::HeartBeatResponse heartBeatResp;
         heartBeatResp.ParseFromString(httpResponse.content);
-
-        if (0 != strcmp(heartBeatResp.request_id().c_str(), requestID.c_str()))
+		if (0 != strcmp(heartBeatResp.request_id().c_str(), requestId.c_str()))
             return emptyResult;
-
         LOG_DEBUG(sLogger,
-                  ("SendHeartBeat", "success")("reqBody", reqBody)("requestId", heartBeatResp.request_id())(
+                  ("SendHeartBeat", "success")("reqBody", request.mBody)("requestId", heartBeatResp.request_id())(
                       "statusCode", heartBeatResp.code()));
 
         return heartBeatResp.pipeline_check_results();
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(
             sLogger,
-            ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
+            ("SendHeartBeat", "fail")("reqBody", request.mBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
         return emptyResult;
     }
 }
