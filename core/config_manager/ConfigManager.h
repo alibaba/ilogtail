@@ -26,7 +26,6 @@
 #include "app_config/AppConfig.h"
 #include "config_manager/ConfigManagerBase.h"
 #include "config_server_pb/agent.pb.h"
-#include "sdk/BytedanceSign.h"
 
 namespace logtail {
 

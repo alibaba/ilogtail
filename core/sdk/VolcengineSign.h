@@ -60,10 +60,10 @@ struct MetaData {
     }
 };
 
-class BytedanceSignV4 {
+class VolcengineSignV4 {
 public:
-    BytedanceSignV4() = default;
-    ~BytedanceSignV4() = default;
+    VolcengineSignV4() = default;
+    ~VolcengineSignV4() = default;
 
     void signHeader(sdk::AsynRequest& request);
     static std::string uriEncode(const std::string& in, bool encodeSlash);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "BytedanceConfigService.h"
+#include "VolcengineConfigServiceClient.h"
 #include "sdk/Common.h"
 #include "sdk/CurlImp.h"
 #include "sdk/Exception.h"
@@ -28,13 +28,13 @@
 using namespace std;
 
 namespace logtail {
-	void BytedanceConfigServiceClient::initClient() {
+	void VolcengineConfigServiceClient::initClient() {
 		flushCredential();
 		this->signV4.service = AppConfig::GetInstance()->GetGatewayService();
 		this->signV4.region = AppConfig::GetInstance()->GetRegion();
 	}
 
-	bool BytedanceConfigServiceClient::flushCredential() { 
+	bool VolcengineConfigServiceClient::flushCredential() { 
 		sdk::HttpMessage httpResponse;
         sdk::CurlClient client;
 		map<string, string> httpHeader;
@@ -58,11 +58,11 @@ namespace logtail {
 		return true;
 	}
 
-	void BytedanceConfigServiceClient::signHeader(sdk::AsynRequest& request) {
+	void VolcengineConfigServiceClient::signHeader(sdk::AsynRequest& request) {
 		signV4.signHeader(request);
 	}
 
-	void BytedanceConfigServiceClient::SendMetadata() {
+	void VolcengineConfigServiceClient::SendMetadata() {
 		configserver::proto::MetadataRequest metadataReq;
 		std::string requestID = sdk::Base64Enconde(string("metadata").append(to_string(time(NULL))));
 		metadataReq.set_request_id(requestID);
@@ -101,7 +101,7 @@ namespace logtail {
 		LOG_INFO(sLogger, ("send metadata to config server", "success"));
 	}
 
-	sdk::AsynRequest BytedanceConfigServiceClient::GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId) {
+	sdk::AsynRequest VolcengineConfigServiceClient::GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId) {
 		configserver::proto::HeartBeatRequest heartBeatReq;
 		heartBeatReq.set_request_id(requestId);
 		heartBeatReq.set_agent_id(ConfigManager::GetInstance()->GetInstanceId());

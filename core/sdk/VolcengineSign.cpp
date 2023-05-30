@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "BytedanceSign.h"
+#include "VolcengineSign.h"
 #include <ctime>
 #include <utility>
 #include <vector>
@@ -84,7 +84,7 @@ bool compareByPairKey(const std::pair<std::string, std::string>& dataA,
     return dataA.first < dataB.first;
 }
 
-void BytedanceSignV4::signHeader(sdk::AsynRequest& request) {
+void VolcengineSignV4::signHeader(sdk::AsynRequest& request) {
     if (strcmp(this->accessKeyId.c_str(), "") == 0 || strcmp(this->secretAccessKey.c_str(), "") == 0
         || strcmp(this->securityToken.c_str(), "") == 0 || strcmp(this->service.c_str(), "") == 0) {
         // Todo log
@@ -104,7 +104,7 @@ void BytedanceSignV4::signHeader(sdk::AsynRequest& request) {
     request.mHeader["Authorization"] = buildAuthHeaderV4(signature, metaData, this->accessKeyId);
 }
 
-std::string BytedanceSignV4::buildAuthHeaderV4(const std::string signature, const MetaData& metaData, const std::string ak) {
+std::string VolcengineSignV4::buildAuthHeaderV4(const std::string signature, const MetaData& metaData, const std::string ak) {
     std::string auth;
     auth.append(metaData.algorithm)
         .append(" Credential=")
@@ -118,7 +118,7 @@ std::string BytedanceSignV4::buildAuthHeaderV4(const std::string signature, cons
     return auth;
 }
 
-std::string BytedanceSignV4::signatureV4(const std::string& sk,
+std::string VolcengineSignV4::signatureV4(const std::string& sk,
                                 const std::string& date,
                                 const std::string& region,
                                 const std::string& service,
@@ -164,7 +164,7 @@ std::string BytedanceSignV4::signatureV4(const std::string& sk,
 }
 
 std::string
-BytedanceSignV4::stringToSignV4(const sdk::AsynRequest& request, const std::string& hashedCanonReq, MetaData& metaData) {
+VolcengineSignV4::stringToSignV4(const sdk::AsynRequest& request, const std::string& hashedCanonReq, MetaData& metaData) {
     std::string requestTs;
     auto it = request.mHeader.find("X-Date");
     if (it != request.mHeader.end()) {
@@ -192,7 +192,7 @@ BytedanceSignV4::stringToSignV4(const sdk::AsynRequest& request, const std::stri
     return stringToSignV4;
 }
 
-std::string BytedanceSignV4::hashedCanonicalRequestV4(sdk::AsynRequest& request, MetaData& metaData) {
+std::string VolcengineSignV4::hashedCanonicalRequestV4(sdk::AsynRequest& request, MetaData& metaData) {
     unsigned char hashedPlayload[32];
     SHA256((unsigned char*)request.mBody.c_str(), request.mBody.length(), hashedPlayload);
     std::string payloadHash(stringToHex(hashedPlayload, 32));
@@ -252,7 +252,7 @@ std::string BytedanceSignV4::hashedCanonicalRequestV4(sdk::AsynRequest& request,
     return stringToHex(hashedRequest, 32);
 }
 
-void BytedanceSignV4::prepareRequestV4(sdk::AsynRequest& request) {
+void VolcengineSignV4::prepareRequestV4(sdk::AsynRequest& request) {
     // gen date for sign
     std::time_t now = time(nullptr);
     std::map<std::string, std::string> necessaryDefaults
@@ -269,7 +269,7 @@ void BytedanceSignV4::prepareRequestV4(sdk::AsynRequest& request) {
     }
 }
 
-std::string BytedanceSignV4::uriEncode(const std::string& in, bool encodeSlash) {
+std::string VolcengineSignV4::uriEncode(const std::string& in, bool encodeSlash) {
     int hexCount = 0;
     std::vector<uint8_t> uint8Char;
     for (int i = 0; i < in.length(); i++) {
@@ -305,14 +305,14 @@ std::string BytedanceSignV4::uriEncode(const std::string& in, bool encodeSlash) 
     return ret;
 }
 
-std::string BytedanceSignV4::encodePath(const std::string& path) {
+std::string VolcengineSignV4::encodePath(const std::string& path) {
     if (path.empty()) {
         return "/";
     }
     return uriEncode(path, false);
 }
 
-std::string BytedanceSignV4::encodeQuery(std::map<std::string, std::string> query) {
+std::string VolcengineSignV4::encodeQuery(std::map<std::string, std::string> query) {
     if (query.empty()) {
         return "";
     }

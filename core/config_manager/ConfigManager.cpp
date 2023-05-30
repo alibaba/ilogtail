@@ -60,8 +60,9 @@
 #include "processor/LogProcess.h"
 #include "processor/LogFilter.h"
 #include <boost/filesystem.hpp>
-#include "sdk/BytedanceSign.h"
-#include "BytedanceConfigService.h"
+#include "sdk/VolcengineSign.h"
+#include "VolcengineConfigServiceClient.h"
+#include "ConfigServiceClient.h"
 #include <string>
 #include <chrono>
 
@@ -201,7 +202,7 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
 
 void ConfigManager::InitConfigServiceClient() {
     if (strcmp(AppConfig::GetInstance()->GetEnvironmentCategory().c_str(), "volcengine") == 0) {
-        this->mConfigServiceClient = new BytedanceConfigServiceClient();
+        this->mConfigServiceClient = new VolcengineConfigServiceClient();
     } else {
 		this->mConfigServiceClient = new ConfigServiceClient();
 	}

@@ -15,7 +15,7 @@
  */
 
 #pragma once
-#include "sdk/BytedanceSign.h"
+#include "sdk/VolcengineSign.h"
 #include "app_config/AppConfig.h"
 #include "ConfigManagerBase.h"
 
@@ -26,7 +26,7 @@ namespace logtail {
 		std::string securityToken;
 	};
 
-	class BytedanceConfigServiceClient: public ConfigServiceClientBase {
+	class VolcengineConfigServiceClient: public ConfigServiceClientBase {
 	public:
 		void initClient();
 		bool flushCredential();
@@ -35,6 +35,6 @@ namespace logtail {
 		sdk::AsynRequest GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId);
 	
 	private:
-		BytedanceSignV4 signV4;
+		VolcengineSignV4 signV4;
 	};
 }
