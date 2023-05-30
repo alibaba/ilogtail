@@ -112,13 +112,4 @@ private:
 #endif
 };
 
-class ConfigServiceClient: public ConfigServiceClientBase {
-public:
-    void initClient(){};
-    bool flushCredential(){ return true; };
-    void signHeader(sdk::AsynRequest& request){};
-	void SendMetadata(){};
-	sdk::AsynRequest GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId);
-};
-
 } // namespace logtail
