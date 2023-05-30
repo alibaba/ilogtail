@@ -61,6 +61,7 @@ public:
     void StopUsingConfigServer() { mConfigServerAvailable = false; }
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
     const std::vector<std::string>& GetConfigServerTags() const { return mConfigServerTags; }
+    const std::string& GetGatewayService() const { return mGatewayService; }
     const std::string& GetMetaServiceHost() const { return mMetaServiceHost; }
     const std::string& GetServiceRoleUri() const { return mServiceRoleUri; }
     const std::string& GetInstanceIdUri() const { return mInstanceIdUri; }
