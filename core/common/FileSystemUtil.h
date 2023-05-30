@@ -49,6 +49,8 @@ inline std::string PathJoin(const std::string& base, const std::string& sub) {
 #endif
 }
 
+std::string CurrentPath();
+
 std::string ParentPath(const std::string& path);
 
 // CheckExistance checks whether the dir or file specified by @path is exist or not.

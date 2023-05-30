@@ -61,7 +61,20 @@ public:
     void StopUsingConfigServer() { mConfigServerAvailable = false; }
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
     const std::vector<std::string>& GetConfigServerTags() const { return mConfigServerTags; }
-
+    const std::string& GetMetaServiceHost() const { return mMetaServiceHost; }
+    const std::string& GetServiceRoleUri() const { return mServiceRoleUri; }
+    const std::string& GetInstanceIdUri() const { return mInstanceIdUri; }
+    const std::string& GetRegionUri() const { return mRegionUri; }
+    const std::string& GetAvailableZoneUri() const { return mAvailableZoneUri; }
+    const std::string& GetAccountIdUri() const { return mAccountIdUri; }
+ private:
+	std::string mRegionUri;
+    std::string mAvailableZoneUri;
+    std::string mAccountIdUri;
+	std::string mGatewayService;
+    std::string mInstanceIdUri;
+    std::string mMetaServiceHost;
+    std::string mServiceRoleUri;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;
     friend class ConfigUpdatorUnittest;

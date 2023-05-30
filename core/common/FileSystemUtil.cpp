@@ -16,8 +16,11 @@
 #if defined(_MSC_VER)
 #include <direct.h>
 #include <fcntl.h>
+#define GetCurrentDir _getcwd
 #elif defined(__linux__)
 #include <fnmatch.h>
+#include <unistd.h>
+#define GetCurrentDir getcwd
 #endif
 #include <boost/filesystem.hpp>
 #include "logger/Logger.h"
@@ -32,6 +35,13 @@ const std::string PATH_SEPARATOR = "/";
 #elif defined(_MSC_VER)
 const std::string PATH_SEPARATOR = "\\";
 #endif
+
+std::string CurrentPath() {
+    char buff[250]; 
+    GetCurrentDir(buff, 250);
+    string current_working_directory(buff);
+    return current_working_directory;
+}
 
 std::string ParentPath(const std::string& path) {
     boost::filesystem::path p(path);

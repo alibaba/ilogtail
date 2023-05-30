@@ -23,6 +23,7 @@
 #include "ConfigManager.h"
 #include "profiler/LogFileProfiler.h"
 #include "common/version.h"
+#include "common/FileSystemUtil.h"
 #include <json/json.h>
 
 using namespace std;
@@ -31,7 +32,11 @@ namespace logtail {
 	void VolcengineConfigServiceClient::initClient() {
 		flushCredential();
 		this->signV4.service = AppConfig::GetInstance()->GetGatewayService();
-		this->signV4.region = AppConfig::GetInstance()->GetRegion();
+		this->signV4.region = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetRegionUri());
+		this->mRegion = this->signV4.region;
+		this->mAgentMachineId = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetInstanceIdUri()) + CurrentPath();
+		this->mAvailableZone = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetAvailableZoneUri());
+		this->mAccountId = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetAccountIdUri());
 	}
 
 	bool VolcengineConfigServiceClient::flushCredential() { 
@@ -67,15 +72,15 @@ namespace logtail {
 		std::string requestID = sdk::Base64Enconde(string("metadata").append(to_string(time(NULL))));
 		metadataReq.set_request_id(requestID);
 		metadataReq.set_agent_id(ConfigManager::GetInstance()->GetInstanceId());
-		metadataReq.set_agent_machine_id(AppConfig::GetInstance()->GetAgentMachineId());
+		metadataReq.set_agent_machine_id(this->mAgentMachineId);
 		metadataReq.set_agent_type("iLogtail");
     	metadataReq.set_startup_time(time(0));
     	metadataReq.set_interval(INT32_FLAG(config_update_interval));
 		metadataReq.set_version(ILOGTAIL_VERSION);
 		metadataReq.set_ip(LogFileProfiler::mIpAddr);
-		metadataReq.set_region(AppConfig::GetInstance()->GetRegion());
-    	metadataReq.set_avaliable_zone(AppConfig::GetInstance()->GetAvailableZone());
-    	metadataReq.set_account_id(AppConfig::GetInstance()->GetAccountId());
+		metadataReq.set_region(this->mRegion);
+    	metadataReq.set_avaliable_zone(this->mAvailableZone);
+    	metadataReq.set_account_id(this->mAccountId);
     	metadataReq.set_os(LogFileProfiler::mOsDetail);
 		std::string reqBody;
     	metadataReq.SerializeToString(&reqBody);
@@ -105,7 +110,7 @@ namespace logtail {
 		configserver::proto::HeartBeatRequest heartBeatReq;
 		heartBeatReq.set_request_id(requestId);
 		heartBeatReq.set_agent_id(ConfigManager::GetInstance()->GetInstanceId());
-		heartBeatReq.set_agent_machine_id(AppConfig::GetInstance()->GetAgentMachineId());
+		heartBeatReq.set_agent_machine_id(this->mAgentMachineId);
 		heartBeatReq.set_running_status("");
 		std::string reqBody;
 		heartBeatReq.SerializeToString(&reqBody);
@@ -113,5 +118,19 @@ namespace logtail {
 		// sign request header
 		sdk::AsynRequest request(sdk::HTTP_POST, configServerAddress.host, configServerAddress.port, "", "Action=HeartBeat&Version=2018-08-01", httpHeader, reqBody, INT32_FLAG(sls_client_send_timeout), "", false, NULL, NULL);
 		return request;
+	}
+
+	const std::string VolcengineConfigServiceClient::getUrlContent(const std::string host, const std::string uri) {
+		sdk::HttpMessage httpResponse;
+        sdk::CurlClient client;
+		map<string, string> httpHeader;
+		try {
+			client.Send(sdk::HTTP_GET, host, 80, uri, "", httpHeader, "", 6, httpResponse, "", false);
+			LOG_WARNING(sLogger, ("resp code", to_string(httpResponse.statusCode)));
+			return httpResponse.content;
+		} catch (const sdk::LOGException& e) {
+			LOG_WARNING(sLogger, ("flushCredential", "fail")("errCode", e.GetErrorCode()));
+			return false;
+		}
 	}
 }
