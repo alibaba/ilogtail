@@ -145,11 +145,12 @@ message MetadataRequest {
     int64 startup_time = 5;                     // Required, Agent's startup time
     int32 interval = 6;                         // Agent's heartbeat interval
     string version = 7;                         // Agent's version
-    string ip = 8;                              // Agent's ip
-    string region = 9;                          // Agent's region
-    string avaliable_zone = 10;                 // Agent's avaliable zone
-    string account_id = 11;                     // Agent's account id
-    string os = 12;                             // Agent's os
+    string ip = 8;                              // Agent machine ip
+    string region = 9;                          // Agent machine region
+    string avaliable_zone = 10;                 // Agent machine avaliable zone
+    string account_id = 11;                     // Agent machine account id
+    string os = 12;                             // Agent machine os
+    string instance_id = 13;                    // Agent machine instance id
 }
 
 // ConfigServer's response to Agent's request

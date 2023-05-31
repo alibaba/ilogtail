@@ -34,7 +34,8 @@ namespace logtail {
 		this->signV4.service = AppConfig::GetInstance()->GetGatewayService();
 		this->signV4.region = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetRegionUri());
 		this->mRegion = this->signV4.region;
-		this->mAgentMachineId = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetInstanceIdUri()) + CurrentPath();
+		this->mAgentMachineId = LogFileProfiler::mHostname + "_" LogFileProfiler::mIpAddr + "_" + CurrentPath();
+		this->mMachineInstancetId = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetInstanceIdUri());
 		this->mAvailableZone = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetAvailableZoneUri());
 		this->mAccountId = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetAccountIdUri());
 	}
@@ -82,6 +83,7 @@ namespace logtail {
     	metadataReq.set_avaliable_zone(this->mAvailableZone);
     	metadataReq.set_account_id(this->mAccountId);
     	metadataReq.set_os(LogFileProfiler::mOsDetail);
+		metadataReq.set_instance_id(this->mMachineInstancetId);
 		std::string reqBody;
     	metadataReq.SerializeToString(&reqBody);
 

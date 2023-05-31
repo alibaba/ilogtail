@@ -2266,6 +2266,20 @@ class MetadataRequest : public ::google::protobuf::Message /* @@protoc_insertion
   ::std::string* release_os();
   void set_allocated_os(::std::string* os);
 
+  // string instance_id = 13;
+  void clear_instance_id();
+  static const int kInstanceIdFieldNumber = 13;
+  const ::std::string& instance_id() const;
+  void set_instance_id(const ::std::string& value);
+  #if LANG_CXX11
+  void set_instance_id(::std::string&& value);
+  #endif
+  void set_instance_id(const char* value);
+  void set_instance_id(const char* value, size_t size);
+  ::std::string* mutable_instance_id();
+  ::std::string* release_instance_id();
+  void set_allocated_instance_id(::std::string* instance_id);
+
   // int64 startup_time = 5;
   void clear_startup_time();
   static const int kStartupTimeFieldNumber = 5;
@@ -2292,6 +2306,7 @@ class MetadataRequest : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::internal::ArenaStringPtr avaliable_zone_;
   ::google::protobuf::internal::ArenaStringPtr account_id_;
   ::google::protobuf::internal::ArenaStringPtr os_;
+  ::google::protobuf::internal::ArenaStringPtr instance_id_;
   ::google::protobuf::int64 startup_time_;
   ::google::protobuf::int32 interval_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
@@ -5353,6 +5368,59 @@ inline void MetadataRequest::set_allocated_os(::std::string* os) {
   }
   os_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), os);
   // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.os)
+}
+
+// string instance_id = 13;
+inline void MetadataRequest::clear_instance_id() {
+  instance_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& MetadataRequest::instance_id() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.instance_id)
+  return instance_id_.GetNoArena();
+}
+inline void MetadataRequest::set_instance_id(const ::std::string& value) {
+  
+  instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.instance_id)
+}
+#if LANG_CXX11
+inline void MetadataRequest::set_instance_id(::std::string&& value) {
+  
+  instance_id_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.instance_id)
+}
+#endif
+inline void MetadataRequest::set_instance_id(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.instance_id)
+}
+inline void MetadataRequest::set_instance_id(const char* value, size_t size) {
+  
+  instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.instance_id)
+}
+inline ::std::string* MetadataRequest::mutable_instance_id() {
+  
+  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.instance_id)
+  return instance_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* MetadataRequest::release_instance_id() {
+  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.instance_id)
+  
+  return instance_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void MetadataRequest::set_allocated_instance_id(::std::string* instance_id) {
+  if (instance_id != NULL) {
+    
+  } else {
+    
+  }
+  instance_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), instance_id);
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.instance_id)
 }
 
 // -------------------------------------------------------------------

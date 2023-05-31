@@ -497,6 +497,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, avaliable_zone_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, account_id_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, os_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, instance_id_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataResponse, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -521,7 +522,7 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 113, -1, sizeof(::configserver::proto::FetchAgentConfigRequest)},
   { 122, -1, sizeof(::configserver::proto::FetchAgentConfigResponse)},
   { 131, -1, sizeof(::configserver::proto::MetadataRequest)},
-  { 148, -1, sizeof(::configserver::proto::MetadataResponse)},
+  { 149, -1, sizeof(::configserver::proto::MetadataResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -616,24 +617,24 @@ void AddDescriptorsImpl() {
       "\030\001 \001(\t\022*\n\004code\030\002 \001(\0162\034.configserver.prot"
       "o.RespCode\022\017\n\007message\030\003 \001(\t\0228\n\016config_de"
       "tails\030\004 \003(\0132 .configserver.proto.ConfigD"
-      "etail\"\362\001\n\017MetadataRequest\022\022\n\nrequest_id\030"
+      "etail\"\207\002\n\017MetadataRequest\022\022\n\nrequest_id\030"
       "\001 \001(\t\022\020\n\010agent_id\030\002 \001(\t\022\030\n\020agent_machine"
       "_id\030\003 \001(\t\022\022\n\nagent_type\030\004 \001(\t\022\024\n\014startup"
       "_time\030\005 \001(\003\022\020\n\010interval\030\006 \001(\005\022\017\n\007version"
       "\030\007 \001(\t\022\n\n\002ip\030\010 \001(\t\022\016\n\006region\030\t \001(\t\022\026\n\016av"
       "aliable_zone\030\n \001(\t\022\022\n\naccount_id\030\013 \001(\t\022\n"
-      "\n\002os\030\014 \001(\t\"c\n\020MetadataResponse\022\022\n\nreques"
-      "t_id\030\001 \001(\t\022*\n\004code\030\002 \001(\0162\034.configserver."
-      "proto.RespCode\022\017\n\007message\030\003 \001(\t*3\n\nConfi"
-      "gType\022\023\n\017PIPELINE_CONFIG\020\000\022\020\n\014AGENT_CONF"
-      "IG\020\001*1\n\013CheckStatus\022\007\n\003NEW\020\000\022\013\n\007DELETED\020"
-      "\001\022\014\n\010MODIFIED\020\002*H\n\010RespCode\022\n\n\006ACCEPT\020\000\022"
-      "\025\n\021INVALID_PARAMETER\020\001\022\031\n\025INTERNAL_SERVE"
-      "R_ERROR\020\002B\026Z\024.;configserver_protob\006proto"
-      "3"
+      "\n\002os\030\014 \001(\t\022\023\n\013instance_id\030\r \001(\t\"c\n\020Metad"
+      "ataResponse\022\022\n\nrequest_id\030\001 \001(\t\022*\n\004code\030"
+      "\002 \001(\0162\034.configserver.proto.RespCode\022\017\n\007m"
+      "essage\030\003 \001(\t*3\n\nConfigType\022\023\n\017PIPELINE_C"
+      "ONFIG\020\000\022\020\n\014AGENT_CONFIG\020\001*1\n\013CheckStatus"
+      "\022\007\n\003NEW\020\000\022\013\n\007DELETED\020\001\022\014\n\010MODIFIED\020\002*H\n\010"
+      "RespCode\022\n\n\006ACCEPT\020\000\022\025\n\021INVALID_PARAMETE"
+      "R\020\001\022\031\n\025INTERNAL_SERVER_ERROR\020\002B\026Z\024.;conf"
+      "igserver_protob\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2681);
+      descriptor, 2702);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "agent.proto", &protobuf_RegisterTypes);
 }
@@ -5962,6 +5963,7 @@ const int MetadataRequest::kRegionFieldNumber;
 const int MetadataRequest::kAvaliableZoneFieldNumber;
 const int MetadataRequest::kAccountIdFieldNumber;
 const int MetadataRequest::kOsFieldNumber;
+const int MetadataRequest::kInstanceIdFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 MetadataRequest::MetadataRequest()
@@ -6015,6 +6017,10 @@ MetadataRequest::MetadataRequest(const MetadataRequest& from)
   if (from.os().size() > 0) {
     os_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.os_);
   }
+  instance_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.instance_id().size() > 0) {
+    instance_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.instance_id_);
+  }
   ::memcpy(&startup_time_, &from.startup_time_,
     static_cast<size_t>(reinterpret_cast<char*>(&interval_) -
     reinterpret_cast<char*>(&startup_time_)) + sizeof(interval_));
@@ -6032,6 +6038,7 @@ void MetadataRequest::SharedCtor() {
   avaliable_zone_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   account_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   os_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  instance_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&startup_time_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&interval_) -
       reinterpret_cast<char*>(&startup_time_)) + sizeof(interval_));
@@ -6053,6 +6060,7 @@ void MetadataRequest::SharedDtor() {
   avaliable_zone_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   account_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   os_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  instance_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 void MetadataRequest::SetCachedSize(int size) const {
@@ -6085,6 +6093,7 @@ void MetadataRequest::Clear() {
   avaliable_zone_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   account_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   os_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  instance_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&startup_time_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&interval_) -
       reinterpret_cast<char*>(&startup_time_)) + sizeof(interval_));
@@ -6289,6 +6298,22 @@ bool MetadataRequest::MergePartialFromCodedStream(
         break;
       }
 
+      // string instance_id = 13;
+      case 13: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(106u /* 106 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_instance_id()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->instance_id().data(), static_cast<int>(this->instance_id().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "configserver.proto.MetadataRequest.instance_id"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -6425,6 +6450,16 @@ void MetadataRequest::SerializeWithCachedSizes(
       12, this->os(), output);
   }
 
+  // string instance_id = 13;
+  if (this->instance_id().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->instance_id().data(), static_cast<int>(this->instance_id().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "configserver.proto.MetadataRequest.instance_id");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      13, this->instance_id(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -6559,6 +6594,17 @@ void MetadataRequest::SerializeWithCachedSizes(
         12, this->os(), target);
   }
 
+  // string instance_id = 13;
+  if (this->instance_id().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->instance_id().data(), static_cast<int>(this->instance_id().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "configserver.proto.MetadataRequest.instance_id");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        13, this->instance_id(), target);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
@@ -6646,6 +6692,13 @@ size_t MetadataRequest::ByteSizeLong() const {
         this->os());
   }
 
+  // string instance_id = 13;
+  if (this->instance_id().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->instance_id());
+  }
+
   // int64 startup_time = 5;
   if (this->startup_time() != 0) {
     total_size += 1 +
@@ -6727,6 +6780,10 @@ void MetadataRequest::MergeFrom(const MetadataRequest& from) {
 
     os_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.os_);
   }
+  if (from.instance_id().size() > 0) {
+
+    instance_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.instance_id_);
+  }
   if (from.startup_time() != 0) {
     set_startup_time(from.startup_time());
   }
@@ -6778,6 +6835,8 @@ void MetadataRequest::InternalSwap(MetadataRequest* other) {
   account_id_.Swap(&other->account_id_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   os_.Swap(&other->os_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  instance_id_.Swap(&other->instance_id_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(startup_time_, other->startup_time_);
   swap(interval_, other->interval_);

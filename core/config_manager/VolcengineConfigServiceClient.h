@@ -40,5 +40,6 @@ namespace logtail {
 		std::string mRegion;
     	std::string mAvailableZone;
     	std::string mAccountId;
+		std::string mMachineInstancetId;
 	};
 }
