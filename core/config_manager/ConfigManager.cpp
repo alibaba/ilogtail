@@ -60,11 +60,8 @@
 #include "processor/LogProcess.h"
 #include "processor/LogFilter.h"
 #include <boost/filesystem.hpp>
-#include "sdk/VolcengineSign.h"
 #include "VolcengineConfigServiceClient.h"
 #include "ConfigServiceClient.h"
-#include <string>
-#include <chrono>
 
 using namespace std;
 using namespace logtail;

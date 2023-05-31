@@ -128,11 +128,14 @@ namespace logtail {
 		map<string, string> httpHeader;
 		try {
 			client.Send(sdk::HTTP_GET, host, 80, uri, "", httpHeader, "", 6, httpResponse, "", false);
-			LOG_WARNING(sLogger, ("resp code", to_string(httpResponse.statusCode)));
+			if (httpResponse.statusCode != 200) {
+				LOG_WARNING(sLogger, ("getUrlContent", "fail")("uri", uri));
+				return "";
+			}
 			return httpResponse.content;
 		} catch (const sdk::LOGException& e) {
-			LOG_WARNING(sLogger, ("flushCredential", "fail")("errCode", e.GetErrorCode()));
-			return false;
+			LOG_WARNING(sLogger, ("getUrlContent", "fail")("errCode", e.GetErrorCode()));
+			return "";
 		}
 	}
 }
