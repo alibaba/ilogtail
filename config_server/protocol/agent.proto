@@ -83,7 +83,7 @@ message HeartBeatRequest {
     int32 interval = 8;                         // Agent's heartbeat interval
     repeated ConfigInfo pipeline_configs = 9;   // Information about the current PIPELINE_CONFIG held by the Agent
     repeated ConfigInfo agent_configs = 10;     // Information about the current AGENT_CONFIG held by the Agent
-    string agent_machine_id =11;                // Agent's unique it will not be changed when restart
+    string agent_session_id =11;                // Agent's session id
 }
 
 // ConfigServer's response to Agent's heartbeats
@@ -139,8 +139,8 @@ message FetchAgentConfigResponse {
 message MetadataRequest {
     string request_id = 1;  
 
-    string agent_id = 2;                        // Required, Agent's instance unique identification, it will be changed when restart
-    string agent_machine_id = 3;                // Required, Agent's unique it will not be changed when restart
+    string agent_id = 2;                        // Required, Agent's unique it will not be changed when restart
+    string agent_session_id = 3;                // Required, Agent's instance unique identification, it will be changed when restart
     string agent_type = 4;                      // Required, Agent's type(ilogtail, ..)
     int64 startup_time = 5;                     // Required, Agent's startup time
     int32 interval = 6;                         // Agent's heartbeat interval

@@ -1226,19 +1226,19 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
   ::std::string* release_running_status();
   void set_allocated_running_status(::std::string* running_status);
 
-  // string agent_machine_id = 11;
-  void clear_agent_machine_id();
-  static const int kAgentMachineIdFieldNumber = 11;
-  const ::std::string& agent_machine_id() const;
-  void set_agent_machine_id(const ::std::string& value);
+  // string agent_session_id = 11;
+  void clear_agent_session_id();
+  static const int kAgentSessionIdFieldNumber = 11;
+  const ::std::string& agent_session_id() const;
+  void set_agent_session_id(const ::std::string& value);
   #if LANG_CXX11
-  void set_agent_machine_id(::std::string&& value);
+  void set_agent_session_id(::std::string&& value);
   #endif
-  void set_agent_machine_id(const char* value);
-  void set_agent_machine_id(const char* value, size_t size);
-  ::std::string* mutable_agent_machine_id();
-  ::std::string* release_agent_machine_id();
-  void set_allocated_agent_machine_id(::std::string* agent_machine_id);
+  void set_agent_session_id(const char* value);
+  void set_agent_session_id(const char* value, size_t size);
+  ::std::string* mutable_agent_session_id();
+  ::std::string* release_agent_session_id();
+  void set_allocated_agent_session_id(::std::string* agent_session_id);
 
   // .configserver.proto.AgentAttributes attributes = 4;
   bool has_attributes() const;
@@ -1275,7 +1275,7 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
   ::google::protobuf::internal::ArenaStringPtr agent_id_;
   ::google::protobuf::internal::ArenaStringPtr agent_type_;
   ::google::protobuf::internal::ArenaStringPtr running_status_;
-  ::google::protobuf::internal::ArenaStringPtr agent_machine_id_;
+  ::google::protobuf::internal::ArenaStringPtr agent_session_id_;
   ::configserver::proto::AgentAttributes* attributes_;
   ::google::protobuf::int64 startup_time_;
   ::google::protobuf::int32 interval_;
@@ -2154,19 +2154,19 @@ class MetadataRequest : public ::google::protobuf::Message /* @@protoc_insertion
   ::std::string* release_agent_id();
   void set_allocated_agent_id(::std::string* agent_id);
 
-  // string agent_machine_id = 3;
-  void clear_agent_machine_id();
-  static const int kAgentMachineIdFieldNumber = 3;
-  const ::std::string& agent_machine_id() const;
-  void set_agent_machine_id(const ::std::string& value);
+  // string agent_session_id = 3;
+  void clear_agent_session_id();
+  static const int kAgentSessionIdFieldNumber = 3;
+  const ::std::string& agent_session_id() const;
+  void set_agent_session_id(const ::std::string& value);
   #if LANG_CXX11
-  void set_agent_machine_id(::std::string&& value);
+  void set_agent_session_id(::std::string&& value);
   #endif
-  void set_agent_machine_id(const char* value);
-  void set_agent_machine_id(const char* value, size_t size);
-  ::std::string* mutable_agent_machine_id();
-  ::std::string* release_agent_machine_id();
-  void set_allocated_agent_machine_id(::std::string* agent_machine_id);
+  void set_agent_session_id(const char* value);
+  void set_agent_session_id(const char* value, size_t size);
+  ::std::string* mutable_agent_session_id();
+  ::std::string* release_agent_session_id();
+  void set_allocated_agent_session_id(::std::string* agent_session_id);
 
   // string agent_type = 4;
   void clear_agent_type();
@@ -2298,7 +2298,7 @@ class MetadataRequest : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr request_id_;
   ::google::protobuf::internal::ArenaStringPtr agent_id_;
-  ::google::protobuf::internal::ArenaStringPtr agent_machine_id_;
+  ::google::protobuf::internal::ArenaStringPtr agent_session_id_;
   ::google::protobuf::internal::ArenaStringPtr agent_type_;
   ::google::protobuf::internal::ArenaStringPtr version_;
   ::google::protobuf::internal::ArenaStringPtr ip_;
@@ -3899,57 +3899,57 @@ HeartBeatRequest::agent_configs() const {
   return agent_configs_;
 }
 
-// string agent_machine_id = 11;
-inline void HeartBeatRequest::clear_agent_machine_id() {
-  agent_machine_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+// string agent_session_id = 11;
+inline void HeartBeatRequest::clear_agent_session_id() {
+  agent_session_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& HeartBeatRequest::agent_machine_id() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.HeartBeatRequest.agent_machine_id)
-  return agent_machine_id_.GetNoArena();
+inline const ::std::string& HeartBeatRequest::agent_session_id() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.HeartBeatRequest.agent_session_id)
+  return agent_session_id_.GetNoArena();
 }
-inline void HeartBeatRequest::set_agent_machine_id(const ::std::string& value) {
+inline void HeartBeatRequest::set_agent_session_id(const ::std::string& value) {
   
-  agent_machine_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.HeartBeatRequest.agent_machine_id)
+  agent_session_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:configserver.proto.HeartBeatRequest.agent_session_id)
 }
 #if LANG_CXX11
-inline void HeartBeatRequest::set_agent_machine_id(::std::string&& value) {
+inline void HeartBeatRequest::set_agent_session_id(::std::string&& value) {
   
-  agent_machine_id_.SetNoArena(
+  agent_session_id_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.HeartBeatRequest.agent_machine_id)
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.HeartBeatRequest.agent_session_id)
 }
 #endif
-inline void HeartBeatRequest::set_agent_machine_id(const char* value) {
+inline void HeartBeatRequest::set_agent_session_id(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  agent_machine_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.HeartBeatRequest.agent_machine_id)
+  agent_session_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:configserver.proto.HeartBeatRequest.agent_session_id)
 }
-inline void HeartBeatRequest::set_agent_machine_id(const char* value, size_t size) {
+inline void HeartBeatRequest::set_agent_session_id(const char* value, size_t size) {
   
-  agent_machine_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  agent_session_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.HeartBeatRequest.agent_machine_id)
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.HeartBeatRequest.agent_session_id)
 }
-inline ::std::string* HeartBeatRequest::mutable_agent_machine_id() {
+inline ::std::string* HeartBeatRequest::mutable_agent_session_id() {
   
-  // @@protoc_insertion_point(field_mutable:configserver.proto.HeartBeatRequest.agent_machine_id)
-  return agent_machine_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  // @@protoc_insertion_point(field_mutable:configserver.proto.HeartBeatRequest.agent_session_id)
+  return agent_session_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* HeartBeatRequest::release_agent_machine_id() {
-  // @@protoc_insertion_point(field_release:configserver.proto.HeartBeatRequest.agent_machine_id)
+inline ::std::string* HeartBeatRequest::release_agent_session_id() {
+  // @@protoc_insertion_point(field_release:configserver.proto.HeartBeatRequest.agent_session_id)
   
-  return agent_machine_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return agent_session_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void HeartBeatRequest::set_allocated_agent_machine_id(::std::string* agent_machine_id) {
-  if (agent_machine_id != NULL) {
+inline void HeartBeatRequest::set_allocated_agent_session_id(::std::string* agent_session_id) {
+  if (agent_session_id != NULL) {
     
   } else {
     
   }
-  agent_machine_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), agent_machine_id);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.HeartBeatRequest.agent_machine_id)
+  agent_session_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), agent_session_id);
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.HeartBeatRequest.agent_session_id)
 }
 
 // -------------------------------------------------------------------
@@ -4918,57 +4918,57 @@ inline void MetadataRequest::set_allocated_agent_id(::std::string* agent_id) {
   // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.agent_id)
 }
 
-// string agent_machine_id = 3;
-inline void MetadataRequest::clear_agent_machine_id() {
-  agent_machine_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+// string agent_session_id = 3;
+inline void MetadataRequest::clear_agent_session_id() {
+  agent_session_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& MetadataRequest::agent_machine_id() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.agent_machine_id)
-  return agent_machine_id_.GetNoArena();
+inline const ::std::string& MetadataRequest::agent_session_id() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.agent_session_id)
+  return agent_session_id_.GetNoArena();
 }
-inline void MetadataRequest::set_agent_machine_id(const ::std::string& value) {
+inline void MetadataRequest::set_agent_session_id(const ::std::string& value) {
   
-  agent_machine_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.agent_machine_id)
+  agent_session_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.agent_session_id)
 }
 #if LANG_CXX11
-inline void MetadataRequest::set_agent_machine_id(::std::string&& value) {
+inline void MetadataRequest::set_agent_session_id(::std::string&& value) {
   
-  agent_machine_id_.SetNoArena(
+  agent_session_id_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.agent_machine_id)
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.agent_session_id)
 }
 #endif
-inline void MetadataRequest::set_agent_machine_id(const char* value) {
+inline void MetadataRequest::set_agent_session_id(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  agent_machine_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.agent_machine_id)
+  agent_session_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.agent_session_id)
 }
-inline void MetadataRequest::set_agent_machine_id(const char* value, size_t size) {
+inline void MetadataRequest::set_agent_session_id(const char* value, size_t size) {
   
-  agent_machine_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  agent_session_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.agent_machine_id)
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.agent_session_id)
 }
-inline ::std::string* MetadataRequest::mutable_agent_machine_id() {
+inline ::std::string* MetadataRequest::mutable_agent_session_id() {
   
-  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.agent_machine_id)
-  return agent_machine_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.agent_session_id)
+  return agent_session_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* MetadataRequest::release_agent_machine_id() {
-  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.agent_machine_id)
+inline ::std::string* MetadataRequest::release_agent_session_id() {
+  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.agent_session_id)
   
-  return agent_machine_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return agent_session_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void MetadataRequest::set_allocated_agent_machine_id(::std::string* agent_machine_id) {
-  if (agent_machine_id != NULL) {
+inline void MetadataRequest::set_allocated_agent_session_id(::std::string* agent_session_id) {
+  if (agent_session_id != NULL) {
     
   } else {
     
   }
-  agent_machine_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), agent_machine_id);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.agent_machine_id)
+  agent_session_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), agent_session_id);
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.agent_session_id)
 }
 
 // string agent_type = 4;

@@ -72,8 +72,8 @@ namespace logtail {
 		configserver::proto::MetadataRequest metadataReq;
 		std::string requestID = sdk::Base64Enconde(string("metadata").append(to_string(time(NULL))));
 		metadataReq.set_request_id(requestID);
-		metadataReq.set_agent_id(ConfigManager::GetInstance()->GetInstanceId());
-		metadataReq.set_agent_machine_id(this->mAgentMachineId);
+		metadataReq.set_agent_id(this->mAgentMachineId);
+		metadataReq.set_agent_session_id(ConfigManager::GetInstance()->GetInstanceId());
 		metadataReq.set_agent_type("iLogtail");
     	metadataReq.set_startup_time(time(0));
     	metadataReq.set_interval(INT32_FLAG(config_update_interval));
@@ -111,8 +111,8 @@ namespace logtail {
 	sdk::AsynRequest VolcengineConfigServiceClient::GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId) {
 		configserver::proto::HeartBeatRequest heartBeatReq;
 		heartBeatReq.set_request_id(requestId);
-		heartBeatReq.set_agent_id(ConfigManager::GetInstance()->GetInstanceId());
-		heartBeatReq.set_agent_machine_id(this->mAgentMachineId);
+		heartBeatReq.set_agent_id(this->mAgentMachineId);
+		heartBeatReq.set_agent_session_id(ConfigManager::GetInstance()->GetInstanceId());
 		heartBeatReq.set_running_status("");
 		std::string reqBody;
 		heartBeatReq.SerializeToString(&reqBody);
