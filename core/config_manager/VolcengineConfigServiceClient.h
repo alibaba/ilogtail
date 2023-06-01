@@ -36,7 +36,6 @@ namespace logtail {
 		const std::string getUrlContent(const std::string host, const std::string uri);
 	private:
 		VolcengineSignV4 signV4;
-		std::string mAgentMachineId;
 		std::string mRegion;
     	std::string mAvailableZone;
     	std::string mAccountId;

@@ -1195,7 +1195,11 @@ ConfigManagerBase::ConfigManagerBase() {
     CorrectionLogtailSysConfDir(); // first create dir then rewrite system-uuid file in GetSystemUUID
     // use a thread to get uuid, work around for CalculateDmiUUID hang
     // mUUID = CalculateDmiUUID();
-    mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
+    std::hash<std::string> hash_str;
+	std::stringstream instanceId;
+	instanceId << hash_str(LogFileProfiler::mHostname + "_" + LogFileProfiler::mIpAddr + "_" + CurrentPath());
+    mInstanceId = instanceId.str();
+    mSessionId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
     ReloadMappingConfig();
 }
 
