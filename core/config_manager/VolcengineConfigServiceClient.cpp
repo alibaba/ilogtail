@@ -111,7 +111,7 @@ namespace logtail {
 		configserver::proto::HeartBeatRequest heartBeatReq;
 		heartBeatReq.set_request_id(requestId);
 		heartBeatReq.set_agent_id(ConfigManager::GetInstance()->GetInstanceId());
-		heartBeatReq.set_agent_session_id(ConfigManager::GetInstance()->GetSessionId);
+		heartBeatReq.set_agent_session_id(ConfigManager::GetInstance()->GetSessionId());
 		heartBeatReq.set_running_status("");
 		std::string reqBody;
 		heartBeatReq.SerializeToString(&reqBody);
