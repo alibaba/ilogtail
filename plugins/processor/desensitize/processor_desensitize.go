@@ -121,19 +121,6 @@ func (p *ProcessorDesensitize) ProcessLogs(logArray []*protocol.Log) []*protocol
 	return logArray
 }
 
-func init() {
-	pipeline.Processors[pluginName] = func() pipeline.Processor {
-		return &ProcessorDesensitize{
-			SourceKey:     "",
-			Method:        "const",
-			Match:         "full",
-			ReplaceString: "",
-			RegexBegin:    "",
-			RegexContent:  "",
-		}
-	}
-}
-
 type runes []rune
 
 func (p *ProcessorDesensitize) desensitize(val string) string {
@@ -167,4 +154,17 @@ func (p *ProcessorDesensitize) desensitize(val string) string {
 		beginMatch, _ = p.regexBegin.FindRunesMatchStartingAt(runeVal, pos)
 	}
 	return string(runeVal)
+}
+
+func init() {
+	pipeline.Processors[pluginName] = func() pipeline.Processor {
+		return &ProcessorDesensitize{
+			SourceKey:     "",
+			Method:        "const",
+			Match:         "full",
+			ReplaceString: "",
+			RegexBegin:    "",
+			RegexContent:  "",
+		}
+	}
 }
