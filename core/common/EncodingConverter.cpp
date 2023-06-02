@@ -46,7 +46,7 @@ EncodingConverter::~EncodingConverter() {
 
 // TODO: Refactor it, do not use the output params to do calculations, set them before return.
 size_t EncodingConverter::ConvertGbk2Utf8(
-    char* src, size_t* srcLength, char* desOut, size_t desLength, const std::vector<size_t>& linePosVec) {
+    const char* src, size_t* srcLength, char* desOut, size_t desLength, const std::vector<size_t>& linePosVec) const {
 #if defined(__linux__)
     if (src == NULL || *srcLength == 0 || mGbk2Utf8Cd == (iconv_t)(-1)) {
         LOG_ERROR(sLogger, ("invalid iconv descriptor fail or invalid buffer pointer, cd", mGbk2Utf8Cd));
@@ -61,7 +61,7 @@ size_t EncodingConverter::ConvertGbk2Utf8(
     }
     char* des = desOut;
     des[*srcLength * 2] = '\0';
-    char* originSrc = src;
+    const char* originSrc = src;
     char* originDes = des;
     size_t beginIndex = 0;
     size_t endIndex = *srcLength;
@@ -74,7 +74,7 @@ size_t EncodingConverter::ConvertGbk2Utf8(
         // include '\n'
         *srcLength = endIndex - beginIndex + 1;
         desLength = maxDestSize - destIndex;
-        size_t ret = iconv(mGbk2Utf8Cd, &src, srcLength, &des, &desLength);
+        size_t ret = iconv(mGbk2Utf8Cd, const_cast<char**>(&src), srcLength, &des, &desLength);
         if (ret == (size_t)(-1)) {
             LOG_ERROR(sLogger, ("convert GBK to UTF8 fail, errno", strerror(errno)));
             iconv(mGbk2Utf8Cd, NULL, NULL, NULL, NULL); // Clear status.
@@ -134,15 +134,8 @@ size_t EncodingConverter::ConvertGbk2Utf8(
 #endif
 }
 
-std::string EncodingConverter::FromUTF8ToACP(const std::string& s) {
-    if (s.empty())
-        return s;
-
-#if defined(__linux__)
-    return s;
-#endif
-
 #if defined(_MSC_VER)
+std::string EncodingConverter::FromUTF8ToACP(const std::string& s) const {
     auto input = s.c_str();
     auto requiredLen = MultiByteToWideChar(CP_UTF8, 0, input, -1, NULL, 0);
     if (requiredLen <= 0) {
@@ -178,10 +171,9 @@ std::string EncodingConverter::FromUTF8ToACP(const std::string& s) {
     std::string ret(acpStr, requiredLen - 1);
     delete[] acpStr;
     return ret;
-#endif
 }
 
-std::string EncodingConverter::FromACPToUTF8(const std::string& s) {
+std::string EncodingConverter::FromACPToUTF8(const std::string& s) const {
     if (s.empty())
         return s;
 
@@ -189,8 +181,7 @@ std::string EncodingConverter::FromACPToUTF8(const std::string& s) {
     auto inputLen = s.length();
     std::vector<size_t> ignore;
 
-    size_t outputLen = 0;
-    outputLen = ConvertGbk2Utf8(input, &inputLen, nullptr, outputLen, ignore);
+    size_t outputLen = ConvertGbk2Utf8(input, &inputLen, nullptr, 0, ignore);
     if (outputLen == 0) {
         LOG_WARNING(sLogger, ("Convert ACP to UTF8 failed", s.substr(0, 1024)));
         return s;
@@ -205,5 +196,6 @@ std::string EncodingConverter::FromACPToUTF8(const std::string& s) {
     ret.c_str();
     return ret;
 }
+#endif
 
 } // namespace logtail

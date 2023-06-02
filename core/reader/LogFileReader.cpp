@@ -1318,14 +1318,20 @@ void LogFileReader::SetReadBufferSize(int32_t bufSize) {
     BUFFER_SIZE = bufSize;
 }
 
-std::vector<StringView> LogFileReader::LogSplit(const char* buffer, int32_t size, int32_t& lineFeed) {
-    std::vector<StringView> index;
+enum SplitState { SPLIT_UNMATCH, SPLIT_START, SPLIT_CONTINUE, SPLIT_END };
+
+bool LogFileReader::LogSplit(const char* buffer,
+                             int32_t size,
+                             int32_t& lineFeed,
+                             std::vector<StringView>& logIndex,
+                             std::vector<StringView>& discardIndex) {
+    SplitState state = SPLIT_UNMATCH;
     int multiBegIndex = 0;
     int begIndex = 0;
     int endIndex = 0;
     bool anyMatched = false;
     lineFeed = 0;
-    string exception;
+    std::string exception;
     while (endIndex < size) {
         if (buffer[endIndex] == '\n' || endIndex == size - 1) {
             lineFeed++;
@@ -1334,11 +1340,19 @@ std::vector<StringView> LogFileReader::LogSplit(const char* buffer, int32_t size
                 || BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
                 anyMatched = true;
                 if (multiBegIndex < begIndex) {
-                    index.emplace_back(buffer + multiBegIndex, begIndex - 1 - multiBegIndex);
+                    if (state == SPLIT_UNMATCH && mDiscardUnmatch) {
+                        discardIndex.emplace_back(buffer + multiBegIndex, begIndex - 1 - multiBegIndex);
+                    } else {
+                        logIndex.emplace_back(buffer + multiBegIndex, begIndex - 1 - multiBegIndex);
+                    }
                     multiBegIndex = begIndex;
                 }
-            } else if (!exception.empty()) {
-                if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
+                state = SPLIT_START;
+            } else {
+                if (state == SPLIT_START || state == SPLIT_CONTINUE) {
+                    state = SPLIT_CONTINUE;
+                }
+                if (!exception.empty() && AppConfig::GetInstance()->IsLogParseAlarmValid()) {
                     if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                         LOG_ERROR(sLogger,
                                   ("regex_match in LogSplit fail, exception",
@@ -1355,9 +1369,10 @@ std::vector<StringView> LogFileReader::LogSplit(const char* buffer, int32_t size
         }
         endIndex++;
     }
-    if (anyMatched) {
-        // save the last log
-        index.emplace_back(buffer + multiBegIndex, size - multiBegIndex);
+    if (state == SPLIT_UNMATCH && mDiscardUnmatch) {
+        discardIndex.emplace_back(buffer + multiBegIndex, begIndex - multiBegIndex);
+    } else {
+        logIndex.emplace_back(buffer + multiBegIndex, begIndex - multiBegIndex);
     }
     if (!exception.empty()) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -1370,7 +1385,7 @@ std::vector<StringView> LogFileReader::LogSplit(const char* buffer, int32_t size
                 REGEX_MATCH_ALARM, "regex_match in LogSplit fail:" + exception, mProjectName, mCategory, mRegion);
         }
     }
-    return index;
+    return anyMatched;
 }
 
 bool LogFileReader::ParseLogTime(const char* buffer,
@@ -1586,6 +1601,9 @@ void LogFileReader::setExactlyOnceCheckpointAfterRead(size_t readSize) {
 void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData) {
     bool fromCpt = false;
     size_t READ_BYTE = getNextReadSize(end, fromCpt);
+    if (!READ_BYTE) {
+        return;
+    }
     StringBuffer sbuffer = logBuffer.AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
     TruncateInfo* truncateInfo = nullptr;
     size_t nbytes = ReadFile(mLogFileOp, sbuffer.data, READ_BYTE, mLastFilePos, &truncateInfo);
@@ -1606,12 +1624,16 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData) 
         nbytes = LastMatchedLine(sbuffer.data, nbytes, rollbackLineFeedCount);
     }
 
-    if (moreData && nbytes == 0) {
-        nbytes = READ_BYTE;
+    if (nbytes == 0) {
+        if (moreData) { // excessively long line without '\n' or multiline begin
+            nbytes = READ_BYTE;
+        } else {
+            return;
+        }
     }
-    size_t stringLen = 0;
-    if (nbytes > 0) {
-        stringLen = nbytes - 1;
+    size_t stringLen = nbytes;
+    if (sbuffer.data[stringLen - 1] == '\n' || sbuffer.data[stringLen - 1] == '\0') {
+        --stringLen;
     }
     sbuffer.data[stringLen] = '\0';
 
@@ -1650,7 +1672,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
     }
     gbkBuffer[readCharCount] = '\0';
 
-    vector<size_t> lineFeedPos;
+    vector<size_t> lineFeedPos = {0};
     for (size_t idx = 0; idx < readCharCount - 1; ++idx) {
         if (gbkBuffer[idx] == '\n')
             lineFeedPos.push_back(idx);
@@ -1667,7 +1689,6 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
     StringBuffer stringBuffer = logBuffer.AllocateStringBuffer(requiredLen + 1);
     size_t resultCharCount = EncodingConverter::GetInstance()->ConvertGbk2Utf8(
         gbkBuffer.get(), &srcLength, stringBuffer.data, stringBuffer.capacity, lineFeedPos);
-
     if (resultCharCount == 0) {
         mLastFilePos += readCharCount;
         return;
@@ -1683,14 +1704,18 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
     }
 
     int32_t lineFeedCount = lineFeedPos.size();
-    if (rollbackLineFeedCount > 0 && lineFeedCount >= (1 + rollbackLineFeedCount))
+    if (rollbackLineFeedCount > 0 && lineFeedCount >= (1 + rollbackLineFeedCount)) {
         readCharCount -= lineFeedPos[lineFeedCount - 1] - lineFeedPos[lineFeedCount - 1 - rollbackLineFeedCount];
-
-    stringBuffer.data[resultCharCount - 1] = '\0';
+    }
+    size_t stringLen = resultCharCount;
+    if (stringBuffer.data[stringLen - 1] == '\n' || stringBuffer.data[stringLen - 1] == '\0') {
+        --stringLen;
+    }
+    stringBuffer.data[stringLen] = '\0';
     if (!moreData && fromCpt && mLastReadPos < end) {
         moreData = true;
     }
-    logBuffer.rawBuffer = StringView(stringBuffer.data, resultCharCount - 1);
+    logBuffer.rawBuffer = StringView(stringBuffer.data, stringLen);
     setExactlyOnceCheckpointAfterRead(resultCharCount);
     mLastFilePos += readCharCount;
     LOG_DEBUG(sLogger,
@@ -1780,16 +1805,20 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
 
 int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount) {
     int endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
-    int begPs = size - 2;
-    string exception;
     rollbackLineFeedCount = 0;
+    if (mLogBeginRegPtr == nullptr && buffer[endPs] == '\n') {
+        return size;
+    }
+    int begPs = size - 2;
+    std::string exception;
     while (begPs >= 0) {
         if (buffer[begPs] == '\n') {
-            rollbackLineFeedCount++;
+            ++rollbackLineFeedCount;
             char temp = buffer[endPs];
             buffer[endPs] = '\0';
             // ignore regex match fail, no need log here
-            if (BoostRegexMatch(buffer + begPs + 1, endPs-begPs-1, *mLogBeginRegPtr, exception)) {
+            if (mLogBeginRegPtr == nullptr
+                || BoostRegexMatch(buffer + begPs + 1, endPs - begPs - 1, *mLogBeginRegPtr, exception)) {
                 buffer[begPs + 1] = '\0';
                 return begPs + 1;
             }
@@ -1797,6 +1826,9 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
             endPs = begPs;
         }
         begPs--;
+    }
+    if (buffer[0] != '\n') {
+        ++rollbackLineFeedCount;
     }
     return 0;
 }
@@ -1836,187 +1868,5 @@ void LogFileReader::UpdateReaderManual() {
     mDevInode = GetFileDevInode(mLogPath);
 }
 #endif
-
-CommonRegLogFileReader::CommonRegLogFileReader(const std::string& projectName,
-                                               const std::string& category,
-                                               const std::string& logPathDir,
-                                               const std::string& logPathFile,
-                                               int32_t tailLimit,
-                                               const std::string& timeFormat,
-                                               const std::string& topicFormat,
-                                               const std::string& groupTopic /* = "" */,
-                                               FileEncoding fileEncoding /* = ENCODING_UTF8 */,
-                                               bool discardUnmatch /* = true */,
-                                               bool dockerFileFlag /* = true */)
-    : LogFileReader(projectName,
-                    category,
-                    logPathDir,
-                    logPathFile,
-                    tailLimit,
-                    topicFormat,
-                    groupTopic,
-                    fileEncoding,
-                    discardUnmatch,
-                    dockerFileFlag) {
-    mLogType = REGEX_LOG;
-    mTimeFormat = timeFormat;
-    mTimeKey = "time";
-}
-
-void CommonRegLogFileReader::SetTimeKey(const std::string& timeKey) {
-    if (!timeKey.empty()) {
-        mTimeKey = timeKey;
-    }
-}
-
-bool CommonRegLogFileReader::AddUserDefinedFormat(const string& regStr, const string& keys) {
-    vector<string> keyParts = StringSpliter(keys, ",");
-    boost::regex reg(regStr);
-    bool isWholeLineMode = regStr == "(.*)";
-    mUserDefinedFormat.push_back(UserDefinedFormat(reg, keyParts, isWholeLineMode));
-    int32_t index = -1;
-    for (size_t i = 0; i < keyParts.size(); i++) {
-        if (ToLowerCaseString(keyParts[i]) == mTimeKey) {
-            index = i;
-            break;
-        }
-    }
-    mTimeIndex.push_back(index);
-    return true;
-}
-
-bool CommonRegLogFileReader::ParseLogLine(StringView buffer,
-                                          LogGroup& logGroup,
-                                          ParseLogError& error,
-                                          time_t& lastLogLineTime,
-                                          std::string& lastLogTimeStr,
-                                          uint32_t& logGroupSize) {
-    if (logGroup.logs_size() == 0) {
-        logGroup.set_category(mCategory);
-        logGroup.set_topic(mTopicName);
-    }
-
-    for (uint32_t i = 0; i < mUserDefinedFormat.size(); ++i) {
-        const UserDefinedFormat& format = mUserDefinedFormat[i];
-        bool res = true;
-        if (mTimeIndex[i] >= 0 && !mTimeFormat.empty()) {
-            res = LogParser::RegexLogLineParser(buffer,
-                                                format.mReg,
-                                                logGroup,
-                                                mDiscardUnmatch,
-                                                format.mKeys,
-                                                mCategory,
-                                                mTimeFormat.c_str(),
-                                                mPreciseTimestampConfig,
-                                                mTimeIndex[i],
-                                                lastLogTimeStr,
-                                                lastLogLineTime,
-                                                mSpecifiedYear,
-                                                mProjectName,
-                                                mRegion,
-                                                mLogPath,
-                                                error,
-                                                logGroupSize,
-                                                mTzOffsetSecond);
-        } else {
-            // if "time" field not exist in user config or timeformat empty, set current system time for logs
-            if (format.mIsWholeLineMode) {
-                res = LogParser::WholeLineModeParser(buffer,
-                                                     logGroup,
-                                                     format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0],
-                                                     time(NULL),
-                                                     logGroupSize);
-            } else {
-                res = LogParser::RegexLogLineParser(buffer,
-                                                    format.mReg,
-                                                    logGroup,
-                                                    mDiscardUnmatch,
-                                                    format.mKeys,
-                                                    mCategory,
-                                                    time(NULL),
-                                                    mProjectName,
-                                                    mRegion,
-                                                    mLogPath,
-                                                    error,
-                                                    logGroupSize);
-            }
-        }
-        if (res) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-ApsaraLogFileReader::ApsaraLogFileReader(const std::string& projectName,
-                                         const std::string& category,
-                                         const std::string& logPathDir,
-                                         const std::string& logPathFile,
-                                         int32_t tailLimit,
-                                         const std::string topicFormat,
-                                         const std::string& groupTopic,
-                                         FileEncoding fileEncoding,
-                                         bool discardUnmatch,
-                                         bool dockerFileFlag)
-    : LogFileReader(projectName, category, logPathDir, logPathFile, tailLimit, discardUnmatch, dockerFileFlag) {
-    mLogType = APSARA_LOG;
-    const std::string lowerConfig = ToLowerCaseString(topicFormat);
-    if (lowerConfig == "none" || lowerConfig == "customized") {
-        mTopicName = "";
-    } else if (lowerConfig == "default") {
-        size_t pos_dot = mLogPath.rfind("."); // the "." must be founded
-        size_t pos = mLogPath.find("@");
-        if (pos != std::string::npos) {
-            size_t pos_slash = mLogPath.find(PATH_SEPARATOR, pos);
-            if (pos_slash != std::string::npos) {
-                mTopicName = mLogPath.substr(0, pos) + mLogPath.substr(pos_slash, pos_dot - pos_slash);
-            }
-        }
-        if (mTopicName.empty()) {
-            mTopicName = mLogPath.substr(0, pos_dot);
-        }
-        std::string lowTopic = ToLowerCaseString(mTopicName);
-        std::string logSuffix = ".log";
-
-        size_t suffixPos = lowTopic.rfind(logSuffix);
-        if (suffixPos == lowTopic.size() - logSuffix.size()) {
-            mTopicName = mTopicName.substr(0, suffixPos);
-        }
-    } else if (lowerConfig == "global_topic") {
-        static LogtailGlobalPara* sGlobalPara = LogtailGlobalPara::Instance();
-        mTopicName = sGlobalPara->GetTopic();
-    } else if (lowerConfig == "group_topic")
-        mTopicName = groupTopic;
-    else
-        mTopicName = GetTopicName(topicFormat, mLogPath);
-    mFileEncoding = fileEncoding;
-}
-
-bool ApsaraLogFileReader::ParseLogLine(StringView buffer,
-                                       sls_logs::LogGroup& logGroup,
-                                       ParseLogError& error,
-                                       time_t& lastLogLineTime,
-                                       std::string& lastLogTimeStr,
-                                       uint32_t& logGroupSize) {
-    if (logGroup.logs_size() == 0) {
-        logGroup.set_category(mCategory);
-        logGroup.set_topic(mTopicName);
-    }
-
-    return LogParser::ApsaraEasyReadLogLineParser(buffer,
-                                                  logGroup,
-                                                  mDiscardUnmatch,
-                                                  lastLogTimeStr,
-                                                  lastLogLineTime,
-                                                  mProjectName,
-                                                  mCategory,
-                                                  mRegion,
-                                                  mLogPath,
-                                                  error,
-                                                  logGroupSize,
-                                                  mTzOffsetSecond,
-                                                  mAdjustApsaraMicroTimezone);
-}
 
 } // namespace logtail

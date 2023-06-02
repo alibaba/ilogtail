@@ -188,20 +188,22 @@ std::string JsonLogFileReader::RapidjsonValueToString(const rapidjson::Value& va
     }
 }
 
-std::vector<StringView> JsonLogFileReader::LogSplit(const char* buffer, int32_t size, int32_t& lineFeed) {
-    std::vector<StringView> index;
+bool JsonLogFileReader::LogSplit(const char* buffer,
+                                 int32_t size,
+                                 int32_t& lineFeed,
+                                 std::vector<StringView>& logIndex,
+                                 std::vector<StringView>& discardIndex) {
     int32_t line_beg = 0, i = 0;
     while (++i < size) {
         if (buffer[i] == '\0') {
-            index.emplace_back(buffer + line_beg, i - line_beg);
+            logIndex.emplace_back(buffer + line_beg, i - line_beg);
             line_beg = i + 1;
         }
     }
-    index.emplace_back(buffer + line_beg, size - line_beg);
-    return index;
+    logIndex.emplace_back(buffer + line_beg, size - line_beg);
+    return true;
 }
 
-// rollbackLineFeedCount is useful in encoding conversion, ingnore it in json reader(should be utf8)
 // split log & find last match in this function
 int32_t JsonLogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount) {
     int32_t readBytes = 0;
@@ -215,8 +217,8 @@ int32_t JsonLogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& 
         if (FindJsonMatch(buffer, beginIdx, size, endIdx, startWithBlock)) {
             noJsonBlockFlag = false;
             buffer[endIdx] = '\0';
-            readBytes = endIdx + 1;
             beginIdx = endIdx + 1;
+            readBytes = endIdx + 1;
             rollbackLineFeedCount = 0;
         } else {
             char* pos = strchr(buffer + beginIdx, '\n');
@@ -231,6 +233,7 @@ int32_t JsonLogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& 
                 // if no json block in this buffer and now line has block, set noJsonBlockFlag false
                 if (!startWithBlock) {
                     readBytes = endIdx + 1;
+                    rollbackLineFeedCount = 0;
                 } else {
                     noJsonBlockFlag = false;
                 }
