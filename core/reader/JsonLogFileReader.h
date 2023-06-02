@@ -38,7 +38,11 @@ public:
                       bool dockerFileFlag = false);
 
     void SetTimeKey(const std::string& timeKey);
-    std::vector<StringView> LogSplit(const char* buffer, int32_t size, int32_t& lineFeed);
+    bool LogSplit(const char* buffer,
+                  int32_t size,
+                  int32_t& lineFeed,
+                  std::vector<StringView>& logIndex,
+                  std::vector<StringView>& discardIndex) override;
 
 protected:
     bool ParseLogLine(StringView buffer,
@@ -46,9 +50,9 @@ protected:
                       ParseLogError& error,
                       time_t& lastLogLineTime,
                       std::string& lastLogTimeStr,
-                      uint32_t& logGroupSize);
+                      uint32_t& logGroupSize) override;
 
-    int32_t LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount);
+    int32_t LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount) override;
 
 private:
     bool FindJsonMatch(char* buffer, int32_t beginIdx, int32_t size, int32_t& endIdx, bool& startWithBlock);
@@ -59,7 +63,7 @@ private:
     bool mUseSystemTime;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class LogFileReaderUnittest;
+    friend class JsonLogFileReaderUnittest;
 #endif
 };
 

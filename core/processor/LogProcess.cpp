@@ -357,10 +357,13 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
 
             StringView& rawBuffer = logBuffer->rawBuffer;
             int32_t lineFeed = 0;
-            vector<StringView> logIndex = logFileReader->LogSplit(rawBuffer.data(), rawBuffer.size(), lineFeed);
+            std::vector<StringView> logIndex; // all splitted logs
+            std::vector<StringView> discardIndex; // used to send warning
+            bool splitSuccess
+                = logFileReader->LogSplit(rawBuffer.data(), rawBuffer.size(), lineFeed, logIndex, discardIndex);
 
-            const string& projectName = config->GetProjectName();
-            const string& category = config->GetCategory();
+            const std::string& projectName = config->GetProjectName();
+            const std::string& category = config->GetCategory();
             ParseLogError error;
             uint32_t lines = logIndex.size();
             //////////////////////////////////////////////
@@ -376,25 +379,30 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             string errorLine;
             //////////////////////////////////////////////
 
-            if (lines == 0) {
-                if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-                    if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                        LogtailAlarm::GetInstance()->SendAlarm(
-                            SPLIT_LOG_FAIL_ALARM,
-                            "split log lines fail, please check log_begin_regex, file:" + logPath
-                                + ", logs:" + rawBuffer.substr(0, 1024).to_string(),
-                            projectName,
-                            category,
-                            config->mRegion);
-                    }
+            if (AppConfig::GetInstance()->IsLogParseAlarmValid()
+                && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                if (!splitSuccess) { // warning if unsplittable
+                    LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM,
+                                                           "split log lines fail, please check log_begin_regex, file:"
+                                                               + logPath
+                                                               + ", logs:" + rawBuffer.substr(0, 1024).to_string(),
+                                                           projectName,
+                                                           category,
+                                                           config->mRegion);
                     LOG_ERROR(sLogger,
                               ("split log lines fail", "please check log_begin_regex")("file_name", logPath)(
                                   "read bytes", readBytes)("first 1KB log", rawBuffer.substr(0, 1024).to_string()));
                 }
-                // if not discard unmatch data, we add whole data block when data splitted fail
-                if (!config->mDiscardUnmatch) {
-                    logIndex.emplace_back(rawBuffer);
-                    lines = 1;
+                for (auto& discardData : discardIndex) { // warning if data loss
+                    LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM,
+                                                           "split log lines discard data, file:" + logPath
+                                                               + ", logs:" + discardData.substr(0, 1024).to_string(),
+                                                           projectName,
+                                                           category,
+                                                           config->mRegion);
+                    LOG_WARNING(sLogger,
+                                ("split log lines discard data", "please check log_begin_regex")("file_name", logPath)(
+                                    "read bytes", readBytes)("first 1KB log", discardData.substr(0, 1024).to_string()));
                 }
             }
             // add lines count

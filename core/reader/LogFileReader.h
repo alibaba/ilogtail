@@ -233,7 +233,11 @@ public:
                               std::string& lastLogTimeStr,
                               uint32_t& logGroupSize)
         = 0;
-    virtual std::vector<StringView> LogSplit(const char* buffer, int32_t size, int32_t& lineFeed);
+    virtual bool LogSplit(const char* buffer,
+                          int32_t size,
+                          int32_t& lineFeed,
+                          std::vector<StringView>& logIndex,
+                          std::vector<StringView>& discardIndex);
 
     // added by xianzhi(bowen.gbw@antfin.com)
     static bool ParseLogTime(const char* buffer,
@@ -342,8 +346,8 @@ protected:
     int32_t mTailLimit; // KB
     uint64_t mLastFileSignatureHash;
     uint32_t mLastFileSignatureSize;
-    int64_t mLastFilePos;
-    int64_t mLastReadPos = 0;
+    int64_t mLastFilePos; // pos read and consumed, used for next read begin
+    int64_t mLastReadPos = 0; // pos read but may not consumed, used for read needed
     int64_t mLastFileSize;
     std::string mProjectName;
     std::string mTopicName;
@@ -510,6 +514,8 @@ private:
     friend class SenderUnittest;
     friend class AppConfigUnittest;
     friend class ModifyHandlerUnittest;
+
+protected:
     void UpdateReaderManual();
 #endif
 };
@@ -526,68 +532,6 @@ struct LogBuffer : public SourceBuffer {
 
     LogBuffer() {}
     void SetDependecy(const LogFileReaderPtr& reader) { logFileReader = reader; }
-};
-
-class CommonRegLogFileReader : public LogFileReader {
-public:
-    CommonRegLogFileReader(const std::string& projectName,
-                           const std::string& category,
-                           const std::string& logPathDir,
-                           const std::string& logPathFile,
-                           int32_t tailLimit,
-                           const std::string& timeFormat,
-                           const std::string& topicFormat,
-                           const std::string& groupTopic = "",
-                           FileEncoding fileEncoding = ENCODING_UTF8,
-                           bool discardUnmatch = true,
-                           bool dockerFileFlag = false);
-
-    void SetTimeKey(const std::string& timeKey);
-
-    bool AddUserDefinedFormat(const std::string& regStr, const std::string& keys);
-
-protected:
-    bool ParseLogLine(StringView buffer,
-                      sls_logs::LogGroup& logGroup,
-                      ParseLogError& error,
-                      time_t& lastLogLineTime,
-                      std::string& lastLogTimeStr,
-                      uint32_t& logGroupSize);
-
-    std::string mTimeKey;
-    std::string mTimeFormat;
-    std::vector<UserDefinedFormat> mUserDefinedFormat;
-    std::vector<int32_t> mTimeIndex;
-
-#ifdef APSARA_UNIT_TEST_MAIN
-    friend class LogFileReaderUnittest;
-#endif
-};
-
-class ApsaraLogFileReader : public LogFileReader {
-public:
-    ApsaraLogFileReader(const std::string& projectName,
-                        const std::string& category,
-                        const std::string& logPathDir,
-                        const std::string& logPathFile,
-                        int32_t tailLimit,
-                        const std::string topicFormat,
-                        const std::string& groupTopic = "",
-                        FileEncoding fileEncoding = ENCODING_UTF8,
-                        bool discardUnmatch = true,
-                        bool dockerFileFlag = false);
-
-private:
-    bool ParseLogLine(StringView buffer,
-                      sls_logs::LogGroup& logGroup,
-                      ParseLogError& error,
-                      time_t& lastLogLineTime,
-                      std::string& lastLogTimeStr,
-                      uint32_t& logGroupSize);
-
-#ifdef APSARA_UNIT_TEST_MAIN
-    friend class LogFileReaderUnittest;
-#endif
 };
 
 } // namespace logtail

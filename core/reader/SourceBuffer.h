@@ -27,6 +27,7 @@ typedef boost::string_view StringView;
 
 struct StringBuffer {
     StringBuffer(char* data, size_t capacity) : data(data), size(0), capacity(capacity) { data[0] = '\0'; }
+    bool IsValid() { return data != nullptr; }
     char* const data;
     size_t size;
     const size_t capacity; // max bytes of data can be stored, data[capacity] is always '\0'.
@@ -78,7 +79,9 @@ public:
     SourceBuffer() {}
     StringBuffer AllocateStringBuffer(size_t size) {
         if (!mAllocator.IsInited()) {
-            mAllocator.Init(size * 1.2); // TODO: better allocate strategy
+            if (!mAllocator.Init(size * 1.2)) {
+                return StringBuffer(nullptr, 0);
+            }; // TODO: better allocate strategy
         }
         char* data = static_cast<char*>(mAllocator.Allocate(size + 1));
         data[size] = '\0';
