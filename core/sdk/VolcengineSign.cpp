@@ -84,7 +84,7 @@ bool compareByPairKey(const std::pair<std::string, std::string>& dataA,
     return dataA.first < dataB.first;
 }
 
-void VolcengineSignV4::signHeader(sdk::AsynRequest& request) {
+void VolcengineSignV4::SignHeader(sdk::AsynRequest& request) {
     if (strcmp(this->accessKeyId.c_str(), "") == 0 || strcmp(this->secretAccessKey.c_str(), "") == 0
         || strcmp(this->securityToken.c_str(), "") == 0 || strcmp(this->service.c_str(), "") == 0) {
         // Todo log
@@ -269,7 +269,7 @@ void VolcengineSignV4::prepareRequestV4(sdk::AsynRequest& request) {
     }
 }
 
-std::string VolcengineSignV4::uriEncode(const std::string& in, bool encodeSlash) {
+std::string VolcengineSignV4::UriEncode(const std::string& in, bool encodeSlash) {
     int hexCount = 0;
     std::vector<uint8_t> uint8Char;
     for (int i = 0; i < in.length(); i++) {
@@ -309,10 +309,10 @@ std::string VolcengineSignV4::encodePath(const std::string& path) {
     if (path.empty()) {
         return "/";
     }
-    return uriEncode(path, false);
+    return UriEncode(path, false);
 }
 
-std::string VolcengineSignV4::encodeQuery(std::map<std::string, std::string> query) {
+std::string VolcengineSignV4::EncodeQuery(std::map<std::string, std::string> query) {
     if (query.empty()) {
         return "";
     }
@@ -327,10 +327,10 @@ std::string VolcengineSignV4::encodeQuery(std::map<std::string, std::string> que
         if (iter != signedRes.begin()) {
             buf.append("&");
         }
-        auto keyEscaped = uriEncode(iter->first, true);
+        auto keyEscaped = UriEncode(iter->first, true);
         buf.append(keyEscaped);
         buf.append("=");
-        auto v = uriEncode(iter->second, true);
+        auto v = UriEncode(iter->second, true);
         buf.append(v);
         iter++;
     }

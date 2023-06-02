@@ -17,7 +17,6 @@
 #include "logger/Logger.h"
 #include "common/util.h"
 #include "common/StringTools.h"
-#include "common/JsonUtil.h"
 #include "random"
 
 using namespace std;
@@ -64,13 +63,6 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
         }
 
         mConfigServerAvailable = true;
-        LoadStringParameter(mGatewayService, confJson, "gateway_service", "GATEWAY_SERVICE");
-        LoadStringParameter(mMetaServiceHost, confJson, "meta_service_host", "META_SERVICE_HOST");
-        LoadStringParameter(mServiceRoleUri, confJson, "service_role_uri", "SERVICE_ROLE_URI");
-        LoadStringParameter(mRegionUri, confJson, "region_uri", "REGION_URI");
-        LoadStringParameter(mAvailableZoneUri, confJson, "available_zone_uri", "AVALIABLE_ZONE_URI");
-        LoadStringParameter(mAccountIdUri, confJson, "account_id_uri", "ACCOUNT_ID_URI");
-        LoadStringParameter(mInstanceIdUri, confJson, "instance_id_uri", "INSTANCE_ID_URI");
         LOG_INFO(sLogger,
                  ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
     }

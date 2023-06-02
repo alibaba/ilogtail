@@ -65,9 +65,9 @@ public:
     VolcengineSignV4() = default;
     ~VolcengineSignV4() = default;
 
-    void signHeader(sdk::AsynRequest& request);
-    static std::string uriEncode(const std::string& in, bool encodeSlash);
-    static std::string encodeQuery(std::map<std::string, std::string> query);
+    void SignHeader(sdk::AsynRequest& request);
+    static std::string UriEncode(const std::string& in, bool encodeSlash);
+    static std::string EncodeQuery(std::map<std::string, std::string> query);
 
     std::string accessKeyId;
     std::string secretAccessKey;

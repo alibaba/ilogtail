@@ -28,9 +28,9 @@ namespace logtail {
 
 	class VolcengineConfigServiceClient: public ConfigServiceClientBase {
 	public:
-		void initClient();
-		bool flushCredential();
-		void signHeader(sdk::AsynRequest& request);
+		void InitClient();
+		bool FlushCredential();
+		void SignHeader(sdk::AsynRequest& request);
 		void SendMetadata();
 		sdk::AsynRequest GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId);
 		const std::string getUrlContent(const std::string host, const std::string uri);
@@ -40,5 +40,6 @@ namespace logtail {
     	std::string mAvailableZone;
     	std::string mAccountId;
 		std::string mMachineInstancetId;
+		std::string mMetaServiceHost;
 	};
 }

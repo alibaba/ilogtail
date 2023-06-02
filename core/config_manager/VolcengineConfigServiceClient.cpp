@@ -29,22 +29,23 @@
 using namespace std;
 
 namespace logtail {
-	void VolcengineConfigServiceClient::initClient() {
-		flushCredential();
-		this->signV4.service = AppConfig::GetInstance()->GetGatewayService();
-		this->signV4.region = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetRegionUri());
-		this->mRegion = this->signV4.region;
-		this->mMachineInstancetId = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetInstanceIdUri());
-		this->mAvailableZone = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetAvailableZoneUri());
-		this->mAccountId = getUrlContent(AppConfig::GetInstance()->GetMetaServiceHost(), AppConfig::GetInstance()->GetAccountIdUri());
+	void VolcengineConfigServiceClient::InitClient() {
+		this->mMetaServiceHost = AppConfig::GetInstance()->GetStringParameter("meta_service_host", "META_SERVICE_HOST");
+		FlushCredential();
+		this->signV4.service = AppConfig::GetInstance()->GetStringParameter("gateway_service", "GATEWAY_SERVICE");
+		this->signV4.region = this->mRegion;
+		this->mRegion = getUrlContent(this->mMetaServiceHost, AppConfig::GetInstance()->GetStringParameter("region_uri", "REGION_URI"));
+		this->mMachineInstancetId = getUrlContent(this->mMetaServiceHost, AppConfig::GetInstance()->GetStringParameter("instance_id_uri", "INSTANCE_ID_URI"));
+		this->mAvailableZone = getUrlContent(this->mMetaServiceHost, AppConfig::GetInstance()->GetStringParameter("available_zone_uri", "AVALIABLE_ZONE_URI"));
+		this->mAccountId = getUrlContent(this->mMetaServiceHost, AppConfig::GetInstance()->GetStringParameter("account_id_uri", "ACCOUNT_ID_URI"));
 	}
 
-	bool VolcengineConfigServiceClient::flushCredential() { 
+	bool VolcengineConfigServiceClient::FlushCredential() { 
 		sdk::HttpMessage httpResponse;
         sdk::CurlClient client;
 		map<string, string> httpHeader;
 		try {
-			client.Send(sdk::HTTP_GET, AppConfig::GetInstance()->GetMetaServiceHost(), 80, AppConfig::GetInstance()->GetServiceRoleUri(), "", httpHeader, "", 6, httpResponse, "", false);
+			client.Send(sdk::HTTP_GET, this->mMetaServiceHost, 80, AppConfig::GetInstance()->GetStringParameter("service_role_uri", "SERVICE_ROLE_URI"), "", httpHeader, "", 6, httpResponse, "", false);
 			Json::Value jsValue;
 			std::string jsErrors;
 			Json::CharReaderBuilder jcrBuilder;
@@ -57,14 +58,14 @@ namespace logtail {
 			this->signV4.secretAccessKey = jsValue["SecretAccessKey"].asString();
 			this->signV4.securityToken = jsValue["SessionToken"].asString();
 		} catch (const sdk::LOGException& e) {
-			LOG_WARNING(sLogger, ("flushCredential", "fail")("errCode", e.GetErrorCode()));
+			LOG_WARNING(sLogger, ("FlushCredential", "fail")("errCode", e.GetErrorCode()));
 			return false;
 		}
 		return true;
 	}
 
-	void VolcengineConfigServiceClient::signHeader(sdk::AsynRequest& request) {
-		signV4.signHeader(request);
+	void VolcengineConfigServiceClient::SignHeader(sdk::AsynRequest& request) {
+		signV4.SignHeader(request);
 	}
 
 	void VolcengineConfigServiceClient::SendMetadata() {
@@ -90,14 +91,14 @@ namespace logtail {
 		map<string, string> httpHeader = { {sdk::CONTENT_TYPE, sdk::TYPE_LOG_PROTOBUF} };
 		// sign request header
 		sdk::AsynRequest request(sdk::HTTP_POST, configServerAddress.host, configServerAddress.port, "", "Action=SendMetadata&Version=2018-08-01", httpHeader, reqBody, INT32_FLAG(sls_client_send_timeout), "", false, NULL, NULL);
-		this->signV4.signHeader(request);
+		this->signV4.SignHeader(request);
 
     	sdk::HttpMessage httpResponse;
     	sdk::CurlClient client;
     	try {
         	client.Send(request.mHTTPMethod, request.mHost, request.mPort, "", request.mQueryString, request.mHeader, reqBody, request.mTimeout, httpResponse, "", false);
 			if (httpResponse.statusCode != 200) {
-				LOG_WARNING(sLogger, ("SendMetadata", "fail")("reqBody", reqBody));
+				LOG_WARNING(sLogger, ("SendMetadata", "fail")("response code", httpResponse.statusCode)("resopnse", httpResponse.content)("reqBody", reqBody));
 				return;
 			}
 		} catch (const sdk::LOGException& e) {

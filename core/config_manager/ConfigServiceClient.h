@@ -25,9 +25,9 @@ namespace logtail {
 
 class ConfigServiceClient: public ConfigServiceClientBase {
 public:
-    void initClient(){};
-    bool flushCredential(){ return true; };
-    void signHeader(sdk::AsynRequest& request){};
+    void InitClient(){};
+    bool FlushCredential(){ return true; };
+    void SignHeader(sdk::AsynRequest& request){};
 	void SendMetadata(){};
 	sdk::AsynRequest GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId);
 };

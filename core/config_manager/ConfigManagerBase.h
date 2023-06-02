@@ -567,10 +567,13 @@ private:
 class ConfigServiceClientBase {
 public:
     ConfigServiceClientBase() = default;
-
-    virtual void initClient() = 0;
-    virtual bool flushCredential() = 0;
-    virtual void signHeader(sdk::AsynRequest& request) = 0;
+    virtual ~ConfigServiceClientBase() {};
+    // initialization client resources such as ak/sk and some variable you need
+    virtual void InitClient() = 0;
+    // update credential such as ak/sk if your config server needed and it has expire limitation
+    virtual bool FlushCredential() = 0;
+    // sign http request header if your config server need request with authentication
+    virtual void SignHeader(sdk::AsynRequest& request) = 0;
 	virtual void SendMetadata() = 0;
 	virtual sdk::AsynRequest GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId) = 0;
 };

@@ -246,15 +246,14 @@ void AppConfigBase::LoadAppConfig(const std::string& ilogtailConfigFile) {
     std::string processExecutionDir = GetProcessExecutionDir();
     mDockerFilePathConfig = processExecutionDir + STRING_FLAG(ilogtail_docker_file_path_config);
 
-    Json::Value confJson(Json::objectValue);
     std::string newSysConfDir;
 
     if (!ilogtailConfigFile.empty()) {
-        ParseConfResult res = ParseConfig(ilogtailConfigFile, confJson);
+        ParseConfResult res = ParseConfig(ilogtailConfigFile, mConfJson);
 
         if (res == CONFIG_NOT_EXIST) {
             LOG_INFO(sLogger, ("config file not exist, try generate config by path", ilogtailConfigFile));
-            if (GenerateAPPConfigByConfigPath(ilogtailConfigFile, confJson)) {
+            if (GenerateAPPConfigByConfigPath(ilogtailConfigFile, mConfJson)) {
                 res = CONFIG_OK;
                 LOG_INFO(sLogger, ("generate config success", ilogtailConfigFile));
             } else {
@@ -264,9 +263,9 @@ void AppConfigBase::LoadAppConfig(const std::string& ilogtailConfigFile) {
 
         if (res == CONFIG_OK) {
             // Should be loaded here because other parameters depend on it.
-            LoadStringParameter(newSysConfDir, confJson, "logtail_sys_conf_dir", "ALIYUN_LOGTAIL_SYS_CONF_DIR");
+            LoadStringParameter(newSysConfDir, mConfJson, "logtail_sys_conf_dir", "ALIYUN_LOGTAIL_SYS_CONF_DIR");
         } else {
-            confJson.clear();
+            mConfJson.clear();
             if (res == CONFIG_NOT_EXIST) {
                 LOG_ERROR(sLogger, ("can not find start config", ilogtailConfigFile));
                 LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CONFIG_ALARM, "can not find start config");
@@ -282,22 +281,22 @@ void AppConfigBase::LoadAppConfig(const std::string& ilogtailConfigFile) {
     }
     SetLogtailSysConfDir(AbsolutePath(newSysConfDir, mProcessExecutionDir));
 
-    LoadIncludeConfig(confJson);
-    string configJsonString = confJson.toStyledString();
+    LoadIncludeConfig(mConfJson);
+    string configJsonString = mConfJson.toStyledString();
     SetIlogtailConfigJson(configJsonString);
     LOG_INFO(sLogger, ("load logtail config file, path", ilogtailConfigFile));
     LOG_INFO(sLogger, ("load logtail config file, detail", configJsonString));
 
-    ParseJsonToFlags(confJson);
+    ParseJsonToFlags(mConfJson);
     ParseEnvToFlags();
 
-    LoadSyslogConf(confJson);
-    LoadResourceConf(confJson);
+    LoadSyslogConf(mConfJson);
+    LoadResourceConf(mConfJson);
     // load addr will init sender, sender param depend on LoadResourceConf
-    LoadAddrConfig(confJson);
-    LoadOtherConf(confJson);
+    LoadAddrConfig(mConfJson);
+    LoadOtherConf(mConfJson);
 
-    LoadGlobalFuseConf(confJson);
+    LoadGlobalFuseConf(mConfJson);
     CheckAndResetProxyEnv();
 }
 
@@ -1223,6 +1222,12 @@ void AppConfigBase::SetLogtailSysConfDir(const std::string& dirPath) {
                  "user local config dir path", mUserLocalConfigDirPath)(
                  "user local yaml config dir path", mUserLocalYamlConfigDirPath)("user remote yaml config dir path",
                                                                                  mUserRemoteYamlConfigDirPath));
+}
+
+const std::string AppConfigBase::GetStringParameter(const char* name, const char* envName) {
+    std::string value;
+    LoadStringParameter(value, mConfJson, name, envName);
+    return value;
 }
 
 } // namespace logtail

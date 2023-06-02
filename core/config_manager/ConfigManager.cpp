@@ -203,7 +203,7 @@ void ConfigManager::InitConfigServiceClient() {
     } else {
 		this->mConfigServiceClient = new ConfigServiceClient();
 	}
-    mConfigServiceClient->initClient();
+    mConfigServiceClient->InitClient();
 }
 
 void ConfigManager::InitUpdateConfig(bool configExistFlag) {
@@ -256,7 +256,7 @@ google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
 ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerAddress) {
     std::string requestId = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
     sdk::AsynRequest request = mConfigServiceClient->GenerateHeartBeatRequest(configServerAddress, requestId);
-    mConfigServiceClient->signHeader(request);
+    mConfigServiceClient->SignHeader(request);
     sdk::HttpMessage httpResponse;
     httpResponse.header[sdk::X_LOG_REQUEST_ID] = "ConfigServer";
     sdk::CurlClient client;
@@ -267,13 +267,13 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
 
         if (httpResponse.statusCode == 400 || httpResponse.statusCode == 401 || httpResponse.statusCode == 403) {
 			LOG_WARNING(sLogger, ("SendHeartbeat", "failed")("response", httpResponse.content));
-			if (!mConfigServiceClient->flushCredential()) {
-				LOG_WARNING(sLogger, ("flushCredential", "failed"));
+			if (!mConfigServiceClient->FlushCredential()) {
+				LOG_WARNING(sLogger, ("FlushCredential", "failed"));
 				return emptyResult;
 			}
-			LOG_WARNING(sLogger, ("flushCredential", "success"));
+			LOG_WARNING(sLogger, ("FlushCredential", "success"));
             try {
-                mConfigServiceClient->signHeader(request);
+                mConfigServiceClient->SignHeader(request);
                 client.Send(request.mHTTPMethod, request.mHost, request.mPort, request.mUrl, request.mQueryString,
                             request.mHeader, request.mBody, request.mTimeout, httpResponse, "", false);
             } catch(const sdk::LOGException& e) {
