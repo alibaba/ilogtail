@@ -34,7 +34,7 @@ namespace logtail {
 		FlushCredential();
 		this->signV4.service = AppConfig::GetInstance()->GetStringParameter("gateway_service", "GATEWAY_SERVICE");
 		this->signV4.region = getUrlContent(this->mMetaServiceHost, AppConfig::GetInstance()->GetStringParameter("region_uri", "REGION_URI"));
-		this->mRegion = this->signV4.region
+		this->mRegion = this->signV4.region;
 		this->mMachineInstancetId = getUrlContent(this->mMetaServiceHost, AppConfig::GetInstance()->GetStringParameter("instance_id_uri", "INSTANCE_ID_URI"));
 		this->mAvailableZone = getUrlContent(this->mMetaServiceHost, AppConfig::GetInstance()->GetStringParameter("available_zone_uri", "AVALIABLE_ZONE_URI"));
 		this->mAccountId = getUrlContent(this->mMetaServiceHost, AppConfig::GetInstance()->GetStringParameter("account_id_uri", "ACCOUNT_ID_URI"));
