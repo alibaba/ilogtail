@@ -53,10 +53,13 @@ message ConfigDetail {
 message AgentAttributes {
     string version = 1;                 // Agent's version
     string category = 2;                // Agent's type(used to distinguish AGENT_CONFIG)
-    string ip = 3;                      // Agent's ip
-    string hostname = 4;                // Agent's hostname
-    string region = 5;                  // Agent's region
-    string zone = 6;                    // Agent's zone
+    string ip = 3;                      // Agent machine's ip
+    string hostname = 4;                // Agent machine's hostname
+    string region = 5;                  // Agent machine's region
+    string zone = 6;                    // Agent machine's zone
+    string account_id = 7;              // Agent machine's account id
+    string os = 8;                      // Agent machine's os
+    string instance_id = 9;             // Agent machine's instance id
     map<string, string> extras = 100;   // Agent's other attributes
 }
 
@@ -144,13 +147,7 @@ message MetadataRequest {
     string agent_type = 4;                      // Required, Agent's type(ilogtail, ..)
     int64 startup_time = 5;                     // Required, Agent's startup time
     int32 interval = 6;                         // Agent's heartbeat interval
-    string version = 7;                         // Agent's version
-    string ip = 8;                              // Agent machine ip
-    string region = 9;                          // Agent machine region
-    string avaliable_zone = 10;                 // Agent machine avaliable zone
-    string account_id = 11;                     // Agent machine account id
-    string os = 12;                             // Agent machine os
-    string instance_id = 13;                    // Agent machine instance id
+    AgentAttributes attributes = 7;             // Agent's basic attributes
 }
 
 // ConfigServer's response to Agent's request

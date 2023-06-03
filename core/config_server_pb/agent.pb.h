@@ -838,6 +838,48 @@ class AgentAttributes : public ::google::protobuf::Message /* @@protoc_insertion
   ::std::string* release_zone();
   void set_allocated_zone(::std::string* zone);
 
+  // string account_id = 7;
+  void clear_account_id();
+  static const int kAccountIdFieldNumber = 7;
+  const ::std::string& account_id() const;
+  void set_account_id(const ::std::string& value);
+  #if LANG_CXX11
+  void set_account_id(::std::string&& value);
+  #endif
+  void set_account_id(const char* value);
+  void set_account_id(const char* value, size_t size);
+  ::std::string* mutable_account_id();
+  ::std::string* release_account_id();
+  void set_allocated_account_id(::std::string* account_id);
+
+  // string os = 8;
+  void clear_os();
+  static const int kOsFieldNumber = 8;
+  const ::std::string& os() const;
+  void set_os(const ::std::string& value);
+  #if LANG_CXX11
+  void set_os(::std::string&& value);
+  #endif
+  void set_os(const char* value);
+  void set_os(const char* value, size_t size);
+  ::std::string* mutable_os();
+  ::std::string* release_os();
+  void set_allocated_os(::std::string* os);
+
+  // string instance_id = 9;
+  void clear_instance_id();
+  static const int kInstanceIdFieldNumber = 9;
+  const ::std::string& instance_id() const;
+  void set_instance_id(const ::std::string& value);
+  #if LANG_CXX11
+  void set_instance_id(::std::string&& value);
+  #endif
+  void set_instance_id(const char* value);
+  void set_instance_id(const char* value, size_t size);
+  ::std::string* mutable_instance_id();
+  ::std::string* release_instance_id();
+  void set_allocated_instance_id(::std::string* instance_id);
+
   // @@protoc_insertion_point(class_scope:configserver.proto.AgentAttributes)
  private:
 
@@ -854,6 +896,9 @@ class AgentAttributes : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::internal::ArenaStringPtr hostname_;
   ::google::protobuf::internal::ArenaStringPtr region_;
   ::google::protobuf::internal::ArenaStringPtr zone_;
+  ::google::protobuf::internal::ArenaStringPtr account_id_;
+  ::google::protobuf::internal::ArenaStringPtr os_;
+  ::google::protobuf::internal::ArenaStringPtr instance_id_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::protobuf_agent_2eproto::TableStruct;
 };
@@ -2182,103 +2227,17 @@ class MetadataRequest : public ::google::protobuf::Message /* @@protoc_insertion
   ::std::string* release_agent_type();
   void set_allocated_agent_type(::std::string* agent_type);
 
-  // string version = 7;
-  void clear_version();
-  static const int kVersionFieldNumber = 7;
-  const ::std::string& version() const;
-  void set_version(const ::std::string& value);
-  #if LANG_CXX11
-  void set_version(::std::string&& value);
-  #endif
-  void set_version(const char* value);
-  void set_version(const char* value, size_t size);
-  ::std::string* mutable_version();
-  ::std::string* release_version();
-  void set_allocated_version(::std::string* version);
-
-  // string ip = 8;
-  void clear_ip();
-  static const int kIpFieldNumber = 8;
-  const ::std::string& ip() const;
-  void set_ip(const ::std::string& value);
-  #if LANG_CXX11
-  void set_ip(::std::string&& value);
-  #endif
-  void set_ip(const char* value);
-  void set_ip(const char* value, size_t size);
-  ::std::string* mutable_ip();
-  ::std::string* release_ip();
-  void set_allocated_ip(::std::string* ip);
-
-  // string region = 9;
-  void clear_region();
-  static const int kRegionFieldNumber = 9;
-  const ::std::string& region() const;
-  void set_region(const ::std::string& value);
-  #if LANG_CXX11
-  void set_region(::std::string&& value);
-  #endif
-  void set_region(const char* value);
-  void set_region(const char* value, size_t size);
-  ::std::string* mutable_region();
-  ::std::string* release_region();
-  void set_allocated_region(::std::string* region);
-
-  // string avaliable_zone = 10;
-  void clear_avaliable_zone();
-  static const int kAvaliableZoneFieldNumber = 10;
-  const ::std::string& avaliable_zone() const;
-  void set_avaliable_zone(const ::std::string& value);
-  #if LANG_CXX11
-  void set_avaliable_zone(::std::string&& value);
-  #endif
-  void set_avaliable_zone(const char* value);
-  void set_avaliable_zone(const char* value, size_t size);
-  ::std::string* mutable_avaliable_zone();
-  ::std::string* release_avaliable_zone();
-  void set_allocated_avaliable_zone(::std::string* avaliable_zone);
-
-  // string account_id = 11;
-  void clear_account_id();
-  static const int kAccountIdFieldNumber = 11;
-  const ::std::string& account_id() const;
-  void set_account_id(const ::std::string& value);
-  #if LANG_CXX11
-  void set_account_id(::std::string&& value);
-  #endif
-  void set_account_id(const char* value);
-  void set_account_id(const char* value, size_t size);
-  ::std::string* mutable_account_id();
-  ::std::string* release_account_id();
-  void set_allocated_account_id(::std::string* account_id);
-
-  // string os = 12;
-  void clear_os();
-  static const int kOsFieldNumber = 12;
-  const ::std::string& os() const;
-  void set_os(const ::std::string& value);
-  #if LANG_CXX11
-  void set_os(::std::string&& value);
-  #endif
-  void set_os(const char* value);
-  void set_os(const char* value, size_t size);
-  ::std::string* mutable_os();
-  ::std::string* release_os();
-  void set_allocated_os(::std::string* os);
-
-  // string instance_id = 13;
-  void clear_instance_id();
-  static const int kInstanceIdFieldNumber = 13;
-  const ::std::string& instance_id() const;
-  void set_instance_id(const ::std::string& value);
-  #if LANG_CXX11
-  void set_instance_id(::std::string&& value);
-  #endif
-  void set_instance_id(const char* value);
-  void set_instance_id(const char* value, size_t size);
-  ::std::string* mutable_instance_id();
-  ::std::string* release_instance_id();
-  void set_allocated_instance_id(::std::string* instance_id);
+  // .configserver.proto.AgentAttributes attributes = 7;
+  bool has_attributes() const;
+  void clear_attributes();
+  static const int kAttributesFieldNumber = 7;
+  private:
+  const ::configserver::proto::AgentAttributes& _internal_attributes() const;
+  public:
+  const ::configserver::proto::AgentAttributes& attributes() const;
+  ::configserver::proto::AgentAttributes* release_attributes();
+  ::configserver::proto::AgentAttributes* mutable_attributes();
+  void set_allocated_attributes(::configserver::proto::AgentAttributes* attributes);
 
   // int64 startup_time = 5;
   void clear_startup_time();
@@ -2300,13 +2259,7 @@ class MetadataRequest : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::internal::ArenaStringPtr agent_id_;
   ::google::protobuf::internal::ArenaStringPtr agent_session_id_;
   ::google::protobuf::internal::ArenaStringPtr agent_type_;
-  ::google::protobuf::internal::ArenaStringPtr version_;
-  ::google::protobuf::internal::ArenaStringPtr ip_;
-  ::google::protobuf::internal::ArenaStringPtr region_;
-  ::google::protobuf::internal::ArenaStringPtr avaliable_zone_;
-  ::google::protobuf::internal::ArenaStringPtr account_id_;
-  ::google::protobuf::internal::ArenaStringPtr os_;
-  ::google::protobuf::internal::ArenaStringPtr instance_id_;
+  ::configserver::proto::AgentAttributes* attributes_;
   ::google::protobuf::int64 startup_time_;
   ::google::protobuf::int32 interval_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
@@ -3269,6 +3222,165 @@ inline void AgentAttributes::set_allocated_zone(::std::string* zone) {
   }
   zone_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), zone);
   // @@protoc_insertion_point(field_set_allocated:configserver.proto.AgentAttributes.zone)
+}
+
+// string account_id = 7;
+inline void AgentAttributes::clear_account_id() {
+  account_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& AgentAttributes::account_id() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.AgentAttributes.account_id)
+  return account_id_.GetNoArena();
+}
+inline void AgentAttributes::set_account_id(const ::std::string& value) {
+  
+  account_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:configserver.proto.AgentAttributes.account_id)
+}
+#if LANG_CXX11
+inline void AgentAttributes::set_account_id(::std::string&& value) {
+  
+  account_id_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.AgentAttributes.account_id)
+}
+#endif
+inline void AgentAttributes::set_account_id(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  account_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:configserver.proto.AgentAttributes.account_id)
+}
+inline void AgentAttributes::set_account_id(const char* value, size_t size) {
+  
+  account_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.AgentAttributes.account_id)
+}
+inline ::std::string* AgentAttributes::mutable_account_id() {
+  
+  // @@protoc_insertion_point(field_mutable:configserver.proto.AgentAttributes.account_id)
+  return account_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* AgentAttributes::release_account_id() {
+  // @@protoc_insertion_point(field_release:configserver.proto.AgentAttributes.account_id)
+  
+  return account_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void AgentAttributes::set_allocated_account_id(::std::string* account_id) {
+  if (account_id != NULL) {
+    
+  } else {
+    
+  }
+  account_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), account_id);
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.AgentAttributes.account_id)
+}
+
+// string os = 8;
+inline void AgentAttributes::clear_os() {
+  os_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& AgentAttributes::os() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.AgentAttributes.os)
+  return os_.GetNoArena();
+}
+inline void AgentAttributes::set_os(const ::std::string& value) {
+  
+  os_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:configserver.proto.AgentAttributes.os)
+}
+#if LANG_CXX11
+inline void AgentAttributes::set_os(::std::string&& value) {
+  
+  os_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.AgentAttributes.os)
+}
+#endif
+inline void AgentAttributes::set_os(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  os_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:configserver.proto.AgentAttributes.os)
+}
+inline void AgentAttributes::set_os(const char* value, size_t size) {
+  
+  os_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.AgentAttributes.os)
+}
+inline ::std::string* AgentAttributes::mutable_os() {
+  
+  // @@protoc_insertion_point(field_mutable:configserver.proto.AgentAttributes.os)
+  return os_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* AgentAttributes::release_os() {
+  // @@protoc_insertion_point(field_release:configserver.proto.AgentAttributes.os)
+  
+  return os_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void AgentAttributes::set_allocated_os(::std::string* os) {
+  if (os != NULL) {
+    
+  } else {
+    
+  }
+  os_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), os);
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.AgentAttributes.os)
+}
+
+// string instance_id = 9;
+inline void AgentAttributes::clear_instance_id() {
+  instance_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& AgentAttributes::instance_id() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.AgentAttributes.instance_id)
+  return instance_id_.GetNoArena();
+}
+inline void AgentAttributes::set_instance_id(const ::std::string& value) {
+  
+  instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:configserver.proto.AgentAttributes.instance_id)
+}
+#if LANG_CXX11
+inline void AgentAttributes::set_instance_id(::std::string&& value) {
+  
+  instance_id_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.AgentAttributes.instance_id)
+}
+#endif
+inline void AgentAttributes::set_instance_id(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:configserver.proto.AgentAttributes.instance_id)
+}
+inline void AgentAttributes::set_instance_id(const char* value, size_t size) {
+  
+  instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.AgentAttributes.instance_id)
+}
+inline ::std::string* AgentAttributes::mutable_instance_id() {
+  
+  // @@protoc_insertion_point(field_mutable:configserver.proto.AgentAttributes.instance_id)
+  return instance_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* AgentAttributes::release_instance_id() {
+  // @@protoc_insertion_point(field_release:configserver.proto.AgentAttributes.instance_id)
+  
+  return instance_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void AgentAttributes::set_allocated_instance_id(::std::string* instance_id) {
+  if (instance_id != NULL) {
+    
+  } else {
+    
+  }
+  instance_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), instance_id);
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.AgentAttributes.instance_id)
 }
 
 // map<string, string> extras = 100;
@@ -5052,375 +5164,58 @@ inline void MetadataRequest::set_interval(::google::protobuf::int32 value) {
   // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.interval)
 }
 
-// string version = 7;
-inline void MetadataRequest::clear_version() {
-  version_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+// .configserver.proto.AgentAttributes attributes = 7;
+inline bool MetadataRequest::has_attributes() const {
+  return this != internal_default_instance() && attributes_ != NULL;
 }
-inline const ::std::string& MetadataRequest::version() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.version)
-  return version_.GetNoArena();
+inline void MetadataRequest::clear_attributes() {
+  if (GetArenaNoVirtual() == NULL && attributes_ != NULL) {
+    delete attributes_;
+  }
+  attributes_ = NULL;
 }
-inline void MetadataRequest::set_version(const ::std::string& value) {
+inline const ::configserver::proto::AgentAttributes& MetadataRequest::_internal_attributes() const {
+  return *attributes_;
+}
+inline const ::configserver::proto::AgentAttributes& MetadataRequest::attributes() const {
+  const ::configserver::proto::AgentAttributes* p = attributes_;
+  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.attributes)
+  return p != NULL ? *p : *reinterpret_cast<const ::configserver::proto::AgentAttributes*>(
+      &::configserver::proto::_AgentAttributes_default_instance_);
+}
+inline ::configserver::proto::AgentAttributes* MetadataRequest::release_attributes() {
+  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.attributes)
   
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.version)
+  ::configserver::proto::AgentAttributes* temp = attributes_;
+  attributes_ = NULL;
+  return temp;
 }
-#if LANG_CXX11
-inline void MetadataRequest::set_version(::std::string&& value) {
+inline ::configserver::proto::AgentAttributes* MetadataRequest::mutable_attributes() {
   
-  version_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.version)
+  if (attributes_ == NULL) {
+    auto* p = CreateMaybeMessage<::configserver::proto::AgentAttributes>(GetArenaNoVirtual());
+    attributes_ = p;
+  }
+  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.attributes)
+  return attributes_;
 }
-#endif
-inline void MetadataRequest::set_version(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.version)
-}
-inline void MetadataRequest::set_version(const char* value, size_t size) {
-  
-  version_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.version)
-}
-inline ::std::string* MetadataRequest::mutable_version() {
-  
-  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.version)
-  return version_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* MetadataRequest::release_version() {
-  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.version)
-  
-  return version_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void MetadataRequest::set_allocated_version(::std::string* version) {
-  if (version != NULL) {
+inline void MetadataRequest::set_allocated_attributes(::configserver::proto::AgentAttributes* attributes) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete attributes_;
+  }
+  if (attributes) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      attributes = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, attributes, submessage_arena);
+    }
     
   } else {
     
   }
-  version_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), version);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.version)
-}
-
-// string ip = 8;
-inline void MetadataRequest::clear_ip() {
-  ip_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& MetadataRequest::ip() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.ip)
-  return ip_.GetNoArena();
-}
-inline void MetadataRequest::set_ip(const ::std::string& value) {
-  
-  ip_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.ip)
-}
-#if LANG_CXX11
-inline void MetadataRequest::set_ip(::std::string&& value) {
-  
-  ip_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.ip)
-}
-#endif
-inline void MetadataRequest::set_ip(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  ip_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.ip)
-}
-inline void MetadataRequest::set_ip(const char* value, size_t size) {
-  
-  ip_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.ip)
-}
-inline ::std::string* MetadataRequest::mutable_ip() {
-  
-  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.ip)
-  return ip_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* MetadataRequest::release_ip() {
-  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.ip)
-  
-  return ip_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void MetadataRequest::set_allocated_ip(::std::string* ip) {
-  if (ip != NULL) {
-    
-  } else {
-    
-  }
-  ip_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ip);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.ip)
-}
-
-// string region = 9;
-inline void MetadataRequest::clear_region() {
-  region_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& MetadataRequest::region() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.region)
-  return region_.GetNoArena();
-}
-inline void MetadataRequest::set_region(const ::std::string& value) {
-  
-  region_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.region)
-}
-#if LANG_CXX11
-inline void MetadataRequest::set_region(::std::string&& value) {
-  
-  region_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.region)
-}
-#endif
-inline void MetadataRequest::set_region(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  region_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.region)
-}
-inline void MetadataRequest::set_region(const char* value, size_t size) {
-  
-  region_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.region)
-}
-inline ::std::string* MetadataRequest::mutable_region() {
-  
-  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.region)
-  return region_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* MetadataRequest::release_region() {
-  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.region)
-  
-  return region_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void MetadataRequest::set_allocated_region(::std::string* region) {
-  if (region != NULL) {
-    
-  } else {
-    
-  }
-  region_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), region);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.region)
-}
-
-// string avaliable_zone = 10;
-inline void MetadataRequest::clear_avaliable_zone() {
-  avaliable_zone_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& MetadataRequest::avaliable_zone() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.avaliable_zone)
-  return avaliable_zone_.GetNoArena();
-}
-inline void MetadataRequest::set_avaliable_zone(const ::std::string& value) {
-  
-  avaliable_zone_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.avaliable_zone)
-}
-#if LANG_CXX11
-inline void MetadataRequest::set_avaliable_zone(::std::string&& value) {
-  
-  avaliable_zone_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.avaliable_zone)
-}
-#endif
-inline void MetadataRequest::set_avaliable_zone(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  avaliable_zone_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.avaliable_zone)
-}
-inline void MetadataRequest::set_avaliable_zone(const char* value, size_t size) {
-  
-  avaliable_zone_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.avaliable_zone)
-}
-inline ::std::string* MetadataRequest::mutable_avaliable_zone() {
-  
-  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.avaliable_zone)
-  return avaliable_zone_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* MetadataRequest::release_avaliable_zone() {
-  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.avaliable_zone)
-  
-  return avaliable_zone_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void MetadataRequest::set_allocated_avaliable_zone(::std::string* avaliable_zone) {
-  if (avaliable_zone != NULL) {
-    
-  } else {
-    
-  }
-  avaliable_zone_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), avaliable_zone);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.avaliable_zone)
-}
-
-// string account_id = 11;
-inline void MetadataRequest::clear_account_id() {
-  account_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& MetadataRequest::account_id() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.account_id)
-  return account_id_.GetNoArena();
-}
-inline void MetadataRequest::set_account_id(const ::std::string& value) {
-  
-  account_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.account_id)
-}
-#if LANG_CXX11
-inline void MetadataRequest::set_account_id(::std::string&& value) {
-  
-  account_id_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.account_id)
-}
-#endif
-inline void MetadataRequest::set_account_id(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  account_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.account_id)
-}
-inline void MetadataRequest::set_account_id(const char* value, size_t size) {
-  
-  account_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.account_id)
-}
-inline ::std::string* MetadataRequest::mutable_account_id() {
-  
-  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.account_id)
-  return account_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* MetadataRequest::release_account_id() {
-  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.account_id)
-  
-  return account_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void MetadataRequest::set_allocated_account_id(::std::string* account_id) {
-  if (account_id != NULL) {
-    
-  } else {
-    
-  }
-  account_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), account_id);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.account_id)
-}
-
-// string os = 12;
-inline void MetadataRequest::clear_os() {
-  os_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& MetadataRequest::os() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.os)
-  return os_.GetNoArena();
-}
-inline void MetadataRequest::set_os(const ::std::string& value) {
-  
-  os_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.os)
-}
-#if LANG_CXX11
-inline void MetadataRequest::set_os(::std::string&& value) {
-  
-  os_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.os)
-}
-#endif
-inline void MetadataRequest::set_os(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  os_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.os)
-}
-inline void MetadataRequest::set_os(const char* value, size_t size) {
-  
-  os_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.os)
-}
-inline ::std::string* MetadataRequest::mutable_os() {
-  
-  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.os)
-  return os_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* MetadataRequest::release_os() {
-  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.os)
-  
-  return os_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void MetadataRequest::set_allocated_os(::std::string* os) {
-  if (os != NULL) {
-    
-  } else {
-    
-  }
-  os_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), os);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.os)
-}
-
-// string instance_id = 13;
-inline void MetadataRequest::clear_instance_id() {
-  instance_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& MetadataRequest::instance_id() const {
-  // @@protoc_insertion_point(field_get:configserver.proto.MetadataRequest.instance_id)
-  return instance_id_.GetNoArena();
-}
-inline void MetadataRequest::set_instance_id(const ::std::string& value) {
-  
-  instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:configserver.proto.MetadataRequest.instance_id)
-}
-#if LANG_CXX11
-inline void MetadataRequest::set_instance_id(::std::string&& value) {
-  
-  instance_id_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.MetadataRequest.instance_id)
-}
-#endif
-inline void MetadataRequest::set_instance_id(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.MetadataRequest.instance_id)
-}
-inline void MetadataRequest::set_instance_id(const char* value, size_t size) {
-  
-  instance_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.MetadataRequest.instance_id)
-}
-inline ::std::string* MetadataRequest::mutable_instance_id() {
-  
-  // @@protoc_insertion_point(field_mutable:configserver.proto.MetadataRequest.instance_id)
-  return instance_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* MetadataRequest::release_instance_id() {
-  // @@protoc_insertion_point(field_release:configserver.proto.MetadataRequest.instance_id)
-  
-  return instance_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void MetadataRequest::set_allocated_instance_id(::std::string* instance_id) {
-  if (instance_id != NULL) {
-    
-  } else {
-    
-  }
-  instance_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), instance_id);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.instance_id)
+  attributes_ = attributes;
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.MetadataRequest.attributes)
 }
 
 // -------------------------------------------------------------------

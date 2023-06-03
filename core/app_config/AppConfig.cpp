@@ -17,6 +17,7 @@
 #include "logger/Logger.h"
 #include "common/util.h"
 #include "common/StringTools.h"
+#include "common/JsonUtil.h"
 #include "random"
 
 using namespace std;
@@ -63,6 +64,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
         }
 
         mConfigServerAvailable = true;
+        LoadStringParameter(mConfigServerProvider, confJson, "config_server_provider", "CONFIG_SERVER_PROVIDER");
         LOG_INFO(sLogger,
                  ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
     }

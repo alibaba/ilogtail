@@ -775,8 +775,7 @@ void AppConfigBase::LoadResourceConf(const Json::Value& confJson) {
                          confJson,
                          "enable_response_verification",
                          "ALIYUN_LOGTAIL_ENABLE_RESPONSE_VERIFICATION");
-    LoadStringParameter(mEnvironmentCategory, confJson, "environment_category", "ENVIROMENT_CATEGORY");
-
+    
     LoadEnvResourceLimit();
     CheckAndAdjustParameters();
 }

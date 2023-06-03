@@ -198,7 +198,7 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
 }
 
 void ConfigManager::InitConfigServiceClient() {
-    if (strcmp(AppConfig::GetInstance()->GetEnvironmentCategory().c_str(), "volcengine") == 0) {
+    if (strcmp(AppConfig::GetInstance()->GetConfigServerProvider().c_str(), "volcengine") == 0) {
         this->mConfigServiceClient = new VolcengineConfigServiceClient();
     } else {
 		this->mConfigServiceClient = new ConfigServiceClient();

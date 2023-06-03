@@ -77,13 +77,15 @@ namespace logtail {
 		metadataReq.set_agent_type("iLogtail");
     	metadataReq.set_startup_time(time(0));
     	metadataReq.set_interval(INT32_FLAG(config_update_interval));
-		metadataReq.set_version(ILOGTAIL_VERSION);
-		metadataReq.set_ip(LogFileProfiler::mIpAddr);
-		metadataReq.set_region(this->mRegion);
-    	metadataReq.set_avaliable_zone(this->mAvailableZone);
-    	metadataReq.set_account_id(this->mAccountId);
-    	metadataReq.set_os(LogFileProfiler::mOsDetail);
-		metadataReq.set_instance_id(this->mMachineInstancetId);
+		configserver::proto::AgentAttributes attributes;
+		attributes.set_version(ILOGTAIL_VERSION);
+		attributes.set_ip(LogFileProfiler::mIpAddr);
+		attributes.set_region(this->mRegion);
+		attributes.set_zone(this->mAvailableZone);
+    	attributes.set_account_id(this->mAccountId);
+    	attributes.set_os(LogFileProfiler::mOsDetail);
+    	attributes.set_instance_id(this->mMachineInstancetId);
+		metadataReq.mutable_attributes()->MergeFrom(attributes);
 		std::string reqBody;
     	metadataReq.SerializeToString(&reqBody);
 

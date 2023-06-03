@@ -310,8 +310,9 @@ static void InitDefaultsMetadataRequest() {
   ::configserver::proto::MetadataRequest::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_MetadataRequest =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsMetadataRequest}, {}};
+::google::protobuf::internal::SCCInfo<1> scc_info_MetadataRequest =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsMetadataRequest}, {
+      &protobuf_agent_2eproto::scc_info_AgentAttributes.base,}};
 
 static void InitDefaultsMetadataResponse() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -399,6 +400,9 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::AgentAttributes, hostname_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::AgentAttributes, region_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::AgentAttributes, zone_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::AgentAttributes, account_id_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::AgentAttributes, os_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::AgentAttributes, instance_id_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::AgentAttributes, extras_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::Command_ArgsEntry_DoNotUse, _has_bits_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::Command_ArgsEntry_DoNotUse, _internal_metadata_),
@@ -491,13 +495,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, agent_type_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, startup_time_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, interval_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, version_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, ip_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, region_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, avaliable_zone_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, account_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, os_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, instance_id_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataRequest, attributes_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::configserver::proto::MetadataResponse, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -513,16 +511,16 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 20, -1, sizeof(::configserver::proto::ConfigDetail)},
   { 30, 37, sizeof(::configserver::proto::AgentAttributes_ExtrasEntry_DoNotUse)},
   { 39, -1, sizeof(::configserver::proto::AgentAttributes)},
-  { 51, 58, sizeof(::configserver::proto::Command_ArgsEntry_DoNotUse)},
-  { 60, -1, sizeof(::configserver::proto::Command)},
-  { 69, -1, sizeof(::configserver::proto::HeartBeatRequest)},
-  { 85, -1, sizeof(::configserver::proto::HeartBeatResponse)},
-  { 96, -1, sizeof(::configserver::proto::FetchPipelineConfigRequest)},
-  { 104, -1, sizeof(::configserver::proto::FetchPipelineConfigResponse)},
-  { 113, -1, sizeof(::configserver::proto::FetchAgentConfigRequest)},
-  { 122, -1, sizeof(::configserver::proto::FetchAgentConfigResponse)},
-  { 131, -1, sizeof(::configserver::proto::MetadataRequest)},
-  { 149, -1, sizeof(::configserver::proto::MetadataResponse)},
+  { 54, 61, sizeof(::configserver::proto::Command_ArgsEntry_DoNotUse)},
+  { 63, -1, sizeof(::configserver::proto::Command)},
+  { 72, -1, sizeof(::configserver::proto::HeartBeatRequest)},
+  { 88, -1, sizeof(::configserver::proto::HeartBeatResponse)},
+  { 99, -1, sizeof(::configserver::proto::FetchPipelineConfigRequest)},
+  { 107, -1, sizeof(::configserver::proto::FetchPipelineConfigResponse)},
+  { 116, -1, sizeof(::configserver::proto::FetchAgentConfigRequest)},
+  { 125, -1, sizeof(::configserver::proto::FetchAgentConfigResponse)},
+  { 134, -1, sizeof(::configserver::proto::MetadataRequest)},
+  { 146, -1, sizeof(::configserver::proto::MetadataResponse)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -575,66 +573,66 @@ void AddDescriptorsImpl() {
       "proto.CheckStatus\"|\n\014ConfigDetail\022,\n\004typ"
       "e\030\001 \001(\0162\036.configserver.proto.ConfigType\022"
       "\014\n\004name\030\002 \001(\t\022\017\n\007version\030\003 \001(\003\022\017\n\007contex"
-      "t\030\004 \001(\t\022\016\n\006detail\030\005 \001(\t\"\340\001\n\017AgentAttribu"
+      "t\030\004 \001(\t\022\016\n\006detail\030\005 \001(\t\"\225\002\n\017AgentAttribu"
       "tes\022\017\n\007version\030\001 \001(\t\022\020\n\010category\030\002 \001(\t\022\n"
       "\n\002ip\030\003 \001(\t\022\020\n\010hostname\030\004 \001(\t\022\016\n\006region\030\005"
-      " \001(\t\022\014\n\004zone\030\006 \001(\t\022\?\n\006extras\030d \003(\0132/.con"
-      "figserver.proto.AgentAttributes.ExtrasEn"
-      "try\032-\n\013ExtrasEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
-      "\030\002 \001(\t:\0028\001\"\223\001\n\007Command\022\014\n\004type\030\001 \001(\t\022\014\n\004"
-      "name\030\002 \001(\t\022\n\n\002id\030\003 \001(\t\0223\n\004args\030\004 \003(\0132%.c"
-      "onfigserver.proto.Command.ArgsEntry\032+\n\tA"
-      "rgsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001"
-      "\"\336\002\n\020HeartBeatRequest\022\022\n\nrequest_id\030\001 \001("
-      "\t\022\020\n\010agent_id\030\002 \001(\t\022\022\n\nagent_type\030\003 \001(\t\022"
-      "7\n\nattributes\030\004 \001(\0132#.configserver.proto"
-      ".AgentAttributes\022\014\n\004tags\030\005 \003(\t\022\026\n\016runnin"
-      "g_status\030\006 \001(\t\022\024\n\014startup_time\030\007 \001(\003\022\020\n\010"
-      "interval\030\010 \001(\005\0228\n\020pipeline_configs\030\t \003(\013"
-      "2\036.configserver.proto.ConfigInfo\0225\n\ragen"
-      "t_configs\030\n \003(\0132\036.configserver.proto.Con"
-      "figInfo\022\030\n\020agent_session_id\030\013 \001(\t\"\245\002\n\021He"
-      "artBeatResponse\022\022\n\nrequest_id\030\001 \001(\t\022*\n\004c"
+      " \001(\t\022\014\n\004zone\030\006 \001(\t\022\022\n\naccount_id\030\007 \001(\t\022\n"
+      "\n\002os\030\010 \001(\t\022\023\n\013instance_id\030\t \001(\t\022\?\n\006extra"
+      "s\030d \003(\0132/.configserver.proto.AgentAttrib"
+      "utes.ExtrasEntry\032-\n\013ExtrasEntry\022\013\n\003key\030\001"
+      " \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\223\001\n\007Command\022\014\n\004t"
+      "ype\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022\n\n\002id\030\003 \001(\t\0223\n\004a"
+      "rgs\030\004 \003(\0132%.configserver.proto.Command.A"
+      "rgsEntry\032+\n\tArgsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005va"
+      "lue\030\002 \001(\t:\0028\001\"\336\002\n\020HeartBeatRequest\022\022\n\nre"
+      "quest_id\030\001 \001(\t\022\020\n\010agent_id\030\002 \001(\t\022\022\n\nagen"
+      "t_type\030\003 \001(\t\0227\n\nattributes\030\004 \001(\0132#.confi"
+      "gserver.proto.AgentAttributes\022\014\n\004tags\030\005 "
+      "\003(\t\022\026\n\016running_status\030\006 \001(\t\022\024\n\014startup_t"
+      "ime\030\007 \001(\003\022\020\n\010interval\030\010 \001(\005\0228\n\020pipeline_"
+      "configs\030\t \003(\0132\036.configserver.proto.Confi"
+      "gInfo\0225\n\ragent_configs\030\n \003(\0132\036.configser"
+      "ver.proto.ConfigInfo\022\030\n\020agent_session_id"
+      "\030\013 \001(\t\"\245\002\n\021HeartBeatResponse\022\022\n\nrequest_"
+      "id\030\001 \001(\t\022*\n\004code\030\002 \001(\0162\034.configserver.pr"
+      "oto.RespCode\022\017\n\007message\030\003 \001(\t\022E\n\026pipelin"
+      "e_check_results\030\004 \003(\0132%.configserver.pro"
+      "to.ConfigCheckResult\022B\n\023agent_check_resu"
+      "lts\030\005 \003(\0132%.configserver.proto.ConfigChe"
+      "ckResult\0224\n\017custom_commands\030\006 \003(\0132\033.conf"
+      "igserver.proto.Command\"w\n\032FetchPipelineC"
+      "onfigRequest\022\022\n\nrequest_id\030\001 \001(\t\022\020\n\010agen"
+      "t_id\030\002 \001(\t\0223\n\013req_configs\030\003 \003(\0132\036.config"
+      "server.proto.ConfigInfo\"\250\001\n\033FetchPipelin"
+      "eConfigResponse\022\022\n\nrequest_id\030\001 \001(\t\022*\n\004c"
       "ode\030\002 \001(\0162\034.configserver.proto.RespCode\022"
-      "\017\n\007message\030\003 \001(\t\022E\n\026pipeline_check_resul"
-      "ts\030\004 \003(\0132%.configserver.proto.ConfigChec"
-      "kResult\022B\n\023agent_check_results\030\005 \003(\0132%.c"
-      "onfigserver.proto.ConfigCheckResult\0224\n\017c"
-      "ustom_commands\030\006 \003(\0132\033.configserver.prot"
-      "o.Command\"w\n\032FetchPipelineConfigRequest\022"
-      "\022\n\nrequest_id\030\001 \001(\t\022\020\n\010agent_id\030\002 \001(\t\0223\n"
-      "\013req_configs\030\003 \003(\0132\036.configserver.proto."
-      "ConfigInfo\"\250\001\n\033FetchPipelineConfigRespon"
-      "se\022\022\n\nrequest_id\030\001 \001(\t\022*\n\004code\030\002 \001(\0162\034.c"
-      "onfigserver.proto.RespCode\022\017\n\007message\030\003 "
-      "\001(\t\0228\n\016config_details\030\004 \003(\0132 .configserv"
-      "er.proto.ConfigDetail\"\255\001\n\027FetchAgentConf"
-      "igRequest\022\022\n\nrequest_id\030\001 \001(\t\022\020\n\010agent_i"
-      "d\030\002 \001(\t\0227\n\nattributes\030\003 \001(\0132#.configserv"
-      "er.proto.AgentAttributes\0223\n\013req_configs\030"
-      "\004 \003(\0132\036.configserver.proto.ConfigInfo\"\245\001"
-      "\n\030FetchAgentConfigResponse\022\022\n\nrequest_id"
-      "\030\001 \001(\t\022*\n\004code\030\002 \001(\0162\034.configserver.prot"
-      "o.RespCode\022\017\n\007message\030\003 \001(\t\0228\n\016config_de"
-      "tails\030\004 \003(\0132 .configserver.proto.ConfigD"
-      "etail\"\207\002\n\017MetadataRequest\022\022\n\nrequest_id\030"
-      "\001 \001(\t\022\020\n\010agent_id\030\002 \001(\t\022\030\n\020agent_session"
-      "_id\030\003 \001(\t\022\022\n\nagent_type\030\004 \001(\t\022\024\n\014startup"
-      "_time\030\005 \001(\003\022\020\n\010interval\030\006 \001(\005\022\017\n\007version"
-      "\030\007 \001(\t\022\n\n\002ip\030\010 \001(\t\022\016\n\006region\030\t \001(\t\022\026\n\016av"
-      "aliable_zone\030\n \001(\t\022\022\n\naccount_id\030\013 \001(\t\022\n"
-      "\n\002os\030\014 \001(\t\022\023\n\013instance_id\030\r \001(\t\"c\n\020Metad"
-      "ataResponse\022\022\n\nrequest_id\030\001 \001(\t\022*\n\004code\030"
-      "\002 \001(\0162\034.configserver.proto.RespCode\022\017\n\007m"
-      "essage\030\003 \001(\t*3\n\nConfigType\022\023\n\017PIPELINE_C"
-      "ONFIG\020\000\022\020\n\014AGENT_CONFIG\020\001*1\n\013CheckStatus"
-      "\022\007\n\003NEW\020\000\022\013\n\007DELETED\020\001\022\014\n\010MODIFIED\020\002*H\n\010"
-      "RespCode\022\n\n\006ACCEPT\020\000\022\025\n\021INVALID_PARAMETE"
-      "R\020\001\022\031\n\025INTERNAL_SERVER_ERROR\020\002B\026Z\024.;conf"
-      "igserver_protob\006proto3"
+      "\017\n\007message\030\003 \001(\t\0228\n\016config_details\030\004 \003(\013"
+      "2 .configserver.proto.ConfigDetail\"\255\001\n\027F"
+      "etchAgentConfigRequest\022\022\n\nrequest_id\030\001 \001"
+      "(\t\022\020\n\010agent_id\030\002 \001(\t\0227\n\nattributes\030\003 \001(\013"
+      "2#.configserver.proto.AgentAttributes\0223\n"
+      "\013req_configs\030\004 \003(\0132\036.configserver.proto."
+      "ConfigInfo\"\245\001\n\030FetchAgentConfigResponse\022"
+      "\022\n\nrequest_id\030\001 \001(\t\022*\n\004code\030\002 \001(\0162\034.conf"
+      "igserver.proto.RespCode\022\017\n\007message\030\003 \001(\t"
+      "\0228\n\016config_details\030\004 \003(\0132 .configserver."
+      "proto.ConfigDetail\"\306\001\n\017MetadataRequest\022\022"
+      "\n\nrequest_id\030\001 \001(\t\022\020\n\010agent_id\030\002 \001(\t\022\030\n\020"
+      "agent_session_id\030\003 \001(\t\022\022\n\nagent_type\030\004 \001"
+      "(\t\022\024\n\014startup_time\030\005 \001(\003\022\020\n\010interval\030\006 \001"
+      "(\005\0227\n\nattributes\030\007 \001(\0132#.configserver.pr"
+      "oto.AgentAttributes\"c\n\020MetadataResponse\022"
+      "\022\n\nrequest_id\030\001 \001(\t\022*\n\004code\030\002 \001(\0162\034.conf"
+      "igserver.proto.RespCode\022\017\n\007message\030\003 \001(\t"
+      "*3\n\nConfigType\022\023\n\017PIPELINE_CONFIG\020\000\022\020\n\014A"
+      "GENT_CONFIG\020\001*1\n\013CheckStatus\022\007\n\003NEW\020\000\022\013\n"
+      "\007DELETED\020\001\022\014\n\010MODIFIED\020\002*H\n\010RespCode\022\n\n\006"
+      "ACCEPT\020\000\022\025\n\021INVALID_PARAMETER\020\001\022\031\n\025INTER"
+      "NAL_SERVER_ERROR\020\002B\026Z\024.;configserver_pro"
+      "tob\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2702);
+      descriptor, 2690);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "agent.proto", &protobuf_RegisterTypes);
 }
@@ -2006,6 +2004,9 @@ const int AgentAttributes::kIpFieldNumber;
 const int AgentAttributes::kHostnameFieldNumber;
 const int AgentAttributes::kRegionFieldNumber;
 const int AgentAttributes::kZoneFieldNumber;
+const int AgentAttributes::kAccountIdFieldNumber;
+const int AgentAttributes::kOsFieldNumber;
+const int AgentAttributes::kInstanceIdFieldNumber;
 const int AgentAttributes::kExtrasFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
@@ -2045,6 +2046,18 @@ AgentAttributes::AgentAttributes(const AgentAttributes& from)
   if (from.zone().size() > 0) {
     zone_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.zone_);
   }
+  account_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.account_id().size() > 0) {
+    account_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.account_id_);
+  }
+  os_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.os().size() > 0) {
+    os_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.os_);
+  }
+  instance_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.instance_id().size() > 0) {
+    instance_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.instance_id_);
+  }
   // @@protoc_insertion_point(copy_constructor:configserver.proto.AgentAttributes)
 }
 
@@ -2055,6 +2068,9 @@ void AgentAttributes::SharedCtor() {
   hostname_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   region_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   zone_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  account_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  os_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  instance_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 AgentAttributes::~AgentAttributes() {
@@ -2069,6 +2085,9 @@ void AgentAttributes::SharedDtor() {
   hostname_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   region_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   zone_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  account_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  os_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  instance_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 void AgentAttributes::SetCachedSize(int size) const {
@@ -2098,6 +2117,9 @@ void AgentAttributes::Clear() {
   hostname_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   region_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   zone_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  account_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  os_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  instance_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   _internal_metadata_.Clear();
 }
 
@@ -2201,6 +2223,54 @@ bool AgentAttributes::MergePartialFromCodedStream(
             this->zone().data(), static_cast<int>(this->zone().length()),
             ::google::protobuf::internal::WireFormatLite::PARSE,
             "configserver.proto.AgentAttributes.zone"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string account_id = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_account_id()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->account_id().data(), static_cast<int>(this->account_id().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "configserver.proto.AgentAttributes.account_id"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string os = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_os()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->os().data(), static_cast<int>(this->os().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "configserver.proto.AgentAttributes.os"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string instance_id = 9;
+      case 9: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_instance_id()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->instance_id().data(), static_cast<int>(this->instance_id().length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "configserver.proto.AgentAttributes.instance_id"));
         } else {
           goto handle_unusual;
         }
@@ -2318,6 +2388,36 @@ void AgentAttributes::SerializeWithCachedSizes(
       "configserver.proto.AgentAttributes.zone");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
       6, this->zone(), output);
+  }
+
+  // string account_id = 7;
+  if (this->account_id().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->account_id().data(), static_cast<int>(this->account_id().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "configserver.proto.AgentAttributes.account_id");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      7, this->account_id(), output);
+  }
+
+  // string os = 8;
+  if (this->os().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->os().data(), static_cast<int>(this->os().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "configserver.proto.AgentAttributes.os");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      8, this->os(), output);
+  }
+
+  // string instance_id = 9;
+  if (this->instance_id().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->instance_id().data(), static_cast<int>(this->instance_id().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "configserver.proto.AgentAttributes.instance_id");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      9, this->instance_id(), output);
   }
 
   // map<string, string> extras = 100;
@@ -2453,6 +2553,39 @@ void AgentAttributes::SerializeWithCachedSizes(
         6, this->zone(), target);
   }
 
+  // string account_id = 7;
+  if (this->account_id().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->account_id().data(), static_cast<int>(this->account_id().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "configserver.proto.AgentAttributes.account_id");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        7, this->account_id(), target);
+  }
+
+  // string os = 8;
+  if (this->os().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->os().data(), static_cast<int>(this->os().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "configserver.proto.AgentAttributes.os");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        8, this->os(), target);
+  }
+
+  // string instance_id = 9;
+  if (this->instance_id().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->instance_id().data(), static_cast<int>(this->instance_id().length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "configserver.proto.AgentAttributes.instance_id");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        9, this->instance_id(), target);
+  }
+
   // map<string, string> extras = 100;
   if (!this->extras().empty()) {
     typedef ::google::protobuf::Map< ::std::string, ::std::string >::const_pointer
@@ -2583,6 +2716,27 @@ size_t AgentAttributes::ByteSizeLong() const {
         this->zone());
   }
 
+  // string account_id = 7;
+  if (this->account_id().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->account_id());
+  }
+
+  // string os = 8;
+  if (this->os().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->os());
+  }
+
+  // string instance_id = 9;
+  if (this->instance_id().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->instance_id());
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
@@ -2635,6 +2789,18 @@ void AgentAttributes::MergeFrom(const AgentAttributes& from) {
 
     zone_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.zone_);
   }
+  if (from.account_id().size() > 0) {
+
+    account_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.account_id_);
+  }
+  if (from.os().size() > 0) {
+
+    os_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.os_);
+  }
+  if (from.instance_id().size() > 0) {
+
+    instance_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.instance_id_);
+  }
 }
 
 void AgentAttributes::CopyFrom(const ::google::protobuf::Message& from) {
@@ -2673,6 +2839,12 @@ void AgentAttributes::InternalSwap(AgentAttributes* other) {
   region_.Swap(&other->region_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   zone_.Swap(&other->zone_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  account_id_.Swap(&other->account_id_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  os_.Swap(&other->os_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  instance_id_.Swap(&other->instance_id_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   _internal_metadata_.Swap(&other->_internal_metadata_);
 }
@@ -5949,6 +6121,8 @@ void FetchAgentConfigResponse::InternalSwap(FetchAgentConfigResponse* other) {
 // ===================================================================
 
 void MetadataRequest::InitAsDefaultInstance() {
+  ::configserver::proto::_MetadataRequest_default_instance_._instance.get_mutable()->attributes_ = const_cast< ::configserver::proto::AgentAttributes*>(
+      ::configserver::proto::AgentAttributes::internal_default_instance());
 }
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int MetadataRequest::kRequestIdFieldNumber;
@@ -5957,13 +6131,7 @@ const int MetadataRequest::kAgentSessionIdFieldNumber;
 const int MetadataRequest::kAgentTypeFieldNumber;
 const int MetadataRequest::kStartupTimeFieldNumber;
 const int MetadataRequest::kIntervalFieldNumber;
-const int MetadataRequest::kVersionFieldNumber;
-const int MetadataRequest::kIpFieldNumber;
-const int MetadataRequest::kRegionFieldNumber;
-const int MetadataRequest::kAvaliableZoneFieldNumber;
-const int MetadataRequest::kAccountIdFieldNumber;
-const int MetadataRequest::kOsFieldNumber;
-const int MetadataRequest::kInstanceIdFieldNumber;
+const int MetadataRequest::kAttributesFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 MetadataRequest::MetadataRequest()
@@ -5993,33 +6161,10 @@ MetadataRequest::MetadataRequest(const MetadataRequest& from)
   if (from.agent_type().size() > 0) {
     agent_type_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.agent_type_);
   }
-  version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.version().size() > 0) {
-    version_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.version_);
-  }
-  ip_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.ip().size() > 0) {
-    ip_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.ip_);
-  }
-  region_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.region().size() > 0) {
-    region_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.region_);
-  }
-  avaliable_zone_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.avaliable_zone().size() > 0) {
-    avaliable_zone_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.avaliable_zone_);
-  }
-  account_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.account_id().size() > 0) {
-    account_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.account_id_);
-  }
-  os_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.os().size() > 0) {
-    os_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.os_);
-  }
-  instance_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.instance_id().size() > 0) {
-    instance_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.instance_id_);
+  if (from.has_attributes()) {
+    attributes_ = new ::configserver::proto::AgentAttributes(*from.attributes_);
+  } else {
+    attributes_ = NULL;
   }
   ::memcpy(&startup_time_, &from.startup_time_,
     static_cast<size_t>(reinterpret_cast<char*>(&interval_) -
@@ -6032,16 +6177,9 @@ void MetadataRequest::SharedCtor() {
   agent_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   agent_session_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   agent_type_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  version_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ip_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  region_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  avaliable_zone_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  account_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  os_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  instance_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(&startup_time_, 0, static_cast<size_t>(
+  ::memset(&attributes_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&interval_) -
-      reinterpret_cast<char*>(&startup_time_)) + sizeof(interval_));
+      reinterpret_cast<char*>(&attributes_)) + sizeof(interval_));
 }
 
 MetadataRequest::~MetadataRequest() {
@@ -6054,13 +6192,7 @@ void MetadataRequest::SharedDtor() {
   agent_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   agent_session_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   agent_type_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  version_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ip_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  region_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  avaliable_zone_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  account_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  os_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  instance_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (this != internal_default_instance()) delete attributes_;
 }
 
 void MetadataRequest::SetCachedSize(int size) const {
@@ -6087,13 +6219,10 @@ void MetadataRequest::Clear() {
   agent_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   agent_session_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   agent_type_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  version_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ip_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  region_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  avaliable_zone_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  account_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  os_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  instance_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == NULL && attributes_ != NULL) {
+    delete attributes_;
+  }
+  attributes_ = NULL;
   ::memset(&startup_time_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&interval_) -
       reinterpret_cast<char*>(&startup_time_)) + sizeof(interval_));
@@ -6202,112 +6331,12 @@ bool MetadataRequest::MergePartialFromCodedStream(
         break;
       }
 
-      // string version = 7;
+      // .configserver.proto.AgentAttributes attributes = 7;
       case 7: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_version()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->version().data(), static_cast<int>(this->version().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "configserver.proto.MetadataRequest.version"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // string ip = 8;
-      case 8: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_ip()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->ip().data(), static_cast<int>(this->ip().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "configserver.proto.MetadataRequest.ip"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // string region = 9;
-      case 9: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_region()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->region().data(), static_cast<int>(this->region().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "configserver.proto.MetadataRequest.region"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // string avaliable_zone = 10;
-      case 10: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(82u /* 82 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_avaliable_zone()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->avaliable_zone().data(), static_cast<int>(this->avaliable_zone().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "configserver.proto.MetadataRequest.avaliable_zone"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // string account_id = 11;
-      case 11: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(90u /* 90 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_account_id()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->account_id().data(), static_cast<int>(this->account_id().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "configserver.proto.MetadataRequest.account_id"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // string os = 12;
-      case 12: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(98u /* 98 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_os()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->os().data(), static_cast<int>(this->os().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "configserver.proto.MetadataRequest.os"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // string instance_id = 13;
-      case 13: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(106u /* 106 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_instance_id()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->instance_id().data(), static_cast<int>(this->instance_id().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "configserver.proto.MetadataRequest.instance_id"));
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_attributes()));
         } else {
           goto handle_unusual;
         }
@@ -6390,74 +6419,10 @@ void MetadataRequest::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt32(6, this->interval(), output);
   }
 
-  // string version = 7;
-  if (this->version().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->version().data(), static_cast<int>(this->version().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.version");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      7, this->version(), output);
-  }
-
-  // string ip = 8;
-  if (this->ip().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->ip().data(), static_cast<int>(this->ip().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.ip");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      8, this->ip(), output);
-  }
-
-  // string region = 9;
-  if (this->region().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->region().data(), static_cast<int>(this->region().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.region");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      9, this->region(), output);
-  }
-
-  // string avaliable_zone = 10;
-  if (this->avaliable_zone().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->avaliable_zone().data(), static_cast<int>(this->avaliable_zone().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.avaliable_zone");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      10, this->avaliable_zone(), output);
-  }
-
-  // string account_id = 11;
-  if (this->account_id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->account_id().data(), static_cast<int>(this->account_id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.account_id");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      11, this->account_id(), output);
-  }
-
-  // string os = 12;
-  if (this->os().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->os().data(), static_cast<int>(this->os().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.os");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      12, this->os(), output);
-  }
-
-  // string instance_id = 13;
-  if (this->instance_id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->instance_id().data(), static_cast<int>(this->instance_id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.instance_id");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      13, this->instance_id(), output);
+  // .configserver.proto.AgentAttributes attributes = 7;
+  if (this->has_attributes()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      7, this->_internal_attributes(), output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -6528,81 +6493,11 @@ void MetadataRequest::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(6, this->interval(), target);
   }
 
-  // string version = 7;
-  if (this->version().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->version().data(), static_cast<int>(this->version().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.version");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        7, this->version(), target);
-  }
-
-  // string ip = 8;
-  if (this->ip().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->ip().data(), static_cast<int>(this->ip().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.ip");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        8, this->ip(), target);
-  }
-
-  // string region = 9;
-  if (this->region().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->region().data(), static_cast<int>(this->region().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.region");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        9, this->region(), target);
-  }
-
-  // string avaliable_zone = 10;
-  if (this->avaliable_zone().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->avaliable_zone().data(), static_cast<int>(this->avaliable_zone().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.avaliable_zone");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        10, this->avaliable_zone(), target);
-  }
-
-  // string account_id = 11;
-  if (this->account_id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->account_id().data(), static_cast<int>(this->account_id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.account_id");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        11, this->account_id(), target);
-  }
-
-  // string os = 12;
-  if (this->os().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->os().data(), static_cast<int>(this->os().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.os");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        12, this->os(), target);
-  }
-
-  // string instance_id = 13;
-  if (this->instance_id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->instance_id().data(), static_cast<int>(this->instance_id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "configserver.proto.MetadataRequest.instance_id");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        13, this->instance_id(), target);
+  // .configserver.proto.AgentAttributes attributes = 7;
+  if (this->has_attributes()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        7, this->_internal_attributes(), deterministic, target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -6650,53 +6545,11 @@ size_t MetadataRequest::ByteSizeLong() const {
         this->agent_type());
   }
 
-  // string version = 7;
-  if (this->version().size() > 0) {
+  // .configserver.proto.AgentAttributes attributes = 7;
+  if (this->has_attributes()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->version());
-  }
-
-  // string ip = 8;
-  if (this->ip().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->ip());
-  }
-
-  // string region = 9;
-  if (this->region().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->region());
-  }
-
-  // string avaliable_zone = 10;
-  if (this->avaliable_zone().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->avaliable_zone());
-  }
-
-  // string account_id = 11;
-  if (this->account_id().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->account_id());
-  }
-
-  // string os = 12;
-  if (this->os().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->os());
-  }
-
-  // string instance_id = 13;
-  if (this->instance_id().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->instance_id());
+      ::google::protobuf::internal::WireFormatLite::MessageSize(
+        *attributes_);
   }
 
   // int64 startup_time = 5;
@@ -6756,33 +6609,8 @@ void MetadataRequest::MergeFrom(const MetadataRequest& from) {
 
     agent_type_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.agent_type_);
   }
-  if (from.version().size() > 0) {
-
-    version_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.version_);
-  }
-  if (from.ip().size() > 0) {
-
-    ip_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.ip_);
-  }
-  if (from.region().size() > 0) {
-
-    region_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.region_);
-  }
-  if (from.avaliable_zone().size() > 0) {
-
-    avaliable_zone_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.avaliable_zone_);
-  }
-  if (from.account_id().size() > 0) {
-
-    account_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.account_id_);
-  }
-  if (from.os().size() > 0) {
-
-    os_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.os_);
-  }
-  if (from.instance_id().size() > 0) {
-
-    instance_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.instance_id_);
+  if (from.has_attributes()) {
+    mutable_attributes()->::configserver::proto::AgentAttributes::MergeFrom(from.attributes());
   }
   if (from.startup_time() != 0) {
     set_startup_time(from.startup_time());
@@ -6824,20 +6652,7 @@ void MetadataRequest::InternalSwap(MetadataRequest* other) {
     GetArenaNoVirtual());
   agent_type_.Swap(&other->agent_type_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  version_.Swap(&other->version_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  ip_.Swap(&other->ip_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  region_.Swap(&other->region_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  avaliable_zone_.Swap(&other->avaliable_zone_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  account_id_.Swap(&other->account_id_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  os_.Swap(&other->os_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  instance_id_.Swap(&other->instance_id_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
+  swap(attributes_, other->attributes_);
   swap(startup_time_, other->startup_time_);
   swap(interval_, other->interval_);
   _internal_metadata_.Swap(&other->_internal_metadata_);

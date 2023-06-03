@@ -32,6 +32,9 @@ public:
     };
 
 private:
+    // for case that some code need to run in specific environment
+    std::string mConfigServerProvider;
+
     void LoadAddrConfig(const Json::Value& confJson) override;
 
 public:
@@ -61,6 +64,7 @@ public:
     void StopUsingConfigServer() { mConfigServerAvailable = false; }
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
     const std::vector<std::string>& GetConfigServerTags() const { return mConfigServerTags; }
+    const std::string& GetConfigServerProvider() const { return mConfigServerProvider; }
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;
     friend class ConfigUpdatorUnittest;
