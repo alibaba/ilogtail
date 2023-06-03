@@ -23,16 +23,19 @@ fi
 
 ## 日志输入样例
 ```
-#1685513549
+#1685803902
 cat user_log_config.json
-#1685513553
+#1685803906
+cat ~/.bash_history|tail
+#1685803907
 exit
-#1685514080
-ll .bash_history
 ```
 
 ## 日志输出样例
 ```
+2023-06-03 22:51:49 {"__tag__:__path__":"/root/.bash_history","cmd":"cat user_log_config.json","__time__":"1685803902"}
+2023-06-03 22:51:49 {"__tag__:__path__":"/root/.bash_history","cmd":"cat ~/.bash_history|tail","__time__":"1685803906"}
+2023-06-03 22:51:49 {"__tag__:__path__":"/root/.bash_history","cmd":"exit","__time__":"1685803907"}
 ```
 
 ## 采集配置
@@ -45,20 +48,24 @@ inputs:
     MaxDepth: 0
 processors:
   - Type: processor_split_log_regex
-    SplitRegex: "#\\d+"
+    SplitRegex: \#\d+
     SplitKey: content
     PreserveOthers: true
   - Type: processor_regex
     SourceKey: content
-    Regex: "#(\\d+)\\n(.*)"
-    Keys: 
+    Regex: \#(\d+)\n(.*)
+    Keys:
         - timestamp
         - cmd
+  - Type: processor_strptime
+    SourceKey: timestamp
+    Format: "%s"
+    KeepSource: false
 flushers:
   - Type: flusher_sls
-    Endpoint: cn-shanghai.log.aliyuncs.com
-    ProjectName: yemo-test-shanghai
-    LogstoreName: linux_security
+    Endpoint: cn-xxx.log.aliyuncs.com
+    ProjectName: test_project
+    LogstoreName: test_logstore
     Topic: bash_history
   - Type: flusher_stdout
     OnlyStdout: true
