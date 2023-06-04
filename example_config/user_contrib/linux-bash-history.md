@@ -1,5 +1,8 @@
 # Linux .bash_history日志
 
+## 提供者
+[`messixukejia`](https://github.com/messixukejia)
+
 ## 描述
 .bash_history 记录了用户在 Bash Shell 中执行的所有命令，每个用户在自己的主目录下，都有自己的 .bash_history 文件。在用户退出 Shell 时将本次登录输入的所有命令进行保存。
 
