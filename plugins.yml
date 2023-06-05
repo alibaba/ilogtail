@@ -49,6 +49,7 @@ plugins:
     - import: "github.com/alibaba/ilogtail/plugins/input/httpserver"
     - import: "github.com/alibaba/ilogtail/plugins/input/jmxfetch"
     - import: "github.com/alibaba/ilogtail/plugins/input/kafka"
+    - import: "github.com/alibaba/ilogtail/plugins/flusher/rocketmq"
     - import: "github.com/alibaba/ilogtail/plugins/input/kubernetesmeta"
     - import: "github.com/alibaba/ilogtail/plugins/input/lumberjack"
     - import: "github.com/alibaba/ilogtail/plugins/input/mock"

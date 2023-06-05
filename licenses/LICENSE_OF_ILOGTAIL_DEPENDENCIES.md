@@ -99,6 +99,8 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/mwitkow/go-conntrack](https://pkg.go.dev/github.com/mwitkow/go-conntrack?tab=licenses)
 - [sigs.k8s.io/json](https://pkg.go.dev/sigs.k8s.io/json?tab=licenses)
 - [gopkg.in/ini.v1](https://pkg.go.dev/gopkg.in/ini.v1?tab=licenses)
+- [github.com/apache/rocketmq-client-go](https://pkg.go.dev/github.com/apache/rocketmq-client-go/v2/primitive?tab=licenses)
+- [github.com/golang/mock](https://pkg.go.dev/github.com/golang/mock?tab=licenses)
 
 ## BSD licenses
 - [github.com/klauspost/compress](https://pkg.go.dev/github.com/klauspost/compress?tab=licenses)
@@ -141,15 +143,14 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [google.golang.org/protobuf](https://pkg.go.dev/google.golang.org/protobuf?tab=licenses)
 - [gopkg.in/inf.v0](https://pkg.go.dev/gopkg.in/inf.v0?tab=licenses)
 - [github.com/go-faster/errors](https://pkg.go.dev/github.com/go-faster/errors?tab=licenses)
-- [github.com/miekg/pkcs11](https://pkg.go.dev/github.com/miekg/pkcs11?tab=licenses)
 - [github.com/grafana/regexp](https://pkg.go.dev/github.com/grafana/regexp?tab=licenses)
 - [github.com/munnerz/goautoneg](https://pkg.go.dev/github.com/munnerz/goautoneg?tab=licenses)
 - [github.com/pmezard/go-difflib](https://pkg.go.dev/github.com/pmezard/go-difflib?tab=licenses)
 - [github.com/gorilla/websocket](github.com/gorilla/websocket)
+- [github.com/emirpasic/gods](https://pkg.go.dev/github.com/emirpasic/gods?tab=licenses)
 
 ## MIT licenses
 
-- [github.com/valyala/gozstd](https://pkg.go.dev/github.com/valyala/gozstd?tab=licenses)
 - [github.com/gofrs/uuid](https://pkg.go.dev/github.com/gofrs/uuid?tab=licenses)
 - [github.com/go-kit/log](https://pkg.go.dev/github.com/go-kit/log?tab=licenses)
 - [github.com/narqo/go-dogstatsd-parser](https://pkg.go.dev/github.com/narqo/go-dogstatsd-parser?tab=licenses)
@@ -235,6 +236,12 @@ When distributed in a binary form, iLogtail may contain portions of the followin
 - [github.com/stretchr/testify](https://pkg.go.dev/github.com/stretchr/testify?tab=licenses)
 - [go.uber.org/goleak](https://pkg.go.dev/go.uber.org/goleak?tab=licenses)
 - [github.com/influxdata/telegraf](https://pkg.go.dev/github.com/influxdata/telegraf?tab=licenses)
+- [github.com/patrickmn/go-cache](https://pkg.go.dev/github.com/patrickmn/go-cache?tab=licenses)
+- [github.com/stathat/consistent](https://pkg.go.dev/github.com/stathat/consistent?tab=licenses)
+- [github.com/tidwall/gjson](https://pkg.go.dev/github.com/tidwall/gjson?tab=licenses)
+- [github.com/tidwall/match](https://pkg.go.dev/github.com/tidwall/match?tab=licenses)
+- [github.com/tidwall/pretty](https://pkg.go.dev/github.com/tidwall/pretty?tab=licenses)
+- [github.com/99designs/go-keychain](https://pkg.go.dev/github.com/99designs/go-keychain?tab=licenses)
 
 ## ISC licenses
 
