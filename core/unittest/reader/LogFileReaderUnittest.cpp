@@ -72,10 +72,110 @@ class LogFileReaderUnittest : public ::testing::Test {
 
 public:
     void TestLogSplit();
+    std::string GenerateRawData(
+        int32_t lines, vector<int32_t>& index, int32_t size = 100, bool singleLine = false, bool gbk = false);
 };
 
 APSARA_UNIT_TEST_CASE(LogFileReaderUnittest, TestLogSplit, 1);
 
+
+string
+LogFileReaderUnittest::GenerateRawData(int32_t lines, vector<int32_t>& index, int32_t size, bool singleLine, bool gbk) {
+    static string GBK_CHARCTERS[26] = {
+#if defined(__linux__)
+        "行",
+        "请",
+        "求",
+        "环",
+        "节",
+        "里",
+        "效",
+        "率",
+        "最",
+        "高",
+        "的",
+        "部",
+        "分",
+        "这",
+        "就",
+        "让",
+        "每",
+        "个",
+        "请",
+        "求",
+        "处",
+        "理",
+        "速",
+        "度",
+        "了",
+        "多"
+#elif defined(_MSC_VER)
+        "\xe8\xa1\x8c",
+        "\xe8\xaf\xb7",
+        "\xe6\xb1\x82",
+        "\xe7\x8e\xaf",
+        "\xe8\x8a\x82",
+        "\xe9\x87\x8c",
+        "\xe6\x95\x88",
+        "\xe7\x8e\x87",
+        "\xe6\x9c\x80",
+        "\xe9\xab\x98",
+        "\xe7\x9a\x84",
+        "\xe9\x83\xa8",
+        "\xe5\x88\x86",
+        "\xe8\xbf\x99",
+        "\xe5\xb0\xb1",
+        "\xe8\xae\xa9",
+        "\xe6\xaf\x8f",
+        "\xe4\xb8\xaa",
+        "\xe8\xaf\xb7",
+        "\xe6\xb1\x82",
+        "\xe5\xa4\x84",
+        "\xe7\x90\x86",
+        "\xe9\x80\x9f",
+        "\xe5\xba\xa6",
+        "\xe4\xba\x86",
+        "\xe5\xa4\x9a"
+#endif
+    };
+    int32_t prefixSize = (int32_t)LOG_BEGIN_TIME.size();
+    if (size < prefixSize + 10)
+        size = prefixSize + 10;
+    string rawLog;
+    for (int32_t i = 0; i < lines; ++i) {
+        index.push_back(rawLog.size());
+        rawLog += LOG_BEGIN_TIME;
+        for (int32_t j = 0; j < size - prefixSize - 1; ++j) {
+            int32_t mod = rand() % 26;
+            int32_t modValue = rand() % 10;
+            if (!singleLine) {
+                if (gbk) {
+                    if (modValue == 0)
+                        rawLog.append("\n");
+                    else if (modValue / 2 == 0)
+                        rawLog.append(GBK_CHARCTERS[mod]);
+                    else
+                        rawLog.append(1, char('A' + mod));
+                } else {
+                    if (modValue == 0)
+                        rawLog.append("\n");
+                    else
+                        rawLog.append(1, char('A' + mod));
+                }
+            } else {
+                if (gbk) {
+                    if (modValue / 2 == 0)
+                        rawLog.append(GBK_CHARCTERS[mod]);
+                    else
+                        rawLog.append(1, char('A' + mod));
+                } else
+                    rawLog.append(1, char('A' + mod));
+            }
+        }
+        rawLog.append(NEXT_LINE);
+    }
+    return rawLog;
+}
 
 void LogFileReaderUnittest::TestLogSplit() {
     LOG_INFO(sLogger, ("TestLogSplit() begin", time(NULL)));
