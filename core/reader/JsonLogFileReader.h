@@ -38,7 +38,7 @@ public:
                       bool dockerFileFlag = false);
 
     void SetTimeKey(const std::string& timeKey);
-    std::vector<int32_t> LogSplit(char* buffer, int32_t size, int32_t& lineFeed);
+    std::vector<int32_t> LogSplit(char* buffer, int32_t size, int32_t& lineFeed, bool discardUnmatch);
 
 protected:
     bool ParseLogLine(const char* buffer,

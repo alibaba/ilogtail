@@ -362,7 +362,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             int32_t bufferSize = logBuffer->bufferSize;
             char* buffer = logBuffer->buffer;
             int32_t lineFeed = 0;
-            vector<int32_t> logIndex = logFileReader->LogSplit(buffer, bufferSize, lineFeed);
+            vector<int32_t> logIndex = logFileReader->LogSplit(buffer, bufferSize, lineFeed, config->mDiscardUnmatch);
 
             const string& projectName = config->GetProjectName();
             const string& category = config->GetCategory();

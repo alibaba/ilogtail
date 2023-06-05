@@ -1337,7 +1337,7 @@ void LogFileReader::SetReadBufferSize(int32_t bufSize) {
     BUFFER_SIZE = bufSize;
 }
 
-vector<int32_t> LogFileReader::LogSplit(char* buffer, int32_t size, int32_t& lineFeed) {
+vector<int32_t> LogFileReader::LogSplit(char* buffer, int32_t size, int32_t& lineFeed, bool discardUnmatch) {
     vector<int32_t> index;
     int begIndex = 0;
     int endIndex = 0;
@@ -1366,6 +1366,9 @@ vector<int32_t> LogFileReader::LogSplit(char* buffer, int32_t size, int32_t& lin
                                                            mCategory,
                                                            mRegion);
                 }
+            }
+            if (begIndex == 0 && !discardUnmatch) {
+                index.push_back(begIndex);
             }
             buffer[endIndex] = '\n';
             begIndex = endIndex + 1;

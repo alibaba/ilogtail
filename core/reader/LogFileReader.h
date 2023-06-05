@@ -232,7 +232,7 @@ public:
                               std::string& lastLogTimeStr,
                               uint32_t& logGroupSize)
         = 0;
-    virtual std::vector<int32_t> LogSplit(char* buffer, int32_t size, int32_t& lineFeed);
+    virtual std::vector<int32_t> LogSplit(char* buffer, int32_t size, int32_t& lineFeed, bool discardUnmatch);
 
     // added by xianzhi(bowen.gbw@antfin.com)
     static bool ParseLogTime(const char* buffer,
