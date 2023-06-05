@@ -87,3 +87,13 @@ flushers:
   - Type: flusher_stdout
     OnlyStdout: true
 ```
+
+
+备注：以上采集配置只会采集`root`用户的操作，如果需要采集其他用户的`.bash_history`，在上述采集配置基础上调整路径即可：
+```
+inputs:
+  - Type: file_log
+    LogPath: /homme/
+    FilePattern: .bash_history
+    MaxDepth: 1
+```
