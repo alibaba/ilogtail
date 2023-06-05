@@ -41,7 +41,6 @@ DECLARE_FLAG_INT64(first_read_endure_bytes);
 namespace logtail {
 
 class LogFileReaderUnittest : public ::testing::Test {
-    const std::string& PS = PATH_SEPARATOR;
 
     static const string LOG_BEGIN_TIME;
     static const string LOG_BEGIN_REGEX;
@@ -49,26 +48,6 @@ class LogFileReaderUnittest : public ::testing::Test {
     static const size_t BUFFER_SIZE;
     static const size_t SIGNATURE_CHAR_COUNT;
     static string gRootDir;
-
-#if defined(_MSC_VER)
-    // Copy from Internet, to replace iconv on Windows.
-    static std::string UTF8ToGBK(const char* strUTF8) {
-        int len = MultiByteToWideChar(CP_UTF8, 0, strUTF8, -1, NULL, 0);
-        wchar_t* wszGBK = new wchar_t[len + 1];
-        memset(wszGBK, 0, len * 2 + 2);
-        MultiByteToWideChar(CP_UTF8, 0, strUTF8, -1, wszGBK, len);
-        len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
-        char* szGBK = new char[len + 1];
-        memset(szGBK, 0, len + 1);
-        WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, szGBK, len, NULL, NULL);
-        string strTemp(szGBK);
-        if (wszGBK)
-            delete[] wszGBK;
-        if (szGBK)
-            delete[] szGBK;
-        return strTemp;
-    }
-#endif
 
 public:
     void TestLogSplit();
@@ -78,6 +57,13 @@ public:
 
 APSARA_UNIT_TEST_CASE(LogFileReaderUnittest, TestLogSplit, 1);
 
+
+const string LogFileReaderUnittest::LOG_BEGIN_TIME = "2012-12-12上午 : ";
+const string LogFileReaderUnittest::LOG_BEGIN_REGEX = "\\d{4}-\\d{2}-\\d{2}上午.*";
+const string LogFileReaderUnittest::NEXT_LINE = "\n";
+const size_t LogFileReaderUnittest::BUFFER_SIZE = 1024 * 512;
+const size_t LogFileReaderUnittest::SIGNATURE_CHAR_COUNT = 1024;
+string LogFileReaderUnittest::gRootDir = "";
 
 string
 LogFileReaderUnittest::GenerateRawData(int32_t lines, vector<int32_t>& index, int32_t size, bool singleLine, bool gbk) {
@@ -199,27 +185,31 @@ void LogFileReaderUnittest::TestLogSplit() {
     delete[] buffer;
 
     // case 1: single line
-    string singleLog = LOG_BEGIN_TIME + "single log";
-    int32_t singleLogSize = singleLog.size();
-    buffer = new char[singleLogSize + 1];
-    strcpy(buffer, singleLog.c_str());
-    buffer[singleLogSize - 1] = '\0';
-    splitIndex = logFileReader.LogSplit(buffer, singleLogSize, lineFeed, true);
-    APSARA_TEST_EQUAL(1, splitIndex.size());
-    APSARA_TEST_EQUAL(0, splitIndex[0]);
-    APSARA_TEST_EQUAL(1, lineFeed);
-    delete[] buffer;
+    {
+        string singleLog = LOG_BEGIN_TIME + "single log";
+        int32_t singleLogSize = singleLog.size();
+        buffer = new char[singleLogSize + 1];
+        strcpy(buffer, singleLog.c_str());
+        buffer[singleLogSize - 1] = '\0';
+        splitIndex = logFileReader.LogSplit(buffer, singleLogSize, lineFeed, true);
+        APSARA_TEST_EQUAL(1, splitIndex.size());
+        APSARA_TEST_EQUAL(0, splitIndex[0]);
+        APSARA_TEST_EQUAL(1, lineFeed);
+        delete[] buffer;
+    }
 
     // case 2: invalid regex beginning
-    string invalidLog = "xx" + LOG_BEGIN_TIME + "invalid log 1\nyy" + LOG_BEGIN_TIME + "invalid log 2\n";
-    int32_t invalidLogSize = invalidLog.size();
-    buffer = new char[invalidLogSize + 1];
-    strcpy(buffer, invalidLog.c_str());
-    buffer[invalidLogSize - 1] = '\0';
-    splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, true);
-    APSARA_TEST_EQUAL(0, splitIndex.size());
-    APSARA_TEST_EQUAL(2, lineFeed);
-    delete[] buffer;
+    {
+        string invalidLog = "xx" + LOG_BEGIN_TIME + "invalid log 1\nyy" + LOG_BEGIN_TIME + "invalid log 2\n";
+        int32_t invalidLogSize = invalidLog.size();
+        buffer = new char[invalidLogSize + 1];
+        strcpy(buffer, invalidLog.c_str());
+        buffer[invalidLogSize - 1] = '\0';
+        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, true);
+        APSARA_TEST_EQUAL(0, splitIndex.size());
+        APSARA_TEST_EQUAL(2, lineFeed);
+        delete[] buffer;
+    }
 
 
     // case 3: invalid begin one regex beginning
