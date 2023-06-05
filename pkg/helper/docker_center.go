@@ -995,11 +995,9 @@ func (dc *DockerCenter) updateContainer(id string, container *DockerInfoDetail) 
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 	if container.K8SInfo != nil {
-		if _, ok := dc.containerMap[id]; !ok {
-			for _, oldContainer := range dc.containerMap {
-				if oldContainer.K8SInfo != nil && oldContainer.K8SInfo.IsSamePod(container.K8SInfo) {
-					oldContainer.K8SInfo.Merge(container.K8SInfo)
-				}
+		for _, oldContainer := range dc.containerMap {
+			if oldContainer.K8SInfo != nil && oldContainer.K8SInfo.IsSamePod(container.K8SInfo) {
+				oldContainer.K8SInfo.Merge(container.K8SInfo)
 			}
 		}
 	}

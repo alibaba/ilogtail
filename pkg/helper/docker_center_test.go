@@ -73,6 +73,53 @@ func TestGetIpByHost_2(t *testing.T) {
 	os.Remove(hostFileName)
 }
 
+func TestUpdateK8sInfo(t *testing.T) {
+	resetDockerCenter()
+	dc := getDockerCenterInstance()
+
+	normalContainerLabels1 := map[string]string{
+		k8sPodNameLabel:      "testPodName",
+		k8sPodNameSpaceLabel: "testNamespace",
+	}
+	pauseContainerLabels := map[string]string{
+		k8sPodNameLabel:      "testPodName",
+		k8sPodNameSpaceLabel: "testNamespace",
+		"customLabel1":       "customLabel1",
+		"customLabel2":       "customLabel2",
+	}
+
+	normalContainerLabels2 := map[string]string{
+		k8sPodNameLabel:      "testPodName",
+		k8sPodNameSpaceLabel: "testNamespace",
+		"customNormalLabel1": "customNormalLabel1",
+		"customNormalLabel2": "customNormalLabel2",
+	}
+
+	newContainer := func(id, name string, labels map[string]string) *DockerInfoDetail {
+		return dc.CreateInfoDetail(types.ContainerJSON{
+			ContainerJSONBase: &types.ContainerJSONBase{
+				ID:    id,
+				Name:  name,
+				State: &types.ContainerState{},
+			},
+			Config: &container.Config{
+				Env:    make([]string, 0),
+				Labels: labels,
+			},
+		}, "", false)
+	}
+
+	{
+		dc.updateContainers(map[string]*DockerInfoDetail{
+			"c1": newContainer("c1", "normalContainer", normalContainerLabels1),
+			"c2": newContainer("c2", "POD", pauseContainerLabels),
+		})
+		require.Equal(t, len(dc.containerMap["c1"].K8SInfo.Labels), 2)
+		dc.updateContainer("c1", newContainer("c1", "normalContainer", normalContainerLabels2))
+		require.Equal(t, len(dc.containerMap["c1"].K8SInfo.Labels), 2)
+	}
+}
+
 func TestGetAllAcceptedInfoV2(t *testing.T) {
 	resetDockerCenter()
 	dc := getDockerCenterInstance()
