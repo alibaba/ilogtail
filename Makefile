@@ -73,7 +73,7 @@ DIST_FILE = $(DIST_DIR)/ilogtail-$(VERSION).linux-$(ARCH).tar.gz
 
 .PHONY: tools
 tools:
-	$(GO_LINT) version || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GO_PATH)/bin v1.53.1
+	$(GO_LINT) version || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GO_PATH)/bin v1.49.0
 	$(GO_ADDLICENSE) version || go install github.com/google/addlicense@latest
 
 .PHONY: clean
