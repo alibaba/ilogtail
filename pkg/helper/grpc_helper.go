@@ -80,7 +80,8 @@ func (cfg *GrpcClientConfig) GetDialOptions() ([]grpc.DialOption, error) {
 
 	cred := insecure.NewCredentials()
 	if strings.HasPrefix(cfg.Endpoint, "https://") {
-		tlsConfig := &tls.Config{MinVersion: uint16(getTLSMinVersion(""))}
+		tlsConfig := &tls.Config{MinVersion: tls.VersionTLS13}
+		tlsConfig.MinVersion = getTLSMinVersion("")
 		cred = credentials.NewTLS(tlsConfig)
 	}
 	opts = append(opts, grpc.WithTransportCredentials(cred))
@@ -103,8 +104,8 @@ func (cfg *GrpcClientConfig) GetDialOptions() ([]grpc.DialOption, error) {
 	return opts, nil
 }
 
-func getTLSMinVersion(version string) int {
-	res := 0
+func getTLSMinVersion(version string) uint16 {
+	var res uint16
 	switch version {
 	case "TLS10":
 		res = tls.VersionTLS10
