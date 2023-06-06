@@ -221,8 +221,8 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer[invalidLogSize - 1] = '\0';
         splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, false);
         APSARA_TEST_EQUAL(2, splitIndex.size());
-        APSARA_TEST_EQUAL(0, splitIndex[0])
-        APSARA_TEST_EQUAL(35, splitIndex[1])
+        APSARA_TEST_EQUAL(0, splitIndex[0]);
+        APSARA_TEST_EQUAL(35, splitIndex[1]);
         APSARA_TEST_EQUAL(2, lineFeed);
         delete[] buffer;
     }
@@ -236,7 +236,7 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer[invalidLogSize - 1] = '\0';
         splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, true);
         APSARA_TEST_EQUAL(1, splitIndex.size());
-        APSARA_TEST_EQUAL(35, splitIndex[0])
+        APSARA_TEST_EQUAL(35, splitIndex[0]);
         APSARA_TEST_EQUAL(2, lineFeed);
         delete[] buffer;
     }
@@ -250,7 +250,7 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer[invalidLogSize - 1] = '\0';
         splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, false);
         APSARA_TEST_EQUAL(1, splitIndex.size());
-        APSARA_TEST_EQUAL(0, splitIndex[0])
+        APSARA_TEST_EQUAL(0, splitIndex[0]);
         APSARA_TEST_EQUAL(2, lineFeed);
         delete[] buffer;
     }
@@ -264,7 +264,7 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer[invalidLogSize - 1] = '\0';
         splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, true);
         APSARA_TEST_EQUAL(1, splitIndex.size());
-        APSARA_TEST_EQUAL(0, splitIndex[0])
+        APSARA_TEST_EQUAL(0, splitIndex[0]);
         APSARA_TEST_EQUAL(2, lineFeed);
         delete[] buffer;
     }
