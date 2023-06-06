@@ -169,7 +169,7 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	switch s.version {
 	case v1:
-		logs, err := s.decoder.Decode(data, r, s.Tags)
+		_, logs, err := s.decoder.Decode(data, r, s.Tags)
 		if err != nil {
 			logger.Warning(s.context.GetRuntimeContext(), "DECODE_BODY_FAIL_ALARM", "decode body failed", err, "request", r.URL.String())
 			BadRequest(w)
@@ -287,6 +287,11 @@ func (s *ServiceHTTP) start() error {
 		s.dumper.Start()
 	}
 	return nil
+}
+
+func (s *ServiceHTTP) GetDataType() pipeline.DataType {
+	dataType, _, _ := s.decoder.Decode(nil, nil, nil)
+	return dataType
 }
 
 func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string {

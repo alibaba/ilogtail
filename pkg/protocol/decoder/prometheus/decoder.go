@@ -31,6 +31,7 @@ import (
 	"github.com/richardartoul/molecule/src/codec"
 
 	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 )
@@ -98,12 +99,17 @@ func parseLabels(metric model.Metric) (metricName, labelsValue string) {
 }
 
 // Decode impl
-func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error) {
+func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (dataType pipeline.DataType, logs []*protocol.Log, err error) {
+	if req == nil {
+		return pipeline.MetricsDataType, nil, common.EmptyReqError
+	}
 	if req.Header.Get(contentEncodingKey) == snappyEncoding &&
 		strings.HasPrefix(req.Header.Get(contentTypeKey), pbContentType) {
-		return d.decodeInRemoteWriteFormat(data, req)
+		logs, err = d.decodeInRemoteWriteFormat(data, req)
+		return pipeline.MetricInputType, logs, err
 	}
-	return d.decodeInExpFmt(data, req)
+	logs, err = d.decodeInExpFmt(data, req)
+	return pipeline.MetricInputType, logs, err
 }
 
 func (d *Decoder) decodeInExpFmt(data []byte, _ *http.Request) (logs []*protocol.Log, err error) {

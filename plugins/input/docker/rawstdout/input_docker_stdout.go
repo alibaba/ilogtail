@@ -542,6 +542,10 @@ func (sds *ServiceDockerStdout) Stop() error {
 	return nil
 }
 
+func (sds *ServiceDockerStdout) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func init() {
 	pipeline.ServiceInputs["service_docker_stdout_raw"] = func() pipeline.ServiceInput {
 		return &ServiceDockerStdout{

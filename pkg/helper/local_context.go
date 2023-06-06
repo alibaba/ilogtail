@@ -35,6 +35,7 @@ type LocalContext struct {
 	ctx         context.Context
 	pluginNames string
 	common      *pkg.LogtailContextMeta
+	dataType    pipeline.DataType
 }
 
 var contextMutex sync.Mutex
@@ -161,4 +162,12 @@ func (p *LocalContext) GetCheckPointObject(key string, obj interface{}) (exist b
 		return false
 	}
 	return true
+}
+
+func (p *LocalContext) RegisterV1DataType(datatype pipeline.DataType) {
+	p.dataType = datatype
+}
+
+func (p *LocalContext) GetV1DataType() pipeline.DataType {
+	return p.dataType
 }

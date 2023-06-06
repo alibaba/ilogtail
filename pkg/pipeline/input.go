@@ -14,7 +14,7 @@
 
 package pipeline
 
-// MetricInput ...
+// MetricInput means a fetch interface rather than Metrics data structure, such as prometheus time series model.
 type MetricInput interface {
 	// Init called for init some system resources, like socket, mutex...
 	// return call interval(ms) and error flag, if interval is 0, use default interval
@@ -24,11 +24,21 @@ type MetricInput interface {
 	Description() string
 }
 
+// DataType is a supplement signature for the v1 log model.
+type DataType int8
+
+const (
+	LogDataType DataType = iota
+	MetricsDataType
+)
+
 type MetricInputV1 interface {
 	MetricInput
 	// Collect takes in an accumulator and adds the metrics that the Input
 	// gathers. This is called every "interval"
 	Collect(Collector) error
+
+	GetDataType() DataType
 }
 
 type MetricInputV2 interface {
@@ -55,6 +65,8 @@ type ServiceInputV1 interface {
 	ServiceInput
 	// Start starts the ServiceInput's service, whatever that may be
 	Start(Collector) error
+
+	GetDataType() DataType
 }
 
 type ServiceInputV2 interface {

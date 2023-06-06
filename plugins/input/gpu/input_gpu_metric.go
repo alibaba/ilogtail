@@ -119,6 +119,10 @@ func (r *InputGpuMetric) CollectGpuMetric() error {
 	return nil
 }
 
+func (r *InputGpuMetric) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func (r *InputGpuMetric) Stop() error {
 	close(r.shutdown)
 	r.waitGroup.Wait()

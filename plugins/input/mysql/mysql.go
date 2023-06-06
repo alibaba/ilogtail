@@ -448,6 +448,10 @@ func (m *Mysql) Stop() error {
 	return nil
 }
 
+func (m *Mysql) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func init() {
 	pipeline.ServiceInputs["service_mysql"] = func() pipeline.ServiceInput {
 		return &Mysql{

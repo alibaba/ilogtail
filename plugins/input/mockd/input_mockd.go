@@ -104,6 +104,10 @@ func (p *ServiceMock) Stop() error {
 	return nil
 }
 
+func (p *ServiceMock) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func init() {
 	pipeline.ServiceInputs["service_mock"] = func() pipeline.ServiceInput {
 		return &ServiceMock{Index: 0}

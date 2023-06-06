@@ -319,6 +319,10 @@ func (sj *ServiceJournal) Stop() error {
 	return nil
 }
 
+func (sj *ServiceJournal) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func (sj *ServiceJournal) run(c pipeline.Collector, shutdown chan struct{}, wg *sync.WaitGroup) {
 	defer func() {
 		sj.SaveCheckpoint(true)

@@ -118,7 +118,7 @@ func (u *UDPServer) doStart(dispatchFunc func(logs []*protocol.Log)) error {
 				logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "read record err", err)
 				return
 			}
-			logs, err := u.decoder.Decode(buf[:n], nil, nil)
+			_, logs, err := u.decoder.Decode(buf[:n], nil, nil)
 			if err != nil {
 				logger.Error(u.context.GetRuntimeContext(), "UDP_SERVER_ALARM", "decode record err,some logs would be dropped", err)
 			} else {
@@ -127,6 +127,11 @@ func (u *UDPServer) doStart(dispatchFunc func(logs []*protocol.Log)) error {
 		}
 	}()
 	return nil
+}
+
+func (u *UDPServer) GetDataType() pipeline.DataType {
+	dataType, _, _ := u.decoder.Decode(nil, nil, nil)
+	return dataType
 }
 
 func (u *UDPServer) Stop() error {

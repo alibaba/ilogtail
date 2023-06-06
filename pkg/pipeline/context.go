@@ -29,12 +29,13 @@ type CommonContext struct {
 // Context for plugin
 type Context interface {
 	InitContext(project, logstore, configName string)
-
 	GetConfigName() string
 	GetProject() string
 	GetLogstore() string
 	GetRuntimeContext() context.Context
 	GetExtension(name string, cfg any) (Extension, error)
+	GetV1DataType() DataType
+	RegisterV1DataType(datatype DataType)
 	RegisterCounterMetric(metric CounterMetric)
 	RegisterStringMetric(metric StringMetric)
 	RegisterLatencyMetric(metric LatencyMetric)

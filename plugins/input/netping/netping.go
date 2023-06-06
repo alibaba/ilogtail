@@ -676,6 +676,10 @@ func (m *NetPing) doHTTPing(config *HTTPConfig) {
 
 }
 
+func (m *NetPing) GetDataType() pipeline.DataType {
+	return pipeline.MetricsDataType
+}
+
 // Register the plugin to the MetricInputs array.
 func init() {
 	pipeline.MetricInputs["metric_input_netping"] = func() pipeline.MetricInput {

@@ -63,6 +63,10 @@ func (m *MetricsExample) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
+func (m *MetricsExample) GetDataType() pipeline.DataType {
+	return pipeline.MetricsDataType
+}
+
 // Register the plugin to the MetricInputs array.
 func init() {
 	pipeline.MetricInputs["metric_input_example"] = func() pipeline.MetricInput {

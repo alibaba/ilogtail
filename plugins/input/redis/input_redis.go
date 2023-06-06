@@ -268,6 +268,10 @@ func gatherKeyspaceLine(name, line string, fields *map[string]string, dbTotal *T
 	}
 }
 
+func (r *InputRedis) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func init() {
 	pipeline.MetricInputs["metric_redis"] = func() pipeline.MetricInput {
 		return &InputRedis{}

@@ -42,6 +42,10 @@ func (r *Input) Description() string {
 	return "skywalking agent v2 input for logtail"
 }
 
+func (r *Input) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func (r *Input) Collect(pipeline.Collector) error {
 	return nil
 }

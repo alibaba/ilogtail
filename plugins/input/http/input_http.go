@@ -325,6 +325,10 @@ func (h *Response) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
+func (h *Response) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func init() {
 	pipeline.MetricInputs["metric_http"] = func() pipeline.MetricInput {
 		return &Response{}

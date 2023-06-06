@@ -683,6 +683,9 @@ func loadMetric(pluginType string, logstoreConfig *LogstoreConfig, configInterfa
 	if err != nil {
 		return err
 	}
+	if metricsV1, ok := metric.(pipeline.MetricInputV1); ok {
+		logstoreConfig.Context.RegisterV1DataType(metricsV1.GetDataType())
+	}
 	if interval == 0 {
 		interval = logstoreConfig.GlobalConfig.InputIntervalMs
 		configMapI, convertSuc := configInterface.(map[string]interface{})

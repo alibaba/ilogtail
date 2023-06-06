@@ -63,6 +63,10 @@ func (s *ServiceExample) Start(collector pipeline.Collector) error {
 	return s.server.ListenAndServe()
 }
 
+func (s *ServiceExample) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 // Stop method would triggered when closing the plugin to graceful stop the go routine blocking with
 // the Start method.
 func (s *ServiceExample) Stop() error {

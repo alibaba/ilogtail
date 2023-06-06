@@ -110,6 +110,10 @@ func (p *ServiceDockerEvents) Stop() error {
 	return nil
 }
 
+func (p *ServiceDockerEvents) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func init() {
 	pipeline.ServiceInputs["service_docker_event"] = func() pipeline.ServiceInput {
 		return &ServiceDockerEvents{

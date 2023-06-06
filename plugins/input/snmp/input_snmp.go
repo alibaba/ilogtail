@@ -572,6 +572,10 @@ func (s *Agent) Start(collector pipeline.Collector) error {
 	return nil
 }
 
+func (s *Agent) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func (s *Agent) Stop() error {
 	for _, GsAgent := range s.gs {
 		func() {

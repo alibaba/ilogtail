@@ -93,6 +93,10 @@ func (r *InputMock) Read(context pipeline.PipelineContext) error {
 	return nil
 }
 
+func (r *InputMock) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func init() {
 	pipeline.MetricInputs["metric_mock"] = func() pipeline.MetricInput {
 		return &InputMock{

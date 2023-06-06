@@ -250,6 +250,10 @@ func (p *ServiceMQTT) Stop() error {
 	return nil
 }
 
+func (p *ServiceMQTT) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func init() {
 	pipeline.ServiceInputs["service_mqtt"] = func() pipeline.ServiceInput {
 		return &ServiceMQTT{

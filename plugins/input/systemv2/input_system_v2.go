@@ -408,6 +408,10 @@ func (r *InputSystem) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
+func (r *InputSystem) GetDataType() pipeline.DataType {
+	return pipeline.MetricsDataType
+}
+
 func init() {
 	pipeline.MetricInputs["metric_system_v2"] = func() pipeline.MetricInput {
 		return &InputSystem{

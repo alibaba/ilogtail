@@ -171,6 +171,10 @@ func (p *ServiceLumber) Start(c pipeline.Collector) error {
 	}
 }
 
+func (p *ServiceLumber) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 // Stop stops the services and closes any necessary channels and connections
 func (p *ServiceLumber) Stop() error {
 	close(p.shutdown)

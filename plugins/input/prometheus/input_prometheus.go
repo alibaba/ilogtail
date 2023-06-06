@@ -146,6 +146,10 @@ func (p *ServiceStaticPrometheus) Stop() error {
 	return nil
 }
 
+func (p *ServiceStaticPrometheus) GetDataType() pipeline.DataType {
+	return pipeline.MetricsDataType
+}
+
 func init() {
 	pipeline.ServiceInputs["service_prometheus"] = func() pipeline.ServiceInput {
 		return &ServiceStaticPrometheus{

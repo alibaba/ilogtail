@@ -44,6 +44,10 @@ func (r *Input) Init(ctx pipeline.Context) (int, error) {
 	return 0, nil
 }
 
+func (r *Input) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 // Description returns a one-sentence description on the Input
 func (r *Input) Description() string {
 	return "skywalking agent v3 input for logtail"

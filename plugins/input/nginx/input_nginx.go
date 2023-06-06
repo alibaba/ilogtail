@@ -189,6 +189,10 @@ func getTags(addr *url.URL) map[string]string {
 	return map[string]string{"_server_": host, "_port_": port}
 }
 
+func (n *Nginx) GetDataType() pipeline.DataType {
+	return pipeline.LogDataType
+}
+
 func init() {
 	pipeline.MetricInputs["metric_nginx_status"] = func() pipeline.MetricInput {
 		return &Nginx{}

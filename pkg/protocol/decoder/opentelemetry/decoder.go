@@ -23,6 +23,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
 
 	"github.com/alibaba/ilogtail/pkg/models"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 )
@@ -38,37 +39,53 @@ const (
 
 // Decoder impl
 type Decoder struct {
-	Format string
+	Format   string
+	dataType pipeline.DataType
+}
+
+func NewDecoder(format string) *Decoder {
+	d := &Decoder{
+		Format: format,
+	}
+	if format == common.ProtocolOTLPMetricV1 {
+		d.dataType = pipeline.MetricsDataType
+	} else {
+		d.dataType = pipeline.LogDataType
+	}
+	return d
 }
 
 // Decode impl
-func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error) {
+func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (dataType pipeline.DataType, logs []*protocol.Log, err error) {
+	if req == nil {
+		return d.dataType, nil, common.EmptyReqError
+	}
 	switch d.Format {
 	case common.ProtocolOTLPLogV1:
 		otlpLogReq := plogotlp.NewExportRequest()
 		otlpLogReq, err = DecodeOtlpRequest(otlpLogReq, data, req)
 		if err != nil {
-			return logs, err
+			return d.dataType, logs, err
 		}
 		logs, err = ConvertOtlpLogRequestV1(otlpLogReq)
 	case common.ProtocolOTLPMetricV1:
 		otlpMetricReq := pmetricotlp.NewExportRequest()
 		otlpMetricReq, err = DecodeOtlpRequest(otlpMetricReq, data, req)
 		if err != nil {
-			return logs, err
+			return d.dataType, logs, err
 		}
 		logs, err = ConvertOtlpMetricRequestV1(otlpMetricReq)
 	case common.ProtocolOTLPTraceV1:
 		otlpTraceReq := ptraceotlp.NewExportRequest()
 		otlpTraceReq, err = DecodeOtlpRequest(otlpTraceReq, data, req)
 		if err != nil {
-			return logs, err
+			return d.dataType, logs, err
 		}
 		logs, err = ConvertOtlpTraceRequestV1(otlpTraceReq)
 	default:
 		err = errors.New("Invalid RequestURI: " + req.RequestURI)
 	}
-	return logs, err
+	return d.dataType, logs, err
 }
 
 // ParseRequest impl

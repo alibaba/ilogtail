@@ -48,6 +48,7 @@ type EmptyContext struct {
 	ctx         context.Context
 	checkpoint  map[string][]byte
 	pluginNames string
+	dataType    pipeline.DataType
 }
 
 var contextMutex sync.Mutex
@@ -187,4 +188,11 @@ func (p *EmptyContext) GetExtension(name string, cfg any) (pipeline.Extension, e
 		return nil, err
 	}
 	return extension, nil
+}
+func (p *EmptyContext) RegisterV1DataType(datatype pipeline.DataType) {
+	p.dataType = datatype
+}
+
+func (p *EmptyContext) GetV1DataType() pipeline.DataType {
+	return p.dataType
 }
