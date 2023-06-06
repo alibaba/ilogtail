@@ -669,19 +669,13 @@ func (dc *DockerCenter) readStaticConfig(forceFlush bool) {
 		forceFlush = true
 	}
 
-	if forceFlush {
+	if forceFlush || changed {
 		containerMap := make(map[string]*DockerInfoDetail)
 		for _, info := range containerInfo {
 			dockerInfoDetail := dockerCenterInstance.CreateInfoDetail(info, envConfigPrefix, false)
 			containerMap[info.ID] = dockerInfoDetail
 		}
 		dockerCenterInstance.updateContainers(containerMap)
-	} else if changed {
-		logger.Info(context.Background(), "read static container info success, count", len(containerInfo), "removed", removedIDs)
-		for _, info := range containerInfo {
-			dockerInfoDetail := dockerCenterInstance.CreateInfoDetail(info, envConfigPrefix, false)
-			dockerCenterInstance.updateContainer(info.ID, dockerInfoDetail)
-		}
 	}
 
 	if len(removedIDs) > 0 {
@@ -995,9 +989,11 @@ func (dc *DockerCenter) updateContainer(id string, container *DockerInfoDetail) 
 	dc.lock.Lock()
 	defer dc.lock.Unlock()
 	if container.K8SInfo != nil {
-		for _, oldContainer := range dc.containerMap {
-			if oldContainer.K8SInfo != nil && oldContainer.K8SInfo.IsSamePod(container.K8SInfo) {
-				oldContainer.K8SInfo.Merge(container.K8SInfo)
+		if _, ok := dc.containerMap[id]; !ok {
+			for _, oldContainer := range dc.containerMap {
+				if oldContainer.K8SInfo != nil && oldContainer.K8SInfo.IsSamePod(container.K8SInfo) {
+					oldContainer.K8SInfo.Merge(container.K8SInfo)
+				}
 			}
 		}
 	}
