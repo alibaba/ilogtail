@@ -176,7 +176,7 @@ void LogFileReaderUnittest::TestLogSplit() {
     strcpy(buffer, multipleLog.c_str());
     buffer[multipleLogSize - 1] = '\0';
     int32_t lineFeed;
-    vector<int32_t> splitIndex = logFileReader.LogSplit(buffer, multipleLogSize, lineFeed, true);
+    vector<int32_t> splitIndex = logFileReader.LogSplit(buffer, multipleLogSize, lineFeed);
     APSARA_TEST_EQUAL(index.size(), splitIndex.size());
     for (size_t i = 0; i < index.size() && i < splitIndex.size(); ++i) {
         APSARA_TEST_EQUAL(index[i], splitIndex[i]);
@@ -191,7 +191,7 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer = new char[singleLogSize + 1];
         strcpy(buffer, singleLog.c_str());
         buffer[singleLogSize - 1] = '\0';
-        splitIndex = logFileReader.LogSplit(buffer, singleLogSize, lineFeed, true);
+        splitIndex = logFileReader.LogSplit(buffer, singleLogSize, lineFeed);
         APSARA_TEST_EQUAL(1, splitIndex.size());
         APSARA_TEST_EQUAL(0, splitIndex[0]);
         APSARA_TEST_EQUAL(1, lineFeed);
@@ -205,7 +205,7 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer = new char[invalidLogSize + 1];
         strcpy(buffer, invalidLog.c_str());
         buffer[invalidLogSize - 1] = '\0';
-        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, true);
+        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed);
         APSARA_TEST_EQUAL(0, splitIndex.size());
         APSARA_TEST_EQUAL(2, lineFeed);
         delete[] buffer;
@@ -214,12 +214,14 @@ void LogFileReaderUnittest::TestLogSplit() {
 
     // case 3: invalid one + valid one, no discard unmatch
     {
+        CommonRegLogFileReader logFileReader("100_proj", "", "", "", INT32_FLAG(default_tail_limit_kb), "", "", "", ENCODING_UTF8, false, false);
+        logFileReader.SetLogBeginRegex(LOG_BEGIN_REGEX);
         string invalidLog = "xx" + LOG_BEGIN_TIME + "invalid log 1\n" + LOG_BEGIN_TIME + "invalid log 2\n";
         int32_t invalidLogSize = invalidLog.size();
         buffer = new char[invalidLogSize + 1];
         strcpy(buffer, invalidLog.c_str());
         buffer[invalidLogSize - 1] = '\0';
-        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, false);
+        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed);
         APSARA_TEST_EQUAL(2, splitIndex.size());
         APSARA_TEST_EQUAL(0, splitIndex[0]);
         APSARA_TEST_EQUAL(35, splitIndex[1]);
@@ -234,7 +236,7 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer = new char[invalidLogSize + 1];
         strcpy(buffer, invalidLog.c_str());
         buffer[invalidLogSize - 1] = '\0';
-        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, true);
+        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed);
         APSARA_TEST_EQUAL(1, splitIndex.size());
         APSARA_TEST_EQUAL(35, splitIndex[0]);
         APSARA_TEST_EQUAL(2, lineFeed);
@@ -243,12 +245,14 @@ void LogFileReaderUnittest::TestLogSplit() {
 
     // case 5: valid one + invalid one, no discard unmatch
     {
+        CommonRegLogFileReader logFileReader("100_proj", "", "", "", INT32_FLAG(default_tail_limit_kb), "", "", "", ENCODING_UTF8, false, false);
+        logFileReader.SetLogBeginRegex(LOG_BEGIN_REGEX);
         string invalidLog = LOG_BEGIN_TIME + "invalid log 1\nyy" + LOG_BEGIN_TIME + "invalid log 2\n";
         int32_t invalidLogSize = invalidLog.size();
         buffer = new char[invalidLogSize + 1];
         strcpy(buffer, invalidLog.c_str());
         buffer[invalidLogSize - 1] = '\0';
-        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, false);
+        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed);
         APSARA_TEST_EQUAL(1, splitIndex.size());
         APSARA_TEST_EQUAL(0, splitIndex[0]);
         APSARA_TEST_EQUAL(2, lineFeed);
@@ -262,7 +266,7 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer = new char[invalidLogSize + 1];
         strcpy(buffer, invalidLog.c_str());
         buffer[invalidLogSize - 1] = '\0';
-        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, true);
+        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed);
         APSARA_TEST_EQUAL(1, splitIndex.size());
         APSARA_TEST_EQUAL(0, splitIndex[0]);
         APSARA_TEST_EQUAL(2, lineFeed);

@@ -185,7 +185,7 @@ std::string JsonLogFileReader::RapidjsonValueToString(const rapidjson::Value& va
     }
 }
 
-vector<int32_t> JsonLogFileReader::LogSplit(char* buffer, int32_t size, int32_t& lineFeed, bool discardUnmatch) {
+vector<int32_t> JsonLogFileReader::LogSplit(char* buffer, int32_t size, int32_t& lineFeed) {
     vector<int32_t> index;
     int32_t i = 0;
     index.push_back(i);
