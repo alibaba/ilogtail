@@ -73,7 +73,6 @@ func TestGetIpByHost_2(t *testing.T) {
 	os.Remove(hostFileName)
 }
 
-
 func TestGetAllAcceptedInfoV2(t *testing.T) {
 	resetDockerCenter()
 	dc := getDockerCenterInstance()
