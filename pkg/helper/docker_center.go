@@ -1052,6 +1052,9 @@ func (dc *DockerCenter) fetchOne(containerID string, tryFindSandbox bool) error 
 	if containerDetail.State.Status == ContainerStatusRunning && !ContainerProcessAlive(containerDetail.State.Pid) {
 		containerDetail.State.Status = ContainerStatusExited
 	}
+	// docker 场景下
+	// tryFindSandbox如果是false, 那么fetchOne的地方应该会调用两次，一次是sandbox的id，一次是业务容器的id
+	// tryFindSandbox如果是true, 调用的地方只会有一个业务容器的id，然后依赖fetchOne内部把sandbox信息补全
 	dc.updateContainer(containerID, dc.CreateInfoDetail(containerDetail, envConfigPrefix, false))
 	logger.Debug(context.Background(), "update container", containerID, "detail", containerDetail)
 	if tryFindSandbox && containerDetail.Config != nil {
