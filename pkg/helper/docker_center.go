@@ -669,6 +669,7 @@ func (dc *DockerCenter) readStaticConfig(forceFlush bool) {
 		forceFlush = true
 	}
 
+	// 静态文件读取容器信息的时候，只能全量读取，因此使用updateContainers全量更新
 	if forceFlush || changed {
 		containerMap := make(map[string]*DockerInfoDetail)
 		for _, info := range containerInfo {
