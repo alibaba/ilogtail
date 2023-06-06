@@ -212,7 +212,7 @@ void LogFileReaderUnittest::TestLogSplit() {
     }
 
 
-    // case 3: invalid begin one regex beginning
+    // case 3: invalid one + valid one, no discard unmatch
     {
         string invalidLog = "xx" + LOG_BEGIN_TIME + "invalid log 1\n" + LOG_BEGIN_TIME + "invalid log 2\n";
         int32_t invalidLogSize = invalidLog.size();
@@ -221,11 +221,41 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer[invalidLogSize - 1] = '\0';
         splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, false);
         APSARA_TEST_EQUAL(2, splitIndex.size());
+        APSARA_TEST_EQUAL(0, splitIndex[0])
+        APSARA_TEST_EQUAL(35, splitIndex[1])
         APSARA_TEST_EQUAL(2, lineFeed);
         delete[] buffer;
     }
 
-    // case 4: invalid end one regex beginning
+    // case 4: invalid one + valid one, discard unmatch
+    {
+        string invalidLog = "xx" + LOG_BEGIN_TIME + "invalid log 1\n" + LOG_BEGIN_TIME + "invalid log 2\n";
+        int32_t invalidLogSize = invalidLog.size();
+        buffer = new char[invalidLogSize + 1];
+        strcpy(buffer, invalidLog.c_str());
+        buffer[invalidLogSize - 1] = '\0';
+        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, true);
+        APSARA_TEST_EQUAL(1, splitIndex.size());
+        APSARA_TEST_EQUAL(35, splitIndex[0])
+        APSARA_TEST_EQUAL(2, lineFeed);
+        delete[] buffer;
+    }
+
+    // case 5: valid one + invalid one, no discard unmatch
+    {
+        string invalidLog = LOG_BEGIN_TIME + "invalid log 1\nyy" + LOG_BEGIN_TIME + "invalid log 2\n";
+        int32_t invalidLogSize = invalidLog.size();
+        buffer = new char[invalidLogSize + 1];
+        strcpy(buffer, invalidLog.c_str());
+        buffer[invalidLogSize - 1] = '\0';
+        splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, false);
+        APSARA_TEST_EQUAL(1, splitIndex.size());
+        APSARA_TEST_EQUAL(0, splitIndex[0])
+        APSARA_TEST_EQUAL(2, lineFeed);
+        delete[] buffer;
+    }
+
+    // case 6: valid one + invalid one, discard unmatch
     {
         string invalidLog = LOG_BEGIN_TIME + "invalid log 1\nyy" + LOG_BEGIN_TIME + "invalid log 2\n";
         int32_t invalidLogSize = invalidLog.size();
@@ -234,6 +264,7 @@ void LogFileReaderUnittest::TestLogSplit() {
         buffer[invalidLogSize - 1] = '\0';
         splitIndex = logFileReader.LogSplit(buffer, invalidLogSize, lineFeed, true);
         APSARA_TEST_EQUAL(1, splitIndex.size());
+        APSARA_TEST_EQUAL(0, splitIndex[0])
         APSARA_TEST_EQUAL(2, lineFeed);
         delete[] buffer;
     }
