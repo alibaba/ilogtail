@@ -1372,9 +1372,6 @@ vector<int32_t> LogFileReader::LogSplit(char* buffer, int32_t size, int32_t& lin
                     index.push_back(begIndex);
                 }
             }
-            if (begIndex == 0 && !discardUnmatch) {
-                index.push_back(begIndex);
-            }
             buffer[endIndex] = '\n';
             begIndex = endIndex + 1;
         }
