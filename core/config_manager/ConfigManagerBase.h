@@ -32,6 +32,8 @@
 #include "common/Lock.h"
 #include "common/Thread.h"
 #include "event/Event.h"
+#include "ILogtailMetric.h"
+#include "MetricConstants.h"
 
 DECLARE_FLAG_BOOL(https_verify_peer);
 DECLARE_FLAG_STRING(https_ca_cert);

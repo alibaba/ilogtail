@@ -563,6 +563,11 @@ LogFileReader* Config::CreateLogFileReader(const std::string& dir,
     }
 
     if (reader != NULL) {
+        PluginMetric* pluginMetric = ILogtailMetric::GetInstance()->getPluginMetric(mPipelineMetric, "FileInput");
+        //SubPluginMetric subFileMetric = ILogtailMetric::GetInstance()->getFileSubMetric(pluginMetric, dir + file);
+        
+        reader->SetFileMetric(ILogtailMetric::GetInstance()->getFileSubMetric(pluginMetric, dir + file));
+        
         if ("customized" == mTopicFormat) {
             reader->SetTopicName(STRING_DEEP_COPY(mCustomizedTopic));
         }

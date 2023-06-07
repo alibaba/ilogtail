@@ -32,6 +32,8 @@
 #include "config/LogType.h"
 #include "common/FileInfo.h"
 #include "checkpoint/RangeCheckpoint.h"
+#include "ILogtailMetric.h"
+#include "MetricConstants.h"
 
 namespace logtail {
 
@@ -307,6 +309,14 @@ public:
         mAdjustApsaraMicroTimezone = adjustApsaraMicroTimezone;
     }
 
+    void SetFileMetric(SubPluginMetric* fileMetric) {
+        mFileMetric = fileMetric;
+    }
+
+    SubPluginMetric* getFileMetric() {
+        return mFileMetric;
+    }
+
 protected:
     virtual bool
     GetRawData(char*& bufferptr, size_t* size, int64_t fileSize, FileInfo*& fileInfo, TruncateInfo*& trncateInfo);
@@ -384,6 +394,8 @@ protected:
 
     int32_t mTzOffsetSecond;
     bool mAdjustApsaraMicroTimezone;
+
+    SubPluginMetric* mFileMetric;
 
 private:
     // Initialized when the exactly once feature is enabled.

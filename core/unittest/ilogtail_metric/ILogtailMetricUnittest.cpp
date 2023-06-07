@@ -1,9 +1,10 @@
 #include "unittest/Unittest.h"
 #include <fstream>
 #include <json/json.h>
-#include "ILogtailMetric.h"
 #include <list>
 #include "util.h"
+#include "ILogtailMetric.h"
+#include <MetricConstants.h>
 
 namespace logtail {
 
@@ -18,10 +19,18 @@ APSARA_UNIT_TEST_CASE(ILogtailMetricUnittest, TestDeleteMetric, 0);
 
 void ILogtailMetricUnittest::TestCreateMetric() {
     // create
-    SubMetric* fileMetric = ILogtailMetric::GetInstance()->createFileSubMetric(NULL, "test");
-    LOG_INFO(sLogger,
-            ("labelSize", fileMetric->getLabels().size()));
-    //APSARA_TEST_EQUAL(ILogtailMetric::GetInstance()->GetInstanceMetrics().size(), 1);    
+    PluginMetric* pluginMetric = new PluginMetric();
+    SubPluginMetric* fileMetric = ILogtailMetric::GetInstance()->getFileSubMetric(pluginMetric, "test");
+    LOG_INFO(sLogger, ("labelSize", fileMetric->mLabels.size()));
+    APSARA_TEST_EQUAL(fileMetric->mLabels.size(), 1);  
+
+
+
+    BaseMetric* base = ILogtailMetric::GetInstance()->getBaseMetric(fileMetric, METRIC_FILE_READ_COUNT);
+    base->baseMetricAdd((uint64_t)123);
+    LOG_INFO(sLogger, ("value", base->getMetricObj()->val));
+    APSARA_TEST_EQUAL(base->getMetricObj()->val, (uint64_t)123);  
+    
 }
 
 void ILogtailMetricUnittest::TestDeleteMetric() {

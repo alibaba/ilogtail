@@ -29,6 +29,8 @@
 #include "processor/BaseFilterNode.h"
 #include "LogType.h"
 #include "IntegrityConfig.h"
+#include "ILogtailMetric.h"
+#include "MetricConstants.h"
 
 namespace logtail {
 
@@ -207,6 +209,8 @@ public:
     std::vector<std::string> mFileNameBlacklist;
     bool mObserverFlag = false; // network observer config flag
     std::string mObserverConfig; // network observer config detail
+
+    PipelineMetric* mPipelineMetric;
 
     Config() {
         mSimpleLogFlag = false;

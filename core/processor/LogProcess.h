@@ -26,6 +26,8 @@
 #include "common/Thread.h"
 #include "common/Lock.h"
 #include "log_pb/sls_logs.pb.h"
+#include "ILogtailMetric.h"
+#include "MetricConstants.h"
 
 namespace logtail {
 // forward declaration
