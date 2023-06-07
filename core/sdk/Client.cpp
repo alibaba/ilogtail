@@ -241,6 +241,21 @@ namespace sdk {
         httpHeader[X_LOG_COMPRESSTYPE] = Client::GetCompressTypeString(compressType);
         return SynPostLogStoreLogs(project, logstore, packageListData, httpHeader, hashKey);
     }
+    void Client::PostMetricstoreLogs(const string& project,
+                                     const string& logstore,
+                                     sls_logs::SlsCompressType compressType,
+                                     const string& compressedLogGroup,
+                                     uint32_t rawSize,
+                                     PostLogStoreLogsClosure* callBack) {
+        map<string, string> httpHeader;
+        httpHeader[CONTENT_TYPE] = TYPE_LOG_PROTOBUF;
+        if (!mKeyProvider.empty()) {
+            httpHeader[X_LOG_KEYPROVIDER] = mKeyProvider;
+        }
+        httpHeader[X_LOG_BODYRAWSIZE] = std::to_string(rawSize);
+        httpHeader[X_LOG_COMPRESSTYPE] = Client::GetCompressTypeString(compressType);
+        AsynPostMetricStoreLogs(project, logstore, compressedLogGroup, httpHeader, callBack);
+    }
 
     void Client::PostLogStoreLogs(const std::string& project,
                                   const std::string& logstore,
@@ -306,6 +321,39 @@ namespace sdk {
             }
             ErrorCheck(httpMessage.content, httpMessage.header[X_LOG_REQUEST_ID], httpMessage.statusCode);
         }
+    }
+
+    void Client::AsynPostMetricStoreLogs(const string& project,
+                                         const string& logstore,
+                                         const string& body,
+                                         map<std::string, std::string>& httpHeader,
+                                         PostLogStoreLogsClosure* callBack) {
+        string operation= PROMETHEUS;
+        operation.append("/").append(project).append("/").append(logstore).append("/api/v1/write");
+        httpHeader[CONTENT_MD5] = CalcMD5(body);
+        map<string, string> parameterList;
+        string host = GetSlsHost();
+        SetCommonHeader(httpHeader, (int32_t)(body.length()), "");
+        string signature = GetUrlSignature(HTTP_POST, operation, httpHeader, parameterList, body, GetAccessKey());
+        httpHeader[AUTHORIZATION] = LOG_HEADSIGNATURE_PREFIX + GetAccessKeyId() + ':' + signature;
+        int32_t port = mPort;
+        if (mPort == 80 && mUsingHTTPS) {
+            port = 443;
+        }
+        Response* response = new PostLogStoreLogsResponse();
+        AsynRequest* request = new AsynRequest(HTTP_POST,
+                                               host,
+                                               port,
+                                               operation,
+                                               "",
+                                               httpHeader,
+                                               body,
+                                               mTimeout,
+                                               mInterface,
+                                               mUsingHTTPS,
+                                               callBack,
+                                               response);
+        mClient->AsynSend(request);
     }
 
     void Client::AsynPostLogStoreLogs(const std::string& project,

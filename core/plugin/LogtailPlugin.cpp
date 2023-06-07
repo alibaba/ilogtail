@@ -200,8 +200,9 @@ int LogtailPlugin::SendPb(const char* configName,
                           int logstoreSize,
                           char* pbBuffer,
                           int32_t pbSize,
-                          int32_t lines) {
-    return SendPbV2(configName, configNameSize, logstoreName, logstoreSize, pbBuffer, pbSize, lines, NULL, 0);
+                          int32_t lines,
+                          int dataType) {
+    return SendPbV2(configName, configNameSize, logstoreName, logstoreSize, pbBuffer, pbSize, lines, NULL, 0, dataType);
 }
 
 int LogtailPlugin::SendPbV2(const char* configName,
@@ -212,7 +213,8 @@ int LogtailPlugin::SendPbV2(const char* configName,
                             int32_t pbSize,
                             int32_t lines,
                             const char* shardHash,
-                            int shardHashSize) {
+                            int shardHashSize,
+                            int dataType) {
     static Config* alarmConfig = &(LogtailPlugin::GetInstance()->mPluginAlarmConfig);
     static Config* profileConfig = &(LogtailPlugin::GetInstance()->mPluginProfileConfig);
     static Config* containerConfig = &(LogtailPlugin::GetInstance()->mPluginContainerConfig);
@@ -255,7 +257,7 @@ int LogtailPlugin::SendPbV2(const char* configName,
         if (shardHashSize > 0) {
             shardHashStr.assign(shardHash, static_cast<size_t>(shardHashSize));
         }
-        return Sender::Instance()->SendPb(pConfig, pbBuffer, pbSize, lines, logstore, shardHashStr) ? 0 : -1;
+        return Sender::Instance()->SendPb(pConfig, pbBuffer, pbSize, lines, logstore, shardHashStr, static_cast<sls_logs::SlsDataContentType>(dataType)) ? 0 : -1;
     } else {
         LOG_INFO(sLogger,
                  ("error", "SendPbV2 can not find config, maybe config updated")("config", configNameStr)("logstore", logstore));

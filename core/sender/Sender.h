@@ -141,6 +141,11 @@ public:
     LoggroupTimeValue* mDataPtr;
 };
 
+class MetricsSendClosure: public SendClosure {
+public:
+    void OnFail(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage) override;
+};
+
 struct SlsClientInfo {
     sdk::Client* sendClient;
     int32_t lastUsedTime;
@@ -446,7 +451,8 @@ public:
                 int32_t pbSize,
                 int32_t lines,
                 const std::string& logstore = "",
-                const std::string& shardHash = "");
+                const std::string& shardHash = "",
+                const sls_logs::SlsDataContentType dataContentType = sls_logs::SLS_DATA_LOG);
 
     // only used by exactly once
     void SendCompressed(const std::string& projectName,
@@ -462,6 +468,7 @@ public:
     void SendLogPackageList(std::vector<MergeItem*>& sendDataVec);
 
     friend class SendClosure;
+    friend class MetricsSendClosure;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;

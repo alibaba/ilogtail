@@ -70,6 +70,7 @@ struct LoggroupTimeValue {
     LoggroupSendStatus mStatus;
     LogstoreFeedBackKey mLogstoreKey;
     bool mRealIpFlag;
+    sls_logs::SlsDataContentType mDataContentType;
 
     // each succeeded sending log group only contains logs in the same minute
     int32_t mLogTimeInMinute;
@@ -88,7 +89,8 @@ struct LoggroupTimeValue {
                       int32_t lastUpdateTime,
                       const std::string& shardHashKey,
                       const LogstoreFeedBackKey& logstoreKey,
-                      const LogGroupContext& context = LogGroupContext()) {
+                      const LogGroupContext& context = LogGroupContext(),
+                      const sls_logs::SlsDataContentType  dataContentType =sls_logs::SLS_DATA_LOG) {
         mProjectName = projectName;
         mLogstore = logstore;
         mConfigName = configName;
@@ -97,6 +99,7 @@ struct LoggroupTimeValue {
         mAliuid = aliuid;
         mRegion = region;
         mDataType = dataType;
+        mDataContentType=dataContentType,
         mLogLines = lines;
         mRawSize = rawSize;
         mLastUpdateTime = lastUpdateTime;

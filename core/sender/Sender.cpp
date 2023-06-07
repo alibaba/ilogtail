@@ -50,6 +50,7 @@
 #include "config_manager/ConfigManager.h"
 #include "common/LogFileCollectOffsetIndicator.h"
 #include "fuse/UlogfsHandler.h"
+#include "log_pb/sls_logs.pb.h"
 
 #ifdef LOGTAIL_RUNTIME_PLUGIN
 #include "LogtailRuntimePlugin.h"
@@ -107,6 +108,7 @@ const string Sender::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";
 const int32_t Sender::BUFFER_META_BASE_SIZE = 65536;
 
 std::atomic_int gNetworkErrorCount{0};
+std::atomic_int gMetricsStoreSendErrorCount{0};
 
 void SendClosure::OnSuccess(sdk::Response* response) {
     BOOL_FLAG(global_network_success) = true;
@@ -123,7 +125,8 @@ void SendClosure::OnSuccess(sdk::Response* response) {
                 "Project", mDataPtr->mProjectName)("Logstore", mDataPtr->mLogstore)("Config", mDataPtr->mConfigName)(
                 "RetryTimes", mDataPtr->mSendRetryTimes)("TotalSendCost", curTime - mDataPtr->mLastUpdateTime)(
                 "LogLines", mDataPtr->mLogLines)("Bytes", mDataPtr->mLogData.size())(
-                "Endpoint", mDataPtr->mCurrentEndpoint)("IsProfileData", isProfileData));
+                "Endpoint", mDataPtr->mCurrentEndpoint)("IsProfileData", isProfileData) ("DataContentType", mDataPtr->mDataContentType)
+            );
     }
 
     if (BOOL_FLAG(e2e_send_throughput_test))
@@ -165,6 +168,17 @@ static const char* GetOperationString(OperationOnFail op) {
         default:
             return "discard data";
     }
+}
+
+void MetricsSendClosure::OnFail(sdk::Response* response, const string& errorCode, const string& errorMessage) {
+    LOG_DEBUG(sLogger, ("send failed, error code", errorCode)("error msg", errorMessage));
+    mDataPtr->mSendRetryTimes++;
+    ++gMetricsStoreSendErrorCount;
+    int32_t curTime = time(NULL);
+    Sender::Instance()->IncSendServerErrorStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
+    // switch to log channel
+    mDataPtr->mDataContentType = SLS_DATA_LOG;
+    Sender::Instance()->SendToNetAsync(mDataPtr);
 }
 
 void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const string& errorMessage) {
@@ -1399,6 +1413,8 @@ void Sender::DaemonSender() {
             // Collect at most 15 stats, similar to Linux load 1,5,15.
             static SlidingWindowCounter sNetErrCounter = CreateLoadCounter();
             sMonitor->UpdateMetric("net_err_stat", sNetErrCounter.Add(gNetworkErrorCount.exchange(0)));
+            static SlidingWindowCounter sMetricsErrCounter = CreateLoadCounter();
+            sMonitor->UpdateMetric("metrics_err_stat", sMetricsErrCounter.Add(gMetricsStoreSendErrorCount.exchange(0)));
         }
 
         ///////////////////////////////////////
@@ -1590,6 +1606,7 @@ bool Sender::SendToBufferFile(LoggroupTimeValue* dataPtr) {
     bufferMeta.set_rawsize(dataPtr->mRawSize);
     bufferMeta.set_shardhashkey(dataPtr->mShardHashKey);
     bufferMeta.set_compresstype(dataPtr->mLogGroupContext.mCompressType);
+    bufferMeta.set_datacontenttype(dataPtr->mDataContentType);
     string encodedInfo;
     bufferMeta.SerializeToString(&encodedInfo);
 
@@ -1658,7 +1675,8 @@ bool Sender::SendPb(Config* pConfig,
                     int32_t pbSize,
                     int32_t lines,
                     const std::string& logstore,
-                    const std::string& shardHash) {
+                    const std::string& shardHash,
+                     const sls_logs::SlsDataContentType dataContentType) {
     // if logstore is specific, use this key, otherwise use pConfig->->mCategory
     sls_logs::SlsCompressType compressType = sdk::Client::GetCompressType(pConfig->mCompressType);
     LogGroupContext logGroupContext(pConfig->mRegion, pConfig->mProjectName, pConfig->mCategory, compressType);
@@ -1675,7 +1693,8 @@ bool Sender::SendPb(Config* pConfig,
                                                      time(NULL),
                                                      shardHash,
                                                      pConfig->mLogstoreKey,
-                                                     logGroupContext);
+                                                     logGroupContext,
+                                                     dataContentType);
     // apsara::timing::TimeInNsec startT = apsara::timing::GetCurrentTimeInNanoSeconds();
     if (!CompressData(logGroupContext.mCompressType, pbBuffer, pbSize, pData->mLogData)) {
         LOG_ERROR(sLogger,
@@ -2058,7 +2077,8 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         dataPtr->mRealIpFlag = sendClient->GetRawSlsHostFlag();
     }
 
-    SendClosure* sendClosure = new SendClosure;
+    SendClosure* sendClosure
+        = dataPtr->mDataContentType == sls_logs::SLS_DATA_Metrics ? new SendClosure : new MetricsSendClosure;
     dataPtr->mLastSendTime = curTime;
     sendClosure->mDataPtr = dataPtr;
     LOG_DEBUG(sLogger,
@@ -2083,7 +2103,15 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         }
     } else if (dataPtr->mDataType == LOGGROUP_COMPRESSED) {
         const auto& hashKey = exactlyOnceCpt ? exactlyOnceCpt->data.hash_key() : dataPtr->mShardHashKey;
-        if (hashKey.empty()) {
+        if (dataPtr->mDataContentType == sls_logs::SLS_DATA_Metrics){
+            // send to metrics store
+            sendClient->PostMetricstoreLogs(dataPtr->mProjectName,
+                                            dataPtr->mLogstore,
+                                            dataPtr->mLogGroupContext.mCompressType,
+                                            dataPtr->mLogData,
+                                            dataPtr->mRawSize,
+                                            sendClosure);
+        }else if (hashKey.empty()) {
             sendClient->PostLogStoreLogs(dataPtr->mProjectName,
                                          dataPtr->mLogstore,
                                          dataPtr->mLogGroupContext.mCompressType,

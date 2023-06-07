@@ -84,11 +84,12 @@ func (p *SlsFlusher) Flush(projectName string, logstoreName string, configName s
 		bufLen := len(buf)
 		p.lenCounter.Add(int64(bufLen))
 
+		dataType := p.context.GetV1DataType()
 		var rst int
 		if !p.EnableShardHash {
-			rst = logtail.SendPb(configName, logGroup.Category, buf, len(logGroup.Logs))
+			rst = logtail.SendPb(configName, logGroup.Category, buf, len(logGroup.Logs), dataType)
 		} else {
-			rst = logtail.SendPbV2(configName, logGroup.Category, buf, len(logGroup.Logs), shardHash)
+			rst = logtail.SendPbV2(configName, logGroup.Category, buf, len(logGroup.Logs), shardHash, dataType)
 		}
 		if rst < 0 {
 			return fmt.Errorf("send error %d", rst)

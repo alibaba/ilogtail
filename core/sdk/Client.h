@@ -110,6 +110,24 @@ namespace sdk {
                                                             sls_logs::SlsCompressType compressType,
                                                             const std::string& packageListData,
                                                             const std::string& hashKey = "");
+
+
+        /**
+         * Async put data to Log service metrics store. Unsuccessful opertaion will cause an LOGException.
+         * @param project  the project name
+         * @param logstore the logstore name
+         * @param compressType  compression type
+         * @param compressedLogGroup data of logGroup
+         * @param rawSize  data size
+         * @param callBack callback closure
+         */
+        void PostMetricstoreLogs(const std::string& project,
+                                 const std::string& logstore,
+                                 sls_logs::SlsCompressType compressType,
+                                 const std::string& compressedLogGroup,
+                                 uint32_t rawSize,
+                                 PostLogStoreLogsClosure* callBack);
+
         /** Async Put data to LOG service. Unsuccessful opertaion will cause an LOGException.
          * @param project The project name
          * @param logstore The logstore name
@@ -167,6 +185,12 @@ namespace sdk {
                                   PostLogStoreLogsClosure* callBack,
                                   const std::string& hashKey,
                                   int64_t hashKeySeqID);
+
+        void AsynPostMetricStoreLogs(const std::string& project,
+                                  const std::string& logstore,
+                                  const std::string& body,
+                                  std::map<std::string, std::string>& httpHeader,
+                                  PostLogStoreLogsClosure* callBack);
 
         // PingSLSServer sends a trivial data packet to SLS for some inner purposes.
         PostLogStoreLogsResponse

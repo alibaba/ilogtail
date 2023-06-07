@@ -51,11 +51,12 @@ int LogtailSendPb(const char* configName,
                   int logstoreSize,
                   char* pbBuffer,
                   int pbSize,
-                  int lines) {
+                  int lines,
+                  int dataType) {
     if (gAdapterSendPbFun == NULL) {
         return -1;
     }
-    return gAdapterSendPbFun(configName, configNameSize, logstore, logstoreSize, pbBuffer, pbSize, lines);
+    return gAdapterSendPbFun(configName, configNameSize, logstore, logstoreSize, pbBuffer, pbSize, lines,dataType);
 }
 
 int LogtailSendPbV2(const char* configName,
@@ -66,12 +67,13 @@ int LogtailSendPbV2(const char* configName,
                     int pbSize,
                     int lines,
                     const char* shardHash,
-                    int shardHashSize) {
+                    int shardHashSize,
+                    int dataType) {
     if (NULL == gAdapterSendPbV2Fun) {
         return -1;
     }
     return gAdapterSendPbV2Fun(
-        configName, configNameSize, logstore, logstoreSize, pbBuffer, pbSize, lines, shardHash, shardHashSize);
+        configName, configNameSize, logstore, logstoreSize, pbBuffer, pbSize, lines, shardHash, shardHashSize,dataType);
 }
 
 int LogtailCtlCmd(const char* configName, int configNameSize, int optId, const char* params, int paramsLen) {

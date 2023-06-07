@@ -84,6 +84,7 @@ namespace sdk {
     extern const char* const LOGE_LOGSTORE_WITHOUT_SHARD; //="LogStoreWithoutShard";
     extern const char* const LOGE_INVALID_SEQUENCE_ID; //="InvalidSequenceId";
 
+    extern const char* const PROMETHEUS; //= "/prometheus"
     extern const char* const LOGSTORES; //= "/logstores"
     extern const char* const SHARDS; //= "/shards"
     extern const char* const INDEX; //= "/index"
