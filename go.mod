@@ -148,7 +148,7 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v0.4.1 // indirect
+	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Microsoft/hcsshim v0.9.4 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1483
@@ -268,12 +268,20 @@ require (
 	github.com/VictoriaMetrics/fasthttp v1.1.0 // indirect
 	github.com/VictoriaMetrics/metrics v1.23.0 // indirect
 	github.com/VictoriaMetrics/metricsql v0.45.0 // indirect
+	github.com/apache/rocketmq-client-go/v2 v2.1.1
+	github.com/emirpasic/gods v1.12.0 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/influxdata/telegraf v1.20.0 // indirect
 	github.com/openkruise/kruise-api v1.4.0
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/richardartoul/molecule v1.0.0 // indirect
+	github.com/stathat/consistent v1.0.0 // indirect
+	github.com/tidwall/gjson v1.13.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
 	github.com/valyala/fastrand v1.1.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
@@ -283,6 +291,7 @@ require (
 	golang.org/x/mod v0.8.0 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	sigs.k8s.io/gateway-api v0.6.2 // indirect
+
 )
 
 replace (
