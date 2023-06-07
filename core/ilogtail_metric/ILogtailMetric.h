@@ -2,8 +2,37 @@
 #include <string>
 #include <unordered_map>
 #include <list>
+#include <metric/Metric.h>
 
 namespace logtail {
+
+
+class GroupMetric {
+    public:
+        std::unordered_map<std::string, BaseMetric*> baseMetrics;
+        std::unordered_map<std::string, std::string> labels;
+        std::unordered_map<Std::string, Metric*> metrics;
+};
+
+class Metric {
+    public:
+        std::unordered_map<std::string, BaseMetric*> baseMetrics;
+        std::unordered_map<std::string, std::string> labels;
+        std::unordered_map<Std::string, SubMetric*> subMetrics;
+
+        std::unordered_map<std::string, BaseMetric*> getBaseMetrics();
+        std::unordered_map<std::string, string> getLabels();
+};
+
+class SubMetric {
+    public:
+        std::unordered_map<std::string, BaseMetric*> mBaseMetrics;
+        std::unordered_map<std::string, string> mLabels;
+
+        std::unordered_map<std::string, BaseMetric*> getBaseMetrics();
+        std::unordered_map<std::string, string> getLabels();
+
+};
 
 class ILogtailMetric {
 
@@ -18,38 +47,11 @@ public:
         return ptr;
     }
 
-    struct Metric {
-        std::string name;
-        std::string unit;
-        std::string tags;
-        std::string description;
-        std::string metricType;
-        float value;
-        uint64_t observedTimestamp;
-        uint64_t timestamp;
-    };
+    std::unordered_map<std::string, GroupMetric*> pipelineMetrics;
+    Metric* instanceMetric;  
 
-    struct GroupInfo {
-        std::string project;
-        std::string logstore;
-        std::string configName;
-    };
+    Metric* createInstanceMetric();
+    SubMetric* createFileSubMetric(Metric* Metric, std::string filePath); 
 
-    struct MetricGroup {
-        GroupInfo* meta;
-        std::list<Metric*> metrics;
-    };
-
-    typedef std::unordered_map<std::string, MetricGroup*> MetricGroupMap;
-    MetricGroupMap mILogtailInstanceMetrics;
-    MetricGroupMap mPluginMetrics;
-    MetricGroupMap mSubPluginMetrics;
-
-    MetricGroupMap GetInstanceMetrics();
-    MetricGroupMap GetPluginMetrics();
-    MetricGroupMap GetSubPluginMetrics();
-
-    MetricGroup* CreateMetric(std::string uid, std::string type);
-    void DeleteMetric(std::string uid, std::string type);
 };
 }

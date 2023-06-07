@@ -2,38 +2,38 @@
 
 namespace logtail {
 
+
 ILogtailMetric::ILogtailMetric() {
 }
 
 ILogtailMetric::~ILogtailMetric() {
 }
 
-ILogtailMetric::MetricGroupMap ILogtailMetric::GetInstanceMetrics() {
-    return mILogtailInstanceMetrics;
+
+
+std::unordered_map<std::string, BaseMetric*> SubMetric::getBaseMetrics() {
+    return SubMetric::mBaseMetrics;
 }
 
-ILogtailMetric::MetricGroupMap ILogtailMetric::GetPluginMetrics() {
-    return mPluginMetrics;
-}
-
-ILogtailMetric::MetricGroupMap ILogtailMetric::GetSubPluginMetrics() {
-    return mSubPluginMetrics;
+std::unordered_map<std::string, std::string> SubMetric::getLabels() {
+    return SubMetric::mLabelsl
 }
 
 
-ILogtailMetric::MetricGroup* ILogtailMetric::CreateMetric(std::string uid, std::string type) {
-    std::unordered_map<std::string,  MetricGroup*>::iterator iter = mILogtailInstanceMetrics.find(uid);
-    if (iter == mILogtailInstanceMetrics.end()) {
-        MetricGroup *s = new(MetricGroup);
-        iter = mILogtailInstanceMetrics.insert(iter, std::make_pair(uid, s));
-        return s;
-    } else {
-        return iter->second;
-    }
+void ILogtailMetric::createInstanceMetric(GroupMetric* groupMetric, std::string id) {
+    ILogtailMetric::instanceMetric = new Metric();
+    ILogtailMetric::instanceMetric->getLabels().insert(std::make_pair("instance", id));
+
+    ILogtailMetric::instanceMetric->getBaseMetrics().insert(std::make_pair("cpu"), NULL);
+    ILogtailMetric::instanceMetric->getBaseMetrics().insert(std::make_pair("memory"), NULL);
 }
 
-void ILogtailMetric::DeleteMetric(std::string uid, std::string type) {
+SubMetric* ILogtailMetric::createFileSubMetric(Metric* metric, std::string filePath) {
+    SubMetric* fileSubMetric = new SubMetric();
+    fileSubMetric->getLabels().insert(std::make_pair("filename", filePath));
 
+    //fileSubMetric->getBaseMetrics()["file_read_count"] = NULL;
+    //fileSubMetric->getBaseMetrics()["file_read_bytes"] = NULL;
+    return fileSubMetric;
 }
-
 }
