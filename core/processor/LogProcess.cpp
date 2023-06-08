@@ -403,8 +403,10 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 }
             }
 
-            BaseMetric* baseMetric = ILogtailMetric::GetInstance()->getBaseMetric(logFileReader->getFileMetric(), METRIC_FILE_READ_COUNT);
-            baseMetric->baseMetricAdd(lines);
+            BaseMetric* baseMetric = ILogtailMetric::GetInstance()->getBaseMetric(logFileReader->getFileMetric(threadNo), METRIC_FILE_READ_COUNT);
+            if (baseMetric != NULL) {
+                baseMetric->baseMetricAdd(lines);
+            }
             // add lines count
             s_processLines += (lines);
             if (lines > 0) {

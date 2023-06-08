@@ -62,6 +62,7 @@
 #include "shennong/MetricSender.h"
 #include "polling/PollingDirFile.h"
 #include "polling/PollingModify.h"
+#include "ilogtail_metric/MetricExportor.h"
 #ifdef APSARA_UNIT_TEST_MAIN
 #include "polling/PollingEventQueue.h"
 #endif
@@ -868,6 +869,7 @@ bool EventDispatcherBase::Dispatch() {
         DumpCheckPointPeriod(curTime);
         if (curTime - lastCheckDir >= INT32_FLAG(main_loop_check_interval)) {
             LogFileProfiler::GetInstance()->SendProfileData();
+            MetricExportor::GetInstance()->pushMetrics();
 #if defined(__linux__)
             CheckShennong();
 #endif

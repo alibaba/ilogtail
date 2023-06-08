@@ -6,11 +6,17 @@
 #include <map>
 #include <json/json.h>
 #include "profile_sender/ProfileSender.h"
+#include "ILogtailMetric.h"
+#include "logger/Logger.h"
 
 namespace logtail {
 
 class MetricExportor {
 public:
+    static MetricExportor* GetInstance() {
+        static MetricExportor* ptr = new MetricExportor();
+        return ptr;
+    }
     void pushMetrics();
     void pullMetrics();
 
@@ -18,9 +24,8 @@ public:
 private:
     MetricExportor();
     ~MetricExportor() {}
-    void getILogtailInstanceMetrics();
-    void getPluginMetrics();
-    void getSubPluginMetrics();
+
+    
 
     void pushInstanceMetric(bool forceSend);
     void pushPluginMetric(bool forceSend);

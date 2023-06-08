@@ -11,7 +11,7 @@ using namespace std;
 namespace logtail {
 
 MetricExportor::MetricExportor() {
-    mSendInterval = INT32_FLAG(profile_data_send_interval);
+    mSendInterval = 60;
 }
 
 void MetricExportor::pushMetrics() {
@@ -25,7 +25,7 @@ void MetricExportor::pushInstanceMetric(bool forceSend) {
 
     if (!forceSend && (curTime - mLastSendTime < mSendInterval))
         return;
-    
+    /*
     size_t sendRegionIndex = 0;
     Json::Value detail;
     Json::Value logstore;
@@ -37,6 +37,11 @@ void MetricExportor::pushInstanceMetric(bool forceSend) {
         mProfileSender.SendToProfileProject(region, logGroup);
         break;
     } while (true);
+    */
+    std::unordered_map<std::string, PipelineMetric*> pipeLineMetrics = ILogtailMetric::GetInstance()->mPipelineMetrics;
+    for (std::unordered_map<std::string, PipelineMetric*>::iterator iter = pipeLineMetrics.begin(); iter != pipeLineMetrics.end(); ++iter) {
+        LOG_INFO(sLogger, ("pipeline_metric value", iter->first));
+    }
     mLastSendTime = curTime;
 }
 

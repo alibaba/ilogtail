@@ -309,12 +309,17 @@ public:
         mAdjustApsaraMicroTimezone = adjustApsaraMicroTimezone;
     }
 
-    void SetFileMetric(SubPluginMetric* fileMetric) {
-        mFileMetric = fileMetric;
+    void SetFileMetric(std::unordered_map<int, SubPluginMetric*> fileMetrics) {
+        mFileMetrics = fileMetrics;
     }
 
-    SubPluginMetric* getFileMetric() {
-        return mFileMetric;
+    SubPluginMetric* getFileMetric(int threadNo) {
+        std::unordered_map<int, SubPluginMetric*>::iterator iter = mFileMetrics.find(threadNo);
+        if (iter != mFileMetrics.end()) {
+            return iter->second;
+        } else {
+            return NULL;
+        }
     }
 
 protected:
@@ -395,7 +400,7 @@ protected:
     int32_t mTzOffsetSecond;
     bool mAdjustApsaraMicroTimezone;
 
-    SubPluginMetric* mFileMetric;
+    std::unordered_map<int, SubPluginMetric*> mFileMetrics;
 
 private:
     // Initialized when the exactly once feature is enabled.

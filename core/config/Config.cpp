@@ -563,10 +563,17 @@ LogFileReader* Config::CreateLogFileReader(const std::string& dir,
     }
 
     if (reader != NULL) {
-        PluginMetric* pluginMetric = ILogtailMetric::GetInstance()->getPluginMetric(mPipelineMetric, "FileInput");
-        //SubPluginMetric subFileMetric = ILogtailMetric::GetInstance()->getFileSubMetric(pluginMetric, dir + file);
-        
-        reader->SetFileMetric(ILogtailMetric::GetInstance()->getFileSubMetric(pluginMetric, dir + file));
+
+        int threadCount = AppConfig::GetInstance()->GetProcessThreadCount();
+
+        std::unordered_map<int, SubPluginMetric*> fileMetrics;
+        for (int32_t threadNo = 0; threadNo < threadCount; ++threadNo) {
+            PluginMetric* pluginMetric = ILogtailMetric::GetInstance()->getPluginMetric(mPipelineMetric, "FileInput_" + std::to_string(threadNo));
+            
+            fileMetrics.insert(std::pair<int, SubPluginMetric*>(threadNo, ILogtailMetric::GetInstance()->getFileSubMetric(pluginMetric, dir + file)));
+            //reader->SetFileMetric(ILogtailMetric::GetInstance()->getFileSubMetric(pluginMetric, dir + file));
+        }
+        reader->SetFileMetric(fileMetrics);
         
         if ("customized" == mTopicFormat) {
             reader->SetTopicName(STRING_DEEP_COPY(mCustomizedTopic));
