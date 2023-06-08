@@ -794,8 +794,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 UserLogConfigParser::ParseAdvancedConfig(value, *config);
             }
 
-            config->mPipelineMetric = ILogtailMetric::GetInstance()->getPipelineMetric(config->mConfigName);   
-
             if (logType == DELIMITER_LOG) {
                 config->mTimeFormat = GetStringValue(value, "timeformat", "");
                 string separatorStr = GetStringValue(value, "delimiter_separator");

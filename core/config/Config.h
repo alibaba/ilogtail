@@ -210,8 +210,6 @@ public:
     bool mObserverFlag = false; // network observer config flag
     std::string mObserverConfig; // network observer config detail
 
-    PipelineMetric* mPipelineMetric;
-
     Config() {
         mSimpleLogFlag = false;
         mCreateTime = 0;

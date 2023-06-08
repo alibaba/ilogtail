@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <list>
+#include <atomic>
 #include "logger/Logger.h"
 #include <MetricConstants.h>
 
@@ -10,51 +11,27 @@ namespace logtail {
 
 
 class BaseMetric{
+    struct MetricObj {
+        /* counters and gauges */
+        std::atomic_long val;
 
+        std::atomic_long timestamp;
+    };
     public:
         BaseMetric();
         //~BaseMetric();
-        struct MetricObj {
-            /* counters and gauges */
-            uint64_t val;
-
-            uint64_t timestamp;
-
-            /* internal */
-            std::unordered_map<std::string, std::string> labels;
-        };
-
-        MetricObj* baseMetric;
+        MetricObj* mMetricObj;
         void baseMetricAdd(uint64_t val);
         MetricObj* getMetricObj();
-};
-
-class SubPluginMetric {
-    public:
-        std::unordered_map<std::string, BaseMetric*> mBaseMetrics;
-        std::unordered_map<std::string, std::string> mLabels;
-
-        std::unordered_map<std::string, BaseMetric*> getBaseMetrics();
-        //std::unordered_map<std::string, std::string> getLabels();
-
-};
-
-class PluginMetric {
-    public:
-        std::unordered_map<std::string, BaseMetric*> mBaseMetrics;
-        std::unordered_map<std::string, std::string> mLabels;
-        std::unordered_map<std::string, SubPluginMetric*> mSubMetrics;
-
-        std::unordered_map<std::string, BaseMetric*> getBaseMetrics();
 };
 
 class PipelineMetric {
     public:
         std::unordered_map<std::string, BaseMetric*> mBaseMetrics;
         std::unordered_map<std::string, std::string> mLabels;
-        std::unordered_map<std::string, PluginMetric*> mPluginMetrics;
 
-        std::unordered_map<std::string, BaseMetric*> getBaseMetrics();
+        BaseMetric* getBaseMetric(std::string metricField);
+
 };
 
 
@@ -71,17 +48,14 @@ public:
         return ptr;
     }
 
-    std::unordered_map<std::string, PipelineMetric*> mPipelineMetrics;
-    PluginMetric* mInstanceMetric;  
+    std::list<PipelineMetric*> mPipelineMetrics;
+    PipelineMetric* mInstanceMetric;  
 
-    void createInstanceMetric(PipelineMetric* groupMetric, std::string id);
+    PipelineMetric* createPipelineMetric(std::list<std::string> fields , std::unordered_map<std::string, std::string> labels);
 
-    PipelineMetric* getPipelineMetric(std::string configUid);
+    PipelineMetric* createFileMetric(std::string configUid, std::string pluginUid, std::string filePath);
 
-    PluginMetric* getPluginMetric(PipelineMetric* pipelineMetric, std::string pluginUid); 
+    BaseMetric* getBaseMetric(PipelineMetric* pipelineMetric, std::string metricField);
 
-    SubPluginMetric* getFileSubMetric(PluginMetric* pluginMetric, std::string filePath); 
-
-    BaseMetric* getBaseMetric(SubPluginMetric* fileMetric, std::string metricField);
 };
 }
