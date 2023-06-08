@@ -30,6 +30,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
 	"google.golang.org/grpc"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
@@ -53,17 +54,17 @@ var (
 	errInvalidMethod   = errors.New("method_invalid")
 )
 
-// Server implements ServiceInputV2
-// It can only work in v2 pipelines.
+// Server implements ServiceInputV1 and ServiceInputV2
 type Server struct {
 	context         pipeline.Context
+	collector       pipeline.Collector
 	piplineContext  pipeline.PipelineContext
 	serverGPRC      *grpc.Server
 	serverHTTP      *http.Server
 	grpcListener    net.Listener
 	httpListener    net.Listener
-	logsReceiver    plogotlp.GRPCServer // currently logs are not supported
-	tracesReceiver  ptraceotlp.GRPCServer
+	logsReceiver    plogotlp.GRPCServer
+	tracesReceiver  ptraceotlp.GRPCServer // currently traces are not supported when using the v1 pipeline
 	metricsReceiver pmetricotlp.GRPCServer
 	wg              sync.WaitGroup
 
@@ -79,7 +80,6 @@ func (s *Server) Init(context pipeline.Context) (int, error) {
 		if s.Protocals.GRPC.Endpoint == "" {
 			s.Protocals.GRPC.Endpoint = defaultGRPCEndpoint
 		}
-
 	}
 
 	if s.Protocals.HTTP != nil {
@@ -111,7 +111,11 @@ func (s *Server) Description() string {
 
 // Start ...
 func (s *Server) Start(c pipeline.Collector) error {
-	return nil
+	s.collector = c
+	s.tracesReceiver = newTracesReceiverV1(c)
+	s.metricsReceiver = newMetricsReceiverV1(c)
+	s.logsReceiver = newLogsReceiverV1(c)
+	return s.start()
 }
 
 // StartService(PipelineContext) error
@@ -120,10 +124,17 @@ func (s *Server) StartService(ctx pipeline.PipelineContext) error {
 	s.tracesReceiver = newTracesReceiver(ctx)
 	s.metricsReceiver = newMetricsReceiver(ctx)
 	s.logsReceiver = newLogsReceiver(ctx)
+	return s.start()
+}
 
+func (s *Server) start() error {
 	if s.Protocals.GRPC != nil {
+		ops, err := s.Protocals.GRPC.GetServerOption()
+		if err != nil {
+			logger.Warningf(s.context.GetRuntimeContext(), "SERVICE_OTLP_INVALID_GRPC_SERVER_CONFIG", "inavlid grpc server config: %v, err: %v", s.Protocals.GRPC, err)
+		}
 		grpcServer := grpc.NewServer(
-			serverGRPCOptions(s.Protocals.GRPC)...,
+			ops...,
 		)
 		s.serverGPRC = grpcServer
 		listener, err := getNetListener(s.Protocals.GRPC.Endpoint)
@@ -305,28 +316,6 @@ func (s *Server) registerHTTPTracesComsumer(serveMux *http.ServeMux, decoder ext
 	})
 }
 
-func serverGRPCOptions(grpcConfig *GRPCServerSettings) []grpc.ServerOption {
-	var opts []grpc.ServerOption
-	if grpcConfig != nil {
-		if grpcConfig.MaxRecvMsgSizeMiB > 0 {
-			opts = append(opts, grpc.MaxRecvMsgSize(grpcConfig.MaxRecvMsgSizeMiB*1024*1024))
-		}
-		if grpcConfig.MaxConcurrentStreams > 0 {
-			opts = append(opts, grpc.MaxConcurrentStreams(uint32(grpcConfig.MaxConcurrentStreams)))
-		}
-
-		if grpcConfig.ReadBufferSize > 0 {
-			opts = append(opts, grpc.ReadBufferSize(grpcConfig.ReadBufferSize))
-		}
-
-		if grpcConfig.WriteBufferSize > 0 {
-			opts = append(opts, grpc.WriteBufferSize(grpcConfig.WriteBufferSize))
-		}
-	}
-
-	return opts
-}
-
 func getNetListener(endpoint string) (net.Listener, error) {
 	var listener net.Listener
 	var err error
@@ -405,16 +394,8 @@ func writeResponse(w http.ResponseWriter, contentType string, statusCode int, ms
 }
 
 type Protocals struct {
-	GRPC *GRPCServerSettings
+	GRPC *helper.GRPCServerSettings
 	HTTP *HTTPServerSettings
-}
-
-type GRPCServerSettings struct {
-	Endpoint             string
-	MaxRecvMsgSizeMiB    int
-	MaxConcurrentStreams int
-	ReadBufferSize       int
-	WriteBufferSize      int
 }
 
 type HTTPServerSettings struct {

@@ -34,6 +34,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pluginmanager"
@@ -58,14 +59,32 @@ func (p *ContextTest) LogWarn(alarmType string, kvPairs ...interface{}) {
 	fmt.Println(alarmType, kvPairs)
 }
 
-func newInput(enableGRPC, enableHTTP bool, grpcEndpoint, httpEndpoint string) (*Server, error) {
+type op func(*Server)
+
+func setCompression(cp string) op {
+	return func(s *Server) {
+		if s.Protocals.GRPC != nil {
+			s.Protocals.GRPC.Compression = cp
+		}
+	}
+}
+
+func setDecompression(cp string) op {
+	return func(s *Server) {
+		if s.Protocals.GRPC != nil {
+			s.Protocals.GRPC.Decompression = cp
+		}
+	}
+}
+
+func newInput(enableGRPC, enableHTTP bool, grpcEndpoint, httpEndpoint string, ops ...op) (*Server, error) {
 	ctx := &ContextTest{}
 	ctx.ContextImp.InitContext("a", "b", "c")
 	s := &Server{
 		Protocals: Protocals{},
 	}
 	if enableGRPC {
-		s.Protocals.GRPC = &GRPCServerSettings{
+		s.Protocals.GRPC = &helper.GRPCServerSettings{
 			Endpoint: grpcEndpoint,
 		}
 	}
@@ -74,6 +93,10 @@ func newInput(enableGRPC, enableHTTP bool, grpcEndpoint, httpEndpoint string) (*
 		s.Protocals.HTTP = &HTTPServerSettings{
 			Endpoint: httpEndpoint,
 		}
+	}
+
+	for _, op := range ops {
+		op(s)
 	}
 	_, err := s.Init(&ctx.ContextImp)
 	return s, err
@@ -555,11 +578,11 @@ func initExponentialHistogramMetric(hm pmetric.Metric) {
 	hdp0.Negative().BucketCounts().FromRaw([]uint64{1, 1})
 
 	// The above will print:
-	// Bucket (-1.414214, -1.000000], Count: 1
-	// Bucket (-1.000000, -0.707107], Count: 1
+	// Bucket (2.000000, 2.828427], Count: 1
+	// Bucket (1.414214, 2.000000], Count: 1
 	// Bucket [0, 0], Count: 1
-	// Bucket [0.707107, 1.000000), Count: 1
-	// Bucket [1.000000, 1.414214), Count: 1
+	// Bucket [-1.000000, -0.707107), Count: 1
+	// Bucket [-1.414214, -1.000000), Count: 1
 
 	hdp1 := hdps.AppendEmpty()
 	initMetricAttributes2(hdp1.Attributes())
@@ -578,8 +601,8 @@ func initExponentialHistogramMetric(hm pmetric.Metric) {
 
 	// The above will print:
 	// Bucket [0, 0], Count: 1
-	// Bucket [0.250000, 1.000000), Count: 1
-	// Bucket [1.000000, 4.000000), Count: 1
+	// Bucket (0.250000, 1.000000], Count: 1
+	// Bucket (1.000000, 4.000000], Count: 1
 
 	exemplar := hdp1.Exemplars().AppendEmpty()
 	exemplar.SetTimestamp(metricExemplarTimestamp)

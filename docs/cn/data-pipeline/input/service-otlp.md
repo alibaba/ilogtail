@@ -2,7 +2,7 @@
 
 ## 简介
 
-`service_otlp` `input`插件实现了`ServiceInputV2`接口，可以接受`Opentelemetry log/metric/trace protocol`的http/gRPC请求，并且转换输出PipelineGroupEvents。
+`service_otlp` `input`插件实现了`ServiceInputV1`和`ServiceInputV2`接口，可以接受`Opentelemetry log/metric/trace protocol`的http/gRPC请求，并且转换输出SLSProto或PipelineGroupEvents。目前尚不支持otlp trace转换到SLSProto。
 
 ## 版本
 
@@ -20,6 +20,9 @@
 | Protocals.GRPC.MaxConcurrentStreams | int   | 否    | gRPC Server 最大并发流。                           |
 | Protocals.GRPC.ReadBufferSize       | int   | 否    | gRPC Server读缓存大小。 |
 | Protocals.GRPC.WriteBufferSize      | int   | 否    | gRPC Server写缓存大小。               |
+| Protocals.GRPC.Compression      | string   | 否    | gRPC Server压缩算法，可以用gzip。               |
+| Protocals.GRPC.Decompression      | string   | 否    | gRPC Server解压算法，可以用gzip。               |
+| Protocals.GRPC.TLSConfig      | Struct   | 否    | gRPC Server TLS CONFIG配置。               |
 | Protocals.HTTP    | Struct | 否    | 是否启用HTTP Server                                |
 | Protocals.HTTP.Endpoint | string   | 否    | <p>HTTP Server 地址。</p><p>默认取值为:`0.0.0.0:4318`。</p>                            |
 | Protocals.HTTP.MaxRecvMsgSizeMiB | int   | 否    | HTTP Server 最大接受Msg大小。 <p>默认取值为:`64(MiB)`。</p>                          |
