@@ -267,6 +267,19 @@ void JsonLogFileReaderUnittest::TestLastMatchedLine() {
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
     }
+    { // case single line, buffer size not big enough
+        std::string line1 = R"({"key": "first value"})";
+        std::string line2 = R"({"key": "second value"})";
+        std::string line3 = R"({"key": "third)";
+        std::string expectMatch = line1 + '\0' + line2 + '\0';
+        std::string testLog = line1 + '\n' + line2 + '\n' + line3;
+        int32_t rollbackLineFeedCount = 0;
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        APSARA_TEST_EQUAL_FATAL(expectMatch.size(), matchSize);
+        APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
+        APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
+    }
     { // case multi line
         std::vector<int32_t> index;
         std::string firstLog = R"({
@@ -283,6 +296,22 @@ void JsonLogFileReaderUnittest::TestLastMatchedLine() {
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
+    }
+    { // case multi line, buffer size not enough
+        std::vector<int32_t> index;
+        std::string firstLog = R"({
+    "key": "first value"
+})";
+        std::string secondLog = R"({
+    "key": "second)";
+        std::string expectMatch = firstLog + '\0';
+        std::string testLog = firstLog + '\n' + secondLog + '\n';
+        int32_t rollbackLineFeedCount = 0;
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
+        APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
+        APSARA_TEST_EQUAL_FATAL(2, rollbackLineFeedCount);
     }
     { // case partial json, rollback all
         std::string testLog = "{partial json\npartial json\npartial json\n";
@@ -351,6 +380,101 @@ void LogSplitUnittest::TestLogSplitMultiLine() {
     APSARA_TEST_EQUAL_FATAL(line1, index[0].to_string());
     APSARA_TEST_EQUAL_FATAL(line2, index[1].to_string());
     APSARA_TEST_EQUAL_FATAL(line3, index[2].to_string());
+}
+
+class JsonParseLogLineUnittest : public ::testing::Test {
+public:
+    void TestCanBeParsed();
+    void TestCanNotBeParsedUnDiscard();
+    void TestCanNotBeParsedDiscard();
+
+    static void SetUpTestCase() {
+        BOOL_FLAG(ilogtail_discard_old_data) = false;
+    }
+};
+
+UNIT_TEST_CASE(JsonParseLogLineUnittest, TestCanBeParsed);
+UNIT_TEST_CASE(JsonParseLogLineUnittest, TestCanNotBeParsedUnDiscard);
+UNIT_TEST_CASE(JsonParseLogLineUnittest, TestCanNotBeParsedDiscard);
+
+void JsonParseLogLineUnittest::TestCanBeParsed() {
+    JsonLogFileReader logFileReader("project",
+                                    "logstore",
+                                    "dir",
+                                    "file",
+                                    INT32_FLAG(default_tail_limit_kb),
+                                    "",
+                                    "",
+                                    "",
+                                    ENCODING_UTF8,
+                                    false,
+                                    false);
+    sls_logs::LogGroup logGroup;
+    ParseLogError error;
+    time_t lastLogLineTime = 0;
+    std::string lastLogTimeStr = "";
+    uint32_t logGroupSize = 0;
+    std::string testLog = "{\n"
+                          "\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\n"
+                          "\"time\": \"07/Jul/2022:10:30:28\"\n}";
+    bool successful
+        = logFileReader.ParseLogLine(testLog, logGroup, error, lastLogLineTime, lastLogTimeStr, logGroupSize);
+    APSARA_TEST_TRUE_FATAL(successful);
+    APSARA_TEST_EQUAL_FATAL(logGroupSize, 86);
+}
+
+void JsonParseLogLineUnittest::TestCanNotBeParsedUnDiscard() {
+    JsonLogFileReader logFileReader("project",
+                                    "logstore",
+                                    "dir",
+                                    "file",
+                                    INT32_FLAG(default_tail_limit_kb),
+                                    "",
+                                    "",
+                                    "",
+                                    ENCODING_UTF8,
+                                    false,
+                                    false);
+    sls_logs::LogGroup logGroup;
+    ParseLogError error;
+    time_t lastLogLineTime = 0;
+    std::string lastLogTimeStr = "";
+    uint32_t logGroupSize = 0;
+    logFileReader.mDiscardUnmatch = false;
+    std::string testLog = "{\n"
+                          "\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\n"
+                          "\"time\": \n}";
+    bool successful
+        = logFileReader.ParseLogLine(testLog, logGroup, error, lastLogLineTime, lastLogTimeStr, logGroupSize);
+    APSARA_TEST_FALSE_FATAL(successful);
+    APSARA_TEST_EQUAL_FATAL(logGroupSize, 88);
+}
+
+void JsonParseLogLineUnittest::TestCanNotBeParsedDiscard() {
+    JsonLogFileReader logFileReader("project",
+                                    "logstore",
+                                    "dir",
+                                    "file",
+                                    INT32_FLAG(default_tail_limit_kb),
+                                    "",
+                                    "",
+                                    "",
+                                    ENCODING_UTF8,
+                                    false,
+                                    false);
+    sls_logs::LogGroup logGroup;
+    ParseLogError error;
+    time_t lastLogLineTime = 0;
+    std::string lastLogTimeStr = "";
+    uint32_t logGroupSize = 0;
+    logFileReader.mDiscardUnmatch = true;
+    std::string testLog = "{\n"
+                          "\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\n"
+                          "\"time\": \n}";
+    bool successful
+        = logFileReader.ParseLogLine(testLog, logGroup, error, lastLogLineTime, lastLogTimeStr, logGroupSize);
+    APSARA_TEST_FALSE_FATAL(successful);
+    APSARA_TEST_EQUAL_FATAL(logGroupSize, 0);
 }
 
 } // namespace logtail
