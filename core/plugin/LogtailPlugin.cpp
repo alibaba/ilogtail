@@ -429,7 +429,11 @@ bool LogtailPlugin::LoadPluginBase() {
             return false;
         }
 
-
+        mGetPipelineMetricsFun = (GetPipelineMetricsFun)loader.LoadMethod("GetPipelineMetrics", error);
+        if (!error.empty()) {
+            LOG_ERROR(sLogger, ("load GetPipelineMetrics error, Message", error));
+            return false;
+        }
         mPluginBasePtr = loader.Release();
     }
 
@@ -549,3 +553,22 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
     }
     return K8sContainerMeta();
 }
+
+PluginPipelineMetric LogtailPlugin::GetPipelineMetrics(const std::string& piplineID) {
+    if (mPluginValid && mGetPipelineMetricsFun != nullptr) {
+        GoString id;
+        id.n = piplineID.size();
+        id.p = piplineID.c_str();
+        auto innerMeta = mGetPipelineMetricsFun(id);
+        if (innerMeta != NULL) {
+            PluginPipelineMetric metric;
+            metric.pipelineName.assign(innerMeta->pipelineName);
+            metric.value.assign(innerMeta->value);
+            free(innerMeta->pipelineName);
+            free(innerMeta->value);
+            return metric;
+        }   
+    }
+    return PluginPipelineMetric();
+}
+

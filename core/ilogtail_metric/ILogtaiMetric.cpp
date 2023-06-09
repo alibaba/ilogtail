@@ -15,9 +15,28 @@ BaseMetric::BaseMetric() {
     mMetricObj->timestamp = time(NULL);
 }
 
+BaseMetric::BaseMetric(MetricObj* metricObj) {
+    mMetricObj = metricObj;
+}
+
 void BaseMetric::baseMetricAdd(uint64_t val) {
     mMetricObj->val += val;
-    mMetricObj->timestamp = time(NULL);
+    mMetricObj->timestamp = {time(NULL)};
+}
+
+BaseMetric::MetricObj* BaseMetric::snapShotMetricObj() {
+    MetricObj* newMetricObj = new MetricObj;
+
+    LOG_INFO(sLogger, ("mMetricObj->val exchange before", mMetricObj->val));
+    long value = mMetricObj->val.exchange(0);
+    newMetricObj->val = {value};
+    LOG_INFO(sLogger, ("mMetricObj->val exchange after", mMetricObj->val));
+
+    LOG_INFO(sLogger, ("mMetricObj->timestamp exchange after", mMetricObj->timestamp));
+    newMetricObj->timestamp = {time(NULL)};
+    LOG_INFO(sLogger, ("mMetricObj->timestamp exchange after", mMetricObj->timestamp));
+
+    return newMetricObj;
 }
 
 BaseMetric::MetricObj* BaseMetric::getMetricObj() {

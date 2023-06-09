@@ -54,6 +54,11 @@ struct containerMeta{
 	char** envsKey;
 	char** envsVal;
 };
+
+struct pipelineMetric{
+	char* pipelineName;
+	char* value;
+};
 */
 import "C" //nolint:typecheck
 
@@ -219,6 +224,14 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 			count++
 		}
 	}
+	return returnStruct
+}
+
+//export GetPipelineMetrics
+func GetPipelineMetrics(piplineId string) *C.struct_pipelineMetric {
+	returnStruct := (*C.struct_pipelineMetric)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_pipelineMetric{}))))
+	returnStruct.pipelineName = C.CString("test")
+	returnStruct.value = C.CString("test")
 	return returnStruct
 }
 

@@ -19,10 +19,12 @@ class BaseMetric{
     };
     public:
         BaseMetric();
+        BaseMetric(MetricObj* metricObj);
         //~BaseMetric();
         MetricObj* mMetricObj;
         void baseMetricAdd(uint64_t val);
         MetricObj* getMetricObj();
+        MetricObj* snapShotMetricObj();
 };
 
 class PipelineMetric {
