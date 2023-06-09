@@ -28,8 +28,6 @@ private:
 
     void snapshotMetrics(bool force);
     void pushInstanceMetric(bool forceSend);
-    void pushPluginMetric(bool forceSend);
-    void pushSubPluginMetric(bool forceSend);
     void snapshotPluginMetrics();
 
     std::list<PipelineMetric*> mSnapshotPipelineMetrics;

@@ -64,19 +64,7 @@ void MetricExportor::pushInstanceMetric(bool forceSend) {
         return;
     }
     
-    /*
-    size_t sendRegionIndex = 0;
-    Json::Value detail;
-    Json::Value logstore;
-    do {
-        LogGroup logGroup;
-        logGroup.set_category("shennong_log_profile");
-        string region;
-        
-        mProfileSender.SendToProfileProject(region, logGroup);
-        break;
-    } while (true);
-    */
+    
    snapshotMetrics(true);
 
     for (std::list<PipelineMetric*>::iterator iter = mSnapshotPipelineMetrics.begin(); iter != mSnapshotPipelineMetrics.end(); ++iter) {
@@ -92,12 +80,38 @@ void MetricExportor::pushInstanceMetric(bool forceSend) {
     mLastSendTime = curTime;
 }
 
-void MetricExportor::pushPluginMetric(bool forceSend) {
 
+void MetricExportor::BuildLogFromMetric(LogGroup& logGroup, PipelineMetric* pipelineMetric) {
+    std::string labelStr = BuildMetricLabel(pipelineMetric->mLabels);
+    for (std::unordered_map<std::string, BaseMetric*>::iterator iterMetric = pilelineMetric->mBaseMetrics.begin(); iterMetric != pilelineMetric->mBaseMetrics.end(); ++ iterMetric) {
+        Log* logPtr = logGroup.add_logs();
+        logPtr->set_time(time(NULL));
+        Log_Content* contentPtr = logPtr->add_contents();
+        contentPtr->set_key("__name__");
+        contentPtr->set_value(iterMetric->first);
+        contentPtr = logPtr->add_contents();
+        contentPtr->set_key("__value__");
+        contentPtr->set_value(iterMetric->second->val);
+        contentPtr = logPtr->add_contents();
+        contentPtr->set_key("__time_nano__");
+        contentPtr->set_value(iterMetric->second->timestamp);
+        contentPtr = logPtr->add_contents();
+        contentPtr->set_key("__labels__");
+        contentPtr->set_value(statistic->mFilename.empty() ? "logstore_statistics" : statistic->mFilename);
+    }
 }
 
-void MetricExportor::pushSubPluginMetric(bool forceSend) {
-
+std::string BuildMetricLabel(std::unordered_map<std::string, std::string> labels) {
+    std::string labelStr = "|";
+    for (std::unordered_map<std::string, std::string>::iterator iterLabel = labels.begin(); iterLabel != labels.end(); ++ iterLabel) {
+        LOG_INFO(sLogger, ("label key", iterLabel->first));
+        LOG_INFO(sLogger, ("label value", iterLabel->second));
+        labelStr += iterLabel->first;
+        labelStr += "#$#";
+        labelStr += iterLabel->second;
+    }
+    return buildMetricLabel;
 }
+
 
 }
