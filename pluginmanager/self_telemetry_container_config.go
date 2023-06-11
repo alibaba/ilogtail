@@ -49,6 +49,10 @@ func (r *InputContainer) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
+func (m *InputContainer) GetDataType() pipeline.DataType {
+	return pipeline.MetricsDataType
+}
+
 func init() {
 	pipeline.MetricInputs["metric_container"] = func() pipeline.MetricInput {
 		return &InputContainer{}

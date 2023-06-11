@@ -54,6 +54,10 @@ func (r *InputAlarm) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
+func (m *InputAlarm) GetDataType() pipeline.DataType {
+	return pipeline.MetricsDataType
+}
+
 func init() {
 	pipeline.MetricInputs["metric_alarm"] = func() pipeline.MetricInput {
 		return &InputAlarm{}

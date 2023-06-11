@@ -86,6 +86,7 @@ bool SLSControl::SetSlsSendClientAuth(const std::string aliuid,
                                       int32_t& lastUpdateTime) {
     sendClient->SetAccessKeyId(STRING_FLAG(default_access_key_id));
     sendClient->SetAccessKey(STRING_FLAG(default_access_key));
+    sendClient->SetOpensource(true);
     LOG_INFO(sLogger, ("SetAccessKeyId", STRING_FLAG(default_access_key_id)));
     return true;
 }

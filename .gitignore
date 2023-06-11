@@ -71,3 +71,4 @@ plugins/all/
 /external_plugins.yml
 *.go.mod
 *.go.mod.sum
+logtailtest

@@ -105,6 +105,13 @@ namespace sdk {
         mSpinLock.unlock();
     }
 
+    void Client::SetOpensource(const bool opensource) {
+        this->mOpensource=opensource;
+    }
+    bool Client::IsOpensource() {
+        return this->mOpensource;
+    }
+
     string Client::GetAccessKey() {
         mSpinLock.lock();
         string accessKey = mAccessKey;
@@ -392,6 +399,10 @@ namespace sdk {
         if (mPort == 80 && mUsingHTTPS) {
             port = 443;
         }
+        LOG_INFO(sLogger, ("host",host));
+        LOG_INFO(sLogger, ("operation",operation));
+        LOG_INFO(sLogger, ("queryString",queryString));
+        LOG_INFO(sLogger, ("mUsingHTTPS",mUsingHTTPS));
         Response* response = new PostLogStoreLogsResponse();
         AsynRequest* request = new AsynRequest(HTTP_POST,
                                                host,

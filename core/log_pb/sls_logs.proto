@@ -26,7 +26,7 @@ enum SlsCompressType
 enum SlsDataContentType
 {
     SLS_DATA_LOG = 0;
-    SLS_DATA_Metrics = 1;
+    SLS_DATA_METRICS = 1;
 }
 
 message Log

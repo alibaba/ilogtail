@@ -62,6 +62,8 @@ namespace sdk {
         void SetKeyProvider(const std::string& keyProvider) { mKeyProvider = keyProvider; }
 
         void SetAccessKey(const std::string& accessKey);
+        void SetOpensource(const bool opensource);
+        bool IsOpensource();
         std::string GetAccessKey();
         void SetAccessKeyId(const std::string& accessKeyId);
         std::string GetAccessKeyId();
@@ -224,6 +226,7 @@ namespace sdk {
         std::string mInterface;
         int32_t mPort;
         bool mUsingHTTPS;
+        bool mOpensource;
 
         SpinLock mSpinLock;
 

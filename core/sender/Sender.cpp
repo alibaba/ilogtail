@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "Sender.h"
+#include "Logger.h"
 #include "sls_control/SLSControl.h"
 #include <fstream>
 #include <string>
@@ -179,6 +180,7 @@ void MetricsSendClosure::OnFail(sdk::Response* response, const string& errorCode
     // switch to log channel
     mDataPtr->mDataContentType = SLS_DATA_LOG;
     Sender::Instance()->SendToNetAsync(mDataPtr);
+    delete this;
 }
 
 void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const string& errorMessage) {
@@ -2076,9 +2078,8 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         }
         dataPtr->mRealIpFlag = sendClient->GetRawSlsHostFlag();
     }
-
-    SendClosure* sendClosure
-        = dataPtr->mDataContentType == sls_logs::SLS_DATA_Metrics ? new SendClosure : new MetricsSendClosure;
+    bool sendToMetricStore = !sendClient->IsOpensource() && dataPtr->mDataContentType == sls_logs::SLS_DATA_METRICS;
+    SendClosure* sendClosure = sendToMetricStore ? new MetricsSendClosure : new SendClosure;
     dataPtr->mLastSendTime = curTime;
     sendClosure->mDataPtr = dataPtr;
     LOG_DEBUG(sLogger,
@@ -2103,7 +2104,7 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         }
     } else if (dataPtr->mDataType == LOGGROUP_COMPRESSED) {
         const auto& hashKey = exactlyOnceCpt ? exactlyOnceCpt->data.hash_key() : dataPtr->mShardHashKey;
-        if (dataPtr->mDataContentType == sls_logs::SLS_DATA_Metrics){
+        if (sendToMetricStore){
             // send to metrics store
             sendClient->PostMetricstoreLogs(dataPtr->mProjectName,
                                             dataPtr->mLogstore,
