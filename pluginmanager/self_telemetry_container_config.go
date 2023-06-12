@@ -50,7 +50,7 @@ func (r *InputContainer) Collect(collector pipeline.Collector) error {
 }
 
 func (m *InputContainer) GetDataType() pipeline.DataType {
-	return pipeline.MetricsDataType
+	return pipeline.LogDataType
 }
 
 func init() {
