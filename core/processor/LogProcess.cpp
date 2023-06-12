@@ -403,12 +403,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 }
             }
 
-            BaseMetric* fileCountMetric = logFileReader->getFileCountMetric();
+            BaseMetricPtr fileCountMetric = logFileReader->getFileCountMetric();
             if (fileCountMetric != NULL) {
                 LOG_INFO(sLogger, ("threadNo", threadNo)("count", lines));
                 fileCountMetric->baseMetricAdd(lines);
             }
-            BaseMetric* fileBytesMetric = logFileReader->getFileBytesMetric();
+            BaseMetricPtr fileBytesMetric = logFileReader->getFileBytesMetric();
             if (fileBytesMetric != NULL) {
                 LOG_INFO(sLogger, ("threadNo", threadNo)("bytes", lines));
                 fileBytesMetric->baseMetricAdd(readBytes);

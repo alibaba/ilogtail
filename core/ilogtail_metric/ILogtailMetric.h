@@ -19,45 +19,53 @@ class BaseMetric{
     };
     public:
         BaseMetric();
-        BaseMetric(MetricObj* metricObj);
-        //~BaseMetric();
+        BaseMetric(MetricObj*  metricObj);
+        ~BaseMetric();
         MetricObj* mMetricObj;
         void baseMetricAdd(uint64_t val);
-        MetricObj* getMetricObj();
-        MetricObj* snapShotMetricObj();
+        MetricObj*  getMetricObj();
+        MetricObj*  snapShotMetricObj();
 };
+
+typedef std::shared_ptr<BaseMetric> BaseMetricPtr;
+
 
 class PipelineMetric {
     public:
-        std::unordered_map<std::string, BaseMetric*> mBaseMetrics;
+        std::unordered_map<std::string, BaseMetricPtr> mBaseMetrics;
         std::unordered_map<std::string, std::string> mLabels;
 
-        BaseMetric* getBaseMetric(std::string metricField);
+        BaseMetricPtr getBaseMetric(std::string metricField);
 
 };
 
+typedef std::shared_ptr<PipelineMetric> PipelineMetricPtr;
 
 class ILogtailMetric {
 
-private:
-    ILogtailMetric();
-    ~ILogtailMetric();
+    private:
+        ILogtailMetric();
+        ~ILogtailMetric();
 
 
-public:
-    static ILogtailMetric* GetInstance() {
-        static ILogtailMetric* ptr = new ILogtailMetric();
-        return ptr;
-    }
+    public:
+        static ILogtailMetric* GetInstance() {
+            static ILogtailMetric* ptr = new ILogtailMetric();
+            return ptr;
+        }
 
-    std::list<PipelineMetric*> mPipelineMetrics;
-    PipelineMetric* mInstanceMetric;  
+        std::mutex mMetricsLock;
 
-    PipelineMetric* createPipelineMetric(std::list<std::string> fields , std::unordered_map<std::string, std::string> labels);
+        std::list<PipelineMetricPtr> mPipelineMetrics;
+        PipelineMetricPtr mInstanceMetric;
 
-    PipelineMetric* createFileMetric(std::string configUid, std::string pluginUid, std::string filePath);
+        PipelineMetricPtr createPipelineMetric(std::list<std::string> fields , std::unordered_map<std::string, std::string> labels);
 
-    BaseMetric* getBaseMetric(PipelineMetric* pipelineMetric, std::string metricField);
+        PipelineMetricPtr createFileMetric(std::string configUid, std::string pluginUid, std::string filePath);
 
-};
+        BaseMetricPtr getBaseMetric(PipelineMetricPtr pipelineMetric, std::string metricField);
+
+        void deletePipelineMetric(PipelineMetricPtr pipelineMetric);
+
+    };
 }

@@ -15,17 +15,24 @@ BaseMetric::BaseMetric() {
     mMetricObj->timestamp = time(NULL);
 }
 
-BaseMetric::BaseMetric(MetricObj* metricObj) {
+BaseMetric::BaseMetric(MetricObj*  metricObj) {
     mMetricObj = metricObj;
 }
+
+BaseMetric::~BaseMetric() {
+    if (mMetricObj) {
+        delete mMetricObj;
+    }
+}
+
 
 void BaseMetric::baseMetricAdd(uint64_t val) {
     mMetricObj->val += val;
     mMetricObj->timestamp = {time(NULL)};
 }
 
-BaseMetric::MetricObj* BaseMetric::snapShotMetricObj() {
-    MetricObj* newMetricObj = new MetricObj;
+BaseMetric::MetricObj*  BaseMetric::snapShotMetricObj() {
+    MetricObj*  newMetricObj = new MetricObj;
 
     LOG_INFO(sLogger, ("mMetricObj->val exchange before", mMetricObj->val));
     long value = mMetricObj->val.exchange(0);
@@ -39,26 +46,26 @@ BaseMetric::MetricObj* BaseMetric::snapShotMetricObj() {
     return newMetricObj;
 }
 
-BaseMetric::MetricObj* BaseMetric::getMetricObj() {
+BaseMetric::MetricObj*  BaseMetric::getMetricObj() {
     return mMetricObj;
 }
 
 
-BaseMetric* PipelineMetric::getBaseMetric(std::string metricField) {
+BaseMetricPtr PipelineMetric::getBaseMetric(std::string metricField) {
     LOG_INFO(sLogger, ("getBaseMetric", metricField));
-    std::unordered_map<std::string, BaseMetric*>::iterator iter = mBaseMetrics.find(metricField);
+    std::unordered_map<std::string, BaseMetricPtr>::iterator iter = mBaseMetrics.find(metricField);
     if (iter != mBaseMetrics.end()) {
         return iter->second;
     } else {
-        BaseMetric* base = new BaseMetric();
-        mBaseMetrics.insert(std::pair<std::string, BaseMetric*>(metricField, base));
+        BaseMetricPtr base(new BaseMetric());
+        mBaseMetrics.insert(std::pair<std::string, BaseMetricPtr>(metricField, base));
         return base;
     }
 }
 
 
-PipelineMetric* ILogtailMetric::createPipelineMetric(std::list<std::string> fields , std::unordered_map<std::string, std::string> labels) {
-    PipelineMetric* fileMetric = new PipelineMetric();
+PipelineMetricPtr ILogtailMetric::createPipelineMetric(std::list<std::string> fields , std::unordered_map<std::string, std::string> labels) {
+    PipelineMetricPtr fileMetric(new PipelineMetric());
 
     LOG_INFO(sLogger, ("label size before", fileMetric->mLabels.size()));
 
@@ -67,14 +74,21 @@ PipelineMetric* ILogtailMetric::createPipelineMetric(std::list<std::string> fiel
     LOG_INFO(sLogger, ("label size before", fileMetric->mLabels.size()));
 
     for (std::list<std::string>::iterator it = fields.begin(); it != fields.end(); ++it) {
-        fileMetric->mBaseMetrics.insert(std::pair<std::string, BaseMetric*>(*it, new BaseMetric()));
+        BaseMetricPtr base(new BaseMetric());
+        fileMetric->mBaseMetrics.insert(std::pair<std::string, BaseMetricPtr>(*it, base));
     }
+    std::lock_guard<std::mutex> lock(mMetricsLock);
     mPipelineMetrics.push_back(fileMetric);
     return fileMetric;
 }
 
+void ILogtailMetric::deletePipelineMetric(PipelineMetricPtr pipelineMetric) {
+    std::lock_guard<std::mutex> lock(mMetricsLock);
+    mPipelineMetrics.remove(pipelineMetric);
+}
 
-PipelineMetric* ILogtailMetric::createFileMetric(std::string configUid, std::string pluginUid, std::string filePath) {
+
+PipelineMetricPtr ILogtailMetric::createFileMetric(std::string configUid, std::string pluginUid, std::string filePath) {
     std::unordered_map<std::string, std::string> labels;
     LOG_INFO(sLogger, ("label size before", labels.size()));
 
@@ -90,15 +104,16 @@ PipelineMetric* ILogtailMetric::createFileMetric(std::string configUid, std::str
 }
 
 
-BaseMetric* ILogtailMetric::getBaseMetric(PipelineMetric* pipelineMetric, std::string metricField) {
+BaseMetricPtr ILogtailMetric::getBaseMetric(PipelineMetricPtr pipelineMetric, std::string metricField) {
     LOG_INFO(sLogger, ("getBaseMetric", metricField));
-    std::unordered_map<std::string, BaseMetric*>::iterator iter = pipelineMetric->mBaseMetrics.find(metricField);
+    std::unordered_map<std::string, BaseMetricPtr>::iterator iter = pipelineMetric->mBaseMetrics.find(metricField);
     if (iter != pipelineMetric->mBaseMetrics.end()) {
         return iter->second;
     } else {
-        BaseMetric* base = new BaseMetric();
-        pipelineMetric->mBaseMetrics.insert(std::pair<std::string, BaseMetric*>(metricField, base));
+        BaseMetricPtr base(new BaseMetric());
+        pipelineMetric->mBaseMetrics.insert(std::pair<std::string, BaseMetricPtr>(metricField, base));
         return base;
     }
 }
+
 }

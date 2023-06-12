@@ -28,14 +28,15 @@ void MetricExportor::snapshotMetrics(bool force) {
         return;
     }
     mSnapshotPipelineMetrics.clear();
-    std::list<PipelineMetric*> pipeLineMetrics = ILogtailMetric::GetInstance()->mPipelineMetrics;
-    for (std::list<PipelineMetric*>::iterator iter = pipeLineMetrics.begin(); iter != pipeLineMetrics.end(); ++iter) {
+    std::lock_guard<std::mutex> lock(ILogtailMetric::GetInstance()->mMetricsLock);
+    std::list<PipelineMetricPtr> pipeLineMetrics = ILogtailMetric::GetInstance()->mPipelineMetrics;
+    for (std::list<PipelineMetricPtr>::iterator iter = pipeLineMetrics.begin(); iter != pipeLineMetrics.end(); ++iter) {
         //LOG_INFO(sLogger, ("pipeline_metric key", iter->first));
-        PipelineMetric* newPilelineMetric = new PipelineMetric();
-        PipelineMetric* pilelineMetric = *iter;
-        for (std::unordered_map<std::string, BaseMetric*>::iterator iterMetric = pilelineMetric->mBaseMetrics.begin(); iterMetric != pilelineMetric->mBaseMetrics.end(); ++ iterMetric) {
-            BaseMetric* newBaseMetric = new BaseMetric(iterMetric->second->snapShotMetricObj());
-            newPilelineMetric->mBaseMetrics.insert(std::pair<std::string, BaseMetric*>(iterMetric->first, newBaseMetric));
+        PipelineMetricPtr newPilelineMetric(new PipelineMetric());
+        PipelineMetricPtr pilelineMetric = *iter;
+        for (std::unordered_map<std::string, BaseMetricPtr>::iterator iterMetric = pilelineMetric->mBaseMetrics.begin(); iterMetric != pilelineMetric->mBaseMetrics.end(); ++ iterMetric) {
+            BaseMetricPtr newBaseMetric(new BaseMetric(iterMetric->second->snapShotMetricObj()));
+            newPilelineMetric->mBaseMetrics.insert(std::pair<std::string, BaseMetricPtr>(iterMetric->first, newBaseMetric));
             long value = newBaseMetric->getMetricObj()->val;
             LOG_INFO(sLogger, ("base_metric key", iterMetric->first));
             LOG_INFO(sLogger, ("base_metric val", value));
@@ -63,19 +64,17 @@ void MetricExportor::pushInstanceMetric(bool forceSend) {
     if (!forceSend && (curTime - mLastSendTime < mSendInterval)) {
         return;
     }
-    
-    
-   snapshotMetrics(true);
-
+    snapshotMetrics(true);
     sls_logs::LogGroup logGroup;
     logGroup.set_category("metric-test");
     // logGroup.set_source(LogFileProfiler::mIpAddr);
     std::string region = "";
+    LOG_INFO(sLogger, ("mSnapshotPipelineMetrics size", mSnapshotPipelineMetrics.size()));
 
-    for (std::list<PipelineMetric*>::iterator iter = mSnapshotPipelineMetrics.begin(); iter != mSnapshotPipelineMetrics.end(); ++iter) {
+    for (std::list<PipelineMetricPtr>::iterator iter = mSnapshotPipelineMetrics.begin(); iter != mSnapshotPipelineMetrics.end(); ++iter) {
         //LOG_INFO(sLogger, ("pipeline_metric key", iter->first));
-        PipelineMetric* pilelineMetric = *iter;
-        for ( std::unordered_map<std::string, BaseMetric*>::iterator iterMetric = pilelineMetric->mBaseMetrics.begin(); iterMetric != pilelineMetric->mBaseMetrics.end(); ++ iterMetric) {
+        PipelineMetricPtr pilelineMetric = *iter;
+        for ( std::unordered_map<std::string, BaseMetricPtr>::iterator iterMetric = pilelineMetric->mBaseMetrics.begin(); iterMetric != pilelineMetric->mBaseMetrics.end(); ++ iterMetric) {
             LOG_INFO(sLogger, ("base_metric key", iterMetric->first));
             long value = iterMetric->second->getMetricObj()->val;
             BuildLogFromMetric(logGroup, pilelineMetric);
@@ -87,9 +86,9 @@ void MetricExportor::pushInstanceMetric(bool forceSend) {
 }
 
 
-void MetricExportor::BuildLogFromMetric(sls_logs::LogGroup& logGroup, PipelineMetric* pipelineMetric) {
+void MetricExportor::BuildLogFromMetric(sls_logs::LogGroup& logGroup, PipelineMetricPtr pipelineMetric) {
     std::string labelStr = BuildMetricLabel(pipelineMetric->mLabels);
-    for (std::unordered_map<std::string, BaseMetric*>::iterator iterMetric = pipelineMetric->mBaseMetrics.begin(); iterMetric != pipelineMetric->mBaseMetrics.end(); ++ iterMetric) {
+    for (std::unordered_map<std::string, BaseMetricPtr>::iterator iterMetric = pipelineMetric->mBaseMetrics.begin(); iterMetric != pipelineMetric->mBaseMetrics.end(); ++ iterMetric) {
         Log* logPtr = logGroup.add_logs();
         logPtr->set_time(time(NULL));
         Log_Content* contentPtr = logPtr->add_contents();

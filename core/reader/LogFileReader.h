@@ -309,16 +309,17 @@ public:
         mAdjustApsaraMicroTimezone = adjustApsaraMicroTimezone;
     }
 
-    void SetFileMetric(PipelineMetric* fileMetrics) {
+    void SetFileMetric(PipelineMetricPtr fileMetrics) {
+        mFileMetrics = fileMetrics;
         mFileCountMetric = fileMetrics->getBaseMetric(METRIC_FILE_READ_COUNT);
         mFileBytesMetric = fileMetrics->getBaseMetric(METRIC_FILE_READ_BYTES);
     }
 
-    BaseMetric* getFileCountMetric() {
+    BaseMetricPtr getFileCountMetric() {
         return mFileCountMetric;
     }
 
-    BaseMetric* getFileBytesMetric() {
+    BaseMetricPtr getFileBytesMetric() {
         return mFileBytesMetric;
     }
 
@@ -401,8 +402,9 @@ protected:
     int32_t mTzOffsetSecond;
     bool mAdjustApsaraMicroTimezone;
 
-    BaseMetric* mFileCountMetric;
-    BaseMetric* mFileBytesMetric;
+    BaseMetricPtr mFileCountMetric;
+    BaseMetricPtr mFileBytesMetric;
+    PipelineMetricPtr mFileMetrics;
 
 
 private:

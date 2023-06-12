@@ -1823,10 +1823,13 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
 }
 
 LogFileReader::~LogFileReader() {
+    LOG_INFO(sLogger, ("Deconstruct", "LogFileReader"));
+
     if (mLogBeginRegPtr != NULL) {
         delete mLogBeginRegPtr;
         mLogBeginRegPtr = NULL;
     }
+    ILogtailMetric::GetInstance()->deletePipelineMetric(mFileMetrics);
     LOG_INFO(sLogger,
              ("try to close the file and destruct the corresponding log reader, project",
               mProjectName)("logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
