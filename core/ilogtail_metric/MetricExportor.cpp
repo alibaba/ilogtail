@@ -17,8 +17,8 @@ MetricExportor::MetricExportor() {
 
 void MetricExportor::pushMetrics() {
     pushInstanceMetric(false);
-    pushPluginMetric(false);
-    pushSubPluginMetric(false);
+    //pushPluginMetric(false);
+    //pushSubPluginMetric(false);
 }
 
 
@@ -67,23 +67,29 @@ void MetricExportor::pushInstanceMetric(bool forceSend) {
     
    snapshotMetrics(true);
 
+    sls_logs::LogGroup logGroup;
+    logGroup.set_category("metric-test");
+    // logGroup.set_source(LogFileProfiler::mIpAddr);
+    std::string region = "";
+
     for (std::list<PipelineMetric*>::iterator iter = mSnapshotPipelineMetrics.begin(); iter != mSnapshotPipelineMetrics.end(); ++iter) {
         //LOG_INFO(sLogger, ("pipeline_metric key", iter->first));
         PipelineMetric* pilelineMetric = *iter;
         for ( std::unordered_map<std::string, BaseMetric*>::iterator iterMetric = pilelineMetric->mBaseMetrics.begin(); iterMetric != pilelineMetric->mBaseMetrics.end(); ++ iterMetric) {
             LOG_INFO(sLogger, ("base_metric key", iterMetric->first));
             long value = iterMetric->second->getMetricObj()->val;
-
+            BuildLogFromMetric(logGroup, pilelineMetric);
             LOG_INFO(sLogger, ("base_metric val", value));
         }
     }
+    mProfileSender.SendMetric(logGroup);
     mLastSendTime = curTime;
 }
 
 
-void MetricExportor::BuildLogFromMetric(LogGroup& logGroup, PipelineMetric* pipelineMetric) {
+void MetricExportor::BuildLogFromMetric(sls_logs::LogGroup& logGroup, PipelineMetric* pipelineMetric) {
     std::string labelStr = BuildMetricLabel(pipelineMetric->mLabels);
-    for (std::unordered_map<std::string, BaseMetric*>::iterator iterMetric = pilelineMetric->mBaseMetrics.begin(); iterMetric != pilelineMetric->mBaseMetrics.end(); ++ iterMetric) {
+    for (std::unordered_map<std::string, BaseMetric*>::iterator iterMetric = pipelineMetric->mBaseMetrics.begin(); iterMetric != pipelineMetric->mBaseMetrics.end(); ++ iterMetric) {
         Log* logPtr = logGroup.add_logs();
         logPtr->set_time(time(NULL));
         Log_Content* contentPtr = logPtr->add_contents();
@@ -91,26 +97,31 @@ void MetricExportor::BuildLogFromMetric(LogGroup& logGroup, PipelineMetric* pipe
         contentPtr->set_value(iterMetric->first);
         contentPtr = logPtr->add_contents();
         contentPtr->set_key("__value__");
-        contentPtr->set_value(iterMetric->second->val);
+        contentPtr->set_value(std::to_string(iterMetric->second->mMetricObj->val));
         contentPtr = logPtr->add_contents();
         contentPtr->set_key("__time_nano__");
-        contentPtr->set_value(iterMetric->second->timestamp);
+        contentPtr->set_value(std::to_string(iterMetric->second->mMetricObj->timestamp) + "000");
         contentPtr = logPtr->add_contents();
         contentPtr->set_key("__labels__");
-        contentPtr->set_value(statistic->mFilename.empty() ? "logstore_statistics" : statistic->mFilename);
+        contentPtr->set_value(labelStr);
     }
 }
 
-std::string BuildMetricLabel(std::unordered_map<std::string, std::string> labels) {
-    std::string labelStr = "|";
+std::string MetricExportor::BuildMetricLabel(std::unordered_map<std::string, std::string> labels) {
+    std::string labelStr = "";
+    int count = 0;
     for (std::unordered_map<std::string, std::string>::iterator iterLabel = labels.begin(); iterLabel != labels.end(); ++ iterLabel) {
         LOG_INFO(sLogger, ("label key", iterLabel->first));
         LOG_INFO(sLogger, ("label value", iterLabel->second));
         labelStr += iterLabel->first;
         labelStr += "#$#";
         labelStr += iterLabel->second;
+        if (count < labels.size() -1) {
+            labelStr += "|";
+        }
+        count ++;
     }
-    return buildMetricLabel;
+    return labelStr;
 }
 
 

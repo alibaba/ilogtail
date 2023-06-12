@@ -41,6 +41,55 @@ void ProfileSender::SendToProfileProject(const std::string& region, sls_logs::Lo
     return;
 }
 
+void ProfileSender::SendMetric(sls_logs::LogGroup& logGroup) {
+    bool existFlag = false;
+
+    std::string logstore = "metric-test";
+    std::string region = "cn-hongkong";
+    std::string projectName = "taiye-cn-hongkong-logtail";
+    std::string endpoint = region + ".log.aliyuncs.com";
+    try {
+        int32_t logSize = (int32_t)logGroup.logs_size();
+        time_t curTime = time(NULL);
+
+        std::string oriData;
+        logGroup.SerializeToString(&oriData);
+
+
+        LOG_INFO(sLogger,
+                  ("logSize", logSize)("curTime", curTime)("oriData", oriData));
+        // filename is empty string
+        LoggroupTimeValue* data = new LoggroupTimeValue(projectName,
+                                                        logstore,
+                                                        "",
+                                                        "",
+                                                        false,
+                                                        "",
+                                                        region,
+                                                        LOGGROUP_COMPRESSED,
+                                                        logSize,
+                                                        oriData.size(),
+                                                        curTime,
+                                                        "",
+                                                        0);
+        if (!CompressLz4(oriData, data->mLogData)) {
+            LOG_ERROR(sLogger, ("lz4 compress data", "fail"));
+            return;
+        }
+        sdk::Client client(endpoint, "", "", INT32_FLAG(sls_client_send_timeout), "", "");
+        SLSControl::Instance()->SetSlsSendClientCommonParam(&client);
+        sdk::PostLogStoreLogsResponse resp
+                = client.PostLogStoreLogs(data->mProjectName, data->mLogstore, sls_logs::SLS_CMP_LZ4, data->mLogData, data->mRawSize, "");
+        LOG_INFO(sLogger,
+                  ("statusCode", resp.statusCode)("requestId", resp.requestId));
+    } catch (const sdk::LOGException& e) {
+        LOG_ERROR(sLogger,
+                  ("SendToProfileProject", "fail")("logBody", "")("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
+    
+    }
+    return;
+}
+
 void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
     if (!BOOL_FLAG(send_running_status)) {
         return;

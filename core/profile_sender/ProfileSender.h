@@ -31,6 +31,8 @@ public:
                        const std::string& projectName,
                        const std::string& logstore);
 
+    void SendMetric(sls_logs::LogGroup& logGroup);
+
     void
     SendToLineCountProject(const std::string& region, const std::string& projectName, sls_logs::LogGroup& logGroup);
 

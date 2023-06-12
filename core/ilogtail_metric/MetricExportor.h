@@ -10,6 +10,8 @@
 #include "ILogtailMetric.h"
 #include "logger/Logger.h"
 #include "plugin/LogtailPlugin.h"
+#include "ProfileSender.h"
+#include "log_pb/sls_logs.pb.h"
 
 namespace logtail {
 
@@ -29,7 +31,8 @@ private:
     void snapshotMetrics(bool force);
     void pushInstanceMetric(bool forceSend);
     void snapshotPluginMetrics();
-
+    void BuildLogFromMetric(sls_logs::LogGroup& logGroup, PipelineMetric* pipelineMetric);
+    std::string BuildMetricLabel(std::unordered_map<std::string, std::string> labels); 
     std::list<PipelineMetric*> mSnapshotPipelineMetrics;
     ProfileSender mProfileSender;
     int32_t mSendInterval;
