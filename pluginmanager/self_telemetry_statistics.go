@@ -46,7 +46,7 @@ func (r *InputStatistics) Collect(collector pipeline.Collector) error {
 }
 
 func (m *InputStatistics) GetDataType() pipeline.DataType {
-	return pipeline.MetricsDataType
+	return pipeline.LogDataType
 }
 
 func init() {
