@@ -106,10 +106,10 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 	if req.Header.Get(contentEncodingKey) == snappyEncoding &&
 		strings.HasPrefix(req.Header.Get(contentTypeKey), pbContentType) {
 		logs, err = d.decodeInRemoteWriteFormat(data, req)
-		return pipeline.MetricInputType, logs, err
+		return pipeline.MetricsDataType, logs, err
 	}
 	logs, err = d.decodeInExpFmt(data, req)
-	return pipeline.MetricInputType, logs, err
+	return pipeline.MetricsDataType, logs, err
 }
 
 func (d *Decoder) decodeInExpFmt(data []byte, _ *http.Request) (logs []*protocol.Log, err error) {

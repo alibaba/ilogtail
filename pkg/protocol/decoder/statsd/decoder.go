@@ -71,8 +71,9 @@ func parseLabels(metric *dogstatsd.Metric) (labelsValue string) {
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (dataType pipeline.DataType, logs []*protocol.Log, err error) {
+	dataType = pipeline.MetricsDataType
 	if req == nil {
-		return pipeline.MetricsDataType, nil, common.EmptyReqError
+		return dataType, nil, common.EmptyReqError
 	}
 	now := time.Now()
 	parts := bytes.Split(data, []byte("\n"))
@@ -113,7 +114,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 		}
 		logs = append(logs, log)
 	}
-	return pipeline.MetricsDataType, logs, nil
+	return
 }
 
 func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {
