@@ -120,8 +120,8 @@ lint-e2e: clean tools
 .PHONY: core
 core: clean import_plugins
 	./scripts/gen_build_scripts.sh core $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) $(OUT_DIR) $(DOCKER_BUILD_EXPORT_GO_ENVS) $(DOCKER_BUILD_COPY_GIT_CONFIGS) $(PLUGINS_CONFIG_FILE) $(GO_MOD_FILE)
-	#./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false $(DOCKER_BUILD_USE_BUILDKIT)
-	#./$(GENERATED_HOME)/gen_copy_docker.sh
+	./scripts/docker_build.sh build $(GENERATED_HOME) $(VERSION) $(BUILD_REPOSITORY) false $(DOCKER_BUILD_USE_BUILDKIT)
+	./$(GENERATED_HOME)/gen_copy_docker.sh
 
 .PHONY: plugin
 plugin: clean import_plugins
