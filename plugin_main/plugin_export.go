@@ -228,7 +228,7 @@ func GetContainerMeta(containerID string) *C.struct_containerMeta {
 }
 
 //export GetPipelineMetrics
-func GetPipelineMetrics(piplineId string) *C.struct_pipelineMetric {
+func GetPipelineMetrics(piplineID string) *C.struct_pipelineMetric {
 	returnStruct := (*C.struct_pipelineMetric)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_pipelineMetric{}))))
 	returnStruct.pipelineName = C.CString("test")
 	returnStruct.value = C.CString("test")
