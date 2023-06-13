@@ -49,7 +49,7 @@ func (r *InputContainer) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
-func (m *InputContainer) GetDataType() pipeline.DataType {
+func (r *InputContainer) GetDataType() pipeline.DataType {
 	return pipeline.LogDataType
 }
 

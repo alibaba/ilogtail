@@ -54,7 +54,7 @@ func (r *InputAlarm) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
-func (m *InputAlarm) GetDataType() pipeline.DataType {
+func (r *InputAlarm) GetDataType() pipeline.DataType {
 	return pipeline.LogDataType
 }
 
