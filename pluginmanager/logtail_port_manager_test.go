@@ -45,14 +45,11 @@ func TestExportLogtailLitsenPorts(t *testing.T) {
 	for range ticker.C {
 		count++
 
-		ports, err := getLogtailLitsenPorts()
+		ports := getLogtailLitsenPorts()
+
+		err := exportLogtailLitsenPorts(ports)
 		if err != nil {
 			t.Log(err.Error())
-		} else {
-			err = exportLogtailLitsenPorts(ports)
-			if err != nil {
-				t.Log(err.Error())
-			}
 		}
 
 		if count == 3 {

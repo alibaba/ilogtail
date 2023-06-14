@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -23,9 +24,9 @@ var exportLogtailPortsInterval = 30 * time.Second
 
 func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
 	ports := []int{}
-
+	filepath.Join()
 	file := fmt.Sprintf("/proc/%d/net/%s", pid, protocol)
-	data, err := ioutil.ReadFile(file)
+	data, err := ioutil.ReadFile(file) //nolint:gosec
 	if err != nil {
 		return ports, err
 	}
@@ -52,7 +53,7 @@ func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
 	return ports, nil
 }
 
-func getLogtailLitsenPorts() ([]int, error) {
+func getLogtailLitsenPorts() []int {
 	portsMap := map[int]int{}
 	pid := os.Getpid()
 	ports := []int{}
@@ -92,7 +93,7 @@ func getLogtailLitsenPorts() ([]int, error) {
 	for port := range portsMap {
 		ports = append(ports, port)
 	}
-	return ports, nil
+	return ports
 }
 
 func exportLogtailLitsenPorts(ports []int) error {
@@ -125,14 +126,10 @@ func ExportLogtailPorts() {
 	exportLogtailPorts := func() {
 		exportLogtailPortsTicker := time.NewTicker(exportLogtailPortsInterval)
 		for range exportLogtailPortsTicker.C {
-			ports, err := getLogtailLitsenPorts()
-			if err != nil {
-				logger.Error(context.Background(), "get logtail's listen ports failed", err.Error())
-				continue
-			}
+			ports := getLogtailLitsenPorts()
 			logger.Info(context.Background(), "get logtail's listen ports success", ports)
 
-			err = exportLogtailLitsenPorts(ports)
+			err := exportLogtailLitsenPorts(ports)
 			if err != nil {
 				logger.Error(context.Background(), "export logtail's listen ports failed", err.Error())
 				continue
