@@ -31,14 +31,22 @@ func TestExportLogtailLitsenPorts(t *testing.T) {
 	go server.ListenAndServe()
 	defer server.Close()
 
-	listener1, _ := net.Listen("tcp", ":8080")
-	defer listener1.Close()
-	addr, err := net.ResolveUDPAddr("udp", ":80")
+	listener1, err := net.Listen("tcp", ":18688")
+	if err != nil {
+		t.Log(err.Error())
+	} else {
+		defer listener1.Close()
+	}
+	addr, err := net.ResolveUDPAddr("udp", ":18687")
 	if err != nil {
 		t.Log(err.Error())
 	}
-	listener2, _ := net.ListenUDP("udp", addr)
-	defer listener2.Close()
+	listener2, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		t.Log(err.Error())
+	} else {
+		defer listener2.Close()
+	}
 
 	ticker := time.NewTicker(2 * time.Second)
 	count := 0
