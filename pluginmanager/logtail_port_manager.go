@@ -18,7 +18,7 @@ import (
 
 var exportLogtailPortsRunning = false
 
-var exportLogtailPortsInterval = time.Duration(30 * time.Second)
+var exportLogtailPortsInterval = 30 * time.Second
 
 func getLogtailLitsenPorts() ([]int, error) {
 	portsMap := map[int]int{}
@@ -31,7 +31,10 @@ func getLogtailLitsenPorts() ([]int, error) {
 		return nil, err
 	}
 	defer stdout1.Close()
-	cmd1.Start()
+	err = cmd1.Start()
+	if err != nil {
+		return nil, err
+	}
 
 	stdout2, err := cmd2.StdoutPipe()
 	if err != nil {
@@ -39,7 +42,10 @@ func getLogtailLitsenPorts() ([]int, error) {
 	}
 	defer stdout2.Close()
 	cmd2.Stdin = stdout1
-	cmd2.Start()
+	err = cmd2.Start()
+	if err != nil {
+		return nil, err
+	}
 
 	output, err := ioutil.ReadAll(stdout2)
 	if err != nil {
@@ -94,23 +100,20 @@ func exportLogtailLitsenPorts(ports []int) error {
 func ExportLogtailPorts() {
 	exportLogtailPorts := func() {
 		exportLogtailPortsTicker := time.NewTicker(exportLogtailPortsInterval)
-		for {
-			select {
-			case <-exportLogtailPortsTicker.C:
-				ports, err := getLogtailLitsenPorts()
-				if err != nil {
-					logger.Error(context.Background(), "get logtail's listen ports failed", err.Error())
-					continue
-				}
-				logger.Info(context.Background(), "get logtail's listen ports success", ports)
-
-				err = exportLogtailLitsenPorts(ports)
-				if err != nil {
-					logger.Error(context.Background(), "export logtail's listen ports failed", err.Error())
-					continue
-				}
-				logger.Info(context.Background(), "export logtail's listen ports success", ports)
+		for range exportLogtailPortsTicker.C {
+			ports, err := getLogtailLitsenPorts()
+			if err != nil {
+				logger.Error(context.Background(), "get logtail's listen ports failed", err.Error())
+				continue
 			}
+			logger.Info(context.Background(), "get logtail's listen ports success", ports)
+
+			err = exportLogtailLitsenPorts(ports)
+			if err != nil {
+				logger.Error(context.Background(), "export logtail's listen ports failed", err.Error())
+				continue
+			}
+			logger.Info(context.Background(), "export logtail's listen ports success", ports)
 		}
 	}
 	if !exportLogtailPortsRunning {

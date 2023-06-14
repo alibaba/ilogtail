@@ -20,7 +20,7 @@ func TestExportLogtailLitsenPorts(t *testing.T) {
 			if err != nil {
 				t.Log("Decode logtail's ports err", err.Error())
 			} else {
-				t.Log("Recived logtail's ports success", param.Ports)
+				t.Log("Receive logtail's ports success", param.Ports)
 			}
 		}
 	})
@@ -40,26 +40,23 @@ func TestExportLogtailLitsenPorts(t *testing.T) {
 	listener2, _ := net.ListenUDP("udp", addr)
 	defer listener2.Close()
 
-	ticker := time.NewTicker(time.Duration(2 * time.Second))
+	ticker := time.NewTicker(2 * time.Second)
 	count := 0
-	for {
-		select {
-		case <-ticker.C:
-			count++
+	for range ticker.C {
+		count++
 
-			ports, err := getLogtailLitsenPorts()
+		ports, err := getLogtailLitsenPorts()
+		if err != nil {
+			t.Log(err.Error())
+		} else {
+			err = exportLogtailLitsenPorts(ports)
 			if err != nil {
 				t.Log(err.Error())
-			} else {
-				err = exportLogtailLitsenPorts(ports)
-				if err != nil {
-					t.Log(err.Error())
-				}
 			}
+		}
 
-			if count == 3 {
-				return
-			}
+		if count == 3 {
+			return
 		}
 	}
 }
