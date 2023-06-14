@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	pkg_flags "github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -136,6 +137,9 @@ func Init() (err error) {
 	}
 	logger.Info(context.Background(), "loadBuiltinConfig container")
 	TimerFetchFuction()
+	if *pkg_flags.K8sStatefulSetFlag {
+		ExportLogtailPorts()
+	}
 	return
 }
 
