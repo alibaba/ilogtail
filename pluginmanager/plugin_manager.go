@@ -137,7 +137,7 @@ func Init() (err error) {
 	}
 	logger.Info(context.Background(), "loadBuiltinConfig container")
 	TimerFetchFuction()
-	if *pkg_flags.K8sStatefulSetFlag {
+	if *pkg_flags.K8sControllerEndpoint != "" {
 		ExportLogtailPorts()
 	}
 	return

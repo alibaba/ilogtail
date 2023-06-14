@@ -5,14 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
@@ -20,51 +21,73 @@ var exportLogtailPortsRunning = false
 
 var exportLogtailPortsInterval = 30 * time.Second
 
-func getLogtailLitsenPorts() ([]int, error) {
-	portsMap := map[int]int{}
-	pid := os.Getpid()
-	cmd1 := exec.Command("netstat", "-lnp")
-	cmd2 := exec.Command("grep", strconv.Itoa(pid))
+func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
+	var ports []int
 
-	stdout1, err := cmd1.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	defer stdout1.Close()
-	err = cmd1.Start()
+	file := fmt.Sprintf("/proc/%d/net/%s", pid, protocol)
+	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
 
-	stdout2, err := cmd2.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	defer stdout2.Close()
-	cmd2.Stdin = stdout1
-	err = cmd2.Start()
-	if err != nil {
-		return nil, err
-	}
-
-	output, err := ioutil.ReadAll(stdout2)
-	if err != nil {
-		return nil, err
-	}
-
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
+	lines := strings.Split(string(data), "\n")
+	for _, line := range lines[1:] {
 		fields := strings.Fields(line)
-		if len(fields) < 7 {
+		if len(fields) < 10 {
 			continue
 		}
-		port, err := strconv.Atoi(strings.Split(fields[3], ":")[3])
+		if strings.HasPrefix(protocol, "tcp") && fields[3] != "0A" {
+			continue
+		}
+		if strings.HasPrefix(protocol, "udp") && fields[3] != "07" {
+			continue
+		}
+		port, err := strconv.ParseUint((strings.Split(fields[1], ":")[1]), 16, 32)
 		if err != nil {
 			return nil, err
 		}
+		ports = append(ports, int(port))
+	}
+	return ports, nil
+}
+
+func getLogtailLitsenPorts() ([]int, error) {
+	portsMap := map[int]int{}
+	pid := os.Getpid()
+	ports := []int{}
+	// get tcp ports
+	tcpPorts, err := getListenPortsFromFile(pid, "tcp")
+	if err != nil {
+		return nil, err
+	}
+	for _, port := range tcpPorts {
 		portsMap[port]++
 	}
-	ports := []int{}
+	// get tcp6 ports
+	tcp6Ports, err := getListenPortsFromFile(pid, "tcp6")
+	if err != nil {
+		return nil, err
+	}
+	for _, port := range tcp6Ports {
+		portsMap[port]++
+	}
+	// get udp ports
+	udpPorts, err := getListenPortsFromFile(pid, "udp")
+	if err != nil {
+		return nil, err
+	}
+	for _, port := range udpPorts {
+		portsMap[port]++
+	}
+	// get udp6 ports
+	udp6Ports, err := getListenPortsFromFile(pid, "udp6")
+	if err != nil {
+		return nil, err
+	}
+	for _, port := range udp6Ports {
+		portsMap[port]++
+	}
+
 	for port := range portsMap {
 		ports = append(ports, port)
 	}
@@ -83,7 +106,7 @@ func exportLogtailLitsenPorts(ports []int) error {
 		return err
 	}
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", "http://127.0.0.1:18689/export/port", bytes.NewBuffer(jsonBytes))
+	req, err := http.NewRequest("POST", *flags.K8sControllerEndpoint, bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return err
 	}

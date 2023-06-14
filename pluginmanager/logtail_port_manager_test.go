@@ -33,7 +33,7 @@ func TestExportLogtailLitsenPorts(t *testing.T) {
 
 	listener1, _ := net.Listen("tcp", ":8080")
 	defer listener1.Close()
-	addr, err := net.ResolveUDPAddr("udp", ":8080")
+	addr, err := net.ResolveUDPAddr("udp", ":80")
 	if err != nil {
 		t.Log(err.Error())
 	}
