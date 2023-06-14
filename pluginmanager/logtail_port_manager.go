@@ -22,12 +22,12 @@ var exportLogtailPortsRunning = false
 var exportLogtailPortsInterval = 30 * time.Second
 
 func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
-	var ports []int
+	ports := []int{}
 
 	file := fmt.Sprintf("/proc/%d/net/%s", pid, protocol)
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
-		return nil, err
+		return ports, err
 	}
 
 	lines := strings.Split(string(data), "\n")
@@ -44,7 +44,8 @@ func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
 		}
 		port, err := strconv.ParseUint((strings.Split(fields[1], ":")[1]), 16, 32)
 		if err != nil {
-			return nil, err
+			logger.Error(context.Background(), "parse port fail", err.Error())
+			continue
 		}
 		ports = append(ports, int(port))
 	}
@@ -58,7 +59,7 @@ func getLogtailLitsenPorts() ([]int, error) {
 	// get tcp ports
 	tcpPorts, err := getListenPortsFromFile(pid, "tcp")
 	if err != nil {
-		return nil, err
+		logger.Error(context.Background(), "get tcp port fail", err.Error())
 	}
 	for _, port := range tcpPorts {
 		portsMap[port]++
@@ -66,7 +67,7 @@ func getLogtailLitsenPorts() ([]int, error) {
 	// get tcp6 ports
 	tcp6Ports, err := getListenPortsFromFile(pid, "tcp6")
 	if err != nil {
-		return nil, err
+		logger.Error(context.Background(), "get tcp6 port fail", err.Error())
 	}
 	for _, port := range tcp6Ports {
 		portsMap[port]++
@@ -74,7 +75,7 @@ func getLogtailLitsenPorts() ([]int, error) {
 	// get udp ports
 	udpPorts, err := getListenPortsFromFile(pid, "udp")
 	if err != nil {
-		return nil, err
+		logger.Error(context.Background(), "get udp port fail", err.Error())
 	}
 	for _, port := range udpPorts {
 		portsMap[port]++
@@ -82,7 +83,7 @@ func getLogtailLitsenPorts() ([]int, error) {
 	// get udp6 ports
 	udp6Ports, err := getListenPortsFromFile(pid, "udp6")
 	if err != nil {
-		return nil, err
+		logger.Error(context.Background(), "get udp6 port fail", err.Error())
 	}
 	for _, port := range udp6Ports {
 		portsMap[port]++
@@ -136,7 +137,7 @@ func ExportLogtailPorts() {
 				logger.Error(context.Background(), "export logtail's listen ports failed", err.Error())
 				continue
 			}
-			logger.Info(context.Background(), "export logtail's listen ports success", ports)
+			logger.Info(context.Background(), "export logtail's listen ports success")
 		}
 	}
 	if !exportLogtailPortsRunning {
