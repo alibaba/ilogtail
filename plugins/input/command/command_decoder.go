@@ -39,8 +39,15 @@ type SlsMetricsDecoder struct {
 
 // __labels__:hostname#$#idc_cluster_env_name|ip#$#ip_address   __value__:0.0  __name__:metric_command_example
 func (sls *SlsMetricsDecoder) Decode(value string) *DecoderResult {
+	sls.DecoderResult = &DecoderResult{}
 	value = strings.TrimSpace(value)
 	if value == "" {
+		sls.DecoderResult.Err = fmt.Errorf("skip empty string")
+		return sls.DecoderResult
+	}
+	//处理注释的情况
+	if string(value[0]) == "#" {
+		sls.DecoderResult.Err = fmt.Errorf("skip comment %s", value)
 		return sls.DecoderResult
 	}
 	//先校验是否合法 不合法则认为是注释或其他字符串 忽略解析
@@ -59,10 +66,6 @@ func (sls *SlsMetricsDecoder) Decode(value string) *DecoderResult {
 	for _, item := range items {
 		item = strings.Trim(item, " ")
 		if item == "" {
-			continue
-		}
-		//处理注释的情况
-		if string(item[0]) == "#" {
 			continue
 		}
 		k, v := sls.decodeItemKv(item)

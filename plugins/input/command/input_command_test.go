@@ -79,7 +79,9 @@ func TestOneLine(t *testing.T) {
 	testReArr := strings.Split(testReturn, "\n")
 	fmt.Println("testReArr", testReArr)
 	re := p.ParseToMetricData(testReArr)
-	fmt.Println(re)
+	for _, item := range re {
+		fmt.Println(item.Name, item.LabelsString)
+	}
 	fmt.Print(testReturn)
 }
 

@@ -73,6 +73,14 @@ func (kv *KeyValues) Append(key, value string) {
 	})
 }
 
+func (kv *KeyValues) ToMap() map[string]string {
+	reMap := make(map[string]string)
+	for _, item := range kv.keyValues {
+		reMap[item.Key] = item.Value
+	}
+	return reMap
+}
+
 // Clone ...
 func (kv *KeyValues) Clone() KeyValues {
 	var newKeyValues KeyValues

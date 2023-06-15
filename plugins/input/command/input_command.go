@@ -157,7 +157,10 @@ func (in *InputCommand) ParseToMetricData(execReturnArr []string) (re []*MetricD
 			logger.Infof(context.Background(), "decode mistake", decodeResult.Err)
 			continue
 		}
-		tempLabelStore := in.labelStore.Clone()
+		tempLabelStore := helper.KeyValues{}
+		tempLabelStore.AppendMap(in.labelStore.ToMap())
+		// fmt.Println("decodeResult.Labels", decodeResult.Labels)
+		in.setCommonLabels()
 		tempLabelStore.AppendMap(decodeResult.Labels)
 		re = append(re, &MetricData{
 			Name:         decodeResult.MetricName,
