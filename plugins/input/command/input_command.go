@@ -22,6 +22,8 @@ type InputCommand struct {
 	ContentType   string //指定脚本格式  PlainText|Base64
 	LineSplitSep  string //行分隔符
 	ScriptDataDir string //执行脚本的存放目前
+	CmdPath       string //需要执行可执行命令的路径 默认:/usr/bin/sh
+	ExporterName  string //注册的exporterName 表示执行脚本内容metric的类别 类似与node_export   mysql_export等 默认为空 会提交到label中
 	//脚本执行后输出的格式
 	//sls_metrics
 	//example: __labels__:hostname#$#idc_cluster_env_name|ip#$#ip_address   __value__:0  __name__:metric_command_example
@@ -52,6 +54,7 @@ func (in *InputCommand) setCommonLabels() {
 	in.labelStore.Append("hostname", in.hostname)
 	in.labelStore.Append("ip", in.ip)
 	in.labelStore.Append("script_md5", in.md5)
+	in.labelStore.Append("script_exporter", in.ExporterName)
 }
 
 func getContentMd5(content string) string {
@@ -77,7 +80,6 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 	//解析Base64内容
 	if in.ContentType == "Base64" {
 		decodeContent, err := base64.StdEncoding.DecodeString(in.ScriptContent)
-		fmt.Println("Base64 DecodeString", decodeContent, err)
 		if err != nil {
 			return 0, fmt.Errorf("base64.StdEncoding error  errorInfo:%s", err)
 		}
@@ -107,32 +109,6 @@ func (in *InputCommand) ExecScript(filePath string) (string, error) {
 	}
 	return stdoutStr, nil
 }
-
-// func (in *InputCommand) ExecScript(filePath string) (string, error) {
-// 	if in.ScriptType != "Bash" && in.ScriptType != "Shell" {
-// 		return "", fmt.Errorf("only support bash and shell")
-// 	}
-// 	cmd := exec.Command("/usr/bin/sh", filePath)
-// 	user, err := user.Lookup(in.User) //查找指定test用户是否存在，获取Uid和Gid
-// 	if err == nil {
-// 		log.Printf("uid=%s,gid=%s", user.Uid, user.Gid)
-// 		uid, _ := strconv.Atoi(user.Uid)
-// 		gid, _ := strconv.Atoi(user.Gid)
-// 		cmd.SysProcAttr = &syscall.SysProcAttr{}
-// 		cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)} //设置执行用户为test
-// 	}
-
-// 	var stdout, stderr bytes.Buffer
-// 	cmd.Stdout = &stdout // 标准输出
-// 	cmd.Stderr = &stderr // 标准错误
-// 	err = cmd.Run()
-// 	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
-// 	fmt.Printf("out:\n %s \n err:\n %s \n", outStr, errStr)
-// 	if err != nil {
-// 		return "", fmt.Errorf("exec cmd error errInfo:%s, stderr:%s, stdout:%s", err, errStr, outStr)
-// 	}
-// 	return outStr, nil
-// }
 
 func (in *InputCommand) Collect(collector pipeline.Collector) error {
 	storageInstance := GetStorage(in.ScriptDataDir)
@@ -206,6 +182,8 @@ func init() {
 			IntervalMs:        defaultIntervalMs,
 			ScriptDataDir:     defaultScirptDataDir,
 			ExecScriptTimeOut: defaltExecScriptTimeOut,
+			CmdPath:           defaultCmdPath,
+			ExporterName:      defaultExporterName,
 
 			hostname: util.GetHostName(),
 			ip:       util.GetIPAddress(),

@@ -34,6 +34,11 @@ func (v *validator) Validate() bool {
 		return false
 	}
 
+	if in.CmdPath == "" {
+		validateError = fmt.Errorf("cmdpath can not be empty")
+		return false
+	}
+
 	if _, ok := supportContentType[in.ContentType]; !ok {
 		validateError = fmt.Errorf("not support content type %s", in.ContentType)
 		return false

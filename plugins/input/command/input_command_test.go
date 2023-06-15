@@ -122,6 +122,7 @@ func TestCommandTestCollecetUserBase64WithTimeout(t *testing.T) {
 	p.ScriptContent = base64.StdEncoding.EncodeToString([]byte(scriptContent))
 	p.ContentType = "Base64"
 	p.ExecScriptTimeOut = 3000
+	p.ExporterName = "scirpt_timeout_exporter"
 	if _, err := p.Init(ctx); err != nil {
 		t.Errorf("cannot init InputCommand: %v", err)
 		return
@@ -147,7 +148,7 @@ func TestCommandTestCollecetUserBase64WithTimeout(t *testing.T) {
 	}
 
 	// fmt.Println("--------labels-----", meta.Labels)
-	shouldReturn := assertLogs(c, t)
+	shouldReturn := assertLogs(c, t, p)
 	if shouldReturn {
 		return
 	}
@@ -171,7 +172,7 @@ func TestCommandTestCollecetUserBase64(t *testing.T) {
 		return
 	}
 	// fmt.Println("--------labels-----", meta.Labels)
-	shouldReturn := assertLogs(c, t)
+	shouldReturn := assertLogs(c, t, p)
 	if shouldReturn {
 		return
 	}
@@ -194,17 +195,19 @@ func TestCommandTestCollect(t *testing.T) {
 		return
 	}
 
-	shouldReturn := assertLogs(c, t)
+	shouldReturn := assertLogs(c, t, p)
 	if shouldReturn {
 		return
 	}
 }
 
-func assertLogs(c *test.MockMetricCollector, t *testing.T) bool {
+func assertLogs(c *test.MockMetricCollector, t *testing.T, p *InputCommand) bool {
 	for _, log := range c.Logs {
 		fmt.Println("logs", log)
 		meta := parseContent(log.Contents)
-
+		if p.ExporterName != GetLabelByKey("script_exporter", meta.Labels) {
+			t.Errorf("script_exporter compare error expect %s get %s", p.ExporterName, GetLabelByKey("script_exporter", meta.Labels))
+		}
 		if meta.Name == "metric_command_example" {
 			if GetLabelByKey("hostname", meta.Labels) != util.GetHostName() {
 				t.Errorf("parse hostname error expect %s get %s ", util.GetHostName(), GetLabelByKey("hostname", meta.Labels))
