@@ -1,4 +1,3 @@
-
 # metric_command 插件
 
 ## 简介
@@ -37,6 +36,7 @@
 - ScriptContent 脚本的内容
 **如果脚本文本格式为Base64 需要设置 ContentType:Base64**
 - OutputDataType 默认支持sls_metrics
+
 **sls_metrics格式举例**
 ```
 # 这是一个注释
@@ -49,6 +49,15 @@ __value__:0  __name__:metric_command_example_without_labels
 ```
 script_exporter#$#default //指标采集器的类型
 script_md5#$#dafd05fb3b73abcbe44f2536b78c7654 //指标采集器的版本
+```
+
+**commonLabels**
+```
+默认会生成四个公共label
+1. hostname
+2. ip
+3. script_exporter
+4. script_md5
 ```
 
 - ExecScriptTimeOut 脚本执行时间不能大于采集触发的时间
@@ -141,3 +150,9 @@ flushers:
   - Type: flusher_stdout
     OnlyStdout: true
 ```
+
+
+
+
+
+
