@@ -107,7 +107,7 @@ bool LogProcess::PushBuffer(LogBuffer* buffer, int32_t retryTimes) {
         if (!mLogFeedbackQueue.PushItem((buffer->logFileReader)->GetLogstoreKey(), buffer)) {
             if (retry % 100 == 0) {
                 LOG_ERROR(sLogger,
-                          ("Push log process buffer queue failed", ToString(buffer->bufferSize))(
+                          ("Push log process buffer queue failed", ToString(buffer->rawBuffer.size()))(
                               buffer->logFileReader->GetProjectName(), buffer->logFileReader->GetCategory()));
             }
         } else {
@@ -279,7 +279,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             ReadLock lock(mAccessProcessThreadRWL);
             mThreadFlags[threadNo] = true;
             s_processCount++;
-            s_processBytes += (logBuffer->bufferSize);
+            s_processBytes += logBuffer->rawBuffer.size() + 1;
             LogFileReaderPtr logFileReader = logBuffer->logFileReader;
             auto logPath = logFileReader->GetConvertedPath();
 #if defined(_MSC_VER)
@@ -294,7 +294,6 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                          ("can not find config while processing log, maybe config updated. config",
                           logFileReader->GetConfigName())("project", logFileReader->GetProjectName())(
                              "logstore", logFileReader->GetCategory()));
-                delete[] logBuffer->buffer;
                 delete logBuffer;
                 continue;
             }
@@ -304,8 +303,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 if (!config->PassingTagsToPlugin()) // V1
                 {
                     LogtailPlugin::GetInstance()->ProcessRawLog(logFileReader->GetConfigName(),
-                                                                logBuffer->buffer,
-                                                                logBuffer->bufferSize,
+                                                                logBuffer->rawBuffer,
                                                                 logFileReader->GetSourceId(),
                                                                 logFileReader->GetTopicName());
                 } else // V2
@@ -347,30 +345,30 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                     }
 
                     LogtailPlugin::GetInstance()->ProcessRawLogV2(logFileReader->GetConfigName(),
-                                                                  logBuffer->buffer,
-                                                                  logBuffer->bufferSize,
+                                                                  logBuffer->rawBuffer,
                                                                   logFileReader->GetSourceId(),
                                                                   logFileReader->GetTopicName(),
                                                                   passingTags);
                 }
 
-                delete[] logBuffer->buffer;
                 delete logBuffer;
                 continue;
             }
 
-            int32_t bufferSize = logBuffer->bufferSize;
-            char* buffer = logBuffer->buffer;
+            StringView& rawBuffer = logBuffer->rawBuffer;
             int32_t lineFeed = 0;
-            vector<int32_t> logIndex = logFileReader->LogSplit(buffer, bufferSize, lineFeed);
+            std::vector<StringView> logIndex; // all splitted logs
+            std::vector<StringView> discardIndex; // used to send warning
+            bool splitSuccess
+                = logFileReader->LogSplit(rawBuffer.data(), rawBuffer.size(), lineFeed, logIndex, discardIndex);
 
-            const string& projectName = config->GetProjectName();
-            const string& category = config->GetCategory();
+            const std::string& projectName = config->GetProjectName();
+            const std::string& category = config->GetCategory();
             ParseLogError error;
             uint32_t lines = logIndex.size();
             //////////////////////////////////////////////
             // for profiling
-            uint64_t readBytes = bufferSize;
+            uint64_t readBytes = +1; // may not be accurate if input is not utf8
             uint64_t skipBytes = 0;
             uint64_t splitLines = lines;
             uint64_t parseFailures = 0;
@@ -381,25 +379,30 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             string errorLine;
             //////////////////////////////////////////////
 
-            if (lines == 0) {
-                if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-                    if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                        LogtailAlarm::GetInstance()->SendAlarm(
-                            SPLIT_LOG_FAIL_ALARM,
-                            "split log lines fail, please check log_begin_regex, file:" + logPath
-                                + ", logs:" + string(buffer, 0, 1024),
-                            projectName,
-                            category,
-                            config->mRegion);
-                    }
+            if (AppConfig::GetInstance()->IsLogParseAlarmValid()
+                && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                if (!splitSuccess) { // warning if unsplittable
+                    LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM,
+                                                           "split log lines fail, please check log_begin_regex, file:"
+                                                               + logPath
+                                                               + ", logs:" + rawBuffer.substr(0, 1024).to_string(),
+                                                           projectName,
+                                                           category,
+                                                           config->mRegion);
                     LOG_ERROR(sLogger,
                               ("split log lines fail", "please check log_begin_regex")("file_name", logPath)(
-                                  "read bytes", readBytes)("first 1KB log", string(buffer, 0, 1024)));
+                                  "read bytes", readBytes)("first 1KB log", rawBuffer.substr(0, 1024).to_string()));
                 }
-                // if not discard unmatch data, we add whole data block when data splitted fail
-                if (!config->mDiscardUnmatch) {
-                    logIndex.push_back(0);
-                    lines = 1;
+                for (auto& discardData : discardIndex) { // warning if data loss
+                    LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM,
+                                                           "split log lines discard data, file:" + logPath
+                                                               + ", logs:" + discardData.substr(0, 1024).to_string(),
+                                                           projectName,
+                                                           category,
+                                                           config->mRegion);
+                    LOG_WARNING(sLogger,
+                                ("split log lines discard data", "please check log_begin_regex")("file_name", logPath)(
+                                    "read bytes", readBytes)("first 1KB log", discardData.substr(0, 1024).to_string()));
                 }
             }
             // add lines count
@@ -417,7 +420,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 int32_t parseStartTime = (int32_t)time(NULL);
                 for (uint32_t i = 0; i < lines; i++) {
                     bool successful = logFileReader->ParseLogLine(
-                        buffer + logIndex[i], logGroup, error, lastLogLineTime, lastLogTimeStr, logGroupSize);
+                        logIndex[i], logGroup, error, lastLogLineTime, lastLogTimeStr, logGroupSize);
                     if (!successful) {
                         ++parseFailures;
                         if (error == PARSE_LOG_REGEX_ERROR)
@@ -427,7 +430,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                         else if (error == PARSE_LOG_HISTORY_ERROR)
                             ++historyFailures;
                         if (errorLine.empty())
-                            errorLine = string(buffer + logIndex[i]);
+                            errorLine = logIndex[i].to_string();
                     }
                     // add source line, time zone adjust
                     if (successLogSize < logGroup.logs_size()) {
@@ -435,7 +438,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                         if (logPtr != NULL) {
                             if (config->mUploadRawLog) {
                                 LogParser::AddLog(
-                                    logPtr, config->mAdvancedConfig.mRawLogTag, buffer + logIndex[i], logGroupSize);
+                                    logPtr, config->mAdvancedConfig.mRawLogTag, logIndex[i].to_string(), logGroupSize);
                             }
                             if (successful && config->mTimeZoneAdjust) {
                                 LogParser::AdjustLogTime(
@@ -447,9 +450,10 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                         }
                         successLogSize = logGroup.logs_size();
 
+                        // TODO: I don't think all offsets calc below works with GBK
                         if (logBuffer->exactlyOnceCheckpoint
                             || (config->mAdvancedConfig.mEnableLogPositionMeta && logPtr != NULL)) {
-                            auto const offset = logBuffer->beginOffset + logIndex[i];
+                            auto const offset = logBuffer->beginOffset + (logIndex[i].data() - rawBuffer.data());
                             if (config->mAdvancedConfig.mEnableLogPositionMeta && logPtr != NULL) {
                                 auto content = logPtr->add_contents();
                                 content->set_key(LOG_RESERVED_KEY_FILE_OFFSET);
@@ -460,11 +464,11 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                             if (logBuffer->exactlyOnceCheckpoint) {
                                 int32_t length = 0;
                                 if (1 == lines) {
-                                    length = logBuffer->bufferSize;
+                                    length = rawBuffer.size() + 1;
                                 } else if (i != lines - 1) {
-                                    length = logIndex[i + 1] - logIndex[i];
+                                    length = logIndex[i].size() + 1;
                                 } else {
-                                    length = logBuffer->bufferSize - logIndex[i];
+                                    length = rawBuffer.size() - (logIndex[i].data() - rawBuffer.data());
                                 }
                                 logBuffer->exactlyOnceCheckpoint->positions.emplace_back(
                                     std::make_pair(offset, static_cast<size_t>(length)));
@@ -476,17 +480,19 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 // check whether processing is too slow
                 int32_t parseEndTime = (int32_t)time(NULL);
                 if (parseEndTime - parseStartTime > 1) {
-                    LogtailAlarm::GetInstance()->SendAlarm(
-                        PROCESS_TOO_SLOW_ALARM,
-                        string("parse ") + ToString(logGroup.logs_size()) + " logs, buffer size " + ToString(bufferSize)
-                            + "time used seconds : " + ToString(parseEndTime - parseStartTime),
-                        projectName,
-                        category,
-                        config->mRegion);
-                    LOG_WARNING(sLogger,
-                                ("process log too slow, parse logs", logGroup.logs_size())("buffer size", bufferSize)(
-                                    "time used seconds",
-                                    parseEndTime - parseStartTime)("project", projectName)("logstore", category));
+                    LogtailAlarm::GetInstance()->SendAlarm(PROCESS_TOO_SLOW_ALARM,
+                                                           string("parse ") + ToString(logGroup.logs_size())
+                                                               + " logs, buffer size " + ToString(rawBuffer.size())
+                                                               + "time used seconds : "
+                                                               + ToString(parseEndTime - parseStartTime),
+                                                           projectName,
+                                                           category,
+                                                           config->mRegion);
+                    LOG_WARNING(
+                        sLogger,
+                        ("process log too slow, parse logs", logGroup.logs_size())("buffer size", rawBuffer.size())(
+                            "time used seconds", parseEndTime - parseStartTime)("project", projectName)("logstore",
+                                                                                                        category));
                 }
                 if (logGroup.logs_size() > 0) {
                     sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
@@ -608,7 +614,6 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                           "parse_time_failures", parseTimeFailures)("regex_match_failures", regexMatchFailures)(
                           "history_failures", historyFailures));
 
-            delete[] logBuffer->buffer;
             delete logBuffer;
         }
     }

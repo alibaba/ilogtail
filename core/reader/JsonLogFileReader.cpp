@@ -60,13 +60,13 @@ void JsonLogFileReader::SetTimeKey(const std::string& timeKey) {
         mUseSystemTime = false;
 }
 
-bool JsonLogFileReader::ParseLogLine(const char* buffer,
+bool JsonLogFileReader::ParseLogLine(StringView buffer,
                                      sls_logs::LogGroup& logGroup,
                                      ParseLogError& error,
                                      time_t& lastLogLineTime,
                                      std::string& lastLogTimeStr,
                                      uint32_t& logGroupSize) {
-    if (strlen(buffer) == 0)
+    if (buffer.empty())
         return true;
 
     if (logGroup.logs_size() == 0) {
@@ -76,15 +76,18 @@ bool JsonLogFileReader::ParseLogLine(const char* buffer,
     bool parseSuccess = true;
     uint64_t preciseTimestamp = 0;
     rapidjson::Document doc;
-    doc.Parse(buffer);
+    doc.Parse(buffer.data(), buffer.size());
     if (doc.HasParseError()) {
         if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
             LOG_WARNING(sLogger,
                         ("parse json log fail, log",
                          buffer)("rapidjson offset", doc.GetErrorOffset())("rapidjson error", doc.GetParseError())(
                             "project", mProjectName)("logstore", mCategory)("file", mLogPath));
-            LogtailAlarm::GetInstance()->SendAlarm(
-                PARSE_LOG_FAIL_ALARM, string("parse json fail:") + string(buffer), mProjectName, mCategory, mRegion);
+            LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
+                                                   string("parse json fail:") + buffer.to_string(),
+                                                   mProjectName,
+                                                   mCategory,
+                                                   mRegion);
         }
         error = PARSE_LOG_FORMAT_ERROR;
         parseSuccess = false;
@@ -94,7 +97,7 @@ bool JsonLogFileReader::ParseLogLine(const char* buffer,
                 sLogger,
                 ("invalid json object, log", buffer)("project", mProjectName)("logstore", mCategory)("file", mLogPath));
             LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
-                                                   string("invalid json object:") + string(buffer),
+                                                   string("invalid json object:") + buffer.to_string(),
                                                    mProjectName,
                                                    mCategory,
                                                    mRegion);
@@ -104,7 +107,7 @@ bool JsonLogFileReader::ParseLogLine(const char* buffer,
     } else if (!mUseSystemTime) {
         rapidjson::Value::ConstMemberIterator itr = doc.FindMember(mTimeKey.c_str());
         if (itr != doc.MemberEnd() && (itr->value.IsString() || itr->value.IsInt64())) {
-            if (!LogParser::ParseLogTime(buffer,
+            if (!LogParser::ParseLogTime(buffer.data(),
                                          lastLogTimeStr,
                                          lastLogLineTime,
                                          preciseTimestamp,
@@ -130,7 +133,7 @@ bool JsonLogFileReader::ParseLogLine(const char* buffer,
                                 "logstore", mCategory)("file", mLogPath));
                 LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
                                                        string("found no time_key: ") + mTimeKey
-                                                           + ", log:" + string(buffer),
+                                                           + ", log:" + buffer.to_string(),
                                                        mProjectName,
                                                        mCategory,
                                                        mRegion);
@@ -185,18 +188,22 @@ std::string JsonLogFileReader::RapidjsonValueToString(const rapidjson::Value& va
     }
 }
 
-vector<int32_t> JsonLogFileReader::LogSplit(char* buffer, int32_t size, int32_t& lineFeed) {
-    vector<int32_t> index;
-    int32_t i = 0;
-    index.push_back(i);
+bool JsonLogFileReader::LogSplit(const char* buffer,
+                                 int32_t size,
+                                 int32_t& lineFeed,
+                                 std::vector<StringView>& logIndex,
+                                 std::vector<StringView>& discardIndex) {
+    int32_t line_beg = 0, i = 0;
     while (++i < size) {
-        if (buffer[i] == '\0' && i < size - 1)
-            index.push_back(i + 1);
+        if (buffer[i] == '\0') {
+            logIndex.emplace_back(buffer + line_beg, i - line_beg);
+            line_beg = i + 1;
+        }
     }
-    return index;
+    logIndex.emplace_back(buffer + line_beg, size - line_beg);
+    return true;
 }
 
-// rollbackLineFeedCount is useful in encoding conversion, ingnore it in json reader(should be utf8)
 // split log & find last match in this function
 int32_t JsonLogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount) {
     int32_t readBytes = 0;
@@ -210,8 +217,8 @@ int32_t JsonLogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& 
         if (FindJsonMatch(buffer, beginIdx, size, endIdx, startWithBlock)) {
             noJsonBlockFlag = false;
             buffer[endIdx] = '\0';
-            readBytes = endIdx + 1;
             beginIdx = endIdx + 1;
+            readBytes = endIdx + 1;
             rollbackLineFeedCount = 0;
         } else {
             char* pos = strchr(buffer + beginIdx, '\n');
@@ -226,6 +233,7 @@ int32_t JsonLogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& 
                 // if no json block in this buffer and now line has block, set noJsonBlockFlag false
                 if (!startWithBlock) {
                     readBytes = endIdx + 1;
+                    rollbackLineFeedCount = 0;
                 } else {
                     noJsonBlockFlag = false;
                 }
