@@ -2,7 +2,6 @@ package command
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"os/exec"
 	"os/user"
@@ -20,7 +19,7 @@ func RunCommandWithTimeOut(timeout int, execUser string, command string, args ..
 	if execUser != "" {
 		user, err := user.Lookup(execUser)
 		if err == nil {
-			log.Printf("uid=%s,gid=%s", user.Uid, user.Gid)
+			log.Printf("user=%s uid=%s,gid=%s", execUser, user.Uid, user.Gid)
 			uid, _ := strconv.Atoi(user.Uid)
 			gid, _ := strconv.Atoi(user.Gid)
 			cmd.SysProcAttr = &syscall.SysProcAttr{}
@@ -42,13 +41,11 @@ func RunCommandWithTimeOut(timeout int, execUser string, command string, args ..
 
 	select {
 	case <-after:
-		fmt.Print("after")
 		cmd.Process.Signal(syscall.SIGINT)
 		time.Sleep(10 * time.Microsecond)
 		cmd.Process.Kill()
 		isKilled = true
 	case <-done:
-		fmt.Print("done")
 		isKilled = false
 	}
 	stdout = string(bytes.TrimSpace(stdoutBuf.Bytes()))

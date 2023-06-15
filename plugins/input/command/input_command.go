@@ -123,6 +123,7 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 	if err != nil {
 		return fmt.Errorf("error on in.ExecScript error: %s", err)
 	}
+	logger.Infof(context.Background(), "exec output return [%s]", scriptOut)
 	var outSplitArr []string
 
 	if in.LineSplitSep == "\\n" {
@@ -135,7 +136,7 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 	//分拆文本内容并解析
 	metricItems := in.ParseToMetricData(outSplitArr)
 	//添加Metrics
-	fmt.Printf("metricItems len %d,  %+v \n", len(metricItems), metricItems)
+	logger.Infof(context.Background(), "add metricItems len %d", len(metricItems))
 
 	for _, metricItme := range metricItems {
 		// fmt.Printf("metricItemsLabels len %s \n", metricItme.LabelsString)
@@ -146,11 +147,14 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 
 func (in *InputCommand) ParseToMetricData(execReturnArr []string) (re []*MetricData) {
 	for _, v := range execReturnArr {
+		v = strings.TrimSpace(v)
+		if len(v) == 0 {
+			continue
+		}
 		decodeResult := in.decoder.Decode(v)
 		if decodeResult.Err != nil {
 			//记录debug log
-			logger.Debug(context.Background(), "decode mistake", decodeResult.Err)
-			fmt.Printf("decode mistake %s \n", decodeResult.Err)
+			logger.Infof(context.Background(), "decode mistake", decodeResult.Err)
 			continue
 		}
 		tempLabelStore := in.labelStore.Clone()

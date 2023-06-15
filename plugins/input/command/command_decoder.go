@@ -1,10 +1,13 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 type Decoder interface {
@@ -34,17 +37,24 @@ type SlsMetricsDecoder struct {
 	SplitSep      string
 }
 
-//__labels__:hostname#$#idc_cluster_env_name|ip#$#ip_address   __value__:0.0  __name__:metric_command_example
+// __labels__:hostname#$#idc_cluster_env_name|ip#$#ip_address   __value__:0.0  __name__:metric_command_example
 func (sls *SlsMetricsDecoder) Decode(value string) *DecoderResult {
-	value = strings.Trim(value, " ")
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return sls.DecoderResult
+	}
 	//先校验是否合法 不合法则认为是注释或其他字符串 忽略解析
-	pattern := `^(__.*?__\:[^\s]+\s*?){3,4}$`
+	// pattern := `^(__.*?__\:[^\s]+\s*?){1,4}$`
+	logger.Infof(context.Background(), "decode string [%s]", value)
+	pattern := `^(__.*?__\:[^\s]+\s*?){2,4}$`
 	r := regexp.MustCompile(pattern)
-	if r.MatchString(value) == false {
-		sls.DecoderResult.Err = fmt.Errorf("validate value error value[%s]", value)
+	if !r.MatchString(value) {
+		sls.DecoderResult.Err = fmt.Errorf("validate regex from pattern [%s]  error value [%s]", pattern, value)
+		logger.Infof(context.Background(), "validate regex from pattern [%s]  error value [%s]", pattern, value)
 		return sls.DecoderResult
 	}
 
+	sls.DecoderResult.Err = nil
 	items := strings.Split(value, sls.SplitSep)
 	for _, item := range items {
 		item = strings.Trim(item, " ")
@@ -72,7 +82,7 @@ func (sls *SlsMetricsDecoder) Decode(value string) *DecoderResult {
 
 	}
 	if sls.DecoderResult.Err != nil {
-		fmt.Print("errpr on decode", sls.DecoderResult.Err)
+		logger.Infof(context.Background(), "decode error:[%s]", sls.DecoderResult.Err)
 	}
 	return sls.DecoderResult
 }
@@ -104,8 +114,7 @@ func (sls *SlsMetricsDecoder) decodeItemKv(item string) (k, v string) {
 	}
 }
 
-//__labels__:hostname#$#idc_cluster_env_name|ip#$#ip_address   __value__:0.0  __name__:metric_command_example
-//
+// __labels__:hostname#$#idc_cluster_env_name|ip#$#ip_address   __value__:0.0  __name__:metric_command_example
 func GetDecoder(dataType string) Decoder {
 	if dataType == SlsMetricDataType {
 		decoder := &SlsMetricsDecoder{

@@ -54,7 +54,36 @@ func parseContent(contents []*protocol.Log_Content) parseRe {
 	return tempRe
 }
 
-//测试文本输出结果的解析
+func TestOneLine(t *testing.T) {
+	ctx := mock.NewEmptyContext("project", "store", "config")
+	p := pipeline.MetricInputs[pluginName]().(*InputCommand)
+	// c := new(test.MockMetricCollector)
+	if _, err := p.Init(ctx); err != nil {
+		t.Errorf("cannot init InputCommand: %v", err)
+		return
+	}
+	testReturn := `
+     __value__:0.0  __name__:metric_command_example_4 __test__:1
+
+		__value__:0.0  __name__:metric_command_example_5 __test__:1
+
+		__value__:0.0  __name__:metric_command_example_no_break __test__:1
+		
+		__labels__:b#$#2|a#$#1   __value__:0.0  __name__:metric_command_example  
+	a:1  b:2  c:3
+	     __value__:0.0  __name__:metric_command_example_big_space __test__:1
+	__value__:0  __name__:metric_command_example_without_labels 
+	# 这是一个注释
+	#  __value__:0  __name__:metric_command_example_without_labels
+	`
+	testReArr := strings.Split(testReturn, "\n")
+	fmt.Println("testReArr", testReArr)
+	re := p.ParseToMetricData(testReArr)
+	fmt.Println(re)
+	fmt.Print(testReturn)
+}
+
+// 测试文本输出结果的解析
 func TestCommandParseToMetricData(t *testing.T) {
 	ctx := mock.NewEmptyContext("project", "store", "config")
 	p := pipeline.MetricInputs[pluginName]().(*InputCommand)
@@ -323,7 +352,7 @@ func TestCommandTestInit(t *testing.T) {
 
 }
 
-//测试script storage
+// 测试script storage
 func TestScriptStorage(t *testing.T) {
 	u, err := user.Current()
 	fmt.Printf("Username %s\n", u.Username)
