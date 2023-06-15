@@ -38,7 +38,7 @@ RUN wget -nv https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/too
         -D CMAKE_CXX_COMPILER=/opt/rh/devtoolset-8/root/usr/bin/g++ \
         -D LLVM_ENABLE_PROJECTS='clang' \
         -D CMAKE_BUILD_TYPE=Release ../llvm && \
-    make -sj2 clang-format && \
+    make -sj$(nproc) clang-format && \
     cd /
 
 # build git
