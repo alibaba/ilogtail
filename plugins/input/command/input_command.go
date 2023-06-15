@@ -16,22 +16,22 @@ import (
 )
 
 type InputCommand struct {
-	ScriptType    string //脚本类型, bash, shell
-	User          string //执行的用户
-	ScriptContent string //脚本内容 PlainText|Base64  两种格式
-	ContentType   string //指定脚本格式  PlainText|Base64
-	LineSplitSep  string //行分隔符
-	ScriptDataDir string //执行脚本的存放目前
-	CmdPath       string //需要执行可执行命令的路径 默认:/usr/bin/sh
-	ExporterName  string //注册的exporterName 表示执行脚本内容metric的类别 类似与node_export   mysql_export等 默认为空 会提交到label中
+	ScriptType    string `json:"script_type" comment:"脚本类型, bash, shell"`
+	User          string `json:"user" comment:"执行的用户"`
+	ScriptContent string `json:"script_content" comment:"脚本内容 PlainText|Base64  两种格式"`
+	ContentType   string `json:"content_type" comment:"指定脚本格式  PlainText|Base64"`
+	LineSplitSep  string `json:"line_split_sep" comment:"分隔符"`
+	ScriptDataDir string `json:"script_data_dir" comment:"执行脚本的存放目前"`
+	CmdPath       string `json:"cmd_path" comment:"需要执行可执行命令的路径 默认 /usr/bin/sh`
+	ExporterName  string `json:"exporter_name" comment:"注册的exporterName 表示执行脚本内容metric的类别 类似与node_export   mysql_export等 默认为空 会提交到label中"`
 	//脚本执行后输出的格式
 	//sls_metrics
 	//example: __labels__:hostname#$#idc_cluster_env_name|ip#$#ip_address   __value__:0  __name__:metric_command_example
 	//json 暂不支持
 	//prometheus 暂不支持
-	OutputDataType    string //目前先支持sls_metrics格式
-	ExecScriptTimeOut int    //执行一次collect的超时时间，超时后会通知context.Alarm 单位毫秒,  不超过collect的采集频率
-	IntervalMs        int    //collect触发频率  单位毫秒
+	OutputDataType    string `json:"output_data_type" comment:"目前先支持sls_metrics格式"`
+	ExecScriptTimeOut int    `json:"exec_script_timeout" comment:"执行一次collect的超时时间，超时后会通知context.Alarm 单位毫秒,  不超过collect的采集频率"`
+	IntervalMs        int    `json:"interval_ms" comment:"//collect触发频率  单位毫秒"`
 
 	hostname   string
 	ip         string
@@ -154,7 +154,6 @@ func (in *InputCommand) ParseToMetricData(execReturnArr []string) (re []*MetricD
 			continue
 		}
 		tempLabelStore := in.labelStore.Clone()
-		fmt.Println("decodeResult.Labels", decodeResult.Labels)
 		tempLabelStore.AppendMap(decodeResult.Labels)
 		re = append(re, &MetricData{
 			Name:         decodeResult.MetricName,
