@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
@@ -103,11 +104,11 @@ func processPort(res http.ResponseWriter, req *http.Request) {
 	jsonBytes, err := json.Marshal(param)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
-		res.Write([]byte(err.Error()))
+		res.Write([]byte(err.Error())) //nolint:gosec
 		return
 	}
 	res.WriteHeader(http.StatusOK)
-	res.Write(jsonBytes)
+	res.Write(jsonBytes) //nolint:gosec
 }
 
 func ExportLogtailPorts() {
@@ -116,8 +117,9 @@ func ExportLogtailPorts() {
 			mux := http.NewServeMux()
 			mux.HandleFunc("/export/port", processPort)
 			server := &http.Server{
-				Addr:    ":" + strconv.Itoa(exportLogtailPortsPort),
-				Handler: mux,
+				Addr:              ":" + strconv.Itoa(exportLogtailPortsPort),
+				Handler:           mux,
+				ReadHeaderTimeout: 10 * time.Second,
 			}
 			err := server.ListenAndServe()
 			defer server.Close()

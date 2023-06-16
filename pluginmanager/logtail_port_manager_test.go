@@ -9,8 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 func TestLogtailPortManager(t *testing.T) {
