@@ -10,29 +10,29 @@ const (
 	defaultLineSplitSep     = `\n`
 	defaultOutputDataType   = SlsMetricDataType
 	defaultScirptDataDir    = "/workspaces/ilogtail/scriptStorage/"
-	defaultIntervalMs       = 5000     //ms 默认5s
+	defaultIntervalMs       = 5000      //ms 3默认为阿里云的采集频率5s
 	defaltExecScriptTimeOut = 3000      //单位ms 设置为3秒超时
 	defaultExporterName     = "default" //默认为default 提交到coommonlabels中
 )
 
-//执行脚本输出的格式
+// 执行脚本输出的格式
 const (
 	SlsMetricDataType = "sls_metrics"
 )
 
-//支持的脚本类型
+// 支持的脚本类型
 var supportScriptTypes = map[string]bool{
 	"Bash":  true,
 	"Shell": true,
 	// "python": false,
 }
 
-//支持的脚本输出类型
+// 支持的脚本输出类型
 var supportOutPutDataType = map[string]bool{
 	SlsMetricDataType: true,
 }
 
-//支持的contentType
+// 支持的contentType
 var supportContentType = map[string]bool{
 	"PlainText": true,
 	"Base64":    true,

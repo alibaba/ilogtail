@@ -159,8 +159,6 @@ func (in *InputCommand) ParseToMetricData(execReturnArr []string) (re []*MetricD
 		}
 		tempLabelStore := helper.KeyValues{}
 		tempLabelStore.AppendMap(in.labelStore.ToMap())
-		// fmt.Println("decodeResult.Labels", decodeResult.Labels)
-		in.setCommonLabels()
 		tempLabelStore.AppendMap(decodeResult.Labels)
 		re = append(re, &MetricData{
 			Name:         decodeResult.MetricName,
