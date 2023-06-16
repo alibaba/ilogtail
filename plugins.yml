@@ -40,6 +40,7 @@ plugins:
     - import: "github.com/alibaba/ilogtail/plugins/flusher/statistics"
     - import: "github.com/alibaba/ilogtail/plugins/flusher/stdout"
     - import: "github.com/alibaba/ilogtail/plugins/input/canal"
+    - import: "github.com/alibaba/ilogtail/plugins/input/command"
     - import: "github.com/alibaba/ilogtail/plugins/input/docker/event"
     - import: "github.com/alibaba/ilogtail/plugins/input/docker/rawstdout"
     - import: "github.com/alibaba/ilogtail/plugins/input/docker/stdout"
