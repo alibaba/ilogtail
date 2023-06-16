@@ -10,7 +10,7 @@ const (
 	defaultLineSplitSep     = `\n`
 	defaultOutputDataType   = SlsMetricDataType
 	defaultScirptDataDir    = "/workspaces/ilogtail/scriptStorage/"
-	defaultIntervalMs       = 30000     //ms 30s
+	defaultIntervalMs       = 5000     //ms 默认5s
 	defaltExecScriptTimeOut = 3000      //单位ms 设置为3秒超时
 	defaultExporterName     = "default" //默认为default 提交到coommonlabels中
 )
