@@ -1,10 +1,8 @@
 package pluginmanager
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,15 +10,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
 var exportLogtailPortsRunning = false
 
-var exportLogtailPortsInterval = 30 * time.Second
+var exportLogtailPortsPort = 18689
 
 func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
 	ports := []int{}
@@ -89,56 +85,47 @@ func getLogtailLitsenPorts() []int {
 	for _, port := range udp6Ports {
 		portsMap[port]++
 	}
-
+	delete(portsMap, exportLogtailPortsPort)
 	for port := range portsMap {
 		ports = append(ports, port)
 	}
 	return ports
 }
 
-func exportLogtailLitsenPorts(ports []int) error {
+func processPort(res http.ResponseWriter, req *http.Request) {
+	ports := getLogtailLitsenPorts()
+	logger.Info(context.Background(), "get logtail's listen ports", ports)
+
 	param := &struct {
-		Status string `json:"status"`
-		Ports  []int  `json:"ports"`
+		Ports []int `json:"ports"`
 	}{}
-	param.Status = "success"
 	param.Ports = ports
 	jsonBytes, err := json.Marshal(param)
 	if err != nil {
-		return err
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte(err.Error()))
+		return
 	}
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", *flags.K8sControllerEndpoint, bytes.NewBuffer(jsonBytes))
-	if err != nil {
-		return err
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	if res.StatusCode != 200 {
-		return errors.New(res.Status)
-	}
-	return nil
+	res.WriteHeader(http.StatusOK)
+	res.Write(jsonBytes)
 }
 
 func ExportLogtailPorts() {
-	exportLogtailPorts := func() {
-		exportLogtailPortsTicker := time.NewTicker(exportLogtailPortsInterval)
-		for range exportLogtailPortsTicker.C {
-			ports := getLogtailLitsenPorts()
-			logger.Info(context.Background(), "get logtail's listen ports success", ports)
-
-			err := exportLogtailLitsenPorts(ports)
-			if err != nil {
-				logger.Error(context.Background(), "export logtail's listen ports failed", err.Error())
-				continue
-			}
-			logger.Info(context.Background(), "export logtail's listen ports success")
-		}
-	}
 	if !exportLogtailPortsRunning {
-		go exportLogtailPorts()
+		go func() {
+			mux := http.NewServeMux()
+			mux.HandleFunc("/export/port", processPort)
+			server := &http.Server{
+				Addr:    ":" + strconv.Itoa(exportLogtailPortsPort),
+				Handler: mux,
+			}
+			err := server.ListenAndServe()
+			defer server.Close()
+			if err != nil && err != http.ErrServerClosed {
+				logger.Error(context.Background(), "export logtail's ports failed", err.Error())
+				return
+			}
+		}()
 		exportLogtailPortsRunning = true
 	}
 }
