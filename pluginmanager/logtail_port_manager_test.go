@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"runtime"
 	"testing"
 	"time"
 
@@ -45,8 +46,10 @@ func (s *logtailPortManagerTestSuite) TestGetLogtailLitsenPorts() {
 
 	ports := getLogtailLitsenPorts()
 	logger.Info(context.Background(), "get ports success", ports)
-	s.Contains(ports, 18687)
-	s.Contains(ports, 18688)
+	if runtime.GOOS == "linux" {
+		s.Contains(ports, 18687)
+		s.Contains(ports, 18688)
+	}
 }
 
 func (s *logtailPortManagerTestSuite) TestExportLogtailLitsenPorts() {
@@ -80,8 +83,10 @@ func (s *logtailPortManagerTestSuite) TestExportLogtailLitsenPorts() {
 		err = json.NewDecoder(res.Body).Decode(param)
 		s.NoError(err)
 		logger.Info(context.Background(), "receive ports success", param.Ports)
-		s.Contains(param.Ports, 18687)
-		s.Contains(param.Ports, 18688)
+		if runtime.GOOS == "linux" {
+			s.Contains(param.Ports, 18687)
+			s.Contains(param.Ports, 18688)
+		}
 		if count == 3 {
 			return
 		}
