@@ -108,13 +108,14 @@ void TimeUtilUnittest::TestNativeStrptimeFormat() {
 
     std::string format = "%s";
     std::string str = "1551053999";
+    int localOffset = GetLocalTimeZoneOffsetSecond();
     struct tm result = {0};
     auto ret = strptime(str.c_str(), format.c_str(), &result);
     ASSERT_TRUE(ret != NULL);
     EXPECT_EQ(2019, result.tm_year + 1900);
     EXPECT_EQ(2, result.tm_mon + 1);
     EXPECT_EQ(25, result.tm_mday);
-    EXPECT_EQ(8, result.tm_hour);
+    EXPECT_EQ(0, result.tm_hour - localOffset / 3600);
     EXPECT_EQ(19, result.tm_min);
     EXPECT_EQ(59, result.tm_sec);
 }

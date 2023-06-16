@@ -285,6 +285,7 @@ APSARA_UNIT_TEST_CASE(LogParserUnittest, TestLogParsingError, 8);
 
 void LogParserUnittest::TestApsaraEasyReadLogTimeParser() {
     LOG_INFO(sLogger, ("TestApsaraEasyReadLogTimeParser() begin", time(NULL)));
+    int localOffset = GetLocalTimeZoneOffsetSecond();
     string buffer = "[1378972170425093]\tA:B";
     int64_t microTime = 0;
     uint32_t dateTime = 0;
@@ -315,8 +316,8 @@ void LogParserUnittest::TestApsaraEasyReadLogTimeParser() {
     microTime = 0;
     dateTime = 0;
     dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
-    APSARA_TEST_EQUAL(dateTime, 1378995508);
-    APSARA_TEST_EQUAL(microTime, 1378995508819129);
+    APSARA_TEST_EQUAL(dateTime, 1379024308 - localOffset);
+    APSARA_TEST_EQUAL(microTime, 1379024308819129 - (int64_t)localOffset * 1000000);
     APSARA_TEST_EQUAL(dateTime, lastTime);
     APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:28");
 
@@ -324,8 +325,8 @@ void LogParserUnittest::TestApsaraEasyReadLogTimeParser() {
     microTime = 0;
     dateTime = 0;
     dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
-    APSARA_TEST_EQUAL(dateTime, 1378995508);
-    APSARA_TEST_EQUAL(microTime, 1378995508819139);
+    APSARA_TEST_EQUAL(dateTime, 1379024308 - localOffset);
+    APSARA_TEST_EQUAL(microTime, 1379024308819139 - (int64_t)localOffset * 1000000);
     APSARA_TEST_EQUAL(dateTime, lastTime);
     APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:28");
 
@@ -333,8 +334,8 @@ void LogParserUnittest::TestApsaraEasyReadLogTimeParser() {
     microTime = 0;
     dateTime = 0;
     dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
-    APSARA_TEST_EQUAL(dateTime, 1378995509);
-    APSARA_TEST_EQUAL(microTime, 1378995509819139);
+    APSARA_TEST_EQUAL(dateTime, 1379024309 - localOffset);
+    APSARA_TEST_EQUAL(microTime, 1379024309819139 - (int64_t)localOffset * 1000000);
     APSARA_TEST_EQUAL(dateTime, lastTime);
     APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:29");
     LOG_INFO(sLogger, ("TestApsaraEasyReadLogTimeParser() end", time(NULL)));
@@ -344,8 +345,8 @@ void LogParserUnittest::TestApsaraEasyReadLogTimeParser() {
     microTime = 0;
     dateTime = 0;
     dateTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.c_str(), lastStr, lastTime, microTime);
-    APSARA_TEST_EQUAL(dateTime, 1378995509);
-    APSARA_TEST_EQUAL(microTime, 1378995509819000);
+    APSARA_TEST_EQUAL(dateTime, 1379024309 - localOffset);
+    APSARA_TEST_EQUAL(microTime, 1379024309819000 - (int64_t)localOffset * 1000000);
     APSARA_TEST_EQUAL(dateTime, lastTime);
     APSARA_TEST_EQUAL(lastStr, "2013-09-12 22:18:29");
     LOG_INFO(sLogger, ("TestApsaraEasyReadLogTimeParser() end", time(NULL)));
@@ -355,6 +356,7 @@ void LogParserUnittest::TestAdjustLogTime() {
     LOG_INFO(sLogger, ("TestAdjustLogTime() begin", time(NULL)));
     Config* config = new Config("", "", APSARA_LOG, "", "", "1000000_proj", false, 2, -1, "category");
     config->mAdvancedConfig.mAdjustApsaraMicroTimezone = true;
+    int localOffset = GetLocalTimeZoneOffsetSecond();
 
     {
         LogGroup logGroup;
@@ -365,13 +367,13 @@ void LogParserUnittest::TestAdjustLogTime() {
         string logLine = "[2013-09-12 22:18:28.819139]\tA:B";
         const char* pLogLine = logLine.c_str();
         bool ret = LogParser::ApsaraEasyReadLogLineParser(
-            pLogLine, logGroup, true, timeStr, lastLogTime, "", "", "", "", error, logGroupSize, 3600 * 8, true);
+            pLogLine, logGroup, true, timeStr, lastLogTime, "", "", "", "", error, logGroupSize, -localOffset, true);
         APSARA_TEST_EQUAL(logGroup.logs_size(), 1);
         sls_logs::Log* logPtr = logGroup.mutable_logs(0);
         const Log& firstLog = logGroup.logs(0);
         for (int32_t conIdx = 0; conIdx < logPtr->contents_size(); ++conIdx) {
             if ("microtime" == firstLog.contents(conIdx).key()) {
-                APSARA_TEST_EQUAL(firstLog.contents(conIdx).value(), "1378966708819139");
+                APSARA_TEST_EQUAL(firstLog.contents(conIdx).value(), "1379024308819139");
             }
         }
     }
@@ -385,13 +387,13 @@ void LogParserUnittest::TestAdjustLogTime() {
         string logLine = "[2013-09-12 22:18:28.819]\tA:B";
         const char* pLogLine = logLine.c_str();
         bool ret = LogParser::ApsaraEasyReadLogLineParser(
-            pLogLine, logGroup, true, timeStr, lastLogTime, "", "", "", "", error, logGroupSize, 3600 * 8, true);
+            pLogLine, logGroup, true, timeStr, lastLogTime, "", "", "", "", error, logGroupSize, -localOffset, true);
         APSARA_TEST_EQUAL(logGroup.logs_size(), 1);
         sls_logs::Log* logPtr = logGroup.mutable_logs(0);
         const Log& firstLog = logGroup.logs(0);
         for (int32_t conIdx = 0; conIdx < logPtr->contents_size(); ++conIdx) {
             if ("microtime" == firstLog.contents(conIdx).key()) {
-                APSARA_TEST_EQUAL(firstLog.contents(conIdx).value(), "1378966708819000");
+                APSARA_TEST_EQUAL(firstLog.contents(conIdx).value(), "1379024308819000");
             }
         }
     }
@@ -405,13 +407,13 @@ void LogParserUnittest::TestAdjustLogTime() {
         string logLine = "[2013-09-12 22:18:28.8191390]\tA:B";
         const char* pLogLine = logLine.c_str();
         bool ret = LogParser::ApsaraEasyReadLogLineParser(
-            pLogLine, logGroup, true, timeStr, lastLogTime, "", "", "", "", error, logGroupSize, 3600 * 8, true);
+            pLogLine, logGroup, true, timeStr, lastLogTime, "", "", "", "", error, logGroupSize, -localOffset, true);
         APSARA_TEST_EQUAL(logGroup.logs_size(), 1);
         sls_logs::Log* logPtr = logGroup.mutable_logs(0);
         const Log& firstLog = logGroup.logs(0);
         for (int32_t conIdx = 0; conIdx < logPtr->contents_size(); ++conIdx) {
             if ("microtime" == firstLog.contents(conIdx).key()) {
-                APSARA_TEST_EQUAL(firstLog.contents(conIdx).value(), "1378966708819139");
+                APSARA_TEST_EQUAL(firstLog.contents(conIdx).value(), "1379024308819139");
             }
         }
     }
@@ -463,6 +465,7 @@ void LogParserUnittest::TestRegexLogLineParser() {
     PreciseTimestampConfig preciseTimestampConfig;
     preciseTimestampConfig.enabled = true;
     preciseTimestampConfig.key = "precise_timestamp_key";
+    int localOffset = GetLocalTimeZoneOffsetSecond();
 
     const char* timeFormat = "%Y-%m-%d %H:%M:%S";
     boost::regex rightReg = boost::regex("\\[([^\\]]+)\\]\\s*(.*)");
@@ -526,7 +529,7 @@ void LogParserUnittest::TestRegexLogLineParser() {
                                          "",
                                          error,
                                          logGroupSize,
-                                         0);
+                                         -localOffset);
     APSARA_TEST_EQUAL(flag, true);
     const Log& secondLog = logGroup.logs(1);
     APSARA_TEST_EQUAL(secondLog.contents_size(), 3);
@@ -536,7 +539,7 @@ void LogParserUnittest::TestRegexLogLineParser() {
     APSARA_TEST_EQUAL(secondLog.contents(1).key(), "message");
     APSARA_TEST_EQUAL(secondLog.contents(1).value(), msgStr);
     APSARA_TEST_EQUAL(secondLog.contents(2).key(), "precise_timestamp_key");
-    APSARA_TEST_EQUAL(secondLog.contents(2).value(), "1383224629123");
+    APSARA_TEST_EQUAL(secondLog.contents(2).value(), "1383253429123");
 
     // case 3: has no last time
     lastTimeStr = "";
@@ -563,7 +566,7 @@ void LogParserUnittest::TestRegexLogLineParser() {
                                          "",
                                          error,
                                          logGroupSize,
-                                         0);
+                                         -localOffset);
     APSARA_TEST_EQUAL(flag, true);
     const Log& thirdLog = logGroup.logs(2);
     APSARA_TEST_EQUAL(thirdLog.contents_size(), 3);
@@ -573,10 +576,9 @@ void LogParserUnittest::TestRegexLogLineParser() {
     APSARA_TEST_EQUAL(thirdLog.contents(1).key(), "message");
     APSARA_TEST_EQUAL(thirdLog.contents(1).value(), msgStr);
     APSARA_TEST_EQUAL(thirdLog.contents(2).key(), "precise_timestamp_key");
-    APSARA_TEST_EQUAL(thirdLog.contents(2).value(), "1383228289100");
+    APSARA_TEST_EQUAL(thirdLog.contents(2).value(), "1383257089100");
 
     // test time adjust
-    int localOffset = GetLocalTimeZoneOffsetSecond();
     int hawaiiTimeZoneOffsetSecond = -10 * 3600;
 
     int logTZSecond;
@@ -641,6 +643,7 @@ void LogParserUnittest::TestLogTimeRegexParser() {
     // NOTICE: \d is not supported in C++ regex extension, supported in boost::regex
     const char* timeRegWrong
         = "(\\d{4})-(0\\d{1}|1[0-2])-(0\\d{1}|[12]\\d{1}|3[01])\\s(0\\d{1}|1\\d{1}|2[0-3]):[0-5]\\d{1}:([0-5]\\d{1})";
+    int localOffset = GetLocalTimeZoneOffsetSecond();
 
     boost::regex reg1(timeRegRight);
     boost::regex reg2(timeRegWrong);
@@ -649,7 +652,7 @@ void LogParserUnittest::TestLogTimeRegexParser() {
     time_t logTime = -1;
     bool flag = LogFileReader::ParseLogTime(logBufferRight, &reg2, logTime, timeFormat);
     APSARA_TEST_EQUAL(flag, true);
-    APSARA_TEST_EQUAL(logTime, 1530734462);
+    APSARA_TEST_EQUAL(logTime, 1530763262 - localOffset);
 
     logTime = -1;
     flag = LogFileReader::ParseLogTime(logBufferWrong, &reg1, logTime, timeFormat);
@@ -658,28 +661,28 @@ void LogParserUnittest::TestLogTimeRegexParser() {
 
     flag = LogFileReader::ParseLogTime(logBufferRight, &reg2, logTime, timeFormat);
     APSARA_TEST_EQUAL(flag, true);
-    APSARA_TEST_EQUAL(logTime, 1530734462); // 2018-07-05 04:01:02 unix time: 1530734462
+    APSARA_TEST_EQUAL(logTime, 1530763262 - localOffset); // 2018-07-05 04:01:02 unix time: 1530763262
 
     logTime = -1;
     flag = LogFileReader::ParseLogTime(logBufferRight, &reg1, logTime, timeFormat);
     APSARA_TEST_EQUAL(flag, true);
-    APSARA_TEST_EQUAL(logTime, 1530734462); // 2018-07-05 04:01:02 unix time: 1530734462
+    APSARA_TEST_EQUAL(logTime, 1530763262 - localOffset); // 2018-07-05 04:01:02 unix time: 1530763262
 
     logTime = -1;
     flag = LogFileReader::ParseLogTime(logBufferRight2, &reg1, logTime, timeFormat);
     APSARA_TEST_EQUAL(flag, true);
-    APSARA_TEST_EQUAL(logTime, 1533645038); // 2018-08-07 20:30:38 unix time: 1533645038
+    APSARA_TEST_EQUAL(logTime, 1533673838 - localOffset); // 2018-08-07 20:30:38 unix time: 1533673838
 
     // test get log time by offset
     time_t logTime2 = -1;
     flag = LogFileReader::GetLogTimeByOffset(logBufferRight, 0, logTime2, timeFormat);
     APSARA_TEST_EQUAL(flag, true);
-    APSARA_TEST_EQUAL(logTime2, 1530734462);
+    APSARA_TEST_EQUAL(logTime2, 1530763262 - localOffset);
 
     logTime2 = -1;
     flag = LogFileReader::GetLogTimeByOffset(logBufferRight2, 1, logTime2, timeFormat); // offset is 1
     APSARA_TEST_EQUAL(flag, true);
-    APSARA_TEST_EQUAL(logTime2, 1533645038);
+    APSARA_TEST_EQUAL(logTime2, 1533673838 - localOffset);
 
     LOG_INFO(sLogger, ("TestLogTimeRegexParser() end", time(NULL)));
 }
@@ -770,6 +773,7 @@ void LogParserUnittest::TestRegexLogLineParserWithTimeIndex() {
     keys.push_back("time");
     keys.push_back("message");
     keys.push_back("mytime");
+    int localOffset = GetLocalTimeZoneOffsetSecond();
 
     string timeStr = "2013-10-31 21:03:49";
     string msgStr = "sample";
@@ -809,7 +813,7 @@ void LogParserUnittest::TestRegexLogLineParserWithTimeIndex() {
                                               "",
                                               error,
                                               logGroupSize,
-                                              0);
+                                              -localOffset);
     APSARA_TEST_EQUAL(flag, true);
     const Log& log = logGroup.logs(0);
     APSARA_TEST_EQUAL(log.time(), myLogTime);
@@ -821,7 +825,7 @@ void LogParserUnittest::TestRegexLogLineParserWithTimeIndex() {
     APSARA_TEST_EQUAL(log.contents(2).key(), "mytime");
     APSARA_TEST_EQUAL(log.contents(2).value(), mytimeStr);
     APSARA_TEST_EQUAL(log.contents(3).key(), "precise_timestamp");
-    APSARA_TEST_EQUAL(log.contents(3).value(), "1383224630123");
+    APSARA_TEST_EQUAL(log.contents(3).value(), "1383253430123");
 
     LOG_INFO(sLogger, ("TestRegexLogLineParserWithTimeIndex() end", time(NULL)));
 }
@@ -835,18 +839,19 @@ void LogParserUnittest::TestLogParserParseLogTime() {
         uint64_t exceptedPreciseTimestamp;
     };
 
+    int localOffset = GetLocalTimeZoneOffsetSecond();
     vector<Case> inputTimes = {
-        {"2017-1-11 15:05:07.012", "%Y-%m-%d %H:%M:%S", 1484118307, 1484118307012},
-        {"2017-1-11 15:05:07.012", "%Y-%m-%d %H:%M:%S", 1484118307, 1484118307012},
-        {"[2017-1-11 15:05:07.0123]", "[%Y-%m-%d %H:%M:%S", 1484118307, 1484118307012},
-        {"11 Jan 17 15:05 MST", "%d %b %y %H:%M", 1484118300, 1484118300000},
-        {"11 Jan 17 15:05 -0700", "%d %b %y %H:%M", 1484118300, 1484118300000},
-        {"Tuesday, 11-Jan-17 15:05:07.0123 MST", "%A, %d-%b-%y %H:%M:%S", 1484118307, 1484118307012},
-        {"Tuesday, 11 Jan 2017 15:05:07 MST", "%A, %d %b %Y %H:%M:%S", 1484118307, 1484118307000},
-        {"2017-01-11T15:05:07Z08:00", "%Y-%m-%dT%H:%M:%S", 1484118307, 1484118307000},
-        {"2017-01-11T15:05:07.012999999Z07:00", "%Y-%m-%dT%H:%M:%S", 1484118307, 1484118307012},
-        {"1484118307", "%s", 1484118307, 1484118307000},
-        {"1484118307123", "%s", 1484118307, 1484118307000},
+        {"2017-1-11 15:05:07.012", "%Y-%m-%d %H:%M:%S", 1484147107 - localOffset, 1484147107012},
+        {"[2017-1-11 15:05:07.0123]", "[%Y-%m-%d %H:%M:%S", 1484147107 - localOffset, 1484147107012},
+        {"11 Jan 17 15:05 MST", "%d %b %y %H:%M", 1484147100 - localOffset, 1484147100000},
+        {"11 Jan 17 15:05 -0700", "%d %b %y %H:%M", 1484147100 - localOffset, 1484147100000},
+        {"Tuesday, 11-Jan-17 15:05:07.0123 MST", "%A, %d-%b-%y %H:%M:%S", 1484147107 - localOffset, 1484147107012},
+        {"Tuesday, 11 Jan 2017 15:05:07 MST", "%A, %d %b %Y %H:%M:%S", 1484147107 - localOffset, 1484147107000},
+        {"2017-01-11T15:05:07Z08:00", "%Y-%m-%dT%H:%M:%S", 1484147107 - localOffset, 1484147107000},
+        {"2017-01-11T15:05:07.012999999Z07:00", "%Y-%m-%dT%H:%M:%S", 1484147107 - localOffset, 1484147107012},
+        // If the input is timestamp, the output preciss timestamp will be affected by tzOffsetSecond
+        {"1484118307", "%s", 1484118307, 1484118307000 + (int64_t)localOffset * 1000},
+        {"1484118307123", "%s", 1484118307, 1484118307000 + (int64_t)localOffset * 1000},
     };
 
     for (size_t i = 0; i < inputTimes.size(); ++i) {
@@ -871,7 +876,7 @@ void LogParserUnittest::TestLogParserParseLogTime() {
                                            "",
                                            "",
                                            error,
-                                           0);
+                                           -localOffset); // tzOffsetSecond only affect precise timestamp
         LOG_INFO(sLogger,
                  ("Case", i)("InputTimeStr", c.inputTimeStr)("FormatStr", c.fmtStr)("ret", ret)(outTimeStr, outTime)(
                      "preciseTimestamp", preciseTimestamp)("error", error));
