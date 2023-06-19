@@ -511,12 +511,16 @@ bool LogParser::ParseLogTime(const char* buffer,
         timeStr = ConvertToTimeStamp(logTime, timeFormat);
 
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(logTime, strptimeResult, preciseTimestampConfig, tzOffsetSecond);
+            preciseTimestamp = GetPreciseTimestamp(
+                logTime, strptimeResult, strlen(strptimeResult), preciseTimestampConfig, tzOffsetSecond);
         }
     } else {
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(
-                logTime, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, tzOffsetSecond);
+            preciseTimestamp = GetPreciseTimestamp(logTime,
+                                                   curTimeStr.substr(timeStr.length()).c_str(),
+                                                   curTimeStr.size() - timeStr.size(),
+                                                   preciseTimestampConfig,
+                                                   tzOffsetSecond);
         }
     }
 
@@ -710,7 +714,8 @@ bool LogParser::ApsaraEasyReadLogLineParser(StringView buffer,
                                 "logstore", category)("file", logPath));
             }
             LogtailAlarm::GetInstance()->SendAlarm(OUTDATED_LOG_ALARM,
-                                                   string("logTime: ") + ToString(logTime) + ", log:" + bufOut.to_string(),
+                                                   string("logTime: ") + ToString(logTime)
+                                                       + ", log:" + bufOut.to_string(),
                                                    projectName,
                                                    category,
                                                    region);

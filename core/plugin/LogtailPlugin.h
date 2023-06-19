@@ -120,6 +120,7 @@ typedef void (*ResumeFun)();
 typedef GoInt (*InitPluginBaseFun)();
 typedef GoInt (*InitPluginBaseV2Fun)(GoString cfg);
 typedef GoInt (*ProcessLogsFun)(GoString c, GoSlice l, GoString p, GoString t, GoSlice tags);
+typedef GoInt (*ProcessLogGroupFun)(GoString c, GoSlice l, GoString p);
 typedef struct innerContainerMeta* (*GetContainerMetaFun)(GoString containerID);
 
 // Methods export by adapter.
@@ -207,6 +208,8 @@ public:
                     const std::string& topic,
                     const std::string& tags);
 
+    void ProcessLogGroup(const std::string& configName, sls_logs::LogGroup& logGroup, const std::string& packId);
+
     static int IsValidToSend(long long logstoreKey);
 
     static int SendPb(const char* configName,
@@ -247,6 +250,7 @@ private:
     logtail::Config mPluginProfileConfig;
     logtail::Config mPluginContainerConfig;
     ProcessLogsFun mProcessLogsFun;
+    ProcessLogGroupFun mProcessLogGroupFun;
     GetContainerMetaFun mGetContainerMetaFun;
 
     // Configuration for plugin system in JSON format.

@@ -74,6 +74,7 @@ void UpdateTimeDelta(time_t serverTime);
 
 uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
                              const char* preciseTimeSuffix,
+                             size_t preciseTimeSuffixLen,
                              const PreciseTimestampConfig& preciseTimestampConfig,
                              int32_t tzOffsetSecond);
 } // namespace logtail

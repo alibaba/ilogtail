@@ -582,9 +582,9 @@ LogFileReader* Config::CreateLogFileReader(const std::string& dir,
         reader->SetConfigName(mConfigName);
         reader->SetRegion(mRegion);
         reader->SetLogBeginRegex(STRING_DEEP_COPY(mLogBeginReg));
+        reader->SetDevInode(devInode);
         if (forceFromBeginning)
             reader->SetReadFromBeginning();
-        reader->SetDevInode(devInode);
         if (mAdvancedConfig.mEnableLogPositionMeta) {
             sls_logs::LogTag inodeTag;
             inodeTag.set_key(LOG_RESERVED_KEY_INODE);

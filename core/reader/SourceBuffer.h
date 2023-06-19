@@ -18,19 +18,20 @@
 
 #include <memory>
 #include <list>
-#include <boost/utility/string_view.hpp>
+#include "models/StringView.h"
 
 namespace logtail {
 
-// like string, in string_view, tailing \0 is not included in size
-typedef boost::string_view StringView;
+class SourceBuffer;
 
 struct StringBuffer {
-    StringBuffer(char* data, size_t capacity) : data(data), size(0), capacity(capacity) { data[0] = '\0'; }
     bool IsValid() { return data != nullptr; }
     char* const data;
     size_t size;
     const size_t capacity; // max bytes of data can be stored, data[capacity] is always '\0'.
+private:
+    StringBuffer(char* data, size_t capacity) : data(data), size(0), capacity(capacity) { data[0] = '\0'; }
+    friend class SourceBuffer;
 };
 
 class BufferAllocator {
@@ -77,6 +78,7 @@ private:
 class SourceBuffer {
 public:
     SourceBuffer() {}
+    virtual ~SourceBuffer() {}
     StringBuffer AllocateStringBuffer(size_t size) {
         if (!mAllocator.IsInited()) {
             if (!mAllocator.Init(size * 1.2)) {
@@ -87,6 +89,16 @@ public:
         data[size] = '\0';
         return StringBuffer(data, size);
     }
+
+    StringBuffer CopyString(const char* data, size_t len) {
+        StringBuffer sb = AllocateStringBuffer(len);
+        memcpy(sb.data, data, len);
+        sb.size = len;
+        return sb;
+    }
+    StringBuffer CopyString(const std::string& s) { return CopyString(s.data(), s.length()); }
+    StringBuffer CopyString(const StringView& s) { return CopyString(s.data(), s.length()); }
+
     // StringView GetProperty(const char* key){};
 
 private:

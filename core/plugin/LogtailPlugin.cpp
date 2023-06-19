@@ -427,7 +427,11 @@ bool LogtailPlugin::LoadPluginBase() {
             LOG_ERROR(sLogger, ("load ProcessLogs error, Message", error));
             return false;
         }
-
+        mProcessLogGroupFun = (ProcessLogGroupFun)loader.LoadMethod("ProcessLogGroup", error);
+        if (!error.empty()) {
+            LOG_ERROR(sLogger, ("load ProcessLogGroup error, Message", error));
+            return false;
+        }
 
         mPluginBasePtr = loader.Release();
     }
@@ -481,6 +485,28 @@ void LogtailPlugin::ProcessLog(const std::string& configName,
     GoInt rst = mProcessLogsFun(goConfigName, goLog, goPackId, goTopic, goTags);
     if (rst != (GoInt)0) {
         LOG_WARNING(sLogger, ("process log error", configName)("result", rst));
+    }
+}
+
+void LogtailPlugin::ProcessLogGroup(const std::string& configName,
+                                    sls_logs::LogGroup& logGroup,
+                                    const std::string& packId) {
+    if (!logGroup.logs_size() || !(mPluginValid && mProcessLogsFun != NULL)) {
+        return;
+    }
+    GoString goConfigName;
+    GoSlice goLog;
+    GoString goPackId;
+    goConfigName.n = configName.size();
+    goConfigName.p = configName.c_str();
+    goPackId.n = packId.size();
+    goPackId.p = packId.c_str();
+    std::string sLog = logGroup.SerializeAsString();
+    goLog.len = goLog.cap = sLog.length();
+    goLog.data = (void*)sLog.c_str();
+    GoInt rst = mProcessLogGroupFun(goConfigName, goLog, goPackId);
+    if (rst != (GoInt)0) {
+        LOG_WARNING(sLogger, ("process loggroup error", configName)("result", rst));
     }
 }
 

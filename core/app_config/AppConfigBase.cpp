@@ -820,10 +820,10 @@ bool AppConfigBase::CheckAndResetProxyEnv() {
         return false;
     }
 
-    char *allProxyKey = "ALL_PROXY";
+    char* allProxyKey = "ALL_PROXY";
     string allProxy = ToString(getenv(allProxyKey));
     if (allProxy.empty()) {
-        char *allProxyKey = "all_proxy";
+        char* allProxyKey = "all_proxy";
         allProxy = ToString(getenv(allProxyKey));
     } else {
         UnsetEnv("all_proxy");
@@ -908,6 +908,16 @@ void AppConfigBase::LoadOtherConf(const Json::Value& confJson) {
                 LOG_WARNING(sLogger, ("invalid force_quit_read_timeout value, at least 600", timeout));
             } else {
                 mForceQuitReadTimeout = timeout;
+            }
+        }
+    }
+
+    // dynamic plugins
+    if (confJson.isMember("dynamic_plugins")) {
+        auto& dynamic_plugins = confJson["dynamic_plugins"];
+        if (dynamic_plugins.isArray()) {
+            for (Json::Value::ArrayIndex i = 0; i < dynamic_plugins.size(); ++i) {
+                mDynamicPlugins.insert(TrimString(dynamic_plugins[i].asString()));
             }
         }
     }

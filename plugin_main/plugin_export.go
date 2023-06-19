@@ -131,6 +131,16 @@ func ProcessLog(configName string, logBytes []byte, packID string, topic string,
 	return config.ProcessLog(logBytes, packID, util.StringDeepCopy(topic), tags)
 }
 
+//export ProcessLogGroup
+func ProcessLogGroup(configName string, logBytes []byte, packID string) int {
+	config, exists := pluginmanager.LogtailConfig[configName]
+	if !exists {
+		logger.Debug(context.Background(), "ProcessLogGroup not found", configName)
+		return -1
+	}
+	return config.ProcessLogGroup(logBytes, packID)
+}
+
 //export HoldOn
 func HoldOn(exitFlag int) {
 	logger.Info(context.Background(), "Hold on", "start", "flag", exitFlag)

@@ -43,6 +43,38 @@ class DevInode;
 typedef std::shared_ptr<LogFileReader> LogFileReaderPtr;
 typedef std::deque<LogFileReaderPtr> LogFileReaderPtrArray;
 
+enum SplitState { SPLIT_UNMATCH, SPLIT_START, SPLIT_CONTINUE, SPLIT_END };
+
+// Only get the currently written log file, it will choose the last modified file to read. There are several condition
+// to choose the lastmodify file:
+// 1. if the last read file don't exist
+// 2. if the file's first 100 bytes(file signature) is not same with the last read file's signature, which meaning the
+// log file has be rolled
+//
+// when a new file is choosen, it will set the read position
+// 1. if the time in the file's first line >= the last read log time , then set the file read position to 0 (which mean
+// the file is new created)
+// 2. other wise , set the position to the end of the file
+// *bufferptr is null terminated.
+/*
+ * 1. for multiline log, "xxx" mean a string without '\n'
+ * 1-1. bufferSize = 512KB:
+ * "MultiLineLog_1\nMultiLineLog_2\nMultiLineLog_3\n" -> "MultiLineLog_1\nMultiLineLog_2\0"
+ * "MultiLineLog_1\nMultiLineLog_2\nMultiLineLog_3_Line_1\n" -> "MultiLineLog_1\nMultiLineLog_2\0"
+ * "MultiLineLog_1\nMultiLineLog_2\nMultiLineLog_3_Line_1\nxxx" -> "MultiLineLog_1\nMultiLineLog_2\0"
+ * "MultiLineLog_1\nMultiLineLog_2\nMultiLineLog_3\nxxx" -> "MultiLineLog_1\nMultiLineLog_2\0"
+ *
+ * 1-2. bufferSize < 512KB:
+ * "MultiLineLog_1\nMultiLineLog_2\nMultiLineLog_3\n" -> "MultiLineLog_1\nMultiLineLog_2\nMultiLineLog_3\0"
+ * "MultiLineLog_1\nMultiLineLog_2\nMultiLineLog_3_Line_1\n" -> "MultiLineLog_1\nMultiLineLog_2\MultiLineLog_3_Line_1\0"
+ * **this is not expected !** "MultiLineLog_1\nMultiLineLog_2\nMultiLineLog_3_Line_1\nxxx" ->
+ * "MultiLineLog_1\nMultiLineLog_2\0" "MultiLineLog_1\nMultiLineLog_2\nMultiLineLog_3\nxxx" ->
+ * "MultiLineLog_1\nMultiLineLog_2\0"
+ *
+ * 2. for singleline log, "xxx" mean a string without '\n'
+ * "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\n" -> "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\0"
+ * "SingleLineLog_1\nSingleLineLog_2\nxxx" -> "SingleLineLog_1\nSingleLineLog_2\0"
+ */
 class LogFileReader {
 public:
     enum FileCompareResult {
@@ -106,27 +138,29 @@ public:
 
     virtual ~LogFileReader();
 
-    std::string GetRegion() const { return mRegion; }
+    const std::string& GetRegion() const { return mRegion; }
 
     void SetRegion(const std::string& region) { mRegion = region; }
 
-    std::string GetConfigName() const { return mConfigName; }
+    const std::string& GetConfigName() const { return mConfigName; }
 
     void SetConfigName(const std::string& configName) { mConfigName = configName; }
 
-    std::string GetProjectName() const { return mProjectName; }
+    const std::string& GetProjectName() const { return mProjectName; }
 
-    std::string GetTopicName() const { return mTopicName; }
+    const std::string& GetTopicName() const { return mTopicName; }
 
-    std::string GetCategory() const { return mCategory; }
+    const std::string& GetCategory() const { return mCategory; }
 
-    std::string GetLogPath() const { return mLogPath; }
+    /// @return e.g. `/logtail_host/var/xxx/home/admin/access.log`,
+    const std::string& GetLogPath() const { return mLogPath; }
 
     bool GetSymbolicLinkFlag() const { return mSymbolicLinkFlag; }
 
-    std::string GetConvertedPath() const { return mDockerPath.empty() ? mLogPath : mDockerPath; }
+    /// @return e.g. `/home/admin/access.log`
+    const std::string& GetConvertedPath() const { return mDockerPath.empty() ? mLogPath : mDockerPath; }
 
-    std::string GetLogPathFile() const { return mLogPathFile; }
+    const std::string& GetLogPathFile() const { return mLogPathFile; }
 
     int64_t GetFileSize() const { return mLastFileSize; }
 
@@ -378,8 +412,9 @@ protected:
     std::string mFuseTrimedFilename;
     LogFileReaderPtrArray* mReaderArray;
     uint64_t mLogstoreKey;
-    // path in other docker container. eg, logtail path `/host_all/xxxxx/home/admin/access.log`, docker path is
-    // `/home/admin/access.log` we should use mDockerPath to extract topic and set it to __tag__:__path__
+    // mLogPath is `/logtail_host/var/xxx/home/admin/access.log`,
+    // mDockerPath is `/home/admin/access.log`
+    // we should use mDockerPath to extract topic and set it to __tag__:__path__
     std::string mDockerPath;
     std::vector<sls_logs::LogTag> mExtraTags;
     int32_t mCloseUnusedInterval;

@@ -229,7 +229,7 @@ int32_t JsonLogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& 
             buffer[endIdx] = '\0'; // invalid json line
             beginIdx = endIdx + 1;
             if (noJsonBlockFlag) {
-                // if no json block in this buffer and now line has no block, forse read this line
+                // if no json block in this buffer and now line has no block, force read this line
                 // if no json block in this buffer and now line has block, set noJsonBlockFlag false
                 if (!startWithBlock) {
                     readBytes = endIdx + 1;
