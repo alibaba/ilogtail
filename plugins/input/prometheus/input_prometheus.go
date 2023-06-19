@@ -149,7 +149,7 @@ func (p *ServiceStaticPrometheus) Stop() error {
 
 func (p *ServiceStaticPrometheus) StartKubeReloadScraper() {
 	go func() {
-		ticker := time.NewTicker(time.Second * 3)
+		ticker := time.NewTicker(time.Second * 10)
 		for {
 			select {
 			case <-p.shutdown:
