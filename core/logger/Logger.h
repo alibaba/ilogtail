@@ -79,6 +79,9 @@ private:
     // LoadAllDefaultConfigs loads all default configs into @loggerCfgs and @sinkCfgs.
     void LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
                                std::map<std::string, SinkConfig>& sinkCfgs);
+
+    // CheckSnapshotDir checks if the snapshot dir exists, if not, create it.
+    void CheckSnapshotDir();
 };
 
 } // namespace logtail

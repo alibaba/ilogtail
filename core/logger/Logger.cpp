@@ -192,6 +192,7 @@ void Logger::LoadConfig(const std::string& filePath) {
         if (!in.good())
             break;
 
+        CheckSnapshotDir();
         in.seekg(0, std::ios::end);
         size_t len = in.tellg();
         in.seekg(0, std::ios::beg);
@@ -394,6 +395,19 @@ void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCf
         {"AsyncFileSinkProfile", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "ilogtail_profile.LOG"}});
     sinkCfgs.insert(
         {"AsyncFileSinkStatus", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "ilogtail_status.LOG"}});
+}
+
+void Logger::CheckSnapshotDir() {
+    std::string dirPath = GetProcessExecutionDir() + STRING_FLAG(logtail_snapshot_dir);
+
+    // determine if the file exists
+    if (access(dirPath.c_str(), F_OK) == 0) {
+        return;
+    }
+
+    if (!Mkdir(dirPath)) {
+        LogMsg(std::string("Create snapshot dir error ") + dirPath + ", error" + ErrnoToString(GetErrno()));
+    }
 }
 
 } // namespace logtail
