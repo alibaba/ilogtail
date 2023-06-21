@@ -44,7 +44,6 @@ const name = "service_http_server"
 type ServiceHTTP struct {
 	context     pipeline.Context
 	collector   pipeline.Collector
-	decoder     extensions.Decoder
 	server      *http.Server
 	listener    net.Listener
 	wg          sync.WaitGroup
@@ -52,10 +51,13 @@ type ServiceHTTP struct {
 	version     int8
 	paramCount  int
 	dumper      *helper.Dumper
+	decoder     extensions.Decoder
+	shuffler    extensions.Shuffler
 
 	DumpDataKeepFiles  int
 	DumpData           bool   // would dump the received data to a local file, which is only used to valid data by the developers.
 	Decoder            string // the decoder to use, default is "ext_default_decoder"
+	Shuffler           string // whether to shuffler data to other ilogtail instance
 	Format             string
 	Address            string
 	Path               string
@@ -100,6 +102,12 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 		return 0, fmt.Errorf("extension %s with type %T not implement extensions.Decoder", s.Decoder, ext)
 	}
 	s.decoder = decoder
+
+	if ext, _ := context.GetExtension(s.Shuffler, nil); ext != nil {
+		if shuffler, ok := ext.(extensions.Shuffler); ok {
+			s.shuffler = shuffler
+		}
+	}
 
 	if s.Path == "" {
 		switch s.Format {
@@ -190,7 +198,18 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				g.Group.Metadata.Merge(models.NewMetadataWithMap(reqParams))
 			}
 		}
-		s.collectorV2.CollectList(groups...)
+
+		if s.shuffler != nil {
+			for _, v := range groups {
+				select {
+				case s.shuffler.SendChan() <- v:
+				default:
+					logger.Warningf(s.context.GetRuntimeContext(), "DISCARD_DATA_BEFORE_SHUFFLE", "shuffler channel is full")
+				}
+			}
+		} else {
+			s.collectorV2.CollectList(groups...)
+		}
 	}
 
 	switch s.Format {
@@ -243,6 +262,21 @@ func (s *ServiceHTTP) StartService(context pipeline.PipelineContext) error {
 
 func (s *ServiceHTTP) start() error {
 	s.wg.Add(1)
+
+	if s.shuffler != nil {
+		s.shuffler.Start()
+
+		go func() {
+			for {
+				select {
+				case v := <-s.shuffler.RecvChan():
+					s.collectorV2.CollectList(v)
+				case <-s.shuffler.Done():
+					return
+				}
+			}
+		}()
+	}
 
 	server := &http.Server{
 		Addr:        s.Address,
@@ -322,11 +356,16 @@ func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string 
 
 // Stop stops the services and closes any necessary channels and connections
 func (s *ServiceHTTP) Stop() error {
+	if s.shuffler != nil {
+		s.Stop()
+	}
+
 	if s.listener != nil {
 		_ = s.listener.Close()
 		logger.Info(s.context.GetRuntimeContext(), "http server stop", s.Address)
 		s.wg.Wait()
 	}
+
 	if s.dumper != nil {
 		s.dumper.Close()
 	}
