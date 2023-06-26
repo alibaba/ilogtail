@@ -44,11 +44,11 @@ func (s *logtailPortManagerTestSuite) TestGetLogtailLitsenPorts() {
 		}
 	}
 
-	ports := getLogtailLitsenPorts()
-	logger.Info(context.Background(), "get ports success", ports)
+	tcp, udp := getLogtailLitsenPorts()
+	logger.Info(context.Background(), "get ports success tcp", tcp, "udp", udp)
 	if runtime.GOOS == "linux" {
-		s.Contains(ports, 18687)
-		s.Contains(ports, 18688)
+		s.Contains(tcp, 18687)
+		s.Contains(udp, 18688)
 	}
 }
 

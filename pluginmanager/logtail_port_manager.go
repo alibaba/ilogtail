@@ -23,7 +23,7 @@ func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
 	ports := []int{}
 	filepath.Join()
 	file := fmt.Sprintf("/proc/%d/net/%s", pid, protocol)
-	data, err := ioutil.ReadFile(file) //nolint:gosec
+	data, err := ioutil.ReadFile(filepath.Clean(file))
 	if err != nil {
 		return ports, err
 	}
@@ -50,17 +50,19 @@ func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
 	return ports, nil
 }
 
-func getLogtailLitsenPorts() []int {
-	portsMap := map[int]int{}
+func getLogtailLitsenPorts() ([]int, []int) {
+	portsTCPMap := map[int]int{}
+	portsUDPMap := map[int]int{}
 	pid := os.Getpid()
-	ports := []int{}
+	portsTCP := []int{}
+	portsUDP := []int{}
 	// get tcp ports
 	tcpPorts, err := getListenPortsFromFile(pid, "tcp")
 	if err != nil {
 		logger.Error(context.Background(), "get tcp port fail", err.Error())
 	}
 	for _, port := range tcpPorts {
-		portsMap[port]++
+		portsTCPMap[port]++
 	}
 	// get tcp6 ports
 	tcp6Ports, err := getListenPortsFromFile(pid, "tcp6")
@@ -68,7 +70,7 @@ func getLogtailLitsenPorts() []int {
 		logger.Error(context.Background(), "get tcp6 port fail", err.Error())
 	}
 	for _, port := range tcp6Ports {
-		portsMap[port]++
+		portsTCPMap[port]++
 	}
 	// get udp ports
 	udpPorts, err := getListenPortsFromFile(pid, "udp")
@@ -76,7 +78,7 @@ func getLogtailLitsenPorts() []int {
 		logger.Error(context.Background(), "get udp port fail", err.Error())
 	}
 	for _, port := range udpPorts {
-		portsMap[port]++
+		portsUDPMap[port]++
 	}
 	// get udp6 ports
 	udp6Ports, err := getListenPortsFromFile(pid, "udp6")
@@ -84,31 +86,42 @@ func getLogtailLitsenPorts() []int {
 		logger.Error(context.Background(), "get udp6 port fail", err.Error())
 	}
 	for _, port := range udp6Ports {
-		portsMap[port]++
+		portsUDPMap[port]++
 	}
-	delete(portsMap, exportLogtailPortsPort)
-	for port := range portsMap {
-		ports = append(ports, port)
+	delete(portsTCPMap, exportLogtailPortsPort)
+	for port := range portsTCPMap {
+		portsTCP = append(portsTCP, port)
 	}
-	return ports
+	for port := range portsUDPMap {
+		portsUDP = append(portsUDP, port)
+	}
+	return portsTCP, portsUDP
 }
 
 func processPort(res http.ResponseWriter, req *http.Request) {
-	ports := getLogtailLitsenPorts()
-	logger.Info(context.Background(), "get logtail's listen ports", ports)
+	portsTCP, portsUDP := getLogtailLitsenPorts()
+	logger.Info(context.Background(), "get logtail's listen ports tcp", portsTCP, "udp", portsUDP)
 
 	param := &struct {
-		Ports []int `json:"ports"`
+		PortsTCP []int `json:"ports_tcp"`
+		PortsUDP []int `json:"ports_udp"`
 	}{}
-	param.Ports = ports
+	param.PortsTCP = portsTCP
+	param.PortsUDP = portsUDP
 	jsonBytes, err := json.Marshal(param)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
-		res.Write([]byte(err.Error())) //nolint:gosec
+		_, WriteErr := res.Write([]byte(err.Error()))
+		if WriteErr != nil {
+			logger.Error(context.Background(), "write response err", WriteErr.Error())
+		}
 		return
 	}
 	res.WriteHeader(http.StatusOK)
-	res.Write(jsonBytes) //nolint:gosec
+	_, WriteErr := res.Write(jsonBytes)
+	if WriteErr != nil {
+		logger.Error(context.Background(), "write response err", WriteErr.Error())
+	}
 }
 
 func ExportLogtailPorts() {

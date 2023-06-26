@@ -137,7 +137,7 @@ func Init() (err error) {
 	}
 	logger.Info(context.Background(), "loadBuiltinConfig container")
 	TimerFetchFuction()
-	if *pkg_flags.ExportPortsFlag {
+	if *pkg_flags.StatefulSetFlag {
 		ExportLogtailPorts()
 	}
 	return
