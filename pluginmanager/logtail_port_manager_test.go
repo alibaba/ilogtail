@@ -47,8 +47,8 @@ func (s *logtailPortManagerTestSuite) TestGetLogtailLitsenPorts() {
 	tcp, udp := getLogtailLitsenPorts()
 	logger.Info(context.Background(), "get ports success tcp", tcp, "udp", udp)
 	if runtime.GOOS == "linux" {
-		s.Contains(tcp, 18687)
-		s.Contains(udp, 18688)
+		s.Contains(tcp, 18688)
+		s.Contains(udp, 18687)
 	}
 }
 
@@ -78,14 +78,15 @@ func (s *logtailPortManagerTestSuite) TestExportLogtailLitsenPorts() {
 
 		s.Equal(res.StatusCode, http.StatusOK)
 		param := &struct {
-			Ports []int `json:"ports"`
+			PortsTCP []int `json:"ports_tcp"`
+			PortsUDP []int `json:"ports_udp"`
 		}{}
 		err = json.NewDecoder(res.Body).Decode(param)
 		s.NoError(err)
-		logger.Info(context.Background(), "receive ports success", param.Ports)
+		logger.Info(context.Background(), "receive ports success, tcp", param.PortsTCP, "udp", param.PortsUDP)
 		if runtime.GOOS == "linux" {
-			s.Contains(param.Ports, 18687)
-			s.Contains(param.Ports, 18688)
+			s.Contains(param.PortsTCP, 18688)
+			s.Contains(param.PortsUDP, 18687)
 		}
 		if count == 3 {
 			return
