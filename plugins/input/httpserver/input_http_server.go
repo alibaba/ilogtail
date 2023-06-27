@@ -264,7 +264,7 @@ func (s *ServiceHTTP) start() error {
 	s.wg.Add(1)
 
 	if s.shuffler != nil {
-		s.shuffler.Init(s.context)
+		s.shuffler.Start()
 
 		go func() {
 			for {

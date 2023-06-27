@@ -16,12 +16,12 @@ package extensions
 
 import (
 	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
 // Shuffler allow routing data to other ilogtail instance and receive data from other instance
 type Shuffler interface {
-	pipeline.Extension
+	Start() error
+	Stop() error
 
 	// CollectList collect GroupEvents list that have been grouped, it sends the GroupEvents to the send channel.
 	// If it blocks if channel is full.
