@@ -27,6 +27,15 @@ target_link_libraries(log_file_reader_unittest unittest_base)
 add_executable(json_log_file_reader_unittest JsonLogFileReaderUnittest.cpp)
 target_link_libraries(json_log_file_reader_unittest unittest_base)
 
+add_executable(delimiter_log_file_reader_unittest DelimiterLogFileReaderUnittest.cpp)
+target_link_libraries(delimiter_log_file_reader_unittest unittest_base)
+
+add_executable(common_reg_log_file_reader_unittest CommonRegLogFileReaderUnittest.cpp)
+target_link_libraries(common_reg_log_file_reader_unittest unittest_base)
+
+add_executable(apsara_log_file_reader_unittest ApsaraLogFileReaderUnittest.cpp)
+target_link_libraries(apsara_log_file_reader_unittest unittest_base)
+
 if (UNIX)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testDataSet)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/testDataSet/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/testDataSet/)

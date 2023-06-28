@@ -64,6 +64,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class JsonLogFileReaderUnittest;
+    friend class JsonParseLogLineUnittest;
 #endif
 };
 

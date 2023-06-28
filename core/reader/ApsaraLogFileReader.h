@@ -42,6 +42,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogFileReaderUnittest;
+    friend class ApsaraParseLogLineUnittest;
 #endif
 };
 

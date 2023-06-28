@@ -78,6 +78,7 @@ protected:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogFileReaderUnittest;
+    friend class DelimiterParseLogLineUnittest;
 #endif
 };
 
