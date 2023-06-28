@@ -180,6 +180,10 @@ TraverseLogArray:
 						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricLabelKey)
 						continue TraverseLogArray
 					}
+					if p.metricLabelKeysMap[key] {
+						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricLabelKey)
+						continue TraverseLogArray
+					}
 					value := keyValues[1]
 					// The value of Label cannot contain vertical bars (|).
 					if strings.Contains(value, "|") {
