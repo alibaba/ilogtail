@@ -27,26 +27,27 @@
 
 ## 处理
 
-| 名称                                               | 提供方                                              | 简介                                             |
-| -------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------ |
-| [`processor_add_fields`](processor/processor-add-fields.md)<br>添加字段                 | SLS官方 | 添加字段。         
-| [`processor_cloud_meta`](processor/processor-cloudmeta.md)<br>添加云资产信息                 | SLS官方 | 为日志增加云平台元数据信息。                               |
-| [`processor_default`](processor/processor-default.md)<br>原始数据                    | SLS官方 | 不对数据任何操作，只是简单的数据透传。           |
-| [`processor_desensitize`](processor/processor-desensitize.md)<br>数据脱敏                    | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 对敏感数据进行脱敏处理。           |
-| [`processor_drop`](processor/processor-drop.md)<br>丢弃字段                       | SLS官方 | 丢弃字段。                                       |
-| [`processor_encrypt`](processor/processor-encrypy.md)<br>字段加密                   | SLS官方 | 加密字段                                  |
-| [`processor_fields_with_conditions`](processor/processor-fields-with-condition.md)<br>条件字段处理 | 社区<br>[`pj1987111`](https://github.com/pj1987111) | 根据日志部分字段的取值，动态进行字段扩展或删除。 |
-| [`processor_filter_regex`](processor/processor-filter-regex.md)<br>日志过滤               | SLS官方 | 通过正则匹配过滤日志。                           |
-| [`processor_gotime`](processor/processor-gotime.md)<br>Gotime                     | SLS官方 | 以 Go 语言时间格式解析原始日志中的时间字段。         |
-| [`processor_grok`](processor/processor-grok.md)<br>Grok                          | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 通过 Grok 语法对数据进行处理              |
-| [`processor_json`](processor/processor-json.md)<br>Json                           | SLS官方 | 实现对Json格式日志的解析。                       |
-| [`processor_regex`](processor/processor-regex.md)<br>正则                          | SLS官方 | 通过正则匹配的模式实现文本日志的字段提取。       |
-| [`processor_rename`](processor/processor-rename.md)<br>重命名字段                   | SLS官方 | 重命名字段。                                     |
-| [`processor_split_char`](processor/processor-delimiter.md)<br>分隔符                   | SLS官方 | 通过单字符的分隔符提取字段。                     |
-| [`processor_split_string`](processor/processor-delimiter.md)<br>分隔符                 | SLS官方 | 通过多字符的分隔符提取字段。                     |
-| [`processor_split_key_value`](processor/processor-split-key-value.md)<br>键值对              | SLS官方 | 通过切分键值对的方式提取字段。                   |
-| [`processor_split_log_regex`](processor/processor-split-log-regex.md)<br>多行切分            | SLS官方 | 实现多行日志（例如Java程序日志）的采集。         |
-| [`processor_string_replace`](processor/processor-string-replace.md)<br>字符串替换                  | SLS官方<br>[`pj1987111`](https://github.com/pj1987111) | 通过全文匹配、正则匹配、去转义字符等方式对文本日志进行内容替换。       |
+| 名称                                                                                           | 提供方                                                    | 简介                               |
+|----------------------------------------------------------------------------------------------|--------------------------------------------------------|----------------------------------|
+| [`processor_add_fields`](processor/processor-add-fields.md)<br>添加字段                          | SLS官方                                                  | 添加字段。                            |
+| [`processor_cloud_meta`](processor/processor-cloudmeta.md)<br>添加云资产信息                        | SLS官方                                                  | 为日志增加云平台元数据信息。                   |
+| [`processor_default`](processor/processor-default.md)<br>原始数据                                | SLS官方                                                  | 不对数据任何操作，只是简单的数据透传。              |
+| [`processor_desensitize`](processor/processor-desensitize.md)<br>数据脱敏                        | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 对敏感数据进行脱敏处理。                     |
+| [`processor_drop`](processor/processor-drop.md)<br>丢弃字段                                      | SLS官方                                                  | 丢弃字段。                            |
+| [`processor_encrypt`](processor/processor-encrypy.md)<br>字段加密                                | SLS官方                                                  | 加密字段                             |
+| [`processor_fields_with_conditions`](processor/processor-fields-with-condition.md)<br>条件字段处理 | 社区<br>[`pj1987111`](https://github.com/pj1987111)      | 根据日志部分字段的取值，动态进行字段扩展或删除。         |
+| [`processor_filter_regex`](processor/processor-filter-regex.md)<br>日志过滤                      | SLS官方                                                  | 通过正则匹配过滤日志。                      |
+| [`processor_gotime`](processor/processor-gotime.md)<br>Gotime                                | SLS官方                                                  | 以 Go 语言时间格式解析原始日志中的时间字段。         |
+| [`processor_grok`](processor/processor-grok.md)<br>Grok                                      | SLS官方<br>[`Takuka0311`](https://github.com/Takuka0311) | 通过 Grok 语法对数据进行处理                |
+| [`processor_json`](processor/processor-json.md)<br>Json                                      | SLS官方                                                  | 实现对Json格式日志的解析。                  |
+| [`processor_regex`](processor/processor-regex.md)<br>正则                                      | SLS官方                                                  | 通过正则匹配的模式实现文本日志的字段提取。            |
+| [`processor_rename`](processor/processor-rename.md)<br>重命名字段                                 | SLS官方                                                  | 重命名字段。                           |
+| [`processor_split_char`](processor/processor-delimiter.md)<br>分隔符                            | SLS官方                                                  | 通过单字符的分隔符提取字段。                   |
+| [`processor_split_string`](processor/processor-delimiter.md)<br>分隔符                          | SLS官方                                                  | 通过多字符的分隔符提取字段。                   |
+| [`processor_split_key_value`](processor/processor-split-key-value.md)<br>键值对                 | SLS官方                                                  | 通过切分键值对的方式提取字段。                  |
+| [`processor_split_log_regex`](processor/processor-split-log-regex.md)<br>多行切分                | SLS官方                                                  | 实现多行日志（例如Java程序日志）的采集。           |
+| [`processor_string_replace`](processor/processor-string-replace.md)<br>字符串替换                 | SLS官方<br>[`pj1987111`](https://github.com/pj1987111)   | 通过全文匹配、正则匹配、去转义字符等方式对文本日志进行内容替换。 |
+| [`processor_sls_metric`](processor/processor-sls-metric.md)<br>日志转sls metric                 | SLS官方                                                  | 将日志转sls metric                   |
 
 ## 聚合
 
@@ -57,18 +58,18 @@
 
 ## 输出
 
-| 名称                                       | 提供方                                                 | 简介                                        |
-|------------------------------------------|-----------------------------------------------------|-------------------------------------------|
-| [`flusher_kafka`](flusher/flusher-kafka.md)<br>Kafka                 | 社区                                                  | 将采集到的数据输出到Kafka。推荐使用下面的flusher_kafka_v2   |
-| [`flusher_kafka_v2`](flusher/flusher-kafka_v2.md)<br>Kafka              | 社区<br>[`shalousun`](https://github.com/shalousun)   | 将采集到的数据输出到Kafka。                          |
-| [`flusher_sls`](flusher/flusher-sls.md)<br>SLS                     | SLS官方                                               | 将采集到的数据输出到SLS。                            |
-| [`flusher_stdout`](flusher/flusher-stdout.md)<br>标准输出/文件              | SLS官方                                               | 将采集到的数据输出到标准输出或文件。                        |
-| [`flusher_otlp_log`](flusher/flusher-otlp.md)<br>OTLP日志             | 社区<br>[`liuhaoyang`](https://github.com/liuhaoyang) | 将采集到的数据支持`Opentelemetry log protocol`的后端。 |
-| [`flusher_http`](flusher/flusher-http.md)<br>HTTP                   | 社区<br>[`snakorse`](https://github.com/snakorse)     | 将采集到的数据以http方式输出到指定的后端。                   |
-| [`flusher_pulsar`](flusher/flusher-pulsar.md)<br>Kafka                | 社区<br>[`shalousun`](https://github.com/shalousun)   | 将采集到的数据输出到Pulsar。                         |
-| [`flusher_clickhouse`](flusher/flusher-clickhouse.md)<br>ClickHouse       | 社区<br>[`kl7sn`](https://github.com/kl7sn)           | 将采集到的数据输出到ClickHouse。                     |
+| 名称                                                                           | 提供方                                                 | 简介                                        |
+|------------------------------------------------------------------------------|-----------------------------------------------------|-------------------------------------------|
+| [`flusher_kafka`](flusher/flusher-kafka.md)<br>Kafka                         | 社区                                                  | 将采集到的数据输出到Kafka。推荐使用下面的flusher_kafka_v2   |
+| [`flusher_kafka_v2`](flusher/flusher-kafka_v2.md)<br>Kafka                   | 社区<br>[`shalousun`](https://github.com/shalousun)   | 将采集到的数据输出到Kafka。                          |
+| [`flusher_sls`](flusher/flusher-sls.md)<br>SLS                               | SLS官方                                               | 将采集到的数据输出到SLS。                            |
+| [`flusher_stdout`](flusher/flusher-stdout.md)<br>标准输出/文件                     | SLS官方                                               | 将采集到的数据输出到标准输出或文件。                        |
+| [`flusher_otlp_log`](flusher/flusher-otlp.md)<br>OTLP日志                      | 社区<br>[`liuhaoyang`](https://github.com/liuhaoyang) | 将采集到的数据支持`Opentelemetry log protocol`的后端。 |
+| [`flusher_http`](flusher/flusher-http.md)<br>HTTP                            | 社区<br>[`snakorse`](https://github.com/snakorse)     | 将采集到的数据以http方式输出到指定的后端。                   |
+| [`flusher_pulsar`](flusher/flusher-pulsar.md)<br>Kafka                       | 社区<br>[`shalousun`](https://github.com/shalousun)   | 将采集到的数据输出到Pulsar。                         |
+| [`flusher_clickhouse`](flusher/flusher-clickhouse.md)<br>ClickHouse          | 社区<br>[`kl7sn`](https://github.com/kl7sn)           | 将采集到的数据输出到ClickHouse。                     |
 | [`flusher_elasticsearch`](flusher/flusher-elasticsearch.md)<br>ElasticSearch | 社区<br>[`joeCarf`](https://github.com/joeCarf)       | 将采集到的数据输出到ElasticSearch。                  |
-| [`flusher_loki`](flusher/loki.md)<br>Loki | 社区<br>[`abingcbc`](https://github.com/abingcbc) | 将采集到的数据输出到Loki。
+| [`flusher_loki`](flusher/loki.md)<br>Loki                                    | 社区<br>[`abingcbc`](https://github.com/abingcbc)     | 将采集到的数据输出到Loki。                           |
 
 ## 加速
 
