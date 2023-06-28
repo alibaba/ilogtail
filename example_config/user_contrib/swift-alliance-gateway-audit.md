@@ -4,6 +4,8 @@
 
 The following configuration parses SWIFT Alliance Gateway logs to identify user login behaviors.
 
+SWIFT (Society for Worldwide Interbank Financial Telecommunication) is a global financial messaging network that enables banks and financial institutions to securely exchange electronic messages and information. SWIFT Alliance Gateway is a software solution provided by SWIFT that allows banks and financial institutions to connect to the SWIFT network, manage their messaging traffic, and exchange financial information with other institutions.
+
 ### Example Input
 
 ``` plain
@@ -17,28 +19,28 @@ May 9 18:06:22 Swift-SAG sag_control[111111]: Component: Sag:System|Event Number
 
 ``` json
 [{
-  "__tag__:__path__": "./sag-access.log",
+  "__tag__:__path__": "/var/log/message",
   "eventdate": "May  25",
   "eventtime": "16:11:19",
   "username": "jack",
   "event": "logged in",
   "__time__": "1685121648"
 }, {
-  "__tag__:__path__": "./sag-access.log",
+  "__tag__:__path__": "/var/log/message",
   "eventdate": "May  25",
   "eventtime": "16:10:57",
   "username": "rose",
   "event": "The TOTP provided is invalid",
   "__time__": "1685121648"
 }, {
-  "__tag__:__path__": "./sag-access.log",
+  "__tag__:__path__": "/var/log/message",
   "eventdate": "May  18",
   "eventtime": "11:06:25",
   "username": "rose",
   "event": "does not exist",
   "__time__": "1685121648"
 }, {
-  "__tag__:__path__": "./sag-access.log",
+  "__tag__:__path__": "/var/log/message",
   "eventdate": "May 9",
   "eventtime": "18:06:22",
   "username": "rose",
@@ -53,8 +55,8 @@ May 9 18:06:22 Swift-SAG sag_control[111111]: Component: Sag:System|Event Number
 enable: true
 inputs:
   - Type: file_log
-    LogPath: .
-    FilePattern: sag-access.log
+    LogPath: /var/log
+    FilePattern: message
 processors:
   - Type: processor_filter_regex
     Include:
