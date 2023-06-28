@@ -97,6 +97,7 @@ func (l *loggingHandler) sendLogging(data *loggingV3.LogData) {
 func (l *loggingHandler) convertFormat(data *loggingV3.LogData) *protocol.Log {
 	r := &protocol.Log{
 		Time:     uint32(data.Timestamp / 1000),
+		TimeNs:   uint32((data.Timestamp * 1e6) % 1e9),
 		Contents: make([]*protocol.Log_Content, 0),
 	}
 
@@ -119,6 +120,7 @@ func (l *loggingHandler) convertFormat(data *loggingV3.LogData) *protocol.Log {
 func (l *loggingHandler) convertBrowserErrorLog(data *agent.BrowserErrorLog) *protocol.Log {
 	r := &protocol.Log{
 		Time:     uint32(data.Time / 1000),
+		TimeNs:   uint32((data.Time * 1e6) % 1e9),
 		Contents: make([]*protocol.Log_Content, 0),
 	}
 

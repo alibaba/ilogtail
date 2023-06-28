@@ -245,7 +245,7 @@ func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 					break
 				}
 			}
-			nowTime := (uint32)(time.Now().Unix())
+			nowTime := time.Now()
 
 			if len(logs) > 0 {
 				p.LogstoreConfig.Statistics.SplitLogMetric.Add(int64(len(logs)))
@@ -255,7 +255,8 @@ func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 							continue
 						}
 						if l.Time == uint32(0) {
-							l.Time = nowTime
+							l.Time = (uint32)(nowTime.Unix())
+							l.TimeNs = (uint32)(nowTime.Nanosecond())
 						}
 						for tryCount := 1; true; tryCount++ {
 							err := aggregator.Aggregator.Add(l, logCtx.Context)

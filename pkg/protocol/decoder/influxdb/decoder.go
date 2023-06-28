@@ -261,6 +261,7 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 
 			log := &protocol.Log{
 				Time:     uint32(s.Time().Unix()),
+				TimeNs:   uint32(s.Time().Nanosecond()),
 				Contents: contents,
 			}
 			logs = append(logs, log)

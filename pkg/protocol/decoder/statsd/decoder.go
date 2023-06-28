@@ -87,7 +87,8 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 		}
 		helper.ReplaceInvalidChars(&m.Name)
 		log := &protocol.Log{
-			Time: uint32(now.Unix()),
+			Time:   uint32(now.Unix()),
+			TimeNs: uint32(now.Nanosecond()),
 			Contents: []*protocol.Log_Content{
 				{
 					Key:   metricNameKey,

@@ -137,7 +137,8 @@ func formatMetricName(name string) string {
 func newMetricLogFromRaw(name string, labels KeyValues, nsec int64, value float64) *protocol.Log {
 	labels.Sort()
 	return &protocol.Log{
-		Time: uint32(nsec / 1e9),
+		Time:   uint32(nsec / 1e9),
+		TimeNs: uint32(nsec % 1e9),
 		Contents: []*protocol.Log_Content{
 			{
 				Key:   metricNameKey,
@@ -210,7 +211,8 @@ func newExemplarMetricLogFromRaw(name string, exemplar pmetric.Exemplar, labels 
 
 	labels.Sort()
 	return &protocol.Log{
-		Time: uint32(exemplar.Timestamp() / 1e9),
+		Time:   uint32(exemplar.Timestamp() / 1e9),
+		TimeNs: uint32(exemplar.Timestamp() % 1e9),
 		Contents: []*protocol.Log_Content{
 			{
 				Key:   metricNameKey,
@@ -445,6 +447,7 @@ func ConvertOtlpLogV1(otlpLogs plog.Logs) (logs []*protocol.Log, err error) {
 
 				protoLog := &protocol.Log{
 					Time:     uint32(logRecord.Timestamp().AsTime().Unix()),
+					TimeNs:   uint32(logRecord.Timestamp().AsTime().Nanosecond()),
 					Contents: protoContents,
 				}
 				logs = append(logs, protoLog)
@@ -509,7 +512,8 @@ func ConvertOtlpMetricV1(otlpMetrics pmetric.Metrics) (logs []*protocol.Log, err
 					// TODO:
 					// find a better way to handle metric with type MetricTypeEmpty.
 					log := &protocol.Log{
-						Time: uint32(time.Now().Unix()),
+						Time:   uint32(time.Now().Unix()),
+						TimeNs: uint32(time.Now().Nanosecond()),
 						Contents: []*protocol.Log_Content{
 							{
 								Key:   metricNameKey,

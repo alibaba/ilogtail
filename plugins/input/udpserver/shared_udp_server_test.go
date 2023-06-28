@@ -60,8 +60,10 @@ func TestSharedUDPServer_cutDispatchTag(t *testing.T) {
 				dispatchKey: tt.dispatchKey,
 				lastLog:     time.Now(),
 			}
+			nowTime := time.Now()
 			log := &protocol.Log{
-				Time: uint32(time.Now().Unix()),
+				Time:   uint32(nowTime.Unix()),
+				TimeNs: uint32(nowTime.Nanosecond()),
 				Contents: []*protocol.Log_Content{
 					{
 						Key:   labelName,

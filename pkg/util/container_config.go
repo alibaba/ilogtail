@@ -173,7 +173,7 @@ func GetDeletedContainerIDs() map[string]struct{} {
 }
 
 func SerializeDeleteContainerToPb(logGroup *protocol.LogGroup, project string, containerIDsStr string) {
-	nowTime := (uint32)(time.Now().Unix())
+	nowTime := time.Now()
 	deletedContainerMutex.Lock()
 	log := &protocol.Log{}
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "type", Value: "delete_containers"})
@@ -181,13 +181,14 @@ func SerializeDeleteContainerToPb(logGroup *protocol.LogGroup, project string, c
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "container_ids", Value: containerIDsStr})
 
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
-	log.Time = nowTime
+	log.Time = (uint32)(nowTime.Unix())
+	log.TimeNs = (uint32)(nowTime.Nanosecond())
 	logGroup.Logs = append(logGroup.Logs, log)
 	deletedContainerMutex.Unlock()
 }
 
 func SerializeContainerToPb(logGroup *protocol.LogGroup) {
-	nowTime := (uint32)(time.Now().Unix())
+	nowTime := time.Now()
 	addedContainerMutex.Lock()
 	for _, item := range AddedContainers {
 		log := &protocol.Log{}
@@ -220,7 +221,8 @@ func SerializeContainerToPb(logGroup *protocol.LogGroup) {
 		}
 
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
-		log.Time = nowTime
+		log.Time = (uint32)(nowTime.Unix())
+		log.TimeNs = (uint32)(nowTime.Nanosecond())
 		logGroup.Logs = append(logGroup.Logs, log)
 	}
 	AddedContainers = AddedContainers[:0]
@@ -228,7 +230,7 @@ func SerializeContainerToPb(logGroup *protocol.LogGroup) {
 }
 
 func SerializeConfigResultToPb(logGroup *protocol.LogGroup) {
-	nowTime := (uint32)(time.Now().Unix())
+	nowTime := time.Now()
 	addedConfigResultMutex.Lock()
 	for _, item := range AddedConfigResult {
 		log := &protocol.Log{}
@@ -249,7 +251,8 @@ func SerializeConfigResultToPb(logGroup *protocol.LogGroup) {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "flusher.type", Value: item.FlusherType})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "flusher.target_addresses", Value: item.FlusherTargetAddress})
 
-		log.Time = nowTime
+		log.Time = (uint32)(nowTime.Unix())
+		log.TimeNs = (uint32)(nowTime.Nanosecond())
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
 		logGroup.Logs = append(logGroup.Logs, log)
 	}

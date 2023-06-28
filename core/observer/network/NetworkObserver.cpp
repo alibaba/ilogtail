@@ -518,9 +518,11 @@ inline void NetworkObserver::StartEventLoop() {
 }
 int NetworkObserver::OutputPluginProcess(std::vector<sls_logs::Log>& logs, Config* config) {
     static auto sPlugin = LogtailPlugin::GetInstance();
-    uint32_t nowTime = time(nullptr);
+    timespec ts;
+    clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     for (auto& item : logs) {
-        item.set_time(nowTime);
+        item.set_time(ts.tv_sec);
+        item.set_time_ns(ts.tv_nsec);
         sPlugin->ProcessLog(config->mConfigName, item, "", config->mGroupTopic, "");
     }
     return 0;
@@ -550,10 +552,13 @@ int NetworkObserver::OutputDirectly(std::vector<sls_logs::Log>& logs, Config* co
         if (!config->mGroupTopic.empty()) {
             logGroup.set_topic(config->mGroupTopic);
         }
+        timespec ts;
+        clock_gettime(CLOCK_REALTIME_COARSE, &ts);
         for (size_t i = beginIndex; i < endIndex; ++i) {
             sls_logs::Log* log = logGroup.add_logs();
             log->mutable_contents()->CopyFrom(*(logs[i].mutable_contents()));
-            log->set_time(nowTime);
+            log->set_time(ts.tv_sec);
+            log->set_time_ns(ts.tv_nsec);
         }
         if (!sSenderInstance->Send(config->mProjectName,
                                    "",

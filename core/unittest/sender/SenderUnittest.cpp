@@ -2067,7 +2067,10 @@ public:
     void GenerateNoneUTF8Char(LogGroup& logGroup) {
         for (int i = 0; i < 10; ++i) {
             Log* logPtr = logGroup.add_logs();
-            logPtr->set_time(time(NULL));
+            timespec ts;
+            clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+            logPtr->set_time(ts.tv_sec);
+            logPtr->set_time_ns(ts.tv_nsec);
             for (int j = 0; j < 10; ++j) {
                 Log_Content* contentPtr = logPtr->add_contents();
                 if (j == i) {

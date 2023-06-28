@@ -20,6 +20,7 @@
 #include "common/StringTools.h"
 #include "common/util.h"
 #include "common/LogtailCommonFlags.h"
+#include "common/TimeUtil.h"
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "config/LogType.h"
@@ -119,7 +120,10 @@ LogParser::ApsaraEasyReadLogTimeParser(const char* buffer, string& timeStr, time
 
 void LogParser::AddUnmatchLog(const char* buffer, sls_logs::LogGroup& logGroup, uint32_t& logGroupSize) {
     Log* logPtr = logGroup.add_logs();
-    logPtr->set_time(time(NULL));
+    timespec ts;
+    clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+    logPtr->set_time(ts.tv_sec);
+    logPtr->set_time_ns(ts.tv_nsec);
     AddLog(logPtr, UNMATCH_LOG_KEY, buffer, logGroupSize);
 }
 
@@ -244,6 +248,7 @@ static bool StdRegexLogLineParser(const char* buffer,
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
         logPtr->set_time(logTime);
+        logPtr->set_time_ns(GetNanoSecondsFromPreciseTimestamp(preciseTimestamp));
         if (preciseTimestampConfig.enabled) {
             LogParser::AddLog(logPtr, preciseTimestampConfig.key, std::to_string(preciseTimestamp), logGroupSize);
         }
@@ -370,6 +375,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
         logPtr->set_time(logTime);
+        logPtr->set_time_ns(GetNanoSecondsFromPreciseTimestamp(preciseTimestamp));
         for (uint32_t i = 0; i < keys.size(); i++) {
             AddLog(logPtr, keys[i], what[i + 1].str(), logGroupSize);
         }
@@ -390,6 +396,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                                    const vector<string>& keys,
                                    const string& category,
                                    time_t logTime,
+                                   long timeNs,
                                    const string& projectName,
                                    const string& region,
                                    const string& logPath,
@@ -455,6 +462,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
 
     Log* logPtr = logGroup.add_logs();
     logPtr->set_time(logTime); // current system time, no need history check
+    logPtr->set_time_ns(timeNs);
     for (uint32_t i = 0; i < keys.size(); i++) {
         AddLog(logPtr, keys[i], what[i + 1].str(), logGroupSize);
     }
@@ -473,7 +481,7 @@ bool LogParser::ParseLogTime(const char* buffer,
                              const string& category,
                              const string& region,
                              const string& logPath,
-                             ParseLogError& error,                                             
+                             ParseLogError& error,
                              int32_t tzOffsetSecond) {
     if (IsPrefixString(curTimeStr, timeStr) == false) {
         struct tm tm;
@@ -515,13 +523,14 @@ bool LogParser::ParseLogTime(const char* buffer,
         }
     } else {
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp
-                = GetPreciseTimestamp(logTime, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, tzOffsetSecond);
+            preciseTimestamp = GetPreciseTimestamp(
+                logTime, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, tzOffsetSecond);
         }
     }
 
     if (logTime <= 0
-        || (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval))) {
+        || (BOOL_FLAG(ilogtail_discard_old_data)
+            && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval))) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(sLogger,
@@ -538,33 +547,35 @@ bool LogParser::ParseLogTime(const char* buffer,
 }
 
 bool LogParser::WholeLineModeParser(
-    const char* buffer, LogGroup& logGroup, const string& key, time_t logTime, uint32_t& logGroupSize) {
+    const char* buffer, LogGroup& logGroup, const string& key, time_t logTime, long timeNs, uint32_t& logGroupSize) {
     Log* logPtr = logGroup.add_logs();
     logPtr->set_time(logTime); // current system time, no need history check
+    logPtr->set_time_ns(timeNs);
     AddLog(logPtr, key, buffer, logGroupSize);
     return true;
 }
 
 int32_t LogParser::GetApsaraLogMicroTime(const char* buffer) {
     int begIndex = 0;
-    char tmp [6];   
+    char tmp[7];
+    tmp[6] = '\0';
     while (buffer[begIndex]) {
         if (buffer[begIndex] == '.') {
             begIndex++;
             break;
         }
         begIndex++;
-    }   
+    }
     int index = 0;
-    while(buffer[begIndex + index] && index <6) {
-        if (buffer[begIndex + index] == ']'){
+    while (buffer[begIndex + index] && index < 6) {
+        if (buffer[begIndex + index] == ']') {
             break;
         }
         tmp[index] = buffer[begIndex + index];
-        index ++;
+        index++;
     }
     if (index < 6) {
-        for (int i = index; i < 6; i ++) {
+        for (int i = index; i < 6; i++) {
             tmp[i] = '0';
         }
     }
@@ -668,8 +679,8 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
                                             const string& region,
                                             const string& logPath,
                                             ParseLogError& error,
-                                            uint32_t& logGroupSize,                                             
-                                            int32_t tzOffsetSecond, 
+                                            uint32_t& logGroupSize,
+                                            int32_t tzOffsetSecond,
                                             bool adjustApsaraMicroTimezone) {
     int64_t logTime_in_micro = 0;
     time_t logTime = LogParser::ApsaraEasyReadLogTimeParser(buffer, timeStr, lastLogTime, logTime_in_micro);
@@ -691,13 +702,13 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
             PARSE_TIME_FAIL_ALARM, bufOut + " $ " + ToString(logTime), projectName, category, region);
         error = PARSE_LOG_TIMEFORMAT_ERROR;
 
-        if (!discardUnmatch)
-        {
+        if (!discardUnmatch) {
             AddUnmatchLog(buffer, logGroup, logGroupSize);
         }
         return false;
     }
-    if (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval)) {
+    if (BOOL_FLAG(ilogtail_discard_old_data)
+        && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval)) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             string bufOut(buffer);
             if (bufOut.size() > (size_t)(1024)) {
@@ -721,6 +732,7 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
 
     Log* logPtr = logGroup.add_logs();
     logPtr->set_time(logTime);
+    logPtr->set_time_ns(logTime_in_micro * 1000 % 1000000000);
     int32_t beg_index = 0;
     int32_t colon_index = -1;
     int32_t index = -1;
@@ -743,7 +755,7 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
         } while (buffer[index]);
     }
     if (adjustApsaraMicroTimezone) {
-        logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)tzOffsetSecond * (int64_t) 1000000;
+        logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)tzOffsetSecond * (int64_t)1000000;
     }
     char s_micro[20] = {0};
 #if defined(__linux__)

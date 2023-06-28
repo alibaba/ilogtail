@@ -64,8 +64,11 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 		}
 		if log.Time != uint32(0) {
 			newLog.Time = log.Time
+			newLog.TimeNs = log.TimeNs
 		} else {
-			newLog.Time = (uint32)(time.Now().Unix())
+			nowTime := time.Now()
+			newLog.Time = (uint32)(nowTime.Unix())
+			newLog.TimeNs = (uint32)(nowTime.Nanosecond())
 		}
 
 		if destCont != nil {

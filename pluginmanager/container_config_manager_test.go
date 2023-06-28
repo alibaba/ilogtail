@@ -181,7 +181,7 @@ func (s *containerConfigTestSuite) TestLargeCountLog() {
 			}
 		]
 	}`
-	nowTime := (uint32)(time.Now().Unix())
+	nowTime := time.Now()
 	ContainerConfig, err := loadBuiltinConfig("container", "sls-test", "logtail_containers", "logtail_containers", configStr)
 	s.NoError(err)
 	ContainerConfig.Start()
@@ -189,7 +189,8 @@ func (s *containerConfigTestSuite) TestLargeCountLog() {
 	for i := 1; i <= 100000; i++ {
 		log := &protocol.Log{}
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "test", Value: "123"})
-		log.Time = nowTime
+		log.Time = (uint32)(nowTime.Unix())
+		log.TimeNs = (uint32)(nowTime.Nanosecond())
 		loggroup.Logs = append(loggroup.Logs, log)
 	}
 

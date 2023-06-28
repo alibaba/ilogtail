@@ -210,7 +210,10 @@ bool DelimiterLogFileReader::ParseLogLine(const char* buffer,
 
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
-        logPtr->set_time(mUseSystemTime || lastLogLineTime <= 0 ? time(NULL) : lastLogLineTime);
+        timespec ts;
+        clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+        logPtr->set_time(mUseSystemTime || lastLogLineTime <= 0 ? ts.tv_sec : lastLogLineTime);
+        logPtr->set_time_ns(ts.tv_nsec);
 
         for (uint32_t idx = 0; idx < parsedColCount; idx++) {
             if (mColumnKeys.size() > idx) {

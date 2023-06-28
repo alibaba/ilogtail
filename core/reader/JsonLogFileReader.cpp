@@ -142,7 +142,10 @@ bool JsonLogFileReader::ParseLogLine(const char* buffer,
 
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
-        logPtr->set_time(mUseSystemTime ? time(NULL) : lastLogLineTime);
+        timespec ts;
+        clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+        logPtr->set_time(mUseSystemTime ? ts.tv_sec : lastLogLineTime);
+        logPtr->set_time_ns(ts.tv_nsec);
         for (rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr) {
             const rapidjson::Value& contentKey = itr->name;
             const rapidjson::Value& contentValue = itr->value;

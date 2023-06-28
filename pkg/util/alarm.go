@@ -91,7 +91,7 @@ func (p *Alarm) Record(alarmType, message string) {
 }
 
 func (p *Alarm) SerializeToPb(logGroup *protocol.LogGroup) {
-	nowTime := (uint32)(time.Now().Unix())
+	nowTime := time.Now()
 	mu.Lock()
 	for alarmType, item := range p.AlarmMap {
 		if item.Count == 0 {
@@ -104,7 +104,8 @@ func (p *Alarm) SerializeToPb(logGroup *protocol.LogGroup) {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "alarm_count", Value: strconv.Itoa(item.Count)})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "alarm_message", Value: item.Message})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
-		log.Time = nowTime
+		log.Time = (uint32)(nowTime.Unix())
+		log.TimeNs = (uint32)(nowTime.Nanosecond())
 		logGroup.Logs = append(logGroup.Logs, log)
 		// clear after serialize
 		item.Count = 0

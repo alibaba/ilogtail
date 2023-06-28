@@ -17,6 +17,7 @@
 #include <chrono>
 #include <limits>
 #include <atomic>
+#include <cmath>
 #if defined(__linux__)
 #include <sys/sysinfo.h>
 #include <utmp.h>
@@ -314,6 +315,10 @@ uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
     return adjustSecondTimestamp + preciseTimeDigit;
 }
 
+int64_t GetNanoSecondsFromPreciseTimestamp(uint64_t preciseTimestamp) {
+    int digitsNum = (int)log10(preciseTimestamp) + 1;
+    return (preciseTimestamp * (int64_t)pow(10, 19 - digitsNum)) % 1000000000;
+}
 
 uint64_t GetCurrentTimeInNanoSeconds() {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch())

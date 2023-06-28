@@ -76,6 +76,9 @@ uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
                              const char* preciseTimeSuffix,
                              const PreciseTimestampConfig& preciseTimestampConfig,
                              int32_t tzOffsetSecond);
+
+long GetNanoSecondsFromPreciseTimestamp(uint64_t preciseTimestamp);
+
 } // namespace logtail
 
 #if defined(_MSC_VER)

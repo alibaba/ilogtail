@@ -176,7 +176,11 @@ func TestAggregatorDefault(t *testing.T) {
 func generateLogs(agg *AggregatorContext, logNum int, withCtx bool, logNo []int, isShort bool) {
 	for i := 0; i < logNum; i++ {
 		index := i % len(packIDPrefix)
-		log := &protocol.Log{Time: uint32(time.Now().Unix())}
+		nowTime := time.Now()
+		log := &protocol.Log{
+			Time:   uint32(nowTime.Unix()),
+			TimeNs: uint32(nowTime.Nanosecond()),
+		}
 		if isShort {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: shortLog + fmt.Sprintf("%d", index)})
 		} else {
@@ -265,8 +269,10 @@ func checkResult(logGroups []*protocol.LogGroup, expectedLogNum int) {
 // common situation: 10 log sources, 10 logs per second per file, medium log
 func BenchmarkAdd(b *testing.B) {
 	agg, _, _ := newAggregatorContext()
+	nowTime := time.Now()
 	log := &protocol.Log{
-		Time:     uint32(time.Now().Unix()),
+		Time:     uint32(nowTime.Unix()),
+		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
 	ctx := make([]map[string]interface{}, 10)
@@ -295,8 +301,10 @@ func BenchmarkLogSource100(b *testing.B) {
 
 func benchmarkLogSource(b *testing.B, num int) {
 	agg, _, _ := newAggregatorContext()
+	nowTime := time.Now()
 	log := &protocol.Log{
-		Time:     uint32(time.Now().Unix()),
+		Time:     uint32(nowTime.Unix()),
+		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
 	ctx := make([]map[string]interface{}, num)
@@ -326,8 +334,10 @@ func BenchmarkLogProducinfPace1000(b *testing.B) {
 
 func benchmarkLogProducingPace(b *testing.B, num int) {
 	agg, _, _ := newAggregatorContext()
+	nowTime := time.Now()
 	log := &protocol.Log{
-		Time:     uint32(time.Now().Unix()),
+		Time:     uint32(nowTime.Unix()),
+		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
 	ctx := make([]map[string]interface{}, 10)
@@ -364,8 +374,10 @@ func benchmarkLogLength(b *testing.B, len string) {
 	default:
 		value = mediumLog
 	}
+	nowTime := time.Now()
 	log := &protocol.Log{
-		Time:     uint32(time.Now().Unix()),
+		Time:     uint32(nowTime.Unix()),
+		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: value}},
 	}
 	ctx := make([]map[string]interface{}, 10)
