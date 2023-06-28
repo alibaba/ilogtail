@@ -315,9 +315,9 @@ uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
     return adjustSecondTimestamp + preciseTimeDigit;
 }
 
-int64_t GetNanoSecondsFromPreciseTimestamp(uint64_t preciseTimestamp) {
-    int digitsNum = (int)log10(preciseTimestamp) + 1;
-    return (preciseTimestamp * (int64_t)pow(10, 19 - digitsNum)) % 1000000000;
+int64_t GetNanoSecondsFromPreciseTimestamp(uint64_t preciseTimestamp, TimeStampUnit unit) {
+    int toFillDigitsNum = 9 - static_cast<int>(unit) * 3;
+    return (preciseTimestamp * (int64_t)pow(10, toFillDigitsNum)) % 1000000000;
 }
 
 uint64_t GetCurrentTimeInNanoSeconds() {

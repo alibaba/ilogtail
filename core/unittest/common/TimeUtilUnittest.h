@@ -181,19 +181,19 @@ void TimeUtilUnittest::TestGetPreciseTimestamp() {
 
 void TimeUtilUnittest::TestGetNanoSecondsFromPreciseTimestamp() {
     uint64_t preciseTimestampSecond = 1551053999;
-    auto result = GetNanoSecondsFromPreciseTimestamp(preciseTimestampSecond);
+    auto result = GetNanoSecondsFromPreciseTimestamp(preciseTimestampSecond, TimeStampUnit::SECOND);
     EXPECT_EQ(0, result);
 
     uint64_t preciseTimestampMilliSecond = 1551053999123;
-    result = GetNanoSecondsFromPreciseTimestamp(preciseTimestampMilliSecond);
+    result = GetNanoSecondsFromPreciseTimestamp(preciseTimestampMilliSecond, TimeStampUnit::MILLISECOND);
     EXPECT_EQ(123000000, result);
 
     uint64_t preciseTimestampMicroSecond = 1551053999123456;
-    result = GetNanoSecondsFromPreciseTimestamp(preciseTimestampMicroSecond);
+    result = GetNanoSecondsFromPreciseTimestamp(preciseTimestampMicroSecond, TimeStampUnit::MICROSECOND);
     EXPECT_EQ(123456000, result);
 
     uint64_t preciseTimestampNanoSecond = 1551053999123456789;
-    result = GetNanoSecondsFromPreciseTimestamp(preciseTimestampNanoSecond);
+    result = GetNanoSecondsFromPreciseTimestamp(preciseTimestampNanoSecond, TimeStampUnit::NANOSECOND);
     EXPECT_EQ(123456789, result);
 }
 

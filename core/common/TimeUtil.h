@@ -77,7 +77,7 @@ uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
                              const PreciseTimestampConfig& preciseTimestampConfig,
                              int32_t tzOffsetSecond);
 
-long GetNanoSecondsFromPreciseTimestamp(uint64_t preciseTimestamp);
+long GetNanoSecondsFromPreciseTimestamp(uint64_t preciseTimestamp, TimeStampUnit unit);
 
 } // namespace logtail
 

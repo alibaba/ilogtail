@@ -248,7 +248,7 @@ static bool StdRegexLogLineParser(const char* buffer,
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
         logPtr->set_time(logTime);
-        logPtr->set_time_ns(GetNanoSecondsFromPreciseTimestamp(preciseTimestamp));
+        logPtr->set_time_ns(GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, preciseTimestampConfig.unit));
         if (preciseTimestampConfig.enabled) {
             LogParser::AddLog(logPtr, preciseTimestampConfig.key, std::to_string(preciseTimestamp), logGroupSize);
         }
@@ -375,7 +375,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
         logPtr->set_time(logTime);
-        logPtr->set_time_ns(GetNanoSecondsFromPreciseTimestamp(preciseTimestamp));
+        logPtr->set_time_ns(GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, preciseTimestampConfig.unit));
         for (uint32_t i = 0; i < keys.size(); i++) {
             AddLog(logPtr, keys[i], what[i + 1].str(), logGroupSize);
         }
