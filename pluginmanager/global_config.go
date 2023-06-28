@@ -40,6 +40,8 @@ type GlobalConfig struct {
 	Hostname     string
 	AlwaysOnline bool
 	DelayStopSec int
+
+	EnableTimestampNanosecond bool
 }
 
 // LogtailGlobalConfig is the singleton instance of GlobalConfig.

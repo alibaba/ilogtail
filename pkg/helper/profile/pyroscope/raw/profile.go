@@ -29,6 +29,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 type Profile struct {
@@ -156,8 +157,10 @@ func (p *Profile) extractProfileV1(meta *profile.Meta, tags map[string]string) f
 
 		log := &protocol.Log{
 			Time:     uint32(meta.StartTime.Unix()),
-			TimeNs:   uint32(meta.StartTime.Nanosecond()),
 			Contents: content,
+		}
+		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			log.TimeNs = uint32(meta.StartTime.Nanosecond())
 		}
 		p.logs = append(p.logs, log)
 	}

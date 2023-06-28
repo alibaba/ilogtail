@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 const ContainerIDPrefixSize = 12
@@ -182,7 +183,9 @@ func SerializeDeleteContainerToPb(logGroup *protocol.LogGroup, project string, c
 
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
 	log.Time = (uint32)(nowTime.Unix())
-	log.TimeNs = (uint32)(nowTime.Nanosecond())
+	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		log.TimeNs = (uint32)(nowTime.Nanosecond())
+	}
 	logGroup.Logs = append(logGroup.Logs, log)
 	deletedContainerMutex.Unlock()
 }
@@ -222,7 +225,9 @@ func SerializeContainerToPb(logGroup *protocol.LogGroup) {
 
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
 		log.Time = (uint32)(nowTime.Unix())
-		log.TimeNs = (uint32)(nowTime.Nanosecond())
+		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			log.TimeNs = (uint32)(nowTime.Nanosecond())
+		}
 		logGroup.Logs = append(logGroup.Logs, log)
 	}
 	AddedContainers = AddedContainers[:0]
@@ -252,7 +257,9 @@ func SerializeConfigResultToPb(logGroup *protocol.LogGroup) {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "flusher.target_addresses", Value: item.FlusherTargetAddress})
 
 		log.Time = (uint32)(nowTime.Unix())
-		log.TimeNs = (uint32)(nowTime.Nanosecond())
+		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			log.TimeNs = (uint32)(nowTime.Nanosecond())
+		}
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
 		logGroup.Logs = append(logGroup.Logs, log)
 	}

@@ -24,6 +24,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 type ProcessorSplit struct {
@@ -64,11 +65,15 @@ func (p *ProcessorSplit) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 		}
 		if log.Time != uint32(0) {
 			newLog.Time = log.Time
-			newLog.TimeNs = log.TimeNs
+			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+				newLog.TimeNs = log.TimeNs
+			}
 		} else {
 			nowTime := time.Now()
 			newLog.Time = (uint32)(nowTime.Unix())
-			newLog.TimeNs = (uint32)(nowTime.Nanosecond())
+			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+				newLog.TimeNs = (uint32)(nowTime.Nanosecond())
+			}
 		}
 
 		if destCont != nil {

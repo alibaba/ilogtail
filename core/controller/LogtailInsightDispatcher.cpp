@@ -17,6 +17,7 @@
 #include "common/Flags.h"
 #include "common/TimeUtil.h"
 #include "common/LogFileCollectOffsetIndicator.h"
+#include "common/LogtailCommonFlags.h"
 
 DEFINE_FLAG_INT32(default_wait_second, "default wait time for non-block fd, milliseconds", 50);
 
@@ -59,7 +60,9 @@ static void SendErrorToFD(int fd, const std::string& errorMessage) {
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     outLog.set_time(ts.tv_sec);
-    outLog.set_time_ns(ts.tv_nsec);
+    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+        outLog.set_time_ns(ts.tv_nsec);
+    }
     sls_logs::Log_Content* content = outLog.add_contents();
     content->set_key("error");
     content->set_value(errorMessage);
@@ -114,7 +117,9 @@ int32_t LogtailInsightDispatcher::ExecuteCommand(int fd, const char* cmdBuf, int
                 timespec ts;
                 clock_gettime(CLOCK_REALTIME_COARSE, &ts);
                 log->set_time(ts.tv_sec);
-                log->set_time_ns(ts.tv_nsec);
+                if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+                    log->set_time_ns(ts.tv_nsec);
+                }
                 sls_logs::Log_Content* content = log->add_contents();
                 content->set_key("isFinished");
                 content->set_value(ToString(finishedFlag));
@@ -130,7 +135,9 @@ int32_t LogtailInsightDispatcher::ExecuteCommand(int fd, const char* cmdBuf, int
                 timespec ts;
                 clock_gettime(CLOCK_REALTIME_COARSE, &ts);
                 log->set_time(ts.tv_sec);
-                log->set_time_ns(ts.tv_nsec);
+                if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+                    log->set_time_ns(ts.tv_nsec);
+                }
                 sls_logs::Log_Content* content = log->add_contents();
                 content->set_key("isFinished");
                 if (result == -1) {
@@ -220,7 +227,9 @@ void LogtailInsightDispatcher::BuildLogGroup(sls_logs::LogGroup* logGroup,
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     log->set_time(ts.tv_sec);
-    log->set_time_ns(ts.tv_nsec);
+    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+        log->set_time_ns(ts.tv_nsec);
+    }
 
     sls_logs::Log_Content* content = log->add_contents();
     content->set_key("project");

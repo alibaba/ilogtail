@@ -16,6 +16,7 @@
 #include <ctime>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include "common/LogtailCommonFlags.h"
 #include "profiler/LogtailAlarm.h"
 #include "parser/LogParser.h"
 #include "log_pb/sls_logs.pb.h"
@@ -145,7 +146,9 @@ bool JsonLogFileReader::ParseLogLine(const char* buffer,
         timespec ts;
         clock_gettime(CLOCK_REALTIME_COARSE, &ts);
         logPtr->set_time(mUseSystemTime ? ts.tv_sec : lastLogLineTime);
-        logPtr->set_time_ns(ts.tv_nsec);
+        if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+            logPtr->set_time_ns(ts.tv_nsec);
+        }
         for (rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr) {
             const rapidjson::Value& contentKey = itr->name;
             const rapidjson::Value& contentValue = itr->value;

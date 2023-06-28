@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 var GlobalAlarm *Alarm
@@ -105,7 +106,9 @@ func (p *Alarm) SerializeToPb(logGroup *protocol.LogGroup) {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "alarm_message", Value: item.Message})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
 		log.Time = (uint32)(nowTime.Unix())
-		log.TimeNs = (uint32)(nowTime.Nanosecond())
+		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			log.TimeNs = (uint32)(nowTime.Nanosecond())
+		}
 		logGroup.Logs = append(logGroup.Logs, log)
 		// clear after serialize
 		item.Count = 0

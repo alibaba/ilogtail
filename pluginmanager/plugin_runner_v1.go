@@ -256,7 +256,9 @@ func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 						}
 						if l.Time == uint32(0) {
 							l.Time = (uint32)(nowTime.Unix())
-							l.TimeNs = (uint32)(nowTime.Nanosecond())
+							if LogtailGlobalConfig.EnableTimestampNanosecond {
+								l.TimeNs = (uint32)(nowTime.Nanosecond())
+							}
 						}
 						for tryCount := 1; true; tryCount++ {
 							err := aggregator.Aggregator.Add(l, logCtx.Context)

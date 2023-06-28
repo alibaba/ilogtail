@@ -62,14 +62,16 @@ func TestSharedUDPServer_cutDispatchTag(t *testing.T) {
 			}
 			nowTime := time.Now()
 			log := &protocol.Log{
-				Time:   uint32(nowTime.Unix()),
-				TimeNs: uint32(nowTime.Nanosecond()),
+				Time: uint32(nowTime.Unix()),
 				Contents: []*protocol.Log_Content{
 					{
 						Key:   labelName,
 						Value: "key1#$#val1|key2#$#val2|key3#$#val3",
 					},
 				},
+			}
+			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+				log.TimeNs = uint32(nowTime.Nanosecond())
 			}
 
 			if gotTag := s.cutDispatchTag(log); gotTag != tt.wantTag || log.Contents[0].Value != tt.wantVal {

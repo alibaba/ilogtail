@@ -39,6 +39,7 @@ import (
 	"unsafe"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 const alphanum string = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -420,8 +421,10 @@ func (hd *HistogramData) ToMetricLogs(name string, timeMs int64, labels Labels) 
 func NewMetricLog(name string, timeMs int64, value string, labels []Label) *protocol.Log {
 	strTime := strconv.FormatInt(timeMs, 10)
 	metric := &protocol.Log{
-		Time:   uint32(timeMs / 1000),
-		TimeNs: uint32((timeMs * 1e6) % 1e9),
+		Time: uint32(timeMs / 1000),
+	}
+	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		metric.TimeNs = uint32((timeMs * 1e6) % 1e9)
 	}
 	metric.Contents = []*protocol.Log_Content{}
 	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__name__", Value: name})

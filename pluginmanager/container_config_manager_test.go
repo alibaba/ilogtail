@@ -190,7 +190,9 @@ func (s *containerConfigTestSuite) TestLargeCountLog() {
 		log := &protocol.Log{}
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "test", Value: "123"})
 		log.Time = (uint32)(nowTime.Unix())
-		log.TimeNs = (uint32)(nowTime.Nanosecond())
+		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			log.TimeNs = (uint32)(nowTime.Nanosecond())
+		}
 		loggroup.Logs = append(loggroup.Logs, log)
 	}
 

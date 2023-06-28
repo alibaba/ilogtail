@@ -104,7 +104,9 @@ void LogLineCount::InsertLineCountDataToLogGroup(sls_logs::LogGroup& logGroup,
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     logPtr->set_time(ts.tv_sec);
-    logPtr->set_time_ns(ts.tv_nsec);
+    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+        logPtr->set_time_ns(ts.tv_nsec);
+    }
 
     Log_Content* contentPtr = logPtr->add_contents();
     contentPtr->set_key("region");

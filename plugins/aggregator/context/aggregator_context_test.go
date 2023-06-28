@@ -178,8 +178,10 @@ func generateLogs(agg *AggregatorContext, logNum int, withCtx bool, logNo []int,
 		index := i % len(packIDPrefix)
 		nowTime := time.Now()
 		log := &protocol.Log{
-			Time:   uint32(nowTime.Unix()),
-			TimeNs: uint32(nowTime.Nanosecond()),
+			Time: uint32(nowTime.Unix()),
+		}
+		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			log.TimeNs = uint32(nowTime.Nanosecond())
 		}
 		if isShort {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: shortLog + fmt.Sprintf("%d", index)})
@@ -272,8 +274,10 @@ func BenchmarkAdd(b *testing.B) {
 	nowTime := time.Now()
 	log := &protocol.Log{
 		Time:     uint32(nowTime.Unix()),
-		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
+	}
+	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	ctx := make([]map[string]interface{}, 10)
 	packIDPrefix := make([]byte, 8)
@@ -304,8 +308,10 @@ func benchmarkLogSource(b *testing.B, num int) {
 	nowTime := time.Now()
 	log := &protocol.Log{
 		Time:     uint32(nowTime.Unix()),
-		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
+	}
+	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	ctx := make([]map[string]interface{}, num)
 	packIDPrefix := make([]byte, 8)
@@ -337,8 +343,10 @@ func benchmarkLogProducingPace(b *testing.B, num int) {
 	nowTime := time.Now()
 	log := &protocol.Log{
 		Time:     uint32(nowTime.Unix()),
-		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
+	}
+	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	ctx := make([]map[string]interface{}, 10)
 	packIDPrefix := make([]byte, 8)
@@ -377,8 +385,10 @@ func benchmarkLogLength(b *testing.B, len string) {
 	nowTime := time.Now()
 	log := &protocol.Log{
 		Time:     uint32(nowTime.Unix()),
-		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: value}},
+	}
+	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	ctx := make([]map[string]interface{}, 10)
 	packIDPrefix := make([]byte, 8)

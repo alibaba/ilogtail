@@ -35,6 +35,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/helper/profile"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 const (
@@ -341,12 +342,14 @@ func (r *RawProfile) extractProfileV1(meta *profile.Meta, tags map[string]string
 					Value: strconv.FormatFloat(float64(v), 'f', 2, 64),
 				},
 			)
-
-			r.logs = append(r.logs, &protocol.Log{
+			log := &protocol.Log{
 				Time:     uint32(startTime / 1e9),
-				TimeNs:   uint32(startTime % 1e9),
 				Contents: res,
-			})
+			}
+			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+				log.TimeNs = uint32(startTime % 1e9)
+			}
+			r.logs = append(r.logs, log)
 		}
 	}
 }

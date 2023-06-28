@@ -28,6 +28,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
+	"github.com/alibaba/ilogtail/pluginmanager"
 
 	dogstatsd "github.com/narqo/go-dogstatsd-parser"
 	"github.com/prometheus/common/model"
@@ -87,8 +88,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 		}
 		helper.ReplaceInvalidChars(&m.Name)
 		log := &protocol.Log{
-			Time:   uint32(now.Unix()),
-			TimeNs: uint32(now.Nanosecond()),
+			Time: uint32(now.Unix()),
 			Contents: []*protocol.Log_Content{
 				{
 					Key:   metricNameKey,
@@ -107,6 +107,9 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 					Value: strconv.FormatFloat(m.Value.(float64), 'g', -1, 64),
 				},
 			},
+		}
+		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			log.TimeNs = uint32(now.Nanosecond())
 		}
 		logs = append(logs, log)
 	}

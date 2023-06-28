@@ -188,7 +188,9 @@ bool LogtailAlarm::SendAlarmLoop() {
                     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
                     logPtr->set_time(AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? ts.tv_sec + GetTimeDelta()
                                                                                          : ts.tv_sec);
-                    logPtr->set_time_ns(ts.tv_nsec);
+                    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+                        logPtr->set_time_ns(ts.tv_nsec);
+                    }
                     Log_Content* contentPtr = logPtr->add_contents();
                     contentPtr->set_key("alarm_type");
                     contentPtr->set_value(messagePtr->mMessageType);

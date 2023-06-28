@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <json/json.h>
 #include "log_pb/sls_logs.pb.h"
+#include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
 
 #ifdef ENABLE_COMPATIBLE_MODE
@@ -184,7 +185,9 @@ int LogtailInsight::ExecuteCommand(const string& serverAddress,
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     cmdLog.set_time(ts.tv_sec);
-    cmdLog.set_time_ns(ts.tv_nsec);
+    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+        cmdLog.set_time_ns(ts.tv_nsec);
+    }
     sls_logs::Log_Content* cmdTypeContent = cmdLog.add_contents();
     cmdTypeContent->set_key("type");
     cmdTypeContent->set_value(cmdType);

@@ -25,6 +25,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 var (
@@ -284,8 +285,10 @@ func (p *DockerStdoutProcessor) newRawLogBySingleLine(msg *LogMessage) *protocol
 	nowTime := time.Now()
 	log := &protocol.Log{
 		Time:     uint32(nowTime.Unix()),
-		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: make([]*protocol.Log_Content, 0, p.fieldNum),
+	}
+	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	if len(msg.Content) > 0 && msg.Content[len(msg.Content)-1] == '\n' {
 		msg.Content = msg.Content[0 : len(msg.Content)-1]
@@ -331,8 +334,10 @@ func (p *DockerStdoutProcessor) newRawLogByMultiLine() *protocol.Log {
 	nowTime := time.Now()
 	log := &protocol.Log{
 		Time:     uint32(nowTime.Unix()),
-		TimeNs:   uint32(nowTime.Nanosecond()),
 		Contents: make([]*protocol.Log_Content, 0, p.fieldNum),
+	}
+	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	log.Contents = append(log.Contents, &protocol.Log_Content{
 		Key:   "content",

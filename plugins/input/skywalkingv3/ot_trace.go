@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pluginmanager"
 
 	"github.com/pkg/errors"
 )
@@ -70,11 +71,15 @@ func (ot *OtSpan) ToLog() (*protocol.Log, error) {
 	log := &protocol.Log{}
 	if ot.End != 0 {
 		log.Time = uint32(ot.End / int64(1000000))
-		log.TimeNs = uint32((ot.End * 1000) % 1e9)
+		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			log.TimeNs = uint32((ot.End * 1000) % 1e9)
+		}
 	} else {
 		nowTime := time.Now()
 		log.Time = uint32(nowTime.Unix())
-		log.TimeNs = uint32(nowTime.Nanosecond())
+		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			log.TimeNs = uint32(nowTime.Nanosecond())
+		}
 	}
 	log.Contents = make([]*protocol.Log_Content, 0)
 	linksJSON, err := json.Marshal(ot.Links)

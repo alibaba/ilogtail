@@ -19,6 +19,7 @@
 #include "metas/ContainerProcessGroup.h"
 #include "sources/pcap/PCAPWrapper.h"
 #include "sources/ebpf/EBPFWrapper.h"
+#include "common/LogtailCommonFlags.h"
 #include "config_manager/ConfigManager.h"
 #include "MachineInfoUtil.h"
 #include "FileSystemUtil.h"
@@ -522,7 +523,9 @@ int NetworkObserver::OutputPluginProcess(std::vector<sls_logs::Log>& logs, Confi
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     for (auto& item : logs) {
         item.set_time(ts.tv_sec);
-        item.set_time_ns(ts.tv_nsec);
+        if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+            item.set_time_ns(ts.tv_nsec);
+        }
         sPlugin->ProcessLog(config->mConfigName, item, "", config->mGroupTopic, "");
     }
     return 0;
@@ -530,7 +533,9 @@ int NetworkObserver::OutputPluginProcess(std::vector<sls_logs::Log>& logs, Confi
 
 int NetworkObserver::OutputDirectly(std::vector<sls_logs::Log>& logs, Config* config) {
     static auto sSenderInstance = Sender::Instance();
-    uint32_t nowTime = time(nullptr);
+    timespec ts;
+    clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+    uint32_t nowTime = ts.tv_sec;
     const size_t maxCount = INT32_FLAG(merge_log_count_limit) / 4;
     for (size_t beginIndex = 0; beginIndex < logs.size(); beginIndex += maxCount) {
         size_t endIndex = beginIndex + maxCount;
@@ -552,13 +557,13 @@ int NetworkObserver::OutputDirectly(std::vector<sls_logs::Log>& logs, Config* co
         if (!config->mGroupTopic.empty()) {
             logGroup.set_topic(config->mGroupTopic);
         }
-        timespec ts;
-        clock_gettime(CLOCK_REALTIME_COARSE, &ts);
         for (size_t i = beginIndex; i < endIndex; ++i) {
             sls_logs::Log* log = logGroup.add_logs();
             log->mutable_contents()->CopyFrom(*(logs[i].mutable_contents()));
-            log->set_time(ts.tv_sec);
-            log->set_time_ns(ts.tv_nsec);
+            log->set_time(nowTime);
+            if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+                log->set_time_ns(ts.tv_nsec);
+            }
         }
         if (!sSenderInstance->Send(config->mProjectName,
                                    "",

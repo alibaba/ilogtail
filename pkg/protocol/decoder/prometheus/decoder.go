@@ -33,6 +33,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 const (
@@ -127,8 +128,7 @@ func (d *Decoder) decodeInExpFmt(data []byte, _ *http.Request) (logs []*protocol
 		for _, sample := range *s {
 			metricName, labelsValue := parseLabels(sample.Metric)
 			log := &protocol.Log{
-				Time:   uint32(sample.Timestamp.Unix()),
-				TimeNs: uint32(sample.Timestamp.UnixNano() % 1e9),
+				Time: uint32(sample.Timestamp.Unix()),
 				Contents: []*protocol.Log_Content{
 					{
 						Key:   metricNameKey,
@@ -147,6 +147,9 @@ func (d *Decoder) decodeInExpFmt(data []byte, _ *http.Request) (logs []*protocol
 						Value: strconv.FormatFloat(float64(sample.Value), 'g', -1, 64),
 					},
 				},
+			}
+			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+				log.TimeNs = uint32(sample.Timestamp.UnixNano() % 1e9)
 			}
 			logs = append(logs, log)
 		}
@@ -198,8 +201,10 @@ func (d *Decoder) decodeInRemoteWriteFormat(data []byte, req *http.Request) (log
 
 			log := &protocol.Log{
 				Time:     uint32(model.Time(sample.Timestamp).Unix()),
-				TimeNs:   uint32(model.Time(sample.Timestamp).UnixNano() % 1e9),
 				Contents: contents,
+			}
+			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+				log.TimeNs = uint32(model.Time(sample.Timestamp).UnixNano() % 1e9)
 			}
 			logs = append(logs, log)
 		}

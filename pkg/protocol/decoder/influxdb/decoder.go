@@ -27,6 +27,7 @@ import (
 	imodels "github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
+	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 const (
@@ -261,8 +262,10 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 
 			log := &protocol.Log{
 				Time:     uint32(s.Time().Unix()),
-				TimeNs:   uint32(s.Time().Nanosecond()),
 				Contents: contents,
+			}
+			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+				log.TimeNs = uint32(s.Time().Nanosecond())
 			}
 			logs = append(logs, log)
 
