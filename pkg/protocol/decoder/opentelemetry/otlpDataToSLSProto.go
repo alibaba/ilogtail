@@ -215,13 +215,8 @@ func newExemplarMetricLogFromRaw(name string, exemplar pmetric.Exemplar, labels 
 	}
 
 	labels.Sort()
-	timeNs := uint32(0)
-	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
-		timeNs = uint32(exemplar.Timestamp() % 1e9)
-	}
-	return &protocol.Log{
-		Time:   uint32(exemplar.Timestamp() / 1e9),
-		TimeNs: timeNs,
+	log := &protocol.Log{
+		Time: uint32(exemplar.Timestamp() / 1e9),
 		Contents: []*protocol.Log_Content{
 			{
 				Key:   metricNameKey,
@@ -240,6 +235,10 @@ func newExemplarMetricLogFromRaw(name string, exemplar pmetric.Exemplar, labels 
 			},
 		},
 	}
+	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
+		log.TimeNs = uint32(exemplar.Timestamp() % 1e9)
+	}
+	return log
 }
 
 func GaugeToLogs(name string, data pmetric.NumberDataPointSlice, defaultLabels KeyValues) (logs []*protocol.Log) {

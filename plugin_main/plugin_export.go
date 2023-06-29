@@ -73,8 +73,8 @@ func InitPluginBaseV2(cfgStr string) int {
 
 //export LoadGlobalConfig
 func LoadGlobalConfig(jsonStr string) int {
-	success := config.LoadGlobalConfig(jsonStr)
-	if success == 0 {
+	retcode := config.LoadGlobalConfig(jsonStr)
+	if retcode == 0 {
 		// Update when both of them are not empty.
 		logger.Debugf(context.Background(), "host IP: %v, hostname: %v",
 			config.LogtailGlobalConfig.HostIP, config.LogtailGlobalConfig.Hostname)
@@ -82,7 +82,7 @@ func LoadGlobalConfig(jsonStr string) int {
 			util.SetNetworkIdentification(config.LogtailGlobalConfig.HostIP, config.LogtailGlobalConfig.Hostname)
 		}
 	}
-	return success
+	return retcode
 }
 
 //export LoadConfig
