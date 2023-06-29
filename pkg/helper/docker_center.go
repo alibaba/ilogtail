@@ -29,6 +29,7 @@ import (
 	"github.com/docker/docker/api/types/events"
 	docker "github.com/docker/docker/client"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
@@ -244,7 +245,7 @@ type DockerInfoDetail struct {
 }
 
 func (did *DockerInfoDetail) IDPrefix() string {
-	return util.GetShortID(did.ContainerInfo.ID)
+	return config.GetShortID(did.ContainerInfo.ID)
 }
 
 func (did *DockerInfoDetail) PodName() string {

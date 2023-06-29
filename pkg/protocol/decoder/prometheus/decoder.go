@@ -30,10 +30,10 @@ import (
 	"github.com/richardartoul/molecule"
 	"github.com/richardartoul/molecule/src/codec"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
-	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 const (
@@ -148,7 +148,7 @@ func (d *Decoder) decodeInExpFmt(data []byte, _ *http.Request) (logs []*protocol
 					},
 				},
 			}
-			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 				log.TimeNs = uint32(sample.Timestamp.UnixNano() % 1e9)
 			}
 			logs = append(logs, log)
@@ -203,7 +203,7 @@ func (d *Decoder) decodeInRemoteWriteFormat(data []byte, req *http.Request) (log
 				Time:     uint32(model.Time(sample.Timestamp).Unix()),
 				Contents: contents,
 			}
-			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 				log.TimeNs = uint32(model.Time(sample.Timestamp).UnixNano() % 1e9)
 			}
 			logs = append(logs, log)

@@ -23,11 +23,11 @@ import (
 
 	"github.com/influxdata/influxdb/models"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	imodels "github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
-	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 const (
@@ -264,7 +264,7 @@ func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []
 				Time:     uint32(s.Time().Unix()),
 				Contents: contents,
 			}
-			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 				log.TimeNs = uint32(s.Time().Nanosecond())
 			}
 			logs = append(logs, log)

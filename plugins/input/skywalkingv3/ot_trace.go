@@ -19,8 +19,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pluginmanager"
 
 	"github.com/pkg/errors"
 )
@@ -71,13 +71,13 @@ func (ot *OtSpan) ToLog() (*protocol.Log, error) {
 	log := &protocol.Log{}
 	if ot.End != 0 {
 		log.Time = uint32(ot.End / int64(1000000))
-		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 			log.TimeNs = uint32((ot.End * 1000) % 1e9)
 		}
 	} else {
 		nowTime := time.Now()
 		log.Time = uint32(nowTime.Unix())
-		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 			log.TimeNs = uint32(nowTime.Nanosecond())
 		}
 	}

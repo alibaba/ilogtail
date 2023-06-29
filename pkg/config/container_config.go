@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package util
+package config
 
 import (
 	"encoding/json"
@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pluginmanager"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 const ContainerIDPrefixSize = 12
@@ -181,9 +181,9 @@ func SerializeDeleteContainerToPb(logGroup *protocol.LogGroup, project string, c
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "project", Value: project})
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "container_ids", Value: containerIDsStr})
 
-	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
+	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: util.GetIPAddress()})
 	log.Time = (uint32)(nowTime.Unix())
-	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+	if LogtailGlobalConfig.EnableTimestampNanosecond {
 		log.TimeNs = (uint32)(nowTime.Nanosecond())
 	}
 	logGroup.Logs = append(logGroup.Logs, log)
@@ -223,9 +223,9 @@ func SerializeContainerToPb(logGroup *protocol.LogGroup) {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "k8s_labels", Value: string(k8sLabelsStr)})
 		}
 
-		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: util.GetIPAddress()})
 		log.Time = (uint32)(nowTime.Unix())
-		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		if LogtailGlobalConfig.EnableTimestampNanosecond {
 			log.TimeNs = (uint32)(nowTime.Nanosecond())
 		}
 		logGroup.Logs = append(logGroup.Logs, log)
@@ -257,10 +257,10 @@ func SerializeConfigResultToPb(logGroup *protocol.LogGroup) {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "flusher.target_addresses", Value: item.FlusherTargetAddress})
 
 		log.Time = (uint32)(nowTime.Unix())
-		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		if LogtailGlobalConfig.EnableTimestampNanosecond {
 			log.TimeNs = (uint32)(nowTime.Nanosecond())
 		}
-		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
+		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: util.GetIPAddress()})
 		logGroup.Logs = append(logGroup.Logs, log)
 	}
 	AddedConfigResult = AddedConfigResult[:0]

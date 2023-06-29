@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/logtail"
@@ -265,13 +266,13 @@ func (idf *InputDockerFile) updateMapping(info *helper.DockerInfoDetail, sourceP
 
 func (idf *InputDockerFile) deleteMapping(id string) {
 	idf.deleteMappingFromLogtail(id)
-	logger.Info(idf.context.GetRuntimeContext(), "container mapping", "deleted", "source path", idf.lastPathMappingCache[id], "id", util.GetShortID(id))
+	logger.Info(idf.context.GetRuntimeContext(), "container mapping", "deleted", "source path", idf.lastPathMappingCache[id], "id", config.GetShortID(id))
 	delete(idf.lastPathMappingCache, id)
 }
 
 func (idf *InputDockerFile) notifyStop(id string) {
 	idf.notifyStopToLogtail(id)
-	logger.Info(idf.context.GetRuntimeContext(), "container mapping", "stopped", "source path", idf.lastPathMappingCache[id], "id", util.GetShortID(id))
+	logger.Info(idf.context.GetRuntimeContext(), "container mapping", "stopped", "source path", idf.lastPathMappingCache[id], "id", config.GetShortID(id))
 }
 
 func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
@@ -303,7 +304,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 		if len(addFullList) > 0 {
 			for _, id := range addFullList {
 				if len(id) > 0 {
-					util.RecordAddedContainerIDs(id)
+					config.RecordAddedContainerIDs(id)
 				}
 			}
 		}
@@ -311,7 +312,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 		if len(deleteFullList) > 0 {
 			for _, id := range deleteFullList {
 				if len(id) > 0 {
-					util.RecordDeletedContainerIDs(util.GetShortID(id))
+					config.RecordDeletedContainerIDs(config.GetShortID(id))
 				}
 			}
 		}
@@ -340,12 +341,12 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 
 		if ok, err := util.PathExists(destPath); err == nil {
 			if !ok {
-				nothavingPathkeys = append(nothavingPathkeys, util.GetShortID(k))
+				nothavingPathkeys = append(nothavingPathkeys, config.GetShortID(k))
 			} else {
-				havingPathkeys = append(havingPathkeys, util.GetShortID(k))
+				havingPathkeys = append(havingPathkeys, config.GetShortID(k))
 			}
 		} else {
-			nothavingPathkeys = append(nothavingPathkeys, util.GetShortID(k))
+			nothavingPathkeys = append(nothavingPathkeys, config.GetShortID(k))
 			logger.Warning(idf.context.GetRuntimeContext(), "check docker mount path error", err.Error())
 		}
 
@@ -360,22 +361,22 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 		}
 	}
 	if idf.CollectContainersFlag {
-		configResult := &util.ConfigResult{
+		configResult := &config.ConfigResult{
 			DataType:                      "container_config_result",
 			Project:                       idf.context.GetProject(),
 			Logstore:                      idf.context.GetLogstore(),
 			ConfigName:                    idf.context.GetConfigName(),
 			SourceAddress:                 fmt.Sprintf("%s/**/%s", idf.LogPath, idf.FileParttern),
-			PathExistInputContainerIDs:    util.GetStringFromList(havingPathkeys),
-			PathNotExistInputContainerIDs: util.GetStringFromList(nothavingPathkeys),
+			PathExistInputContainerIDs:    config.GetStringFromList(havingPathkeys),
+			PathNotExistInputContainerIDs: config.GetStringFromList(nothavingPathkeys),
 			InputType:                     "file_log",
 			InputIsContainerFile:          "true",
 			FlusherType:                   "flusher_sls",
 			FlusherTargetAddress:          fmt.Sprintf("%s/%s", idf.context.GetProject(), idf.context.GetLogstore()),
 		}
-		util.RecordConfigResultMap(configResult)
+		config.RecordConfigResultMap(configResult)
 		if newCount != 0 || delCount != 0 {
-			util.RecordConfigResultIncrement(configResult)
+			config.RecordConfigResultIncrement(configResult)
 		}
 		logger.Debugf(idf.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
 	}

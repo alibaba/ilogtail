@@ -23,12 +23,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
-	"github.com/alibaba/ilogtail/pluginmanager"
 
 	dogstatsd "github.com/narqo/go-dogstatsd-parser"
 	"github.com/prometheus/common/model"
@@ -108,7 +108,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 				},
 			},
 		}
-		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 			log.TimeNs = uint32(now.Nanosecond())
 		}
 		logs = append(logs, log)

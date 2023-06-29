@@ -21,9 +21,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pluginmanager"
 	v3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/common/v3"
 	agent "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/language/agent/v3"
 	loggingV3 "github.com/alibaba/ilogtail/plugins/input/skywalkingv3/skywalking/network/logging/v3"
@@ -100,7 +100,7 @@ func (l *loggingHandler) convertFormat(data *loggingV3.LogData) *protocol.Log {
 		Time:     uint32(data.Timestamp / 1000),
 		Contents: make([]*protocol.Log_Content, 0),
 	}
-	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 		r.TimeNs = uint32((data.Timestamp * 1e6) % 1e9)
 	}
 
@@ -125,7 +125,7 @@ func (l *loggingHandler) convertBrowserErrorLog(data *agent.BrowserErrorLog) *pr
 		Time:     uint32(data.Time / 1000),
 		Contents: make([]*protocol.Log_Content, 0),
 	}
-	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 		r.TimeNs = uint32((data.Time * 1e6) % 1e9)
 	}
 

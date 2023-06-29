@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 var GlobalAlarm *Alarm
@@ -41,11 +40,11 @@ func DeleteAlarm(key string) {
 	delete(RegisterAlarms, key)
 }
 
-func RegisterAlarmsSerializeToPb(logGroup *protocol.LogGroup) {
+func RegisterAlarmsSerializeToPb(logGroup *protocol.LogGroup, enableTimestampNanosecond bool) {
 	regMu.Lock()
 	defer regMu.Unlock()
 	for _, alarm := range RegisterAlarms {
-		alarm.SerializeToPb(logGroup)
+		alarm.SerializeToPb(logGroup, enableTimestampNanosecond)
 	}
 }
 
@@ -91,7 +90,7 @@ func (p *Alarm) Record(alarmType, message string) {
 	mu.Unlock()
 }
 
-func (p *Alarm) SerializeToPb(logGroup *protocol.LogGroup) {
+func (p *Alarm) SerializeToPb(logGroup *protocol.LogGroup, enableTimestampNanosecond bool) {
 	nowTime := time.Now()
 	mu.Lock()
 	for alarmType, item := range p.AlarmMap {
@@ -106,7 +105,7 @@ func (p *Alarm) SerializeToPb(logGroup *protocol.LogGroup) {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "alarm_message", Value: item.Message})
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: GetIPAddress()})
 		log.Time = (uint32)(nowTime.Unix())
-		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		if enableTimestampNanosecond {
 			log.TimeNs = (uint32)(nowTime.Nanosecond())
 		}
 		logGroup.Logs = append(logGroup.Logs, log)

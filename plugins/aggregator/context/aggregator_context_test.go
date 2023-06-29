@@ -25,6 +25,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
@@ -180,7 +181,7 @@ func generateLogs(agg *AggregatorContext, logNum int, withCtx bool, logNo []int,
 		log := &protocol.Log{
 			Time: uint32(nowTime.Unix()),
 		}
-		if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+		if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 			log.TimeNs = uint32(nowTime.Nanosecond())
 		}
 		if isShort {
@@ -276,7 +277,7 @@ func BenchmarkAdd(b *testing.B) {
 		Time:     uint32(nowTime.Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
-	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	ctx := make([]map[string]interface{}, 10)
@@ -310,7 +311,7 @@ func benchmarkLogSource(b *testing.B, num int) {
 		Time:     uint32(nowTime.Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
-	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	ctx := make([]map[string]interface{}, num)
@@ -345,7 +346,7 @@ func benchmarkLogProducingPace(b *testing.B, num int) {
 		Time:     uint32(nowTime.Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
-	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	ctx := make([]map[string]interface{}, 10)
@@ -387,7 +388,7 @@ func benchmarkLogLength(b *testing.B, len string) {
 		Time:     uint32(nowTime.Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: value}},
 	}
-	if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 		log.TimeNs = uint32(nowTime.Nanosecond())
 	}
 	ctx := make([]map[string]interface{}, 10)

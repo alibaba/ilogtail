@@ -19,10 +19,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 // 24h
@@ -42,12 +42,12 @@ var k8sLabelSet map[string]struct{}
 func timerRecordData() {
 	recordContainers(make(map[string]struct{}))
 	// record all container config result at same time
-	util.RecordConfigResult()
+	config.RecordConfigResult()
 }
 
 // 记录增量的容器
 func recordAddedContainers() {
-	containerIDs := util.GetAddedContainerIDs()
+	containerIDs := config.GetAddedContainerIDs()
 	if len(containerIDs) > 0 {
 		recordContainers(containerIDs)
 	}
@@ -64,13 +64,13 @@ func recordContainers(containerIDs map[string]struct{}) {
 			keys = append(keys, k)
 		}
 	}
-	projectStr := util.GetStringFromList(keys)
+	projectStr := config.GetStringFromList(keys)
 	// get add container
 	envAndLabelMutex.Lock()
 	result := helper.GetAllContainerToRecord(envSet, containerLabelSet, k8sLabelSet, containerIDs)
 	envAndLabelMutex.Unlock()
 	for _, containerInfo := range result {
-		var containerDetailToRecord util.ContainerDetail
+		var containerDetailToRecord config.ContainerDetail
 		containerDetailToRecord.Project = projectStr
 		containerDetailToRecord.DataType = "all_container_info"
 		containerDetailToRecord.ContainerID = containerInfo.Detail.ContainerInfo.ID
@@ -89,17 +89,17 @@ func recordContainers(containerIDs map[string]struct{}) {
 		containerDetailToRecord.Env = containerInfo.Env
 		containerDetailToRecord.ContainerLabels = containerInfo.ContainerLabels
 		containerDetailToRecord.K8sLabels = containerInfo.K8sLabels
-		util.RecordAddedContainer(&containerDetailToRecord)
+		config.RecordAddedContainer(&containerDetailToRecord)
 	}
 }
 
 func CollectContainers(logGroup *protocol.LogGroup) {
 	recordAddedContainers()
-	util.SerializeContainerToPb(logGroup)
+	config.SerializeContainerToPb(logGroup)
 }
 
 func CollectDeleteContainers(logGroup *protocol.LogGroup) {
-	containerIDs := util.GetDeletedContainerIDs()
+	containerIDs := config.GetDeletedContainerIDs()
 	logger.Debugf(context.Background(), "GetDeletedContainerIDs", containerIDs)
 	if len(containerIDs) > 0 {
 		projectSet := make(map[string]struct{})
@@ -114,7 +114,7 @@ func CollectDeleteContainers(logGroup *protocol.LogGroup) {
 				keys = append(keys, k)
 			}
 		}
-		projectStr := util.GetStringFromList(keys)
+		projectStr := config.GetStringFromList(keys)
 
 		ids := make([]string, 0, len(containerIDs))
 		for id := range containerIDs {
@@ -122,12 +122,12 @@ func CollectDeleteContainers(logGroup *protocol.LogGroup) {
 				ids = append(ids, id)
 			}
 		}
-		util.SerializeDeleteContainerToPb(logGroup, projectStr, util.GetStringFromList(ids))
+		config.SerializeDeleteContainerToPb(logGroup, projectStr, config.GetStringFromList(ids))
 	}
 }
 
 func CollectConfigResult(logGroup *protocol.LogGroup) {
-	util.SerializeConfigResultToPb(logGroup)
+	config.SerializeConfigResultToPb(logGroup)
 }
 
 func refreshEnvAndLabel() {
@@ -200,12 +200,12 @@ func compareEnvAndLabelAndRecordContainer() {
 				keys = append(keys, k)
 			}
 		}
-		projectStr := util.GetStringFromList(keys)
+		projectStr := config.GetStringFromList(keys)
 		result := helper.GetAllContainerIncludeEnvAndLabelToRecord(envSet, containerLabelSet, k8sLabelSet, diffEnvSet, diffContainerLabelSet, diffK8sLabelSet)
 		logger.Debugf(context.Background(), "GetAllContainerIncludeEnvAndLabelToRecord", result)
 
 		for _, containerInfo := range result {
-			var containerDetailToRecord util.ContainerDetail
+			var containerDetailToRecord config.ContainerDetail
 			containerDetailToRecord.Project = projectStr
 			containerDetailToRecord.DataType = "all_container_info"
 			containerDetailToRecord.ContainerID = containerInfo.Detail.ContainerInfo.ID
@@ -224,7 +224,7 @@ func compareEnvAndLabelAndRecordContainer() {
 			containerDetailToRecord.Env = containerInfo.Env
 			containerDetailToRecord.ContainerLabels = containerInfo.ContainerLabels
 			containerDetailToRecord.K8sLabels = containerInfo.K8sLabels
-			util.RecordAddedContainer(&containerDetailToRecord)
+			config.RecordAddedContainer(&containerDetailToRecord)
 		}
 	}
 }

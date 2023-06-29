@@ -15,11 +15,11 @@
 package logregex
 
 import (
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pluginmanager"
 
 	"regexp"
 	"time"
@@ -114,13 +114,13 @@ func (p *ProcessorSplitRegex) ProcessLogs(logArray []*protocol.Log) []*protocol.
 		}
 		if log.Time != uint32(0) {
 			newLog.Time = log.Time
-			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 				newLog.TimeNs = log.TimeNs
 			}
 		} else {
 			nowTime := time.Now()
 			newLog.Time = (uint32)(nowTime.Unix())
-			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 				newLog.TimeNs = (uint32)(nowTime.Nanosecond())
 			}
 		}

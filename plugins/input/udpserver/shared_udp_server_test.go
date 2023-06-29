@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
@@ -70,7 +71,7 @@ func TestSharedUDPServer_cutDispatchTag(t *testing.T) {
 					},
 				},
 			}
-			if pluginmanager.LogtailGlobalConfig.EnableTimestampNanosecond {
+			if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 				log.TimeNs = uint32(nowTime.Nanosecond())
 			}
 
