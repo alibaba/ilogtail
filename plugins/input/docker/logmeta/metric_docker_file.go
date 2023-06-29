@@ -361,7 +361,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 		}
 	}
 	if idf.CollectContainersFlag {
-		configResult := &config.ConfigResult{
+		configResult := &config.ContainerConfigResult{
 			DataType:                      "container_config_result",
 			Project:                       idf.context.GetProject(),
 			Logstore:                      idf.context.GetLogstore(),
@@ -374,9 +374,9 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 			FlusherType:                   "flusher_sls",
 			FlusherTargetAddress:          fmt.Sprintf("%s/%s", idf.context.GetProject(), idf.context.GetLogstore()),
 		}
-		config.RecordConfigResultMap(configResult)
+		config.RecordContainerConfigResultMap(configResult)
 		if newCount != 0 || delCount != 0 {
-			config.RecordConfigResultIncrement(configResult)
+			config.RecordContainerConfigResultIncrement(configResult)
 		}
 		logger.Debugf(idf.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
 	}

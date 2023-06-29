@@ -42,7 +42,7 @@ var k8sLabelSet map[string]struct{}
 func timerRecordData() {
 	recordContainers(make(map[string]struct{}))
 	// record all container config result at same time
-	config.RecordConfigResult()
+	config.RecordContainerConfigResult()
 }
 
 // 记录增量的容器
@@ -127,7 +127,7 @@ func CollectDeleteContainers(logGroup *protocol.LogGroup) {
 }
 
 func CollectConfigResult(logGroup *protocol.LogGroup) {
-	config.SerializeConfigResultToPb(logGroup)
+	config.SerializeContainerConfigResultToPb(logGroup)
 }
 
 func refreshEnvAndLabel() {

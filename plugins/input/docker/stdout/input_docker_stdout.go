@@ -295,7 +295,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 					keys = append(keys, config.GetShortID(k))
 				}
 			}
-			configResult := &config.ConfigResult{
+			configResult := &config.ContainerConfigResult{
 				DataType:                   "container_config_result",
 				Project:                    sds.context.GetProject(),
 				Logstore:                   sds.context.GetLogstore(),
@@ -306,9 +306,9 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 				FlusherType:                "flusher_sls",
 				FlusherTargetAddress:       fmt.Sprintf("%s/%s", sds.context.GetProject(), sds.context.GetLogstore()),
 			}
-			config.RecordConfigResultMap(configResult)
+			config.RecordContainerConfigResultMap(configResult)
 			if newCount != 0 || delCount != 0 {
-				config.RecordConfigResultIncrement(configResult)
+				config.RecordContainerConfigResultIncrement(configResult)
 			}
 			logger.Debugf(sds.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
 		}
