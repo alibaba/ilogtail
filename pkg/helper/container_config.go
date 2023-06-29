@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package helper
 
 import (
 	"encoding/json"
@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
@@ -183,7 +184,7 @@ func SerializeDeleteContainerToPb(logGroup *protocol.LogGroup, project string, c
 
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: util.GetIPAddress()})
 	log.Time = (uint32)(nowTime.Unix())
-	if LogtailGlobalConfig.EnableTimestampNanosecond {
+	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 		log.TimeNs = (uint32)(nowTime.Nanosecond())
 	}
 	logGroup.Logs = append(logGroup.Logs, log)
@@ -225,7 +226,7 @@ func SerializeContainerToPb(logGroup *protocol.LogGroup) {
 
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: util.GetIPAddress()})
 		log.Time = (uint32)(nowTime.Unix())
-		if LogtailGlobalConfig.EnableTimestampNanosecond {
+		if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 			log.TimeNs = (uint32)(nowTime.Nanosecond())
 		}
 		logGroup.Logs = append(logGroup.Logs, log)
@@ -257,7 +258,7 @@ func SerializeContainerConfigResultToPb(logGroup *protocol.LogGroup) {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "flusher.target_addresses", Value: item.FlusherTargetAddress})
 
 		log.Time = (uint32)(nowTime.Unix())
-		if LogtailGlobalConfig.EnableTimestampNanosecond {
+		if config.LogtailGlobalConfig.EnableTimestampNanosecond {
 			log.TimeNs = (uint32)(nowTime.Nanosecond())
 		}
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "ip", Value: util.GetIPAddress()})

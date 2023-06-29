@@ -23,7 +23,6 @@ import (
 
 	"github.com/docker/docker/api/types"
 
-	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -275,7 +274,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 		if len(addFullList) > 0 {
 			for _, id := range addFullList {
 				if len(id) > 0 {
-					config.RecordAddedContainerIDs(id)
+					helper.RecordAddedContainerIDs(id)
 				}
 			}
 		}
@@ -283,7 +282,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 		if len(deleteFullList) > 0 {
 			for _, id := range deleteFullList {
 				if len(id) > 0 {
-					config.RecordDeletedContainerIDs(config.GetShortID(id))
+					helper.RecordDeletedContainerIDs(helper.GetShortID(id))
 				}
 			}
 		}
@@ -292,23 +291,23 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 			keys := make([]string, 0, len(sds.matchList))
 			for k := range sds.matchList {
 				if len(k) > 0 {
-					keys = append(keys, config.GetShortID(k))
+					keys = append(keys, helper.GetShortID(k))
 				}
 			}
-			configResult := &config.ContainerConfigResult{
+			configResult := &helper.ContainerConfigResult{
 				DataType:                   "container_config_result",
 				Project:                    sds.context.GetProject(),
 				Logstore:                   sds.context.GetLogstore(),
 				ConfigName:                 sds.context.GetConfigName(),
-				PathExistInputContainerIDs: config.GetStringFromList(keys),
+				PathExistInputContainerIDs: helper.GetStringFromList(keys),
 				SourceAddress:              "stdout",
 				InputType:                  input.ServiceDockerStdoutPluginName,
 				FlusherType:                "flusher_sls",
 				FlusherTargetAddress:       fmt.Sprintf("%s/%s", sds.context.GetProject(), sds.context.GetLogstore()),
 			}
-			config.RecordContainerConfigResultMap(configResult)
+			helper.RecordContainerConfigResultMap(configResult)
 			if newCount != 0 || delCount != 0 {
-				config.RecordContainerConfigResultIncrement(configResult)
+				helper.RecordContainerConfigResultIncrement(configResult)
 			}
 			logger.Debugf(sds.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
 		}
@@ -342,7 +341,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 	// delete container
 	for id, syner := range sds.synerMap {
 		if _, ok := dockerInfos[id]; !ok {
-			logger.Info(sds.context.GetRuntimeContext(), "docker stdout", "deleted", "id", config.GetShortID(id), "name", syner.info.ContainerInfo.Name)
+			logger.Info(sds.context.GetRuntimeContext(), "docker stdout", "deleted", "id", helper.GetShortID(id), "name", syner.info.ContainerInfo.Name)
 			syner.dockerFileReader.Stop()
 			delete(sds.synerMap, id)
 			sds.deleteMetric.Add(1)
