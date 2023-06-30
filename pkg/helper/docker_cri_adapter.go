@@ -605,6 +605,11 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSO
 		"/var/run/containerd",
 	}
 
+	// TODO If the containerd interface provides the absolute path to the rootfs, optimize lookupContainerRootfsAbsDir method.
+	if len(os.Getenv("CONTAINERD_ROOT_PATH")) > 0 {
+		aDirs = append(aDirs, os.Getenv("CONTAINERD_ROOT_PATH"))
+	}
+
 	bDirs := []string{
 		"io.containerd.runtime.v2.task",
 		"io.containerd.runtime.v1.linux",
