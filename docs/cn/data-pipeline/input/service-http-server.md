@@ -30,6 +30,7 @@
 | DumpData           | Boolean           | 否    | [开发使用] 将接收的请求存储于本地文件, 默认取值为:`false`                                                                                                                                                                                    |
 | DumpDataKeepFiles  | Int               | 否    | [开发使用] Dump文件保留文件数目, 文件按小时滚动, 此参数默认值为5, 表示保留5小时Dump 参数                                                                                                                                                                 |
 | AllowUnsafeMode    | Boolean           | 否    | 是否允许unsafe模式的Decode，启用该模式，Decoder将可能利用go unsafe技术来加速解码，目前仅当Format=prometheus时有效(注：暂不支持Exemplar、Histogram)                                                                                                              |
+| Shuffler    | Struct           | 否    | 添加Shuffler，把数据路由给其他ilogtail实例｜
 
 ## 样例
 

@@ -55,9 +55,9 @@ type ServiceHTTP struct {
 	shuffler    extensions.Shuffler
 
 	DumpDataKeepFiles  int
-	DumpData           bool   // would dump the received data to a local file, which is only used to valid data by the developers.
-	Decoder            string // the decoder to use, default is "ext_default_decoder"
-	Shuffler           string // whether to shuffler data to other ilogtail instance
+	DumpData           bool            // would dump the received data to a local file, which is only used to valid data by the developers.
+	Decoder            string          // the decoder to use, default is "ext_default_decoder"
+	Shuffler           *ShufflerConfig // whether to shuffler data to other ilogtail instance
 	Format             string
 	Address            string
 	Path               string
@@ -103,9 +103,11 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	}
 	s.decoder = decoder
 
-	if ext, _ := context.GetExtension(s.Shuffler, nil); ext != nil {
-		if shuffler, ok := ext.(extensions.Shuffler); ok {
-			s.shuffler = shuffler
+	if s.Shuffler != nil {
+		if ext, _ := context.GetExtension(s.Shuffler.Name, s.Shuffler.Properties); ext != nil {
+			if shuffler, ok := ext.(extensions.Shuffler); ok {
+				s.shuffler = shuffler
+			}
 		}
 	}
 
@@ -354,7 +356,12 @@ func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string 
 // Stop stops the services and closes any necessary channels and connections
 func (s *ServiceHTTP) Stop() error {
 	if s.shuffler != nil {
-		s.shuffler.Stop()
+		logger.Infof(s.context.GetRuntimeContext(), "stop shuffler %s in http server", s.Shuffler)
+		err := s.shuffler.Stop()
+		if err != nil {
+			logger.Warningf(s.context.GetRuntimeContext(), "SHUFFLER_STOP_FAILURE", "failed to stop shuffler %s", s.Shuffler)
+		}
+
 	}
 
 	if s.listener != nil {
@@ -381,4 +388,9 @@ func init() {
 			Tags:               map[string]string{},
 		}
 	}
+}
+
+type ShufflerConfig struct {
+	Name       string         `json:"Name" mapstructure:"Name"`
+	Properties map[string]any `json:"Properties" mapstructure:"Properties"`
 }

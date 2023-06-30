@@ -430,11 +430,12 @@ func init() {
 }
 
 type mockShuffler struct {
-	ctx        context.Context
-	cancelFunc context.CancelFunc
-	wg         sync.WaitGroup
-	sendChan   chan *models.PipelineGroupEvents // it is recvChan for ilogtail plugins
-	recvChan   chan *models.PipelineGroupEvents // it is sendChan for ilogtail plugins
+	ctx                context.Context
+	cancelFunc         context.CancelFunc
+	wg                 sync.WaitGroup
+	CutsomizedProperty int
+	sendChan           chan *models.PipelineGroupEvents // it is recvChan for ilogtail plugins
+	recvChan           chan *models.PipelineGroupEvents // it is sendChan for ilogtail plugins
 }
 
 func (s *mockShuffler) Description() string {
@@ -492,10 +493,26 @@ func (s *mockShuffler) Done() <-chan struct{} {
 }
 
 func TestInputInfluxDB_WithShuffler(t *testing.T) {
-	input, err := newInputWithOpts("influx", func(input *ServiceHTTP) {
-		input.Shuffler = "ext_mock_shuffler"
+	input0, err := newInputWithOpts("influx", func(input *ServiceHTTP) {
+		input.Shuffler = &ShufflerConfig{
+			Name: "ext_mock_shuffler",
+		}
 	})
 	require.NoError(t, err)
+	assert.Equal(t, 0, input0.shuffler.(*mockShuffler).CutsomizedProperty)
+
+	defer func() {
+		require.NoError(t, input0.Stop())
+	}()
+
+	input, err := newInputWithOpts("influx", func(input *ServiceHTTP) {
+		input.Shuffler = &ShufflerConfig{
+			Name:       "ext_mock_shuffler",
+			Properties: map[string]any{"CutsomizedProperty": 10},
+		}
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 10, input.shuffler.(*mockShuffler).CutsomizedProperty)
 
 	pipelineCtx := pipeline.NewObservePipelineConext(10)
 	err = input.StartService(pipelineCtx)
