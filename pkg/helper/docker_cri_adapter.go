@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -606,10 +607,15 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSO
 	}
 
 	// TODO If the containerd interface provides the absolute path to the rootfs, optimize lookupContainerRootfsAbsDir method.
-	if len(os.Getenv("CONTAINERD_ROOT_PATH")) > 0 {
-		aDirs = append(aDirs, os.Getenv("CONTAINERD_ROOT_PATH"))
+	if len(os.Getenv("CONTAINERD_ROOT_DIR")) > 0 {
+		dir := os.Getenv("CONTAINERD_ROOT_DIR")
+		absPath, err := filepath.Abs(dir)
+		if err != nil {
+			logger.Errorf(context.Background(), "CHECK_CUSTOM_CONTAINERD_ROOT_DIR_FAILED", "failed to parse custom containerd root dir, please check it. dir: %s, error: %v", absPath, err)
+		} else {
+			aDirs = append(aDirs, absPath)
+		}
 	}
-
 	bDirs := []string{
 		"io.containerd.runtime.v2.task",
 		"io.containerd.runtime.v1.linux",
