@@ -16,11 +16,13 @@ package httpserver
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -28,6 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	pluginmanager "github.com/alibaba/ilogtail/pluginmanager"
@@ -414,4 +417,107 @@ func TestInputWithRequestParamsWithoutPrefix(t *testing.T) {
 		}
 	}
 
+}
+
+func init() {
+	pipeline.AddExtensionCreator("ext_mock_shuffler", func() pipeline.Extension {
+		return &mockShuffler{
+			ctx:      context.Background(),
+			sendChan: make(chan *models.PipelineGroupEvents, 1024),
+			recvChan: make(chan *models.PipelineGroupEvents, 1024),
+		}
+	})
+}
+
+type mockShuffler struct {
+	ctx        context.Context
+	cancelFunc context.CancelFunc
+	wg         sync.WaitGroup
+	sendChan   chan *models.PipelineGroupEvents // it is recvChan for ilogtail plugins
+	recvChan   chan *models.PipelineGroupEvents // it is sendChan for ilogtail plugins
+}
+
+func (s *mockShuffler) Description() string {
+	return "mock shuffler for ut"
+}
+
+func (s *mockShuffler) Init(_ pipeline.Context) (err error) {
+	s.ctx, s.cancelFunc = context.WithCancel(context.Background())
+	return
+}
+
+func (s *mockShuffler) Start() (err error) {
+	s.ctx, s.cancelFunc = context.WithCancel(context.Background())
+	s.wg.Add(1)
+
+	go func() {
+		defer s.wg.Done()
+		for {
+			select {
+			case pg := <-s.recvChan:
+				s.sendChan <- pg
+			case <-s.ctx.Done():
+				return
+			}
+		}
+	}()
+	return
+}
+
+func (s *mockShuffler) Stop() (err error) {
+	s.cancelFunc()
+	s.wg.Wait()
+	return
+}
+
+func (s *mockShuffler) CollectList(groupEventsList ...*models.PipelineGroupEvents) {
+	for i := range groupEventsList {
+		select {
+		case s.recvChan <- groupEventsList[i]:
+		case <-s.ctx.Done(): // discard all the data
+		}
+	}
+}
+
+func (s *mockShuffler) SendChan() chan<- *models.PipelineGroupEvents {
+	return s.recvChan
+}
+
+func (s *mockShuffler) RecvChan() <-chan *models.PipelineGroupEvents {
+	return s.sendChan
+}
+
+func (s *mockShuffler) Done() <-chan struct{} {
+	return s.ctx.Done()
+}
+
+func TestInputInfluxDB_WithShuffler(t *testing.T) {
+	input, err := newInputWithOpts("influx", func(input *ServiceHTTP) {
+		input.Shuffler = "ext_mock_shuffler"
+	})
+	require.NoError(t, err)
+
+	pipelineCtx := pipeline.NewObservePipelineConext(10)
+	err = input.StartService(pipelineCtx)
+	require.NoError(t, err)
+	port := input.listener.Addr().(*net.TCPAddr).Port
+
+	defer func() {
+		require.NoError(t, input.Stop())
+	}()
+
+	err = sendRequest(textFormatInflux, port)
+	require.NoError(t, err)
+	err = sendRequest(textFormatInflux, port)
+	require.NoError(t, err)
+
+	time.Sleep(time.Second * 2)
+
+	pgs := pipelineCtx.Collector().Observe()
+	assert.Equal(t, 2, len(pgs))
+
+	pg0 := <-pgs
+	assert.Equal(t, 13, len(pg0.Events))
+	pg1 := <-pgs
+	assert.Equal(t, 13, len(pg1.Events))
 }

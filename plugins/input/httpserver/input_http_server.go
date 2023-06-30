@@ -200,13 +200,7 @@ func (s *ServiceHTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if s.shuffler != nil {
-			for _, v := range groups {
-				select {
-				case s.shuffler.SendChan() <- v:
-				default:
-					logger.Warningf(s.context.GetRuntimeContext(), "DISCARD_DATA_BEFORE_SHUFFLE", "shuffler channel is full")
-				}
-			}
+			s.shuffler.CollectList(groups...)
 		} else {
 			s.collectorV2.CollectList(groups...)
 		}
@@ -264,7 +258,10 @@ func (s *ServiceHTTP) start() error {
 	s.wg.Add(1)
 
 	if s.shuffler != nil {
-		s.shuffler.Start()
+		err := s.shuffler.Start()
+		if err != nil {
+			return err
+		}
 
 		go func() {
 			for {
@@ -357,7 +354,7 @@ func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string 
 // Stop stops the services and closes any necessary channels and connections
 func (s *ServiceHTTP) Stop() error {
 	if s.shuffler != nil {
-		s.Stop()
+		s.shuffler.Stop()
 	}
 
 	if s.listener != nil {
