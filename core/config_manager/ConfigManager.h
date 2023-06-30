@@ -62,6 +62,7 @@ public:
 
     Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson);
 
+    void InitConfigServiceClient();
 private:
     ThreadPtr mCheckUpdateThreadPtr;
 
@@ -95,6 +96,8 @@ private:
      * @return
      */
     void CreateCustomizedFuseConfig() override;
+
+    ConfigServiceClientBase* mConfigServiceClient;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class SenderUnittest;

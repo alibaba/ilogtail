@@ -137,6 +137,9 @@ private:
     //   local time to adjust logs' time automatically.
     bool mEnableLogTimeAutoAdjust = false;
 
+    // ilogtail_config.json file data
+    Json::Value mConfJson;
+
     /**
      * @brief Load ConfigServer, DataServer and network interface
      *
@@ -370,6 +373,7 @@ public:
 
     inline bool EnableLogTimeAutoAdjust() const { return mEnableLogTimeAutoAdjust; }
 
+    const std::string GetStringParameter(const char* name, const char* envName);
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;
     friend class ConfigUpdatorUnittest;

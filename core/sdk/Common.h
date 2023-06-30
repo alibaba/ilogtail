@@ -340,6 +340,7 @@ namespace sdk {
     class LogsClosure;
 
     struct AsynRequest {
+        AsynRequest(){};
         AsynRequest(const std::string& httpMethod,
                     const std::string& host,
                     const int32_t port,

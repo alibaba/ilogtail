@@ -32,6 +32,7 @@
 #include "common/Lock.h"
 #include "common/Thread.h"
 #include "event/Event.h"
+#include "sdk/Common.h"
 
 DECLARE_FLAG_BOOL(https_verify_peer);
 DECLARE_FLAG_STRING(https_ca_cert);
@@ -143,6 +144,7 @@ protected:
     int32_t mLogtailSysConfUpdateTime;
     std::string mUUID;
     std::string mInstanceId;
+    std::string mSessionId;
     int32_t mProcessStartTime;
     std::atomic_int mConfigUpdateTotal{0};
     std::atomic_int mConfigUpdateItemTotal{0};
@@ -286,6 +288,7 @@ public:
     }
 
     std::string GetInstanceId() { return mInstanceId; }
+    std::string GetSessionId() { return mSessionId; }
 
     void InsertAliuidSet(const std::string& aliuid);
     void SetAliuidSet(const std::vector<std::string>& aliuidList);
@@ -474,6 +477,7 @@ public:
     void InsertRegionAliuidMap(const std::string& region, const std::string& aliuid);
     void ClearRegionAliuidMap();
 
+    std::unordered_map<std::string, int64_t> GetMServerYamlConfigVersionMap(){ return mServerYamlConfigVersionMap; };
 private:
     // no copy
     ConfigManagerBase(const ConfigManagerBase&);
@@ -558,6 +562,20 @@ private:
     friend class MultiServerConfigUpdatorUnitest;
     friend class CreateModifyHandlerUnittest;
 #endif
+};
+
+class ConfigServiceClientBase {
+public:
+    ConfigServiceClientBase() = default;
+    virtual ~ConfigServiceClientBase() {};
+    // initialization client resources such as ak/sk and some variable you need
+    virtual void InitClient() = 0;
+    // update credential such as ak/sk if your config server needed and it has expire limitation
+    virtual bool FlushCredential() = 0;
+    // sign http request header if your config server need request with authentication
+    virtual void SignHeader(sdk::AsynRequest& request) = 0;
+	virtual void SendMetadata() = 0;
+	virtual sdk::AsynRequest GenerateHeartBeatRequest(const AppConfig::ConfigServerAddress& configServerAddress, const std::string requestId) = 0;
 };
 
 } // namespace logtail

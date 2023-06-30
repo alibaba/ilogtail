@@ -53,10 +53,13 @@ message ConfigDetail {
 message AgentAttributes {
     string version = 1;                 // Agent's version
     string category = 2;                // Agent's type(used to distinguish AGENT_CONFIG)
-    string ip = 3;                      // Agent's ip
-    string hostname = 4;                // Agent's hostname
-    string region = 5;                  // Agent's region
-    string zone = 6;                    // Agent's zone
+    string ip = 3;                      // Agent machine's ip
+    string hostname = 4;                // Agent machine's hostname
+    string region = 5;                  // Agent machine's region
+    string zone = 6;                    // Agent machine's zone
+    string account_id = 7;              // Agent machine's account id
+    string os = 8;                      // Agent machine's os
+    string instance_id = 9;             // Agent machine's instance id
     map<string, string> extras = 100;   // Agent's other attributes
 }
 
@@ -83,6 +86,7 @@ message HeartBeatRequest {
     int32 interval = 8;                         // Agent's heartbeat interval
     repeated ConfigInfo pipeline_configs = 9;   // Information about the current PIPELINE_CONFIG held by the Agent
     repeated ConfigInfo agent_configs = 10;     // Information about the current AGENT_CONFIG held by the Agent
+    string agent_session_id =11;                // Agent's session id
 }
 
 // ConfigServer's response to Agent's heartbeats
@@ -131,4 +135,24 @@ message FetchAgentConfigResponse {
     string message = 3;                   
 
     repeated ConfigDetail config_details = 4;   // AGENT_CONFIGs' detail
+}
+
+// API: /Agent/Metadata/
+// Agent sends requests to the ConfigServer to send agent's metadata
+message MetadataRequest {
+    string request_id = 1;  
+
+    string agent_id = 2;                        // Required, Agent's unique it will not be changed when restart
+    string agent_session_id = 3;                // Required, Agent's instance unique identification, it will be changed when restart
+    string agent_type = 4;                      // Required, Agent's type(ilogtail, ..)
+    int64 startup_time = 5;                     // Required, Agent's startup time
+    int32 interval = 6;                         // Agent's heartbeat interval
+    AgentAttributes attributes = 7;             // Agent's basic attributes
+}
+
+// ConfigServer's response to Agent's request
+message MetadataResponse {
+    string request_id = 1;  
+    RespCode code = 2;
+    string message = 3;
 }
