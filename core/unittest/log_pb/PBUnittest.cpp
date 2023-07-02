@@ -62,8 +62,7 @@ public:
         kv = log->add_contents();
         kv->set_key("");
         kv->set_value("890xyz");
-        log->set_time(ts.tv_sec);
-        log->set_time_ns(ts.tv_nsec);
+        SetLogTime(log, ts.tv_sec, ts.tv_nsec);
 
         string rawLogStr;
         rawLog->AppendToString(&rawLogStr);
@@ -100,8 +99,7 @@ public:
         kv = log->add_contents();
         kv->set_key("key4");
         kv->set_value("value");
-        log->set_time(ts.tv_sec);
-        log->set_time_ns(ts.tv_nsec);
+        SetLogTime(log, ts.tv_sec, ts.tv_nsec);
 
         string rawLogStr;
         rawLog.AppendToString(&rawLogStr);
@@ -135,8 +133,7 @@ public:
         kv = log->add_contents();
         kv->set_key("key4");
         kv->set_value(longLogValue1000);
-        log->set_time(ts.tv_sec);
-        log->set_time_ns(ts.tv_nsec);
+        SetLogTime(log, ts.tv_sec, ts.tv_nsec);
 
         string rawLogStr;
         rawLog.AppendToString(&rawLogStr);
@@ -224,8 +221,7 @@ public:
         kv = log->add_contents();
         kv->set_key("key4");
         kv->set_value("value4");
-        log->set_time(ts.tv_sec);
-        log->set_time_ns(ts.tv_nsec);
+        SetLogTime(log, ts.tv_sec, ts.tv_nsec);
 
         string rawLogStr;
         rawLog.AppendToString(&rawLogStr);
@@ -260,8 +256,7 @@ public:
         kv = log->add_contents();
         kv->set_key("key4");
         kv->set_value("value");
-        log->set_time(ts.tv_sec);
-        log->set_time_ns(ts.tv_nsec);
+        SetLogTime(log, ts.tv_sec, ts.tv_nsec);
 
 
         RawLogGroup* pRawLogGroup = new RawLogGroup;
@@ -323,8 +318,7 @@ public:
         kv = log->add_contents();
         kv->set_key("key4");
         kv->set_value("value");
-        log->set_time(ts.tv_sec);
-        log->set_time_ns(ts.tv_nsec);
+        SetLogTime(log, ts.tv_sec, ts.tv_nsec);
 
 
         RawLogGroup* pRawLogGroup = new RawLogGroup;
@@ -388,8 +382,7 @@ public:
             kv = log->add_contents();
             kv->set_key("key4");
             kv->set_value("value");
-            log->set_time(ts.tv_sec);
-            log->set_time_ns(ts.tv_nsec);
+            SetLogTime(log, ts.tv_sec, ts.tv_nsec);
             logStr.clear();
             loggroup.AppendToString(&logStr);
         }

@@ -522,10 +522,7 @@ int NetworkObserver::OutputPluginProcess(std::vector<sls_logs::Log>& logs, Confi
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     for (auto& item : logs) {
-        item.set_time(ts.tv_sec);
-        if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-            item.set_time_ns(ts.tv_nsec);
-        }
+        SetLogTime(&item, ts.tv_sec, ts.tv_nsec);
         sPlugin->ProcessLog(config->mConfigName, item, "", config->mGroupTopic, "");
     }
     return 0;
@@ -535,7 +532,6 @@ int NetworkObserver::OutputDirectly(std::vector<sls_logs::Log>& logs, Config* co
     static auto sSenderInstance = Sender::Instance();
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-    uint32_t nowTime = ts.tv_sec;
     const size_t maxCount = INT32_FLAG(merge_log_count_limit) / 4;
     for (size_t beginIndex = 0; beginIndex < logs.size(); beginIndex += maxCount) {
         size_t endIndex = beginIndex + maxCount;
@@ -560,10 +556,7 @@ int NetworkObserver::OutputDirectly(std::vector<sls_logs::Log>& logs, Config* co
         for (size_t i = beginIndex; i < endIndex; ++i) {
             sls_logs::Log* log = logGroup.add_logs();
             log->mutable_contents()->CopyFrom(*(logs[i].mutable_contents()));
-            log->set_time(nowTime);
-            if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-                log->set_time_ns(ts.tv_nsec);
-            }
+            SetLogTime(log, ts.tv_sec, ts.tv_nsec);
         }
         if (!sSenderInstance->Send(config->mProjectName,
                                    "",

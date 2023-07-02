@@ -2069,8 +2069,7 @@ public:
             Log* logPtr = logGroup.add_logs();
             timespec ts;
             clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-            logPtr->set_time(ts.tv_sec);
-            logPtr->set_time_ns(ts.tv_nsec);
+            SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
             for (int j = 0; j < 10; ++j) {
                 Log_Content* contentPtr = logPtr->add_contents();
                 if (j == i) {

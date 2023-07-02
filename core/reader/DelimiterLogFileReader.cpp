@@ -213,9 +213,10 @@ bool DelimiterLogFileReader::ParseLogLine(const char* buffer,
         Log* logPtr = logGroup.add_logs();
         timespec ts;
         clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-        logPtr->set_time(mUseSystemTime || lastLogLineTime <= 0 ? ts.tv_sec : lastLogLineTime);
-        if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-            logPtr->set_time_ns(ts.tv_nsec);
+        if (mUseSystemTime || lastLogLineTime <= 0) {
+            SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
+        } else {
+            SetLogTime(logPtr, lastLogLineTime, GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, mPreciseTimestampConfig.unit));
         }
 
         for (uint32_t idx = 0; idx < parsedColCount; idx++) {

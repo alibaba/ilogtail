@@ -695,10 +695,7 @@ void LogIntegrity::BuildLogGroup(sls_logs::LogGroup& logGroup,
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
     Log* logPtr = logGroup.add_logs();
-    logPtr->set_time(ts.tv_sec);
-    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-        logPtr->set_time_ns(ts.tv_nsec);
-    }
+    SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
 
     Log_Content* contentPtr = logPtr->add_contents();
     contentPtr->set_key("project_name");

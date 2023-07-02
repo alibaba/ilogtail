@@ -68,10 +68,7 @@ bool LogFileProfiler::GetProfileData(LogGroup& logGroup, LogStoreStatistic* stat
     Log* logPtr = logGroup.add_logs();
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-    logPtr->set_time(AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? ts.tv_sec + GetTimeDelta() : ts.tv_sec);
-    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-        logPtr->set_time_ns(ts.tv_nsec);
-    }
+    SetLogTime(logPtr, AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? ts.tv_sec + GetTimeDelta() : ts.tv_sec, ts.tv_nsec);
     Log_Content* contentPtr = logPtr->add_contents();
     contentPtr->set_key("logreader_project_name");
     contentPtr->set_value(statistic->mProjectName);

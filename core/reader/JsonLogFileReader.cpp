@@ -145,9 +145,10 @@ bool JsonLogFileReader::ParseLogLine(const char* buffer,
         Log* logPtr = logGroup.add_logs();
         timespec ts;
         clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-        logPtr->set_time(mUseSystemTime ? ts.tv_sec : lastLogLineTime);
-        if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-            logPtr->set_time_ns(ts.tv_nsec);
+        if (mUseSystemTime) {
+            SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
+        } else {
+            SetLogTime(logPtr, lastLogLineTime, GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, mPreciseTimestampConfig.unit));
         }
         for (rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr) {
             const rapidjson::Value& contentKey = itr->name;

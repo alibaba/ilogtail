@@ -23,6 +23,7 @@
 #include <utmp.h>
 #endif
 #include "logger/Logger.h"
+#include "common/LogtailCommonFlags.h"
 
 namespace logtail {
 
@@ -316,8 +317,22 @@ uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
 }
 
 int64_t GetNanoSecondsFromPreciseTimestamp(uint64_t preciseTimestamp, TimeStampUnit unit) {
-    int toFillDigitsNum = 9 - static_cast<int>(unit) * 3;
-    return (preciseTimestamp * (int64_t)pow(10, toFillDigitsNum)) % 1000000000;
+    switch (unit) {
+        case TimeStampUnit::NANOSECOND:
+            return preciseTimestamp % 1000000000;
+        case TimeStampUnit::MICROSECOND:
+            return preciseTimestamp % 1000000;
+        case TimeStampUnit::MILLISECOND:
+            return preciseTimestamp % 1000;
+    }
+    return 0;
+}
+
+void SetLogTime(sls_logs::Log* log, time_t second, long nanosecond) {
+    log->set_time(second);
+    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
+        log->set_time_ns(nanosecond);
+    }
 }
 
 uint64_t GetCurrentTimeInNanoSeconds() {

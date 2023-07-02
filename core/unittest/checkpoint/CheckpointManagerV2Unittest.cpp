@@ -84,8 +84,7 @@ void CheckpointManagerV2Unittest::TestProtobufMethod() {
     sls_logs::Log log;
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-    log.set_time(ts.tv_sec);
-    log.set_time_ns(ts.tv_nsec);
+    SetLogTime(&log, ts.tv_sec, ts.tv_nsec);
     for (int idx = 0; idx < 10; ++idx) {
         auto content = log.add_contents();
         content->set_key(std::to_string(idx));

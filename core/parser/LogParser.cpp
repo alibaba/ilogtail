@@ -122,10 +122,7 @@ void LogParser::AddUnmatchLog(const char* buffer, sls_logs::LogGroup& logGroup, 
     Log* logPtr = logGroup.add_logs();
     timespec ts;
     clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-    logPtr->set_time(ts.tv_sec);
-    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-        logPtr->set_time_ns(ts.tv_nsec);
-    }
+    SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
     AddLog(logPtr, UNMATCH_LOG_KEY, buffer, logGroupSize);
 }
 
@@ -249,10 +246,7 @@ static bool StdRegexLogLineParser(const char* buffer,
 
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
-        logPtr->set_time(logTime);
-        if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-            logPtr->set_time_ns(GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, preciseTimestampConfig.unit));
-        }
+        SetLogTime(logPtr, logTime, GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, preciseTimestampConfig.unit));
         if (preciseTimestampConfig.enabled) {
             LogParser::AddLog(logPtr, preciseTimestampConfig.key, std::to_string(preciseTimestamp), logGroupSize);
         }
@@ -378,10 +372,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
 
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
-        logPtr->set_time(logTime);
-        if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-            logPtr->set_time_ns(GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, preciseTimestampConfig.unit));
-        }
+        SetLogTime(logPtr, logTime, GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, preciseTimestampConfig.unit));
         for (uint32_t i = 0; i < keys.size(); i++) {
             AddLog(logPtr, keys[i], what[i + 1].str(), logGroupSize);
         }
@@ -467,10 +458,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
     }
 
     Log* logPtr = logGroup.add_logs();
-    logPtr->set_time(logTime); // current system time, no need history check
-    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-        logPtr->set_time_ns(timeNs);
-    }
+    SetLogTime(logPtr, logTime, timeNs); // current system time, no need history check
     for (uint32_t i = 0; i < keys.size(); i++) {
         AddLog(logPtr, keys[i], what[i + 1].str(), logGroupSize);
     }
@@ -557,10 +545,7 @@ bool LogParser::ParseLogTime(const char* buffer,
 bool LogParser::WholeLineModeParser(
     const char* buffer, LogGroup& logGroup, const string& key, time_t logTime, long timeNs, uint32_t& logGroupSize) {
     Log* logPtr = logGroup.add_logs();
-    logPtr->set_time(logTime); // current system time, no need history check
-    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-        logPtr->set_time_ns(timeNs);
-    }
+    SetLogTime(logPtr, logTime, timeNs); // current system time, no need history check
     AddLog(logPtr, key, buffer, logGroupSize);
     return true;
 }
@@ -741,10 +726,7 @@ bool LogParser::ApsaraEasyReadLogLineParser(const char* buffer,
     }
 
     Log* logPtr = logGroup.add_logs();
-    logPtr->set_time(logTime);
-    if (BOOL_FLAG(enable_timestamp_nanosecond)) {
-        logPtr->set_time_ns(logTime_in_micro * 1000 % 1000000000);
-    }
+    SetLogTime(logPtr, logTime, logTime_in_micro * 1000 % 1000000000);
     int32_t beg_index = 0;
     int32_t colon_index = -1;
     int32_t index = -1;
