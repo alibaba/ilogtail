@@ -601,11 +601,7 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSO
 	}
 
 	// Example: /run/containerd/io.containerd.runtime.v1.linux/k8s.io/{ContainerID}/rootfs/
-	aDirs := []string{
-		"/run/containerd",
-		"/var/run/containerd",
-	}
-
+	aDirs := []string{}
 	// TODO If the containerd interface provides the absolute path to the rootfs, optimize lookupContainerRootfsAbsDir method.
 	if len(os.Getenv("CONTAINERD_ROOT_DIR")) > 0 {
 		dir := os.Getenv("CONTAINERD_ROOT_DIR")
@@ -613,7 +609,16 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSO
 		if err != nil {
 			logger.Errorf(context.Background(), "CHECK_CUSTOM_CONTAINERD_ROOT_DIR_FAILED", "failed to parse custom containerd root dir, please check it. dir: %s, error: %v", absPath, err)
 		} else {
-			aDirs = append(aDirs, absPath)
+			aDirs = []string{
+				absPath,
+				"/run/containerd",
+				"/var/run/containerd",
+			}
+		}
+	} else {
+		aDirs := []string{
+			"/run/containerd",
+			"/var/run/containerd",
 		}
 	}
 	bDirs := []string{
