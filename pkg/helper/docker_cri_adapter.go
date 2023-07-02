@@ -616,7 +616,7 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSO
 			}
 		}
 	} else {
-		aDirs := []string{
+		aDirs = []string{
 			"/run/containerd",
 			"/var/run/containerd",
 		}
