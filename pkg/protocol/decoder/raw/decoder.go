@@ -41,5 +41,15 @@ func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBo
 }
 
 func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error) {
-	return nil, nil
+	log := &protocol.Log{
+		Time: uint32(time.Now().Unix()),
+		Contents: []*protocol.Log_Content{
+			{
+				Key:   ContentKey,
+				Value: string(data),
+			},
+		},
+	}
+	logs = append(logs, log)
+	return logs, nil
 }
