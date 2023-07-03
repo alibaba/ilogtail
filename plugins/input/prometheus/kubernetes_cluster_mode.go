@@ -95,13 +95,14 @@ func (p *KubernetesMeta) readKubernetesWorkloadMeta() bool {
 		return false
 	}
 	for i := 0; i < 3; i++ {
-		if _, err = p.getPrometheusReplicas(); err == nil {
+		if _, err = p.getPrometheusReplicas(); err == nil || i == 2 {
 			break
 		}
 		time.Sleep(time.Millisecond * 500)
 	}
 	if err != nil {
 		logger.Error(p.context.GetRuntimeContext(), "KUBE_PROMETHEUS_ALARM", "read replicas err", err)
+		p.replicas = 1 // means maybe repeat scrape
 	}
 	p.kubernetesClusterMode = true
 	logger.Info(p.context.GetRuntimeContext(), "replicas", p.replicas, "num", p.currentNum, "workload", p.workloadName, "namespace", p.namespace)
