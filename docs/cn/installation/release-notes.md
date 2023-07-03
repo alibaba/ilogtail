@@ -22,8 +22,8 @@
 
 | 文件名                                                                                                                                          | 系统    | 架构     | SHA256 校验码                                                       |
 | -------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ | ---------------------------------------------------------------- |
-| [ilogtail-1.7.0.linux-amd64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.7.0/ilogtail-1.7.0.linux-amd64.tar.gz) | Linux | x86-64 | 72272f6670ff11f214ef28057afd63f966d516c0c4748c4c6940951d66dac2cf |
-| [ilogtail-1.7.0.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.7.0/ilogtail-1.7.0.linux-arm64.tar.gz) | Linux | arm64  | 8ea517cb0db15923a2b532f7a7c3b1c024dc7510d8fbd3f7606add32f3cd0e92 |
+| [ilogtail-1.7.0.linux-amd64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.7.0/ilogtail-1.7.0.linux-amd64.tar.gz) | Linux | x86-64 | d64061f9b5dc33e40f385c5514000157cc530c5b1f325afb3552267231334cd8 |
+| [ilogtail-1.7.0.linux-arm64.tar.gz](https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/1.7.0/ilogtail-1.7.0.linux-arm64.tar.gz) | Linux | arm64  | 27f9a34df79869bffb1c1be639c3602f1bd021c068e97fc3e287ef9cbabb3834 |
 
 ### Docker 镜像
 
