@@ -18,16 +18,19 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 )
 
-// Shuffler allow routing data to other ilogtail instance and receive data from other instance
+// Shuffler allow routing data to other ilogtail instance and receive data from other instance.
+// It should also implement Extension interface.
 type Shuffler interface {
-	Start() error
-	Stop() error
-
 	// CollectList collect GroupEvents list that have been grouped, it sends the GroupEvents to the send channel.
-	// If it blocks if channel is full.
+	// It blocks if channel is full.
 	CollectList(groupEventsList ...*models.PipelineGroupEvents)
 
+	// Plugins can send data to shuffler with this channel
 	SendChan() chan<- *models.PipelineGroupEvents
+
+	// Plugins can fetch data from shuffler with this channel.
 	RecvChan() <-chan *models.PipelineGroupEvents
+
+	// Plugins can be notified from this channel if shuffler is stopped.
 	Done() <-chan struct{}
 }

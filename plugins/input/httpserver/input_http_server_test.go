@@ -32,6 +32,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/pipeline/extensions"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	pluginmanager "github.com/alibaba/ilogtail/pluginmanager"
 	_ "github.com/alibaba/ilogtail/plugins/extension/default_decoder"
@@ -444,11 +445,6 @@ func (s *mockShuffler) Description() string {
 
 func (s *mockShuffler) Init(_ pipeline.Context) (err error) {
 	s.ctx, s.cancelFunc = context.WithCancel(context.Background())
-	return
-}
-
-func (s *mockShuffler) Start() (err error) {
-	s.ctx, s.cancelFunc = context.WithCancel(context.Background())
 	s.wg.Add(1)
 
 	go func() {
@@ -494,8 +490,8 @@ func (s *mockShuffler) Done() <-chan struct{} {
 
 func TestInputInfluxDB_WithShuffler(t *testing.T) {
 	input0, err := newInputWithOpts("influx", func(input *ServiceHTTP) {
-		input.Shuffler = &ShufflerConfig{
-			Name: "ext_mock_shuffler",
+		input.Shuffler = &extensions.ExtensionConfig{
+			Type: "ext_mock_shuffler",
 		}
 	})
 	require.NoError(t, err)
@@ -506,9 +502,9 @@ func TestInputInfluxDB_WithShuffler(t *testing.T) {
 	}()
 
 	input, err := newInputWithOpts("influx", func(input *ServiceHTTP) {
-		input.Shuffler = &ShufflerConfig{
-			Name:       "ext_mock_shuffler",
-			Properties: map[string]any{"CutsomizedProperty": 10},
+		input.Shuffler = &extensions.ExtensionConfig{
+			Type:    "ext_mock_shuffler",
+			Options: map[string]any{"CutsomizedProperty": 10},
 		}
 	})
 	require.NoError(t, err)

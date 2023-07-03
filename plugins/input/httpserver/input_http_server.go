@@ -55,9 +55,9 @@ type ServiceHTTP struct {
 	shuffler    extensions.Shuffler
 
 	DumpDataKeepFiles  int
-	DumpData           bool            // would dump the received data to a local file, which is only used to valid data by the developers.
-	Decoder            string          // the decoder to use, default is "ext_default_decoder"
-	Shuffler           *ShufflerConfig // whether to shuffler data to other ilogtail instance
+	DumpData           bool                        // would dump the received data to a local file, which is only used to valid data by the developers.
+	Decoder            string                      // the decoder to use, default is "ext_default_decoder"
+	Shuffler           *extensions.ExtensionConfig // whether to shuffler data to other ilogtail instance
 	Format             string
 	Address            string
 	Path               string
@@ -104,7 +104,7 @@ func (s *ServiceHTTP) Init(context pipeline.Context) (int, error) {
 	s.decoder = decoder
 
 	if s.Shuffler != nil {
-		if ext, _ := context.GetExtension(s.Shuffler.Name, s.Shuffler.Properties); ext != nil {
+		if ext, _ := context.GetExtension(s.Shuffler.Type, s.Shuffler.Options); ext != nil {
 			if shuffler, ok := ext.(extensions.Shuffler); ok {
 				s.shuffler = shuffler
 			}
@@ -260,11 +260,6 @@ func (s *ServiceHTTP) start() error {
 	s.wg.Add(1)
 
 	if s.shuffler != nil {
-		err := s.shuffler.Start()
-		if err != nil {
-			return err
-		}
-
 		go func() {
 			for {
 				select {
@@ -355,15 +350,6 @@ func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string 
 
 // Stop stops the services and closes any necessary channels and connections
 func (s *ServiceHTTP) Stop() error {
-	if s.shuffler != nil {
-		logger.Infof(s.context.GetRuntimeContext(), "stop shuffler %s in http server", s.Shuffler)
-		err := s.shuffler.Stop()
-		if err != nil {
-			logger.Warningf(s.context.GetRuntimeContext(), "SHUFFLER_STOP_FAILURE", "failed to stop shuffler %s", s.Shuffler)
-		}
-
-	}
-
 	if s.listener != nil {
 		_ = s.listener.Close()
 		logger.Info(s.context.GetRuntimeContext(), "http server stop", s.Address)
