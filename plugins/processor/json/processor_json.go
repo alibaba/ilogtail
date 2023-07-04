@@ -130,25 +130,61 @@ func (p *ExpandParam) getConnector(depth int) string {
 
 func (p *ExpandParam) ExpandJSONCallBack(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 	p.nowDepth++
-	if p.nowDepth == p.maxDepth || dataType != jsonparser.Object {
-		if dataType == jsonparser.String {
-			// unescape string
-			if strValue, err := jsonparser.ParseString(value); err == nil {
-				p.appendNewContent(p.preKey+p.getConnector(p.nowDepth)+(string)(key), strValue)
-			} else {
-				p.appendNewContent(p.preKey+p.getConnector(p.nowDepth)+(string)(key), (string)(value))
-			}
-		} else {
-			p.appendNewContent(p.preKey+p.getConnector(p.nowDepth)+(string)(key), (string)(value))
-		}
+
+	if dataType == jsonparser.Object {
+		p.flattenObject(key, value)
+	} else if dataType == jsonparser.Array {
+		p.flattenArray(key, value)
 	} else {
-		backKey := p.preKey
-		p.preKey = p.preKey + p.getConnector(p.nowDepth) + (string)(key)
-		_ = jsonparser.ObjectEach(value, p.ExpandJSONCallBack)
-		p.preKey = backKey
+		p.flattenValue(key, value)
 	}
+
 	p.nowDepth--
 	return nil
+}
+
+func (p *ExpandParam) flattenObject(key []byte, value []byte) {
+	if p.nowDepth == p.maxDepth {
+		// If reach max depth, add it directly to the result
+		newKey := p.preKey + p.getConnector(p.nowDepth) + (string)(key)
+		p.appendNewContent(newKey, (string)(value))
+		return
+	}
+
+	backKey := p.preKey
+	p.preKey = p.preKey + p.getConnector(p.nowDepth) + (string)(key)
+	_ = jsonparser.ObjectEach(value, p.ExpandJSONCallBack)
+	p.preKey = backKey
+}
+
+func (p *ExpandParam) flattenArray(key []byte, value []byte) {
+	if p.nowDepth == p.maxDepth {
+		// If reach max depth, add it directly to the result
+		newKey := p.preKey + p.getConnector(p.nowDepth) + (string)(key)
+		p.appendNewContent(newKey, (string)(value))
+		return
+	}
+
+	index := 0
+	jsonparser.ArrayEach(value, func(val []byte, dataType jsonparser.ValueType, offset int, err error) {
+		newKey := append(key, fmt.Sprintf("[%d]", index)...)
+		if dataType == jsonparser.Object {
+			p.flattenObject(newKey, val)
+		} else {
+			p.flattenValue(newKey, val)
+		}
+		index++
+	})
+}
+
+func (p *ExpandParam) flattenValue(key []byte, value []byte) {
+	// If the current value is not a JSON object, nor a JSON array, add it directly to the result
+	newKey := p.preKey + p.getConnector(p.nowDepth) + (string)(key)
+	if strValue, err := jsonparser.ParseString(value); err == nil {
+		p.appendNewContent(newKey, strValue)
+	} else {
+		p.appendNewContent(newKey, (string)(value))
+	}
 }
 
 func (p *ExpandParam) appendNewContent(key string, value string) {
