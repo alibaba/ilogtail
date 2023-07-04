@@ -1874,8 +1874,8 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
         // GB 18030 encoding rules:
         // 1. The number of byte for one character can be 1, 2, 4.
         // 2. 1 byte character: the top bit is 0.
-        // 3. 2 bytes character: the top bit of the first byte is 1; the second bit of the second byte is 1.
-        // 4. 4 bytes character: the top bit of the first byte is 1; the first and second bit of the 2nd and 4th byte are 00.
+        // 3. 2 bytes character: the top bit of the first byte is 1; the second byte is between 0x40 and 0xFE.
+        // 4. 4 bytes character: the top bit of the first byte is 1; the 2nd and 4th byte are between 0x30 and 0x39.
 
         // First byte of the multi-bytes character, must be rollback
         if ((buffer[endPs] & 0x80) == 0x80) {
@@ -1885,7 +1885,7 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
         if ((buffer[endPs] & 0xC0) == 0) { // 4 bytes character, 0xC0 -> 11000000
             int pair = 0;
             // search backward whether 2nd byte is paired with 4th
-            while (endPs >= 0 and (buffer[endPs] & 0xC0) == 0) {
+            while (endPs >= 1 && ((buffer[endPs - 1] & 0x80) == 0x80 && (buffer[endPs] & 0xC0) == 0)) {
                 pair += 1;
                 endPs -= 2;
             }

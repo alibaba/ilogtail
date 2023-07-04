@@ -654,10 +654,25 @@ void LogMultiBytesUnittest::TestAlignLastCharacterGBK() {
                                          FileEncoding::ENCODING_GBK,
                                          false,
                                          false);
-    std::string expectedLog = "\xce\xaa\xbf\xc9\xb9\xdb\xb2\xe2\xb3\xa1\xbe\xb0\xb6\xf8"; // equal to "为可观测场景而"
-    std::string testLog = expectedLog + "\xc9";
-    size_t result = logFileReader.AlignLastCharacter(const_cast<char*>(testLog.data()), expectedLog.size() + 1);
-    APSARA_TEST_EQUAL_FATAL(expectedLog.size(), result);
+    { // case: GBK
+        std::string expectedLog = "\xce\xaa\xbf\xc9\xb9\xdb\xb2\xe2\xb3\xa1\xbe\xb0\xb6\xf8"; // equal to "为可观测场景而"
+        std::string testLog = expectedLog + "\xc9";
+        size_t result = logFileReader.AlignLastCharacter(const_cast<char*>(testLog.data()), expectedLog.size() + 1);
+        APSARA_TEST_EQUAL_FATAL(expectedLog.size(), result);
+    }
+    { // case: GB 18030
+        std::string expectedLog = "ilogtail\xce\xaa"; // equal to "ilogtail为"
+        std::string testLog = expectedLog + "\x81\x30\x89\x39"; // equal to "â"
+        size_t result = logFileReader.AlignLastCharacter(const_cast<char*>(testLog.data()), expectedLog.size() + 2);
+        APSARA_TEST_EQUAL_FATAL(expectedLog.size(), result);
+    }
+    { // case: All ASCII
+        std::string expectedLog = "ilogtail";
+        std::string testLog = expectedLog + "\x81\x30\x89\x39"; // equal to "â"
+        size_t result = logFileReader.AlignLastCharacter(const_cast<char*>(testLog.data()), expectedLog.size() + 3);
+        APSARA_TEST_EQUAL_FATAL(expectedLog.size(), result);
+    }
+
 }
 
 void LogMultiBytesUnittest::TestReadUTF8() {
