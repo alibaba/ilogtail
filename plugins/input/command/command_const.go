@@ -2,38 +2,43 @@ package command
 
 const (
 	pluginName              = "metric_command"
-	defaultContent          = `echo -e "__labels__:hostname#\$#idc_cluster_env_name|ip#\$#ip_address    __value__:0  __name__:metric_command_example"`
-	defaultScriptType       = "Bash"
-	defaultCmdPath          = "/usr/bin/sh"
-	defaultUser             = "nobody"
 	defaultContentType      = "PlainText"
-	defaultLineSplitSep     = `\n`
-	defaultOutputDataType   = SlsMetricDataType
-	defaultScirptDataDir    = "/workspaces/ilogtail/scriptStorage/"
-	defaultIntervalMs       = 5000      //ms 3默认为阿里云的采集频率5s
-	defaltExecScriptTimeOut = 3000      //单位ms 设置为3秒超时
-	defaultExporterName     = "default" //默认为default 提交到coommonlabels中
+	defaultLineSplitSep     = "\n"
+	defaultIntervalMs       = 5000 //ms 3默认为阿里云的采集频率5s
+	defaltExecScriptTimeOut = 3000 //单位ms 设置为3秒超时
+	ScriptMd5               = "script_md5"
+	UserRoot                = "root"
+	ContentTypeBase64       = "Base64"
+	ContentTypePlainText    = "PlainText"
 )
 
-// 执行脚本输出的格式
-const (
-	SlsMetricDataType = "sls_metrics"
-)
-
-// 支持的脚本类型
-var supportScriptTypes = map[string]bool{
-	"Bash":  true,
-	"Shell": true,
-	// "python": false,
+type ScriptMeta struct {
+	scriptSuffix   string
+	defaultCmdPath string
 }
 
-// 支持的脚本输出类型
-var supportOutPutDataType = map[string]bool{
-	SlsMetricDataType: true,
+// 支持的脚本类型
+var ScriptTypeToSuffix = map[string]ScriptMeta{
+	"bash": {
+		scriptSuffix:   "sh",
+		defaultCmdPath: "/usr/bin/bash",
+	},
+	"shell": {
+		scriptSuffix:   "sh",
+		defaultCmdPath: "/usr/bin/sh",
+	},
+	"python2": {
+		scriptSuffix:   "py",
+		defaultCmdPath: "/usr/bin/python2",
+	},
+	"python3": {
+		scriptSuffix:   "py",
+		defaultCmdPath: "/usr/bin/python3",
+	},
 }
 
 // 支持的contentType
-var supportContentType = map[string]bool{
-	"PlainText": true,
-	"Base64":    true,
+var SupportContentType = map[string]bool{
+	ContentTypePlainText: true,
+	ContentTypeBase64:    true,
 }

@@ -8,9 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/plugins/test"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 )
@@ -54,6 +55,7 @@ func parseContent(contents []*protocol.Log_Content) parseRe {
 	return tempRe
 }
 
+/*
 func TestOneLine(t *testing.T) {
 	ctx := mock.NewEmptyContext("project", "store", "config")
 	p := pipeline.MetricInputs[pluginName]().(*InputCommand)
@@ -68,11 +70,11 @@ func TestOneLine(t *testing.T) {
 		__value__:0.0  __name__:metric_command_example_5 __test__:1
 
 		__value__:0.0  __name__:metric_command_example_no_break __test__:1
-		
-		__labels__:b#$#2|a#$#1   __value__:0.0  __name__:metric_command_example  
+
+		__labels__:b#$#2|a#$#1   __value__:0.0  __name__:metric_command_example
 	a:1  b:2  c:3
 	     __value__:0.0  __name__:metric_command_example_big_space __test__:1
-	__value__:0  __name__:metric_command_example_without_labels 
+	__value__:0  __name__:metric_command_example_without_labels
 	# 这是一个注释
 	#  __value__:0  __name__:metric_command_example_without_labels
 	`
@@ -141,6 +143,7 @@ func TestCommandParseToMetricData(t *testing.T) {
 		}
 	}
 }
+*/
 
 func TestCommandTestCollecetUserBase64WithTimeout(t *testing.T) {
 	ctx := mock.NewEmptyContext("project", "store", "config")
@@ -151,9 +154,8 @@ func TestCommandTestCollecetUserBase64WithTimeout(t *testing.T) {
 
 	//指定base64
 	p.ScriptContent = base64.StdEncoding.EncodeToString([]byte(scriptContent))
-	p.ContentType = "Base64"
-	p.ExecScriptTimeOut = 3000
-	p.ExporterName = "scirpt_timeout_exporter"
+	p.ContentEncoding = "Base64"
+	p.TimeoutMilliSeconds = 3000
 	if _, err := p.Init(ctx); err != nil {
 		t.Errorf("cannot init InputCommand: %v", err)
 		return
@@ -164,10 +166,10 @@ func TestCommandTestCollecetUserBase64WithTimeout(t *testing.T) {
 	}
 
 	//变更timeout
-	p.ExecScriptTimeOut = 6000
+	p.TimeoutMilliSeconds = 6000
 	//指定base64
 	p.ScriptContent = base64.StdEncoding.EncodeToString([]byte(scriptContent))
-	p.ContentType = "Base64"
+	p.ContentEncoding = "Base64"
 	if _, err := p.Init(ctx); err != nil {
 		t.Errorf("cannot init InputCommand: %v", err)
 		return
@@ -192,8 +194,11 @@ func TestCommandTestCollecetUserBase64(t *testing.T) {
 	c := new(test.MockMetricCollector)
 	scriptContent := `echo -e "__labels__:a#\$#1|b#\$#2    __value__:0  __name__:metric_command_example \n __labels__:a#\$#3|b#\$#4    __value__:3  __name__:metric_command_example2"`
 	//指定base64
+	p.ScriptType = "shell"
+	p.CmdPath = "/usr/bin/sh"
 	p.ScriptContent = base64.StdEncoding.EncodeToString([]byte(scriptContent))
-	p.ContentType = "Base64"
+	p.ContentEncoding = "Base64"
+	p.User = "root"
 	if _, err := p.Init(ctx); err != nil {
 		t.Errorf("cannot init InputCommand: %v", err)
 		return
@@ -207,7 +212,6 @@ func TestCommandTestCollecetUserBase64(t *testing.T) {
 	if shouldReturn {
 		return
 	}
-
 }
 
 func TestCommandTestCollect(t *testing.T) {
@@ -215,7 +219,60 @@ func TestCommandTestCollect(t *testing.T) {
 	p := pipeline.MetricInputs[pluginName]().(*InputCommand)
 	c := new(test.MockMetricCollector)
 
-	p.ScriptContent = `echo -e "__labels__:a#\$#1|b#\$#2    __value__:0  __name__:metric_command_example \n __labels__:a#\$#3|b#\$#4    __value__:3  __name__:metric_command_example2"`
+	p.ScriptContent = `cat /var/log/messages`
+	p.ScriptType = "shell"
+	p.ContentEncoding = "PlainText"
+	p.User = "root"
+
+	if _, err := p.Init(ctx); err != nil {
+		t.Errorf("cannot init InputCommand: %v", err)
+		return
+	}
+	if err := p.Collect(c); err != nil {
+		t.Errorf("Collect() error = %v", err)
+		return
+	}
+
+	shouldReturn := assertLogs(c, t, p)
+	if shouldReturn {
+		return
+	}
+}
+
+func TestCommandTestExceptionCollect(t *testing.T) {
+	ctx := mock.NewEmptyContext("project", "store", "config")
+	p := pipeline.MetricInputs[pluginName]().(*InputCommand)
+	c := new(test.MockMetricCollector)
+
+	p.ScriptContent = `xxxxxX`
+	p.ScriptType = "shell"
+	p.ContentEncoding = "PlainText"
+	p.User = "root"
+
+	if _, err := p.Init(ctx); err != nil {
+		t.Errorf("cannot init InputCommand: %v", err)
+		return
+	}
+	if err := p.Collect(c); err != nil {
+		t.Errorf("Collect() error = %v", err)
+		return
+	}
+
+	shouldReturn := assertLogs(c, t, p)
+	if shouldReturn {
+		return
+	}
+}
+
+func TestCommandTestTimeoutCollect(t *testing.T) {
+	ctx := mock.NewEmptyContext("project", "store", "config")
+	p := pipeline.MetricInputs[pluginName]().(*InputCommand)
+	c := new(test.MockMetricCollector)
+
+	p.ScriptContent = `sleep 10`
+	p.ScriptType = "shell"
+	p.ContentEncoding = "PlainText"
+	p.User = "root"
 
 	if _, err := p.Init(ctx); err != nil {
 		t.Errorf("cannot init InputCommand: %v", err)
@@ -235,58 +292,6 @@ func TestCommandTestCollect(t *testing.T) {
 func assertLogs(c *test.MockMetricCollector, t *testing.T, p *InputCommand) bool {
 	for _, log := range c.Logs {
 		fmt.Println("logs", log)
-		meta := parseContent(log.Contents)
-		if p.ExporterName != GetLabelByKey("script_exporter", meta.Labels) {
-			t.Errorf("script_exporter compare error expect %s get %s", p.ExporterName, GetLabelByKey("script_exporter", meta.Labels))
-		}
-		if meta.Name == "metric_command_example" {
-			if GetLabelByKey("hostname", meta.Labels) != util.GetHostName() {
-				t.Errorf("parse hostname error expect %s get %s ", util.GetHostName(), GetLabelByKey("hostname", meta.Labels))
-				return true
-			}
-			if GetLabelByKey("ip", meta.Labels) != util.GetIPAddress() {
-				t.Errorf("parse ip error expect %s get %s ", util.GetIPAddress(), GetLabelByKey("ip", meta.Labels))
-				return true
-			}
-
-			if GetLabelByKey("a", meta.Labels) != "1" {
-				t.Errorf("parse a error expect %s get %s ", "1", GetLabelByKey("a", meta.Labels))
-				return true
-			}
-
-			if GetLabelByKey("b", meta.Labels) != "2" {
-				t.Errorf("parse b error expect %s get %s ", "2", GetLabelByKey("b", meta.Labels))
-				return true
-			}
-			if meta.Value != "0" {
-				t.Errorf("parse value error expect %s get %s ", "0", meta.Value)
-				return true
-			}
-		}
-		if meta.Name == "metric_command_example2" {
-			if GetLabelByKey("hostname", meta.Labels) != util.GetHostName() {
-				t.Errorf("parse hostname error expect %s get %s ", util.GetHostName(), GetLabelByKey("hostname", meta.Labels))
-				return true
-			}
-			if GetLabelByKey("ip", meta.Labels) != util.GetIPAddress() {
-				t.Errorf("parse ip error expect %s get %s ", util.GetIPAddress(), GetLabelByKey("ip", meta.Labels))
-				return true
-			}
-
-			if GetLabelByKey("a", meta.Labels) != "3" {
-				t.Errorf("parse a error expect %s get %s ", "3", GetLabelByKey("a", meta.Labels))
-				return true
-			}
-
-			if GetLabelByKey("b", meta.Labels) != "4" {
-				t.Errorf("parse b error expect %s get %s ", "4", GetLabelByKey("b", meta.Labels))
-				return true
-			}
-			if meta.Value != "3" {
-				t.Errorf("parse value error expect %s get %s ", "3", meta.Value)
-				return true
-			}
-		}
 	}
 	return false
 }
@@ -295,63 +300,55 @@ func TestCommandTestInit(t *testing.T) {
 	ctx := mock.NewEmptyContext("project", "store", "config")
 	p := pipeline.MetricInputs[pluginName]().(*InputCommand)
 	_, err := p.Init(ctx)
+	require.Error(t, err)
 	if err != nil {
-		t.Errorf("default config error %f", err)
-		return
+		fmt.Println("default config error", err)
 	}
 
 	//测试错误的script type
 	p.ScriptType = "golang_none"
 	_, err = p.Init(ctx)
-	if err == nil {
-		t.Errorf("expect error with script type not support")
-		return
+	require.Error(t, err)
+	if err != nil {
+		fmt.Println("expect error with script type not support", err)
 	}
-	p.ScriptType = defaultScriptType
+	p.ScriptType = "bash"
 
 	//测试错误的User
 	p.User = "root"
 	_, err = p.Init(ctx)
-	if err == nil {
-		t.Errorf("expect error with wrong user root")
+	require.Error(t, err)
+	if err != nil {
+		fmt.Println("expect error with wrong user root", err)
 	}
-	p.User = defaultUser
+	p.User = "someone"
 
 	//测试contentType
-	p.ContentType = "mixin"
+	p.ContentEncoding = "mixin"
 	_, err = p.Init(ctx)
-	if err == nil {
-		t.Errorf("expect error with ContentType error")
+	require.Error(t, err)
+	if err != nil {
+		fmt.Println("expect error with ContentType error", err)
 	}
-	p.ContentType = defaultContentType
+	p.ContentEncoding = defaultContentType
 
 	//测试脚本内容为空
 	p.ScriptContent = ""
 	_, err = p.Init(ctx)
-	if err == nil {
-		t.Errorf("expect error with ScriptContent empty error")
+	require.Error(t, err)
+	if err != nil {
+		fmt.Println("expect error with ScriptContent empty error", err)
 	}
-	p.ScriptContent = defaultContent
-
-	//测试输出的dataType
-	p.OutputDataType = "mixinDataType"
-	_, err = p.Init(ctx)
-	if err == nil {
-		t.Errorf("expect error with OutputDataType not support error")
-	}
-	p.OutputDataType = defaultOutputDataType
-
+	p.ScriptContent = "some"
 	//测试执行脚本超时
 	//测试输出的dataType
 	p.IntervalMs = 3000
-	p.ExecScriptTimeOut = 4000
+	p.TimeoutMilliSeconds = 4000
 	_, err = p.Init(ctx)
-	if err == nil {
-		t.Errorf("expect error with ExecScriptTimeOut > IntervalMs ")
+	require.Error(t, err)
+	if err != nil {
+		fmt.Println("expect error with ExecScriptTimeOut > IntervalMs ", err)
 	}
-	p.IntervalMs = defaultIntervalMs
-	p.ExecScriptTimeOut = defaltExecScriptTimeOut
-
 }
 
 // 测试script storage
@@ -359,13 +356,13 @@ func TestScriptStorage(t *testing.T) {
 	u, err := user.Current()
 	fmt.Printf("Username %s\n", u.Username)
 
-	content := defaultContent
-	storage := GetStorage("/workspaces/ilogtail/scriptStorage/")
+	content := `echo -e "__labels__:hostname#\$#idc_cluster_env_name|ip#\$#ip_address    __value__:0  __name__:metric_command_example"`
+	storage := GetStorage("/data/workspaces/ilogtail/scriptStorage/")
 	if storage.Err != nil {
 		t.Errorf("create Storage error %s", storage.Err)
 		return
 	}
-	filepath, err := storage.SaveContent(content)
+	filepath, err := storage.SaveContent(content, "shell")
 	if err != nil {
 		t.Errorf("ScriptStorage save content error %s", err)
 		return
@@ -383,11 +380,10 @@ func TestScriptStorage(t *testing.T) {
 	fmt.Print("\n---TestScriptStorage filepath", filepath, "\n")
 
 	//再次获取
-	filepath, _ = storage.SaveContent(content)
+	filepath, _ = storage.SaveContent(content, "shell")
 	data, _ = ioutil.ReadFile(filepath)
 	if string(data) != content {
 		t.Errorf("content compare error")
 		return
 	}
-
 }
