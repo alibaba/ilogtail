@@ -16,9 +16,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/util"
-	"github.com/alibaba/ilogtail/pluginmanager"
 )
 
 type ScriptStorage struct {
@@ -33,7 +33,7 @@ var storageInstance *ScriptStorage
 func GetStorage(dataDir string) *ScriptStorage {
 	dataDir = strings.Trim(dataDir, " ")
 	if len(dataDir) == 0 {
-		dataDir = pluginmanager.LogtailGlobalConfig.LogtailSysConfDir
+		dataDir = config.LogtailGlobalConfig.LogtailSysConfDir
 	}
 	storageOnce.Do(func() {
 		storageInstance = &ScriptStorage{
