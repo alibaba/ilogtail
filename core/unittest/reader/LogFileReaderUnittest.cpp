@@ -655,7 +655,7 @@ void LogMultiBytesUnittest::TestAlignLastCharacterGBK() {
                                          false,
                                          false);
     std::string expectedLog = "\xce\xaa\xbf\xc9\xb9\xdb\xb2\xe2\xb3\xa1\xbe\xb0\xb6\xf8"; // equal to "为可观测场景而"
-    std::string testLog = expectedLog + "\xc9\xfa";
+    std::string testLog = expectedLog + "\xc9";
     size_t result = logFileReader.AlignLastCharacter(const_cast<char*>(testLog.data()), expectedLog.size() + 1);
     APSARA_TEST_EQUAL_FATAL(expectedLog.size(), result);
 }

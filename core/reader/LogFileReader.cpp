@@ -1866,41 +1866,60 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
 
 size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
     int n = 0;
-    if (buffer[size - 1] == '\n') {
+    int endPs = size - 1;
+    if (buffer[endPs] == '\n') {
         return size;
     }
     if (mFileEncoding == ENCODING_GBK) {
-        // GBK encoding rules:
-        // 1. The top bit of the first byte is 1.
-        // 2. The top bit of the second byte or single byte character is 0.
-        if (buffer[size - 1] & 0x80) {
-            return size - 1;
+        // GB 18030 encoding rules:
+        // 1. The number of byte for one character can be 1, 2, 4.
+        // 2. 1 byte character: the top bit is 0.
+        // 3. 2 bytes character: the top bit of the first byte is 1; the second bit of the second byte is 1.
+        // 4. 4 bytes character: the top bit of the first byte is 1; the first and second bit of the 2nd and 4th byte are 00.
+
+        // First byte of the multi-bytes character, must be rollback
+        if ((buffer[endPs] & 0x80) == 0x80) {
+            size--;
+            endPs--;
+        }
+        if ((buffer[endPs] & 0xC0) == 0) { // 4 bytes character, 0xC0 -> 11000000
+            int pair = 0;
+            // search backward whether 2nd byte is paired with 4th
+            while (endPs >= 0 and (buffer[endPs] & 0xC0) == 0) {
+                pair += 1;
+                endPs -= 2;
+            }
+            if (pair % 2 == 0) {
+                return size;
+            } else {
+                buffer[size - 2] = '\0';
+                return size - 2;
+            }
         } else {
             return size;
         }
     } else {
         // UTF8 encoding rules:
         // 1. For single byte character, the top bit is 0.
-        // 2. For N (N > 1) bytes character, the top N bit of the first byte is 1. The top 2 bits of the following bytes are 10.
-        int endPs = size - 1;
+        // 2. For N (N > 1) bytes character, the top N bit of the first byte is 1. The first and second bits of the following bytes are 10.
         while (endPs >= 0) {
             char ch = buffer[endPs];
-            if ((ch & 0x80) == 0) { // 1 bytes character
+            if ((ch & 0x80) == 0) { // 1 bytes character, 0x80 -> 10000000
                 n = 1;
                 break;
-            } else if ((ch & 0xE0) == 0xC0) { // 2 bytes character
+            } else if ((ch & 0xE0) == 0xC0) { // 2 bytes character, 0xE0 -> 11100000, 0xC0 -> 11000000
                 n = 2;
                 break;
-            } else if ((ch & 0xF0) == 0xE0) { // 3 bytes character
+            } else if ((ch & 0xF0) == 0xE0) { // 3 bytes character, 0xF0 -> 11110000, 0xE0 -> 11100000
                 n = 3;
                 break;
-            } else if ((ch & 0xF8) == 0xF0) { // 4 bytes character
+            } else if ((ch & 0xF8) == 0xF0) { // 4 bytes character, 0xF8 -> 11111000, 0xF0 -> 11110000
                 n = 4;
                 break;
-            } else if ((ch & 0xFC) == 0xF8) { // 5 bytes character
+            } else if ((ch & 0xFC) == 0xF8) { // 5 bytes character, 0xFC -> 11111100, 0xF8 -> 11111000
                 n = 5;
                 break;
-            } else if ((ch & 0xFE) == 0xFC) { // 6 bytes character
+            } else if ((ch & 0xFE) == 0xFC) { // 6 bytes character, 0xFE -> 11111110, 0xFC -> 11111100
                 n = 6;
                 break;
             }
