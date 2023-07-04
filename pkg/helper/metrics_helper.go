@@ -15,12 +15,12 @@
 package helper
 
 import (
-	"github.com/alibaba/ilogtail/pkg/pipeline"
-
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/alibaba/ilogtail/pkg/pipeline"
 )
 
 var metricKeys []string
@@ -71,14 +71,6 @@ func (kv *KeyValues) Append(key, value string) {
 		key,
 		value,
 	})
-}
-
-func (kv *KeyValues) ToMap() map[string]string {
-	reMap := make(map[string]string)
-	for _, item := range kv.keyValues {
-		reMap[item.Key] = item.Value
-	}
-	return reMap
 }
 
 // Clone ...
