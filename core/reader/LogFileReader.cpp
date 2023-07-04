@@ -23,6 +23,7 @@
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <cityhash/city.h>
+#include <queue>
 #include "common/util.h"
 #include "common/Flags.h"
 #include "common/HashUtil.h"
@@ -426,6 +427,9 @@ LogFileReader::LogFileReader(const string& projectName,
     mLastFilePos = 0;
     mLastFileSize = 0;
     mLogBeginRegPtr = NULL;
+    mLogContinueRegPtr = NULL;
+    mLogEndRegPtr = NULL;
+    mUnmatch = "discard";
     mDiscardUnmatch = discardUnmatch;
     mLastUpdateTime = time(NULL);
     mLastEventTime = mLastUpdateTime;
@@ -478,6 +482,9 @@ LogFileReader::LogFileReader(const std::string& projectName,
         mTopicName = GetTopicName(topicFormat, mHostLogPath);
     mFileEncoding = fileEncoding;
     mLogBeginRegPtr = NULL;
+    mLogContinueRegPtr = NULL;
+    mLogEndRegPtr = NULL;
+    mUnmatch = "discard";
     mDiscardUnmatch = discardUnmatch;
     mLastUpdateTime = time(NULL);
     mLastEventTime = mLastUpdateTime;
@@ -1320,70 +1327,275 @@ void LogFileReader::SetReadBufferSize(int32_t bufSize) {
     BUFFER_SIZE = bufSize;
 }
 
+enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
+
 bool LogFileReader::LogSplit(const char* buffer,
                              int32_t size,
                              int32_t& lineFeed,
                              std::vector<StringView>& logIndex,
                              std::vector<StringView>& discardIndex) {
     SplitState state = SPLIT_UNMATCH;
-    int multiBegIndex = 0;
+    int multiBeginIndex = 0;
     int begIndex = 0;
     int endIndex = 0;
     bool anyMatched = false;
     lineFeed = 0;
     std::string exception;
-    while (endIndex < size) {
-        if (buffer[endIndex] == '\n' || endIndex == size - 1) {
+    while (endIndex <= size) {
+        if (endIndex == size || buffer[endIndex] == '\n') {
             lineFeed++;
             exception.clear();
-            if (mLogBeginRegPtr == NULL
-                || BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
-                anyMatched = true;
-                if (multiBegIndex < begIndex) {
-                    if (state == SPLIT_UNMATCH && mDiscardUnmatch) {
-                        discardIndex.emplace_back(buffer + multiBegIndex, begIndex - 1 - multiBegIndex);
+            switch (state) {
+                case SPLIT_UNMATCH:
+                    if (!IsMultiLine()) {
+                        anyMatched = true;
+                        logIndex.emplace_back(buffer + begIndex, endIndex - begIndex);
+                        multiBeginIndex = endIndex + 1;
+                        break;
+                    } else if (mLogBeginRegPtr != NULL) {
+                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
+                            state = SPLIT_BEGIN;
+                            // Other unmatch strategies cannot be confirmed here
+                            if (multiBeginIndex != begIndex && mUnmatch == "append") {
+                                anyMatched = true;
+                                logIndex[logIndex.size() - 1] = StringView(logIndex[logIndex.size() - 1].begin(),
+                                                                           logIndex[logIndex.size() - 1].length()
+                                                                               + begIndex - 1 - multiBeginIndex);
+                                multiBeginIndex = begIndex;
+                            }
+                            break;
+                        }
+                    } else if (mLogContinueRegPtr != NULL) {
+                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                            state = SPLIT_CONTINUE;
+                            // Other unmatch strategies cannot be confirmed here
+                            if (multiBeginIndex != begIndex && mUnmatch == "append") {
+                                anyMatched = true;
+                                logIndex[logIndex.size() - 1] = StringView(logIndex[logIndex.size() - 1].begin(),
+                                                                           logIndex[logIndex.size() - 1].length()
+                                                                               + begIndex - 1 - multiBeginIndex);
+                                multiBeginIndex = begIndex;
+                            }
+                            break;
+                        }
+                    } else if (mLogEndRegPtr != NULL) {
+                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
+                            anyMatched = true;
+                            // Other unmatch strategies cannot be confirmed here
+                            if (multiBeginIndex != begIndex && mUnmatch == "append") {
+                                anyMatched = true;
+                                logIndex[logIndex.size() - 1] = StringView(logIndex[logIndex.size() - 1].begin(),
+                                                                           logIndex[logIndex.size() - 1].length()
+                                                                               + begIndex - 1 - multiBeginIndex);
+                                multiBeginIndex = begIndex;
+                            }
+                            logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
+                            multiBeginIndex = endIndex + 1;
+                            break;
+                        }
+                    }
+                    // Unmatch log
+                    if (mUnmatch == "discard") {
+                        discardIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
+                        multiBeginIndex = endIndex + 1;
+                    } else if (mUnmatch == "singleline") {
+                        logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
+                        multiBeginIndex = endIndex + 1;
+                    } else if (mUnmatch == "append") {
+                        if (logIndex.size() == 0) {
+                            logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
+                        } else {
+                            logIndex[logIndex.size() - 1]
+                                = StringView(logIndex[logIndex.size() - 1].begin(),
+                                            logIndex[logIndex.size() - 1].length() + endIndex + 1 - multiBeginIndex);
+                        }
+                        multiBeginIndex = endIndex + 1;
+                    }
+                    // No need to update multiBeginIndex when mUnmatch == "prepend"
+                    break;
+
+                case SPLIT_BEGIN:
+                    if (mLogContinueRegPtr != NULL) {
+                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                            state = SPLIT_CONTINUE;
+                        } else {
+                            state = SPLIT_UNMATCH;
+                            if (mUnmatch == "discard") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            } else if (mUnmatch == "singleline") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            }
+                        }
+                    } else if (mLogEndRegPtr != NULL) {
+                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
+                            state = SPLIT_UNMATCH;
+                            anyMatched = true;
+                            logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
+                            multiBeginIndex = endIndex + 1;
+                        } else {
+                            state = SPLIT_UNMATCH;
+                            if (mUnmatch == "discard") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            } else if (mUnmatch == "singleline") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            }
+                        }
+                    } else if (mLogBeginRegPtr != NULL) {
+                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
+                            anyMatched = true;
+                            if (multiBeginIndex != begIndex) {
+                                logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
+                                multiBeginIndex = begIndex;
+                            }
+                        } else {
+                            state = SPLIT_UNMATCH;
+                            anyMatched = true;
+                            logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
+                            multiBeginIndex = begIndex;
+                            if (mUnmatch == "discard") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            } else if (mUnmatch == "singleline") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case SPLIT_CONTINUE:
+                    if (mLogContinueRegPtr != NULL && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                        break;
+                    }
+                    if (mLogEndRegPtr != NULL) {
+                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
+                            state = SPLIT_UNMATCH;
+                            anyMatched = true;
+                            logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
+                            multiBeginIndex = endIndex + 1;
+                        } else {
+                            state = SPLIT_UNMATCH;
+                            if (mUnmatch == "discard") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            } else if (mUnmatch == "singleline") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            }
+                        }
+                    } else if (mLogBeginRegPtr != NULL) {
+                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
+                            state = SPLIT_BEGIN;
+                            anyMatched = true;
+                            logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
+                            multiBeginIndex = begIndex;
+                        } else {
+                            state = SPLIT_UNMATCH;
+                            anyMatched = true;
+                            logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
+                            multiBeginIndex = begIndex;
+                            if (mUnmatch == "discard") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            } else if (mUnmatch == "singleline") {
+                                for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                    if (i == endIndex || buffer[i] == '\n') {
+                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                        multiBeginIndex = i + 1;
+                                    }
+                                }
+                            }
+                        }
                     } else {
-                        logIndex.emplace_back(buffer + multiBegIndex, begIndex - 1 - multiBegIndex);
+                        state = SPLIT_UNMATCH;
+                        anyMatched = true;
+                        logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
+                        multiBeginIndex = begIndex;
+                        if (mUnmatch == "discard") {
+                            for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                if (i == endIndex || buffer[i] == '\n') {
+                                    discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                    multiBeginIndex = i + 1;
+                                }
+                            }
+                        } else if (mUnmatch == "singleline") {
+                            for (int i = multiBeginIndex; i <= endIndex; i++) {
+                                if (i == endIndex || buffer[i] == '\n') {
+                                    logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                                    multiBeginIndex = i + 1;
+                                }
+                            }
+                        }
                     }
-                    multiBegIndex = begIndex;
-                }
-                state = SPLIT_START;
-            } else {
-                if (state == SPLIT_START || state == SPLIT_CONTINUE) {
-                    state = SPLIT_CONTINUE;
-                }
-                if (!exception.empty() && AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-                    if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                        LOG_ERROR(sLogger,
-                                  ("regex_match in LogSplit fail, exception",
-                                   exception)("project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
-                        LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
-                                                               "regex_match in LogSplit fail:" + exception + ", file"
-                                                                   + mHostLogPath,
-                                                               mProjectName,
-                                                               mCategory,
-                                                               mRegion);
-                    }
-                }
+                    break;
             }
             begIndex = endIndex + 1;
+            if (!exception.empty()) {
+                if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
+                    if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                        LOG_ERROR(sLogger,
+                                ("regex_match in LogSplit fail, exception",
+                                exception)("project", mProjectName)("logstore", mCategory)("file", mLogPath));
+                    }
+                    LogtailAlarm::GetInstance()->SendAlarm(
+                        REGEX_MATCH_ALARM, "regex_match in LogSplit fail:" + exception, mProjectName, mCategory, mRegion);
+                }
+            }
         }
         endIndex++;
     }
-    if (state == SPLIT_UNMATCH && mDiscardUnmatch) {
-        discardIndex.emplace_back(buffer + multiBegIndex, begIndex - multiBegIndex);
-    } else {
-        logIndex.emplace_back(buffer + multiBegIndex, begIndex - multiBegIndex);
-    }
-    if (!exception.empty()) {
-        if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-            if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                LOG_ERROR(sLogger,
-                          ("regex_match in LogSplit fail, exception",
-                           exception)("project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
+    if (multiBeginIndex < size) {
+        if (!IsMultiLine()) {
+            logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
+        } else if (state == SplitState::SPLIT_UNMATCH) {
+            if (mUnmatch == "append") {
+                endIndex = buffer[size-1] == '\n' ? size : size + 1;
+                logIndex[logIndex.size() - 1]
+                    = StringView(logIndex[logIndex.size() - 1].begin(),
+                                 logIndex[logIndex.size() - 1].length() + endIndex - multiBeginIndex);
+            } else if (mUnmatch == "prepend"){
+                logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
             }
-            LogtailAlarm::GetInstance()->SendAlarm(
-                REGEX_MATCH_ALARM, "regex_match in LogSplit fail:" + exception, mProjectName, mCategory, mRegion);
         }
     }
     return anyMatched;
@@ -1616,17 +1828,8 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData) 
         nbytes = AlignLastCharacter(sbuffer.data, nbytes);
     }
 
-    // before: bufferptr[nbytes-1] == ?
-    // after: bufferptr[nbytes-1] == '\n' or nbytes == READ_BYTE
-    bool adjustFlag = false;
-    while (nbytes > 0 && sbuffer.data[nbytes - 1] != '\n') {
-        nbytes--;
-        adjustFlag = true;
-    }
-    if ((nbytes > 0 && (adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
-        int32_t rollbackLineFeedCount;
-        nbytes = LastMatchedLine(sbuffer.data, nbytes, rollbackLineFeedCount);
-    }
+    int32_t rollbackLineFeedCount;
+    nbytes = LastMatchedLine(sbuffer.data, nbytes, rollbackLineFeedCount);
 
     if (nbytes == 0) {
         if (moreData) { // excessively long line without '\n' or multiline begin
@@ -1675,20 +1878,6 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
     }
     bool adjustFlag = false;
     bool logTooLongSplitFlag = false;
-    while (readCharCount > 0 && gbkBuffer[readCharCount - 1] != '\n') {
-        readCharCount--;
-        adjustFlag = true;
-    }
-
-    if (readCharCount == 0) {
-        if (moreData) {
-            readCharCount = READ_BYTE;
-            // Cannot get the split position here, so just mark a flag and send alarm later
-            logTooLongSplitFlag = moreData;
-        } else {
-            return;
-        }
-    }
     gbkBuffer[readCharCount] = '\0';
 
     vector<size_t> lineFeedPos = {0};
@@ -1837,29 +2026,67 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
 int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount) {
     int endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
     rollbackLineFeedCount = 0;
-    if (mLogBeginRegPtr == nullptr && buffer[endPs] == '\n') {
-        return size;
+    // Single line rollback
+    if (!IsMultiLine()) {
+        while (endPs >= 0 && buffer[endPs] != '\n') {
+            endPs--;
+        }
+        if (endPs != size - 1) {
+            ++rollbackLineFeedCount;
+        }
+        buffer[endPs + 1] = '\0';
+        return endPs + 1;
     }
+    // Multi line rollback
     int begPs = size - 2;
     std::string exception;
     while (begPs >= 0) {
-        if (buffer[begPs] == '\n') {
+        if (buffer[begPs] == '\n' || begPs == 0) {
+            int lineBegin = begPs == 0 ? 0 : begPs + 1;
             ++rollbackLineFeedCount;
             char temp = buffer[endPs];
             buffer[endPs] = '\0';
-            // ignore regex match fail, no need log here
-            if (mLogBeginRegPtr == nullptr
-                || BoostRegexMatch(buffer + begPs + 1, endPs - begPs - 1, *mLogBeginRegPtr, exception)) {
-                buffer[begPs + 1] = '\0';
-                return begPs + 1;
+            if (mLogContinueRegPtr != NULL && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogContinueRegPtr, exception)) {
+                --rollbackLineFeedCount;  // The first rollback line will be increased twice, so decrease here
+                // rollback until one line unmatch continue regex
+                while (begPs >= 0) {
+                    if (buffer[begPs] == '\n') {
+                        ++rollbackLineFeedCount;
+                        if (!BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogContinueRegPtr, exception)) {
+                            break;
+                        }
+                        endPs = begPs;
+                    }
+                    begPs--;
+                    lineBegin = begPs == 0 ? 0 : begPs + 1;
+                }
+                if (begPs < 0 && buffer[0] != '\n') {
+                    ++rollbackLineFeedCount;
+                }
+                // if begin pattern, then rollback current line
+                if (begPs < 0 || (mLogBeginRegPtr != nullptr && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogBeginRegPtr, exception))) {
+                    buffer[lineBegin] = '\0';
+                    return lineBegin;
+                } else { // only rollback line after
+                    --rollbackLineFeedCount;
+                    buffer[endPs + 1] = '\0';
+                    return endPs + 1;
+                }
+            } else if (mLogEndRegPtr != NULL && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogEndRegPtr, exception)) {
+                // Ensure the end line is complete
+                if (temp == '\n') {
+                    --rollbackLineFeedCount;
+                    buffer[endPs + 1] = '\0';
+                    return endPs + 1;
+                }
+            } else if (mLogBeginRegPtr != NULL && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogBeginRegPtr, exception)) {
+                buffer[lineBegin] = '\0';
+                return lineBegin;
             }
             buffer[endPs] = temp;
             endPs = begPs;
         }
         begPs--;
-    }
-    if (buffer[0] != '\n') {
-        ++rollbackLineFeedCount;
     }
     return 0;
 }
@@ -1940,6 +2167,14 @@ LogFileReader::~LogFileReader() {
     if (mLogBeginRegPtr != NULL) {
         delete mLogBeginRegPtr;
         mLogBeginRegPtr = NULL;
+    }
+    if (mLogContinueRegPtr != NULL) {
+        delete mLogContinueRegPtr;
+        mLogContinueRegPtr = NULL;
+    }
+    if (mLogEndRegPtr != NULL) {
+        delete mLogEndRegPtr;
+        mLogEndRegPtr = NULL;
     }
     LOG_INFO(sLogger,
              ("try to close the file and destruct the corresponding log reader, project",

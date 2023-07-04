@@ -108,6 +108,9 @@ public:
     LogType mLogType;
     std::string mConfigName; // name of log e.g. aliyun_com "##1.0##sls-zc-test$home-log"
     std::string mLogBeginReg; // the log begin line regex
+    std::string mLogContinueReg; // the log continue line regex
+    std::string mLogEndReg; // the log end line regex
+    std::string mUnmatch; // the strategy to handle unmatch log
     std::string mProjectName; // project name
     bool mIsPreserve; // true is service dir, false is job dir
     int mPreserveDepth; // for job dir, the depth that will not be watch timeout
@@ -231,6 +234,9 @@ public:
            LogType logType,
            const std::string& logName,
            const std::string& logBeginReg,
+           const std::string& logContinueReg,
+           const std::string& logEndReg,
+           const std::string& unmatch,
            const std::string& projectName,
            bool isPreserve,
            int preserveDepth,

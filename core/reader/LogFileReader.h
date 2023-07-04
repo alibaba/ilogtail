@@ -127,6 +127,38 @@ public:
             mLogBeginRegPtr = new boost::regex(reg.c_str());
         }
     }
+        
+    void SetLogContinueRegex(const std::string& reg) {
+        if (mLogContinueRegPtr != NULL) {
+            delete mLogContinueRegPtr;
+            mLogContinueRegPtr = NULL;
+        }
+        if (reg.empty() == false && reg != ".*") {
+            mLogContinueRegPtr = new boost::regex(reg.c_str());
+        }
+    }
+
+    void SetLogEndRegex(const std::string& reg) {
+        if (mLogEndRegPtr != NULL) {
+            delete mLogEndRegPtr;
+            mLogEndRegPtr = NULL;
+        }
+        if (reg.empty() == false && reg != ".*") {
+            mLogEndRegPtr = new boost::regex(reg.c_str());
+        }
+    }
+
+    void SetUnmatch(const std::string& unmatch) {
+        if (unmatch == "discard" || unmatch == "singleline" || unmatch == "append" || unmatch == "prepend") {
+            mUnmatch = unmatch;
+        } else {
+            mUnmatch = mDiscardUnmatch ? "discard" : "append";
+        }
+    }
+
+    bool IsMultiLine() {
+        return mLogBeginRegPtr != NULL || mLogContinueRegPtr != NULL || mLogEndRegPtr != NULL;
+    }
 
     std::string GetTopicName(const std::string& topicConfig, const std::string& path);
 
@@ -389,8 +421,11 @@ protected:
     std::string mTopicName;
     time_t mLastUpdateTime;
     boost::regex* mLogBeginRegPtr;
+    boost::regex* mLogContinueRegPtr;
+    boost::regex* mLogEndRegPtr;
     FileEncoding mFileEncoding;
     bool mDiscardUnmatch;
+    std::string mUnmatch;
     LogType mLogType;
     DevInode mDevInode;
     bool mFirstWatched;
@@ -552,6 +587,7 @@ private:
     friend class SenderUnittest;
     friend class AppConfigUnittest;
     friend class ModifyHandlerUnittest;
+    friend class LogSplitUnittest;
 
 protected:
     void UpdateReaderManual();

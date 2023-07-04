@@ -1028,9 +1028,9 @@ APSARA_UNIT_TEST_CASE(ConfigMatchUnittest, TestBlacklistControlWildcardBasePath,
 void ConfigMatchUnittest::TestChinesePathAndFilePattern() {
     LOG_INFO(sLogger, ("TestChinesePathAndFilePattern() begin", time(NULL)));
     CaseSetUp();
-    auto const pathRoot = gRootDir + PATH_SEPARATOR + "жпндб╥╬╤";
+    auto const pathRoot = gRootDir + PATH_SEPARATOR + "О©╫О©╫О©╫О©╫б╥О©╫О©╫";
     auto const fileNames
-        = std::vector<std::string>{"жпнднд╪Чa.txt", "жпнднд╪Чbжпнд.txt", "жпнднд╪Чc.txtжп", "жпнднд╪Чd.txtt", "a.txt"};
+        = std::vector<std::string>{"О©╫О©╫О©╫О©╫О©╫д╪О©╫a.txt", "О©╫О©╫О©╫О©╫О©╫д╪О©╫bО©╫О©╫О©╫О©╫.txt", "О©╫О©╫О©╫О©╫О©╫д╪О©╫c.txtО©╫О©╫", "О©╫О©╫О©╫О©╫О©╫д╪О©╫d.txtt", "a.txt"};
     auto const matchResults = std::vector<bool>{true, true, false, false, false};
     bfs::create_directories(pathRoot);
     for (auto& fn : fileNames) {
@@ -1038,13 +1038,13 @@ void ConfigMatchUnittest::TestChinesePathAndFilePattern() {
     }
 
     std::string basePath = pathRoot;
-    std::string filePattern = "жпнднд╪Ч*.txt";
+    std::string filePattern = "О©╫О©╫О©╫О©╫О©╫д╪О©╫*.txt";
 #if defined(_MSC_VER)
     basePath = EncodingConverter::GetInstance()->FromACPToUTF8(basePath);
     filePattern = EncodingConverter::GetInstance()->FromACPToUTF8(filePattern);
 #endif
     {
-        Config cfg(basePath, filePattern, LogType::REGEX_LOG, "log", ".*", "project", true, 3, 3, "logstore");
+        Config cfg(basePath, filePattern, LogType::REGEX_LOG, "log", ".*", "", "", "", "project", true, 3, 3, "logstore");
         fsutil::Dir dir(pathRoot);
         APSARA_TEST_TRUE(dir.Open());
         while (fsutil::Entry ent = dir.ReadNext()) {
