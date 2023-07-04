@@ -56,6 +56,12 @@ jobs:
         with:
           submodules: true
 
+      - name: Cache Cmake
+        uses: actions/cache@v3
+        with:
+          path: core/build
+          key: core-${{ hashFiles('**/CMakeLists.txt') }}
+
       - name: Build Binary
         if: matrix.runner == 'ubuntu-latest'
         env:

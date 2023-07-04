@@ -14,7 +14,7 @@
 # limitations under the License.
 set -e
 
-TARGET_ARTIFACT_PATH=${TARGET_ARTIFACT_PATH:-"./output/unittest"}
+TARGET_ARTIFACT_PATH=${TARGET_ARTIFACT_PATH:-"./unittest"}
 
 search_files() {
     for file in "$1"/*; do

@@ -44,10 +44,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: unittest-binary
-          path: output
+          path: unittest
 
       - name: Prepare
-        run: chmod -R +x output/unittest
+        run: chmod -R +x unittest
 
       - name: Test
         run: ./.github/scripts/run_ut_ci.sh
