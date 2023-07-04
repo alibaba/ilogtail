@@ -131,11 +131,12 @@ func (p *ExpandParam) getConnector(depth int) string {
 func (p *ExpandParam) ExpandJSONCallBack(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 	p.nowDepth++
 
-	if dataType == jsonparser.Object {
+	switch dataType {
+	case jsonparser.Object:
 		p.flattenObject(key, value)
-	} else if dataType == jsonparser.Array {
+	case jsonparser.Array:
 		p.flattenArray(key, value)
-	} else {
+	default:
 		p.flattenValue(key, value)
 	}
 
@@ -167,7 +168,13 @@ func (p *ExpandParam) flattenArray(key []byte, value []byte) {
 
 	index := 0
 	jsonparser.ArrayEach(value, func(val []byte, dataType jsonparser.ValueType, offset int, err error) {
-		newKey := append(key, fmt.Sprintf("[%d]", index)...)
+		if err != nil {
+			return
+		}
+
+		newKey := make([]byte, len(key), len(key)+10)
+		copy(newKey, key)
+		newKey = append(newKey, fmt.Sprintf("[%d]", index)...)
 		if dataType == jsonparser.Object {
 			p.flattenObject(newKey, val)
 		} else {
