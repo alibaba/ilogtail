@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
 
@@ -114,7 +115,13 @@ func (f *FlusherElasticSearch) Init(context pipeline.Context) error {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher index fail, error", err)
 		return err
 	}
-	f.indexKeys = indexKeys
+	filteredKeys := make([]string, 0, len(indexKeys))
+	for _, key := range indexKeys {
+		if !strings.HasPrefix(key, "+") {
+			filteredKeys = append(filteredKeys, key)
+		}
+	}
+	f.indexKeys = filteredKeys
 
 	cfg := elasticsearch.Config{
 		Addresses: f.Addresses,
@@ -163,6 +170,7 @@ func (f *FlusherElasticSearch) Stop() error {
 }
 
 func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+	nowTime := time.Now().Local()
 	for _, logGroup := range logGroupList {
 		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
 		serializedLogs, values, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
@@ -172,7 +180,7 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 		var buffer []string
 		for index, log := range serializedLogs.([][]byte) {
 			valueMap := values[index]
-			ESIndex, err := FormatIndex(valueMap, f.Index)
+			ESIndex, err := fmtstr.FormatIndex(valueMap, f.Index, uint32(nowTime.Unix()))
 			if err != nil {
 				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch format index fail, error", err)
 			}
@@ -209,10 +217,4 @@ func init() {
 		f := NewFlusherElasticSearch()
 		return f
 	}
-}
-
-// FormatIndex return elasticsearch index dynamically by using a format string
-func FormatIndex(targetValues map[string]string, topicPattern string) (*string, error) {
-	// TODO this is not completed yet, should return dynamic index
-	return &topicPattern, nil
 }
