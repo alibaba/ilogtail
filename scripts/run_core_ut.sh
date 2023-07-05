@@ -25,10 +25,10 @@ search_files() {
             unittest="${file##*_}"
             if [ "$unittest" == "unittest" ]; then
                 echo "============== ${file##*/} =============="
-				cd ${file%/*}
+                cd ${file%/*}
                 ./${file##*/}
-				cd ..
-				echo "===================================="
+                cd -
+                echo "===================================="
             fi
         fi
     done

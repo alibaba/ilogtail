@@ -61,7 +61,6 @@ jobs:
           BUILD_LOGTAIL_UT: ON
           ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
-          MOUNT_OUTPUT_TO_HOST: true
         run: make core
 
       - name: Unit Test

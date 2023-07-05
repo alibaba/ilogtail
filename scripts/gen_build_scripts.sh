@@ -35,7 +35,6 @@ GO_MOD_FILE=${9:-${GO_MOD_FILE:-go.mod}}
 BUILD_LOGTAIL_UT=${BUILD_LOGTAIL_UT:-OFF}
 ENABLE_COMPATIBLE_MODE=${ENABLE_COMPATIBLE_MODE:-OFF}
 ENABLE_STATIC_LINK_CRT=${ENABLE_STATIC_LINK_CRT:-OFF}
-MOUNT_OUTPUT_TO_HOST=${MOUNT_OUTPUT_TO_HOST:-false}
 
 BUILD_SCRIPT_FILE=$GENERATED_HOME/gen_build.sh
 COPY_SCRIPT_FILE=$GENERATED_HOME/gen_copy_docker.sh
@@ -93,7 +92,7 @@ function generateCopyScript() {
   echo 'BINDIR=$(cd $(dirname "${BASH_SOURCE[0]}")&& cd .. && pwd)/'${OUT_DIR}'/' >>$COPY_SCRIPT_FILE
   echo 'rm -rf $BINDIR && mkdir $BINDIR' >>$COPY_SCRIPT_FILE
   echo "id=\$(docker create ${REPOSITORY}:${VERSION})" >>$COPY_SCRIPT_FILE
-  if [ $MOUNT_OUTPUT_TO_HOST ]; then
+  if [ $BUILD_LOGTAIL_UT = "ON" ]; then
     echo 'docker cp "$id":/src/core/build core/build' >>$COPY_SCRIPT_FILE
   fi
 
