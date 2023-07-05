@@ -15,20 +15,19 @@
 package elasticsearch
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
-
-	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/elastic/go-elasticsearch/v8/esapi"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 )
 
 type FlusherElasticSearch struct {
@@ -170,21 +169,34 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", err)
 		}
+		var buffer []string
 		for index, log := range serializedLogs.([][]byte) {
 			valueMap := values[index]
 			ESIndex, err := FormatIndex(valueMap, f.Index)
 			if err != nil {
 				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch format index fail, error", err)
 			}
-			req := esapi.IndexRequest{
-				Index: *ESIndex,
-				Body:  bytes.NewReader(log),
-			}
-			res, err := req.Do(context.Background(), f.esClient)
-			if err != nil {
-				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request fail, error", err)
-			}
-			defer res.Body.Close()
+			buffer = append(buffer, fmt.Sprintf(`{"index": {"_index": "%s"}}`, *ESIndex))
+			buffer = append(buffer, string(log))
+		}
+		body := strings.Join(buffer, "\n")
+		req := esapi.BulkRequest{
+			Body: strings.NewReader(body + "\n"),
+		}
+
+		res, err := req.Do(context.Background(), f.esClient)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request fail, error", err)
+		}
+		defer res.Body.Close()
+
+		switch res.StatusCode / 100 {
+		case 4:
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request client error", res)
+		case 5:
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request server error", res)
+		default:
+			logger.Debug(f.context.GetRuntimeContext(), res)
 		}
 		logger.Debug(f.context.GetRuntimeContext(), "elasticsearch success send events: messageID")
 	}
