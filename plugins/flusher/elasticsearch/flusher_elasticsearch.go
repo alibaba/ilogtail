@@ -176,6 +176,7 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 		serializedLogs, values, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", err)
+			return err
 		}
 		var buffer []string
 		for index, log := range serializedLogs.([][]byte) {
@@ -183,6 +184,7 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 			ESIndex, err := fmtstr.FormatIndex(valueMap, f.Index, uint32(nowTime.Unix()))
 			if err != nil {
 				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch format index fail, error", err)
+				return err
 			}
 			buffer = append(buffer, fmt.Sprintf(`{"index": {"_index": "%s"}}`, *ESIndex))
 			buffer = append(buffer, string(log))
@@ -195,6 +197,7 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 		res, err := req.Do(context.Background(), f.esClient)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request fail, error", err)
+			return err
 		}
 		defer res.Body.Close()
 
