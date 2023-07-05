@@ -16,6 +16,7 @@ package raw
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -45,7 +46,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 		Time: uint32(time.Now().Unix()),
 		Contents: []*protocol.Log_Content{
 			{
-				Key:   ContentKey,
+				Key:   models.ContentKey,
 				Value: string(data),
 			},
 		},
