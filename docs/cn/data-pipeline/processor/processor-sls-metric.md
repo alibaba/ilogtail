@@ -9,7 +9,7 @@
 
 | 参数                 | 类型     | 必选或可选 | 参数说明                                                                                                             |
 |--------------------|--------|-------|------------------------------------------------------------------------------------------------------------------|
-| MetricTimeKey      | String | 可选    | 指定要用作时间戳的字段。默认取`log.Time`。确保指定的字段是合法的、符合格式的纳秒时间戳。                                                                |
+| MetricTimeKey      | String | 可选    | 指定要用作时间戳的字段。默认取`log.Time`。确保指定的字段是合法的、符合格式的纳秒时间戳(19位长数字）。                                                        |
 | MetricLabelKeys    | Array  | 可选    | labels字段的key列表，key需遵循正则表达式： `[a-zA-Z_][a-zA-Z0-9_]*`。如果原始字段中存在 `__labels__` 字段，该值将被追加到列表中。 Label的Value不能包含竖线（\|） |
 | MetricValues       | Map    | 可选    | 时序字段名所使用的key与时序值使用的key的映射。name需遵循正则表达式：`[a-zA-Z_:][a-zA-Z0-9_:]*` ，时序值可以是float类型的字符串。                            |
 | CustomMetricLabels | Map    | 可选    | 要追加的自定义标签。 key需遵循正则表达式： `[a-zA-Z_][a-zA-Z0-9_]*`，Value不能包含竖线（\|）                                                 |
@@ -22,14 +22,14 @@
 
 ```json
 {
-	"labelA": "AAA",
-	"labelB": "BBB",
-	"labelC": "CCC",
-	"nameA": "myname",
-	"valueA": "1.0",
-	"nameB": "myname2",
-	"valueB": "2.0",
-    "__time__": "1579134612000000004"
+  "labelA":"AAA",
+  "labelB":"BBB",
+  "labelC":"CCC",
+  "nameA":"myname",
+  "valueA":"1.0",
+  "nameB":"myname2",
+  "valueB":"2.0",
+  "__time__":"1658491078378371632"
 }
 ```
 
@@ -37,18 +37,22 @@
 
 ```json
 {
-  "processors": [
+  "processors":[
     {
-      "type": "processor_sls_metric",
-      "detail": {
-        "MetricTimeKey": "__time__",
-        "MetricLabelKeys": ["labelA", "labelB", "labelC"],
-        "MetricValues": {
-          "nameA": "valueA",
-          "nameB": "valueB"
+      "type":"processor_sls_metric",
+      "detail":{
+        "MetricTimeKey":"__time__",
+        "MetricLabelKeys":[
+          "labelA",
+          "labelB",
+          "labelC"
+        ],
+        "MetricValues":{
+          "nameA":"valueA",
+          "nameB":"valueB"
         },
-        "CustomMetricLabels": {
-          "labelD": "CustomD"
+        "CustomMetricLabels":{
+          "labelD":"CustomD"
         }
       }
     }
@@ -61,16 +65,16 @@
 ```json
 [
   {
-    "__labels__":"labelA#$#AAA|labelB#$#BBB|labelC#$#CCC|labelD#$#CustomD",
-    "__name__":"myname",
-    "__value__":"1.0",
-    "__time_nanos__":"1579134612000000004"
+      "__labels__":"labelA#$#AAA|labelB#$#BBB|labelC#$#CCC|labelD#$#CustomD",
+      "__name__":"myname",
+      "__value__":"1.0",
+      "__time_nano__":"1658491078378371632"
   },
   {
-    "__labels__":"labelA#$#AAA|labelB#$#BBB|labelC#$#CCC|labelD#$#CustomD",
-    "__name__":"myname2",
-    "__value__":"2.0",
-    "__time_nanos__":"1579134612000000004"
+      "__labels__":"labelA#$#AAA|labelB#$#BBB|labelC#$#CCC|labelD#$#CustomD",
+      "__name__":"myname2",
+      "__value__":"2.0",
+      "__time_nano__":"1658491078378371632"
   }
 ]
 ```
