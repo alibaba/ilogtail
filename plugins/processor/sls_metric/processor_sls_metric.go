@@ -320,16 +320,14 @@ func canParseToFloat64(s string) bool {
 }
 
 func isTimeNano(t string) bool {
-	if len(t) > 19 {
+	if len(t) != 19 {
 		return false
 	}
-
 	for _, c := range t {
 		if !unicode.IsDigit(c) {
 			return false
 		}
 	}
-
 	return true
 }
 
