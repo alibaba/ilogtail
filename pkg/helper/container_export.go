@@ -189,9 +189,17 @@ func SplitRegexFromMap(input map[string]string) (staticResult map[string]string,
 func CreateDockerClient(opt ...docker.Opt) (client *docker.Client, err error) {
 	opt = append(opt, docker.FromEnv)
 	client, err = docker.NewClientWithOpts(opt...)
-	if err == nil {
-		client.NegotiateAPIVersion(context.Background())
+	if err != nil {
+		return nil, err
 	}
+	// add dockerClient connectivity tests
+	pingCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	_, err = client.Ping(pingCtx)
+	if err != nil {
+		return nil, err
+	}
+	client.NegotiateAPIVersion(context.Background())
 	return
 }
 

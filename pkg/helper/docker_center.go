@@ -643,7 +643,13 @@ func getDockerCenterInstance() *DockerCenter {
 			logger.Warning(context.Background(), "check docker mount path error", err.Error())
 		}
 		var enableCriFinding = criRuntimeWrapper != nil
-		var enableDocker = dockerCenterInstance.initClient() == nil
+		var enableDocker = false
+		// if enableCriFinding is true,There is no need to initialize dockerClient.
+		if !enableCriFinding {
+			if dockerCenterInstance.initClient() == nil {
+				enableDocker = true
+			}
+		}
 		var enableStatic = isStaticContainerInfoEnabled()
 		containerFindingManager = NewContainerDiscoverManager(enableDocker, enableCriFinding, enableStatic)
 		containerFindingManager.Init(3)
