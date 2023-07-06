@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metric
+package sls_metric
 
 import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
