@@ -115,16 +115,16 @@ func init() {
 }
 
 type ExpandParam struct {
-	sourceKey            string
-	log                  *protocol.Log
-	contents             models.LogContents
-	preKey               string
-	nowDepth             int
-	maxDepth             int
-	connector            string
-	prefix               string
-	ignoreFirstConnector bool
-	isSourceKeyOverwritten  bool
+	sourceKey              string
+	log                    *protocol.Log
+	contents               models.LogContents
+	preKey                 string
+	nowDepth               int
+	maxDepth               int
+	connector              string
+	prefix                 string
+	ignoreFirstConnector   bool
+	isSourceKeyOverwritten bool
 }
 
 func (p *ExpandParam) getConnector(depth int) string {
