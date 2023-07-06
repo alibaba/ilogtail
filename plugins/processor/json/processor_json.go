@@ -124,7 +124,7 @@ type ExpandParam struct {
 	connector            string
 	prefix               string
 	ignoreFirstConnector bool
-	isSourceKeyConflict  bool
+	isSourceKeyOverwritten  bool
 }
 
 func (p *ExpandParam) getConnector(depth int) string {
@@ -178,7 +178,7 @@ func (p *ExpandParam) appendNewContent(key string, value string) {
 		}
 		p.contents.Add(key, value)
 		if key == p.sourceKey {
-			p.isSourceKeyConflict = true
+			p.isSourceKeyOverwritten = true
 		}
 	}
 }
@@ -228,7 +228,7 @@ func (p *ProcessorJSON) processEvent(event models.PipelineEvent) {
 	if err != nil {
 		logger.Errorf(p.context.GetRuntimeContext(), "PROCESSOR_JSON_PARSER_ALARM", "parser json error %v", err)
 	}
-	if !p.shouldKeepSource(err) && !param.isSourceKeyConflict {
+	if !p.shouldKeepSource(err) && !param.isSourceKeyOverwritten {
 		contents.Delete(p.SourceKey)
 	}
 }
