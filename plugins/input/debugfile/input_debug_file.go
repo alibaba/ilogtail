@@ -22,6 +22,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 // InputDebugFile can reads some lines from head in specified file, then set them as same field.
@@ -75,7 +76,7 @@ func (r *InputDebugFile) Collect(collector pipeline.Collector) error {
 
 func (r *InputDebugFile) Read(context pipeline.PipelineContext) error {
 	body := strings.Join(r.logs, "\n")
-	log := models.NewLog("debug_log", []byte(body), "info", "", "", models.NewTags(), uint64(time.Now().Unix()))
+	log := models.NewLog("debug_log", util.ZeroCopyStringToBytes(body), "info", "", "", models.NewTags(), uint64(time.Now().Unix()))
 	if r.FieldName != models.BodyKey {
 		log.Contents.Add(r.FieldName, body)
 	}

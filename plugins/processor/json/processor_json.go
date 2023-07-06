@@ -23,6 +23,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 type ProcessorJSON struct {
@@ -133,7 +134,7 @@ func (p *ExpandParam) getConnector(depth int) string {
 	return p.connector
 }
 
-func (p *ExpandParam) ExpandJSONCallBack(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+func (p *ExpandParam) ExpandJSONCallBack(key []byte, value []byte, dataType jsonparser.ValueType, _ int) error {
 	p.nowDepth++
 	if p.nowDepth == p.maxDepth || dataType != jsonparser.Object {
 		if dataType == jsonparser.String {
@@ -201,7 +202,12 @@ func (p *ProcessorJSON) processEvent(event models.PipelineEvent) {
 		return
 	}
 	objectVal := contents.Get(p.SourceKey)
-	stringVal, ok := objectVal.(string)
+	bytesVal, ok := objectVal.([]byte)
+	if !ok {
+		var stringVal string
+		stringVal, ok = objectVal.(string)
+		bytesVal = util.ZeroCopyStringToBytes(stringVal)
+	}
 	if !ok {
 		logger.Warningf(p.context.GetRuntimeContext(), "PROCESSOR_JSON_FIND_ALARM", "key %v is not string", p.SourceKey)
 		return
@@ -218,7 +224,7 @@ func (p *ProcessorJSON) processEvent(event models.PipelineEvent) {
 	if p.UseSourceKeyAsPrefix {
 		param.preKey = p.SourceKey
 	}
-	err := jsonparser.ObjectEach([]byte(stringVal), param.ExpandJSONCallBack)
+	err := jsonparser.ObjectEach(bytesVal, param.ExpandJSONCallBack)
 	if err != nil {
 		logger.Errorf(p.context.GetRuntimeContext(), "PROCESSOR_JSON_PARSER_ALARM", "parser json error %v", err)
 	}

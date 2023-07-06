@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
 
@@ -152,6 +153,121 @@ func TestNoKeyError(t *testing.T) {
 	log := &protocol.Log{Time: 0}
 	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "d_key", Value: jsonVal})
 	processor.processLog(log)
+	memoryLog, ok := logger.ReadMemoryLog(1)
+	assert.True(t, ok)
+	assert.True(t, strings.Contains(memoryLog, "PROCESSOR_JSON_FIND_ALARM\tcannot find key s_key"))
+}
+
+func TestSourceKeyV2(t *testing.T) {
+	processor, err := newProcessor()
+	require.NoError(t, err)
+	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	contents := log.GetIndices()
+	contents.Add("s_key", jsonVal)
+	processor.processEvent(log)
+	assert.True(t, contents.Contains("js_key-k1-k2-k3-k4-k51"))
+	assert.Equal(t, "51", contents.Get("js_key-k1-k2-k3-k4-k51"))
+	assert.True(t, contents.Contains("js_key-k1-k2-k3-k4-k52"))
+	assert.Equal(t, "52", contents.Get("js_key-k1-k2-k3-k4-k52"))
+	assert.True(t, contents.Contains("js_key-k1-k2-k3-k41"))
+	assert.Equal(t, "41", contents.Get("js_key-k1-k2-k3-k41"))
+}
+
+func TestIgnoreFirstConnectorV2(t *testing.T) {
+	processor, err := newProcessor()
+	require.NotNil(t, processor)
+	require.NoError(t, err)
+
+	processor.IgnoreFirstConnector = true
+	processor.UseSourceKeyAsPrefix = false
+	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	contents := log.GetIndices()
+	contents.Add("s_key", jsonVal)
+	processor.processEvent(log)
+	assert.True(t, contents.Contains("jk1-k2-k3-k4-k51"))
+	assert.Equal(t, "51", contents.Get("jk1-k2-k3-k4-k51"))
+	assert.True(t, contents.Contains("jk1-k2-k3-k4-k52"))
+	assert.Equal(t, "52", contents.Get("jk1-k2-k3-k4-k52"))
+	assert.True(t, contents.Contains("jk1-k2-k3-k41"))
+	assert.Equal(t, "41", contents.Get("jk1-k2-k3-k41"))
+}
+
+func TestExpandDepthV2(t *testing.T) {
+	processor, err := newProcessor()
+	if processor == nil {
+		return
+	}
+	processor.ExpandDepth = 1
+	require.NoError(t, err)
+	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	contents := log.GetIndices()
+	contents.Add("s_key", jsonVal)
+	processor.processEvent(log)
+	assert.True(t, contents.Contains("js_key-k1"))
+	assert.Equal(t, "{\"k2\":{\"k3\":{\"k4\":{\"k51\":\"51\",\"k52\":\"52\"},\"k41\":\"41\"}}}", contents.Get("js_key-k1"))
+}
+
+func TestKeepSourceV2(t *testing.T) {
+	processor, err := newProcessor()
+	if processor == nil {
+		return
+	}
+	processor.KeepSource = false
+	processor.ExpandDepth = 1
+	require.NoError(t, err)
+	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	contents := log.GetIndices()
+	contents.Add("s_key", jsonVal)
+	processor.processEvent(log)
+	assert.True(t, contents.Contains("js_key-k1"))
+	assert.Equal(t, "{\"k2\":{\"k3\":{\"k4\":{\"k51\":\"51\",\"k52\":\"52\"},\"k41\":\"41\"}}}", contents.Get("js_key-k1"))
+}
+
+func TestKeepSourceIfParseErrorV2(t *testing.T) {
+	processor, err := newProcessor()
+	require.NoError(t, err)
+	require.NotNil(t, processor)
+
+	processor.KeepSource = false
+	processor.ExpandDepth = 1
+
+	// Case 1: Valid log, no source key in output log.
+	{
+		log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+		contents := log.GetIndices()
+		contents.Add("s_key", jsonVal)
+		processor.processEvent(log)
+		assert.Equal(t, 1, contents.Len())
+		assert.True(t, contents.Contains("js_key-k1"))
+		assert.Equal(t, "{\"k2\":{\"k3\":{\"k4\":{\"k51\":\"51\",\"k52\":\"52\"},\"k41\":\"41\"}}}", contents.Get("js_key-k1"))
+	}
+
+	// Case 2: Invalid log, keep source key in output log.
+	{
+		const invalidValue = "hello"
+		log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+		contents := log.GetIndices()
+		contents.Add("s_key", invalidValue)
+		processor.processEvent(log)
+		assert.Equal(t, 1, contents.Len())
+		assert.True(t, contents.Contains("s_key"))
+		assert.Equal(t, invalidValue, contents.Get("s_key"))
+	}
+}
+
+func TestNoKeyErrorV2(t *testing.T) {
+	logger.ClearMemoryLog()
+	processor, err := newProcessor()
+	if processor == nil {
+		return
+	}
+	processor.KeepSource = false
+	processor.ExpandDepth = 1
+	require.NoError(t, err)
+	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	contents := log.GetIndices()
+	contents.Add("d_key", jsonVal)
+	processor.processEvent(log)
 	memoryLog, ok := logger.ReadMemoryLog(1)
 	assert.True(t, ok)
 	assert.True(t, strings.Contains(memoryLog, "PROCESSOR_JSON_FIND_ALARM\tcannot find key s_key"))

@@ -268,12 +268,11 @@ func (p *FlusherStdout) writeLogBody(writer *jsoniter.Stream, log *models.Log) {
 	_, _ = writer.Write([]byte{','})
 	writer.WriteObjectField("spanID")
 	writer.WriteString(log.GetSpanID())
-	_, _ = writer.Write([]byte{','})
 	contents := log.GetIndices()
 	for key, value := range contents.Iterator() {
+		_, _ = writer.Write([]byte{','})
 		writer.WriteObjectField(key)
 		_, _ = writer.Write([]byte(fmt.Sprintf("%#v", value)))
-		_, _ = writer.Write([]byte{','})
 	}
 }
 
