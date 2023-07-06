@@ -230,16 +230,11 @@ TraverseLogArray:
 					logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricTime)
 					continue TraverseLogArray
 				}
-				timeNano = cont.Value
+				timeNano = convertToTimestamp(cont.Value)
 			}
 
 			if len(p.MetricTimeKey) == 0 {
-				time := convertToTimestamp(log.Time)
-				if !isTimeNano(time) {
-					logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricTime)
-					continue TraverseLogArray
-				}
-				timeNano = time
+				timeNano = convertToTimestamp(log.Time)
 			}
 		}
 		if len(timeNano) == 0 {
@@ -310,6 +305,11 @@ func convertToTimestamp(values interface{}) string {
 		timestamp = strconv.FormatFloat(t, 'f', -1, 64)
 	case uint32:
 		timestamp = strconv.FormatFloat(float64(t), 'f', -1, 64)
+	case string:
+		timestamp = values.(string)
+	}
+	if len(timestamp) < 19 {
+		timestamp += strings.Repeat("0", 19-len(timestamp))
 	}
 	return timestamp
 }
