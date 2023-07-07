@@ -57,7 +57,7 @@ var (
 var (
 	errInvalidMetricLabelKey      = errors.New("the Key of Label must follow the regular expression: [a-zA-Z_][a-zA-Z0-9_]*")
 	errInvalidMetricLabelValue    = errors.New("label value can not contain '|' or '#$#'")
-	errInvalidMetricLabelKeyCount = errors.New("the number of label keys must be equal to the number of MetricLabelKeys")
+	errInvalidMetricLabelKeyCount = errors.New("the number of labels must be equal to the number of MetricLabelKeys")
 
 	errEmptyMetricLabel = errors.New("metricLabel is be empty")
 
@@ -167,12 +167,12 @@ TraverseLogArray:
 				for _, label := range labels {
 					keyValues := strings.Split(label, "#$#")
 					key := keyValues[0]
-					// The Key of Label must follow the regular expression: [a-zA-Z_][a-zA-Z0-9_]*
-					if !metricLabelKeyRegex.MatchString(key) {
-						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricLabelKey)
+					if p.metricLabelKeysMap[key] {
+						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errFieldRepeated)
 						continue TraverseLogArray
 					}
-					if p.metricLabelKeysMap[key] {
+					// The Key of Label must follow the regular expression: [a-zA-Z_][a-zA-Z0-9_]*
+					if !metricLabelKeyRegex.MatchString(key) {
 						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricLabelKey)
 						continue TraverseLogArray
 					}
@@ -224,14 +224,9 @@ TraverseLogArray:
 				}
 				timeNano = convertToTimestamp(cont.Value)
 			}
-
-			if len(p.MetricTimeKey) == 0 {
-				timeNano = convertToTimestamp(log.Time)
-			}
 		}
 		if len(timeNano) == 0 {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errEmptyMetricTime)
-			continue TraverseLogArray
+			timeNano = convertToTimestamp(log.Time)
 		}
 
 		// The number of labels must be equal to the number of label fields.
