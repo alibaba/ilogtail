@@ -17,14 +17,13 @@ package helper
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strings"
-	"time"
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/events"
 	docker "github.com/docker/docker/client"
-
-	"github.com/alibaba/ilogtail/pkg/logger"
+	"regexp"
+	"strings"
+	"time"
 )
 
 type ContainerMeta struct {
