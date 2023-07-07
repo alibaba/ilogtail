@@ -20,8 +20,6 @@ package helper
 import (
 	"errors"
 	"runtime"
-
-	"github.com/docker/docker/api/types"
 )
 
 var errUninplemented = errors.New("Unimplemented on " + runtime.GOOS)
@@ -53,9 +51,9 @@ func IsCRIRuntimeValid(_ string) bool {
 	return false
 }
 
-func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(_ types.ContainerJSON) string {
+/*func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(_ types.ContainerJSON) string {
 	return ""
-}
+}*/
 
 // NewCRIRuntimeWrapper ...
 func NewCRIRuntimeWrapper(_ *DockerCenter) (*CRIRuntimeWrapper, error) {
