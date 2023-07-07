@@ -21,11 +21,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/containerd/containerd"
 	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
-	"path"
 	"strings"
 	"sync"
 	"time"
@@ -60,8 +60,8 @@ type innerContainerInfo struct {
 	Status string
 }
 type CRIRuntimeWrapper struct {
-	dockerCenter *DockerCenter
-
+	dockerCenter   *DockerCenter
+	nativeClient   *containerd.Client
 	client         cri.RuntimeServiceClient
 	runtimeVersion *cri.VersionResponse
 
@@ -223,9 +223,19 @@ func NewCRIRuntimeWrapper(dockerCenter *DockerCenter) (*CRIRuntimeWrapper, error
 		return nil, err
 	}
 
+	containerdClient, err := containerd.New(containerdUnixSocket, containerd.WithDefaultNamespace("k8s.io"))
+	if err != nil {
+		return nil, err
+	}
+	_, err = containerdClient.Version(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
 	return &CRIRuntimeWrapper{
 		dockerCenter:           dockerCenter,
 		client:                 client,
+		nativeClient:           containerdClient,
 		runtimeVersion:         runtimeVersion,
 		containers:             make(map[string]*innerContainerInfo),
 		containerHistory:       make(map[string]bool),
@@ -335,7 +345,14 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 			})
 		}
 	}
-
+	if ci.Snapshotter != "" && ci.SnapshotKey != "" {
+		uppDir := cw.getContainerUpperDir(ci.SnapshotKey, ci.Snapshotter)
+		if uppDir != "" {
+			dockerContainer.GraphDriver.Data = map[string]string{
+				"UpperDir": uppDir,
+			}
+		}
+	}
 	if len(hostnamePath) > 0 {
 		hn, _ := ioutil.ReadFile(GetMountedFilePath(hostnamePath))
 		dockerContainer.Config.Hostname = strings.Trim(string(hn), "\t \n")
@@ -592,51 +609,27 @@ func (cw *CRIRuntimeWrapper) lookupRootfsCache(containerID string) (string, bool
 	return dir, ok
 }
 
-func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSON) string {
-	// For cri-runtime
-	containerID := info.ID
-	if dir, ok := cw.lookupRootfsCache(containerID); ok {
+func (cw *CRIRuntimeWrapper) getContainerUpperDir(containerid, snapshotter string) string {
+	// For Containerd
+	if dir, ok := cw.lookupRootfsCache(containerid); ok {
 		return dir
 	}
-
-	// Example: /run/containerd/io.containerd.runtime.v1.linux/k8s.io/{ContainerID}/rootfs/
-	aDirs := []string{
-		"/run/containerd",
-		"/var/run/containerd",
+	si := cw.nativeClient.SnapshotService(snapshotter)
+	mounts, err := si.Mounts(context.Background(), containerid)
+	if err != nil {
+		logger.Debug(context.Background(), "cannot get snapshot info, containerID", containerid, "errinfo", err)
 	}
-
-	bDirs := []string{
-		"io.containerd.runtime.v2.task",
-		"io.containerd.runtime.v1.linux",
-		"runc",
-	}
-
-	cDirs := []string{
-		"k8s.io",
-		"",
-	}
-
-	dDirs := []string{
-		"rootfs",
-		"root",
-	}
-
-	for _, a := range aDirs {
-		for _, c := range cDirs {
-			for _, d := range dDirs {
-				for _, b := range bDirs {
-					dir := path.Join(a, b, c, info.ID, d)
-					if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
-						cw.rootfsLock.Lock()
-						cw.rootfsCache[containerID] = dir
-						cw.rootfsLock.Unlock()
-						return dir
-					}
+	for _, m := range mounts {
+		if len(m.Options) != 0 {
+			for _, i := range m.Options {
+				s := strings.Split(i, "=")
+				if s[0] == "upperdir" {
+					return s[1]
 				}
+				continue
 			}
 		}
 	}
-
 	return ""
 }
 
