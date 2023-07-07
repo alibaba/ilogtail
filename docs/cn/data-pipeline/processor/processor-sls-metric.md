@@ -2,7 +2,7 @@
 
 ## 简介
 
-`processor_sls_metric processor`插件可以根据配置将sls日志转换为sls metric。
+`processor_sls_metric`插件可以根据配置将sls日志转换为sls metric。
 
 ## 版本
 
