@@ -23,7 +23,7 @@
 
 以下是一个示例配置，展示了如何使用 `processor_sls_metric` 插件来处理数据：
 
-采集`/home/test-log/`路径下的`string_replace.log`文件，测试日志内容的正则匹配与替换功能。
+采集`/home/test-log/`路径下的`nginx.log`文件，使用`processor_regex`插件提取log内容，然后测试`processor_sls_metric`的功能。
 
 * 输入
 
@@ -37,10 +37,8 @@ echo '::1 - - [18/Jul/2022:07:28:01 +0000] "GET /hello/ilogtail HTTP/1.1" 404 15
 enable: true
 inputs:
   - Type: file_log
-    LogPath: /logtail_host/host_mnt/Users/yitao/ilogtail-test/mock-log
-    FilePattern: mock_nginx.log
-    DockerFile: true
-
+    LogPath: /home/test-log
+    FilePattern: nginx.log
 processors:
   - Type: processor_regex
     SourceKey: content
@@ -64,7 +62,13 @@ processors:
     MetricValues:
       time_local: body_bytes_sent
       remote_addr: status
+    CustomMetricLabels:
+      nginx: test
 flushers:
+  - Type: flusher_sls
+    Endpoint: cn-xxx.log.aliyuncs.com
+    ProjectName: test_project
+    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```
@@ -73,7 +77,7 @@ flushers:
 
 ```json
 {
-  "__labels__":"method#$#GET|url#$#/hello/ilogtail",
+  "__labels__":"method#$#GET|nginx#$#test|url#$#/hello/ilogtail",
   "__name__":"::1",
   "__value__":"404",
   "__time_nano__":"1688729393000000000",
@@ -82,14 +86,10 @@ flushers:
 ```
 ```json
 {
-  "__labels__":"method#$#GET|url#$#/hello/ilogtail",
+  "__labels__":"method#$#GET|nginx#$#test|url#$#/hello/ilogtail",
   "__name__":"18/Jul/2022:07:28:01",
   "__value__":"153",
   "__time_nano__":"1688729393000000000",
   "__time__":"1688729393"
 }
 ```
-
-在上述示例中，原始数据包含了一些标签和指标值。通过配置 `processor_sls_metric` 插件，我们指定了要使用的字段和标签，并生成了处理后的数据对象。处理后的数据对象包含了指定的标签、指标值和时间戳字段。
-
-请根据您的实际需求和数据结构，调整配置和字段名称。
