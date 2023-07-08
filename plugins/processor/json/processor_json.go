@@ -159,27 +159,35 @@ func (p *ExpandParam) ExpandJSONCallBack(key []byte, value []byte, dataType json
 
 func (p *ExpandParam) appendNewContent(key string, value string) {
 	if p.log != nil {
-		if len(p.prefix) > 0 {
-			newContent := &protocol.Log_Content{
-				Key:   p.prefix + key,
-				Value: value,
-			}
-			p.log.Contents = append(p.log.Contents, newContent)
-		} else {
-			newContent := &protocol.Log_Content{
-				Key:   key,
-				Value: value,
-			}
-			p.log.Contents = append(p.log.Contents, newContent)
-		}
+		p.appendNewContentV1(key, value)
 	} else {
-		if len(p.prefix) > 0 {
-			key = p.prefix + key
+		p.appendNewContentV2(key, value)
+	}
+}
+
+func (p *ExpandParam) appendNewContentV1(key string, value string) {
+	if len(p.prefix) > 0 {
+		newContent := &protocol.Log_Content{
+			Key:   p.prefix + key,
+			Value: value,
 		}
-		p.contents.Add(key, value)
-		if key == p.sourceKey {
-			p.isSourceKeyOverwritten = true
+		p.log.Contents = append(p.log.Contents, newContent)
+	} else {
+		newContent := &protocol.Log_Content{
+			Key:   key,
+			Value: value,
 		}
+		p.log.Contents = append(p.log.Contents, newContent)
+	}
+}
+
+func (p *ExpandParam) appendNewContentV2(key string, value string) {
+	if len(p.prefix) > 0 {
+		key = p.prefix + key
+	}
+	p.contents.Add(key, value)
+	if key == p.sourceKey {
+		p.isSourceKeyOverwritten = true
 	}
 }
 

@@ -117,10 +117,8 @@ func (p *ProcessorRename) Process(in *models.PipelineGroupEvents, context pipeli
 		}
 	}
 	context.Collector().Collect(in.Group, in.Events...)
-	if p.NoKeyError {
-		if len(p.noKeyErrorArray) != 0 {
-			logger.Warningf(p.context.GetRuntimeContext(), "RENAME_FIND_ALARM", "cannot find key %v", p.noKeyErrorArray)
-		}
+	if p.NoKeyError && len(p.noKeyErrorArray) != 0 {
+		logger.Warningf(p.context.GetRuntimeContext(), "RENAME_FIND_ALARM", "cannot find key %v", p.noKeyErrorArray)
 	}
 }
 
