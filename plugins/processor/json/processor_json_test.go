@@ -110,6 +110,28 @@ func TestKeepSource(t *testing.T) {
 	assert.Equal(t, "{\"k2\":{\"k3\":{\"k4\":{\"k51\":\"51\",\"k52\":\"52\"},\"k41\":\"41\"}}}", log.Contents[0].Value)
 }
 
+func TestExpandKeySameToSource(t *testing.T) {
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	processor := &ProcessorJSON{
+		SourceKey:              "key",
+		NoKeyError:             true, // 目标Key，为空不生效
+		ExpandDepth:            0,
+		ExpandConnector:        "",
+		Prefix:                 "",
+		KeepSource:             false, // 是否保留源字段
+		KeepSourceIfParseError: false,
+		UseSourceKeyAsPrefix:   false,
+	}
+	assert.Nil(t, processor.Init(ctx))
+	var jsonV = "{\"key\":\"value\"}"
+	log := &protocol.Log{Time: 0}
+	log.Contents = append(log.Contents, &protocol.Log_Content{Key: "key", Value: jsonV})
+	processor.processLog(log)
+	assert.Equal(t, 1, len(log.Contents))
+	assert.Equal(t, "key", log.Contents[0].Key)
+	assert.Equal(t, "value", log.Contents[0].Value)
+}
+
 func TestKeepSourceIfParseError(t *testing.T) {
 	processor, err := newProcessor()
 	require.NoError(t, err)
@@ -161,7 +183,7 @@ func TestNoKeyError(t *testing.T) {
 func TestSourceKeyV2(t *testing.T) {
 	processor, err := newProcessor()
 	require.NoError(t, err)
-	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	log := models.NewLog("", nil, "", "", "", models.NewTags(), 0)
 	contents := log.GetIndices()
 	contents.Add("s_key", jsonVal)
 	processor.processEvent(log)
@@ -180,7 +202,7 @@ func TestIgnoreFirstConnectorV2(t *testing.T) {
 
 	processor.IgnoreFirstConnector = true
 	processor.UseSourceKeyAsPrefix = false
-	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	log := models.NewLog("", nil, "", "", "", models.NewTags(), 0)
 	contents := log.GetIndices()
 	contents.Add("s_key", jsonVal)
 	processor.processEvent(log)
@@ -199,7 +221,7 @@ func TestExpandDepthV2(t *testing.T) {
 	}
 	processor.ExpandDepth = 1
 	require.NoError(t, err)
-	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	log := models.NewLog("", nil, "", "", "", models.NewTags(), 0)
 	contents := log.GetIndices()
 	contents.Add("s_key", jsonVal)
 	processor.processEvent(log)
@@ -215,12 +237,35 @@ func TestKeepSourceV2(t *testing.T) {
 	processor.KeepSource = false
 	processor.ExpandDepth = 1
 	require.NoError(t, err)
-	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	log := models.NewLog("", nil, "", "", "", models.NewTags(), 0)
 	contents := log.GetIndices()
 	contents.Add("s_key", jsonVal)
 	processor.processEvent(log)
 	assert.True(t, contents.Contains("js_key-k1"))
 	assert.Equal(t, "{\"k2\":{\"k3\":{\"k4\":{\"k51\":\"51\",\"k52\":\"52\"},\"k41\":\"41\"}}}", contents.Get("js_key-k1"))
+}
+
+func TestExpandKeySameToSourceV2(t *testing.T) {
+	ctx := mock.NewEmptyContext("p", "l", "c")
+	processor := &ProcessorJSON{
+		SourceKey:              "key",
+		NoKeyError:             true, // 目标Key，为空不生效
+		ExpandDepth:            0,
+		ExpandConnector:        "",
+		Prefix:                 "",
+		KeepSource:             false, // 是否保留源字段
+		KeepSourceIfParseError: false,
+		UseSourceKeyAsPrefix:   false,
+	}
+	assert.Nil(t, processor.Init(ctx))
+	var jsonV = "{\"key\":\"value\"}"
+	log := models.NewLog("", nil, "", "", "", models.NewTags(), 0)
+	contents := log.GetIndices()
+	contents.Add("key", jsonV)
+	processor.processEvent(log)
+	assert.Equal(t, 1, contents.Len())
+	assert.True(t, contents.Contains("key"))
+	assert.Equal(t, "value", contents.Get("key"))
 }
 
 func TestKeepSourceIfParseErrorV2(t *testing.T) {
@@ -233,7 +278,7 @@ func TestKeepSourceIfParseErrorV2(t *testing.T) {
 
 	// Case 1: Valid log, no source key in output log.
 	{
-		log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+		log := models.NewLog("", nil, "", "", "", models.NewTags(), 0)
 		contents := log.GetIndices()
 		contents.Add("s_key", jsonVal)
 		processor.processEvent(log)
@@ -245,7 +290,7 @@ func TestKeepSourceIfParseErrorV2(t *testing.T) {
 	// Case 2: Invalid log, keep source key in output log.
 	{
 		const invalidValue = "hello"
-		log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+		log := models.NewLog("", nil, "", "", "", models.NewTags(), 0)
 		contents := log.GetIndices()
 		contents.Add("s_key", invalidValue)
 		processor.processEvent(log)
@@ -264,7 +309,7 @@ func TestNoKeyErrorV2(t *testing.T) {
 	processor.KeepSource = false
 	processor.ExpandDepth = 1
 	require.NoError(t, err)
-	log := models.NewLog("", []byte{}, "", "", "", models.NewTags(), 0)
+	log := models.NewLog("", nil, "", "", "", models.NewTags(), 0)
 	contents := log.GetIndices()
 	contents.Add("d_key", jsonVal)
 	processor.processEvent(log)
