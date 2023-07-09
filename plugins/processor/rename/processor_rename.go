@@ -28,7 +28,7 @@ type ProcessorRename struct {
 	SourceKeys         []string
 	DestKeys           []string
 	keyDictionary      map[string]string // use map to eliminate duplicate keys and invalid renames
-	existKeyDictionary map[string]bool   // not neccesary in v2 pipeline
+	existKeyDictionary map[string]bool   // not necessary in v2 pipeline
 	noKeyErrorArray    []string
 	context            pipeline.Context
 }
