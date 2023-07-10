@@ -50,8 +50,8 @@ const (
 
 // Regex for labels and names
 var (
-	metricLabelKeyRegex = regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`)
-	metricNameRegex     = regexp.MustCompile(`[a-zA-Z_:][a-zA-Z0-9_:]*`)
+	metricLabelKeyRegex = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+	metricNameRegex     = regexp.MustCompile(`^[a-zA-Z_:][a-zA-Z0-9_:]*$`)
 )
 
 var (
@@ -69,7 +69,6 @@ var (
 	errInvalidMetricValueCount = errors.New("the number of metric values must be equal to the number of MetricValues")
 
 	errInvalidMetricTime = errors.New("the value of __time_nano__ field must be a valid Unix timestamp in nanoseconds")
-	errEmptyMetricTime   = errors.New("the value of __time_nano__ field is empty")
 
 	errFieldRepeated = errors.New("the field is repeated")
 )
