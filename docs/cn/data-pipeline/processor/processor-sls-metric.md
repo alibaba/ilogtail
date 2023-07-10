@@ -64,6 +64,11 @@ processors:
     CustomMetricLabels:
       nginx: test
 flushers:
+  - Type: flusher_sls
+    Region: cn-xxx
+    Endpoint: cn-xxx.log.aliyuncs.com
+    ProjectName: test_project
+    LogstoreName: test_logstore
   - Type: flusher_stdout
     OnlyStdout: true
 ```
