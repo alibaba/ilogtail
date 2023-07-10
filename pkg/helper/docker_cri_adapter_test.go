@@ -16,3 +16,30 @@
 // +build linux
 
 package helper
+
+import (
+	"testing"
+
+	"github.com/docker/docker/api/types"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestLookupContainerRootfsAbsDir(t *testing.T) {
+	crirt := &CRIRuntimeWrapper{
+		dockerCenter:   nil,
+		client:         nil,
+		runtimeVersion: nil,
+		containers:     make(map[string]*innerContainerInfo),
+		stopCh:         make(<-chan struct{}),
+		rootfsCache:    make(map[string]string),
+	}
+
+	container := types.ContainerJSON{
+		ContainerJSONBase: &types.ContainerJSONBase{
+			ID: "1234567890abcde",
+		},
+	}
+	dir := crirt.lookupContainerRootfsAbsDir(container)
+	require.Equal(t, dir, "")
+}

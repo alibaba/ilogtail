@@ -608,6 +608,10 @@ func (dc *DockerCenter) CreateInfoDetail(info types.ContainerJSON, envConfigPref
 			did.DefaultRootPath = rootPath
 		}
 	}
+	// for cri-runtime
+	if criRuntimeWrapper != nil && info.HostConfig != nil && len(did.DefaultRootPath) == 0 {
+		did.DefaultRootPath = criRuntimeWrapper.lookupContainerRootfsAbsDir(info)
+	}
 	logger.Debugf(context.Background(), "container(id: %s, name: %s) default root path is %s", info.ID, info.Name, did.DefaultRootPath)
 	return did
 }

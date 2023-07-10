@@ -51,9 +51,9 @@ func IsCRIRuntimeValid(_ string) bool {
 	return false
 }
 
-/*func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(_ types.ContainerJSON) string {
+func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(_ types.ContainerJSON) string {
 	return ""
-}*/
+}
 
 // NewCRIRuntimeWrapper ...
 func NewCRIRuntimeWrapper(_ *DockerCenter) (*CRIRuntimeWrapper, error) {

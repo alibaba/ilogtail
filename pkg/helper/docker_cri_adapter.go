@@ -26,6 +26,8 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -607,6 +609,74 @@ func (cw *CRIRuntimeWrapper) lookupRootfsCache(containerID string) (string, bool
 	defer cw.rootfsLock.RUnlock()
 	dir, ok := cw.rootfsCache[containerID]
 	return dir, ok
+}
+
+func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSON) string {
+	// For cri-runtime
+	containerID := info.ID
+	if dir, ok := cw.lookupRootfsCache(containerID); ok {
+		return dir
+	}
+
+	// Example: /run/containerd/io.containerd.runtime.v1.linux/k8s.io/{ContainerID}/rootfs/
+
+	var aDirs []string
+
+	if len(os.Getenv("CONTAINERD_STATE_DIR")) > 0 {
+		// /etc/containerd/config.toml
+		// state = "/home/containerd"
+		// Example /home/containerd/io.containerd.runtime.v2.task/k8s.io/{ContainerID}/rootfs
+		dir := os.Getenv("CONTAINERD_STATE_DIR")
+		absPath, err := filepath.Abs(dir)
+		if err != nil {
+			logger.Warning(context.Background(), "CHECK_CUSTOM_CONTAINERD_ROOT_DIR_FAILED", "failed to parse custom containerd root dir, please check it. dir: %s, error: %v", absPath, err)
+		} else {
+			aDirs = []string{
+				absPath,
+				"/run/containerd",
+				"/var/run/containerd",
+			}
+		}
+	} else {
+		aDirs = []string{
+			"/run/containerd",
+			"/var/run/containerd",
+		}
+	}
+
+	bDirs := []string{
+		"io.containerd.runtime.v2.task",
+		"io.containerd.runtime.v1.linux",
+		"runc",
+	}
+
+	cDirs := []string{
+		"k8s.io",
+		"",
+	}
+
+	dDirs := []string{
+		"rootfs",
+		"root",
+	}
+
+	for _, a := range aDirs {
+		for _, c := range cDirs {
+			for _, d := range dDirs {
+				for _, b := range bDirs {
+					dir := path.Join(a, b, c, info.ID, d)
+					if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
+						cw.rootfsLock.Lock()
+						cw.rootfsCache[containerID] = dir
+						cw.rootfsLock.Unlock()
+						return dir
+					}
+				}
+			}
+		}
+	}
+
+	return ""
 }
 
 func (cw *CRIRuntimeWrapper) getContainerUpperDir(containerid, snapshotter string) string {
