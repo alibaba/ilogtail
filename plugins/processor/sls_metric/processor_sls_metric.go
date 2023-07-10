@@ -55,7 +55,7 @@ var (
 )
 
 var (
-	errInvalidMetricLabelKey      = errors.New("the Key of Label must follow the regular expression: [a-zA-Z_][a-zA-Z0-9_]*")
+	errInvalidMetricLabelKey      = errors.New("the Key of Label must follow the regular expression: ^[a-zA-Z_][a-zA-Z0-9_]*$")
 	errInvalidMetricLabelValue    = errors.New("label value can not contain '|' or '#$#'")
 	errInvalidMetricLabelKeyCount = errors.New("the number of labels must be equal to the number of MetricLabelKeys")
 
@@ -63,7 +63,7 @@ var (
 
 	errEmptyMetricValues = errors.New("metricValues is be empty")
 
-	errInvalidMetricName       = errors.New("the name of metric must follow the regular expression: [a-zA-Z_:][a-zA-Z0-9_:]*")
+	errInvalidMetricName       = errors.New("the name of metric must follow the regular expression: ^[a-zA-Z_:][a-zA-Z0-9_:]*$")
 	errInvalidMetricValue      = errors.New("the value of metric must be a number")
 	errInvalidMetricNameCount  = errors.New("the number of metric names must be equal to the number of MetricValues")
 	errInvalidMetricValueCount = errors.New("the number of metric values must be equal to the number of MetricValues")
@@ -91,7 +91,7 @@ func (p *ProcessorSlsMetric) Init(context pipeline.Context) error {
 	// Cache labelKey to map for quick access
 	p.metricLabelKeysMap = map[string]bool{}
 	for _, labelKey := range p.MetricLabelKeys {
-		// The Key of Label must follow the regular expression: [a-zA-Z_][a-zA-Z0-9_]*
+		// The Key of Label must follow the regular expression: ^[a-zA-Z_][a-zA-Z0-9_]*$
 		if !metricLabelKeyRegex.MatchString(labelKey) {
 			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errInvalidMetricLabelKey)
 			return errInvalidMetricLabelKey
@@ -170,7 +170,7 @@ TraverseLogArray:
 						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errFieldRepeated)
 						continue TraverseLogArray
 					}
-					// The Key of Label must follow the regular expression: [a-zA-Z_][a-zA-Z0-9_]*
+					// The Key of Label must follow the regular expression: ^[a-zA-Z_][a-zA-Z0-9_]*$
 					if !metricLabelKeyRegex.MatchString(key) {
 						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricLabelKey)
 						continue TraverseLogArray
@@ -198,7 +198,7 @@ TraverseLogArray:
 
 			// Match to the name field
 			if p.metricNamesMap[cont.Key] {
-				// Metric name needs to follow the regular expression: [a-zA-Z_:][a-zA-Z0-9_:]*
+				// Metric name needs to follow the regular expression: ^[a-zA-Z_:][a-zA-Z0-9_:]*$
 				if !metricNameRegex.MatchString(cont.Value) {
 					logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricName)
 					continue TraverseLogArray
