@@ -12,7 +12,7 @@
 //See the License for the specific language governing permissions and
 //limitations under the License.
 
-package sls_metric
+package log_to_sls_metric
 
 import (
 	"github.com/alibaba/ilogtail/pkg/pipeline"
@@ -41,7 +41,6 @@ var params = []MockParam{
 
 func mockData(num int) []*protocol.Log {
 	var Logs []*protocol.Log
-
 	for i := 0; i < num; i++ {
 		log := &protocol.Log{
 			Time: 1234567890,
@@ -65,17 +64,17 @@ func mockData(num int) []*protocol.Log {
 // goarch: amd64
 // pkg: github.com/alibaba/ilogtail/plugins/processor/sls_metric
 // cpu: Intel(R) Xeon(R) Platinum 8369B CPU @ 2.70GHz
-// BenchmarkProcessorSlsMetricTest/original10-4              344119              3322 ns/op            1040 B/op         50 allocs/op
-// BenchmarkProcessorSlsMetricTest/original100-4              37146             32294 ns/op           10400 B/op        500 allocs/op
-// BenchmarkProcessorSlsMetricTest/original1000-4              3562            326816 ns/op          104000 B/op       5000 allocs/op
-// BenchmarkProcessorSlsMetricTest/original10000-4              332           3606487 ns/op         1040007 B/op      50000 allocs/op
-func BenchmarkProcessorSlsMetricTest(b *testing.B) {
+// BenchmarkProcessorLogSlsMetricTest/original10-4              344119              3322 ns/op            1040 B/op         50 allocs/op
+// BenchmarkProcessorLogSlsMetricTest/original100-4              37146             32294 ns/op           10400 B/op        500 allocs/op
+// BenchmarkProcessorLogSlsMetricTest/original1000-4              3562            326816 ns/op          104000 B/op       5000 allocs/op
+// BenchmarkProcessorLogSlsMetricTest/original10000-4              332           3606487 ns/op         1040007 B/op      50000 allocs/op
+func BenchmarkProcessorLogSlsMetricTest(b *testing.B) {
 	for _, param := range params {
 		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
 			// generate mock data
 			Logs := param.mockFunc(param.num)
 			// Create a ProcessorSlsMetric instance
-			processor := pipeline.Processors["processor_sls_metric"]().(*ProcessorSlsMetric)
+			processor := pipeline.Processors["processor_log_to_sls_metric"]().(*ProcessorSlsMetric)
 			// Init ProcessorSlsMetric
 			processor.MetricLabelKeys = []string{}
 			processor.Init(mock.NewEmptyContext("p", "l", "c"))

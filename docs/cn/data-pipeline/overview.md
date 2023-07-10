@@ -2,28 +2,28 @@
 
 ## 输入
 
-| 名称                                          | 提供方                                                       | 简介                                        |
-|---------------------------------------------| ------------------------------------------------------------ |-------------------------------------------|
-| [`file_log`](input/file-log.md)<br> 文本日志                         | SLS官方<br>[`messixukejia`](https://github.com/messixukejia) | 文本采集。                                     |
-| [`input_docker_stdout`](input/service-docker-stdout.md)<br>容器标准输出             | SLS官方 | 从容器标准输出/标准错误流中采集日志。                       |
-| [`metric_debug_file`](input/metric-debug-file.md)<br>文本日志（debug）          | SLS官方 | 用于调试的读取文件内容的插件。                           |
-| [`metric_input_example`](input/metric-input-example.md)<br>MetricInput示例插件   | SLS官方 | MetricInput示例插件。                          |
-| [`metric_meta_host`](input/metric-meta-host.md)<br>主机Meta数据              | SLS官方 | 主机Meta数据。                                 |
-| [`metric_mock`](input/metric-mock.md)<br>Mock数据-Metric              | SLS官方 | 生成metric模拟数据的插件。                          |
-| [`observer_ilogtail_network`](input/metric-observer.md)<br>eBPF网络调用数据    | SLS官方 | 支持从网络系统调用中收集四层网络调用，并借助网络解析模块，可以观测七层网络调用细节。 |
-| [`metric_system_v2`](input/metric-system.md)<br>主机监控数据 | SLS官方 | 主机监控数据。 |
-| [`service_canal`](input/service-canal.md)<br>MySQL Binlog             | SLS官方 | 将MySQL Binlog输入到iLogtail。                 |
-| [`service_go_profile`](input/service-goprofile.md)<br>GO Profile             | SLS官方 | 采集Golang pprof 性能数据。                 |
-| [`service_gpu_metric`](input/service-gpu.md)<br>GPU数据               | SLS官方 | 支持收集英伟达GPU指标。                             |
-| [`service_http_server`](input/service-http-server.md)<br>HTTP数据 | SLS官方 | 接收来自unix socket、http/https、tcp的请求，并支持sls协议、otlp等多种协议。 |
-| [`service_input_example`](input/service-input-example.md)<br>ServiceInput示例插件 | SLS官方 | ServiceInput示例插件。                         |
-| [`service_journal`](input/service-journal.md)<br>Journal数据              | SLS官方 | 从原始的二进制文件中采集Linux系统的Journal（systemd）日志。   |
-| [`service_kafka`](input/service-kafka.md)<br>Kafka                    | SLS官方 | 将Kafka数据输入到iLogtail。                      |
-| [`service_mock`](input/service-mock.md)<br>Mock数据-Service            | SLS官方 | 生成service模拟数据的插件。                         |
-| [`service_mssql`](input/service-mssql.md)<br>SqlServer查询数据            | SLS官方 | 将Sql Server数据输入到iLogtail。                 |
-| [`service_otlp`](input/service-otlp.md)<br>OTLP数据 | 社区<br>[`Zhu Shunjia`](https://github.com/shunjiazhu) | 通过http/grpc协议，接收OTLP数据。 |
-| [`service_pgsql`](input/service-pgsql.md)<br>PostgreSQL查询数据           | SLS官方 | 将PostgresSQL数据输入到iLogtail。                |
-| [`service_syslog`](input/service-syslog.md)<br>Syslog数据                | SLS官方 | 采集syslog数据。                               |
+| 名称                                                                            | 提供方                                                        | 简介                                                    |
+|-------------------------------------------------------------------------------|------------------------------------------------------------|-------------------------------------------------------|
+| [`file_log`](input/file-log.md)<br> 文本日志                                      | SLS官方<br>[`messixukejia`](https://github.com/messixukejia) | 文本采集。                                                 |
+| [`input_docker_stdout`](input/service-docker-stdout.md)<br>容器标准输出             | SLS官方                                                      | 从容器标准输出/标准错误流中采集日志。                                   |
+| [`metric_debug_file`](input/metric-debug-file.md)<br>文本日志（debug）              | SLS官方                                                      | 用于调试的读取文件内容的插件。                                       |
+| [`metric_input_example`](input/metric-input-example.md)<br>MetricInput示例插件    | SLS官方                                                      | MetricInput示例插件。                                      |
+| [`metric_meta_host`](input/metric-meta-host.md)<br>主机Meta数据                   | SLS官方                                                      | 主机Meta数据。                                             |
+| [`metric_mock`](input/metric-mock.md)<br>Mock数据-Metric                        | SLS官方                                                      | 生成metric模拟数据的插件。                                      |
+| [`observer_ilogtail_network`](input/metric-observer.md)<br>eBPF网络调用数据         | SLS官方                                                      | 支持从网络系统调用中收集四层网络调用，并借助网络解析模块，可以观测七层网络调用细节。            |
+| [`metric_system_v2`](input/metric-system.md)<br>主机监控数据                        | SLS官方                                                      | 主机监控数据。                                               |
+| [`service_canal`](input/service-canal.md)<br>MySQL Binlog                     | SLS官方                                                      | 将MySQL Binlog输入到iLogtail。                             |
+| [`service_go_profile`](input/service-goprofile.md)<br>GO Profile              | SLS官方                                                      | 采集Golang pprof 性能数据。                                  |
+| [`service_gpu_metric`](input/service-gpu.md)<br>GPU数据                         | SLS官方                                                      | 支持收集英伟达GPU指标。                                         |
+| [`service_http_server`](input/service-http-server.md)<br>HTTP数据               | SLS官方                                                      | 接收来自unix socket、http/https、tcp的请求，并支持sls协议、otlp等多种协议。 |
+| [`service_input_example`](input/service-input-example.md)<br>ServiceInput示例插件 | SLS官方                                                      | ServiceInput示例插件。                                     |
+| [`service_journal`](input/service-journal.md)<br>Journal数据                    | SLS官方                                                      | 从原始的二进制文件中采集Linux系统的Journal（systemd）日志。               |
+| [`service_kafka`](input/service-kafka.md)<br>Kafka                            | SLS官方                                                      | 将Kafka数据输入到iLogtail。                                  |
+| [`service_mock`](input/service-mock.md)<br>Mock数据-Service                     | SLS官方                                                      | 生成service模拟数据的插件。                                     |
+| [`service_mssql`](input/service-mssql.md)<br>SqlServer查询数据                    | SLS官方                                                      | 将Sql Server数据输入到iLogtail。                             |
+| [`service_otlp`](input/service-otlp.md)<br>OTLP数据                             | 社区<br>[`Zhu Shunjia`](https://github.com/shunjiazhu)       | 通过http/grpc协议，接收OTLP数据。                               |
+| [`service_pgsql`](input/service-pgsql.md)<br>PostgreSQL查询数据                   | SLS官方                                                      | 将PostgresSQL数据输入到iLogtail。                            |
+| [`service_syslog`](input/service-syslog.md)<br>Syslog数据                       | SLS官方                                                      | 采集syslog数据。                                           |
 
 ## 处理
 
@@ -47,14 +47,14 @@
 | [`processor_split_key_value`](processor/processor-split-key-value.md)<br>键值对                 | SLS官方                                                  | 通过切分键值对的方式提取字段。                  |
 | [`processor_split_log_regex`](processor/processor-split-log-regex.md)<br>多行切分                | SLS官方                                                  | 实现多行日志（例如Java程序日志）的采集。           |
 | [`processor_string_replace`](processor/processor-string-replace.md)<br>字符串替换                 | SLS官方<br>[`pj1987111`](https://github.com/pj1987111)   | 通过全文匹配、正则匹配、去转义字符等方式对文本日志进行内容替换。 |
-| [`processor_sls_metric`](processor/processor-sls-metric.md)<br>日志转sls metric                 | SLS官方                                                  | 将日志转sls metric                   |
+| [`processor_log_to_sls_metric`](processor/processor-log-to-sls-metric.md)<br>日志转sls metric   | SLS官方                                                  | 将日志转sls metric                   |
 
 ## 聚合
 
-| 名称                               | 提供方                                                 | 简介                                        |
-|----------------------------------|-----------------------------------------------------|---------------------------------------------|
-| [`aggregator_content_value_group`](aggregator/aggregator-content-value-group.md) | 社区<br>[`snakorse`](https://github.com/snakorse)     | 按照指定的Key对采集到的数据进行分组聚合           |
-| [`aggregator_metadata_group`](aggregator/aggregator-metadata-group.md)      | 社区<br>[`urnotsally`](https://github.com/urnotsally) | 按照指定的Metadata Keys对采集到的数据进行重新分组聚合|
+| 名称                                                                               | 提供方                                                 | 简介                                |
+|----------------------------------------------------------------------------------|-----------------------------------------------------|-----------------------------------|
+| [`aggregator_content_value_group`](aggregator/aggregator-content-value-group.md) | 社区<br>[`snakorse`](https://github.com/snakorse)     | 按照指定的Key对采集到的数据进行分组聚合             |
+| [`aggregator_metadata_group`](aggregator/aggregator-metadata-group.md)           | 社区<br>[`urnotsally`](https://github.com/urnotsally) | 按照指定的Metadata Keys对采集到的数据进行重新分组聚合 |
 
 ## 输出
 
@@ -73,11 +73,11 @@
 
 ## 加速
 
-| 名称                                           | 提供方  | 简介                                           |
-| ---------------------------------------------- | ------- | ---------------------------------------------- |
-| [`processor_delimiter_accelerate`](accelerator/delimiter-accelerate.md)<br>分隔符加速 | SLS官方 | 以加速模式实现分隔符日志的字段提取。           |
-| [`processor_json_accelerate`](accelerator/json-accelerate.md)<br>Json加速        | SLS官方 | 以加速模式实现`Json`格式日志的字段提取。       |
-| [`processor_regex_accelerate`](accelerator/regex-accelerate.md)<br>正则加速       | SLS官方 | 通过正则匹配以加速模式实现文本日志的字段提取。 |
+| 名称                                                                               | 提供方   | 简介                      |
+|----------------------------------------------------------------------------------|-------|-------------------------|
+| [`processor_delimiter_accelerate`](accelerator/delimiter-accelerate.md)<br>分隔符加速 | SLS官方 | 以加速模式实现分隔符日志的字段提取。      |
+| [`processor_json_accelerate`](accelerator/json-accelerate.md)<br>Json加速          | SLS官方 | 以加速模式实现`Json`格式日志的字段提取。 |
+| [`processor_regex_accelerate`](accelerator/regex-accelerate.md)<br>正则加速          | SLS官方 | 通过正则匹配以加速模式实现文本日志的字段提取。 |
 
 
 ## 扩展

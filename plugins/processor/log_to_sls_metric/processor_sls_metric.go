@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sls_metric
+package log_to_sls_metric
 
 import (
 	"encoding/json"
@@ -41,7 +41,7 @@ type ProcessorSlsMetric struct {
 }
 
 const (
-	PluginName        = "processor_sls_metric"
+	PluginName        = "processor_log_to_sls_metric"
 	metricNameKey     = "__name__"
 	metricLabelsKey   = "__labels__"
 	metricTimeNanoKey = "__time_nano__"

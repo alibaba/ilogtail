@@ -37,4 +37,4 @@ your changes, such as:
 
 ## [Unreleased]
 
-- [public] [both] [added] add new plugin: processor_sls_metric
+- [public] [both] [added] add new plugin: processor_log_to_sls_metric

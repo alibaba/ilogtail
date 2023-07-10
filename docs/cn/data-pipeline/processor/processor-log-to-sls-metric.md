@@ -1,8 +1,8 @@
-# sls日志转换为sls metric
+# 日志转换为sls metric
 
 ## 简介
 
-`processor_sls_metric`插件可以根据配置将sls日志转换为sls metric。
+`processor_log_to_sls_metric`插件可以根据配置将日志转换为sls metric。
 
 ## 版本
 
