@@ -55,7 +55,7 @@ ParseResult PgSQLProtocolParser::OnPacket(PacketType pktType,
                 insertSuccess = mCache.InsertReq([&](PgSQLRequestInfo* info) {
                     info->TimeNano = header->TimeNano;
                     info->ReqBytes = pktRealSize;
-                    info->SQL = pgsql.query.sql.ToString();
+                    info->SQL = std::string(pgsql.query.sql.data(), pgsql.query.sql.size());
                     LOG_TRACE(sLogger, ("pgsql insert req", info->ToString()));
                 });
                 break;

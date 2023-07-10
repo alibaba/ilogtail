@@ -52,6 +52,10 @@ struct ContainerProcessGroup {
                          std::vector<sls_logs::Log>& allData,
                          std::vector<std::pair<std::string, std::string>>& tags,
                          uint64_t interval);
+    void FlushOutDetails(uint64_t timeNano,
+                         std::vector<sls_logs::Log>& allData,
+                         std::vector<std::pair<std::string, std::string>>& tags,
+                         uint64_t interval);
 
     std::unordered_set<uint32_t> mAllProcesses;
     ProcessMetaPtr mMetaPtr;
@@ -145,6 +149,9 @@ public:
                          std::vector<std::pair<std::string, std::string>>& tags,
                          uint64_t interval);
 
+    void FlushOutDetails(std::vector<sls_logs::Log>& allData,
+                         std::vector<std::pair<std::string, std::string>>& tags,
+                         uint64_t interval);
 
     void FlushMetas();
 

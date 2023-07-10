@@ -23,10 +23,17 @@
 // 解析结果
 enum ParseResult {
     ParseResult_OK,
-    ParseResult_Fail,
+    ParseResult_Fail, // means invalid packet buffer
     ParseResult_Drop,
     ParseResult_Partial,
 };
+
+enum BufferResult {
+    BufferResult_DirectParse,
+    BufferResult_Success,
+    BufferResult_Drop,
+};
+
 
 // ProtocolEventKey 需要提供一个 uint64_t Hash() 函数
 

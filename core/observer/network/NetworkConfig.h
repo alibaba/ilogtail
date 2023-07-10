@@ -89,6 +89,16 @@ struct NetworkConfig {
         return iter->second;
     }
 
+    static std::tuple<int32_t, bool, int32_t> GetProtocolDetailSampleCfg(ProtocolType protocol_type) {
+        static auto sInstance = GetInstance();
+        auto iter = sInstance->mDetailProtocolSampling.find(protocol_type);
+        if (iter == sInstance->mDetailProtocolSampling.end()) {
+            return std::make_tuple(false, false, 0);
+        }
+        return iter->second;
+    }
+
+
     static std::string label2String(const std::unordered_map<std::string, boost::regex>& map) {
         return std::accumulate(map.begin(),
                                map.end(),
@@ -127,6 +137,7 @@ struct NetworkConfig {
     int mSampling = 100;
     uint64_t mFlushOutL4Interval = 60;
     uint64_t mFlushOutL7Interval = 15;
+    uint64_t mFlushOutL7DetailsInterval = 3;
     uint64_t mFlushMetaInterval = 30;
     uint64_t mFlushNetlinkInterval = 10;
     boost::regex mIncludeCmdRegex;
@@ -147,6 +158,18 @@ struct NetworkConfig {
     bool mDropLocalConnections = true;
     bool mDropUnknownSocket = true;
     uint32_t mProtocolProcessFlag = -1;
+
+    // for detail sampling
+    int8_t mDetailSampling = 10;
+    uint16_t mDetailThresholdPerSecond = 5000;
+    // protocol force sample, error force sample and over max latency force sample.
+    std::unordered_map<uint8_t, std::tuple<int8_t, bool, int32_t>> mDetailProtocolSampling;
+    boost::regex mDetailIncludePodNameRegex;
+    boost::regex mDetailIncludeNamespaceRegex;
+    boost::regex mDetailIncludeCmdRegex;
+    boost::regex mDetailIncludeNodeRegex;
+    boost::regex mDetailIncludeIpRegex;
+    boost::regex mDetailIncludeHostnameRegex;
     std::vector<std::pair<std::string, std::string>> mTags;
     std::unordered_map<uint8_t, std::pair<uint32_t, uint32_t>> mProtocolAggCfg;
 

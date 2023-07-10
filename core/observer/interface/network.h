@@ -91,8 +91,7 @@ inline std::string PacketEventTypeToString(enum PacketEventType type) {
 // header；如果是数据类型，传PacketEventData
 struct PacketEventHeader {
     uint32_t PID;
-    uint32_t SockHash; // hashed by local addr + local port + remote addrr +
-                       // remote port
+    uint32_t SockHash; // hashed by local addr + local port + remote addrr + remote port
 
     PacketEventType EventType;
     PacketRoleType RoleType;
@@ -112,6 +111,7 @@ struct PacketEventData {
 
     int32_t RealLen; // 原始的数据包大小
     int32_t BufferLen; // 实际拷贝的数据包大小，即Buffer的Size
+    int32_t Pos;
 
     char* Buffer; // 一般设置为 buffer + sizeof(PacketEventHeader) +
                   // sizeof(PacketEventData)

@@ -36,6 +36,8 @@ namespace observer {
     std::string kProtocol = "protocol";
     std::string kVersion = "version";
     std::string kTdigestLatency = "tdigest_latency";
+    std::string kDetailRequest = "request";
+    std::string kDetailResponse = "response";
 
 } // namespace observer
 

@@ -52,38 +52,27 @@ ParseResult DNSProtocolParser::OnPacket(PacketType pktType,
     if (dns.OK()) {
         bool insertSuccess = true;
         uint16_t txid = dns.dnsHeader.txid;
-        if (dns.packetType == DNSPacketRequest && !dns.dnsRequest.requests.empty()) {
-            auto resp = mRespCache.find(txid);
-            std::string queryHosts;
-            std::string queryTypes;
-
-            if (dns.dnsRequest.requests.size() == 1) { // 大部分情况
-                queryHosts = dns.dnsRequest.requests.at(0).queryHost;
-                queryTypes = ToString(dns.dnsRequest.requests.at(0).queryType);
-            } else {
-                for (auto iter = dns.dnsRequest.requests.begin(); iter < dns.dnsRequest.requests.end(); iter++) {
-                    queryHosts.append(std::string(iter->queryHost)).append(",");
-                    queryTypes.append(std::string(ToString(iter->queryType))).append(",");
+        if (dns.packetType == DNSPacketRequest) {
+            mCache.InsertReq(txid, [&](DNSRequestInfo* info) {
+                info->TimeNano = header->TimeNano;
+                info->ReqBytes = pktRealSize;
+                if (dns.dnsRequest.requests.size() == 1) {
+                    info->QueryRecord = dns.dnsRequest.requests.at(0).queryHost;
+                    info->QueryType = ToString(dns.dnsRequest.requests.at(0).queryType);
+                } else {
+                    for (auto iter = dns.dnsRequest.requests.begin(); iter < dns.dnsRequest.requests.end(); iter++) {
+                        info->QueryRecord.append(std::string(iter->queryHost)).append(",");
+                        info->QueryType.append(std::string(ToString(iter->queryType))).append(",");
+                    }
+                    // remove last ,
+                    if (!info->QueryRecord.empty()) {
+                        info->QueryRecord.pop_back();
+                    }
+                    if (!info->QueryType.empty()) {
+                        info->QueryType.pop_back();
+                    }
                 }
-                // remove last ,
-                if (!queryHosts.empty()) {
-                    queryHosts.pop_back();
-                }
-                if (!queryTypes.empty()) {
-                    queryTypes.pop_back();
-                }
-            }
-
-            auto req = new DNSRequestInfo(header->TimeNano, std::move(queryHosts), std::move(queryTypes), pktRealSize);
-
-            if (resp == mRespCache.end()) {
-                mReqCache.insert(std::make_pair(txid, req));
-            } else {
-                insertSuccess = stitcher(req, resp->second);
-                delete req;
-                delete resp->second;
-                mRespCache.erase(resp);
-            }
+            });
         } else if (dns.packetType == DNSPacketResponse) {
             // currently, only collect the dns host outside the kubernetes cluster
             const static std::string sKubernetesDnsFlag = "cluster.local";
@@ -93,70 +82,24 @@ ParseResult DNSProtocolParser::OnPacket(PacketType pktType,
                     sHostManager->AddHostName(header->PID, response.queryHost, response.value);
                 }
             }
-            auto resp = new DNSResponseInfo(header->TimeNano, dns.dnsResponse.answerCount, pktRealSize);
-            auto req = mReqCache.find(txid);
-            if (req == mReqCache.end()) {
-                mRespCache.insert(std::make_pair(txid, resp));
-            } else {
-                insertSuccess = stitcher(req->second, resp);
-                delete resp;
-                delete req->second;
-                mReqCache.erase(req);
-            }
+            mCache.InsertResp(txid, [&](DNSResponseInfo* info) -> bool {
+                info->TimeNano = header->TimeNano;
+                info->AnswerCount = dns.dnsResponse.answerCount;
+                info->RespBytes = pktRealSize;
+                return true;
+            });
         }
         return insertSuccess ? ParseResult_OK : ParseResult_Drop;
     }
     return ParseResult_Fail;
 }
 
-
-DNSResponseInfo::DNSResponseInfo(uint64_t timeNano, uint16_t answerCount, int32_t respBytes)
-    : TimeNano(timeNano), RespBytes(respBytes), AnswerCount(answerCount) {
-}
-
-DNSRequestInfo::DNSRequestInfo(uint64_t timeNano, std::string&& queryRecord, std::string&& queryType, int32_t reqBytes)
-    : TimeNano(timeNano), ReqBytes(reqBytes), QueryRecord(queryRecord), QueryType(queryType) {
-}
-
-
-bool DNSProtocolParser::stitcher(DNSRequestInfo* requestInfo, DNSResponseInfo* responseInfo) {
-    DNSProtocolEvent dnsEvent;
-    dnsEvent.Key.ReqResource = std::move(requestInfo->QueryRecord);
-    dnsEvent.Key.ReqType = std::move(requestInfo->QueryType);
-    dnsEvent.Key.RespStatus = responseInfo->AnswerCount > 0 ? 1 : 0;
-    dnsEvent.Key.ConnKey = mKey;
-    dnsEvent.Info.LatencyNs = responseInfo->TimeNano - requestInfo->TimeNano;
-    if (dnsEvent.Info.LatencyNs < 0) {
-        dnsEvent.Info.LatencyNs = 0;
-    }
-    dnsEvent.Info.ReqBytes = requestInfo->ReqBytes;
-    dnsEvent.Info.RespBytes = responseInfo->RespBytes;
-    return mAggregator->AddEvent(std::move(dnsEvent));
-}
-
 bool DNSProtocolParser::GarbageCollection(size_t size_limit_bytes, uint64_t expireTimeNs) {
-    for (auto item = mReqCache.begin(); item != mReqCache.end();) {
-        if (item->second->TimeNano < expireTimeNs) {
-            delete item->second;
-            item = mReqCache.erase(item);
-            continue;
-        }
-        item++;
-    }
-
-    for (auto item = mRespCache.begin(); item != mRespCache.end();) {
-        if (item->second->TimeNano < expireTimeNs) {
-            delete item->second;
-            item = mRespCache.erase(item);
-            continue;
-        }
-        item++;
-    }
-    return mRespCache.empty() && mReqCache.empty();
+    return mCache.GarbageCollection(expireTimeNs);
 }
 
 int32_t DNSProtocolParser::GetCacheSize() {
-    return this->mReqCache.size() + this->mRespCache.size();
+    return mCache.GetRequestsSize() + mCache.GetResponsesSize();
 }
 
 } // end of namespace logtail

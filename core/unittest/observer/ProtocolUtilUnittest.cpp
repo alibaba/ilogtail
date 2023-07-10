@@ -24,15 +24,42 @@ namespace logtail {
 struct TestReq {
     int num;
     uint64_t TimeNano;
+    int ID;
+    TestReq() { std::cout << "construct req" << std::endl; }
+    ~TestReq() { std::cout << "deconstruct req" << std::endl; }
+    std::string ToString() {
+        std::stringstream ss;
+        ss << "TestReq num: " << num << " timenano: " << TimeNano << " id: " << ID;
+        return ss.str();
+    }
+    void Clear() {
+        num = 0;
+        TimeNano = 0;
+        ID = 0;
+    }
 };
 
 struct TestResp {
     int num;
     uint64_t TimeNano;
+    int ID;
+    TestResp() { std::cout << "construct resp" << std::endl; }
+    ~TestResp() { std::cout << "deconstruct resp" << std::endl; }
+    std::string ToString() {
+        std::stringstream ss;
+        ss << "TestResp num: " << num << " timenano: " << TimeNano << " id: " << ID;
+        return ss.str();
+    }
+    void Clear() {
+        num = 0;
+        TimeNano = 0;
+        ID = 0;
+    }
 };
 
 
 typedef CommonCache<TestReq, TestResp, MySQLProtocolEventAggregator, MySQLProtocolEvent, 4> TestCache;
+typedef CommonMapCache<TestReq, TestResp, int, MySQLProtocolEventAggregator, MySQLProtocolEvent, 2> TestMapCache;
 
 struct ExpectTestCacheMeta {
     size_t headRequest = 0;
@@ -56,78 +83,6 @@ public:
         APSARA_TEST_TRUE(parser.readUntil('\0') == "");
         APSARA_TEST_TRUE(parser.readUntil('\0') == "select * from pg_am where oid= 2");
         APSARA_TEST_EQUAL(parser.readUint16(), 0);
-    }
-
-    void TestSlsStringPiece() {
-        logtail::SlsStringPiece d1("abc", 3);
-        APSARA_TEST_TRUE(d1.TrimToString() == "abc");
-
-        logtail::SlsStringPiece d2("abc  ", 5);
-        APSARA_TEST_TRUE(d2.TrimToString() == "abc");
-
-        logtail::SlsStringPiece d3(" abc", 4);
-        APSARA_TEST_TRUE(d3.TrimToString() == "abc");
-
-
-        logtail::SlsStringPiece d4(" abc ", 5);
-        APSARA_TEST_TRUE(d4.TrimToString() == "abc");
-
-        logtail::SlsStringPiece d5(" \tabc  \t", 8);
-        APSARA_TEST_TRUE(d5.TrimToString() == "abc");
-
-        logtail::SlsStringPiece v1("Ram-Sdk-Hostip", 14);
-        logtail::SlsStringPiece v2("Content-Length", 14);
-
-        std::map<logtail::SlsStringPiece, int> header1;
-
-        header1[v1] = 1;
-        header1[v1] = 1;
-        APSARA_TEST_TRUE(header1.size() == 1);
-
-        std::map<logtail::SlsStringPiece, int> header2;
-
-        header2[v1] = 1;
-        header2[v2] = 1;
-
-        APSARA_TEST_TRUE(header2.size() == 2);
-
-        static logtail::SlsStringPiece v3("Content-Length", 14);
-
-        APSARA_TEST_TRUE(header2.find(v3) != header2.end());
-
-        logtail::SlsStringPiece v4("abc", 3);
-        logtail::SlsStringPiece v5("ab", 2);
-        logtail::SlsStringPiece v6("abcd", 4);
-        logtail::SlsStringPiece v7("aBc", 3);
-        logtail::SlsStringPiece v8("Ab", 2);
-        logtail::SlsStringPiece v9("abcD", 4);
-        logtail::SlsStringPiece v10("", 0);
-        logtail::SlsStringPiece v11("abc", 3);
-        logtail::SlsStringPiece v12("", 0);
-
-        APSARA_TEST_EQUAL(v4 < v5, false);
-        APSARA_TEST_EQUAL(v5 < v4, true);
-
-        APSARA_TEST_EQUAL(v4 < v6, true);
-        APSARA_TEST_EQUAL(v6 < v4, false);
-
-        APSARA_TEST_EQUAL(v4 < v7, false);
-        APSARA_TEST_EQUAL(v7 < v4, true);
-
-        APSARA_TEST_EQUAL(v4 < v8, false);
-        APSARA_TEST_EQUAL(v8 < v4, true);
-
-        APSARA_TEST_EQUAL(v4 < v9, true);
-        APSARA_TEST_EQUAL(v9 < v4, false);
-
-        APSARA_TEST_EQUAL(v4 < v10, false);
-        APSARA_TEST_EQUAL(v10 < v4, true);
-
-        APSARA_TEST_EQUAL(v4 < v11, false);
-        APSARA_TEST_EQUAL(v11 < v4, false);
-
-        APSARA_TEST_EQUAL(v10 < v12, false);
-        APSARA_TEST_EQUAL(v12 < v10, false);
     }
 
     void PrintCache(TestCache& cache, ExpectTestCacheMeta meta) {
@@ -327,11 +282,113 @@ public:
         APSARA_TEST_EQUAL(cache.GetResponsesSize(), 0);
         APSARA_TEST_EQUAL(count, 1);
     }
+
+    void TestCommonMapCacheContinueReq() {
+        TestMapCache cache(nullptr);
+        for (int i = 0; i < 10; ++i) {
+            auto success = cache.InsertReq(i, [&](TestReq* req) {
+                req->ID = i;
+                req->TimeNano = i;
+            });
+            if (i >= 8) {
+                APSARA_TEST_FALSE(success);
+            } else {
+                APSARA_TEST_TRUE(success);
+            }
+        }
+        APSARA_TEST_EQUAL(cache.mReqManager.mUnUsed.size(), 0);
+        bool success = cache.GarbageCollection(2000);
+        APSARA_TEST_TRUE(success);
+        APSARA_TEST_EQUAL(cache.mReqManager.mUnUsed.size(), 2);
+    }
+
+    void TestCommonMapCacheContinueResp() {
+        TestMapCache cache(nullptr);
+        for (int i = 0; i < 10; ++i) {
+            auto success = cache.InsertResp(i, [&](TestResp* resp) -> void {
+                resp->ID = i;
+                resp->TimeNano = i;
+            });
+            if (i >= 8) {
+                APSARA_TEST_FALSE(success);
+            } else {
+                APSARA_TEST_TRUE(success);
+            }
+        }
+        APSARA_TEST_EQUAL(cache.mRespManager.mUnUsed.size(), 0);
+        bool success = cache.GarbageCollection(2000);
+        APSARA_TEST_TRUE(success);
+        APSARA_TEST_EQUAL(cache.mRespManager.mUnUsed.size(), 2);
+    }
+
+
+    void TestCommonMapCacheOneByOne() {
+        TestMapCache cache(nullptr);
+        for (int i = 0; i < 10; ++i) {
+            auto success = cache.InsertResp(i, [&](TestResp* resp) -> void {
+                resp->ID = i;
+                resp->TimeNano = i;
+            });
+            APSARA_TEST_TRUE(success);
+            APSARA_TEST_EQUAL(cache.mResponses.size(), 1);
+            success = cache.InsertReq(i, [&](TestReq* req) -> void {
+                req->ID = i;
+                req->TimeNano = i;
+            });
+            APSARA_TEST_TRUE(success);
+            APSARA_TEST_EQUAL(cache.mResponses.size(), 0);
+            APSARA_TEST_EQUAL(cache.mRequests.size(), 0);
+            APSARA_TEST_EQUAL(cache.mRespManager.mUnUsed.size(), 1);
+            APSARA_TEST_EQUAL(cache.mReqManager.mUnUsed.size(), 0);
+        }
+
+        TestMapCache cache2(nullptr);
+        for (int i = 0; i < 10; ++i) {
+            auto success = cache2.InsertReq(i, [&](TestReq* req) -> void {
+                req->ID = i;
+                req->TimeNano = i;
+            });
+            APSARA_TEST_TRUE(success);
+            APSARA_TEST_EQUAL(cache2.mRequests.size(), 1);
+            success = cache2.InsertResp(i, [&](TestResp* resp) -> void {
+                resp->ID = i;
+                resp->TimeNano = i;
+            });
+            APSARA_TEST_TRUE(success);
+            APSARA_TEST_EQUAL(cache2.mResponses.size(), 0);
+            APSARA_TEST_EQUAL(cache2.mRequests.size(), 0);
+            APSARA_TEST_EQUAL(cache2.mRespManager.mUnUsed.size(), 0);
+            APSARA_TEST_EQUAL(cache2.mReqManager.mUnUsed.size(), 1);
+        }
+    }
+
+    void TestCommonMapCacheCommon() {
+        TestMapCache cache(nullptr);
+        for (int i = 0, j = 4; i < 5; ++i, --j) {
+            auto success = cache.InsertResp(i, [&](TestResp* resp) -> void {
+                resp->ID = i;
+                resp->TimeNano = i;
+            });
+            APSARA_TEST_TRUE(success);
+            success = cache.InsertReq(j, [&](TestReq* req) -> void {
+                req->ID = i;
+                req->TimeNano = i;
+            });
+            APSARA_TEST_TRUE(success);
+            if (i < 2) {
+                APSARA_TEST_EQUAL(cache.mRequests.size(), i + 1);
+                APSARA_TEST_EQUAL(cache.mResponses.size(), i + 1);
+            }
+            if (j < 2) {
+                APSARA_TEST_EQUAL(cache.mRequests.size(), j);
+                APSARA_TEST_EQUAL(cache.mResponses.size(), j);
+            }
+        }
+    }
 };
 
 
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestReadUntil, 0);
-APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestSlsStringPiece, 0);
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheContinueReq, 0);
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheContinueResp, 0);
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheContinueOneByOneAndReqFirst, 0);
@@ -339,6 +396,10 @@ APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheContinueOneByOneAndRe
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheInsertOldResp, 0);
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheInsertNewReq, 0);
 APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonCacheTryMatchingReq, 0);
+APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonMapCacheContinueReq, 0);
+APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonMapCacheContinueResp, 0);
+APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonMapCacheOneByOne, 0);
+APSARA_UNIT_TEST_CASE(ProtocolUtilUnittest, TestCommonMapCacheCommon, 0);
 } // namespace logtail
 
 

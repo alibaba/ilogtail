@@ -31,8 +31,12 @@ struct DNSRequestInfo {
     std::string QueryRecord;
     std::string QueryType;
 
-public:
-    DNSRequestInfo(uint64_t timeNano, std::string&& queryRecord, std::string&& queryType, int32_t reqBytes);
+    void Clear() {
+        TimeNano = 0;
+        ReqBytes = 0;
+        QueryRecord.clear();
+        QueryType.clear();
+    }
 };
 
 struct DNSResponseInfo {
@@ -40,23 +44,35 @@ struct DNSResponseInfo {
     int32_t RespBytes;
     uint16_t AnswerCount;
 
-    DNSResponseInfo(uint64_t timeNano, uint16_t answerCount, int32_t respBytes);
+    void Clear() {
+        TimeNano = 0;
+        RespBytes = 0;
+        AnswerCount = 0;
+    }
 };
 
+typedef CommonMapCache<DNSRequestInfo, DNSResponseInfo, uint16_t, DNSProtocolEventAggregator, DNSProtocolEvent, 4>
+    DnsCache;
 
 // 协议解析器，流式解析，解析到某个协议后，自动放到aggregator中聚合
 class DNSProtocolParser {
 public:
     DNSProtocolParser(DNSProtocolEventAggregator* aggregator, PacketEventHeader* header)
-        : mAggregator(aggregator), mKey(header) {}
-
-    ~DNSProtocolParser() {
-        for (auto& p : mReqCache) {
-            delete p.second;
-        }
-        for (auto& p : mRespCache) {
-            delete p.second;
-        }
+        : mCache(aggregator), mKey(header) {
+        mCache.BindConvertFunc(
+            [&](DNSRequestInfo* requestInfo, DNSResponseInfo* responseInfo, DNSProtocolEvent& dnsEvent) -> bool {
+                dnsEvent.Info.LatencyNs = responseInfo->TimeNano - requestInfo->TimeNano;
+                if (dnsEvent.Info.LatencyNs < 0) {
+                    dnsEvent.Info.LatencyNs = 0;
+                }
+                dnsEvent.Info.ReqBytes = requestInfo->ReqBytes;
+                dnsEvent.Info.RespBytes = responseInfo->RespBytes;
+                dnsEvent.Key.ReqResource = std::move(requestInfo->QueryRecord);
+                dnsEvent.Key.ReqType = std::move(requestInfo->QueryType);
+                dnsEvent.Key.RespStatus = responseInfo->AnswerCount > 0 ? 1 : 0;
+                dnsEvent.Key.ConnKey = mKey;
+                return true;
+            });
     }
 
     static DNSProtocolParser* Create(DNSProtocolEventAggregator* aggregator, PacketEventHeader* header) {
@@ -80,11 +96,7 @@ public:
     int32_t GetCacheSize();
 
 private:
-    bool stitcher(DNSRequestInfo* requestInfo, DNSResponseInfo* responseInfo);
-
-    DNSProtocolEventAggregator* mAggregator = NULL;
-    std::unordered_map<uint16_t, DNSRequestInfo*> mReqCache;
-    std::unordered_map<uint16_t, DNSResponseInfo*> mRespCache;
+    DnsCache mCache;
     CommonAggKey mKey;
 
     friend class ProtocolDnsUnittest;

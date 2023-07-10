@@ -215,7 +215,7 @@ public:
         hexstring_to_bin(hexString, data);
         logtail::PgSQLParser pgsql((const char*)data.data(), (size_t)data.size());
         pgsql.parse(MessageType_Response);
-        APSARA_TEST_EQUAL(pgsql.query.sql.ToString(), "");
+        APSARA_TEST_EQUAL(std::string(pgsql.query.sql.data(), pgsql.query.sql.size()), "");
         APSARA_TEST_EQUAL(pgsql.resp.ok, true);
         APSARA_TEST_TRUE(pgsql.type == PgSQLPacketType::Response);
     }

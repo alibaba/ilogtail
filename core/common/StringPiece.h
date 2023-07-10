@@ -19,6 +19,8 @@
 #include <cstddef>
 #include <algorithm>
 #include <stdexcept>
+#include <unordered_map>
+#include "xxhash/xxhash.h"
 
 namespace logtail {
 namespace detail {
@@ -311,5 +313,11 @@ namespace detail {
 
 typedef detail::StringPieceDetail<char> StringPiece;
 // typedef detail::StringPieceDetail<wchar_t> StringPiece16;
+
+struct StringPieceHash {
+    size_t operator()(const StringPiece& info) const { return XXH32(info.data(), info.size(), 0); }
+};
+
+typedef std::unordered_map<StringPiece, StringPiece, StringPieceHash> StringPieceHashMap;
 
 } // namespace logtail

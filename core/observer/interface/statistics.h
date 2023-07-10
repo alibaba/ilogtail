@@ -230,16 +230,22 @@ struct ProtocolStatistic {
     uint32_t mMySQLParseFailCount{0};
     uint32_t mPgSQLParseFailCount{0};
     uint32_t mDNSParseFailCount{0};
+    uint32_t mDubboParseFailCount{0};
+    uint32_t mKafkaParseFailCount{0};
     uint32_t mHTTPDropCount{0};
     uint32_t mRedisDropCount{0};
     uint32_t mMySQLDropCount{0};
     uint32_t mPgSQLDropCount{0};
     uint32_t mDNSDropCount{0};
+    uint32_t mDubboDropCount{0};
+    uint32_t mKafkaDropCount{0};
     uint32_t mHTTPCount{0};
     uint32_t mRedisCount{0};
     uint32_t mMySQLCount{0};
     uint32_t mPgSQLCount{0};
     uint32_t mDNSCount{0};
+    uint32_t mDubboCount{0};
+    uint32_t mKafkaCount{0};
 
     static ProtocolStatistic* GetInstance() {
         static auto ptr = new ProtocolStatistic();
@@ -259,16 +265,22 @@ struct ProtocolStatistic {
         sMonitor->UpdateMetric("observer_protocol_mysql_drop_count", mMySQLDropCount);
         sMonitor->UpdateMetric("observer_protocol_pgsql_drop_count", mPgSQLDropCount);
         sMonitor->UpdateMetric("observer_protocol_redis_drop_count", mRedisDropCount);
+        sMonitor->UpdateMetric("observer_protocol_dubbo_drop_count", mDubboDropCount);
+        sMonitor->UpdateMetric("observer_protocol_kafka_drop_count", mDubboDropCount);
         sMonitor->UpdateMetric("observer_protocol_http_count", mHTTPCount);
         sMonitor->UpdateMetric("observer_protocol_dns_count", mDNSCount);
         sMonitor->UpdateMetric("observer_protocol_mysql_count", mMySQLCount);
         sMonitor->UpdateMetric("observer_protocol_pgsql_count", mPgSQLCount);
         sMonitor->UpdateMetric("observer_protocol_redis_count", mRedisCount);
+        sMonitor->UpdateMetric("observer_protocol_dubbo_count", mDubboCount);
+        sMonitor->UpdateMetric("observer_protocol_kafka_count", mDubboCount);
         sMonitor->UpdateMetric("observer_protocol_http_parse_fail_count", mHTTPParseFailCount);
         sMonitor->UpdateMetric("observer_protocol_dns_parse_fail_count", mDNSParseFailCount);
         sMonitor->UpdateMetric("observer_protocol_mysql_parse_fail_count", mMySQLParseFailCount);
         sMonitor->UpdateMetric("observer_protocol_pgsql_parse_fail_count", mPgSQLParseFailCount);
         sMonitor->UpdateMetric("observer_protocol_redis_parse_fail_count", mRedisParseFailCount);
+        sMonitor->UpdateMetric("observer_protocol_dubbo_parse_fail_count", mDubboParseFailCount);
+        sMonitor->UpdateMetric("observer_protocol_kafka_parse_fail_count", mDubboParseFailCount);
         doClear();
     }
 
@@ -288,7 +300,10 @@ struct ProtocolStatistic {
            << " mPgSQLDropCount: " << statistic.mPgSQLDropCount << " mDNSDropCount: " << statistic.mDNSDropCount
            << " mHTTPCount: " << statistic.mHTTPCount << " mRedisCount: " << statistic.mRedisCount
            << " mMySQLCount: " << statistic.mMySQLCount << " mPgSQLCount: " << statistic.mPgSQLCount
-           << " mDNSCount: " << statistic.mDNSCount;
+           << " mDNSCount: " << statistic.mDNSCount << " mDubboCount: " << statistic.mDubboCount
+           << " mDubboDropCount: " << statistic.mDubboDropCount << " mKafkaDropCount: " << statistic.mKafkaDropCount
+           << " mDubboParseFailCount: " << statistic.mDubboParseFailCount
+           << " mKafkaParseFailCount: " << statistic.mKafkaParseFailCount;
         return os;
     }
 
@@ -311,6 +326,11 @@ private:
         mMySQLCount = 0;
         mPgSQLCount = 0;
         mDNSCount = 0;
+        mDubboCount = 0;
+        mDubboDropCount = 0;
+        mDubboParseFailCount = 0, mKafkaCount = 0;
+        mKafkaDropCount = 0;
+        mKafkaParseFailCount = 0;
     }
 };
 
@@ -326,6 +346,10 @@ struct ProtocolDebugStatistic {
     uint32_t mMySQLConnectionCachedSize{0};
     uint32_t mPgSQLConnectionNum{0};
     uint32_t mPgSQLConnectionCachedSize{0};
+    uint32_t mDubboConnectionNum{0};
+    uint32_t mDubboConnectionCachedSize{0};
+    uint32_t mKafkaConnectionNum{0};
+    uint32_t mKafkaConnectionCachedSize{0};
 
     static ProtocolDebugStatistic* GetInstance() {
         static auto ptr = new ProtocolDebugStatistic();
@@ -351,6 +375,10 @@ struct ProtocolDebugStatistic {
             sMonitor->UpdateMetric("observer_protocolstat_mysql_cached", mMySQLConnectionCachedSize);
             sMonitor->UpdateMetric("observer_protocolstat_pgsql_cached", mPgSQLConnectionCachedSize);
             sMonitor->UpdateMetric("observer_protocolstat_redis_cached", mRedisConnectionCachedSize);
+            sMonitor->UpdateMetric("observer_protocolstat_dubbo_conn", mDubboConnectionNum);
+            sMonitor->UpdateMetric("observer_protocolstat_dubbo_cached", mDubboConnectionCachedSize);
+            sMonitor->UpdateMetric("observer_protocolstat_kafka_conn", mKafkaConnectionNum);
+            sMonitor->UpdateMetric("observer_protocolstat_kafka_cached", mKafkaConnectionCachedSize);
         }
         doClear();
     }
@@ -365,7 +393,11 @@ struct ProtocolDebugStatistic {
            << " mMySQLConnectionNum: " << statistic.mMySQLConnectionNum
            << " mMySQLConnectionCachedSize: " << statistic.mMySQLConnectionCachedSize
            << " mPgSQLConnectionNum: " << statistic.mPgSQLConnectionNum
-           << " mPgSQLConnectionCachedSize: " << statistic.mPgSQLConnectionCachedSize;
+           << " mPgSQLConnectionCachedSize: " << statistic.mPgSQLConnectionCachedSize
+           << " mDubboConnectionNum: " << statistic.mDubboConnectionNum
+           << " mDubboConnectionCachedSize: " << statistic.mDubboConnectionCachedSize
+           << " mKafkaConnectionNum: " << statistic.mKafkaConnectionNum
+           << " mKafkaConnectionCachedSize: " << statistic.mKafkaConnectionCachedSize;
         return os;
     }
 
@@ -389,6 +421,10 @@ private:
         mMySQLConnectionCachedSize = 0;
         mPgSQLConnectionNum = 0;
         mPgSQLConnectionCachedSize = 0;
+        mDubboConnectionNum = 0;
+        mDubboConnectionCachedSize = 0;
+        mKafkaConnectionNum = 0;
+        mKafkaConnectionCachedSize = 0;
     }
 };
 

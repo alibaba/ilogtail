@@ -34,22 +34,31 @@
 namespace logtail {
 
 template <typename T>
-inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const T& value) {
-    auto content = log->add_contents();
+inline void AddAnyLogContent(sls_logs::Log_Content* content, const std::string& key, const T& value) {
     content->set_key(key);
     content->set_value(std::to_string(value));
 }
-inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const std::string& value) {
+template <typename T>
+inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const T& value) {
     auto content = log->add_contents();
+    AddAnyLogContent(content, key, value);
+}
+inline void AddAnyLogContent(sls_logs::Log_Content* content, const std::string& key, const std::string& value) {
     content->set_key(key);
     content->set_value(value);
 }
-inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, std::string&& value) {
+inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, const std::string& value) {
     auto content = log->add_contents();
+    AddAnyLogContent(content, key, value);
+}
+inline void AddAnyLogContent(sls_logs::Log_Content* content, const std::string& key, std::string&& value) {
     content->set_key(key);
     content->set_value(std::move(value));
 }
-
+inline void AddAnyLogContent(sls_logs::Log* log, const std::string& key, std::string&& value) {
+    auto content = log->add_contents();
+    AddAnyLogContent(content, key, std::move(value));
+}
 // GenUniqueConnectionID use connid,add and pid to generate a mostly unique id.
 inline uint64_t GenConnectionID(uint32_t pid, uint32_t connid) {
     static std::string sHostname = GetHostName();

@@ -92,7 +92,7 @@ enum class MySQLCommand {
 };
 
 struct MySQLPacketQuery {
-    SlsStringPiece sql;
+    StringPiece sql;
 };
 
 struct MySQLPacketResponse {
@@ -135,17 +135,17 @@ public:
 
     uint64_t readLengthCodedInt();
 
-    SlsStringPiece readLeft();
+    StringPiece readLeft();
 
-    SlsStringPiece readFixSizeString(int32_t size);
+    StringPiece readFixSizeString(int32_t size);
 
-    SlsStringPiece readLengthCodedString();
+    StringPiece readLengthCodedString();
 
     uint32_t readPacketLength();
 
     uint8_t readPacketNum();
 
-    void readData(std::vector<SlsStringPiece>& data);
+    void readData(std::vector<StringPiece>& data);
 
     void parse();
 

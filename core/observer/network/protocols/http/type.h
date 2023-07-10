@@ -29,8 +29,10 @@ using HTTPProtocolEventKey = RequestAggKey<ProtocolType_HTTP>;
 using HTTPProtocolEvent = CommonProtocolEvent<HTTPProtocolEventKey>;
 using HTTPProtocolEventAggItem = CommonProtocolEventAggItem<HTTPProtocolEventKey, CommonProtocolAggResult>;
 using HTTPProtocolEventAggItemManager = CommonProtocolEventAggItemManager<HTTPProtocolEventAggItem>;
-using HTTPProtocolEventAggregator = CommonProtocolEventAggregator<HTTPProtocolEvent,
-                                                                  HTTPProtocolEventAggItem,
-                                                                  HTTPProtocolEventAggItemManager>;
+using HTTPProtocolEventAggregator
+    = CommonProtocolEventAggregator<HTTPProtocolEvent, HTTPProtocolEventAggItem, HTTPProtocolEventAggItemManager>;
+
+constexpr char kContentLength[] = "Content-Length";
+constexpr char kTransferEncoding[] = "Transfer-Encoding";
 
 } // namespace logtail

@@ -39,25 +39,25 @@ uint64_t MySQLParser::readLengthCodedInt() {
     }
 }
 
-SlsStringPiece MySQLParser::readLeft() {
+StringPiece MySQLParser::readLeft() {
     uint32_t leftSize = getLeftSize();
 
     const char* s = readChar(true);
 
     positionCommit(leftSize - 1);
-    SlsStringPiece value(s, leftSize);
+    StringPiece value(s, leftSize);
     return value;
 }
 
-SlsStringPiece MySQLParser::readFixSizeString(int32_t size) {
+StringPiece MySQLParser::readFixSizeString(int32_t size) {
     const char* s = readChar(true);
     positionCommit(size - 1);
-    SlsStringPiece value(s, size);
+    StringPiece value(s, size);
     return value;
 }
 
 
-SlsStringPiece MySQLParser::readLengthCodedString() {
+StringPiece MySQLParser::readLengthCodedString() {
     uint64_t counter = readLengthCodedInt();
     return readFixSizeString(counter);
 }
@@ -75,11 +75,11 @@ uint8_t MySQLParser::readPacketNum() {
 
 void MySQLParser::parseGreetingPacket() {
     //    uint8_t protocol = readUint8();
-    //    SlsStringPiece version = readUntil('\0');
+    //    StringPiece version = readUntil('\0');
     //    uint32_t threadId = readUint32();
     //    const char * slatStart = readChar(true);
     //    this->positionCommit(8);
-    //    SlsStringPiece salt(slatStart, 8);
+    //    StringPiece salt(slatStart, 8);
     //    uint16_t cap = readUint16();
     //    uint8_t chCoding = readUint8();
     //    uint16_t serverStatus = readUint16();
@@ -88,8 +88,8 @@ void MySQLParser::parseGreetingPacket() {
     //
     //    // 10个填充字符
     //    this->positionCommit(10);
-    //    SlsStringPiece salt2 = readUntil('\0');
-    //    SlsStringPiece autPluinName = readUntil('\0');
+    //    StringPiece salt2 = readUntil('\0');
+    //    StringPiece autPluinName = readUntil('\0');
 }
 
 void MySQLParser::parseLoginPacket() {
@@ -106,10 +106,10 @@ void MySQLParser::parseLoginPacket() {
 void MySQLParser::parseQueryPacket(MySQLCommand command) {
     // for com_query only collect command type to avoid plain sql influence aggregator performance
     if (command == MySQLCommand::comQuery) {
-        SlsStringPiece val = readUntil(' ', true);
+        StringPiece val = readUntil(' ', true);
         mysqlPacketQuery.sql = val;
     } else {
-        SlsStringPiece val = readLeft();
+        StringPiece val = readLeft();
         mysqlPacketQuery.sql = val;
     }
 }
@@ -126,8 +126,8 @@ void MySQLParser::parseErrPacket() {
     //    uint8_t code = readUint8();
     //    uint8_t errCode = readUint16();
     //    uint8_t serverStateFlag = readUint8();
-    //    SlsStringPiece serverState = readFixSizeString(5);
-    //    SlsStringPiece errorMsg = readLeft();
+    //    StringPiece serverState = readFixSizeString(5);
+    //    StringPiece errorMsg = readLeft();
 }
 
 void MySQLParser::parseEOFPacket() {
@@ -159,12 +159,12 @@ uint32_t MySQLParser::parseFieldHeaderPacket() {
 
 void MySQLParser::parseFieldPacket() {
     //    uint32_t startPosition = currPostion;
-    //    SlsStringPiece catalog = readLengthCodedString();
-    //    SlsStringPiece database = readLengthCodedString();
-    //    SlsStringPiece table = readLengthCodedString();
-    //    SlsStringPiece tableOriName = readLengthCodedString();
-    //    SlsStringPiece fieldName = readLengthCodedString();
-    //    SlsStringPiece fieldOriName = readLengthCodedString();
+    //    StringPiece catalog = readLengthCodedString();
+    //    StringPiece database = readLengthCodedString();
+    //    StringPiece table = readLengthCodedString();
+    //    StringPiece tableOriName = readLengthCodedString();
+    //    StringPiece fieldName = readLengthCodedString();
+    //    StringPiece fieldOriName = readLengthCodedString();
     //
     //    // 跳过一位填充值
     //    positionCommit(1);
@@ -178,7 +178,7 @@ void MySQLParser::parseFieldPacket() {
 
 void MySQLParser::parseRowPacket(int fieldCount) {
     //    for(int i=0; i<fieldCount; i++) {
-    //        SlsStringPiece val = readLengthCodedString();
+    //        StringPiece val = readLengthCodedString();
     //    }
 }
 
@@ -331,7 +331,7 @@ void MySQLParser::print() {
     std::cout << this->mysqlPacketType << std::endl;
     std::cout << "resp:" << std::endl;
     std::cout << this->mysqlPacketResponse.ok << std::endl;
-    std::cout << "sql:" + this->mysqlPacketQuery.sql.ToString() << std::endl;
+    std::cout << "sql:" + std::string(mysqlPacketQuery.sql.data(), mysqlPacketQuery.sql.size()) << std::endl;
     std::cout << "===================================================" << std::endl;
 }
 

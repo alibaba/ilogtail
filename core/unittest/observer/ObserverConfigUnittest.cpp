@@ -56,6 +56,24 @@ public:
                                         "                        \"ServerSize\":2\n"
                                         "                    }\n"
                                         "                },\n"
+                                        "                \"DetailProtocolSampling\":{\n"
+                                        "                    \"mysql\":{\n"
+                                        "                        \"SampleType\":1,\n"
+                                        "                        \"ErrorSample\":true,\n"
+                                        "                        \"LatencySample\":10\n"
+                                        "                    },\n"
+                                        "                    \"pgsql\":{\n"
+                                        "                        \"SampleType\":-1\n"
+                                        "                    }\n"
+                                        "                },\n"
+                                        "                \"DetailSampling\":50,\n"
+                                        "                \"DetailThresholdPerSecond\":2000,\n"
+                                        "                \"DetailIncludePodNameRegex\":\"^in_dpname\",\n"
+                                        "                \"DetailIncludeNamespaceRegex\":\"^in_dncname\",\n"
+                                        "                \"DetailIncludeCmdRegex\":\"^in_dcname\",\n"
+                                        "                \"DetailIncludeNodeRegex\":\"^in_dnname\",\n"
+                                        "                \"DetailIncludeIpRegex\":\"^in_diname\",\n"
+                                        "                \"DetailIncludeHostnameRegex\":\"^in_dhname\",\n"
                                         "                \"IncludeCmdRegex\":\"^in_cmd\",\n"
                                         "                \"ExcludeCmdRegex\":\"^ex_cmd$\",\n"
                                         "                \"IncludeContainerNameRegex\":\"^in_cname\",\n"
@@ -135,7 +153,27 @@ public:
         APSARA_TEST_EQUAL(cfg->label2String(cfg->mExcludeK8sLabels), "app1=^test1$,");
         APSARA_TEST_EQUAL(cfg->label2String(cfg->mIncludeEnvs), "env1=^env1,");
         APSARA_TEST_EQUAL(cfg->label2String(cfg->mExcludeEnvs), "env2=^env2,");
-
+        APSARA_TEST_EQUAL(std::get<0>(cfg->GetProtocolDetailSampleCfg(ProtocolType_MySQL)), true);
+        APSARA_TEST_EQUAL(std::get<1>(cfg->GetProtocolDetailSampleCfg(ProtocolType_MySQL)), true);
+        APSARA_TEST_EQUAL(std::get<2>(cfg->GetProtocolDetailSampleCfg(ProtocolType_MySQL)), 10);
+        APSARA_TEST_EQUAL(std::get<0>(cfg->GetProtocolDetailSampleCfg(ProtocolType_PgSQL)), -1);
+        APSARA_TEST_EQUAL(std::get<1>(cfg->GetProtocolDetailSampleCfg(ProtocolType_PgSQL)), false);
+        APSARA_TEST_EQUAL(std::get<2>(cfg->GetProtocolDetailSampleCfg(ProtocolType_PgSQL)), 0);
+        APSARA_TEST_EQUAL(std::get<0>(cfg->GetProtocolDetailSampleCfg(ProtocolType_Dubbo)), 0);
+        APSARA_TEST_EQUAL(std::get<1>(cfg->GetProtocolDetailSampleCfg(ProtocolType_Dubbo)), false);
+        APSARA_TEST_EQUAL(std::get<2>(cfg->GetProtocolDetailSampleCfg(ProtocolType_Dubbo)), 0);
+        APSARA_TEST_EQUAL(std::get<2>(cfg->GetProtocolDetailSampleCfg(ProtocolType_Dubbo)), 0);
+        APSARA_TEST_TRUE(!cfg->mDetailIncludePodNameRegex.empty()
+                         && cfg->mDetailIncludePodNameRegex.str() == "^in_dpname");
+        APSARA_TEST_TRUE(!cfg->mDetailIncludeNamespaceRegex.empty()
+                         && cfg->mDetailIncludeNamespaceRegex.str() == "^in_dncname");
+        APSARA_TEST_TRUE(!cfg->mDetailIncludeCmdRegex.empty() && cfg->mDetailIncludeCmdRegex.str() == "^in_dcname");
+        APSARA_TEST_TRUE(!cfg->mDetailIncludeNodeRegex.empty() && cfg->mDetailIncludeNodeRegex.str() == "^in_dnname");
+        APSARA_TEST_TRUE(!cfg->mDetailIncludeIpRegex.empty() && cfg->mDetailIncludeIpRegex.str() == "^in_diname");
+        APSARA_TEST_TRUE(!cfg->mDetailIncludeHostnameRegex.empty()
+                         && cfg->mDetailIncludeHostnameRegex.str() == "^in_dhname");
+        APSARA_TEST_TRUE(cfg->mDetailSampling == 50);
+        APSARA_TEST_TRUE(cfg->mDetailThresholdPerSecond == 2000);
         std::cout << cfg->ToString() << std::endl;
     }
 };

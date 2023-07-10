@@ -53,11 +53,11 @@ ParseResult MySQLProtocolParser::OnPacket(PacketType pktType,
     }
     if (mysql.OK()) {
         bool insertSuccess = true;
-        LOG_TRACE(
-            sLogger,
-            ("hashID", header->SockHash)("packet_type", MySQLPacketTypeToString(mysql.mysqlPacketType))(
-                "pid", header->PID)("msgType", MessageTypeToString(msgType))(
-                "mysql_query", mysql.mysqlPacketQuery.sql.ToString())("mysql_resp", mysql.mysqlPacketResponse.ok));
+        LOG_TRACE(sLogger,
+                  ("hashID", header->SockHash)("packet_type", MySQLPacketTypeToString(mysql.mysqlPacketType))(
+                      "pid", header->PID)("msgType", MessageTypeToString(msgType))(
+                      "mysql_query", std::string(mysql.mysqlPacketQuery.sql.data(), mysql.mysqlPacketQuery.sql.size()))(
+                      "mysql_resp", mysql.mysqlPacketResponse.ok));
         switch (mysql.mysqlPacketType) {
             case MySQLPacketTypeServerGreeting:
             case MySQLPacketNoResponseStatement:
@@ -76,7 +76,7 @@ ParseResult MySQLProtocolParser::OnPacket(PacketType pktType,
                 insertSuccess = mCache.InsertReq([&](MySQLRequestInfo* info) {
                     info->TimeNano = header->TimeNano;
                     info->ReqBytes = pktRealSize;
-                    info->SQL = mysql.mysqlPacketQuery.sql.ToString();
+                    info->SQL = std::string(mysql.mysqlPacketQuery.sql.data(), mysql.mysqlPacketQuery.sql.size());
                 });
                 break;
             }

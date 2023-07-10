@@ -16,9 +16,18 @@
 #include <string>
 
 #include "inner_parser.h"
-namespace logtail {
+#include "type.h"
 
-SlsStringPiece RedisParser::readUtilNewLine() {
+#define CHECK_PARTIAL \
+    do { \
+        if (!this->OK()) { \
+            return ParseResult_Partial; \
+        } \
+    } while (0)
+
+
+namespace logtail {
+StringPiece RedisParser::readUtilNewLine() {
     const char* s = readChar();
     const char* ch = s;
     const char* lastCh = s;
@@ -28,7 +37,7 @@ SlsStringPiece RedisParser::readUtilNewLine() {
         counter++;
         positionCommit(1);
         if (isParseFail) {
-            SlsStringPiece empty;
+            StringPiece empty;
             return empty;
         }
 
@@ -37,61 +46,62 @@ SlsStringPiece RedisParser::readUtilNewLine() {
         }
         lastCh = ch;
     }
-    SlsStringPiece val(s, counter - 2);
+    StringPiece val(s, counter - 2);
     return val;
 }
 
-void RedisParser::readData(std::vector<SlsStringPiece>& data) {
+ParseResult RedisParser::readData(std::vector<StringPiece>& data) {
     const char* ch = readChar();
     switch (*ch) {
-        case '+': // + 字符串 \r\n
-        {
-            auto s = readUtilNewLine();
-            // std::cout << s1.ToString() << std::endl;
-            data.push_back(s);
-        } break;
-        case '-': // - 错误前缀 错误信息 \r\n
-        {
-            auto s = readUtilNewLine();
-            // std::cout << s1.ToString() << std::endl;
-            data.push_back(s);
+        case kErrorFlag:
             redisData.isError = true;
-        } break;
-        case ':': // : 数字 \r\n
+        case kNumberFlag:
+        case kSimpleStringFlag: // + 字符串 \r\n
         {
             auto s = readUtilNewLine();
-            // std::cout << s1.ToString() << std::endl;
+            CHECK_PARTIAL;
             data.push_back(s);
-        } break;
-        case '$': // $ 字符串的长度 \r\n 字符串 \r\n
+            break;
+        }
+        case kBulkStringFlag: // $ 字符串的长度 \r\n 字符串 \r\n
         {
-            readUtilNewLine();
+            auto s = readUtilNewLine();
+            CHECK_PARTIAL;
+            auto len = std::stoi(std::string(s.data(), s.size()));
+            if (len > getLeftSize()) {
+                return ParseResult_Partial;
+            }
             auto s2 = readUtilNewLine();
+            CHECK_PARTIAL;
             data.push_back(s2);
             break;
         }
-        case '*': // * 数组元素个数 \r\n 其他所有类型 (结尾不需要\r\n)
+        case kArrayFlag: // * 数组元素个数 \r\n 其他所有类型 (结尾不需要\r\n)
         {
             auto s = readUtilNewLine();
-            int cnt = std::stoi(s.ToString());
-            int max = cnt > 1 ? 1 : cnt;
-            for (int i = 0; i < max; i++) {
-                readData(data);
+            CHECK_PARTIAL;
+            auto cnt = std::stoi(std::string(s.data(), s.size()));
+            for (int i = 0; i < cnt; i++) {
+                auto res = readData(data);
+                if (res != ParseResult_OK) {
+                    return res;
+                }
             }
             break;
         }
         default:
-            break;
+            return ParseResult_Fail;
     }
+    return ParseResult_OK;
 }
 
-void RedisParser::parse() {
-    readData(redisData.data);
+ParseResult RedisParser::parse() {
+    return readData(redisData.data);
 }
 
 void RedisParser::print() {
     for (auto v : redisData.data) {
-        std::cout << v.ToString() << " ";
+        std::cout << std::string(v.data(), v.size()) << " ";
     }
 
     std::cout << std::endl;

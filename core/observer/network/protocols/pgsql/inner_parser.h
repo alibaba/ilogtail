@@ -34,7 +34,7 @@ enum class PgSQLPacketType {
 };
 
 struct PgSQLPacketQuery {
-    SlsStringPiece sql;
+    StringPiece sql;
 };
 
 struct PgSQLPacketResponse {

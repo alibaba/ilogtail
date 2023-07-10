@@ -23,13 +23,15 @@
 #include "network/protocols/redis/type.h"
 #include "observer/interface/network.h"
 #include "inner_parser.h"
+#include "network/protocols/buffer.h"
+#include "network/protocols/parser.h"
 
 namespace logtail {
 
 struct RedisRequestInfo {
-    uint64_t TimeNano;
-    std::string CMD;
-    int32_t ReqBytes;
+    int32_t ReqBytes{0};
+    uint64_t TimeNano{0};
+    std::string Data;
 
     std::string ToString() const {
         std::stringstream ss;
@@ -40,9 +42,10 @@ struct RedisRequestInfo {
 };
 
 struct RedisResponseInfo {
-    uint64_t TimeNano;
-    bool isOK;
-    int32_t RespBytes;
+    uint64_t TimeNano{0};
+    bool IsOK{false};
+    std::string Data;
+    int32_t RespBytes{0};
     std::string ToString() const {
         std::stringstream ss;
         ss << *this;
@@ -55,10 +58,24 @@ typedef CommonCache<RedisRequestInfo, RedisResponseInfo, RedisProtocolEventAggre
     RedisCache;
 
 // 协议解析器，流式解析，解析到某个协议后，自动放到aggregator中聚合
-class RedisProtocolParser {
+class RedisProtocolParser : public Parser {
+private:
+    RedisCache mCache;
+    CommonAggKey mKey;
+    CommonProtocolDetailsSampler* mSampler;
+
 public:
-    RedisProtocolParser(RedisProtocolEventAggregator* aggregator, PacketEventHeader* header)
-        : mCache(aggregator), mKey(header) {
+    static RedisProtocolParser*
+    Create(RedisProtocolEventAggregator* aggregator, CommonProtocolDetailsSampler* sampler, PacketEventHeader* header) {
+        return new RedisProtocolParser(aggregator, sampler, header);
+    }
+    static void Delete(RedisProtocolParser* parser) { delete parser; }
+
+
+    RedisProtocolParser(RedisProtocolEventAggregator* aggregator,
+                        CommonProtocolDetailsSampler* sampler,
+                        PacketEventHeader* header)
+        : mCache(aggregator), mKey(header), mSampler(sampler) {
         mCache.BindConvertFunc([&](RedisRequestInfo* req, RedisResponseInfo* resp, RedisProtocolEvent& event) {
             event.Info.LatencyNs = resp->TimeNano - req->TimeNano;
             if (event.Info.LatencyNs < 0) {
@@ -67,36 +84,37 @@ public:
             event.Info.ReqBytes = req->ReqBytes;
             event.Info.RespBytes = resp->RespBytes;
             event.Key.ConnKey = mKey;
-            event.Key.QueryCmd = ToLowerCaseString(req->CMD.substr(0, req->CMD.find_first_of(' ')));
-            event.Key.Query = std::move(req->CMD);
-            event.Key.Status = resp->isOK;
+            event.Key.QueryCmd = ToLowerCaseString(req->Data.substr(0, req->Data.find_first_of(' ')));
+            event.Key.Query = event.Key.QueryCmd;
+            event.Key.Status = resp->IsOK;
+            if (this->mSampler->IsSample(event.Key.Status, static_cast<int32_t>((event.Info.LatencyNs / 1e3)))) {
+                ProtocolDetail detail;
+                detail.Type = ProtocolType_Redis;
+                detail.Query = event.Key.QueryCmd;
+                detail.QueryCmd = event.Key.QueryCmd;
+                detail.Request["cmd"] = req->Data;
+                detail.Response["result"] = resp->Data;
+                detail.Response["success"] = resp->IsOK ? "true" : "false";
+                this->mKey.ToPB(&detail.Tags);
+                this->mSampler->AddData(std::move(detail));
+            }
             return true;
         });
     }
 
-    static RedisProtocolParser* Create(RedisProtocolEventAggregator* aggregator, PacketEventHeader* header) {
-        return new RedisProtocolParser(aggregator, header);
-    }
+    ~RedisProtocolParser() override = default;
 
-    static void Delete(RedisProtocolParser* parser) { delete parser; }
-
-    // Packet到达的时候会Call，所有参数都会告诉类型（PacketType，MessageType）
     ParseResult OnPacket(PacketType pktType,
                          MessageType msgType,
-                         PacketEventHeader* header,
+                         const PacketEventHeader* header,
                          const char* pkt,
                          int32_t pktSize,
-                         int32_t pktRealSize);
-
-    // GC，把内部没有完成Event匹配的消息按照SizeLimit和TimeOut进行清理
-    // 返回值，如果是true代表还有数据，false代表无数据
+                         int32_t pktRealSize,
+                         int32_t* offset) override;
     bool GarbageCollection(size_t size_limit_bytes, uint64_t expireTimeNs);
+    size_t GetCacheSize() override;
+    size_t FindBoundary(MessageType messageType, const StringPiece& piece) override;
 
-    int32_t GetCacheSize();
-
-private:
-    RedisCache mCache;
-    CommonAggKey mKey;
 
     friend class ProtocolRedisUnittest;
 };

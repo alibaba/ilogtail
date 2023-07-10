@@ -47,6 +47,7 @@ NetworkObserver::~NetworkObserver() {
         delete mAllProcess.second;
     }
 }
+
 void NetworkObserver::HoldOn(bool exitFlag) {
     if (mEBPFWrapper != nullptr) {
         mEBPFWrapper->HoldOn(exitFlag);
@@ -137,6 +138,10 @@ void NetworkObserver::FlushOutMetrics(std::vector<sls_logs::Log>& allData) {
     containerProcessGroupManager->FlushOutMetrics(allData, mConfig->mTags, mConfig->mFlushOutL7Interval);
 }
 
+void NetworkObserver::FlushOutDetails(std::vector<sls_logs::Log>& allData) {
+    static ContainerProcessGroupManager* containerProcessGroupManager = ContainerProcessGroupManager::GetInstance();
+    containerProcessGroupManager->FlushOutDetails(allData, mConfig->mTags, mConfig->mFlushOutL7DetailsInterval);
+}
 void NetworkObserver::FlushStatistics(logtail::NetStaticticsMap& statisticsMap, std::vector<sls_logs::Log>& allData) {
     static ContainerProcessGroupManager* cpgManager = ContainerProcessGroupManager::GetInstance();
     MergedNetStatisticsHashMap mergedMap;
@@ -285,6 +290,7 @@ int NetworkObserver::OnPacketEvent(void* event, size_t len) {
     }
     return 0;
 }
+
 void NetworkObserver::OnProcessDestroyed(uint32_t pid, const char* command, size_t len) {
     auto findIter = mAllProcesses.find(pid);
     if (findIter != mAllProcesses.end()) {
@@ -299,6 +305,7 @@ void NetworkObserver::OnProcessDestroyed(uint32_t pid, const char* command, size
         }
     }
 }
+
 void NetworkObserver::ReloadSource() {
     LOG_INFO(sLogger, ("reload observer", "begin"));
     bool success = true;
@@ -365,7 +372,7 @@ void NetworkObserver::EventLoop() {
     while (true) {
         bool hasMoreData = false;
         ReadLock lock(mEventLoopThreadRWL);
-        if (mPCAPWrapper == nullptr && mEBPFWrapper == nullptr) {
+        if (mPCAPWrapper == nullptr && mEBPFWrapper == nullptr && mReplayFilePtr== nullptr) {
             static int sErrorCount = 0;
             static int sErrorPintCount = 60000 / INT32_FLAG(sls_observer_network_no_data_sleep_interval_ms);
             if (++sErrorCount % sErrorPintCount == 0) {
@@ -454,7 +461,22 @@ void NetworkObserver::EventLoop() {
             ConnectionMetaManager::GetInstance()->GarbageCollection();
         }
 
-        // flush observer metrics
+        // flush L7 observer details
+        if (nowTimeNs - mLastL7DetailsFlushTimeNs
+            >= mConfig->mFlushOutL7DetailsInterval * 1000ULL * 1000ULL * 1000ULL) {
+            mLastL7DetailsFlushTimeNs = nowTimeNs;
+            std::vector<sls_logs::Log> allLogs;
+            FlushOutDetails(allLogs);
+            if (mSenderFunc) {
+                mSenderFunc(allLogs, mConfig->mLastApplyedConfig);
+            }
+            mNetworkStatistic->mOutputEvents += allLogs.size();
+            for (const auto& item : allLogs) {
+                mNetworkStatistic->mOutputBytes += item.GetCachedSize();
+            }
+        }
+
+        // flush L4 observer metrics
         if (nowTimeNs - mLastL4FlushTimeNs >= mConfig->mFlushOutL4Interval * 1000ULL * 1000ULL * 1000ULL) {
             mLastL4FlushTimeNs = nowTimeNs;
             std::vector<sls_logs::Log> allLogs;
@@ -468,7 +490,7 @@ void NetworkObserver::EventLoop() {
             }
         }
 
-        // flush observer metrics
+        // flush L4 observer metrics
         if (nowTimeNs - mLastL7FlushTimeNs >= mConfig->mFlushOutL7Interval * 1000ULL * 1000ULL * 1000ULL) {
             mLastL7FlushTimeNs = nowTimeNs;
             std::vector<sls_logs::Log> allLogs;
@@ -517,6 +539,7 @@ inline void NetworkObserver::StartEventLoop() {
         mEventLoopThread = CreateThread([this]() { EventLoop(); });
     }
 }
+
 int NetworkObserver::OutputPluginProcess(std::vector<sls_logs::Log>& logs, Config* config) {
     static auto sPlugin = LogtailPlugin::GetInstance();
     timespec ts;
