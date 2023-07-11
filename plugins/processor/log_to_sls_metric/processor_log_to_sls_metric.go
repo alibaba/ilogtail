@@ -34,6 +34,8 @@ type ProcessorLogToSlsMetric struct {
 	MetricValues       map[string]string
 	CustomMetricLabels map[string]string
 
+	names              []string
+	values             []string
 	metricLabelKeysMap map[string]bool
 	metricNamesMap     map[string]bool
 	metricValuesMap    map[string]bool
@@ -136,6 +138,8 @@ func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) error {
 		existField[value] = true
 		p.metricNamesMap[name] = true
 		p.metricValuesMap[value] = true
+		p.names = append(p.names, name)
+		p.values = append(p.values, value)
 	}
 
 	return nil
@@ -253,7 +257,7 @@ TraverseLogArray:
 		// sort label
 		sort.Sort(metricLabels)
 		metricLabel := metricLabels.GetLabel()
-		for name, value := range p.MetricValues {
+		for i, _ := range p.names {
 			metricLog := &protocol.Log{
 				Time:     log.Time,
 				Contents: nil,
@@ -264,11 +268,11 @@ TraverseLogArray:
 			})
 			metricLog.Contents = append(metricLog.Contents, &protocol.Log_Content{
 				Key:   metricNameKey,
-				Value: names[name],
+				Value: names[p.names[i]],
 			})
 			metricLog.Contents = append(metricLog.Contents, &protocol.Log_Content{
 				Key:   metricValueKey,
-				Value: values[value],
+				Value: values[p.values[i]],
 			})
 			metricLog.Contents = append(metricLog.Contents, &protocol.Log_Content{
 				Key:   metricTimeNanoKey,
