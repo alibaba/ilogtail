@@ -6,7 +6,7 @@
 
 ## 描述
 
-Django Application服务日志包含系统Debug日志，开发者自定义Debug日志，RESTFUL访问日志等。本样例主要展示如何使用ilogtail配置采集开发者自定义Debug日志与RESTFUL访问日志。
+Django Application服务日志包含系统Debug日志，开发者自定义Debug日志，RESTFUL访问日志等。本样例主要展示如何使用ilogtail配置采集RESTFUL访问日志。
 
 ```shell
 System check identified no issues (0 silenced).
@@ -24,16 +24,6 @@ Quit the server with CONTROL-C.
 [11/Jul/2023 21:37:55] "GET /images/users/Screen_Shot_2021-11-21_at_8.33.32_AM.png HTTP/1.1" 200 259330
 [11/Jul/2023 21:37:55] "GET /images/users/Screen_Shot_2021-11-21_at_8.39.07_AM.png HTTP/1.1" 200 281226
 [11/Jul/2023 21:37:55] "GET /images/users/favicon_8YPMSCm.png HTTP/1.1" 200 406007
-
-# 开发者自定义Debug日志
-[11/Jul/2023 21:37:50] [INFO] Starting Devzone application ...
-[11/Jul/2023 21:37:52] [INFO] Application started
-...
-[11/Jul/2023 21:38:57] [WARNING] CPU workload is heavy and working threads are reduced to 8
-...
-[11/Jul/2023 21:39:55] [INFO] Ending Devzone application
-
-# 备注：上述两种日志信息可能交替出现在日志文件中。
 ```
 
 ## 日志输入样例
@@ -57,7 +47,6 @@ Quit the server with CONTROL-C.
 ## 日志输出样例
 
 ```shell
-# Django Access Out
 2023-07-11 22:52:24 {"__tag__:__path__":"./logs/django.log.20230711","time":"11/Jul/2023 21:37:54","method":"GET","body":"/","http_version":"HTTP/1.1","status_code":"200","__time__":"1689115942"}
 2023-07-11 22:52:24 {"__tag__:__path__":"./logs/django.log.20230711","time":"11/Jul/2023 21:37:55","method":"GET","body":"/static/css/style.css","http_version":"HTTP/1.1","status_code":"200","__time__":"1689115942"}
 2023-07-11 22:52:24 {"__tag__:__path__":"./logs/django.log.20230711","time":"11/Jul/2023 21:37:55","method":"GET","body":"/static/js/script.js","http_version":"HTTP/1.1","status_code":"200","__time__":"1689115942"}
@@ -67,17 +56,11 @@ Quit the server with CONTROL-C.
 2023-07-11 22:52:24 {"__tag__:__path__":"./logs/django.log.20230711","time":"11/Jul/2023 21:37:55","method":"GET","body":"/images/users/Screen_Shot_2021-11-21_at_8.39.07_AM.png","http_version":"HTTP/1.1","status_code":"200","__time__":"1689115942"}
 2023-07-11 22:52:24 {"__tag__:__path__":"./logs/django.log.20230711","time":"11/Jul/2023 21:37:55","method":"GET","body":"/images/users/favicon_8YPMSCm.png","http_version":"HTTP/1.1","status_code":"200","__time__":"1689115942"}
 2023-07-11 22:52:24 {"__tag__:__path__":"./logs/django.log.20230711","time":"11/Jul/2023 21:39:20","method":"GET","body":"/static/images/avatar.svg","http_version":"HTTP/1.1","status_code":"200","__time__":"1689115942"}
-
-# Django Debug Out
-2023-07-11 22:57:26 {"__tag__:__path__":"./logs/django.log.20230711","time":"11/Jul/2023 21:37:50","level":"INFO","message":"Starting Devzone application ...","__time__":"1689116243"}
-2023-07-11 22:57:26 {"__tag__:__path__":"./logs/django.log.20230711","time":"11/Jul/2023 21:37:52","level":"INFO","message":"Application started","__time__":"1689116243"}
-2023-07-11 22:57:26 {"__tag__:__path__":"./logs/django.log.20230711","time":"11/Jul/2023 21:38:57","level":"WARNING","message":"CPU workload is heavy and working threads are reduced to 8","__time__":"1689116243"}
 ```
 
 ## 采集配置
 
 ```yaml
-# access log
 enable: true
 inputs:
   - Type: file_log
@@ -95,23 +78,4 @@ processors:
 flushers:
   - Type: flusher_stdout
     FileName: ./django-access-log.out
-
-# debug log
-enable: true 
-inputs:
-  - Type: file_log
-    LogPath: ./logs
-    FilePattern: django.log.*
-    MaxDepth: 0
-processors:
-  - Type: processor_filter_regex
-    Include:
-      content: '^\[\d+.*\]\s\[\w+\].*$'
-  - Type: processor_regex
-    SourceKey: content
-    Regex: '^\[(\d+.*)\]\s\[(INFO|WARNING|ERRO)\]\s(.*)$'
-    Keys: ["time", "level", "message"]
-flushers:
-  - Type: flusher_stdout
-    FileName: ./django-debug-log.out
 ```
