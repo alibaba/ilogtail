@@ -77,12 +77,12 @@ func (p *ProcessorSlsMetric) Init(context pipeline.Context) error {
 	p.context = context
 	// Check if the label parameter exists
 	if len(p.MetricLabelKeys) == 0 && len(p.CustomMetricLabels) == 0 {
-		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errEmptyMetricLabel)
+		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errEmptyMetricLabel)
 		return errEmptyMetricLabel
 	}
 	// Check if Metric Values are empty
 	if len(p.MetricValues) == 0 {
-		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errEmptyMetricValues)
+		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errEmptyMetricValues)
 		return errEmptyMetricValues
 	}
 	// Check field is repeated
@@ -93,11 +93,11 @@ func (p *ProcessorSlsMetric) Init(context pipeline.Context) error {
 	for _, labelKey := range p.MetricLabelKeys {
 		// The Key of Label must follow the regular expression: ^[a-zA-Z_][a-zA-Z0-9_]*$
 		if !metricLabelKeyRegex.MatchString(labelKey) {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errInvalidMetricLabelKey)
+			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errInvalidMetricLabelKey)
 			return errInvalidMetricLabelKey
 		}
 		if ok, _ := existField[labelKey]; ok {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errFieldRepeated)
+			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
 			return errFieldRepeated
 		}
 		existField[labelKey] = true
@@ -106,16 +106,16 @@ func (p *ProcessorSlsMetric) Init(context pipeline.Context) error {
 	// Check keys and values of CustomMetricLabels are valid
 	for key, value := range p.CustomMetricLabels {
 		if !metricLabelKeyRegex.MatchString(key) {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errInvalidMetricLabelKey)
+			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errInvalidMetricLabelKey)
 			return errInvalidMetricLabelKey
 		}
 		// The value of Label cannot contain "|" or "#$#".
 		if strings.Contains(value, "|") || strings.Contains(value, "#$#") {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errInvalidMetricLabelValue)
+			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errInvalidMetricLabelValue)
 			return errInvalidMetricLabelValue
 		}
 		if ok, _ := existField[key]; ok {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errFieldRepeated)
+			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
 			return errFieldRepeated
 		}
 		existField[key] = true
@@ -125,12 +125,12 @@ func (p *ProcessorSlsMetric) Init(context pipeline.Context) error {
 	p.metricValuesMap = map[string]bool{}
 	for name, value := range p.MetricValues {
 		if ok, _ := existField[name]; ok {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errFieldRepeated)
+			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
 			return errInvalidMetricLabelKey
 		}
 		existField[name] = true
 		if ok, _ := existField[value]; ok {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_sls_metric error", errFieldRepeated)
+			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
 			return errInvalidMetricLabelKey
 		}
 		existField[value] = true

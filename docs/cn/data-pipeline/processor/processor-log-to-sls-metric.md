@@ -21,9 +21,9 @@
 
 ## 样例
 
-以下是一个示例配置，展示了如何使用 `processor_sls_metric` 插件来处理数据：
+以下是一个示例配置，展示了如何使用 `processor_log_to_sls_metric` 插件来处理数据：
 
-采集`/home/test-log/`路径下的`nginx.log`文件，首先使用`processor_regex`插件提取log内容，然后测试`processor_sls_metric`的功能。
+采集`/home/test-log/`路径下的`nginx.log`文件，首先使用`processor_regex`插件提取log内容，然后测试`processor_log_to_sls_metric`的功能。
 
 * 输入
 
@@ -55,7 +55,7 @@ processors:
       - http_referer
       - http_user_agent
       - http_x_forwarded_for
-  - Type: processor_sls_metric
+  - Type: processor_log_to_sls_metric
     MetricLabelKeys:
       - url
       - method
