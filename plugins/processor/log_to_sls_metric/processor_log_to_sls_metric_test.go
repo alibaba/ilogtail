@@ -25,7 +25,7 @@ import (
 func TestInitError(t *testing.T) {
 	Convey("Init error.", t, func() {
 		Convey("Regex error", func() {
-			processor := &ProcessorSlsMetric{}
+			processor := &ProcessorLogToSlsMetric{}
 			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
 			So(err, ShouldNotBeNil)
 		})
@@ -76,8 +76,8 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 			},
 		}
 
-		Convey("When the logs are processed using ProcessorSlsMetric", func() {
-			processor := &ProcessorSlsMetric{
+		Convey("When the logs are processed using ProcessorLogToSlsMetric", func() {
+			processor := &ProcessorLogToSlsMetric{
 				MetricTimeKey:   "__time__",
 				MetricLabelKeys: []string{"labelA", "labelB", "labelC"},
 				MetricValues: map[string]string{
@@ -151,8 +151,8 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 			},
 		}
 
-		Convey("When the logs are processed using ProcessorSlsMetric", func() {
-			processor := &ProcessorSlsMetric{
+		Convey("When the logs are processed using ProcessorLogToSlsMetric", func() {
+			processor := &ProcessorLogToSlsMetric{
 				MetricLabelKeys: []string{"labelA", "labelB", "labelC"},
 				MetricValues: map[string]string{
 					"nameA": "valueA",

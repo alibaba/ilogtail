@@ -73,9 +73,9 @@ func BenchmarkProcessorLogSlsMetricTest(b *testing.B) {
 		b.Run(param.name+strconv.Itoa(param.num), func(b *testing.B) {
 			// generate mock data
 			Logs := param.mockFunc(param.num)
-			// Create a ProcessorSlsMetric instance
-			processor := pipeline.Processors["processor_log_to_sls_metric"]().(*ProcessorSlsMetric)
-			// Init ProcessorSlsMetric
+			// Create a ProcessorLogToSlsMetric instance
+			processor := pipeline.Processors["processor_log_to_sls_metric"]().(*ProcessorLogToSlsMetric)
+			// Init ProcessorLogToSlsMetric
 			processor.MetricLabelKeys = []string{}
 			processor.Init(mock.NewEmptyContext("p", "l", "c"))
 

@@ -28,7 +28,7 @@ import (
 	"unicode"
 )
 
-type ProcessorSlsMetric struct {
+type ProcessorLogToSlsMetric struct {
 	MetricTimeKey      string
 	MetricLabelKeys    []string
 	MetricValues       map[string]string
@@ -73,7 +73,7 @@ var (
 	errFieldRepeated = errors.New("the field is repeated")
 )
 
-func (p *ProcessorSlsMetric) Init(context pipeline.Context) error {
+func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) error {
 	p.context = context
 	// Check if the label parameter exists
 	if len(p.MetricLabelKeys) == 0 && len(p.CustomMetricLabels) == 0 {
@@ -141,11 +141,11 @@ func (p *ProcessorSlsMetric) Init(context pipeline.Context) error {
 	return nil
 }
 
-func (p *ProcessorSlsMetric) Description() string {
+func (p *ProcessorLogToSlsMetric) Description() string {
 	return "Parse fields from logs into metrics."
 }
 
-func (p *ProcessorSlsMetric) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
+func (p *ProcessorLogToSlsMetric) ProcessLogs(logArray []*protocol.Log) []*protocol.Log {
 	var metricLogs []*protocol.Log
 TraverseLogArray:
 	for _, log := range logArray {
@@ -319,6 +319,6 @@ func isTimeNano(t string) bool {
 
 func init() {
 	pipeline.Processors[PluginName] = func() pipeline.Processor {
-		return &ProcessorSlsMetric{}
+		return &ProcessorLogToSlsMetric{}
 	}
 }
