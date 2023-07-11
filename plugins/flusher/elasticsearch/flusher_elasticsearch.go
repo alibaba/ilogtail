@@ -110,18 +110,21 @@ func (f *FlusherElasticSearch) Init(context pipeline.Context) error {
 	}
 
 	// Obtain index keys from dynamic index expression
-	indexKeys, err := fmtstr.CompileKeys(f.Index)
+	compileKeys, err := fmtstr.CompileKeys(f.Index)
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher index fail, error", err)
 		return err
 	}
-	filteredKeys := make([]string, 0, len(indexKeys))
-	for _, key := range indexKeys {
-		if !strings.HasPrefix(key, "+") {
-			filteredKeys = append(filteredKeys, key)
+	// CompileKeys() parse all variables inside %{}
+	// but indexKeys is used to find field express starting with 'content.' or 'tag.'
+	// so date express starting with '+' should be ignored
+	indexKeys := make([]string, 0, len(compileKeys))
+	for _, key := range compileKeys {
+		if key[0] != '+' {
+			indexKeys = append(indexKeys, key)
 		}
 	}
-	f.indexKeys = filteredKeys
+	f.indexKeys = indexKeys
 
 	cfg := elasticsearch.Config{
 		Addresses: f.Addresses,
@@ -186,7 +189,11 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch format index fail, error", err)
 				return err
 			}
-			buffer = append(buffer, fmt.Sprintf(`{"index": {"_index": "%s"}}`, *ESIndex))
+			var builder strings.Builder
+			builder.WriteString(`{"index": {"_index": "`)
+			builder.WriteString(*ESIndex)
+			builder.WriteString(`"}}`)
+			buffer = append(buffer, builder.String())
 			buffer = append(buffer, string(log))
 		}
 		body := strings.Join(buffer, "\n")
