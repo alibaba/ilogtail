@@ -20,7 +20,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/protocol/converter"
+	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 	"regexp"
 	"sort"
 	"strconv"
