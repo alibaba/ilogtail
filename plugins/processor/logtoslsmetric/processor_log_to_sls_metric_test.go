@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package log_to_sls_metric
+package logtoslsmetric
 
 import (
 	"testing"
