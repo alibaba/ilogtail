@@ -31,12 +31,11 @@ private:
     void AddUserDefinedFormat(const std::string& regStr, const std::string& keys);
     /// @return false if data need to be discarded
     bool ProcessEvent(PipelineEventGroup& logGroup, const StringView& logPath, PipelineEventPtr& e);
-    bool WholeLineModeParser(const LogEvent& sourceEvent, const std::string& key, LogEvent& targetEvent);
-    bool RegexLogLineParser(const LogEvent& sourceEvent,
+    bool WholeLineModeParser(LogEvent& sourceEvent, const std::string& key);
+    bool RegexLogLineParser(LogEvent& sourceEvent,
                             const boost::regex& reg,
                             const std::vector<std::string>& keys,
-                            const StringView& logPath,
-                            LogEvent& targetEvent);
+                            const StringView& logPath);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
     std::string mSourceKey;
     std::vector<UserDefinedFormat> mUserDefinedFormat;

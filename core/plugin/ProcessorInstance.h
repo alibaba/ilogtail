@@ -27,8 +27,8 @@ namespace logtail {
 
 class ProcessorInstance : public PluginInstance {
 public:
-    ProcessorInstance(ProcessorInterface* plugin, const std::string& pluginId, PluginCreatorInterface* creator)
-        : PluginInstance(pluginId, creator), mPlugin(plugin) {}
+    ProcessorInstance(ProcessorInterface* plugin, const std::string& pluginId)
+        : PluginInstance(pluginId), mPlugin(plugin) {}
     ~ProcessorInstance() { delete mPlugin; }
     ProcessorInterface* Plugin() { return mPlugin; };
 

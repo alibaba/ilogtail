@@ -75,10 +75,9 @@ bool ProcessorParseRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
     for (uint32_t i = 0; i < mUserDefinedFormat.size(); ++i) { // support multiple patterns
         const UserDefinedFormat& format = mUserDefinedFormat[i];
         if (format.mIsWholeLineMode) {
-            res = WholeLineModeParser(
-                sourceEvent, format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0], sourceEvent);
+            res = WholeLineModeParser(sourceEvent, format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0]);
         } else {
-            res = RegexLogLineParser(sourceEvent, format.mReg, format.mKeys, logPath, sourceEvent);
+            res = RegexLogLineParser(sourceEvent, format.mReg, format.mKeys, logPath);
         }
         if (res) {
             break;
@@ -109,11 +108,8 @@ void ProcessorParseRegexNative::AddUserDefinedFormat(const std::string& regStr, 
     mUserDefinedFormat.push_back(UserDefinedFormat(reg, keyParts, isWholeLineMode));
 }
 
-bool ProcessorParseRegexNative::WholeLineModeParser(const LogEvent& sourceEvent,
-                                                    const std::string& key,
-                                                    LogEvent& targetEvent) {
-    targetEvent.SetTimestamp(sourceEvent.GetTimestamp());
-    AddLog(StringView(key), sourceEvent.GetContent(mSourceKey), targetEvent);
+bool ProcessorParseRegexNative::WholeLineModeParser(LogEvent& sourceEvent, const std::string& key) {
+    AddLog(StringView(key), sourceEvent.GetContent(mSourceKey), sourceEvent);
     return true;
 }
 
@@ -122,11 +118,10 @@ void ProcessorParseRegexNative::AddLog(const StringView& key, const StringView& 
     *mLogGroupSize += key.size() + value.size() + 5;
 }
 
-bool ProcessorParseRegexNative::RegexLogLineParser(const LogEvent& sourceEvent,
+bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
                                                    const boost::regex& reg,
                                                    const std::vector<std::string>& keys,
-                                                   const StringView& logPath,
-                                                   LogEvent& targetEvent) {
+                                                   const StringView& logPath) {
     boost::match_results<const char*> what;
     std::string exception;
     StringView buffer = sourceEvent.GetContent(mSourceKey);
@@ -185,9 +180,8 @@ bool ProcessorParseRegexNative::RegexLogLineParser(const LogEvent& sourceEvent,
         return false;
     }
 
-    targetEvent.SetTimestamp(sourceEvent.GetTimestamp());
     for (uint32_t i = 0; i < keys.size(); i++) {
-        AddLog(keys[i], StringView(what[i + 1].begin(), what[i + 1].length()), targetEvent);
+        AddLog(keys[i], StringView(what[i + 1].begin(), what[i + 1].length()), sourceEvent);
     }
     return true;
 }

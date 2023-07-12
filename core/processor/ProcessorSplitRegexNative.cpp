@@ -98,13 +98,14 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         }
     }
     if (splitSuccess) {
+        auto sourceoffset = atol(sourceEvent.GetContent(EVENT_META_LOG_FILE_OFFSET).data()); // use safer method
         StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
         for (auto& content : logIndex) {
             std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-            targetEvent->SetTimestamp(sourceEvent.GetTimestamp());
+            targetEvent->SetTimestamp(sourceEvent.GetTimestamp()); // it is easy to forget other fields, better solution?
             targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
             if (mEnableLogPositionMeta) {
-                auto const offset = sourceEvent.GetOffset() + (content.data() - sourceVal.data());
+                auto const offset = sourceoffset + (content.data() - sourceVal.data());
                 StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
                 targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
             }

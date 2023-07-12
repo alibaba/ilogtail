@@ -72,4 +72,5 @@ const std::string EVENT_META_LOG_TOPIC = "log.topic";
 const std::string EVENT_META_LOG_FILE_PATH = "log.file.path";
 const std::string EVENT_META_LOG_FILE_PATH_RESOLVED = "log.file.path_resolved";
 const std::string EVENT_META_LOG_FILE_INODE = "log.file.inode";
+const std::string EVENT_META_LOG_FILE_OFFSET = "log.file.offset";
 } // namespace logtail

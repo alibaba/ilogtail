@@ -73,10 +73,6 @@ PluginInstance* PluginRegistry::Create(PluginCat cat, const std::string& name, c
     return ins;
 }
 
-void PluginRegistry::Destroy(PluginInstance* ins) {
-    ins->Creator()->Destroy(ins);
-}
-
 void PluginRegistry::LoadStaticPlugins() {
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitRegexNative>());
     /* more native plugin registers here */

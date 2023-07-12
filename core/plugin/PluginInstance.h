@@ -23,15 +23,12 @@ namespace logtail {
 
 class PluginInstance {
 public:
-    PluginInstance(const std::string& pluginId, PluginCreatorInterface* creator) : mId(pluginId), mCreator(creator) {}
+    PluginInstance(const std::string& pluginId) : mId(pluginId) {}
     virtual ~PluginInstance() {}
     const std::string& Id() { return mId; }
-    PluginCreatorInterface* Creator() { return mCreator; }
 
 protected:
     std::string mId;
-    PluginCreatorInterface* mCreator;
-    PluginInstance* next = nullptr;
 };
 
 } // namespace logtail

@@ -24,8 +24,6 @@ class LogEvent : public PipelineEvent {
 public:
     static std::unique_ptr<LogEvent> CreateEvent(std::shared_ptr<SourceBuffer>& sb);
     const std::string& GetType() const override;
-    long GetOffset() const { return offset; }
-    void SetOffset(long o) { offset = o; }
     const LogContents& GetContents() const { return contents; }
     LogContents& ModifiableContents() { return contents; }
     void SetContent(const StringView& key, const StringView& val);
@@ -41,7 +39,6 @@ public:
 private:
     LogEvent();
 
-    long offset = 0;
     LogContents contents;
     static std::string sType;
 };

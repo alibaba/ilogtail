@@ -35,14 +35,10 @@ public:
 
     time_t GetTimestamp() const { return timestamp; }
     void SetTimestamp(time_t t) { timestamp = t; }
-    time_t GetObservedTimestamp() const { return observedTimestamp; }
-    void SetObservedTimestamp(time_t t) { observedTimestamp = t; }
-
 protected:
     void SetSourceBuffer(std::shared_ptr<SourceBuffer> sourceBuffer) { mSourceBuffer = sourceBuffer; }
 
     time_t timestamp = 0;
-    time_t observedTimestamp = 0;
     PipelineEventType mType = VOID_EVENT_TYPE;
     std::shared_ptr<SourceBuffer> mSourceBuffer;
     friend class PipelineEventPtr;

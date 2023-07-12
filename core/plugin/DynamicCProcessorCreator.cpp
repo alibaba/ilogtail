@@ -25,7 +25,6 @@ namespace logtail {
 
 DynamicCProcessorCreator::DynamicCProcessorCreator(const processor_interface_t* plugin, void* handle)
     : mPlugin(plugin), _handle(handle) {
-    next = nullptr;
 }
 
 DynamicCProcessorCreator::~DynamicCProcessorCreator() {
@@ -37,7 +36,7 @@ DynamicCProcessorCreator::~DynamicCProcessorCreator() {
 PluginInstance* DynamicCProcessorCreator::Create(const std::string& pluginId) {
     DynamicCProcessorProxy* plugin = new DynamicCProcessorProxy(mPlugin->name);
     plugin->SetCProcessor(mPlugin);
-    return new ProcessorInstance(plugin, pluginId, this);
+    return new ProcessorInstance(plugin, pluginId);
 }
 
 } // namespace logtail

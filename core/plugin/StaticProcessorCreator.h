@@ -27,9 +27,7 @@ public:
     StaticProcessorCreator() {}
     const char* Name() override { return T::Name(); }
     bool IsDynamic() override { return false; }
-    PluginInstance* Create(const std::string& pluginId) override {
-        return new ProcessorInstance(new T, pluginId, this);
-    }
+    PluginInstance* Create(const std::string& pluginId) override { return new ProcessorInstance(new T, pluginId); }
 };
 
 } // namespace logtail

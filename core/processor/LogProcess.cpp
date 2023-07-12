@@ -305,7 +305,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             ProcessProfile profile;
             profile.readBytes = readBytes;
             int32_t parseStartTime = (int32_t)time(NULL);
-            if (!logFileReader->GetPluginFlag() && config->mLogType == REGEX_LOG) {
+            if (config->mLogType == REGEX_LOG) {
                 ProcessBuffer(logBuffer, logFileReader, logGroup, profile);
             } else {
                 ProcessBufferLegacy(logBuffer, logFileReader, logGroup, profile, *config);
@@ -418,7 +418,8 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
                                LogFileReaderPtr& logFileReader,
                                sls_logs::LogGroup& resultGroup,
                                ProcessProfile& profile) {
-    auto pipeline = PipelineManager::GetInstance()->FindPipelineByName(logFileReader->GetConfigName());
+    auto pipeline = PipelineManager::GetInstance()->FindPipelineByName(
+        logFileReader->GetConfigName()); // pipeline should be set in the loggroup by input
     if (pipeline.get() == nullptr) {
         LOG_INFO(sLogger,
                  ("can not find pipeline while processing log, maybe config deleted. config",
@@ -436,7 +437,8 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     }
     event->SetTimestamp(logtime);
     event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
-    event->SetOffset(logBuffer->beginOffset);
+    auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->beginOffset));
+    event->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
     eventGroup.AddEvent(event.release());
 
     // process logGroup

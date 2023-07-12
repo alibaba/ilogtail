@@ -40,8 +40,6 @@ public:
     ProcessorInstance* CreateProcessor(const std::string& name, const std::string& pluginId);
     // FlusherInstance* CreateFlusher(const std::string& name, const std::string& pluginId);
 
-    void Destroy(PluginInstance* ins);
-
 private:
     enum PluginCat { INPUT_PLUGIN, PROCESSOR_PLUGIN, FLUSHER_PLUGIN };
 

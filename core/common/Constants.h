@@ -75,4 +75,5 @@ extern const std::string EVENT_META_LOG_TOPIC;
 extern const std::string EVENT_META_LOG_FILE_PATH;
 extern const std::string EVENT_META_LOG_FILE_PATH_RESOLVED;
 extern const std::string EVENT_META_LOG_FILE_INODE;
+extern const std::string EVENT_META_LOG_FILE_OFFSET;
 } // namespace logtail

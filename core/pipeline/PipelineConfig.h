@@ -20,7 +20,7 @@
 
 namespace logtail {
 
-using ComponentConfig = Config;
-using PipelineConfig = Config;
+using ComponentConfig = Config; // use Config temporarily
+using PipelineConfig = Config; // should use json like object
 
 } // namespace logtail

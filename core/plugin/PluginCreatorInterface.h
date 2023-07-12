@@ -28,6 +28,5 @@ public:
     virtual bool IsDynamic() = 0;
     virtual PluginInstance* Create(const std::string& pluginId) = 0;
     virtual void Destroy(PluginInstance* ins);
-    PluginCreatorInterface* next = nullptr;
 };
 } // namespace logtail
