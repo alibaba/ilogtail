@@ -2322,6 +2322,7 @@ void Sender::SendLogPackageList(std::vector<MergeItem*>& sendDataVec) {
         SlsLogPackage* package = logPackageList.add_packages();
         package->set_data(compressedData);
         package->set_uncompress_size(oriData.size());
+        package->set_compress_type(sendDataVec[idx]->mLogGroupContext.mCompressType);
         lines += sendDataVec[idx]->mLines;
         bytes += sendDataVec[idx]->mRawBytes;
         if (bytes >= AppConfig::GetInstance()->GetMaxHoldedDataSize() || idx == totalLogGroupCount - 1) {
