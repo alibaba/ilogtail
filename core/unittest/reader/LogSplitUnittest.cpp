@@ -20,17 +20,10 @@
 namespace logtail
 {
 
-static void CompareMultilineStringWithArray(std::string s, std::vector<StringView> strings) {
-    size_t begPos = 0;
-    size_t endPos = 0;
-    int i = 0;
-    while (endPos < s.size()) {
-        if (s[endPos] == '\n') {
-            APSARA_TEST_EQUAL_FATAL(s.substr(begPos, endPos - begPos), strings[i].to_string());
-            begPos = endPos + 1;
-            i++;
-        }
-        endPos++;
+static void CompareTwoStringArray(std::vector<std::string> s1, std::vector<StringView> s2) {
+    APSARA_TEST_EQUAL_FATAL(s1.size(), s2.size());
+    for (size_t i = 0; i < s1.size(); i++) {
+        APSARA_TEST_EQUAL_FATAL(s1[i], s2[i].to_string());
     }
 }
 
@@ -147,7 +140,7 @@ void LogSplitUnittest::TestLogSplitMultiLinePartNotMatch() {
     APSARA_TEST_EQUAL_FATAL(1UL, index.size());
     APSARA_TEST_EQUAL_FATAL(secondLog.substr(0, secondLog.find('\n')), index[0].to_string());
     APSARA_TEST_EQUAL_FATAL(5UL, discard.size());
-    CompareMultilineStringWithArray(firstLog, discard);
+    CompareTwoStringArray({"first.", "multiline1", "multiline2", "multiline1", "multiline2"}, discard);
 }
 
 void LogSplitUnittest::TestLogSplitMultiLinePartNotMatchNoDiscard() {
@@ -183,7 +176,7 @@ void LogSplitUnittest::TestLogSplitMultiLineAllNotmatch() {
     APSARA_TEST_FALSE_FATAL(splitSuccess);
     APSARA_TEST_EQUAL_FATAL(0UL, index.size());
     APSARA_TEST_EQUAL_FATAL(6UL, discard.size());
-    CompareMultilineStringWithArray(testLog, discard);
+    CompareTwoStringArray({"first.", "multiline1", "multiline2", "second.", "multiline1", "multiline2"}, discard);
 }
 
 void LogSplitUnittest::TestLogSplitMultiLineAllNotmatchNoDiscard() {
@@ -200,7 +193,7 @@ void LogSplitUnittest::TestLogSplitMultiLineAllNotmatchNoDiscard() {
     bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
     APSARA_TEST_FALSE_FATAL(splitSuccess);
     APSARA_TEST_EQUAL_FATAL(6UL, index.size());
-    CompareMultilineStringWithArray(testLog, index);
+    CompareTwoStringArray({"first.", "multiline1", "multiline2", "second.", "multiline1", "multiline2"}, index);
 }
 
 class LogSplitDiscardUnmatchUnittest : public ::testing::Test {
@@ -264,7 +257,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(5UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_BEGIN_STRING, LOG_CONTINUE_STRING, LOG_CONTINUE_STRING, LOG_UNMATCH}, discard);
     }
     { // case: incomplete log (begin)
         std::string expectMatch = LOG_BEGIN_STRING;
@@ -276,7 +269,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(3UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_BEGIN_STRING, LOG_UNMATCH}, discard);
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -288,7 +281,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(2UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, discard);
     }
 }
 
@@ -322,7 +315,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginContinue() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(3UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_BEGIN_STRING, LOG_UNMATCH}, discard);
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -334,7 +327,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginContinue() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(2UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, discard);
     }
 }
 
@@ -368,7 +361,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(3UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_BEGIN_STRING, LOG_UNMATCH}, discard);
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -380,7 +373,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(2UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, discard);
     }
 }
 
@@ -413,7 +406,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBegin() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(2UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, discard);
     }
 }
 
@@ -447,7 +440,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(4UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_CONTINUE_STRING, LOG_CONTINUE_STRING, LOG_UNMATCH}, discard);
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -459,7 +452,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(2UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, discard);
     }
 }
 
@@ -492,7 +485,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithContinue() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(2UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, discard);
     }
 }
 
@@ -525,7 +518,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(0UL, index.size());
         APSARA_TEST_EQUAL_FATAL(2UL, discard.size());
-        CompareMultilineStringWithArray(testLog, discard);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, discard);
     }
 }
 
@@ -590,7 +583,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(5UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_BEGIN_STRING, LOG_CONTINUE_STRING, LOG_CONTINUE_STRING, LOG_UNMATCH}, index);
     }
     { // case: incomplete log (begin)
         std::string expectMatch = LOG_BEGIN_STRING;
@@ -602,7 +595,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(3UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_BEGIN_STRING, LOG_UNMATCH}, index);
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -614,7 +607,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(2UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, index);
     }
 }
 
@@ -648,7 +641,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginContinue() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(3UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_BEGIN_STRING, LOG_UNMATCH}, index);
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -660,7 +653,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginContinue() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(2UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, index);
     }
 }
 
@@ -694,7 +687,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(3UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_BEGIN_STRING, LOG_UNMATCH}, index);
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -706,7 +699,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(2UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, index);
     }
 }
 
@@ -739,7 +732,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBegin() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(2UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, index);
     }
 }
 
@@ -773,7 +766,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(4UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_CONTINUE_STRING, LOG_CONTINUE_STRING, LOG_UNMATCH}, index);
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -785,7 +778,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithContinueEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(2UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, index);
     }
 }
 
@@ -818,7 +811,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithContinue() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(2UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, index);
     }
 }
 
@@ -851,7 +844,7 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithEnd() {
         APSARA_TEST_FALSE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(2UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareMultilineStringWithArray(testLog, index);
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, index);
     }
 }
 
