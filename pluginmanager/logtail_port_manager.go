@@ -109,7 +109,8 @@ func getLogtailLitsenPorts() ([]int, []int) {
 		portsUDPMap[port]++
 	}
 
-	for port := range getExcludePorts() {
+	excludePorts := getExcludePorts()
+	for port := range excludePorts {
 		delete(portsTCPMap, port)
 	}
 
