@@ -34,6 +34,7 @@ type ProcessorLogToSlsMetric struct {
 	MetricLabelKeys    []string
 	MetricValues       map[string]string
 	CustomMetricLabels map[string]string
+	IgnoreWarning      bool
 
 	names              []string
 	values             []string
@@ -59,12 +60,12 @@ var (
 
 var (
 	errInvalidMetricLabelKey      = errors.New("the Key of Label must follow the regular expression: ^[a-zA-Z_][a-zA-Z0-9_]*$")
-	errInvalidMetricLabelValue    = errors.New("label value can not contain '|' or '#$#'")
+	errInvalidMetricLabelValue    = errors.New("the value of Label can not contain '|' or '#$#'")
 	errInvalidMetricLabelKeyCount = errors.New("the number of labels must be equal to the number of MetricLabelKeys")
 
-	errEmptyMetricLabel = errors.New("metricLabel is be empty")
+	errEmptyMetricLabel = errors.New("MetricLabelKeys and CustomMetricLabels parameters are empty")
 
-	errEmptyMetricValues = errors.New("metricValues is be empty")
+	errEmptyMetricValues = errors.New("MetricValues parameter is empty")
 
 	errInvalidMetricName       = errors.New("the name of metric must follow the regular expression: ^[a-zA-Z_:][a-zA-Z0-9_:]*$")
 	errInvalidMetricValue      = errors.New("the value of metric must be a number")
@@ -76,17 +77,24 @@ var (
 	errFieldRepeated = errors.New("the field is repeated")
 )
 
-func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) error {
+var (
+	processorLogWarningAlarmType   = "PROCESSOR_LOG_ALARM"
+	processorInitErrorLogAlarmType = "PROCESSOR_INIT_ALARM"
+)
+
+func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) (err error) {
 	p.context = context
 	// Check if the label parameter exists
 	if len(p.MetricLabelKeys) == 0 && len(p.CustomMetricLabels) == 0 {
-		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errEmptyMetricLabel)
-		return errEmptyMetricLabel
+		err = errEmptyMetricLabel
+		p.logInitError(err)
+		return
 	}
-	// Check if Metric Values are empty
+	// Check if MetricValues is empty
 	if len(p.MetricValues) == 0 {
-		logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errEmptyMetricValues)
-		return errEmptyMetricValues
+		err = errEmptyMetricValues
+		p.logInitError(err)
+		return
 	}
 	// Check field is repeated
 	existField := map[string]bool{}
@@ -96,30 +104,40 @@ func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) error {
 	for _, labelKey := range p.MetricLabelKeys {
 		// The Key of Label must follow the regular expression: ^[a-zA-Z_][a-zA-Z0-9_]*$
 		if !metricLabelKeyRegex.MatchString(labelKey) {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errInvalidMetricLabelKey)
-			return errInvalidMetricLabelKey
+			err = errInvalidMetricLabelKey
+			p.logInitError(err)
+			return
 		}
+
+		// Check field is repeated
 		if existField[labelKey] {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
-			return errFieldRepeated
+			err = errFieldRepeated
+			p.logInitError(err)
+			return
 		}
 		existField[labelKey] = true
+
 		p.metricLabelKeysMap[labelKey] = true
 	}
 	// Check keys and values of CustomMetricLabels are valid
 	for key, value := range p.CustomMetricLabels {
 		if !metricLabelKeyRegex.MatchString(key) {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errInvalidMetricLabelKey)
-			return errInvalidMetricLabelKey
+			err = errInvalidMetricLabelKey
+			p.logInitError(err)
+			return
 		}
 		// The value of Label cannot contain "|" or "#$#".
 		if strings.Contains(value, "|") || strings.Contains(value, "#$#") {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errInvalidMetricLabelValue)
-			return errInvalidMetricLabelValue
+			err = errInvalidMetricLabelValue
+			p.logInitError(err)
+			return
 		}
+
+		// Check field is repeated
 		if existField[key] {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
-			return errFieldRepeated
+			err = errFieldRepeated
+			p.logInitError(err)
+			return
 		}
 		existField[key] = true
 	}
@@ -127,22 +145,28 @@ func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) error {
 	p.metricNamesMap = map[string]bool{}
 	p.metricValuesMap = map[string]bool{}
 	for name, value := range p.MetricValues {
+		// Check field is repeated
 		if existField[name] {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
-			return errInvalidMetricLabelKey
+			err = errFieldRepeated
+			p.logInitError(err)
+			return
 		}
 		existField[name] = true
+
+		// Check field is repeated
 		if existField[value] {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
-			return errInvalidMetricLabelKey
+			err = errFieldRepeated
+			p.logInitError(err)
+			return
 		}
 		existField[value] = true
+
 		p.metricNamesMap[name] = true
 		p.metricValuesMap[value] = true
+
 		p.names = append(p.names, name)
 		p.values = append(p.values, value)
 	}
-
 	return nil
 }
 
@@ -160,94 +184,113 @@ TraverseLogArray:
 		var timeNano string
 		// __labels__ field
 		metricLabels := converter.MetricLabels{}
-		labelCount := 0
+		labelExisted := map[string]bool{}
 		for i, cont := range log.Contents {
 			if log.Contents[i] == nil {
 				continue
 			}
+
 			// __labels__
 			if cont.Key == metricLabelsKey {
 				labels := strings.Split(cont.Value, "|")
 				for _, label := range labels {
 					keyValues := strings.Split(label, "#$#")
+					if len(keyValues) != 2 {
+						p.logWarning(errInvalidMetricLabelValue)
+						continue TraverseLogArray
+					}
 					key := keyValues[0]
 					if p.metricLabelKeysMap[key] {
-						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errFieldRepeated)
+						p.logWarning(errFieldRepeated)
 						continue TraverseLogArray
 					}
 					// The Key of Label must follow the regular expression: ^[a-zA-Z_][a-zA-Z0-9_]*$
 					if !metricLabelKeyRegex.MatchString(key) {
-						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricLabelKey)
+						p.logWarning(errInvalidMetricLabelKey)
 						continue TraverseLogArray
 					}
 					value := keyValues[1]
 					// The value of Label cannot contain "|" or "#$#".
 					if strings.Contains(value, "|") || strings.Contains(value, "#$#") {
-						logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricLabelValue)
+						p.logWarning(errInvalidMetricLabelValue)
 						continue TraverseLogArray
 					}
 					metricLabels = append(metricLabels, converter.MetricLabel{Key: key, Value: value})
 				}
+				continue
 			}
 
 			// Match to the label field
 			if p.metricLabelKeysMap[cont.Key] {
-				// The value of Label cannot contain "|" or "#$#".
-				if strings.Contains(cont.Value, "|") || strings.Contains(cont.Value, "#$#") {
-					logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricLabelValue)
+				if labelExisted[cont.Key] {
+					p.logWarning(errFieldRepeated)
 					continue TraverseLogArray
 				}
-				labelCount++
+				// The value of Label cannot contain "|" or "#$#".
+				if strings.Contains(cont.Value, "|") || strings.Contains(cont.Value, "#$#") {
+					p.logWarning(errInvalidMetricLabelValue)
+					continue TraverseLogArray
+				}
+				labelExisted[cont.Key] = true
 				metricLabels = append(metricLabels, converter.MetricLabel{Key: cont.Key, Value: cont.Value})
+				continue
 			}
 
 			// Match to the name field
 			if p.metricNamesMap[cont.Key] {
 				// Metric name needs to follow the regular expression: ^[a-zA-Z_:][a-zA-Z0-9_:]*$
 				if !metricNameRegex.MatchString(cont.Value) {
-					logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricName)
+					p.logWarning(errInvalidMetricName)
 					continue TraverseLogArray
 				}
 				names[cont.Key] = cont.Value
+				continue
 			}
 
 			// Match to the value field
 			if p.metricValuesMap[cont.Key] {
 				// Metric value needs to be a float type string.
 				if !canParseToFloat64(cont.Value) {
-					logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricValue)
+					p.logWarning(errInvalidMetricValue)
 					continue TraverseLogArray
 				}
 				values[cont.Key] = cont.Value
+				continue
 			}
 
-			if len(p.MetricTimeKey) > 0 && cont.Key == p.MetricTimeKey {
+			if p.MetricTimeKey != "" && cont.Key == p.MetricTimeKey {
 				if !isTimeNano(cont.Value) {
-					logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricTime)
+					p.logWarning(errInvalidMetricTime)
 					continue TraverseLogArray
 				}
 				timeNano = convertToTimestamp(cont.Value)
+				continue
 			}
 		}
-		if len(timeNano) == 0 {
+
+		if timeNano == "" {
+			if p.MetricTimeKey != "" {
+				p.logWarning(errInvalidMetricTime)
+				continue TraverseLogArray
+			}
 			timeNano = convertToTimestamp(log.Time)
 		}
 
 		// The number of labels must be equal to the number of label fields.
-		if labelCount < len(p.MetricLabelKeys) {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricLabelKeyCount)
+		if len(labelExisted) != len(p.MetricLabelKeys) {
+			p.logWarning(errInvalidMetricLabelKeyCount)
 			continue TraverseLogArray
 		}
 
 		// The number of names must be equal to the number of name fields.
-		if len(names) < len(p.metricNamesMap) {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricNameCount)
+		if len(names) != len(p.metricNamesMap) {
+			p.logWarning(errInvalidMetricNameCount)
 			continue TraverseLogArray
 		}
 
 		// The number of values must be equal to the number of value fields.
-		if len(values) < len(p.metricValuesMap) {
-			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "process log error", errInvalidMetricValueCount)
+		if len(values) != len(p.metricValuesMap) {
+			p.logWarning(errInvalidMetricValueCount)
 			continue TraverseLogArray
 		}
 
@@ -257,7 +300,9 @@ TraverseLogArray:
 
 		// sort label
 		sort.Sort(metricLabels)
+
 		metricLabel := metricLabels.GetLabel()
+
 		for i := range p.names {
 			metricLog := &protocol.Log{
 				Time:     log.Time,
@@ -282,9 +327,17 @@ TraverseLogArray:
 			metricLogs = append(metricLogs, metricLog)
 		}
 	}
-
 	return metricLogs
+}
 
+func (p *ProcessorLogToSlsMetric) logWarning(err error) {
+	if !p.IgnoreWarning {
+		logger.Warning(p.context.GetRuntimeContext(), processorLogWarningAlarmType, "process log error", err)
+	}
+}
+
+func (p *ProcessorLogToSlsMetric) logInitError(err error) {
+	logger.Error(p.context.GetRuntimeContext(), processorInitErrorLogAlarmType, "init processor_log_to_sls_metric error", err)
 }
 
 func convertToTimestamp(values interface{}) string {
@@ -324,6 +377,8 @@ func isTimeNano(t string) bool {
 
 func init() {
 	pipeline.Processors[PluginName] = func() pipeline.Processor {
-		return &ProcessorLogToSlsMetric{}
+		return &ProcessorLogToSlsMetric{
+			IgnoreWarning: false,
+		}
 	}
 }

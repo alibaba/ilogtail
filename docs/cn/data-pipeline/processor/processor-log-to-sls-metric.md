@@ -10,12 +10,13 @@
 
 ## 配置参数
 
-| 参数                 | 类型     | 必选或可选 | 参数说明                                                                                                                              |
-|--------------------|--------|-------|-----------------------------------------------------------------------------------------------------------------------------------|
-| MetricTimeKey      | String | 可选    | 指定要用作时间戳 `__time_nano__` 的字段。默认取`log.Time`。确保指定的字段是合法的、符合格式的纳秒时间戳(19位长）。                                                          |
-| MetricLabelKeys    | Array  | 必选    | `__labels__` 字段的key列表，key需遵循正则表达式： `^[a-zA-Z_][a-zA-Z0-9_]*$`。如果原始字段中存在 `__labels__` 字段，该值将被追加到列表中。 Label的Value不能包含竖线（\|）和 "#$#"。 |
-| MetricValues       | Map    | 必选    | 时序字段名所使用的key与时序值使用的key的映射。name需遵循正则表达式：`^[a-zA-Z_:][a-zA-Z0-9_:]*$` ，时序值需要是double类型的字符串。                                          |
-| CustomMetricLabels | Map    | 可选    | 要追加的自定义 `__labels__` 字段。 key需遵循正则表达式： `^[a-zA-Z_][a-zA-Z0-9_]*$`，Value不能包含竖线（\|）和 "#$#"。                                          |
+| 参数                 | 类型     | 必选或可选 | 参数说明                                                                                                                                               |
+|--------------------|--------|-------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| MetricTimeKey      | String | 可选    | 指定要用作时间戳 `__time_nano__` 的字段。默认取`log.Time`。确保指定的字段是合法的、符合格式的纳秒时间戳(19位长）。                                                                           |
+| MetricLabelKeys    | Array  | 必选    | `__labels__` 字段的key列表，key需遵循正则表达式： `^[a-zA-Z_][a-zA-Z0-9_]*$`，不能包含`__labels__`。如果原始字段中存在 `__labels__` 字段，该值将被追加到列表中。 Label的Value不能包含竖线（\|）和 "#$#"。 |
+| MetricValues       | Map    | 必选    | 时序字段名所使用的key与时序值使用的key的映射。name需遵循正则表达式：`^[a-zA-Z_:][a-zA-Z0-9_:]*$` ，时序值需要是double类型的字符串。                                                           |
+| CustomMetricLabels | Map    | 可选    | 要追加的自定义 `__labels__` 字段。 key需遵循正则表达式： `^[a-zA-Z_][a-zA-Z0-9_]*$`，Value不能包含竖线（\|）和 "#$#"。                                                           |
+| IgnoreWarning      | Bool   | 可选    | 当日志没有匹配时是否输出Warning日志。如果未添加该参数，则默认使用false，表示不忽略。                                                                                                   |
 
 注意：MetricTimeKey、MetricLabelKeys、MetricValues、CustomMetricLabels的字段不可相互重复。
 
@@ -63,6 +64,7 @@ processors:
       remote_addr: status
     CustomMetricLabels:
       nginx: test
+    IgnoreWarning: false
 flushers:
   - Type: flusher_sls
     Region: cn-xxx
