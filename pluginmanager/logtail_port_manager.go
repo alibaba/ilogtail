@@ -19,11 +19,6 @@ var exportLogtailPortsRunning = false
 
 var exportLogtailPortsPort = 18689
 
-var excludePorts = []int{
-	exportLogtailPortsPort,
-	7953,
-}
-
 func getExcludePorts() []int {
 	ports := []int{}
 	// logtail service port
