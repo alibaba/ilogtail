@@ -79,7 +79,6 @@
 | [`processor_json_accelerate`](accelerator/json-accelerate.md)<br>Json加速          | SLS官方 | 以加速模式实现`Json`格式日志的字段提取。 |
 | [`processor_regex_accelerate`](accelerator/regex-accelerate.md)<br>正则加速          | SLS官方 | 通过正则匹配以加速模式实现文本日志的字段提取。 |
 
-
 ## 扩展
 
 ### ClientAuthenticator
@@ -94,13 +93,11 @@
 |-----------------------------------------------------------------------------|-------------------------------------------------|-------------------------------------------|
 | [`ext_groupinfo_filter`](extension/ext-groupinfo-filter.md)<br> GroupInfo过滤 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供根据GroupInfo筛选最终提交数据的能力 |
 
-
 ### RequestInterceptor
 
 | 名称                                                                  | 提供方                                             | 简介                        |
 |---------------------------------------------------------------------|-------------------------------------------------|---------------------------|
 | [`ext_request_breaker`](extension/ext-request-breaker.md)<br> 请求熔断器 | 社区<br>[`snakorse`](https://github.com/snakorse) | 为 http_flusher 插件提供请求熔断能力 |
-
 
 ### Decoder
 

@@ -17,15 +17,16 @@ package log_to_sls_metric
 import (
 	"encoding/json"
 	"errors"
-	"github.com/alibaba/ilogtail/pkg/logger"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
-	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/protocol"
+	converter "github.com/alibaba/ilogtail/pkg/protocol/converter"
 )
 
 type ProcessorLogToSlsMetric struct {
@@ -98,7 +99,7 @@ func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) error {
 			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errInvalidMetricLabelKey)
 			return errInvalidMetricLabelKey
 		}
-		if ok, _ := existField[labelKey]; ok {
+		if existField[labelKey] {
 			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
 			return errFieldRepeated
 		}
@@ -116,7 +117,7 @@ func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) error {
 			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errInvalidMetricLabelValue)
 			return errInvalidMetricLabelValue
 		}
-		if ok, _ := existField[key]; ok {
+		if existField[key] {
 			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
 			return errFieldRepeated
 		}
@@ -126,12 +127,12 @@ func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) error {
 	p.metricNamesMap = map[string]bool{}
 	p.metricValuesMap = map[string]bool{}
 	for name, value := range p.MetricValues {
-		if ok, _ := existField[name]; ok {
+		if existField[name] {
 			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
 			return errInvalidMetricLabelKey
 		}
 		existField[name] = true
-		if ok, _ := existField[value]; ok {
+		if existField[value] {
 			logger.Error(p.context.GetRuntimeContext(), "PROCESSOR_INIT_ALARM", "init processor_log_to_sls_metric error", errFieldRepeated)
 			return errInvalidMetricLabelKey
 		}
@@ -155,7 +156,7 @@ TraverseLogArray:
 	for _, log := range logArray {
 		names := map[string]string{}
 		values := map[string]string{}
-		//__time_nano__ field
+		// __time_nano__ field
 		var timeNano string
 		// __labels__ field
 		metricLabels := converter.MetricLabels{}
@@ -257,7 +258,7 @@ TraverseLogArray:
 		// sort label
 		sort.Sort(metricLabels)
 		metricLabel := metricLabels.GetLabel()
-		for i, _ := range p.names {
+		for i := range p.names {
 			metricLog := &protocol.Log{
 				Time:     log.Time,
 				Contents: nil,

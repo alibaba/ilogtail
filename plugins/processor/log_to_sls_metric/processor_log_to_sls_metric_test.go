@@ -15,11 +15,12 @@
 package log_to_sls_metric
 
 import (
-	"fmt"
+	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/test/mock"
-	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestInitError(t *testing.T) {
@@ -64,7 +65,6 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 			{
 				Time: 1234567890,
 				Contents: []*protocol.Log_Content{
-					//{Key: "labelA", Value: "AAA"},
 					{Key: "labelB", Value: "BBB"},
 					{Key: "labelC", Value: "CCC"},
 					{Key: "nameA", Value: "myname"},
@@ -92,7 +92,6 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			processedLogs := processor.ProcessLogs(logs)
-			fmt.Println(processedLogs)
 			Convey("Then the processed logs should have the correct format", func() {
 				So(len(processedLogs), ShouldEqual, 4)
 
