@@ -19,6 +19,26 @@ var exportLogtailPortsRunning = false
 
 var exportLogtailPortsPort = 18689
 
+var excludePorts = []int{
+	exportLogtailPortsPort,
+	7953,
+}
+
+func getExcludePorts() []int {
+	ports := []int{}
+	// logtail service port
+	ports = append(ports, exportLogtailPortsPort)
+	// env "HTTP_PROBE_PORT"
+	checkAlivePort := os.Getenv("HTTP_PROBE_PORT")
+	if len(checkAlivePort) != 0 {
+		port, err := strconv.Atoi(checkAlivePort)
+		if err == nil {
+			ports = append(ports, port)
+		}
+	}
+	return ports
+}
+
 func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
 	ports := []int{}
 	filepath.Join()
@@ -88,7 +108,11 @@ func getLogtailLitsenPorts() ([]int, []int) {
 	for _, port := range udp6Ports {
 		portsUDPMap[port]++
 	}
-	delete(portsTCPMap, exportLogtailPortsPort)
+
+	for port := range getExcludePorts() {
+		delete(portsTCPMap, port)
+	}
+
 	for port := range portsTCPMap {
 		portsTCP = append(portsTCP, port)
 	}
