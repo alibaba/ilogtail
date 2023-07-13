@@ -15,11 +15,11 @@
 package logtoslsmetric
 
 import (
-	"encoding/json"
 	"errors"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -35,8 +35,6 @@ type ProcessorLogToSlsMetric struct {
 	CustomMetricLabels map[string]string
 	IgnoreWarning      bool
 
-	names              []string
-	values             []string
 	metricLabelKeysMap map[string]bool
 	metricNamesMap     map[string]bool
 	metricValuesMap    map[string]bool
@@ -162,9 +160,6 @@ func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) (err error) {
 
 		p.metricNamesMap[name] = true
 		p.metricValuesMap[value] = true
-
-		p.names = append(p.names, name)
-		p.values = append(p.values, value)
 	}
 	return nil
 }
@@ -262,7 +257,7 @@ TraverseLogArray:
 					p.logWarning(errInvalidMetricTime)
 					continue TraverseLogArray
 				}
-				timeNano = convertToTimestamp(cont.Value)
+				timeNano = cont.Value
 				continue
 			}
 		}
@@ -272,7 +267,8 @@ TraverseLogArray:
 				p.logWarning(errInvalidMetricTime)
 				continue TraverseLogArray
 			}
-			timeNano = convertToTimestamp(log.Time)
+			// log.Time = (uint32)(time.Now().Unix())
+			timeNano = convertSecondsToNano(log.Time)
 		}
 
 		// The number of labels must be equal to the number of label fields.
@@ -299,7 +295,7 @@ TraverseLogArray:
 
 		metricLabel := metricLabels.GetLabel()
 
-		for i := range p.names {
+		for name, value := range p.MetricValues {
 			metricLog := &protocol.Log{
 				Time:     log.Time,
 				Contents: nil,
@@ -310,11 +306,11 @@ TraverseLogArray:
 			})
 			metricLog.Contents = append(metricLog.Contents, &protocol.Log_Content{
 				Key:   metricNameKey,
-				Value: names[p.names[i]],
+				Value: names[name],
 			})
 			metricLog.Contents = append(metricLog.Contents, &protocol.Log_Content{
 				Key:   metricValueKey,
-				Value: values[p.values[i]],
+				Value: values[value],
 			})
 			metricLog.Contents = append(metricLog.Contents, &protocol.Log_Content{
 				Key:   metricTimeNanoKey,
@@ -336,22 +332,10 @@ func (p *ProcessorLogToSlsMetric) logInitError(err error) {
 	logger.Error(p.context.GetRuntimeContext(), processorInitErrorLogAlarmType, "init processor_log_to_sls_metric error", err)
 }
 
-func convertToTimestamp(values interface{}) string {
-	var timestamp string
-	switch t := values.(type) {
-	case json.Number:
-		timestamp = t.String()
-	case float64:
-		timestamp = strconv.FormatFloat(t, 'f', -1, 64)
-	case uint32:
-		timestamp = strconv.FormatFloat(float64(t), 'f', -1, 64)
-	case string:
-		timestamp = values.(string)
-	}
-	if len(timestamp) < 19 {
-		timestamp += strings.Repeat("0", 19-len(timestamp))
-	}
-	return timestamp
+func convertSecondsToNano(seconds uint32) string {
+	nanoseconds := int64(seconds) * int64(time.Second)
+	nanosecondsStr := strconv.FormatInt(nanoseconds, 10)
+	return nanosecondsStr
 }
 
 func canParseToFloat64(s string) bool {

@@ -44,8 +44,8 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 					{Key: "labelC", Value: "3"},
 					{Key: "nameA", Value: "myname"},
 					{Key: "valueA", Value: "1.0"},
-					{Key: "nameB", Value: "myname2"},
-					{Key: "valueB", Value: "2.0"},
+					{Key: "nameB", Value: "myname"},
+					{Key: "valueB", Value: "1.0"},
 					{Key: "timeKey", Value: "1658806869597190887"},
 				},
 			},
@@ -54,12 +54,12 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 				Contents: []*protocol.Log_Content{
 					{Key: "labelB", Value: "22"},
 					{Key: "labelC", Value: "33"},
-					{Key: "nameB", Value: "myname2"},
-					{Key: "valueB", Value: "2.0"},
+					{Key: "nameB", Value: "myname"},
+					{Key: "valueB", Value: "1.0"},
 					{Key: "timeKey", Value: "1658806869597190887"},
 					{Key: "valueA", Value: "1.0"},
 					{Key: "labelA", Value: "11"},
-					{Key: "nameA", Value: "myname1"},
+					{Key: "nameA", Value: "myname"},
 				},
 			},
 			{
@@ -69,8 +69,8 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 					{Key: "labelC", Value: "CCC"},
 					{Key: "nameA", Value: "myname"},
 					{Key: "valueA", Value: "1.0"},
-					{Key: "nameB", Value: "myname2"},
-					{Key: "valueB", Value: "2.0"},
+					{Key: "nameB", Value: "myname"},
+					{Key: "valueB", Value: "1.0"},
 					{Key: "timeKey", Value: "1658806869597190887"},
 				},
 			},
@@ -107,16 +107,16 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 				So(processedLogs[1].Contents[0].Key, ShouldEqual, "__labels__")
 				So(processedLogs[1].Contents[0].Value, ShouldEqual, "labelA#$#1|labelB#$#2|labelC#$#3|labelD#$#CustomD")
 				So(processedLogs[1].Contents[1].Key, ShouldEqual, "__name__")
-				So(processedLogs[1].Contents[1].Value, ShouldEqual, "myname2")
+				So(processedLogs[1].Contents[1].Value, ShouldEqual, "myname")
 				So(processedLogs[1].Contents[2].Key, ShouldEqual, "__value__")
-				So(processedLogs[1].Contents[2].Value, ShouldEqual, "2.0")
+				So(processedLogs[1].Contents[2].Value, ShouldEqual, "1.0")
 				So(processedLogs[1].Contents[3].Key, ShouldEqual, "__time_nano__")
 				So(processedLogs[1].Contents[3].Value, ShouldEqual, "1658806869597190887")
 
 				So(processedLogs[2].Contents[0].Key, ShouldEqual, "__labels__")
 				So(processedLogs[2].Contents[0].Value, ShouldEqual, "labelA#$#11|labelB#$#22|labelC#$#33|labelD#$#CustomD")
 				So(processedLogs[2].Contents[1].Key, ShouldEqual, "__name__")
-				So(processedLogs[2].Contents[1].Value, ShouldEqual, "myname1")
+				So(processedLogs[2].Contents[1].Value, ShouldEqual, "myname")
 				So(processedLogs[2].Contents[2].Key, ShouldEqual, "__value__")
 				So(processedLogs[2].Contents[2].Value, ShouldEqual, "1.0")
 				So(processedLogs[2].Contents[3].Key, ShouldEqual, "__time_nano__")
@@ -125,9 +125,9 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 				So(processedLogs[3].Contents[0].Key, ShouldEqual, "__labels__")
 				So(processedLogs[3].Contents[0].Value, ShouldEqual, "labelA#$#11|labelB#$#22|labelC#$#33|labelD#$#CustomD")
 				So(processedLogs[3].Contents[1].Key, ShouldEqual, "__name__")
-				So(processedLogs[3].Contents[1].Value, ShouldEqual, "myname2")
+				So(processedLogs[3].Contents[1].Value, ShouldEqual, "myname")
 				So(processedLogs[3].Contents[2].Key, ShouldEqual, "__value__")
-				So(processedLogs[3].Contents[2].Value, ShouldEqual, "2.0")
+				So(processedLogs[3].Contents[2].Value, ShouldEqual, "1.0")
 				So(processedLogs[3].Contents[3].Key, ShouldEqual, "__time_nano__")
 				So(processedLogs[3].Contents[3].Value, ShouldEqual, "1658806869597190887")
 			})
@@ -142,8 +142,8 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 					{Key: "labelA", Value: "AAA"},
 					{Key: "nameA", Value: "myname"},
 					{Key: "valueA", Value: "1.0"},
-					{Key: "nameB", Value: "myname2"},
-					{Key: "valueB", Value: "2.0"},
+					{Key: "nameB", Value: "myname"},
+					{Key: "valueB", Value: "1.0"},
 					{Key: "labelB", Value: "BBB"},
 					{Key: "labelC", Value: "CCC"},
 				},
@@ -181,9 +181,9 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 				So(processedLogs[1].Contents[0].Key, ShouldEqual, "__labels__")
 				So(processedLogs[1].Contents[0].Value, ShouldEqual, "labelA#$#AAA|labelB#$#BBB|labelC#$#CCC|labelD#$#CustomD")
 				So(processedLogs[1].Contents[1].Key, ShouldEqual, "__name__")
-				So(processedLogs[1].Contents[1].Value, ShouldEqual, "myname2")
+				So(processedLogs[1].Contents[1].Value, ShouldEqual, "myname")
 				So(processedLogs[1].Contents[2].Key, ShouldEqual, "__value__")
-				So(processedLogs[1].Contents[2].Value, ShouldEqual, "2.0")
+				So(processedLogs[1].Contents[2].Value, ShouldEqual, "1.0")
 				So(processedLogs[1].Contents[3].Key, ShouldEqual, "__time_nano__")
 				So(processedLogs[1].Contents[3].Value, ShouldEqual, "1234567890000000000")
 			})
