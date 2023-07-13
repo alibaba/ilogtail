@@ -69,6 +69,7 @@ public:
                                     sls_logs::LogGroup& logGroup,
                                     const std::string& key,
                                     time_t logTime,
+                                    long timeNs,
                                     uint32_t& logGroupSize);
 
     // RegexLogLineParser parses @buffer according to @reg.
@@ -101,6 +102,7 @@ public:
                                    const std::vector<std::string>& keys,
                                    const std::string& category,
                                    time_t logTime,
+                                   long timeNs,
                                    const std::string& projectName,
                                    const std::string& region,
                                    const std::string& logPath,
