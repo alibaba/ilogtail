@@ -34,7 +34,7 @@ $ActionFileDefaultTemplate CustomFormat
 
 ## 日志输入样例
 
-```
+```plain
 2023-07-11 23:48:03 localhost sshd[2408098]: Received disconnect from 128.199.185.21 port 54777:11: Bye Bye [preauth]
 2023-07-11 23:48:03 localhost sshd[2408098]: Disconnected from authenticating user ubuntu 128.199.185.21 port 54777 [preauth]
 2023-07-11 23:48:24 localhost sudo:   shouao : TTY=pts/0 ; PWD=/home/shouao ; USER=root ; COMMAND=/usr/bin/tail /var/log/auth.log
@@ -43,7 +43,7 @@ $ActionFileDefaultTemplate CustomFormat
 
 ## 日志输出样例
 
-```
+```plain
 2023-07-11 15:52:49 {"__tag__:__path__":"./simple.log","time":"2023-07-11 23:48:03","hostname":"localhost","logtag":"sshd[2408098]","msg":"Received disconnect from 128.199.185.21 port 54777:11: Bye Bye [preauth]","__time__":"1689090769"}
 2023-07-11 15:52:49 {"__tag__:__path__":"./simple.log","time":"2023-07-11 23:48:03","hostname":"localhost","logtag":"sshd[2408098]","msg":"Disconnected from authenticating user ubuntu 128.199.185.21 port 54777 [preauth]","__time__":"1689090769"}
 2023-07-11 15:52:49 {"__tag__:__path__":"./simple.log","time":"2023-07-11 23:48:24","hostname":"localhost","logtag":"sudo","msg":"  shouao : TTY=pts/0 ; PWD=/home/shouao ; USER=root ; COMMAND=/usr/bin/tail /var/log/auth.log","__time__":"1689090769"}
@@ -51,7 +51,7 @@ $ActionFileDefaultTemplate CustomFormat
 ```
 
 ## 采集配置
-```
+```yaml
 enable: true
 inputs:
   - Type: file_log
@@ -72,10 +72,8 @@ processors:
     KeepSource: false
 flushers:
   - Type: flusher_sls
+    Region: cn-xxx
     Endpoint: cn-xxx.log.aliyuncs.com
-    ProjectName: test_project
-    LogstoreName: test_logstore
-    Topic: bash_history
-  - Type: flusher_stdout
-    OnlyStdout: true
+    ProjectName: xxx_project
+    LogstoreName: xxx_logstore
 ```
