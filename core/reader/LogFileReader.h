@@ -136,6 +136,8 @@ public:
 
     virtual int32_t LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount);
 
+    size_t AlignLastCharacter(char* buffer, size_t size);
+
     virtual ~LogFileReader();
 
     const std::string& GetRegion() const { return mRegion; }
@@ -545,6 +547,7 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class LogFileReaderUnittest;
+    friend class LogMultiBytesUnittest;
     friend class ExactlyOnceReaderUnittest;
     friend class SenderUnittest;
     friend class AppConfigUnittest;

@@ -529,8 +529,6 @@ bool LogParser::ParseLogTime(const char* buffer,
     if (logTime <= 0
         || (BOOL_FLAG(ilogtail_discard_old_data)
             && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval))) {
-        || (BOOL_FLAG(ilogtail_discard_old_data)
-            && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval))) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(sLogger,
@@ -564,20 +562,15 @@ int32_t LogParser::GetApsaraLogMicroTime(const char* buffer) {
         }
         begIndex++;
     }
-    }
     int index = 0;
-    while (buffer[begIndex + index] && index < 6) {
-        if (buffer[begIndex + index] == ']') {
     while (buffer[begIndex + index] && index < 6) {
         if (buffer[begIndex + index] == ']') {
             break;
         }
         tmp[index] = buffer[begIndex + index];
         index++;
-        index++;
     }
     if (index < 6) {
-        for (int i = index; i < 6; i++) {
         for (int i = index; i < 6; i++) {
             tmp[i] = '0';
         }
@@ -684,8 +677,6 @@ bool LogParser::ApsaraEasyReadLogLineParser(StringView buffer,
                                             ParseLogError& error,
                                             uint32_t& logGroupSize,
                                             int32_t tzOffsetSecond,
-                                            uint32_t& logGroupSize,
-                                            int32_t tzOffsetSecond,
                                             bool adjustApsaraMicroTimezone) {
     int64_t logTime_in_micro = 0;
     time_t logTime = LogParser::ApsaraEasyReadLogTimeParser(buffer.data(), timeStr, lastLogTime, logTime_in_micro);
@@ -708,13 +699,10 @@ bool LogParser::ApsaraEasyReadLogLineParser(StringView buffer,
         error = PARSE_LOG_TIMEFORMAT_ERROR;
 
         if (!discardUnmatch) {
-        if (!discardUnmatch) {
             AddUnmatchLog(buffer, logGroup, logGroupSize);
         }
         return false;
     }
-    if (BOOL_FLAG(ilogtail_discard_old_data)
-        && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval)) {
     if (BOOL_FLAG(ilogtail_discard_old_data)
         && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval)) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -763,7 +751,6 @@ bool LogParser::ApsaraEasyReadLogLineParser(StringView buffer,
         } while (buffer.data()[index]);
     }
     if (adjustApsaraMicroTimezone) {
-        logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)tzOffsetSecond * (int64_t)1000000;
         logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)tzOffsetSecond * (int64_t)1000000;
     }
     char s_micro[20] = {0};
