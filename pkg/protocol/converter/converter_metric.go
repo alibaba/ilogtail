@@ -76,6 +76,8 @@ func (m MetricLabels) Swap(i, j int) {
 }
 
 func (m MetricLabels) GetLabel() string {
+	// sort label
+	sort.Sort(m)
 	var res []string
 	for _, label := range m {
 		res = append(res, label.Key+"#$#"+label.Value)

@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -297,9 +296,6 @@ TraverseLogArray:
 		for key, value := range p.CustomMetricLabels {
 			metricLabels = append(metricLabels, converter.MetricLabel{Key: key, Value: value})
 		}
-
-		// sort label
-		sort.Sort(metricLabels)
 
 		metricLabel := metricLabels.GetLabel()
 
