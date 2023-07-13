@@ -8,7 +8,7 @@
 
 `glog`是Google的一个C++日志库，提供流式风格的API。它的默认输出格式如下所示：
 
-```
+```plain
 <Severity><Date Hour:Minute:Second.microsecond> <ThreadID><SourceFileName>:<LineNo>] <LogMessage>
 ```
 
@@ -18,10 +18,11 @@
 
 ## 日志输入样例
 
-```
-W20220926 21:37:44.070065 3276269 main.cpp:25] warning message
-with multi-line
-I20220926 21:37:44.070065 3276269 main.cpp:26] info message
+```plain
+I20220926 21:37:44.070065 3276269 main.cpp:25] print function stack:
+#0 worker()
+#1 main()
+W20220926 21:37:44.070065 3276269 main.cpp:26] warning message
 ```
 
 ## 日志输出样例
@@ -29,26 +30,26 @@ I20220926 21:37:44.070065 3276269 main.cpp:26] info message
 ```json
 {
     "__tag__:__path__": "/logs/glog.log",
-    "Severity": "W",
-    "Date": "20220926",
-    "Time": "21:37:44.070065",
-    "ThreadID": "3276269",
-    "SoureFileName": "main.cpp",
-    "LineNo": "25",
-    "Message": "warning message\nwith multi-line",
-    "__time__": "1688796869"
-}
-
-{
-    "__tag__:__path__": "/logs/glog.log",
     "Severity": "I",
     "Date": "20220926",
     "Time": "21:37:44.070065",
     "ThreadID": "3276269",
     "SoureFileName": "main.cpp",
+    "LineNo": "25",
+    "Message": "print function stack:\n#0 worker()\n#1 main()",
+    "__time__": "1689220717"
+}
+
+{
+    "__tag__:__path__": "/logs/glog.log",
+    "Severity": "W",
+    "Date": "20220926",
+    "Time": "21:37:44.070065",
+    "ThreadID": "3276269",
+    "SoureFileName": "main.cpp",
     "LineNo": "26",
-    "Message": "info message",
-    "__time__": "1688796869"
+    "Message": "warning message",
+    "__time__": "1689220717"
 }
 ```
 
@@ -63,8 +64,8 @@ inputs:
     LogPath: /logs # log directory
     FilePattern: glog.log # log file
 processors:
-  - Type: processor_split_log_regex
-    SplitRegex: ([IWEF])(.+)
+  - Type: processor_split_log_regex # configure only when logs may span lines
+    SplitRegex: \[IWEF\]
     SplitKey: content
     PreserveOthers: true
   - Type: processor_regex

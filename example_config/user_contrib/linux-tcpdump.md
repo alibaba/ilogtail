@@ -12,7 +12,7 @@
 
 `tcpdump`中`tcp`报文的输出格式如下：（见`man tcpdump`）
 
-```
+```plain
 src > dst: Flags [tcpflags], seq data-seqno, ack ackno, win window, urg urgent, options [opts], length len
 ```
 
@@ -22,7 +22,7 @@ src > dst: Flags [tcpflags], seq data-seqno, ack ackno, win window, urg urgent, 
 
 ## 日志输入样例
 
-```
+```plain
 13:45:51.894506 IP 192.168.111.111.11111 > 110.242.68.66.http: Flags [S], seq 3449331597, win 64240, options [mss 1460,sackOK,TS val 2834610279 ecr 0,nop,wscale 7], length 0
 13:45:51.909884 IP 110.242.68.66.http > 192.168.111.111.11111: Flags [S.], seq 2926209326, ack 3449331598, win 8192, options [mss 1452,sackOK,nop,nop,nop,nop,nop,nop,nop,nop,nop,nop,nop,wscale 5], length 0
 13:45:51.909964 IP 192.168.111.111.11111 > 110.242.68.66.http: Flags [.], ack 1, win 502, length 0

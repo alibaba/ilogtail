@@ -8,7 +8,7 @@
 
 `zap`是一个高性能的Go语言日志库，默认输出`Json`格式的日志记录，并提供`Debug`，`Info`，`Warn`，`Error`，`Fatal`，`Panic`等日志级别。
 
-使用`processor_json`插件对`Json`格式解析，同时设置`KeepSourceIfParseError: true`来保留日志中非`Json`格式的信息（如触发`Panic`时显示的调用栈信息）。
+使用`processor_json`插件对`Json`格式解析，同时使用`processor_split_log_regex`和`processor_regex`插件来处理触发`Panic`时显示的消息以及多行的调用栈信息。
 
 ## 日志输入样例
 
@@ -30,32 +30,13 @@ go.uber.org/zap/zapcore.CheckWriteAction.OnWrite(0x2, 0x987e770, {0x0, 0x0, 0x0}
     "msg": "info message",
     "name": "user",
     "email": "user@test.com",
-    "__time__": "1688793620"
+    "__time__": "1689222388"
 }
 
 {
     "__tag__:__path__": "/logs/zap.log",
-    "level": "panic",
-    "msg": "panic message",
-    "__time__": "1688793620"
-}
-
-{
-    "__tag__:__path__": "/logs/zap.log",
-    "content": "panic: panic message",
-    "__time__": "1688793620"
-}
-
-{
-    "__tag__:__path__": "/logs/zap.log",
-    "content": "goroutine 1 [running]:",
-    "__time__": "1688793620"
-}
-
-{
-    "__tag__:__path__": "/logs/zap.log",
-    "content": "go.uber.org/zap/zapcore.CheckWriteAction.OnWrite(0x2, 0x987e770, {0x0, 0x0, 0x0})",
-    "__time__": "1688793620"
+    "panic": "panic message\n\ngoroutine 1 [running]:\ngo.uber.org/zap/zapcore.CheckWriteAction.OnWrite(0x2, 0x987e770, {0x0, 0x0, 0x0})",
+    "__time__": "1689222388"
 }
 ```
 
@@ -70,6 +51,16 @@ inputs:
     LogPath: /logs # log directory
     FilePattern: zap.log # log file
 processors:
+  - Type: processor_split_log_regex
+    SplitRegex: \{.+\}
+    SplitKey: content
+    PreserveOthers: true
+  - Type: processor_regex
+    SourceKey: content
+    Regex: \{"level":"panic".+\}\npanic:\s(.+)
+    Keys:
+      - panic
+    KeepSourceIfParseError: true
   - Type: processor_json
     SourceKey: content
     KeepSource: false
