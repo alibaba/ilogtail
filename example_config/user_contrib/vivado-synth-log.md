@@ -14,7 +14,7 @@
 
 ## 日志输入样例
 
-```
+```plain
 WARNING: [Synth 8-6014] Unused sequential element lastBatchHistory_1_reg was removed.  [D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:18281]
 WARNING: [Synth 8-6014] Unused sequential element lastBatchHistory_2_reg was removed.  [D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:18282]
 INFO: [Synth 8-6155] done synthesizing module 'FunctionArray' (20#1) [D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:17445]
@@ -25,11 +25,44 @@ WARNING: [Synth 8-6779] Delay data for wire-load model not found, using default 
 ## 日志输出样例
 
 ```json
-2023-07-12 07:00:17 {"__tag__:__path__":"/mnt/hgfs/synth_25/runme.log","log_type":"WARNING","log_id":"Synth 8-6014","content":"Unused sequential element lastBatchHistory_1_reg was removed. ","path":"[D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:18281]","__time__":"1689145214"}
-2023-07-12 07:00:17 {"__tag__:__path__":"/mnt/hgfs/synth_25/runme.log","log_type":"WARNING","log_id":"Synth 8-6014","content":"Unused sequential element lastBatchHistory_2_reg was removed. ","path":"[D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:18282]","__time__":"1689145214"}
-2023-07-12 07:00:17 {"__tag__:__path__":"/mnt/hgfs/synth_25/runme.log","log_type":"INFO","log_id":"Synth 8-6155","content":"done synthesizing module 'FunctionArray' (20#1)","path":"[D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:17445]","__time__":"1689145214"}
-2023-07-12 07:00:17 {"__tag__:__path__":"/mnt/hgfs/synth_25/runme.log","log_type":"INFO","log_id":"Synth 8-6157","content":"synthesizing module 'BucketSpliter'","path":"[D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:12362]","__time__":"1689145214"}
-2023-07-12 07:00:23 {"__tag__:__path__":"/mnt/hgfs/synth_25/runme.log","log_type":"WARNING","log_id":"Synth 8-6779","content":"Delay data for wire-load model not found, using default","__time__":"1689145221"}
+{
+    "__tag__:__path__":"/mnt/hgfs/synth_25/runme.log","log_type":"WARNING",
+    "log_id":"Synth 8-6014",
+    "content":"Unused sequential element lastBatchHistory_1_reg was removed. ",
+     "path":"D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:18281",
+    "__time__":"1689234234"
+}
+{
+    "__tag__:__path__":"/mnt/hgfs/synth_25/runme.log",
+    "log_type":"WARNING",
+    "log_id":"Synth 8-6014",
+    "content":"Unused sequential element lastBatchHistory_2_reg was removed. ",
+    "path":"D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:18282",
+    "__time__":"1689234234"
+}
+{
+    "__tag__:__path__":"/mnt/hgfs/synth_25/runme.log",
+    "log_type":"INFO",
+    "log_id":"Synth 8-6155",
+    "content":"done synthesizing module 'FunctionArray' (20#1)",
+    "path":"D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:17445",
+    "__time__":"1689234234"
+}
+{
+    "__tag__:__path__":"/mnt/hgfs/synth_25/runme.log",
+    "log_type":"INFO",
+    "log_id":"Synth 8-6157",
+    "content":"synthesizing module 'BucketSpliter'",
+    "path":"D:/Desktop/Learning/PointCloud/vivado_proj/FPS_Without_IP/FPS_Without_IP.srcs/sources_1/imports/FPS/Wrapper.v:12362",
+    "__time__":"1689234234"
+}
+{
+    "__tag__:__path__":"/mnt/hgfs/synth_25/runme.log",
+    "log_type":"WARNING",
+    "log_id":"Synth 8-6779",
+    "content":"Delay data for wire-load model not found, using default value\r",
+    "__time__":"1689234242"
+}
 ```
 
 ## 采集配置
@@ -46,14 +79,15 @@ processors:
       content: '^.+Synth.+$'
   - Type: processor_regex
     SourceKey: content
-    Regex: '(\S+): \[(\S+ \S+)\] (.+) (\[\S+\])?'
+    Regex: '(\S+): \[(\S+ \S+)\] (?:(.+) \[(\S+)\]|(.+))'
     Keys:
       - log_type
       - log_id
       - content
       - path
+      - content
 flushers:
-  - Type: flusher_stdout     # 标准输出流输出类型
+  - Type: flusher_stdout
     FileName: ./output.log
 ```
 
