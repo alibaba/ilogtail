@@ -21,14 +21,15 @@ import (
 )
 
 func TestGetIndexKeys(t *testing.T) {
-	Convey("Given a empty index", t, func() {
+	Convey("Given an empty index", t, func() {
 		flusher := &FlusherElasticSearch{
 			Index: "",
 		}
 		Convey("When getIndexKeys is called", func() {
-			keys, err := flusher.getIndexKeys()
+			keys, isDynamicIndex, err := flusher.getIndexKeys()
 			Convey("Then the keys should not be extracted correctly", func() {
 				So(err, ShouldNotBeNil)
+				So(isDynamicIndex, ShouldBeFalse)
 				So(keys, ShouldBeNil)
 			})
 		})
@@ -38,21 +39,63 @@ func TestGetIndexKeys(t *testing.T) {
 			Index: "normal_index",
 		}
 		Convey("When getIndexKeys is called", func() {
-			keys, err := flusher.getIndexKeys()
+			keys, isDynamicIndex, err := flusher.getIndexKeys()
 			Convey("Then the keys should be extracted correctly", func() {
 				So(err, ShouldBeNil)
+				So(isDynamicIndex, ShouldBeFalse)
 				So(len(keys), ShouldEqual, 0)
 			})
 		})
 	})
-	Convey("Given a dynamic index expression", t, func() {
+	Convey("Given a variable index", t, func() {
+		flusher := &FlusherElasticSearch{
+			Index: "index_${var}",
+		}
+		Convey("When getIndexKeys is called", func() {
+			keys, isDynamicIndex, err := flusher.getIndexKeys()
+			Convey("Then the keys should be extracted correctly", func() {
+				So(err, ShouldBeNil)
+				So(isDynamicIndex, ShouldBeFalse)
+				So(len(keys), ShouldEqual, 0)
+			})
+		})
+	})
+	Convey("Given a field dynamic index expression", t, func() {
+		flusher := &FlusherElasticSearch{
+			Index: "index_%{content.field}",
+		}
+		Convey("When getIndexKeys is called", func() {
+			keys, isDynamicIndex, err := flusher.getIndexKeys()
+			Convey("Then the keys should be extracted correctly", func() {
+				So(err, ShouldBeNil)
+				So(isDynamicIndex, ShouldBeTrue)
+				So(len(keys), ShouldEqual, 1)
+				So(keys[0], ShouldEqual, "content.field")
+			})
+		})
+	})
+	Convey("Given a timestamp dynamic index expression", t, func() {
+		flusher := &FlusherElasticSearch{
+			Index: "index_%{+yyyyMM}",
+		}
+		Convey("When getIndexKeys is called", func() {
+			keys, isDynamicIndex, err := flusher.getIndexKeys()
+			Convey("Then the keys should be extracted correctly", func() {
+				So(err, ShouldBeNil)
+				So(isDynamicIndex, ShouldBeTrue)
+				So(len(keys), ShouldEqual, 0)
+			})
+		})
+	})
+	Convey("Given a composite dynamic index expression", t, func() {
 		flusher := &FlusherElasticSearch{
 			Index: "index_%{content.field}_%{tag.host.ip}_%{+yyyyMMdd}",
 		}
 		Convey("When getIndexKeys is called", func() {
-			keys, err := flusher.getIndexKeys()
+			keys, isDynamicIndex, err := flusher.getIndexKeys()
 			Convey("Then the keys should be extracted correctly", func() {
 				So(err, ShouldBeNil)
+				So(isDynamicIndex, ShouldBeTrue)
 				So(len(keys), ShouldEqual, 2)
 				So(keys[0], ShouldEqual, "content.field")
 				So(keys[1], ShouldEqual, "tag.host.ip")

@@ -43,10 +43,11 @@ type FlusherElasticSearch struct {
 	// HTTP config
 	HTTPConfig *HTTPConfig
 
-	indexKeys []string
-	context   pipeline.Context
-	converter *converter.Converter
-	esClient  *elasticsearch.Client
+	indexKeys      []string
+	isDynamicIndex bool
+	context        pipeline.Context
+	converter      *converter.Converter
+	esClient       *elasticsearch.Client
 }
 
 type HTTPConfig struct {
@@ -106,12 +107,13 @@ func (f *FlusherElasticSearch) Init(context pipeline.Context) error {
 	f.converter = convert
 
 	// Init index keys
-	indexKeys, err := f.getIndexKeys()
+	indexKeys, isDynamicIndex, err := f.getIndexKeys()
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher index fail, error", err)
 		return err
 	}
 	f.indexKeys = indexKeys
+	f.isDynamicIndex = isDynamicIndex
 
 	cfg := elasticsearch.Config{
 		Addresses: f.Addresses,
@@ -149,15 +151,15 @@ func (f *FlusherElasticSearch) getConverter() (*converter.Converter, error) {
 	return converter.NewConverter(f.Convert.Protocol, f.Convert.Encoding, f.Convert.TagFieldsRename, f.Convert.ProtocolFieldsRename)
 }
 
-func (f *FlusherElasticSearch) getIndexKeys() ([]string, error) {
+func (f *FlusherElasticSearch) getIndexKeys() ([]string, bool, error) {
 	if f.Index == "" {
-		return nil, errors.New("index can't be empty")
+		return nil, false, errors.New("index can't be empty")
 	}
 
 	// Obtain index keys from dynamic index expression
 	compileKeys, err := fmtstr.CompileKeys(f.Index)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	// CompileKeys() parse all variables inside %{}
 	// but indexKeys is used to find field express starting with 'content.' or 'tag.'
@@ -168,7 +170,8 @@ func (f *FlusherElasticSearch) getIndexKeys() ([]string, error) {
 			indexKeys = append(indexKeys, key)
 		}
 	}
-	return indexKeys, nil
+	isDynamicIndex := len(compileKeys) > 0
+	return indexKeys, isDynamicIndex, nil
 }
 
 func (f *FlusherElasticSearch) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
@@ -192,11 +195,14 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 		}
 		var buffer []string
 		for index, log := range serializedLogs.([][]byte) {
-			valueMap := values[index]
-			ESIndex, err := fmtstr.FormatIndex(valueMap, f.Index, uint32(nowTime.Unix()))
-			if err != nil {
-				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch format index fail, error", err)
-				return err
+			ESIndex := &f.Index
+			if f.isDynamicIndex {
+				valueMap := values[index]
+				ESIndex, err = fmtstr.FormatIndex(valueMap, f.Index, uint32(nowTime.Unix()))
+				if err != nil {
+					logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch format index fail, error", err)
+					return err
+				}
 			}
 			var builder strings.Builder
 			builder.WriteString(`{"index": {"_index": "`)
