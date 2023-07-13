@@ -53,7 +53,7 @@ func mockData(num int) []*protocol.Log {
 				{Key: "valueA", Value: "1.0"},
 				{Key: "nameB", Value: "myname2"},
 				{Key: "valueB", Value: "2.0"},
-				{Key: "__time__", Value: "1658806869597190887"},
+				{Key: "timeKey", Value: "1658806869597190887"},
 			},
 		}
 		Logs = append(Logs, log)

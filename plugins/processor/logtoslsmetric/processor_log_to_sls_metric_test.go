@@ -46,7 +46,7 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 					{Key: "valueA", Value: "1.0"},
 					{Key: "nameB", Value: "myname2"},
 					{Key: "valueB", Value: "2.0"},
-					{Key: "__time__", Value: "1658806869597190887"},
+					{Key: "timeKey", Value: "1658806869597190887"},
 				},
 			},
 			{
@@ -56,7 +56,7 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 					{Key: "labelC", Value: "33"},
 					{Key: "nameB", Value: "myname2"},
 					{Key: "valueB", Value: "2.0"},
-					{Key: "__time__", Value: "1658806869597190887"},
+					{Key: "timeKey", Value: "1658806869597190887"},
 					{Key: "valueA", Value: "1.0"},
 					{Key: "labelA", Value: "11"},
 					{Key: "nameA", Value: "myname1"},
@@ -71,14 +71,14 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 					{Key: "valueA", Value: "1.0"},
 					{Key: "nameB", Value: "myname2"},
 					{Key: "valueB", Value: "2.0"},
-					{Key: "__time__", Value: "1658806869597190887"},
+					{Key: "timeKey", Value: "1658806869597190887"},
 				},
 			},
 		}
 
 		Convey("When the logs are processed using ProcessorLogToSlsMetric", func() {
 			processor := &ProcessorLogToSlsMetric{
-				MetricTimeKey:   "__time__",
+				MetricTimeKey:   "timeKey",
 				MetricLabelKeys: []string{"labelA", "labelB", "labelC"},
 				MetricValues: map[string]string{
 					"nameA": "valueA",
