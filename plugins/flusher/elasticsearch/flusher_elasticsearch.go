@@ -105,24 +105,11 @@ func (f *FlusherElasticSearch) Init(context pipeline.Context) error {
 	}
 	f.converter = convert
 
-	if f.Index == "" {
-		return errors.New("index can't be empty")
-	}
-
-	// Obtain index keys from dynamic index expression
-	compileKeys, err := fmtstr.CompileKeys(f.Index)
+	// Init index keys
+	indexKeys, err := f.getIndexKeys()
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init elasticsearch flusher index fail, error", err)
 		return err
-	}
-	// CompileKeys() parse all variables inside %{}
-	// but indexKeys is used to find field express starting with 'content.' or 'tag.'
-	// so date express starting with '+' should be ignored
-	indexKeys := make([]string, 0, len(compileKeys))
-	for _, key := range compileKeys {
-		if key[0] != '+' {
-			indexKeys = append(indexKeys, key)
-		}
 	}
 	f.indexKeys = indexKeys
 
@@ -160,6 +147,28 @@ func (f *FlusherElasticSearch) getConverter() (*converter.Converter, error) {
 	logger.Debug(f.context.GetRuntimeContext(), "[ilogtail data convert config] Protocol", f.Convert.Protocol,
 		"Encoding", f.Convert.Encoding, "TagFieldsRename", f.Convert.TagFieldsRename, "ProtocolFieldsRename", f.Convert.ProtocolFieldsRename)
 	return converter.NewConverter(f.Convert.Protocol, f.Convert.Encoding, f.Convert.TagFieldsRename, f.Convert.ProtocolFieldsRename)
+}
+
+func (f *FlusherElasticSearch) getIndexKeys() ([]string, error) {
+	if f.Index == "" {
+		return nil, errors.New("index can't be empty")
+	}
+
+	// Obtain index keys from dynamic index expression
+	compileKeys, err := fmtstr.CompileKeys(f.Index)
+	if err != nil {
+		return nil, err
+	}
+	// CompileKeys() parse all variables inside %{}
+	// but indexKeys is used to find field express starting with 'content.' or 'tag.'
+	// so date express starting with '+' should be ignored
+	indexKeys := make([]string, 0, len(compileKeys))
+	for _, key := range compileKeys {
+		if key[0] != '+' {
+			indexKeys = append(indexKeys, key)
+		}
+	}
+	return indexKeys, nil
 }
 
 func (f *FlusherElasticSearch) IsReady(projectName string, logstoreName string, logstoreKey int64) bool {
