@@ -1,6 +1,6 @@
 # com.west2online.ClashX.log
 ## 提供者
-liuw515
+[liuw515](https://github.com/liuw515)
 ## 描述
 
 `.com.west2online.ClashX.log`记录了使用ClashX软件进行网络节点链接时的网络访问日志，方便记录当前机器使用的TCP IP地址以及端口，另外也记录当前使用节点及访问域名。储存位置在`/Users/UserName/Library/Logs/ClashX`
