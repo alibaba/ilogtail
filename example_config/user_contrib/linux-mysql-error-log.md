@@ -13,18 +13,16 @@
 从输出结果来看，达到了预期的目的，并且在5条输入日志中只有一条priority为Warning的日志被筛选出来了，其他日志都被过滤掉了。
 
 ## 日志输入样例
-```
+``` plain
 2023-07-08T17:51:01.833256Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.33-0ubuntu0.22.04.2) starting as process 1077
 2023-07-08T17:51:01.873571Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
 2023-07-08T17:51:02.658251Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
 2023-07-08T17:51:03.209853Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
 2023-07-08T17:51:03.209889Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
-
 ```
 
 ## 日志输出样例
-```
-2023-07-08 23:55:08 
+``` json
 {
 	"__tag__:__path__": "/var/log/mysql/error.log",
 	"logged": "2023-07-08T17:51:03.209853",
@@ -38,7 +36,7 @@
 ```
 
 ## 采集配置
-```
+``` YAML
 enable: true
 inputs:
   - Type: file_log
@@ -61,7 +59,4 @@ processors:
 flushers:
   - Type: flusher_stdout 
     FileName: ./out1.log
-
 ```
-
-
