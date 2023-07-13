@@ -3,6 +3,7 @@ package protocol
 import (
 	"fmt"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -19,6 +20,15 @@ func CloneLog(log *Log) *Log {
 		}
 	}
 	return cloneLog
+}
+
+func SetLogTime(log *Log, second uint32, nanosecond uint32) {
+	log.Time = second
+	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
+		log.TimeNs = &nanosecond
+	} else {
+		log.TimeNs = nil
+	}
 }
 
 type Codec struct{}
