@@ -223,13 +223,12 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 		}
 		defer res.Body.Close()
 
-		switch res.StatusCode / 100 {
-		case 4:
+		if res.StatusCode >= 400 && res.StatusCode <= 499 {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request client error", res)
-		case 5:
+			return errors.New(fmt.Sprintf("err status returned: %v", res.Status()))
+		} else if res.StatusCode >= 500 && res.StatusCode <= 599 {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request server error", res)
-		default:
-			logger.Debug(f.context.GetRuntimeContext(), res)
+			return errors.New(fmt.Sprintf("err status returned: %v", res.Status()))
 		}
 		logger.Debug(f.context.GetRuntimeContext(), "elasticsearch success send events: messageID")
 	}
