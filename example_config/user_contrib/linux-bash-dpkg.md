@@ -22,10 +22,10 @@
 ## 日志输出样例
 
 ```json
-2023-07-09 21:56:16 {"__tag__:__path__":"./dpkg.log","date":"2023-07-08","time":"10:44:34","action":"configure","package":"git:amd64","version":"1:2.25.1-1ubuntu3.11","appendix":" <无>","__time__":"1688910976"}
-2023-07-09 21:56:16 {"__tag__:__path__":"./dpkg.log","date":"2023-07-08","time":"10:44:34","action":"status unpacked","package":"git:amd64","version":"1:2.25.1-1ubuntu3.11","appendix":"","__time__":"1688910976"}
-2023-07-09 21:56:16 {"__tag__:__path__":"./dpkg.log","date":"2023-07-08","time":"10:44:34","action":"status","package":"half-configured","version":"git:amd64","appendix":" 1:2.25.1-1ubuntu3.11","__time__":"1688910976"}
-2023-07-09 21:56:16 {"__tag__:__path__":"./dpkg.log","date":"2023-07-08","time":"10:44:34","action":"status installed","package":"git:amd64","version":"1:2.25.1-1ubuntu3.11","appendix":"","__time__":"1688910976"}
+{"__tag__:__path__":"./dpkg.log","date":"2023-07-08","time":"10:44:34","action":"configure","package":"git:amd64","version":"1:2.25.1-1ubuntu3.11","appendix":" <无>","__time__":"1688910976"}
+{"__tag__:__path__":"./dpkg.log","date":"2023-07-08","time":"10:44:34","action":"status unpacked","package":"git:amd64","version":"1:2.25.1-1ubuntu3.11","appendix":"","__time__":"1688910976"}
+{"__tag__:__path__":"./dpkg.log","date":"2023-07-08","time":"10:44:34","action":"status","package":"half-configured","version":"git:amd64","appendix":" 1:2.25.1-1ubuntu3.11","__time__":"1688910976"}
+{"__tag__:__path__":"./dpkg.log","date":"2023-07-08","time":"10:44:34","action":"status installed","package":"git:amd64","version":"1:2.25.1-1ubuntu3.11","appendix":"","__time__":"1688910976"}
 
 ```
 
