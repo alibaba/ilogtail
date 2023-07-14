@@ -112,7 +112,11 @@ func (p *ProcessorSplitRegex) ProcessLogs(logArray []*protocol.Log) []*protocol.
 			}
 		}
 		if log.Time != uint32(0) {
-			protocol.SetLogTime(newLog, log.Time, *log.TimeNs)
+			if log.TimeNs != nil {
+				protocol.SetLogTime(newLog, log.Time, *log.TimeNs)
+			} else {
+				protocol.SetLogTime(newLog, log.Time, 0)
+			}
 		} else {
 			nowTime := time.Now()
 			protocol.SetLogTime(newLog, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
