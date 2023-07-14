@@ -579,6 +579,12 @@ private:
     void updatePrimaryCheckpointSignature();
     void updatePrimaryCheckpointRealPath();
 
+    void handleUnmatchAtOtherState(const char* buffer,
+                                   int& multiBeginIndex,
+                                   int endIndex,
+                                   std::vector<StringView>& logIndex,
+                                   std::vector<StringView>& discardIndex);
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class LogFileReaderUnittest;

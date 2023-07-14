@@ -1345,9 +1345,11 @@ bool LogFileReader::LogSplit(const char* buffer,
         if (endIndex == size || buffer[endIndex] == '\n') {
             lineFeed++;
             exception.clear();
+            // State machine with three states (SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE)
             switch (state) {
                 case SPLIT_UNMATCH:
                     if (!IsMultiLine()) {
+                        // Single line log
                         anyMatched = true;
                         logIndex.emplace_back(buffer + begIndex, endIndex - begIndex);
                         multiBeginIndex = endIndex + 1;
@@ -1355,7 +1357,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                     } else if (mLogBeginRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
                             state = SPLIT_BEGIN;
-                            // Other unmatch strategies cannot be confirmed here
+                            // Other unmatch strategies cannot confirm how to handle logs here
                             if (multiBeginIndex != begIndex && mUnmatch == "append") {
                                 anyMatched = true;
                                 logIndex[logIndex.size() - 1] = StringView(logIndex[logIndex.size() - 1].begin(),
@@ -1368,7 +1370,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                     } else if (mLogContinueRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
                             state = SPLIT_CONTINUE;
-                            // Other unmatch strategies cannot be confirmed here
+                            // Other unmatch strategies cannot confirm how to handle logs here
                             if (multiBeginIndex != begIndex && mUnmatch == "append") {
                                 anyMatched = true;
                                 logIndex[logIndex.size() - 1] = StringView(logIndex[logIndex.size() - 1].begin(),
@@ -1381,7 +1383,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                     } else if (mLogEndRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
                             anyMatched = true;
-                            // Other unmatch strategies cannot be confirmed here
+                            // Other unmatch strategies cannot confirm how to handle logs here
                             if (multiBeginIndex != begIndex && mUnmatch == "append") {
                                 anyMatched = true;
                                 logIndex[logIndex.size() - 1] = StringView(logIndex[logIndex.size() - 1].begin(),
@@ -1420,21 +1422,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                             state = SPLIT_CONTINUE;
                         } else {
                             state = SPLIT_UNMATCH;
-                            if (mUnmatch == "discard") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            } else if (mUnmatch == "singleline") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            }
+                            handleUnmatchAtOtherState(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
                         }
                     } else if (mLogEndRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
@@ -1444,21 +1432,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                             multiBeginIndex = endIndex + 1;
                         } else {
                             state = SPLIT_UNMATCH;
-                            if (mUnmatch == "discard") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            } else if (mUnmatch == "singleline") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            }
+                            handleUnmatchAtOtherState(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
                         }
                     } else if (mLogBeginRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
@@ -1472,21 +1446,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                             anyMatched = true;
                             logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
                             multiBeginIndex = begIndex;
-                            if (mUnmatch == "discard") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            } else if (mUnmatch == "singleline") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            }
+                            handleUnmatchAtOtherState(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
                         }
                     }
                     break;
@@ -1495,6 +1455,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                     if (mLogContinueRegPtr != NULL && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
                         break;
                     }
+                    // The next line may be CONTINUE or END, so it can still be matched when cannot be matched ContinueReg.
                     if (mLogEndRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
                             state = SPLIT_UNMATCH;
@@ -1503,21 +1464,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                             multiBeginIndex = endIndex + 1;
                         } else {
                             state = SPLIT_UNMATCH;
-                            if (mUnmatch == "discard") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            } else if (mUnmatch == "singleline") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            }
+                            handleUnmatchAtOtherState(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
                         }
                     } else if (mLogBeginRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
@@ -1530,42 +1477,14 @@ bool LogFileReader::LogSplit(const char* buffer,
                             anyMatched = true;
                             logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
                             multiBeginIndex = begIndex;
-                            if (mUnmatch == "discard") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            } else if (mUnmatch == "singleline") {
-                                for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                    if (i == endIndex || buffer[i] == '\n') {
-                                        logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                        multiBeginIndex = i + 1;
-                                    }
-                                }
-                            }
+                            handleUnmatchAtOtherState(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
                         }
                     } else {
                         state = SPLIT_UNMATCH;
                         anyMatched = true;
                         logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
                         multiBeginIndex = begIndex;
-                        if (mUnmatch == "discard") {
-                            for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                if (i == endIndex || buffer[i] == '\n') {
-                                    discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                    multiBeginIndex = i + 1;
-                                }
-                            }
-                        } else if (mUnmatch == "singleline") {
-                            for (int i = multiBeginIndex; i <= endIndex; i++) {
-                                if (i == endIndex || buffer[i] == '\n') {
-                                    logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
-                                    multiBeginIndex = i + 1;
-                                }
-                            }
-                        }
+                        handleUnmatchAtOtherState(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
                     }
                     break;
             }
@@ -1584,6 +1503,7 @@ bool LogFileReader::LogSplit(const char* buffer,
         }
         endIndex++;
     }
+    // We should clean the log from `multiBeginIndex` to `size`.
     if (multiBeginIndex < size) {
         if (!IsMultiLine()) {
             logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
@@ -1599,6 +1519,29 @@ bool LogFileReader::LogSplit(const char* buffer,
         }
     }
     return anyMatched;
+}
+
+void LogFileReader::handleUnmatchAtOtherState(const char* buffer,
+                                              int& multiBeginIndex,
+                                              int endIndex,
+                                              std::vector<StringView>& logIndex,
+                                              std::vector<StringView>& discardIndex) {
+    // No need to update multiBeginIndex when mUnmatch == "prepend" or "append"
+    if (mUnmatch == "discard") {
+        for (int i = multiBeginIndex; i <= endIndex; i++) {
+            if (i == endIndex || buffer[i] == '\n') {
+                discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                multiBeginIndex = i + 1;
+            }
+        }
+    } else if (mUnmatch == "singleline") {
+        for (int i = multiBeginIndex; i <= endIndex; i++) {
+            if (i == endIndex || buffer[i] == '\n') {
+                logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
+                multiBeginIndex = i + 1;
+            }
+        }
+    }
 }
 
 bool LogFileReader::ParseLogTime(const char* buffer,
