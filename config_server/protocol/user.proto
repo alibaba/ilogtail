@@ -15,13 +15,17 @@ message AgentGroup {
 }
 
 message Agent {
-    string agent_id = 1;            // Required, Agent's unique identification
-    string agent_type = 2;          // Required, Agent's type(ilogtail, ..)
-    AgentAttributes attributes = 3; // Agent's basic attributes
-    repeated string tags =  4;      // Agent's tags
-    string running_status = 5;      // Required, Agent's running status
-    int64 startup_time = 6;         // Required, Agent's startup time
-    int32 interval = 7;             // Agent's heartbeat interval
+    string agent_id = 1;                // Required, Agent's unique identification
+    string agent_type = 2;              // Required, Agent's type(ilogtail, ..)
+    AgentAttributes attributes = 3;     // Agent's basic attributes
+    repeated string tags =  4;          // Agent's tags
+    RunningStatus running_status = 5;   // Agent's running status
+    int64 startup_time = 6;             // Agent's startup time
+    int32 interval = 7;                 // Agent's heartbeat interval
+    int64 latest_beat_time = 8;         // Agent's latest heartbeat time
+    int64 beat_cycle_time = 9;          // Agent's heartbeat cycle time
+    int32 success_beat_count = 10;      // Agent's success heartbeat count
+    int32 fail_beat_count = 11;         // Agent's fail heartbeat count
 }
 
 // API: /User/CreateAgentGroup

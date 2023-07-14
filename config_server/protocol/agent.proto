@@ -15,6 +15,13 @@ enum CheckStatus {
     MODIFIED = 2;
 }
 
+// Define Agent's running status
+enum RunningStatus {
+    INIT = 0;
+    ONLINE = 1;
+    OFFLINE = 2;
+}
+
 // Define response code
 enum RespCode {
     ACCEPT = 0;                 
@@ -78,8 +85,8 @@ message HeartBeatRequest {
     string agent_type = 3;                      // Required, Agent's type(ilogtail, ..)
     AgentAttributes attributes = 4;             // Agent's basic attributes
     repeated string tags =  5;                  // Agent's tags
-    string running_status = 6;                  // Required, Agent's running status
-    int64 startup_time = 7;                     // Required, Agent's startup time
+    RunningStatus running_status = 6;           // Agent's running status
+    int64 startup_time = 7;                     // Agent's startup time
     int32 interval = 8;                         // Agent's heartbeat interval
     repeated ConfigInfo pipeline_configs = 9;   // Information about the current PIPELINE_CONFIG held by the Agent
     repeated ConfigInfo agent_configs = 10;     // Information about the current AGENT_CONFIG held by the Agent
