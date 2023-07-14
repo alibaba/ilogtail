@@ -10,14 +10,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
-var exportLogtailPortsRunning = false
-
-var exportLogtailPortsPort = 18689
+var (
+	exportLogtailPortsPort = 18689
+	exportLogtailPortsOnce sync.Once
+)
 
 func getExcludePorts() []int {
 	ports := []int{}
@@ -145,8 +147,8 @@ func processPort(res http.ResponseWriter, req *http.Request) {
 }
 
 func ExportLogtailPorts() {
-	if !exportLogtailPortsRunning {
-		go func() {
+	go func() {
+		exportLogtailPortsOnce.Do(func() {
 			mux := http.NewServeMux()
 			mux.HandleFunc("/export/port", processPort)
 			server := &http.Server{
@@ -160,7 +162,6 @@ func ExportLogtailPorts() {
 				logger.Error(context.Background(), "export logtail's ports failed", err.Error())
 				return
 			}
-		}()
-		exportLogtailPortsRunning = true
-	}
+		})
+	}()
 }
