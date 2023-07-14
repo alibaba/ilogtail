@@ -3,8 +3,9 @@ package protocol
 import (
 	"fmt"
 
-	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/gogo/protobuf/proto"
+
+	"github.com/alibaba/ilogtail/pkg/config"
 )
 
 func CloneLog(log *Log) *Log {
