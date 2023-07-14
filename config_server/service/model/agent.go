@@ -18,6 +18,12 @@ import (
 	proto "github.com/alibaba/ilogtail/config_server/service/proto"
 )
 
+var RunningStatus = map[string]proto.RunningStatus{
+	"INIT":    proto.RunningStatus_INIT,
+	"ONLINE":  proto.RunningStatus_ONLINE,
+	"OFFLINE": proto.RunningStatus_OFFLINE,
+}
+
 type AgentAttributes struct {
 	Version  string            `json:"Version"`
 	Category string            `json:"Category"`
@@ -51,13 +57,17 @@ func (a *AgentAttributes) ParseProto(pa *proto.AgentAttributes) {
 }
 
 type Agent struct {
-	AgentID       string          `json:"AgentID"`
-	AgentType     string          `json:"AgentType"`
-	Attributes    AgentAttributes `json:"Attributes"`
-	Tags          []string        `json:"Tags"`
-	RunningStatus string          `json:"RunningStatus"`
-	StartupTime   int64           `json:"StartupTime"`
-	Interval      int32           `json:"Interval"`
+	AgentID          string          `json:"AgentID"`
+	AgentType        string          `json:"AgentType"`
+	Attributes       AgentAttributes `json:"Attributes"`
+	Tags             []string        `json:"Tags"`
+	RunningStatus    string          `json:"RunningStatus"`
+	StartupTime      int64           `json:"StartupTime"`
+	Interval         int32           `json:"Interval"`
+	LatestBeatTime   int64           `json:"LatestBeatTime"`
+	BeatCycleTime    int64           `json:"BeatCycleTime"`
+	SuccessBeatCount int32           `json:"SuccessBeatCount"`
+	FailBeatCount    int32           `json:"FailBeatCount"`
 }
 
 func (a *Agent) ToProto() *proto.Agent {
@@ -66,9 +76,13 @@ func (a *Agent) ToProto() *proto.Agent {
 	pa.AgentType = a.AgentType
 	pa.Attributes = a.Attributes.ToProto()
 	pa.Tags = a.Tags
-	pa.RunningStatus = a.RunningStatus
+	pa.RunningStatus = RunningStatus[a.RunningStatus]
 	pa.StartupTime = a.StartupTime
 	pa.Interval = a.Interval
+	pa.LatestBeatTime = a.LatestBeatTime
+	pa.BeatCycleTime = a.BeatCycleTime
+	pa.SuccessBeatCount = a.SuccessBeatCount
+	pa.FailBeatCount = a.FailBeatCount
 	return pa
 }
 
@@ -77,7 +91,11 @@ func (a *Agent) ParseProto(pa *proto.Agent) {
 	a.AgentType = pa.AgentType
 	a.Attributes.ParseProto(pa.Attributes)
 	a.Tags = pa.Tags
-	a.RunningStatus = pa.RunningStatus
+	a.RunningStatus = pa.RunningStatus.String()
 	a.StartupTime = pa.StartupTime
 	a.Interval = pa.Interval
+	a.LatestBeatTime = pa.LatestBeatTime
+	a.BeatCycleTime = pa.BeatCycleTime
+	a.SuccessBeatCount = pa.SuccessBeatCount
+	a.FailBeatCount = pa.FailBeatCount
 }
