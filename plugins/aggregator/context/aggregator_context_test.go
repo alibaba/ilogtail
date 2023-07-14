@@ -334,7 +334,7 @@ func benchmarkLogProducingPace(b *testing.B, num int) {
 	log := &protocol.Log{
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
-	log.SetLogTime(log, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
+	protocol.SetLogTime(log, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 	ctx := make([]map[string]interface{}, 10)
 	packIDPrefix := make([]byte, 8)
 	for i := 0; i < 10; i++ {
