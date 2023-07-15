@@ -104,11 +104,14 @@ bool CommonRegLogFileReader::ParseLogLine(StringView buffer,
                                                 mTzOffsetSecond);
         } else {
             // if "time" field not exist in user config or timeformat empty, set current system time for logs
+            timespec ts;
+            clock_gettime(CLOCK_REALTIME_COARSE, &ts);
             if (format.mIsWholeLineMode) {
                 res = LogParser::WholeLineModeParser(buffer,
                                                      logGroup,
                                                      format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0],
-                                                     time(NULL),
+                                                     ts.tv_sec,
+                                                     ts.tv_nsec,
                                                      logGroupSize);
             } else {
                 res = LogParser::RegexLogLineParser(buffer,
@@ -117,7 +120,8 @@ bool CommonRegLogFileReader::ParseLogLine(StringView buffer,
                                                     mDiscardUnmatch,
                                                     format.mKeys,
                                                     mCategory,
-                                                    time(NULL),
+                                                    ts.tv_sec,
+                                                    ts.tv_nsec,
                                                     mProjectName,
                                                     mRegion,
                                                     mLogPath,

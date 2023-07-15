@@ -1318,8 +1318,6 @@ void LogFileReader::SetReadBufferSize(int32_t bufSize) {
     BUFFER_SIZE = bufSize;
 }
 
-enum SplitState { SPLIT_UNMATCH, SPLIT_START, SPLIT_CONTINUE, SPLIT_END };
-
 bool LogFileReader::LogSplit(const char* buffer,
                              int32_t size,
                              int32_t& lineFeed,
@@ -1926,7 +1924,7 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
             }
             endPs--;
         }
-        if (endPs - 1 + n >= size) {
+        if (endPs - 1 + n >= (int)size) {
             buffer[endPs] = '\0';
             return endPs;
         } else {
