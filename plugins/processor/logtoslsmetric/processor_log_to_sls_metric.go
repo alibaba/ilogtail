@@ -190,23 +190,23 @@ TraverseLogArray:
 				for _, label := range labels {
 					keyValues := strings.Split(label, converter.KeyValueSeparator)
 					if len(keyValues) != 2 {
-						p.logWarning(errInvalidMetricLabelValue)
+						p.logError(errInvalidMetricLabelValue)
 						continue TraverseLogArray
 					}
 					key := keyValues[0]
 					if p.metricLabelKeysMap[key] {
-						p.logWarning(errFieldRepeated)
+						p.logError(errFieldRepeated)
 						continue TraverseLogArray
 					}
 					// The Key of Label must follow the regular expression: ^[a-zA-Z_][a-zA-Z0-9_]*$
 					if !metricLabelKeyRegex.MatchString(key) {
-						p.logWarning(errInvalidMetricLabelKey)
+						p.logError(errInvalidMetricLabelKey)
 						continue TraverseLogArray
 					}
 					value := keyValues[1]
 					// The value of Label cannot contain "|" or "#$#".
 					if strings.Contains(value, converter.LabelSeparator) || strings.Contains(value, converter.KeyValueSeparator) {
-						p.logWarning(errInvalidMetricLabelValue)
+						p.logError(errInvalidMetricLabelValue)
 						continue TraverseLogArray
 					}
 					metricLabels = append(metricLabels, converter.MetricLabel{Key: key, Value: value})
@@ -217,12 +217,12 @@ TraverseLogArray:
 			// Match to the label field
 			if p.metricLabelKeysMap[cont.Key] {
 				if labelExisted[cont.Key] {
-					p.logWarning(errFieldRepeated)
+					p.logError(errFieldRepeated)
 					continue TraverseLogArray
 				}
 				// The value of Label cannot contain "|" or "#$#".
 				if strings.Contains(cont.Value, converter.LabelSeparator) || strings.Contains(cont.Value, converter.KeyValueSeparator) {
-					p.logWarning(errInvalidMetricLabelValue)
+					p.logError(errInvalidMetricLabelValue)
 					continue TraverseLogArray
 				}
 				labelExisted[cont.Key] = true
@@ -234,7 +234,7 @@ TraverseLogArray:
 			if p.metricNamesMap[cont.Key] {
 				// Metric name needs to follow the regular expression: ^[a-zA-Z_:][a-zA-Z0-9_:]*$
 				if !metricNameRegex.MatchString(cont.Value) {
-					p.logWarning(errInvalidMetricName)
+					p.logError(errInvalidMetricName)
 					continue TraverseLogArray
 				}
 				names[cont.Key] = cont.Value
@@ -245,7 +245,7 @@ TraverseLogArray:
 			if p.metricValuesMap[cont.Key] {
 				// Metric value needs to be a float type string.
 				if !canParseToFloat64(cont.Value) {
-					p.logWarning(errInvalidMetricValue)
+					p.logError(errInvalidMetricValue)
 					continue TraverseLogArray
 				}
 				values[cont.Key] = cont.Value
@@ -254,14 +254,16 @@ TraverseLogArray:
 
 			if p.MetricTimeKey != "" && cont.Key == p.MetricTimeKey {
 				if !isTimeNano(cont.Value) {
-					p.logWarning(errInvalidMetricTime)
+					p.logError(errInvalidMetricTime)
 					continue TraverseLogArray
 				}
 				if len(cont.Value) == 19 {
 					timeNano = cont.Value
 				} else if len(cont.Value) == 10 {
+					// second
 					timeNano = cont.Value + "000000000"
 				} else if len(cont.Value) == 13 {
+					// millisecond
 					timeNano = cont.Value + "000000"
 				}
 				continue
@@ -270,7 +272,7 @@ TraverseLogArray:
 
 		if timeNano == "" {
 			if p.MetricTimeKey != "" {
-				p.logWarning(errInvalidMetricTime)
+				p.logError(errInvalidMetricTime)
 				continue TraverseLogArray
 			}
 			// log.Time = (uint32)(time.Now().Unix())
@@ -279,19 +281,19 @@ TraverseLogArray:
 
 		// The number of labels must be equal to the number of label fields.
 		if len(labelExisted) != len(p.MetricLabelKeys) {
-			p.logWarning(errInvalidMetricLabelKeyCount)
+			p.logError(errInvalidMetricLabelKeyCount)
 			continue TraverseLogArray
 		}
 
 		// The number of names must be equal to the number of name fields.
 		if len(names) != len(p.metricNamesMap) {
-			p.logWarning(errInvalidMetricNameCount)
+			p.logError(errInvalidMetricNameCount)
 			continue TraverseLogArray
 		}
 
 		// The number of values must be equal to the number of value fields.
 		if len(values) != len(p.metricValuesMap) {
-			p.logWarning(errInvalidMetricValueCount)
+			p.logError(errInvalidMetricValueCount)
 			continue TraverseLogArray
 		}
 
@@ -328,7 +330,7 @@ TraverseLogArray:
 	return metricLogs
 }
 
-func (p *ProcessorLogToSlsMetric) logWarning(err error) {
+func (p *ProcessorLogToSlsMetric) logError(err error) {
 	if !p.IgnoreError {
 		logger.Error(p.context.GetRuntimeContext(), processorLogWarningAlarmType, "process log error", err)
 	}
