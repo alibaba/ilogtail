@@ -257,14 +257,19 @@ TraverseLogArray:
 					p.logError(errInvalidMetricTime)
 					continue TraverseLogArray
 				}
-				if len(cont.Value) == 19 {
+				switch len(cont.Value) {
+				case 19:
+					// nanosecond
 					timeNano = cont.Value
-				} else if len(cont.Value) == 10 {
-					// second
-					timeNano = cont.Value + "000000000"
-				} else if len(cont.Value) == 13 {
+				case 16:
+					// microsecond
+					timeNano = cont.Value + "000"
+				case 13:
 					// millisecond
 					timeNano = cont.Value + "000000"
+				case 10:
+					// second
+					timeNano = cont.Value + "000000000"
 				}
 				continue
 			}
@@ -352,7 +357,8 @@ func canParseToFloat64(s string) bool {
 }
 
 func isTimeNano(t string) bool {
-	if len(t) != 19 && len(t) != 10 && len(t) != 13 {
+	length := len(t)
+	if length != 19 && length != 16 && length != 13 && length != 10 {
 		return false
 	}
 	for _, c := range t {
