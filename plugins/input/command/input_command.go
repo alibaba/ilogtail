@@ -17,11 +17,12 @@ package command
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/config"
 	"os/user"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/alibaba/ilogtail/pkg/config"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
@@ -160,6 +161,16 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 		return err
 	}
 
+	if stderrStr != "" {
+		if in.IgnoreError {
+			err = nil
+		} else {
+			err = fmt.Errorf("exec cmd error, stderr:%s, stdout:%s", stderrStr, stdoutStr)
+			logger.Error(in.context.GetRuntimeContext(), "OBSERVER_RUNTIME_ALARM", "input_command Collect error", err)
+		}
+		return err
+	}
+
 	var outSplitArr []string
 	if in.LineSplitSep != "" {
 		outSplitArr = strings.Split(stdoutStr, in.LineSplitSep)
@@ -176,12 +187,6 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 					Value: splitStr,
 				},
 			},
-		}
-		if len(stderrStr) > 0 {
-			log.Contents = append(log.Contents, &protocol.Log_Content{
-				Key:   "stderr",
-				Value: stderrStr,
-			})
 		}
 		collector.AddRawLog(log)
 	}

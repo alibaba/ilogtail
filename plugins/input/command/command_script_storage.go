@@ -24,6 +24,7 @@ import (
 	"os/user"
 	"path"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -89,6 +90,10 @@ func RunCommandWithTimeOut(timeout int, user *user.User, command string, environ
 		Uid: uint32(uid),
 		Gid: uint32(gid),
 	}
+	defer func() {
+		stdout = strings.TrimSpace(stdoutBuf.String())
+		stderr = strings.TrimSpace(stderrBuf.String())
+	}()
 
 	// start
 	if err = cmd.Start(); err != nil {
@@ -99,10 +104,6 @@ func RunCommandWithTimeOut(timeout int, user *user.User, command string, environ
 	if err != nil {
 		return
 	}
-
-	stdout = string(bytes.TrimSpace(stdoutBuf.Bytes()))
-	// stderr is a string representation of the trimmed standard error output.
-	stderr = string(bytes.TrimSpace(stderrBuf.Bytes()))
 
 	return
 }
