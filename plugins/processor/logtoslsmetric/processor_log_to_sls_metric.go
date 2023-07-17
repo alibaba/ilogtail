@@ -69,7 +69,7 @@ var (
 	errInvalidMetricNameCount  = errors.New("the number of metric names must be equal to the number of MetricValues")
 	errInvalidMetricValueCount = errors.New("the number of metric values must be equal to the number of MetricValues")
 
-	errInvalidMetricTime = errors.New("the value of MetricTime must be a valid Unix timestamp")
+	errInvalidMetricTime = errors.New("the value of MetricTime must be a valid Unix timestamp in second or millisecond or microsecond or nanosecond")
 
 	errFieldRepeated = errors.New("the field is repeated")
 )
