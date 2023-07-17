@@ -78,7 +78,6 @@ std::vector<std::pair<std::string, std::string>> Metrics::GetLabels() {
     return mLabels;
 }
 
-
 Metrics* Metrics::Copy() {
     std::vector<std::pair<std::string, std::string>> newLabels;
     for (std::vector<std::pair<std::string, std::string>>::iterator it = mLabels.begin(); it != mLabels.end(); ++it) {
@@ -99,28 +98,34 @@ Metrics* WriteMetrics::CreateMetrics(std::vector<std::pair<std::string, std::str
     
     Metrics* oldHead = mHead;
     mHead = cur;
-    mHead -> next = oldHead;
+    mHead->next = oldHead;
     return cur;
 }
 
 
+// mark as deleted
 void WriteMetrics::DestroyMetrics(Metrics* metrics) {
-    // mark as delete
+    // deleted is atomic_bool, no need to lock
     metrics->MarkDeleted();    
 }
 
 
 Metrics* WriteMetrics::DoSnapshot() {
+    // new read head
     Metrics* snapshot = NULL;
-    Metrics* wTmp = NULL;
-    Metrics* wTmpHead = NULL;
-
-    Metrics* tmp = mHead;
+    // new read head iter
     Metrics* rTmp ;
+    // new write head
+    Metrics* wTmpHead = NULL;
+    // new write head iter
+    Metrics* wTmp = NULL;
+    // old head iter
+    Metrics* tmp = mHead;
+
     while(tmp) {
         if (tmp->IsDeleted()) {
             Metrics* toDeleted = tmp;
-            tmp = tmp -> next;
+            tmp = tmp->next;
             delete toDeleted;
             continue;
         }
@@ -129,14 +134,14 @@ Metrics* WriteMetrics::DoSnapshot() {
         if (!snapshot) {
             wTmpHead = tmp;
             wTmp = wTmpHead;
-            tmp = tmp -> next;
+            tmp = tmp->next;
             snapshot = newMetrics;
             rTmp = snapshot;
             continue;
         }
-        wTmp -> next = tmp;
-        tmp = tmp -> next;
-        rTmp -> next = newMetrics;
+        wTmp->next = tmp;
+        tmp = tmp->next;
+        rTmp->next = newMetrics;
         rTmp = newMetrics;
     }
     {
@@ -146,10 +151,14 @@ Metrics* WriteMetrics::DoSnapshot() {
     return snapshot;
 }
 
-void ReadMetrics::Read() {
+void ReadMetrics::ReadAsLogGroup() {
     ReadLock lock(mReadWriteLock);
+    // Do some read
+}
 
-      // Do some read
+void ReadMetrics::ReadAsPrometheus() {
+    ReadLock lock(mReadWriteLock);
+    // Do some read
 }
 
 void ReadMetrics::UpdateMetrics() {
@@ -160,7 +169,7 @@ void ReadMetrics::UpdateMetrics() {
         mHead = snapshot;
         mReadWriteLock.unlock();
     }
-    // do deletion
+    // delete old linklist
     while(toDelete) {
         Metrics* obj = toDelete;
         toDelete = toDelete->next;

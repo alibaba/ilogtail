@@ -17,9 +17,6 @@ MetricExportor::MetricExportor() {
 
 void MetricExportor::pushMetrics() {
      LOG_INFO(sLogger, ("pushMetrics", ""));
-    //pushInstanceMetric(false);
-    //pushPluginMetric(false);
-    //pushSubPluginMetric(false);
 }
 
 

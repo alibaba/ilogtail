@@ -56,7 +56,6 @@ class WriteMetrics {
         }
         Metrics* CreateMetrics(std::vector<std::pair<std::string, std::string>> Labels);
         void DestroyMetrics(Metrics* metrics);
-        void ClearDeleted();
         Metrics* DoSnapshot();
         // empty head node
         Metrics* mHead = NULL;

@@ -27,15 +27,6 @@ private:
     MetricExportor();
     ~MetricExportor() {}
 
-
-    /*
-    void snapshotMetrics(bool force);
-    void pushInstanceMetric(bool forceSend);
-    void snapshotPluginMetrics();
-    void BuildLogFromMetric(sls_logs::LogGroup& logGroup, PipelineMetricPtr pipelineMetric);
-    std::string BuildMetricLabel(std::unordered_map<std::string, std::string> labels); 
-    std::list<PipelineMetricPtr> mSnapshotPipelineMetrics;
-    */
     ProfileSender mProfileSender;
     int32_t mSendInterval;
     int32_t mLastSendTime;
