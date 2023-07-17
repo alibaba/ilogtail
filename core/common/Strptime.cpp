@@ -29,9 +29,10 @@
 
 #include <ctype.h>
 #include <string.h>
-#include <time.h>
 #include <stdlib.h>
+#include "Strptime.h"
 
+namespace logtail {
 /*
  * We do not implement alternate representations. However, we always
  * check whether a given modifier is allowed for a certain conversion.
@@ -73,10 +74,11 @@ static const char* abmon[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
 static const char* am_pm[2] = {"AM", "PM"};
 
 static const unsigned char* conv_num(const unsigned char*, int*, unsigned int, unsigned int);
+static const unsigned char* conv_nanosecond(const unsigned char*, long*);
 static const unsigned char* find_string(const unsigned char*, int*, const char* const*, const char* const*, int);
 
 
-const char* strptime(const char* buf, const char* fmt, struct tm* tm) {
+const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* nanosecond) {
     // Replenish %s support.
     if (0 == strcmp("%s", fmt)) {
         char* cp;
@@ -85,9 +87,16 @@ const char* strptime(const char* buf, const char* fmt, struct tm* tm) {
         time_t t;
         if ((long long)(t = n) != n)
             return NULL;
+        #ifdef _MSC_VER
         if (localtime_s(tm, &t) != 0)
             return NULL;
-        return cp;
+        #else
+        if (NULL == localtime_r(&t, tm))
+            return NULL;
+        #endif
+
+        conv_nanosecond((const unsigned char*)(buf + 10), nanosecond);
+        return ((const char*)cp);
     }
 
     unsigned char c;
@@ -175,7 +184,7 @@ const char* strptime(const char* buf, const char* fmt, struct tm* tm) {
             case 'x': /* The date, using the locale's format. */
                 new_fmt = "%m/%d/%y";
             recurse:
-                bp = (const unsigned char*)strptime((const char*)bp, new_fmt, tm);
+                bp = (const unsigned char*)strptime_ns((const char*)bp, new_fmt, tm, nanosecond);
                 LEGAL_ALT(ALT_E);
                 continue;
 
@@ -210,6 +219,11 @@ const char* strptime(const char* buf, const char* fmt, struct tm* tm) {
             case 'd': /* The day of month. */
             case 'e':
                 bp = conv_num(bp, &tm->tm_mday, 1, 31);
+                LEGAL_ALT(ALT_O);
+                continue;
+
+            case 'f': /* Nanosecond */
+                bp = conv_nanosecond(bp, nanosecond);
                 LEGAL_ALT(ALT_O);
                 continue;
 
@@ -530,6 +544,28 @@ static const unsigned char* conv_num(const unsigned char* buf, int* dest, unsign
     return buf;
 }
 
+static const unsigned char* conv_nanosecond(const unsigned char* buf, long* dest) {
+    unsigned int result = 0;
+    unsigned char ch;
+    int digitNum = 0;
+
+    ch = *buf;
+    if (ch < '0' || ch > '9')
+        return NULL;
+
+    do {
+        result *= 10;
+        result += ch - '0';
+        ++digitNum;
+        ch = *++buf;
+    } while (ch >= '0' && ch <= '9');
+    for (int i = 0; i < 9 - digitNum; i++) {
+        result *= 10;
+    }
+    *dest = result;
+    return buf;
+}
+
 static int strncasecmp(const char* s1, const char* s2, size_t n) {
     if (n == 0)
         return 0;
@@ -563,3 +599,5 @@ find_string(const unsigned char* bp, int* tgt, const char* const* n1, const char
     /* Nothing matched */
     return NULL;
 }
+
+} // namespace logtail

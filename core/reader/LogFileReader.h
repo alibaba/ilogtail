@@ -228,7 +228,7 @@ public:
     virtual bool ParseLogLine(const char* buffer,
                               sls_logs::LogGroup& logGroup,
                               ParseLogError& error,
-                              time_t& lastLogLineTime,
+                              LogtailTime& lastLogLineTime,
                               std::string& lastLogTimeStr,
                               uint32_t& logGroupSize)
         = 0;
@@ -555,7 +555,7 @@ protected:
     bool ParseLogLine(const char* buffer,
                       sls_logs::LogGroup& logGroup,
                       ParseLogError& error,
-                      time_t& lastLogLineTime,
+                      LogtailTime& lastLogLineTime,
                       std::string& lastLogTimeStr,
                       uint32_t& logGroupSize);
 
@@ -586,7 +586,7 @@ private:
     bool ParseLogLine(const char* buffer,
                       sls_logs::LogGroup& logGroup,
                       ParseLogError& error,
-                      time_t& lastLogLineTime,
+                      LogtailTime& lastLogLineTime,
                       std::string& lastLogTimeStr,
                       uint32_t& logGroupSize);
 

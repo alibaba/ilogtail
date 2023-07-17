@@ -120,9 +120,8 @@ LogParser::ApsaraEasyReadLogTimeParser(const char* buffer, string& timeStr, time
 
 void LogParser::AddUnmatchLog(const char* buffer, sls_logs::LogGroup& logGroup, uint32_t& logGroupSize) {
     Log* logPtr = logGroup.add_logs();
-    timespec ts;
-    clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-    SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
+    auto now = GetCurrentLogtailTime();
+    SetLogTime(logPtr, now.tv_sec, now.tv_nsec);
     AddLog(logPtr, UNMATCH_LOG_KEY, buffer, logGroupSize);
 }
 
@@ -155,7 +154,7 @@ static bool StdRegexLogLineParser(const char* buffer,
                                   const PreciseTimestampConfig& preciseTimestampConfig,
                                   const uint32_t timeIndex,
                                   string& timeStr,
-                                  time_t& logTime,
+                                  LogtailTime& logTime,
                                   int32_t specifiedYear,
                                   const string& projectName,
                                   const string& region,
@@ -246,7 +245,7 @@ static bool StdRegexLogLineParser(const char* buffer,
 
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
-        SetLogTime(logPtr, logTime, GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, preciseTimestampConfig.unit));
+        SetLogTime(logPtr, logTime.tv_sec, logTime.tv_nsec);
         if (preciseTimestampConfig.enabled) {
             LogParser::AddLog(logPtr, preciseTimestampConfig.key, std::to_string(preciseTimestamp), logGroupSize);
         }
@@ -273,7 +272,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                                    const PreciseTimestampConfig& preciseTimestampConfig,
                                    const uint32_t timeIndex,
                                    string& timeStr,
-                                   time_t& logTime,
+                                   LogtailTime& logTime,
                                    int32_t specifiedYear,
                                    const string& projectName,
                                    const string& region,
@@ -372,7 +371,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
 
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
-        SetLogTime(logPtr, logTime, GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, preciseTimestampConfig.unit));
+        SetLogTime(logPtr, logTime.tv_sec, logTime.tv_nsec);
         for (uint32_t i = 0; i < keys.size(); i++) {
             AddLog(logPtr, keys[i], what[i + 1].str(), logGroupSize);
         }
@@ -392,8 +391,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                                    bool discardUnmatch,
                                    const vector<string>& keys,
                                    const string& category,
-                                   time_t logTime,
-                                   long timeNs,
+                                   LogtailTime logTime,
                                    const string& projectName,
                                    const string& region,
                                    const string& logPath,
@@ -458,7 +456,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
     }
 
     Log* logPtr = logGroup.add_logs();
-    SetLogTime(logPtr, logTime, timeNs); // current system time, no need history check
+    SetLogTime(logPtr, logTime.tv_sec, logTime.tv_nsec); // current system time, no need history check
     for (uint32_t i = 0; i < keys.size(); i++) {
         AddLog(logPtr, keys[i], what[i + 1].str(), logGroupSize);
     }
@@ -467,7 +465,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
 
 bool LogParser::ParseLogTime(const char* buffer,
                              std::string& timeStr,
-                             time_t& logTime,
+                             LogtailTime& logTime,
                              uint64_t& preciseTimestamp,
                              const std::string& curTimeStr,
                              const char* timeFormat,
@@ -480,28 +478,25 @@ bool LogParser::ParseLogTime(const char* buffer,
                              ParseLogError& error,
                              int32_t tzOffsetSecond) {
     if (IsPrefixString(curTimeStr, timeStr) == false) {
-        struct tm tm;
-        memset(&tm, 0, sizeof(tm));
         // In order to handle timestamp not in seconds, curTimeStr will be truncated,
         // only the front 10 charaters will be used.
         // NOTE: This method can only work until 2286/11/21 1:46:39 (9999999999).
         bool keepTimeStr = (strcmp("%s", timeFormat) != 0);
         const char* strptimeResult = NULL;
         if (keepTimeStr) {
-            strptimeResult = Strptime(curTimeStr.c_str(), timeFormat, &tm, specifiedYear);
+            strptimeResult = Strptime(curTimeStr.c_str(), timeFormat, &logTime, specifiedYear);
         } else {
-            strptimeResult = Strptime(curTimeStr.substr(0, 10).c_str(), timeFormat, &tm);
+            strptimeResult = Strptime(curTimeStr.substr(0, 10).c_str(), timeFormat, &logTime);
         }
         if (NULL == strptimeResult) {
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
                 if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                     LOG_WARNING(sLogger,
                                 ("parse time fail", curTimeStr)("project", projectName)("logstore", category)(
-                                    "file", logPath)("keep time str", keepTimeStr));
+                                    "file", logPath));
                 }
                 LogtailAlarm::GetInstance()->SendAlarm(PARSE_TIME_FAIL_ALARM,
-                                                       curTimeStr + " " + timeFormat
-                                                           + " flag: " + std::to_string(keepTimeStr),
+                                                       curTimeStr + " " + timeFormat,
                                                        projectName,
                                                        category,
                                                        region);
@@ -510,31 +505,28 @@ bool LogParser::ParseLogTime(const char* buffer,
             error = PARSE_LOG_TIMEFORMAT_ERROR;
             return false;
         }
-        tm.tm_isdst = -1;
-        logTime = mktime(&tm);
-        timeStr = ConvertToTimeStamp(logTime, timeFormat);
+        timeStr = ConvertToTimeStamp(logTime.tv_sec, timeFormat);
 
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(logTime, strptimeResult, preciseTimestampConfig, tzOffsetSecond);
+            preciseTimestamp = GetPreciseTimestamp(logTime, preciseTimestampConfig, tzOffsetSecond);
         }
     } else {
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(
-                logTime, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, tzOffsetSecond);
+            preciseTimestamp = GetPreciseTimestamp(logTime, preciseTimestampConfig, tzOffsetSecond);
         }
     }
 
-    if (logTime <= 0
+    if (logTime.tv_sec <= 0
         || (BOOL_FLAG(ilogtail_discard_old_data)
-            && (time(NULL) - logTime + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval))) {
+            && (time(NULL) - logTime.tv_sec + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval))) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(sLogger,
-                            ("discard history data", buffer)("timestamp", logTime)("project", projectName)(
+                            ("discard history data", buffer)("time now", time(NULL))("timestamp", logTime.tv_sec)("nanosecond", logTime.tv_nsec)("tzOffsetSecond", tzOffsetSecond)("INT32_FLAG(ilogtail_discard_interval)", INT32_FLAG(ilogtail_discard_interval))("project", projectName)(
                                 "logstore", category)("file", logPath));
             }
             LogtailAlarm::GetInstance()->SendAlarm(
-                OUTDATED_LOG_ALARM, string("logTime: ") + ToString(logTime), projectName, category, region);
+                OUTDATED_LOG_ALARM, string("logTime: ") + ToString(logTime.tv_sec), projectName, category, region);
         }
         error = PARSE_LOG_HISTORY_ERROR;
         return false;
@@ -543,9 +535,9 @@ bool LogParser::ParseLogTime(const char* buffer,
 }
 
 bool LogParser::WholeLineModeParser(
-    const char* buffer, LogGroup& logGroup, const string& key, time_t logTime, long timeNs, uint32_t& logGroupSize) {
+    const char* buffer, LogGroup& logGroup, const string& key, LogtailTime& logTime, uint32_t& logGroupSize) {
     Log* logPtr = logGroup.add_logs();
-    SetLogTime(logPtr, logTime, timeNs); // current system time, no need history check
+    SetLogTime(logPtr, logTime.tv_sec, logTime.tv_nsec); // current system time, no need history check
     AddLog(logPtr, key, buffer, logGroupSize);
     return true;
 }

@@ -410,7 +410,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 // linesCount += lines;
                 // LOG_INFO(sLogger, ("Logprocess lines", lines)("Total lines", linesCount));
                 LogGroup logGroup;
-                time_t lastLogLineTime = 0;
+                LogtailTime lastLogLineTime;
                 string lastLogTimeStr = "";
                 uint32_t logGroupSize = 0;
                 int32_t successLogSize = 0;
