@@ -1,7 +1,6 @@
 package command
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
 	"os/user"
@@ -15,15 +14,17 @@ import (
 )
 
 type InputCommand struct {
-	ScriptType          string `comment:"脚本类型, bash, shell，python2，python3"`
-	User                string `comment:"执行的用户"`
-	ScriptContent       string `comment:"脚本内容 PlainText|Base64  两种格式"`
-	ContentEncoding     string `comment:"指定脚本格式  PlainText|Base64"`
-	LineSplitSep        string `comment:"分隔符"`
-	TimeoutMilliSeconds int    `comment:"执行一次collect的超时时间，超时后会通知context.Alarm 单位毫秒,  不超过collect的采集频率"`
-	ScriptDataDir       string `comment:"执行脚本的存放目前"`
-	CmdPath             string `comment:"需要执行可执行命令的路径  默认/usr/bin/${bin}"`
-	IntervalMs          int    `comment:"collect触发频率  单位毫秒"`
+	ScriptType          string   `comment:"Type of script: bash, shell, python2, python3"`
+	User                string   `comment:"User executing the script"`
+	ScriptContent       string   `comment:"Content of the script"`
+	ContentEncoding     string   `comment:"Encoding format of the script: PlainText|Base64"`
+	LineSplitSep        string   `comment:"Separator used for splitting lines"`
+	TimeoutMilliSeconds int      `comment:"Timeout period for script execution in milliseconds. If the execution exceeds this timeout, the context.Alarm will be triggered"`
+	ScriptDataDir       string   `comment:"Directory where the script is stored"`
+	CmdPath             string   `comment:"Path where the executable command needs to be executed"`
+	IntervalMs          int      `comment:"Frequency at which the collection is triggered in milliseconds"`
+	Environments        []string `comment:"Environment variables"`
+	IgnoreError         bool     `comment:"Environment variables"`
 
 	context         pipeline.Context
 	storageInstance ScriptStorage
@@ -33,13 +34,13 @@ type InputCommand struct {
 
 func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 	in.context = context
-	//执行校验
-	valid, err := in.Validate()
-	if err != nil || !valid {
+
+	if valid, err := in.Validate(); err != nil || !valid {
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
 		return 0, err
 	}
 
-	//解析Base64内容
+	// Parse Base64 content
 	if in.ContentEncoding == ContentTypeBase64 {
 		decodeContent, err := base64.StdEncoding.DecodeString(in.ScriptContent)
 		if err != nil {
@@ -48,86 +49,98 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 		in.ScriptContent = string(decodeContent)
 	}
 
+	// get dir
 	storageInstance = GetStorage(in.ScriptDataDir)
 	if storageInstance.Err != nil {
-		return 0, fmt.Errorf("init storageInstance error : %s", storageInstance.Err)
+		err := fmt.Errorf("init storageInstance error : %s", storageInstance.Err)
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		return 0, err
 	}
-	scriptPath, err := storageInstance.SaveContent(in.ScriptContent, in.ScriptType)
+	in.storageInstance = *storageInstance
+
+	// save ScriptContent
+	scriptPath, err := storageInstance.SaveContent(in.ScriptContent, in.context.GetConfigName(), in.ScriptType)
+	if err != nil {
+		err = fmt.Errorf("storageInstance.SaveContent error: %s", err)
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		return 0, err
+	}
+	in.scriptPath = scriptPath
+
+	// Lookup looks up the user
+	cmdUser, err := user.Lookup(in.User)
+	if err != nil {
+		err = fmt.Errorf("cannot find cmdUser %s, error: %s", in.User, err)
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		return 0, err
+	}
+	in.cmdUser = cmdUser
+
 	if in.CmdPath == "" {
 		in.CmdPath = ScriptTypeToSuffix[in.ScriptType].defaultCmdPath
 	}
-	if err != nil {
-		return 0, fmt.Errorf("storageInstance.SaveContent error: %s", err)
-	}
-	in.storageInstance = *storageInstance
-	in.scriptPath = scriptPath
-
-	user, err := user.Lookup(in.User)
-	if err != nil {
-		return 0, fmt.Errorf("cannot find user %s, error: %s", in.User, err)
-	}
-	in.cmdUser = user
 	return 0, nil
 }
 
 func (in *InputCommand) Validate() (bool, error) {
 	if _, ok := ScriptTypeToSuffix[in.ScriptType]; !ok {
-		return false, fmt.Errorf("not support ScriptType %s", in.ScriptType)
+		err := fmt.Errorf("not support ScriptType %s", in.ScriptType)
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		return false, err
 	}
 
 	if in.User == UserRoot {
-		//return false, fmt.Errorf("exec command not support user root")
-	} else if len(in.User) == 0 {
-		return false, fmt.Errorf("params User can not be empty")
+		err := fmt.Errorf("exec command not support user root")
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		return false, err
+	}
+
+	if in.User == "" {
+		err := fmt.Errorf("params ExecUser can not be empty")
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		return false, err
 	}
 
 	if _, ok := SupportContentType[in.ContentEncoding]; !ok {
-		return false, fmt.Errorf("not support ContentType %s", in.ContentEncoding)
+		err := fmt.Errorf("not support ContentType %s", in.ContentEncoding)
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		return false, err
 	}
 
 	if in.ScriptContent == "" {
-		return false, fmt.Errorf("params ScriptContent can not empty")
+		err := fmt.Errorf("params ScriptContent can not empty")
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		return false, err
 	}
 
 	if in.TimeoutMilliSeconds > in.IntervalMs {
-		return false, fmt.Errorf("not support ExecScriptTimeOut > IntervalMs(脚本执行时间不能大于采集的频率)")
+		in.TimeoutMilliSeconds = in.IntervalMs
+		logger.Warning(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command warning", "TimeoutMilliSeconds > IntervalMs", "set TimeoutMilliSeconds = IntervalMs")
 	}
 	return true, nil
 }
 
-func (in *InputCommand) ExecScript(filePath string) (string, error) {
-	stdoutStr, stderrStr, isKilled, err := RunCommandWithTimeOut(in.TimeoutMilliSeconds, in.cmdUser, in.CmdPath, in.scriptPath)
-	if err != nil {
-		return "", fmt.Errorf("exec cmd error errInfo:%s, stderr:%s, stdout:%s", err, stderrStr, stdoutStr)
-	}
-	if isKilled {
-		fmt.Println("timeout run exec script file filepath", filePath)
-		return "", fmt.Errorf("timeout run exec script file filepath %s", filePath)
-	}
-	if stderrStr != "" {
-		fmt.Println("run exec script file filepath", filePath, "stderr", stderrStr, "stdout", stdoutStr)
-	}
-	return stdoutStr, nil
-}
-
 func (in *InputCommand) Collect(collector pipeline.Collector) error {
-	stdoutStr, stderrStr, isKilled, err := RunCommandWithTimeOut(in.TimeoutMilliSeconds, in.cmdUser, in.CmdPath, in.scriptPath)
+	stdoutStr, stderrStr, isKilled, err := RunCommandWithTimeOut(in.TimeoutMilliSeconds, in.cmdUser, in.CmdPath, in.Environments, in.scriptPath)
 
 	if err != nil {
-		return fmt.Errorf("exec cmd error errInfo:%s, stderr:%s, stdout:%s", err, stderrStr, stdoutStr)
+		err = fmt.Errorf("exec cmd error errInfo:%s, stderr:%s, stdout:%s", err, stderrStr, stdoutStr)
+		in.collectError("INPUT_Collect_ALARM", "input_command Collect error", err)
+		return err
 	}
+
 	if isKilled {
-		return fmt.Errorf("timeout run exec script file filepath %s", in.scriptPath)
+		err = fmt.Errorf("timeout run exec script file filepath %s", in.scriptPath)
+		in.collectError("INPUT_Collect_ALARM", "input_command Collect error", err)
+		return err
 	}
-	if len(stderrStr) != 0 {
-		fmt.Println("run exec script file ", in.scriptPath, "stderr", stderrStr, "stdout", stdoutStr)
+
+	var outSplitArr []string
+	if in.LineSplitSep != "" {
+		outSplitArr = strings.Split(stdoutStr, in.LineSplitSep)
+	} else {
+		outSplitArr = []string{stdoutStr}
 	}
-
-	logger.Infof(context.Background(), "exec output return [%s]", stdoutStr)
-
-	outSplitArr := strings.Split(stdoutStr, in.LineSplitSep)
-
-	logger.Infof(context.Background(), "outSplitArr len %d", len(outSplitArr))
 
 	for _, splitStr := range outSplitArr {
 		log := &protocol.Log{
@@ -135,11 +148,7 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 			Contents: []*protocol.Log_Content{
 				{
 					Key:   models.ContentKey,
-					Value: string(splitStr),
-				},
-				{
-					Key:   ScriptMd5,
-					Value: in.storageInstance.ScriptMd5,
+					Value: splitStr,
 				},
 			},
 		}
@@ -154,15 +163,20 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
+func (in *InputCommand) collectError(alarmType string, kvPairs ...interface{}) {
+	if in.IgnoreError {
+		logger.Error(in.context.GetRuntimeContext(), "INPUT_Collect_ALARM", alarmType, kvPairs)
+	}
+}
+
 func (in *InputCommand) Description() string {
-	return "Collect the metrics by exec script "
+	return "Collect logs through exec command "
 }
 
 func init() {
 	pipeline.MetricInputs[pluginName] = func() pipeline.MetricInput {
 		return &InputCommand{
 			ContentEncoding:     defaultContentType,
-			LineSplitSep:        defaultLineSplitSep,
 			IntervalMs:          defaultIntervalMs,
 			TimeoutMilliSeconds: defaltExecScriptTimeOut,
 		}
