@@ -67,7 +67,7 @@ Counter* Metrics::CreateCounter(std::string name) {
 
 
 void Metrics::MarkDeleted() {
-    mDeleted = true;
+    mDeleted.store(true);
 }
 
 bool Metrics::IsDeleted() {
@@ -93,12 +93,14 @@ Metrics* Metrics::Copy() {
 }
 
 Metrics* WriteMetrics::CreateMetrics(std::vector<std::pair<std::string, std::string>> labels) {
-    std::lock_guard<std::mutex> lock(mMutex);
-    Metrics* cur = new Metrics(labels);
-    
+    Metrics* cur = new Metrics(labels);    
+    // add metric to head
     Metrics* oldHead = mHead;
-    mHead = cur;
-    mHead->next = oldHead;
+    {
+        std::lock_guard<std::mutex> lock(mMutex);
+        mHead = cur;
+        mHead->next = oldHead;
+    }
     return cur;
 }
 
@@ -144,6 +146,7 @@ Metrics* WriteMetrics::DoSnapshot() {
         rTmp->next = newMetrics;
         rTmp = newMetrics;
     }
+    // Only lock when change head
     {
         std::lock_guard<std::mutex> lock(mMutex);
         mHead = wTmpHead;
@@ -165,6 +168,7 @@ void ReadMetrics::UpdateMetrics() {
     Metrics* snapshot = mWriteMetrics->DoSnapshot();
     Metrics* toDelete = mHead;
     {
+        // Only lock when change head
         mReadWriteLock.lock();
         mHead = snapshot;
         mReadWriteLock.unlock();

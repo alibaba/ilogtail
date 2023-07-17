@@ -12,11 +12,9 @@ namespace logtail {
 class ILogtailMetricUnittest : public ::testing::Test {
 public:
     void TestCreateMetric();
-    void TestDeleteMetric();
 };
 
 APSARA_UNIT_TEST_CASE(ILogtailMetricUnittest, TestCreateMetric, 0);
-APSARA_UNIT_TEST_CASE(ILogtailMetricUnittest, TestDeleteMetric, 0);
 
 void ILogtailMetricUnittest::TestCreateMetric() {
     // create
@@ -59,9 +57,6 @@ void ILogtailMetricUnittest::TestCreateMetric() {
     }    
 }
 
-void ILogtailMetricUnittest::TestDeleteMetric() {
-    
-}
 }// namespace logtail
 
 int main(int argc, char** argv) {

@@ -71,7 +71,8 @@ class ReadMetrics {
             static ReadMetrics* ptr = new ReadMetrics();
             return ptr;
         }
-        void Read();
+        void ReadAsLogGroup();
+        void ReadAsPrometheus();
         void UpdateMetrics();
         Metrics* mHead = NULL;
         WriteMetrics* mWriteMetrics;
