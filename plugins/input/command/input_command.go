@@ -61,7 +61,7 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 	// save ScriptContent
 	scriptPath, err := storageInstance.SaveContent(in.ScriptContent, in.context.GetConfigName(), in.ScriptType)
 	if err != nil {
-		err = fmt.Errorf("storageInstance.SaveContent error: %s", err)
+		err = fmt.Errorf("SaveContent error: %s", err)
 		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
 		return 0, err
 	}
@@ -70,7 +70,7 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 	// Lookup looks up the user
 	cmdUser, err := user.Lookup(in.User)
 	if err != nil {
-		err = fmt.Errorf("cannot find cmdUser %s, error: %s", in.User, err)
+		err = fmt.Errorf("cannot find User %s, error: %s", in.User, err)
 		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
 		return 0, err
 	}
@@ -96,7 +96,7 @@ func (in *InputCommand) Validate() (bool, error) {
 	}
 
 	if in.User == "" {
-		err := fmt.Errorf("params ExecUser can not be empty")
+		err := fmt.Errorf("params User can not be empty")
 		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
 		return false, err
 	}
