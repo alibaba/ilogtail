@@ -52,7 +52,7 @@ func (storage *ScriptStorage) Init() {
 		return
 	}
 	// Create a directory
-	err = os.MkdirAll(storage.StorageDir, 0644)
+	err = os.MkdirAll(storage.StorageDir, 0755)
 	if err != nil {
 		storage.Err = fmt.Errorf("os.MkdirAll %s failed with error:%s", storage.StorageDir, err.Error())
 		return
@@ -67,7 +67,7 @@ func (storage *ScriptStorage) SaveContent(content string, configName, scriptType
 
 	filePath := path.Join(storage.StorageDir, fmt.Sprintf("%s.%s", fileName, suffix))
 
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0755); err != nil {
 		return "", err
 	}
 	return filePath, nil
