@@ -67,7 +67,7 @@ jobs:
         run: sudo make unittest_plugin
 
       - name: UnitTest PluginManager
-        run: make unittest_pluginmanager
+        run: sudo make unittest_pluginmanager
 
 
   result:
