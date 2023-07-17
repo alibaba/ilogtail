@@ -82,7 +82,7 @@ Metrics* Metrics::Copy() {
     std::vector<std::pair<std::string, std::string>> newLabels;
     for (std::vector<std::pair<std::string, std::string>>::iterator it = mLabels.begin(); it != mLabels.end(); ++it) {
         std::pair<std::string, std::string> pair = *it;
-        newLabels.push_back(pair);
+        newLabels.push_back(std::make_pair(pair.first, pair.second));
     }
     Metrics* metrics = new Metrics(newLabels);
     for (std::vector<Counter*>::iterator it = mValues.begin(); it != mValues.end(); ++it) {
