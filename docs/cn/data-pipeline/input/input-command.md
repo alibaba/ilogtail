@@ -26,16 +26,18 @@
 | IntervalMs          | int      | 否    | 采集触发频率，也是脚本执行的频率，单位为毫秒，默认为5000ms                                                                                                                        |
 | Environments        | []string | 否    | 环境变量，默认为os.Environ()的值，如果设置了Environments，则在os.Environ()的基础上追加设置的环境变量                                                                                    |
 
-* 采集配置
+* 采集配置1
 
 ```yaml
 enable: true
 inputs:
   - Type: input_command
-    User: someone
+    User: test
     ScriptType: shell
     ScriptContent:
-        echo -e "test metric commond"
+      echo -e "test metric commond"
+    Environments:
+      - "DEBUG=true"
 flushers:
   - Type: flusher_stdout
     OnlyStdout: true
@@ -47,5 +49,79 @@ flushers:
 {
     "content":"test metric commond",
     "__time__":"1680079323"
+}
+```
+
+* 采集配置2
+
+```yaml
+enable: true
+inputs:
+  - Type: input_command
+    User: test
+    ScriptType: python2
+    ScriptContent: |
+      print("test input_command 0")
+      print("test input_command 1")
+      print("test input_command 2")
+      print("test input_command 3")
+      print("test input_command 4")
+      print("test input_command 5")
+      print("test input_command 6")
+      print("test input_command 7")
+      print("test input_command 8")
+      print("test input_command 9")
+    CmdPath: /usr/bin/python
+    Environments:
+      - "DEBUG=true"
+    TimeoutMilliseconds: 1005
+flushers:
+  - Type: flusher_sls
+    Endpoint: cn-xxxxxx.log.aliyuncs.com
+    ProjectName: xxxxxx
+    LogstoreName: xxxxxx
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+* 输出
+
+```json
+{
+  "content":"test input_command 0\ntest input_command 1\ntest input_command 2\ntest input_command 3\ntest input_command 4\ntest input_command 5\ntest input_command 6\ntest input_command 7\ntest input_command 8\ntest input_command 9",
+  "__time__":"1689563358"
+}
+```
+
+* 采集配置3
+
+```yaml
+enable: true
+inputs:
+  - Type: input_command
+    User: test
+    ScriptType: python2
+    ScriptContent: |
+      import os
+      print os.environ
+    CmdPath: /usr/bin/python
+    Environments:
+      - "DEBUG=true"
+    TimeoutMilliseconds: 1005
+flushers:
+  - Type: flusher_sls
+    Endpoint: cn-xxxxxx.log.aliyuncs.com
+    ProjectName: xxxxxx
+    LogstoreName: xxxxxx
+  - Type: flusher_stdout
+    OnlyStdout: true
+```
+
+* 输出
+
+```json
+{
+  "content":"{'GOPATH': '/opt/go', 'GOROOT': '/usr/local/go',  'DEBUG': 'true', xxxxx(省略后面内容）}",
+  "__time__":"1689563758"
 }
 ```
