@@ -69,7 +69,7 @@ var (
 	errInvalidMetricNameCount  = errors.New("the number of metric names must be equal to the number of MetricValues")
 	errInvalidMetricValueCount = errors.New("the number of metric values must be equal to the number of MetricValues")
 
-	errInvalidMetricTime = errors.New("the value of __time_nano__ field must be a valid Unix timestamp in nanoseconds")
+	errInvalidMetricTime = errors.New("the value of MetricTime must be a valid Unix timestamp")
 
 	errFieldRepeated = errors.New("the field is repeated")
 )
