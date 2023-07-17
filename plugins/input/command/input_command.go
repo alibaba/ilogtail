@@ -17,7 +17,9 @@ package command
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/alibaba/ilogtail/pkg/config"
 	"os/user"
+	"path"
 	"strings"
 	"time"
 
@@ -39,17 +41,17 @@ type InputCommand struct {
 	Environments        []string `comment:"Environment variables"`
 	IgnoreError         bool     `comment:"Environment variables"`
 
-	context         pipeline.Context
-	storageInstance ScriptStorage
-	scriptPath      string
-	cmdUser         *user.User
+	context    pipeline.Context
+	storageDir string
+	scriptPath string
+	cmdUser    *user.User
 }
 
 func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 	in.context = context
 
 	if valid, err := in.Validate(); err != nil || !valid {
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		logger.Error(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command error", err)
 		return 0, err
 	}
 
@@ -62,20 +64,20 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 		in.ScriptContent = string(decodeContent)
 	}
 
-	// get dir
-	storageInstance = GetStorage()
-	if storageInstance.Err != nil {
-		err := fmt.Errorf("init storageInstance error : %s", storageInstance.Err)
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+	// mkdir
+	in.storageDir = path.Join(config.LogtailGlobalConfig.LogtailSysConfDir, "/scripts")
+	err := mkdir(in.storageDir)
+	if err != nil {
+		err = fmt.Errorf("init storageInstance error : %s", err)
+		logger.Error(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command error", err)
 		return 0, err
 	}
-	in.storageInstance = *storageInstance
 
 	// save ScriptContent
-	scriptPath, err := storageInstance.SaveContent(in.ScriptContent, in.context.GetConfigName(), in.ScriptType)
+	scriptPath, err := saveContent(in.storageDir, in.ScriptContent, in.context.GetConfigName(), in.ScriptType)
 	if err != nil {
 		err = fmt.Errorf("SaveContent error: %s", err)
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		logger.Error(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command error", err)
 		return 0, err
 	}
 	in.scriptPath = scriptPath
@@ -84,7 +86,7 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 	cmdUser, err := user.Lookup(in.User)
 	if err != nil {
 		err = fmt.Errorf("cannot find User %s, error: %s", in.User, err)
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		logger.Error(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command error", err)
 		return 0, err
 	}
 	in.cmdUser = cmdUser
@@ -98,42 +100,44 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 func (in *InputCommand) Validate() (bool, error) {
 	if _, ok := ScriptTypeToSuffix[in.ScriptType]; !ok {
 		err := fmt.Errorf("not support ScriptType %s", in.ScriptType)
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		logger.Error(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command error", err)
 		return false, err
 	}
 
 	if in.User == UserRoot {
 		err := fmt.Errorf("exec command not support user root")
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		logger.Error(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command error", err)
 		return false, err
 	}
 
 	if in.User == "" {
 		err := fmt.Errorf("params User can not be empty")
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		logger.Error(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command error", err)
 		return false, err
 	}
 
 	if _, ok := SupportContentType[in.ContentEncoding]; !ok {
 		err := fmt.Errorf("not support ContentType %s", in.ContentEncoding)
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		logger.Error(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command error", err)
 		return false, err
 	}
 
 	if in.ScriptContent == "" {
 		err := fmt.Errorf("params ScriptContent can not empty")
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
+		logger.Error(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command error", err)
 		return false, err
 	}
 
 	if in.TimeoutMilliSeconds > in.IntervalMs {
 		in.TimeoutMilliSeconds = in.IntervalMs
-		logger.Warning(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command warning", "TimeoutMilliSeconds > IntervalMs", "set TimeoutMilliSeconds = IntervalMs")
+		logger.Warning(in.context.GetRuntimeContext(), "LOGTAIL_CONFIG_ALARM", "init input_command warning", "TimeoutMilliSeconds > IntervalMs", "set TimeoutMilliSeconds = IntervalMs")
 	}
 	return true, nil
 }
 
 func (in *InputCommand) Collect(collector pipeline.Collector) error {
+	// stderrStr is used to store the standard error output generated during command execution.
+	// It captures any error messages or diagnostic information produced by the command.
 	stdoutStr, stderrStr, isKilled, err := RunCommandWithTimeOut(in.TimeoutMilliSeconds, in.cmdUser, in.CmdPath, in.Environments, in.scriptPath)
 
 	if err != nil {
@@ -141,7 +145,7 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 			err = nil
 		} else {
 			err = fmt.Errorf("exec cmd error errInfo:%s, stderr:%s, stdout:%s", err, stderrStr, stdoutStr)
-			logger.Error(in.context.GetRuntimeContext(), "INPUT_Collect_ALARM", "input_command Collect error", err)
+			logger.Error(in.context.GetRuntimeContext(), "OBSERVER_RUNTIME_ALARM", "input_command Collect error", err)
 		}
 		return err
 	}
@@ -151,7 +155,7 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 			err = nil
 		} else {
 			err = fmt.Errorf("timeout run exec script file filepath %s", in.scriptPath)
-			logger.Error(in.context.GetRuntimeContext(), "INPUT_Collect_ALARM", "input_command Collect error", err)
+			logger.Error(in.context.GetRuntimeContext(), "OBSERVER_RUNTIME_ALARM", "input_command Collect error", err)
 		}
 		return err
 	}

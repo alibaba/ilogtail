@@ -24,58 +24,39 @@ import (
 	"os/user"
 	"path"
 	"strconv"
-	"sync"
 	"syscall"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
-type ScriptStorage struct {
-	StorageDir string
-	Err        error
-}
-
-var storageOnce sync.Once
-var storageInstance *ScriptStorage
-
-func GetStorage() *ScriptStorage {
-	dataDir := path.Join(config.LogtailGlobalConfig.LogtailSysConfDir, "/scripts")
-	storageOnce.Do(func() {
-		storageInstance = &ScriptStorage{
-			StorageDir: dataDir,
-		}
-		storageInstance.Init()
-	})
-	return storageInstance
-}
-
-func (storage *ScriptStorage) Init() {
+func mkdir(dataDir string) error {
 	// if the dir exists
-	isExist, err := util.PathExists(storage.StorageDir)
+	isExist, err := util.PathExists(dataDir)
 	if err != nil {
-		storage.Err = fmt.Errorf("PathExists %s failed with error:%s", storage.StorageDir, err.Error())
-		return
+		err = fmt.Errorf("PathExists %s failed with error:%s", dataDir, err.Error())
+		return err
 	}
 	if isExist {
-		return
+		return nil
 	}
 	// Create a directory
-	err = os.MkdirAll(storage.StorageDir, 0755) //nolint:gosec
+	err = os.MkdirAll(dataDir, 0755) //nolint:gosec
 	if err != nil {
-		storage.Err = fmt.Errorf("os.MkdirAll %s failed with error:%s", storage.StorageDir, err.Error())
-		return
+		err = fmt.Errorf("os.MkdirAll %s failed with error:%s", dataDir, err.Error())
+		return err
 	}
+	return nil
 }
 
 // SaveContent save the script to the machine
-func (storage *ScriptStorage) SaveContent(content string, configName, scriptType string) (string, error) {
+func saveContent(dataDir string, content string, configName, scriptType string) (string, error) {
+	// Use the base64-encoded full name of the configuration as the filename to ensure that each configuration will only have one script.
 	fileName := base64.StdEncoding.EncodeToString([]byte(configName))
 
 	suffix := ScriptTypeToSuffix[scriptType].scriptSuffix
 
-	filePath := path.Join(storage.StorageDir, fmt.Sprintf("%s.%s", fileName, suffix))
+	filePath := path.Join(dataDir, fmt.Sprintf("%s.%s", fileName, suffix))
 
 	if err := os.WriteFile(filePath, []byte(content), 0755); err != nil { //nolint:gosec
 		return "", err
@@ -93,11 +74,10 @@ func RunCommandWithTimeOut(timeout int, user *user.User, command string, environ
 		cmd.Env = os.Environ()
 	}
 
-	// set std
-	var (
-		stdoutBuf bytes.Buffer
-		stderrBuf bytes.Buffer
-	)
+	var stdoutBuf bytes.Buffer
+	// stderrBuf is used to store the standard error output generated during command execution.
+	var stderrBuf bytes.Buffer
+
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
 
@@ -121,6 +101,7 @@ func RunCommandWithTimeOut(timeout int, user *user.User, command string, environ
 	}
 
 	stdout = string(bytes.TrimSpace(stdoutBuf.Bytes()))
+	// stderr is a string representation of the trimmed standard error output.
 	stderr = string(bytes.TrimSpace(stderrBuf.Bytes()))
 
 	return

@@ -255,12 +255,12 @@ func TestScriptStorage(t *testing.T) {
 	fmt.Printf("Username %s\n", u.Username)
 
 	content := `echo -e "__labels__:hostname#\$#idc_cluster_env_name|ip#\$#ip_address    __value__:0  __name__:metric_command_example"`
-	storage := GetStorage("./")
-	if storage.Err != nil {
-		t.Errorf("create Storage error %s", storage.Err)
+	err = mkdir("./")
+	if err != nil {
+		t.Errorf("create Storage error %s", err)
 		return
 	}
-	filepath, err := storage.SaveContent(content, "TestScriptStorage", "shell")
+	filepath, err := saveContent("./", content, "TestScriptStorage", "shell")
 	if err != nil {
 		t.Errorf("ScriptStorage save content error %s", err)
 		return
@@ -278,7 +278,7 @@ func TestScriptStorage(t *testing.T) {
 	fmt.Print("\n---TestScriptStorage filepath", filepath, "\n")
 
 	// Get again
-	filepath, _ = storage.SaveContent(content, "TestScriptStorage", "shell")
+	filepath, _ = saveContent("./", content, "TestScriptStorage", "shell")
 	data, _ = os.ReadFile(filepath)
 	if string(data) != content {
 		t.Errorf("content compare error")
