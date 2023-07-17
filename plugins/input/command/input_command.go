@@ -124,14 +124,22 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 	stdoutStr, stderrStr, isKilled, err := RunCommandWithTimeOut(in.TimeoutMilliSeconds, in.cmdUser, in.CmdPath, in.Environments, in.scriptPath)
 
 	if err != nil {
-		err = fmt.Errorf("exec cmd error errInfo:%s, stderr:%s, stdout:%s", err, stderrStr, stdoutStr)
-		in.collectError("INPUT_Collect_ALARM", "input_command Collect error", err)
+		if in.IgnoreError {
+			err = nil
+		} else {
+			err = fmt.Errorf("exec cmd error errInfo:%s, stderr:%s, stdout:%s", err, stderrStr, stdoutStr)
+			logger.Error(in.context.GetRuntimeContext(), "INPUT_Collect_ALARM", "input_command Collect error", err)
+		}
 		return err
 	}
 
 	if isKilled {
-		err = fmt.Errorf("timeout run exec script file filepath %s", in.scriptPath)
-		in.collectError("INPUT_Collect_ALARM", "input_command Collect error", err)
+		if in.IgnoreError {
+			err = nil
+		} else {
+			err = fmt.Errorf("timeout run exec script file filepath %s", in.scriptPath)
+			logger.Error(in.context.GetRuntimeContext(), "INPUT_Collect_ALARM", "input_command Collect error", err)
+		}
 		return err
 	}
 
@@ -161,12 +169,6 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 		collector.AddRawLog(log)
 	}
 	return nil
-}
-
-func (in *InputCommand) collectError(alarmType string, kvPairs ...interface{}) {
-	if !in.IgnoreError {
-		logger.Error(in.context.GetRuntimeContext(), "INPUT_Collect_ALARM", alarmType, kvPairs)
-	}
 }
 
 func (in *InputCommand) Description() string {
