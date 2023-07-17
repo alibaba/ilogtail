@@ -21,7 +21,6 @@
 | User                | String   | 是    | 执行该脚本内容的用户， 不支持root                                                                                                                                     |
 | ScriptContent       | String   | 是    | 脚本内容                                                                                                                                                    |
 | ContentEncoding     | String   | 否    | 脚本内容的文本格式 <br/> 支持PlainText(纯文本)\|Base64 默认:PlainText                                                                                                   |
-| ScriptDataDir       | String   | 否    | 存储脚本的目录路径，脚本在机器上会被存储为文件，指定存储目录时不能包含空格，默认为ilogtail的目录下，存储脚本的文件名为配置名的base64。                                                                              |
 | LineSplitSep        | String   | 否    | 脚本输出内容的分隔符，为空时不进行分割                                                                                                                                     |
 | CmdPath             | String   | 否    | 执行脚本命令的路径，如果与默认路径不一致，请指定命令路径。默认路径如下：<br/>- bash: /usr/bin/bash<br/>- shell: /usr/bin/sh<br/>- python2: /usr/bin/python2<br/>- python3: /usr/bin/python3 |
 | TimeoutMilliSeconds | int      | 否    | 执行脚本的超时时间，单位为毫秒，默认为3000ms                                                                                                                               |

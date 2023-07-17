@@ -24,7 +24,6 @@ import (
 	"os/user"
 	"path"
 	"strconv"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -41,11 +40,8 @@ type ScriptStorage struct {
 var storageOnce sync.Once
 var storageInstance *ScriptStorage
 
-func GetStorage(dataDir string) *ScriptStorage {
-	dataDir = strings.Trim(dataDir, " ")
-	if len(dataDir) == 0 {
-		dataDir = path.Join(config.LogtailGlobalConfig.LogtailSysConfDir, "/scripts")
-	}
+func GetStorage() *ScriptStorage {
+	dataDir := path.Join(config.LogtailGlobalConfig.LogtailSysConfDir, "/scripts")
 	storageOnce.Do(func() {
 		storageInstance = &ScriptStorage{
 			StorageDir: dataDir,

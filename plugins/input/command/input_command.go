@@ -34,7 +34,6 @@ type InputCommand struct {
 	ContentEncoding     string   `comment:"Encoding format of the script: PlainText|Base64"`
 	LineSplitSep        string   `comment:"Separator used for splitting lines"`
 	TimeoutMilliSeconds int      `comment:"Timeout period for script execution in milliseconds. If the execution exceeds this timeout, the context.Alarm will be triggered"`
-	ScriptDataDir       string   `comment:"Directory where the script is stored"`
 	CmdPath             string   `comment:"Path where the executable command needs to be executed"`
 	IntervalMs          int      `comment:"Frequency at which the collection is triggered in milliseconds"`
 	Environments        []string `comment:"Environment variables"`
@@ -64,7 +63,7 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 	}
 
 	// get dir
-	storageInstance = GetStorage(in.ScriptDataDir)
+	storageInstance = GetStorage()
 	if storageInstance.Err != nil {
 		err := fmt.Errorf("init storageInstance error : %s", storageInstance.Err)
 		logger.Error(in.context.GetRuntimeContext(), "INPUT_INIT_ALARM", "init input_command error", err)
