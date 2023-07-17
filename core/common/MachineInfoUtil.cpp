@@ -23,6 +23,7 @@
 #include <sys/utsname.h>
 #include <pwd.h>
 #include <netdb.h>
+#include <map>
 #elif defined(_MSC_VER)
 #include <WinSock2.h>
 #include <Windows.h>
@@ -161,6 +162,26 @@ std::string GetHostName() {
     return std::string(hostname);
 }
 
+std::map<std::string, std::string> GetNicIpv4Info(){
+    struct ifaddrs* ifAddrStruct = NULL;
+    struct ifaddrs* ifa = NULL;
+    void* tmpAddrPtr = NULL;
+    std::map<std::string, std::string> ifaMap;
+    getifaddrs(&ifAddrStruct);
+    for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr->sa_family == AF_INET) {
+            tmpAddrPtr = &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr;
+            char addressBuffer[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+            if(0 == strcmp("lo", ifa->ifa_name)){
+                continue;
+            }
+            ifaMap.insert(std::pair<std::string, std::string>(addressBuffer, ifa->ifa_name));
+        }
+    }
+    return ifaMap;
+}
+
 std::string GetHostIpByHostName() {
     std::string hostname = GetHostName();
 
@@ -175,7 +196,26 @@ std::string GetHostIpByHostName() {
         return "";
     }
 #if defined(__linux__)
-    struct in_addr* addr = (struct in_addr*)entry->h_addr_list[0];
+    std::map<std::string, std::string> ifaMap;
+    int i = 0;
+    ifaMap = GetNicIpv4Info();
+    if(!ifaMap.empty()){
+        int isExistValidIP = 0;
+        while (entry->h_addr_list[i] != NULL) {
+            struct in_addr addr;
+            memcpy(&addr, entry->h_addr_list[i], sizeof(struct in_addr));
+            auto item = ifaMap.find(inet_ntoa(addr));
+            if (item != ifaMap.end()) {
+                isExistValidIP = 1;
+                break;
+            }
+            i++;
+        }
+        if(0 == isExistValidIP){
+            i = 0;
+        }
+    }
+    struct in_addr* addr = (struct in_addr*)entry->h_addr_list[i];
     if (addr == NULL) {
         return "";
     }
