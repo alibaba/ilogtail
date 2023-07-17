@@ -164,7 +164,7 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 }
 
 func (in *InputCommand) collectError(alarmType string, kvPairs ...interface{}) {
-	if in.IgnoreError {
+	if !in.IgnoreError {
 		logger.Error(in.context.GetRuntimeContext(), "INPUT_Collect_ALARM", alarmType, kvPairs)
 	}
 }
@@ -179,6 +179,7 @@ func init() {
 			ContentEncoding:     defaultContentType,
 			IntervalMs:          defaultIntervalMs,
 			TimeoutMilliSeconds: defaltExecScriptTimeOut,
+			IgnoreError:         false,
 		}
 	}
 }
