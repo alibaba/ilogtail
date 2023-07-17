@@ -40,7 +40,6 @@ plugins:
     - import: "github.com/alibaba/ilogtail/plugins/flusher/statistics"
     - import: "github.com/alibaba/ilogtail/plugins/flusher/stdout"
     - import: "github.com/alibaba/ilogtail/plugins/input/canal"
-    - import: "github.com/alibaba/ilogtail/plugins/input/command"
     - import: "github.com/alibaba/ilogtail/plugins/input/docker/event"
     - import: "github.com/alibaba/ilogtail/plugins/input/docker/rawstdout"
     - import: "github.com/alibaba/ilogtail/plugins/input/docker/stdout"
@@ -106,6 +105,7 @@ plugins:
     - import: "github.com/alibaba/ilogtail/plugins/input/debugfile"
   linux:
     - import: "github.com/alibaba/ilogtail/plugins/flusher/sls"
+    - import: "github.com/alibaba/ilogtail/plugins/input/command"
     - import: "github.com/alibaba/ilogtail/plugins/input/docker/logmeta"
     - import: "github.com/alibaba/ilogtail/plugins/input/gpu"
     - import: "github.com/alibaba/ilogtail/plugins/input/journal"
