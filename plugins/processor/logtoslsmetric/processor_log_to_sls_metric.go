@@ -33,7 +33,7 @@ type ProcessorLogToSlsMetric struct {
 	MetricLabelKeys    []string
 	MetricValues       map[string]string
 	CustomMetricLabels map[string]string
-	IgnoreWarning      bool
+	IgnoreError        bool
 
 	metricLabelKeysMap map[string]bool
 	metricNamesMap     map[string]bool
@@ -329,8 +329,8 @@ TraverseLogArray:
 }
 
 func (p *ProcessorLogToSlsMetric) logWarning(err error) {
-	if !p.IgnoreWarning {
-		logger.Warning(p.context.GetRuntimeContext(), processorLogWarningAlarmType, "process log error", err)
+	if !p.IgnoreError {
+		logger.Error(p.context.GetRuntimeContext(), processorLogWarningAlarmType, "process log error", err)
 	}
 }
 
@@ -364,7 +364,7 @@ func isTimeNano(t string) bool {
 func init() {
 	pipeline.Processors[PluginName] = func() pipeline.Processor {
 		return &ProcessorLogToSlsMetric{
-			IgnoreWarning: false,
+			IgnoreError: false,
 		}
 	}
 }
