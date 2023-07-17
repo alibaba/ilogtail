@@ -21,7 +21,7 @@
 
 namespace logtail {
 
-bool ProcessorParseRegexNative::Init(const ComponentConfig& config, PipelineContext& context) {
+bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     mSourceKey = DEFAULT_CONTENT_KEY;
     mDiscardUnmatch = config.mDiscardUnmatch;
     mUploadRawLog = config.mUploadRawLog;
@@ -37,10 +37,9 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config, PipelineCont
             mRawLogTagOverwritten = true;
         }
     }
-    mContext = context;
-    mParseFailures = &(context.GetProcessProfile().parseFailures);
-    mRegexMatchFailures = &(context.GetProcessProfile().regexMatchFailures);
-    mLogGroupSize = &(context.GetProcessProfile().logGroupSize);
+    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
+    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     return true;
 }
 
@@ -131,28 +130,28 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
                 if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                     LOG_ERROR(
-                        mContext.GetLogger(),
-                        ("parse regex log fail", buffer)("exception", exception)("project", mContext.GetProjectName())(
-                            "logstore", mContext.GetLogstoreName())("file", logPath));
+                        GetContext().GetLogger(),
+                        ("parse regex log fail", buffer)("exception", exception)("project", GetContext().GetProjectName())(
+                            "logstore", GetContext().GetLogstoreName())("file", logPath));
                 }
                 LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
                                                        "errorlog:" + buffer.to_string() + " | exception:" + exception,
-                                                       mContext.GetProjectName(),
-                                                       mContext.GetLogstoreName(),
-                                                       mContext.GetRegion());
+                                                       GetContext().GetProjectName(),
+                                                       GetContext().GetLogstoreName(),
+                                                       GetContext().GetRegion());
             }
         } else {
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
                 if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                    LOG_WARNING(mContext.GetLogger(),
-                                ("parse regex log fail", buffer)("project", mContext.GetProjectName())(
-                                    "logstore", mContext.GetLogstoreName())("file", logPath));
+                    LOG_WARNING(GetContext().GetLogger(),
+                                ("parse regex log fail", buffer)("project", GetContext().GetProjectName())(
+                                    "logstore", GetContext().GetLogstoreName())("file", logPath));
                 }
                 LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
                                                        std::string("errorlog:") + buffer.to_string(),
-                                                       mContext.GetProjectName(),
-                                                       mContext.GetLogstoreName(),
-                                                       mContext.GetRegion());
+                                                       GetContext().GetProjectName(),
+                                                       GetContext().GetLogstoreName(),
+                                                       GetContext().GetRegion());
             }
         }
 
@@ -162,16 +161,16 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(
-                    mContext.GetLogger(),
+                    GetContext().GetLogger(),
                     ("parse key count not match", what.size())("parse regex log fail", buffer)(
-                        "project", mContext.GetProjectName())("logstore", mContext.GetLogstoreName())("file", logPath));
+                        "project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName())("file", logPath));
             }
             LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
                                                    "parse key count not match" + ToString(what.size())
                                                        + "errorlog:" + buffer.to_string(),
-                                                   mContext.GetProjectName(),
-                                                   mContext.GetLogstoreName(),
-                                                   mContext.GetRegion());
+                                                   GetContext().GetProjectName(),
+                                                   GetContext().GetLogstoreName(),
+                                                   GetContext().GetRegion());
         }
         ++(*mParseFailures);
         parseSuccess = false;

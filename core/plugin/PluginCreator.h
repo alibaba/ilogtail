@@ -16,16 +16,16 @@
 
 #pragma once
 #include <string>
+#include <memory>
+#include "plugin/PluginInstance.h"
 
 namespace logtail {
 
-class PluginInstance;
-
-class PluginCreatorInterface {
+class PluginCreator {
 public:
-    virtual ~PluginCreatorInterface() {}
+    virtual ~PluginCreator() {}
     virtual const char* Name() = 0;
     virtual bool IsDynamic() = 0;
-    virtual PluginInstance* Create(const std::string& pluginId) = 0;
+    virtual std::unique_ptr<PluginInstance> Create(const std::string& pluginId) = 0;
 };
 } // namespace logtail

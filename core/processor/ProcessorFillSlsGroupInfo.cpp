@@ -20,14 +20,13 @@
 #include "reader/LogFileReader.h"
 namespace logtail {
 
-bool ProcessorFillSlsGroupInfo::Init(const ComponentConfig& config, PipelineContext& context) {
+bool ProcessorFillSlsGroupInfo::Init(const ComponentConfig& config) {
     mConfigName = config.mConfigName;
     mTopicFormat = config.mTopicFormat;
     mGroupTopic = config.mGroupTopic;
     if ("customized" == config.mTopicFormat) {
         mCustomizedTopic = config.mCustomizedTopic;
     }
-    mContext = context;
     return true;
 }
 
@@ -130,31 +129,31 @@ std::string ProcessorFillSlsGroupInfo::GetTopicName(const std::string& topicConf
         }
     } else {
         if (!exception.empty())
-            LOG_ERROR(mContext.GetLogger(),
-                      ("extract topic by regex", "fail")("exception", exception)("project", mContext.GetProjectName())(
-                          "logstore", mContext.GetLogstoreName())("path", finalPath)("regx", topicConfig));
+            LOG_ERROR(GetContext().GetLogger(),
+                      ("extract topic by regex", "fail")("exception", exception)("project", GetContext().GetProjectName())(
+                          "logstore", GetContext().GetLogstoreName())("path", finalPath)("regx", topicConfig));
         else
-            LOG_WARNING(mContext.GetLogger(),
-                        ("extract topic by regex", "fail")("project", mContext.GetProjectName())(
-                            "logstore", mContext.GetLogstoreName())("path", finalPath)("regx", topicConfig));
+            LOG_WARNING(GetContext().GetLogger(),
+                        ("extract topic by regex", "fail")("project", GetContext().GetProjectName())(
+                            "logstore", GetContext().GetLogstoreName())("path", finalPath)("regx", topicConfig));
 
         LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                std::string("extract topic by regex fail, exception:") + exception
                                                    + ", path:" + finalPath + ", regex:" + topicConfig,
-                                               mContext.GetProjectName(),
-                                               mContext.GetLogstoreName(),
-                                               mContext.GetRegion());
+                                               GetContext().GetProjectName(),
+                                               GetContext().GetLogstoreName(),
+                                               GetContext().GetRegion());
     }
     } catch (...) {
-    LOG_ERROR(mContext.GetLogger(),
-              ("extract topic by regex", "fail")("exception", exception)("project", mContext.GetProjectName())(
-                  "logstore", mContext.GetLogstoreName())("path", finalPath)("regx", topicConfig));
+    LOG_ERROR(GetContext().GetLogger(),
+              ("extract topic by regex", "fail")("exception", exception)("project", GetContext().GetProjectName())(
+                  "logstore", GetContext().GetLogstoreName())("path", finalPath)("regx", topicConfig));
     LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                            std::string("extract topic by regex fail, exception:") + exception
                                                + ", path:" + finalPath + ", regex:" + topicConfig,
-                                           mContext.GetProjectName(),
-                                           mContext.GetLogstoreName(),
-                                           mContext.GetRegion());
+                                           GetContext().GetProjectName(),
+                                           GetContext().GetLogstoreName(),
+                                           GetContext().GetRegion());
     }
 
     return res;

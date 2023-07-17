@@ -35,25 +35,25 @@ bool Pipeline::Init(const PipelineConfig& config) {
     mContext.SetProjectName(config.mProjectName);
     mContext.SetRegion(config.mRegion);
 
-    ProcessorInstance* plugin1 = PluginRegistry::GetInstance()->CreateProcessor(
+    std::unique_ptr<ProcessorInstance> plugin1 = PluginRegistry::GetInstance()->CreateProcessor(
         ProcessorFillSlsGroupInfo::Name(), std::string(ProcessorFillSlsGroupInfo::Name()) + "/1"); // /0 is the input
     if (!InitAndAddProcessor(plugin1, config)) {
         return false;
     }
 
-    ProcessorInstance* plugin2 = PluginRegistry::GetInstance()->CreateProcessor(
+    std::unique_ptr<ProcessorInstance> plugin2 = PluginRegistry::GetInstance()->CreateProcessor(
         ProcessorSplitRegexNative::Name(), std::string(ProcessorSplitRegexNative::Name()) + "/2");
     if (!InitAndAddProcessor(plugin2, config)) {
         return false;
     }
 
-    ProcessorInstance* plugin3 = PluginRegistry::GetInstance()->CreateProcessor(
+    std::unique_ptr<ProcessorInstance> plugin3 = PluginRegistry::GetInstance()->CreateProcessor(
         ProcessorParseRegexNative::Name(), std::string(ProcessorParseRegexNative::Name()) + "/3");
     if (!InitAndAddProcessor(plugin3, config)) {
         return false;
     }
 
-    ProcessorInstance* plugin4 = PluginRegistry::GetInstance()->CreateProcessor(
+    std::unique_ptr<ProcessorInstance> plugin4 = PluginRegistry::GetInstance()->CreateProcessor(
         ProcessorParseTimestampNative::Name(), std::string(ProcessorParseTimestampNative::Name()) + "/4");
     if (!InitAndAddProcessor(plugin4, config)) {
         return false;
@@ -68,17 +68,17 @@ void Pipeline::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-bool Pipeline::InitAndAddProcessor(ProcessorInstance* processor, const ComponentConfig& config) {
+bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>& processor, const ComponentConfig& config) {
     if (!processor) {
         LOG_ERROR(GetContext().GetLogger(),
                   ("CreateProcessor", ProcessorSplitRegexNative::Name())("Error", "Cannot find plugin"));
         return false;
     }
-    mProcessorLine.emplace_back(processor);
-    if (!processor->Plugin()->Init(config, mContext)) {
+    if (!processor->Init(config, mContext)) {
         LOG_ERROR(GetContext().GetLogger(), ("InitProcessor", processor->Id())("Error", "Init failed"));
         return false;
     }
+    mProcessorLine.emplace_back(std::move(processor));
     return true;
 }
 

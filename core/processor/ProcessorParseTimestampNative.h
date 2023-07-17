@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorInterface.h"
+#include "processor/Processor.h"
 #include <string>
 
 namespace logtail {
-class ProcessorParseTimestampNative : public ProcessorInterface {
+class ProcessorParseTimestampNative : public Processor {
 public:
     static const char* Name() { return "processor_parse_timestamp_native"; }
-    bool Init(const ComponentConfig& config, PipelineContext& context) override;
+    bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 private:
@@ -40,7 +40,6 @@ private:
     int mSpecifiedYear;
     PreciseTimestampConfig mLegacyPreciseTimestampConfig;
 
-    PipelineContext mContext;
     int* mParseTimeFailures;
     int* mHistoryFailures;
 };

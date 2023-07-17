@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorInterface.h"
+#include "processor/Processor.h"
 #include <string>
 #include <boost/regex.hpp>
 
 namespace logtail {
 
-class ProcessorSplitRegexNative : public ProcessorInterface {
+class ProcessorSplitRegexNative : public Processor {
 public:
     static const char* Name() { return "processor_split_regex_native"; }
-    bool Init(const ComponentConfig& config, PipelineContext& context) override;
+    bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 private:
@@ -38,7 +38,6 @@ private:
                   std::vector<StringView>& discardIndex,
                   const StringView& logPath);
 
-    PipelineContext mContext;
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
     std::string mSplitKey;

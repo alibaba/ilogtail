@@ -20,7 +20,7 @@
 #include "common/LogtailCommonFlags.h"
 
 namespace logtail {
-bool ProcessorParseTimestampNative::Init(const ComponentConfig& config, PipelineContext& context) {
+bool ProcessorParseTimestampNative::Init(const ComponentConfig& config) {
     mTimeFormat = config.mTimeFormat;
     mTimeKey = config.mTimeKey;
     mSpecifiedYear = config.mAdvancedConfig.mSpecifiedYear;
@@ -29,9 +29,8 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& config, Pipeline
     mLegacyPreciseTimestampConfig.unit = config.mAdvancedConfig.mPreciseTimestampUnit;
     mLogTimeZoneOffsetSecond = config.mLogTimeZoneOffsetSecond;
 
-    mContext = context;
-    mParseTimeFailures = &(context.GetProcessProfile().parseTimeFailures);
-    mHistoryFailures = &(context.GetProcessProfile().historyFailures);
+    mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
+    mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
     return true;
 }
 
@@ -73,15 +72,15 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(
-                    sLogger,
-                    ("discard history data", timeStr)("timestamp", logTime)("project", mContext.GetProjectName())(
-                        "logstore", mContext.GetLogstoreName())("file", logPath));
+                    GetContext().GetLogger(),
+                    ("discard history data", timeStr)("timestamp", logTime)("project", GetContext().GetProjectName())(
+                        "logstore", GetContext().GetLogstoreName())("file", logPath));
             }
             LogtailAlarm::GetInstance()->SendAlarm(OUTDATED_LOG_ALARM,
                                                    std::string("logTime: ") + ToString(logTime),
-                                                   mContext.GetProjectName(),
-                                                   mContext.GetLogstoreName(),
-                                                   mContext.GetRegion());
+                                                   GetContext().GetProjectName(),
+                                                   GetContext().GetLogstoreName(),
+                                                   GetContext().GetRegion());
         }
         ++mHistoryFailures;
         return false;
@@ -133,16 +132,16 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
                 if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                     LOG_WARNING(
-                        sLogger,
-                        ("parse time fail", curTimeStr)("project", mContext.GetProjectName())(
-                            "logstore", mContext.GetLogstoreName())("file", logPath)("keep time str", keepTimeStr));
+                        GetContext().GetLogger(),
+                        ("parse time fail", curTimeStr)("project", GetContext().GetProjectName())(
+                            "logstore", GetContext().GetLogstoreName())("file", logPath)("keep time str", keepTimeStr));
                 }
                 LogtailAlarm::GetInstance()->SendAlarm(PARSE_TIME_FAIL_ALARM,
                                                        curTimeStr.to_string() + " " + mTimeFormat
                                                            + " flag: " + std::to_string(keepTimeStr),
-                                                       mContext.GetProjectName(),
-                                                       mContext.GetLogstoreName(),
-                                                       mContext.GetRegion());
+                                                       GetContext().GetProjectName(),
+                                                       GetContext().GetLogstoreName(),
+                                                       GetContext().GetRegion());
             }
 
             ++mParseTimeFailures;

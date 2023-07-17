@@ -15,16 +15,16 @@
  */
 
 #pragma once
-#include "processor/ProcessorInterface.h"
+#include "processor/Processor.h"
 #include <vector>
 #include "parser/LogParser.h" //UserDefinedFormat
 
 namespace logtail {
 
-class ProcessorParseRegexNative : public ProcessorInterface {
+class ProcessorParseRegexNative : public Processor {
 public:
     static const char* Name() { return "processor_parse_regex_native"; }
-    bool Init(const ComponentConfig& config, PipelineContext& context) override;
+    bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 private:
@@ -45,7 +45,6 @@ private:
     bool mRawLogTagOverwritten;
     std::string mRawLogTag;
 
-    PipelineContext mContext;
     int* mParseFailures;
     int* mRegexMatchFailures;
     int* mLogGroupSize;

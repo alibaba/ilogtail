@@ -17,17 +17,17 @@
 #pragma once
 
 #include <string>
-#include "processor/ProcessorInterface.h"
-#include "plugin/CProcessorInterface.h"
+#include "processor/Processor.h"
+#include "plugin/CProcessor.h"
 
 namespace logtail {
 
-class DynamicCProcessorProxy : public ProcessorInterface {
+class DynamicCProcessorProxy : public Processor {
 public:
     DynamicCProcessorProxy(const char* name);
     ~DynamicCProcessorProxy();
     const char* Name() const;
-    bool Init(const ComponentConfig& config, PipelineContext& context) override;
+    bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
     void SetCProcessor(const processor_interface_t* c_ins);
 

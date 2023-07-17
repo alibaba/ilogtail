@@ -17,7 +17,6 @@
 #pragma once
 
 #include <string>
-#include "plugin/PluginCreatorInterface.h"
 
 namespace logtail {
 
@@ -25,10 +24,10 @@ class PluginInstance {
 public:
     PluginInstance(const std::string& pluginId) : mId(pluginId) {}
     virtual ~PluginInstance() {}
-    const std::string& Id() { return mId; }
+    const std::string& Id() const { return mId; }
 
 protected:
-    std::string mId;
+    const std::string mId;
 };
 
 } // namespace logtail

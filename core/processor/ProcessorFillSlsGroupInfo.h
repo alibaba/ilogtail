@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorInterface.h"
+#include "processor/Processor.h"
 #include <string>
 
 namespace logtail {
 
-class ProcessorFillSlsGroupInfo : public ProcessorInterface {
+class ProcessorFillSlsGroupInfo : public Processor {
 public:
     static const char* Name() { return "ProcessorFillSlsGroupInfo"; }
-    bool Init(const ComponentConfig& config, PipelineContext& context) override;
+    bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 private:
@@ -30,6 +30,5 @@ private:
     GetTopicName(const std::string& topicConfig, const std::string& path, std::vector<sls_logs::LogTag>& extraTags);
 
     std::string mConfigName, mTopicFormat, mGroupTopic, mCustomizedTopic;
-    PipelineContext mContext;
 };
 } // namespace logtail
