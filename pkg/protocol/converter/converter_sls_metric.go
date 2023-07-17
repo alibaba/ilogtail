@@ -41,6 +41,11 @@ const (
 	valueTypeString = "string"
 )
 
+const (
+	KeyValueSeparator = "#$#"
+	LabelSeparator    = "|"
+)
+
 var readerPool = sync.Pool{
 	New: func() any {
 		return &metricReader{}
@@ -80,9 +85,9 @@ func (m MetricLabels) GetLabel() string {
 	sort.Sort(m)
 	var res []string
 	for _, label := range m {
-		res = append(res, label.Key+"#$#"+label.Value)
+		res = append(res, label.Key+KeyValueSeparator+label.Value)
 	}
-	return strings.Join(res, "|")
+	return strings.Join(res, LabelSeparator)
 }
 
 func (r *metricReader) readNames() (metricName, fieldName string) {

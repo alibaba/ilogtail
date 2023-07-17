@@ -124,7 +124,7 @@ func (p *ProcessorLogToSlsMetric) Init(context pipeline.Context) (err error) {
 			return
 		}
 		// The value of Label cannot contain "|" or "#$#".
-		if strings.Contains(value, "|") || strings.Contains(value, "#$#") {
+		if strings.Contains(value, converter.LabelSeparator) || strings.Contains(value, converter.KeyValueSeparator) {
 			err = errInvalidMetricLabelValue
 			p.logInitError(err)
 			return
@@ -186,9 +186,9 @@ TraverseLogArray:
 
 			// __labels__
 			if cont.Key == metricLabelsKey {
-				labels := strings.Split(cont.Value, "|")
+				labels := strings.Split(cont.Value, converter.LabelSeparator)
 				for _, label := range labels {
-					keyValues := strings.Split(label, "#$#")
+					keyValues := strings.Split(label, converter.KeyValueSeparator)
 					if len(keyValues) != 2 {
 						p.logWarning(errInvalidMetricLabelValue)
 						continue TraverseLogArray
@@ -205,7 +205,7 @@ TraverseLogArray:
 					}
 					value := keyValues[1]
 					// The value of Label cannot contain "|" or "#$#".
-					if strings.Contains(value, "|") || strings.Contains(value, "#$#") {
+					if strings.Contains(value, converter.LabelSeparator) || strings.Contains(value, converter.KeyValueSeparator) {
 						p.logWarning(errInvalidMetricLabelValue)
 						continue TraverseLogArray
 					}
@@ -221,7 +221,7 @@ TraverseLogArray:
 					continue TraverseLogArray
 				}
 				// The value of Label cannot contain "|" or "#$#".
-				if strings.Contains(cont.Value, "|") || strings.Contains(cont.Value, "#$#") {
+				if strings.Contains(cont.Value, converter.LabelSeparator) || strings.Contains(cont.Value, converter.KeyValueSeparator) {
 					p.logWarning(errInvalidMetricLabelValue)
 					continue TraverseLogArray
 				}
@@ -257,7 +257,13 @@ TraverseLogArray:
 					p.logWarning(errInvalidMetricTime)
 					continue TraverseLogArray
 				}
-				timeNano = cont.Value
+				if len(cont.Value) == 19 {
+					timeNano = cont.Value
+				} else if len(cont.Value) == 10 {
+					timeNano = cont.Value + "000000000"
+				} else if len(cont.Value) == 13 {
+					timeNano = cont.Value + "000000"
+				}
 				continue
 			}
 		}
@@ -344,7 +350,7 @@ func canParseToFloat64(s string) bool {
 }
 
 func isTimeNano(t string) bool {
-	if len(t) != 19 {
+	if len(t) != 19 && len(t) != 10 && len(t) != 13 {
 		return false
 	}
 	for _, c := range t {
