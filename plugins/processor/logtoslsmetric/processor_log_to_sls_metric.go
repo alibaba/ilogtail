@@ -75,7 +75,7 @@ var (
 )
 
 var (
-	processorLogWarningAlarmType   = "PROCESSOR_LOG_ALARM"
+	processorLogErrorAlarmType     = "PROCESSOR_LOG_ALARM"
 	processorInitErrorLogAlarmType = "PROCESSOR_INIT_ALARM"
 )
 
@@ -332,7 +332,7 @@ TraverseLogArray:
 
 func (p *ProcessorLogToSlsMetric) logError(err error) {
 	if !p.IgnoreError {
-		logger.Error(p.context.GetRuntimeContext(), processorLogWarningAlarmType, "process log error", err)
+		logger.Error(p.context.GetRuntimeContext(), processorLogErrorAlarmType, "process log error", err)
 	}
 }
 
