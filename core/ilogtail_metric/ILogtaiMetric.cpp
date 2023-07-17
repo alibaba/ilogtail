@@ -169,9 +169,8 @@ void ReadMetrics::UpdateMetrics() {
     Metrics* toDelete = mHead;
     {
         // Only lock when change head
-        mReadWriteLock.lock();
+        WriteLock lock(mReadWriteLock);
         mHead = snapshot;
-        mReadWriteLock.unlock();
     }
     // delete old linklist
     while(toDelete) {
