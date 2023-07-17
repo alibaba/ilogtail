@@ -58,7 +58,7 @@ void* __wrap_memcpy(void* dest, const void* src, size_t n) {
 }
 #endif
 
-DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
+DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", false);
 DEFINE_FLAG_INT32(fork_interval, "fork dispatcher process interval", 10);
 DECLARE_FLAG_INT32(max_open_files_limit);
 DECLARE_FLAG_INT32(max_reader_open_files);

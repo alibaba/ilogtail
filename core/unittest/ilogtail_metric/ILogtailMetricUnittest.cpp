@@ -26,25 +26,25 @@ void ILogtailMetricUnittest::TestCreateMetric() {
     labels.push_back(std::make_pair<std::string, std::string>("logstore","logstore1"));
 
     Metrics* fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
-    LOG_INFO(sLogger, ("labelSize", fileMetric->mLabels.size()));
-    APSARA_TEST_EQUAL(fileMetric->mLabels.size(), 2);  
+    LOG_INFO(sLogger, ("labelSize", fileMetric->GetLabels().size()));
+    APSARA_TEST_EQUAL(fileMetric->GetLabels().size(), 2);  
 
     Metrics* fileMetric2 = WriteMetrics::GetInstance()->CreateMetrics(labels);
-    LOG_INFO(sLogger, ("labelSize", fileMetric2->mLabels.size()));
-    APSARA_TEST_EQUAL(fileMetric2->mLabels.size(), 2);  
+    LOG_INFO(sLogger, ("labelSize", fileMetric2->GetLabels().size()));
+    APSARA_TEST_EQUAL(fileMetric2->GetLabels().size(), 2);  
 
     Metrics* fileMetric3 = WriteMetrics::GetInstance()->CreateMetrics(labels);
-    LOG_INFO(sLogger, ("labelSize", fileMetric3->mLabels.size()));
-    APSARA_TEST_EQUAL(fileMetric3->mLabels.size(), 2);  
+    LOG_INFO(sLogger, ("labelSize", fileMetric3->GetLabels().size()));
+    APSARA_TEST_EQUAL(fileMetric3->GetLabels().size(), 2);  
 
 
     Counter* fileCounter = fileMetric->CreateCounter("filed1");
     fileCounter->Add((uint64_t)111);
-    LOG_INFO(sLogger, ("value", fileCounter->mVal)("time", fileCounter->mTimestamp));
+    LOG_INFO(sLogger, ("value", fileCounter->GetValue())("time", fileCounter->GetTimestamp()));
 
     Counter* fileCounter2 = fileMetric->CreateCounter("filed2");
     fileCounter2->Add((uint64_t)222);
-    LOG_INFO(sLogger, ("value", fileCounter2->mVal)("time", fileCounter2->mTimestamp));
+    LOG_INFO(sLogger, ("value", fileCounter2->GetValue())("time", fileCounter2->GetTimestamp()));
 
 
     WriteMetrics::GetInstance()->DestroyMetrics(fileMetric2);
@@ -54,7 +54,7 @@ void ILogtailMetricUnittest::TestCreateMetric() {
     
     Metrics* head = ReadMetrics::GetInstance()->mHead;
     while(head) {
-        LOG_INFO(sLogger, ("ReadMetrics", head->mLabels.size()));
+        LOG_INFO(sLogger, ("ReadMetrics", head->GetLabels().size()));
         head = head->next;
     }    
 }

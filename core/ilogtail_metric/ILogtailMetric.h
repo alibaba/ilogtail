@@ -5,35 +5,41 @@
 #include <atomic>
 #include "logger/Logger.h"
 #include <MetricConstants.h>
+#include "common/Lock.h"
 
 
 namespace logtail {
 
 
 class Counter{
-
-    public:
-        Counter();
-        Counter(std::string name);
-        ~Counter();
-
+    private:
         std::string mName;
         std::atomic_long mVal;
         std::atomic_long mTimestamp;
+
+    public:
+        Counter(std::string name);
+        ~Counter();
+        uint64_t GetValue();
+        uint64_t GetTimestamp();
+        
         void Add(uint64_t val);
         void Set(uint64_t val);
-        Counter* Copy();
+        Counter* CopyAndReset();
 };
 
 class Metrics {
-    public:
-        Metrics(std::vector<std::pair<std::string, std::string> > labels);
-        Metrics();
-        ~Metrics();
-        
-        std::atomic_bool mDeleted;
+    private:
         std::vector<std::pair<std::string, std::string>> mLabels;
         std::vector<Counter*> mValues;
+        std::atomic_bool mDeleted;
+
+    public:
+        Metrics(std::vector<std::pair<std::string, std::string> > labels);
+        ~Metrics();
+        void MarkDeleted();
+        bool IsDeleted();
+        std::vector<std::pair<std::string, std::string>> GetLabels();
         Counter* CreateCounter(std::string Name);
         Metrics* Copy();
         Metrics* next = NULL;
@@ -53,9 +59,7 @@ class WriteMetrics {
         void ClearDeleted();
         Metrics* DoSnapshot();
         // empty head node
-        Metrics* mHead = new Metrics();
-        Metrics* mTail = mHead;
-        std::vector<Metrics*> mDeletedMetrics;
+        Metrics* mHead = NULL;
         std::mutex mMutex;
 };
 
@@ -71,7 +75,7 @@ class ReadMetrics {
         void Read();
         void UpdateMetrics();
         Metrics* mHead = NULL;
-        std::mutex mMutex;
         WriteMetrics* mWriteMetrics;
+        ReadWriteLock mReadWriteLock;
 };
 }

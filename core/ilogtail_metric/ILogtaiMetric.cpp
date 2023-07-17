@@ -9,16 +9,7 @@ Counter::Counter(std::string name) {
     mTimestamp = time(NULL);
 }
 
-Counter::Counter() {
-    mVal = (uint64_t)0;
-    mTimestamp = time(NULL);
-}
-
 Counter::~Counter() {
-}
-
-Metrics::Metrics() {
-    mDeleted.store(false);
 }
 
 Metrics::Metrics(std::vector<std::pair<std::string, std::string>> labels) {
@@ -52,7 +43,16 @@ void Counter::Set(uint64_t value) {
     mTimestamp = time(NULL);
 }
 
-Counter* Counter::Copy() {
+uint64_t Counter::GetValue() {
+    return mVal;
+}
+
+ uint64_t Counter::GetTimestamp() {
+    return mTimestamp;
+ }
+
+
+Counter* Counter::CopyAndReset() {
     Counter* counter = new Counter(mName);
     counter->mVal = mVal.exchange(0);
     counter->mTimestamp = mTimestamp.exchange(0);
@@ -66,15 +66,29 @@ Counter* Metrics::CreateCounter(std::string name) {
 }
 
 
+void Metrics::MarkDeleted() {
+    mDeleted = true;
+}
+
+bool Metrics::IsDeleted() {
+    return mDeleted;
+}
+
+std::vector<std::pair<std::string, std::string>> Metrics::GetLabels() {
+    return mLabels;
+}
+
+
 Metrics* Metrics::Copy() {
-    Metrics* metrics = new Metrics();
+    std::vector<std::pair<std::string, std::string>> newLabels;
     for (std::vector<std::pair<std::string, std::string>>::iterator it = mLabels.begin(); it != mLabels.end(); ++it) {
         std::pair<std::string, std::string> pair = *it;
-        metrics->mLabels.push_back(pair);
+        newLabels.push_back(pair);
     }
+    Metrics* metrics = new Metrics(newLabels);
     for (std::vector<Counter*>::iterator it = mValues.begin(); it != mValues.end(); ++it) {
         Counter* cur = *it;
-        metrics->mValues.push_back(cur->Copy());
+        metrics->mValues.push_back(cur->CopyAndReset());
     }
     return metrics;
 }
@@ -82,61 +96,59 @@ Metrics* Metrics::Copy() {
 Metrics* WriteMetrics::CreateMetrics(std::vector<std::pair<std::string, std::string>> labels) {
     std::lock_guard<std::mutex> lock(mMutex);
     Metrics* cur = new Metrics(labels);
-    mTail->next = cur;
-    mTail = cur;
+    
+    Metrics* oldHead = mHead;
+    mHead = cur;
+    mHead -> next = oldHead;
     return cur;
 }
 
 
 void WriteMetrics::DestroyMetrics(Metrics* metrics) {
-    std::lock_guard<std::mutex> lock(mMutex);
     // mark as delete
-    metrics->mDeleted = true;
-    mDeletedMetrics.push_back(metrics);
-    
+    metrics->MarkDeleted();    
 }
 
-void WriteMetrics::ClearDeleted() {
-    std::lock_guard<std::mutex> lock(mMutex);
-    Metrics* cur = mHead;
-    while(cur) {
-        // unlink metrics from mHead and add to mDeletedMetrics;
-        // do not modify metrics's next pointer to let who is reading this Metrics can read next Metrics normally
-        Metrics* next = cur->next;
-        if (next != NULL && next->mDeleted) {
-            cur->next = next->next;
-        }
-        cur = cur->next;
-    }
-    std::vector<Metrics*> tmp;
-    tmp.swap(mDeletedMetrics);
-}
 
 Metrics* WriteMetrics::DoSnapshot() {
-    Metrics* snapshot;
+    Metrics* snapshot = NULL;
+    Metrics* wTmp = NULL;
+    Metrics* wTmpHead = NULL;
+
     Metrics* tmp = mHead;
-    Metrics* cTmp;
-    if (tmp) {
-        Metrics* newMetrics = tmp->Copy();
-        tmp = tmp -> next;
-        snapshot = newMetrics;
-        cTmp = snapshot;
-        while(tmp) {
-            while(tmp->mDeleted) {
-                tmp = tmp -> next;
-            }
-            Metrics* newMetrics = tmp->Copy();
+    Metrics* rTmp ;
+    while(tmp) {
+        if (tmp->IsDeleted()) {
+            Metrics* toDeleted = tmp;
             tmp = tmp -> next;
-            cTmp -> next = newMetrics;
-            cTmp = newMetrics;
+            delete toDeleted;
+            continue;
         }
+        Metrics* newMetrics = tmp->Copy();
+        // Get Head
+        if (!snapshot) {
+            wTmpHead = tmp;
+            wTmp = wTmpHead;
+            tmp = tmp -> next;
+            snapshot = newMetrics;
+            rTmp = snapshot;
+            continue;
+        }
+        wTmp -> next = tmp;
+        tmp = tmp -> next;
+        rTmp -> next = newMetrics;
+        rTmp = newMetrics;
     }
-    ClearDeleted();
+    {
+        std::lock_guard<std::mutex> lock(mMutex);
+        mHead = wTmpHead;
+    }
     return snapshot;
 }
 
 void ReadMetrics::Read() {
-    std::lock_guard<std::mutex> lock(mMutex);
+    ReadLock lock(mReadWriteLock);
+
       // Do some read
 }
 
@@ -144,8 +156,9 @@ void ReadMetrics::UpdateMetrics() {
     Metrics* snapshot = mWriteMetrics->DoSnapshot();
     Metrics* toDelete = mHead;
     {
-        std::lock_guard<std::mutex> lock(mMutex);
-        mHead = snapshot->next;
+        mReadWriteLock.lock();
+        mHead = snapshot;
+        mReadWriteLock.unlock();
     }
     // do deletion
     while(toDelete) {
