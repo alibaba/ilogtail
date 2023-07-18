@@ -218,8 +218,8 @@ processors:
     Regex: (\[(\S+)].*)
     Unmatch: singleline
     LogBeginRegex: \[\d+-\d+-\w+:\d+:\d+.\d+].*Exception.*
-    LogContinueRegex: .*at.*
-    LogEndRegex: .*\.\.\..*
+    LogContinueRegex: .*\s+at\s.*
+    LogEndRegex: .*\.\.\. \d+ more
 flushers:
   - Type: flusher_sls
     Endpoint: cn-xxx.log.aliyuncs.com
@@ -233,14 +233,13 @@ flushers:
 {
     "__tag__:__path__": "/home/test-log/regMulti.log",
     "time": "2022-07-07T10:43:27.360266763",
-    "msg": "[2022-07-07T10:43:27.360266763] [ERROR] java.lang.Exception: exception happened
-[2022-07-07T10:43:27.360266763]    at com.aliyun.sls.devops.logGenerator.type.RegexMultiLog.f2(RegexMultiLog.java:108)
-[2022-07-07T10:43:27.360266763]    at java.base/java.lang.Thread.run(Thread.java:833)
-[2022-07-07T10:43:27.360266763]    ... 23 more"
+    "msg": "[2022-07-07T10:43:27.360266763] [ERROR] java.lang.Exception: exception happened\n[2022-07-07T10:43:27.360266763]    at com.aliyun.sls.devops.logGenerator.type.RegexMultiLog.f2(RegexMultiLog.java:108)\n[2022-07-07T10:43:27.360266763]    at java.base/java.lang.Thread.run(Thread.java:833)\n[2022-07-07T10:43:27.360266763]    ... 23 more"
 }
-```
-
-```json
+{
+    "__tag__:__path__": "/home/test-log/regMulti.log",
+    "time": "2022-07-07T10:43:27.360266763",
+    "msg": "[2022-07-07T10:43:27.360266763] Some user custom log"
+}
 {
     "__tag__:__path__": "/home/test-log/regMulti.log",
     "time": "2022-07-07T10:43:27.360266763",

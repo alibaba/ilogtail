@@ -575,9 +575,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (logEndReg != "" && CheckRegFormat(logEndReg) == false) {
                     throw ExceptionBase("The log end line is not value regex : " + logEndReg);
                 }
-                string unmatch = GetStringValue(value, "unmatch", "");
-                if (unmatch != "" && !(unmatch == "discard" || unmatch == "singleline" || unmatch == "append" || unmatch == "prepend")) {
-                    throw ExceptionBase("The unmatch is not legal value : " + logEndReg);
+                string logUnmatch = GetStringValue(value, "log_unmatch", "");
+                if (logUnmatch != "" && !(logUnmatch == "discard" || logUnmatch == "singleline" || logUnmatch == "append" || logUnmatch == "prepend")) {
+                    throw ExceptionBase("The log unmatch is not legal value : " + logEndReg);
                 }
                 string filePattern = GetStringValue(value, "file_pattern");
                 // raw log flag
@@ -593,7 +593,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     logBeginReg,
                                     logContinueReg,
                                     logEndReg,
-                                    unmatch,
+                                    logUnmatch,
                                     projectName,
                                     isPreserve,
                                     preserveDepth,

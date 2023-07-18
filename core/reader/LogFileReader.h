@@ -28,6 +28,7 @@
 #include "common/EncodingConverter.h"
 #include "common/DevInode.h"
 #include "common/LogFileOperator.h"
+#include "logger/Logger.h"
 #include "log_pb/sls_logs.pb.h"
 #include "config/LogType.h"
 #include "common/FileInfo.h"
@@ -91,6 +92,13 @@ public:
         BACKWARD_TO_FIXED_POS,
     };
 
+    enum LogUnmatchPolicy {
+        DISCARD,
+        SINGLELINE,
+        APPEND,
+        PREPEND
+    };
+
     // for ApsaraLogFileReader
     LogFileReader(const std::string& projectName,
                   const std::string& category,
@@ -118,41 +126,61 @@ public:
         return mLastUpdateTime;
     }
     // this function should only be called once
-    void SetLogBeginRegex(const std::string& reg) {
+    void SetLogMultilinePolicy(const std::string& begReg, const std::string& conReg, const std::string& endReg, const std::string& logUnmatch) {
         if (mLogBeginRegPtr != NULL) {
             delete mLogBeginRegPtr;
             mLogBeginRegPtr = NULL;
         }
-        if (reg.empty() == false && reg != ".*") {
-            mLogBeginRegPtr = new boost::regex(reg.c_str());
+        if (begReg.empty() == false) {
+            mLogBeginRegPtr = new boost::regex(begReg.c_str());
         }
-    }
-        
-    void SetLogContinueRegex(const std::string& reg) {
         if (mLogContinueRegPtr != NULL) {
             delete mLogContinueRegPtr;
             mLogContinueRegPtr = NULL;
         }
-        if (reg.empty() == false && reg != ".*") {
-            mLogContinueRegPtr = new boost::regex(reg.c_str());
+        if (conReg.empty() == false) {
+            mLogContinueRegPtr = new boost::regex(conReg.c_str());
         }
-    }
-
-    void SetLogEndRegex(const std::string& reg) {
         if (mLogEndRegPtr != NULL) {
             delete mLogEndRegPtr;
             mLogEndRegPtr = NULL;
         }
-        if (reg.empty() == false && reg != ".*") {
-            mLogEndRegPtr = new boost::regex(reg.c_str());
+        if (endReg.empty() == false) {
+            mLogEndRegPtr = new boost::regex(endReg.c_str());
         }
-    }
-
-    void SetUnmatch(const std::string& unmatch) {
-        if (unmatch == "discard" || unmatch == "singleline" || unmatch == "append" || unmatch == "prepend") {
-            mUnmatch = unmatch;
+        /*
+            1. LogUnmatch `append` can only work with `begin`.
+            2. LogUnmatch `prepend` can only work with `end`.
+            3. If logUnmatch is invalid, we will fallback to use mDiscardUnmatch.
+        */
+        if (logUnmatch == "discard") {
+            mLogUnmatch = LogUnmatchPolicy::DISCARD;
+        } else if (logUnmatch == "singleline") {
+            mLogUnmatch = LogUnmatchPolicy::SINGLELINE;
+        } else if (logUnmatch == "append") {
+            if (mLogBeginRegPtr == NULL || mLogContinueRegPtr != NULL || mLogEndRegPtr != NULL) {
+                mLogUnmatch = mDiscardUnmatch ? LogUnmatchPolicy::DISCARD : LogUnmatchPolicy::SINGLELINE;
+                LOG_WARNING(sLogger,
+                            ("Invalid multiline pattern configuration with", "append")("fallback to", mLogUnmatch)(
+                                "begin regex", begReg)("continue regex", conReg)("end regex", endReg));
+            } else {
+                mLogUnmatch = LogUnmatchPolicy::APPEND;
+            }
+        } else if (logUnmatch == "prepend") {
+            if (mLogBeginRegPtr != NULL || mLogContinueRegPtr != NULL || mLogEndRegPtr == NULL) {
+                mLogUnmatch = mDiscardUnmatch ? LogUnmatchPolicy::DISCARD : LogUnmatchPolicy::SINGLELINE;
+                LOG_WARNING(sLogger,
+                            ("Invalid multiline pattern configuration with", "prepend")("fallback to", mLogUnmatch)(
+                                "begin regex", begReg)("continue regex", conReg)("end regex", endReg));
+            } else {
+                mLogUnmatch = LogUnmatchPolicy::PREPEND;
+            }
         } else {
-            mUnmatch = mDiscardUnmatch ? "discard" : "append";
+            LOG_WARNING(sLogger,
+                        ("Invalid multiline pattern configuration with",
+                         mLogUnmatch)("fallback to", mDiscardUnmatch ? "discard" : "singleline")("begin regex", begReg)(
+                            "continue regex", conReg)("end regex", endReg));
+            mLogUnmatch = mDiscardUnmatch ? LogUnmatchPolicy::DISCARD : LogUnmatchPolicy::SINGLELINE;
         }
     }
 
@@ -425,7 +453,7 @@ protected:
     boost::regex* mLogEndRegPtr;
     FileEncoding mFileEncoding;
     bool mDiscardUnmatch;
-    std::string mUnmatch;
+    LogUnmatchPolicy mLogUnmatch;
     LogType mLogType;
     DevInode mDevInode;
     bool mFirstWatched;
@@ -579,7 +607,7 @@ private:
     void updatePrimaryCheckpointSignature();
     void updatePrimaryCheckpointRealPath();
 
-    void handleUnmatchAtOtherState(const char* buffer,
+    void handleUnmatchLogs(const char* buffer,
                                    int& multiBeginIndex,
                                    int endIndex,
                                    std::vector<StringView>& logIndex,

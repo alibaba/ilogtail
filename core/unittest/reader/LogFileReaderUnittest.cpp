@@ -121,7 +121,7 @@ void LogFileReaderUnittest::TestReadGBK() {
                                       false);
         LogFileReader::BUFFER_SIZE = 14;
         size_t BUFFER_SIZE_UTF8 = 15; // "ilogtail 为可"
-        reader.SetLogBeginRegex("no matching pattern");
+        reader.SetLogMultilinePolicy("no matching pattern", ".*", ".*", "");
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -145,7 +145,7 @@ void LogFileReaderUnittest::TestReadGBK() {
                                       FileEncoding::ENCODING_GBK,
                                       false,
                                       false);
-        reader.SetLogBeginRegex("iLogtail.*");
+        reader.SetLogMultilinePolicy("iLogtail.*", ".*", ".*", "");
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -171,7 +171,7 @@ void LogFileReaderUnittest::TestReadGBK() {
                                       FileEncoding::ENCODING_GBK,
                                       false,
                                       false);
-        reader.SetLogBeginRegex("iLogtail.*");
+        reader.SetLogMultilinePolicy("iLogtail.*", ".*", ".*", "");
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -231,7 +231,7 @@ void LogFileReaderUnittest::TestReadUTF8() {
                                       false,
                                       false);
         LogFileReader::BUFFER_SIZE = 15;
-        reader.SetLogBeginRegex("no matching pattern");
+        reader.SetLogMultilinePolicy("no matching pattern", ".*", ".*", "");
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -256,7 +256,7 @@ void LogFileReaderUnittest::TestReadUTF8() {
                                       FileEncoding::ENCODING_UTF8,
                                       false,
                                       false);
-        reader.SetLogBeginRegex("iLogtail.*");
+        reader.SetLogMultilinePolicy("iLogtail.*", ".*", ".*", "");
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -282,7 +282,7 @@ void LogFileReaderUnittest::TestReadUTF8() {
                                       FileEncoding::ENCODING_UTF8,
                                       false,
                                       false);
-        reader.SetLogBeginRegex("iLogtail.*");
+        reader.SetLogMultilinePolicy("iLogtail.*", ".*", ".*", "");
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;

@@ -75,7 +75,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileConfigMap["LogBeginRegex"] = "log_begin_reg";
     mFileConfigMap["LogContinueRegex"] = "log_continue_reg";
     mFileConfigMap["LogEndRegex"] = "log_end_reg";
-    mFileConfigMap["Unmatch"] = "unmatch";
+    mFileConfigMap["LogUnmatch"] = "log_unmatch";
     // params specific to delimiter accelerate processor
     mFileConfigMap["Separator"] = "delimiter_separator";
     mFileConfigMap["Quote"] = "delimiter_quote";
