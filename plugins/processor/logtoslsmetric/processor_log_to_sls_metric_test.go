@@ -15,7 +15,9 @@
 package logtoslsmetric
 
 import (
+	"strconv"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -35,9 +37,11 @@ func TestInitError(t *testing.T) {
 
 func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 	Convey("Given a set of logs", t, func() {
+		nowTime := time.Now()
 		logs := []*protocol.Log{
 			{
-				Time: 1234567890,
+				Time:   uint32(nowTime.Unix()),
+				TimeNs: uint32(nowTime.Nanosecond()),
 				Contents: []*protocol.Log_Content{
 					{Key: "labelA", Value: "1"},
 					{Key: "labelB", Value: "2"},
@@ -50,7 +54,8 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 				},
 			},
 			{
-				Time: 1234567890,
+				Time:   uint32(nowTime.Unix()),
+				TimeNs: uint32(nowTime.Nanosecond()),
 				Contents: []*protocol.Log_Content{
 					{Key: "labelB", Value: "22"},
 					{Key: "labelC", Value: "33"},
@@ -63,7 +68,8 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 				},
 			},
 			{
-				Time: 1234567890,
+				Time:   uint32(nowTime.Unix()),
+				TimeNs: uint32(nowTime.Nanosecond()),
 				Contents: []*protocol.Log_Content{
 					{Key: "labelB", Value: "BBB"},
 					{Key: "labelC", Value: "CCC"},
@@ -135,9 +141,12 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 	})
 
 	Convey("Given a set of logs", t, func() {
+		nowTime := time.Now()
+
 		logs := []*protocol.Log{
 			{
-				Time: 1234567890,
+				Time:   uint32(nowTime.Unix()),
+				TimeNs: uint32(nowTime.Nanosecond()),
 				Contents: []*protocol.Log_Content{
 					{Key: "labelA", Value: "AAA"},
 					{Key: "nameA", Value: "myname"},
@@ -176,7 +185,7 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 				So(processedLogs[0].Contents[2].Key, ShouldEqual, "__value__")
 				So(processedLogs[0].Contents[2].Value, ShouldEqual, "1.0")
 				So(processedLogs[0].Contents[3].Key, ShouldEqual, "__time_nano__")
-				So(processedLogs[0].Contents[3].Value, ShouldEqual, "1234567890000000000")
+				So(processedLogs[0].Contents[3].Value, ShouldEqual, strconv.FormatInt(nowTime.UnixNano(), 10))
 
 				So(processedLogs[1].Contents[0].Key, ShouldEqual, "__labels__")
 				So(processedLogs[1].Contents[0].Value, ShouldEqual, "labelA#$#AAA|labelB#$#BBB|labelC#$#CCC|labelD#$#CustomD")
@@ -185,8 +194,21 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 				So(processedLogs[1].Contents[2].Key, ShouldEqual, "__value__")
 				So(processedLogs[1].Contents[2].Value, ShouldEqual, "1.0")
 				So(processedLogs[1].Contents[3].Key, ShouldEqual, "__time_nano__")
-				So(processedLogs[1].Contents[3].Value, ShouldEqual, "1234567890000000000")
+				So(processedLogs[1].Contents[3].Value, ShouldEqual, strconv.FormatInt(nowTime.UnixNano(), 10))
 			})
 		})
 	})
+}
+
+func TestGetLogTimeNano(t *testing.T) {
+	nowTime := time.Now()
+	log := &protocol.Log{}
+	log.Time = (uint32)(nowTime.Unix())
+	log.TimeNs = (uint32)(nowTime.Nanosecond())
+	timeNano := GetLogTimeNano(log)
+
+	if timeNano != strconv.FormatInt(nowTime.UnixNano(), 10) {
+		t.Errorf("GetLogTimeNano err")
+		return
+	}
 }
