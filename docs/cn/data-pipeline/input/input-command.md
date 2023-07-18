@@ -26,7 +26,7 @@
 | TimeoutMilliSeconds | int      | 否    | 执行脚本的超时时间，单位为毫秒，默认为3000ms                                                                                                                               |
 | IntervalMs          | int      | 否    | 采集触发频率，也是脚本执行的频率，单位为毫秒，默认为5000ms                                                                                                                        |
 | Environments        | []string | 否    | 环境变量，默认为os.Environ()的值，如果设置了Environments，则在os.Environ()的基础上追加设置的环境变量                                                                                    |
-| IgnoreError         | Bool     | 可选   | 插件执行出错时是否输出Error日志。如果未添加该参数，则默认使用false，表示不忽略                                                                                                            |
+| IgnoreError         | Bool     | 否    | 插件执行出错时是否输出Error日志。如果未添加该参数，则默认使用false，表示不忽略                                                                                                            |
 
 * 采集配置1
 
