@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/plugin_main/flags"
 )
 
 func TestLogtailPortManager(t *testing.T) {
@@ -53,7 +54,22 @@ func (s *logtailPortManagerTestSuite) TestGetLogtailLitsenPorts() {
 }
 
 func (s *logtailPortManagerTestSuite) TestExportLogtailLitsenPorts() {
-	ExportLogtailPorts()
+	go func() {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/export/port", FindPort)
+		server := &http.Server{
+			Addr:              *flags.HTTPAddr,
+			Handler:           mux,
+			ReadHeaderTimeout: 10 * time.Second,
+		}
+		err := server.ListenAndServe()
+		defer server.Close()
+		if err != nil && err != http.ErrServerClosed {
+			logger.Error(context.Background(), "export logtail's ports failed", err.Error())
+			return
+		}
+	}()
+
 	listener1, err := net.Listen("tcp", ":18688")
 	if err == nil {
 		defer listener1.Close()
@@ -71,7 +87,7 @@ func (s *logtailPortManagerTestSuite) TestExportLogtailLitsenPorts() {
 	for range ticker.C {
 		count++
 		client := &http.Client{}
-		req, err := http.NewRequest("GET", fmt.Sprintf("http://127.0.0.1:%d/export/port", exportLogtailPortsPort), nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf("http://127.0.0.1%s/export/port", *flags.HTTPAddr), nil)
 		s.NoError(err)
 		res, err := client.Do(req)
 		s.NoError(err)

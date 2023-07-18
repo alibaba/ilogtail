@@ -10,21 +10,20 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
-)
-
-var (
-	exportLogtailPortsPort = 18689
-	exportLogtailPortsOnce sync.Once
+	"github.com/alibaba/ilogtail/plugin_main/flags"
 )
 
 func getExcludePorts() []int {
 	ports := []int{}
 	// logtail service port
-	ports = append(ports, exportLogtailPortsPort)
+	if *flags.StatefulSetFlag {
+		add := *flags.HTTPAddr
+		exportLogtailPortsPort, _ := strconv.Atoi(strings.Split(add, ":")[1])
+		ports = append(ports, exportLogtailPortsPort)
+	}
+
 	// env "HTTP_PROBE_PORT"
 	checkAlivePort := os.Getenv("HTTP_PROBE_PORT")
 	if len(checkAlivePort) != 0 {
@@ -51,12 +50,27 @@ func getListenPortsFromFile(pid int, protocol string) ([]int, error) {
 		if len(fields) < 10 {
 			continue
 		}
+		/*
+			file /proc/{pid}/net/tcp or /proc/{pid}/net/tcp6
+			sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
+			0: 0100007F:97ED 00000000:0000 0A 00000000:00000000 00:00000000 00000000     0        0 259386485 1 0000000000000000 100 0 0 10 0
+			1: 1600580A:8DDE C8E81275:01BB 01 00000000:00000000 00:00000000 00000000     0        0 259384917 1 0000000000000000 393 4 24 10 -1
+			2: 0100007F:97ED 0100007F:D30A 01 00000000:00000000 00:00000000 00000000     0        0 259384905 2 0000000000000000 20 4 6 10 -1
+			st's value=="0A" means LISTEN
+		*/
 		if strings.HasPrefix(protocol, "tcp") && fields[3] != "0A" {
 			continue
 		}
+		/*
+			file /proc/{pid}/net/udp or /proc/{pid}/net/udp6
+			sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops
+			0: 0100007F:0017 0100007F:0035 01 00000000:00000000 00:00000000 00000000  1000        0 17032 1 ffff8a682eed8000 0
+			st's value=="07" means LISTEN
+		*/
 		if strings.HasPrefix(protocol, "udp") && fields[3] != "07" {
 			continue
 		}
+		// local_address is ip:port
 		port, err := strconv.ParseUint((strings.Split(fields[1], ":")[1]), 16, 32)
 		if err != nil {
 			logger.Error(context.Background(), "parse port fail", err.Error())
@@ -120,7 +134,7 @@ func getLogtailLitsenPorts() ([]int, []int) {
 	return portsTCP, portsUDP
 }
 
-func processPort(res http.ResponseWriter, req *http.Request) {
+func FindPort(res http.ResponseWriter, req *http.Request) {
 	portsTCP, portsUDP := getLogtailLitsenPorts()
 	logger.Info(context.Background(), "get logtail's listen ports tcp", portsTCP, "udp", portsUDP)
 
@@ -144,24 +158,4 @@ func processPort(res http.ResponseWriter, req *http.Request) {
 	if WriteErr != nil {
 		logger.Error(context.Background(), "write response err", WriteErr.Error())
 	}
-}
-
-func ExportLogtailPorts() {
-	go func() {
-		exportLogtailPortsOnce.Do(func() {
-			mux := http.NewServeMux()
-			mux.HandleFunc("/export/port", processPort)
-			server := &http.Server{
-				Addr:              ":" + strconv.Itoa(exportLogtailPortsPort),
-				Handler:           mux,
-				ReadHeaderTimeout: 10 * time.Second,
-			}
-			err := server.ListenAndServe()
-			defer server.Close()
-			if err != nil && err != http.ErrServerClosed {
-				logger.Error(context.Background(), "export logtail's ports failed", err.Error())
-				return
-			}
-		})
-	}()
 }
