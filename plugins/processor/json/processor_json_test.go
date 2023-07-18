@@ -286,9 +286,13 @@ func TestKeepSourceIfParseErrorV2(t *testing.T) {
 		contents := log.GetIndices()
 		contents.Add("s_key", jsonVal)
 		processor.processEvent(log)
-		assert.Equal(t, 1, contents.Len())
+		assert.Equal(t, 3, contents.Len())
 		assert.True(t, contents.Contains("js_key-k1"))
+		assert.True(t, contents.Contains("js_key-k6"))
+		assert.True(t, contents.Contains("js_key-k7"))
 		assert.Equal(t, "{\"k2\":{\"k3\":{\"k4\":{\"k51\":\"51\",\"k52\":\"52\"},\"k41\":\"41\"}}}", contents.Get("js_key-k1"))
+		assert.Equal(t, "[{\"x\":\"a\"},{\"x\":\"b\"}]", contents.Get("js_key-k6"))
+		assert.Equal(t, "[]", contents.Get("js_key-k7"))
 	}
 
 	// Case 2: Invalid log, keep source key in output log.
