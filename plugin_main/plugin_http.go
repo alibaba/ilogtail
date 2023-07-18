@@ -195,7 +195,7 @@ func InitHTTPServer() {
 			}
 		}
 		if *flags.StatefulSetFlag {
-			handlers["/export/port"] = &handler{handlerFunc: pluginmanager.FindPort, description: "dump mem info"}
+			handlers["/export/port"] = &handler{handlerFunc: pluginmanager.FindPort, description: "export ilogtail's LISTEN ports"}
 		}
 		if len(handlers) != 0 {
 			handlers["/"] = &handler{handlerFunc: HelpServer, description: "handlers help description"}
