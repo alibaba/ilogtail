@@ -16,15 +16,16 @@ package model
 
 import proto "github.com/alibaba/ilogtail/config_server/service/proto"
 
-type AgentGroupTag struct {
-	Name  string `json:"Name"`
-	Value string `json:"Value"`
+var Operators = map[string]proto.TagOperator{
+	"LOGIC_AND": proto.TagOperator_LOGIC_AND,
+	"LOGIC_OR":  proto.TagOperator_LOGIC_OR,
 }
 
 type AgentGroup struct {
 	Name           string           `json:"Name"`
 	Description    string           `json:"Description"`
 	Tags           []AgentGroupTag  `json:"Tags"`
+	TagOperator    string           `json:"TagOperator"`
 	AppliedConfigs map[string]int64 `json:"AppliedConfigs"`
 }
 
@@ -34,11 +35,9 @@ func (a *AgentGroup) ToProto() *proto.AgentGroup {
 	pa.Description = a.Description
 	pa.Tags = make([]*proto.AgentGroupTag, 0)
 	for _, v := range a.Tags {
-		tag := new(proto.AgentGroupTag)
-		tag.Name = v.Name
-		tag.Value = v.Value
-		pa.Tags = append(pa.Tags, tag)
+		pa.Tags = append(pa.Tags, v.ToProto())
 	}
+	pa.TagOperator = Operators[a.TagOperator]
 	return pa
 }
 
@@ -48,8 +47,8 @@ func (a *AgentGroup) ParseProto(pa *proto.AgentGroup) {
 	a.Tags = make([]AgentGroupTag, 0)
 	for _, v := range pa.Tags {
 		tag := new(AgentGroupTag)
-		tag.Name = v.Name
-		tag.Value = v.Value
+		tag.ParseProto(v)
 		a.Tags = append(a.Tags, *tag)
 	}
+	a.TagOperator = pa.TagOperator.String()
 }

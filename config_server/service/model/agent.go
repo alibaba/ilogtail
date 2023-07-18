@@ -60,7 +60,7 @@ type Agent struct {
 	AgentID          string          `json:"AgentID"`
 	AgentType        string          `json:"AgentType"`
 	Attributes       AgentAttributes `json:"Attributes"`
-	Tags             []string        `json:"Tags"`
+	Tags             []AgentGroupTag `json:"Tags"`
 	RunningStatus    string          `json:"RunningStatus"`
 	StartupTime      int64           `json:"StartupTime"`
 	Interval         int32           `json:"Interval"`
@@ -75,7 +75,10 @@ func (a *Agent) ToProto() *proto.Agent {
 	pa.AgentId = a.AgentID
 	pa.AgentType = a.AgentType
 	pa.Attributes = a.Attributes.ToProto()
-	pa.Tags = a.Tags
+	pa.Tags = make([]*proto.AgentGroupTag, 0)
+	for _, v := range a.Tags {
+		pa.Tags = append(pa.Tags, v.ToProto())
+	}
 	pa.RunningStatus = RunningStatus[a.RunningStatus]
 	pa.StartupTime = a.StartupTime
 	pa.Interval = a.Interval
@@ -90,7 +93,12 @@ func (a *Agent) ParseProto(pa *proto.Agent) {
 	a.AgentID = pa.AgentId
 	a.AgentType = pa.AgentType
 	a.Attributes.ParseProto(pa.Attributes)
-	a.Tags = pa.Tags
+	a.Tags = make([]AgentGroupTag, 0)
+	for _, v := range pa.Tags {
+		tag := new(AgentGroupTag)
+		tag.ParseProto(v)
+		a.Tags = append(a.Tags, *tag)
+	}
 	a.RunningStatus = pa.RunningStatus.String()
 	a.StartupTime = pa.StartupTime
 	a.Interval = pa.Interval
