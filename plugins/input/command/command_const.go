@@ -54,3 +54,8 @@ var SupportContentType = map[string]bool{
 	ContentTypePlainText: true,
 	ContentTypeBase64:    true,
 }
+
+var (
+	intErrorAlarmType     = "CATEGORY_CONFIG_ALARM"
+	collectErrorAlarmType = "OBSERVER_RUNTIME_ALARM"
+)
