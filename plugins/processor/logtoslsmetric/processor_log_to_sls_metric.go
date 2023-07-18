@@ -280,8 +280,7 @@ TraverseLogArray:
 				p.logError(errInvalidMetricTime)
 				continue TraverseLogArray
 			}
-			// log.Time = (uint32)(time.Now().Unix())
-			timeNano = convertSecondsToNano(log.Time)
+			timeNano = GetLogTimeNano(log)
 		}
 
 		// The number of labels must be equal to the number of label fields.
@@ -345,9 +344,9 @@ func (p *ProcessorLogToSlsMetric) logInitError(err error) {
 	logger.Error(p.context.GetRuntimeContext(), processorInitErrorLogAlarmType, "init processor_log_to_sls_metric error", err)
 }
 
-func convertSecondsToNano(seconds uint32) string {
-	nanoseconds := int64(seconds) * int64(time.Second)
-	nanosecondsStr := strconv.FormatInt(nanoseconds, 10)
+func GetLogTimeNano(log *protocol.Log) string {
+	nanoTime := int64(log.Time)*int64(time.Second) + +int64(log.TimeNs)
+	nanosecondsStr := strconv.FormatInt(nanoTime, 10)
 	return nanosecondsStr
 }
 
