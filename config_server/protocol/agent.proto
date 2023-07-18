@@ -22,6 +22,12 @@ enum RunningStatus {
     OFFLINE = 2;
 }
 
+// Define AgentGroup's tag operator
+enum TagOperator {
+	LOGIC_AND = 0;
+	LOGIC_OR = 1;
+}
+
 // Define response code
 enum RespCode {
     ACCEPT = 0;                 
@@ -75,6 +81,12 @@ message Command {
     map<string, string> args = 4;   // Command's parameter arrays
 }
 
+// Define AgentGroup's tag
+message AgentGroupTag {
+    string name = 1;
+    string value = 2;
+}
+
 // API: /Agent/HeartBeat/
 
 // Agent sends requests to the ConfigServer to send heartbeats, get config updates and receive commands.
@@ -84,7 +96,7 @@ message HeartBeatRequest {
     string agent_id = 2;                        // Required, Agent's unique identification
     string agent_type = 3;                      // Required, Agent's type(ilogtail, ..)
     AgentAttributes attributes = 4;             // Agent's basic attributes
-    repeated string tags =  5;                  // Agent's tags
+    repeated AgentGroupTag tags =  5;           // Agent's tags
     RunningStatus running_status = 6;           // Agent's running status
     int64 startup_time = 7;                     // Agent's startup time
     int32 interval = 8;                         // Agent's heartbeat interval
