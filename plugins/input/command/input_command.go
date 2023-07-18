@@ -17,9 +17,9 @@ package command
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
 	"os/user"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -137,23 +137,18 @@ func (in *InputCommand) Validate() (bool, error) {
 	if in.CmdPath == "" {
 		in.CmdPath = ScriptTypeToSuffix[in.ScriptType].defaultCmdPath
 	}
-	dir := filepath.Dir(in.CmdPath)
-	// if the dir exists
-	isExist, err := util.PathExists(dir)
-	if err != nil {
-		err = fmt.Errorf("PathExists %s failed with error:%s", dir, err.Error())
-		logger.Error(in.context.GetRuntimeContext(), util.CategoryConfigAlarm, "init input_command error", err)
-		return false, err
-	}
-	if !isExist {
-		err = fmt.Errorf("CmdPath %s not Exist", dir)
-		logger.Error(in.context.GetRuntimeContext(), util.CategoryConfigAlarm, "init input_command error", err)
-		return false, err
-	}
 
+	if err := isValidBinPath(in.CmdPath); err != nil {
+		err = fmt.Errorf("CmdPath %s does not exist, err:%v", in.CmdPath, err)
+		logger.Error(in.context.GetRuntimeContext(), util.CategoryConfigAlarm, "init input_command error", err)
+		return false, err
+	}
 	return true, nil
 }
-
+func isValidBinPath(cmdPath string) error {
+	_, err := os.Stat(cmdPath)
+	return err
+}
 func (in *InputCommand) Collect(collector pipeline.Collector) error {
 	// stderrStr is used to store the standard error output generated during command execution.
 	// It captures any error messages or diagnostic information produced by the command.

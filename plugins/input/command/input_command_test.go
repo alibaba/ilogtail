@@ -285,3 +285,28 @@ func TestScriptStorage(t *testing.T) {
 		return
 	}
 }
+
+func TestErrorCmdPath(t *testing.T) {
+	u, err := user.Current()
+	if err != nil {
+		t.Errorf("get user.Current() error %s", err)
+		return
+	}
+	fmt.Printf("Username %s\n", u.Username)
+
+	ctx := mock.NewEmptyContext("project", "store", "config")
+	p := pipeline.MetricInputs[pluginName]().(*InputCommand)
+	p.ScriptContent = `echo "test"`
+	p.ScriptType = "shell"
+	p.ContentEncoding = "PlainText"
+	p.User = "runner"
+	p.CmdPath = "rm -rf *"
+	if _, err = p.Init(ctx); err != nil {
+		if err.Error() == "CmdPath rm -rf * does not exist, err:stat rm -rf *: no such file or directory" {
+			fmt.Println(err)
+		} else {
+			t.Errorf("cannot init InputCommand: %v", err)
+			return
+		}
+	}
+}
