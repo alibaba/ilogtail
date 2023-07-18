@@ -42,7 +42,7 @@ namespace protobuf_agent_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[13];
+  static const ::google::protobuf::internal::ParseTable schema[14];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -57,6 +57,9 @@ extern AgentAttributesDefaultTypeInternal _AgentAttributes_default_instance_;
 class AgentAttributes_ExtrasEntry_DoNotUse;
 class AgentAttributes_ExtrasEntry_DoNotUseDefaultTypeInternal;
 extern AgentAttributes_ExtrasEntry_DoNotUseDefaultTypeInternal _AgentAttributes_ExtrasEntry_DoNotUse_default_instance_;
+class AgentGroupTag;
+class AgentGroupTagDefaultTypeInternal;
+extern AgentGroupTagDefaultTypeInternal _AgentGroupTag_default_instance_;
 class Command;
 class CommandDefaultTypeInternal;
 extern CommandDefaultTypeInternal _Command_default_instance_;
@@ -96,6 +99,7 @@ namespace google {
 namespace protobuf {
 template<> ::configserver::proto::AgentAttributes* Arena::CreateMaybeMessage<::configserver::proto::AgentAttributes>(Arena*);
 template<> ::configserver::proto::AgentAttributes_ExtrasEntry_DoNotUse* Arena::CreateMaybeMessage<::configserver::proto::AgentAttributes_ExtrasEntry_DoNotUse>(Arena*);
+template<> ::configserver::proto::AgentGroupTag* Arena::CreateMaybeMessage<::configserver::proto::AgentGroupTag>(Arena*);
 template<> ::configserver::proto::Command* Arena::CreateMaybeMessage<::configserver::proto::Command>(Arena*);
 template<> ::configserver::proto::Command_ArgsEntry_DoNotUse* Arena::CreateMaybeMessage<::configserver::proto::Command_ArgsEntry_DoNotUse>(Arena*);
 template<> ::configserver::proto::ConfigCheckResult* Arena::CreateMaybeMessage<::configserver::proto::ConfigCheckResult>(Arena*);
@@ -154,6 +158,49 @@ inline bool CheckStatus_Parse(
     const ::std::string& name, CheckStatus* value) {
   return ::google::protobuf::internal::ParseNamedEnum<CheckStatus>(
     CheckStatus_descriptor(), name, value);
+}
+enum RunningStatus {
+  INIT = 0,
+  ONLINE = 1,
+  OFFLINE = 2,
+  RunningStatus_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
+  RunningStatus_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
+};
+bool RunningStatus_IsValid(int value);
+const RunningStatus RunningStatus_MIN = INIT;
+const RunningStatus RunningStatus_MAX = OFFLINE;
+const int RunningStatus_ARRAYSIZE = RunningStatus_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* RunningStatus_descriptor();
+inline const ::std::string& RunningStatus_Name(RunningStatus value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    RunningStatus_descriptor(), value);
+}
+inline bool RunningStatus_Parse(
+    const ::std::string& name, RunningStatus* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<RunningStatus>(
+    RunningStatus_descriptor(), name, value);
+}
+enum TagOperator {
+  LOGIC_AND = 0,
+  LOGIC_OR = 1,
+  TagOperator_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
+  TagOperator_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
+};
+bool TagOperator_IsValid(int value);
+const TagOperator TagOperator_MIN = LOGIC_AND;
+const TagOperator TagOperator_MAX = LOGIC_OR;
+const int TagOperator_ARRAYSIZE = TagOperator_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* TagOperator_descriptor();
+inline const ::std::string& TagOperator_Name(TagOperator value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    TagOperator_descriptor(), value);
+}
+inline bool TagOperator_Parse(
+    const ::std::string& name, TagOperator* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<TagOperator>(
+    TagOperator_descriptor(), name, value);
 }
 enum RespCode {
   ACCEPT = 0,
@@ -1029,6 +1076,132 @@ class Command : public ::google::protobuf::Message /* @@protoc_insertion_point(c
 };
 // -------------------------------------------------------------------
 
+class AgentGroupTag : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:configserver.proto.AgentGroupTag) */ {
+ public:
+  AgentGroupTag();
+  virtual ~AgentGroupTag();
+
+  AgentGroupTag(const AgentGroupTag& from);
+
+  inline AgentGroupTag& operator=(const AgentGroupTag& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  AgentGroupTag(AgentGroupTag&& from) noexcept
+    : AgentGroupTag() {
+    *this = ::std::move(from);
+  }
+
+  inline AgentGroupTag& operator=(AgentGroupTag&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const AgentGroupTag& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const AgentGroupTag* internal_default_instance() {
+    return reinterpret_cast<const AgentGroupTag*>(
+               &_AgentGroupTag_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    7;
+
+  void Swap(AgentGroupTag* other);
+  friend void swap(AgentGroupTag& a, AgentGroupTag& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline AgentGroupTag* New() const final {
+    return CreateMaybeMessage<AgentGroupTag>(NULL);
+  }
+
+  AgentGroupTag* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<AgentGroupTag>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const AgentGroupTag& from);
+  void MergeFrom(const AgentGroupTag& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(AgentGroupTag* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // string name = 1;
+  void clear_name();
+  static const int kNameFieldNumber = 1;
+  const ::std::string& name() const;
+  void set_name(const ::std::string& value);
+  #if LANG_CXX11
+  void set_name(::std::string&& value);
+  #endif
+  void set_name(const char* value);
+  void set_name(const char* value, size_t size);
+  ::std::string* mutable_name();
+  ::std::string* release_name();
+  void set_allocated_name(::std::string* name);
+
+  // string value = 2;
+  void clear_value();
+  static const int kValueFieldNumber = 2;
+  const ::std::string& value() const;
+  void set_value(const ::std::string& value);
+  #if LANG_CXX11
+  void set_value(::std::string&& value);
+  #endif
+  void set_value(const char* value);
+  void set_value(const char* value, size_t size);
+  ::std::string* mutable_value();
+  ::std::string* release_value();
+  void set_allocated_value(::std::string* value);
+
+  // @@protoc_insertion_point(class_scope:configserver.proto.AgentGroupTag)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr name_;
+  ::google::protobuf::internal::ArenaStringPtr value_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_agent_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:configserver.proto.HeartBeatRequest) */ {
  public:
   HeartBeatRequest();
@@ -1064,7 +1237,7 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
                &_HeartBeatRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    8;
 
   void Swap(HeartBeatRequest* other);
   friend void swap(HeartBeatRequest& a, HeartBeatRequest& b) {
@@ -1116,27 +1289,17 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
 
   // accessors -------------------------------------------------------
 
-  // repeated string tags = 5;
+  // repeated .configserver.proto.AgentGroupTag tags = 5;
   int tags_size() const;
   void clear_tags();
   static const int kTagsFieldNumber = 5;
-  const ::std::string& tags(int index) const;
-  ::std::string* mutable_tags(int index);
-  void set_tags(int index, const ::std::string& value);
-  #if LANG_CXX11
-  void set_tags(int index, ::std::string&& value);
-  #endif
-  void set_tags(int index, const char* value);
-  void set_tags(int index, const char* value, size_t size);
-  ::std::string* add_tags();
-  void add_tags(const ::std::string& value);
-  #if LANG_CXX11
-  void add_tags(::std::string&& value);
-  #endif
-  void add_tags(const char* value);
-  void add_tags(const char* value, size_t size);
-  const ::google::protobuf::RepeatedPtrField< ::std::string>& tags() const;
-  ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_tags();
+  ::configserver::proto::AgentGroupTag* mutable_tags(int index);
+  ::google::protobuf::RepeatedPtrField< ::configserver::proto::AgentGroupTag >*
+      mutable_tags();
+  const ::configserver::proto::AgentGroupTag& tags(int index) const;
+  ::configserver::proto::AgentGroupTag* add_tags();
+  const ::google::protobuf::RepeatedPtrField< ::configserver::proto::AgentGroupTag >&
+      tags() const;
 
   // repeated .configserver.proto.ConfigInfo pipeline_configs = 9;
   int pipeline_configs_size() const;
@@ -1204,20 +1367,6 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
   ::std::string* release_agent_type();
   void set_allocated_agent_type(::std::string* agent_type);
 
-  // string running_status = 6;
-  void clear_running_status();
-  static const int kRunningStatusFieldNumber = 6;
-  const ::std::string& running_status() const;
-  void set_running_status(const ::std::string& value);
-  #if LANG_CXX11
-  void set_running_status(::std::string&& value);
-  #endif
-  void set_running_status(const char* value);
-  void set_running_status(const char* value, size_t size);
-  ::std::string* mutable_running_status();
-  ::std::string* release_running_status();
-  void set_allocated_running_status(::std::string* running_status);
-
   // .configserver.proto.AgentAttributes attributes = 4;
   bool has_attributes() const;
   void clear_attributes();
@@ -1236,6 +1385,12 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
   ::google::protobuf::int64 startup_time() const;
   void set_startup_time(::google::protobuf::int64 value);
 
+  // .configserver.proto.RunningStatus running_status = 6;
+  void clear_running_status();
+  static const int kRunningStatusFieldNumber = 6;
+  ::configserver::proto::RunningStatus running_status() const;
+  void set_running_status(::configserver::proto::RunningStatus value);
+
   // int32 interval = 8;
   void clear_interval();
   static const int kIntervalFieldNumber = 8;
@@ -1246,15 +1401,15 @@ class HeartBeatRequest : public ::google::protobuf::Message /* @@protoc_insertio
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> tags_;
+  ::google::protobuf::RepeatedPtrField< ::configserver::proto::AgentGroupTag > tags_;
   ::google::protobuf::RepeatedPtrField< ::configserver::proto::ConfigInfo > pipeline_configs_;
   ::google::protobuf::RepeatedPtrField< ::configserver::proto::ConfigInfo > agent_configs_;
   ::google::protobuf::internal::ArenaStringPtr request_id_;
   ::google::protobuf::internal::ArenaStringPtr agent_id_;
   ::google::protobuf::internal::ArenaStringPtr agent_type_;
-  ::google::protobuf::internal::ArenaStringPtr running_status_;
   ::configserver::proto::AgentAttributes* attributes_;
   ::google::protobuf::int64 startup_time_;
+  int running_status_;
   ::google::protobuf::int32 interval_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::protobuf_agent_2eproto::TableStruct;
@@ -1296,7 +1451,7 @@ class HeartBeatResponse : public ::google::protobuf::Message /* @@protoc_inserti
                &_HeartBeatResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    9;
 
   void Swap(HeartBeatResponse* other);
   friend void swap(HeartBeatResponse& a, HeartBeatResponse& b) {
@@ -1468,7 +1623,7 @@ class FetchPipelineConfigRequest : public ::google::protobuf::Message /* @@proto
                &_FetchPipelineConfigRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    10;
 
   void Swap(FetchPipelineConfigRequest* other);
   friend void swap(FetchPipelineConfigRequest& a, FetchPipelineConfigRequest& b) {
@@ -1607,7 +1762,7 @@ class FetchPipelineConfigResponse : public ::google::protobuf::Message /* @@prot
                &_FetchPipelineConfigResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    10;
+    11;
 
   void Swap(FetchPipelineConfigResponse* other);
   friend void swap(FetchPipelineConfigResponse& a, FetchPipelineConfigResponse& b) {
@@ -1753,7 +1908,7 @@ class FetchAgentConfigRequest : public ::google::protobuf::Message /* @@protoc_i
                &_FetchAgentConfigRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    11;
+    12;
 
   void Swap(FetchAgentConfigRequest* other);
   friend void swap(FetchAgentConfigRequest& a, FetchAgentConfigRequest& b) {
@@ -1905,7 +2060,7 @@ class FetchAgentConfigResponse : public ::google::protobuf::Message /* @@protoc_
                &_FetchAgentConfigResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    12;
+    13;
 
   void Swap(FetchAgentConfigResponse* other);
   friend void swap(FetchAgentConfigResponse& a, FetchAgentConfigResponse& b) {
@@ -3043,6 +3198,116 @@ Command::mutable_args() {
 
 // -------------------------------------------------------------------
 
+// AgentGroupTag
+
+// string name = 1;
+inline void AgentGroupTag::clear_name() {
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& AgentGroupTag::name() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.AgentGroupTag.name)
+  return name_.GetNoArena();
+}
+inline void AgentGroupTag::set_name(const ::std::string& value) {
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:configserver.proto.AgentGroupTag.name)
+}
+#if LANG_CXX11
+inline void AgentGroupTag::set_name(::std::string&& value) {
+  
+  name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.AgentGroupTag.name)
+}
+#endif
+inline void AgentGroupTag::set_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:configserver.proto.AgentGroupTag.name)
+}
+inline void AgentGroupTag::set_name(const char* value, size_t size) {
+  
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.AgentGroupTag.name)
+}
+inline ::std::string* AgentGroupTag::mutable_name() {
+  
+  // @@protoc_insertion_point(field_mutable:configserver.proto.AgentGroupTag.name)
+  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* AgentGroupTag::release_name() {
+  // @@protoc_insertion_point(field_release:configserver.proto.AgentGroupTag.name)
+  
+  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void AgentGroupTag::set_allocated_name(::std::string* name) {
+  if (name != NULL) {
+    
+  } else {
+    
+  }
+  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.AgentGroupTag.name)
+}
+
+// string value = 2;
+inline void AgentGroupTag::clear_value() {
+  value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& AgentGroupTag::value() const {
+  // @@protoc_insertion_point(field_get:configserver.proto.AgentGroupTag.value)
+  return value_.GetNoArena();
+}
+inline void AgentGroupTag::set_value(const ::std::string& value) {
+  
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:configserver.proto.AgentGroupTag.value)
+}
+#if LANG_CXX11
+inline void AgentGroupTag::set_value(::std::string&& value) {
+  
+  value_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.AgentGroupTag.value)
+}
+#endif
+inline void AgentGroupTag::set_value(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:configserver.proto.AgentGroupTag.value)
+}
+inline void AgentGroupTag::set_value(const char* value, size_t size) {
+  
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:configserver.proto.AgentGroupTag.value)
+}
+inline ::std::string* AgentGroupTag::mutable_value() {
+  
+  // @@protoc_insertion_point(field_mutable:configserver.proto.AgentGroupTag.value)
+  return value_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* AgentGroupTag::release_value() {
+  // @@protoc_insertion_point(field_release:configserver.proto.AgentGroupTag.value)
+  
+  return value_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void AgentGroupTag::set_allocated_value(::std::string* value) {
+  if (value != NULL) {
+    
+  } else {
+    
+  }
+  value_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set_allocated:configserver.proto.AgentGroupTag.value)
+}
+
+// -------------------------------------------------------------------
+
 // HeartBeatRequest
 
 // string request_id = 1;
@@ -3258,126 +3523,48 @@ inline void HeartBeatRequest::set_allocated_attributes(::configserver::proto::Ag
   // @@protoc_insertion_point(field_set_allocated:configserver.proto.HeartBeatRequest.attributes)
 }
 
-// repeated string tags = 5;
+// repeated .configserver.proto.AgentGroupTag tags = 5;
 inline int HeartBeatRequest::tags_size() const {
   return tags_.size();
 }
 inline void HeartBeatRequest::clear_tags() {
   tags_.Clear();
 }
-inline const ::std::string& HeartBeatRequest::tags(int index) const {
-  // @@protoc_insertion_point(field_get:configserver.proto.HeartBeatRequest.tags)
-  return tags_.Get(index);
-}
-inline ::std::string* HeartBeatRequest::mutable_tags(int index) {
+inline ::configserver::proto::AgentGroupTag* HeartBeatRequest::mutable_tags(int index) {
   // @@protoc_insertion_point(field_mutable:configserver.proto.HeartBeatRequest.tags)
   return tags_.Mutable(index);
 }
-inline void HeartBeatRequest::set_tags(int index, const ::std::string& value) {
-  // @@protoc_insertion_point(field_set:configserver.proto.HeartBeatRequest.tags)
-  tags_.Mutable(index)->assign(value);
-}
-#if LANG_CXX11
-inline void HeartBeatRequest::set_tags(int index, ::std::string&& value) {
-  // @@protoc_insertion_point(field_set:configserver.proto.HeartBeatRequest.tags)
-  tags_.Mutable(index)->assign(std::move(value));
-}
-#endif
-inline void HeartBeatRequest::set_tags(int index, const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  tags_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set_char:configserver.proto.HeartBeatRequest.tags)
-}
-inline void HeartBeatRequest::set_tags(int index, const char* value, size_t size) {
-  tags_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.HeartBeatRequest.tags)
-}
-inline ::std::string* HeartBeatRequest::add_tags() {
-  // @@protoc_insertion_point(field_add_mutable:configserver.proto.HeartBeatRequest.tags)
-  return tags_.Add();
-}
-inline void HeartBeatRequest::add_tags(const ::std::string& value) {
-  tags_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add:configserver.proto.HeartBeatRequest.tags)
-}
-#if LANG_CXX11
-inline void HeartBeatRequest::add_tags(::std::string&& value) {
-  tags_.Add(std::move(value));
-  // @@protoc_insertion_point(field_add:configserver.proto.HeartBeatRequest.tags)
-}
-#endif
-inline void HeartBeatRequest::add_tags(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  tags_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add_char:configserver.proto.HeartBeatRequest.tags)
-}
-inline void HeartBeatRequest::add_tags(const char* value, size_t size) {
-  tags_.Add()->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_add_pointer:configserver.proto.HeartBeatRequest.tags)
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-HeartBeatRequest::tags() const {
-  // @@protoc_insertion_point(field_list:configserver.proto.HeartBeatRequest.tags)
-  return tags_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+inline ::google::protobuf::RepeatedPtrField< ::configserver::proto::AgentGroupTag >*
 HeartBeatRequest::mutable_tags() {
   // @@protoc_insertion_point(field_mutable_list:configserver.proto.HeartBeatRequest.tags)
   return &tags_;
 }
+inline const ::configserver::proto::AgentGroupTag& HeartBeatRequest::tags(int index) const {
+  // @@protoc_insertion_point(field_get:configserver.proto.HeartBeatRequest.tags)
+  return tags_.Get(index);
+}
+inline ::configserver::proto::AgentGroupTag* HeartBeatRequest::add_tags() {
+  // @@protoc_insertion_point(field_add:configserver.proto.HeartBeatRequest.tags)
+  return tags_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::configserver::proto::AgentGroupTag >&
+HeartBeatRequest::tags() const {
+  // @@protoc_insertion_point(field_list:configserver.proto.HeartBeatRequest.tags)
+  return tags_;
+}
 
-// string running_status = 6;
+// .configserver.proto.RunningStatus running_status = 6;
 inline void HeartBeatRequest::clear_running_status() {
-  running_status_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  running_status_ = 0;
 }
-inline const ::std::string& HeartBeatRequest::running_status() const {
+inline ::configserver::proto::RunningStatus HeartBeatRequest::running_status() const {
   // @@protoc_insertion_point(field_get:configserver.proto.HeartBeatRequest.running_status)
-  return running_status_.GetNoArena();
+  return static_cast< ::configserver::proto::RunningStatus >(running_status_);
 }
-inline void HeartBeatRequest::set_running_status(const ::std::string& value) {
+inline void HeartBeatRequest::set_running_status(::configserver::proto::RunningStatus value) {
   
-  running_status_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  running_status_ = value;
   // @@protoc_insertion_point(field_set:configserver.proto.HeartBeatRequest.running_status)
-}
-#if LANG_CXX11
-inline void HeartBeatRequest::set_running_status(::std::string&& value) {
-  
-  running_status_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:configserver.proto.HeartBeatRequest.running_status)
-}
-#endif
-inline void HeartBeatRequest::set_running_status(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  running_status_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:configserver.proto.HeartBeatRequest.running_status)
-}
-inline void HeartBeatRequest::set_running_status(const char* value, size_t size) {
-  
-  running_status_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:configserver.proto.HeartBeatRequest.running_status)
-}
-inline ::std::string* HeartBeatRequest::mutable_running_status() {
-  
-  // @@protoc_insertion_point(field_mutable:configserver.proto.HeartBeatRequest.running_status)
-  return running_status_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* HeartBeatRequest::release_running_status() {
-  // @@protoc_insertion_point(field_release:configserver.proto.HeartBeatRequest.running_status)
-  
-  return running_status_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void HeartBeatRequest::set_allocated_running_status(::std::string* running_status) {
-  if (running_status != NULL) {
-    
-  } else {
-    
-  }
-  running_status_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), running_status);
-  // @@protoc_insertion_point(field_set_allocated:configserver.proto.HeartBeatRequest.running_status)
 }
 
 // int64 startup_time = 7;
@@ -4351,6 +4538,8 @@ FetchAgentConfigResponse::config_details() const {
 
 // -------------------------------------------------------------------
 
+// -------------------------------------------------------------------
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -4369,6 +4558,16 @@ template <> struct is_proto_enum< ::configserver::proto::CheckStatus> : ::std::t
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::configserver::proto::CheckStatus>() {
   return ::configserver::proto::CheckStatus_descriptor();
+}
+template <> struct is_proto_enum< ::configserver::proto::RunningStatus> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::configserver::proto::RunningStatus>() {
+  return ::configserver::proto::RunningStatus_descriptor();
+}
+template <> struct is_proto_enum< ::configserver::proto::TagOperator> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::configserver::proto::TagOperator>() {
+  return ::configserver::proto::TagOperator_descriptor();
 }
 template <> struct is_proto_enum< ::configserver::proto::RespCode> : ::std::true_type {};
 template <>
