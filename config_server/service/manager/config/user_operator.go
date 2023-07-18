@@ -484,17 +484,7 @@ func (c *ConfigManager) ListAgents(req *proto.ListAgentsRequest, res *proto.List
 
 	for _, v := range agentList {
 		agent := v.(*model.Agent)
-		match := func() bool {
-			for _, v := range agentGroup.Tags {
-				for _, tag := range agent.Tags {
-					if v.Value == tag {
-						return true
-					}
-				}
-			}
-			return false
-		}()
-		if match || agentGroup.Name == "default" {
+		if agentGroup.Name == "default" || c.tagsMatch(agentGroup.Tags, agent.Tags, agentGroup.TagOperator) {
 			ans = append(ans, agent.ToProto())
 		}
 	}
