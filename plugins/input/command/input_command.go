@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os/user"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -94,9 +95,6 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 	}
 	in.cmdUser = cmdUser
 
-	if in.CmdPath == "" {
-		in.CmdPath = ScriptTypeToSuffix[in.ScriptType].defaultCmdPath
-	}
 	return 0, nil
 }
 
@@ -135,6 +133,24 @@ func (in *InputCommand) Validate() (bool, error) {
 		in.TimeoutMilliSeconds = in.IntervalMs
 		logger.Warning(in.context.GetRuntimeContext(), util.CategoryConfigAlarm, "init input_command warning", "TimeoutMilliSeconds > IntervalMs", "set TimeoutMilliSeconds = IntervalMs")
 	}
+
+	if in.CmdPath == "" {
+		in.CmdPath = ScriptTypeToSuffix[in.ScriptType].defaultCmdPath
+	}
+	dir := filepath.Dir(in.CmdPath)
+	// if the dir exists
+	isExist, err := util.PathExists(dir)
+	if err != nil {
+		err = fmt.Errorf("PathExists %s failed with error:%s", dir, err.Error())
+		logger.Error(in.context.GetRuntimeContext(), util.CategoryConfigAlarm, "init input_command error", err)
+		return false, err
+	}
+	if !isExist {
+		err = fmt.Errorf("CmdPath %s not Exist", dir)
+		logger.Error(in.context.GetRuntimeContext(), util.CategoryConfigAlarm, "init input_command error", err)
+		return false, err
+	}
+
 	return true, nil
 }
 
