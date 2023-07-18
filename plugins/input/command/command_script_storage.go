@@ -16,7 +16,9 @@ package command
 
 import (
 	"bytes"
+	"crypto/md5" //nolint:gosec
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -48,6 +50,12 @@ func mkdir(dataDir string) error {
 		return err
 	}
 	return nil
+}
+
+func getContentMd5(content string) string {
+	contentMd5 := md5.New() //nolint:gosec
+	contentMd5.Write([]byte(content))
+	return hex.EncodeToString(contentMd5.Sum(nil))
 }
 
 // SaveContent save the script to the machine

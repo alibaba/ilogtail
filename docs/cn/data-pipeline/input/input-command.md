@@ -28,6 +28,13 @@
 | Environments        | []string | 否    | 环境变量，默认为os.Environ()的值，如果设置了Environments，则在os.Environ()的基础上追加设置的环境变量                                                                                                           |
 | IgnoreError         | Bool     | 否    | 插件执行出错时是否输出Error日志。如果未添加该参数，则默认使用false，表示不忽略                                                                                                                                   |
 
+### 生成参数
+
+| 参数         | 类型     | 说明                                             |
+|------------|--------|------------------------------------------------|
+| content    | String | 表示脚本的输出内容                                      |
+| script_md5 | String | 用于表示 ScriptContent（脚本内容）的 MD5，有助于确定生成日志的脚本内容来源 |
+
 * 采集配置1
 
 ```yaml
@@ -41,6 +48,10 @@ inputs:
     Environments:
       - "DEBUG=true"
 flushers:
+  - Type: flusher_sls
+    Endpoint: cn-xxxxxx.log.aliyuncs.com
+    ProjectName: xxxxxx
+    LogstoreName: xxxxxx
   - Type: flusher_stdout
     OnlyStdout: true
 ```
@@ -49,8 +60,9 @@ flushers:
 
 ```json
 {
-    "content":"test metric commond",
-    "__time__":"1680079323"
+  "content":"test metric commond",
+  "script_md5":"b3ebc535c2e6cead6e2e13b383907245",
+  "__time__":"1689677617"
 }
 ```
 
@@ -91,7 +103,8 @@ flushers:
 ```json
 {
   "content":"test input_command 0\ntest input_command 1\ntest input_command 2\ntest input_command 3\ntest input_command 4\ntest input_command 5\ntest input_command 6\ntest input_command 7\ntest input_command 8\ntest input_command 9",
-  "__time__":"1689563358"
+  "script_md5":"5d049f5b2943d2d5e5737dddb065c39c",
+  "__time__":"1689677656"
 }
 ```
 
@@ -124,6 +137,7 @@ flushers:
 ```json
 {
   "content":"{'GOPATH': '/opt/go', 'GOROOT': '/usr/local/go',  'DEBUG': 'true', xxxxx(省略后面内容）}",
-  "__time__":"1689563758"
+  "script_md5":"1444286e16118f7d1bb778738a828273",
+  "__time__":"1689677681"
 }
 ```

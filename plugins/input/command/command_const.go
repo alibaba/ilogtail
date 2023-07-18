@@ -22,6 +22,7 @@ const (
 	UserRoot                = "root"
 	ContentTypeBase64       = "Base64"
 	ContentTypePlainText    = "PlainText"
+	ScriptMd5               = "script_md5"
 )
 
 type ScriptMeta struct {

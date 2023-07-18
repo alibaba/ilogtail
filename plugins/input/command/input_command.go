@@ -45,10 +45,11 @@ type InputCommand struct {
 	Environments        []string `comment:"Environment variables"`
 	IgnoreError         bool     `comment:"Environment variables"`
 
-	context    pipeline.Context
-	storageDir string
-	scriptPath string
-	cmdUser    *user.User
+	context          pipeline.Context
+	storageDir       string
+	scriptPath       string
+	cmdUser          *user.User
+	scriptContentMd5 string
 }
 
 func (in *InputCommand) Init(context pipeline.Context) (int, error) {
@@ -85,6 +86,8 @@ func (in *InputCommand) Init(context pipeline.Context) (int, error) {
 		return 0, err
 	}
 	in.scriptPath = scriptPath
+
+	in.scriptContentMd5 = getContentMd5(in.ScriptContent)
 
 	// Lookup looks up the user
 	cmdUser, err := user.Lookup(in.User)
@@ -198,6 +201,10 @@ func (in *InputCommand) Collect(collector pipeline.Collector) error {
 				{
 					Key:   models.ContentKey,
 					Value: splitStr,
+				},
+				{
+					Key:   ScriptMd5,
+					Value: in.scriptContentMd5,
 				},
 			},
 		}
