@@ -46,7 +46,7 @@ public:
     bool mConfigServerAvailable;
     std::vector<ConfigServerAddress> mConfigServerAddresses;
     int mConfigServerAddressId;
-    std::vector<std::string> mConfigServerTags;
+    std::unordered_map<std::string, std::string> mConfigServerTags;
 
     bool IsDebugMode() const { return false; }
 
@@ -60,7 +60,7 @@ public:
     bool GetConfigServerAvailable() { return mConfigServerAvailable; }
     void StopUsingConfigServer() { mConfigServerAvailable = false; }
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
-    const std::vector<std::string>& GetConfigServerTags() const { return mConfigServerTags; }
+    const std::unordered_map<std::string, std::string>& GetConfigServerTags() const { return mConfigServerTags; }
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;

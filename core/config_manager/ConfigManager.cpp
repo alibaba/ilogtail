@@ -251,10 +251,17 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     attributes.set_version(ILOGTAIL_VERSION);
     attributes.set_ip(LogFileProfiler::mIpAddr);
     heartBeatReq.mutable_attributes()->MergeFrom(attributes);
-    heartBeatReq.mutable_tags()->MergeFrom({AppConfig::GetInstance()->GetConfigServerTags().begin(),
-                                            AppConfig::GetInstance()->GetConfigServerTags().end()});
-    heartBeatReq.set_running_status("");
-    heartBeatReq.set_startup_time(0);
+
+    google::protobuf::RepeatedPtrField<configserver::proto::AgentGroupTag> agentGroupTags;
+    for (std::unordered_map<std::string, std::string>::const_iterator it = AppConfig::GetInstance()->GetConfigServerTags().begin();
+         it != AppConfig::GetInstance()->GetConfigServerTags().end();
+         it++) {
+        configserver::proto::AgentGroupTag* info = agentGroupTags.Add();
+        info->set_name(it->first);
+        info->set_value(it->second);
+    }
+    heartBeatReq.mutable_tags()->MergeFrom(agentGroupTags);
+
     heartBeatReq.set_interval(INT32_FLAG(config_update_interval));
 
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigInfo> pipelineConfigs;

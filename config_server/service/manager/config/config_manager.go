@@ -52,3 +52,41 @@ func (c *ConfigManager) Init() {
 		panic(addErr)
 	}
 }
+
+func (c *ConfigManager) tagsMatch(groupTags []model.AgentGroupTag, agentTags []model.AgentGroupTag, tagOperator string) bool {
+	switch tagOperator {
+	case "LOGIC_AND":
+		return logicAndMatch(groupTags, agentTags)
+	case "LOGIC_OR":
+		return logicOrMatch(groupTags, agentTags)
+	default:
+		return false
+	}
+}
+
+func logicAndMatch(groupTags []model.AgentGroupTag, agentTags []model.AgentGroupTag) bool {
+	for _, gt := range groupTags {
+		found := false
+		for _, at := range agentTags {
+			if gt.Name == at.Name && gt.Value == at.Value {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+func logicOrMatch(groupTags []model.AgentGroupTag, agentTags []model.AgentGroupTag) bool {
+	for _, gt := range groupTags {
+		for _, at := range agentTags {
+			if gt.Name == at.Name && gt.Value == at.Value {
+				return true
+			}
+		}
+	}
+	return false
+}

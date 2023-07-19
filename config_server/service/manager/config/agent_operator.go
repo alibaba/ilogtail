@@ -60,19 +60,16 @@ func (c *ConfigManager) CheckConfigUpdatesWhenHeartbeat(req *proto.HeartBeatRequ
 		return common.InternalServerError.Status, res
 	}
 
-	for _, agentGroup := range agentGroupList {
-		match := func() bool {
-			for _, v := range agentGroup.(*model.AgentGroup).Tags {
-				for _, tag := range req.Tags {
-					if v.Value == tag {
-						return true
-					}
-				}
-			}
-			return false
-		}()
-		if match || agentGroup.(*model.AgentGroup).Name == "default" {
-			for k := range agentGroup.(*model.AgentGroup).AppliedConfigs {
+	for _, v := range agentGroupList {
+		group := v.(*model.AgentGroup)
+		agentTags := make([]model.AgentGroupTag, 0)
+		for _, pt := range req.Tags {
+			tag := new(model.AgentGroupTag)
+			tag.ParseProto(pt)
+			agentTags = append(agentTags, *tag)
+		}
+		if group.Name == "default" || c.tagsMatch(group.Tags, agentTags, group.TagOperator) {
+			for k := range group.AppliedConfigs {
 				// Check if config k exist
 				config, hasErr := c.ConfigList[k]
 				if !hasErr {

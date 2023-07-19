@@ -76,7 +76,9 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
     if (confJson.isMember("ilogtail_tags") && confJson["ilogtail_tags"].isObject()) {
         Json::Value::Members members = confJson["ilogtail_tags"].getMemberNames();
         for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
-            mConfigServerTags.push_back(confJson["ilogtail_tags"][*it].asString());
+            std::string name = *it;
+            std::string value = confJson["ilogtail_tags"][name].asString();
+            mConfigServerTags[name] = value;
         }
 
         LOG_INFO(sLogger, ("ilogtail_configserver_tags", confJson["ilogtail_tags"].toStyledString()));

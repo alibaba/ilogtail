@@ -37,7 +37,14 @@ func (a *AgentManager) HeartBeat(req *proto.HeartBeatRequest, res *proto.HeartBe
 	agent.AgentID = req.AgentId
 	agent.AgentType = req.AgentType
 	agent.Attributes.ParseProto(req.Attributes)
-	agent.Tags = req.Tags
+
+	agent.Tags = make([]model.AgentGroupTag, 0)
+	for _, v := range req.Tags {
+		tag := new(model.AgentGroupTag)
+		tag.ParseProto(v)
+		agent.Tags = append(agent.Tags, *tag)
+	}
+
 	agent.Interval = req.Interval
 	current := time.Now()
 	startupTime := current.Unix()
