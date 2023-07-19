@@ -16,6 +16,7 @@ package addfields
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
@@ -63,9 +64,13 @@ func (p *ProcessorAddFields) processLog(log *protocol.Log) {
 			if _, exists := dict[k]; exists {
 				continue
 			}
+			val := v
+			if k == "@timestamp" {
+				val = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+			}
 			newContent := &protocol.Log_Content{
 				Key:   k,
-				Value: v,
+				Value: val,
 			}
 			log.Contents = append(log.Contents, newContent)
 		}
@@ -74,9 +79,13 @@ func (p *ProcessorAddFields) processLog(log *protocol.Log) {
 			if p.IgnoreIfExist && p.isExist(log, k) {
 				continue
 			}
+			val := v
+			if k == "@timestamp" {
+				val = time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+			}
 			newContent := &protocol.Log_Content{
 				Key:   k,
-				Value: v,
+				Value: val,
 			}
 			log.Contents = append(log.Contents, newContent)
 		}
