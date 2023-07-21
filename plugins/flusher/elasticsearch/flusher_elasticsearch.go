@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/fmtstr"
@@ -187,14 +188,22 @@ func (f *FlusherElasticSearch) Stop() error {
 
 func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
 	nowTime := time.Now().Local()
+	var errs []error
+	var wg sync.WaitGroup
+	sendCh := make(chan *esapi.BulkRequest, len(logGroupList))
+	recvCh := make(chan *esapi.Response, len(logGroupList))
+
 	for _, logGroup := range logGroupList {
 		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
+
 		serializedLogs, values, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", err)
-			return err
+			errs = append(errs, err)
+			continue
 		}
-		var buffer []string
+
+		var builder strings.Builder
 		for index, log := range serializedLogs.([][]byte) {
 			ESIndex := &f.Index
 			if f.isDynamicIndex {
@@ -202,38 +211,59 @@ func (f *FlusherElasticSearch) Flush(projectName string, logstoreName string, co
 				ESIndex, err = fmtstr.FormatIndex(valueMap, f.Index, uint32(nowTime.Unix()))
 				if err != nil {
 					logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch format index fail, error", err)
-					return err
+					errs = append(errs, err)
+					continue
 				}
 			}
-			var builder strings.Builder
 			builder.WriteString(`{"index": {"_index": "`)
 			builder.WriteString(*ESIndex)
 			builder.WriteString(`"}}`)
-			buffer = append(buffer, builder.String())
-			buffer = append(buffer, string(log))
+			builder.WriteString("\n")
+			builder.Write(log)
+			builder.WriteString("\n")
 		}
-		body := strings.Join(buffer, "\n")
 		req := esapi.BulkRequest{
-			Body: strings.NewReader(body + "\n"),
+			Body: strings.NewReader(builder.String()),
 		}
-
-		res, err := req.Do(context.Background(), f.esClient)
-		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request fail, error", err)
-			return err
-		}
-		defer res.Body.Close()
-
-		if res.StatusCode >= 400 && res.StatusCode <= 499 {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request client error", res)
-			return fmt.Errorf("err status returned: %v", res.Status())
-		} else if res.StatusCode >= 500 && res.StatusCode <= 599 {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request server error", res)
-			return fmt.Errorf("err status returned: %v", res.Status())
-		}
-		logger.Debug(f.context.GetRuntimeContext(), "elasticsearch success send events: messageID")
+		sendCh <- &req
 	}
 
+	wg.Add(len(sendCh))
+
+	go func() {
+		for req := range sendCh {
+			go func(req *esapi.BulkRequest) {
+				res, err := req.Do(context.Background(), f.esClient)
+				if err != nil {
+					logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request fail, error", err)
+					errs = append(errs, err)
+				} else {
+					recvCh <- res
+				}
+				wg.Done()
+			}(req)
+		}
+	}()
+
+	go func() {
+		for res := range recvCh {
+			if res.StatusCode >= 400 && res.StatusCode <= 499 {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request client error", res)
+				errs = append(errs, fmt.Errorf("err status returned: %v", res.Status()))
+			} else if res.StatusCode >= 500 && res.StatusCode <= 599 {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch request server error", res)
+				errs = append(errs, fmt.Errorf("err status returned: %v", res.Status()))
+			}
+			res.Body.Close()
+			logger.Debug(f.context.GetRuntimeContext(), "elasticsearch success send events: messageID")
+		}
+	}()
+
+	wg.Wait()
+
+	if len(errs) > 0 {
+		return errs[0]
+	}
 	return nil
 }
 
