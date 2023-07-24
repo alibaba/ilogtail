@@ -201,16 +201,36 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 }
 
 func TestGetLogTimeNano(t *testing.T) {
-	nowTime := time.Now()
-	log := &protocol.Log{}
-	log.Time = (uint32)(nowTime.Unix())
-	log.TimeNs = (uint32)(nowTime.Nanosecond())
-	timeNano := GetLogTimeNano(log)
+	Convey("Given a log", t, func() {
+		nowTime := time.Now()
+		log := &protocol.Log{
+			Time:   (uint32)(nowTime.Unix()),
+			TimeNs: (uint32)(nowTime.Nanosecond()),
+		}
 
-	if timeNano != strconv.FormatInt(nowTime.UnixNano(), 10) {
-		t.Errorf("GetLogTimeNano err")
-		return
-	}
+		Convey("Given a log with current Time and TimeNs", func() {
+			result := GetLogTimeNano(log)
+
+			Convey("The result should be the concatenation of Time and TimeNs", func() {
+				expected := strconv.FormatInt(nowTime.UnixNano(), 10)
+				So(result, ShouldEqual, expected)
+			})
+		})
+
+		log = &protocol.Log{
+			Time:   1631234567,
+			TimeNs: 123456789,
+		}
+
+		Convey("When calling GetLogTimeNano", func() {
+			result := GetLogTimeNano(log)
+
+			Convey("The result should be the concatenation of Time and TimeNs", func() {
+				expected := "1631234567123456789"
+				So(result, ShouldEqual, expected)
+			})
+		})
+	})
 }
 
 func TestIsTimeNano(t *testing.T) {
