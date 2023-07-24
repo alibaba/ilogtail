@@ -21,7 +21,7 @@ public:
         static MetricExportor* ptr = new MetricExportor();
         return ptr;
     }
-    void pushMetrics();
+    void PushMetrics();
 
 private:
     MetricExportor();

@@ -1,5 +1,7 @@
 #include "ILogtailMetric.h"
 
+using namespace sls_logs;
+
 namespace logtail {
 
 
@@ -14,6 +16,10 @@ Counter::~Counter() {
 
 Metrics::Metrics(std::vector<std::pair<std::string, std::string>> labels) {
     mLabels = labels;
+    mDeleted.store(false);
+}
+
+Metrics::Metrics() {
     mDeleted.store(false);
 }
 
@@ -47,9 +53,13 @@ uint64_t Counter::GetValue() {
     return mVal;
 }
 
- uint64_t Counter::GetTimestamp() {
+uint64_t Counter::GetTimestamp() {
     return mTimestamp;
- }
+}
+
+std::string Counter::GetName() {
+    return mName;
+}
 
 
 Counter* Counter::CopyAndReset() {
@@ -76,6 +86,10 @@ bool Metrics::IsDeleted() {
 
 std::vector<std::pair<std::string, std::string>> Metrics::GetLabels() {
     return mLabels;
+}
+
+std::vector<Counter*> Metrics::GetValues() {
+    return mValues;
 }
 
 Metrics* Metrics::Copy() {
@@ -116,47 +130,81 @@ Metrics* WriteMetrics::DoSnapshot() {
     // new read head
     Metrics* snapshot = NULL;
     // new read head iter
-    Metrics* rTmp ;
+    Metrics* rTmp;
     // new write head
     Metrics* wTmpHead = NULL;
     // new write head iter
     Metrics* wTmp = NULL;
     // old head iter
-    Metrics* tmp = mHead;
+    //Metrics* tmp = mHead;
+    Metrics* emptyHead = new Metrics();
+    emptyHead->next = mHead;
 
-    while(tmp) {
+    Metrics* preTmp = emptyHead;
+
+    while(preTmp) {
+        Metrics* tmp = preTmp->next;
+        if (!tmp) {
+            break;
+        }
         if (tmp->IsDeleted()) {
             Metrics* toDeleted = tmp;
-            tmp = tmp->next;
+            //tmp = tmp->next;
+            preTmp->next = tmp->next;
+            //preTmp = preTmp->next;
             delete toDeleted;
             continue;
         }
         Metrics* newMetrics = tmp->Copy();
         // Get Head
         if (!snapshot) {
-            wTmpHead = tmp;
-            wTmp = wTmpHead;
-            tmp = tmp->next;
+            //wTmpHead = tmp;
+            //wTmp = wTmpHead;
+            preTmp = preTmp->next;
             snapshot = newMetrics;
             rTmp = snapshot;
             continue;
         }
-        wTmp->next = tmp;
-        tmp = tmp->next;
+        //wTmp->next = tmp;
+        preTmp = preTmp->next;
         rTmp->next = newMetrics;
         rTmp = newMetrics;
     }
     // Only lock when change head
     {
         std::lock_guard<std::mutex> lock(mMutex);
-        mHead = wTmpHead;
+        mHead = emptyHead->next;
+        delete emptyHead;
     }
     return snapshot;
 }
 
-void ReadMetrics::ReadAsLogGroup() {
+void ReadMetrics::ReadAsLogGroup(sls_logs::LogGroup& logGroup) {
+    logGroup.set_category("metric-test");
+
     ReadLock lock(mReadWriteLock);
-    // Do some read
+    Metrics* tmp = mHead;
+    while(tmp) {
+        Log* logPtr = logGroup.add_logs();
+        logPtr->set_time(time(NULL));
+        std::vector<std::pair<std::string, std::string>> labels = tmp->GetLabels();
+        for (std::vector<std::pair<std::string, std::string>>::iterator it = labels.begin(); it != labels.end(); ++it) {
+            std::pair<std::string, std::string> pair = *it;
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key("label." + pair.first);
+            contentPtr->set_value(pair.second);
+        }
+
+        std::vector<Counter*> values = tmp->GetValues();
+
+        for (std::vector<Counter*>::iterator it = values.begin(); it != values.end(); ++it) {
+            Counter* counter = *it;
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key("value." + counter->GetName());
+            contentPtr->set_value(ToString(counter->GetValue()));
+        }
+        tmp = tmp->next;
+    }
 }
 
 void ReadMetrics::ReadAsPrometheus() {

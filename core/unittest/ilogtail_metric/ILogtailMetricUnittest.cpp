@@ -5,6 +5,7 @@
 #include <atomic>
 #include "util.h"
 #include "ILogtailMetric.h"
+#include "MetricExportor.h"
 #include "MetricConstants.h"
 
 namespace logtail {
@@ -55,6 +56,7 @@ void ILogtailMetricUnittest::TestCreateMetric() {
         LOG_INFO(sLogger, ("ReadMetrics", head->GetLabels().size()));
         head = head->next;
     }    
+    MetricExportor::GetInstance()->PushMetrics();
 }
 
 }// namespace logtail

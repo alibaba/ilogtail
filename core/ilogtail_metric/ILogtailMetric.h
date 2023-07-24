@@ -6,10 +6,11 @@
 #include "logger/Logger.h"
 #include <MetricConstants.h>
 #include "common/Lock.h"
+#include "log_pb/sls_logs.pb.h"
+#include "common/StringTools.h"
 
 
 namespace logtail {
-
 
 class Counter{
     private:
@@ -22,6 +23,7 @@ class Counter{
         ~Counter();
         uint64_t GetValue();
         uint64_t GetTimestamp();
+        std::string GetName();
         
         void Add(uint64_t val);
         void Set(uint64_t val);
@@ -36,10 +38,12 @@ class Metrics {
 
     public:
         Metrics(std::vector<std::pair<std::string, std::string> > labels);
+        Metrics();
         ~Metrics();
         void MarkDeleted();
         bool IsDeleted();
         std::vector<std::pair<std::string, std::string>> GetLabels();
+        std::vector<Counter*> GetValues();
         Counter* CreateCounter(std::string Name);
         Metrics* Copy();
         Metrics* next = NULL;
@@ -70,7 +74,7 @@ class ReadMetrics {
             static ReadMetrics* ptr = new ReadMetrics();
             return ptr;
         }
-        void ReadAsLogGroup();
+        void ReadAsLogGroup(sls_logs::LogGroup& logGroup);
         void ReadAsPrometheus();
         void UpdateMetrics();
         Metrics* mHead = NULL;
