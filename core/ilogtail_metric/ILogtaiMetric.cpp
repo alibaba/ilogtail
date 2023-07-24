@@ -27,6 +27,7 @@ Metrics::~Metrics() {
 }
 
 WriteMetrics::WriteMetrics() {   
+    mSnapshotting.store(false);
 }
 
 WriteMetrics::~WriteMetrics() {   
@@ -107,13 +108,21 @@ Metrics* Metrics::Copy() {
 }
 
 Metrics* WriteMetrics::CreateMetrics(std::vector<std::pair<std::string, std::string>> labels) {
-    Metrics* cur = new Metrics(labels);    
+    Metrics* cur = new Metrics(labels); 
+    std::lock_guard<std::mutex> lock(mMutex);   
     // add metric to head
-    Metrics* oldHead = mHead;
-    {
-        std::lock_guard<std::mutex> lock(mMutex);
+    // 根据mSnapshotting的状态，决定节点加到哪里
+    if (mSnapshotting) {
+        Metrics* oldHead = mSnapshottingHead;
+        mSnapshottingHead = cur;
+        mSnapshottingHead->next = oldHead;
+        LOG_INFO(sLogger, ("CreateMetrics", "mSnapshottingHead"));
+
+    } else {
+        Metrics* oldHead = mHead;
         mHead = cur;
         mHead->next = oldHead;
+        LOG_INFO(sLogger, ("CreateMetrics", "mHead"));
     }
     return cur;
 }
@@ -127,21 +136,19 @@ void WriteMetrics::DestroyMetrics(Metrics* metrics) {
 
 
 Metrics* WriteMetrics::DoSnapshot() {
+    mSnapshotting.store(true);
     // new read head
     Metrics* snapshot = NULL;
     // new read head iter
     Metrics* rTmp;
-    // new write head
-    Metrics* wTmpHead = NULL;
-    // new write head iter
-    Metrics* wTmp = NULL;
     // old head iter
     //Metrics* tmp = mHead;
     Metrics* emptyHead = new Metrics();
-    emptyHead->next = mHead;
-
+    {
+        std::lock_guard<std::mutex> lock(mMutex);  
+        emptyHead->next = mHead;
+    }
     Metrics* preTmp = emptyHead;
-
     while(preTmp) {
         Metrics* tmp = preTmp->next;
         if (!tmp) {
@@ -158,14 +165,12 @@ Metrics* WriteMetrics::DoSnapshot() {
         Metrics* newMetrics = tmp->Copy();
         // Get Head
         if (!snapshot) {
-            //wTmpHead = tmp;
-            //wTmp = wTmpHead;
+
             preTmp = preTmp->next;
             snapshot = newMetrics;
             rTmp = snapshot;
             continue;
         }
-        //wTmp->next = tmp;
         preTmp = preTmp->next;
         rTmp->next = newMetrics;
         rTmp = newMetrics;
@@ -173,7 +178,23 @@ Metrics* WriteMetrics::DoSnapshot() {
     // Only lock when change head
     {
         std::lock_guard<std::mutex> lock(mMutex);
+        // 把临时的节点加到链表里
+        if (mSnapshottingHead) {
+            Metrics* tmpSnapHead = mSnapshottingHead;
+            Metrics* tmpMHead = emptyHead->next;
+            emptyHead->next = mSnapshottingHead;
+            while(tmpSnapHead) {
+                if (tmpSnapHead->next == NULL) {
+                    tmpSnapHead->next = tmpMHead;
+                    break;
+                } else {
+                    tmpSnapHead = tmpSnapHead->next;
+                }
+            }
+            mSnapshottingHead = NULL;
+        }
         mHead = emptyHead->next;
+        mSnapshotting.store(false);
         delete emptyHead;
     }
     return snapshot;

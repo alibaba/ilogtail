@@ -53,6 +53,7 @@ class WriteMetrics {
     private:
         WriteMetrics();
         ~WriteMetrics();
+        std::atomic_bool mSnapshotting;
     public:
         static WriteMetrics* GetInstance() {
             static WriteMetrics* ptr = new WriteMetrics();
@@ -62,7 +63,10 @@ class WriteMetrics {
         void DestroyMetrics(Metrics* metrics);
         Metrics* DoSnapshot();
         Metrics* mHead = NULL;
+        Metrics* mSnapshottingHead = NULL;
         std::mutex mMutex;
+        std::mutex mSnapshottingMutex;
+
 };
 
 class ReadMetrics {
