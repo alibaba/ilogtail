@@ -42,8 +42,8 @@ class Metrics {
         ~Metrics();
         void MarkDeleted();
         bool IsDeleted();
-        std::vector<std::pair<std::string, std::string>> GetLabels();
-        std::vector<Counter*> GetValues();
+        const std::vector<std::pair<std::string, std::string>>& GetLabels();
+        const std::vector<Counter*>& GetValues();
         Counter* CreateCounter(std::string Name);
         Metrics* Copy();
         Metrics* next = NULL;

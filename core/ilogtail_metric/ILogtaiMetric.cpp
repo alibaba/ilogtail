@@ -84,11 +84,11 @@ bool Metrics::IsDeleted() {
     return mDeleted;
 }
 
-std::vector<std::pair<std::string, std::string>> Metrics::GetLabels() {
+const std::vector<std::pair<std::string, std::string>>& Metrics::GetLabels() {
     return mLabels;
 }
 
-std::vector<Counter*> Metrics::GetValues() {
+const std::vector<Counter*>& Metrics::GetValues() {
     return mValues;
 }
 
@@ -196,7 +196,6 @@ void ReadMetrics::ReadAsLogGroup(sls_logs::LogGroup& logGroup) {
         }
 
         std::vector<Counter*> values = tmp->GetValues();
-
         for (std::vector<Counter*>::iterator it = values.begin(); it != values.end(); ++it) {
             Counter* counter = *it;
             Log_Content* contentPtr = logPtr->add_contents();
