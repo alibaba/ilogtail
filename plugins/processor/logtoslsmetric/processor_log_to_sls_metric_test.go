@@ -212,3 +212,27 @@ func TestGetLogTimeNano(t *testing.T) {
 		return
 	}
 }
+
+func TestIsTimeNano(t *testing.T) {
+	Convey("Given a time string", t, func() {
+		Convey("When the length is not valid", func() {
+			So(isTimeNano("123"), ShouldBeFalse)
+			So(isTimeNano("12345678901234567"), ShouldBeFalse)
+		})
+
+		Convey("When the length is valid", func() {
+			Convey("And the string contains only digits", func() {
+				So(isTimeNano("1234567890123456789"), ShouldBeTrue)
+				So(isTimeNano("1234567890123456"), ShouldBeTrue)
+				So(isTimeNano("1234567890"), ShouldBeTrue)
+			})
+
+			Convey("And the string contains non-digit characters", func() {
+				So(isTimeNano("12345678901234567.9"), ShouldBeFalse)
+				So(isTimeNano("12345678901234567a"), ShouldBeFalse)
+				So(isTimeNano("1234567890123456@"), ShouldBeFalse)
+				So(isTimeNano("123456789"), ShouldBeFalse)
+			})
+		})
+	})
+}
