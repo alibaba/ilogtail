@@ -236,3 +236,20 @@ func TestIsTimeNano(t *testing.T) {
 		})
 	})
 }
+
+func TestCanParseToFloat64(t *testing.T) {
+	Convey("Given a string", t, func() {
+		Convey("When the string can be parsed to float64", func() {
+			So(canParseToFloat64("3.14123123124123123"), ShouldBeTrue)
+			So(canParseToFloat64("0.123"), ShouldBeTrue)
+			So(canParseToFloat64("-2.5"), ShouldBeTrue)
+		})
+
+		Convey("When the string cannot be parsed to float64", func() {
+			So(canParseToFloat64("abc"), ShouldBeFalse)
+			So(canParseToFloat64("1.23.45"), ShouldBeFalse)
+			So(canParseToFloat64("12a"), ShouldBeFalse)
+			So(canParseToFloat64("3.1412312312.4123123"), ShouldBeFalse)
+		})
+	})
+}
