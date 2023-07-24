@@ -141,8 +141,7 @@ Metrics* WriteMetrics::DoSnapshot() {
     Metrics* snapshot = NULL;
     // new read head iter
     Metrics* rTmp;
-    // old head iter
-    //Metrics* tmp = mHead;
+
     Metrics* emptyHead = new Metrics();
     {
         std::lock_guard<std::mutex> lock(mMutex);  
@@ -156,9 +155,7 @@ Metrics* WriteMetrics::DoSnapshot() {
         }
         if (tmp->IsDeleted()) {
             Metrics* toDeleted = tmp;
-            //tmp = tmp->next;
             preTmp->next = tmp->next;
-            //preTmp = preTmp->next;
             delete toDeleted;
             continue;
         }
@@ -202,7 +199,6 @@ Metrics* WriteMetrics::DoSnapshot() {
 
 void ReadMetrics::ReadAsLogGroup(sls_logs::LogGroup& logGroup) {
     logGroup.set_category("metric-test");
-
     ReadLock lock(mReadWriteLock);
     Metrics* tmp = mHead;
     while(tmp) {
@@ -234,10 +230,11 @@ void ReadMetrics::ReadAsPrometheus() {
 
 void ReadMetrics::UpdateMetrics() {
     Metrics* snapshot = mWriteMetrics->DoSnapshot();
-    Metrics* toDelete = mHead;
+    Metrics* toDelete;
     {
         // Only lock when change head
         WriteLock lock(mReadWriteLock);
+        toDelete = mHead;
         mHead = snapshot;
     }
     // delete old linklist
