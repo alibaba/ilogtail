@@ -345,7 +345,10 @@ func (p *ProcessorLogToSlsMetric) logInitError(err error) {
 }
 
 func GetLogTimeNano(log *protocol.Log) string {
-	nanoTime := int64(log.Time)*int64(time.Second) + int64(log.TimeNs)
+	nanoTime := int64(log.Time) * int64(time.Second)
+	if log.TimeNs != nil {
+		nanoTime += int64(*log.TimeNs)
+	}
 	nanosecondsStr := strconv.FormatInt(nanoTime, 10)
 	return nanosecondsStr
 }

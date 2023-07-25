@@ -39,10 +39,11 @@ func TestInitError(t *testing.T) {
 func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 	Convey("Given a set of logs", t, func() {
 		nowTime := time.Now()
+		nanosecond := uint32(nowTime.Nanosecond())
 		logs := []*protocol.Log{
 			{
 				Time:   uint32(nowTime.Unix()),
-				TimeNs: uint32(nowTime.Nanosecond()),
+				TimeNs: &nanosecond,
 				Contents: []*protocol.Log_Content{
 					{Key: "labelA", Value: "1"},
 					{Key: "labelB", Value: "2"},
@@ -56,7 +57,7 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 			},
 			{
 				Time:   uint32(nowTime.Unix()),
-				TimeNs: uint32(nowTime.Nanosecond()),
+				TimeNs: &nanosecond,
 				Contents: []*protocol.Log_Content{
 					{Key: "labelB", Value: "22"},
 					{Key: "labelC", Value: "33"},
@@ -70,7 +71,7 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 			},
 			{
 				Time:   uint32(nowTime.Unix()),
-				TimeNs: uint32(nowTime.Nanosecond()),
+				TimeNs: &nanosecond,
 				Contents: []*protocol.Log_Content{
 					{Key: "labelB", Value: "BBB"},
 					{Key: "labelC", Value: "CCC"},
@@ -143,11 +144,11 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 
 	Convey("Given a set of logs", t, func() {
 		nowTime := time.Now()
-
+		nanosecond := uint32(nowTime.Nanosecond())
 		logs := []*protocol.Log{
 			{
 				Time:   uint32(nowTime.Unix()),
-				TimeNs: uint32(nowTime.Nanosecond()),
+				TimeNs: &nanosecond,
 				Contents: []*protocol.Log_Content{
 					{Key: "labelA", Value: "AAA"},
 					{Key: "nameA", Value: "myname"},
@@ -911,9 +912,10 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 func TestGetLogTimeNano(t *testing.T) {
 	Convey("Given a log", t, func() {
 		nowTime := time.Now()
+		nanosecond := uint32(nowTime.Nanosecond())
 		log := &protocol.Log{
 			Time:   (uint32)(nowTime.Unix()),
-			TimeNs: (uint32)(nowTime.Nanosecond()),
+			TimeNs: &nanosecond,
 		}
 
 		Convey("Given a log with current Time and TimeNs", func() {
@@ -924,10 +926,10 @@ func TestGetLogTimeNano(t *testing.T) {
 				So(result, ShouldEqual, expected)
 			})
 		})
-
+		nanosecond = uint32(123456789)
 		log = &protocol.Log{
 			Time:   1631234567,
-			TimeNs: 123456789,
+			TimeNs: &nanosecond,
 		}
 
 		Convey("When calling GetLogTimeNano", func() {
