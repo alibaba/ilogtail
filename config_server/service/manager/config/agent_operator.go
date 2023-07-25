@@ -46,9 +46,51 @@ func (c *ConfigManager) updateConfigList(interval int) {
 	}
 }
 
+func (c *ConfigManager) checkConfigs(configType proto.ConfigType, configs []*proto.ConfigInfo, selectedConfigs map[string]*model.ConfigDetail) []*proto.ConfigCheckResult {
+	results := make([]*proto.ConfigCheckResult, 0)
+	// deleted or modified configs, and delete same configs in SelectedConfigs
+	for _, k := range configs {
+		config, ok := selectedConfigs[k.Name]
+		if !ok {
+			result := new(proto.ConfigCheckResult)
+			result.Type = configType
+			result.Name = k.Name
+			result.OldVersion = k.Version
+			result.NewVersion = k.Version
+			result.Context = k.Context
+			result.CheckStatus = proto.CheckStatus_DELETED
+			results = append(results, result)
+		} else if ok {
+			if config.Version > k.Version {
+				result := new(proto.ConfigCheckResult)
+				result.Type = configType
+				result.Name = config.Name
+				result.OldVersion = k.Version
+				result.NewVersion = config.Version
+				result.Context = config.Context
+				result.CheckStatus = proto.CheckStatus_MODIFIED
+				results = append(results, result)
+			}
+			delete(selectedConfigs, k.Name)
+		}
+	}
+
+	// new configs
+	for _, config := range selectedConfigs {
+		result := new(proto.ConfigCheckResult)
+		result.Type = configType
+		result.Name = config.Name
+		result.OldVersion = 0
+		result.NewVersion = config.Version
+		result.Context = config.Context
+		result.CheckStatus = proto.CheckStatus_NEW
+		results = append(results, result)
+	}
+
+	return results
+}
+
 func (c *ConfigManager) CheckConfigUpdatesWhenHeartbeat(req *proto.HeartBeatRequest, res *proto.HeartBeatResponse) (int, *proto.HeartBeatResponse) {
-	pipelineConfigs := make([]*proto.ConfigCheckResult, 0)
-	agentConfigs := make([]*proto.ConfigCheckResult, 0)
 	s := store.GetStore()
 
 	// get all configs connected to agent group whose tag is same as agent's
@@ -89,80 +131,13 @@ func (c *ConfigManager) CheckConfigUpdatesWhenHeartbeat(req *proto.HeartBeatRequ
 		}
 	}
 
-	// deleted or modified configs, and delete same configs in SelectedConfigs
-	for _, k := range req.PipelineConfigs {
-		config, ok := SelectedConfigs[k.Name]
-		if !ok {
-			result := new(proto.ConfigCheckResult)
-			result.Type = proto.ConfigType_PIPELINE_CONFIG
-			result.Name = k.Name
-			result.OldVersion = k.Version
-			result.NewVersion = k.Version
-			result.Context = k.Context
-			result.CheckStatus = proto.CheckStatus_DELETED
-			pipelineConfigs = append(pipelineConfigs, result)
-		} else if ok {
-			if config.Version > k.Version {
-				result := new(proto.ConfigCheckResult)
-				result.Type = proto.ConfigType_PIPELINE_CONFIG
-				result.Name = config.Name
-				result.OldVersion = k.Version
-				result.NewVersion = config.Version
-				result.Context = config.Context
-				result.CheckStatus = proto.CheckStatus_MODIFIED
-				pipelineConfigs = append(pipelineConfigs, result)
-			}
-			delete(SelectedConfigs, k.Name)
-		}
-	}
-
-	for _, k := range req.AgentConfigs {
-		config, ok := SelectedConfigs[k.Name]
-		if !ok {
-			result := new(proto.ConfigCheckResult)
-			result.Type = proto.ConfigType_AGENT_CONFIG
-			result.Name = k.Name
-			result.OldVersion = k.Version
-			result.NewVersion = k.Version
-			result.Context = k.Context
-			result.CheckStatus = proto.CheckStatus_DELETED
-			agentConfigs = append(agentConfigs, result)
-		} else if ok {
-			if config.Version > k.Version {
-				result := new(proto.ConfigCheckResult)
-				result.Type = proto.ConfigType_AGENT_CONFIG
-				result.Name = config.Name
-				result.OldVersion = k.Version
-				result.NewVersion = config.Version
-				result.Context = config.Context
-				result.CheckStatus = proto.CheckStatus_MODIFIED
-				agentConfigs = append(agentConfigs, result)
-			}
-			delete(SelectedConfigs, k.Name)
-		}
-	}
-
-	// new configs
-	for _, config := range SelectedConfigs {
-		result := new(proto.ConfigCheckResult)
-		result.Type = model.ConfigType[config.Type]
-		result.Name = config.Name
-		result.OldVersion = 0
-		result.NewVersion = config.Version
-		result.Context = config.Context
-		result.CheckStatus = proto.CheckStatus_NEW
-		switch result.Type {
-		case proto.ConfigType_AGENT_CONFIG:
-			agentConfigs = append(agentConfigs, result)
-		case proto.ConfigType_PIPELINE_CONFIG:
-			pipelineConfigs = append(pipelineConfigs, result)
-		}
-	}
+	agentCheckResults := c.checkConfigs(proto.ConfigType_AGENT_CONFIG, req.AgentConfigs, SelectedConfigs)
+	pipelineCheckResults := c.checkConfigs(proto.ConfigType_PIPELINE_CONFIG, req.PipelineConfigs, SelectedConfigs)
 
 	res.Code = proto.RespCode_ACCEPT
 	res.Message += "Get config update infos success"
-	res.AgentCheckResults = agentConfigs
-	res.PipelineCheckResults = pipelineConfigs
+	res.AgentCheckResults = agentCheckResults
+	res.PipelineCheckResults = pipelineCheckResults
 	return common.Accept.Status, res
 }
 
