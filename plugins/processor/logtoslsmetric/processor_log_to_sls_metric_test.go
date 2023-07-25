@@ -15,6 +15,7 @@
 package logtoslsmetric
 
 import (
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -198,6 +199,713 @@ func TestProcessorSlsMetric_ProcessLogs(t *testing.T) {
 			})
 		})
 	})
+
+	Convey("Given a ProcessorLogToSlsMetric instance", t, func() {
+		processor := &ProcessorLogToSlsMetric{
+			MetricTimeKey:   "timestamp",
+			MetricLabelKeys: []string{"label1", "label2"},
+			MetricValues:    map[string]string{"value1": "metric1", "value2": "metric2"},
+			CustomMetricLabels: map[string]string{
+				"customLabel1": "customValue1",
+				"customLabel2": "customValue2",
+			},
+			IgnoreError: false,
+		}
+
+		Convey("When processing logs, timestamp 1234567890", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1|b#$#2|c#$#3|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|m#$#2|n#$#1|o#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "timestamp",
+							Value: "1234567890",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+			sort.Slice(metricLogs, func(i, j int) bool {
+				return metricLogs[i].Contents[1].Value < metricLogs[j].Contents[1].Value
+			})
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 2)
+
+				So(metricLogs[0].Contents[0].Key, ShouldEqual, "__labels__")
+				So(metricLogs[0].Contents[0].Value, ShouldEqual, "a#$#1|b#$#2|c#$#3|customLabel1#$#customValue1|customLabel2#$#customValue2|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|label1#$#label1|label2#$#label2|m#$#2|n#$#1|o#$#2")
+
+				So(metricLogs[0].Contents[1].Key, ShouldEqual, "__name__")
+				So(metricLogs[0].Contents[1].Value, ShouldEqual, "value1")
+
+				So(metricLogs[0].Contents[2].Key, ShouldEqual, "__value__")
+				So(metricLogs[0].Contents[2].Value, ShouldEqual, "10")
+
+				So(metricLogs[0].Contents[3].Key, ShouldEqual, "__time_nano__")
+				So(metricLogs[0].Contents[3].Value, ShouldEqual, "1234567890000000000")
+
+				So(metricLogs[1].Contents[0].Key, ShouldEqual, "__labels__")
+				So(metricLogs[1].Contents[0].Value, ShouldEqual, "a#$#1|b#$#2|c#$#3|customLabel1#$#customValue1|customLabel2#$#customValue2|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|label1#$#label1|label2#$#label2|m#$#2|n#$#1|o#$#2")
+
+				So(metricLogs[1].Contents[1].Key, ShouldEqual, "__name__")
+				So(metricLogs[1].Contents[1].Value, ShouldEqual, "value2")
+
+				So(metricLogs[1].Contents[2].Key, ShouldEqual, "__value__")
+				So(metricLogs[1].Contents[2].Value, ShouldEqual, "20")
+
+				So(metricLogs[1].Contents[3].Key, ShouldEqual, "__time_nano__")
+				So(metricLogs[1].Contents[3].Value, ShouldEqual, "1234567890000000000")
+			})
+		})
+
+		Convey("When processing logs, timestamp 1234567890000", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1|b#$#2|c#$#3|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|m#$#2|n#$#1|o#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "timestamp",
+							Value: "1234567890000",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+			sort.Slice(metricLogs, func(i, j int) bool {
+				return metricLogs[i].Contents[1].Value < metricLogs[j].Contents[1].Value
+			})
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 2)
+
+				So(metricLogs[0].Contents[0].Key, ShouldEqual, "__labels__")
+				So(metricLogs[0].Contents[0].Value, ShouldEqual, "a#$#1|b#$#2|c#$#3|customLabel1#$#customValue1|customLabel2#$#customValue2|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|label1#$#label1|label2#$#label2|m#$#2|n#$#1|o#$#2")
+
+				So(metricLogs[0].Contents[1].Key, ShouldEqual, "__name__")
+				So(metricLogs[0].Contents[1].Value, ShouldEqual, "value1")
+
+				So(metricLogs[0].Contents[2].Key, ShouldEqual, "__value__")
+				So(metricLogs[0].Contents[2].Value, ShouldEqual, "10")
+
+				So(metricLogs[0].Contents[3].Key, ShouldEqual, "__time_nano__")
+				So(metricLogs[0].Contents[3].Value, ShouldEqual, "1234567890000000000")
+
+				So(metricLogs[1].Contents[0].Key, ShouldEqual, "__labels__")
+				So(metricLogs[1].Contents[0].Value, ShouldEqual, "a#$#1|b#$#2|c#$#3|customLabel1#$#customValue1|customLabel2#$#customValue2|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|label1#$#label1|label2#$#label2|m#$#2|n#$#1|o#$#2")
+
+				So(metricLogs[1].Contents[1].Key, ShouldEqual, "__name__")
+				So(metricLogs[1].Contents[1].Value, ShouldEqual, "value2")
+
+				So(metricLogs[1].Contents[2].Key, ShouldEqual, "__value__")
+				So(metricLogs[1].Contents[2].Value, ShouldEqual, "20")
+
+				So(metricLogs[1].Contents[3].Key, ShouldEqual, "__time_nano__")
+				So(metricLogs[1].Contents[3].Value, ShouldEqual, "1234567890000000000")
+			})
+		})
+
+		Convey("When processing logs, timestamp 1234567890000000", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1|b#$#2|c#$#3|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|m#$#2|n#$#1|o#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "timestamp",
+							Value: "1234567890000000",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+			sort.Slice(metricLogs, func(i, j int) bool {
+				return metricLogs[i].Contents[1].Value < metricLogs[j].Contents[1].Value
+			})
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 2)
+
+				So(metricLogs[0].Contents[0].Key, ShouldEqual, "__labels__")
+				So(metricLogs[0].Contents[0].Value, ShouldEqual, "a#$#1|b#$#2|c#$#3|customLabel1#$#customValue1|customLabel2#$#customValue2|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|label1#$#label1|label2#$#label2|m#$#2|n#$#1|o#$#2")
+
+				So(metricLogs[0].Contents[1].Key, ShouldEqual, "__name__")
+				So(metricLogs[0].Contents[1].Value, ShouldEqual, "value1")
+
+				So(metricLogs[0].Contents[2].Key, ShouldEqual, "__value__")
+				So(metricLogs[0].Contents[2].Value, ShouldEqual, "10")
+
+				So(metricLogs[0].Contents[3].Key, ShouldEqual, "__time_nano__")
+				So(metricLogs[0].Contents[3].Value, ShouldEqual, "1234567890000000000")
+
+				So(metricLogs[1].Contents[0].Key, ShouldEqual, "__labels__")
+				So(metricLogs[1].Contents[0].Value, ShouldEqual, "a#$#1|b#$#2|c#$#3|customLabel1#$#customValue1|customLabel2#$#customValue2|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|label1#$#label1|label2#$#label2|m#$#2|n#$#1|o#$#2")
+
+				So(metricLogs[1].Contents[1].Key, ShouldEqual, "__name__")
+				So(metricLogs[1].Contents[1].Value, ShouldEqual, "value2")
+
+				So(metricLogs[1].Contents[2].Key, ShouldEqual, "__value__")
+				So(metricLogs[1].Contents[2].Value, ShouldEqual, "20")
+
+				So(metricLogs[1].Contents[3].Key, ShouldEqual, "__time_nano__")
+				So(metricLogs[1].Contents[3].Value, ShouldEqual, "1234567890000000000")
+			})
+		})
+
+		Convey("When processing logs, timestamp 1234567890000000000", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1|b#$#2|c#$#3|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|m#$#2|n#$#1|o#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "timestamp",
+							Value: "1234567890000000000",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+			sort.Slice(metricLogs, func(i, j int) bool {
+				return metricLogs[i].Contents[1].Value < metricLogs[j].Contents[1].Value
+			})
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 2)
+
+				So(metricLogs[0].Contents[0].Key, ShouldEqual, "__labels__")
+				So(metricLogs[0].Contents[0].Value, ShouldEqual, "a#$#1|b#$#2|c#$#3|customLabel1#$#customValue1|customLabel2#$#customValue2|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|label1#$#label1|label2#$#label2|m#$#2|n#$#1|o#$#2")
+
+				So(metricLogs[0].Contents[1].Key, ShouldEqual, "__name__")
+				So(metricLogs[0].Contents[1].Value, ShouldEqual, "value1")
+
+				So(metricLogs[0].Contents[2].Key, ShouldEqual, "__value__")
+				So(metricLogs[0].Contents[2].Value, ShouldEqual, "10")
+
+				So(metricLogs[0].Contents[3].Key, ShouldEqual, "__time_nano__")
+				So(metricLogs[0].Contents[3].Value, ShouldEqual, "1234567890000000000")
+
+				So(metricLogs[1].Contents[0].Key, ShouldEqual, "__labels__")
+				So(metricLogs[1].Contents[0].Value, ShouldEqual, "a#$#1|b#$#2|c#$#3|customLabel1#$#customValue1|customLabel2#$#customValue2|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|label1#$#label1|label2#$#label2|m#$#2|n#$#1|o#$#2")
+
+				So(metricLogs[1].Contents[1].Key, ShouldEqual, "__name__")
+				So(metricLogs[1].Contents[1].Value, ShouldEqual, "value2")
+
+				So(metricLogs[1].Contents[2].Key, ShouldEqual, "__value__")
+				So(metricLogs[1].Contents[2].Value, ShouldEqual, "20")
+
+				So(metricLogs[1].Contents[3].Key, ShouldEqual, "__time_nano__")
+				So(metricLogs[1].Contents[3].Value, ShouldEqual, "1234567890000000000")
+			})
+		})
+
+		Convey("When processing logs, timestamp 12345678900000000.0", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1|b#$#2|c#$#3|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|m#$#2|n#$#1|o#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "timestamp",
+							Value: "12345678900000000.0",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 0)
+			})
+		})
+
+		Convey("When processing logs, timestamp 123456789000000000", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1|b#$#2|c#$#3|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|m#$#2|n#$#1|o#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "timestamp",
+							Value: "123456789000000000",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 0)
+			})
+		})
+
+		Convey("When processing logs, metric2 2a0", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1|b#$#2|c#$#3|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|m#$#2|n#$#1|o#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "2a0",
+						},
+						{
+							Key:   "timestamp",
+							Value: "1234567890000000000",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 0)
+			})
+		})
+
+		Convey("When processing logs, value1 2a0", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1|b#$#2|c#$#3|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|m#$#2|n#$#1|o#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "timestamp",
+							Value: "1234567890000000000",
+						},
+						{
+							Key:   "value1",
+							Value: "2a0",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 0)
+			})
+		})
+
+		Convey("When processing logs, timestamp null", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1|b#$#2|c#$#3|d#$#4|h#$#1|i#$#2|j#$#1|k#$#2|l#$#1|m#$#2|n#$#1|o#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 0)
+			})
+		})
+
+		Convey("When processing logs, __labels__ a#$#1#$#|b#$#2", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "a#$#1#$#|b#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 0)
+			})
+		})
+
+		Convey("When processing logs, __labels__ label1#$#1|b#$#2", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "label1#$#1|b#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 0)
+			})
+		})
+
+		Convey("When processing logs, __labels__ -a#$#1|b#$#2", func() {
+			err := processor.Init(mock.NewEmptyContext("p", "l", "c"))
+			So(err, ShouldBeNil)
+			logs := []*protocol.Log{
+				{
+					Time: 1234567890,
+					Contents: []*protocol.Log_Content{
+						{
+							Key:   metricLabelsKey,
+							Value: "-a#$#1|b#$#2",
+						},
+						{
+							Key:   "label1",
+							Value: "label1",
+						},
+						{
+							Key:   "label2",
+							Value: "label2",
+						},
+						{
+							Key:   "metric1",
+							Value: "10",
+						},
+						{
+							Key:   "metric2",
+							Value: "20",
+						},
+						{
+							Key:   "value1",
+							Value: "value1",
+						},
+						{
+							Key:   "value2",
+							Value: "value2",
+						},
+					},
+				},
+			}
+
+			metricLogs := processor.ProcessLogs(logs)
+
+			Convey("Then the metric logs should be generated correctly", func() {
+				So(len(metricLogs), ShouldEqual, 0)
+			})
+		})
+
+	})
+
 }
 
 func TestGetLogTimeNano(t *testing.T) {
