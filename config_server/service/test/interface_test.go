@@ -744,8 +744,6 @@ func TestAgentSendMessage(t *testing.T) {
 			agent := new(proto.Agent)
 			agent.AgentId = "ilogtail-1"
 			agent.Attributes = &proto.AgentAttributes{}
-			agent.RunningStatus = "good"
-			agent.StartupTime = 100
 
 			status, res := HeartBeat(r, agent, configInfos, fmt.Sprint(requestID))
 
@@ -770,8 +768,6 @@ func TestAgentSendMessage(t *testing.T) {
 			agent := new(proto.Agent)
 			agent.AgentId = "ilogtail-2"
 			agent.Attributes = &proto.AgentAttributes{}
-			agent.RunningStatus = "good"
-			agent.StartupTime = 200
 
 			status, res := HeartBeat(r, agent, configInfos, fmt.Sprint(requestID))
 
@@ -796,8 +792,6 @@ func TestAgentSendMessage(t *testing.T) {
 			agent := new(proto.Agent)
 			agent.AgentId = "ilogtail-1"
 			agent.Attributes = &proto.AgentAttributes{}
-			agent.RunningStatus = "good"
-			agent.StartupTime = 100
 
 			status, res := HeartBeat(r, agent, configInfos, fmt.Sprint(requestID))
 
@@ -846,8 +840,6 @@ func TestAgentGetConfig(t *testing.T) {
 		agent := new(proto.Agent)
 		agent.AgentId = "ilogtail-1"
 		agent.Attributes = &proto.AgentAttributes{}
-		agent.RunningStatus = "good"
-		agent.StartupTime = 100
 
 		configVersions := map[string]int64{}
 		configInfos := make([]*proto.ConfigCheckResult, 0)
