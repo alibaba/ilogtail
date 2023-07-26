@@ -82,7 +82,7 @@ func (c *Converter) ConvertToOtlpResourseLogs(logGroup *protocol.LogGroup, targe
 		}
 
 		logRecord.SetObservedTimestamp(pcommon.Timestamp(time.Now().UnixNano()))
-		logRecord.SetTimestamp(pcommon.Timestamp(uint64(log.Time) * uint64(time.Second)))
+		logRecord.SetTimestamp(pcommon.Timestamp(uint64(log.Time)*uint64(time.Second)) + pcommon.Timestamp(uint64(*log.TimeNs)*uint64(time.Nanosecond)))
 
 		if body, has := contents[bodyKey]; has {
 			logRecord.Body().SetStr(body)
