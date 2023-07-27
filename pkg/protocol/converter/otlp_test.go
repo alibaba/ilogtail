@@ -70,6 +70,10 @@ func TestNewConvertToOtlpLogs(t *testing.T) {
 						for j := 0; j < scope.LogRecords().Len(); j++ {
 							logRecord := scope.LogRecords().At(j)
 							convey.So(logs[i].Contents[4].Value, convey.ShouldEqual, logRecord.Body().AsString())
+
+							// Convert timestamp to unix seconds and compare with the original time
+							unixTimeSec := logRecord.Timestamp().AsTime().Unix()
+							convey.So(uint64(logs[j].Time), convey.ShouldEqual, unixTimeSec)
 						}
 					}
 				})
@@ -130,6 +134,10 @@ func TestNewConvertToOtlpLogs(t *testing.T) {
 						for j := 0; j < scope.LogRecords().Len(); j++ {
 							logRecord := scope.LogRecords().At(j)
 							convey.So(logs[i].Contents[4].Value, convey.ShouldEqual, logRecord.Body().AsString())
+
+							// Convert timestamp to unix nanoseconds and compare with the original timeNs
+							unixTimeNano := logRecord.Timestamp().AsTime().UnixNano()
+							convey.So(uint64(logs[j].Time)*uint64(systime.Second)+uint64(*logs[j].TimeNs), convey.ShouldEqual, unixTimeNano)
 						}
 					}
 				})
