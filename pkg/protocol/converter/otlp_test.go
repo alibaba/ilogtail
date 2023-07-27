@@ -7,9 +7,12 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 	"go.opentelemetry.io/collector/pdata/plog"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/otlp"
+
+	systime "time"
 )
 
 func TestNewConvertToOtlpLogs(t *testing.T) {
@@ -37,6 +40,66 @@ func TestNewConvertToOtlpLogs(t *testing.T) {
 						{Key: "__log_topic__", Value: "file"},
 						{Key: "content", Value: "test log content"},
 					},
+				}
+			}
+			tags := []*protocol.LogTag{
+				{Key: "__hostname__", Value: "alje834hgf"},
+				{Key: "__pack_id__", Value: "AEDCFGHNJUIOPLMN-1E"},
+			}
+			logGroup := &protocol.LogGroup{
+				Logs:        logs,
+				Category:    "test",
+				Topic:       "file",
+				Source:      "172.10.0.56",
+				LogTags:     tags,
+				MachineUUID: "machine_id",
+			}
+			d, err := c.Do(logGroup)
+			convey.Convey("Then the converted log should be valid", func() {
+				convey.So(err, convey.ShouldBeNil)
+				resourceLogs, ok := d.(plog.ResourceLogs)
+				convey.So(ok, convey.ShouldBeTrue)
+				convey.So(1, convey.ShouldEqual, resourceLogs.ScopeLogs().Len())
+				convey.So(5, convey.ShouldEqual, resourceLogs.Resource().Attributes().Len())
+
+				convey.Convey("Then the LogRecords should be valid", func() {
+					for i := 0; i < resourceLogs.ScopeLogs().Len(); i++ {
+						scope := resourceLogs.ScopeLogs().At(i)
+						convey.So(2, convey.ShouldEqual, scope.LogRecords().Len())
+
+						for j := 0; j < scope.LogRecords().Len(); j++ {
+							logRecord := scope.LogRecords().At(j)
+							convey.So(logs[i].Contents[4].Value, convey.ShouldEqual, logRecord.Body().AsString())
+						}
+					}
+				})
+			})
+		})
+	})
+
+	config.LogtailGlobalConfig.EnableTimestampNanosecond = true
+	convey.Convey("When constructing converter with supported encoding", t, func() {
+		c, err := NewConverter(ProtocolOtlpV1, EncodingNone, nil, nil)
+		convey.So(err, convey.ShouldBeNil)
+
+		convey.Convey("When the logGroup is generated from files", func() {
+			time := []uint32{1662434209, 1662434487}
+			namosec := systime.Now().Nanosecond()
+			timeNs := []uint32{uint32(namosec), uint32(namosec + 10)}
+			method := []string{"PUT", "GET"}
+			status := []string{"200", "404"}
+			logs := make([]*protocol.Log, 2)
+			for i := 0; i < 2; i++ {
+				logs[i] = &protocol.Log{
+					Time: time[i],
+					Contents: []*protocol.Log_Content{
+						{Key: "method", Value: method[i]},
+						{Key: "status", Value: status[i]},
+						{Key: "__tag__:__path__", Value: "/root/test/origin/example.log"},
+						{Key: "__log_topic__", Value: "file"},
+						{Key: "content", Value: "test log content"},
+					},
+					TimeNs: &timeNs[i],
 				}
 			}
 			tags := []*protocol.LogTag{
