@@ -23,6 +23,7 @@
 #include "common/Flags.h"
 #include "common/ErrorUtil.h"
 #include "common/FileSystemUtil.h"
+#include <boost/filesystem.hpp>
 
 DEFINE_FLAG_STRING(logtail_snapshot_dir, "snapshot dir on local disk", "snapshot");
 DEFINE_FLAG_BOOL(logtail_async_logger_enable, "", true);
@@ -266,8 +267,6 @@ void Logger::LoadConfig(const std::string& filePath) {
         logConfigInfo = "Load log config from " + filePath;
     } while (0);
 
-    EnsureSnapshotDirExist(sinkConfigs);
-
     // Add or supply default config(s).
     bool needSave = true;
     if (loggerConfigs.empty()) {
@@ -278,6 +277,8 @@ void Logger::LoadConfig(const std::string& filePath) {
         LoadDefaultConfig(loggerConfigs, sinkConfigs);
     } else
         needSave = false;
+
+    EnsureSnapshotDirExist(sinkConfigs);
 
     LogMsg(logConfigInfo);
     LogMsg(std::string("Logger size in config: ") + std::to_string(loggerConfigs.size()));
@@ -388,11 +389,8 @@ void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCf
     loggerCfgs.insert({"/apsara/sls/ilogtail", LoggerConfig{"AsyncFileSink", level::info}});
     loggerCfgs.insert({"/apsara/sls/ilogtail/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
     loggerCfgs.insert({"/apsara/sls/ilogtail/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
-}
 
-void Logger::EnsureSnapshotDirExist(std::map<std::string, SinkConfig>& sinkCfgs) {
     std::string dirPath = GetProcessExecutionDir() + STRING_FLAG(logtail_snapshot_dir);
-
     if (!Mkdir(dirPath)) {
         LogMsg(std::string("Create snapshot dir error ") + dirPath + ", error" + ErrnoToString(GetErrno()));
     }
@@ -400,6 +398,27 @@ void Logger::EnsureSnapshotDirExist(std::map<std::string, SinkConfig>& sinkCfgs)
         {"AsyncFileSinkProfile", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "ilogtail_profile.LOG"}});
     sinkCfgs.insert(
         {"AsyncFileSinkStatus", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "ilogtail_status.LOG"}});
+}
+
+void Logger::EnsureSnapshotDirExist(std::map<std::string, SinkConfig>& sinkCfgs) {
+    if (sinkCfgs.size() == 0) {
+        return;
+    }
+
+    for (const auto& sink : sinkCfgs) {
+        std::string sinkName = sink.first;
+        SinkConfig sinkCfg = sink.second;
+
+        if (sinkName == "AsyncFileSinkStatus" || sinkName == "AsyncFileSinkProfile") {
+            boost::filesystem::path logFilePath(sinkCfg.logFilePath);
+            try {
+                boost::filesystem::create_directories(logFilePath.parent_path());
+            } catch (const boost::filesystem::filesystem_error& e) {
+                LogMsg(std::string("Create snapshot dir error ") + logFilePath.parent_path().string() + ", error"
+                       + std::string(e.what()));
+            }
+        }
+    }
 }
 
 } // namespace logtail
