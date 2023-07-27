@@ -393,11 +393,6 @@ void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCf
 void Logger::EnsureSnapshotDirExist(std::map<std::string, SinkConfig>& sinkCfgs) {
     std::string dirPath = GetProcessExecutionDir() + STRING_FLAG(logtail_snapshot_dir);
 
-    // determine if the file exists
-    if (CheckExistance(dirPath)) {
-        return;
-    }
-
     if (!Mkdir(dirPath)) {
         LogMsg(std::string("Create snapshot dir error ") + dirPath + ", error" + ErrnoToString(GetErrno()));
     }
