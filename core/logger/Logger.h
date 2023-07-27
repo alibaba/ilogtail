@@ -80,8 +80,8 @@ private:
     void LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
                                std::map<std::string, SinkConfig>& sinkCfgs);
 
-    // CheckSnapshotDir checks if the snapshot dir exists, if not, create it.
-    void CheckSnapshotDir();
+    // EnsureSnapshotDirExist ensures the snapshot dir exists.
+    void EnsureSnapshotDirExist(std::map<std::string, SinkConfig>& sinkCfgs);
 };
 
 } // namespace logtail
