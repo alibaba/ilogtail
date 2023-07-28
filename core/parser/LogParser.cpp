@@ -15,6 +15,7 @@
 #include "LogParser.h"
 #include <time.h>
 #include <stdlib.h>
+#include <cstring>
 #include <vector>
 #include <regex>
 #include "common/StringTools.h"
@@ -364,6 +365,7 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                              logPath,
                              error,
                              tzOffsetSecond)) {
+        std::cout << "parse time failed " << what[timeIndex + 1].str() << " " << timeFormat << std::endl;
         parseSuccess = false;
         if (error == PARSE_LOG_HISTORY_ERROR)
             return false;
@@ -505,14 +507,17 @@ bool LogParser::ParseLogTime(const char* buffer,
             error = PARSE_LOG_TIMEFORMAT_ERROR;
             return false;
         }
-        timeStr = ConvertToTimeStamp(logTime.tv_sec, timeFormat);
+        std::string secondFormat = std::string(timeFormat);
+        secondFormat = secondFormat.substr(0, secondFormat.size()-3);
+        timeStr = ConvertToTimeStamp(logTime.tv_sec, secondFormat.c_str());
 
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(logTime, preciseTimestampConfig, tzOffsetSecond);
+            preciseTimestamp = GetPreciseTimestampFromLogtailTime(logTime, preciseTimestampConfig, tzOffsetSecond);
         }
     } else {
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(logTime, preciseTimestampConfig, tzOffsetSecond);
+            preciseTimestamp = GetPreciseTimestamp(
+                logTime.tv_sec, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, tzOffsetSecond);
         }
     }
 

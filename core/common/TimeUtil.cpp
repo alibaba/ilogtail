@@ -271,9 +271,66 @@ void UpdateTimeDelta(time_t serverTime) {
 // Parse ms/us/ns suffix from preciseTimeSuffix, joining with the input second timestamp.
 // Will return value the precise timestamp.
 uint64_t GetPreciseTimestamp(LogtailTime logTime,
+                             const char* preciseTimeSuffix,
                              const PreciseTimestampConfig& preciseTimestampConfig,
                              int32_t tzOffsetSecond) {
     uint64_t adjustSecondTimestamp = logTime.tv_sec  - tzOffsetSecond;
+    if (!preciseTimestampConfig.enabled) {
+        return adjustSecondTimestamp;
+    }
+
+    bool endFlag = false;
+    TimeStampUnit timeUnit = preciseTimestampConfig.unit;
+
+    uint32_t maxPreciseDigitNum = 0;
+    if (TimeStampUnit::MILLISECOND == timeUnit) {
+        maxPreciseDigitNum = 3;
+    } else if (TimeStampUnit::MICROSECOND == timeUnit) {
+        maxPreciseDigitNum = 6;
+    } else if (TimeStampUnit::NANOSECOND == timeUnit) {
+        maxPreciseDigitNum = 9;
+    } else {
+        maxPreciseDigitNum = 0;
+    }
+
+    if (NULL == preciseTimeSuffix || strlen(preciseTimeSuffix) <= 1) {
+        endFlag = true;
+    } else {
+        std::string supprotSeparators = ".,: ";
+        const char separator = preciseTimeSuffix[0];
+        std::size_t found = supprotSeparators.find(separator);
+        if (found == std::string::npos) {
+            endFlag = true;
+        }
+    }
+
+    uint32_t preciseTimeDigit = 0;
+    for (uint32_t i = 0; i < maxPreciseDigitNum; i++) {
+        bool validDigit = false;
+        if (!endFlag) {
+            const char digitChar = preciseTimeSuffix[i + 1];
+            if (digitChar != '\0' && digitChar >= '0' && digitChar <= '9') {
+                preciseTimeDigit = preciseTimeDigit * 10 + (digitChar - '0');
+                validDigit = true;
+            }
+        }
+
+        if (!validDigit) {
+            // Insufficient digits filled with zeros.
+            preciseTimeDigit = preciseTimeDigit * 10;
+            endFlag = true;
+        }
+        adjustSecondTimestamp *= 10;
+    }
+
+    return adjustSecondTimestamp + preciseTimeDigit;
+}
+
+// DEPRECATED: only for the compability of PreciseTimestamp
+uint64_t GetPreciseTimestampFromLogtailTime(LogtailTime logTime,
+                                            const PreciseTimestampConfig& preciseTimestampConfig,
+                                            int32_t tzOffsetSecond) {
+    uint64_t adjustSecondTimestamp = logTime.tv_sec - tzOffsetSecond;
     if (!preciseTimestampConfig.enabled) {
         return adjustSecondTimestamp;
     }

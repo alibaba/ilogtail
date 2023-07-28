@@ -76,11 +76,14 @@ int32_t GetSystemBootTime();
 time_t GetTimeDelta();
 void UpdateTimeDelta(time_t serverTime);
 
-uint64_t GetPreciseTimestamp(LogtailTime logTime,
+uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
+                             const char* preciseTimeSuffix,
                              const PreciseTimestampConfig& preciseTimestampConfig,
                              int32_t tzOffsetSecond);
 
-long GetNanoSecondsFromPreciseTimestamp(uint64_t preciseTimestamp, TimeStampUnit unit);
+uint64_t GetPreciseTimestampFromLogtailTime(LogtailTime logTime,
+                                            const PreciseTimestampConfig& preciseTimestampConfig,
+                                            int32_t tzOffsetSecond);
 
 void SetLogTime(sls_logs::Log* log, time_t second, long nanosecond);
 
