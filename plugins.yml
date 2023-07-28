@@ -106,6 +106,7 @@ plugins:
     - import: "github.com/alibaba/ilogtail/plugins/processor/logtoslsmetric"
   linux:
     - import: "github.com/alibaba/ilogtail/plugins/flusher/sls"
+    - import: "github.com/alibaba/ilogtail/plugins/input/command"
     - import: "github.com/alibaba/ilogtail/plugins/input/docker/logmeta"
     - import: "github.com/alibaba/ilogtail/plugins/input/gpu"
     - import: "github.com/alibaba/ilogtail/plugins/input/journal"

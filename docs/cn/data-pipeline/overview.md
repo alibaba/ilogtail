@@ -5,6 +5,7 @@
 | 名称                                                                            | 提供方                                                        | 简介                                                    |
 |-------------------------------------------------------------------------------|------------------------------------------------------------|-------------------------------------------------------|
 | [`file_log`](input/file-log.md)<br> 文本日志                                      | SLS官方<br>[`messixukejia`](https://github.com/messixukejia) | 文本采集。                                                 |
+| [`input_command`](input/input-command.md)<br>脚本执行数据                           | 社区<br>[`didachuxing`](https://github.com/didachuxing)      | 采集脚本执行数据。                                             |
 | [`input_docker_stdout`](input/service-docker-stdout.md)<br>容器标准输出             | SLS官方                                                      | 从容器标准输出/标准错误流中采集日志。                                   |
 | [`metric_debug_file`](input/metric-debug-file.md)<br>文本日志（debug）              | SLS官方                                                      | 用于调试的读取文件内容的插件。                                       |
 | [`metric_input_example`](input/metric-input-example.md)<br>MetricInput示例插件    | SLS官方                                                      | MetricInput示例插件。                                      |
