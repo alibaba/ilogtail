@@ -30,7 +30,7 @@ public:
 private:
     void AddUserDefinedFormat(const std::string& regStr, const std::string& keys);
     /// @return false if data need to be discarded
-    bool ProcessEvent(PipelineEventGroup& logGroup, const StringView& logPath, PipelineEventPtr& e);
+    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
     bool WholeLineModeParser(LogEvent& sourceEvent, const std::string& key);
     bool RegexLogLineParser(LogEvent& sourceEvent,
                             const boost::regex& reg,
@@ -48,5 +48,8 @@ private:
     int* mParseFailures;
     int* mRegexMatchFailures;
     int* mLogGroupSize;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorParseRegexNativeUnittest;
+#endif
 };
 } // namespace logtail

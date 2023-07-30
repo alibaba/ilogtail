@@ -103,6 +103,10 @@ public:
 
 private:
     BufferAllocator mAllocator;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class LogEventUnittest;
+    friend class PipelineEventGroupUnittest;
+#endif
 };
 
 } // namespace logtail

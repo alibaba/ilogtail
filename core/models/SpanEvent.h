@@ -21,9 +21,14 @@ namespace logtail {
 
 class SpanEvent : public PipelineEvent {
 public:
-    SpanEvent() { mType = SPAN_EVENT_TYPE; }
-    const std::string& GetType() const override;
-    static std::string sType;
+    static std::unique_ptr<SpanEvent> CreateEvent(std::shared_ptr<SourceBuffer>& sb);
+
+    // for debug and test
+    Json::Value ToJson() const override;
+    bool FromJson(const Json::Value&) override;
+
+private:
+    SpanEvent();
 };
 
 } // namespace logtail

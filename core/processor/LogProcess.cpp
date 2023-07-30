@@ -428,8 +428,11 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         return;
     }
     // construct a logGroup, it should be moved into input later
-    PipelineEventGroup eventGroup;
-    eventGroup.SetSourceBuffer(logBuffer);
+    PipelineEventGroup eventGroup(logBuffer);
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH, logBuffer->logFileReader->GetConvertedPath());
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH_RESOLVED, logBuffer->logFileReader->GetLogPath());
+    auto inodebuf = logBuffer->CopyString(std::to_string(logBuffer->logFileReader->GetDevInode().inode));
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_INODE, StringView(inodebuf.data, inodebuf.size));
     std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
     time_t logtime = time(NULL);
     if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
@@ -439,7 +442,7 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
     auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->beginOffset));
     event->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
-    eventGroup.AddEvent(event.release());
+    eventGroup.AddEvent(std::move(event));
 
     // process logGroup
     pipeline->Process(eventGroup);
@@ -471,7 +474,8 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup, sls_logs
         log->set_time(logEvent.GetTimestamp());
         for (auto& kv : logEvent.GetContents()) {
             sls_logs::Log_Content* contPtr = log->add_contents();
-            contPtr->set_key(kv.first.to_string());
+            contPtr->set_key(kv.first == EVENT_META_LOG_FILE_OFFSET ? LOG_RESERVED_KEY_FILE_OFFSET
+                                                                    : kv.first.to_string());
             contPtr->set_value(kv.second.to_string());
         }
     }

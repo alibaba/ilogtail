@@ -24,8 +24,8 @@ namespace logtail {
 
 class GroupInfo {
 public:
-    std::map<StringView, StringView> metadata; // source/topic etc.
-    std::map<StringView, StringView> tags;
+    std::map<StringView, StringView> metadata; // predefined source/topic etc. should have conventional protocol
+    std::map<StringView, StringView> tags; // custom tags
 };
 
 // DeepCopy is required if we want to support no-linear topology
@@ -33,26 +33,39 @@ public:
 using EventsContainer = std::vector<PipelineEventPtr>;
 class PipelineEventGroup {
 public:
-    // default constructors are ok
+    PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
     const GroupInfo& GetGroupInfo() const { return mGroup; }
     // GroupInfo& ModifiableGroupInfo() { return mGroup; }
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& ModifiableEvents() { return mEvents; }
     void AddEvent(PipelineEventPtr);
+    void AddEvent(std::unique_ptr<PipelineEvent> event);
     void Swap(PipelineEventGroup& other) { std::swap(*this, other); }
     void SwapEvents(EventsContainer& other) { mEvents.swap(other); }
-    void SetSourceBuffer(std::shared_ptr<SourceBuffer> sourceBuffer) { mSourceBuffer = sourceBuffer; }
+    // void SetSourceBuffer(std::shared_ptr<SourceBuffer> sourceBuffer) { mSourceBuffer = sourceBuffer; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer() { return mSourceBuffer; }
 
     void SetMetadata(const StringView& key, const StringView& val);
     void SetMetadata(const std::string& key, const std::string& val);
-    void SetMetadata(const StringBuffer& key, const StringBuffer& val);
-    const StringView& GetMetadata(const std::string& key) const;
-    const StringView& GetMetadata(const char* key) const;
+    void SetMetadataNoCopy(const StringBuffer& key, const StringBuffer& val);
     const StringView& GetMetadata(const StringView& key) const;
-    bool HasMetadata(const std::string& key) const;
     bool HasMetadata(const StringView& key) const;
     void SetMetadataNoCopy(const StringView& key, const StringView& val);
+    void DelMetadata(const StringView& key);
+
+    void SetTag(const StringView& key, const StringView& val);
+    void SetTag(const std::string& key, const std::string& val);
+    void SetTagNoCopy(const StringBuffer& key, const StringBuffer& val);
+    const StringView& GetTag(const StringView& key) const;
+    bool HasTag(const StringView& key) const;
+    void SetTagNoCopy(const StringView& key, const StringView& val);
+    void DelTag(const StringView& key);
+
+    // for debug and test
+    Json::Value ToJson() const;
+    bool FromJson(const Json::Value&);
+    std::string ToJsonString() const;
+    bool FromJsonString(const std::string&);
 
 private:
     GroupInfo mGroup;

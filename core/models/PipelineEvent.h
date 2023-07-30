@@ -18,6 +18,8 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <json/json.h>
+
 #include "models/StringView.h"
 #include "reader/SourceBuffer.h"
 
@@ -25,16 +27,25 @@ namespace logtail {
 
 enum PipelineEventType { VOID_EVENT_TYPE = 0, LOG_EVENT_TYPE = 1, METRIC_EVENT_TYPE = 2, SPAN_EVENT_TYPE = 3 };
 
+const std::string& PipelineEventTypeToString(PipelineEventType t);
+
 class PipelineEventPtr;
 class PipelineGroupEvents;
 class PipelineEvent {
 public:
     virtual ~PipelineEvent() {}
-    virtual const std::string& GetType() const = 0;
+    PipelineEventType GetType() const { return mType; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer() { return mSourceBuffer; }
 
     time_t GetTimestamp() const { return timestamp; }
     void SetTimestamp(time_t t) { timestamp = t; }
+
+    // for debug and test
+    virtual Json::Value ToJson() const = 0;
+    virtual bool FromJson(const Json::Value&) = 0;
+    std::string ToJsonString() const;
+    bool FromJsonString(const std::string&);
+
 protected:
     void SetSourceBuffer(std::shared_ptr<SourceBuffer> sourceBuffer) { mSourceBuffer = sourceBuffer; }
 

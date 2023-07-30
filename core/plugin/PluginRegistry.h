@@ -45,12 +45,11 @@ private:
 
     void LoadStaticPlugins();
     void LoadDynamicPlugins(const std::set<std::string>& plugins);
-    // void RegisterInputCreator(PluginCreator* registry);
-    void RegisterProcessorCreator(PluginCreator* registry);
-    // void RegisterFlusherCreator(PluginCreator* registry);
-    void UnregisterCreator(PluginCreator* node);
+    // void RegisterInputCreator(PluginCreator* creator);
+    void RegisterProcessorCreator(PluginCreator* creator);
+    // void RegisterFlusherCreator(PluginCreator* creator);
     PluginCreator* LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName);
-    void RegisterCreator(PluginCat cat, PluginCreator* registry);
+    void RegisterCreator(PluginCat cat, PluginCreator* creator);
     std::unique_ptr<PluginInstance> Create(PluginCat cat, const std::string& name, const std::string& pluginId);
 
     struct PluginKey {
@@ -66,6 +65,10 @@ private:
         }
     };
     std::unordered_map<PluginKey, std::shared_ptr<PluginCreator>, PluginKeyHash> mPluginDict;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class PluginRegistryUnittest;
+#endif
 };
 
 } // namespace logtail

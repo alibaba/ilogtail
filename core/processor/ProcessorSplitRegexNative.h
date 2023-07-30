@@ -45,6 +45,9 @@ private:
     std::unique_ptr<boost::regex> mLogBeginRegPtr;
     bool mDiscardUnmatch;
     bool mEnableLogPositionMeta;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorSplitRegexNativeUnittest;
+#endif
 };
 
 } // namespace logtail

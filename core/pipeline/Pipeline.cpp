@@ -37,25 +37,25 @@ bool Pipeline::Init(const PipelineConfig& config) {
 
     std::unique_ptr<ProcessorInstance> plugin1 = PluginRegistry::GetInstance()->CreateProcessor(
         ProcessorFillSlsGroupInfo::Name(), std::string(ProcessorFillSlsGroupInfo::Name()) + "/1"); // /0 is the input
-    if (!InitAndAddProcessor(plugin1, config)) {
+    if (!InitAndAddProcessor(std::move(plugin1), config)) {
         return false;
     }
 
     std::unique_ptr<ProcessorInstance> plugin2 = PluginRegistry::GetInstance()->CreateProcessor(
         ProcessorSplitRegexNative::Name(), std::string(ProcessorSplitRegexNative::Name()) + "/2");
-    if (!InitAndAddProcessor(plugin2, config)) {
+    if (!InitAndAddProcessor(std::move(plugin2), config)) {
         return false;
     }
 
     std::unique_ptr<ProcessorInstance> plugin3 = PluginRegistry::GetInstance()->CreateProcessor(
         ProcessorParseRegexNative::Name(), std::string(ProcessorParseRegexNative::Name()) + "/3");
-    if (!InitAndAddProcessor(plugin3, config)) {
+    if (!InitAndAddProcessor(std::move(plugin3), config)) {
         return false;
     }
 
     std::unique_ptr<ProcessorInstance> plugin4 = PluginRegistry::GetInstance()->CreateProcessor(
         ProcessorParseTimestampNative::Name(), std::string(ProcessorParseTimestampNative::Name()) + "/4");
-    if (!InitAndAddProcessor(plugin4, config)) {
+    if (!InitAndAddProcessor(std::move(plugin4), config)) {
         return false;
     }
 
@@ -68,7 +68,7 @@ void Pipeline::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>& processor, const ComponentConfig& config) {
+bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance> processor, const ComponentConfig& config) {
     if (!processor) {
         LOG_ERROR(GetContext().GetLogger(),
                   ("CreateProcessor", ProcessorSplitRegexNative::Name())("Error", "Cannot find plugin"));

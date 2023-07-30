@@ -17,10 +17,26 @@
 #include "models/SpanEvent.h"
 
 namespace logtail {
+std::unique_ptr<SpanEvent> SpanEvent::CreateEvent(std::shared_ptr<SourceBuffer>& sb) {
+    auto p = std::unique_ptr<SpanEvent>(new SpanEvent);
+    p->SetSourceBuffer(sb);
+    return p;
+}
 
-std::string SpanEvent::sType = "Span";
-const std::string& SpanEvent::GetType() const {
-    return sType;
-};
+SpanEvent::SpanEvent() {
+    mType = SPAN_EVENT_TYPE;
+}
+
+Json::Value SpanEvent::ToJson() const {
+    Json::Value root;
+    root["type"] = GetType();
+    root["timestamp"] = GetTimestamp();
+    return root;
+}
+
+bool SpanEvent::FromJson(const Json::Value& root) {
+    SetTimestamp(root["timestamp"].asInt64());
+    return true;
+}
 
 } // namespace logtail

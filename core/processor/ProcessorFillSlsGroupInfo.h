@@ -21,14 +21,18 @@ namespace logtail {
 
 class ProcessorFillSlsGroupInfo : public Processor {
 public:
-    static const char* Name() { return "ProcessorFillSlsGroupInfo"; }
+    static const char* Name() { return "processor_fill_sls_group_info"; }
     bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 private:
-    std::string
-    GetTopicName(const std::string& topicConfig, const std::string& path, std::vector<sls_logs::LogTag>& extraTags);
+    std::string GetTopicName(const std::string& path, std::vector<sls_logs::LogTag>& extraTags);
 
-    std::string mConfigName, mTopicFormat, mGroupTopic, mCustomizedTopic;
+    std::string mTopicFormat, mGroupTopic, mStaticTopic;
+    bool mIsStaticTopic = false;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorFillSlsGroupInfoUnittest;
+#endif
 };
 } // namespace logtail

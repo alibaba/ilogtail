@@ -42,5 +42,8 @@ private:
 
     int* mParseTimeFailures;
     int* mHistoryFailures;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorParseTimestampNativeUnittest;
+#endif
 };
 } // namespace logtail

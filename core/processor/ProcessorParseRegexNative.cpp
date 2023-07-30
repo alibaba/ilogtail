@@ -26,15 +26,20 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     mDiscardUnmatch = config.mDiscardUnmatch;
     mUploadRawLog = config.mUploadRawLog;
     mRawLogTag = config.mAdvancedConfig.mRawLogTag;
-    std::list<std::string>::iterator regitr = config.mRegs->begin();
-    std::list<std::string>::iterator keyitr = config.mKeys->begin();
-    for (; regitr != config.mRegs->end(); ++regitr, ++keyitr) {
-        AddUserDefinedFormat(*regitr, *keyitr);
-        if (*keyitr == mSourceKey) {
-            mSourceKeyOverwritten = true;
+    if (config.mRegs && config.mKeys) {
+        std::list<std::string>::iterator regitr = config.mRegs->begin();
+        std::list<std::string>::iterator keyitr = config.mKeys->begin();
+        for (; regitr != config.mRegs->end() && keyitr != config.mKeys->end(); ++regitr, ++keyitr) {
+            AddUserDefinedFormat(*regitr, *keyitr);
+            if (*keyitr == mSourceKey) {
+                mSourceKeyOverwritten = true;
+            }
+            if (*keyitr == mRawLogTag) {
+                mRawLogTagOverwritten = true;
+            }
         }
-        if (*keyitr == mRawLogTag) {
-            mRawLogTagOverwritten = true;
+        if (mUploadRawLog && mRawLogTag == mSourceKey) {
+            mSourceKeyOverwritten = true;
         }
     }
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
@@ -44,14 +49,14 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
 }
 
 void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
-    if (logGroup.GetEvents().empty()) {
+    if (logGroup.GetEvents().empty() || mUserDefinedFormat.empty()) {
         return;
     }
     const StringView& logPath = logGroup.GetMetadata("source");
     EventsContainer& events = logGroup.ModifiableEvents();
     // works good normally. poor performance if most data need to be discarded.
     for (auto it = events.begin(); it != events.end();) {
-        if (ProcessorParseRegexNative::ProcessEvent(logGroup, logPath, *it)) {
+        if (ProcessorParseRegexNative::ProcessEvent(logPath, *it)) {
             ++it;
         } else {
             it = events.erase(it);
@@ -60,9 +65,7 @@ void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-bool ProcessorParseRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
-                                             const StringView& logPath,
-                                             PipelineEventPtr& e) {
+bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e) {
     if (!e.Is<LogEvent>()) {
         return true;
     }
@@ -83,17 +86,16 @@ bool ProcessorParseRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         }
     }
     if (!res && !mDiscardUnmatch) {
-        std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                sourceEvent.GetContent(mSourceKey),
-               *targetEvent); // legacy behavior, should use sourceKey
-    }
-    if (res && !mSourceKeyOverwritten) {
-        sourceEvent.DelContent(mSourceKey);
+               sourceEvent); // legacy behavior, should use sourceKey
     }
     if (res || !mDiscardUnmatch) {
         if (mUploadRawLog && (!res || !mRawLogTagOverwritten)) {
             AddLog(mRawLogTag, sourceEvent.GetContent(mSourceKey), sourceEvent); // __raw__
+        }
+        if (res && !mSourceKeyOverwritten) {
+            sourceEvent.DelContent(mSourceKey);
         }
         return true;
     }
@@ -128,50 +130,51 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
     if (!BoostRegexMatch(buffer.data(), buffer.size(), reg, exception, what, boost::match_default)) {
         if (!exception.empty()) {
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-                if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                    LOG_ERROR(
-                        GetContext().GetLogger(),
-                        ("parse regex log fail", buffer)("exception", exception)("project", GetContext().GetProjectName())(
-                            "logstore", GetContext().GetLogstoreName())("file", logPath));
+                if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
+                    LOG_ERROR(GetContext().GetLogger(),
+                              ("parse regex log fail", buffer)("exception", exception)("project",
+                                                                                       GetContext().GetProjectName())(
+                                  "logstore", GetContext().GetLogstoreName())("file", logPath));
                 }
-                LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
-                                                       "errorlog:" + buffer.to_string() + " | exception:" + exception,
-                                                       GetContext().GetProjectName(),
-                                                       GetContext().GetLogstoreName(),
-                                                       GetContext().GetRegion());
+                GetContext().GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
+                                                  "errorlog:" + buffer.to_string() + " | exception:" + exception,
+                                                  GetContext().GetProjectName(),
+                                                  GetContext().GetLogstoreName(),
+                                                  GetContext().GetRegion());
             }
         } else {
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-                if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
                     LOG_WARNING(GetContext().GetLogger(),
                                 ("parse regex log fail", buffer)("project", GetContext().GetProjectName())(
                                     "logstore", GetContext().GetLogstoreName())("file", logPath));
                 }
-                LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
-                                                       std::string("errorlog:") + buffer.to_string(),
-                                                       GetContext().GetProjectName(),
-                                                       GetContext().GetLogstoreName(),
-                                                       GetContext().GetRegion());
+                GetContext().GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
+                                                  std::string("errorlog:") + buffer.to_string(),
+                                                  GetContext().GetProjectName(),
+                                                  GetContext().GetLogstoreName(),
+                                                  GetContext().GetRegion());
             }
         }
-
+        ++(*mRegexMatchFailures);
         ++(*mParseFailures);
         parseSuccess = false;
     } else if (what.size() <= keys.size()) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-            if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                LOG_WARNING(
-                    GetContext().GetLogger(),
-                    ("parse key count not match", what.size())("parse regex log fail", buffer)(
-                        "project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName())("file", logPath));
+            if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
+                LOG_WARNING(GetContext().GetLogger(),
+                            ("parse key count not match",
+                             what.size())("parse regex log fail", buffer)("project", GetContext().GetProjectName())(
+                                "logstore", GetContext().GetLogstoreName())("file", logPath));
             }
-            LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
-                                                   "parse key count not match" + ToString(what.size())
-                                                       + "errorlog:" + buffer.to_string(),
-                                                   GetContext().GetProjectName(),
-                                                   GetContext().GetLogstoreName(),
-                                                   GetContext().GetRegion());
+            GetContext().GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
+                                              "parse key count not match" + ToString(what.size())
+                                                  + "errorlog:" + buffer.to_string(),
+                                              GetContext().GetProjectName(),
+                                              GetContext().GetLogstoreName(),
+                                              GetContext().GetRegion());
         }
+        ++(*mRegexMatchFailures);
         ++(*mParseFailures);
         parseSuccess = false;
     }

@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#include <memory>
 #include <typeinfo>
 #include "models/PipelineEvent.h"
 #include "models/LogEvent.h"
@@ -25,9 +26,14 @@ namespace logtail {
 
 class PipelineEventPtr {
 public:
-    PipelineEventPtr(PipelineEvent* ptr) : mData(ptr) {}
-    PipelineEventPtr(std::unique_ptr<PipelineEvent> ptr) : mData(ptr.release()) {}
+    PipelineEventPtr() {}
+    PipelineEventPtr(std::unique_ptr<PipelineEvent> ptr) : mData(std::move(ptr)) {}
     // default copy/move constructor is ok
+    void Reset(std::unique_ptr<PipelineEvent> ptr) { mData.reset(ptr.release()); }
+    PipelineEventPtr& operator=(std::unique_ptr<PipelineEvent> ptr) {
+        mData = std::move(ptr);
+        return *this;
+    }
 
     template <typename T>
     bool Is() const {
@@ -58,6 +64,10 @@ public:
     const T* Get() const {
         return Is<T>() ? static_cast<const T*>(mData.get()) : nullptr;
     }
+
+    operator bool() const { return static_cast<bool>(mData); }
+    PipelineEvent* operator->() { return mData.operator->(); }
+    const PipelineEvent* operator->() const { return mData.operator->(); }
 
 private:
     std::shared_ptr<PipelineEvent> mData;

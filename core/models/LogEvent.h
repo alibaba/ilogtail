@@ -23,24 +23,24 @@ using LogContents = std::map<StringView, StringView>;
 class LogEvent : public PipelineEvent {
 public:
     static std::unique_ptr<LogEvent> CreateEvent(std::shared_ptr<SourceBuffer>& sb);
-    const std::string& GetType() const override;
     const LogContents& GetContents() const { return contents; }
     LogContents& ModifiableContents() { return contents; }
     void SetContent(const StringView& key, const StringView& val);
     void SetContent(const std::string& key, const std::string& val);
-    void SetContent(const StringBuffer& key, const StringBuffer& val);
-    const StringView& GetContent(const std::string& key) const;
+    void SetContentNoCopy(const StringBuffer& key, const StringBuffer& val);
     const StringView& GetContent(const StringView& key) const;
-    bool HasContent(const std::string& key) const;
     bool HasContent(const StringView& key) const;
     void SetContentNoCopy(const StringView& key, const StringView& val);
     void DelContent(const StringView& key);
+
+    // for debug and test
+    Json::Value ToJson() const override;
+    bool FromJson(const Json::Value&) override;
 
 private:
     LogEvent();
 
     LogContents contents;
-    static std::string sType;
 };
 
 } // namespace logtail

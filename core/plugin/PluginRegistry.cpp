@@ -31,6 +31,9 @@
 
 #include "plugin/CProcessor.h"
 #include "processor/ProcessorSplitRegexNative.h"
+#include "processor/ProcessorParseRegexNative.h"
+#include "processor/ProcessorParseTimestampNative.h"
+#include "processor/ProcessorFillSlsGroupInfo.h"
 
 namespace logtail {
 
@@ -47,16 +50,16 @@ void PluginRegistry::LoadPlugins() {
 }
 
 void PluginRegistry::UnloadPlugins() {
-    for (auto& kv : mPluginDict) {
-        // if (node->plugin_type() == PLUGIN_TYPE_DYNAMIC) {
-        //     CPluginRegistryItem* registry = reinterpret_cast<CPluginRegistryItem*>(node);
-        //     if (strcmp(registry->mPlugin->language, "Go") == 0) {
-        //         destroy_go_plugin_interface(registry->_handle,
-        //         const_cast<plugin_interface_t*>(registry->mPlugin));
-        //     }
-        // }
-        UnregisterCreator(kv.second.get());
-    }
+    // for (auto& kv : mPluginDict) {
+    // if (node->plugin_type() == PLUGIN_TYPE_DYNAMIC) {
+    //     CPluginRegistryItem* registry = reinterpret_cast<CPluginRegistryItem*>(node);
+    //     if (strcmp(registry->mPlugin->language, "Go") == 0) {
+    //         destroy_go_plugin_interface(registry->_handle,
+    //         const_cast<plugin_interface_t*>(registry->mPlugin));
+    //     }
+    // }
+    //     UnregisterCreator(kv.second.get());
+    // }
     mPluginDict.clear();
 }
 
@@ -78,6 +81,9 @@ PluginRegistry::Create(PluginCat cat, const std::string& name, const std::string
 
 void PluginRegistry::LoadStaticPlugins() {
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitRegexNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseRegexNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseTimestampNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFillSlsGroupInfo>());
     /* more native plugin registers here */
 }
 
@@ -93,9 +99,9 @@ void PluginRegistry::LoadDynamicPlugins(const std::set<std::string>& plugins) {
             LOG_ERROR(sLogger, ("open plugin", pluginName)("error", error));
             continue;
         }
-        PluginCreator* registry = LoadProcessorPlugin(loader, pluginName);
-        if (registry) {
-            RegisterProcessorCreator(registry);
+        PluginCreator* creator = LoadProcessorPlugin(loader, pluginName);
+        if (creator) {
+            RegisterProcessorCreator(creator);
             continue;
         }
     }
@@ -132,10 +138,6 @@ void PluginRegistry::RegisterCreator(PluginCat cat, PluginCreator* creator) {
 
 void PluginRegistry::RegisterProcessorCreator(PluginCreator* creator) {
     RegisterCreator(PROCESSOR_PLUGIN, creator);
-}
-
-// 卸载插件
-void PluginRegistry::UnregisterCreator(PluginCreator* creator) {
 }
 
 } // namespace logtail

@@ -72,24 +72,24 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
 
     if (AppConfig::GetInstance()->IsLogParseAlarmValid() && LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
         if (!splitSuccess) { // warning if unsplittable
-            LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM,
-                                                   "split log lines fail, please check log_begin_regex, file:"
-                                                       + logPath.to_string()
-                                                       + ", logs:" + sourceVal.substr(0, 1024).to_string(),
-                                                   GetContext().GetProjectName(),
-                                                   GetContext().GetLogstoreName(),
-                                                   GetContext().GetRegion());
+            GetContext().GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
+                                              "split log lines fail, please check log_begin_regex, file:"
+                                                  + logPath.to_string()
+                                                  + ", logs:" + sourceVal.substr(0, 1024).to_string(),
+                                              GetContext().GetProjectName(),
+                                              GetContext().GetLogstoreName(),
+                                              GetContext().GetRegion());
             LOG_ERROR(GetContext().GetLogger(),
                       ("split log lines fail", "please check log_begin_regex")("file_name", logPath)(
                           "log bytes", sourceVal.size() + 1)("first 1KB log", sourceVal.substr(0, 1024).to_string()));
         }
         for (auto& discardData : discardIndex) { // warning if data loss
-            LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM,
-                                                   "split log lines discard data, file:" + logPath.to_string()
-                                                       + ", logs:" + discardData.substr(0, 1024).to_string(),
-                                                   GetContext().GetProjectName(),
-                                                   GetContext().GetLogstoreName(),
-                                                   GetContext().GetRegion());
+            GetContext().GetAlarm().SendAlarm(SPLIT_LOG_FAIL_ALARM,
+                                              "split log lines discard data, file:" + logPath.to_string()
+                                                  + ", logs:" + discardData.substr(0, 1024).to_string(),
+                                              GetContext().GetProjectName(),
+                                              GetContext().GetLogstoreName(),
+                                              GetContext().GetRegion());
             LOG_WARNING(
                 GetContext().GetLogger(),
                 ("split log lines discard data", "please check log_begin_regex")("file_name", logPath)(
@@ -97,7 +97,10 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         }
     }
     if (splitSuccess) {
-        auto sourceoffset = atol(sourceEvent.GetContent(EVENT_META_LOG_FILE_OFFSET).data()); // use safer method
+        long sourceoffset = 0L;
+        if (sourceEvent.HasContent(EVENT_META_LOG_FILE_OFFSET)) {
+            sourceoffset = atol(sourceEvent.GetContent(EVENT_META_LOG_FILE_OFFSET).data()); // use safer method
+        }
         StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
         for (auto& content : logIndex) {
             std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
@@ -106,11 +109,11 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
             if (mEnableLogPositionMeta) {
                 auto const offset = sourceoffset + (content.data() - sourceVal.data());
                 StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
-                targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+                targetEvent->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
             }
             if (sourceEvent.GetContents().size() > 1) { // copy other fields
                 for (auto& kv : sourceEvent.GetContents()) {
-                    if (kv.first != mSplitKey) {
+                    if (kv.first != mSplitKey && kv.first != EVENT_META_LOG_FILE_OFFSET) {
                         targetEvent->SetContentNoCopy(kv.first, kv.second);
                     }
                 }
@@ -156,17 +159,17 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
                     state = SPLIT_CONTINUE;
                 }
                 if (!exception.empty() && AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-                    if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                    if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
                         LOG_ERROR(GetContext().GetLogger(),
                                   ("regex_match in LogSplit fail, exception", exception)("project",
                                                                                          GetContext().GetProjectName())(
                                       "logstore", GetContext().GetLogstoreName())("file", logPath));
-                        LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
-                                                               "regex_match in LogSplit fail:" + exception + ", file"
-                                                                   + logPath.to_string(),
-                                                               GetContext().GetProjectName(),
-                                                               GetContext().GetLogstoreName(),
-                                                               GetContext().GetRegion());
+                        GetContext().GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
+                                                          "regex_match in LogSplit fail:" + exception + ", file"
+                                                              + logPath.to_string(),
+                                                          GetContext().GetProjectName(),
+                                                          GetContext().GetLogstoreName(),
+                                                          GetContext().GetRegion());
                     }
                 }
             }
@@ -186,11 +189,11 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
                           ("regex_match in LogSplit fail, exception", exception)("project", GetContext().GetProjectName())(
                               "logstore", GetContext().GetLogstoreName())("file", logPath));
             }
-            LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
-                                                   "regex_match in LogSplit fail:" + exception,
-                                                   GetContext().GetProjectName(),
-                                                   GetContext().GetLogstoreName(),
-                                                   GetContext().GetRegion());
+            GetContext().GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
+                                              "regex_match in LogSplit fail:" + exception,
+                                              GetContext().GetProjectName(),
+                                              GetContext().GetLogstoreName(),
+                                              GetContext().GetRegion());
         }
     }
     return anyMatched;

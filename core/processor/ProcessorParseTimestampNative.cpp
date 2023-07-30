@@ -35,7 +35,7 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& config) {
 }
 
 void ProcessorParseTimestampNative::Process(PipelineEventGroup& logGroup) {
-    if (logGroup.GetEvents().empty()) {
+    if (logGroup.GetEvents().empty() || mTimeFormat.empty() || mTimeKey.empty()) {
         return;
     }
     const StringView& logPath = logGroup.GetMetadata("source");
@@ -70,19 +70,19 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
     if (logTime <= 0
         || (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime) > INT32_FLAG(ilogtail_discard_interval))) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-            if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+            if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
                 LOG_WARNING(
                     GetContext().GetLogger(),
                     ("discard history data", timeStr)("timestamp", logTime)("project", GetContext().GetProjectName())(
                         "logstore", GetContext().GetLogstoreName())("file", logPath));
             }
-            LogtailAlarm::GetInstance()->SendAlarm(OUTDATED_LOG_ALARM,
-                                                   std::string("logTime: ") + ToString(logTime),
-                                                   GetContext().GetProjectName(),
-                                                   GetContext().GetLogstoreName(),
-                                                   GetContext().GetRegion());
+            GetContext().GetAlarm().SendAlarm(OUTDATED_LOG_ALARM,
+                                              std::string("logTime: ") + ToString(logTime),
+                                              GetContext().GetProjectName(),
+                                              GetContext().GetLogstoreName(),
+                                              GetContext().GetRegion());
         }
-        ++mHistoryFailures;
+        ++(*mHistoryFailures);
         return false;
     }
     sourceEvent.SetTimestamp(logTime);
@@ -104,7 +104,7 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
                                                  uint64_t& preciseTimestamp,
                                                  StringView& timeStr // cache
 ) {
-    if (!curTimeStr.starts_with(timeStr)) {
+    if (timeStr.empty() || !curTimeStr.starts_with(timeStr)) {
         // current implementation requires curTimeStr to be a C-style zero terminated string
         // have to copy it.
         // TODO: use better strptime which accepts string length
@@ -130,18 +130,18 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
         }
         if (NULL == strptimeResult) {
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-                if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
                     LOG_WARNING(
                         GetContext().GetLogger(),
                         ("parse time fail", curTimeStr)("project", GetContext().GetProjectName())(
                             "logstore", GetContext().GetLogstoreName())("file", logPath)("keep time str", keepTimeStr));
                 }
-                LogtailAlarm::GetInstance()->SendAlarm(PARSE_TIME_FAIL_ALARM,
-                                                       curTimeStr.to_string() + " " + mTimeFormat
-                                                           + " flag: " + std::to_string(keepTimeStr),
-                                                       GetContext().GetProjectName(),
-                                                       GetContext().GetLogstoreName(),
-                                                       GetContext().GetRegion());
+                GetContext().GetAlarm().SendAlarm(PARSE_TIME_FAIL_ALARM,
+                                                  curTimeStr.to_string() + " " + mTimeFormat
+                                                      + " flag: " + std::to_string(keepTimeStr),
+                                                  GetContext().GetProjectName(),
+                                                  GetContext().GetLogstoreName(),
+                                                  GetContext().GetRegion());
             }
 
             ++mParseTimeFailures;

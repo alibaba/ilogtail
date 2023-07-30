@@ -16,6 +16,52 @@
 
 #include "models/PipelineEventGroup.h"
 
+#include <sstream>
+
+#include "logger/Logger.h"
+
 namespace logtail {
 StringView gEmptyStringView;
+
+const std::string& PipelineEventTypeToString(PipelineEventType t) {
+    switch (t) {
+        case LOG_EVENT_TYPE:
+            static std::string logname = "Log";
+            return logname;
+        case METRIC_EVENT_TYPE:
+            static std::string metricname = "Metric";
+            return metricname;
+        case SPAN_EVENT_TYPE:
+            static std::string spanname = "Span";
+            return spanname;
+        default:
+            static std::string voidname = "";
+            return voidname;
+    }
+}
+
+std::string PipelineEvent::ToJsonString() const {
+    Json::Value root = ToJson();
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    builder["indentation"] = "    ";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+    std::ostringstream oss;
+    writer->write(root, &oss);
+    return oss.str();
+}
+
+bool PipelineEvent::FromJsonString(const std::string& inJson) {
+    Json::CharReaderBuilder builder;
+    builder["collectComments"] = false;
+    std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+    std::string errs;
+    Json::Value root;
+    if (!reader->parse(inJson.data(), inJson.data() + inJson.size(), &root, &errs)) {
+        LOG_ERROR(sLogger, ("build PipelineEvent FromJsonString error", errs));
+        return false;
+    }
+    return FromJson(root);
+}
+
 } // namespace logtail
