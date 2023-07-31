@@ -1,4 +1,4 @@
-#include "ILogtailMetric.h"
+#include "LogtailMetric.h"
 
 using namespace sls_logs;
 
@@ -198,7 +198,6 @@ Metrics* WriteMetrics::DoSnapshot() {
 }
 
 void ReadMetrics::ReadAsLogGroup(sls_logs::LogGroup& logGroup) {
-    logGroup.set_category("metric-test");
     ReadLock lock(mReadWriteLock);
     Metrics* tmp = mHead;
     while(tmp) {
@@ -222,6 +221,7 @@ void ReadMetrics::ReadAsLogGroup(sls_logs::LogGroup& logGroup) {
         tmp = tmp->next;
     }
 }
+
 
 void ReadMetrics::ReadAsPrometheus() {
     ReadLock lock(mReadWriteLock);

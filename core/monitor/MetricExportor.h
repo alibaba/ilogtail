@@ -7,7 +7,7 @@
 #include <list>
 #include <json/json.h>
 #include "profile_sender/ProfileSender.h"
-#include "ILogtailMetric.h"
+#include "LogtailMetric.h"
 #include "logger/Logger.h"
 #include "plugin/LogtailPlugin.h"
 #include "ProfileSender.h"

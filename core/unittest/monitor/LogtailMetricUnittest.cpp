@@ -5,7 +5,7 @@
 #include <atomic>
 #include <thread>
 #include "util.h"
-#include "ILogtailMetric.h"
+#include "LogtailMetric.h"
 #include "MetricExportor.h"
 #include "MetricConstants.h"
 

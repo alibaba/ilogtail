@@ -79,6 +79,7 @@ class ReadMetrics {
             return ptr;
         }
         void ReadAsLogGroup(sls_logs::LogGroup& logGroup);
+        void ReadAsMap(std::map<std::string, std::string> map);
         void ReadAsPrometheus();
         void UpdateMetrics();
         Metrics* mHead = NULL;

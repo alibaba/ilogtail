@@ -19,6 +19,7 @@ void MetricExportor::PushMetrics() {
     LOG_INFO(sLogger, ("pushMetrics", ""));
     ReadMetrics::GetInstance()->UpdateMetrics();
     sls_logs::LogGroup logGroup;
+    logGroup.set_category("metric-test");
     ReadMetrics::GetInstance()->ReadAsLogGroup(logGroup);
     for (int i = 0; i < logGroup.logs_size(); ++i) {
         const sls_logs::Log& log = logGroup.logs(i);
