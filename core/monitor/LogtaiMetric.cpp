@@ -70,10 +70,10 @@ Counter* Counter::CopyAndReset() {
     return counter;
 }
 
-Counter* Metrics::CreateCounter(std::string name) {
-    Counter* counter = new Counter(name);
-    mValues.push_back(counter);
-    return counter;
+CounterPtr Metrics::CreateCounter(std::string name) {
+    CounterPtr counterPtr(new Counter(name));
+    mValues.push_back(counterPtr);
+    return counterPtr;
 }
 
 
@@ -89,7 +89,7 @@ const std::vector<std::pair<std::string, std::string>>& Metrics::GetLabels() {
     return mLabels;
 }
 
-const std::vector<Counter*>& Metrics::GetValues() {
+const std::vector<CounterPtr>& Metrics::GetValues() {
     return mValues;
 }
 
@@ -100,9 +100,10 @@ Metrics* Metrics::Copy() {
         newLabels.push_back(std::make_pair(pair.first, pair.second));
     }
     Metrics* metrics = new Metrics(newLabels);
-    for (std::vector<Counter*>::iterator it = mValues.begin(); it != mValues.end(); ++it) {
-        Counter* cur = *it;
-        metrics->mValues.push_back(cur->CopyAndReset());
+    for (std::vector<CounterPtr>::iterator it = mValues.begin(); it != mValues.end(); ++it) {
+        CounterPtr cur = *it;
+        CounterPtr newCounterPtr(cur->CopyAndReset());
+        metrics->mValues.push_back(newCounterPtr);
     }
     return metrics;
 }
@@ -211,9 +212,9 @@ void ReadMetrics::ReadAsLogGroup(sls_logs::LogGroup& logGroup) {
             contentPtr->set_value(pair.second);
         }
 
-        std::vector<Counter*> values = tmp->GetValues();
-        for (std::vector<Counter*>::iterator it = values.begin(); it != values.end(); ++it) {
-            Counter* counter = *it;
+        std::vector<CounterPtr> values = tmp->GetValues();
+        for (std::vector<CounterPtr>::iterator it = values.begin(); it != values.end(); ++it) {
+            CounterPtr counter = *it;
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key("value." + counter->GetName());
             contentPtr->set_value(ToString(counter->GetValue()));

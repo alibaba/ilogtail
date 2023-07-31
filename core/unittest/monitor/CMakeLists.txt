@@ -17,3 +17,7 @@ project(logtail_metric_unittest)
 
 add_executable(logtail_metric_unittest LogtailMetricUnittest.cpp)
 target_link_libraries(logtail_metric_unittest unittest_base)
+
+
+add_executable(profiler_data_integrity_unittest DataIntegrityUnittest.cpp)
+target_link_libraries(profiler_data_integrity_unittest unittest_base)

@@ -43,15 +43,15 @@ void ILogtailMetricUnittest::TestCreateMetric() {
     APSARA_TEST_EQUAL(fileMetric3->GetLabels().size(), 2);  
 
 
-    Counter* fileCounter = fileMetric->CreateCounter("filed1");
+    CounterPtr fileCounter = fileMetric->CreateCounter("filed1");
     fileCounter->Add((uint64_t)111);
     LOG_INFO(sLogger, ("value", fileCounter->GetValue())("time", fileCounter->GetTimestamp()));
 
-    Counter* fileCounter2 = fileMetric->CreateCounter("filed2");
+    CounterPtr fileCounter2 = fileMetric->CreateCounter("filed2");
     fileCounter2->Add((uint64_t)222);
     LOG_INFO(sLogger, ("value", fileCounter2->GetValue())("time", fileCounter2->GetTimestamp()));
 
-    Counter* fileCounter3 = fileMetric3->CreateCounter("filed2");
+    CounterPtr fileCounter3 = fileMetric3->CreateCounter("filed2");
     fileCounter3->Add((uint64_t)222);
     LOG_INFO(sLogger, ("value", fileCounter3->GetValue())("time", fileCounter3->GetTimestamp()));
 
@@ -75,7 +75,7 @@ void createMetrics(int count) {
         labels.push_back(std::make_pair<std::string, std::string>("num", std::to_string(i)));
         labels.push_back(std::make_pair<std::string, std::string>("count", std::to_string(count)));
         Metrics* fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
-        Counter* fileCounter = fileMetric->CreateCounter("filed1");
+        CounterPtr fileCounter = fileMetric->CreateCounter("filed1");
         fileCounter->Add((uint64_t)111);
         //LOG_INFO(sLogger, ("num", i )("count", count));
     }
@@ -87,7 +87,7 @@ void createAndDeleteMetrics(int count) {
         labels.push_back(std::make_pair<std::string, std::string>("num", std::to_string(i)));
         labels.push_back(std::make_pair<std::string, std::string>("count", std::to_string(count)));
         Metrics* fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
-        Counter* fileCounter = fileMetric->CreateCounter("filed1");
+        CounterPtr fileCounter = fileMetric->CreateCounter("filed1");
         fileCounter->Add((uint64_t)111);
         //LOG_INFO(sLogger, ("num", i )("count", count));
         WriteMetrics::GetInstance()->DestroyMetrics(fileMetric);

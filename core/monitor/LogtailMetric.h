@@ -30,10 +30,12 @@ class Counter{
         Counter* CopyAndReset();
 };
 
+typedef std::shared_ptr<Counter> CounterPtr;
+
 class Metrics {
     private:
         std::vector<std::pair<std::string, std::string>> mLabels;
-        std::vector<Counter*> mValues;
+        std::vector<CounterPtr> mValues;
         std::atomic_bool mDeleted;
 
     public:
@@ -43,8 +45,8 @@ class Metrics {
         void MarkDeleted();
         bool IsDeleted();
         const std::vector<std::pair<std::string, std::string>>& GetLabels();
-        const std::vector<Counter*>& GetValues();
-        Counter* CreateCounter(std::string Name);
+        const std::vector<CounterPtr>& GetValues();
+        CounterPtr CreateCounter(std::string Name);
         Metrics* Copy();
         Metrics* next = NULL;
 };
