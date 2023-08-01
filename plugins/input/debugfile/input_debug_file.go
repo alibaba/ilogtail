@@ -61,10 +61,6 @@ func (r *InputDebugFile) Description() string {
 	return "input plugin for debugging"
 }
 
-func (r *InputDebugFile) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 // Collect ...
 func (r *InputDebugFile) Collect(collector pipeline.Collector) error {
 	for _, l := range r.logs {

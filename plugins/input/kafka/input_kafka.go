@@ -252,10 +252,6 @@ func (k *InputKafka) onMessage(msg *sarama.ConsumerMessage) {
 	}
 }
 
-func (k *InputKafka) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func (k *InputKafka) Stop() error {
 	k.readyCloser.Do(func() {
 		close(k.ready)

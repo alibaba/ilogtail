@@ -129,11 +129,6 @@ func (u *UDPServer) doStart(dispatchFunc func(logs []*protocol.Log)) error {
 	return nil
 }
 
-func (u *UDPServer) GetDataType() pipeline.DataType {
-	dataType, _, _ := u.decoder.Decode(nil, nil, nil)
-	return dataType
-}
-
 func (u *UDPServer) Stop() error {
 	_ = u.conn.Close()
 	u.conn = nil

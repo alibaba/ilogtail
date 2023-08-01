@@ -289,11 +289,6 @@ func (s *ServiceHTTP) start() error {
 	return nil
 }
 
-func (s *ServiceHTTP) GetDataType() pipeline.DataType {
-	dataType, _, _ := s.decoder.Decode(nil, nil, nil)
-	return dataType
-}
-
 func (s *ServiceHTTP) extractRequestParams(req *http.Request) map[string]string {
 	keyValues := make(map[string]string, s.paramCount)
 	for _, key := range s.QueryParams {

@@ -147,10 +147,6 @@ func (w *WinEventLog) Stop() error {
 	return nil
 }
 
-func (w *WinEventLog) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func (w *WinEventLog) run() bool {
 	err := w.eventLogger.Open(w.checkpoint)
 	if err != nil {

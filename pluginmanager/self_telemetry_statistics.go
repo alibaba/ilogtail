@@ -45,10 +45,6 @@ func (r *InputStatistics) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
-func (m *InputStatistics) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func init() {
 	pipeline.MetricInputs["metric_statistics"] = func() pipeline.MetricInput {
 		return &InputStatistics{}

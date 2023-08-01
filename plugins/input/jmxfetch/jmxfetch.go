@@ -187,10 +187,6 @@ func (m *Jmx) Stop() error {
 	return nil
 }
 
-func (m *Jmx) GetDataType() pipeline.DataType {
-	return pipeline.MetricsDataType
-}
-
 func (m *Jmx) UpdateContainerCfg() {
 	for s := range m.instances {
 		delete(m.instances, s)

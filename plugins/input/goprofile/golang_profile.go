@@ -58,10 +58,6 @@ func (g *GoProfile) Start(collector pipeline.Collector) error {
 	return g.manager.Start(g)
 }
 
-func (g *GoProfile) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func init() {
 	pipeline.ServiceInputs["service_go_profile"] = func() pipeline.ServiceInput {
 		return &GoProfile{

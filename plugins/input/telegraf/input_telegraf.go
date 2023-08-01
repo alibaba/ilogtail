@@ -59,10 +59,6 @@ func (s *ServiceTelegraf) Stop() error {
 	return nil
 }
 
-func (s *ServiceTelegraf) GetDataType() pipeline.DataType {
-	return pipeline.MetricsDataType
-}
-
 func init() {
 	pipeline.ServiceInputs["service_telegraf"] = func() pipeline.ServiceInput {
 		return &ServiceTelegraf{}

@@ -430,10 +430,6 @@ func (sds *ServiceDockerStdout) Stop() error {
 	return nil
 }
 
-func (sds *ServiceDockerStdout) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func init() {
 	pipeline.ServiceInputs[input.ServiceDockerStdoutPluginName] = func() pipeline.ServiceInput {
 		return &ServiceDockerStdout{

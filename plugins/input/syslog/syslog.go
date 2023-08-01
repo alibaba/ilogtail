@@ -391,10 +391,6 @@ func (s *Syslog) listenPacket(collector pipeline.Collector) {
 	}
 }
 
-func (s *Syslog) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func (s *Syslog) parse(b []byte, clientIP string, collector pipeline.Collector) {
 	lines := bytes.Split(b, []byte("\n"))
 	if '\n' == b[len(b)-1] {

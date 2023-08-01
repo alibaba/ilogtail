@@ -212,10 +212,6 @@ func (s *Server) Stop() error {
 	return nil
 }
 
-func (s *Server) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func (s *Server) registerHTTPLogsComsumer(serveMux *http.ServeMux, decoder extensions.Decoder, maxBodySize int64, routing string) {
 	serveMux.HandleFunc(routing, func(w http.ResponseWriter, r *http.Request) {
 		data, err := handleInvalidRequest(w, r, maxBodySize, decoder)

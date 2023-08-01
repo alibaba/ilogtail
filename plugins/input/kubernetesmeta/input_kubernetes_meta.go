@@ -243,10 +243,6 @@ func (in *InputKubernetesMeta) Stop() error {
 	return nil
 }
 
-func (in *InputKubernetesMeta) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func init() {
 	pipeline.MetricInputs[pluginName] = func() pipeline.MetricInput {
 		return &InputKubernetesMeta{

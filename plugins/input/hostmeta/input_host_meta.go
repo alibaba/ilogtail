@@ -112,10 +112,6 @@ func (in *InputNodeMeta) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
-func (in *InputNodeMeta) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func (in *InputNodeMeta) collectHostMeta() (node *helper.MetaNode, err error) {
 	info, err := in.getHostInfo()
 	if err != nil {

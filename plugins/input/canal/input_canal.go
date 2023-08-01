@@ -858,10 +858,6 @@ func NewServiceCanal() *ServiceCanal {
 	}
 }
 
-func (sc *ServiceCanal) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func init() {
 	pipeline.ServiceInputs["service_canal"] = func() pipeline.ServiceInput {
 		return NewServiceCanal()

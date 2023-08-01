@@ -411,10 +411,6 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 	return nil
 }
 
-func (idf *InputDockerFile) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func init() {
 	pipeline.MetricInputs["metric_docker_file"] = func() pipeline.MetricInput {
 		return &InputDockerFile{

@@ -267,10 +267,6 @@ func (ip *InputProcess) addIOMetrics(pc processCache, labels string, collector p
 	}
 }
 
-func (ip *InputProcess) GetDataType() pipeline.DataType {
-	return pipeline.MetricsDataType
-}
-
 func init() {
 	pipeline.MetricInputs["metric_process_v2"] = func() pipeline.MetricInput {
 		return &InputProcess{

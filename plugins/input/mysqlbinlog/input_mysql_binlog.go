@@ -233,10 +233,6 @@ func (b *InputMysqlBinlog) Collect(collector pipeline.Collector) error {
 	return err
 }
 
-func (b *InputMysqlBinlog) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func init() {
 	pipeline.MetricInputs["metric_binlog"] = func() pipeline.MetricInput {
 		return &InputMysqlBinlog{AutoMap: true, RowMode: true}

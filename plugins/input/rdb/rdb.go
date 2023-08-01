@@ -140,10 +140,6 @@ func (m *Rdb) initRdbsql(connStr string, rdbFunc RdbFunc) error {
 	return err
 }
 
-func (m *Rdb) GetDataType() pipeline.DataType {
-	return pipeline.LogDataType
-}
-
 func (m *Rdb) InitCheckPointFromString(val string) {
 	m.checkpointValue = val
 }
