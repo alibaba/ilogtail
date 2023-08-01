@@ -36,7 +36,6 @@ type ContextImp struct {
 	pluginNames string
 	ctx         context.Context
 	logstoreC   *LogstoreConfig
-	dataType    pipeline.DataType
 }
 
 var contextMutex sync.Mutex
@@ -186,12 +185,4 @@ func (p *ContextImp) GetCheckPointObject(key string, obj interface{}) (exist boo
 		return false
 	}
 	return true
-}
-
-func (p *ContextImp) RegisterV1DataType(datatype pipeline.DataType) {
-	p.dataType = datatype
-}
-
-func (p *ContextImp) GetV1DataType() pipeline.DataType {
-	return p.dataType
 }

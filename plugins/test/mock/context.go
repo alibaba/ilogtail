@@ -48,7 +48,6 @@ type EmptyContext struct {
 	ctx         context.Context
 	checkpoint  map[string][]byte
 	pluginNames string
-	dataType    pipeline.DataType
 }
 
 var contextMutex sync.Mutex

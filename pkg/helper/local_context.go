@@ -35,7 +35,6 @@ type LocalContext struct {
 	ctx         context.Context
 	pluginNames string
 	common      *pkg.LogtailContextMeta
-	dataType    pipeline.DataType
 }
 
 var contextMutex sync.Mutex
