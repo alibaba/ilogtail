@@ -162,11 +162,3 @@ func (p *LocalContext) GetCheckPointObject(key string, obj interface{}) (exist b
 	}
 	return true
 }
-
-func (p *LocalContext) RegisterV1DataType(datatype pipeline.DataType) {
-	p.dataType = datatype
-}
-
-func (p *LocalContext) GetV1DataType() pipeline.DataType {
-	return p.dataType
-}

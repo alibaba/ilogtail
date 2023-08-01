@@ -188,10 +188,3 @@ func (p *EmptyContext) GetExtension(name string, cfg any) (pipeline.Extension, e
 	}
 	return extension, nil
 }
-func (p *EmptyContext) RegisterV1DataType(datatype pipeline.DataType) {
-	p.dataType = datatype
-}
-
-func (p *EmptyContext) GetV1DataType() pipeline.DataType {
-	return p.dataType
-}
