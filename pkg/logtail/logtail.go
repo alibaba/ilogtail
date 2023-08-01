@@ -29,7 +29,6 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
@@ -51,15 +50,15 @@ func ExecuteCMD(configName string, cmdType int, params []byte) error {
 	return nil
 }
 
-func SendPb(configName string, logstore string, pbBuffer []byte, lines int, dataType pipeline.DataType) int {
+func SendPb(configName string, logstore string, pbBuffer []byte, lines int) int {
 	rstVal := C.LogtailSendPb((*C.char)(util.StringPointer(configName)), C.int(len(configName)),
 		(*C.char)(util.StringPointer(logstore)), C.int(len(logstore)),
 		(*C.char)(unsafe.Pointer(&pbBuffer[0])), C.int(len(pbBuffer)),
-		C.int(lines), C.int(dataType))
+		C.int(lines))
 	return int(rstVal)
 }
 
-func SendPbV2(configName string, logstore string, pbBuffer []byte, lines int, hash string, dataType pipeline.DataType) int {
+func SendPbV2(configName string, logstore string, pbBuffer []byte, lines int, hash string) int {
 	rstVal := C.LogtailSendPbV2((*C.char)(util.StringPointer(configName)), C.int(len(configName)),
 		(*C.char)(util.StringPointer(logstore)), C.int(len(logstore)),
 		(*C.char)(unsafe.Pointer(&pbBuffer[0])), C.int(len(pbBuffer)),

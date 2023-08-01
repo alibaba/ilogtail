@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 iLogtail Authors
+ * Copyright 2021 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,78 +14,50 @@
  * limitations under the License.
  */
 
-#pragma once
-#if defined(_MSC_VER) || defined(_WIN32)
-#if defined(PLUGIN_ADAPTER_EXPORTS)
-#define PLUGIN_ADAPTER_API __declspec(dllexport)
-#else
-#define PLUGIN_ADAPTER_API __declspec(dllimport)
-#endif
-#else
-#define PLUGIN_ADAPTER_API
-#endif
+#ifndef LOGTAILPLUGINADAPTER_H__
+#define LOGTAILPLUGINADAPTER_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef int (*IsValidToSendFun)(long long logstoreKey);
-typedef int (*SendPbFun)(const char* configName,
-                         int configNameSize,
-                         const char* logstore,
-                         int logstoreSize,
-                         char* pbBuffer,
-                         int pbSize,
-                         int lines,
-                         int dataType);
-typedef int (*SendPbV2Fun)(const char* configName,
-                           int configNameSize,
-                           const char* logstore,
-                           int logstoreSize,
-                           char* pbBuffer,
-                           int pbSize,
-                           int lines,
-                           const char* shardHash,
-                           int shardHashSize,
-                           int dataType);
-typedef int (*PluginCtlCmdFun)(
-    const char* configName, int configNameSize, int optId, const char* params, int paramsLen);
+    typedef int(*IsValidToSendFun)(long long logstoreKey);
 
-PLUGIN_ADAPTER_API void RegisterLogtailCallBack(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun);
+    typedef int(*SendPbFun)(const char * configName, int configNameSize, const char * logstore, int logstoreSize, char * pbBuffer, int pbSize, int lines);
 
-PLUGIN_ADAPTER_API void RegisterLogtailCallBackV2(IsValidToSendFun checkFun,
-                                                  SendPbFun sendV1Fun,
-                                                  SendPbV2Fun sendV2Fun,
-                                                  PluginCtlCmdFun cmdFun);
+    typedef int(*SendPbV2Fun)(const char *configName, int configNameSize,
+        const char *logstore, int logstoreSize,
+        char *pbBuffer, int pbSize,
+        int lines,
+        const char *shardHash, int shardHashSize);
 
-PLUGIN_ADAPTER_API int LogtailIsValidToSend(long long logstoreKey);
+    typedef int(*PluginCtlCmdFun)(const char * configName, int configNameSize, int optId, const char * params, int paramsLen);
 
-PLUGIN_ADAPTER_API int LogtailSendPb(const char* configName,
-                                     int configNameSize,
-                                     const char* logstore,
-                                     int logstoreSize,
-                                     char* pbBuffer,
-                                     int pbSize,
-                                     int lines,
-                                     int dataType);
+    void RegisterLogtailCallBack(IsValidToSendFun checkFun, SendPbFun sendFun, PluginCtlCmdFun cmdFun);
 
-PLUGIN_ADAPTER_API int LogtailSendPbV2(const char* configName,
-                                       int configNameSize,
-                                       const char* logstore,
-                                       int logstoreSize,
-                                       char* pbBuffer,
-                                       int pbSize,
-                                       int lines,
-                                       const char* shardHash,
-                                       int shardHashSize,
-                                       int dataType);
+    void RegisterLogtailCallBackV2(IsValidToSendFun checkFun,
+        SendPbFun sendV1Fun,
+        SendPbV2Fun sendV2Fun,
+        PluginCtlCmdFun cmdFun);
 
-PLUGIN_ADAPTER_API int
-LogtailCtlCmd(const char* configName, int configNameSize, int cmdId, const char* params, int paramsLen);
+    int LogtailIsValidToSend(long long logstoreKey);
 
-// version for logtail plugin adapter, used for check plugin adapter version
-PLUGIN_ADAPTER_API int PluginAdapterVersion();
+    int LogtailSendPb(const char * configName, int configNameSize, const char * logstore, int logstoreSize, char * pbBuffer, int pbSize, int lines);
+
+    int LogtailSendPbV2(const char *configName, int configNameSize,
+        const char *logstore, int logstoreSize,
+        char *pbBuffer, int pbSize,
+        int lines,
+        const char *shardHash, int shardHashSize);
+
+    int LogtailCtlCmd(const char * configName, int configNameSize, int cmdId, const char * params, int paramsLen);
+
+    // version for logtail plugin adapter, used for check plugin adapter version
+    int PluginAdapterVersion();
 
 #ifdef __cplusplus
 }
 #endif
+
+
+#endif // LOGTAILPLUGINADAPTER_H__

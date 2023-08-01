@@ -34,8 +34,6 @@ type Context interface {
 	GetLogstore() string
 	GetRuntimeContext() context.Context
 	GetExtension(name string, cfg any) (Extension, error)
-	GetV1DataType() DataType
-	RegisterV1DataType(datatype DataType)
 	RegisterCounterMetric(metric CounterMetric)
 	RegisterStringMetric(metric StringMetric)
 	RegisterLatencyMetric(metric LatencyMetric)
