@@ -257,6 +257,11 @@ void LogFileProfiler::SendProfileData(bool forceSend) {
     mLastSendTime = curTime;
 }
 
+
+// 1. when in container, filename is the file path in container, hostFilename is the file path on host.
+//    eg. /home/admin/access.log in container, filename = "/home/admin/access.log", hostFilename="/logtail_host/xxx/home/admin/access.log".
+//    so hostFilename is unique.
+// 2. On host, filename = hostFilename.
 void LogFileProfiler::AddProfilingData(const std::string& configName,
                                        const std::string& region,
                                        const std::string& projectName,
