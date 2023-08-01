@@ -63,7 +63,7 @@ func SendPbV2(configName string, logstore string, pbBuffer []byte, lines int, ha
 		(*C.char)(util.StringPointer(logstore)), C.int(len(logstore)),
 		(*C.char)(unsafe.Pointer(&pbBuffer[0])), C.int(len(pbBuffer)),
 		C.int(lines),
-		(*C.char)(util.StringPointer(hash)), C.int(len(hash)), C.int(dataType))
+		(*C.char)(util.StringPointer(hash)), C.int(len(hash)))
 	return int(rstVal)
 }
 
