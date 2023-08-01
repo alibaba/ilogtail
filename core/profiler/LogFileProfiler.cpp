@@ -82,6 +82,9 @@ bool LogFileProfiler::GetProfileData(LogGroup& logGroup, LogStoreStatistic* stat
     contentPtr->set_key("file_name");
     contentPtr->set_value(statistic->mFilename.empty() ? "logstore_statistics" : statistic->mFilename);
     contentPtr = logPtr->add_contents();
+    contentPtr->set_key("real_file_name");
+    contentPtr->set_value(statistic->mRealFilename.empty() ? "logstore_statistics" : statistic->mRealFilename);
+    contentPtr = logPtr->add_contents();
     contentPtr->set_key("logtail_version");
     contentPtr->set_value(ILOGTAIL_VERSION);
     contentPtr = logPtr->add_contents();
@@ -259,6 +262,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
                                        const std::string& projectName,
                                        const std::string& category,
                                        const std::string& filename,
+                                       const std::string& realFilename,
                                        const std::vector<sls_logs::LogTag>& tags,
                                        uint64_t readBytes,
                                        uint64_t skipBytes,
@@ -276,6 +280,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
                          projectName,
                          category,
                          "",
+                         "",
                          tags,
                          readBytes,
                          skipBytes,
@@ -287,7 +292,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
                          sendFailures,
                          "");
     }
-    string key = projectName + "_" + category + "_" + configName + "_" + filename;
+    string key = projectName + "_" + category + "_" + configName + "_" + realFilename;
     std::lock_guard<std::mutex> lock(mStatisticLock);
     LogstoreSenderStatisticsMap& statisticsMap = *MakesureRegionStatisticsMapUnlocked(region);
     std::unordered_map<string, LogStoreStatistic*>::iterator iter = statisticsMap.find(key);
@@ -311,6 +316,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
                                                 projectName,
                                                 category,
                                                 filename,
+                                                realFilename,
                                                 empty,
                                                 readBytes,
                                                 skipBytes,
@@ -326,6 +332,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
                                                 projectName,
                                                 category,
                                                 filename,
+                                                realFilename,
                                                 tags,
                                                 readBytes,
                                                 skipBytes,
@@ -346,13 +353,14 @@ void LogFileProfiler::AddProfilingSkipBytes(const std::string& configName,
                                             const std::string& projectName,
                                             const std::string& category,
                                             const std::string& filename,
+                                            const std::string& realFilename,
                                             const std::vector<sls_logs::LogTag>& tags,
                                             uint64_t skipBytes) {
     if (!filename.empty()) {
         // logstore statistics
-        AddProfilingSkipBytes(configName, region, projectName, category, "", tags, skipBytes);
+        AddProfilingSkipBytes(configName, region, projectName, category, "", "", tags, skipBytes);
     }
-    string key = projectName + "_" + category + "_" + configName + "_" + filename;
+    string key = projectName + "_" + category + "_" + configName + "_" + realFilename;
     std::lock_guard<std::mutex> lock(mStatisticLock);
     LogstoreSenderStatisticsMap& statisticsMap = *MakesureRegionStatisticsMapUnlocked(region);
     std::unordered_map<string, LogStoreStatistic*>::iterator iter = statisticsMap.find(key);
@@ -363,9 +371,9 @@ void LogFileProfiler::AddProfilingSkipBytes(const std::string& configName,
         LogStoreStatistic* statistic = NULL;
         if (filename.empty()) {
             std::vector<sls_logs::LogTag> empty;
-            statistic = new LogStoreStatistic(configName, projectName, category, filename, empty);
+            statistic = new LogStoreStatistic(configName, projectName, category, filename, realFilename, empty);
         } else {
-            statistic = new LogStoreStatistic(configName, projectName, category, filename, tags);
+            statistic = new LogStoreStatistic(configName, projectName, category, filename, realFilename, tags);
         }
         statistic->mSkipBytes += skipBytes;
         statisticsMap.insert(std::pair<string, LogStoreStatistic*>(key, statistic));
@@ -377,6 +385,7 @@ void LogFileProfiler::AddProfilingReadBytes(const std::string& configName,
                                             const std::string& projectName,
                                             const std::string& category,
                                             const std::string& filename,
+                                            const std::string& realFilename,
                                             const std::vector<sls_logs::LogTag>& tags,
                                             uint64_t dev,
                                             uint64_t inode,
@@ -386,9 +395,9 @@ void LogFileProfiler::AddProfilingReadBytes(const std::string& configName,
     if (!filename.empty()) {
         // logstore statistics
         AddProfilingReadBytes(
-            configName, region, projectName, category, "", tags, dev, inode, fileSize, readOffset, lastReadTime);
+            configName, region, projectName, category, "", "", tags, dev, inode, fileSize, readOffset, lastReadTime);
     }
-    string key = projectName + "_" + category + "_" + configName + "_" + filename;
+    string key = projectName + "_" + category + "_" + configName + "_" + realFilename;
     std::lock_guard<std::mutex> lock(mStatisticLock);
     LogstoreSenderStatisticsMap& statisticsMap = *MakesureRegionStatisticsMapUnlocked(region);
     std::unordered_map<string, LogStoreStatistic*>::iterator iter = statisticsMap.find(key);
@@ -398,9 +407,9 @@ void LogFileProfiler::AddProfilingReadBytes(const std::string& configName,
         LogStoreStatistic* statistic = NULL;
         if (filename.empty()) {
             std::vector<sls_logs::LogTag> empty;
-            statistic = new LogStoreStatistic(configName, projectName, category, filename, empty);
+            statistic = new LogStoreStatistic(configName, projectName, category, filename, realFilename, empty);
         } else {
-            statistic = new LogStoreStatistic(configName, projectName, category, filename, tags);
+            statistic = new LogStoreStatistic(configName, projectName, category, filename, realFilename, tags);
         }
         statistic->UpdateReadInfo(dev, inode, fileSize, readOffset, lastReadTime);
         statisticsMap.insert(std::pair<string, LogStoreStatistic*>(key, statistic));

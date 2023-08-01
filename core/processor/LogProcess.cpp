@@ -282,9 +282,11 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             s_processBytes += (logBuffer->bufferSize);
             LogFileReaderPtr logFileReader = logBuffer->logFileReader;
             auto logPath = logFileReader->GetConvertedPath();
+            auto realLogPath = logFileReader->GetLogPath();
 #if defined(_MSC_VER)
             if (BOOL_FLAG(enable_chinese_tag_path)) {
                 logPath = EncodingConverter::GetInstance()->FromACPToUTF8(logPath);
+                realLogPath = EncodingConverter::GetInstance()->FromACPToUTF8(realLogPath);
             }
 #endif
 
@@ -592,6 +594,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                              projectName,
                                                              category,
                                                              logPath,
+                                                             realLogPath,
                                                              logFileReader->GetExtraTags(),
                                                              readBytes,
                                                              skipBytes,
@@ -603,7 +606,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                              sendFailures,
                                                              errorLine);
             LOG_DEBUG(sLogger,
-                      ("project", projectName)("logstore", category)("filename", logPath)("read_bytes", readBytes)(
+                      ("project", projectName)("logstore", category)("filename", logPath)("realFilename", realLogPath)("read_bytes", readBytes)(
                           "line_feed", lineFeed)("split_lines", splitLines)("parse_failures", parseFailures)(
                           "parse_time_failures", parseTimeFailures)("regex_match_failures", regexMatchFailures)(
                           "history_failures", historyFailures));

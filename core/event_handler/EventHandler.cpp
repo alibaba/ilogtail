@@ -741,6 +741,7 @@ void ModifyHandler::Handle(const Event& event) {
                                                                       reader->GetProjectName(),
                                                                       reader->GetCategory(),
                                                                       reader->GetConvertedPath(),
+                                                                      reader->GetLogPath(),
                                                                       reader->GetExtraTags(),
                                                                       reader->GetDevInode().dev,
                                                                       reader->GetDevInode().inode,
