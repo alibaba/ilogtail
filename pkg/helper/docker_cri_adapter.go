@@ -688,7 +688,8 @@ func (cw *CRIRuntimeWrapper) getContainerUpperDir(containerid, snapshotter strin
 	si := cw.nativeClient.SnapshotService(snapshotter)
 	mounts, err := si.Mounts(context.Background(), containerid)
 	if err != nil {
-		logger.Debug(context.Background(), "cannot get snapshot info, containerID", containerid, "errinfo", err)
+		logger.Warning(context.Background(), "cannot get snapshot info, containerID", containerid, "errInfo", err)
+		return ""
 	}
 	for _, m := range mounts {
 		if len(m.Options) != 0 {
