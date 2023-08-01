@@ -39,6 +39,7 @@ struct LogFilterRule;
 
 enum RegionType { REGION_PUB, REGION_CORP };
 enum CheckUpdateStat { NORMAL, UPDATE_CONFIG, UPDATE_BIN };
+enum TelemetryType { TELEMETRYTYPE_LOG, TELEMETRYTYPE_METRIC };
 
 struct UserInfo {
     std::string aliuid;
@@ -105,6 +106,7 @@ public:
     std::string mBasePath; // base path, not terminated by "*" "**"
     std::string mFilePattern; // file name format
     LogType mLogType;
+    TelemetryType mTelemetryType;           
     std::string mConfigName; // name of log e.g. aliyun_com "##1.0##sls-zc-test$home-log"
     std::string mLogBeginReg; // the log begin line regex
     std::string mProjectName; // project name
@@ -136,6 +138,7 @@ public:
     bool mDiscardNoneUtf8;
     std::string mAliuid;
     std::string mRegion;
+
     std::string mStreamLogTag;
     bool mDiscardUnmatch;
     std::vector<std::string> mColumnKeys;
@@ -228,6 +231,7 @@ public:
     Config(const std::string& basePath,
            const std::string& filePattern,
            LogType logType,
+           TelemetryType telemetryType,
            const std::string& logName,
            const std::string& logBeginReg,
            const std::string& projectName,

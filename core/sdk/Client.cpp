@@ -105,13 +105,6 @@ namespace sdk {
         mSpinLock.unlock();
     }
 
-    void Client::SetOpensource(const bool opensource) {
-        this->mOpensource=opensource;
-    }
-    bool Client::IsOpensource() {
-        return this->mOpensource;
-    }
-
     string Client::GetAccessKey() {
         mSpinLock.lock();
         string accessKey = mAccessKey;

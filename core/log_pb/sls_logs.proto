@@ -23,12 +23,6 @@ enum SlsCompressType
     SLS_CMP_ZSTD = 3;
 }
 
-enum SlsDataContentType
-{
-    SLS_DATA_LOG = 0;
-    SLS_DATA_METRICS = 1;
-}
-
 message Log
 {
     required uint32 Time = 1;// UNIX Time Format

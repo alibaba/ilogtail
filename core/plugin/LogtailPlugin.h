@@ -130,8 +130,7 @@ typedef int (*SendPbFun)(const char* configName,
                          int logstoreSize,
                          char* pbBuffer,
                          int pbSize,
-                         int lines,
-                         int dataType);
+                         int lines);
 typedef int (*SendPbV2Fun)(const char* configName,
                            int configNameSize,
                            const char* logstore,
@@ -140,8 +139,7 @@ typedef int (*SendPbV2Fun)(const char* configName,
                            int pbSize,
                            int lines,
                            const char* shardHash,
-                           int shardHashSize,
-                           int dataType);
+                           int shardHashSize);
 
 typedef int (*PluginCtlCmdFun)(
     const char* configName, int configNameSize, int optId, const char* params, int paramsLen);
@@ -218,8 +216,7 @@ public:
                       int logstoreSize,
                       char* pbBuffer,
                       int32_t pbSize,
-                      int32_t lines,
-                      int dataType);
+                      int32_t lines);
 
     static int SendPbV2(const char* configName,
                         int32_t configNameSize,
@@ -229,8 +226,7 @@ public:
                         int32_t pbSize,
                         int32_t lines,
                         const char* shardHash,
-                        int shardHashSize,
-                        int dataType);
+                        int shardHashSize);
 
     static int ExecPluginCmd(const char* configName, int configNameSize, int cmdId, const char* params, int paramsLen);
 

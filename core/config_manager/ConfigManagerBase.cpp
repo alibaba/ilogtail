@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "Config.h"
 #include "ConfigManager.h"
 #include <curl/curl.h>
 #include <cctype>
+#include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -197,6 +199,17 @@ bool ConfigManagerBase::CheckLogType(const string& logTypeStr, LogType& logType)
     return true;
 }
 
+void ConfigManagerBase::ParseTelemetryType(const string& telemetryTypeStr, TelemetryType& telemetryType) {
+    if (telemetryTypeStr == "log")
+        telemetryType = TELEMETRYTYPE_LOG;
+    else if (telemetryTypeStr == "metrics")
+        telemetryType = TELEMETRYTYPE_METRIC;
+    else {
+        LOG_ERROR(sLogger, ("not supported log type, use default log telemetry type", telemetryType));
+         telemetryType = TELEMETRYTYPE_LOG;
+    }
+}
+
 // LoadGlobalConfig reads config from @jsonRoot, and set to LogtailGlobalPara::Instance().
 bool ConfigManagerBase::LoadGlobalConfig(const Json::Value& jsonRoot) {
     LOG_INFO(sLogger, ("load global config", jsonRoot.toStyledString()));
@@ -367,6 +380,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
     static const std::string MIX_PROCESS_MODE = "mix_process_mode";
     Config* config = NULL;
     string projectName, category, errorMessage;
+    TelemetryType telemetryType;
     LOG_DEBUG(sLogger, ("message", "load single user config")("json", rawValue.toStyledString()));
     const Json::Value* valuePtr = &rawValue;
     Json::Value replacedValue = rawValue;
@@ -387,6 +401,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             }
             projectName = GetStringValue(value, "project_name", "");
             category = GetStringValue(value, "category", "");
+            ParseTelemetryType(GetStringValue(value, "telemetry_type", "log"), telemetryType);
             string logTypeStr = GetStringValue(value, "log_type", "plugin");
             auto region = GetStringValue(value, "region", AppConfig::GetInstance()->GetDefaultRegion());
             LogType logType;
@@ -496,7 +511,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
             if (logType == PLUGIN_LOG) {
                 config = new Config(
-                    "", "", logType, logName, "", projectName, false, 0, 0, category, false, "", discardUnmatch);
+                    "", "", logType, telemetryType, logName, "", projectName, false, 0, 0, category, false, "", discardUnmatch);
                 if (pluginConfig.empty()) {
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
@@ -531,6 +546,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 config = new Config("",
                                     "",
                                     logType,
+                                    telemetryType,
                                     logName,
                                     "",
                                     projectName,
@@ -576,6 +592,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 config = new Config(logPath,
                                     filePattern,
                                     logType,
+                                    telemetryType,
                                     logName,
                                     logBeingReg,
                                     projectName,

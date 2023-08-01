@@ -489,6 +489,7 @@ private:
     bool RegisterHandlersWithinDepth(const std::string& path, Config* config, int depth);
     bool RegisterDescendants(const std::string& path, Config* config, int withinDepth);
     bool CheckLogType(const std::string& logTypeStr, LogType& logType);
+    void ParseTelemetryType(const std::string& telemetryTypeStr, TelemetryType& logType);
     std::vector<std::string> GetStringVector(const Json::Value& value);
     LogFilterRule* GetFilterFule(const Json::Value& filterKeys, const Json::Value& filterRegs);
     void GetRegexAndKeys(const Json::Value& value, Config* configPtr);
