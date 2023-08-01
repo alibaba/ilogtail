@@ -132,7 +132,7 @@ func (p *ProcessorGotime) processLog(log *protocol.Log) {
 				parsedTime = parsedStringTime
 			}
 			if p.SetTime {
-				log.Time = uint32(parsedTime.Unix())
+				protocol.SetLogTime(log, uint32(parsedTime.Unix()), uint32(parsedTime.Nanosecond()))
 			}
 			if !p.KeepSource {
 				log.Contents = append(log.Contents[:idx], log.Contents[idx+1:]...)

@@ -1353,18 +1353,23 @@ vector<int32_t> LogFileReader::LogSplit(char* buffer, int32_t size, int32_t& lin
                 if (begIndex > 0) {
                     buffer[begIndex - 1] = '\0';
                 }
-            } else if (!exception.empty()) {
-                if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-                    if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                        LOG_ERROR(sLogger,
-                                  ("regex_match in LogSplit fail, exception",
-                                   exception)("project", mProjectName)("logstore", mCategory)("file", mLogPath));
+            } else {
+                if (!exception.empty()) {
+                    if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
+                        if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                            LOG_ERROR(sLogger,
+                                    ("regex_match in LogSplit fail, exception",
+                                    exception)("project", mProjectName)("logstore", mCategory)("file", mLogPath));
+                        }
+                        LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
+                                                            "regex_match in LogSplit fail:" + exception,
+                                                            mProjectName,
+                                                            mCategory,
+                                                            mRegion);
                     }
-                    LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
-                                                           "regex_match in LogSplit fail:" + exception,
-                                                           mProjectName,
-                                                           mCategory,
-                                                           mRegion);
+                }
+                if (begIndex == 0 && !mDiscardUnmatch) {
+                    index.push_back(begIndex);
                 }
             }
             buffer[endIndex] = '\n';
@@ -1628,6 +1633,15 @@ void LogFileReader::ReadUTF8(char*& bufferptr, size_t* size, int64_t end, bool& 
 
     if (moreData && nbytes == 0) {
         nbytes = READ_BYTE;
+        LOG_WARNING(sLogger, ("Log is too long and forced to be split at offset: ", mLastFilePos + nbytes)("file: ", mLogPath)("inode: ", mDevInode.inode)("first 1024B log: ", std::string(bufferptr, 1024)));
+        std::ostringstream oss;
+        oss << "Log is too long and forced to be split at offset: " << ToString(mLastFilePos + nbytes) << " file: " << mLogPath << " inode: " << ToString(mDevInode.inode) << " first 1024B log: " << std::string(bufferptr, 1024) << std::endl;
+        LogtailAlarm::GetInstance()->SendAlarm(
+            SPLIT_LOG_FAIL_ALARM,
+            oss.str(),
+            mProjectName,
+            mCategory,
+            mRegion);
     }
     if (nbytes == 0)
         bufferptr[0] = '\0';
@@ -1653,14 +1667,18 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
     size_t originReadCount = readCharCount;
     moreData = (readCharCount == BUFFER_SIZE);
     bool adjustFlag = false;
+    bool logTooLongSplitFlag = false;
     while (readCharCount > 0 && gbkBuffer[readCharCount - 1] != '\n') {
         readCharCount--;
         adjustFlag = true;
     }
 
     if (readCharCount == 0) {
-        if (moreData)
+        if (moreData) {
             readCharCount = READ_BYTE;
+            // Cannot get the split position here, so just mark a flag and send alarm later
+            logTooLongSplitFlag = moreData;
+        }
         else {
             delete[] gbkBuffer;
             *size = 0;
@@ -1695,6 +1713,8 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
         if (resultCharCount == 0) {
             resultCharCount = bakResultCharCount;
             rollbackLineFeedCount = 0;
+            // Cannot get the split position here, so just mark a flag and send alarm later
+            logTooLongSplitFlag = moreData;
         }
     }
 
@@ -1709,6 +1729,17 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
     *size = resultCharCount;
     setExactlyOnceCheckpointAfterRead(*size);
     mLastFilePos += readCharCount;
+    if (logTooLongSplitFlag) {
+        LOG_WARNING(sLogger, ("Log is too long and forced to be split at offset: ", mLastFilePos)("file: ", mLogPath)("inode: ", mDevInode.inode)("first 1024B log: ", std::string(bufferptr, 1024)));
+        std::ostringstream oss;
+        oss << "Log is too long and forced to be split at offset: " << ToString(mLastFilePos) << " file: " << mLogPath << " inode: " << ToString(mDevInode.inode) << " first 1024B log: " << std::string(bufferptr, 1024) << std::endl;
+        LogtailAlarm::GetInstance()->SendAlarm(
+            SPLIT_LOG_FAIL_ALARM,
+            oss.str(),
+            mProjectName,
+            mCategory,
+            mRegion);
+    }
     LOG_DEBUG(sLogger,
               ("read gbk buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }
@@ -1936,11 +1967,14 @@ bool CommonRegLogFileReader::ParseLogLine(const char* buffer,
                                                 mTzOffsetSecond);
         } else {
             // if "time" field not exist in user config or timeformat empty, set current system time for logs
+            timespec ts;
+            clock_gettime(CLOCK_REALTIME_COARSE, &ts);
             if (format.mIsWholeLineMode) {
                 res = LogParser::WholeLineModeParser(buffer,
                                                      logGroup,
                                                      format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0],
-                                                     time(NULL),
+                                                     ts.tv_sec,
+                                                     ts.tv_nsec,
                                                      logGroupSize);
             } else {
                 res = LogParser::RegexLogLineParser(buffer,
@@ -1949,7 +1983,8 @@ bool CommonRegLogFileReader::ParseLogLine(const char* buffer,
                                                     mDiscardUnmatch,
                                                     format.mKeys,
                                                     mCategory,
-                                                    time(NULL),
+                                                    ts.tv_sec,
+                                                    ts.tv_nsec,
                                                     mProjectName,
                                                     mRegion,
                                                     mLogPath,

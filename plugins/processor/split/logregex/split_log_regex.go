@@ -65,7 +65,7 @@ func (p *ProcessorSplitRegex) SplitLog(logArray []*protocol.Log, rawLog *protoco
 			if fullMatch(p.regex, valueStr[lastCheckIndex:i]) && (lastLineIndex != 0 || lastCheckIndex != 0) {
 				copyLog := protocol.CloneLog(rawLog)
 				copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{
-					Key: cont.GetKey(), Value: valueStr[lastLineIndex:lastCheckIndex]})
+					Key: cont.GetKey(), Value: valueStr[lastLineIndex : lastCheckIndex-1]})
 				helper.ReviseFileOffset(copyLog, int64(lastLineIndex), p.EnableLogPositionMeta)
 				logArray = append(logArray, copyLog)
 				lastLineIndex = lastCheckIndex
@@ -81,7 +81,7 @@ func (p *ProcessorSplitRegex) SplitLog(logArray []*protocol.Log, rawLog *protoco
 		if fullMatch(p.regex, valueStr[lastCheckIndex:]) {
 			copyLog := protocol.CloneLog(rawLog)
 			copyLog.Contents = append(copyLog.Contents, &protocol.Log_Content{
-				Key: cont.GetKey(), Value: valueStr[lastLineIndex:lastCheckIndex]})
+				Key: cont.GetKey(), Value: valueStr[lastLineIndex : lastCheckIndex-1]})
 			helper.ReviseFileOffset(copyLog, int64(lastLineIndex), p.EnableLogPositionMeta)
 			logArray = append(logArray, copyLog)
 			lastLineIndex = lastCheckIndex
@@ -112,9 +112,14 @@ func (p *ProcessorSplitRegex) ProcessLogs(logArray []*protocol.Log) []*protocol.
 			}
 		}
 		if log.Time != uint32(0) {
-			newLog.Time = log.Time
+			if log.TimeNs != nil {
+				protocol.SetLogTime(newLog, log.Time, *log.TimeNs)
+			} else {
+				protocol.SetLogTime(newLog, log.Time, 0)
+			}
 		} else {
-			newLog.Time = (uint32)(time.Now().Unix())
+			nowTime := time.Now()
+			protocol.SetLogTime(newLog, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 		}
 		if destCont != nil {
 			destArray = p.SplitLog(destArray, newLog, destCont)

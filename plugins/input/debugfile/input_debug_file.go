@@ -17,8 +17,12 @@ package debugfile
 import (
 	"bufio"
 	"os"
+	"strings"
+	"time"
 
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 // InputDebugFile can reads some lines from head in specified file, then set them as same field.
@@ -63,19 +67,27 @@ func (r *InputDebugFile) Description() string {
 
 // Collect ...
 func (r *InputDebugFile) Collect(collector pipeline.Collector) error {
-	for _, l := range r.logs {
-		log := map[string]string{}
-		log[r.FieldName] = l
-		collector.AddData(nil, log)
-	}
+	log := map[string]string{}
+	log[r.FieldName] = strings.Join(r.logs, "\n")
+	collector.AddData(nil, log)
 
+	return nil
+}
+
+func (r *InputDebugFile) Read(context pipeline.PipelineContext) error {
+	body := strings.Join(r.logs, "\n")
+	log := models.NewLog("debug_log", util.ZeroCopyStringToBytes(body), "info", "", "", models.NewTags(), uint64(time.Now().Unix()))
+	if r.FieldName != models.BodyKey {
+		log.Contents.Add(r.FieldName, body)
+	}
+	context.Collector().Collect(&models.GroupInfo{}, log)
 	return nil
 }
 
 func init() {
 	pipeline.MetricInputs["metric_debug_file"] = func() pipeline.MetricInput {
 		return &InputDebugFile{
-			FieldName: "content",
+			FieldName: models.ContentKey,
 			LineLimit: 1000,
 		}
 	}
