@@ -176,7 +176,9 @@ func TestAggregatorDefault(t *testing.T) {
 func generateLogs(agg *AggregatorContext, logNum int, withCtx bool, logNo []int, isShort bool) {
 	for i := 0; i < logNum; i++ {
 		index := i % len(packIDPrefix)
-		log := &protocol.Log{Time: uint32(time.Now().Unix())}
+		nowTime := time.Now()
+		log := &protocol.Log{}
+		protocol.SetLogTime(log, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 		if isShort {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "content", Value: shortLog + fmt.Sprintf("%d", index)})
 		} else {
@@ -265,10 +267,11 @@ func checkResult(logGroups []*protocol.LogGroup, expectedLogNum int) {
 // common situation: 10 log sources, 10 logs per second per file, medium log
 func BenchmarkAdd(b *testing.B) {
 	agg, _, _ := newAggregatorContext()
+	nowTime := time.Now()
 	log := &protocol.Log{
-		Time:     uint32(time.Now().Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
+	protocol.SetLogTime(log, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 	ctx := make([]map[string]interface{}, 10)
 	packIDPrefix := make([]byte, 8)
 	for i := 0; i < 10; i++ {
@@ -295,10 +298,11 @@ func BenchmarkLogSource100(b *testing.B) {
 
 func benchmarkLogSource(b *testing.B, num int) {
 	agg, _, _ := newAggregatorContext()
+	nowTime := time.Now()
 	log := &protocol.Log{
-		Time:     uint32(time.Now().Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
+	protocol.SetLogTime(log, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 	ctx := make([]map[string]interface{}, num)
 	packIDPrefix := make([]byte, 8)
 	for i := 0; i < num; i++ {
@@ -326,10 +330,11 @@ func BenchmarkLogProducinfPace1000(b *testing.B) {
 
 func benchmarkLogProducingPace(b *testing.B, num int) {
 	agg, _, _ := newAggregatorContext()
+	nowTime := time.Now()
 	log := &protocol.Log{
-		Time:     uint32(time.Now().Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: mediumLog}},
 	}
+	protocol.SetLogTime(log, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 	ctx := make([]map[string]interface{}, 10)
 	packIDPrefix := make([]byte, 8)
 	for i := 0; i < 10; i++ {
@@ -364,10 +369,11 @@ func benchmarkLogLength(b *testing.B, len string) {
 	default:
 		value = mediumLog
 	}
+	nowTime := time.Now()
 	log := &protocol.Log{
-		Time:     uint32(time.Now().Unix()),
 		Contents: []*protocol.Log_Content{{Key: "content", Value: value}},
 	}
+	protocol.SetLogTime(log, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 	ctx := make([]map[string]interface{}, 10)
 	packIDPrefix := make([]byte, 8)
 	for i := 0; i < 10; i++ {

@@ -341,11 +341,11 @@ func (r *RawProfile) extractProfileV1(meta *profile.Meta, tags map[string]string
 					Value: strconv.FormatFloat(float64(v), 'f', 2, 64),
 				},
 			)
-
-			r.logs = append(r.logs, &protocol.Log{
-				Time:     uint32(startTime / 1e9),
+			log := &protocol.Log{
 				Contents: res,
-			})
+			}
+			protocol.SetLogTime(log, uint32(startTime/1e9), uint32(startTime%1e9))
+			r.logs = append(r.logs, log)
 		}
 	}
 }

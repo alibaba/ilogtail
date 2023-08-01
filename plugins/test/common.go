@@ -25,10 +25,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"github.com/alibaba/ilogtail/pluginmanager"
 	_ "github.com/alibaba/ilogtail/plugins/aggregator"
 	_ "github.com/alibaba/ilogtail/plugins/flusher/checker"
@@ -75,7 +75,8 @@ func CreateLogs(kvs ...string) *protocol.Log {
 		cont := &protocol.Log_Content{Key: kvs[i], Value: kvs[i+1]}
 		slsLog.Contents = append(slsLog.Contents, cont)
 	}
-	slsLog.Time = uint32(time.Now().Unix())
+	nowTime := time.Now()
+	protocol.SetLogTime(&slsLog, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 	return &slsLog
 }
 
@@ -85,7 +86,8 @@ func CreateLogByFields(fields map[string]string) *protocol.Log {
 		cont := &protocol.Log_Content{Key: key, Value: val}
 		slsLog.Contents = append(slsLog.Contents, cont)
 	}
-	slsLog.Time = uint32(time.Now().Unix())
+	nowTime := time.Now()
+	protocol.SetLogTime(&slsLog, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 	return &slsLog
 }
 
@@ -156,7 +158,7 @@ func (m *MockMetricCollector) AddDataWithContext(tags map[string]string, fields 
 	} else {
 		logTime = t[0]
 	}
-	slsLog, _ := util.CreateLog(logTime, m.Tags, tags, fields)
+	slsLog, _ := helper.CreateLog(logTime, m.Tags, tags, fields)
 	m.Logs = append(m.Logs, slsLog)
 }
 
@@ -170,7 +172,7 @@ func (m *MockMetricCollector) AddDataArrayWithContext(tags map[string]string, co
 	} else {
 		logTime = t[0]
 	}
-	slsLog, _ := util.CreateLogByArray(logTime, m.Tags, tags, columns, values)
+	slsLog, _ := helper.CreateLogByArray(logTime, m.Tags, tags, columns, values)
 	m.Logs = append(m.Logs, slsLog)
 }
 

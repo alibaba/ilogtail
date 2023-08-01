@@ -127,7 +127,6 @@ func (d *Decoder) decodeInExpFmt(data []byte, _ *http.Request) (logs []*protocol
 		for _, sample := range *s {
 			metricName, labelsValue := parseLabels(sample.Metric)
 			log := &protocol.Log{
-				Time: uint32(sample.Timestamp.Unix()),
 				Contents: []*protocol.Log_Content{
 					{
 						Key:   metricNameKey,
@@ -147,6 +146,7 @@ func (d *Decoder) decodeInExpFmt(data []byte, _ *http.Request) (logs []*protocol
 					},
 				},
 			}
+			protocol.SetLogTime(log, uint32(sample.Timestamp.Unix()), uint32(sample.Timestamp.UnixNano()%1e9))
 			logs = append(logs, log)
 		}
 	}
@@ -196,9 +196,9 @@ func (d *Decoder) decodeInRemoteWriteFormat(data []byte, req *http.Request) (log
 			}
 
 			log := &protocol.Log{
-				Time:     uint32(model.Time(sample.Timestamp).Unix()),
 				Contents: contents,
 			}
+			protocol.SetLogTime(log, uint32(model.Time(sample.Timestamp).Unix()), uint32(model.Time(sample.Timestamp).UnixNano()%1e9))
 			logs = append(logs, log)
 		}
 	}

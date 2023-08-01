@@ -13,7 +13,7 @@
 # limitations under the License.
 
 .DEFAULT_GOAL := all
-VERSION ?= 1.6.0
+VERSION ?= 1.7.0
 DOCKER_PUSH ?= false
 DOCKER_REPOSITORY ?= aliyun/ilogtail
 BUILD_REPOSITORY ?= aliyun/ilogtail_build
@@ -199,6 +199,10 @@ unittest_plugin: clean import_plugins
 	go test $$(go list ./...|grep -Ev "telegraf|external|envconfig|(input\/prometheus)|(input\/syslog)"| grep -Ev "plugin_main|pluginmanager") -coverprofile .testCoverage.txt
 	mv ./plugins/input/prometheus/input_prometheus.go.bak ./plugins/input/prometheus/input_prometheus.go
 	rm -rf plugins/input/jmxfetch/test/
+
+.PHONY: unittest_core
+unittest_core:
+	./scripts/run_core_ut.sh
 
 .PHONY: unittest_pluginmanager
 unittest_pluginmanager: clean import_plugins

@@ -60,8 +60,8 @@ func TestSharedUDPServer_cutDispatchTag(t *testing.T) {
 				dispatchKey: tt.dispatchKey,
 				lastLog:     time.Now(),
 			}
+			nowTime := time.Now()
 			log := &protocol.Log{
-				Time: uint32(time.Now().Unix()),
 				Contents: []*protocol.Log_Content{
 					{
 						Key:   labelName,
@@ -69,6 +69,7 @@ func TestSharedUDPServer_cutDispatchTag(t *testing.T) {
 					},
 				},
 			}
+			protocol.SetLogTime(log, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
 
 			if gotTag := s.cutDispatchTag(log); gotTag != tt.wantTag || log.Contents[0].Value != tt.wantVal {
 				t.Errorf("cutDispatchTag() = %v, want %v, got val = %v, want val= %v",
