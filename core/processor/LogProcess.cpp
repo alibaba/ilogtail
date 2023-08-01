@@ -606,7 +606,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                              sendFailures,
                                                              errorLine);
             LOG_DEBUG(sLogger,
-                      ("project", projectName)("logstore", category)("filename", logPath)("realFilename", hostLogPath)("read_bytes", readBytes)(
+                      ("project", projectName)("logstore", category)("filename", logPath)("hostFilename", hostLogPath)("read_bytes", readBytes)(
                           "line_feed", lineFeed)("split_lines", splitLines)("parse_failures", parseFailures)(
                           "parse_time_failures", parseTimeFailures)("regex_match_failures", regexMatchFailures)(
                           "history_failures", historyFailures));
