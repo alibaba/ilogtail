@@ -46,7 +46,7 @@ public:
                           const std::string& projectName,
                           const std::string& category,
                           const std::string& filename,
-                          const std::string& realFilename,
+                          const std::string& hostFilename,
                           const std::vector<sls_logs::LogTag>& tags,
                           uint64_t readBytes,
                           uint64_t skipBytes,
@@ -62,7 +62,7 @@ public:
                                const std::string& projectName,
                                const std::string& category,
                                const std::string& filename,
-                               const std::string& realFilename,
+                               const std::string& hostFilename,
                                const std::vector<sls_logs::LogTag>& tags,
                                uint64_t skipBytes);
 
@@ -71,7 +71,7 @@ public:
                                const std::string& projectName,
                                const std::string& category,
                                const std::string& filename,
-                               const std::string& realFilename,
+                               const std::string& host,
                                const std::vector<sls_logs::LogTag>& tags,
                                uint64_t dev,
                                uint64_t inode,
@@ -101,7 +101,7 @@ private:
                           const std::string& projectName,
                           const std::string& category,
                           const std::string& filename,
-                          const std::string& realFilename,
+                          const std::string& hostFilename,
                           const std::vector<sls_logs::LogTag>& tags,
                           uint64_t readBytes = 0,
                           uint64_t skipBytes = 0,
@@ -116,7 +116,7 @@ private:
               mProjectName(projectName),
               mCategory(category),
               mFilename(filename),
-              mRealFilename(realFilename),
+              mHostFilename(hostFilename),
               mTags(tags),
               mReadBytes(readBytes),
               mSkipBytes(skipBytes),
@@ -171,7 +171,7 @@ private:
         std::string mProjectName;
         std::string mCategory;
         std::string mFilename;
-        std::string mRealFilename;
+        std::string mHostFilename;
         std::vector<sls_logs::LogTag> mTags;
         // how many bytes processed
         uint64_t mReadBytes;
