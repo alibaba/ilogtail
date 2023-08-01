@@ -18,6 +18,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/plugin_main/flags"
 
 	"context"
 	"errors"
@@ -54,7 +55,7 @@ func (p *KubernetesMeta) isWorkingOnClusterMode() bool {
 
 func (p *KubernetesMeta) readKubernetesWorkloadMeta() bool {
 	// history use ILOGTAIL_PROMETHEUS_CLUSTER_REPLICAS env to set statis replicas, not only use it to distinct kubernetes cluster mode.
-	if os.Getenv("ILOGTAIL_PROMETHEUS_CLUSTER_REPLICAS") == "" {
+	if !*flags.StatefulSetFlag {
 		return false
 	}
 	readNamespaceFunc := func() (string, error) {
