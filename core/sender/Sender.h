@@ -459,8 +459,7 @@ public:
                 int32_t pbSize,
                 int32_t lines,
                 const std::string& logstore = "",
-                const std::string& shardHash = "",
-                const sls_logs::SlsDataContentType dataContentType = sls_logs::SLS_DATA_LOG);
+                const std::string& shardHash = "");
 
     // only used by exactly once
     void SendCompressed(const std::string& projectName,

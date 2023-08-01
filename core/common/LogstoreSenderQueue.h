@@ -19,10 +19,12 @@
 #include <string>
 #include <deque>
 #include <stdio.h>
+#include "Config.h"
 #include "logger/Logger.h"
 #include "LogGroupContext.h"
 #include "Lock.h"
 #include "LogstoreFeedbackQueue.h"
+#include "sls_logs.pb.h"
 
 namespace logtail {
 
@@ -49,6 +51,7 @@ struct LogstoreSenderStatistics {
 struct LoggroupTimeValue {
     int32_t mLastUpdateTime;
     SEND_DATA_TYPE mDataType;
+    sls_logs::SlsTelemetryType mTelemetryType;
     std::string mLogData;
     int32_t mRawSize;
     int32_t mLogLines;
@@ -88,7 +91,8 @@ struct LoggroupTimeValue {
                       int32_t lastUpdateTime,
                       const std::string& shardHashKey,
                       const LogstoreFeedBackKey& logstoreKey,
-                      const LogGroupContext& context = LogGroupContext()) {
+                      const LogGroupContext& context = LogGroupContext(),
+                      sls_logs::SlsTelemetryType telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG) {
         mProjectName = projectName;
         mLogstore = logstore;
         mConfigName = configName;
@@ -109,6 +113,7 @@ struct LoggroupTimeValue {
         mRealIpFlag = false;
         mLogTimeInMinute = -1;
         mLogGroupContext = context;
+        mTelemetryType=telemetryType;
     }
 
 #ifdef APSARA_UNIT_TEST_MAIN

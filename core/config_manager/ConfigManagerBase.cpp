@@ -14,6 +14,7 @@
 
 #include "Config.h"
 #include "ConfigManager.h"
+#include "sls_logs.pb.h"
 #include <curl/curl.h>
 #include <cctype>
 #include <string>
@@ -199,14 +200,14 @@ bool ConfigManagerBase::CheckLogType(const string& logTypeStr, LogType& logType)
     return true;
 }
 
-void ConfigManagerBase::ParseTelemetryType(const string& telemetryTypeStr, TelemetryType& telemetryType) {
+void ConfigManagerBase::ParseTelemetryType(const string& telemetryTypeStr, sls_logs::SlsTelemetryType& telemetryType) {
     if (telemetryTypeStr == "log")
-        telemetryType = TELEMETRYTYPE_LOG;
+        telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG;
     else if (telemetryTypeStr == "metrics")
-        telemetryType = TELEMETRYTYPE_METRIC;
+        telemetryType = sls_logs::SLS_TELEMETRY_TYPE_METRICS;
     else {
         LOG_ERROR(sLogger, ("not supported log type, use default log telemetry type", telemetryType));
-         telemetryType = TELEMETRYTYPE_LOG;
+         telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG;
     }
 }
 
@@ -380,7 +381,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
     static const std::string MIX_PROCESS_MODE = "mix_process_mode";
     Config* config = NULL;
     string projectName, category, errorMessage;
-    TelemetryType telemetryType;
+    sls_logs::SlsTelemetryType telemetryType;
     LOG_DEBUG(sLogger, ("message", "load single user config")("json", rawValue.toStyledString()));
     const Json::Value* valuePtr = &rawValue;
     Json::Value replacedValue = rawValue;

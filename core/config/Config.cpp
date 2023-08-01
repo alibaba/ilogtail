@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "Config.h"
+#include "sls_logs.pb.h"
 #if defined(__linux__)
 #include <fnmatch.h>
 #endif
@@ -84,7 +85,7 @@ Config::AdvancedConfig::AdvancedConfig()
 Config::Config(const std::string& basePath,
                const std::string& filePattern,
                LogType logType,
-               TelemetryType telemetryType,
+               sls_logs::SlsTelemetryType telemetryType,
                const std::string& logName,
                const std::string& logBeginReg,
                const std::string& projectName,

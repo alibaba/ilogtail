@@ -29,6 +29,7 @@
 #include "processor/BaseFilterNode.h"
 #include "LogType.h"
 #include "IntegrityConfig.h"
+#include "sls_logs.pb.h"
 
 namespace logtail {
 
@@ -39,7 +40,6 @@ struct LogFilterRule;
 
 enum RegionType { REGION_PUB, REGION_CORP };
 enum CheckUpdateStat { NORMAL, UPDATE_CONFIG, UPDATE_BIN };
-enum TelemetryType { TELEMETRYTYPE_LOG, TELEMETRYTYPE_METRIC };
 
 struct UserInfo {
     std::string aliuid;
@@ -106,7 +106,7 @@ public:
     std::string mBasePath; // base path, not terminated by "*" "**"
     std::string mFilePattern; // file name format
     LogType mLogType;
-    TelemetryType mTelemetryType;           
+    sls_logs::SlsTelemetryType mTelemetryType;
     std::string mConfigName; // name of log e.g. aliyun_com "##1.0##sls-zc-test$home-log"
     std::string mLogBeginReg; // the log begin line regex
     std::string mProjectName; // project name
@@ -217,6 +217,7 @@ public:
         mMaxSendBytesPerSecond = -1;
         mSendRateExpireTime = -1;
         mMergeType = MERGE_BY_TOPIC;
+        mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG;
         mTimeZoneAdjust = false;
         mLogTimeZoneOffsetSecond = 0;
         mLocalFlag = false;
@@ -231,7 +232,7 @@ public:
     Config(const std::string& basePath,
            const std::string& filePattern,
            LogType logType,
-           TelemetryType telemetryType,
+           sls_logs::SlsTelemetryType telemetryType,
            const std::string& logName,
            const std::string& logBeginReg,
            const std::string& projectName,

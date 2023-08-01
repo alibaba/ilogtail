@@ -32,6 +32,7 @@
 #include "common/Lock.h"
 #include "common/Thread.h"
 #include "event/Event.h"
+#include "sls_logs.pb.h"
 
 DECLARE_FLAG_BOOL(https_verify_peer);
 DECLARE_FLAG_STRING(https_ca_cert);
@@ -489,7 +490,7 @@ private:
     bool RegisterHandlersWithinDepth(const std::string& path, Config* config, int depth);
     bool RegisterDescendants(const std::string& path, Config* config, int withinDepth);
     bool CheckLogType(const std::string& logTypeStr, LogType& logType);
-    void ParseTelemetryType(const std::string& telemetryTypeStr, TelemetryType& logType);
+    void ParseTelemetryType(const std::string& telemetryTypeStr, sls_logs::SlsTelemetryType& logType);
     std::vector<std::string> GetStringVector(const Json::Value& value);
     LogFilterRule* GetFilterFule(const Json::Value& filterKeys, const Json::Value& filterRegs);
     void GetRegexAndKeys(const Json::Value& value, Config* configPtr);
