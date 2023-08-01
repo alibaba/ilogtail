@@ -16,7 +16,6 @@ package sls
 
 import (
 	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 
@@ -28,15 +27,12 @@ type Decoder struct {
 }
 
 // Decode impl
-func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (pipeline.DataType, []*protocol.Log, error) {
-	if req == nil {
-		return pipeline.LogDataType, nil, common.EmptyReqError
-	}
+func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) ([]*protocol.Log, error) {
 	logGroup := &protocol.LogGroup{}
 	if err := logGroup.Unmarshal(data); err != nil {
-		return pipeline.LogDataType, nil, err
+		return nil, err
 	}
-	return pipeline.LogDataType, logGroup.Logs, nil
+	return logGroup.Logs, nil
 }
 
 func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {

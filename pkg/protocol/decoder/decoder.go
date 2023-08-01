@@ -54,13 +54,14 @@ func GetDecoderWithOptions(format string, option Option) (extensions.Decoder, er
 			Time: time.Now(),
 		}, nil
 	case common.ProtocolOTLPLogV1:
-		return opentelemetry.NewDecoder(common.ProtocolOTLPLogV1), nil
+		return &opentelemetry.Decoder{Format: common.ProtocolOTLPLogV1}, nil
 	case common.ProtocolOTLPMetricV1:
-		return opentelemetry.NewDecoder(common.ProtocolOTLPMetricV1), nil
+		return &opentelemetry.Decoder{Format: common.ProtocolOTLPMetricV1}, nil
 	case common.ProtocolOTLPTraceV1:
-		return opentelemetry.NewDecoder(common.ProtocolOTLPTraceV1), nil
+		return &opentelemetry.Decoder{Format: common.ProtocolOTLPTraceV1}, nil
 	case common.ProtocolRaw:
 		return &raw.Decoder{DisableUncompress: option.DisableUncompress}, nil
+
 	case common.ProtocolPyroscope:
 		return &pyroscope.Decoder{}, nil
 	default:

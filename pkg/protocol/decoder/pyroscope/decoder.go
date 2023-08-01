@@ -31,7 +31,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/helper/profile/pyroscope/raw"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 )
@@ -46,16 +45,12 @@ func (d *Decoder) DecodeV2(data []byte, req *http.Request) (groups []*models.Pip
 	return nil, nil
 }
 
-func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (dataType pipeline.DataType, logs []*protocol.Log, err error) {
-	if req == nil {
-		return pipeline.LogDataType, nil, common.EmptyReqError
-	}
+func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error) {
 	in, err := d.extractRawInput(data, req)
 	if err != nil {
-		return pipeline.LogDataType, nil, err
+		return nil, err
 	}
-	logs, err = in.Profile.Parse(context.Background(), &in.Metadata, tags)
-	return pipeline.LogDataType, logs, err
+	return in.Profile.Parse(context.Background(), &in.Metadata, tags)
 }
 
 func (d *Decoder) extractRawInput(data []byte, req *http.Request) (*profile.Input, error) {

@@ -42,9 +42,6 @@ const (
 	ProtocolPyroscope    = "pyroscope"
 )
 
-var (
-	EmptyReqError = errors.New("empty request")
-)
 var bufPool = sync.Pool{
 	New: func() interface{} {
 		buf := bytes.NewBuffer(make([]byte, 0, 32*1024))

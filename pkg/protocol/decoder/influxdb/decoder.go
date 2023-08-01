@@ -25,7 +25,6 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/helper"
 	imodels "github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 )
@@ -60,16 +59,13 @@ type Decoder struct {
 	FieldsExtend bool
 }
 
-func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (dataType pipeline.DataType, logs []*protocol.Log, decodeErr error) {
-	if req == nil {
-		return pipeline.MetricsDataType, nil, common.EmptyReqError
-	}
+func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, decodeErr error) {
 	points, err := d.decodeToInfluxdbPoints(data, req)
 	if err != nil {
-		return pipeline.MetricsDataType, nil, err
+		return nil, err
 	}
 	logs = d.parsePointsToLogs(points, req)
-	return pipeline.MetricsDataType, logs, nil
+	return logs, nil
 }
 
 func (d *Decoder) ParseRequest(res http.ResponseWriter, req *http.Request, maxBodySize int64) (data []byte, statusCode int, err error) {

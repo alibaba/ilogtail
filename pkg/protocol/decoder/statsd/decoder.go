@@ -26,7 +26,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
-	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
 
@@ -70,11 +69,7 @@ func parseLabels(metric *dogstatsd.Metric) (labelsValue string) {
 	return builder.String()
 }
 
-func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (dataType pipeline.DataType, logs []*protocol.Log, err error) {
-	dataType = pipeline.MetricsDataType
-	if req == nil {
-		return dataType, nil, common.EmptyReqError
-	}
+func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string) (logs []*protocol.Log, err error) {
 	now := time.Now()
 	parts := bytes.Split(data, []byte("\n"))
 	for _, part := range parts {
