@@ -45,8 +45,8 @@ public:
                           const std::string& region,
                           const std::string& projectName,
                           const std::string& category,
-                          const std::string& filename,
-                          const std::string& hostFilename,
+                          const std::string& convertedPath,
+                          const std::string& hostLogPath,
                           const std::vector<sls_logs::LogTag>& tags,
                           uint64_t readBytes,
                           uint64_t skipBytes,
@@ -61,8 +61,8 @@ public:
                                const std::string& region,
                                const std::string& projectName,
                                const std::string& category,
-                               const std::string& filename,
-                               const std::string& hostFilename,
+                               const std::string& convertedPath,
+                               const std::string& hostLogPath,
                                const std::vector<sls_logs::LogTag>& tags,
                                uint64_t skipBytes);
 
@@ -70,7 +70,7 @@ public:
                                const std::string& region,
                                const std::string& projectName,
                                const std::string& category,
-                               const std::string& filename,
+                               const std::string& convertedPath,
                                const std::string& host,
                                const std::vector<sls_logs::LogTag>& tags,
                                uint64_t dev,
@@ -100,8 +100,8 @@ private:
         LogStoreStatistic(const std::string& configName,
                           const std::string& projectName,
                           const std::string& category,
-                          const std::string& filename,
-                          const std::string& hostFilename,
+                          const std::string& convertedPath,
+                          const std::string& hostLogPath,
                           const std::vector<sls_logs::LogTag>& tags,
                           uint64_t readBytes = 0,
                           uint64_t skipBytes = 0,
@@ -115,8 +115,8 @@ private:
             : mConfigName(configName),
               mProjectName(projectName),
               mCategory(category),
-              mFilename(filename),
-              mHostFilename(hostFilename),
+              mConvertedPath(convertedPath),
+              mHostLogPath(hostLogPath),
               mTags(tags),
               mReadBytes(readBytes),
               mSkipBytes(skipBytes),
@@ -170,8 +170,8 @@ private:
         std::string mConfigName;
         std::string mProjectName;
         std::string mCategory;
-        std::string mFilename;
-        std::string mHostFilename;
+        std::string mConvertedPath;
+        std::string mHostLogPath;
         std::vector<sls_logs::LogTag> mTags;
         // how many bytes processed
         uint64_t mReadBytes;
