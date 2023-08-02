@@ -31,41 +31,36 @@ void ILogtailMetricUnittest::TestCreateMetric() {
     labels.push_back(std::make_pair<std::string, std::string>("logstore","logstore1"));
 
     Metrics* fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
-    LOG_INFO(sLogger, ("labelSize", fileMetric->GetLabels().size()));
     APSARA_TEST_EQUAL(fileMetric->GetLabels().size(), 2);  
 
     Metrics* fileMetric2 = WriteMetrics::GetInstance()->CreateMetrics(labels);
-    LOG_INFO(sLogger, ("labelSize", fileMetric2->GetLabels().size()));
-    APSARA_TEST_EQUAL(fileMetric2->GetLabels().size(), 2);  
 
     Metrics* fileMetric3 = WriteMetrics::GetInstance()->CreateMetrics(labels);
-    LOG_INFO(sLogger, ("labelSize", fileMetric3->GetLabels().size()));
-    APSARA_TEST_EQUAL(fileMetric3->GetLabels().size(), 2);  
 
 
     CounterPtr fileCounter = fileMetric->CreateCounter("filed1");
     fileCounter->Add((uint64_t)111);
-    LOG_INFO(sLogger, ("value", fileCounter->GetValue())("time", fileCounter->GetTimestamp()));
+    APSARA_TEST_EQUAL(fileCounter->GetValue(), 111);  
 
     CounterPtr fileCounter2 = fileMetric->CreateCounter("filed2");
     fileCounter2->Add((uint64_t)222);
-    LOG_INFO(sLogger, ("value", fileCounter2->GetValue())("time", fileCounter2->GetTimestamp()));
-
-    CounterPtr fileCounter3 = fileMetric3->CreateCounter("filed2");
-    fileCounter3->Add((uint64_t)222);
-    LOG_INFO(sLogger, ("value", fileCounter3->GetValue())("time", fileCounter3->GetTimestamp()));
+    
+    CounterPtr fileCounter3 = fileMetric3->CreateCounter("filed3");
+    fileCounter3->Add((uint64_t)333);
 
 
     WriteMetrics::GetInstance()->DestroyMetrics(fileMetric2);
     // delete first element
-    WriteMetrics::GetInstance()->DestroyMetrics(fileMetric);
+    WriteMetrics::GetInstance()->DestroyMetrics(fileMetric3);
     ReadMetrics::GetInstance()->UpdateMetrics();
     
     Metrics* head = ReadMetrics::GetInstance()->mHead;
+    int count = 0;
     while(head) {
-        LOG_INFO(sLogger, ("ReadMetrics", head->GetLabels().size()));
         head = head->next;
-    }    
+        count ++;
+    } 
+    APSARA_TEST_EQUAL(count, 1);  
     MetricExportor::GetInstance()->PushMetrics();
 }
 
@@ -77,7 +72,6 @@ void createMetrics(int count) {
         Metrics* fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
         CounterPtr fileCounter = fileMetric->CreateCounter("filed1");
         fileCounter->Add((uint64_t)111);
-        //LOG_INFO(sLogger, ("num", i )("count", count));
     }
 }
 
@@ -89,7 +83,6 @@ void createAndDeleteMetrics(int count) {
         Metrics* fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
         CounterPtr fileCounter = fileMetric->CreateCounter("filed1");
         fileCounter->Add((uint64_t)111);
-        //LOG_INFO(sLogger, ("num", i )("count", count));
         WriteMetrics::GetInstance()->DestroyMetrics(fileMetric);
     }
 }
@@ -101,7 +94,6 @@ void UpdateMetrics() {
         std::vector<std::pair<std::string, std::string>> labels = head->GetLabels();
         for (std::vector<std::pair<std::string, std::string>>::iterator it = labels.begin(); it != labels.end(); ++it) {
             std::pair<std::string, std::string> pair = *it;
-            //LOG_INFO(sLogger, ("key", pair.first)("value", pair.second));
         }
         head = head->next;
     }    
@@ -130,6 +122,8 @@ void ILogtailMetricUnittest::TestCreateMetricMultiThread() {
         head = head->next;
         count ++;
     }    
+    // first test left 1, 1 + (1 + 2 + 3 + 4)
+    APSARA_TEST_EQUAL(count, 11);  
     LOG_INFO(sLogger, ("Count", count));
 }
 
@@ -161,7 +155,6 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetricMultiThread() {
             head = head->next;
         }    
         LOG_INFO(sLogger, ("WriteCount", count));
-
     }
     {
         Metrics* head = ReadMetrics::GetInstance()->mHead;
@@ -171,7 +164,6 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetricMultiThread() {
             count ++;
         }    
         LOG_INFO(sLogger, ("ReadCount", count));
-
     }
 
     UpdateMetrics();
@@ -184,6 +176,7 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetricMultiThread() {
             }
             head = head->next;
         }    
+        APSARA_TEST_EQUAL(count, 11);  
         LOG_INFO(sLogger, ("FinalWriteCount", count));
 
     }
@@ -194,6 +187,7 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetricMultiThread() {
             head = head->next;
             count ++;
         }    
+        APSARA_TEST_EQUAL(count, 11);  
         LOG_INFO(sLogger, ("FinalReadCount", count));
 
     }

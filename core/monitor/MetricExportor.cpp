@@ -16,18 +16,9 @@ MetricExportor::MetricExportor() {
 }
 
 void MetricExportor::PushMetrics() {
-    LOG_INFO(sLogger, ("pushMetrics", ""));
     ReadMetrics::GetInstance()->UpdateMetrics();
     sls_logs::LogGroup logGroup;
-    logGroup.set_category("metric-test");
     ReadMetrics::GetInstance()->ReadAsLogGroup(logGroup);
-    for (int i = 0; i < logGroup.logs_size(); ++i) {
-        const sls_logs::Log& log = logGroup.logs(i);
-        for (int j = 0; j < log.contents_size(); ++j) {
-            const sls_logs::Log_Content& content = log.contents(j);
-            LOG_INFO(sLogger, ("contentKey", content.key())("contentValue", content.value()));
-        }
-    }
+    // TODO: send
 }
-
 }

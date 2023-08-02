@@ -117,13 +117,11 @@ Metrics* WriteMetrics::CreateMetrics(std::vector<std::pair<std::string, std::str
         Metrics* oldHead = mSnapshottingHead;
         mSnapshottingHead = cur;
         mSnapshottingHead->next = oldHead;
-        LOG_INFO(sLogger, ("CreateMetrics", "mSnapshottingHead"));
 
     } else {
         Metrics* oldHead = mHead;
         mHead = cur;
         mHead->next = oldHead;
-        LOG_INFO(sLogger, ("CreateMetrics", "mHead"));
     }
     return cur;
 }
