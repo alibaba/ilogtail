@@ -81,9 +81,11 @@ bool LogFileProfiler::GetProfileData(LogGroup& logGroup, LogStoreStatistic* stat
     contentPtr = logPtr->add_contents();
     contentPtr->set_key("file_name");
     contentPtr->set_value(statistic->mFilename.empty() ? "logstore_statistics" : statistic->mFilename);
-    contentPtr = logPtr->add_contents();
-    contentPtr->set_key("host_file_name");
-    contentPtr->set_value(statistic->mHostFilename.empty() ? "logstore_statistics" : statistic->mHostFilename);
+    if (!statistic->mHostFilename.empty()) {
+        contentPtr = logPtr->add_contents();
+        contentPtr->set_key("host_file_name");
+        contentPtr->set_value(statistic->mHostFilename);
+    }
     contentPtr = logPtr->add_contents();
     contentPtr->set_key("logtail_version");
     contentPtr->set_value(ILOGTAIL_VERSION);
@@ -278,7 +280,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
                                        uint64_t historyFailures,
                                        uint64_t sendFailures,
                                        const std::string& errorLine) {
-    if (!filename.empty()) {
+    if (!hostFilename.empty()) {
         // logstore statistics
         AddProfilingData(configName,
                          region,
@@ -315,7 +317,7 @@ void LogFileProfiler::AddProfilingData(const std::string& configName,
         (iter->second)->mLastUpdateTime = time(NULL);
     } else {
         LogStoreStatistic* statistic = NULL;
-        if (filename.empty()) {
+        if (hostFilename.empty()) {
             std::vector<sls_logs::LogTag> empty;
             statistic = new LogStoreStatistic(configName,
                                                 projectName,
@@ -361,7 +363,7 @@ void LogFileProfiler::AddProfilingSkipBytes(const std::string& configName,
                                             const std::string& hostFilename,
                                             const std::vector<sls_logs::LogTag>& tags,
                                             uint64_t skipBytes) {
-    if (!filename.empty()) {
+    if (!hostFilename.empty()) {
         // logstore statistics
         AddProfilingSkipBytes(configName, region, projectName, category, "", "", tags, skipBytes);
     }
@@ -374,7 +376,7 @@ void LogFileProfiler::AddProfilingSkipBytes(const std::string& configName,
         (iter->second)->mLastUpdateTime = time(NULL);
     } else {
         LogStoreStatistic* statistic = NULL;
-        if (filename.empty()) {
+        if (hostFilename.empty()) {
             std::vector<sls_logs::LogTag> empty;
             statistic = new LogStoreStatistic(configName, projectName, category, filename, hostFilename, empty);
         } else {
@@ -397,7 +399,7 @@ void LogFileProfiler::AddProfilingReadBytes(const std::string& configName,
                                             uint64_t fileSize,
                                             uint64_t readOffset,
                                             int32_t lastReadTime) {
-    if (!filename.empty()) {
+    if (!hostFilename.empty()) {
         // logstore statistics
         AddProfilingReadBytes(
             configName, region, projectName, category, "", "", tags, dev, inode, fileSize, readOffset, lastReadTime);
@@ -410,7 +412,7 @@ void LogFileProfiler::AddProfilingReadBytes(const std::string& configName,
         (iter->second)->UpdateReadInfo(dev, inode, fileSize, readOffset, lastReadTime);
     } else {
         LogStoreStatistic* statistic = NULL;
-        if (filename.empty()) {
+        if (hostFilename.empty()) {
             std::vector<sls_logs::LogTag> empty;
             statistic = new LogStoreStatistic(configName, projectName, category, filename, hostFilename, empty);
         } else {
