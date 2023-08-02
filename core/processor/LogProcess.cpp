@@ -282,7 +282,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             s_processBytes += (logBuffer->bufferSize);
             LogFileReaderPtr logFileReader = logBuffer->logFileReader;
             auto logPath = logFileReader->GetConvertedPath();
-            auto hostLogPath = logFileReader->GetLogPath();
+            auto hostLogPath = logFileReader->GetHostLogPath();
 #if defined(_MSC_VER)
             if (BOOL_FLAG(enable_chinese_tag_path)) {
                 logPath = EncodingConverter::GetInstance()->FromACPToUTF8(logPath);
