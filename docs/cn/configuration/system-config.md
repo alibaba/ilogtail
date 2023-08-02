@@ -30,7 +30,7 @@
 | 参数                      | 类型     | 说明                                                                                                         |
 | ----------------------- |--------|------------------------------------------------------------------------------------------------------------|
 | `USE_CONTAINERD`       | Bool   | 是否使用containerd runtime，非必选。ilogtail会自动通过接口探测。                                                              |
-| `CONTAINERD_SOCK_PATH`       | String | 自定义containerd sock路径，默认为/run/containerd/containerd.sock。可通过/etc/containerd/config.toml grpc.address字段进行配置。 |
-| `CONTAINERD_STATE_DIR` | String | 自定义containerd 数据目录，可通过/etc/containerd/config.toml state字段进行配置。                                             |
+| `CONTAINERD_SOCK_PATH`       | String | 自定义containerd sock路径，非必选。默认为/run/containerd/containerd.sock。自定义取值可以通过查看/etc/containerd/config.toml grpc.address字段获取。 |
+| `CONTAINERD_STATE_DIR` | String | 自定义containerd 数据目录，非必选。自定义取值可以通过查看/etc/containerd/config.toml state字段获取。                                             |
 
 > 因为k8s本身自带资源限制的功能，所以如果你要将ilogtail部署到k8s中，可以通过将`cpu_usage_limit` 和 `mem_usage_limit` 设置为一个很大的值（比如99999999），以此来达到“关闭”ilogtail自身熔断功能的目的。
