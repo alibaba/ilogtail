@@ -501,6 +501,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
                 if (!pluginConfigJson.isNull()) {
+                    config->mPluginProcessFlag = true;
                     if (pluginConfig.find("\"observer_ilogtail_") != string::npos) {
                         if (pluginConfigJson.isMember("inputs")) {
                             if (pluginConfigJson["inputs"].isObject() || pluginConfigJson["inputs"].isArray()) {
@@ -511,7 +512,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                             if (pluginConfigJson.isMember("processors")
                                 && (pluginConfigJson["processors"].isObject()
                                     || pluginConfigJson["processors"].isArray())) {
-                                config->mPluginProcessFlag = true;
                                 SetNotFoundJsonMember(pluginConfigJson, MIX_PROCESS_MODE, "observer");
                             }
                         } else {
@@ -589,8 +589,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (!pluginConfig.empty() && !pluginConfigJson.isNull()) {
                     if ((pluginConfigJson.isMember("processors")
                          && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray()))
-                        || (pluginConfigJson.isMember("flusher")
-                            && (pluginConfigJson["flusher"].isObject() || pluginConfigJson["flusher"].isArray()))) {
+                        || (pluginConfigJson.isMember("flushers")
+                            && (pluginConfigJson["flushers"].isObject() || pluginConfigJson["flushers"].isArray()))) {
                         config->mPluginProcessFlag = true;
                     }
                     // check processors
@@ -600,8 +600,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                         // patch enable_log_position_meta to split processor if exists ...
                         pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
                         pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
-                        config->mPluginConfig = pluginConfig;
                     }
+                    config->mPluginConfig = pluginConfig;
                 }
                 if (value.isMember("docker_file") && value["docker_file"].isBool() && value["docker_file"].asBool()) {
                     if (AppConfig::GetInstance()->IsPurageContainerMode()) {
