@@ -18,6 +18,7 @@
 #include "Result.h"
 #include <curl/curl.h>
 #include <curl/multi.h>
+#include <string>
 #include "logger/Logger.h"
 #include "app_config/AppConfig.h"
 #include "common/TimeUtil.h"
@@ -123,6 +124,11 @@ namespace sdk {
         request->mCallBack->mHTTPMessage.statusCode = (int32_t)http_code;
         curl_easy_cleanup(curl);
         if (!request->mCallBack->mHTTPMessage.IsLogServiceResponse()) {
+            if (request->mUrl.find("/prometheus") != std::string::npos) {
+                // means sls metricstore remote write channel
+                 request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, request->mCallBack->mHTTPMessage.content);
+                 return;
+            }
             request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, "Get invalid response");
             return;
         }

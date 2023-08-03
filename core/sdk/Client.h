@@ -224,7 +224,6 @@ namespace sdk {
         std::string mInterface;
         int32_t mPort;
         bool mUsingHTTPS;
-        bool mOpensource;
 
         SpinLock mSpinLock;
 

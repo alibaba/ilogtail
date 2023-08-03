@@ -329,7 +329,7 @@ namespace sdk {
                                          map<std::string, std::string>& httpHeader,
                                          PostLogStoreLogsClosure* callBack) {
         string operation= PROMETHEUS;
-        operation.append("/").append(project).append("/").append(logstore).append("/api/v1/import/loggroup");
+        operation.append("/").append(project).append("/").append(logstore).append("/api/v1/write");
         httpHeader[CONTENT_MD5] = CalcMD5(body);
         map<string, string> parameterList;
         string host = GetSlsHost();

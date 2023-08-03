@@ -36,7 +36,7 @@ namespace sdk {
     class Client;
 }
 
-enum OperationOnFail { RETRY_ASYNC_WHEN_FAIL, RECORD_ERROR_WHEN_FAIL, DISCARD_WHEN_FAIL };
+enum OperationOnFail { RETRY_ASYNC_WHEN_FAIL, RECORD_ERROR_WHEN_FAIL, DISCARD_WHEN_FAIL, METRICSTORE_CHANGE_LOGSOTER };
 
 enum SEND_THREAD_TYPE { REALTIME_SEND_THREAD = 0, REPLAY_SEND_THREAD = 1, SEND_THREAD_TYPE_COUNT = 2 };
 
@@ -132,11 +132,27 @@ struct RegionEndpointEntry {
             (iter->second).SetDetail(status, latency);
     }
 };
-
+enum SendResult {
+    SEND_OK,
+    SEND_NETWORK_ERROR,
+    SEND_QUOTA_EXCEED,
+    SEND_UNAUTHORIZED,
+    SEND_SERVER_ERROR,
+    SEND_DISCARD_ERROR,
+    SEND_INVALID_SEQUENCE_ID,
+    SEND_PARAMETER_INVALID
+};
 class SendClosure : public sdk::PostLogStoreLogsClosure {
 public:
     virtual void OnSuccess(sdk::Response* response);
     virtual void OnFail(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage);
+    void OperationWhenNetOrServerErr(int32_t curTime,
+                                     SendResult sendResult,
+                                     std::ostringstream& failDetail,
+                                     std::ostringstream& suggestion,
+                                     OperationOnFail& operation,
+                                     SendResult& sendReult,
+                                     LogstoreSenderInfo::SendResult& recordResult);
     OperationOnFail DefaultOperation();
     OperationOnFail
     RecompressData(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage);
@@ -155,16 +171,7 @@ struct SlsClientInfo {
     SlsClientInfo(sdk::Client* client, int32_t updateTime);
 };
 
-enum SendResult {
-    SEND_OK,
-    SEND_NETWORK_ERROR,
-    SEND_QUOTA_EXCEED,
-    SEND_UNAUTHORIZED,
-    SEND_SERVER_ERROR,
-    SEND_DISCARD_ERROR,
-    SEND_INVALID_SEQUENCE_ID,
-    SEND_PARAMETER_INVALID
-};
+
 SendResult ConvertErrorCode(const std::string& errorCode);
 
 class Sender {

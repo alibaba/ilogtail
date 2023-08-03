@@ -402,7 +402,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             }
             projectName = GetStringValue(value, "project_name", "");
             category = GetStringValue(value, "category", "");
-            ParseTelemetryType(GetStringValue(value, "telemetry_type", "log"), telemetryType);
+            ParseTelemetryType(GetStringValue(value, "telemetry_type", "metrics"), telemetryType);
             string logTypeStr = GetStringValue(value, "log_type", "plugin");
             auto region = GetStringValue(value, "region", AppConfig::GetInstance()->GetDefaultRegion());
             LogType logType;
