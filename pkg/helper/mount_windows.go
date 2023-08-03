@@ -118,3 +118,7 @@ func GetMountedFilePathWithBasePath(basePath, filePath string) string {
 	}
 	return basePath + filePath[colonPos+1:]
 }
+
+func TryGetRealPath(path string, maxRecurseNum int) string {
+	return ""
+}

@@ -55,28 +55,28 @@ func TryGetRealPath(path string, maxRecurseNum int) string {
 				return TryGetRealPath(path, maxRecurseNum-1)
 			}
 			return path
-		} else {
-			index += i + sepLen
-			if _, err := os.Stat(path[:index]); err != nil {
-				if _, err := os.Lstat(path[:index]); err != nil {
-					// path[:index] does not exist, return directly
-					return ""
-				}
-				// path[:index] is a symlink
-				target, _ := os.Readlink(path[:index])
-				partailPath := GetMountedFilePath(target)
-				path = partailPath + path[index:]
-				if _, err := os.Stat(partailPath); err != nil {
-					// path referenced does not exist or has symlink, call recursively
-					return TryGetRealPath(path, maxRecurseNum-1)
-				}
-				if _, err := os.Stat(path); err != nil {
-					// perhaps more symlink exists
-					index = len(partailPath)
-					continue
-				}
-				return path
+		}
+
+		index += i + sepLen
+		if _, err := os.Stat(path[:index]); err != nil {
+			if _, err := os.Lstat(path[:index]); err != nil {
+				// path[:index] does not exist, return directly
+				return ""
 			}
+			// path[:index] is a symlink
+			target, _ := os.Readlink(path[:index])
+			partailPath := GetMountedFilePath(target)
+			path = partailPath + path[index:]
+			if _, err := os.Stat(partailPath); err != nil {
+				// path referenced does not exist or has symlink, call recursively
+				return TryGetRealPath(path, maxRecurseNum-1)
+			}
+			if _, err := os.Stat(path); err != nil {
+				// perhaps more symlink exists
+				index = len(partailPath)
+				continue
+			}
+			return path
 		}
 	}
 }
