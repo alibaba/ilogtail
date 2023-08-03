@@ -87,7 +87,16 @@ func NewDockerFileSyner(sds *ServiceDockerStdout,
 		// first watch this container
 		stat, err := os.Stat(checkpoint.Path)
 		if err != nil {
-			logger.Warning(sds.context.GetRuntimeContext(), "DOCKER_STDOUT_STAT_ALARM", "stat log file error, path", checkpoint.Path, "error", err.Error())
+			if !sds.LogtailInDocker {
+				logger.Warning(sds.context.GetRuntimeContext(), "DOCKER_STDOUT_STAT_ALARM", "stat log file error, path", checkpoint.Path, "error", err.Error())
+			} else {
+				realPath := helper.TryGetRealPath(checkpoint.Path, 3)
+				if realPath == "" {
+					logger.Warning(sds.context.GetRuntimeContext(), "DOCKER_STDOUT_STAT_ALARM", "stat log file error, path", checkpoint.Path, "error", err.Error())
+				} else {
+					checkpoint.Path = realPath
+				}
+			}
 		} else {
 			checkpoint.Offset = stat.Size()
 			if checkpoint.Offset > sds.StartLogMaxOffset {

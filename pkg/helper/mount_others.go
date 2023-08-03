@@ -19,6 +19,7 @@ package helper
 
 import (
 	"os"
+	"strings"
 )
 
 var DefaultLogtailMountPath string
@@ -29,6 +30,55 @@ func GetMountedFilePath(logPath string) string {
 
 func GetMountedFilePathWithBasePath(basePath, logPath string) string {
 	return basePath + logPath
+}
+
+func TryGetRealPath(path string, maxRecurseNum int) string {
+	if maxRecurseNum == 0 {
+		return ""
+	}
+
+	sepLen := len(string(os.PathSeparator))
+	index := 0 // assume path is absolute
+	for {
+		i := strings.IndexRune(path[index+sepLen:], os.PathSeparator)
+		if i == -1 {
+			// pre condition: os.Stat(path) returns error
+			if _, err := os.Lstat(path); err != nil {
+				// file does not exist, return directly
+				return ""
+			}
+			// file is a symlink
+			target, _ := os.Readlink(path)
+			path = GetMountedFilePath(target)
+			if _, err := os.Stat(path); err != nil {
+				// file referenced does not exist or has symlink, call recursively
+				return TryGetRealPath(path, maxRecurseNum-1)
+			}
+			return path
+		} else {
+			index += i + sepLen
+			if _, err := os.Stat(path[:index]); err != nil {
+				if _, err := os.Lstat(path[:index]); err != nil {
+					// path[:index] does not exist, return directly
+					return ""
+				}
+				// path[:index] is a symlink
+				target, _ := os.Readlink(path[:index])
+				partailPath := GetMountedFilePath(target)
+				path = partailPath + path[index:]
+				if _, err := os.Stat(partailPath); err != nil {
+					// path referenced does not exist or has symlink, call recursively
+					return TryGetRealPath(path, maxRecurseNum-1)
+				}
+				if _, err := os.Stat(path); err != nil {
+					// perhaps more symlink exists
+					index = len(partailPath)
+					continue
+				}
+				return path
+			}
+		}
+	}
 }
 
 func init() {
