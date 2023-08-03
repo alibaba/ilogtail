@@ -34,6 +34,7 @@ void PipelineUnittest::TestInit() {
     config.mProjectName = "project";
     config.mCategory = "category";
     config.mRegion = "cn-shanghai";
+    config.mLogType = REGEX_LOG;
     APSARA_TEST_TRUE_FATAL(pipeline.Init(config));
     APSARA_TEST_EQUAL_FATAL(config.mConfigName, pipeline.Name());
     PipelineContext& context = pipeline.GetContext();

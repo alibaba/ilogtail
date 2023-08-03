@@ -28,6 +28,7 @@ public:
         std::string configName = "project##config_0";
         Config* config = new Config;
         config->mConfigName = configName;
+        config->mLogType = JSON_LOG;
         ConfigManager::GetInstance()->mNameConfigMap[configName] = config;
     }
 
