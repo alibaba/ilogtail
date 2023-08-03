@@ -17,11 +17,11 @@
 #include "common/Constants.h"
 #include "config/Config.h"
 #include "config_manager/ConfigManager.h"
-#include "processor/ProcessorFillSlsGroupInfo.h"
+#include "../../processor/ProcessorFillGroupInfoNative.h"
 
 namespace logtail {
 
-class ProcessorFillSlsGroupInfoUnittest : public ::testing::Test {
+class ProcessorFillGroupInfoNativeUnittest : public ::testing::Test {
 public:
     static void SetUpTestCase() { ConfigManager::GetInstance()->SetUserDefinedIdSet({"mg1", "mg2"}); }
 
@@ -39,11 +39,11 @@ public:
     PipelineContext mContext;
 };
 
-UNIT_TEST_CASE(ProcessorFillSlsGroupInfoUnittest, TestInit);
-UNIT_TEST_CASE(ProcessorFillSlsGroupInfoUnittest, TestGetTopicName);
-UNIT_TEST_CASE(ProcessorFillSlsGroupInfoUnittest, TestProcess);
+UNIT_TEST_CASE(ProcessorFillGroupInfoNativeUnittest, TestInit);
+UNIT_TEST_CASE(ProcessorFillGroupInfoNativeUnittest, TestGetTopicName);
+UNIT_TEST_CASE(ProcessorFillGroupInfoNativeUnittest, TestProcess);
 
-void ProcessorFillSlsGroupInfoUnittest::TestInit() {
+void ProcessorFillGroupInfoNativeUnittest::TestInit() {
     Config config;
     config.mLogType = REGEX_LOG;
     config.mTopicFormat = "default";
@@ -51,7 +51,7 @@ void ProcessorFillSlsGroupInfoUnittest::TestInit() {
     config.mCustomizedTopic = "static_topic";
 
     {
-        ProcessorFillSlsGroupInfo processor;
+        ProcessorFillGroupInfoNative processor;
         processor.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         APSARA_TEST_EQUAL_FATAL("none", processor.mTopicFormat);
@@ -61,14 +61,14 @@ void ProcessorFillSlsGroupInfoUnittest::TestInit() {
 
     {
         config.mLogType = APSARA_LOG;
-        ProcessorFillSlsGroupInfo processor;
+        ProcessorFillGroupInfoNative processor;
         processor.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         APSARA_TEST_EQUAL_FATAL("default", processor.mTopicFormat);
     }
 }
 
-void ProcessorFillSlsGroupInfoUnittest::TestGetTopicName() {
+void ProcessorFillGroupInfoNativeUnittest::TestGetTopicName() {
     Config config;
     config.mLogType = REGEX_LOG;
     config.mGroupTopic = "group_topic";
@@ -76,7 +76,7 @@ void ProcessorFillSlsGroupInfoUnittest::TestGetTopicName() {
     std::vector<sls_logs::LogTag> tags;
     {
         config.mTopicFormat = "/var/log/(.*)";
-        ProcessorFillSlsGroupInfo processor;
+        ProcessorFillGroupInfoNative processor;
         processor.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         tags.clear();
@@ -86,7 +86,7 @@ void ProcessorFillSlsGroupInfoUnittest::TestGetTopicName() {
 
     {
         config.mTopicFormat = "/var/(.*)/(.*)";
-        ProcessorFillSlsGroupInfo processor;
+        ProcessorFillGroupInfoNative processor;
         processor.SetContext(mContext);
         APSARA_TEST_TRUE_FATAL(processor.Init(config));
         tags.clear();
@@ -99,14 +99,14 @@ void ProcessorFillSlsGroupInfoUnittest::TestGetTopicName() {
     }
 }
 
-void ProcessorFillSlsGroupInfoUnittest::TestProcess() {
+void ProcessorFillGroupInfoNativeUnittest::TestProcess() {
     Config config;
     config.mLogType = REGEX_LOG;
     config.mTopicFormat = "none";
     config.mGroupTopic = "group_topic";
     config.mCustomizedTopic = "static_topic";
 
-    ProcessorFillSlsGroupInfo processor;
+    ProcessorFillGroupInfoNative processor;
     processor.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
 

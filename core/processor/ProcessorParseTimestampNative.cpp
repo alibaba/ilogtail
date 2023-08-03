@@ -17,6 +17,7 @@
 #include "processor/ProcessorParseTimestampNative.h"
 
 #include "app_config/AppConfig.h"
+#include "common/Constants.h"
 #include "common/LogtailCommonFlags.h"
 
 namespace logtail {
@@ -38,7 +39,7 @@ void ProcessorParseTimestampNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty() || mTimeFormat.empty() || mTimeKey.empty()) {
         return;
     }
-    const StringView& logPath = logGroup.GetMetadata("source");
+    const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
     StringView timeStrCache;
     EventsContainer& events = logGroup.ModifiableEvents();
     // works good normally. poor performance if most data need to be discarded.

@@ -30,10 +30,14 @@
 #include "plugin/DynamicCProcessorCreator.h"
 
 #include "plugin/CProcessor.h"
+#include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
+#include "processor/ProcessorParseApsaraNative.h"
+#include "processor/ProcessorParseDelimiterNative.h"
+#include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseRegexNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
-#include "processor/ProcessorFillSlsGroupInfo.h"
+#include "processor/ProcessorFillGroupInfoNative.h"
 
 namespace logtail {
 
@@ -80,10 +84,14 @@ PluginRegistry::Create(PluginCat cat, const std::string& name, const std::string
 }
 
 void PluginRegistry::LoadStaticPlugins() {
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitLogStringNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitRegexNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseApsaraNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseDelimiterNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseJsonNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseRegexNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseTimestampNative>());
-    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFillSlsGroupInfo>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFillGroupInfoNative>());
     /* more native plugin registers here */
 }
 

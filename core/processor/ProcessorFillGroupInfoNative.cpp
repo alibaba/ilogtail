@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorFillSlsGroupInfo.h"
+#include "processor/ProcessorFillGroupInfoNative.h"
 
 #include "common/Constants.h"
 #include "common/FileSystemUtil.h"
 #include "reader/LogFileReader.h"
 namespace logtail {
 
-bool ProcessorFillSlsGroupInfo::Init(const ComponentConfig& config) {
+bool ProcessorFillGroupInfoNative::Init(const ComponentConfig& config) {
     mTopicFormat = config.mTopicFormat;
     if (config.mLogType != APSARA_LOG && ToLowerCaseString(mTopicFormat) == "default") {
         mTopicFormat = "none";
@@ -34,7 +34,7 @@ bool ProcessorFillSlsGroupInfo::Init(const ComponentConfig& config) {
     return true;
 }
 
-void ProcessorFillSlsGroupInfo::Process(PipelineEventGroup& logGroup) {
+void ProcessorFillGroupInfoNative::Process(PipelineEventGroup& logGroup) {
     // LogBuffer* logBuffer = dynamic_cast<LogBuffer*>(logGroup.GetSourceBuffer().get());
     std::string agentTag = ConfigManager::GetInstance()->GetUserDefinedIdSet();
     if (!agentTag.empty()) {
@@ -85,7 +85,7 @@ void ProcessorFillSlsGroupInfo::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-std::string ProcessorFillSlsGroupInfo::GetTopicName(const std::string& path, std::vector<sls_logs::LogTag>& extraTags) {
+std::string ProcessorFillGroupInfoNative::GetTopicName(const std::string& path, std::vector<sls_logs::LogTag>& extraTags) {
     std::string finalPath = path;
     size_t len = finalPath.size();
     // ignore the ".1" like suffix when the log file is roll back

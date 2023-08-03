@@ -40,9 +40,9 @@ void ProcessorSplitRegexNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
     EventsContainer newEvents;
-    const StringView& logPath = logGroup.GetMetadata("source");
+    const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
     for (const PipelineEventPtr& e : logGroup.GetEvents()) {
-        ProcessorSplitRegexNative::ProcessEvent(logGroup, logPath, e, newEvents);
+        ProcessEvent(logGroup, logPath, e, newEvents);
     }
     *mSplitLines = newEvents.size();
     logGroup.SwapEvents(newEvents);
@@ -66,7 +66,7 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
     StringView sourceVal = sourceEvent.GetContent(mSplitKey);
     std::vector<StringView> logIndex; // all splitted logs
     std::vector<StringView> discardIndex; // used to send warning
-    int feedLines;
+    int feedLines = 0;
     bool splitSuccess = LogSplit(sourceVal.data(), sourceVal.size(), feedLines, logIndex, discardIndex, logPath);
     *mFeedLines += feedLines;
 
@@ -140,7 +140,7 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
     std::string exception;
     while (endIndex < size) {
         if (buffer[endIndex] == '\n' || endIndex == size - 1) {
-            lineFeed++;
+            ++lineFeed;
             exception.clear();
             if (mLogBeginRegPtr == NULL
                 || BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {

@@ -304,8 +304,8 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
         Json::Value::Members mem = config["plugin"].getMemberNames();
         for (auto it = mem.begin(); it != mem.end(); ++it) {
             if (*it == "inputs" || *it == "processors" || *it == "flushers") {
-                for (int i = 0; i < config["plugin"][*it].size(); ++i) {
-                    stats[*it].insert(config["plugin"][*it][i]["type"].asString());
+                for (size_t i = 0; i < config["plugin"][*it].size(); ++i) {
+                    stats[*it].insert(config["plugin"][*it][int(i)]["type"].asString());
                 }
             }
         }
@@ -501,8 +501,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
                 if (!pluginConfigJson.isNull()) {
-                    pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
-                    pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
                     if (pluginConfig.find("\"observer_ilogtail_") != string::npos) {
                         if (pluginConfigJson.isMember("inputs")) {
                             if (pluginConfigJson["inputs"].isObject() || pluginConfigJson["inputs"].isArray()) {
@@ -515,17 +513,17 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     || pluginConfigJson["processors"].isArray())) {
                                 config->mPluginProcessFlag = true;
                                 SetNotFoundJsonMember(pluginConfigJson, MIX_PROCESS_MODE, "observer");
-                                config->mPluginConfig = pluginConfigJson.toStyledString();
                             }
-
                         } else {
                             LOG_WARNING(sLogger,
                                         ("observer config is not a legal JSON object",
                                          logName)("project", projectName)("logstore", category));
+                            throw ExceptionBase(std::string("observer config is not a legal JSON object"));
                         }
-                    } else {
-                        config->mPluginConfig = pluginConfig;
                     }
+                    pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
+                    pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
+                    config->mPluginConfig = pluginConfig;
                 }
             } else if (logType == STREAM_LOG) {
                 config = new Config("",
@@ -589,12 +587,17 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
                 // normal log file config can have plugin too
                 if (!pluginConfig.empty() && !pluginConfigJson.isNull()) {
+                    if ((pluginConfigJson.isMember("processors")
+                         && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray()))
+                        || (pluginConfigJson.isMember("flusher")
+                            && (pluginConfigJson["flusher"].isObject() || pluginConfigJson["flusher"].isArray()))) {
+                        config->mPluginProcessFlag = true;
+                    }
                     // check processors
                     // set process flag when config have processors
                     if (pluginConfigJson.isMember("processors")
                         && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())) {
                         // patch enable_log_position_meta to split processor if exists ...
-                        config->mPluginProcessFlag = true;
                         pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
                         pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
                         config->mPluginConfig = pluginConfig;

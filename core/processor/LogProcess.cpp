@@ -305,10 +305,11 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             ProcessProfile profile;
             profile.readBytes = readBytes;
             int32_t parseStartTime = (int32_t)time(NULL);
-            if (config->mLogType == REGEX_LOG) {
-                ProcessBuffer(logBuffer, logFileReader, logGroup, profile);
-            } else {
+            if (config->mLogType == STREAM_LOG || config->mLogType == PLUGIN_LOG
+                || (config->mPluginProcessFlag && !config->mAdvancedConfig.mForceEnablePipeline)) {
                 ProcessBufferLegacy(logBuffer, logFileReader, logGroup, profile, *config);
+            } else {
+                ProcessBuffer(logBuffer, logFileReader, logGroup, profile);
             }
             const std::string& projectName = config->GetProjectName();
             const std::string& category = config->GetCategory();
@@ -474,6 +475,7 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup, sls_logs
         log->set_time(logEvent.GetTimestamp());
         for (auto& kv : logEvent.GetContents()) {
             sls_logs::Log_Content* contPtr = log->add_contents();
+            // need to rename EVENT_META_LOG_FILE_OFFSET
             contPtr->set_key(kv.first == EVENT_META_LOG_FILE_OFFSET ? LOG_RESERVED_KEY_FILE_OFFSET
                                                                     : kv.first.to_string());
             contPtr->set_value(kv.second.to_string());

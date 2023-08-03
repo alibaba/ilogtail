@@ -16,23 +16,19 @@
 
 #include "processor/Processor.h"
 #include <string>
+#include <boost/regex.hpp>
 
 namespace logtail {
 
-class ProcessorFillSlsGroupInfo : public Processor {
+class ProcessorParseApsaraNative : public Processor {
 public:
-    static const char* Name() { return "processor_fill_sls_group_info"; }
+    static const char* Name() { return "processor_parse_apsara_native"; }
     bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
-private:
-    std::string GetTopicName(const std::string& path, std::vector<sls_logs::LogTag>& extraTags);
-
-    std::string mTopicFormat, mGroupTopic, mStaticTopic;
-    bool mIsStaticTopic = false;
-
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorFillSlsGroupInfoUnittest;
+    friend class ProcessorParseApsaraNativeUnittest;
 #endif
 };
+
 } // namespace logtail
