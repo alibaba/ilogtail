@@ -36,12 +36,12 @@ private:
     );
     std::string mTimeKey;
     std::string mTimeFormat;
-    int mLogTimeZoneOffsetSecond;
-    int mSpecifiedYear;
+    int mLogTimeZoneOffsetSecond = 0;
+    int mSpecifiedYear = -1;
     PreciseTimestampConfig mLegacyPreciseTimestampConfig;
 
-    int* mParseTimeFailures;
-    int* mHistoryFailures;
+    int* mParseTimeFailures = nullptr;
+    int* mHistoryFailures = nullptr;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseTimestampNativeUnittest;
 #endif

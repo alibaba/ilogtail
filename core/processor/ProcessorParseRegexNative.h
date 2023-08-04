@@ -39,15 +39,15 @@ private:
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
     std::string mSourceKey;
     std::vector<UserDefinedFormat> mUserDefinedFormat;
-    bool mDiscardUnmatch;
-    bool mUploadRawLog;
-    bool mSourceKeyOverwritten;
-    bool mRawLogTagOverwritten;
+    bool mDiscardUnmatch = false;
+    bool mUploadRawLog = false;
+    bool mSourceKeyOverwritten = false;
+    bool mRawLogTagOverwritten = false;
     std::string mRawLogTag;
 
-    int* mParseFailures;
-    int* mRegexMatchFailures;
-    int* mLogGroupSize;
+    int* mParseFailures = nullptr;
+    int* mRegexMatchFailures = nullptr;
+    int* mLogGroupSize = nullptr;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseRegexNativeUnittest;
 #endif

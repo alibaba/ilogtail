@@ -43,8 +43,8 @@ private:
     std::string mSplitKey;
     std::string mLogBeginReg;
     std::unique_ptr<boost::regex> mLogBeginRegPtr;
-    bool mDiscardUnmatch;
-    bool mEnableLogPositionMeta;
+    bool mDiscardUnmatch = false;
+    bool mEnableLogPositionMeta = false;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorSplitRegexNativeUnittest;
 #endif

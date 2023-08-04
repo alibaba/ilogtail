@@ -32,8 +32,8 @@ private:
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
     std::string mSplitKey;
-    char mSplitChar;
-    bool mEnableLogPositionMeta;
+    char mSplitChar = '\n';
+    bool mEnableLogPositionMeta = false;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorRegexStringNativeUnittest;
 #endif
