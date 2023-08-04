@@ -40,7 +40,7 @@ jobs:
 
       # prepare ubuntu environment
       - name: prepare ubuntu environment
-        if: matrix.runner == 'ubuntu'
+        if: matrix.runner == 'self-hosted'
         run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev
 
       - name: Set up Go ${{ matrix.go-version }}
@@ -54,15 +54,15 @@ jobs:
           submodules: true
 
       - name: Copy Lib
-        if: matrix.runner == 'ubuntu'
+        if: matrix.runner == 'self-hosted'
         run: sudo cp ./pkg/logtail/libPluginAdapter.so /usr/lib/
 
       - name: Check License Header
-        if: matrix.runner == 'ubuntu'
+        if: matrix.runner == 'self-hosted'
         run: make check-license
 
       - name: Check Dependencies Licences
-        if: matrix.runner == 'ubuntu'
+        if: matrix.runner == 'self-hosted'
         run: make check-dependency-licenses
 
       - name: Lint
