@@ -44,12 +44,12 @@ jobs:
         run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev
 
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
 
