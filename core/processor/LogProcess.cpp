@@ -285,10 +285,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             uint64_t readBytes = logBuffer->rawBuffer.size() + 1; // may not be accurate if input is not utf8
             s_processBytes += readBytes;
             LogFileReaderPtr logFileReader = logBuffer->logFileReader;
-            auto logPath = logFileReader->GetConvertedPath();
+            auto convertedPath = logFileReader->GetConvertedPath();
+            auto hostLogPath = logFileReader->GetHostLogPath();
 #if defined(_MSC_VER)
             if (BOOL_FLAG(enable_chinese_tag_path)) {
-                logPath = EncodingConverter::GetInstance()->FromACPToUTF8(logPath);
+                convertedPath = EncodingConverter::GetInstance()->FromACPToUTF8(convertedPath);
+                hostLogPath = EncodingConverter::GetInstance()->FromACPToUTF8(hostLogPath);
             }
 #endif
 
@@ -391,7 +393,8 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                              config->mRegion,
                                                              projectName,
                                                              category,
-                                                             logPath,
+                                                             convertedPath,
+                                                             hostLogPath,
                                                              logFileReader->GetExtraTags(),
                                                              readBytes,
                                                              profile.skipBytes,

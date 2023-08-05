@@ -28,8 +28,8 @@ using namespace std;
 
 JsonLogFileReader::JsonLogFileReader(const std::string& projectName,
                                      const std::string& category,
-                                     const std::string& logPathDir,
-                                     const std::string& logPathFile,
+                                     const std::string& hostLogPathDir,
+                                     const std::string& hostLogPathFile,
                                      int32_t tailLimit,
                                      const std::string& timeFormat,
                                      const std::string& topicFormat,
@@ -39,8 +39,8 @@ JsonLogFileReader::JsonLogFileReader(const std::string& projectName,
                                      bool dockerFileFlag)
     : LogFileReader(projectName,
                     category,
-                    logPathDir,
-                    logPathFile,
+                    hostLogPathDir,
+                    hostLogPathFile,
                     tailLimit,
                     topicFormat,
                     groupTopic,
@@ -94,9 +94,9 @@ bool JsonLogFileReader::ParseLogLine(StringView buffer,
         parseSuccess = false;
     } else if (!doc.IsObject()) {
         if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-            LOG_WARNING(
-                sLogger,
-                ("invalid json object, log", buffer)("project", mProjectName)("logstore", mCategory)("file", mLogPath));
+            LOG_WARNING(sLogger,
+                        ("invalid json object, log", buffer)("project", mProjectName)("logstore",
+                                                                                      mCategory)("file", mHostLogPath));
             LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
                                                    string("invalid json object:") + buffer.to_string(),
                                                    mProjectName,
@@ -120,7 +120,7 @@ bool JsonLogFileReader::ParseLogLine(StringView buffer,
                                          mProjectName,
                                          mCategory,
                                          mRegion,
-                                         mLogPath,
+                                         mHostLogPath,
                                          error,
                                          mTzOffsetSecond)) {
                 parseSuccess = false;
@@ -131,7 +131,7 @@ bool JsonLogFileReader::ParseLogLine(StringView buffer,
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(sLogger,
                             ("parse json log fail, log", buffer)("invalid time key", mTimeKey)("project", mProjectName)(
-                                "logstore", mCategory)("file", mLogPath));
+                                "logstore", mCategory)("file", mHostLogPath));
                 LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
                                                        string("found no time_key: ") + mTimeKey
                                                            + ", log:" + buffer.to_string(),
@@ -151,7 +151,9 @@ bool JsonLogFileReader::ParseLogLine(StringView buffer,
         if (mUseSystemTime) {
             SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
         } else {
-            SetLogTime(logPtr, lastLogLineTime, GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, mPreciseTimestampConfig.unit));
+            SetLogTime(logPtr,
+                       lastLogLineTime,
+                       GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, mPreciseTimestampConfig.unit));
         }
         for (rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr) {
             const rapidjson::Value& contentKey = itr->name;
@@ -268,8 +270,8 @@ bool JsonLogFileReader::FindJsonMatch(
     }
     if (idx == size || buffer[idx] != '{') {
         LOG_DEBUG(sLogger,
-                  ("invalid json begining", buffer + beginIdx)("project", mProjectName)("logstore",
-                                                                                        mCategory)("file", mLogPath));
+                  ("invalid json begining",
+                   buffer + beginIdx)("project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
         startWithBlock = false;
         return false;
     }
@@ -290,7 +292,7 @@ bool JsonLogFileReader::FindJsonMatch(
                     LOG_WARNING(
                         sLogger,
                         ("brace count", braceCount)("brace not match, invalid json begining", buffer + beginIdx)(
-                            "project", mProjectName)("logstore", mCategory)("file", mLogPath));
+                            "project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
                     return false;
                 }
                 break;
@@ -311,7 +313,7 @@ bool JsonLogFileReader::FindJsonMatch(
         }
     }
     LOG_DEBUG(sLogger,
-              ("find no match, beginIdx", beginIdx)("idx", idx)("project", mProjectName)("logstore",
-                                                                                         mCategory)("file", mLogPath));
+              ("find no match, beginIdx",
+               beginIdx)("idx", idx)("project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
     return false;
 }

@@ -94,8 +94,8 @@ public:
     // for ApsaraLogFileReader
     LogFileReader(const std::string& projectName,
                   const std::string& category,
-                  const std::string& logPathDir,
-                  const std::string& logPathFile,
+                  const std::string& hostLogPathDir,
+                  const std::string& hostLogPathFile,
                   int32_t tailLimit,
                   bool discardUnmatch,
                   bool dockerFileFlag);
@@ -103,8 +103,8 @@ public:
     // for CommonRegLogFileReader, JsonLogFileReader, DelimiterLogFileReader
     LogFileReader(const std::string& projectName,
                   const std::string& category,
-                  const std::string& logPathDir,
-                  const std::string& logPathFile,
+                  const std::string& hostLogPathDir,
+                  const std::string& hostLogPathFile,
                   int32_t tailLimit,
                   const std::string& topicFormat,
                   const std::string& groupTopic,
@@ -222,7 +222,7 @@ public:
     bool CheckFileSignatureAndOffset(int64_t& fileSize);
 
     void UpdateLogPath(const std::string& filePath) {
-        if (mLogPath == filePath) {
+        if (mHostLogPath == filePath) {
             return;
         }
         mRealLogPath = filePath;
@@ -374,8 +374,8 @@ protected:
     std::string mRegion;
     std::string mCategory;
     std::string mConfigName;
-    std::string mLogPath;
-    std::string mLogPathFile;
+    std::string mHostLogPath;
+    std::string mHostLogPathFile;
     std::string mRealLogPath; // real log path
     bool mSymbolicLinkFlag = false;
     std::string mSourceId;
@@ -486,7 +486,7 @@ private:
         std::string key;
         key.append(mConfigName)
             .append("-")
-            .append(mLogPath)
+            .append(mHostLogPath)
             .append("-")
             .append(std::to_string(mDevInode.dev))
             .append("-")
