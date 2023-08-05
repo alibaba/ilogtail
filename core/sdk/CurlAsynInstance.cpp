@@ -124,12 +124,23 @@ namespace sdk {
         request->mCallBack->mHTTPMessage.statusCode = (int32_t)http_code;
         curl_easy_cleanup(curl);
         if (!request->mCallBack->mHTTPMessage.IsLogServiceResponse()) {
-            if (request->mUrl.find("/prometheus") != std::string::npos) {
-                // means sls metricstore remote write channel
-                 request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, request->mCallBack->mHTTPMessage.content);
-                 return;
+           if (request->mUrl.find("/prometheus") == std::string::npos) {
+                request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, "Get invalid response");
+                return;
             }
-            request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, "Get invalid response");
+            // means sls metricstore remote write channel
+            if (request->mCallBack->mHTTPMessage.statusCode == 200) {
+                request->mResponse->statusCode = 200;
+                request->mCallBack->OnSuccess(request->mResponse);
+                return;
+            } 
+            auto errCode = LOGE_REQUEST_ERROR;
+            if (request->mCallBack->mHTTPMessage.statusCode ==401) {
+                errCode = LOGE_INTERNAL_SERVER_ERROR;
+            }else if (request->mCallBack->mHTTPMessage.statusCode >= 500) {
+                errCode = LOGE_INTERNAL_SERVER_ERROR;
+            }
+            request->mCallBack->OnFail(request->mResponse, errCode, request->mCallBack->mHTTPMessage.content);
             return;
         }
 

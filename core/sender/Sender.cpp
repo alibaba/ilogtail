@@ -173,7 +173,7 @@ static const char* GetOperationString(OperationOnFail op) {
 }
 
 void MetricsSendClosure::OnFail(sdk::Response* response, const string& errorCode, const string& errorMessage) {
-    static std::string sMetricstoreVersionTooLowFlag = "get WriteClient eror: no basic auth or parse error";
+    static std::string sMetricstoreVersionTooLowFlag = "get WriteClient error: no basic auth or parse error";
     LOG_INFO(sLogger, ("send failed, error code", errorCode)("error msg", errorMessage)("retry times", mDataPtr->mSendRetryTimes));
     ++gMetricsStoreSendErrorCount;
     ++mDataPtr->mSendRetryTimes;
