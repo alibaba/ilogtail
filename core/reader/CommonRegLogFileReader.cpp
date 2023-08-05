@@ -98,7 +98,7 @@ bool CommonRegLogFileReader::ParseLogLine(StringView buffer,
                                                 mSpecifiedYear,
                                                 mProjectName,
                                                 mRegion,
-                                                mLogPath,
+                                                mHostLogPath,
                                                 error,
                                                 logGroupSize,
                                                 mTzOffsetSecond);
@@ -124,7 +124,7 @@ bool CommonRegLogFileReader::ParseLogLine(StringView buffer,
                                                     ts.tv_nsec,
                                                     mProjectName,
                                                     mRegion,
-                                                    mLogPath,
+                                                    mHostLogPath,
                                                     error,
                                                     logGroupSize);
             }

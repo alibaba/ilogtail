@@ -37,16 +37,16 @@ ApsaraLogFileReader::ApsaraLogFileReader(const std::string& projectName,
     if (lowerConfig == "none" || lowerConfig == "customized") {
         mTopicName = "";
     } else if (lowerConfig == "default") {
-        size_t pos_dot = mLogPath.rfind("."); // the "." must be founded
-        size_t pos = mLogPath.find("@");
+        size_t pos_dot = mHostLogPath.rfind("."); // the "." must be founded
+        size_t pos = mHostLogPath.find("@");
         if (pos != std::string::npos) {
-            size_t pos_slash = mLogPath.find(PATH_SEPARATOR, pos);
+            size_t pos_slash = mHostLogPath.find(PATH_SEPARATOR, pos);
             if (pos_slash != std::string::npos) {
-                mTopicName = mLogPath.substr(0, pos) + mLogPath.substr(pos_slash, pos_dot - pos_slash);
+                mTopicName = mHostLogPath.substr(0, pos) + mHostLogPath.substr(pos_slash, pos_dot - pos_slash);
             }
         }
         if (mTopicName.empty()) {
-            mTopicName = mLogPath.substr(0, pos_dot);
+            mTopicName = mHostLogPath.substr(0, pos_dot);
         }
         std::string lowTopic = ToLowerCaseString(mTopicName);
         std::string logSuffix = ".log";
@@ -61,7 +61,7 @@ ApsaraLogFileReader::ApsaraLogFileReader(const std::string& projectName,
     } else if (lowerConfig == "group_topic")
         mTopicName = groupTopic;
     else
-        mTopicName = GetTopicName(topicFormat, mLogPath);
+        mTopicName = GetTopicName(topicFormat, GetConvertedPath());
     mFileEncoding = fileEncoding;
 }
 
@@ -84,7 +84,7 @@ bool ApsaraLogFileReader::ParseLogLine(StringView buffer,
                                                   mProjectName,
                                                   mCategory,
                                                   mRegion,
-                                                  mLogPath,
+                                                  mHostLogPath,
                                                   error,
                                                   logGroupSize,
                                                   mTzOffsetSecond,

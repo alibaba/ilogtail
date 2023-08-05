@@ -94,8 +94,8 @@ public:
     // for ApsaraLogFileReader
     LogFileReader(const std::string& projectName,
                   const std::string& category,
-                  const std::string& logPathDir,
-                  const std::string& logPathFile,
+                  const std::string& hostLogPathDir,
+                  const std::string& hostLogPathFile,
                   int32_t tailLimit,
                   bool discardUnmatch,
                   bool dockerFileFlag);
@@ -103,8 +103,8 @@ public:
     // for CommonRegLogFileReader, JsonLogFileReader, DelimiterLogFileReader
     LogFileReader(const std::string& projectName,
                   const std::string& category,
-                  const std::string& logPathDir,
-                  const std::string& logPathFile,
+                  const std::string& hostLogPathDir,
+                  const std::string& hostLogPathFile,
                   int32_t tailLimit,
                   const std::string& topicFormat,
                   const std::string& groupTopic,
@@ -155,14 +155,14 @@ public:
     const std::string& GetCategory() const { return mCategory; }
 
     /// @return e.g. `/logtail_host/var/xxx/home/admin/access.log`,
-    const std::string& GetLogPath() const { return mLogPath; }
+    const std::string& GetHostLogPath() const { return mHostLogPath; }
 
     bool GetSymbolicLinkFlag() const { return mSymbolicLinkFlag; }
 
     /// @return e.g. `/home/admin/access.log`
-    const std::string& GetConvertedPath() const { return mDockerPath.empty() ? mLogPath : mDockerPath; }
+    const std::string& GetConvertedPath() const { return mDockerPath.empty() ? mHostLogPath : mDockerPath; }
 
-    const std::string& GetLogPathFile() const { return mLogPathFile; }
+    const std::string& GetHostLogPathFile() const { return mHostLogPathFile; }
 
     int64_t GetFileSize() const { return mLastFileSize; }
 
@@ -222,7 +222,7 @@ public:
     bool CheckFileSignatureAndOffset(int64_t& fileSize);
 
     void UpdateLogPath(const std::string& filePath) {
-        if (mLogPath == filePath) {
+        if (mHostLogPath == filePath) {
             return;
         }
         mRealLogPath = filePath;
@@ -374,8 +374,8 @@ protected:
     std::string mRegion;
     std::string mCategory;
     std::string mConfigName;
-    std::string mLogPath;
-    std::string mLogPathFile;
+    std::string mHostLogPath;
+    std::string mHostLogPathFile;
     std::string mRealLogPath; // real log path
     bool mSymbolicLinkFlag = false;
     std::string mSourceId;
@@ -414,7 +414,7 @@ protected:
     std::string mFuseTrimedFilename;
     LogFileReaderPtrArray* mReaderArray;
     uint64_t mLogstoreKey;
-    // mLogPath is `/logtail_host/var/xxx/home/admin/access.log`,
+    // mHostLogPath is `/logtail_host/var/xxx/home/admin/access.log`,
     // mDockerPath is `/home/admin/access.log`
     // we should use mDockerPath to extract topic and set it to __tag__:__path__
     std::string mDockerPath;
@@ -486,7 +486,7 @@ private:
         std::string key;
         key.append(mConfigName)
             .append("-")
-            .append(mLogPath)
+            .append(mHostLogPath)
             .append("-")
             .append(std::to_string(mDevInode.dev))
             .append("-")

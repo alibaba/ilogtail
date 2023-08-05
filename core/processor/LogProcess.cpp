@@ -285,10 +285,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             uint64_t readBytes = logBuffer->rawBuffer.size() + 1; // may not be accurate if input is not utf8
             s_processBytes += readBytes;
             LogFileReaderPtr logFileReader = logBuffer->logFileReader;
-            auto logPath = logFileReader->GetConvertedPath();
+            auto convertedPath = logFileReader->GetConvertedPath();
+            auto hostLogPath = logFileReader->GetHostLogPath();
 #if defined(_MSC_VER)
             if (BOOL_FLAG(enable_chinese_tag_path)) {
-                logPath = EncodingConverter::GetInstance()->FromACPToUTF8(logPath);
+                convertedPath = EncodingConverter::GetInstance()->FromACPToUTF8(convertedPath);
+                hostLogPath = EncodingConverter::GetInstance()->FromACPToUTF8(hostLogPath);
             }
 #endif
 
@@ -375,7 +377,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                               config->mMergeType,
                                               (uint32_t)(profile.logGroupSize * DOUBLE_FLAG(loggroup_bytes_inflation)),
                                               "",
-                                              logPath,
+                                              convertedPath,
                                               context)) {
                     LogtailAlarm::GetInstance()->SendAlarm(DISCARD_DATA_ALARM,
                                                            "push file data into batch map fail",
@@ -384,7 +386,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                            config->mRegion);
                     LOG_ERROR(sLogger,
                               ("push file data into batch map fail, discard logs", logGroup.logs_size())(
-                                  "project", projectName)("logstore", category)("filename", logPath));
+                                  "project", projectName)("logstore", category)("filename", convertedPath));
                 }
             }
 
@@ -392,7 +394,8 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                              config->mRegion,
                                                              projectName,
                                                              category,
-                                                             logPath,
+                                                             convertedPath,
+                                                             hostLogPath,
                                                              logFileReader->GetExtraTags(),
                                                              readBytes,
                                                              profile.skipBytes,
@@ -405,7 +408,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                              ""); // TODO: I don't think errorLine is useful
             LOG_DEBUG(
                 sLogger,
-                ("project", projectName)("logstore", category)("filename", logPath)("read_bytes", readBytes)(
+                ("project", projectName)("logstore", category)("filename", convertedPath)("read_bytes", readBytes)(
                     "line_feed", profile.feedLines)("split_lines", profile.splitLines)(
                     "parse_failures", profile.parseFailures)("parse_time_failures", profile.parseTimeFailures)(
                     "regex_match_failures", profile.regexMatchFailures)("history_failures", profile.historyFailures));
@@ -431,7 +434,7 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     // construct a logGroup, it should be moved into input later
     PipelineEventGroup eventGroup(logBuffer);
     eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH, logBuffer->logFileReader->GetConvertedPath());
-    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH_RESOLVED, logBuffer->logFileReader->GetLogPath());
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH_RESOLVED, logBuffer->logFileReader->GetHostLogPath());
     auto inodebuf = logBuffer->CopyString(std::to_string(logBuffer->logFileReader->GetDevInode().inode));
     eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_INODE, StringView(inodebuf.data, inodebuf.size));
     std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
