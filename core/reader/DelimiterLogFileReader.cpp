@@ -159,7 +159,7 @@ bool DelimiterLogFileReader::ParseLogLine(StringView buffer,
                             ("parse delimiter log fail, keys count unmatch "
                              "columns count, parsed",
                              parsedColCount)("required", mColumnKeys.size())("log", buffer)("project", mProjectName)(
-                                "logstore", mCategory)("file", mLogPath));
+                                "logstore", mCategory)("file", mHostLogPath));
                 LogtailAlarm::GetInstance()->SendAlarm(
                     PARSE_LOG_FAIL_ALARM,
                     string("keys count unmatch columns count :") + ToString(parsedColCount)

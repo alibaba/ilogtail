@@ -40,7 +40,7 @@ void ProcessorFillSlsGroupInfo::Process(PipelineEventGroup& logGroup) {
     logGroup.SetMetadataNoCopy(EVENT_META_HOST_IP, LogFileProfiler::mIpAddr);
     logGroup.SetMetadataNoCopy(EVENT_META_HOST_NAME, LogFileProfiler::mHostname);
     logGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH, logBuffer->logFileReader->GetConvertedPath());
-    logGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH_RESOLVED, logBuffer->logFileReader->GetLogPath());
+    logGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH_RESOLVED, logBuffer->logFileReader->GetRealLogPath());
     /* inode和topic还有docker的tags在reader中混杂在一起，后续剥离开后再改
     logGroup.SetMetadata(EVENT_META_LOG_FILE_INODE, std::to_string(logBuffer->logFileReader->GetDevInode().inode));
     // topic

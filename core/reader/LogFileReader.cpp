@@ -77,7 +77,7 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
         if (index == string::npos || index == mHostLogPath.size() - 1) {
             LOG_INFO(sLogger,
                      ("skip dump reader meta", "invalid log reader queue name")("project", mProjectName)(
-                         "logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
+                         "logstore", mCategory)("config", mConfigName)("log reader queue name", mHostLogPath)(
                          "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
                          "file signature", mLastFileSignatureHash));
             return;
@@ -87,14 +87,14 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
         if (ConfigManager::GetInstance()->FindBestMatch(dirPath, fileName) == NULL) {
             LOG_INFO(sLogger,
                      ("skip dump reader meta", "no config matches the file path")("project", mProjectName)(
-                         "logstore", mCategory)("config", mConfigName)("log reader queue name", mLogPath)(
+                         "logstore", mCategory)("config", mConfigName)("log reader queue name", mHostLogPath)(
                          "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
                          "file signature", mLastFileSignatureHash));
             return;
         }
         LOG_INFO(sLogger,
                  ("dump log reader meta, project", mProjectName)("logstore", mCategory)("config", mConfigName)(
-                     "log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
+                     "log reader queue name", mHostLogPath)("file device", ToString(mDevInode.dev))(
                      "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
                      "real file path", mRealLogPath)("file size", mLastFileSize)("last file position", mLastFilePos)(
                      "is file opened", ToString(mLogFileOp.IsOpen())));
@@ -1320,8 +1320,6 @@ void LogFileReader::SetReadBufferSize(int32_t bufSize) {
     BUFFER_SIZE = bufSize;
 }
 
-enum SplitState { SPLIT_UNMATCH, SPLIT_START, SPLIT_CONTINUE, SPLIT_END };
-
 bool LogFileReader::LogSplit(const char* buffer,
                              int32_t size,
                              int32_t& lineFeed,
@@ -1358,10 +1356,10 @@ bool LogFileReader::LogSplit(const char* buffer,
                     if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                         LOG_ERROR(sLogger,
                                   ("regex_match in LogSplit fail, exception",
-                                   exception)("project", mProjectName)("logstore", mCategory)("file", mLogPath));
+                                   exception)("project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
                         LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
                                                                "regex_match in LogSplit fail:" + exception + ", file"
-                                                                   + mLogPath,
+                                                                   + mHostLogPath,
                                                                mProjectName,
                                                                mCategory,
                                                                mRegion);
@@ -1513,7 +1511,7 @@ bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize) {
             LogtailAlarm::GetInstance()->SendAlarm(
                 READ_LOG_DELAY_ALARM,
                 std::string("fall behind ") + ToString(delta) + " bytes, file size:" + ToString(fileSize)
-                    + ", now position:" + ToString(mLastFilePos) + ", path:" + mLogPath
+                    + ", now position:" + ToString(mLastFilePos) + ", path:" + mHostLogPath
                     + ", now read log content:" + logBuffer.rawBuffer.substr(0, 256).to_string(),
                 mProjectName,
                 mCategory,
@@ -1531,7 +1529,7 @@ bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize) {
             READ_LOG_DELAY_ALARM,
             string("force set file pos to file size, fall behind ") + ToString(delta)
                 + " bytes, file size:" + ToString(fileSize) + ", now position:" + ToString(mLastFilePos)
-                + ", path:" + mLogPath + ", now read log content:" + logBuffer.rawBuffer.substr(0, 256).to_string(),
+                + ", path:" + mHostLogPath + ", now read log content:" + logBuffer.rawBuffer.substr(0, 256).to_string(),
             mProjectName,
             mCategory,
             mRegion);
@@ -1542,7 +1540,7 @@ bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize) {
     if (mMarkOffsetFlag && logBuffer.rawBuffer.size() > 0) {
         logBuffer.fileInfo.reset(new FileInfo(mLogFileOp.GetFd(), mDevInode));
         FileInfoPtr& fileInfo = logBuffer.fileInfo;
-        fileInfo->filename = mIsFuseMode ? mFuseTrimedFilename : mLogPath;
+        fileInfo->filename = mIsFuseMode ? mFuseTrimedFilename : mHostLogPath;
         fileInfo->offset = mLastFilePos - (int64_t)logBuffer.rawBuffer.size();
         fileInfo->len = (int64_t)logBuffer.rawBuffer.size();
         fileInfo->filePos = mLastFilePos;
@@ -1635,11 +1633,11 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData) 
             nbytes = READ_BYTE;
             LOG_WARNING(
                 sLogger,
-                ("Log is too long and forced to be split at offset: ", mLastFilePos + nbytes)("file: ", mLogPath)(
+                ("Log is too long and forced to be split at offset: ", mLastFilePos + nbytes)("file: ", mHostLogPath)(
                     "inode: ", mDevInode.inode)("first 1024B log: ", logBuffer.rawBuffer.substr(0, 1024)));
             std::ostringstream oss;
             oss << "Log is too long and forced to be split at offset: " << ToString(mLastFilePos + nbytes)
-                << " file: " << mLogPath << " inode: " << ToString(mDevInode.inode)
+                << " file: " << mHostLogPath << " inode: " << ToString(mDevInode.inode)
                 << " first 1024B log: " << logBuffer.rawBuffer.substr(0, 1024) << std::endl;
             LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM, oss.str(), mProjectName, mCategory, mRegion);
         } else {
@@ -1743,12 +1741,12 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
     mLastFilePos += readCharCount;
     if (logTooLongSplitFlag) {
         LOG_WARNING(sLogger,
-                    ("Log is too long and forced to be split at offset: ", mLastFilePos)("file: ", mLogPath)(
+                    ("Log is too long and forced to be split at offset: ", mLastFilePos)("file: ", mHostLogPath)(
                         "inode: ", mDevInode.inode)("first 1024B log: ", logBuffer.rawBuffer.substr(0, 1024)));
         std::ostringstream oss;
-        oss << "Log is too long and forced to be split at offset: " << ToString(mLastFilePos) << " file: " << mLogPath
-            << " inode: " << ToString(mDevInode.inode) << " first 1024B log: " << logBuffer.rawBuffer.substr(0, 1024)
-            << std::endl;
+        oss << "Log is too long and forced to be split at offset: " << ToString(mLastFilePos)
+            << " file: " << mHostLogPath << " inode: " << ToString(mDevInode.inode)
+            << " first 1024B log: " << logBuffer.rawBuffer.substr(0, 1024) << std::endl;
         LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM, oss.str(), mProjectName, mCategory, mRegion);
     }
     LOG_DEBUG(sLogger,

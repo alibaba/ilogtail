@@ -83,7 +83,7 @@ bool JsonLogFileReader::ParseLogLine(StringView buffer,
             LOG_WARNING(sLogger,
                         ("parse json log fail, log",
                          buffer)("rapidjson offset", doc.GetErrorOffset())("rapidjson error", doc.GetParseError())(
-                            "project", mProjectName)("logstore", mCategory)("file", mLogPath));
+                            "project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
             LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
                                                    string("parse json fail:") + buffer.to_string(),
                                                    mProjectName,

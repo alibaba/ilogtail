@@ -545,9 +545,9 @@ bool LogParser::ParseLogTime(const char* buffer,
 }
 
 bool LogParser::WholeLineModeParser(
-    StringView buffer, LogGroup& logGroup, const string& key, time_t logTime, uint32_t& logGroupSize) {
+    StringView buffer, LogGroup& logGroup, const string& key, time_t logTime, long timeNs, uint32_t& logGroupSize) {
     Log* logPtr = logGroup.add_logs();
-    logPtr->set_time(logTime); // current system time, no need history check
+    SetLogTime(logPtr, logTime, timeNs); // current system time, no need history check
     AddLog(logPtr, key, buffer.to_string(), logGroupSize);
     return true;
 }

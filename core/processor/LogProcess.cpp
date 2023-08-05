@@ -376,7 +376,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                               config->mMergeType,
                                               (uint32_t)(profile.logGroupSize * DOUBLE_FLAG(loggroup_bytes_inflation)),
                                               "",
-                                              logPath,
+                                              convertedPath,
                                               context)) {
                     LogtailAlarm::GetInstance()->SendAlarm(DISCARD_DATA_ALARM,
                                                            "push file data into batch map fail",
@@ -385,7 +385,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                            config->mRegion);
                     LOG_ERROR(sLogger,
                               ("push file data into batch map fail, discard logs", logGroup.logs_size())(
-                                  "project", projectName)("logstore", category)("filename", logPath));
+                                  "project", projectName)("logstore", category)("filename", convertedPath));
                 }
             }
 
@@ -407,7 +407,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                                              ""); // TODO: I don't think errorLine is useful
             LOG_DEBUG(
                 sLogger,
-                ("project", projectName)("logstore", category)("filename", logPath)("read_bytes", readBytes)(
+                ("project", projectName)("logstore", category)("filename", convertedPath)("read_bytes", readBytes)(
                     "line_feed", profile.feedLines)("split_lines", profile.splitLines)(
                     "parse_failures", profile.parseFailures)("parse_time_failures", profile.parseTimeFailures)(
                     "regex_match_failures", profile.regexMatchFailures)("history_failures", profile.historyFailures));
