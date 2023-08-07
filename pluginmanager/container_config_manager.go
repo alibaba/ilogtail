@@ -27,8 +27,8 @@ import (
 // 24h
 var FetchAllInterval = time.Second * time.Duration(24*60*60)
 
-// 30min
-var FirstFetchAllInterval = time.Second * time.Duration(30*60)
+// 10min
+var FirstFetchAllInterval = time.Second * time.Duration(5*60)
 
 var timerFetchRunning = false
 
