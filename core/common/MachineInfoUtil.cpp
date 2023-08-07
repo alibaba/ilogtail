@@ -24,6 +24,8 @@
 #include <pwd.h>
 #include <netdb.h>
 #include <map>
+#include <list>
+#include <algorithm>
 #elif defined(_MSC_VER)
 #include <WinSock2.h>
 #include <Windows.h>
@@ -162,13 +164,15 @@ std::string GetHostName() {
     return std::string(hostname);
 }
 
-std::map<std::string, std::string> GetNicIpv4Info(){
+std::list<std::string> GetNicIpv4IPList(){
     struct ifaddrs* ifAddrStruct = NULL;
-    struct ifaddrs* ifa = NULL;
     void* tmpAddrPtr = NULL;
-    std::map<std::string, std::string> ifaMap;
+    std::list<std::string> ipList;
     getifaddrs(&ifAddrStruct);
-    for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+    for (struct ifaddrs* ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr == NULL){
+            continue;
+        } 
         if (ifa->ifa_addr->sa_family == AF_INET) {
             tmpAddrPtr = &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr;
             char addressBuffer[INET_ADDRSTRLEN];
@@ -176,10 +180,11 @@ std::map<std::string, std::string> GetNicIpv4Info(){
             if(0 == strcmp("lo", ifa->ifa_name)){
                 continue;
             }
-            ifaMap.insert(std::pair<std::string, std::string>(addressBuffer, ifa->ifa_name));
+            ipList.push_back(addressBuffer);
         }
     }
-    return ifaMap;
+    freeifaddrs(ifAddrStruct);
+    return ipList;
 }
 
 std::string GetHostIpByHostName() {
@@ -196,16 +201,16 @@ std::string GetHostIpByHostName() {
         return "";
     }
 #if defined(__linux__)
-    std::map<std::string, std::string> ifaMap;
     int i = 0;
-    ifaMap = GetNicIpv4Info();
-    if(!ifaMap.empty()){
+    std::list<std::string> ipList;
+    ipList = GetNicIpv4IPList();
+    if(!ipList.empty()){
         int isExistValidIP = 0;
         while (entry->h_addr_list[i] != NULL) {
             struct in_addr addr;
             memcpy(&addr, entry->h_addr_list[i], sizeof(struct in_addr));
-            auto item = ifaMap.find(inet_ntoa(addr));
-            if (item != ifaMap.end()) {
+            auto item = std::find(ipList.begin(), ipList.end(), inet_ntoa(addr));
+            if (item != ipList.end()) {
                 isExistValidIP = 1;
                 break;
             }
@@ -304,45 +309,30 @@ std::string GetHostIp(const std::string& intf) {
 
 std::string GetAnyAvailableIP() {
 #if defined(__linux__)
-    struct ifaddrs* ifaddr = NULL;
-    if (getifaddrs(&ifaddr) == -1) {
-        APSARA_LOG_ERROR(sLogger, ("get any available IP error", errno));
-        return "";
-    }
-
     std::string retIP;
     char host[NI_MAXHOST];
-    for (struct ifaddrs* ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr == NULL) {
-            continue;
-        }
-
-        const int family = ifa->ifa_addr->sa_family;
-        const char* familyName = (family == AF_PACKET) ? "AF_PACKET"
-            : (family == AF_INET)                      ? "AF_INET"
-            : (family == AF_INET6)                     ? "AF_INET6"
-                                                       : "???";
-        APSARA_LOG_DEBUG(sLogger, ("interface name", ifa->ifa_name)("family", family)("family name", familyName));
-        if (family == AF_INET) {
-            int s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+    std::list<std::string> ipList;
+    ipList = GetNicIpv4IPList();
+    if(!ipList.empty()){
+        for (std::string ip : ipList) {
+            struct sockaddr_in sa;
+            sa.sin_family = AF_INET;
+            sa.sin_port = 0;
+            int result = inet_pton(AF_INET, ip.c_str(), &sa.sin_addr);
+            if(result != 1){
+            //    std::cout << "inet_pton error,result != 1"<< ip.c_str() << std::endl;
+               continue;
+            }
+            int s = getnameinfo((struct sockaddr*)&sa , sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+        
             if (s != 0) {
-                APSARA_LOG_WARNING(sLogger, ("getnameinfo error", gai_strerror(s))("interface name", ifa->ifa_name));
+                // std::cout << "getnameinfo error" << std::endl;
                 continue;
             }
-
-            std::string ip(host);
-            APSARA_LOG_DEBUG(sLogger, ("interface name", ifa->ifa_name)("IP", ip));
-            if (!ip.empty() && !StartWith(ip, "127.")) {
-                retIP = ip;
-                break;
-            }
-            if (retIP.empty()) {
-                retIP = ip;
-            }
+            retIP = ip;
+            break;
         }
     }
-
-    freeifaddrs(ifaddr);
     return retIP;
 
 #elif defined(_MSC_VER)
