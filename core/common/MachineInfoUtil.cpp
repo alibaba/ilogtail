@@ -320,13 +320,10 @@ std::string GetAnyAvailableIP() {
             sa.sin_port = 0;
             int result = inet_pton(AF_INET, ip.c_str(), &sa.sin_addr);
             if(result != 1){
-            //    std::cout << "inet_pton error,result != 1"<< ip.c_str() << std::endl;
                continue;
             }
             int s = getnameinfo((struct sockaddr*)&sa , sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-        
             if (s != 0) {
-                // std::cout << "getnameinfo error" << std::endl;
                 continue;
             }
             retIP = ip;
