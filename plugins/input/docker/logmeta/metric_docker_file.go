@@ -303,7 +303,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 		if len(addFullList) > 0 {
 			for _, id := range addFullList {
 				if len(id) > 0 {
-					helper.RecordAddedContainerIDs(id)
+					helper.RecordAddedContainerIDs(addFullList)
 				}
 			}
 		}

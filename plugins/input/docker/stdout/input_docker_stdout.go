@@ -176,6 +176,9 @@ type ServiceDockerStdout struct {
 	matchList             map[string]*helper.DockerInfoDetail
 	lastUpdateTime        int64
 	CollectContainersFlag bool
+
+	flagFirstInitContainers bool
+	matchIDList             []string
 }
 
 func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
@@ -274,7 +277,8 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 		if len(addFullList) > 0 {
 			for _, id := range addFullList {
 				if len(id) > 0 {
-					helper.RecordAddedContainerIDs(id)
+					// full id，to get info from container map
+					helper.RecordAddedContainerIDs(addFullList)
 				}
 			}
 		}
@@ -282,6 +286,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 		if len(deleteFullList) > 0 {
 			for _, id := range deleteFullList {
 				if len(id) > 0 {
+					// short id， to record
 					helper.RecordDeletedContainerIDs(helper.GetShortID(id))
 				}
 			}

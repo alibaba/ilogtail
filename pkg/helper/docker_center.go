@@ -854,11 +854,7 @@ func (dc *DockerCenter) getAllAcceptedInfoV2(
 	fullAddedList = make([]string, 0)
 	// Remove deleted containers from match list and full list.
 	delCount = 0
-	// 第一次启动的时候，会有全量的容器信息，不需要这里上报，因此忽略掉
-	flagFirstInitContainers := false
-	if len(fullList) == 0 && len(dc.containerMap) != 0 {
-		flagFirstInitContainers = true
-	}
+
 	for id := range fullList {
 		if _, exist := dc.containerMap[id]; !exist {
 			delete(fullList, id)
@@ -887,17 +883,13 @@ func (dc *DockerCenter) getAllAcceptedInfoV2(
 	for id, info := range dc.containerMap {
 		if _, exist := fullList[id]; !exist {
 			fullList[id] = true
-			if !flagFirstInitContainers {
-				fullAddedList = append(fullAddedList, id)
-			}
+			fullAddedList = append(fullAddedList, id)
 			if isContainerLabelMatch(includeLabel, excludeLabel, includeLabelRegex, excludeLabelRegex, info) &&
 				isContainerEnvMatch(includeEnv, excludeEnv, includeEnvRegex, excludeEnvRegex, info) &&
 				info.K8SInfo.IsMatch(k8sFilter) {
 				newCount++
 				matchList[id] = info
-				if !flagFirstInitContainers {
-					matchAddedList = append(matchAddedList, id)
-				}
+				matchAddedList = append(matchAddedList, id)
 			}
 		}
 	}
