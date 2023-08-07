@@ -149,7 +149,7 @@ func ProcessRawLogV2(configName string, rawLog []byte, packID string, topic stri
 func ProcessLog(configName string, logBytes []byte, packID string, topic string, tags []byte) int {
 	config, exists := pluginmanager.LogtailConfig[configName]
 	if !exists {
-		logger.Debug(context.Background(), "ProcessLog not found", configName)
+		logger.Debug(context.Background(), "config not found", configName)
 		return -1
 	}
 	return config.ProcessLog(logBytes, packID, util.StringDeepCopy(topic), tags)
@@ -159,7 +159,7 @@ func ProcessLog(configName string, logBytes []byte, packID string, topic string,
 func ProcessLogGroup(configName string, logBytes []byte, packID string) int {
 	config, exists := pluginmanager.LogtailConfig[configName]
 	if !exists {
-		logger.Debug(context.Background(), "ProcessLogGroup not found", configName)
+		logger.Debug(context.Background(), "config not found", configName)
 		return -1
 	}
 	return config.ProcessLogGroup(logBytes, packID)
