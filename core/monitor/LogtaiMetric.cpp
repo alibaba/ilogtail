@@ -196,13 +196,41 @@ Metrics* WriteMetrics::DoSnapshot() {
     return snapshot;
 }
 
-void ReadMetrics::ReadAsLogGroup(sls_logs::LogGroup& logGroup) {
+void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logGroupMap) {
     ReadLock lock(mReadWriteLock);
     Metrics* tmp = mHead;
     while(tmp) {
-        Log* logPtr = logGroup.add_logs();
-        logPtr->set_time(time(NULL));
+        Log* logPtr = NULL;
         std::vector<std::pair<std::string, std::string>> labels = tmp->GetLabels();
+        for (std::vector<std::pair<std::string, std::string>>::iterator it = labels.begin(); it != labels.end(); ++it) {
+            std::pair<std::string, std::string> pair = *it;
+            if ("region" == pair.first) {
+                std::map<std::string, sls_logs::LogGroup>::iterator iter;
+                std::string region = pair.second;
+                iter = logGroupMap.find(region);
+                if (iter != logGroupMap.end()) {
+                    sls_logs::LogGroup logGroup = iter->second;
+                    logPtr = logGroup.add_logs();
+                } else {
+                    sls_logs::LogGroup logGroup;
+                    logPtr = logGroup.add_logs();
+                    logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup>(region, logGroup));
+                }
+            }
+        }
+        if (!logPtr) {
+            std::map<std::string, sls_logs::LogGroup>::iterator iter;
+            iter = logGroupMap.find("default");
+            if (iter != logGroupMap.end()) {
+                sls_logs::LogGroup logGroup = iter->second;
+                logPtr = logGroup.add_logs();
+            } else {
+                sls_logs::LogGroup logGroup;
+                logPtr = logGroup.add_logs();
+                logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup>("default", logGroup));
+            }
+        }
+        logPtr->set_time(time(NULL));
         for (std::vector<std::pair<std::string, std::string>>::iterator it = labels.begin(); it != labels.end(); ++it) {
             std::pair<std::string, std::string> pair = *it;
             Log_Content* contentPtr = logPtr->add_contents();

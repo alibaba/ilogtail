@@ -80,7 +80,7 @@ class ReadMetrics {
             static ReadMetrics* ptr = new ReadMetrics();
             return ptr;
         }
-        void ReadAsLogGroup(sls_logs::LogGroup& logGroup);
+        void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logGroupMap);
         void ReadAsMap(std::map<std::string, std::string> map);
         void ReadAsPrometheus();
         void UpdateMetrics();
