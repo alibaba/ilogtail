@@ -181,7 +181,8 @@ namespace sdk {
         }
         // Date sample: Thu, 18 Feb 2021 03:09:29 GMT
         LogtailTime ts;
-        if (Strptime(iter->second.c_str(), "%a, %d %b %Y %H:%M:%S", &ts) == NULL) {
+        int nanosecondLength;
+        if (Strptime(iter->second.c_str(), "%a, %d %b %Y %H:%M:%S", &ts, nanosecondLength) == NULL) {
             LOG_ERROR(sLogger,
                       METHOD_LOG_PATTERN("parse Date error", ErrnoToString(GetErrno()))("value", iter->second));
             return 0;

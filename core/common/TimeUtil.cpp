@@ -97,21 +97,23 @@ int DeduceYear(const struct tm* tm, const struct tm* currentTm) {
     return currentTm->tm_year;
 }
 
-const char* Strptime(const char* buf, const char* fmt, LogtailTime* ts, int32_t specifiedYear /* = -1 */) {
+const char* Strptime(const char* buf, const char* fmt, LogtailTime* ts, int& nanosecondLength, int32_t specifiedYear /* = -1 */) {
     struct tm tm_ = {0};
     struct tm* tm = &tm_;
-    if (specifiedYear < 0) {
-        auto ret = strptime_ns(buf, fmt, tm, &ts->tv_nsec);
-        ts->tv_sec = mktime(tm);
-        return ret;
-    }
-
     const int32_t MIN_YEAR = std::numeric_limits<decltype(tm->tm_year)>::min();
     auto bakYear = tm->tm_year;
     tm->tm_year = MIN_YEAR;
 
+    auto ret = strptime_ns(buf, fmt, tm, &ts->tv_nsec, nanosecondLength);
+    if (0 == strcmp("%f", fmt)) {
+        return ret;
+    }
+    if (specifiedYear < 0) {
+        ts->tv_sec = mktime(tm);
+        return ret;
+    }
+
     // Do not specify: already got year information.
-    auto ret = strptime_ns(buf, fmt, tm, &ts->tv_nsec);
     if (tm->tm_year != MIN_YEAR) {
         ts->tv_sec = mktime(tm);
         return ret;
@@ -268,85 +270,44 @@ void UpdateTimeDelta(time_t serverTime) {
     APSARA_LOG_INFO(sLogger, ("update time delta by server time", serverTime)("delta", sTimeDelta));
 }
 
-// Parse ms/us/ns suffix from preciseTimeSuffix, joining with the input second timestamp.
-// Will return value the precise timestamp.
-uint64_t GetPreciseTimestamp(LogtailTime logTime,
-                             const char* preciseTimeSuffix,
-                             const PreciseTimestampConfig& preciseTimestampConfig,
-                             int32_t tzOffsetSecond) {
-    uint64_t adjustSecondTimestamp = logTime.tv_sec  - tzOffsetSecond;
-    if (!preciseTimestampConfig.enabled) {
-        return adjustSecondTimestamp;
-    }
-
+uint64_t ParseNanosecondAtEnd(const char* preciseTimeSuffix) {
     bool endFlag = false;
-    TimeStampUnit timeUnit = preciseTimestampConfig.unit;
-
-    uint32_t maxPreciseDigitNum = 0;
-    if (TimeStampUnit::MILLISECOND == timeUnit) {
-        maxPreciseDigitNum = 3;
-    } else if (TimeStampUnit::MICROSECOND == timeUnit) {
-        maxPreciseDigitNum = 6;
-    } else if (TimeStampUnit::NANOSECOND == timeUnit) {
-        maxPreciseDigitNum = 9;
-    } else {
-        maxPreciseDigitNum = 0;
-    }
-
-    if (NULL == preciseTimeSuffix || strlen(preciseTimeSuffix) <= 1) {
-        endFlag = true;
-    } else {
-        std::string supprotSeparators = ".,: ";
-        const char separator = preciseTimeSuffix[0];
-        std::size_t found = supprotSeparators.find(separator);
-        if (found == std::string::npos) {
-            endFlag = true;
-        }
-    }
-
-    uint32_t preciseTimeDigit = 0;
-    for (uint32_t i = 0; i < maxPreciseDigitNum; i++) {
+    uint32_t nanosecond = 0;
+    for (uint32_t i = 0; i < 9; i++) {
         bool validDigit = false;
         if (!endFlag) {
             const char digitChar = preciseTimeSuffix[i + 1];
             if (digitChar != '\0' && digitChar >= '0' && digitChar <= '9') {
-                preciseTimeDigit = preciseTimeDigit * 10 + (digitChar - '0');
+                nanosecond = nanosecond * 10 + (digitChar - '0');
                 validDigit = true;
             }
         }
 
         if (!validDigit) {
             // Insufficient digits filled with zeros.
-            preciseTimeDigit = preciseTimeDigit * 10;
+            nanosecond = nanosecond * 10;
             endFlag = true;
         }
-        adjustSecondTimestamp *= 10;
     }
-
-    return adjustSecondTimestamp + preciseTimeDigit;
+    return nanosecond;
 }
 
 // DEPRECATED: only for the compability of PreciseTimestamp
 uint64_t GetPreciseTimestampFromLogtailTime(LogtailTime logTime,
-                                            const PreciseTimestampConfig& preciseTimestampConfig,
-                                            int32_t tzOffsetSecond) {
-    uint64_t adjustSecondTimestamp = logTime.tv_sec - tzOffsetSecond;
-    if (!preciseTimestampConfig.enabled) {
-        return adjustSecondTimestamp;
-    }
-
+                                            const PreciseTimestampConfig& preciseTimestampConfig) {
     bool endFlag = false;
+    uint64_t preciseTimestamp = logTime.tv_sec;
     TimeStampUnit timeUnit = preciseTimestampConfig.unit;
 
     uint32_t maxPreciseDigitNum = 0;
     if (TimeStampUnit::MILLISECOND == timeUnit) {
-        return adjustSecondTimestamp * 1000 + logTime.tv_nsec / 1000000;
+        return preciseTimestamp * 1000 + logTime.tv_nsec / 1000000;
     } else if (TimeStampUnit::MICROSECOND == timeUnit) {
-        return adjustSecondTimestamp * 1000000 + logTime.tv_nsec / 1000;
+        return preciseTimestamp * 1000000 + logTime.tv_nsec / 1000;
     } else if (TimeStampUnit::NANOSECOND == timeUnit) {
-        return adjustSecondTimestamp * 1000000000 + logTime.tv_nsec;
+        return preciseTimestamp * 1000000000 + logTime.tv_nsec;
     }
-    return adjustSecondTimestamp;
+    return preciseTimestamp;
 }
 
 void SetLogTime(sls_logs::Log* log, time_t second, long nanosecond) {

@@ -68,7 +68,7 @@ inline void sleep(uint64_t s) {
 //   2. You can set to 0 to ask Strptime to make a deduction according to current date.
 //     This mode only suits for real-time logs which lack of year information, for
 //     example, syslog following RFC3164 does not generate year information.
-const char* Strptime(const char* buf, const char* fmt, LogtailTime* ts, int32_t specifiedYear = -1);
+const char* Strptime(const char* buf, const char* fmt, LogtailTime* ts, int& nanosecondLength, int32_t specifiedYear = -1);
 
 int32_t GetSystemBootTime();
 
@@ -76,14 +76,10 @@ int32_t GetSystemBootTime();
 time_t GetTimeDelta();
 void UpdateTimeDelta(time_t serverTime);
 
-uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
-                             const char* preciseTimeSuffix,
-                             const PreciseTimestampConfig& preciseTimestampConfig,
-                             int32_t tzOffsetSecond);
+uint64_t ParseNanosecondAtEnd(const char* preciseTimeSuffix);
 
 uint64_t GetPreciseTimestampFromLogtailTime(LogtailTime logTime,
-                                            const PreciseTimestampConfig& preciseTimestampConfig,
-                                            int32_t tzOffsetSecond);
+                                            const PreciseTimestampConfig& preciseTimestampConfig);
 
 void SetLogTime(sls_logs::Log* log, time_t second, long nanosecond);
 

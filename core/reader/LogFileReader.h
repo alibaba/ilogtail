@@ -237,7 +237,7 @@ public:
     // added by xianzhi(bowen.gbw@antfin.com)
     static bool ParseLogTime(const char* buffer,
                              const boost::regex* reg,
-                             time_t& logTime,
+                             LogtailTime& logTime,
                              const std::string& timeFormat,
                              const std::string& region = "",
                              const std::string& project = "",
@@ -245,7 +245,7 @@ public:
                              const std::string& logPath = "");
     static bool GetLogTimeByOffset(const char* buffer,
                                    int32_t pos,
-                                   time_t& logTime,
+                                   LogtailTime& logTime,
                                    const std::string& timeFormat,
                                    const std::string& region = "",
                                    const std::string& project = "",

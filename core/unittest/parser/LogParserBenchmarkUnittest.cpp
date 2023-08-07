@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include "config_manager/ConfigManager.h"
 #include <chrono>
+#include <cmath>
 
 using namespace std;
 using namespace sls_logs;
@@ -63,7 +64,7 @@ void LogParserUnittest::TestLogParserParseLogTime() {
     };
 
     vector<Case> inputTimes = {
-        {"2012-01-01 15:05:07.123456", "%Y-%m-%d %H:%M:%S.%f", 1325430307, 1325430307123456},
+        {"2012-01-01 15:05:00.123456", "%Y-%m-%d %H:%M:%S.%f", 1325430300, 1325430300000000},
     };
 
 
@@ -76,6 +77,28 @@ void LogParserUnittest::TestLogParserParseLogTime() {
     preciseTimestampConfig.enabled = true;
     preciseTimestampConfig.key = "key";
     preciseTimestampConfig.unit = TimeStampUnit::MICROSECOND;
+    // std::string timeStr = "2012-01-01 15:05:00";
+
+    // {
+    //     auto start = std::chrono::high_resolution_clock::now();
+    //     for (int i = 0; i < 100000; ++i) {
+    //         GetPreciseTimestamp(outTime.tv_sec, c.inputTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, 0);
+    //     }
+    //     auto end = std::chrono::high_resolution_clock::now();
+    //     auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    //     std::cout << "precise timestamp cost time: " << time_span.count() << " ms" << std::endl;
+    // }
+
+    // {
+    //     auto start = std::chrono::high_resolution_clock::now();
+    //     for (int i = 0; i < 100000; ++i) {
+    //         outTime.tv_nsec = ParseNanosecondAtEnd(c.inputTimeStr.substr(timeStr.length()).c_str());
+    //         GetPreciseTimestampFromLogtailTime(outTime, preciseTimestampConfig, 0);
+    //     }
+    //     auto end = std::chrono::high_resolution_clock::now();
+    //     auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    //     std::cout << "strptime cost time: " << time_span.count() << " ms" << std::endl;
+    // }
 
     // {
     //     std::string inputTimeStr = "15:05:07.123456 2012-01-01";
@@ -130,8 +153,9 @@ void LogParserUnittest::TestLogParserParseLogTime() {
     // auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     // std::cout << "Always parse cost time: " << time_span.count() << " ms" << std::endl;
 
+    BOOL_FLAG(ilogtail_discard_old_data) = false;
     auto start2 = std::chrono::high_resolution_clock::now();
-    std::string preTimeStr = "";
+    std::string preTimeStr = "2012-01-01 15:04:59";
     for (size_t i = 0; i < 60; ++i) {
         std::string second = "2012-01-01 15:05:" + (i < 10 ? "0" + to_string(i) : to_string(i));
         for (size_t j = 0; j < 500000; ++j) {
@@ -152,8 +176,8 @@ void LogParserUnittest::TestLogParserParseLogTime() {
                                             0);
             // APSARA_TEST_EQUAL(ret, true);
             // APSARA_TEST_EQUAL(preTimeStr, second);
-            // APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
-            // APSARA_TEST_EQUAL(preciseTimestamp, c.exceptedPreciseTimestamp);
+            // APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime + i);
+            // APSARA_TEST_EQUAL(preciseTimestamp, c.exceptedPreciseTimestamp + i * 1000000 + (int)(j * pow(10, 5 - j / 10)));
         }
     }
     auto end2 = std::chrono::high_resolution_clock::now();
@@ -220,7 +244,8 @@ void LogParserUnittest::TestRegexLogLineParser() {
     // auto end = std::chrono::high_resolution_clock::now();
     // auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     // std::cout << "Always regex parse cost time: " << time_span.count() << " ms" << std::endl;
-
+    
+    // BOOL_FLAG(ilogtail_discard_old_data) = false;
     // auto start2 = std::chrono::high_resolution_clock::now();
     // std::string lastLogTimeStr = "2023-07-24/11:21:59";
     // for (size_t i = 0; i < 60; ++i) {

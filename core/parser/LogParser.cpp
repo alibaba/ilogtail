@@ -479,17 +479,30 @@ bool LogParser::ParseLogTime(const char* buffer,
                              const string& logPath,
                              ParseLogError& error,
                              int32_t tzOffsetSecond) {
-    if (IsPrefixString(curTimeStr, timeStr) == false) {
-        // In order to handle timestamp not in seconds, curTimeStr will be truncated,
-        // only the front 10 charaters will be used.
-        // NOTE: This method can only work until 2286/11/21 1:46:39 (9999999999).
-        bool keepTimeStr = (strcmp("%s", timeFormat) != 0);
-        const char* strptimeResult = NULL;
-        if (keepTimeStr) {
-            strptimeResult = Strptime(curTimeStr.c_str(), timeFormat, &logTime, specifiedYear);
+    // Second-level cache only work when:
+    // 1. No %f in the time format
+    // 2. The %f is at the end of the time format
+    bool haveNanosecond = strstr(timeFormat, "%f") != nullptr;
+    bool endWithNanosecond = strcmp(timeFormat+strlen(timeFormat)-2, "%f") == 0;
+    int nanosecondLength = 0;
+    if ((!haveNanosecond || endWithNanosecond) && IsPrefixString(curTimeStr, timeStr)) {
+        if (endWithNanosecond) {
+            std::string supprotSeparators = ".,: ";
+            const char separator = timeFormat[strlen(timeFormat)-3];
+            std::size_t found = supprotSeparators.find(separator);
+            Strptime(curTimeStr.substr((found == std::string::npos ? timeStr.length() : timeStr.length()+1)).c_str(), "%f", &logTime, nanosecondLength);
+        } else if (strcmp(timeFormat, "%s") == 0) {
+            Strptime(curTimeStr.substr(timeStr.length()).c_str(), "%f", &logTime, nanosecondLength);
+            tzOffsetSecond = 0;
         } else {
-            strptimeResult = Strptime(curTimeStr.substr(0, 10).c_str(), timeFormat, &logTime);
+            logTime.tv_nsec = 0;
         }
+        if (preciseTimestampConfig.enabled) {
+            preciseTimestamp = GetPreciseTimestampFromLogtailTime(logTime, preciseTimestampConfig);
+        }
+    } else {
+        const char* strptimeResult = NULL;
+        strptimeResult = Strptime(curTimeStr.c_str(), timeFormat, &logTime, nanosecondLength, specifiedYear);
         if (NULL == strptimeResult) {
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
                 if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
@@ -507,17 +520,10 @@ bool LogParser::ParseLogTime(const char* buffer,
             error = PARSE_LOG_TIMEFORMAT_ERROR;
             return false;
         }
-        std::string secondFormat = std::string(timeFormat);
-        secondFormat = secondFormat.substr(0, secondFormat.size()-3);
-        timeStr = ConvertToTimeStamp(logTime.tv_sec, secondFormat.c_str());
 
+        timeStr = curTimeStr.substr(0, curTimeStr.length()-nanosecondLength);
         if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestampFromLogtailTime(logTime, preciseTimestampConfig, tzOffsetSecond);
-        }
-    } else {
-        if (preciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(
-                logTime.tv_sec, curTimeStr.substr(timeStr.length()).c_str(), preciseTimestampConfig, tzOffsetSecond);
+            preciseTimestamp = GetPreciseTimestampFromLogtailTime(logTime, preciseTimestampConfig);
         }
     }
 

@@ -184,7 +184,7 @@ void LogIntegrity::RecordIntegrityInfo(MergeItem* item) {
     LogIntegrityInfoMap* logIntegrityInfoMap = regionIter->second;
 
     // parse log time
-    time_t logTime = -1;
+    LogtailTime logTime;
     bool parseSucceeded = false;
     // if time pos is -1, use regex
     // if config->mTimePos is invalid, use regex
@@ -238,7 +238,7 @@ void LogIntegrity::RecordIntegrityInfo(MergeItem* item) {
     LogIntegrityInfo* logIntegrityInfo = projectLogStoreFilenameIter->second;
     // initial succeeded lines is 0, will modify afterwards
     LogTimeInfo logTimeInfo(seqNum,
-                            parseSucceeded ? logTime : -1,
+                            parseSucceeded ? logTime.tv_sec : -1,
                             0,
                             parseSucceeded ? LogTimeInfo::LogIntegrityStatus_ParseFail
                                            : LogTimeInfo::LogIntegrityStatus_ParseOK);
@@ -247,7 +247,7 @@ void LogIntegrity::RecordIntegrityInfo(MergeItem* item) {
 
     LOG_DEBUG(sLogger,
               ("insert log time info into map, region", region)("project", projectName)("log store", logstore)(
-                  "filename", filename)("log time", logTime)("sequence num", seqNum));
+                  "filename", filename)("log time", logTime.tv_sec)("sequence num", seqNum));
 }
 
 void LogIntegrity::Notify(LoggroupTimeValue* data, bool flag) {

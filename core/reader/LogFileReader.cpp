@@ -692,7 +692,8 @@ int32_t LogFileReader::ParseTime(const char* buffer, const std::string& timeForm
     struct tm tm;
     memset(&tm, 0, sizeof(tm));
     long nanosecond = 0;
-    const char* result = strptime_ns(buffer, timeFormat.c_str(), &tm, &nanosecond);
+    int nanosecondLength;
+    const char* result = strptime_ns(buffer, timeFormat.c_str(), &tm, &nanosecond, nanosecondLength);
     tm.tm_isdst = -1;
     if (result != NULL) {
         time_t logTime = mktime(&tm);
@@ -1403,7 +1404,7 @@ vector<int32_t> LogFileReader::LogSplit(char* buffer, int32_t size, int32_t& lin
 
 bool LogFileReader::ParseLogTime(const char* buffer,
                                  const boost::regex* reg,
-                                 time_t& logTime,
+                                 LogtailTime& logTime,
                                  const std::string& timeFormat,
                                  const std::string& region,
                                  const std::string& project,
@@ -1417,15 +1418,17 @@ bool LogFileReader::ParseLogTime(const char* buffer,
             // convert log time
             struct tm t;
             memset(&t, 0, sizeof(t));
-            if (strptime(timeStr.c_str(), timeFormat.c_str(), &t) == NULL) {
+            int nanosecondLength;
+            if (strptime_ns(timeStr.c_str(), timeFormat.c_str(), &t, &logTime.tv_nsec, nanosecondLength) == NULL) {
                 LOG_ERROR(sLogger,
                           ("convert time failed, time str", timeStr)("time format", timeFormat)("project", project)(
                               "logstore", logStore)("file", logPath));
+                logTime.tv_sec = -1;
                 return false;
             }
 
             t.tm_isdst = -1;
-            logTime = mktime(&t);
+            logTime.tv_sec = mktime(&t);
             return true;
         }
     }
@@ -1438,12 +1441,13 @@ bool LogFileReader::ParseLogTime(const char* buffer,
         LogtailAlarm::GetInstance()->SendAlarm(
             REGEX_MATCH_ALARM, "parse regex log fail:" + exception, project, logStore, region);
     }
+    logTime.tv_sec = -1;
     return false;
 }
 
 bool LogFileReader::GetLogTimeByOffset(const char* buffer,
                                        int32_t pos,
-                                       time_t& logTime,
+                                       LogtailTime& logTime,
                                        const std::string& timeFormat,
                                        const std::string& region,
                                        const std::string& project,
@@ -1464,7 +1468,7 @@ bool LogFileReader::GetLogTimeByOffset(const char* buffer,
         return false;
     }
     t.tm_isdst = -1;
-    logTime = mktime(&t);
+    logTime.tv_sec = mktime(&t);
     return true;
 }
 

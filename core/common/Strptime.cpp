@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "Strptime.h"
+#include <iostream>
 
 namespace logtail {
 /*
@@ -74,18 +75,23 @@ static const char* abmon[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
 static const char* am_pm[2] = {"AM", "PM"};
 
 static const unsigned char* conv_num(const unsigned char*, int*, unsigned int, unsigned int);
-static const unsigned char* conv_nanosecond(const unsigned char*, long*);
+static const unsigned char* conv_nanosecond(const unsigned char*, long*, int&);
 static const unsigned char* find_string(const unsigned char*, int*, const char* const*, const char* const*, int);
 
 
-const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* nanosecond) {
+const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* nanosecond, int& nanosecondLength) {
     // Replenish %s support.
     if (0 == strcmp("%s", fmt)) {
         char* cp;
         long long n;
+        // Parse second timestamp
         n = strtoll(buf, &cp, 10);
+        nanosecondLength = cp - buf - 10;
+        for (int i = 0; i < nanosecondLength; i++) {
+            n /= 10;
+        }
         time_t t;
-        if ((long long)(t = n) != n)
+        if (n == 0 || (long long)(t = n) != n)
             return NULL;
         #ifdef _MSC_VER
         if (localtime_s(tm, &t) != 0)
@@ -95,7 +101,8 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
             return NULL;
         #endif
 
-        conv_nanosecond((const unsigned char*)(buf + 10), nanosecond);
+        *nanosecond = 0;
+        conv_nanosecond((const unsigned char*)(buf + 10), nanosecond, nanosecondLength);
         return ((const char*)cp);
     }
 
@@ -103,6 +110,7 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
     const unsigned char *bp, *ep;
     int alt_format, i, split_year = 0, neg = 0, offs;
     const char* new_fmt;
+    *nanosecond = 0;
 
     bp = (const unsigned char*)buf;
 
@@ -184,7 +192,7 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
             case 'x': /* The date, using the locale's format. */
                 new_fmt = "%m/%d/%y";
             recurse:
-                bp = (const unsigned char*)strptime_ns((const char*)bp, new_fmt, tm, nanosecond);
+                bp = (const unsigned char*)strptime_ns((const char*)bp, new_fmt, tm, nanosecond, nanosecondLength);
                 LEGAL_ALT(ALT_E);
                 continue;
 
@@ -223,7 +231,7 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
                 continue;
 
             case 'f': /* Nanosecond */
-                bp = conv_nanosecond(bp, nanosecond);
+                bp = conv_nanosecond(bp, nanosecond, nanosecondLength);
                 LEGAL_ALT(ALT_O);
                 continue;
 
@@ -514,7 +522,12 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
                 return NULL;
         }
     }
-
+    std::cout << "Year: " << tm->tm_year + 1900 << std::endl;
+    std::cout << "Month: " << tm->tm_mon + 1 << std::endl;
+    std::cout << "Day: " << tm->tm_mday << std::endl;
+    std::cout << "Hour: " << tm->tm_hour << std::endl;
+    std::cout << "Minute: " << tm->tm_min << std::endl;
+    std::cout << "Second: " << tm->tm_sec << std::endl;
     return ((const char*)bp);
 }
 
@@ -544,10 +557,11 @@ static const unsigned char* conv_num(const unsigned char* buf, int* dest, unsign
     return buf;
 }
 
-static const unsigned char* conv_nanosecond(const unsigned char* buf, long* dest) {
+static const unsigned char* conv_nanosecond(const unsigned char* buf, long* dest, int& nanosecondLength) {
     unsigned int result = 0;
     unsigned char ch;
     int digitNum = 0;
+    const unsigned char* start = buf;
 
     ch = *buf;
     if (ch < '0' || ch > '9')
@@ -563,6 +577,7 @@ static const unsigned char* conv_nanosecond(const unsigned char* buf, long* dest
         result *= 10;
     }
     *dest = result;
+    nanosecondLength = buf - start;
     return buf;
 }
 
