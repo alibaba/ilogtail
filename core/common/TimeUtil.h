@@ -76,8 +76,6 @@ int32_t GetSystemBootTime();
 time_t GetTimeDelta();
 void UpdateTimeDelta(time_t serverTime);
 
-uint64_t ParseNanosecondAtEnd(const char* preciseTimeSuffix);
-
 uint64_t GetPreciseTimestampFromLogtailTime(LogtailTime logTime,
                                             const PreciseTimestampConfig& preciseTimestampConfig);
 

@@ -31,7 +31,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "Strptime.h"
-#include <iostream>
 
 namespace logtail {
 /*
@@ -84,7 +83,6 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
     if (0 == strcmp("%s", fmt)) {
         char* cp;
         long long n;
-        // Parse second timestamp
         n = strtoll(buf, &cp, 10);
         nanosecondLength = cp - buf - 11;
         time_t t;

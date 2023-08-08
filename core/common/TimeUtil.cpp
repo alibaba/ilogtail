@@ -277,32 +277,9 @@ void UpdateTimeDelta(time_t serverTime) {
     APSARA_LOG_INFO(sLogger, ("update time delta by server time", serverTime)("delta", sTimeDelta));
 }
 
-uint64_t ParseNanosecondAtEnd(const char* preciseTimeSuffix) {
-    bool endFlag = false;
-    uint32_t nanosecond = 0;
-    for (uint32_t i = 0; i < 9; i++) {
-        bool validDigit = false;
-        if (!endFlag) {
-            const char digitChar = preciseTimeSuffix[i + 1];
-            if (digitChar != '\0' && digitChar >= '0' && digitChar <= '9') {
-                nanosecond = nanosecond * 10 + (digitChar - '0');
-                validDigit = true;
-            }
-        }
-
-        if (!validDigit) {
-            // Insufficient digits filled with zeros.
-            nanosecond = nanosecond * 10;
-            endFlag = true;
-        }
-    }
-    return nanosecond;
-}
-
 // DEPRECATED: only for the compability of PreciseTimestamp
 uint64_t GetPreciseTimestampFromLogtailTime(LogtailTime logTime,
                                             const PreciseTimestampConfig& preciseTimestampConfig) {
-    bool endFlag = false;
     uint64_t preciseTimestamp = logTime.tv_sec;
     TimeStampUnit timeUnit = preciseTimestampConfig.unit;
 
