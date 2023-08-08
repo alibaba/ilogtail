@@ -49,6 +49,7 @@ your changes, such as:
 - [public] [both] [updated] Upgrade go version to 1.19
 - [public] [both] [updated] Refactory LogBuffer structure
 - [inner] [both] [updated] Logtail containers monitor refine code
+- [inner] [both] [updated] Support SLS Metricstore output
 
 - [public] [both] [fixed] Fix service_go_profile nil panic
 - [public] [both] [fixed] Fix broken container log path link
