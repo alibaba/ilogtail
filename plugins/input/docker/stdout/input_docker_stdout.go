@@ -176,9 +176,6 @@ type ServiceDockerStdout struct {
 	matchList             map[string]*helper.DockerInfoDetail
 	lastUpdateTime        int64
 	CollectContainersFlag bool
-
-	flagFirstInitContainers bool
-	matchIDList             []string
 }
 
 func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
@@ -187,6 +184,7 @@ func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
 	sds.fullList = make(map[string]bool)
 	sds.matchList = make(map[string]*helper.DockerInfoDetail)
 	sds.synerMap = make(map[string]*DockerFileSyner)
+
 	if sds.MaxLogSize < 1024 {
 		sds.MaxLogSize = 1024
 	}
@@ -242,7 +240,6 @@ func (sds *ServiceDockerStdout) Init(context pipeline.Context) (int, error) {
 		logger.Warning(sds.context.GetRuntimeContext(), "INVALID_REGEX_ALARM", "init exclude label regex error", err)
 	}
 	sds.K8sFilter, err = helper.CreateK8SFilter(sds.K8sNamespaceRegex, sds.K8sPodRegex, sds.K8sContainerRegex, sds.IncludeK8sLabel, sds.ExcludeK8sLabel)
-
 	return 0, err
 }
 
@@ -293,7 +290,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 				FlusherTargetAddress:       fmt.Sprintf("%s/%s", sds.context.GetProject(), sds.context.GetLogstore()),
 			}
 			helper.RecordContainerConfigResultMap(configResult)
-			if newCount != 0 || delCount != 0 {
+			if newCount != 0 || delCount != 0 || firstStart {
 				helper.RecordContainerConfigResultIncrement(configResult)
 			}
 			logger.Debugf(sds.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v", addResultList, deleteResultList)

@@ -90,6 +90,7 @@ type InputDockerFile struct {
 	fullList              map[string]bool
 	matchList             map[string]*helper.DockerInfoDetail
 	CollectContainersFlag bool
+	firstStart            bool
 }
 
 func formatPath(path string) string {
@@ -112,6 +113,7 @@ func (idf *InputDockerFile) Name() string {
 func (idf *InputDockerFile) Init(context pipeline.Context) (int, error) {
 	idf.context = context
 	idf.lastPathMappingCache = make(map[string]string)
+	idf.firstStart = true
 	idf.fullList = make(map[string]bool)
 	idf.matchList = make(map[string]*helper.DockerInfoDetail)
 	// Because docker on Windows will convert all mounted path to lowercase (see
@@ -356,8 +358,9 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 			FlusherTargetAddress:          fmt.Sprintf("%s/%s", idf.context.GetProject(), idf.context.GetLogstore()),
 		}
 		helper.RecordContainerConfigResultMap(configResult)
-		if newCount != 0 || delCount != 0 {
+		if newCount != 0 || delCount != 0 || idf.firstStart {
 			helper.RecordContainerConfigResultIncrement(configResult)
+			idf.firstStart = false
 		}
 		logger.Debugf(idf.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v", addResultList, deleteResultList)
 	}

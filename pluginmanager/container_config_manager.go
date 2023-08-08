@@ -27,8 +27,6 @@ import (
 // 12h
 var FetchAllInterval = time.Second * time.Duration(12*60*60)
 
-var timerFetchRunning = false
-
 var envAndLabelMutex sync.Mutex
 
 var envSet map[string]struct{}
@@ -37,6 +35,7 @@ var k8sLabelSet map[string]struct{}
 
 var cachedFullList map[string]struct{}
 var containerMutex sync.Mutex
+var once sync.Once
 
 func timerRecordData() {
 	containerMutex.Lock()
@@ -287,15 +286,13 @@ func TimerFetchFuction() {
 					refreshEnvAndLabel()
 					timerRecordData()
 					lastFetchAllTime = time.Now()
-
 				} else {
 					compareEnvAndLabelAndRecordContainer()
 				}
 			}
 		}
 	}
-	if !timerFetchRunning {
+	once.Do(func() {
 		go timerFetch()
-		timerFetchRunning = true
-	}
+	})
 }
