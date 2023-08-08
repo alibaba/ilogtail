@@ -172,10 +172,16 @@ static const char* GetOperationString(OperationOnFail op) {
     }
 }
 
-void MetricsSendClosure::OnFail(sdk::Response* response, const string& errorCode, const string& errorMessage) {
+void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const string& errorMessage) {
     static std::string sMetricstoreVersionTooLowFlag = "get WriteClient error: no basic auth or parse error";
-    LOG_INFO(sLogger, ("send failed, error code", errorCode)("error msg", errorMessage)("retry times", mDataPtr->mSendRetryTimes));
-    ++gMetricsStoreSendErrorCount;
+    // test
+    LOG_DEBUG(sLogger, ("send failed, error code", errorCode)("error msg", errorMessage)("retry times", mDataPtr->mSendRetryTimes));
+
+    // added by xianzhi(bowen.gbw@antfin.com)
+    if (mDataPtr->mLogGroupContext.mIntegrityConfigPtr.get() != NULL
+        && mDataPtr->mLogGroupContext.mIntegrityConfigPtr->mIntegritySwitch)
+        LogIntegrity::GetInstance()->Notify(mDataPtr, false);
+
     ++mDataPtr->mSendRetryTimes;
     int32_t curTime = time(NULL);
     OperationOnFail operation;
@@ -183,84 +189,50 @@ void MetricsSendClosure::OnFail(sdk::Response* response, const string& errorCode
     SendResult sendResult = ConvertErrorCode(errorCode);
     std::ostringstream failDetail, suggestion;
     std::string failEndpoint = mDataPtr->mCurrentEndpoint;
-    if (errorMessage.rfind(sMetricstoreVersionTooLowFlag) != std::string::npos) {
-        // todo delete when finish upgrade
+    if (mDataPtr->mTelemetryType== sls_logs::SLS_TELEMETRY_TYPE_METRICS){
+        ++gMetricsStoreSendErrorCount;
+    }
+    if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS
+        && errorMessage.rfind(sMetricstoreVersionTooLowFlag) != std::string::npos) {
         operation = METRICSTORE_CHANGE_LOGSOTER;
     } else if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
-        OperationWhenNetOrServerErr(curTime, sendResult, failDetail, suggestion, operation, sendResult, recordRst);
-    } else {
-        failDetail << "other error";
-        suggestion << "no suggestion";
-        Sender::Instance()->IncTotalSendStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
-        operation = DefaultOperation();
-    }
-#define LOG_PATTERN \
-    ("SendFail", failDetail.str())("Operation", GetOperationString(operation))("Suggestion", suggestion.str()) \
-        ("StatusCode", response->statusCode)("ErrorCode", errorCode)( "ErrorMessage", errorMessage) \
-        ("ResponseTime", curTime - mDataPtr->mLastSendTime)("Region", mDataPtr->mRegion)( \
-        "Project", mDataPtr->mProjectName)("Logstore", mDataPtr->mLogstore)("Config", mDataPtr->mConfigName)( \
-        "RetryTimes", mDataPtr->mSendRetryTimes)("TotalSendCost", curTime - mDataPtr->mLastUpdateTime) \
-        ("Bytes", mDataPtr->mLogData.size())("Endpoint", mDataPtr->mCurrentEndpoint)
+        if (SEND_NETWORK_ERROR == sendResult) {
+            gNetworkErrorCount++;
+        }
 
-    switch (operation) {
-        case METRICSTORE_CHANGE_LOGSOTER:
-            // switch to log channel because metricstore version too low
-            mDataPtr->mTelemetryType= sls_logs::SLS_TELEMETRY_TYPE_LOG;
-        case RETRY_ASYNC_WHEN_FAIL:
-            if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
-                LOG_WARNING(sLogger, LOG_PATTERN);
+        if (sendResult == SEND_NETWORK_ERROR) {
+            failDetail << "network error";
+        } else {
+            failDetail << "server error";
+        }
+        suggestion << "check network connection to endpoint";
+        if (BOOL_FLAG(send_prefer_real_ip) && mDataPtr->mRealIpFlag) {
+            // connect refused, use vip directly
+            failDetail << ", real ip may be stale, force update";
+            // just set force update flag
+            // mDataPtr->mRealIpFlag = false;
+            // Sender::Instance()->ResetSendClientEndpoint(mDataPtr->mAliuid, mDataPtr->mRegion, curTime);
+            Sender::Instance()->ForceUpdateRealIp(mDataPtr->mRegion);
+        }
+        double serverErrorRatio
+            = Sender::Instance()->IncSendServerErrorStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
+        if (serverErrorRatio < DOUBLE_FLAG(send_server_error_retry_ratio)
+            && mDataPtr->mSendRetryTimes < INT32_FLAG(send_retrytimes)) {
+            operation = RETRY_ASYNC_WHEN_FAIL;
+        } else {
+            if (sendResult == SEND_NETWORK_ERROR) {
+                // only set network stat when no real ip
+                if (!BOOL_FLAG(send_prefer_real_ip) || !mDataPtr->mRealIpFlag) {
+                    Sender::Instance()->SetNetworkStat(mDataPtr->mRegion, mDataPtr->mCurrentEndpoint, false);
+                    recordRst = LogstoreSenderInfo::SendResult_NetworkFail;
+                    if (Sender::Instance()->mDataServerSwitchPolicy == dataServerSwitchPolicy::DESIGNATED_FIRST) {
+                        Sender::Instance()->ResetSendClientEndpoint(mDataPtr->mAliuid, mDataPtr->mRegion, curTime);
+                    }
+                }
             }
-            Sender::Instance()->SendToNetAsync(mDataPtr);
-            break;
-        case RECORD_ERROR_WHEN_FAIL:
-            if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
-                LOG_WARNING(sLogger, LOG_PATTERN);
-            }
-            // Sender::Instance()->PutIntoSecondaryBuffer(mDataPtr, 10);
-            Sender::Instance()->SubSendingBufferCount();
-            // record error
-            Sender::Instance()->OnSendDone(mDataPtr, recordRst);
-            Sender::Instance()->DescSendingCount();
-            break;
-        case DISCARD_WHEN_FAIL:
-        default:
-            LOG_WARNING(sLogger, LOG_PATTERN);
-             LogtailAlarm::GetInstance()->SendAlarm(
-                    SEND_DATA_FAIL_ALARM,
-                    "lines:" + ToString(mDataPtr->mLogLines) + ", errorCode:" + errorCode
-                        + ", errorMessage:" + errorMessage + ", requestId:" + response->requestId
-                        + ", endpoint:" + mDataPtr->mCurrentEndpoint + ", config:" + mDataPtr->mConfigName,
-                    mDataPtr->mProjectName,
-                    mDataPtr->mLogstore,
-                    mDataPtr->mRegion);
-            Sender::Instance()->SubSendingBufferCount();
-            // set ok to delete data
-            Sender::Instance()->OnSendDone(mDataPtr, LogstoreSenderInfo::SendResult_DiscardFail);
-            Sender::Instance()->DescSendingCount();
-    }
-#undef LOG_PATTERN
-    delete this;
-}
-
-
-void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const string& errorMessage) {
-    // test
-    LOG_DEBUG(sLogger, ("send failed, error code", errorCode)("error msg", errorMessage));
-
-    // added by xianzhi(bowen.gbw@antfin.com)
-    if (mDataPtr->mLogGroupContext.mIntegrityConfigPtr.get() != NULL
-        && mDataPtr->mLogGroupContext.mIntegrityConfigPtr->mIntegritySwitch)
-        LogIntegrity::GetInstance()->Notify(mDataPtr, false);
-
-    mDataPtr->mSendRetryTimes++;
-    int32_t curTime = time(NULL);
-    OperationOnFail operation;
-    LogstoreSenderInfo::SendResult recordRst = LogstoreSenderInfo::SendResult_OtherFail;
-    SendResult sendResult = ConvertErrorCode(errorCode);
-    std::ostringstream failDetail, suggestion;
-    std::string failEndpoint = mDataPtr->mCurrentEndpoint;
-    if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
-        OperationWhenNetOrServerErr(curTime, sendResult, failDetail, suggestion, operation, sendResult, recordRst);
+            operation = mDataPtr->mBufferOrNot ? RECORD_ERROR_WHEN_FAIL : DISCARD_WHEN_FAIL;
+        }
+        Sender::Instance()->ResetRegionConcurrency(mDataPtr->mRegion);
     } else if (sendResult == SEND_QUOTA_EXCEED) {
         BOOL_FLAG(global_network_success) = true;
         if (errorCode == sdk::LOGE_SHARD_WRITE_QUOTA_EXCEED) {
@@ -391,6 +363,9 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
 
     // Log warning if retry for too long or will discard data
     switch (operation) {
+        case METRICSTORE_CHANGE_LOGSOTER:
+            // switch to log channel because metricstore version too low
+            mDataPtr->mTelemetryType= sls_logs::SLS_TELEMETRY_TYPE_LOG;
         case RETRY_ASYNC_WHEN_FAIL:
             if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
                 LOG_WARNING(sLogger, LOG_PATTERN);
@@ -438,52 +413,6 @@ OperationOnFail SendClosure::DefaultOperation() {
     } else {
         return RECORD_ERROR_WHEN_FAIL;
     }
-}
-
-void SendClosure::OperationWhenNetOrServerErr(int32_t curTime,
-                                              SendResult sendResult,
-                                              std::ostringstream& failDetail,
-                                              std::ostringstream& suggestion,
-                                              OperationOnFail& operation,
-                                              SendResult& sendReult,
-                                              LogstoreSenderInfo::SendResult& recordRst) {
-    if (SEND_NETWORK_ERROR == sendResult) {
-        gNetworkErrorCount++;
-    }
-
-    if (sendResult == SEND_NETWORK_ERROR) {
-        failDetail << "network error";
-    } else {
-        failDetail << "server error";
-    }
-    suggestion << "check network connection to endpoint";
-    if (BOOL_FLAG(send_prefer_real_ip) && mDataPtr->mRealIpFlag) {
-        // connect refused, use vip directly
-        failDetail << ", real ip may be stale, force update";
-        // just set force update flag
-        // mDataPtr->mRealIpFlag = false;
-        // Sender::Instance()->ResetSendClientEndpoint(mDataPtr->mAliuid, mDataPtr->mRegion, curTime);
-        Sender::Instance()->ForceUpdateRealIp(mDataPtr->mRegion);
-    }
-    double serverErrorRatio
-        = Sender::Instance()->IncSendServerErrorStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
-    if (serverErrorRatio < DOUBLE_FLAG(send_server_error_retry_ratio)
-        && mDataPtr->mSendRetryTimes < INT32_FLAG(send_retrytimes)) {
-        operation = RETRY_ASYNC_WHEN_FAIL;
-    } else {
-        if (sendResult == SEND_NETWORK_ERROR) {
-            // only set network stat when no real ip
-            if (!BOOL_FLAG(send_prefer_real_ip) || !mDataPtr->mRealIpFlag) {
-                Sender::Instance()->SetNetworkStat(mDataPtr->mRegion, mDataPtr->mCurrentEndpoint, false);
-                recordRst = LogstoreSenderInfo::SendResult_NetworkFail;
-                if (Sender::Instance()->mDataServerSwitchPolicy == dataServerSwitchPolicy::DESIGNATED_FIRST) {
-                    Sender::Instance()->ResetSendClientEndpoint(mDataPtr->mAliuid, mDataPtr->mRegion, curTime);
-                }
-            }
-        }
-        operation = mDataPtr->mBufferOrNot ? RECORD_ERROR_WHEN_FAIL : DISCARD_WHEN_FAIL;
-    }
-    Sender::Instance()->ResetRegionConcurrency(mDataPtr->mRegion);
 }
 
 SendResult ConvertErrorCode(const std::string& errorCode) {
@@ -2190,7 +2119,7 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         dataPtr->mRealIpFlag = sendClient->GetRawSlsHostFlag();
     }
     bool sendToMetricStore = dataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS;
-    SendClosure* sendClosure = sendToMetricStore ? new MetricsSendClosure : new SendClosure;
+    SendClosure* sendClosure = new SendClosure;
     dataPtr->mLastSendTime = curTime;
     sendClosure->mDataPtr = dataPtr;
     LOG_DEBUG(sLogger,
@@ -2223,7 +2152,7 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
                                             dataPtr->mLogData,
                                             dataPtr->mRawSize,
                                             sendClosure);
-        }else if (hashKey.empty()) {
+        } else if (hashKey.empty()) {
             sendClient->PostLogStoreLogs(dataPtr->mProjectName,
                                          dataPtr->mLogstore,
                                          dataPtr->mLogGroupContext.mCompressType,

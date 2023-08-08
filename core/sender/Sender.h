@@ -146,22 +146,10 @@ class SendClosure : public sdk::PostLogStoreLogsClosure {
 public:
     virtual void OnSuccess(sdk::Response* response);
     virtual void OnFail(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage);
-    void OperationWhenNetOrServerErr(int32_t curTime,
-                                     SendResult sendResult,
-                                     std::ostringstream& failDetail,
-                                     std::ostringstream& suggestion,
-                                     OperationOnFail& operation,
-                                     SendResult& sendReult,
-                                     LogstoreSenderInfo::SendResult& recordResult);
     OperationOnFail DefaultOperation();
     OperationOnFail
     RecompressData(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage);
     LoggroupTimeValue* mDataPtr;
-};
-
-class MetricsSendClosure: public SendClosure {
-public:
-    void OnFail(sdk::Response* response, const std::string& errorCode, const std::string& errorMessage) override;
 };
 
 struct SlsClientInfo {

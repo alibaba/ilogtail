@@ -124,7 +124,7 @@ namespace sdk {
         request->mCallBack->mHTTPMessage.statusCode = (int32_t)http_code;
         curl_easy_cleanup(curl);
         if (!request->mCallBack->mHTTPMessage.IsLogServiceResponse()) {
-           if (request->mUrl.find("/prometheus") == std::string::npos) {
+            if (request->mUrl.find("/prometheus") == std::string::npos) {
                 request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, "Get invalid response");
                 return;
             }
@@ -133,11 +133,11 @@ namespace sdk {
                 request->mResponse->statusCode = 200;
                 request->mCallBack->OnSuccess(request->mResponse);
                 return;
-            } 
+            }
             auto errCode = LOGE_REQUEST_ERROR;
-            if (request->mCallBack->mHTTPMessage.statusCode ==401) {
-                errCode = LOGE_INTERNAL_SERVER_ERROR;
-            }else if (request->mCallBack->mHTTPMessage.statusCode >= 500) {
+            if (request->mCallBack->mHTTPMessage.statusCode == 401) {
+                errCode = LOGE_UNAUTHORIZED;
+            } else if (request->mCallBack->mHTTPMessage.statusCode >= 500) {
                 errCode = LOGE_INTERNAL_SERVER_ERROR;
             }
             request->mCallBack->OnFail(request->mResponse, errCode, request->mCallBack->mHTTPMessage.content);
