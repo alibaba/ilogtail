@@ -131,7 +131,10 @@ public:
                              ParseLogError& error,
                              int32_t tzOffsetSecond);
 
-    static void AdjustLogTime(sls_logs::Log* logPtr, int logTimeZoneOffsetSecond, int localTimeZoneOffsetSecond);
+    static void AdjustLogTime(LogtailTime& logTime,
+                              uint64_t& preciseTimestamp,
+                              PreciseTimestampConfig preciseTimestampConfig,
+                              int timeZoneOffsetSecond);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogParserUnittest;

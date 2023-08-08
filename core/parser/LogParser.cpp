@@ -486,17 +486,7 @@ bool LogParser::ParseLogTime(const char* buffer,
     bool endWithNanosecond = strcmp(timeFormat+strlen(timeFormat)-2, "%f") == 0;
     int nanosecondLength = 0;
     if ((!haveNanosecond || endWithNanosecond) && IsPrefixString(curTimeStr, timeStr)) {
-        if (endWithNanosecond) {
-            std::string supprotSeparators = ".,: ";
-            const char separator = timeFormat[strlen(timeFormat)-3];
-            std::size_t found = supprotSeparators.find(separator);
-            Strptime(curTimeStr.substr((found == std::string::npos ? timeStr.length() : timeStr.length()+1)).c_str(), "%f", &logTime, nanosecondLength);
-        } else if (strcmp(timeFormat, "%s") == 0) {
-            Strptime(curTimeStr.substr(timeStr.length()).c_str(), "%f", &logTime, nanosecondLength);
-            tzOffsetSecond = 0;
-        } else {
-            logTime.tv_nsec = 0;
-        }
+        Strptime(curTimeStr.substr(timeStr.length()).c_str(), "%f", &logTime, nanosecondLength);
         if (preciseTimestampConfig.enabled) {
             preciseTimestamp = GetPreciseTimestampFromLogtailTime(logTime, preciseTimestampConfig);
         }
@@ -520,16 +510,17 @@ bool LogParser::ParseLogTime(const char* buffer,
             error = PARSE_LOG_TIMEFORMAT_ERROR;
             return false;
         }
-
         timeStr = curTimeStr.substr(0, curTimeStr.length()-nanosecondLength);
         if (preciseTimestampConfig.enabled) {
             preciseTimestamp = GetPreciseTimestampFromLogtailTime(logTime, preciseTimestampConfig);
         }
+        AdjustLogTime(logTime, preciseTimestamp, preciseTimestampConfig, tzOffsetSecond);
     }
 
     if (logTime.tv_sec <= 0
         || (BOOL_FLAG(ilogtail_discard_old_data)
-            && (time(NULL) - logTime.tv_sec + tzOffsetSecond) > INT32_FLAG(ilogtail_discard_interval))) {
+            // Adjust time(NULL) from local timezone to target timezone
+            && ((time(NULL) - tzOffsetSecond) - logTime.tv_sec) > INT32_FLAG(ilogtail_discard_interval))) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(sLogger,
@@ -772,8 +763,21 @@ void LogParser::AddLog(Log* logPtr, const string& key, const string& value, uint
 }
 
 
-void LogParser::AdjustLogTime(sls_logs::Log* logPtr, int mLogTimeZoneOffsetSecond, int timeZoneOffsetSecond) {
-    logPtr->set_time(logPtr->time() - mLogTimeZoneOffsetSecond + timeZoneOffsetSecond);
+void LogParser::AdjustLogTime(LogtailTime& logTime,
+                              uint64_t& preciseTimestamp,
+                              PreciseTimestampConfig preciseTimestampConfig,
+                              int timeZoneOffsetSecond) {
+    logTime.tv_sec = logTime.tv_sec - timeZoneOffsetSecond;
+    TimeStampUnit timeUnit = preciseTimestampConfig.unit;
+    if (TimeStampUnit::MILLISECOND == timeUnit) {
+        preciseTimestamp -= uint64_t(timeZoneOffsetSecond) * 1000;
+    } else if (TimeStampUnit::MICROSECOND == timeUnit) {
+        preciseTimestamp -= uint64_t(timeZoneOffsetSecond) * 1000000;
+    } else if (TimeStampUnit::NANOSECOND == timeUnit) {
+        preciseTimestamp -= uint64_t(timeZoneOffsetSecond) * 1000000000;
+    } else {
+        preciseTimestamp -= timeZoneOffsetSecond;
+    }
 }
 
 } // namespace logtail

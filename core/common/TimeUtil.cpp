@@ -108,6 +108,13 @@ const char* Strptime(const char* buf, const char* fmt, LogtailTime* ts, int& nan
     if (0 == strcmp("%f", fmt)) {
         return ret;
     }
+    if (0 == strcmp("%s", fmt)) {
+        ts->tv_sec = mktime(tm);
+        for (int i = 0; i < nanosecondLength; ++i) {
+            ts->tv_sec /= 10;
+        }
+        return ret;
+    }
     if (specifiedYear < 0) {
         ts->tv_sec = mktime(tm);
         return ret;
@@ -299,7 +306,6 @@ uint64_t GetPreciseTimestampFromLogtailTime(LogtailTime logTime,
     uint64_t preciseTimestamp = logTime.tv_sec;
     TimeStampUnit timeUnit = preciseTimestampConfig.unit;
 
-    uint32_t maxPreciseDigitNum = 0;
     if (TimeStampUnit::MILLISECOND == timeUnit) {
         return preciseTimestamp * 1000 + logTime.tv_nsec / 1000000;
     } else if (TimeStampUnit::MICROSECOND == timeUnit) {

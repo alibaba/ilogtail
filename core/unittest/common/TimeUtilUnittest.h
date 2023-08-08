@@ -93,13 +93,14 @@ void TimeUtilUnittest::TestStrptime() {
     for (auto& c : cases) {
         struct tm o1 = {0};
         LogtailTime o2;
+        int nanosecondLength;
         auto ret1 = strptime(c.buf.c_str(), c.format.c_str(), &o1);
-        auto ret2 = Strptime(c.buf.c_str(), c.format.c_str(), &o2, c.specifiedYear);
+        auto ret2 = Strptime(c.buf.c_str(), c.format.c_str(), &o2, nanosecondLength, c.specifiedYear);
 
         EXPECT_TRUE(ret1 != NULL);
         EXPECT_TRUE(ret2 != NULL);
         o1.tm_year = c.expectedYear - 1900;
-        EXPECT_EQ(mktime(&o1), o2.tv_sec);
+        EXPECT_EQ(mktime(&o1), o2.tv_sec) << "FAILED: " + c.buf;
     }
 }
 
@@ -139,6 +140,7 @@ void TimeUtilUnittest::TestStrptimeNanosecond() {
         {"2012-01-01T15:05:07.123456Z07:00", "%Y-%m-%dT%H:%M:%S.%f", "2012-01-01T15:05:07Z07:00", "%Y-%m-%dT%H:%M:%S", 123456000},
         {"1325430307", "%s", "1325430307", "%s", 0},
         {"1325430307123456", "%s", "1325430307123456", "%s", 123456000},
+        {"15:05:07.123456 2012-01-01", "%H:%M:%S.%f %Y-%m-%d", "15:05:07 2012-01-01", "%H:%M:%S %Y-%m-%d", 123456000},
     };
 
     for (auto& c : cases) {
@@ -149,8 +151,8 @@ void TimeUtilUnittest::TestStrptimeNanosecond() {
         auto ret1 = strptime_ns(c.buf1.c_str(), c.format1.c_str(), &o1, &nanosecond, nanosecondLength);
         auto ret2 = strptime(c.buf2.c_str(), c.format2.c_str(), &o2);
 
-        EXPECT_TRUE(ret1 != NULL)  << "FAILED: " + c.buf1;
-        EXPECT_TRUE(ret2 != NULL)  << "FAILED: " + c.buf2;
+        EXPECT_TRUE(ret1 != NULL) << "FAILED: " + c.buf1;
+        EXPECT_TRUE(ret2 != NULL) << "FAILED: " + c.buf2;
         EXPECT_EQ(mktime(&o1), mktime(&o2)) << "FAILED: " + c.buf1;
         EXPECT_EQ(nanosecond, c.expectedNanosecond) << "FAILED: " + c.buf1;
     }

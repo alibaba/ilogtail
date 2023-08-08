@@ -437,10 +437,6 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                 LogParser::AddLog(
                                     logPtr, config->mAdvancedConfig.mRawLogTag, buffer + logIndex[i], logGroupSize);
                             }
-                            if (successful && config->mTimeZoneAdjust) {
-                                LogParser::AdjustLogTime(
-                                    logPtr, config->mLogTimeZoneOffsetSecond, localTimeZoneOffsetSecond);
-                            }
                             if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
                                 logPtr->set_time(logPtr->time() + GetTimeDelta());
                             }

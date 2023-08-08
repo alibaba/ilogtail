@@ -86,10 +86,7 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
         long long n;
         // Parse second timestamp
         n = strtoll(buf, &cp, 10);
-        nanosecondLength = cp - buf - 10;
-        for (int i = 0; i < nanosecondLength; i++) {
-            n /= 10;
-        }
+        nanosecondLength = cp - buf - 11;
         time_t t;
         if (n == 0 || (long long)(t = n) != n)
             return NULL;
@@ -522,12 +519,6 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
                 return NULL;
         }
     }
-    std::cout << "Year: " << tm->tm_year + 1900 << std::endl;
-    std::cout << "Month: " << tm->tm_mon + 1 << std::endl;
-    std::cout << "Day: " << tm->tm_mday << std::endl;
-    std::cout << "Hour: " << tm->tm_hour << std::endl;
-    std::cout << "Minute: " << tm->tm_min << std::endl;
-    std::cout << "Second: " << tm->tm_sec << std::endl;
     return ((const char*)bp);
 }
 
