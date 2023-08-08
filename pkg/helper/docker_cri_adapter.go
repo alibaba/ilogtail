@@ -26,7 +26,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -39,6 +38,7 @@ import (
 	"google.golang.org/grpc"
 	cri "k8s.io/cri-api/pkg/apis/runtime/v1alpha2"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/logger"
 )
 
@@ -226,13 +226,16 @@ func NewCRIRuntimeWrapper(dockerCenter *DockerCenter) (*CRIRuntimeWrapper, error
 		return nil, err
 	}
 
-	containerdClient, err := containerd.New(containerdUnixSocket, containerd.WithDefaultNamespace("k8s.io"))
-	if err != nil {
-		return nil, err
-	}
-	_, err = containerdClient.Version(context.Background())
-	if err != nil {
-		return nil, err
+	var containerdClient *containerd.Client
+	if config.LogtailGlobalConfig.EnableContainerdUpperDirDetect {
+		containerdClient, err = containerd.New(containerdUnixSocket, containerd.WithDefaultNamespace("k8s.io"))
+		if err == nil {
+			_, err = containerdClient.Version(context.Background())
+		}
+		if err != nil {
+			logger.Warning(context.Background(), "CONTAINERD_CLIENT_ALARM", "Connect containerd failed", err)
+			containerdClient = nil
+		}
 	}
 
 	return &CRIRuntimeWrapper{
@@ -622,21 +625,15 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSO
 	// Example: /run/containerd/io.containerd.runtime.v1.linux/k8s.io/{ContainerID}/rootfs/
 
 	var aDirs []string
-
-	if len(os.Getenv("CONTAINERD_STATE_DIR")) > 0 {
+	custom_state_dir := os.Getenv("CONTAINERD_STATE_DIR")
+	if len(custom_state_dir) > 0 {
 		// /etc/containerd/config.toml
 		// state = "/home/containerd"
 		// Example /home/containerd/io.containerd.runtime.v2.task/k8s.io/{ContainerID}/rootfs
-		dir := os.Getenv("CONTAINERD_STATE_DIR")
-		absPath, err := filepath.Abs(dir)
-		if err != nil {
-			logger.Warning(context.Background(), "CHECK_CUSTOM_CONTAINERD_ROOT_DIR_FAILED", "failed to parse custom containerd root dir, please check it. dir: %s, error: %v", absPath, err)
-		} else {
-			aDirs = []string{
-				absPath,
-				"/run/containerd",
-				"/var/run/containerd",
-			}
+		aDirs = []string{
+			custom_state_dir,
+			"/run/containerd",
+			"/var/run/containerd",
 		}
 	} else {
 		aDirs = []string{
@@ -685,10 +682,13 @@ func (cw *CRIRuntimeWrapper) getContainerUpperDir(containerid, snapshotter strin
 	if dir, ok := cw.lookupRootfsCache(containerid); ok {
 		return dir
 	}
+	if cw.nativeClient == nil {
+		return ""
+	}
 	si := cw.nativeClient.SnapshotService(snapshotter)
 	mounts, err := si.Mounts(context.Background(), containerid)
 	if err != nil {
-		logger.Warning(context.Background(), "cannot get snapshot info, containerID", containerid, "errInfo", err)
+		logger.Warning(context.Background(), "CONTAINERD_CLIENT_ALARM", "cannot get snapshot info, containerID", containerid, "errInfo", err)
 		return ""
 	}
 	for _, m := range mounts {
