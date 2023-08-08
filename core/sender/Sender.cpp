@@ -2121,7 +2121,6 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         }
         dataPtr->mRealIpFlag = sendClient->GetRawSlsHostFlag();
     }
-    bool sendToMetricStore = dataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS;
     SendClosure* sendClosure = new SendClosure;
     dataPtr->mLastSendTime = curTime;
     sendClosure->mDataPtr = dataPtr;
@@ -2147,7 +2146,7 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         }
     } else if (dataPtr->mDataType == LOGGROUP_COMPRESSED) {
         const auto& hashKey = exactlyOnceCpt ? exactlyOnceCpt->data.hash_key() : dataPtr->mShardHashKey;
-        if (sendToMetricStore) {
+        if (dataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
             // send to metrics store
             sendClient->PostMetricstoreLogs(dataPtr->mProjectName,
                                             dataPtr->mLogstore,
