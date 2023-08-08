@@ -103,7 +103,10 @@ DEFINE_FLAG_INT32(sending_cost_time_alarm_interval, "sending log group cost too 
 DEFINE_FLAG_INT32(log_group_wait_in_queue_alarm_interval,
                   "log group wait in queue alarm interval, may blocked by concurrency or quota, second",
                   3);
-DEFINE_FLAG_STRING(data_endpoint_policy, "policy for switching between data server endpoints, possible options include 'designated_first'(default) and 'designated_locked'", "designated_first");
+DEFINE_FLAG_STRING(data_endpoint_policy,
+                   "policy for switching between data server endpoints, possible options include "
+                   "'designated_first'(default) and 'designated_locked'",
+                   "designated_first");
 
 namespace logtail {
 const string Sender::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";
@@ -189,7 +192,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
     SendResult sendResult = ConvertErrorCode(errorCode);
     std::ostringstream failDetail, suggestion;
     std::string failEndpoint = mDataPtr->mCurrentEndpoint;
-    if (mDataPtr->mTelemetryType== sls_logs::SLS_TELEMETRY_TYPE_METRICS){
+    if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
         ++gMetricsStoreSendErrorCount;
     }
     if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS
@@ -365,7 +368,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
     switch (operation) {
         case METRICSTORE_CHANGE_LOGSOTER:
             // switch to log channel because metricstore version too low
-            mDataPtr->mTelemetryType= sls_logs::SLS_TELEMETRY_TYPE_LOG;
+            mDataPtr->mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG;
         case RETRY_ASYNC_WHEN_FAIL:
             if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
                 LOG_WARNING(sLogger, LOG_PATTERN);
@@ -2144,7 +2147,7 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         }
     } else if (dataPtr->mDataType == LOGGROUP_COMPRESSED) {
         const auto& hashKey = exactlyOnceCpt ? exactlyOnceCpt->data.hash_key() : dataPtr->mShardHashKey;
-        if (sendToMetricStore){
+        if (sendToMetricStore) {
             // send to metrics store
             sendClient->PostMetricstoreLogs(dataPtr->mProjectName,
                                             dataPtr->mLogstore,

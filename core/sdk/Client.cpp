@@ -328,7 +328,7 @@ namespace sdk {
                                          const string& body,
                                          map<std::string, std::string>& httpHeader,
                                          PostLogStoreLogsClosure* callBack) {
-        string operation= PROMETHEUS;
+        string operation = PROMETHEUS;
         operation.append("/").append(project).append("/").append(logstore).append("/api/v1/write");
         httpHeader[CONTENT_MD5] = CalcMD5(body);
         map<string, string> parameterList;
@@ -391,7 +391,7 @@ namespace sdk {
         int32_t port = mPort;
         if (mPort == 80 && mUsingHTTPS) {
             port = 443;
-        } 
+        }
         Response* response = new PostLogStoreLogsResponse();
         AsynRequest* request = new AsynRequest(HTTP_POST,
                                                host,

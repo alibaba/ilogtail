@@ -55,7 +55,7 @@ int LogtailSendPb(const char* configName,
     if (gAdapterSendPbFun == NULL) {
         return -1;
     }
-    return gAdapterSendPbFun(configName, configNameSize, logstore, logstoreSize, pbBuffer, pbSize);
+    return gAdapterSendPbFun(configName, configNameSize, logstore, logstoreSize, pbBuffer, pbSize, lines);
 }
 
 int LogtailSendPbV2(const char* configName,

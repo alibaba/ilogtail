@@ -187,10 +187,10 @@ namespace sdk {
                                   int64_t hashKeySeqID);
 
         void AsynPostMetricStoreLogs(const std::string& project,
-                                  const std::string& logstore,
-                                  const std::string& body,
-                                  std::map<std::string, std::string>& httpHeader,
-                                  PostLogStoreLogsClosure* callBack);
+                                     const std::string& logstore,
+                                     const std::string& body,
+                                     std::map<std::string, std::string>& httpHeader,
+                                     PostLogStoreLogsClosure* callBack);
 
         // PingSLSServer sends a trivial data packet to SLS for some inner purposes.
         PostLogStoreLogsResponse

@@ -601,7 +601,7 @@ LogFileReader* Config::CreateLogFileReader(const std::string& dir,
                                           mAdvancedConfig.mPreciseTimestampUnit);
         reader->SetTzOffsetSecond(mTimeZoneAdjust, mLogTimeZoneOffsetSecond);
         reader->SetAdjustApsaraMicroTimezone(mAdvancedConfig.mAdjustApsaraMicroTimezone);
-        
+
         if (mDockerFileFlag) {
             DockerContainerPath* containerPath = GetContainerPathByLogPath(dir);
             if (containerPath == NULL) {
