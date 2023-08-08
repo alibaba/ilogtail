@@ -45,3 +45,5 @@ your changes, such as:
 - [public] [both] [fixed] fix service_go_profile nil panic
 - [public] [both] [fixed] service_prometheus support scale in kubernetes
 - [public] [both] [fixed] logtail containers monitor refine code
+- [public] [both] [fixed] fix broken container log path link
+- [public] [both] [fixed] service_prometheus support scale in kubernetes
