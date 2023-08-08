@@ -87,7 +87,6 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 		}
 		helper.ReplaceInvalidChars(&m.Name)
 		log := &protocol.Log{
-			Time: uint32(now.Unix()),
 			Contents: []*protocol.Log_Content{
 				{
 					Key:   metricNameKey,
@@ -107,6 +106,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 				},
 			},
 		}
+		protocol.SetLogTime(log, uint32(now.Unix()), uint32(now.Nanosecond()))
 		logs = append(logs, log)
 	}
 	return

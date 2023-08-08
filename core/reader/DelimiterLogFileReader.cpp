@@ -15,6 +15,7 @@
 #include "DelimiterLogFileReader.h"
 #include <string.h>
 #include <ctime>
+#include "common/LogtailCommonFlags.h"
 #include "profiler/LogtailAlarm.h"
 #include "parser/LogParser.h"
 #include "parser/DelimiterModeFsmParser.h"
@@ -29,8 +30,8 @@ const std::string DelimiterLogFileReader::s_mDiscardedFieldKey = "_";
 
 DelimiterLogFileReader::DelimiterLogFileReader(const std::string& projectName,
                                                const std::string& category,
-                                               const std::string& logPathDir,
-                                               const std::string& logPathFile,
+                                               const std::string& hostLogPathDir,
+                                               const std::string& hostLogPathFile,
                                                int32_t tailLimit,
                                                const std::string& timeFormat,
                                                const std::string& topicFormat,
@@ -45,8 +46,8 @@ DelimiterLogFileReader::DelimiterLogFileReader(const std::string& projectName,
                                                bool extractPartialFields)
     : LogFileReader(projectName,
                     category,
-                    logPathDir,
-                    logPathFile,
+                    hostLogPathDir,
+                    hostLogPathFile,
                     tailLimit,
                     topicFormat,
                     groupTopic,
@@ -158,7 +159,7 @@ bool DelimiterLogFileReader::ParseLogLine(const char* buffer,
                             ("parse delimiter log fail, keys count unmatch "
                              "columns count, parsed",
                              parsedColCount)("required", mColumnKeys.size())("log", buffer)("project", mProjectName)(
-                                "logstore", mCategory)("file", mLogPath));
+                                "logstore", mCategory)("file", mHostLogPath));
                 LogtailAlarm::GetInstance()->SendAlarm(PARSE_LOG_FAIL_ALARM,
                                                        string("keys count unmatch columns count :")
                                                            + ToString(parsedColCount) + ", required:"
@@ -181,7 +182,7 @@ bool DelimiterLogFileReader::ParseLogLine(const char* buffer,
                                              mProjectName,
                                              mCategory,
                                              mRegion,
-                                             mLogPath,
+                                             mHostLogPath,
                                              error,
                                              mTzOffsetSecond)) {
                     parseSuccess = false;
@@ -203,14 +204,20 @@ bool DelimiterLogFileReader::ParseLogLine(const char* buffer,
             PARSE_LOG_FAIL_ALARM, "no column keys defined", mProjectName, mCategory, mRegion);
         LOG_WARNING(sLogger,
                     ("parse delimiter log fail",
-                     "no column keys defined")("project", mProjectName)("logstore", mCategory)("file", mLogPath));
+                     "no column keys defined")("project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
         error = PARSE_LOG_FORMAT_ERROR;
         parseSuccess = false;
     }
 
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
-        logPtr->set_time(mUseSystemTime || lastLogLineTime <= 0 ? time(NULL) : lastLogLineTime);
+        timespec ts;
+        clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+        if (mUseSystemTime || lastLogLineTime <= 0) {
+            SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
+        } else {
+            SetLogTime(logPtr, lastLogLineTime, GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, mPreciseTimestampConfig.unit));
+        }
 
         for (uint32_t idx = 0; idx < parsedColCount; idx++) {
             if (mColumnKeys.size() > idx) {

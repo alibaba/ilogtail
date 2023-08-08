@@ -1,6 +1,6 @@
 module github.com/alibaba/ilogtail/pkg
 
-go 1.18
+go 1.19
 
 require (
 	github.com/alibaba/ilogtail v1.4.0
@@ -29,7 +29,7 @@ require (
 	go.opentelemetry.io/collector/pdata v0.66.0
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4
 	google.golang.org/grpc v1.53.0
-	google.golang.org/protobuf v1.29.0
+	google.golang.org/protobuf v1.31.0
 	k8s.io/api v0.23.4
 	k8s.io/apimachinery v0.23.4
 	k8s.io/client-go v0.23.3
@@ -136,7 +136,7 @@ require (
 )
 
 replace (
-	github.com/VictoriaMetrics/VictoriaMetrics => github.com/iLogtail/VictoriaMetrics v1.83.3-ilogtail
+	github.com/VictoriaMetrics/VictoriaMetrics => github.com/iLogtail/VictoriaMetrics v1.83.4-ilogtail
 	github.com/VictoriaMetrics/metrics => github.com/iLogtail/metrics v1.23.0-ilogtail
 	github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner => ../external/github.com/aliyun/alibaba-cloud-sdk-go/services/sls_inner
 	github.com/elastic/beats/v7 => ../external/github.com/elastic/beats/v7

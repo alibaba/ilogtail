@@ -244,7 +244,7 @@ type DockerInfoDetail struct {
 }
 
 func (did *DockerInfoDetail) IDPrefix() string {
-	return util.GetShortID(did.ContainerInfo.ID)
+	return GetShortID(did.ContainerInfo.ID)
 }
 
 func (did *DockerInfoDetail) PodName() string {
@@ -1088,6 +1088,7 @@ func (dc *DockerCenter) markRemove(containerID string) {
 		container.ContainerInfo.State.Status = ContainerStatusExited
 		container.deleteFlag = true
 		container.lastUpdateTime = time.Now()
+		dc.refreshLastUpdateMapTime()
 	}
 }
 
