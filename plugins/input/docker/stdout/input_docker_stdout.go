@@ -263,7 +263,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 	}
 
 	var err error
-	newCount, delCount, addResultList, deleteResultList, addFullList, deleteFullList := helper.GetContainerByAcceptedInfoV2(
+	newCount, delCount, addResultList, deleteResultList := helper.GetContainerByAcceptedInfoV2(
 		sds.fullList, sds.matchList,
 		sds.IncludeLabel, sds.ExcludeLabel,
 		sds.IncludeLabelRegex, sds.ExcludeLabelRegex,
@@ -273,24 +273,6 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 	sds.lastUpdateTime = newUpdateTime
 
 	if sds.CollectContainersFlag {
-		// record added container id
-		if len(addFullList) > 0 {
-			for _, id := range addFullList {
-				if len(id) > 0 {
-					// full id，to get info from container map
-					helper.RecordAddedContainerIDs(addFullList)
-				}
-			}
-		}
-		// record deleted container id
-		if len(deleteFullList) > 0 {
-			for _, id := range deleteFullList {
-				if len(id) > 0 {
-					// short id， to record
-					helper.RecordDeletedContainerIDs(helper.GetShortID(id))
-				}
-			}
-		}
 		// record config result
 		{
 			keys := make([]string, 0, len(sds.matchList))
@@ -314,7 +296,7 @@ func (sds *ServiceDockerStdout) FlushAll(c pipeline.Collector, firstStart bool) 
 			if newCount != 0 || delCount != 0 {
 				helper.RecordContainerConfigResultIncrement(configResult)
 			}
-			logger.Debugf(sds.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
+			logger.Debugf(sds.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v", addResultList, deleteResultList)
 		}
 	}
 

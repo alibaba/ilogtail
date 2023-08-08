@@ -289,7 +289,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 	if len(idf.lastPathMappingCache) == 0 {
 		allCmd = new(DockerFileUpdateCmdAll)
 	}
-	newCount, delCount, addResultList, deleteResultList, addFullList, deleteFullList := helper.GetContainerByAcceptedInfoV2(
+	newCount, delCount, addResultList, deleteResultList := helper.GetContainerByAcceptedInfoV2(
 
 		idf.fullList, idf.matchList,
 		idf.IncludeLabel, idf.ExcludeLabel,
@@ -298,24 +298,6 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 		idf.IncludeEnvRegex, idf.ExcludeEnvRegex,
 		idf.K8sFilter)
 	idf.lastUpdateTime = newUpdateTime
-	if idf.CollectContainersFlag {
-		// record added container id
-		if len(addFullList) > 0 {
-			for _, id := range addFullList {
-				if len(id) > 0 {
-					helper.RecordAddedContainerIDs(addFullList)
-				}
-			}
-		}
-		// record deleted container id
-		if len(deleteFullList) > 0 {
-			for _, id := range deleteFullList {
-				if len(id) > 0 {
-					helper.RecordDeletedContainerIDs(helper.GetShortID(id))
-				}
-			}
-		}
-	}
 	// record config result
 	havingPathkeys := make([]string, 0)
 	nothavingPathkeys := make([]string, 0)
@@ -377,7 +359,7 @@ func (idf *InputDockerFile) Collect(collector pipeline.Collector) error {
 		if newCount != 0 || delCount != 0 {
 			helper.RecordContainerConfigResultIncrement(configResult)
 		}
-		logger.Debugf(idf.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v, addFullList: %v, deleteFullList: %v", addResultList, deleteResultList, addFullList, deleteFullList)
+		logger.Debugf(idf.context.GetRuntimeContext(), "update match list, addResultList: %v, deleteResultList: %v", addResultList, deleteResultList)
 	}
 
 	for id := range idf.lastPathMappingCache {
