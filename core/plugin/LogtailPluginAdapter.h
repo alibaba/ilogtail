@@ -36,8 +36,7 @@ typedef int (*SendPbFun)(const char* configName,
                          int logstoreSize,
                          char* pbBuffer,
                          int pbSize,
-                         int lines,
-                         int dataType);
+                         int lines);
 typedef int (*SendPbV2Fun)(const char* configName,
                            int configNameSize,
                            const char* logstore,
@@ -46,8 +45,7 @@ typedef int (*SendPbV2Fun)(const char* configName,
                            int pbSize,
                            int lines,
                            const char* shardHash,
-                           int shardHashSize,
-                           int dataType);
+                           int shardHashSize);
 typedef int (*PluginCtlCmdFun)(
     const char* configName, int configNameSize, int optId, const char* params, int paramsLen);
 
@@ -66,8 +64,7 @@ PLUGIN_ADAPTER_API int LogtailSendPb(const char* configName,
                                      int logstoreSize,
                                      char* pbBuffer,
                                      int pbSize,
-                                     int lines,
-                                     int dataType);
+                                     int lines);
 
 PLUGIN_ADAPTER_API int LogtailSendPbV2(const char* configName,
                                        int configNameSize,
@@ -77,8 +74,7 @@ PLUGIN_ADAPTER_API int LogtailSendPbV2(const char* configName,
                                        int pbSize,
                                        int lines,
                                        const char* shardHash,
-                                       int shardHashSize,
-                                       int dataType);
+                                       int shardHashSize);
 
 PLUGIN_ADAPTER_API int
 LogtailCtlCmd(const char* configName, int configNameSize, int cmdId, const char* params, int paramsLen);
