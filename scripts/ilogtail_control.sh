@@ -86,7 +86,7 @@ check_liveness_by_port() {
 block_on_check_liveness_by_pid() {
     while [[ $exit_flag -eq 0 ]]
     do
-        check_liveness_by_pod || {
+        check_liveness_by_pid || {
             echo "ilogtail exited unexpectedly"
             exit 1
         }
