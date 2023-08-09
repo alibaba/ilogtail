@@ -370,7 +370,7 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 
 func (cw *CRIRuntimeWrapper) fetchAll() error {
 	// fetchAll and syncContainers must be isolated
-	// if one procedure read c list then locked out
+	// if one procedure read container list then locked out
 	// when it resumes, it may process on a staled list and make wrong decisions
 	cw.containersLock.Lock()
 	defer cw.containersLock.Unlock()
@@ -409,7 +409,7 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 			continue
 		}
 		if err != nil {
-			logger.Debug(context.Background(), "Create c info from cri-runtime error", err)
+			logger.Debug(context.Background(), "Create container info from cri-runtime error", err)
 			continue
 		}
 		cw.containers[c.GetId()] = &innerContainerInfo{
@@ -425,7 +425,7 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 		if sandbox, ok := sandboxMap[c.PodSandboxId]; ok {
 			cw.wrapperK8sInfoByLabels(sandbox.GetLabels(), dockerContainer)
 		}
-		logger.Debugf(context.Background(), "Create c info, id:%v\tname:%v\tcreated:%v\tstatus:%v\tdetail:%+v",
+		logger.Debugf(context.Background(), "Create container info, id:%v\tname:%v\tcreated:%v\tstatus:%v\tdetail:%+v",
 			dockerContainer.IDPrefix(), c.Metadata.Name, dockerContainer.ContainerInfo.Created, dockerContainer.Status(), c)
 	}
 	cw.dockerCenter.updateContainers(containerMap)
@@ -504,7 +504,7 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 		}
 	}
 
-	// delete c
+	// delete container
 	for oldID, c := range cw.containers {
 		if _, ok := newContainers[oldID]; !ok || c.State == cri.ContainerState_CONTAINER_EXITED {
 			logger.Debug(context.Background(), "cri sync containers remove", oldID)
