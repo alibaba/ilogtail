@@ -313,7 +313,6 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
                             && config["plugin"][*it][i]["detail"]["CollectContainersFlag"].isBool()
                             && config["plugin"][*it][i]["detail"]["CollectContainersFlag"].asBool()) {
                                 stats["inner_function"].insert("collect_containers_meta");
-                            }
                         }
                     }
                 }
