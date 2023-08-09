@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
@@ -360,7 +359,7 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 		}
 	}
 	if len(hostnamePath) > 0 {
-		hn, _ := ioutil.ReadFile(GetMountedFilePath(hostnamePath))
+		hn, _ := os.ReadFile(GetMountedFilePath(hostnamePath))
 		dockerContainer.Config.Hostname = strings.Trim(string(hn), "\t \n")
 	}
 	dockerContainer.HostnamePath = hostnamePath
@@ -371,7 +370,7 @@ func (cw *CRIRuntimeWrapper) createContainerInfo(containerID string) (detail *Do
 
 func (cw *CRIRuntimeWrapper) fetchAll() error {
 	// fetchAll and syncContainers must be isolated
-	// if one procedure read container list then locked out
+	// if one procedure read c list then locked out
 	// when it resumes, it may process on a staled list and make wrong decisions
 	cw.containersLock.Lock()
 	defer cw.containersLock.Unlock()
@@ -393,41 +392,41 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 	allContainerMap := make(map[string]bool)           // all listable containers
 	runningMap := make(map[string]bool)                // status running
 	containerMap := make(map[string]*DockerInfoDetail) // pid exists
-	for i, container := range containersResp.Containers {
-		logger.Debugf(context.Background(), "CRIRuntime ListContainers [%v]: %+v", i, container)
-		allContainerMap[container.GetId()] = true
-		switch container.State {
+	for i, c := range containersResp.Containers {
+		logger.Debugf(context.Background(), "CRIRuntime ListContainers [%v]: %+v", i, c)
+		allContainerMap[c.GetId()] = true
+		switch c.State {
 		case cri.ContainerState_CONTAINER_RUNNING:
-			runningMap[container.GetId()] = true
+			runningMap[c.GetId()] = true
 		case cri.ContainerState_CONTAINER_EXITED:
-			runningMap[container.GetId()] = false
+			runningMap[c.GetId()] = false
 		default:
 			continue
 		}
 
-		dockerContainer, _, _, err := cw.createContainerInfo(container.GetId())
+		dockerContainer, _, _, err := cw.createContainerInfo(c.GetId())
 		if dockerContainer.Status() != ContainerStatusRunning {
 			continue
 		}
 		if err != nil {
-			logger.Debug(context.Background(), "Create container info from cri-runtime error", err)
+			logger.Debug(context.Background(), "Create c info from cri-runtime error", err)
 			continue
 		}
-		cw.containers[container.GetId()] = &innerContainerInfo{
-			State:  container.State,
+		cw.containers[c.GetId()] = &innerContainerInfo{
+			State:  c.State,
 			Pid:    dockerContainer.ContainerInfo.State.Pid,
 			Name:   dockerContainer.ContainerInfo.Name,
 			Status: dockerContainer.Status(),
 		}
-		cw.containerHistory[container.GetId()] = true
-		containerMap[container.GetId()] = dockerContainer
+		cw.containerHistory[c.GetId()] = true
+		containerMap[c.GetId()] = dockerContainer
 
 		// append the pod labels to the k8s info.
-		if sandbox, ok := sandboxMap[container.PodSandboxId]; ok {
+		if sandbox, ok := sandboxMap[c.PodSandboxId]; ok {
 			cw.wrapperK8sInfoByLabels(sandbox.GetLabels(), dockerContainer)
 		}
-		logger.Debugf(context.Background(), "Create container info, id:%v\tname:%v\tcreated:%v\tstatus:%v\tdetail:%+v",
-			dockerContainer.IDPrefix(), container.Metadata.Name, dockerContainer.ContainerInfo.Created, dockerContainer.Status(), container)
+		logger.Debugf(context.Background(), "Create c info, id:%v\tname:%v\tcreated:%v\tstatus:%v\tdetail:%+v",
+			dockerContainer.IDPrefix(), c.Metadata.Name, dockerContainer.ContainerInfo.Created, dockerContainer.Status(), c)
 	}
 	cw.dockerCenter.updateContainers(containerMap)
 
@@ -476,12 +475,12 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 	}
 
 	newContainers := map[string]*cri.Container{}
-	for i, container := range containersResp.Containers {
+	for i, c := range containersResp.Containers {
 		// https://github.com/containerd/containerd/blob/main/pkg/cri/store/container/status.go
 		// We only care RUNNING and EXITED
 		// This is only an early prune, accurate status must be detected by ContainerProcessAlive
-		if container.State != cri.ContainerState_CONTAINER_RUNNING &&
-			(container.State != cri.ContainerState_CONTAINER_EXITED || container.GetCreatedAt() < cw.listContainerStartTime) {
+		if c.State != cri.ContainerState_CONTAINER_RUNNING &&
+			(c.State != cri.ContainerState_CONTAINER_EXITED || c.GetCreatedAt() < cw.listContainerStartTime) {
 			continue
 		}
 		id := containersResp.Containers[i].GetId()
@@ -494,7 +493,7 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 				status = ContainerStatusRunning
 			}
 			if oldInfo.State != cri.ContainerState_CONTAINER_RUNNING || // not running
-				(oldInfo.State == container.State && oldInfo.Name == container.Metadata.Name && oldInfo.Status == status) { // no state change
+				(oldInfo.State == c.State && oldInfo.Name == c.Metadata.Name && oldInfo.Status == status) { // no state change
 				continue
 			}
 		} else if inHistory {
@@ -505,7 +504,7 @@ func (cw *CRIRuntimeWrapper) syncContainers() error {
 		}
 	}
 
-	// delete container
+	// delete c
 	for oldID, c := range cw.containers {
 		if _, ok := newContainers[oldID]; !ok || c.State == cri.ContainerState_CONTAINER_EXITED {
 			logger.Debug(context.Background(), "cri sync containers remove", oldID)
@@ -625,13 +624,13 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSO
 	// Example: /run/containerd/io.containerd.runtime.v1.linux/k8s.io/{ContainerID}/rootfs/
 
 	var aDirs []string
-	custom_state_dir := os.Getenv("CONTAINERD_STATE_DIR")
-	if len(custom_state_dir) > 0 {
+	customStateDir := os.Getenv("CONTAINERD_STATE_DIR")
+	if len(customStateDir) > 0 {
 		// /etc/containerd/config.toml
 		// state = "/home/containerd"
 		// Example /home/containerd/io.containerd.runtime.v2.task/k8s.io/{ContainerID}/rootfs
 		aDirs = []string{
-			custom_state_dir,
+			customStateDir,
 			"/run/containerd",
 			"/var/run/containerd",
 		}
@@ -679,12 +678,15 @@ func (cw *CRIRuntimeWrapper) lookupContainerRootfsAbsDir(info types.ContainerJSO
 
 func (cw *CRIRuntimeWrapper) getContainerUpperDir(containerid, snapshotter string) string {
 	// For Containerd
-	if dir, ok := cw.lookupRootfsCache(containerid); ok {
-		return dir
-	}
+
 	if cw.nativeClient == nil {
 		return ""
 	}
+
+	if dir, ok := cw.lookupRootfsCache(containerid); ok {
+		return dir
+	}
+
 	si := cw.nativeClient.SnapshotService(snapshotter)
 	mounts, err := si.Mounts(context.Background(), containerid)
 	if err != nil {
@@ -696,6 +698,9 @@ func (cw *CRIRuntimeWrapper) getContainerUpperDir(containerid, snapshotter strin
 			for _, i := range m.Options {
 				s := strings.Split(i, "=")
 				if s[0] == "upperdir" {
+					cw.rootfsLock.Lock()
+					cw.rootfsCache[containerid] = s[1]
+					cw.rootfsLock.Unlock()
 					return s[1]
 				}
 				continue
