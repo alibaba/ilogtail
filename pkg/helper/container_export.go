@@ -196,11 +196,11 @@ func CreateDockerClient(opt ...docker.Opt) (client *docker.Client, err error) {
 	// add dockerClient connectivity tests
 	pingCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	_, err = client.Ping(pingCtx)
+	ping, err := client.Ping(pingCtx)
 	if err != nil {
 		return nil, err
 	}
-	client.NegotiateAPIVersion(context.Background())
+	client.NegotiateAPIVersionPing(ping)
 	return
 }
 
