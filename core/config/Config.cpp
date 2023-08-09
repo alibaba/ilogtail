@@ -108,7 +108,6 @@ Config::Config(const std::string& basePath,
       mLogBeginReg(logBeginReg),
       mLogContinueReg(logContinueReg),
       mLogEndReg(logEndReg),
-      mLogUnmatch(logUnmatch),
       mProjectName(projectName),
       mIsPreserve(isPreserve),
       mPreserveDepth(preserveDepth),
@@ -589,8 +588,7 @@ LogFileReader* Config::CreateLogFileReader(const std::string& dir,
         reader->SetRegion(mRegion);
         reader->SetLogMultilinePolicy(STRING_DEEP_COPY(mLogBeginReg),
                                        STRING_DEEP_COPY(mLogContinueReg),
-                                       STRING_DEEP_COPY(mLogEndReg),
-                                       STRING_DEEP_COPY(mLogUnmatch));
+                                       STRING_DEEP_COPY(mLogEndReg));
         reader->SetDevInode(devInode);
         if (forceFromBeginning)
             reader->SetReadFromBeginning();

@@ -27,10 +27,6 @@ const std::string LOG_CONTINUE_REGEX = R"(\s+at\s.*)";
 const std::string LOG_END_STRING = "    ...23 more";
 const std::string LOG_END_REGEX = R"(\s*\.\.\.\d+ more)";
 const std::string LOG_UNMATCH = "unmatch log";
-const std::string UNMATCH_DISCARD = "discard";
-const std::string UNMATCH_SINGLELINE = "singleline";
-const std::string UNMATCH_APPEND = "append";
-const std::string UNMATCH_PREPEND = "prepend";
 
 static void CompareTwoStringArray(std::vector<std::string> s1, std::vector<StringView> s2) {
     APSARA_TEST_EQUAL_FATAL(s1.size(), s2.size());
@@ -81,7 +77,8 @@ void LogSplitUnittest::TestLogSplitSingleLine() {
 void LogSplitUnittest::TestLogSplitSingleLinePartNotMatch() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", "discard");
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
+    logFileReader.mDiscardUnmatch = true;
     std::string line1 = "first.";
     std::string testLog = line1;
     int32_t lineFeed = 0;
@@ -96,7 +93,8 @@ void LogSplitUnittest::TestLogSplitSingleLinePartNotMatch() {
 void LogSplitUnittest::TestLogSplitSingleLinePartNotMatchNoDiscard() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "", ENCODING_UTF8, false);
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", "append");
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
+    logFileReader.mDiscardUnmatch = false;
     std::string line1 = "first.";
     std::string testLog = line1;
     int32_t lineFeed = 0;
@@ -111,7 +109,8 @@ void LogSplitUnittest::TestLogSplitSingleLinePartNotMatchNoDiscard() {
 void LogSplitUnittest::TestLogSplitMultiLine() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", "discard");
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
+    logFileReader.mDiscardUnmatch = true;
     std::string firstLog = LOG_BEGIN_STRING + "first.\nmultiline1\nmultiline2";
     std::string secondLog = LOG_BEGIN_STRING + "second.\nmultiline1\nmultiline2";
     std::string testLog = firstLog + '\n' + secondLog;
@@ -121,15 +120,16 @@ void LogSplitUnittest::TestLogSplitMultiLine() {
     bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
     APSARA_TEST_TRUE_FATAL(splitSuccess);
     APSARA_TEST_EQUAL_FATAL(2UL, index.size());
-    APSARA_TEST_EQUAL_FATAL(4UL, discard.size());
-    APSARA_TEST_EQUAL_FATAL(firstLog.substr(0, firstLog.find('\n')), index[0].to_string());
-    APSARA_TEST_EQUAL_FATAL(secondLog.substr(0, secondLog.find('\n')), index[1].to_string());
+    APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
+    APSARA_TEST_EQUAL_FATAL(firstLog, index[0].to_string());
+    APSARA_TEST_EQUAL_FATAL(secondLog, index[1].to_string());
 }
 
 void LogSplitUnittest::TestLogSplitMultiLinePartNotMatch() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", "discard");
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
+    logFileReader.mDiscardUnmatch = true;
     std::string firstLog = "first.\nmultiline1\nmultiline2";
     std::string secondLog = LOG_BEGIN_STRING + "second.\nmultiline1\nmultiline2";
     std::string testLog = firstLog + '\n' + secondLog;
@@ -139,15 +139,16 @@ void LogSplitUnittest::TestLogSplitMultiLinePartNotMatch() {
     bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
     APSARA_TEST_TRUE_FATAL(splitSuccess);
     APSARA_TEST_EQUAL_FATAL(1UL, index.size());
-    APSARA_TEST_EQUAL_FATAL(secondLog.substr(0, secondLog.find('\n')), index[0].to_string());
-    APSARA_TEST_EQUAL_FATAL(5UL, discard.size());
-    CompareTwoStringArray({"first.", "multiline1", "multiline2", "multiline1", "multiline2"}, discard);
+    APSARA_TEST_EQUAL_FATAL(secondLog, index[0].to_string());
+    APSARA_TEST_EQUAL_FATAL(3UL, discard.size());
+    CompareTwoStringArray({"first.", "multiline1", "multiline2"}, discard);
 }
 
 void LogSplitUnittest::TestLogSplitMultiLinePartNotMatchNoDiscard() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "", ENCODING_UTF8, false);
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", "append");
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
+    logFileReader.mDiscardUnmatch = false;
     std::string firstLog = "first.\nmultiline1\nmultiline2";
     std::string secondLog = LOG_BEGIN_STRING + "second.\nmultiline1\nmultiline2";
     std::string testLog = firstLog + '\n' + secondLog;
@@ -156,15 +157,15 @@ void LogSplitUnittest::TestLogSplitMultiLinePartNotMatchNoDiscard() {
     std::vector<StringView> discard;
     bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
     APSARA_TEST_TRUE_FATAL(splitSuccess);
-    APSARA_TEST_EQUAL_FATAL(2UL, index.size());
-    APSARA_TEST_EQUAL_FATAL(firstLog, index[0].to_string());
-    APSARA_TEST_EQUAL_FATAL(secondLog, index[1].to_string());
+    APSARA_TEST_EQUAL_FATAL(4UL, index.size());
+    CompareTwoStringArray({"first.", "multiline1", "multiline2", secondLog}, index);
 }
 
 void LogSplitUnittest::TestLogSplitMultiLineAllNotmatch() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", "discard");
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
+    logFileReader.mDiscardUnmatch = true;
     std::string firstLog = "first.\nmultiline1\nmultiline2";
     std::string secondLog = "second.\nmultiline1\nmultiline2";
     std::string testLog = firstLog + '\n' + secondLog;
@@ -181,7 +182,8 @@ void LogSplitUnittest::TestLogSplitMultiLineAllNotmatch() {
 void LogSplitUnittest::TestLogSplitMultiLineAllNotmatchNoDiscard() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "", ENCODING_UTF8, false);
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", "singleline");
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
+    logFileReader.mDiscardUnmatch = false;
     std::string firstLog = "first.\nmultiline1\nmultiline2";
     std::string secondLog = "second.\nmultiline1\nmultiline2";
     std::string testLog = firstLog + '\n' + secondLog;
@@ -212,7 +214,8 @@ UNIT_TEST_CASE(LogSplitDiscardUnmatchUnittest, TestLogSplitWithEnd);
 void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginContinue() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, LOG_CONTINUE_REGEX, "", UNMATCH_DISCARD);
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, LOG_CONTINUE_REGEX, "");
+    logFileReader.mDiscardUnmatch = true;
     { // case: complete log
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING;
         std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
@@ -256,7 +259,8 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginContinue() {
 void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginEnd() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", LOG_END_REGEX, UNMATCH_DISCARD);
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", LOG_END_REGEX);
+    logFileReader.mDiscardUnmatch = true;
     { // case: complete log
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_END_STRING;
         std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
@@ -314,20 +318,20 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBeginEnd() {
 void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBegin() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", UNMATCH_DISCARD);
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
+    logFileReader.mDiscardUnmatch = true;
     { // case: complete log
-        std::string expectMatch = LOG_BEGIN_STRING;
-        std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
+        std::string expectMatch = LOG_BEGIN_STRING + '\n' + LOG_UNMATCH;
+        std::string testLog = LOG_UNMATCH + "\n" + expectMatch;
         int32_t lineFeed = 0;
         std::vector<StringView> index;
         std::vector<StringView> discard;
         bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
         APSARA_TEST_TRUE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(1UL, index.size());
-        APSARA_TEST_EQUAL_FATAL(2UL, discard.size());
+        APSARA_TEST_EQUAL_FATAL(1UL, discard.size());
         APSARA_TEST_EQUAL_FATAL(expectMatch, index[0].to_string());
         APSARA_TEST_EQUAL_FATAL(LOG_UNMATCH, discard[0].to_string());
-        APSARA_TEST_EQUAL_FATAL(LOG_UNMATCH, discard[1].to_string());
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -346,7 +350,8 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithBegin() {
 void LogSplitDiscardUnmatchUnittest::TestLogSplitWithContinueEnd() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy("", LOG_CONTINUE_REGEX, LOG_END_REGEX, UNMATCH_DISCARD);
+    logFileReader.SetLogMultilinePolicy("", LOG_CONTINUE_REGEX, LOG_END_REGEX);
+    logFileReader.mDiscardUnmatch = true;
     { // case: complete log
         std::string expectMatch = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING;
         std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
@@ -390,20 +395,20 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithContinueEnd() {
 void LogSplitDiscardUnmatchUnittest::TestLogSplitWithEnd() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy("", "", LOG_END_REGEX, UNMATCH_DISCARD);
+    logFileReader.SetLogMultilinePolicy("", "", LOG_END_REGEX);
+    logFileReader.mDiscardUnmatch = true;
     { // case: complete log
-        std::string expectMatch = LOG_END_STRING;
-        std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
+        std::string expectMatch = LOG_UNMATCH + "\n" + LOG_END_STRING;
+        std::string testLog = expectMatch + '\n' + LOG_UNMATCH;
         int32_t lineFeed = 0;
         std::vector<StringView> index;
         std::vector<StringView> discard;
         bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
         APSARA_TEST_TRUE_FATAL(splitSuccess);
         APSARA_TEST_EQUAL_FATAL(1UL, index.size());
-        APSARA_TEST_EQUAL_FATAL(2UL, discard.size());
+        APSARA_TEST_EQUAL_FATAL(1UL, discard.size());
         APSARA_TEST_EQUAL_FATAL(expectMatch, index[0].to_string());
         APSARA_TEST_EQUAL_FATAL(LOG_UNMATCH, discard[0].to_string());
-        APSARA_TEST_EQUAL_FATAL(LOG_UNMATCH, discard[1].to_string());
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -419,7 +424,7 @@ void LogSplitDiscardUnmatchUnittest::TestLogSplitWithEnd() {
     }
 }
 
-class LogSplitSinglelineUnmatchUnittest : public ::testing::Test {
+class LogSplitNoDiscardUnmatchUnittest : public ::testing::Test {
 public:
     void TestLogSplitWithBeginContinue();
     void TestLogSplitWithBeginEnd();
@@ -428,16 +433,17 @@ public:
     void TestLogSplitWithEnd();
 };
 
-UNIT_TEST_CASE(LogSplitSinglelineUnmatchUnittest, TestLogSplitWithBeginContinue);
-UNIT_TEST_CASE(LogSplitSinglelineUnmatchUnittest, TestLogSplitWithBeginEnd);
-UNIT_TEST_CASE(LogSplitSinglelineUnmatchUnittest, TestLogSplitWithBegin);
-UNIT_TEST_CASE(LogSplitSinglelineUnmatchUnittest, TestLogSplitWithContinueEnd);
-UNIT_TEST_CASE(LogSplitSinglelineUnmatchUnittest, TestLogSplitWithEnd);
+UNIT_TEST_CASE(LogSplitNoDiscardUnmatchUnittest, TestLogSplitWithBeginContinue);
+UNIT_TEST_CASE(LogSplitNoDiscardUnmatchUnittest, TestLogSplitWithBeginEnd);
+UNIT_TEST_CASE(LogSplitNoDiscardUnmatchUnittest, TestLogSplitWithBegin);
+UNIT_TEST_CASE(LogSplitNoDiscardUnmatchUnittest, TestLogSplitWithContinueEnd);
+UNIT_TEST_CASE(LogSplitNoDiscardUnmatchUnittest, TestLogSplitWithEnd);
 
-void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginContinue() {
+void LogSplitNoDiscardUnmatchUnittest::TestLogSplitWithBeginContinue() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, LOG_CONTINUE_REGEX, "", UNMATCH_SINGLELINE);
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, LOG_CONTINUE_REGEX, "");
+    logFileReader.mDiscardUnmatch = false;
     { // case: complete log
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING;
         std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
@@ -478,10 +484,11 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginContinue() {
     }
 }
 
-void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginEnd() {
+void LogSplitNoDiscardUnmatchUnittest::TestLogSplitWithBeginEnd() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", LOG_END_REGEX, UNMATCH_SINGLELINE);
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", LOG_END_REGEX);
+    logFileReader.mDiscardUnmatch = false;
     { // case: complete log
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_END_STRING;
         std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
@@ -536,23 +543,23 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBeginEnd() {
     }
 }
 
-void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBegin() {
+void LogSplitNoDiscardUnmatchUnittest::TestLogSplitWithBegin() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", UNMATCH_SINGLELINE);
+    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
+    logFileReader.mDiscardUnmatch = false;
     { // case: complete log
-        std::string expectMatch = LOG_BEGIN_STRING;
-        std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
+        std::string expectMatch = LOG_BEGIN_STRING + '\n' + LOG_UNMATCH;
+        std::string testLog = LOG_UNMATCH + "\n" + expectMatch;
         int32_t lineFeed = 0;
         std::vector<StringView> index;
         std::vector<StringView> discard;
         bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
         APSARA_TEST_TRUE_FATAL(splitSuccess);
-        APSARA_TEST_EQUAL_FATAL(3UL, index.size());
+        APSARA_TEST_EQUAL_FATAL(2UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
         APSARA_TEST_EQUAL_FATAL(LOG_UNMATCH, index[0].to_string());
         APSARA_TEST_EQUAL_FATAL(expectMatch, index[1].to_string());
-        APSARA_TEST_EQUAL_FATAL(LOG_UNMATCH, index[2].to_string());
     }
     { // case: no match log
         std::string expectMatch = "";
@@ -568,10 +575,11 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithBegin() {
     }
 }
 
-void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithContinueEnd() {
+void LogSplitNoDiscardUnmatchUnittest::TestLogSplitWithContinueEnd() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy("", LOG_CONTINUE_REGEX, LOG_END_REGEX, UNMATCH_SINGLELINE);
+    logFileReader.SetLogMultilinePolicy("", LOG_CONTINUE_REGEX, LOG_END_REGEX);
+    logFileReader.mDiscardUnmatch = false;
     { // case: complete log
         std::string expectMatch = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING;
         std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
@@ -612,87 +620,11 @@ void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithContinueEnd() {
     }
 }
 
-void LogSplitSinglelineUnmatchUnittest::TestLogSplitWithEnd() {
+void LogSplitNoDiscardUnmatchUnittest::TestLogSplitWithEnd() {
     CommonRegLogFileReader logFileReader(
         "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy("", "", LOG_END_REGEX, UNMATCH_SINGLELINE);
-    { // case: complete log
-        std::string expectMatch = LOG_END_STRING;
-        std::string testLog = LOG_UNMATCH + "\n" + expectMatch + '\n' + LOG_UNMATCH;
-        int32_t lineFeed = 0;
-        std::vector<StringView> index;
-        std::vector<StringView> discard;
-        bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
-        APSARA_TEST_TRUE_FATAL(splitSuccess);
-        APSARA_TEST_EQUAL_FATAL(3UL, index.size());
-        APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        APSARA_TEST_EQUAL_FATAL(LOG_UNMATCH, index[0].to_string());
-        APSARA_TEST_EQUAL_FATAL(expectMatch, index[1].to_string());
-        APSARA_TEST_EQUAL_FATAL(LOG_UNMATCH, index[2].to_string());
-    }
-    { // case: no match log
-        std::string expectMatch = "";
-        std::string testLog = LOG_UNMATCH + "\n" + LOG_UNMATCH;
-        int32_t lineFeed = 0;
-        std::vector<StringView> index;
-        std::vector<StringView> discard;
-        bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
-        APSARA_TEST_FALSE_FATAL(splitSuccess);
-        APSARA_TEST_EQUAL_FATAL(2UL, index.size());
-        APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, index);
-    }
-}
-
-class LogSplitAppendUnmatchUnittest : public ::testing::Test {
-public:
-    void TestLogSplitWithBegin();
-};
-
-UNIT_TEST_CASE(LogSplitAppendUnmatchUnittest, TestLogSplitWithBegin);
-
-void LogSplitAppendUnmatchUnittest::TestLogSplitWithBegin() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "", UNMATCH_APPEND);
-    { // case: complete log
-        std::string expectMatch = LOG_BEGIN_STRING + '\n' + LOG_UNMATCH;
-        std::string testLog = LOG_UNMATCH + "\n" + expectMatch;
-        int32_t lineFeed = 0;
-        std::vector<StringView> index;
-        std::vector<StringView> discard;
-        bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
-        APSARA_TEST_TRUE_FATAL(splitSuccess);
-        APSARA_TEST_EQUAL_FATAL(2UL, index.size());
-        APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        APSARA_TEST_EQUAL_FATAL(LOG_UNMATCH, index[0].to_string());
-        APSARA_TEST_EQUAL_FATAL(expectMatch, index[1].to_string());
-    }
-    { // case: no match log
-        std::string expectMatch = "";
-        std::string testLog = LOG_UNMATCH + "\n" + LOG_UNMATCH;
-        int32_t lineFeed = 0;
-        std::vector<StringView> index;
-        std::vector<StringView> discard;
-        bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
-        APSARA_TEST_FALSE_FATAL(splitSuccess);
-        APSARA_TEST_EQUAL_FATAL(1UL, index.size());
-        APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        APSARA_TEST_EQUAL_FATAL(testLog, index[0].to_string());
-    }
-}
-
-class LogSplitPrependUnmatchUnittest : public ::testing::Test {
-public:
-    void TestLogSplitWithEnd();
-};
-
-UNIT_TEST_CASE(LogSplitPrependUnmatchUnittest, TestLogSplitWithEnd);
-
-void LogSplitPrependUnmatchUnittest::TestLogSplitWithEnd() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy("", "", LOG_END_REGEX, UNMATCH_PREPEND);
+    logFileReader.SetLogMultilinePolicy("", "", LOG_END_REGEX);
+    logFileReader.mDiscardUnmatch = false;
     { // case: complete log
         std::string expectMatch = LOG_UNMATCH + "\n" + LOG_END_STRING;
         std::string testLog = expectMatch + '\n' + LOG_UNMATCH;
@@ -714,9 +646,9 @@ void LogSplitPrependUnmatchUnittest::TestLogSplitWithEnd() {
         std::vector<StringView> discard;
         bool splitSuccess = logFileReader.LogSplit(testLog.data(), testLog.size(), lineFeed, index, discard);
         APSARA_TEST_FALSE_FATAL(splitSuccess);
-        APSARA_TEST_EQUAL_FATAL(1UL, index.size());
+        APSARA_TEST_EQUAL_FATAL(2UL, index.size());
         APSARA_TEST_EQUAL_FATAL(0UL, discard.size());
-        APSARA_TEST_EQUAL_FATAL(testLog, index[0].to_string());
+        CompareTwoStringArray({LOG_UNMATCH, LOG_UNMATCH}, index);
     }
 }
 

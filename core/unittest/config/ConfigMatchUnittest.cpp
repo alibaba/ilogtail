@@ -1028,9 +1028,9 @@ APSARA_UNIT_TEST_CASE(ConfigMatchUnittest, TestBlacklistControlWildcardBasePath,
 void ConfigMatchUnittest::TestChinesePathAndFilePattern() {
     LOG_INFO(sLogger, ("TestChinesePathAndFilePattern() begin", time(NULL)));
     CaseSetUp();
-    auto const pathRoot = gRootDir + PATH_SEPARATOR + "����·��";
+    auto const pathRoot = gRootDir + PATH_SEPARATOR + "中文路径";
     auto const fileNames
-        = std::vector<std::string>{"�����ļ�a.txt", "�����ļ�b����.txt", "�����ļ�c.txt��", "�����ļ�d.txtt", "a.txt"};
+        = std::vector<std::string>{"中文文件a.txt", "中文文件b中文.txt", "中文文件c.txt中", "中文文件d.txtt", "a.txt"};
     auto const matchResults = std::vector<bool>{true, true, false, false, false};
     bfs::create_directories(pathRoot);
     for (auto& fn : fileNames) {
@@ -1038,7 +1038,7 @@ void ConfigMatchUnittest::TestChinesePathAndFilePattern() {
     }
 
     std::string basePath = pathRoot;
-    std::string filePattern = "�����ļ�*.txt";
+    std::string filePattern = "中文文件*.txt";
 #if defined(_MSC_VER)
     basePath = EncodingConverter::GetInstance()->FromACPToUTF8(basePath);
     filePattern = EncodingConverter::GetInstance()->FromACPToUTF8(filePattern);

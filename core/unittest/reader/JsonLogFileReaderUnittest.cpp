@@ -120,7 +120,7 @@ void JsonLogFileReaderUnittest::TestReadGBK() {
                                  false);
         LogFileReader::BUFFER_SIZE = 23;
         size_t BUFFER_SIZE_UTF8 = 25; // "{"first":"iLogtail 为可"
-        reader.SetLogMultilinePolicy("no matching pattern", ".*", ".*", "");
+        reader.SetLogMultilinePolicy("no matching pattern", ".*", ".*");
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;

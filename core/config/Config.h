@@ -110,7 +110,6 @@ public:
     std::string mLogBeginReg; // the log begin line regex
     std::string mLogContinueReg; // the log continue line regex
     std::string mLogEndReg; // the log end line regex
-    std::string mLogUnmatch; // the strategy to handle unmatch log
     std::string mProjectName; // project name
     bool mIsPreserve; // true is service dir, false is job dir
     int mPreserveDepth; // for job dir, the depth that will not be watch timeout

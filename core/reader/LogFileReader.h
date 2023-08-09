@@ -92,13 +92,6 @@ public:
         BACKWARD_TO_FIXED_POS,
     };
 
-    enum LogUnmatchPolicy {
-        DISCARD,
-        SINGLELINE,
-        APPEND,
-        PREPEND
-    };
-
     // for ApsaraLogFileReader
     LogFileReader(const std::string& projectName,
                   const std::string& category,
@@ -126,63 +119,7 @@ public:
         return mLastUpdateTime;
     }
     // this function should only be called once
-    void SetLogMultilinePolicy(const std::string& begReg, const std::string& conReg, const std::string& endReg, const std::string& logUnmatch) {
-        if (mLogBeginRegPtr != NULL) {
-            delete mLogBeginRegPtr;
-            mLogBeginRegPtr = NULL;
-        }
-        if (begReg.empty() == false) {
-            mLogBeginRegPtr = new boost::regex(begReg.c_str());
-        }
-        if (mLogContinueRegPtr != NULL) {
-            delete mLogContinueRegPtr;
-            mLogContinueRegPtr = NULL;
-        }
-        if (conReg.empty() == false) {
-            mLogContinueRegPtr = new boost::regex(conReg.c_str());
-        }
-        if (mLogEndRegPtr != NULL) {
-            delete mLogEndRegPtr;
-            mLogEndRegPtr = NULL;
-        }
-        if (endReg.empty() == false) {
-            mLogEndRegPtr = new boost::regex(endReg.c_str());
-        }
-        /*
-            1. LogUnmatch `append` can only work with `begin`.
-            2. LogUnmatch `prepend` can only work with `end`.
-            3. If logUnmatch is invalid, we will fallback to use mDiscardUnmatch.
-        */
-        if (logUnmatch == "discard") {
-            mLogUnmatch = LogUnmatchPolicy::DISCARD;
-        } else if (logUnmatch == "singleline") {
-            mLogUnmatch = LogUnmatchPolicy::SINGLELINE;
-        } else if (logUnmatch == "append") {
-            if (mLogBeginRegPtr == NULL || mLogContinueRegPtr != NULL || mLogEndRegPtr != NULL) {
-                mLogUnmatch = mDiscardUnmatch ? LogUnmatchPolicy::DISCARD : LogUnmatchPolicy::SINGLELINE;
-                LOG_WARNING(sLogger,
-                            ("Invalid multiline pattern configuration with", "append")("fallback to", mLogUnmatch)(
-                                "begin regex", begReg)("continue regex", conReg)("end regex", endReg));
-            } else {
-                mLogUnmatch = LogUnmatchPolicy::APPEND;
-            }
-        } else if (logUnmatch == "prepend") {
-            if (mLogBeginRegPtr != NULL || mLogContinueRegPtr != NULL || mLogEndRegPtr == NULL) {
-                mLogUnmatch = mDiscardUnmatch ? LogUnmatchPolicy::DISCARD : LogUnmatchPolicy::SINGLELINE;
-                LOG_WARNING(sLogger,
-                            ("Invalid multiline pattern configuration with", "prepend")("fallback to", mLogUnmatch)(
-                                "begin regex", begReg)("continue regex", conReg)("end regex", endReg));
-            } else {
-                mLogUnmatch = LogUnmatchPolicy::PREPEND;
-            }
-        } else {
-            LOG_WARNING(sLogger,
-                        ("Invalid multiline pattern configuration with",
-                         mLogUnmatch)("fallback to", mDiscardUnmatch ? "discard" : "singleline")("begin regex", begReg)(
-                            "continue regex", conReg)("end regex", endReg));
-            mLogUnmatch = mDiscardUnmatch ? LogUnmatchPolicy::DISCARD : LogUnmatchPolicy::SINGLELINE;
-        }
-    }
+    void SetLogMultilinePolicy(const std::string& begReg, const std::string& conReg, const std::string& endReg);
 
     bool IsMultiLine() {
         return mLogBeginRegPtr != NULL || mLogContinueRegPtr != NULL || mLogEndRegPtr != NULL;
@@ -453,7 +390,6 @@ protected:
     boost::regex* mLogEndRegPtr;
     FileEncoding mFileEncoding;
     bool mDiscardUnmatch;
-    LogUnmatchPolicy mLogUnmatch;
     LogType mLogType;
     DevInode mDevInode;
     bool mFirstWatched;
@@ -622,6 +558,10 @@ private:
     friend class AppConfigUnittest;
     friend class ModifyHandlerUnittest;
     friend class LogSplitUnittest;
+    friend class LogSplitDiscardUnmatchUnittest;
+    friend class LogSplitNoDiscardUnmatchUnittest;
+    friend class LastMatchedLineDiscardUnmatchUnittest;
+    friend class LastMatchedLineNoDiscardUnmatchUnittest;
 
 protected:
     void UpdateReaderManual();

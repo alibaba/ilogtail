@@ -17,9 +17,9 @@
 | Type | String | 是 | 插件类型，指定为`processor_regex_accelerate`。 |
 | Keys | Array | 是 | 提取的字段名列表。 |
 | Regex | String | 是 | 提取字段的正则表达式，使用()标注待提取的字段。 |
-| LogBeginRegex | String | 否 | 起始行正则表达式，仅当待采集日志为多行日志时使用。 |
-| LogContinueRegex | String | 否 | 中间行正则表达式，仅当待采集日志为多行日志时使用。 |
-| LogEndRegex | String | 否 | 结尾行正则表达式，仅当待采集日志为多行日志时使用。 |
+| LogBeginRegex | String | 否 | 起始行正则表达式，仅当待采集日志为多行日志时使用。支持组合参见表3。 |
+| LogContinueRegex | String | 否 | 中间行正则表达式，仅当待采集日志为多行日志时使用。支持组合参见表3。 |
+| LogEndRegex | String | 否 | 结尾行正则表达式，仅当待采集日志为多行日志时使用。支持组合参见表3。 |
 | FilterKey | Array | 否 | 用于过滤日志的字段。仅当该字段的值与FilterRegex参数中对应设置的正则表达式匹配时，对应的日志才会被采集。 |
 | FilterRegex | Array | 否，当FilterKey参数不为空时必选 | 日志字段过滤的正则表达式。该参数元素个数必须与FilterKey参数的元素个数相同。 |
 | TimeFormat | String | 否 | 日志时间格式，仅当Keys参数中有“time”字段时有效，用于对“time”字段的值进行解析。未配置该字段时，默认使用系统时间作为日志时间。具体信息参见表1。 |
@@ -79,6 +79,15 @@
 | regex_content | String | 是 | [^']* | 敏感内容的正则表达式，使用RE2语法。 |
 | all | Boolean | 是 | true | 是否替换该字段中所有的敏感内容。可选值如下：<br>- true（推荐）：替换。<br>- false：只替换字段中匹配正则表达式的第一部分内容。 |
 | const | String | 否 | "********" | 当type设置为const时，必须配置。 |
+
+- 表3:多行切分正则模式组合
+| 正则 | 含义 |
+| --- | --- |
+| LogBeginRegex | 多行日志有明确的开头模式。开头模式之后的其他日志，跟随开头模式组成多行日志。
+| LogBeginRegex，LogContinueRegex | 多行日志有明确的开头模式，中间行模式。不符合模式的其他日志，根据 DiscardUnmatch 进行处理。
+| LogBeginRegex，LogEndRegex | 多行日志有明确的开头模式，结尾模式。两者之间的日志会被当做多行日志进行处理，两者之外的日志会根据 DiscardUnmatch 进行处理。
+| LogContinueRegex，LogEndRegex | 多行日志有明确的中间行模式，结尾模式。不符合模式的其他日志，根据 DiscardUnmatch 进行处理。
+| LogEndRegex | 多行日志有明确的结尾模式。结尾模式之前的其他日志，跟随结尾模式组成多行日志。
 
 ## 样例
 
@@ -200,6 +209,7 @@ flushers:
 [2022-07-07T10:43:27.360266763]    ... 23 more
 [2022-07-07T10:43:27.360266763] Some user custom log
 [2022-07-07T10:43:27.360266763] Some user custom log
+[2022-07-07T10:43:27.360266763] [ERROR] java.lang.Exception: exception happened
 ```
 
 - 采集配置
@@ -216,9 +226,8 @@ processors:
     - msg
     - time
     Regex: (\[(\S+)].*)
-    Unmatch: singleline
+    DiscardUnmatch: false
     LogBeginRegex: \[\d+-\d+-\w+:\d+:\d+.\d+].*Exception.*
-    LogContinueRegex: .*\s+at\s.*
     LogEndRegex: .*\.\.\. \d+ more
 flushers:
   - Type: flusher_sls
