@@ -1821,7 +1821,6 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
     if (moreData) {
         READ_BYTE = readCharCount = AlignLastCharacter(gbkBuffer.get(), readCharCount);
     }
-    bool adjustFlag = false;
     bool logTooLongSplitFlag = false;
     gbkBuffer[readCharCount] = '\0';
 
@@ -1847,7 +1846,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
         return;
     }
     int32_t rollbackLineFeedCount = 0;
-    if (((adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
+    if ((moreData && !IsMultiLine()) || mLogType == JSON_LOG) {
         int32_t bakResultCharCount = resultCharCount;
         resultCharCount = LastMatchedLine(stringBuffer.data, resultCharCount, rollbackLineFeedCount);
         if (resultCharCount == 0) {
@@ -1975,7 +1974,23 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
     2. The logs rollbacked may be complete but we cannot confirm. Leave them to the next reading.
     3. The last line without '\n' is considered as unmatch. (even if it can match END regex)
     4. The '\n' at the end is considered as part of the multiline log.
-    Refer to the unittest for the intput and output in some common scene.
+    Examples:
+    1. mLogBeginRegPtr != NULL
+        1. begin\nxxx\nbegin\nxxx\n -> begin\nxxx\n
+    2. mLogBeginRegPtr != NULL, mLogContinueRegPtr != NULL
+        1. begin\ncontinue\nxxx\n -> begin\ncontinue\n
+        2. begin\ncontinue\nbegin\n -> begin\ncontinue\n
+        3. begin\ncontinue\nbegin\ncontinue\n -> begin\ncontinue\n
+    3. mLogBeginRegPtr != NULL, mLogEndRegPtr != NULL
+        1. begin\nxxx\nend\n -> begin\nxxx\nend
+        2. begin\nxxx\nend\nbegin\nxxx\n -> begin\nxxx\nend
+    4. mLogContinueRegPtr != NULL, mLogEndRegPtr != NULL
+        1. continue\nend\n -> continue\nxxx\nend
+        2. continue\nend\ncontinue\n -> continue\nxxx\nend
+        3. continue\nend\ncontinue\nend\n -> continue\nxxx\nend
+    5. mLogEndRegPtr != NULL
+        1. xxx\nend\n -> xxx\nend
+        1. xxx\nend\nxxx\n -> xxx\nend
 */
 int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount) {
     int endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
