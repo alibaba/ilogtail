@@ -23,7 +23,6 @@
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <cityhash/city.h>
-#include <queue>
 #include "common/util.h"
 #include "common/Flags.h"
 #include "common/HashUtil.h"
@@ -1325,8 +1324,6 @@ void LogFileReader::SetReadBufferSize(int32_t bufSize) {
     BUFFER_SIZE = bufSize;
 }
 
-enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
-
 bool LogFileReader::LogSplit(const char* buffer,
                              int32_t size,
                              int32_t& lineFeed,
@@ -1480,7 +1477,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                     if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                         LOG_ERROR(sLogger,
                                 ("regex_match in LogSplit fail, exception",
-                                exception)("project", mProjectName)("logstore", mCategory)("file", mLogPath));
+                                exception)("project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
                     }
                     LogtailAlarm::GetInstance()->SendAlarm(
                         REGEX_MATCH_ALARM, "regex_match in LogSplit fail:" + exception, mProjectName, mCategory, mRegion);

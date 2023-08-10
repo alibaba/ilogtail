@@ -235,7 +235,6 @@ public:
            const std::string& logBeginReg,
            const std::string& logContinueReg,
            const std::string& logEndReg,
-           const std::string& logUnmatch,
            const std::string& projectName,
            bool isPreserve,
            int preserveDepth,

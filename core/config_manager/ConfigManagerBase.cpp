@@ -496,7 +496,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
             if (logType == PLUGIN_LOG) {
                 config = new Config(
-                    "", "", logType, logName, "", "", "", "", projectName, false, 0, 0, category, false, "", discardUnmatch);
+                    "", "", logType, logName, "", "", "", projectName, false, 0, 0, category, false, "", discardUnmatch);
                 if (pluginConfig.empty()) {
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
@@ -530,7 +530,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     "",
                                     logType,
                                     logName,
-                                    "",
                                     "",
                                     "",
                                     "",
@@ -575,10 +574,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (logEndReg != "" && CheckRegFormat(logEndReg) == false) {
                     throw ExceptionBase("The log end line is not value regex : " + logEndReg);
                 }
-                string logUnmatch = GetStringValue(value, "log_unmatch", "");
-                if (logUnmatch != "" && !(logUnmatch == "discard" || logUnmatch == "singleline" || logUnmatch == "append" || logUnmatch == "prepend")) {
-                    throw ExceptionBase("The log unmatch is not legal value : " + logEndReg);
-                }
                 string filePattern = GetStringValue(value, "file_pattern");
                 // raw log flag
                 bool rawLogFlag = false;
@@ -593,7 +588,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     logBeginReg,
                                     logContinueReg,
                                     logEndReg,
-                                    logUnmatch,
                                     projectName,
                                     isPreserve,
                                     preserveDepth,
