@@ -228,7 +228,7 @@ func (ip *InputProcess) addCPUMetrics(pc processCache, labels *helper.MetricLabe
 }
 
 func (ip *InputProcess) addMetric(collector pipeline.Collector, name string, t *time.Time, labels *helper.MetricLabels, val float64) {
-	collector.AddRawLog(helper.NewMetricLogWithNanoSeconds(name, t.UnixNano(), val, labels))
+	collector.AddRawLog(helper.NewMetricLog(name, t.UnixNano(), val, labels))
 }
 
 func (ip *InputProcess) addMemMetrics(pc processCache, labels *helper.MetricLabels, collector pipeline.Collector) {

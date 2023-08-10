@@ -57,7 +57,7 @@ func (d *Decoder) Decode(data []byte, req *http.Request, tags map[string]string)
 			}
 			continue
 		}
-		log := helper.NewMetricLogWithNanoSeconds(m.Name, now.UnixNano(), m.Value.(float64), parseLabels(m))
+		log := helper.NewMetricLog(m.Name, now.UnixNano(), m.Value.(float64), parseLabels(m))
 		logs = append(logs, log)
 	}
 	return

@@ -346,7 +346,7 @@ func (m *NetPing) Collect(collector pipeline.Collector) error {
 }
 
 func (m *NetPing) addMetric(collector pipeline.Collector, name string, t *time.Time, labels *helper.MetricLabels, val float64) {
-	collector.AddRawLog(helper.NewMetricLogWithNanoSeconds(name, t.UnixNano(), val, labels))
+	collector.AddRawLog(helper.NewMetricLog(name, t.UnixNano(), val, labels))
 }
 
 func (m *NetPing) evaluteDNSResolve(host string) {

@@ -58,8 +58,8 @@ func (m *MetricsExample) Collect(collector pipeline.Collector) error {
 	m.gauge = rand.Intn(100) //nolint:gosec
 
 	// collect the metrics
-	collector.AddRawLog(helper.NewMetricLogWithNanoSeconds("example_counter", time.Now().UnixNano(), float64(m.counter), &m.commonLabels))
-	collector.AddRawLog(helper.NewMetricLogWithNanoSeconds("example_gauge", time.Now().UnixNano(), float64(m.gauge), &m.commonLabels))
+	collector.AddRawLog(helper.NewMetricLog("example_counter", time.Now().UnixNano(), float64(m.counter), &m.commonLabels))
+	collector.AddRawLog(helper.NewMetricLog("example_gauge", time.Now().UnixNano(), float64(m.gauge), &m.commonLabels))
 	return nil
 }
 

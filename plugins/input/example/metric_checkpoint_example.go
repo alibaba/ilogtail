@@ -63,8 +63,8 @@ func (m *MetricsCheckpointExample) Collect(collector pipeline.Collector) error {
 	m.gauge = rand.Intn(100)
 
 	// collect the metrics
-	collector.AddRawLog(helper.NewMetricLogWithNanoSeconds("example_counter", time.Now().UnixNano(), float64(m.counter), &m.commonLabels))
-	collector.AddRawLog(helper.NewMetricLogWithNanoSeconds("example_gauge", time.Now().UnixNano(), float64(m.gauge), &m.commonLabels))
+	collector.AddRawLog(helper.NewMetricLog("example_counter", time.Now().UnixNano(), float64(m.counter), &m.commonLabels))
+	collector.AddRawLog(helper.NewMetricLog("example_gauge", time.Now().UnixNano(), float64(m.gauge), &m.commonLabels))
 	_ = m.context.SaveCheckPointObject("metric_checkpoint_example", &m.counter)
 	return nil
 }

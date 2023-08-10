@@ -106,7 +106,7 @@ func (r *InputSystem) CommonInit(context pipeline.Context) (int, error) {
 }
 
 func (r *InputSystem) addMetric(collector pipeline.Collector, name string, labels *helper.MetricLabels, value float64) {
-	collector.AddRawLog(helper.NewMetricLogWithNanoSeconds(name, r.collectTime.UnixNano(), value, labels))
+	collector.AddRawLog(helper.NewMetricLog(name, r.collectTime.UnixNano(), value, labels))
 }
 
 func (r *InputSystem) CollectCore(collector pipeline.Collector) {
