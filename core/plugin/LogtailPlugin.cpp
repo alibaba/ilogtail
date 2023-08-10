@@ -53,6 +53,7 @@ LogtailPlugin::LogtailPlugin() {
     mPluginCfg["Hostname"] = LogFileProfiler::mHostname;
     mPluginCfg["EnableTimestampNanosecond"] = BOOL_FLAG(enable_timestamp_nanosecond);
     mPluginCfg["EnableContainerdUpperDirDetect"] = BOOL_FLAG(enable_containerd_upper_dir_detect);
+    mPluginCfg["EnableSlsMetricsFormat"] = BOOL_FLAG(enable_sls_metrics_format);
 }
 
 LogtailPlugin::~LogtailPlugin() {

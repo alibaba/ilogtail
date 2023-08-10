@@ -16,17 +16,16 @@ package helper
 
 import (
 	"fmt"
+	"github.com/alibaba/ilogtail/pkg/config"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 	"unsafe"
-
-	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
-// https://github.com/apache/skywalking-satellite/blob/main/Makefile#L115
 const (
 	// StaleNaN is a signaling NaN, due to the MSB of the mantissa being 0.
 	// This value is chosen with many leading 0s, so we have scope to store more
@@ -236,38 +235,44 @@ func (hd *HistogramData) ToMetricLogs(name string, timeMs int64, labels *MetricL
 	return logs
 }
 
-func appendMetricLogContent(name, time string, value float64, labels *MetricLabels, metric *protocol.Log) {
-	metric.Contents = make([]*protocol.Log_Content, 0, 4)
+// NewMetricLog create a metric log, time support unix milliseconds and unix nanoseconds.
+func NewMetricLog(name string, t int64, value float64, labels *MetricLabels) *protocol.Log {
 	var valStr string
 	if math.Float64bits(value) == StaleNaN {
 		valStr = StaleNan
 	} else {
 		valStr = strconv.FormatFloat(value, 'g', -1, 64)
 	}
+	return NewMetricLogStringVal(name, t, valStr, labels)
+}
+
+// NewMetricLogStringVal create a metric log with val string, time support unix milliseconds and unix nanoseconds.
+func NewMetricLogStringVal(name string, t int64, value string, labels *MetricLabels) *protocol.Log {
+	strTime := strconv.FormatInt(t, 10)
+	var metric *protocol.Log
+
+	switch len(strTime) {
+	case 13:
+		metric = &protocol.Log{}
+		protocol.SetLogTime(metric, uint32(t/1000), uint32((t*1e6)%1e9))
+	case 19:
+		metric = &protocol.Log{}
+		protocol.SetLogTime(metric, uint32(t/1e9), uint32(t%1e9))
+	default:
+		return nil
+	}
+	metric.Contents = make([]*protocol.Log_Content, 0, 4)
 	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__name__", Value: formatNewMetricName(name)})
-	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__time_nano__", Value: time})
+	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__time_nano__", Value: strTime})
 	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__labels__", Value: labels.String()})
-	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__value__", Value: valStr})
-}
-
-func NewMetricLogWithNanoSeconds(name string, timeNano int64, value float64, labels *MetricLabels) *protocol.Log {
-	strTime := strconv.FormatInt(timeNano, 10)
-	metric := &protocol.Log{}
-	protocol.SetLogTime(metric, uint32(timeNano/1e9), uint32(timeNano))
-	appendMetricLogContent(name, strTime, value, labels, metric)
-	return metric
-}
-
-// NewMetricLog caller must sort labels
-func NewMetricLog(name string, timeMs int64, value float64, labels *MetricLabels) *protocol.Log {
-	strTime := strconv.FormatInt(timeMs, 10)
-	metric := &protocol.Log{}
-	protocol.SetLogTime(metric, uint32(timeMs/1000), uint32((timeMs*1e6)%1e9))
-	appendMetricLogContent(name, strTime, value, labels, metric)
+	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__value__", Value: value})
 	return metric
 }
 
 func formatLabelKey(key string) string {
+	if !config.LogtailGlobalConfig.EnableSlsMetricsFormat {
+		return key
+	}
 	var newKey []byte
 	for i := 0; i < len(key); i++ {
 		b := key[i]
@@ -290,6 +295,9 @@ func formatLabelKey(key string) string {
 }
 
 func formatLabelValue(value string) string {
+	if !config.LogtailGlobalConfig.EnableSlsMetricsFormat {
+		return value
+	}
 	var newValue []byte
 	for i := 0; i < len(value); i++ {
 		b := value[i]
@@ -309,6 +317,9 @@ func formatLabelValue(value string) string {
 }
 
 func formatNewMetricName(name string) string {
+	if !config.LogtailGlobalConfig.EnableSlsMetricsFormat {
+		return name
+	}
 	newName := []byte(name)
 	for i, b := range newName {
 		if (b >= 'a' && b <= 'z') ||
