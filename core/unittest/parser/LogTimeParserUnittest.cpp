@@ -39,6 +39,7 @@ public:
 public:
     void TestParseLogTime();
     void TestParseLogTimeSecondCache();
+    void TestParseLogTimeTimeZone();
 
     static void SetUpTestCase() // void Setup()
     {
@@ -53,7 +54,8 @@ public:
 };
 
 APSARA_UNIT_TEST_CASE(LogParserUnittest, TestParseLogTime, 0);
-APSARA_UNIT_TEST_CASE(LogParserUnittest, TestParseLogTimeSecondCache, 0);
+APSARA_UNIT_TEST_CASE(LogParserUnittest, TestParseLogTimeSecondCache, 1);
+APSARA_UNIT_TEST_CASE(LogParserUnittest, TestParseLogTimeTimeZone, 2);
 
 void LogParserUnittest::TestParseLogTime() {
     struct Case {
@@ -237,6 +239,76 @@ void LogParserUnittest::TestParseLogTimeSecondCache() {
                 APSARA_TEST_EQUAL(ret, true);
                 APSARA_TEST_EQUAL(outTime.tv_sec, expectLogTimeBase + i);
                 APSARA_TEST_EQUAL(preciseTimestamp, expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
+            }
+        }
+    }
+}
+
+void LogParserUnittest::TestParseLogTimeTimeZone() {
+    LogtailTime outTime;
+    ParseLogError error;
+    uint64_t preciseTimestamp = 0;
+    PreciseTimestampConfig preciseTimestampConfig;
+    preciseTimestampConfig.enabled = true;
+    preciseTimestampConfig.key = "key";
+    preciseTimestampConfig.unit = TimeStampUnit::MICROSECOND;
+    { // case: UTC
+        int32_t tzOffsetSecond = -GetLocalTimeZoneOffsetSecond();
+        std::string preTimeStr = "2012-01-01 15:04:59";
+        std::string timeFormat = "%Y-%m-%d %H:%M:%S";
+        time_t expectLogTimeBase = 1325430300;
+        long expectLogTimeNanosecondBase = 1325430300000000;
+        for (size_t i = 0; i < 5; ++i) {
+            std::string second = "2012-01-01 15:05:" + (i < 10 ? "0" + to_string(i) : to_string(i));
+            for (size_t j = 0; j < 5; ++j) {
+                std::string inputTimeStr = std::string(second.data());
+                bool ret = LogParser::ParseLogTime("TestData",
+                                                preTimeStr,
+                                                outTime,
+                                                preciseTimestamp,
+                                                inputTimeStr,
+                                                timeFormat.c_str(),
+                                                preciseTimestampConfig,
+                                                -1,
+                                                "",
+                                                "",
+                                                "",
+                                                "",
+                                                error,
+                                                tzOffsetSecond);
+                APSARA_TEST_EQUAL(ret, true);
+                APSARA_TEST_EQUAL(outTime.tv_sec, expectLogTimeBase + i);
+                APSARA_TEST_EQUAL(preciseTimestamp, expectLogTimeNanosecondBase + i * 1000000);
+            }
+        }
+    }
+    { // case: +7
+        int32_t tzOffsetSecond = 7 * 3600 - GetLocalTimeZoneOffsetSecond();
+        std::string preTimeStr = "2012-01-01 15:04:59";
+        std::string timeFormat = "%Y-%m-%d %H:%M:%S";
+        time_t expectLogTimeBase = 1325405100;
+        long expectLogTimeNanosecondBase = 1325405100000000;
+        for (size_t i = 0; i < 5; ++i) {
+            std::string second = "2012-01-01 15:05:" + (i < 10 ? "0" + to_string(i) : to_string(i));
+            for (size_t j = 0; j < 5; ++j) {
+                std::string inputTimeStr = std::string(second.data());
+                bool ret = LogParser::ParseLogTime("TestData",
+                                                preTimeStr,
+                                                outTime,
+                                                preciseTimestamp,
+                                                inputTimeStr,
+                                                timeFormat.c_str(),
+                                                preciseTimestampConfig,
+                                                -1,
+                                                "",
+                                                "",
+                                                "",
+                                                "",
+                                                error,
+                                                tzOffsetSecond);
+                APSARA_TEST_EQUAL(ret, true);
+                APSARA_TEST_EQUAL(outTime.tv_sec, expectLogTimeBase + i);
+                APSARA_TEST_EQUAL(preciseTimestamp, expectLogTimeNanosecondBase + i * 1000000);
             }
         }
     }
