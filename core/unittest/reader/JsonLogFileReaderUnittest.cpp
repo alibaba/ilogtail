@@ -61,6 +61,8 @@ public:
         }
     }
     void TearDown() override { LogFileReader::BUFFER_SIZE = 1024 * 512; }
+    void TestReadGBK();
+    void TestReadUTF8();
     void TestLastMatchedLine();
 
     std::string projectName = "projectName";
@@ -75,6 +77,8 @@ public:
 };
 
 UNIT_TEST_CASE(JsonLogFileReaderUnittest, TestLastMatchedLine);
+UNIT_TEST_CASE(JsonLogFileReaderUnittest, TestReadGBK);
+UNIT_TEST_CASE(JsonLogFileReaderUnittest, TestReadUTF8);
 
 std::string JsonLogFileReaderUnittest::logPathDir;
 std::string JsonLogFileReaderUnittest::gbkFile;
