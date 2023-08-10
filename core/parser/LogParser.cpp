@@ -487,7 +487,12 @@ bool LogParser::ParseLogTime(const char* buffer,
     int nanosecondLength = 0;
     const char* strptimeResult = NULL;
     if ((!haveNanosecond || endWithNanosecond) && IsPrefixString(curTimeStr, timeStr)) {
-        strptimeResult = Strptime(curTimeStr.substr(timeStr.length()).c_str(), "%f", &logTime, nanosecondLength);
+        if (endWithNanosecond) {
+            strptimeResult = Strptime(curTimeStr.substr(timeStr.length()).c_str(), "%f", &logTime, nanosecondLength);
+        } else {
+            strptimeResult = curTimeStr.data() + timeStr.length();
+            logTime.tv_nsec = 0;
+        }
     } else {
         strptimeResult = Strptime(curTimeStr.c_str(), timeFormat, &logTime, nanosecondLength, specifiedYear);
         timeStr = curTimeStr.substr(0, curTimeStr.length()-nanosecondLength);

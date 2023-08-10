@@ -77,7 +77,7 @@ void LogParserUnittest::TestParseLogTime() {
         {"1484147107", "%s", 1484147107, 0, 1484147107000},
         {"1484147107123", "%s", 1484147107, 123000000, 1484147107123},
         {"15:05:07.012 2017-1-11", "%H:%M:%S.%f %Y-%m-%d", 1484147107, 12000000, 1484147107012},
-        {"2017-1-11 15:05:07.012 +0700 (UTC)", "%H:%M:%S.%f %Y-%m-%d.%f %z (%Z)", 1484147107, 12000000, 1484147107012},
+        {"2017-1-11 15:05:07.012 +0700 (UTC)", "%Y-%m-%d %H:%M:%S.%f %z (%Z)", 1484147107, 12000000, 1484147107012},
     };
 
     int32_t tzOffsetSecond = -GetLocalTimeZoneOffsetSecond();
@@ -124,7 +124,36 @@ void LogParserUnittest::TestParseLogTimeSecondCache() {
     preciseTimestampConfig.enabled = true;
     preciseTimestampConfig.key = "key";
     preciseTimestampConfig.unit = TimeStampUnit::MICROSECOND;
-    {
+    { // case: second
+        std::string preTimeStr = "2012-01-01 15:04:59";
+        std::string timeFormat = "%Y-%m-%d %H:%M:%S";
+        time_t expectLogTimeBase = 1325430300;
+        long expectLogTimeNanosecondBase = 1325430300000000;
+        for (size_t i = 0; i < 5; ++i) {
+            std::string second = "2012-01-01 15:05:" + (i < 10 ? "0" + to_string(i) : to_string(i));
+            for (size_t j = 0; j < 5; ++j) {
+                std::string inputTimeStr = std::string(second.data());
+                bool ret = LogParser::ParseLogTime("TestData",
+                                                preTimeStr,
+                                                outTime,
+                                                preciseTimestamp,
+                                                inputTimeStr,
+                                                timeFormat.c_str(),
+                                                preciseTimestampConfig,
+                                                -1,
+                                                "",
+                                                "",
+                                                "",
+                                                "",
+                                                error,
+                                                tzOffsetSecond);
+                APSARA_TEST_EQUAL(ret, true);
+                APSARA_TEST_EQUAL(outTime.tv_sec, expectLogTimeBase + i);
+                APSARA_TEST_EQUAL(preciseTimestamp, expectLogTimeNanosecondBase + i * 1000000);
+            }
+        }
+    }
+    { // case: nanosecond
         std::string preTimeStr = "2012-01-01 15:04:59";
         std::string timeFormat = "%Y-%m-%d %H:%M:%S.%f";
         time_t expectLogTimeBase = 1325430300;
@@ -153,7 +182,7 @@ void LogParserUnittest::TestParseLogTimeSecondCache() {
             }
         }
     }
-    {
+    { // case: timestamp
         std::string preTimeStr = "1484147107123";
         std::string timeFormat = "%s";
         time_t expectLogTimeBase = 1484147107;
@@ -178,11 +207,11 @@ void LogParserUnittest::TestParseLogTimeSecondCache() {
                                                 0);
                 APSARA_TEST_EQUAL(ret, true);
                 APSARA_TEST_EQUAL(outTime.tv_sec, expectLogTimeBase + i);
-                APSARA_TEST_EQUAL(preciseTimestamp, expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
+                APSARA_TEST_EQUAL(preciseTimestamp, expectLogTimeNanosecondBase + i * 1000000);
             }
         }
     }
-    {
+    { // case: nanosecond in the middle
         std::string preTimeStr = "15:04:59.012 2012-01-01";
         std::string timeFormat = "%H:%M:%S.%f %Y-%m-%d";
         time_t expectLogTimeBase = 1325430300;

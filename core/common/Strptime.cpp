@@ -46,9 +46,7 @@ namespace logtail {
     }
 
 static char gmt[] = {"GMT"};
-#ifdef TM_ZONE
 static char utc[] = {"UTC"};
-#endif
 
 /* RFC-822/RFC-2822 */
 static const char* const nast[5] = {"EST", "CST", "MST", "PST", "\0\0\0"};
@@ -355,6 +353,15 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
 #endif
 #ifdef TM_ZONE
                     tm->TM_ZONE = gmt;
+#endif
+                    bp += 3;
+                } else if (strncmp((const char*)bp, utc, 3) == 0) {
+                    tm->tm_isdst = 0;
+#ifdef TM_GMTOFF
+                    tm->TM_GMTOFF = 0;
+#endif
+#ifdef TM_ZONE
+                    tm->TM_ZONE = utc;
 #endif
                     bp += 3;
                 } else {
