@@ -131,10 +131,7 @@ public:
                              ParseLogError& error,
                              int32_t tzOffsetSecond);
 
-    static void AdjustLogTime(LogtailTime& logTime,
-                              uint64_t& preciseTimestamp,
-                              PreciseTimestampConfig preciseTimestampConfig,
-                              int timeZoneOffsetSecond);
+    static void AdjustLogTime(LogtailTime& logTime, int timeZoneOffsetSecond);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogParserUnittest;

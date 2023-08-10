@@ -77,6 +77,7 @@ void LogParserUnittest::TestParseLogTime() {
         {"1484147107", "%s", 1484147107, 0, 1484147107000},
         {"1484147107123", "%s", 1484147107, 123000000, 1484147107123},
         {"15:05:07.012 2017-1-11", "%H:%M:%S.%f %Y-%m-%d", 1484147107, 12000000, 1484147107012},
+        {"2017-1-11 15:05:07.012 +0700 (UTC)", "%H:%M:%S.%f %Y-%m-%d.%f %z (%Z)", 1484147107, 12000000, 1484147107012},
     };
 
     int32_t tzOffsetSecond = -GetLocalTimeZoneOffsetSecond();
@@ -107,10 +108,10 @@ void LogParserUnittest::TestParseLogTime() {
         LOG_INFO(sLogger,
                  ("Case", i)("InputTimeStr", c.inputTimeStr)("FormatStr", c.fmtStr)("ret", ret)(outTimeStr, outTime.tv_sec)(
                      "preciseTimestamp", preciseTimestamp)("error", error));
-        APSARA_TEST_EQUAL(ret, true);
-        APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
-        APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
-        APSARA_TEST_EQUAL(preciseTimestamp, c.exceptedPreciseTimestamp);
+        EXPECT_EQ(ret, true) << "failed: " + c.inputTimeStr;
+        EXPECT_EQ(outTime.tv_sec, c.exceptedLogTime) << "failed: " + c.inputTimeStr;
+        EXPECT_EQ(outTime.tv_nsec, c.exceptedLogTimeNanosecond) << "failed: " + c.inputTimeStr;
+        EXPECT_EQ(preciseTimestamp, c.exceptedPreciseTimestamp) << "failed: " + c.inputTimeStr;
     }
 }
 

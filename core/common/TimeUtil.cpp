@@ -97,6 +97,10 @@ int DeduceYear(const struct tm* tm, const struct tm* currentTm) {
     return currentTm->tm_year;
 }
 
+/*
+    Parse time (local timezone) from log
+    return the position of the parsing ends.
+*/
 const char* Strptime(const char* buf, const char* fmt, LogtailTime* ts, int& nanosecondLength, int32_t specifiedYear /* = -1 */) {
     struct tm tm_ = {0};
     struct tm* tm = &tm_;
