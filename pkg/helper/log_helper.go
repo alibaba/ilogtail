@@ -189,28 +189,24 @@ func (kv *MetricLabels) SubSlice(begin, end int) {
 }
 
 func (kv *MetricLabels) String() string {
+	if kv == nil {
+		return ""
+	}
 	if !kv.sorted || kv.formatStr == "" {
-		kv.clearCache()
 		sort.Sort(kv)
 		var builder strings.Builder
-		kv.labelToStringBuilder(&builder)
+		for index, label := range kv.keyValues {
+			builder.WriteString(label.Name)
+			builder.WriteString("#$#")
+			builder.WriteString(label.Value)
+			if index != len(kv.keyValues)-1 {
+				builder.WriteByte('|')
+			}
+		}
 		kv.formatStr = builder.String()
+		kv.sorted = true
 	}
 	return kv.formatStr
-}
-
-func (kv *MetricLabels) labelToStringBuilder(sb *strings.Builder) {
-	if sb.Len() != 0 {
-		sb.WriteByte('|')
-	}
-	for index, label := range kv.keyValues {
-		sb.WriteString(label.Name)
-		sb.WriteString("#$#")
-		sb.WriteString(label.Value)
-		if index != len(kv.keyValues)-1 {
-			sb.WriteByte('|')
-		}
-	}
 }
 
 // DefBucket ...

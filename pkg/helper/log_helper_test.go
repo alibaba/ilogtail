@@ -29,4 +29,7 @@ func TestMetricLabels_Append(t *testing.T) {
 	log = NewMetricLog("name", 1691646109945, 1, &ml)
 	require.Equal(t, `Time:1691646109 Contents:<Key:"__name__" Value:"name" > Contents:<Key:"__time_nano__" Value:"1691646109945" > Contents:<Key:"__labels__" Value:"key#$#val2|key2#$#val|key3#$#val3" > Contents:<Key:"__value__" Value:"1" > `, log.String())
 
+	log = NewMetricLog("name", 1691646109945, 1, nil)
+	require.Equal(t, `Time:1691646109 Contents:<Key:"__name__" Value:"name" > Contents:<Key:"__time_nano__" Value:"1691646109945" > Contents:<Key:"__labels__" Value:"" > Contents:<Key:"__value__" Value:"1" > `, log.String())
+
 }
