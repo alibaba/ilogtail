@@ -26,6 +26,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
 
+// https://github.com/apache/skywalking-satellite/blob/main/Makefile#L115
 const (
 	// StaleNaN is a signaling NaN, due to the MSB of the mantissa being 0.
 	// This value is chosen with many leading 0s, so we have scope to store more

@@ -30,7 +30,7 @@ func (r *InputSystem) Init(context pipeline.Context) (int, error) {
 }
 
 func (r *InputSystem) CollectTCPStats(collector pipeline.Collector, stat *net.ProtoCountersStat) {
-	r.addMetric(collector, "protocol_tcp_established", r.commonLabels, float64(stat.Stats["CurrEstab"]))
+	r.addMetric(collector, "protocol_tcp_established", &r.commonLabels, float64(stat.Stats["CurrEstab"]))
 }
 
 func (r *InputSystem) CollectOpenFD(collector pipeline.Collector) {

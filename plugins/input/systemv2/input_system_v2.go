@@ -67,7 +67,7 @@ type InputSystem struct {
 	lastDiskStat           disk.IOCountersStat
 	lastDiskStatAll        map[string]disk.IOCountersStat
 	lastDiskTime           time.Time
-	commonLabels           *helper.MetricLabels
+	commonLabels           helper.MetricLabels
 	collectTime            time.Time
 	context                pipeline.Context
 	excludeDiskFsTypeRegex *regexp.Regexp
@@ -119,11 +119,11 @@ func (r *InputSystem) CollectCore(collector pipeline.Collector) {
 	// load stat
 	loadStat, err := load.Avg()
 	if err == nil {
-		r.addMetric(collector, "system_load1", r.commonLabels, loadStat.Load1)
-		r.addMetric(collector, "system_load5", r.commonLabels, loadStat.Load5)
-		r.addMetric(collector, "system_load15", r.commonLabels, loadStat.Load15)
+		r.addMetric(collector, "system_load1", &r.commonLabels, loadStat.Load1)
+		r.addMetric(collector, "system_load5", &r.commonLabels, loadStat.Load5)
+		r.addMetric(collector, "system_load15", &r.commonLabels, loadStat.Load15)
 	}
-	r.addMetric(collector, "system_boot_time", r.commonLabels, float64(r.lastInfo.BootTime))
+	r.addMetric(collector, "system_boot_time", &r.commonLabels, float64(r.lastInfo.BootTime))
 }
 
 func (r *InputSystem) CollectCPU(collector pipeline.Collector) {
@@ -134,7 +134,7 @@ func (r *InputSystem) CollectCPU(collector pipeline.Collector) {
 	for _, c := range cpuInfo {
 		ncpus += c.Cores
 	}
-	r.addMetric(collector, "cpu_count", r.commonLabels, float64(ncpus))
+	r.addMetric(collector, "cpu_count", &r.commonLabels, float64(ncpus))
 	if err == nil && len(cpuStat) > 0 {
 		cpuBusy := cpuStat[0].GuestNice + cpuStat[0].Guest + cpuStat[0].Nice +
 			cpuStat[0].Softirq + cpuStat[0].Irq + cpuStat[0].User + cpuStat[0].System
@@ -157,16 +157,16 @@ func (r *InputSystem) CollectCPU(collector pipeline.Collector) {
 
 		deltaTotal := cpuTotal - r.lastCPUTotal
 		if r.CPUPercent && !r.lastCPUTime.IsZero() && deltaTotal > 0 {
-			r.addMetric(collector, "cpu_util", r.commonLabels, 100*(cpuBusy-r.lastCPUBusy)/deltaTotal*cpuShareFactor)
-			r.addMetric(collector, "cpu_wait_util", r.commonLabels, 100*(cpuStat[0].Iowait-r.lastCPUStat.Iowait)/deltaTotal*cpuShareFactor)
-			r.addMetric(collector, "cpu_sys_util", r.commonLabels, 100*(cpuStat[0].System-r.lastCPUStat.System)/deltaTotal*cpuShareFactor)
-			r.addMetric(collector, "cpu_user_util", r.commonLabels, 100*(cpuStat[0].User-r.lastCPUStat.User)/deltaTotal*cpuShareFactor)
-			r.addMetric(collector, "cpu_irq_util", r.commonLabels, 100*(cpuStat[0].Irq-r.lastCPUStat.Irq)/deltaTotal*cpuShareFactor)
-			r.addMetric(collector, "cpu_softirq_util", r.commonLabels, 100*(cpuStat[0].Softirq-r.lastCPUStat.Softirq)/deltaTotal*cpuShareFactor)
-			r.addMetric(collector, "cpu_nice_util", r.commonLabels, 100*(cpuStat[0].Nice-r.lastCPUStat.Nice)/deltaTotal*cpuShareFactor)
-			r.addMetric(collector, "cpu_steal_util", r.commonLabels, 100*(cpuStat[0].Steal-r.lastCPUStat.Steal)/deltaTotal*cpuShareFactor)
-			r.addMetric(collector, "cpu_guest_util", r.commonLabels, 100*(cpuStat[0].Guest-r.lastCPUStat.Guest)/deltaTotal*cpuShareFactor)
-			r.addMetric(collector, "cpu_guestnice_util", r.commonLabels, 100*(cpuStat[0].GuestNice-r.lastCPUStat.GuestNice)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_util", &r.commonLabels, 100*(cpuBusy-r.lastCPUBusy)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_wait_util", &r.commonLabels, 100*(cpuStat[0].Iowait-r.lastCPUStat.Iowait)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_sys_util", &r.commonLabels, 100*(cpuStat[0].System-r.lastCPUStat.System)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_user_util", &r.commonLabels, 100*(cpuStat[0].User-r.lastCPUStat.User)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_irq_util", &r.commonLabels, 100*(cpuStat[0].Irq-r.lastCPUStat.Irq)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_softirq_util", &r.commonLabels, 100*(cpuStat[0].Softirq-r.lastCPUStat.Softirq)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_nice_util", &r.commonLabels, 100*(cpuStat[0].Nice-r.lastCPUStat.Nice)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_steal_util", &r.commonLabels, 100*(cpuStat[0].Steal-r.lastCPUStat.Steal)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_guest_util", &r.commonLabels, 100*(cpuStat[0].Guest-r.lastCPUStat.Guest)/deltaTotal*cpuShareFactor)
+			r.addMetric(collector, "cpu_guestnice_util", &r.commonLabels, 100*(cpuStat[0].GuestNice-r.lastCPUStat.GuestNice)/deltaTotal*cpuShareFactor)
 		}
 
 		r.lastCPUTime = time.Now()
@@ -180,17 +180,17 @@ func (r *InputSystem) CollectMem(collector pipeline.Collector) {
 	// mem stat
 	memStat, err := mem.VirtualMemory()
 	if err == nil {
-		r.addMetric(collector, "mem_util", r.commonLabels, memStat.UsedPercent)
-		r.addMetric(collector, "mem_cache", r.commonLabels, float64(memStat.Cached))
-		r.addMetric(collector, "mem_free", r.commonLabels, float64(memStat.Free))
-		r.addMetric(collector, "mem_available", r.commonLabels, float64(memStat.Available))
-		r.addMetric(collector, "mem_used", r.commonLabels, float64(memStat.Used))
-		r.addMetric(collector, "mem_total", r.commonLabels, float64(memStat.Total))
+		r.addMetric(collector, "mem_util", &r.commonLabels, memStat.UsedPercent)
+		r.addMetric(collector, "mem_cache", &r.commonLabels, float64(memStat.Cached))
+		r.addMetric(collector, "mem_free", &r.commonLabels, float64(memStat.Free))
+		r.addMetric(collector, "mem_available", &r.commonLabels, float64(memStat.Available))
+		r.addMetric(collector, "mem_used", &r.commonLabels, float64(memStat.Used))
+		r.addMetric(collector, "mem_total", &r.commonLabels, float64(memStat.Total))
 	}
 
 	swapStat, err := mem.SwapMemory()
 	if err == nil {
-		r.addMetric(collector, "mem_swap_util", r.commonLabels, swapStat.UsedPercent)
+		r.addMetric(collector, "mem_swap_util", &r.commonLabels, swapStat.UsedPercent)
 	}
 }
 
@@ -356,13 +356,13 @@ func (r *InputSystem) CollectProtocol(collector pipeline.Collector) {
 					deltaTotalOutSegs := protoCounterStats[i].Stats[totalOutSegField] - r.lastProtoAll[i].Stats[totalOutSegField]
 					deltaTotalInSegs := protoCounterStats[i].Stats[totalInSegField] - r.lastProtoAll[i].Stats[totalInSegField]
 
-					r.addMetric(collector, "protocol_tcp_outsegs", r.commonLabels, float64(deltaTotalOutSegs))
-					r.addMetric(collector, "protocol_tcp_insegs", r.commonLabels, float64(deltaTotalInSegs))
-					r.addMetric(collector, "protocol_tcp_retran_segs", r.commonLabels, float64(deltaRetransSegs))
+					r.addMetric(collector, "protocol_tcp_outsegs", &r.commonLabels, float64(deltaTotalOutSegs))
+					r.addMetric(collector, "protocol_tcp_insegs", &r.commonLabels, float64(deltaTotalInSegs))
+					r.addMetric(collector, "protocol_tcp_retran_segs", &r.commonLabels, float64(deltaRetransSegs))
 					if deltaTotalOutSegs <= 0 {
-						r.addMetric(collector, "protocol_tcp_retran_util", r.commonLabels, 0.)
+						r.addMetric(collector, "protocol_tcp_retran_util", &r.commonLabels, 0.)
 					} else {
-						r.addMetric(collector, "protocol_tcp_retran_util", r.commonLabels, 100*float64(deltaRetransSegs)/float64(deltaTotalOutSegs))
+						r.addMetric(collector, "protocol_tcp_retran_util", &r.commonLabels, 100*float64(deltaRetransSegs)/float64(deltaTotalOutSegs))
 					}
 
 				}
