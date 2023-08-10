@@ -143,12 +143,18 @@ func (kv *MetricLabels) Replace(key, value string) {
 }
 
 func (kv *MetricLabels) Clone() *MetricLabels {
+	if kv == nil {
+		return &MetricLabels{}
+	}
 	var newKeyValues MetricLabels
 	kv.CloneInto(&newKeyValues)
 	return &newKeyValues
 }
 
 func (kv *MetricLabels) CloneInto(dst *MetricLabels) *MetricLabels {
+	if kv == nil {
+		return &MetricLabels{}
+	}
 	if dst == nil {
 		return kv.Clone()
 	}

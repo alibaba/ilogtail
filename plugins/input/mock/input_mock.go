@@ -33,21 +33,19 @@ type InputMock struct {
 	OpenPrometheusPattern bool
 
 	context pipeline.Context
-	labels  *helper.MetricLabels
+	labels  helper.MetricLabels
 }
 
 func (r *InputMock) Init(context pipeline.Context) (int, error) {
 	r.context = context
-	var labels helper.MetricLabels
 	if r.OpenPrometheusPattern {
 		for k, v := range r.Tags {
-			labels.Append(k, v)
+			r.labels.Append(k, v)
 		}
 		for k, v := range r.Fields {
-			labels.Append(k, fmt.Sprint(v))
+			r.labels.Append(k, fmt.Sprint(v))
 		}
 	}
-	r.labels = &labels
 	return 0, nil
 }
 
@@ -58,7 +56,7 @@ func (r *InputMock) Description() string {
 func (r *InputMock) Collect(collector pipeline.Collector) error {
 	r.Index++
 	if r.OpenPrometheusPattern {
-		collector.AddRawLog(helper.NewMetricLog("metrics_mock", time.Now().UnixMilli(), float64(r.Index), r.labels))
+		collector.AddRawLog(helper.NewMetricLog("metrics_mock", time.Now().UnixNano(), float64(r.Index), &r.labels))
 	} else {
 		// original log pattern.
 		fields := make(map[string]string)

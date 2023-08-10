@@ -55,8 +55,7 @@ func (h *JVMMetricHandler) toMetricStoreFormat(metric *skywalking.JVMMetric, ser
 	labels.Append("service", service)
 	labels.Append("serviceInstance", serviceInstance)
 
-	cpuUsage := helper.NewMetricLog("skywalking_jvm_cpu_usage", metric.Time,
-		metric.GetCpu().UsagePercent, &labels)
+	cpuUsage := helper.NewMetricLog("skywalking_jvm_cpu_usage", metric.Time, metric.GetCpu().UsagePercent, &labels)
 	logs = append(logs, cpuUsage)
 
 	memLabels := labels.Clone()
@@ -68,22 +67,16 @@ func (h *JVMMetricHandler) toMetricStoreFormat(metric *skywalking.JVMMetric, ser
 			memType = "nonheap"
 		}
 		memLabels.Replace("type", memType)
-		memCommitted := helper.NewMetricLog("skywalking_jvm_memory_committed", metric.GetTime(),
-			float64(mem.Committed),
-			memLabels)
+		memCommitted := helper.NewMetricLog("skywalking_jvm_memory_committed", metric.GetTime(), float64(mem.Committed), memLabels)
 		logs = append(logs, memCommitted)
 
 		memInit := helper.NewMetricLog("skywalking_jvm_memory_init", metric.GetTime(), float64(mem.Init), memLabels)
 		logs = append(logs, memInit)
 
-		memMax := helper.NewMetricLog("skywalking_jvm_memory_max", metric.GetTime(),
-			float64(mem.Max),
-			memLabels)
+		memMax := helper.NewMetricLog("skywalking_jvm_memory_max", metric.GetTime(), float64(mem.Max), memLabels)
 		logs = append(logs, memMax)
 
-		memUsed := helper.NewMetricLog("skywalking_jvm_memory_used", metric.GetTime(),
-			float64(mem.Used),
-			memLabels)
+		memUsed := helper.NewMetricLog("skywalking_jvm_memory_used", metric.GetTime(), float64(mem.Used), memLabels)
 		logs = append(logs, memUsed)
 	}
 	for _, memPool := range metric.MemoryPool {

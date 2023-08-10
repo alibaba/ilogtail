@@ -16,6 +16,7 @@ package skywalkingv2
 
 import (
 	"context"
+
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
