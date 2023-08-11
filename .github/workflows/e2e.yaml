@@ -30,12 +30,12 @@ on:
       - 1.*
 jobs:
   CI:
-    runs-on: ${{ matrix.runner }}-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     strategy:
       matrix:
         go-version: [ 1.19.10 ]
-        runner: [ ubuntu ]
+        runner: [ self-hosted ]
       fail-fast: true
     steps:
       - name: Set up Go ${{ matrix.go-version }}
@@ -62,13 +62,13 @@ jobs:
         run: make e2e
 
       - name: UnitTest E2e Engine
-        if: matrix.runner == 'ubuntu'
+        if: matrix.runner == 'self-hosted'
         run: |
           go version
           make unittest_e2e_engine
 
   result:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 30
     needs: [ CI ]
     steps:
