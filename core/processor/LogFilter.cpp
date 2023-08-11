@@ -173,6 +173,14 @@ bool LogFilter::IsMatched(const Log& log, const LogFilterRule& rule, const LogGr
             }
         }
         if (false == found) {
+            // not found this key
+            if (false == found) {
+                LOG_ERROR(sLogger, ("FilterKeys not in logs", keys[i]));
+                if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                    context.SendAlarm(REGEX_MATCH_ALARM, "FilterKeys " + keys[i] " not in logs");
+                }
+                return false;
+            }
             return false;
         }
     }
