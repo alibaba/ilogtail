@@ -18,12 +18,12 @@ import (
 	"fmt"
 	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/alibaba/ilogtail/pkg/util"
 	"math"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"unsafe"
 )
 
 const (
@@ -297,7 +297,7 @@ func formatLabelKey(key string) string {
 	if newKey == nil {
 		return key
 	}
-	return string(newKey)
+	return util.ZeroCopyBytesToString(newKey)
 }
 
 func formatLabelValue(value string) string {
@@ -319,7 +319,7 @@ func formatLabelValue(value string) string {
 	if newValue == nil {
 		return value
 	}
-	return string(newValue)
+	return util.ZeroCopyBytesToString(newValue)
 }
 
 func formatNewMetricName(name string) string {
@@ -338,7 +338,7 @@ func formatNewMetricName(name string) string {
 			newName[i] = '_'
 		}
 	}
-	return *(*string)(unsafe.Pointer(&newName))
+	return util.ZeroCopyBytesToString(newName)
 }
 
 // ReplaceInvalidChars analog of invalidChars = regexp.MustCompile("[^a-zA-Z0-9_]")
