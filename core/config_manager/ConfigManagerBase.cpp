@@ -587,10 +587,14 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
                 // normal log file config can have plugin too
                 if (!pluginConfig.empty() && !pluginConfigJson.isNull()) {
-                    if ((pluginConfigJson.isMember("processors")
-                         && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray()))
-                        || (pluginConfigJson.isMember("flushers")
-                            && (pluginConfigJson["flushers"].isObject() || pluginConfigJson["flushers"].isArray()))) {
+                    if (pluginConfigJson.isMember("processors")
+                        && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())
+                        && !pluginConfigJson["processors"].empty()) {
+                        config->mPluginProcessFlag = true;
+                    }
+                    if (pluginConfigJson.isMember("flushers")
+                        && (pluginConfigJson["flushers"].isObject() || pluginConfigJson["flushers"].isArray())
+                        && !pluginConfigJson["flushers"].empty() && IsMeaningfulFlusher(pluginConfigJson["flushers"])) {
                         config->mPluginProcessFlag = true;
                     }
                     // check processors
@@ -1077,6 +1081,21 @@ LogFilterRule* ConfigManagerBase::GetFilterFule(const Json::Value& filterKeys, c
         }
     }
     return rulePtr;
+}
+
+bool ConfigManagerBase::IsMeaningfulFlusher(const Json::Value& flusherConfig) {
+    // Only one sls flusher without any option is not meaningful to use go plugin
+    if (flusherConfig.isArray() && flusherConfig.size() == 1) {
+        const auto& flusher = flusherConfig[0];
+        try {
+            if (flusher["type"].asString() == "flusher_sls" && flusher["detail"].empty()) {
+                return false;
+            }
+        } catch (Json::Exception& e) {
+            LOG_WARNING(sLogger, ("parse flusher plugin json failed", e.what()));
+        }
+    }
+    return true;
 }
 
 bool ConfigManagerBase::LoadAllConfig() {

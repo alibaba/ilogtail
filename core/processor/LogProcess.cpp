@@ -307,11 +307,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             ProcessProfile profile;
             profile.readBytes = readBytes;
             int32_t parseStartTime = (int32_t)time(NULL);
+            bool needSend = false;
             if (config->mLogType == STREAM_LOG || config->mLogType == PLUGIN_LOG
                 || (config->mPluginProcessFlag && !config->mAdvancedConfig.mForceEnablePipeline)) {
-                ProcessBufferLegacy(logBuffer, logFileReader, logGroup, profile, *config);
+                needSend = 0 == ProcessBufferLegacy(logBuffer, logFileReader, logGroup, profile, *config);
             } else {
-                ProcessBuffer(logBuffer, logFileReader, logGroup, profile);
+                needSend = 0 == ProcessBuffer(logBuffer, logFileReader, logGroup, profile);
             }
             const std::string& projectName = config->GetProjectName();
             const std::string& category = config->GetCategory();
@@ -337,7 +338,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             }
 
 
-            if (logGroup.logs_size() > 0) { // send log group
+            if (logGroup.logs_size() > 0 && needSend) { // send log group
                 IntegrityConfig* integrityConfig = NULL;
                 LineCountConfig* lineCountConfig = NULL;
                 if (config->mIntegrityConfig->mIntegritySwitch) {
@@ -418,10 +419,10 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
     return NULL;
 }
 
-void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
-                               LogFileReaderPtr& logFileReader,
-                               sls_logs::LogGroup& resultGroup,
-                               ProcessProfile& profile) {
+int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
+                              LogFileReaderPtr& logFileReader,
+                              sls_logs::LogGroup& resultGroup,
+                              ProcessProfile& profile) {
     auto pipeline = PipelineManager::GetInstance()->FindPipelineByName(
         logFileReader->GetConfigName()); // pipeline should be set in the loggroup by input
     if (pipeline.get() == nullptr) {
@@ -429,7 +430,7 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
                  ("can not find pipeline while processing log, maybe config deleted. config",
                   logFileReader->GetConfigName())("project", logFileReader->GetProjectName())(
                      "logstore", logFileReader->GetCategory()));
-        return;
+        return -1;
     }
     // construct a logGroup, it should be moved into input later
     PipelineEventGroup eventGroup(logBuffer);
@@ -462,10 +463,10 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         FillLogGroupForPlugin(eventGroup, logFileReader, resultGroup);
         LogtailPlugin::GetInstance()->ProcessLogGroup(
             logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
-        return;
+        return 1;
     }
     FillLogGroupAllNative(eventGroup, logFileReader, resultGroup);
-    return;
+    return 0;
 }
 
 void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup, sls_logs::LogGroup& resultGroup) {
@@ -566,11 +567,11 @@ void LogProcess::FillLogGroupAllNative(const PipelineEventGroup& eventGroup,
     }
 }
 
-void LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
-                                     LogFileReaderPtr& logFileReader,
-                                     sls_logs::LogGroup& logGroup,
-                                     ProcessProfile& profile,
-                                     Config& config) {
+int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
+                                    LogFileReaderPtr& logFileReader,
+                                    sls_logs::LogGroup& logGroup,
+                                    ProcessProfile& profile,
+                                    Config& config) {
     auto logPath = logFileReader->GetConvertedPath();
     // Mixed mode, pass buffer to plugin system.
     if (logFileReader->GetPluginFlag()) {
@@ -624,7 +625,7 @@ void LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                                                           logFileReader->GetTopicName(),
                                                           passingTags);
         }
-        return;
+        return 1;
     }
 
     StringView& rawBuffer = logBuffer->rawBuffer;
@@ -784,6 +785,7 @@ void LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
             }
         }
     }
+    return 0;
 }
 
 void LogProcess::DoFuseHandling() {

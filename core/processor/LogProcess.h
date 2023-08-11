@@ -89,15 +89,21 @@ public:
 private:
     LogProcess();
     ~LogProcess();
-    void ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
-                       LogFileReaderPtr& logFileReader,
-                       sls_logs::LogGroup& logGroup,
-                       ProcessProfile& profile);
-    void ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
-                             LogFileReaderPtr& logFileReader,
-                             sls_logs::LogGroup& logGroup,
-                             ProcessProfile& profile,
-                             Config& config);
+    /**
+     * @retval 0 if continue processing by C++, 1 if processed by Go
+     */
+    int ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
+                      LogFileReaderPtr& logFileReader,
+                      sls_logs::LogGroup& logGroup,
+                      ProcessProfile& profile);
+    /**
+     * @retval 0 if continue processing by C++, 1 if processed by Go
+     */
+    int ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
+                            LogFileReaderPtr& logFileReader,
+                            sls_logs::LogGroup& logGroup,
+                            ProcessProfile& profile,
+                            Config& config);
     void DoFuseHandling();
     void FillLogGroupLogs(const PipelineEventGroup& eventGroup, sls_logs::LogGroup& resultGroup);
     void FillLogGroupForPlugin(const PipelineEventGroup& eventGroup,
