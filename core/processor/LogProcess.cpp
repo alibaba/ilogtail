@@ -60,6 +60,7 @@ DEFINE_FLAG_BOOL(enable_chinese_tag_path, "Enable Chinese __tag__.__path__", tru
 #endif
 DEFINE_FLAG_STRING(raw_log_tag, "", "__raw__");
 DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged buffer, seconds", 1);
+DEFINE_FLAG_BOOL(enable_new_pipeline, "", false);
 
 namespace logtail {
 
@@ -308,7 +309,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             profile.readBytes = readBytes;
             int32_t parseStartTime = (int32_t)time(NULL);
             bool needSend = false;
-            if (config->mLogType == STREAM_LOG || config->mLogType == PLUGIN_LOG
+            if (!BOOL_FLAG(enable_new_pipeline) || config->mLogType == STREAM_LOG || config->mLogType == PLUGIN_LOG
                 || (config->mPluginProcessFlag && !config->mAdvancedConfig.mForceEnablePipeline)) {
                 needSend = 0 == ProcessBufferLegacy(logBuffer, logFileReader, logGroup, profile, *config);
             } else {
@@ -674,7 +675,6 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
         // static int linesCount = 0;
         // linesCount += lines;
         // LOG_INFO(sLogger, ("Logprocess lines", lines)("Total lines", linesCount));
-        LogGroup logGroup;
         time_t lastLogLineTime = 0;
         string lastLogTimeStr = "";
         uint32_t logGroupSize = 0;
