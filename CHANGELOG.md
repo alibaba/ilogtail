@@ -49,6 +49,7 @@ your changes, such as:
 - [public] [both] [updated] Upgrade go version to 1.19
 - [public] [both] [updated] Refactory LogBuffer structure
 - [inner] [both] [updated] Logtail containers monitor refine code
+- [public] [both] [updated] Flusher Kafka V2: support send the message with headers to kafka
 
 - [public] [both] [fixed] Fix service_go_profile nil panic
 - [public] [both] [fixed] Fix broken container stdout log path link
