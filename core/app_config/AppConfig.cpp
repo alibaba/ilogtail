@@ -54,15 +54,16 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
             string host = configServerAddress[0];
             int32_t port = atoi(configServerAddress[1].c_str());
 
-            std::string exception;
+            std::string exception_ip;
             // regular expressions to verify ip
             boost::regex reg_ip
                 = boost::regex("(?:(?:1[0-9][0-9]\.)|(?:2[0-4][0-9]\.)|(?:25[0-5]\.)|(?:[1-9][0-9]\.)|(?:[0-9]\.)){3}(?"
                                ":(?:1[0-9][0-9])|(?:2[0-4][0-9])|(?:25[0-5])|(?:[1-9][0-9])|(?:[0-9]))");  
+            std::string exception_domain;
             // regular expressions to verify domain name
             boost::regex reg_domain = boost::regex("(?:[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\.){1,}(?:[a-zA-Z]{2,})");
-            if (!BoostRegexMatch(host.c_str(), reg_ip, exception) && !BoostRegexMatch(host.c_str(), reg_domain, exception))
-                LOG_WARNING(sLogger, ("ilogtail_configserver_address", "parse fail")("exception", exception));
+            if (!BoostRegexMatch(host.c_str(), reg_ip, exception_ip) && !BoostRegexMatch(host.c_str(), reg_domain, exception_domain))
+                LOG_WARNING(sLogger, ("ilogtail_configserver_address", "parse fail")("exception_ip", exception_ip)("exception_domain", exception_domain));
             else if (port < 1 || port > 65535)
                 LOG_WARNING(sLogger, ("ilogtail_configserver_address", "illegal port")("port", port));
             else
