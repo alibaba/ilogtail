@@ -48,7 +48,7 @@ public:
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& MutableEvents() { return mEvents; }
     void AddEvent(const PipelineEventPtr& event);
-    void AddEvent(std::unique_ptr<PipelineEvent> event);
+    void AddEvent(std::unique_ptr<PipelineEvent>&& event);
     void SwapEvents(EventsContainer& other) { mEvents.swap(other); }
     // void SetSourceBuffer(std::shared_ptr<SourceBuffer> sourceBuffer) { mSourceBuffer = sourceBuffer; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer() { return mSourceBuffer; }

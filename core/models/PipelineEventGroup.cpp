@@ -26,7 +26,7 @@ void PipelineEventGroup::AddEvent(const PipelineEventPtr& event) {
     mEvents.emplace_back(event);
 }
 
-void PipelineEventGroup::AddEvent(std::unique_ptr<PipelineEvent> event) {
+void PipelineEventGroup::AddEvent(std::unique_ptr<PipelineEvent>&& event) {
     mEvents.emplace_back(std::move(event));
 }
 

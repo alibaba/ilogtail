@@ -36,25 +36,26 @@ private:
 
 class BufferAllocator {
 public:
-    BufferAllocator() : mSize(0), mUsed(0), mOtherUsed(0) {}
+    BufferAllocator() : mCapacity(0), mUsed(0), mOtherUsed(0) {}
 
-    bool Init(size_t size) {
-        if (size == 0 || mSize > 0) {
+    bool Init(size_t capacity) {
+        if (capacity == 0 || mCapacity > 0) {
             return false;
         }
-        mData.reset(new char[size]);
-        mSize = size;
+        mData.reset(new char[capacity]);
+        mCapacity = capacity;
         return true;
     }
 
-    bool IsInited() { return mSize > 0; }
+    bool IsInited() { return mCapacity > 0; }
 
     void* Allocate(size_t size) {
-        if (mSize == 0) {
+        if (mCapacity == 0) {
             return nullptr;
         }
-        if (mUsed + size > mSize) {
+        if (mUsed + size > mCapacity) {
             mOtherData.emplace_back(new char[size]);
+            mOtherUsed += size;
             return mOtherData.back().get();
         }
         void* result = mData.get() + mUsed;
@@ -64,11 +65,11 @@ public:
 
     size_t TotalAllocated() { return mUsed + mOtherUsed; }
 
-    size_t TotalMemory() { return mSize + mOtherUsed; }
+    size_t TotalMemory() { return mCapacity + mOtherUsed; }
 
 private:
     std::unique_ptr<char[]> mData;
-    size_t mSize;
+    size_t mCapacity;
     size_t mUsed;
     // Stores other memory allocation than buffer
     std::list<std::unique_ptr<char[]>> mOtherData;

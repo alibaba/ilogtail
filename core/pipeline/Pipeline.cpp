@@ -113,7 +113,7 @@ void Pipeline::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance> processor, const ComponentConfig& config) {
+bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const ComponentConfig& config) {
     if (!processor) {
         LOG_ERROR(GetContext().GetLogger(),
                   ("CreateProcessor", ProcessorSplitRegexNative::Name())("Error", "Cannot find plugin"));

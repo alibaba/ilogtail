@@ -27,10 +27,10 @@ namespace logtail {
 class PipelineEventPtr {
 public:
     PipelineEventPtr() {}
-    PipelineEventPtr(std::unique_ptr<PipelineEvent> ptr) : mData(std::move(ptr)) {}
+    PipelineEventPtr(std::unique_ptr<PipelineEvent>&& ptr) : mData(std::move(ptr)) {}
     // default copy/move constructor is ok
-    void Reset(std::unique_ptr<PipelineEvent> ptr) { mData.reset(ptr.release()); }
-    PipelineEventPtr& operator=(std::unique_ptr<PipelineEvent> ptr) {
+    void Reset(std::unique_ptr<PipelineEvent>&& ptr) { mData.reset(ptr.release()); }
+    PipelineEventPtr& operator=(std::unique_ptr<PipelineEvent>&& ptr) {
         mData = std::move(ptr);
         return *this;
     }
