@@ -50,11 +50,15 @@ void ProcessorSplitRegexNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
+bool ProcessorSplitRegexNative::IsSupportedEvent(const PipelineEventPtr& e) {
+    return e.Is<LogEvent>();
+}
+
 void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
                                              const StringView& logPath,
                                              const PipelineEventPtr& e,
                                              EventsContainer& newEvents) {
-    if (!e.Is<LogEvent>()) {
+    if (!IsSupportedEvent(e)) {
         newEvents.emplace_back(e);
         return;
     }

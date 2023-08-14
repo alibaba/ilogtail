@@ -40,6 +40,11 @@ struct ProcessProfile {
 class PipelineContext {
 public:
     PipelineContext() {}
+    PipelineContext(const PipelineContext&) = delete;
+    PipelineContext(PipelineContext&&) = delete;
+    PipelineContext operator=(const PipelineContext&) = delete;
+    PipelineContext operator=(PipelineContext&&) = delete;
+
     const std::string& GetProjectName() const { return mProjectName; }
     void SetProjectName(const std::string& projectName) { mProjectName = projectName; }
     const std::string& GetLogstoreName() const { return mLogstoreName; }
@@ -55,11 +60,6 @@ public:
     LogtailAlarm& GetAlarm() { return *mAlarm; };
 
 private:
-    PipelineContext(const PipelineContext&) = delete;
-    PipelineContext(PipelineContext&&) = delete;
-    PipelineContext operator=(const PipelineContext&) = delete;
-    PipelineContext operator=(PipelineContext&&) = delete;
-
     std::string mProjectName, mLogstoreName, mConfigName, mRegion;
     ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();

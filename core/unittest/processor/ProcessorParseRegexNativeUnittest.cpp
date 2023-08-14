@@ -74,7 +74,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     config.mKeys->emplace_back("content");
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto eventGroup = PipelineEventGroup(sourceBuffer);
+    PipelineEventGroup eventGroup(sourceBuffer);
     std::string inJson = R"({
         "events" :
         [
@@ -121,7 +121,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     config.mKeys->emplace_back("key1,key2");
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto eventGroup = PipelineEventGroup(sourceBuffer);
+    PipelineEventGroup eventGroup(sourceBuffer);
     std::string inJson = R"({
         "events" :
         [

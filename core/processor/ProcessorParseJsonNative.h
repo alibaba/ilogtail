@@ -26,6 +26,9 @@ public:
     bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseJsonNativeUnittest;
 #endif

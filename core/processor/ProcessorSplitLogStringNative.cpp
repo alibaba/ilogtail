@@ -43,10 +43,14 @@ void ProcessorSplitLogStringNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
+bool ProcessorSplitLogStringNative::IsSupportedEvent(const PipelineEventPtr& e) {
+    return e.Is<LogEvent>();
+}
+
 void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
                                                  const PipelineEventPtr& e,
                                                  EventsContainer& newEvents) {
-    if (!e.Is<LogEvent>()) {
+    if (!IsSupportedEvent(e)) {
         newEvents.emplace_back(e);
         return;
     }

@@ -28,4 +28,8 @@ void ProcessorParseDelimiterNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
+bool ProcessorParseDelimiterNative::IsSupportedEvent(const PipelineEventPtr& e) {
+    return e.Is<LogEvent>();
+}
+
 } // namespace logtail

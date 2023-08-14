@@ -28,4 +28,8 @@ void ProcessorParseJsonNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
+bool ProcessorParseJsonNative::IsSupportedEvent(const PipelineEventPtr& e) {
+    return e.Is<LogEvent>();
+}
+
 } // namespace logtail

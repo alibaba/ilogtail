@@ -24,6 +24,9 @@ public:
     bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
+
 private:
     /// @return false if data need to be discarded
     bool ProcessEvent(StringView logPath, PipelineEventPtr& e, StringView& timeStrCache);

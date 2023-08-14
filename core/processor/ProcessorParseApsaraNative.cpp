@@ -28,4 +28,8 @@ void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
+bool ProcessorParseApsaraNative::IsSupportedEvent(const PipelineEventPtr& e) {
+    return e.Is<LogEvent>();
+}
+
 } // namespace logtail

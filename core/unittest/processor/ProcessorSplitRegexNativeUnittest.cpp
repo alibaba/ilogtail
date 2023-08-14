@@ -67,7 +67,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventWholeLine() {
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto eventGroup = PipelineEventGroup(sourceBuffer);
+    PipelineEventGroup eventGroup(sourceBuffer);
     auto logEvent = LogEvent::CreateEvent(sourceBuffer);
     logEvent->SetContent(StringView(DEFAULT_CONTENT_KEY), StringView("line1\nline2"));
     logEvent->SetContent(EVENT_META_LOG_FILE_OFFSET, StringView("0"));
@@ -97,7 +97,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto eventGroup = PipelineEventGroup(sourceBuffer);
+    PipelineEventGroup eventGroup(sourceBuffer);
     auto logEvent = LogEvent::CreateEvent(sourceBuffer);
     logEvent->SetContent(StringView(DEFAULT_CONTENT_KEY), StringView("badline1\ncontinue\nline2\ncontinue"));
     logEvent->SetContent(EVENT_META_LOG_FILE_OFFSET, StringView("0"));
@@ -125,7 +125,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto eventGroup = PipelineEventGroup(sourceBuffer);
+    PipelineEventGroup eventGroup(sourceBuffer);
     auto logEvent = LogEvent::CreateEvent(sourceBuffer);
     logEvent->SetContent(StringView(DEFAULT_CONTENT_KEY), StringView("badline1\ncontinue\nline2\ncontinue"));
     logEvent->SetContent(EVENT_META_LOG_FILE_OFFSET, StringView("0"));
@@ -157,7 +157,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcess() {
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto eventGroup = PipelineEventGroup(sourceBuffer);
+    PipelineEventGroup eventGroup(sourceBuffer);
     eventGroup.SetMetadata(EVENT_META_LOG_FILE_PATH, StringView("/var/log/message"));
     auto logEvent = LogEvent::CreateEvent(sourceBuffer);
     logEvent->SetContent(StringView(DEFAULT_CONTENT_KEY), StringView("line1\ncontinue\nline2\ncontinue"));

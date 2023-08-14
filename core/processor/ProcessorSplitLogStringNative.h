@@ -26,6 +26,9 @@ public:
     bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
+
 private:
     void ProcessEvent(PipelineEventGroup& logGroup, const PipelineEventPtr& e, EventsContainer& newEvents);
     void LogSplit(const char* buffer, int32_t size, int32_t& lineFeed, std::vector<StringView>& logIndex);

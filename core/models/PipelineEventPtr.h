@@ -38,13 +38,13 @@ public:
     template <typename T>
     bool Is() const {
         if (typeid(T) == typeid(LogEvent)) {
-            return mData->mType == LOG_EVENT_TYPE;
+            return mData->GetType() == LOG_EVENT_TYPE;
         }
         if (typeid(T) == typeid(MetricEvent)) {
-            return mData->mType == METRIC_EVENT_TYPE;
+            return mData->GetType() == METRIC_EVENT_TYPE;
         }
         if (typeid(T) == typeid(SpanEvent)) {
-            return mData->mType == SPAN_EVENT_TYPE;
+            return mData->GetType() == SPAN_EVENT_TYPE;
         }
         return false;
     }

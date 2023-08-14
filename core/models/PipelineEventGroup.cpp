@@ -22,7 +22,7 @@
 
 namespace logtail {
 
-void PipelineEventGroup::AddEvent(PipelineEventPtr event) {
+void PipelineEventGroup::AddEvent(const PipelineEventPtr& event) {
     mEvents.emplace_back(event);
 }
 

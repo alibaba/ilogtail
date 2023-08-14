@@ -67,7 +67,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessNoFormat() {
     config.mLogTimeZoneOffsetSecond = 28800;
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto eventGroup = PipelineEventGroup(sourceBuffer);
+    PipelineEventGroup eventGroup(sourceBuffer);
     std::string inJson = R"({
         "events" :
         [

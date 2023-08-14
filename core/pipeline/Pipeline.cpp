@@ -25,11 +25,9 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
-#include "../processor/ProcessorFillGroupInfoNative.h"
+#include "processor/ProcessorFillGroupInfoNative.h"
 
 namespace logtail {
-Pipeline::~Pipeline() {
-}
 
 bool Pipeline::Init(const PipelineConfig& config) {
     mName = config.mConfigName;

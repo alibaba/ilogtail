@@ -28,14 +28,13 @@ namespace logtail {
 class ProcessorInstance : public PluginInstance {
 public:
     ProcessorInstance(Processor* plugin, const std::string& pluginId) : PluginInstance(pluginId), mPlugin(plugin) {}
-    ~ProcessorInstance() { delete mPlugin; }
 
     bool Init(const ComponentConfig& config, PipelineContext& context);
     void Process(PipelineEventGroup& logGroup);
 
 private:
-    Processor* mPlugin;
-    PipelineContext* mContext;
+    std::unique_ptr<Processor> mPlugin;
+    PipelineContext* mContext = nullptr;
 };
 
 } // namespace logtail

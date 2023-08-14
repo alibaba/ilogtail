@@ -24,7 +24,6 @@ namespace logtail {
 class Pipeline {
 public:
     Pipeline() {}
-    ~Pipeline();
     const std::string& Name() const { return mName; }
     bool Init(const PipelineConfig& config);
     void Process(PipelineEventGroup& logGroup);

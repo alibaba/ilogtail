@@ -53,7 +53,7 @@ void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
     const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
-    EventsContainer& events = logGroup.ModifiableEvents();
+    EventsContainer& events = logGroup.MutableEvents();
     // works good normally. poor performance if most data need to be discarded.
     for (auto it = events.begin(); it != events.end();) {
         if (ProcessorParseRegexNative::ProcessEvent(logPath, *it)) {
@@ -65,8 +65,12 @@ void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
+bool ProcessorParseRegexNative::IsSupportedEvent(const PipelineEventPtr& e) {
+    return e.Is<LogEvent>();
+}
+
 bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e) {
-    if (!e.Is<LogEvent>()) {
+    if (!IsSupportedEvent(e)) {
         return true;
     }
     LogEvent& sourceEvent = e.Cast<LogEvent>();

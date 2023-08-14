@@ -38,6 +38,10 @@ void DynamicCProcessorProxy::Process(PipelineEventGroup& logGroup) {
     _c_ins->plugin->process(_c_ins->plugin_state, &logGroup);
 }
 
+bool DynamicCProcessorProxy::IsSupportedEvent(const PipelineEventPtr& /*e*/) {
+    return true;
+}
+
 void DynamicCProcessorProxy::SetCProcessor(const processor_interface_t* cprocessor) {
     _c_ins->plugin = cprocessor;
 }

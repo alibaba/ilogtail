@@ -30,6 +30,7 @@ public:
     virtual void Process(PipelineEventGroup& logGroup) = 0;
 
 protected:
+    virtual bool IsSupportedEvent(const PipelineEventPtr& e) = 0;
     PipelineContext* mContext = nullptr;
 };
 } // namespace logtail

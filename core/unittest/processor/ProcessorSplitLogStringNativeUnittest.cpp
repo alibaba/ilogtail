@@ -62,7 +62,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
     config.mAdvancedConfig.mEnableLogPositionMeta = true;
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto eventGroup = PipelineEventGroup(sourceBuffer);
+    PipelineEventGroup eventGroup(sourceBuffer);
     std::string inJson = R"({
         "events" :
         [
@@ -125,7 +125,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
     config.mAdvancedConfig.mEnableLogPositionMeta = false;
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto eventGroup = PipelineEventGroup(sourceBuffer);
+    PipelineEventGroup eventGroup(sourceBuffer);
     std::string inJson = R"({
         "events" :
         [

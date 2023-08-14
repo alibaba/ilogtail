@@ -29,8 +29,6 @@ enum PipelineEventType { VOID_EVENT_TYPE = 0, LOG_EVENT_TYPE = 1, METRIC_EVENT_T
 
 const std::string& PipelineEventTypeToString(PipelineEventType t);
 
-class PipelineEventPtr;
-class PipelineGroupEvents;
 class PipelineEvent {
 public:
     virtual ~PipelineEvent() {}
@@ -52,8 +50,6 @@ protected:
     time_t timestamp = 0;
     PipelineEventType mType = VOID_EVENT_TYPE;
     std::shared_ptr<SourceBuffer> mSourceBuffer;
-    friend class PipelineEventPtr;
-    friend class PipelineGroupEvents;
 };
 
 extern StringView gEmptyStringView;

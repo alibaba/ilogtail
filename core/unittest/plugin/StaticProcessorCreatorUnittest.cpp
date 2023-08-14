@@ -23,6 +23,7 @@ public:
     static const char* Name() { return "processor_mock"; }
     bool Init(const ComponentConfig&) override { return true; }
     void Process(PipelineEventGroup&) override {}
+    bool IsSupportedEvent(const PipelineEventPtr& e) override { return true; }
 };
 
 class StaticProcessorCreatorUnittest : public ::testing::Test {

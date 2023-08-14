@@ -31,6 +31,9 @@ public:
     void Process(PipelineEventGroup& logGroup) override;
     void SetCProcessor(const processor_interface_t* c_ins);
 
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
+
 private:
     std::string _name;
     processor_instance_t* _c_ins;

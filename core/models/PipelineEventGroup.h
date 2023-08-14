@@ -22,10 +22,18 @@
 
 namespace logtail {
 
+using GroupInfoMetadata = std::map<StringView, StringView>;
+using GroupInfoTags = std::map<StringView, StringView>;
+
 class GroupInfo {
 public:
+    const GroupInfoMetadata& GetAllMetadata() const { return metadata; }
+    const GroupInfoTags& GetAllTags() const { return tags; }
+
+private:
     std::map<StringView, StringView> metadata; // predefined source/topic etc. should have conventional protocol
     std::map<StringView, StringView> tags; // custom tags
+    friend class PipelineEventGroup;
 };
 
 // DeepCopy is required if we want to support no-linear topology
@@ -34,13 +42,13 @@ using EventsContainer = std::vector<PipelineEventPtr>;
 class PipelineEventGroup {
 public:
     PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
+    PipelineEventGroup(const PipelineEventGroup&) = delete;
+    PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
     const GroupInfo& GetGroupInfo() const { return mGroup; }
-    // GroupInfo& ModifiableGroupInfo() { return mGroup; }
     const EventsContainer& GetEvents() const { return mEvents; }
-    EventsContainer& ModifiableEvents() { return mEvents; }
-    void AddEvent(PipelineEventPtr);
+    EventsContainer& MutableEvents() { return mEvents; }
+    void AddEvent(const PipelineEventPtr& event);
     void AddEvent(std::unique_ptr<PipelineEvent> event);
-    void Swap(PipelineEventGroup& other) { std::swap(*this, other); }
     void SwapEvents(EventsContainer& other) { mEvents.swap(other); }
     // void SetSourceBuffer(std::shared_ptr<SourceBuffer> sourceBuffer) { mSourceBuffer = sourceBuffer; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer() { return mSourceBuffer; }

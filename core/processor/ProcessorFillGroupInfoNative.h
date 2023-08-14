@@ -25,6 +25,9 @@ public:
     bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
+
 private:
     std::string GetTopicName(const std::string& path, std::vector<sls_logs::LogTag>& extraTags);
 

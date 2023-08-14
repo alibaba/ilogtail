@@ -85,6 +85,10 @@ void ProcessorFillGroupInfoNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
+bool ProcessorFillGroupInfoNative::IsSupportedEvent(const PipelineEventPtr& /*e*/) {
+    return true;
+}
+
 std::string ProcessorFillGroupInfoNative::GetTopicName(const std::string& path, std::vector<sls_logs::LogTag>& extraTags) {
     std::string finalPath = path;
     size_t len = finalPath.size();

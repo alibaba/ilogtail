@@ -27,6 +27,9 @@ public:
     bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
+
 private:
     void AddUserDefinedFormat(const std::string& regStr, const std::string& keys);
     /// @return false if data need to be discarded
