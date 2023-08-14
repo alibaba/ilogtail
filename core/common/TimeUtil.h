@@ -83,4 +83,7 @@ void SetLogTime(sls_logs::Log* log, time_t second, long nanosecond);
 
 LogtailTime GetCurrentLogtailTime();
 
+uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
+                             const char* preciseTimeSuffix,
+                             const PreciseTimestampConfig& preciseTimestampConfig);
 } // namespace logtail

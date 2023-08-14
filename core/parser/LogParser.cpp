@@ -481,13 +481,14 @@ bool LogParser::ParseLogTime(const char* buffer,
     // Second-level cache only work when:
     // 1. No %f in the time format
     // 2. The %f is at the end of the time format
-    bool haveNanosecond = strstr(timeFormat, "%f") != nullptr;
-    bool endWithNanosecond = strcmp(timeFormat+strlen(timeFormat)-2, "%f") == 0;
-    int nanosecondLength = 0;
+    const char* compareResult = strstr(timeFormat, "%f");
+    bool haveNanosecond = compareResult != nullptr;
+    bool endWithNanosecond = compareResult == (timeFormat + strlen(timeFormat) - 2);
+    int nanosecondLength = -1;
     const char* strptimeResult = NULL;
     if ((!haveNanosecond || endWithNanosecond) && IsPrefixString(curTimeStr, timeStr)) {
         if (endWithNanosecond) {
-            strptimeResult = Strptime(curTimeStr.substr(timeStr.length()).c_str(), "%f", &logTime, nanosecondLength);
+            strptimeResult = Strptime(curTimeStr.c_str() + timeStr.length(), "%f", &logTime, nanosecondLength);
         } else {
             strptimeResult = curTimeStr.data() + timeStr.length();
             logTime.tv_nsec = 0;
@@ -496,10 +497,6 @@ bool LogParser::ParseLogTime(const char* buffer,
         strptimeResult = Strptime(curTimeStr.c_str(), timeFormat, &logTime, nanosecondLength, specifiedYear);
         timeStr = curTimeStr.substr(0, curTimeStr.length()-nanosecondLength);
         AdjustLogTime(logTime, tzOffsetSecond);
-    }
-
-    if (preciseTimestampConfig.enabled) {
-        preciseTimestamp = GetPreciseTimestampFromLogtailTime(logTime, preciseTimestampConfig);
     }
     if (NULL == strptimeResult) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -530,6 +527,13 @@ bool LogParser::ParseLogTime(const char* buffer,
         }
         error = PARSE_LOG_HISTORY_ERROR;
         return false;
+    }
+    if (preciseTimestampConfig.enabled) {
+        if (nanosecondLength < 0) {
+            preciseTimestamp = GetPreciseTimestamp(logTime.tv_sec, strptimeResult, preciseTimestampConfig);
+        } else {
+            preciseTimestamp = GetPreciseTimestampFromLogtailTime(logTime, preciseTimestampConfig);
+        }
     }
     return true;
 }
