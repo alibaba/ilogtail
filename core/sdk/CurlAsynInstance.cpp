@@ -18,7 +18,6 @@
 #include "Result.h"
 #include <curl/curl.h>
 #include <curl/multi.h>
-#include <string>
 #include "logger/Logger.h"
 #include "app_config/AppConfig.h"
 #include "common/TimeUtil.h"
@@ -124,23 +123,11 @@ namespace sdk {
         request->mCallBack->mHTTPMessage.statusCode = (int32_t)http_code;
         curl_easy_cleanup(curl);
         if (!request->mCallBack->mHTTPMessage.IsLogServiceResponse()) {
-            if (request->mUrl.find("/prometheus") == std::string::npos) {
-                request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, "Get invalid response");
+            if (request->mUrl.find("/prometheus") != std::string::npos) {
+                request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, request->mCallBack->mHTTPMessage.content);
                 return;
             }
-            // means sls metricstore remote write channel
-            if (request->mCallBack->mHTTPMessage.statusCode == 200) {
-                request->mResponse->statusCode = 200;
-                request->mCallBack->OnSuccess(request->mResponse);
-                return;
-            }
-            auto errCode = LOGE_REQUEST_ERROR;
-            if (request->mCallBack->mHTTPMessage.statusCode == 401) {
-                errCode = LOGE_UNAUTHORIZED;
-            } else if (request->mCallBack->mHTTPMessage.statusCode >= 500) {
-                errCode = LOGE_INTERNAL_SERVER_ERROR;
-            }
-            request->mCallBack->OnFail(request->mResponse, errCode, request->mCallBack->mHTTPMessage.content);
+            request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, "Get invalid response");
             return;
         }
 
