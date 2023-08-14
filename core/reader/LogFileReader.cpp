@@ -693,7 +693,7 @@ int32_t LogFileReader::ParseTime(const char* buffer, const std::string& timeForm
     memset(&tm, 0, sizeof(tm));
     long nanosecond = 0;
     int nanosecondLength;
-    const char* result = strptime_ns(buffer, timeFormat.c_str(), &tm, &nanosecond, nanosecondLength);
+    const char* result = strptime_ns(buffer, timeFormat.c_str(), &tm, &nanosecond, &nanosecondLength);
     tm.tm_isdst = -1;
     if (result != NULL) {
         time_t logTime = mktime(&tm);
@@ -1419,11 +1419,10 @@ bool LogFileReader::ParseLogTime(const char* buffer,
             struct tm t;
             memset(&t, 0, sizeof(t));
             int nanosecondLength;
-            if (strptime_ns(timeStr.c_str(), timeFormat.c_str(), &t, &logTime.tv_nsec, nanosecondLength) == NULL) {
+            if (strptime_ns(timeStr.c_str(), timeFormat.c_str(), &t, &logTime.tv_nsec, &nanosecondLength) == NULL) {
                 LOG_ERROR(sLogger,
                           ("convert time failed, time str", timeStr)("time format", timeFormat)("project", project)(
                               "logstore", logStore)("file", logPath));
-                logTime.tv_sec = -1;
                 return false;
             }
 
@@ -1441,7 +1440,6 @@ bool LogFileReader::ParseLogTime(const char* buffer,
         LogtailAlarm::GetInstance()->SendAlarm(
             REGEX_MATCH_ALARM, "parse regex log fail:" + exception, project, logStore, region);
     }
-    logTime.tv_sec = -1;
     return false;
 }
 

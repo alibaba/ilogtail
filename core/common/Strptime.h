@@ -18,6 +18,6 @@
 
 namespace logtail {
 
-const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* nanosecond, int& nanosecondLength);
+const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* nanosecond, int* nanosecondLength);
 
 } // namespace logtail

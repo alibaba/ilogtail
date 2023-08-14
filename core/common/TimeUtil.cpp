@@ -108,17 +108,11 @@ const char* Strptime(const char* buf, const char* fmt, LogtailTime* ts, int& nan
     auto bakYear = tm->tm_year;
     tm->tm_year = MIN_YEAR;
 
-    auto ret = strptime_ns(buf, fmt, tm, &ts->tv_nsec, nanosecondLength);
+    auto ret = strptime_ns(buf, fmt, tm, &ts->tv_nsec, &nanosecondLength);
     if (0 == strcmp("%f", fmt)) {
         return ret;
     }
-    if (0 == strcmp("%s", fmt)) {
-        ts->tv_sec = mktime(tm);
-        for (int i = 0; i < nanosecondLength; ++i) {
-            ts->tv_sec /= 10;
-        }
-        return ret;
-    }
+
     if (specifiedYear < 0) {
         ts->tv_sec = mktime(tm);
         return ret;

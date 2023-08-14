@@ -72,17 +72,20 @@ static const char* abmon[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
 static const char* am_pm[2] = {"AM", "PM"};
 
 static const unsigned char* conv_num(const unsigned char*, int*, unsigned int, unsigned int);
-static const unsigned char* conv_nanosecond(const unsigned char*, long*, int&);
+static const unsigned char* conv_nanosecond(const unsigned char*, long*, int*);
 static const unsigned char* find_string(const unsigned char*, int*, const char* const*, const char* const*, int);
 
-
-const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* nanosecond, int& nanosecondLength) {
+// Parse time string into two part: second and nanosecond
+const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* nanosecond, int* nanosecondLength) {
     // Replenish %s support.
     if (0 == strcmp("%s", fmt)) {
         char* cp;
         long long n;
-        n = strtoll(buf, &cp, 10);
-        nanosecondLength = cp - buf - 11;
+        char secondBuf[11];
+        strncpy(secondBuf, buf, 10);
+        secondBuf[10] = '\0';
+
+        n = strtoll(secondBuf, &cp, 10);
         time_t t;
         if (n == 0 || (long long)(t = n) != n)
             return NULL;
@@ -95,6 +98,7 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
         #endif
 
         *nanosecond = 0;
+        *nanosecondLength = 0;
         conv_nanosecond((const unsigned char*)(buf + 10), nanosecond, nanosecondLength);
         return ((const char*)cp);
     }
@@ -346,22 +350,13 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
                 continue;
 
             case 'Z':
-                if (strncmp((const char*)bp, gmt, 3) == 0) {
+                if (strncasecmp((const char*)bp, gmt, 3) == 0 || strncasecmp((const char *)bp, utc, 3) == 0) {
                     tm->tm_isdst = 0;
 #ifdef TM_GMTOFF
                     tm->TM_GMTOFF = 0;
 #endif
 #ifdef TM_ZONE
                     tm->TM_ZONE = gmt;
-#endif
-                    bp += 3;
-                } else if (strncmp((const char*)bp, utc, 3) == 0) {
-                    tm->tm_isdst = 0;
-#ifdef TM_GMTOFF
-                    tm->TM_GMTOFF = 0;
-#endif
-#ifdef TM_ZONE
-                    tm->TM_ZONE = utc;
 #endif
                     bp += 3;
                 } else {
@@ -553,7 +548,7 @@ static const unsigned char* conv_num(const unsigned char* buf, int* dest, unsign
     return buf;
 }
 
-static const unsigned char* conv_nanosecond(const unsigned char* buf, long* dest, int& nanosecondLength) {
+static const unsigned char* conv_nanosecond(const unsigned char* buf, long* dest, int* nanosecondLength) {
     unsigned int result = 0;
     unsigned char ch;
     int digitNum = 0;
@@ -573,7 +568,7 @@ static const unsigned char* conv_nanosecond(const unsigned char* buf, long* dest
         result *= 10;
     }
     *dest = result;
-    nanosecondLength = buf - start;
+    *nanosecondLength = buf - start;
     return buf;
 }
 

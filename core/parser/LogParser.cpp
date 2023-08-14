@@ -365,7 +365,6 @@ bool LogParser::RegexLogLineParser(const char* buffer,
                              logPath,
                              error,
                              tzOffsetSecond)) {
-        std::cout << "parse time failed " << what[timeIndex + 1].str() << " " << timeFormat << std::endl;
         parseSuccess = false;
         if (error == PARSE_LOG_HISTORY_ERROR)
             return false;
