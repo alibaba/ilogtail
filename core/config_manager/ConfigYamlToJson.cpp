@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "ConfigYamlToJson.h"
+#include "common/LogtailCommonFlags.h"
 #include "logger/Logger.h"
 #include <iostream>
 
@@ -387,6 +388,25 @@ bool ConfigYamlToJson::GeneratePluginStatistics(const string pluginCategory,
     return true;
 }
 
+bool ConfigYamlToJson::FillupMustMultiLinesSplitProcessor(const WorkMode& workMode, Json::Value& splitProcessor) {
+    if (!workMode.mIsFileMode || workMode.mHasAccelerateProcessor) {
+        return false;
+    }
+
+    if (0 != workMode.mLogSplitProcessorPluginType.size()) {
+        return false;
+    }
+
+    Json::Value pluginDetails;
+    if (0 == workMode.mInputPluginType.compare(INPUT_FILE_LOG)) {
+        pluginDetails["SplitKey"] = "content";
+        splitProcessor["detail"] = pluginDetails;
+        splitProcessor["type"] = PROCESSOR_SPLIT_LINE_LOG_USING_SEP;
+    }
+
+    return true;
+}
+
 bool ConfigYamlToJson::GenerateGlobalConfigForPluginCategory(const std::string& configName,
                                                              const YAML::Node& yamlConfig,
                                                              Json::Value& pluginJsonConfig) {
@@ -414,6 +434,13 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForPluginCategory(const string con
                                                                 Json::Value& pluginsJsonConfig,
                                                                 Json::Value& userJsonConfig) {
     Json::Value plugins;
+
+    if (!BOOL_FLAG(enable_new_pipeline) && 0 == pluginCategory.compare(PLUGIN_CATEGORY_PROCESSORS)) {
+        Json::Value splitProcessor;
+        if (FillupMustMultiLinesSplitProcessor(workMode, splitProcessor))
+            plugins.append(splitProcessor);
+    }
+
     if (yamlConfig[pluginCategory]) {
         const YAML::Node& pluginsYaml = yamlConfig[pluginCategory];
         if (pluginsYaml.IsSequence()) {
