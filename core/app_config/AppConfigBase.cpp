@@ -1246,6 +1246,6 @@ bool AppConfigBase::IsHostPathMatchBlacklist(const string& dirPath) const {
             return true;
         }
     }
-    return true;
+    return false;
 }
 } // namespace logtail
