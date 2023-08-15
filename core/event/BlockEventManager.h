@@ -54,9 +54,13 @@ protected:
             }
             mEvent = pEvent;
             mLogstoreKey = logstoreKey;
-            mTimeout = (curTime - mInvalidTime) * 2 + 1;
-            if (mTimeout > INT32_FLAG(max_block_event_timeout)) {
-                mTimeout = INT32_FLAG(max_block_event_timeout);
+            if (mEvent->IsReadLogTimeout()) {
+                mTimeout = curTime - mInvalidTime;
+            } else {
+                mTimeout = (curTime - mInvalidTime) * 2 + 1;
+                if (mTimeout > INT32_FLAG(max_block_event_timeout)) {
+                    mTimeout = INT32_FLAG(max_block_event_timeout);
+                }
             }
         }
         void SetInvalidAgain(int32_t curTime) {

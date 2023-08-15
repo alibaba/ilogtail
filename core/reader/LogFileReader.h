@@ -112,7 +112,7 @@ public:
                   bool discardUnmatch,
                   bool dockerFileFlag);
 
-    bool ReadLog(LogBuffer& logBuffer);
+    bool ReadLog(LogBuffer& logBuffer, Event* event);
     time_t GetLastUpdateTime() const // actually it's the time whenever ReadLogs is called
     {
         return mLastUpdateTime;
@@ -349,9 +349,9 @@ public:
     }
 
 protected:
-    bool GetRawData(LogBuffer& logBuffer, int64_t fileSize);
-    void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData);
-    void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData);
+    bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback);
+    void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback);
+    void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback);
 
     size_t
     ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL);

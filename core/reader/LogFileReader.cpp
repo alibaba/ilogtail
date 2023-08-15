@@ -44,6 +44,7 @@
 #include "fuse/UlogfsHandler.h"
 #include "sender/Sender.h"
 #include "GloablFileDescriptorManager.h"
+#include "event/BlockEventManager.h"
 
 using namespace sls_logs;
 using namespace std;
@@ -963,7 +964,7 @@ void LogFileReader::skipCheckpointRelayHole() {
     mLastFilePos = readOffset;
 }
 
-bool LogFileReader::ReadLog(LogBuffer& logBuffer) {
+bool LogFileReader::ReadLog(LogBuffer& logBuffer, Event* event) {
     if (mLogFileOp.IsOpen() == false) {
         if (!ShouldForceReleaseDeletedFileFd()) {
             // should never happen
@@ -988,7 +989,13 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer) {
 
     auto const beginOffset = mLastFilePos;
     size_t lastFilePos = mLastFilePos;
-    bool moreData = GetRawData(logBuffer, mLastFileSize);
+    bool allowRollback = true;
+    if (event != nullptr) {
+        if (event->IsReadLogTimeout() && event->GetLastReadPos() == mLastReadPos && event->GetLastFilePos() == mLastFilePos) {
+            allowRollback = false;
+        }
+    }
+    bool moreData = GetRawData(logBuffer, mLastFileSize, allowRollback);
     if (!logBuffer.rawBuffer.empty() > 0) {
         if (mEOOption) {
             // This read was replayed by checkpoint, adjust mLastFilePos to skip hole.
@@ -1004,6 +1011,19 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer) {
     LOG_DEBUG(sLogger,
               ("read log file", mRealLogPath)("last file pos", mLastFilePos)("last file size", mLastFileSize)(
                   "read size", mLastFilePos - lastFilePos));
+    if (mLastFilePos != mLastReadPos) {
+        size_t index = mHostLogPath.rfind(PATH_SEPARATOR);
+        string dirPath = mHostLogPath.substr(0, index);
+        string fileName = mHostLogPath.substr(index + 1, mHostLogPath.size() - index - 1);
+        Event event = Event(dirPath, fileName, EVENT_READ_LOG_TIMEOUT | EVENT_MODIFY, -1, 0);
+        event.SetLastReadPos(mLastReadPos);
+        event.SetLastFilePos(mLastFilePos);
+        BlockedEventManager::GetInstance()->UpdateBlockEvent(GetLogstoreKey(),
+                                                             mConfigName,
+                                                             event,
+                                                             mDevInode,
+                                                             time(NULL) + 5);
+    }
     return moreData;
 }
 
@@ -1486,7 +1506,7 @@ bool LogFileReader::GetLogTimeByOffset(const char* buffer,
  * "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\n" -> "SingleLineLog_1\nSingleLineLog_2\nSingleLineLog_3\0"
  * "SingleLineLog_1\nSingleLineLog_2\nxxx" -> "SingleLineLog_1\nSingleLineLog_2\0"
  */
-bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize) {
+bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback) {
     // Truncate, return false to indicate no more data.
     if (fileSize == mLastFilePos) {
         return false;
@@ -1494,9 +1514,9 @@ bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize) {
 
     bool moreData = false;
     if (mFileEncoding == ENCODING_GBK)
-        ReadGBK(logBuffer, fileSize, moreData);
+        ReadGBK(logBuffer, fileSize, moreData, allowRollback);
     else
-        ReadUTF8(logBuffer, fileSize, moreData);
+        ReadUTF8(logBuffer, fileSize, moreData, allowRollback);
 
     int64_t delta = fileSize - mLastFilePos;
     if (delta > mReadDelayAlarmBytes && !logBuffer.rawBuffer.empty()) {
@@ -1599,7 +1619,7 @@ void LogFileReader::setExactlyOnceCheckpointAfterRead(size_t readSize) {
     cpt.set_read_length(readSize);
 }
 
-void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData) {
+void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback) {
     bool fromCpt = false;
     size_t READ_BYTE = getNextReadSize(end, fromCpt);
     if (!READ_BYTE) {
@@ -1612,20 +1632,22 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData) 
     mLastReadPos = mLastFilePos + nbytes;
     LOG_DEBUG(sLogger, ("read bytes", nbytes)("last read pos", mLastReadPos));
     moreData = (nbytes == BUFFER_SIZE);
-    if (moreData) {
-        nbytes = AlignLastCharacter(sbuffer.data, nbytes);
-    }
+    if (allowRollback) {
+        if (moreData) {
+            nbytes = AlignLastCharacter(sbuffer.data, nbytes);
+        }
 
-    // before: bufferptr[nbytes-1] == ?
-    // after: bufferptr[nbytes-1] == '\n' or nbytes == READ_BYTE
-    bool adjustFlag = false;
-    while (nbytes > 0 && sbuffer.data[nbytes - 1] != '\n') {
-        nbytes--;
-        adjustFlag = true;
-    }
-    if ((nbytes > 0 && (adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
-        int32_t rollbackLineFeedCount;
-        nbytes = LastMatchedLine(sbuffer.data, nbytes, rollbackLineFeedCount);
+        // before: bufferptr[nbytes-1] == ?
+        // after: bufferptr[nbytes-1] == '\n' or nbytes == READ_BYTE
+        bool adjustFlag = false;
+        while (nbytes > 0 && sbuffer.data[nbytes - 1] != '\n') {
+            nbytes--;
+            adjustFlag = true;
+        }
+        if ((nbytes > 0 && (adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
+            int32_t rollbackLineFeedCount;
+            nbytes = LastMatchedLine(sbuffer.data, nbytes, rollbackLineFeedCount);
+        }
     }
 
     if (nbytes == 0) {
@@ -1660,7 +1682,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData) 
     LOG_DEBUG(sLogger, ("read size", nbytes)("last file pos", mLastFilePos));
 }
 
-void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
+void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback) {
     bool fromCpt = false;
     size_t READ_BYTE = getNextReadSize(end, fromCpt);
     std::unique_ptr<char[]> gbkBuffer(new char[READ_BYTE + 1]);
@@ -1670,14 +1692,16 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
     mLastReadPos = mLastFilePos + readCharCount;
     size_t originReadCount = readCharCount;
     moreData = (readCharCount == BUFFER_SIZE);
-    if (moreData) {
-        READ_BYTE = readCharCount = AlignLastCharacter(gbkBuffer.get(), readCharCount);
-    }
     bool adjustFlag = false;
     bool logTooLongSplitFlag = false;
-    while (readCharCount > 0 && gbkBuffer[readCharCount - 1] != '\n') {
-        readCharCount--;
-        adjustFlag = true;
+    if (allowRollback) {
+        if (moreData) {
+            READ_BYTE = readCharCount = AlignLastCharacter(gbkBuffer.get(), readCharCount);
+        }
+        while (readCharCount > 0 && gbkBuffer[readCharCount - 1] != '\n') {
+            readCharCount--;
+            adjustFlag = true;
+        }
     }
 
     if (readCharCount == 0) {
@@ -1713,14 +1737,16 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
         return;
     }
     int32_t rollbackLineFeedCount = 0;
-    if (((adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
-        int32_t bakResultCharCount = resultCharCount;
-        resultCharCount = LastMatchedLine(stringBuffer.data, resultCharCount, rollbackLineFeedCount);
-        if (resultCharCount == 0) {
-            resultCharCount = bakResultCharCount;
-            rollbackLineFeedCount = 0;
-            // Cannot get the split position here, so just mark a flag and send alarm later
-            logTooLongSplitFlag = moreData;
+    if (allowRollback) {
+        if (((adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
+            int32_t bakResultCharCount = resultCharCount;
+            resultCharCount = LastMatchedLine(stringBuffer.data, resultCharCount, rollbackLineFeedCount);
+            if (resultCharCount == 0) {
+                resultCharCount = bakResultCharCount;
+                rollbackLineFeedCount = 0;
+                // Cannot get the split position here, so just mark a flag and send alarm later
+                logTooLongSplitFlag = moreData;
+            }
         }
     }
 

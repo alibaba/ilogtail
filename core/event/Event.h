@@ -32,6 +32,7 @@ typedef uint32_t EventType;
 #define EVENT_MOVE_TO (64)
 #define EVENT_DELETE (128)
 #define EVENT_CONTAINER_STOPPED (256)
+#define EVENT_READ_LOG_TIMEOUT (512)
 
 class Event {
 private:
@@ -47,6 +48,10 @@ private:
     int64_t mHashKey;
     std::string mConfigName;
 
+    // for read timeout
+    int64_t mLastReadPos;
+    int64_t mLastFilePos;
+
 public:
     Event(const Event& ev) {
         mSource = ev.mSource;
@@ -58,6 +63,8 @@ public:
         mInode = ev.mInode;
         mHashKey = ev.mHashKey;
         mConfigName = ev.mConfigName;
+        mLastReadPos = ev.mLastReadPos;
+        mLastFilePos = ev.mLastFilePos;
     }
 
     Event(const std::string& source, const std::string& object, EventType type, int wd, uint32_t cookie = 0)
@@ -115,6 +122,10 @@ public:
 
     const std::string& GetConfigName() const { return mConfigName; }
 
+    int64_t GetLastReadPos() { return mLastReadPos; }
+
+    int64_t GetLastFilePos() { return mLastFilePos; }
+
     void SetSource(const std::string& source) { mSource = source; }  
 
     void SetDev(uint64_t dev) { mDev = dev; }
@@ -124,6 +135,10 @@ public:
     void SetHashKey(int64_t hashKey) { mHashKey = hashKey; }
 
     void SetConfigName(const std::string& configName) { mConfigName = configName; }
+
+    void SetLastReadPos(int64_t lastReadPos) { mLastReadPos = lastReadPos; }
+
+    void SetLastFilePos(int64_t lastFilePos) { mLastFilePos = lastFilePos; }
  
     bool IsCreate() const { return mType & EVENT_CREATE; }
 
@@ -143,6 +158,8 @@ public:
     bool IsDeleted() const { return mType & EVENT_DELETE; }
 
     bool IsContainerStopped() const { return mType & EVENT_CONTAINER_STOPPED; }
+
+    bool IsReadLogTimeout() const { return (mType & EVENT_READ_LOG_TIMEOUT) == EVENT_READ_LOG_TIMEOUT; }
 
     std::string GetTypeString() const {
         std::string type;

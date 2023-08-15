@@ -733,7 +733,12 @@ void ModifyHandler::Handle(const Event& event) {
                 return;
             }
             LogBuffer* logBuffer = new LogBuffer;
-            hasMoreData = reader->ReadLog(*logBuffer);
+            if (event.IsReadLogTimeout()) {
+                Event pEvent = Event(event);
+                hasMoreData = reader->ReadLog(*logBuffer, &pEvent);
+            } else {
+                hasMoreData = reader->ReadLog(*logBuffer, nullptr);
+            }
             int32_t pushRetry = 0;
             if (!logBuffer->rawBuffer.empty()) {
                 LogFileProfiler::GetInstance()->AddProfilingReadBytes(reader->GetConfigName(),
