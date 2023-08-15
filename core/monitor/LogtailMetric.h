@@ -12,49 +12,66 @@
 
 namespace logtail {
 
-class Counter{
-    private:
+
+class BaseMetric {
+    protected:
         std::string mName;
         std::atomic_long mVal;
         std::atomic_long mTimestamp;
-
     public:
-        Counter(std::string name);
-        ~Counter();
-        uint64_t GetValue();
-        uint64_t GetTimestamp();
-        std::string GetName();
-        
-        void Add(uint64_t val);
+        const uint64_t GetValue() const;
+        const uint64_t GetTimestamp() const;
+        const std::string GetName() const;
+        virtual BaseMetric* CopyAndReset() = 0;
+};
+
+
+class Gauge : public BaseMetric {
+    public:
+        Gauge(const std::string name);   
         void Set(uint64_t val);
+        Gauge* CopyAndReset();
+};
+
+
+class Counter : public BaseMetric {
+    public:
+        Counter(const std::string name);
+        void Add(uint64_t val);
         Counter* CopyAndReset();
 };
 
-typedef std::shared_ptr<Counter> CounterPtr;
+using MetricPtr = std::shared_ptr<BaseMetric>;
+using CounterPtr = std::shared_ptr<Counter>;
+using GaugePtr = std::shared_ptr<Gauge>;
+
 
 class Metrics {
     private:
         std::vector<std::pair<std::string, std::string>> mLabels;
-        std::vector<CounterPtr> mValues;
+        std::vector<MetricPtr> mValues;
         std::atomic_bool mDeleted;
 
+
     public:
-        Metrics(std::vector<std::pair<std::string, std::string> > labels);
+        Metrics(std::vector<std::pair<std::string, std::string>> labels);
         Metrics();
-        ~Metrics();
         void MarkDeleted();
         bool IsDeleted();
-        const std::vector<std::pair<std::string, std::string>>& GetLabels();
-        const std::vector<CounterPtr>& GetValues();
-        CounterPtr CreateCounter(std::string Name);
+        const std::vector<std::pair<std::string, std::string>>& GetLabels() const;
+        const std::vector<MetricPtr>& GetValues() const;
+        CounterPtr CreateCounter(const std::string Name);
+        GaugePtr CreateGauge(const std::string Name);
+
+        //using MetricsUniq = std::unique_ptr<Metrics, void(*)(Metrics*)>;
         Metrics* Copy();
-        Metrics* next = NULL;
+        Metrics* next;
 };
+
 
 class WriteMetrics {
     private:
         WriteMetrics();
-        ~WriteMetrics();
         std::atomic_bool mSnapshotting;
     public:
         static WriteMetrics* GetInstance() {
@@ -74,15 +91,14 @@ class WriteMetrics {
 class ReadMetrics {
    private:
         ReadMetrics();
-        ~ReadMetrics();
     public:
         static ReadMetrics* GetInstance() {
             static ReadMetrics* ptr = new ReadMetrics();
             return ptr;
         }
         void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logGroupMap);
-        void ReadAsMap(std::map<std::string, std::string> map);
-        void ReadAsPrometheus();
+        // void ReadAsMap(std::map<std::string, std::string> map);
+        // void ReadAsPrometheus();
         void UpdateMetrics();
         Metrics* mHead = NULL;
         WriteMetrics* mWriteMetrics;

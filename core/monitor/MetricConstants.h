@@ -19,6 +19,13 @@
 
 namespace logtail {
 
+const std::string METRIC_FIELD_REGION = "region";
+const std::string METRIC_REGION_DEFAULT = "default";
+const std::string LABEL_PREFIX = "label.";
+const std::string VALUE_PREFIX = "value.";
+
+
+
 const std::string METRIC_FILE_READ_COUNT = "file_read_count";
 const std::string METRIC_FILE_READ_BYTES = "file_read_bytes";
 

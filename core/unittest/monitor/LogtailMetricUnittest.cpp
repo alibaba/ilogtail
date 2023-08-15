@@ -86,7 +86,7 @@ void createAndDeleteMetrics(int count) {
         Metrics* fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
         CounterPtr fileCounter = fileMetric->CreateCounter("filed1");
         fileCounter->Add((uint64_t)111);
-        WriteMetrics::GetInstance()->DestroyMetrics(fileMetric);
+        //WriteMetrics::GetInstance()->DestroyMetrics(fileMetric);
     }
 }
 
