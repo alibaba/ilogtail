@@ -20,6 +20,7 @@
 #include <Shlwapi.h>
 #endif
 #include <sys/stat.h>
+#include "app_config/AppConfig.h"
 #include "common/Flags.h"
 #include "common/StringTools.h"
 #include "common/ErrorUtil.h"
