@@ -1289,6 +1289,8 @@ github.com/oschwald/geoip2-golang v1.1.0/go.mod h1:0LTTzix/Ao1uMvOhAV4iLU0Lz7eCr
 github.com/oschwald/maxminddb-golang v1.2.1 h1:1wUyw1BYyCY7E0bbG8lD7P5aPDFIsRr611otw6LOJtM=
 github.com/oschwald/maxminddb-golang v1.2.1/go.mod h1:3jhIUymTJ5VREKyIhWm66LJiQt04F0UCDdodShpjWsY=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
+github.com/panjf2000/ants/v2 v2.8.1 h1:C+n/f++aiW8kHCExKlpX6X+okmxKXP7DWLutxuAPuwQ=
+github.com/panjf2000/ants/v2 v2.8.1/go.mod h1:KIBmYG9QQX5U2qzFP/yQJaq/nSb6rahS9iEHkrCMgM8=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/paulbellamy/ratecounter v0.2.1-0.20170719102518-a803f0e4f071 h1:lL9DHDiy6y/YcERO1Baji6ed0S2XisLARdeWRs2ZHC8=
