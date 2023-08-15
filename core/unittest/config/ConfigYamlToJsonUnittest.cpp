@@ -46,7 +46,7 @@ namespace logtail {
 
 class ConfigYamlToJsonUnittest : public ::testing::Test {
 public:
-    static void SetUpTestCase() {}
+    static void SetUpTestCase() { BOOL_FLAG(enable_new_pipeline) = true; }
     static void TearDownTestCase() {}
 
     void CaseSetUp() {}
