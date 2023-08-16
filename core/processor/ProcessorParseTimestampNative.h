@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorInterface.h"
+#include "processor/Processor.h"
 #include <string>
 
 namespace logtail {
-class ProcessorParseTimestampNative : public ProcessorInterface {
+class ProcessorParseTimestampNative : public Processor {
 public:
     static const char* Name() { return "processor_parse_timestamp_native"; }
-    bool Init(const ComponentConfig& config, PipelineContext& context) override;
+    bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
+
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
 
 private:
     /// @return false if data need to be discarded
@@ -36,12 +39,14 @@ private:
     );
     std::string mTimeKey;
     std::string mTimeFormat;
-    int mLogTimeZoneOffsetSecond;
-    int mSpecifiedYear;
+    int mLogTimeZoneOffsetSecond = 0;
+    int mSpecifiedYear = -1;
     PreciseTimestampConfig mLegacyPreciseTimestampConfig;
 
-    PipelineContext mContext;
-    int* mParseTimeFailures;
-    int* mHistoryFailures;
+    int* mParseTimeFailures = nullptr;
+    int* mHistoryFailures = nullptr;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorParseTimestampNativeUnittest;
+#endif
 };
 } // namespace logtail

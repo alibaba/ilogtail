@@ -300,7 +300,7 @@ func (lc *LogstoreConfig) ProcessLogGroup(logByte []byte, packID string) int {
 		}
 		for _, tag := range logGroup.LogTags {
 			log.Contents = append(log.Contents, &protocol.Log_Content{
-				Key:   tag.GetKey(),
+				Key:   tagPrefix + tag.GetKey(),
 				Value: tag.GetValue(),
 			})
 		}

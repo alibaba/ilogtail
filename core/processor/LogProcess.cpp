@@ -60,6 +60,7 @@ DEFINE_FLAG_BOOL(enable_chinese_tag_path, "Enable Chinese __tag__.__path__", tru
 #endif
 DEFINE_FLAG_STRING(raw_log_tag, "", "__raw__");
 DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged buffer, seconds", 1);
+DEFINE_FLAG_BOOL(enable_new_pipeline, "", false);
 
 namespace logtail {
 
@@ -307,10 +308,12 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             ProcessProfile profile;
             profile.readBytes = readBytes;
             int32_t parseStartTime = (int32_t)time(NULL);
-            if (config->mLogType == REGEX_LOG) {
-                ProcessBuffer(logBuffer, logFileReader, logGroup, profile);
+            bool needSend = false;
+            if (!BOOL_FLAG(enable_new_pipeline) || config->mLogType == STREAM_LOG || config->mLogType == PLUGIN_LOG
+                || (config->mPluginProcessFlag && !config->mAdvancedConfig.mForceEnablePipeline)) {
+                needSend = 0 == ProcessBufferLegacy(logBuffer, logFileReader, logGroup, profile, *config);
             } else {
-                ProcessBufferLegacy(logBuffer, logFileReader, logGroup, profile, *config);
+                needSend = 0 == ProcessBuffer(logBuffer, logFileReader, logGroup, profile);
             }
             const std::string& projectName = config->GetProjectName();
             const std::string& category = config->GetCategory();
@@ -336,7 +339,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             }
 
 
-            if (logGroup.logs_size() > 0) { // send log group
+            if (logGroup.logs_size() > 0 && needSend) { // send log group
                 IntegrityConfig* integrityConfig = NULL;
                 LineCountConfig* lineCountConfig = NULL;
                 if (config->mIntegrityConfig->mIntegritySwitch) {
@@ -417,10 +420,10 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
     return NULL;
 }
 
-void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
-                               LogFileReaderPtr& logFileReader,
-                               sls_logs::LogGroup& resultGroup,
-                               ProcessProfile& profile) {
+int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
+                              LogFileReaderPtr& logFileReader,
+                              sls_logs::LogGroup& resultGroup,
+                              ProcessProfile& profile) {
     auto pipeline = PipelineManager::GetInstance()->FindPipelineByName(
         logFileReader->GetConfigName()); // pipeline should be set in the loggroup by input
     if (pipeline.get() == nullptr) {
@@ -428,11 +431,14 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
                  ("can not find pipeline while processing log, maybe config deleted. config",
                   logFileReader->GetConfigName())("project", logFileReader->GetProjectName())(
                      "logstore", logFileReader->GetCategory()));
-        return;
+        return -1;
     }
     // construct a logGroup, it should be moved into input later
-    PipelineEventGroup eventGroup;
-    eventGroup.SetSourceBuffer(logBuffer);
+    PipelineEventGroup eventGroup(logBuffer);
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH, logBuffer->logFileReader->GetConvertedPath());
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH_RESOLVED, logBuffer->logFileReader->GetHostLogPath());
+    auto inodebuf = logBuffer->CopyString(std::to_string(logBuffer->logFileReader->GetDevInode().inode));
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_INODE, StringView(inodebuf.data, inodebuf.size));
     std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
     time_t logtime = time(NULL);
     if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
@@ -442,7 +448,7 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
     auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->beginOffset));
     event->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
-    eventGroup.AddEvent(event.release());
+    eventGroup.AddEvent(std::move(event));
 
     // process logGroup
     pipeline->Process(eventGroup);
@@ -458,10 +464,10 @@ void LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         FillLogGroupForPlugin(eventGroup, logFileReader, resultGroup);
         LogtailPlugin::GetInstance()->ProcessLogGroup(
             logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
-        return;
+        return 1;
     }
     FillLogGroupAllNative(eventGroup, logFileReader, resultGroup);
-    return;
+    return 0;
 }
 
 void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup, sls_logs::LogGroup& resultGroup) {
@@ -474,7 +480,9 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup, sls_logs
         log->set_time(logEvent.GetTimestamp());
         for (auto& kv : logEvent.GetContents()) {
             sls_logs::Log_Content* contPtr = log->add_contents();
-            contPtr->set_key(kv.first.to_string());
+            // need to rename EVENT_META_LOG_FILE_OFFSET
+            contPtr->set_key(kv.first == EVENT_META_LOG_FILE_OFFSET ? LOG_RESERVED_KEY_FILE_OFFSET
+                                                                    : kv.first.to_string());
             contPtr->set_value(kv.second.to_string());
         }
     }
@@ -560,11 +568,11 @@ void LogProcess::FillLogGroupAllNative(const PipelineEventGroup& eventGroup,
     }
 }
 
-void LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
-                                     LogFileReaderPtr& logFileReader,
-                                     sls_logs::LogGroup& logGroup,
-                                     ProcessProfile& profile,
-                                     Config& config) {
+int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
+                                    LogFileReaderPtr& logFileReader,
+                                    sls_logs::LogGroup& logGroup,
+                                    ProcessProfile& profile,
+                                    Config& config) {
     auto logPath = logFileReader->GetConvertedPath();
     // Mixed mode, pass buffer to plugin system.
     if (logFileReader->GetPluginFlag()) {
@@ -618,7 +626,7 @@ void LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                                                           logFileReader->GetTopicName(),
                                                           passingTags);
         }
-        return;
+        return 1;
     }
 
     StringView& rawBuffer = logBuffer->rawBuffer;
@@ -667,7 +675,6 @@ void LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
         // static int linesCount = 0;
         // linesCount += lines;
         // LOG_INFO(sLogger, ("Logprocess lines", lines)("Total lines", linesCount));
-        LogGroup logGroup;
         time_t lastLogLineTime = 0;
         string lastLogTimeStr = "";
         uint32_t logGroupSize = 0;
@@ -778,6 +785,7 @@ void LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
             }
         }
     }
+    return 0;
 }
 
 void LogProcess::DoFuseHandling() {

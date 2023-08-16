@@ -25,12 +25,19 @@
 #include <dirent.h>
 #include "logger/Logger.h"
 #include "app_config/AppConfig.h"
-#include "plugin/PluginCreatorInterface.h"
+#include "plugin/PluginCreator.h"
 #include "plugin/StaticProcessorCreator.h"
 #include "plugin/DynamicCProcessorCreator.h"
 
-#include "plugin/CProcessorInterface.h"
+#include "plugin/CProcessor.h"
+#include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
+#include "processor/ProcessorParseApsaraNative.h"
+#include "processor/ProcessorParseDelimiterNative.h"
+#include "processor/ProcessorParseJsonNative.h"
+#include "processor/ProcessorParseRegexNative.h"
+#include "processor/ProcessorParseTimestampNative.h"
+#include "processor/ProcessorFillGroupInfoNative.h"
 
 namespace logtail {
 
@@ -47,25 +54,28 @@ void PluginRegistry::LoadPlugins() {
 }
 
 void PluginRegistry::UnloadPlugins() {
-    for (auto& kv : mPluginDict) {
-        // if (node->plugin_type() == PLUGIN_TYPE_DYNAMIC) {
-        //     CPluginRegistryItem* registry = reinterpret_cast<CPluginRegistryItem*>(node);
-        //     if (strcmp(registry->mPlugin->language, "Go") == 0) {
-        //         destroy_go_plugin_interface(registry->_handle,
-        //         const_cast<plugin_interface_t*>(registry->mPlugin));
-        //     }
-        // }
-        UnregisterCreator(kv.second.get());
-    }
+    // for (auto& kv : mPluginDict) {
+    // if (node->plugin_type() == PLUGIN_TYPE_DYNAMIC) {
+    //     CPluginRegistryItem* registry = reinterpret_cast<CPluginRegistryItem*>(node);
+    //     if (strcmp(registry->mPlugin->language, "Go") == 0) {
+    //         destroy_go_plugin_interface(registry->_handle,
+    //         const_cast<plugin_interface_t*>(registry->mPlugin));
+    //     }
+    // }
+    //     UnregisterCreator(kv.second.get());
+    // }
     mPluginDict.clear();
 }
 
-ProcessorInstance* PluginRegistry::CreateProcessor(const std::string& name, const std::string& pluginId) {
-    return static_cast<ProcessorInstance*>(Create(PROCESSOR_PLUGIN, name, pluginId));
+std::unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const std::string& name,
+                                                                   const std::string& pluginId) {
+    return std::unique_ptr<ProcessorInstance>(
+        static_cast<ProcessorInstance*>(Create(PROCESSOR_PLUGIN, name, pluginId).release()));
 }
 
-PluginInstance* PluginRegistry::Create(PluginCat cat, const std::string& name, const std::string& pluginId) {
-    PluginInstance* ins = nullptr;
+std::unique_ptr<PluginInstance>
+PluginRegistry::Create(PluginCat cat, const std::string& name, const std::string& pluginId) {
+    std::unique_ptr<PluginInstance> ins;
     auto creatorEntry = mPluginDict.find(PluginKey(cat, name));
     if (creatorEntry != mPluginDict.end()) {
         ins = creatorEntry->second->Create(pluginId);
@@ -74,7 +84,14 @@ PluginInstance* PluginRegistry::Create(PluginCat cat, const std::string& name, c
 }
 
 void PluginRegistry::LoadStaticPlugins() {
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitLogStringNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitRegexNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseApsaraNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseDelimiterNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseJsonNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseRegexNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseTimestampNative>());
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFillGroupInfoNative>());
     /* more native plugin registers here */
 }
 
@@ -90,15 +107,15 @@ void PluginRegistry::LoadDynamicPlugins(const std::set<std::string>& plugins) {
             LOG_ERROR(sLogger, ("open plugin", pluginName)("error", error));
             continue;
         }
-        PluginCreatorInterface* registry = LoadProcessorPlugin(loader, pluginName);
-        if (registry) {
-            RegisterProcessorCreator(registry);
+        PluginCreator* creator = LoadProcessorPlugin(loader, pluginName);
+        if (creator) {
+            RegisterProcessorCreator(creator);
             continue;
         }
     }
 }
 
-PluginCreatorInterface* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName) {
+PluginCreator* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName) {
     std::string error;
     processor_interface_t* plugin = (processor_interface_t*)loader.LoadMethod("processor_interface", error);
     // if (!error.empty()) {
@@ -120,19 +137,15 @@ PluginCreatorInterface* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& lo
     return new DynamicCProcessorCreator(plugin, loader.Release());
 }
 
-void PluginRegistry::RegisterCreator(PluginCat cat, PluginCreatorInterface* creator) {
+void PluginRegistry::RegisterCreator(PluginCat cat, PluginCreator* creator) {
     if (!creator) {
         return;
     }
-    mPluginDict.emplace(PluginKey(cat, creator->Name()), std::shared_ptr<PluginCreatorInterface>(creator));
+    mPluginDict.emplace(PluginKey(cat, creator->Name()), std::shared_ptr<PluginCreator>(creator));
 }
 
-void PluginRegistry::RegisterProcessorCreator(PluginCreatorInterface* creator) {
+void PluginRegistry::RegisterProcessorCreator(PluginCreator* creator) {
     RegisterCreator(PROCESSOR_PLUGIN, creator);
-}
-
-// 卸载插件
-void PluginRegistry::UnregisterCreator(PluginCreatorInterface* creator) {
 }
 
 } // namespace logtail

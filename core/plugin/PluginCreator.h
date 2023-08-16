@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 iLogtail Authors
+ * Copyright 2022 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorInterface.h"
+#pragma once
 #include <string>
+#include <memory>
+#include "plugin/PluginInstance.h"
 
 namespace logtail {
 
-class ProcessorFillSlsGroupInfo : public ProcessorInterface {
+class PluginCreator {
 public:
-    static const char* Name() { return "ProcessorFillSlsGroupInfo"; }
-    bool Init(const ComponentConfig& config, PipelineContext& context) override;
-    void Process(PipelineEventGroup& logGroup) override;
-
-private:
-    std::string
-    GetTopicName(const std::string& topicConfig, const std::string& path, std::vector<sls_logs::LogTag>& extraTags);
-
-    std::string mConfigName, mTopicFormat, mGroupTopic, mCustomizedTopic;
-    PipelineContext mContext;
+    virtual ~PluginCreator() {}
+    virtual const char* Name() = 0;
+    virtual bool IsDynamic() = 0;
+    virtual std::unique_ptr<PluginInstance> Create(const std::string& pluginId) = 0;
 };
 } // namespace logtail

@@ -18,14 +18,16 @@
 
 #include "pipeline/PipelineContext.h"
 #include "plugin/PluginRegistry.h"
+#include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
+#include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorParseRegexNative.h"
+#include "processor/ProcessorParseJsonNative.h"
+#include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
-#include "processor/ProcessorFillSlsGroupInfo.h"
+#include "processor/ProcessorFillGroupInfoNative.h"
 
 namespace logtail {
-Pipeline::~Pipeline() {
-}
 
 bool Pipeline::Init(const PipelineConfig& config) {
     mName = config.mConfigName;
@@ -35,27 +37,70 @@ bool Pipeline::Init(const PipelineConfig& config) {
     mContext.SetProjectName(config.mProjectName);
     mContext.SetRegion(config.mRegion);
 
-    ProcessorInstance* plugin1 = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorFillSlsGroupInfo::Name(), std::string(ProcessorFillSlsGroupInfo::Name()) + "/1"); // /0 is the input
-    if (!InitAndAddProcessor(plugin1, config)) {
+    if (config.mLogType == STREAM_LOG || config.mLogType == PLUGIN_LOG
+        || (config.mPluginProcessFlag && !config.mAdvancedConfig.mForceEnablePipeline)) {
+        return true; // this may not apply if flusher is part of the pipeline
+    }
+
+    int pluginIndex = 0;
+    // Input plugin
+    pluginIndex++;
+
+    std::unique_ptr<ProcessorInstance> pluginDecoder;
+    if (config.mLogType == JSON_LOG || config.mLogBeginReg.empty() || config.mLogBeginReg == ".*") {
+        pluginDecoder = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorSplitLogStringNative::Name(),
+            std::string(ProcessorSplitLogStringNative::Name()) + "/" + std::to_string(pluginIndex++));
+    } else {
+        pluginDecoder = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::Name(),
+                                                                       std::string(ProcessorSplitRegexNative::Name())
+                                                                           + "/" + std::to_string(pluginIndex++));
+    }
+    if (!InitAndAddProcessor(std::move(pluginDecoder), config)) {
         return false;
     }
 
-    ProcessorInstance* plugin2 = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorSplitRegexNative::Name(), std::string(ProcessorSplitRegexNative::Name()) + "/2");
-    if (!InitAndAddProcessor(plugin2, config)) {
+    std::unique_ptr<ProcessorInstance> pluginGroupInfo = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorFillGroupInfoNative::Name(),
+        std::string(ProcessorFillGroupInfoNative::Name()) + "/" + std::to_string(pluginIndex++));
+    if (!InitAndAddProcessor(std::move(pluginGroupInfo), config)) {
         return false;
     }
 
-    ProcessorInstance* plugin3 = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorParseRegexNative::Name(), std::string(ProcessorParseRegexNative::Name()) + "/3");
-    if (!InitAndAddProcessor(plugin3, config)) {
+    // APSARA_LOG, REGEX_LOG, STREAM_LOG, JSON_LOG, DELIMITER_LOG, PLUGIN_LOG
+    std::unique_ptr<ProcessorInstance> pluginParser;
+    switch (config.mLogType) {
+        case APSARA_LOG:
+            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorParseApsaraNative::Name(),
+                std::string(ProcessorParseApsaraNative::Name()) + "/" + std::to_string(pluginIndex++));
+            break;
+        case REGEX_LOG:
+            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseRegexNative::Name(),
+                                                                          std::string(ProcessorParseRegexNative::Name())
+                                                                              + "/" + std::to_string(pluginIndex++));
+            break;
+        case JSON_LOG:
+            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseJsonNative::Name(),
+                                                                          std::string(ProcessorParseJsonNative::Name())
+                                                                              + "/" + std::to_string(pluginIndex++));
+            break;
+        case DELIMITER_LOG:
+            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorParseDelimiterNative::Name(),
+                std::string(ProcessorParseDelimiterNative::Name()) + "/" + std::to_string(pluginIndex++));
+            break;
+        default:
+            return false;
+    }
+    if (!InitAndAddProcessor(std::move(pluginParser), config)) {
         return false;
     }
 
-    ProcessorInstance* plugin4 = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorParseTimestampNative::Name(), std::string(ProcessorParseTimestampNative::Name()) + "/4");
-    if (!InitAndAddProcessor(plugin4, config)) {
+    std::unique_ptr<ProcessorInstance> pluginTime = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorParseTimestampNative::Name(),
+        std::string(ProcessorParseTimestampNative::Name()) + "/" + std::to_string(pluginIndex++));
+    if (!InitAndAddProcessor(std::move(pluginTime), config)) {
         return false;
     }
 
@@ -68,17 +113,17 @@ void Pipeline::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-bool Pipeline::InitAndAddProcessor(ProcessorInstance* processor, const ComponentConfig& config) {
+bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const ComponentConfig& config) {
     if (!processor) {
         LOG_ERROR(GetContext().GetLogger(),
                   ("CreateProcessor", ProcessorSplitRegexNative::Name())("Error", "Cannot find plugin"));
         return false;
     }
-    mProcessorLine.emplace_back(processor);
-    if (!processor->Plugin()->Init(config, mContext)) {
+    if (!processor->Init(config, mContext)) {
         LOG_ERROR(GetContext().GetLogger(), ("InitProcessor", processor->Id())("Error", "Init failed"));
         return false;
     }
+    mProcessorLine.emplace_back(std::move(processor));
     return true;
 }
 

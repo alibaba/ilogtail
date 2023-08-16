@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 iLogtail Authors
+ * Copyright 2023 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "processor/Processor.h"
 #include <string>
+#include <boost/regex.hpp>
 
 namespace logtail {
 
-class PluginInstance;
-
-class PluginCreatorInterface {
+class ProcessorParseApsaraNative : public Processor {
 public:
-    virtual ~PluginCreatorInterface() {}
-    virtual const char* Name() = 0;
-    virtual bool IsDynamic() = 0;
-    virtual PluginInstance* Create(const std::string& pluginId) = 0;
-    virtual void Destroy(PluginInstance* ins);
+    static const char* Name() { return "processor_parse_apsara_native"; }
+    bool Init(const ComponentConfig& config) override;
+    void Process(PipelineEventGroup& logGroup) override;
+
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorParseApsaraNativeUnittest;
+#endif
 };
+
 } // namespace logtail

@@ -36,22 +36,21 @@ public:
     // 卸载所有插件
     void UnloadPlugins();
 
-    // InputInstance* CreateInput(const std::string& name, const std::string& pluginId);
-    ProcessorInstance* CreateProcessor(const std::string& name, const std::string& pluginId);
-    // FlusherInstance* CreateFlusher(const std::string& name, const std::string& pluginId);
+    // std::unique_ptr<InputInstance> CreateInput(const std::string& name, const std::string& pluginId);
+    std::unique_ptr<ProcessorInstance> CreateProcessor(const std::string& name, const std::string& pluginId);
+    // std::unique_ptr<FlusherInstance> CreateFlusher(const std::string& name, const std::string& pluginId);
 
 private:
     enum PluginCat { INPUT_PLUGIN, PROCESSOR_PLUGIN, FLUSHER_PLUGIN };
 
     void LoadStaticPlugins();
     void LoadDynamicPlugins(const std::set<std::string>& plugins);
-    // void RegisterInputCreator(PluginCreatorInterface* registry);
-    void RegisterProcessorCreator(PluginCreatorInterface* registry);
-    // void RegisterFlusherCreator(PluginCreatorInterface* registry);
-    void UnregisterCreator(PluginCreatorInterface* node);
-    PluginCreatorInterface* LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName);
-    void RegisterCreator(PluginCat cat, PluginCreatorInterface* registry);
-    PluginInstance* Create(PluginCat cat, const std::string& name, const std::string& pluginId);
+    // void RegisterInputCreator(PluginCreator* creator);
+    void RegisterProcessorCreator(PluginCreator* creator);
+    // void RegisterFlusherCreator(PluginCreator* creator);
+    PluginCreator* LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName);
+    void RegisterCreator(PluginCat cat, PluginCreator* creator);
+    std::unique_ptr<PluginInstance> Create(PluginCat cat, const std::string& name, const std::string& pluginId);
 
     struct PluginKey {
         PluginCat cat;
@@ -65,7 +64,11 @@ private:
             return std::hash<int>()(obj.cat) ^ std::hash<std::string>()(obj.name);
         }
     };
-    std::unordered_map<PluginKey, std::shared_ptr<PluginCreatorInterface>, PluginKeyHash> mPluginDict;
+    std::unordered_map<PluginKey, std::shared_ptr<PluginCreator>, PluginKeyHash> mPluginDict;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class PluginRegistryUnittest;
+#endif
 };
 
 } // namespace logtail

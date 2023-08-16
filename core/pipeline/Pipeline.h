@@ -24,14 +24,13 @@ namespace logtail {
 class Pipeline {
 public:
     Pipeline() {}
-    ~Pipeline();
     const std::string& Name() const { return mName; }
     bool Init(const PipelineConfig& config);
     void Process(PipelineEventGroup& logGroup);
     PipelineContext& GetContext() { return mContext; }
 
 private:
-    bool InitAndAddProcessor(ProcessorInstance* processor, const ComponentConfig& config);
+    bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const ComponentConfig& config);
 
     std::string mName;
     std::vector<std::unique_ptr<ProcessorInstance> > mProcessorLine;

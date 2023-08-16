@@ -15,22 +15,25 @@
  */
 
 #pragma once
-#include "processor/ProcessorInterface.h"
+#include "processor/Processor.h"
 #include <vector>
 #include "parser/LogParser.h" //UserDefinedFormat
 
 namespace logtail {
 
-class ProcessorParseRegexNative : public ProcessorInterface {
+class ProcessorParseRegexNative : public Processor {
 public:
     static const char* Name() { return "processor_parse_regex_native"; }
-    bool Init(const ComponentConfig& config, PipelineContext& context) override;
+    bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
+
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
 
 private:
     void AddUserDefinedFormat(const std::string& regStr, const std::string& keys);
     /// @return false if data need to be discarded
-    bool ProcessEvent(PipelineEventGroup& logGroup, const StringView& logPath, PipelineEventPtr& e);
+    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
     bool WholeLineModeParser(LogEvent& sourceEvent, const std::string& key);
     bool RegexLogLineParser(LogEvent& sourceEvent,
                             const boost::regex& reg,
@@ -39,15 +42,17 @@ private:
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
     std::string mSourceKey;
     std::vector<UserDefinedFormat> mUserDefinedFormat;
-    bool mDiscardUnmatch;
-    bool mUploadRawLog;
-    bool mSourceKeyOverwritten;
-    bool mRawLogTagOverwritten;
+    bool mDiscardUnmatch = false;
+    bool mUploadRawLog = false;
+    bool mSourceKeyOverwritten = false;
+    bool mRawLogTagOverwritten = false;
     std::string mRawLogTag;
 
-    PipelineContext mContext;
-    int* mParseFailures;
-    int* mRegexMatchFailures;
-    int* mLogGroupSize;
+    int* mParseFailures = nullptr;
+    int* mRegexMatchFailures = nullptr;
+    int* mLogGroupSize = nullptr;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorParseRegexNativeUnittest;
+#endif
 };
 } // namespace logtail

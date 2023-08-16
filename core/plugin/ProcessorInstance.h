@@ -18,8 +18,8 @@
 
 #include <string>
 #include "plugin/PluginInstance.h"
-#include "processor/ProcessorInterface.h"
-#include "plugin/PluginCreatorInterface.h"
+#include "processor/Processor.h"
+#include "plugin/PluginCreator.h"
 #include "pipeline/PipelineConfig.h"
 #include "pipeline/PipelineContext.h"
 
@@ -27,17 +27,14 @@ namespace logtail {
 
 class ProcessorInstance : public PluginInstance {
 public:
-    ProcessorInstance(ProcessorInterface* plugin, const std::string& pluginId)
-        : PluginInstance(pluginId), mPlugin(plugin) {}
-    ~ProcessorInstance() { delete mPlugin; }
-    ProcessorInterface* Plugin() { return mPlugin; };
+    ProcessorInstance(Processor* plugin, const std::string& pluginId) : PluginInstance(pluginId), mPlugin(plugin) {}
 
     bool Init(const ComponentConfig& config, PipelineContext& context);
     void Process(PipelineEventGroup& logGroup);
-    PipelineContext mContext;
 
 private:
-    ProcessorInterface* mPlugin;
+    std::unique_ptr<Processor> mPlugin;
+    PipelineContext* mContext = nullptr;
 };
 
 } // namespace logtail

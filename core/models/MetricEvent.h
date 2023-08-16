@@ -21,10 +21,13 @@ namespace logtail {
 
 class MetricEvent : public PipelineEvent {
 public:
-    MetricEvent() { mType = METRIC_EVENT_TYPE; }
+    static std::unique_ptr<MetricEvent> CreateEvent(std::shared_ptr<SourceBuffer>& sb);
 
-    const std::string& GetType() const override;
-    static std::string sType;
+    // for debug and test
+    Json::Value ToJson() const override;
+    bool FromJson(const Json::Value&) override;
+private:
+    MetricEvent();
 };
 
 } // namespace logtail

@@ -39,6 +39,12 @@ struct ProcessProfile {
 
 class PipelineContext {
 public:
+    PipelineContext() {}
+    PipelineContext(const PipelineContext&) = delete;
+    PipelineContext(PipelineContext&&) = delete;
+    PipelineContext operator=(const PipelineContext&) = delete;
+    PipelineContext operator=(PipelineContext&&) = delete;
+
     const std::string& GetProjectName() const { return mProjectName; }
     void SetProjectName(const std::string& projectName) { mProjectName = projectName; }
     const std::string& GetLogstoreName() const { return mLogstoreName; }
@@ -48,15 +54,15 @@ public:
     const std::string& GetRegion() const { return mRegion; }
     void SetRegion(const std::string& region) { mRegion = region; }
 
-    ProcessProfile& GetProcessProfile() { return *mProcessProfile; }
-    LogFileProfiler* GetProfiler() { return mProfiler; }
+    ProcessProfile& GetProcessProfile() { return mProcessProfile; }
+    // LogFileProfiler& GetProfiler() { return *mProfiler; }
     Logger::logger& GetLogger() { return mLogger; }
-    LogtailAlarm* GetAlarm() { return mAlarm; };
+    LogtailAlarm& GetAlarm() { return *mAlarm; };
 
 private:
     std::string mProjectName, mLogstoreName, mConfigName, mRegion;
-    std::shared_ptr<ProcessProfile> mProcessProfile = std::make_shared<ProcessProfile>();
-    LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
+    ProcessProfile mProcessProfile;
+    // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
     Logger::logger mLogger = sLogger;
     LogtailAlarm* mAlarm = LogtailAlarm::GetInstance();
 };

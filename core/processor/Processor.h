@@ -21,10 +21,16 @@
 
 namespace logtail {
 
-class ProcessorInterface {
+class Processor {
 public:
-    virtual ~ProcessorInterface() {}
-    virtual bool Init(const ComponentConfig& config, PipelineContext& context) = 0;
+    virtual ~Processor() {}
+    void SetContext(PipelineContext& context) { mContext = &context; }
+    PipelineContext& GetContext() { return *mContext; }
+    virtual bool Init(const ComponentConfig& config) = 0;
     virtual void Process(PipelineEventGroup& logGroup) = 0;
+
+protected:
+    virtual bool IsSupportedEvent(const PipelineEventPtr& e) = 0;
+    PipelineContext* mContext = nullptr;
 };
 } // namespace logtail

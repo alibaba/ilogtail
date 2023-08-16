@@ -19,12 +19,6 @@
 
 namespace logtail {
 
-std::string LogEvent::sType = "Log";
-
-const std::string& LogEvent::GetType() const {
-    return sType;
-};
-
 std::unique_ptr<LogEvent> LogEvent::CreateEvent(std::shared_ptr<SourceBuffer>& sb) {
     auto p = std::unique_ptr<LogEvent>(new LogEvent);
     p->SetSourceBuffer(sb);
@@ -32,17 +26,13 @@ std::unique_ptr<LogEvent> LogEvent::CreateEvent(std::shared_ptr<SourceBuffer>& s
 }
 
 void LogEvent::SetContent(const StringView& key, const StringView& val) {
-    SetContent(mSourceBuffer->CopyString(key), mSourceBuffer->CopyString(val));
+    SetContentNoCopy(mSourceBuffer->CopyString(key), mSourceBuffer->CopyString(val));
 }
 void LogEvent::SetContent(const std::string& key, const std::string& val) {
-    SetContent(mSourceBuffer->CopyString(key), mSourceBuffer->CopyString(val));
+    SetContentNoCopy(mSourceBuffer->CopyString(key), mSourceBuffer->CopyString(val));
 }
-void LogEvent::SetContent(const StringBuffer& key, const StringBuffer& val) {
+void LogEvent::SetContentNoCopy(const StringBuffer& key, const StringBuffer& val) {
     SetContentNoCopy(StringView(key.data, key.size), StringView(val.data, val.size));
-}
-
-const StringView& LogEvent::GetContent(const std::string& key) const {
-    return GetContent(StringView(key));
 }
 
 const StringView& LogEvent::GetContent(const StringView& key) const {
@@ -53,9 +43,6 @@ const StringView& LogEvent::GetContent(const StringView& key) const {
     return gEmptyStringView;
 }
 
-bool LogEvent::HasContent(const std::string& key) const {
-    return HasContent(StringView(key));
-}
 bool LogEvent::HasContent(const StringView& key) const {
     return contents.find(key) != contents.end();
 }
@@ -69,6 +56,31 @@ void LogEvent::DelContent(const StringView& key) {
 
 LogEvent::LogEvent() {
     mType = LOG_EVENT_TYPE;
+}
+
+Json::Value LogEvent::ToJson() const {
+    Json::Value root;
+    root["type"] = GetType();
+    root["timestamp"] = GetTimestamp();
+    if (!GetContents().empty()) {
+        Json::Value contents;
+        for (const auto& content : this->GetContents()) {
+            contents[content.first.to_string()] = content.second.to_string();
+        }
+        root["contents"] = std::move(contents);
+    }
+    return root;
+}
+
+bool LogEvent::FromJson(const Json::Value& root) {
+    SetTimestamp(root["timestamp"].asInt64());
+    if (root.isMember("contents")) {
+        Json::Value contents = root["contents"];
+        for (const auto& key : contents.getMemberNames()) {
+            SetContent(key, contents[key].asString());
+        }
+    }
+    return true;
 }
 
 } // namespace logtail

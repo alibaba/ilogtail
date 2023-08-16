@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-#include "processor/ProcessorInterface.h"
+#include "processor/Processor.h"
 #include <string>
 #include <boost/regex.hpp>
 
 namespace logtail {
 
-class ProcessorSplitRegexNative : public ProcessorInterface {
+class ProcessorSplitRegexNative : public Processor {
 public:
     static const char* Name() { return "processor_split_regex_native"; }
-    bool Init(const ComponentConfig& config, PipelineContext& context) override;
+    bool Init(const ComponentConfig& config) override;
     void Process(PipelineEventGroup& logGroup) override;
+
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) override;
 
 private:
     void ProcessEvent(PipelineEventGroup& logGroup,
@@ -38,14 +41,16 @@ private:
                   std::vector<StringView>& discardIndex,
                   const StringView& logPath);
 
-    PipelineContext mContext;
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
     std::string mSplitKey;
     std::string mLogBeginReg;
     std::unique_ptr<boost::regex> mLogBeginRegPtr;
-    bool mDiscardUnmatch;
-    bool mEnableLogPositionMeta;
+    bool mDiscardUnmatch = false;
+    bool mEnableLogPositionMeta = false;
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorSplitRegexNativeUnittest;
+#endif
 };
 
 } // namespace logtail

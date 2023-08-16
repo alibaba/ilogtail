@@ -19,15 +19,16 @@
 namespace logtail {
 
 bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& context) {
-    mContext = context;
-    return mPlugin->Init(config, context);
+    mContext = &context;
+    mPlugin->SetContext(context);
+    return mPlugin->Init(config);
 }
 
 void ProcessorInstance::Process(PipelineEventGroup& logGroup) {
     size_t inSize = logGroup.GetEvents().size();
     mPlugin->Process(logGroup);
     size_t outSize = logGroup.GetEvents().size();
-    LOG_DEBUG(mContext.GetLogger(), ("Processor", Id())("InSize", inSize)("OutSize", outSize));
+    LOG_DEBUG(mContext->GetLogger(), ("Processor", Id())("InSize", inSize)("OutSize", outSize));
 }
 
 } // namespace logtail

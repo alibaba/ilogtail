@@ -95,6 +95,7 @@ public:
         std::string mPreciseTimestampKey;
         TimeStampUnit mPreciseTimestampUnit;
         bool mAdjustApsaraMicroTimezone = false;
+        bool mForceEnablePipeline = false;
     };
 
 public:

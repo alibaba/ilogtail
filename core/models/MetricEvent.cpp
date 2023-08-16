@@ -18,9 +18,26 @@
 
 namespace logtail {
 
-std::string MetricEvent::sType = "Metric";
-const std::string& MetricEvent::GetType() const {
-    return sType;
-};
+std::unique_ptr<MetricEvent> MetricEvent::CreateEvent(std::shared_ptr<SourceBuffer>& sb) {
+    auto p = std::unique_ptr<MetricEvent>(new MetricEvent);
+    p->SetSourceBuffer(sb);
+    return p;
+}
+
+MetricEvent::MetricEvent() {
+    mType = METRIC_EVENT_TYPE;
+}
+
+Json::Value MetricEvent::ToJson() const {
+    Json::Value root;
+    root["type"] = GetType();
+    root["timestamp"] = GetTimestamp();
+    return root;
+}
+
+bool MetricEvent::FromJson(const Json::Value& root) {
+    SetTimestamp(root["timestamp"].asInt64());
+    return true;
+}
 
 } // namespace logtail

@@ -32,8 +32,18 @@ bool PipelineManager::LoadAllPipelines() {
     auto& allConfig = ConfigManager::GetInstance()->GetAllConfig();
     for (auto& kv : allConfig) {
         auto p = std::make_shared<Pipeline>();
-        p->Init(*kv.second);
-        mPipelineDict.emplace(kv.first, p);
+        if (p->Init(*kv.second)) {
+            mPipelineDict.emplace(kv.first, p);
+        } else {
+            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+                                                   "pipeline " + kv.second->mConfigName + " init failed",
+                                                   kv.second->GetProjectName(),
+                                                   kv.second->GetCategory(),
+                                                   kv.second->mRegion);
+            LOG_WARNING(sLogger,
+                        ("pipeline init failed", kv.second->mConfigName)("project", kv.second->GetProjectName())(
+                            "logstore", kv.second->GetCategory())("region", kv.second->mRegion));
+        }
     }
     return true;
 }

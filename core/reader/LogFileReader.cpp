@@ -1926,7 +1926,7 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
             }
             endPs--;
         }
-        if (endPs - 1 + n >= size) {
+        if (endPs - 1 + n >= (int)size) {
             buffer[endPs] = '\0';
             return endPs;
         } else {

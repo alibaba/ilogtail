@@ -17,19 +17,18 @@
 #pragma once
 
 #include <string>
-#include "plugin/PluginInstance.h"
-#include "plugin/PluginCreatorInterface.h"
-#include "plugin/CProcessorInterface.h"
+#include "plugin/PluginCreator.h"
+#include "plugin/CProcessor.h"
 
 namespace logtail {
 
-class DynamicCProcessorCreator : public PluginCreatorInterface {
+class DynamicCProcessorCreator : public PluginCreator {
 public:
     DynamicCProcessorCreator(const processor_interface_t* plugin, void* handle);
     ~DynamicCProcessorCreator();
     const char* Name() override { return mPlugin ? mPlugin->name : ""; }
     bool IsDynamic() override { return true; }
-    PluginInstance* Create(const std::string& pluginId) override;
+    std::unique_ptr<PluginInstance> Create(const std::string& pluginId) override;
 
 private:
     const processor_interface_t* mPlugin;

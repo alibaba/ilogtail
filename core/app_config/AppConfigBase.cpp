@@ -985,9 +985,9 @@ void AppConfigBase::SetConfigFlag(const std::string& flagName, const std::string
         string beforeValue = info.current_value;
         string setrst = GFLAGS_NAMESPACE::SetCommandLineOption(flagName.c_str(), value.c_str());
         GetCommandLineFlagInfo(flagName.c_str(), &info);
-        APSARA_LOG_DEBUG(sLogger,
-                         ("Set config flag", flagName)("before value", beforeValue)("after value", info.current_value)(
-                             "result", setrst.size() == 0 ? ("error with value " + value) : setrst));
+        APSARA_LOG_INFO(sLogger,
+                        ("Set config flag", flagName)("before value", beforeValue)("after value", info.current_value)(
+                            "result", setrst.size() == 0 ? ("error with value " + value) : setrst));
     } else {
         APSARA_LOG_DEBUG(sLogger, ("Flag not define", flagName));
     }
