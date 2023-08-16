@@ -81,11 +81,13 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
     if (0 == strcmp("%s", fmt)) {
         char* cp;
         long long n;
-        char secondBuf[11];
-        strncpy(secondBuf, buf, 10);
-        secondBuf[10] = '\0';
-
-        n = strtoll(secondBuf, &cp, 10);
+        n = strtoll(buf, &cp, 10);
+        // Assert the length of second timestamp to be less than 10.
+        size_t bufLength = strlen(buf);
+        size_t secondTimestampLength = bufLength >= 10 ? 10 : bufLength;
+        for (size_t i = 0; i < bufLength - secondTimestampLength; ++i) {
+            n /= 10;
+        }
         time_t t;
         if (n == 0 || (long long)(t = n) != n)
             return NULL;
@@ -99,7 +101,7 @@ const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* n
 
         *nanosecond = 0;
         *nanosecondLength = 0;
-        conv_nanosecond((const unsigned char*)(buf + 10), nanosecond, nanosecondLength);
+        conv_nanosecond((const unsigned char*)(buf + secondTimestampLength), nanosecond, nanosecondLength);
         return ((const char*)cp);
     }
 
