@@ -1,4 +1,8 @@
 #include "LogtailMetric.h"
+#include "common/StringTools.h"
+#include "MetricConstants.h"
+#include "logger/Logger.h"
+
 
 using namespace sls_logs;
 
@@ -9,10 +13,6 @@ const uint64_t BaseMetric::GetValue() const {
     return mVal;
 }
 
-const uint64_t BaseMetric::GetTimestamp() const {
-    return mTimestamp;
-}
-
 const std::string BaseMetric::GetName() const {
     return mName;
 }
@@ -20,56 +20,41 @@ const std::string BaseMetric::GetName() const {
 Counter::Counter(std::string name) {
     mName = name;
     mVal = (uint64_t)0;
-    mTimestamp = time(NULL);
 }
 
 Counter* Counter::CopyAndReset() {
     Counter* counter = new Counter(mName);
     counter->mVal = mVal.exchange(0);
-    counter->mTimestamp = mTimestamp.exchange(0);
     return counter;
 }
 
 void Counter::Add(uint64_t value) {
     mVal += value;
-    mTimestamp = time(NULL);
 }
 
 Gauge::Gauge(std::string name) {
     mName = name;
     mVal = (uint64_t)0;
-    mTimestamp = time(NULL);
 }
 
 Gauge* Gauge::CopyAndReset() {
     Gauge* gauge = new Gauge(mName);
     gauge->mVal = mVal.exchange(0);
-    gauge->mTimestamp = mTimestamp.exchange(0);
     return gauge;
 }
 
 void Gauge::Set(uint64_t value) {
     mVal = value;
-    mTimestamp = time(NULL);
 }
 
 
-Metrics::Metrics(std::vector<std::pair<std::string, std::string>> labels) {
-    mLabels = labels;
-    mDeleted.store(false);
-}
+Metrics::Metrics(const std::vector<std::pair<std::string, std::string>>& labels) : mLabels(std::move(labels)), mDeleted(false) {}
 
-Metrics::Metrics() {
-    mDeleted.store(false);
-}
+Metrics::Metrics() : mDeleted(false) {}
 
-WriteMetrics::WriteMetrics() {   
-    mSnapshotting.store(false);
-}
+WriteMetrics::WriteMetrics() {}
 
-ReadMetrics::ReadMetrics() {
-    mWriteMetrics = WriteMetrics::GetInstance();
-}
+ReadMetrics::ReadMetrics() {}
 
 
 CounterPtr Metrics::CreateCounter(const std::string name) {
@@ -85,7 +70,7 @@ GaugePtr Metrics::CreateGauge(const std::string name) {
 }
 
 void Metrics::MarkDeleted() {
-    mDeleted.store(true);
+    mDeleted = true;
 }
 
 bool Metrics::IsDeleted() {
@@ -100,106 +85,98 @@ const std::vector<MetricPtr>& Metrics::GetValues() const {
     return mValues;
 }
 
-Metrics* Metrics::Copy() {
-    std::vector<std::pair<std::string, std::string>> newLabels;
-    for (std::vector<std::pair<std::string, std::string>>::iterator it = mLabels.begin(); it != mLabels.end(); ++it) {
-        std::pair<std::string, std::string> pair = *it;
-        newLabels.push_back(std::make_pair(pair.first, pair.second));
-    }
+Metrics* Metrics::CopyAndReset() {
+    std::vector<std::pair<std::string, std::string>> newLabels(mLabels);
     Metrics* metrics =  new Metrics(newLabels); 
-    for (std::vector<MetricPtr>::iterator it = mValues.begin(); it != mValues.end(); ++it) {
-        MetricPtr cur = *it;
-        MetricPtr newPtr(cur->CopyAndReset());
+    for (auto &item: mValues) {
+        MetricPtr newPtr(item->CopyAndReset());
         metrics->mValues.push_back(newPtr);
     }
     return metrics;
 }
 
-Metrics* WriteMetrics::CreateMetrics(std::vector<std::pair<std::string, std::string>> labels) {
-    Metrics* cur = new Metrics(labels); 
-    std::lock_guard<std::mutex> lock(mMutex);   
-    // add metric to head
-    // 根据mSnapshotting的状态，决定节点加到哪里
-    if (mSnapshotting) {
-        Metrics* oldHead = mSnapshottingHead;
-        mSnapshottingHead = cur;
-        mSnapshottingHead->next = oldHead;
-
-    } else {
-        Metrics* oldHead = mHead;
-        mHead = cur;
-        mHead->next = oldHead;
-    }
-    return cur;
+Metrics* Metrics::GetNext() {
+    return mNext;
 }
 
+void Metrics::SetNext(Metrics* next) {
+    mNext = next; 
+}
 
 // mark as deleted
-void WriteMetrics::DestroyMetrics(Metrics* metrics) {
+void DestroyMetrics(Metrics* metrics) {
     // deleted is atomic_bool, no need to lock
-    metrics->MarkDeleted();    
+    LOG_INFO(sLogger, ("DestroyMetrics", "true"));
+    metrics->MarkDeleted();
 }
 
+MetricsPtr WriteMetrics::CreateMetrics(const std::vector<std::pair<std::string, std::string>>& labels) {
+    Metrics* cur = new Metrics(std::move(labels)); 
+    std::lock_guard<std::mutex> lock(mMutex);   
+
+    Metrics* oldHead = mHead;
+    mHead = cur;
+    mHead->SetNext(oldHead);
+
+    MetricsPtr curUnique(cur, DestroyMetrics);
+    return curUnique;
+}
+
+Metrics* WriteMetrics::GetHead() {
+    return mHead;
+}
 
 Metrics* WriteMetrics::DoSnapshot() {
-    mSnapshotting.store(true);
     // new read head
-    Metrics* snapshot = NULL;
-    // new read head iter
-    Metrics* rTmp;
-
+    Metrics* snapshot = nullptr;
+    Metrics* toDeleteHead = nullptr;
+    Metrics* tmp = nullptr;
+    
     Metrics* emptyHead = new Metrics();
+    Metrics* preTmp = nullptr;
+    // find the first not deleted node and set as new mHead
     {
-        std::lock_guard<std::mutex> lock(mMutex);  
-        emptyHead->next = mHead;
-    }
-    Metrics* preTmp = emptyHead;
-    while(preTmp) {
-        Metrics* tmp = preTmp->next;
-        if (!tmp) {
-            break;
-        }
-        if (tmp->IsDeleted()) {
-            Metrics* toDeleted = tmp;
-            preTmp->next = tmp->next;
-            delete toDeleted;
-            continue;
-        }
-        Metrics* newMetrics(tmp->Copy());
-        // Get Head
-        if (!snapshot) {
-
-            preTmp = preTmp->next;
-            snapshot = newMetrics;
-            rTmp = snapshot;
-            continue;
-        }
-        preTmp = preTmp->next;
-        rTmp->next = newMetrics;
-        rTmp = newMetrics;
-    }
-    // Only lock when change head
-    {
-        std::lock_guard<std::mutex> lock(mMutex);
-        // 把临时的节点加到链表里
-        if (mSnapshottingHead) {
-            Metrics* tmpSnapHead = mSnapshottingHead;
-            Metrics* tmpMHead = emptyHead->next;
-            emptyHead->next = mSnapshottingHead;
-            while(tmpSnapHead) {
-                if (tmpSnapHead->next == NULL) {
-                    tmpSnapHead->next = tmpMHead;
-                    break;
-                } else {
-                    tmpSnapHead = tmpSnapHead->next;
-                }
+        std::lock_guard<std::mutex> lock(mMutex); 
+        emptyHead->SetNext(mHead);
+        preTmp = emptyHead;
+        tmp = preTmp->GetNext();
+        while (tmp) {
+            if (tmp->IsDeleted()) {
+                preTmp->SetNext(tmp->GetNext());
+                tmp->SetNext(toDeleteHead);
+                toDeleteHead = tmp;
+                tmp = preTmp->GetNext();
+            } else {
+                mHead = tmp;
+                break;
             }
-            mSnapshottingHead = NULL;
         }
-        mHead = emptyHead->next;
-        mSnapshotting.store(false);
-        delete emptyHead;
+        if (!tmp) {
+            mHead = nullptr;
+        }
     }
+    
+    while (tmp) {
+        if (tmp->IsDeleted()) {
+            preTmp->SetNext(tmp->GetNext());
+            tmp->SetNext(toDeleteHead);
+            toDeleteHead = tmp;
+            tmp = preTmp->GetNext();
+        } else {
+            Metrics* newMetrics = tmp->CopyAndReset();
+            newMetrics->SetNext(snapshot);
+            snapshot = newMetrics;
+            preTmp = tmp;
+            tmp = tmp->GetNext();
+        }
+    }
+
+    while(toDeleteHead) {
+        Metrics* toDeleted = toDeleteHead;
+        toDeleteHead = toDeleteHead->GetNext();
+        delete toDeleted;
+    }
+    delete emptyHead;
     return snapshot;
 }
 
@@ -207,10 +184,9 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logG
     ReadLock lock(mReadWriteLock);
     Metrics* tmp = mHead;
     while(tmp) {
-        Log* logPtr = NULL;
-        std::vector<std::pair<std::string, std::string>> labels = tmp->GetLabels();
-        for (std::vector<std::pair<std::string, std::string>>::iterator it = labels.begin(); it != labels.end(); ++it) {
-            std::pair<std::string, std::string> pair = *it;
+        Log* logPtr = nullptr;
+        for (auto &item: tmp->GetLabels()) {
+            std::pair<std::string, std::string> pair = item;
             if (METRIC_FIELD_REGION == pair.first) {
                 std::map<std::string, sls_logs::LogGroup>::iterator iter;
                 std::string region = pair.second;
@@ -237,29 +213,31 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logG
                 logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup>(METRIC_REGION_DEFAULT, logGroup));
             }
         }
-        logPtr->set_time(time(NULL));
-        for (std::vector<std::pair<std::string, std::string>>::iterator it = labels.begin(); it != labels.end(); ++it) {
-            std::pair<std::string, std::string> pair = *it;
+        logPtr->set_time(time(nullptr));
+        for (auto &item: tmp->GetLabels()) {
+            std::pair<std::string, std::string> pair = item;
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key(LABEL_PREFIX + pair.first);
             contentPtr->set_value(pair.second);
         }
 
-        std::vector<MetricPtr> values = tmp->GetValues();
-        for (std::vector<MetricPtr>::iterator it = values.begin(); it != values.end(); ++it) {
-            MetricPtr counter = *it;
+        //std::vector<MetricPtr> values = tmp->GetValues();
+        for (auto &item: tmp->GetValues()) {
+            MetricPtr counter = item;
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key(VALUE_PREFIX + counter->GetName());
             contentPtr->set_value(ToString(counter->GetValue()));
         }
-        tmp = tmp->next;
+        tmp = tmp->GetNext();
     }
 }
 
-
+Metrics* ReadMetrics::GetHead() {
+    return mHead;
+}
 
 void ReadMetrics::UpdateMetrics() {
-    Metrics* snapshot = mWriteMetrics->DoSnapshot();
+    Metrics* snapshot = WriteMetrics::GetInstance()->DoSnapshot();
     Metrics* toDelete;
     {
         // Only lock when change head
@@ -270,7 +248,7 @@ void ReadMetrics::UpdateMetrics() {
     // delete old linklist
     while(toDelete) {
         Metrics* obj = toDelete;
-        toDelete = toDelete->next;
+        toDelete = toDelete->GetNext();
         delete obj;
     }
 }
