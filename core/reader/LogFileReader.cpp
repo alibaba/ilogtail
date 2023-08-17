@@ -1333,10 +1333,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                | -------------- | -------- \n
         multiBeginIndex      begIndex   endIndex
 
-        multiBeginIndex: used to cache logs which cannot be confirmed.
-            Logs between multiBeginIndex and begIndex can be:
-                1. there is only begin regex
-                2. there is only end regex
+        multiBeginIndex: used to cache current parsing log. Clear when starting the next log.
         begIndex: the begin index of the current line
         endIndex: the end index of the current line
 
@@ -1369,7 +1366,8 @@ bool LogFileReader::LogSplit(const char* buffer,
                         break;
                     } else if (mLogBeginRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
-                            if (multiBeginIndex != begIndex) { // true when there is only begin regex
+                            // Just clear old cache, task current line as the new cache
+                            if (multiBeginIndex != begIndex) {
                                 anyMatched = true;
                                 logIndex[logIndex.size() - 1] = StringView(logIndex[logIndex.size() - 1].begin(),
                                                                            logIndex[logIndex.size() - 1].length()
@@ -1379,39 +1377,33 @@ bool LogFileReader::LogSplit(const char* buffer,
                             state = SPLIT_BEGIN;
                             break;
                         }
-                    } else if (mLogContinueRegPtr != NULL) {
-                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
-                            state = SPLIT_CONTINUE;
-                            break;
-                        }
-                    } else if (mLogEndRegPtr != NULL) {
-                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
-                            if (multiBeginIndex != begIndex) {
-                                anyMatched = true;
-                                if (logIndex.size() == 0) {
-                                    logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
-                                } else {
-                                    logIndex[logIndex.size() - 1] = StringView(logIndex[logIndex.size() - 1].begin(),
-                                                                               logIndex[logIndex.size() - 1].length()
-                                                                                   + endIndex - multiBeginIndex);
-                                }
-                                multiBeginIndex = endIndex + 1;
-                            }
-                            break;
-                        }
+                        handleUnmatchLogs(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
+                        break;
+                    }
+                    // mLogContinueRegPtr can be matched 0 or multiple times, if not match continue to try mLogEndRegPtr
+                    if (mLogContinueRegPtr != NULL
+                        && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                        state = SPLIT_CONTINUE;
+                        break;
+                    }
+                    if (mLogEndRegPtr != NULL
+                        && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
+                        // output logs in cache from multiBeginIndex to endIndex
+                        anyMatched = true;
+                        logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
+                        multiBeginIndex = endIndex + 1;
+                        break;
                     }
                     handleUnmatchLogs(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
                     break;
 
                 case SPLIT_BEGIN:
-                    if (mLogContinueRegPtr != NULL) {
-                        if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
-                            state = SPLIT_CONTINUE;
-                        } else {
-                            handleUnmatchLogs(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
-                            state = SPLIT_UNMATCH;
-                        }
-                    } else if (mLogEndRegPtr != NULL) {
+                    // mLogContinueRegPtr can be matched 0 or multiple times, if not match continue to try others.
+                    if (mLogContinueRegPtr != NULL && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                        state = SPLIT_CONTINUE;
+                        break;
+                    }
+                    if (mLogEndRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
                             anyMatched = true;
                             logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
@@ -1421,24 +1413,28 @@ bool LogFileReader::LogSplit(const char* buffer,
                         // for case: begin unmatch end
                         // so logs cannot be handled as unmatch even if not match LogEngReg
                     } else if (mLogBeginRegPtr != NULL) {
+                        anyMatched = true;
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogBeginRegPtr, exception)) {
-                            anyMatched = true;
                             if (multiBeginIndex != begIndex) {
                                 logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
                                 multiBeginIndex = begIndex;
                             }
-                        } else {
-                            // case: only begin, wait to match the next begin
-                            anyMatched = true;
+                        } else if (mLogContinueRegPtr != NULL) {
+                            // case: begin+continue, but we meet unmatch log here
+                            logIndex.emplace_back(buffer + multiBeginIndex, begIndex - 1 - multiBeginIndex);
+                            multiBeginIndex = begIndex;
+                            handleUnmatchLogs(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
+                            state = SPLIT_UNMATCH;
                         }
+                        // else case: begin+end or begin, we should keep unmatch log in the cache
                     }
                     break;
 
                 case SPLIT_CONTINUE:
+                    // mLogContinueRegPtr can be matched 0 or multiple times, if not match continue to try others.
                     if (mLogContinueRegPtr != NULL && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
                         break;
                     }
-                    // The next line may be CONTINUE or END, so it can still be matched when cannot be matched ContinueReg.
                     if (mLogEndRegPtr != NULL) {
                         if (BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogEndRegPtr, exception)) {
                             anyMatched = true;
@@ -1491,10 +1487,12 @@ bool LogFileReader::LogSplit(const char* buffer,
         if (!IsMultiLine()) {
             logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
         } else {
+            endIndex = buffer[size-1] == '\n' ? size -1 : size;
             if (mLogBeginRegPtr != NULL && mLogContinueRegPtr == NULL && mLogEndRegPtr == NULL) {
-                logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
+                // If logs is unmatched, they have been handled immediately. So logs must be matched here.
+                logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
             } else if (mLogBeginRegPtr == NULL && mLogContinueRegPtr == NULL && mLogEndRegPtr != NULL) {
-                endIndex = buffer[size-1] == '\n' ? size -1 : size;
+                // If there is still logs in cache, it means that there is no end line. We can handle them as unmatched.
                 if (mDiscardUnmatch) {
                     for (int i = multiBeginIndex; i <= endIndex; i++) {
                         if (i == endIndex || buffer[i] == '\n') {
@@ -1511,7 +1509,7 @@ bool LogFileReader::LogSplit(const char* buffer,
                     }
                 }
             } else {
-                handleUnmatchLogs(buffer, multiBeginIndex, size, logIndex, discardIndex);
+                handleUnmatchLogs(buffer, multiBeginIndex, endIndex, logIndex, discardIndex);
             }
         }
     }
@@ -1523,6 +1521,7 @@ void LogFileReader::handleUnmatchLogs(const char* buffer,
                                       int endIndex,
                                       std::vector<StringView>& logIndex,
                                       std::vector<StringView>& discardIndex) {
+    // Cannot determine where log is unmatched here where there is only mLogEndRegPtr
     if (mLogBeginRegPtr == NULL && mLogContinueRegPtr == NULL && mLogEndRegPtr != NULL) {
         return;
     }
@@ -1843,7 +1842,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData) {
         return;
     }
     int32_t rollbackLineFeedCount = 0;
-    if ((moreData && !IsMultiLine()) || mLogType == JSON_LOG) {
+    if (moreData || mLogType == JSON_LOG) {
         int32_t bakResultCharCount = resultCharCount;
         resultCharCount = LastMatchedLine(stringBuffer.data, resultCharCount, rollbackLineFeedCount);
         if (resultCharCount == 0) {
@@ -1994,14 +1993,15 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     rollbackLineFeedCount = 0;
     // Single line rollback
     if (!IsMultiLine()) {
-        while (endPs >= 0 && buffer[endPs] != '\n') {
+        while (endPs >= 0) {
+            if (buffer[endPs] != '\n') {
+                ++rollbackLineFeedCount;
+                buffer[endPs + 1] = '\0';
+                return endPs + 1;
+            }
             endPs--;
         }
-        if (endPs != size - 1) {
-            ++rollbackLineFeedCount;
-        }
-        buffer[endPs + 1] = '\0';
-        return endPs + 1;
+        return 0;
     }
     // Multiline rollback
     int begPs = size - 2;
@@ -2023,7 +2023,10 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
                 }
             } else if (mLogBeginRegPtr != NULL && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogBeginRegPtr, exception)) {
                 ++rollbackLineFeedCount;
-                buffer[lineBegin] = '\0';
+                // Keep all the buffer if rollback all
+                if (lineBegin != 0) {
+                    buffer[lineBegin] = '\0';
+                }
                 return lineBegin;
             } else if (mLogContinueRegPtr != NULL) {
                 // We can confirm the logs before are complete if continue is configured but no regex pattern can match.
@@ -2031,7 +2034,10 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
                     buffer[endPs + 1] = '\0';
                     return endPs + 1;
                 } else {
-                    buffer[lineBegin] = '\0';
+                    // Keep all the buffer if rollback all
+                    if (lineBegin != 0) {
+                        buffer[lineBegin] = '\0';
+                    }
                     return lineBegin;
                 }
             } else {
@@ -2054,30 +2060,21 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
         // GB 18030 encoding rules:
         // 1. The number of byte for one character can be 1, 2, 4.
         // 2. 1 byte character: the top bit is 0.
-        // 3. 2 bytes character: the top bit of the first byte is 1; the second byte is between 0x40 and 0xFE.
-        // 4. 4 bytes character: the top bit of the first byte is 1; the 2nd and 4th byte are between 0x30 and 0x39.
+        // 3. 2 bytes character: the 1st byte is between 0x81 and 0xFE; the 2nd byte is between 0x40 and 0xFE.
+        // 4. 4 bytes character: the 1st and 3rd byte is between 0x81 and 0xFE; the 2nd and 4th byte are between 0x30 and 0x39. (not supported to align)
 
-        // First byte of the multi-bytes character, must be rollback
-        if ((buffer[endPs] & 0x80) == 0x80) {
-            size--;
-            endPs--;
-        }
-        if ((buffer[endPs] & 0xC0) == 0) { // 4 bytes character, 0xC0 -> 11000000
-            int pair = 0;
-            // search backward whether 2nd byte is paired with 4th
-            while (endPs >= 1 && ((buffer[endPs - 1] & 0x80) == 0x80 && (buffer[endPs] & 0xC0) == 0)) {
-                pair += 1;
-                endPs -= 2;
-            }
-            if (pair % 2 == 0) {
-                return size;
-            } else {
-                buffer[size - 2] = '\0';
-                return size - 2;
-            }
-        } else {
+        // 1 byte character, 2nd byte of 2 bytes, 2nd or 4th byte of 4 bytes
+        if ((buffer[endPs] & 0x80) == 0 || size == 1) {
             return size;
         }
+        while (endPs >= 0 && (buffer[endPs] & 0x80)) {
+            --endPs;
+        }
+        // whether characters >= 0x80 appear in pair
+        if (((size - endPs - 1) & 1) == 0) {
+            return size;
+        }
+        return size - 1;
     } else {
         // UTF8 encoding rules:
         // 1. For single byte character, the top bit is 0.
@@ -2123,21 +2120,21 @@ void LogFileReader::SetLogMultilinePolicy(const std::string& begReg,
         delete mLogBeginRegPtr;
         mLogBeginRegPtr = NULL;
     }
-    if (begReg.empty() == false) {
+    if (begReg.empty() == false && begReg != ".*") {
         mLogBeginRegPtr = new boost::regex(begReg.c_str());
     }
     if (mLogContinueRegPtr != NULL) {
         delete mLogContinueRegPtr;
         mLogContinueRegPtr = NULL;
     }
-    if (conReg.empty() == false) {
+    if (conReg.empty() == false && conReg != ".*") {
         mLogContinueRegPtr = new boost::regex(conReg.c_str());
     }
     if (mLogEndRegPtr != NULL) {
         delete mLogEndRegPtr;
         mLogEndRegPtr = NULL;
     }
-    if (endReg.empty() == false) {
+    if (endReg.empty() == false && endReg != ".*") {
         mLogEndRegPtr = new boost::regex(endReg.c_str());
     }
 }
