@@ -262,6 +262,7 @@ void UpdateTimeDelta(time_t serverTime) {
 // Will return value the precise timestamp.
 uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
                              const char* preciseTimeSuffix,
+                             size_t preciseTimeSuffixLen,
                              const PreciseTimestampConfig& preciseTimestampConfig,
                              int32_t tzOffsetSecond) {
     uint64_t adjustSecondTimestamp = secondTimestamp  - tzOffsetSecond;
@@ -283,12 +284,12 @@ uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
         maxPreciseDigitNum = 0;
     }
 
-    if (NULL == preciseTimeSuffix || strlen(preciseTimeSuffix) <= 1) {
+    if (NULL == preciseTimeSuffix || preciseTimeSuffixLen <= 1) {
         endFlag = true;
     } else {
-        std::string supprotSeparators = ".,: ";
+        static std::string supportedSeparators = ".,: ";
         const char separator = preciseTimeSuffix[0];
-        std::size_t found = supprotSeparators.find(separator);
+        std::size_t found = supportedSeparators.find(separator);
         if (found == std::string::npos) {
             endFlag = true;
         }
@@ -298,7 +299,7 @@ uint64_t GetPreciseTimestamp(uint64_t secondTimestamp,
     for (uint32_t i = 0; i < maxPreciseDigitNum; i++) {
         bool validDigit = false;
         if (!endFlag) {
-            const char digitChar = preciseTimeSuffix[i + 1];
+            char digitChar = i + 1 < preciseTimeSuffixLen ? preciseTimeSuffix[i + 1] : '\0';
             if (digitChar != '\0' && digitChar >= '0' && digitChar <= '9') {
                 preciseTimeDigit = preciseTimeDigit * 10 + (digitChar - '0');
                 validDigit = true;
@@ -324,6 +325,8 @@ int64_t GetNanoSecondsFromPreciseTimestamp(uint64_t preciseTimestamp, TimeStampU
             return preciseTimestamp * 1000 % 1000000000;
         case TimeStampUnit::MILLISECOND:
             return preciseTimestamp * 1000000 % 1000000000;
+        default:
+            return 0;
     }
     return 0;
 }

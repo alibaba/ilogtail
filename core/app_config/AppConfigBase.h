@@ -137,6 +137,7 @@ private:
     //   local time to adjust logs' time automatically.
     bool mEnableLogTimeAutoAdjust = false;
 
+    std::set<std::string> mDynamicPlugins;
     /**
      * @brief Load ConfigServer, DataServer and network interface
      *
@@ -370,6 +371,7 @@ public:
 
     inline bool EnableLogTimeAutoAdjust() const { return mEnableLogTimeAutoAdjust; }
 
+    inline const std::set<std::string>& GetDynamicPlugins() const { return mDynamicPlugins; }
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;
     friend class ConfigUpdatorUnittest;

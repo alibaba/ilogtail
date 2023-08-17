@@ -308,11 +308,11 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
                     std::string type = config["plugin"][*it][i]["type"].asString();
                     stats[*it].insert(type);
                     if (type == "service_docker_stdout") {
-                        if (config["plugin"][*it][i].isMember("detail") && config["plugin"][*it][i]["detail"].isObject() 
-                            && config["plugin"][*it][i]["detail"].isMember("CollectContainersFlag") 
+                        if (config["plugin"][*it][i].isMember("detail") && config["plugin"][*it][i]["detail"].isObject()
+                            && config["plugin"][*it][i]["detail"].isMember("CollectContainersFlag")
                             && config["plugin"][*it][i]["detail"]["CollectContainersFlag"].isBool()
                             && config["plugin"][*it][i]["detail"]["CollectContainersFlag"].asBool()) {
-                                stats["inner_function"].insert("collect_containers_meta");
+                            stats["inner_function"].insert("collect_containers_meta");
                         }
                     }
                 }
@@ -341,8 +341,10 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
         stats["processors"].insert(processor);
         stats["flushers"].insert("flusher_sls");
 
-        if (config.isMember("advanced") && config["advanced"].isObject() && config["advanced"].isMember("collect_containers_flag") 
-            && config["advanced"]["collect_containers_flag"].isBool() && config["advanced"]["collect_containers_flag"].asBool()) {
+        if (config.isMember("advanced") && config["advanced"].isObject()
+            && config["advanced"].isMember("collect_containers_flag")
+            && config["advanced"]["collect_containers_flag"].isBool()
+            && config["advanced"]["collect_containers_flag"].asBool()) {
             stats["inner_function"].insert("collect_containers_meta");
         }
     }
@@ -515,8 +517,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
                 if (!pluginConfigJson.isNull()) {
-                    pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
-                    pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
+                    config->mPluginProcessFlag = true;
                     if (pluginConfig.find("\"observer_ilogtail_") != string::npos) {
                         if (pluginConfigJson.isMember("inputs")) {
                             if (pluginConfigJson["inputs"].isObject() || pluginConfigJson["inputs"].isArray()) {
@@ -527,19 +528,18 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                             if (pluginConfigJson.isMember("processors")
                                 && (pluginConfigJson["processors"].isObject()
                                     || pluginConfigJson["processors"].isArray())) {
-                                config->mPluginProcessFlag = true;
                                 SetNotFoundJsonMember(pluginConfigJson, MIX_PROCESS_MODE, "observer");
-                                config->mPluginConfig = pluginConfigJson.toStyledString();
                             }
-
                         } else {
                             LOG_WARNING(sLogger,
                                         ("observer config is not a legal JSON object",
                                          logName)("project", projectName)("logstore", category));
+                            throw ExceptionBase(std::string("observer config is not a legal JSON object"));
                         }
-                    } else {
-                        config->mPluginConfig = pluginConfig;
                     }
+                    pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
+                    pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
+                    config->mPluginConfig = pluginConfig;
                 }
             } else if (logType == STREAM_LOG) {
                 config = new Config("",
@@ -603,16 +603,25 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
                 // normal log file config can have plugin too
                 if (!pluginConfig.empty() && !pluginConfigJson.isNull()) {
+                    if (pluginConfigJson.isMember("processors")
+                        && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())
+                        && !pluginConfigJson["processors"].empty()) {
+                        config->mPluginProcessFlag = true;
+                    }
+                    if (pluginConfigJson.isMember("flushers")
+                        && (pluginConfigJson["flushers"].isObject() || pluginConfigJson["flushers"].isArray())
+                        && !pluginConfigJson["flushers"].empty() && IsMeaningfulFlusher(pluginConfigJson["flushers"])) {
+                        config->mPluginProcessFlag = true;
+                    }
                     // check processors
                     // set process flag when config have processors
                     if (pluginConfigJson.isMember("processors")
                         && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())) {
                         // patch enable_log_position_meta to split processor if exists ...
-                        config->mPluginProcessFlag = true;
                         pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
                         pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
-                        config->mPluginConfig = pluginConfig;
                     }
+                    config->mPluginConfig = pluginConfig;
                 }
                 if (value.isMember("docker_file") && value["docker_file"].isBool() && value["docker_file"].asBool()) {
                     if (AppConfig::GetInstance()->IsPurageContainerMode()) {
@@ -1088,6 +1097,21 @@ LogFilterRule* ConfigManagerBase::GetFilterFule(const Json::Value& filterKeys, c
         }
     }
     return rulePtr;
+}
+
+bool ConfigManagerBase::IsMeaningfulFlusher(const Json::Value& flusherConfig) {
+    // Only one sls flusher without any option is not meaningful to use go plugin
+    if (flusherConfig.isArray() && flusherConfig.size() == 1) {
+        const auto& flusher = flusherConfig[0];
+        try {
+            if (flusher["type"].asString() == "flusher_sls" && flusher["detail"].empty()) {
+                return false;
+            }
+        } catch (Json::Exception& e) {
+            LOG_WARNING(sLogger, ("parse flusher plugin json failed", e.what()));
+        }
+    }
+    return true;
 }
 
 bool ConfigManagerBase::LoadAllConfig() {

@@ -732,10 +732,10 @@ void ModifyHandler::Handle(const Event& event) {
                     reader->GetLogstoreKey(), mConfigName, event, reader->GetDevInode(), curTime);
                 return;
             }
-            LogBuffer* logBuffer = NULL;
-            hasMoreData = reader->ReadLog(logBuffer);
+            LogBuffer* logBuffer = new LogBuffer;
+            hasMoreData = reader->ReadLog(*logBuffer);
             int32_t pushRetry = 0;
-            if (logBuffer != NULL) {
+            if (!logBuffer->rawBuffer.empty()) {
                 LogFileProfiler::GetInstance()->AddProfilingReadBytes(reader->GetConfigName(),
                                                                       reader->GetRegion(),
                                                                       reader->GetProjectName(),
@@ -755,6 +755,8 @@ void ModifyHandler::Handle(const Event& event) {
                     if (pushRetry % 10 == 0)
                         LogInput::GetInstance()->TryReadEvents(false);
                 }
+            } else {
+                delete logBuffer;
             }
 
             if (!hasMoreData) {

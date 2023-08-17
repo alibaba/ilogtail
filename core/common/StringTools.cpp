@@ -112,12 +112,13 @@ bool BoostRegexSearch(const char* buffer,
 }
 
 bool BoostRegexMatch(const char* buffer,
+                     size_t length,
                      const boost::regex& reg,
                      string& exception,
                      boost::match_results<const char*>& what,
                      boost::match_flag_type flags) {
     try {
-        if (boost::regex_match(buffer, what, reg, flags))
+        if (boost::regex_match(buffer, buffer + length, what, reg, flags))
             return true;
         else
             return false;
@@ -135,6 +136,31 @@ bool BoostRegexMatch(const char* buffer,
         return false;
     } catch (...) {
         exception.append("unknown exception; buffer: ");
+        exception.append(buffer);
+        return false;
+    }
+}
+
+bool BoostRegexMatch(const char* buffer, size_t size, const boost::regex& reg, string& exception) {
+    try {
+        if (boost::regex_match(buffer, buffer + size, reg))
+            return true;
+        else
+            return false;
+    } catch (boost::regex_error& e) {
+        exception.append("regex_error code is ");
+        exception.append(ToString(e.code()));
+        exception.append("; buffer is ");
+        exception.append(buffer);
+        return false;
+    } catch (std::exception& e) {
+        exception.append("exception message is ");
+        exception.append(e.what());
+        exception.append("; buffer is ");
+        exception.append(buffer);
+        return false;
+    } catch (...) {
+        exception.append("unknown exception; buffer is ");
         exception.append(buffer);
         return false;
     }
