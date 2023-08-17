@@ -98,17 +98,19 @@ void Metrics::SetNext(Metrics* next) {
     mNext = next; 
 }
 
-// mark as deleted
-void DestroyMetrics(Metrics* metrics) {
-    // deleted is atomic_bool, no need to lock
-    LOG_INFO(sLogger, ("DestroyMetrics", "true"));
-    metrics->MarkDeleted();
+MetricsRef::MetricsRef(Metrics* metrics) : mMetrics(metrics) {}
+
+MetricsRef::~MetricsRef() {
+    mMetrics->MarkDeleted();
 }
 
+Metrics* MetricsRef::Get() {
+    return mMetrics;
+}
 
 WriteMetrics::WriteMetrics() {}
 
-MetricsPtr WriteMetrics::CreateMetrics(const std::vector<std::pair<std::string, std::string>>& labels) {
+MetricsRef WriteMetrics::CreateMetrics(const std::vector<std::pair<std::string, std::string>>& labels) {
     Metrics* cur = new Metrics(std::move(labels)); 
     std::lock_guard<std::mutex> lock(mMutex);   
 
@@ -116,8 +118,8 @@ MetricsPtr WriteMetrics::CreateMetrics(const std::vector<std::pair<std::string, 
     mHead = cur;
     mHead->SetNext(oldHead);
 
-    MetricsPtr curUnique(cur, DestroyMetrics);
-    return curUnique;
+    MetricsRef curRef(cur);
+    return curRef;
 }
 
 Metrics* WriteMetrics::GetHead() {
@@ -130,13 +132,13 @@ Metrics* WriteMetrics::DoSnapshot() {
     Metrics* toDeleteHead = nullptr;
     Metrics* tmp = nullptr;
     
-    Metrics* emptyHead = new Metrics();
+    Metrics emptyHead;
     Metrics* preTmp = nullptr;
     // find the first not deleted node and set as new mHead
     {
         std::lock_guard<std::mutex> lock(mMutex); 
-        emptyHead->SetNext(mHead);
-        preTmp = emptyHead;
+        emptyHead.SetNext(mHead);
+        preTmp = &emptyHead;
         tmp = preTmp->GetNext();
         while (tmp) {
             if (tmp->IsDeleted()) {
@@ -174,7 +176,6 @@ Metrics* WriteMetrics::DoSnapshot() {
         toDeleteHead = toDeleteHead->GetNext();
         delete toDeleted;
     }
-    delete emptyHead;
     return snapshot;
 }
 

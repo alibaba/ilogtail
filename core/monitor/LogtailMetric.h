@@ -59,8 +59,14 @@ class Metrics {
         Metrics* GetNext();
 };
 
-typedef void (*functionPointer)(Metrics*);
-using MetricsPtr = std::unique_ptr<Metrics, functionPointer>;
+class MetricsRef {
+    private:
+        Metrics* mMetrics;
+    public:
+        MetricsRef(Metrics* metrics);
+        ~MetricsRef();
+        Metrics* Get();
+};
 
 class WriteMetrics {
     private:
@@ -72,7 +78,8 @@ class WriteMetrics {
             static WriteMetrics* ptr = new WriteMetrics();
             return ptr;
         }
-        MetricsPtr CreateMetrics(const std::vector<std::pair<std::string, std::string>>& Labels);
+        MetricsRef CreateMetrics(const std::vector<std::pair<std::string, std::string>>& Labels);
+
         Metrics* DoSnapshot();
         Metrics* GetHead();
 };
