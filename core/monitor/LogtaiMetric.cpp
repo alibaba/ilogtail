@@ -52,11 +52,6 @@ Metrics::Metrics(const std::vector<std::pair<std::string, std::string>>& labels)
 
 Metrics::Metrics() : mDeleted(false) {}
 
-WriteMetrics::WriteMetrics() {}
-
-ReadMetrics::ReadMetrics() {}
-
-
 CounterPtr Metrics::CreateCounter(const std::string name) {
     CounterPtr counterPtr = std::make_shared<Counter>(name);
     mValues.push_back(counterPtr);
@@ -109,6 +104,9 @@ void DestroyMetrics(Metrics* metrics) {
     LOG_INFO(sLogger, ("DestroyMetrics", "true"));
     metrics->MarkDeleted();
 }
+
+
+WriteMetrics::WriteMetrics() {}
 
 MetricsPtr WriteMetrics::CreateMetrics(const std::vector<std::pair<std::string, std::string>>& labels) {
     Metrics* cur = new Metrics(std::move(labels)); 
@@ -180,6 +178,8 @@ Metrics* WriteMetrics::DoSnapshot() {
     return snapshot;
 }
 
+ReadMetrics::ReadMetrics() {}
+
 void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logGroupMap) {
     ReadLock lock(mReadWriteLock);
     Metrics* tmp = mHead;
@@ -232,9 +232,6 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logG
     }
 }
 
-Metrics* ReadMetrics::GetHead() {
-    return mHead;
-}
 
 void ReadMetrics::UpdateMetrics() {
     Metrics* snapshot = WriteMetrics::GetInstance()->DoSnapshot();
@@ -252,4 +249,9 @@ void ReadMetrics::UpdateMetrics() {
         delete obj;
     }
 }
+
+Metrics* ReadMetrics::GetHead() {
+    return mHead;
+}
+
 }
