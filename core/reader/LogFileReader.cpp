@@ -1994,8 +1994,10 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     // Single line rollback
     if (!IsMultiLine()) {
         while (endPs >= 0) {
-            if (buffer[endPs] != '\n') {
-                ++rollbackLineFeedCount;
+            if (buffer[endPs] == '\n') {
+                if (endPs != size - 1) {
+                    ++rollbackLineFeedCount;
+                }
                 buffer[endPs + 1] = '\0';
                 return endPs + 1;
             }

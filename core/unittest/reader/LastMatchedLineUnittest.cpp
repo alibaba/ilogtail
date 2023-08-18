@@ -126,8 +126,8 @@ void LastMatchedLineUnittest::TestSingleline() {
         int32_t matchSize
             = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(0, matchSize);
-        APSARA_TEST_EQUAL_FATAL(std::string(testLog.data()), "");
-        APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
+        // return the whole buffer, so no rollback
+        APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
     }
 }
 
