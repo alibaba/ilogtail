@@ -128,6 +128,8 @@ public:
         }
     }
 
+    void SetFlushTimeout(unsigned int timeout) { mFlushTimeout = timeout; }
+
     std::string GetTopicName(const std::string& topicConfig, const std::string& path);
 
     void SetTopicName(const std::string& topic) { mTopicName = topic; }
@@ -349,9 +351,9 @@ public:
     }
 
 protected:
-    bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback);
-    void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback);
-    void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback);
+    bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);
+    void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
+    void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
 
     size_t
     ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL);
@@ -375,6 +377,7 @@ protected:
     std::string mCategory;
     std::string mConfigName;
     std::string mHostLogPath;
+    std::string mHostLogPathDir;
     std::string mHostLogPathFile;
     std::string mRealLogPath; // real log path
     bool mSymbolicLinkFlag = false;
@@ -389,6 +392,7 @@ protected:
     std::string mTopicName;
     time_t mLastUpdateTime;
     boost::regex* mLogBeginRegPtr;
+    unsigned int mFlushTimeout;
     FileEncoding mFileEncoding;
     bool mDiscardUnmatch;
     LogType mLogType;
