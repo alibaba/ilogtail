@@ -2,12 +2,14 @@
 
 ## 简介
 
+提示：请使用`processor_regex_accelerate processor`中的多行行首正则表达式。
+
 `processor_split_log_regex processor`插件实现多行日志（例如Java程序日志）的采集。
 备注：该插件必须设置为`processor`的第一个插件。
 
 ## 版本
 
-[Stable](../stability-level.md)
+[Stable](../stability-level.md)，请使用`processor_regex_accelerate`。
 
 ## 配置参数
 

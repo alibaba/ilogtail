@@ -18,6 +18,8 @@
 #include "logger/Logger.h"
 #if defined(_MSC_VER)
 #include <Shlwapi.h>
+#else
+#include <strings.h>
 #endif
 using namespace std;
 
@@ -27,6 +29,14 @@ std::string ToLowerCaseString(const std::string& orig) {
     auto copy = orig;
     std::transform(copy.begin(), copy.end(), copy.begin(), ::tolower);
     return copy;
+}
+
+int StringCaseInsensitiveCmp(const std::string& s1, const std::string& s2) {
+#if defined(_MSC_VER)
+    return _stricmp(s1.c_str(), s2.c_str());
+#else
+    return strcasecmp(s1.c_str(), s2.c_str());
+#endif
 }
 
 std::string ToString(const std::vector<std::string>& vec) {

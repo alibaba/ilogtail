@@ -309,11 +309,10 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
             profile.readBytes = readBytes;
             int32_t parseStartTime = (int32_t)time(NULL);
             bool needSend = false;
-            if (!BOOL_FLAG(enable_new_pipeline) || config->mLogType == STREAM_LOG || config->mLogType == PLUGIN_LOG
-                || (config->mPluginProcessFlag && !config->mAdvancedConfig.mForceEnablePipeline)) {
-                needSend = 0 == ProcessBufferLegacy(logBuffer, logFileReader, logGroup, profile, *config);
+            if (!BOOL_FLAG(enable_new_pipeline)) {
+                needSend = (0 == ProcessBufferLegacy(logBuffer, logFileReader, logGroup, profile, *config));
             } else {
-                needSend = 0 == ProcessBuffer(logBuffer, logFileReader, logGroup, profile);
+                needSend = (0 == ProcessBuffer(logBuffer, logFileReader, logGroup, profile));
             }
             const std::string& projectName = config->GetProjectName();
             const std::string& category = config->GetCategory();

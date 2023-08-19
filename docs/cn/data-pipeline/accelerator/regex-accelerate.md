@@ -15,8 +15,8 @@
 | 参数 | 类型 | 是否必选 | 说明 |
 | --- | --- | --- | --- |
 | Type | String | 是 | 插件类型，指定为`processor_regex_accelerate`。 |
-| Keys | Array | 是 | 提取的字段名列表。 |
-| Regex | String | 是 | 提取字段的正则表达式，使用()标注待提取的字段。 |
+| Keys | Array | 否 | 提取的字段名列表。默认值：`["content"]`。 |
+| Regex | String | 否 | 提取字段的正则表达式，使用()标注待提取的字段。默认值：`(.*)`。 |
 | LogBeginRegex | String | 否 | 行首正则表达式，仅当待采集日志为多行日志时使用。 |
 | FilterKey | Array | 否 | 用于过滤日志的字段。仅当该字段的值与FilterRegex参数中对应设置的正则表达式匹配时，对应的日志才会被采集。 |
 | FilterRegex | Array | 否，当FilterKey参数不为空时必选 | 日志字段过滤的正则表达式。该参数元素个数必须与FilterKey参数的元素个数相同。 |

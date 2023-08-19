@@ -602,6 +602,14 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     discardUnmatch);
 
                 // normal log file config can have plugin too
+                // Boolean force_enable_pipeline.
+                if (value.isMember("force_enable_pipeline") && value["force_enable_pipeline"].isBool()
+                    && value["force_enable_pipeline"].asBool()) {
+                    config->mForceEnablePipeline = true;
+                    LOG_INFO(sLogger,
+                             ("set force enable pipeline",
+                              config->mForceEnablePipeline)("project", projectName)("config", logName));
+                }
                 if (!pluginConfig.empty() && !pluginConfigJson.isNull()) {
                     if (pluginConfigJson.isMember("processors")
                         && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())
