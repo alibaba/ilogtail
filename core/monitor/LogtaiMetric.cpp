@@ -46,13 +46,13 @@ Metrics::Metrics() : mDeleted(false) {}
 
 MetricPtr Metrics::CreateCounter(const std::string& name) {
     MetricPtr counterPtr = std::make_shared<Counter>(name);
-    mValues.push_back(counterPtr);
+    mValues.emplace_back(counterPtr);
     return counterPtr;
 }
 
 MetricPtr Metrics::CreateGauge(const std::string& name) {
     MetricPtr gaugePtr = std::make_shared<Gauge>(name);
-    mValues.push_back(gaugePtr);
+    mValues.emplace_back(gaugePtr);
     return gaugePtr;
 }
 
@@ -77,7 +77,7 @@ Metrics* Metrics::CopyAndReset() {
     Metrics* metrics = new Metrics(std::move(newLabels)); 
     for (auto &item: mValues) {
         MetricPtr newPtr(item->CopyAndReset());
-        metrics->mValues.push_back(newPtr);
+        metrics->mValues.emplace_back(newPtr);
     }
     return metrics;
 }
