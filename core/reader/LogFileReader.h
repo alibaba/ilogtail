@@ -112,7 +112,7 @@ public:
                   bool discardUnmatch,
                   bool dockerFileFlag);
 
-    bool ReadLog(LogBuffer& logBuffer, Event* event);
+    bool ReadLog(LogBuffer& logBuffer, const Event* event);
     time_t GetLastUpdateTime() const // actually it's the time whenever ReadLogs is called
     {
         return mLastUpdateTime;
@@ -128,7 +128,7 @@ public:
         }
     }
 
-    void SetFlushTimeout(unsigned int timeout) { mFlushTimeout = timeout; }
+    void SetReaderFlushTimeout(int timeout) { mReaderFlushTimeout = timeout; }
 
     std::string GetTopicName(const std::string& topicConfig, const std::string& path);
 
@@ -392,7 +392,7 @@ protected:
     std::string mTopicName;
     time_t mLastUpdateTime;
     boost::regex* mLogBeginRegPtr;
-    unsigned int mFlushTimeout;
+    int mReaderFlushTimeout;
     FileEncoding mFileEncoding;
     bool mDiscardUnmatch;
     LogType mLogType;

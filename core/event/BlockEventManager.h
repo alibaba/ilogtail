@@ -54,7 +54,8 @@ protected:
             }
             mEvent = pEvent;
             mLogstoreKey = logstoreKey;
-            if (mEvent->IsReadLogTimeout()) {
+            // will become traditional block event if processor queue is not ready
+            if (mEvent->IsReadFlushTimeout()) {
                 mTimeout = curTime - mInvalidTime;
             } else {
                 mTimeout = (curTime - mInvalidTime) * 2 + 1;

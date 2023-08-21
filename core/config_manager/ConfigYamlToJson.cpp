@@ -73,7 +73,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileConfigMap["Keys"] = "keys";
     mFileConfigMap["Regex"] = "regex";
     mFileConfigMap["LogBeginRegex"] = "log_begin_reg";
-    mFileConfigMap["FlushTimeout"] = "flush_timeout";
+    mFileConfigMap["ReaderFlushTimeout"] = "reader_flush_timeout";
     // params specific to delimiter accelerate processor
     mFileConfigMap["Separator"] = "delimiter_separator";
     mFileConfigMap["Quote"] = "delimiter_quote";

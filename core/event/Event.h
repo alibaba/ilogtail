@@ -32,7 +32,7 @@ typedef uint32_t EventType;
 #define EVENT_MOVE_TO (64)
 #define EVENT_DELETE (128)
 #define EVENT_CONTAINER_STOPPED (256)
-#define EVENT_READ_LOG_TIMEOUT (512)
+#define EVENT_READER_FLUSH_TIMEOUT (512)
 
 class Event {
 private:
@@ -122,9 +122,9 @@ public:
 
     const std::string& GetConfigName() const { return mConfigName; }
 
-    int64_t GetLastReadPos() { return mLastReadPos; }
+    int64_t GetLastReadPos() const { return mLastReadPos; }
 
-    int64_t GetLastFilePos() { return mLastFilePos; }
+    int64_t GetLastFilePos() const { return mLastFilePos; }
 
     void SetSource(const std::string& source) { mSource = source; }  
 
@@ -159,7 +159,7 @@ public:
 
     bool IsContainerStopped() const { return mType & EVENT_CONTAINER_STOPPED; }
 
-    bool IsReadLogTimeout() const { return (mType & EVENT_READ_LOG_TIMEOUT) == EVENT_READ_LOG_TIMEOUT; }
+    bool IsReadFlushTimeout() const { return mType & EVENT_READER_FLUSH_TIMEOUT; }
 
     std::string GetTypeString() const {
         std::string type;

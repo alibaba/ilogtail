@@ -428,7 +428,7 @@ LogFileReader::LogFileReader(const string& projectName,
     mLastFilePos = 0;
     mLastFileSize = 0;
     mLogBeginRegPtr = NULL;
-    mFlushTimeout = 5;
+    mReaderFlushTimeout = 5;
     mDiscardUnmatch = discardUnmatch;
     mLastUpdateTime = time(NULL);
     mLastEventTime = mLastUpdateTime;
@@ -482,7 +482,7 @@ LogFileReader::LogFileReader(const std::string& projectName,
         mTopicName = GetTopicName(topicFormat, mHostLogPath);
     mFileEncoding = fileEncoding;
     mLogBeginRegPtr = NULL;
-    mFlushTimeout = 5;
+    mReaderFlushTimeout = 5;
     mDiscardUnmatch = discardUnmatch;
     mLastUpdateTime = time(NULL);
     mLastEventTime = mLastUpdateTime;
@@ -968,7 +968,7 @@ void LogFileReader::skipCheckpointRelayHole() {
     mLastFilePos = readOffset;
 }
 
-bool LogFileReader::ReadLog(LogBuffer& logBuffer, Event* event) {
+bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
     if (mLogFileOp.IsOpen() == false) {
         if (!ShouldForceReleaseDeletedFileFd()) {
             // should never happen
@@ -994,9 +994,14 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, Event* event) {
     auto const beginOffset = mLastFilePos;
     size_t lastFilePos = mLastFilePos;
     bool allowRollback = true;
-    if (event != nullptr) {
-        if (event->IsReadLogTimeout() && event->GetLastReadPos() == mLastReadPos && event->GetLastFilePos() == mLastFilePos && event->GetInode() == mDevInode.inode) {
+    if (event != nullptr && event->IsReadFlushTimeout()) {
+        // If flush timeout event, we should filter whether the event is legacy.
+        if (((event->GetLastReadPos() == mLastReadPos && event->GetLastFilePos() == mLastFilePos)
+             || (event->GetLastReadPos() == -1 && event->GetLastFilePos() == -1))
+            && event->GetInode() == mDevInode.inode) {
             allowRollback = false;
+        } else {
+            return false;
         }
     }
     bool moreData = GetRawData(logBuffer, mLastFileSize, allowRollback);
@@ -1017,14 +1022,14 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, Event* event) {
                   "read size", mLastFilePos - lastFilePos));
     if (mLastFilePos != mLastReadPos) {
         string fileName = mHostLogPath.substr(mHostLogPathDir.size() + 1, mHostLogPath.size() - mHostLogPathDir.size() - 1);
-        Event event = Event(mHostLogPathDir, fileName, EVENT_READ_LOG_TIMEOUT | EVENT_MODIFY, -1, 0);
+        Event event = Event(mHostLogPathDir, fileName, EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0);
         event.SetLastReadPos(mLastReadPos);
         event.SetLastFilePos(mLastFilePos);
         BlockedEventManager::GetInstance()->UpdateBlockEvent(GetLogstoreKey(),
                                                              mConfigName,
                                                              event,
                                                              mDevInode,
-                                                             time(NULL) + mFlushTimeout);
+                                                             time(NULL) + mReaderFlushTimeout);
     }
     return moreData;
 }

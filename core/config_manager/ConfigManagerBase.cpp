@@ -564,9 +564,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (logBeingReg != "" && CheckRegFormat(logBeingReg) == false) {
                     throw ExceptionBase("The log begin line is not value regex : " + logBeingReg);
                 }
-                unsigned int flushTimeout = 5;
-                if (value.isMember("flush_timeout"))
-                    flushTimeout = GetIntValue(value, "flush_timeout");
+                int readerFlushTimeout = 5;
+                if (value.isMember("reader_flush_timeout"))
+                    readerFlushTimeout = GetIntValue(value, "reader_flush_timeout");
 
                 string filePattern = GetStringValue(value, "file_pattern");
                 // raw log flag
@@ -588,7 +588,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     rawLogFlag,
                                     "",
                                     discardUnmatch,
-                                    flushTimeout);
+                                    readerFlushTimeout);
 
                 // normal log file config can have plugin too
                 if (!pluginConfig.empty() && !pluginConfigJson.isNull()) {
