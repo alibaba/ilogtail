@@ -15,53 +15,43 @@ const uint64_t BaseMetric::GetValue() const {
     return mVal;
 }
 
-const std::string BaseMetric::GetName() const {
+const std::string& BaseMetric::GetName() const {
     return mName;
 }
 
-Counter::Counter(std::string name) {
-    mName = name;
-    mVal = (uint64_t)0;
-}
+Counter::Counter(const std::string &name, uint64_t val = 0) : BaseMetric(name, val) {}
 
 Counter* Counter::CopyAndReset() {
-    Counter* counter = new Counter(mName);
-    counter->mVal = mVal.exchange(0);
-    return counter;
+    return new Counter(mName, mVal.exchange(0));
 }
 
-void Counter::Add(uint64_t value) {
+void Counter::SetValue(uint64_t value) {
     mVal += value;
 }
 
-Gauge::Gauge(std::string name) {
-    mName = name;
-    mVal = (uint64_t)0;
-}
+Gauge::Gauge(const std::string &name, uint64_t val = 0) : BaseMetric(name, val) {}
 
 Gauge* Gauge::CopyAndReset() {
-    Gauge* gauge = new Gauge(mName);
-    gauge->mVal = mVal.exchange(0);
-    return gauge;
+    return new Gauge(mName, mVal.exchange(0));
 }
 
-void Gauge::Set(uint64_t value) {
+void Gauge::SetValue(uint64_t value) {
     mVal = value;
 }
 
 
-Metrics::Metrics(const std::vector<std::pair<std::string, std::string>>& labels) : mLabels(std::move(labels)), mDeleted(false) {}
+Metrics::Metrics(const std::vector<std::pair<std::string, std::string>>&& labels) : mLabels(labels), mDeleted(false) {}
 
 Metrics::Metrics() : mDeleted(false) {}
 
-CounterPtr Metrics::CreateCounter(const std::string name) {
-    CounterPtr counterPtr = std::make_shared<Counter>(name);
+MetricPtr Metrics::CreateCounter(const std::string& name) {
+    MetricPtr counterPtr = std::make_shared<Counter>(name);
     mValues.push_back(counterPtr);
     return counterPtr;
 }
 
-GaugePtr Metrics::CreateGauge(const std::string name) {
-    GaugePtr gaugePtr = std::make_shared<Gauge>(name);
+MetricPtr Metrics::CreateGauge(const std::string& name) {
+    MetricPtr gaugePtr = std::make_shared<Gauge>(name);
     mValues.push_back(gaugePtr);
     return gaugePtr;
 }
@@ -84,7 +74,7 @@ const std::vector<MetricPtr>& Metrics::GetValues() const {
 
 Metrics* Metrics::CopyAndReset() {
     std::vector<std::pair<std::string, std::string>> newLabels(mLabels);
-    Metrics* metrics =  new Metrics(newLabels); 
+    Metrics* metrics = new Metrics(std::move(newLabels)); 
     for (auto &item: mValues) {
         MetricPtr newPtr(item->CopyAndReset());
         metrics->mValues.push_back(newPtr);
@@ -110,7 +100,7 @@ MetricsRef::~MetricsRef() {
 
 void MetricsRef::Init(const std::vector<std::pair<std::string, std::string>>& Labels) {
     if (!mMetrics) {
-        mMetrics = WriteMetrics::GetInstance()->CreateMetrics(Labels);
+        mMetrics = WriteMetrics::GetInstance()->CreateMetrics(std::move(Labels));
     }
 }
 
@@ -149,6 +139,7 @@ Metrics* WriteMetrics::DoSnapshot() {
         emptyHead.SetNext(mHead);
         preTmp = &emptyHead;
         tmp = preTmp->GetNext();
+        bool findHead = false;
         while (tmp) {
             if (tmp->IsDeleted()) {
                 preTmp->SetNext(tmp->GetNext());
@@ -156,15 +147,32 @@ Metrics* WriteMetrics::DoSnapshot() {
                 toDeleteHead = tmp;
                 tmp = preTmp->GetNext();
             } else {
-                mHead = tmp;
-                break;
+                Metrics* newMetrics = tmp->CopyAndReset();
+                newMetrics->SetNext(snapshot);
+                snapshot = newMetrics;
+                // find head
+                if (!findHead) {
+                    mHead = tmp;
+                    preTmp = tmp;
+                    tmp = tmp->GetNext();
+
+                    mHead->SetNext(nullptr);
+                    findHead = true;
+                // find head next
+                } else {
+                    mHead->SetNext(tmp);
+                    preTmp = tmp;
+                    tmp = tmp->GetNext();
+                    break;
+                } 
             }
         }
-        if (!tmp) {
+        // if no undeleted node, set null to mHead
+        if (!findHead) {
             mHead = nullptr;
         }
-    }
-    
+    } 
+
     while (tmp) {
         if (tmp->IsDeleted()) {
             preTmp->SetNext(tmp->GetNext());

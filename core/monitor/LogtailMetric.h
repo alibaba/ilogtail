@@ -13,31 +13,34 @@ class BaseMetric {
         std::string mName;
         std::atomic_long mVal;
     public:
+        BaseMetric(const std::string &name, uint64_t val) {
+            mName = name;
+            mVal = val;
+        };
+        virtual ~BaseMetric() {};
         const uint64_t GetValue() const;
-        const std::string GetName() const;
+        const std::string& GetName() const;
+        virtual void SetValue(uint64_t val) = 0;
         virtual BaseMetric* CopyAndReset() = 0;
 };
 
 
 class Gauge : public BaseMetric {
     public:
-        Gauge(const std::string name);   
-        void Set(uint64_t val);
-        Gauge* CopyAndReset();
+        Gauge(const std::string &name, uint64_t val);   
+        void SetValue(uint64_t val) override;
+        Gauge* CopyAndReset() override;
 };
 
 
 class Counter : public BaseMetric {
     public:
-        Counter(const std::string name);
-        void Add(uint64_t val);
-        Counter* CopyAndReset();
+        Counter(const std::string &name, uint64_t val);
+        void SetValue(uint64_t val) override;
+        Counter* CopyAndReset() override;
 };
 
 using MetricPtr = std::shared_ptr<BaseMetric>;
-using CounterPtr = std::shared_ptr<Counter>;
-using GaugePtr = std::shared_ptr<Gauge>;
-
 
 class Metrics {
     private:
@@ -46,14 +49,14 @@ class Metrics {
         std::vector<MetricPtr> mValues;
         Metrics* mNext  = nullptr;
     public:
-        Metrics(const std::vector<std::pair<std::string, std::string>>& labels);
+        Metrics(const std::vector<std::pair<std::string, std::string>>&& labels);
         Metrics();
         void MarkDeleted();
         bool IsDeleted();
         const std::vector<std::pair<std::string, std::string>>& GetLabels() const;
         const std::vector<MetricPtr>& GetValues() const;
-        CounterPtr CreateCounter(const std::string Name);
-        GaugePtr CreateGauge(const std::string Name);
+        MetricPtr CreateCounter(const std::string& Name);
+        MetricPtr CreateGauge(const std::string& Name);
         Metrics* CopyAndReset();
         void SetNext(Metrics* next);
         Metrics* GetNext();
