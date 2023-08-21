@@ -18,5 +18,9 @@
         "bmalehorn.shell-syntax"
       ]
     }
-  }
+  },
+  "mounts": [
+    "source=/root/.ssh,target=/home/root/.ssh,type=bind,consistency=cached",
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind,consistency=cached"
+  ]
 }
