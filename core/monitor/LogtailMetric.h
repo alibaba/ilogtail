@@ -61,10 +61,11 @@ class Metrics {
 
 class MetricsRef {
     private:
-        Metrics* mMetrics;
+        Metrics* mMetrics = nullptr;
     public:
-        MetricsRef(Metrics* metrics);
+        MetricsRef();
         ~MetricsRef();
+        void Init(const std::vector<std::pair<std::string, std::string>>& Labels);
         Metrics* Get();
 };
 
@@ -78,7 +79,7 @@ class WriteMetrics {
             static WriteMetrics* ptr = new WriteMetrics();
             return ptr;
         }
-        MetricsRef CreateMetrics(const std::vector<std::pair<std::string, std::string>>& Labels);
+        Metrics* CreateMetrics(const std::vector<std::pair<std::string, std::string>>& Labels);
 
         Metrics* DoSnapshot();
         Metrics* GetHead();
@@ -94,7 +95,7 @@ class ReadMetrics {
             static ReadMetrics* ptr = new ReadMetrics();
             return ptr;
         }
-        void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logGroupMap);
+        void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap);
         void UpdateMetrics();
         Metrics* GetHead();
 };

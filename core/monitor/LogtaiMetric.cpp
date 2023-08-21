@@ -2,6 +2,8 @@
 #include "common/StringTools.h"
 #include "MetricConstants.h"
 #include "logger/Logger.h"
+#include "common/TimeUtil.h"
+#include "app_config/AppConfig.h"
 
 
 using namespace sls_logs;
@@ -98,10 +100,18 @@ void Metrics::SetNext(Metrics* next) {
     mNext = next; 
 }
 
-MetricsRef::MetricsRef(Metrics* metrics) : mMetrics(metrics) {}
+MetricsRef::MetricsRef() {}
 
 MetricsRef::~MetricsRef() {
-    mMetrics->MarkDeleted();
+    if (mMetrics) {
+        mMetrics->MarkDeleted();
+    }
+}
+
+void MetricsRef::Init(const std::vector<std::pair<std::string, std::string>>& Labels) {
+    if (!mMetrics) {
+        mMetrics = WriteMetrics::GetInstance()->CreateMetrics(Labels);
+    }
 }
 
 Metrics* MetricsRef::Get() {
@@ -110,7 +120,7 @@ Metrics* MetricsRef::Get() {
 
 WriteMetrics::WriteMetrics() {}
 
-MetricsRef WriteMetrics::CreateMetrics(const std::vector<std::pair<std::string, std::string>>& labels) {
+Metrics* WriteMetrics::CreateMetrics(const std::vector<std::pair<std::string, std::string>>& labels) {
     Metrics* cur = new Metrics(std::move(labels)); 
     std::lock_guard<std::mutex> lock(mMutex);   
 
@@ -118,8 +128,7 @@ MetricsRef WriteMetrics::CreateMetrics(const std::vector<std::pair<std::string, 
     mHead = cur;
     mHead->SetNext(oldHead);
 
-    MetricsRef curRef(cur);
-    return curRef;
+    return cur;
 }
 
 Metrics* WriteMetrics::GetHead() {
@@ -181,7 +190,7 @@ Metrics* WriteMetrics::DoSnapshot() {
 
 ReadMetrics::ReadMetrics() {}
 
-void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logGroupMap) {
+void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) {
     ReadLock lock(mReadWriteLock);
     Metrics* tmp = mHead;
     while(tmp) {
@@ -189,32 +198,33 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logG
         for (auto &item: tmp->GetLabels()) {
             std::pair<std::string, std::string> pair = item;
             if (METRIC_FIELD_REGION == pair.first) {
-                std::map<std::string, sls_logs::LogGroup>::iterator iter;
+                std::map<std::string, sls_logs::LogGroup*>::iterator iter;
                 std::string region = pair.second;
                 iter = logGroupMap.find(region);
                 if (iter != logGroupMap.end()) {
-                    sls_logs::LogGroup logGroup = iter->second;
-                    logPtr = logGroup.add_logs();
+                    sls_logs::LogGroup* logGroup = iter->second;
+                    logPtr = logGroup->add_logs();
                 } else {
-                    sls_logs::LogGroup logGroup;
-                    logPtr = logGroup.add_logs();
-                    logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup>(region, logGroup));
+                    sls_logs::LogGroup* logGroup = new sls_logs::LogGroup();
+                    logPtr = logGroup->add_logs();
+                    logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup*>(region, logGroup));
                 }
             }
         }
         if (!logPtr) {
-            std::map<std::string, sls_logs::LogGroup>::iterator iter;
+            std::map<std::string, sls_logs::LogGroup*>::iterator iter;
             iter = logGroupMap.find(METRIC_REGION_DEFAULT);
             if (iter != logGroupMap.end()) {
-                sls_logs::LogGroup logGroup = iter->second;
-                logPtr = logGroup.add_logs();
+                sls_logs::LogGroup* logGroup = iter->second;
+                logPtr = logGroup->add_logs();
             } else {
-                sls_logs::LogGroup logGroup;
-                logPtr = logGroup.add_logs();
-                logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup>(METRIC_REGION_DEFAULT, logGroup));
+                sls_logs::LogGroup* logGroup = new sls_logs::LogGroup();
+                logPtr = logGroup->add_logs();
+                logGroupMap.insert(std::pair<std::string, sls_logs::LogGroup*>(METRIC_REGION_DEFAULT, logGroup));
             }
         }
-        logPtr->set_time(time(nullptr));
+        auto now = GetCurrentLogtailTime();
+        SetLogTime(logPtr, AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec, now.tv_nsec);
         for (auto &item: tmp->GetLabels()) {
             std::pair<std::string, std::string> pair = item;
             Log_Content* contentPtr = logPtr->add_contents();
@@ -222,7 +232,6 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup>& logG
             contentPtr->set_value(pair.second);
         }
 
-        //std::vector<MetricPtr> values = tmp->GetValues();
         for (auto &item: tmp->GetValues()) {
             MetricPtr counter = item;
             Log_Content* contentPtr = logPtr->add_contents();

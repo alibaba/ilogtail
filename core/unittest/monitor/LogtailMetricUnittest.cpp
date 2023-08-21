@@ -32,7 +32,8 @@ void ILogtailMetricUnittest::TestCreateMetric() {
     labels.emplace_back(std::make_pair<std::string, std::string>("logstore","logstore1"));
     labels.emplace_back(std::make_pair<std::string, std::string>("region","cn-hangzhou"));
 
-    MetricsRef fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
+    MetricsRef fileMetric;
+    fileMetric.Init(labels);
     APSARA_TEST_EQUAL(fileMetric.Get()->GetLabels().size(), 3);  
 
 
@@ -47,7 +48,8 @@ void ILogtailMetricUnittest::TestCreateMetric() {
         labels.emplace_back(std::make_pair<std::string, std::string>("logstore","logstore1"));
         labels.emplace_back(std::make_pair<std::string, std::string>("region","cn-hangzhou"));
 
-        MetricsRef fileMetric2 = WriteMetrics::GetInstance()->CreateMetrics(labels);
+        MetricsRef fileMetric2;
+        fileMetric2.Init(labels);
         CounterPtr fileCounter2 = fileMetric2.Get()->CreateCounter("filed2");
         fileCounter2->Add((uint64_t)222);
     }
@@ -57,8 +59,8 @@ void ILogtailMetricUnittest::TestCreateMetric() {
         labels.emplace_back(std::make_pair<std::string, std::string>("project","project1"));
         labels.emplace_back(std::make_pair<std::string, std::string>("logstore","logstore1"));
         labels.emplace_back(std::make_pair<std::string, std::string>("region","cn-hangzhou"));
-
-        MetricsRef fileMetric3 = WriteMetrics::GetInstance()->CreateMetrics(labels);
+        MetricsRef fileMetric3;
+        fileMetric3.Init(labels);
         CounterPtr fileCounter3 = fileMetric3.Get()->CreateCounter("filed3");
         fileCounter3->Add((uint64_t)333);
     }
@@ -77,13 +79,20 @@ void ILogtailMetricUnittest::TestCreateMetric() {
     MetricExportor::GetInstance()->PushMetrics();
 }
 
+void PushMetrics() {
+    for (int i = 0; i < 10; i ++) {
+        MetricExportor::GetInstance()->PushMetrics();
+    }
+}
+
 void createMetrics(int count) {
     for (int i = 0; i < count; i ++) {
         std::vector<std::pair<std::string, std::string>> labels;
         labels.emplace_back(std::make_pair<std::string, std::string>("num", std::to_string(i)));
         labels.emplace_back(std::make_pair<std::string, std::string>("count", std::to_string(count)));
         labels.emplace_back(std::make_pair<std::string, std::string>("region","cn-beijing"));
-        MetricsRef fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
+        MetricsRef fileMetric;
+        fileMetric.Init(labels);
         CounterPtr fileCounter = fileMetric.Get()->CreateCounter("filed1");
         fileCounter->Add((uint64_t)111);
     }
@@ -175,21 +184,22 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetricMultiThread() {
     labels.emplace_back(std::make_pair<std::string, std::string>("logstore","logstore1"));
     labels.emplace_back(std::make_pair<std::string, std::string>("region","cn-hangzhou"));
 
-    MetricsRef fileMetric = WriteMetrics::GetInstance()->CreateMetrics(labels);
+    MetricsRef fileMetric;
+    fileMetric.Init(labels);
     CounterPtr fileCounter = fileMetric.Get()->CreateCounter("filed2");
     fileCounter->Add((uint64_t)1);
 
     // UpdateMetrics multi time while createMetrics
-    std::thread tUpdate(UpdateMetrics);
+    std::thread tUpdate(PushMetrics);
 
     std::thread t3(createMetrics, 7);
     std::thread t4(createMetrics, 8);
     
     t1.join();
     t2.join();
+    tUpdate.join();
     t3.join();
     t4.join();
-    tUpdate.join();
     
 
     // final UpdateMetrics after createMetrics

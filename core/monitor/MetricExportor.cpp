@@ -13,8 +13,7 @@ MetricExportor::MetricExportor() {}
 
 void MetricExportor::PushMetrics() {
     ReadMetrics::GetInstance()->UpdateMetrics();
-    std::map<std::string, sls_logs::LogGroup> logGroupMap;
-    ReadMetrics::GetInstance()->ReadAsLogGroup(logGroupMap);
+    
     // TODO: send
 }
 }
