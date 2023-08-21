@@ -26,6 +26,17 @@
 #include <unordered_map>
 #include <ostream>
 
+static void log_trace_wrapper(int64_t mHeadRequestsIdx, int64_t mTailRequestsIdx, int64_t mTailResponsesIdx) 
+{
+    do {
+        if (true && sLogger->should_log(spdlog::level::trace)) {
+            LogMaker maker;
+            (void)maker ("head_req", mHeadRequestsIdx)("tail_req", mTailRequestsIdx)("head_resp", mHeadRequestsIdx)("tail_resp", mTailResponsesIdx);
+            sLogger->log(spdlog::level::trace, "{}:{}\t{}", __FILE__, __LINE__, maker.GetContent());
+        }
+    } while (0);
+}
+
 namespace logtail {
 
 
@@ -380,9 +391,7 @@ private:
         eventType event;
         bool success = true;
         if (this->mConvertEventFunc != nullptr && this->mConvertEventFunc(req, resp, event)) {
-            LOG_TRACE(sLogger,
-                      ("head_req", this->mHeadRequestsIdx)("tail_req", this->mTailRequestsIdx)(
-                          "head_resp", this->mHeadRequestsIdx)("tail_resp", this->mTailResponsesIdx));
+            log_trace_wrapper(this->mHeadRequestsIdx, this->mTailRequestsIdx, this->mTailResponsesIdx);
             success = this->mAggregators->AddEvent(std::move(event));
         }
         ++this->mHeadRequestsIdx;
