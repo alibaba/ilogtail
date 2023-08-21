@@ -53,7 +53,7 @@ start_ilogtail() {
         local ilogtail_pid=$(load_pid)
         echo "ilogtail already started. pid: $ilogtail_pid"
     } || {
-        ($bin_file $1) &
+        ($bin_file $@) &
         local ilogtail_pid=$!
         save_pid $ilogtail_pid
         echo "ilogtail started. pid: $ilogtail_pid"
