@@ -58,7 +58,7 @@ void DelimiterParseLogLineUnittest::TestCanBeParsed() {
     logFileReader.SetColumnKeys(columnKeys, "time");
     sls_logs::LogGroup logGroup;
     ParseLogError error;
-    time_t lastLogLineTime = 0;
+    LogtailTime lastLogLineTime = {0, 0};
     std::string lastLogTimeStr = "";
     uint32_t logGroupSize = 0;
     std::string testLog = "2013-10-31 21:03:49,POST,PutData?Category\n=YunOsAccountOpLog\n,0.024";
@@ -89,7 +89,7 @@ void DelimiterParseLogLineUnittest::TestCanNotBeParsedUnDiscard() {
     logFileReader.SetColumnKeys(columnKeys, "time");
     sls_logs::LogGroup logGroup;
     ParseLogError error;
-    time_t lastLogLineTime = 0;
+    LogtailTime lastLogLineTime = {0, 0};
     std::string lastLogTimeStr = "";
     uint32_t logGroupSize = 0;
     logFileReader.mDiscardUnmatch = false;
@@ -121,7 +121,7 @@ void DelimiterParseLogLineUnittest::TestCanNotBeParsedDiscard() {
     logFileReader.SetColumnKeys(columnKeys, "time");
     sls_logs::LogGroup logGroup;
     ParseLogError error;
-    time_t lastLogLineTime = 0;
+    LogtailTime lastLogLineTime = {0, 0};
     std::string lastLogTimeStr = "";
     uint32_t logGroupSize = 0;
     logFileReader.mDiscardUnmatch = true;

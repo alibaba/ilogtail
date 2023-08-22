@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "StringTools.h"
+#include <string.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/xpressive/xpressive.hpp>
 #include "logger/Logger.h"
@@ -36,6 +37,13 @@ int StringCaseInsensitiveCmp(const std::string& s1, const std::string& s2) {
     return _stricmp(s1.c_str(), s2.c_str());
 #else
     return strcasecmp(s1.c_str(), s2.c_str());
+}
+
+int CStringNCaseInsensitiveCmp(const char* s1, const char* s2, size_t n) {
+#if defined(_MSC_VER)
+    return _strnicmp(s1, s2, n);
+#else
+    return strncasecmp(s1, s2, n);
 #endif
 }
 

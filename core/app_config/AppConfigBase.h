@@ -138,6 +138,8 @@ private:
     bool mEnableLogTimeAutoAdjust = false;
 
     std::set<std::string> mDynamicPlugins;
+    std::vector<std::string> mHostPathBlacklist;
+
     /**
      * @brief Load ConfigServer, DataServer and network interface
      *
@@ -372,6 +374,8 @@ public:
     inline bool EnableLogTimeAutoAdjust() const { return mEnableLogTimeAutoAdjust; }
 
     inline const std::set<std::string>& GetDynamicPlugins() const { return mDynamicPlugins; }
+    bool IsHostPathMatchBlacklist(const std::string& dirPath) const;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;
     friend class ConfigUpdatorUnittest;

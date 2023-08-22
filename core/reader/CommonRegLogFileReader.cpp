@@ -72,7 +72,7 @@ bool CommonRegLogFileReader::AddUserDefinedFormat(const std::string& regStr, con
 bool CommonRegLogFileReader::ParseLogLine(StringView buffer,
                                           LogGroup& logGroup,
                                           ParseLogError& error,
-                                          time_t& lastLogLineTime,
+                                          LogtailTime& lastLogLineTime,
                                           std::string& lastLogTimeStr,
                                           uint32_t& logGroupSize) {
     if (logGroup.logs_size() == 0) {
@@ -104,15 +104,10 @@ bool CommonRegLogFileReader::ParseLogLine(StringView buffer,
                                                 mTzOffsetSecond);
         } else {
             // if "time" field not exist in user config or timeformat empty, set current system time for logs
-            timespec ts;
-            clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+            LogtailTime ts = GetCurrentLogtailTime();
             if (format.mIsWholeLineMode) {
-                res = LogParser::WholeLineModeParser(buffer,
-                                                     logGroup,
-                                                     format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0],
-                                                     ts.tv_sec,
-                                                     ts.tv_nsec,
-                                                     logGroupSize);
+                res = LogParser::WholeLineModeParser(
+                    buffer, logGroup, format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0], ts, logGroupSize);
             } else {
                 res = LogParser::RegexLogLineParser(buffer,
                                                     format.mReg,
@@ -120,8 +115,7 @@ bool CommonRegLogFileReader::ParseLogLine(StringView buffer,
                                                     mDiscardUnmatch,
                                                     format.mKeys,
                                                     mCategory,
-                                                    ts.tv_sec,
-                                                    ts.tv_nsec,
+                                                    ts,
                                                     mProjectName,
                                                     mRegion,
                                                     mHostLogPath,

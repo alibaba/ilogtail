@@ -45,7 +45,7 @@ void CommonRegParseLogLineUnittest::TestCanBeParsed() {
     logFileReader.AddUserDefinedFormat(LOG_BEGIN_REGEX, "time");
     sls_logs::LogGroup logGroup;
     ParseLogError error;
-    time_t lastLogLineTime = 0;
+    LogtailTime lastLogLineTime = {0, 0};
     std::string lastLogTimeStr = "";
     uint32_t logGroupSize = 0;
     std::string testLog = LOG_BEGIN_TIME + "first\nsecond";
@@ -61,7 +61,7 @@ void CommonRegParseLogLineUnittest::TestCanNotBeParsedUnDiscard() {
     logFileReader.AddUserDefinedFormat(LOG_BEGIN_REGEX, "time");
     sls_logs::LogGroup logGroup;
     ParseLogError error;
-    time_t lastLogLineTime = 0;
+    LogtailTime lastLogLineTime = {0, 0};
     std::string lastLogTimeStr = "";
     uint32_t logGroupSize = 0;
     logFileReader.mDiscardUnmatch = false;
@@ -78,7 +78,7 @@ void CommonRegParseLogLineUnittest::TestCanNotBeParsedDiscard() {
     logFileReader.AddUserDefinedFormat(LOG_BEGIN_REGEX, "time");
     sls_logs::LogGroup logGroup;
     ParseLogError error;
-    time_t lastLogLineTime = 0;
+    LogtailTime lastLogLineTime = {0, 0};
     std::string lastLogTimeStr = "";
     uint32_t logGroupSize = 0;
     logFileReader.mDiscardUnmatch = true;
