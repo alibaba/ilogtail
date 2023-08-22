@@ -21,6 +21,10 @@ namespace logtail {
 
 const std::string METRIC_FIELD_REGION = "region";
 const std::string METRIC_REGION_DEFAULT = "default";
+const std::string METRIC_SLS_LOGSTORE_NAME = "shennong_log_profile";
+const std::string METRIC_TOPIC_TYPE = "logtail_metric";
+const std::string METRIC_TOPIC_FIELD_NAME = "__topic__";
+
 const std::string LABEL_PREFIX = "label.";
 const std::string VALUE_PREFIX = "value.";
 

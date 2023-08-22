@@ -80,13 +80,13 @@ void ILogtailMetricUnittest::TestCreateMetric() {
     } 
     APSARA_TEST_EQUAL(count, 1);  
 
-    MetricExportor::GetInstance()->PushMetrics();
+    MetricExportor::GetInstance()->PushMetrics(true);
 }
 
 void PushMetrics() {
     for (int i = 0; i < 10; i ++) {
         LOG_INFO(sLogger, ("PushMetricsCount", i));
-        MetricExportor::GetInstance()->PushMetrics();
+        MetricExportor::GetInstance()->PushMetrics(true);
     }
 }
 
@@ -286,7 +286,7 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetricMultiThread() {
     }
 
     
-    MetricExportor::GetInstance()->PushMetrics();
+    MetricExportor::GetInstance()->PushMetrics(true);
     running.store(false);
     tRunning1.join();
     tRunning2.join();

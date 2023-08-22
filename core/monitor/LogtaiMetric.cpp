@@ -246,6 +246,12 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
             contentPtr->set_key(VALUE_PREFIX + counter->GetName());
             contentPtr->set_value(ToString(counter->GetValue()));
         }
+        // set default key
+        {
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key(METRIC_TOPIC_FIELD_NAME);
+            contentPtr->set_value(METRIC_TOPIC_TYPE);
+        }
         tmp = tmp->GetNext();
     }
 }
