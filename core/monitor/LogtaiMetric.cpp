@@ -133,6 +133,9 @@ Metrics* WriteMetrics::DoSnapshot() {
     
     Metrics emptyHead;
     Metrics* preTmp = nullptr;
+
+    Metrics* tmpHead = nullptr;
+    Metrics* tmpHeadNext = nullptr;
     // find the first not deleted node and set as new mHead
     {
         std::lock_guard<std::mutex> lock(mMutex); 
@@ -147,9 +150,6 @@ Metrics* WriteMetrics::DoSnapshot() {
                 toDeleteHead = tmp;
                 tmp = preTmp->GetNext();
             } else {
-                Metrics* newMetrics = tmp->CopyAndReset();
-                newMetrics->SetNext(snapshot);
-                snapshot = newMetrics;
                 // find head
                 if (!findHead) {
                     mHead = tmp;
@@ -170,8 +170,24 @@ Metrics* WriteMetrics::DoSnapshot() {
         // if no undeleted node, set null to mHead
         if (!findHead) {
             mHead = nullptr;
+        } else {
+            tmpHead = mHead;
+            tmpHeadNext = mHead->GetNext();
         }
-    } 
+    }
+
+    // copy head
+    if (tmpHead) {
+        Metrics* newMetrics = tmpHead->CopyAndReset();
+        newMetrics->SetNext(snapshot);
+        snapshot = newMetrics;
+    }
+    // copy head next
+    if (tmpHeadNext) {
+        Metrics* newMetrics = tmpHead->CopyAndReset();
+        newMetrics->SetNext(snapshot);
+        snapshot = newMetrics;
+    }
 
     while (tmp) {
         if (tmp->IsDeleted()) {
