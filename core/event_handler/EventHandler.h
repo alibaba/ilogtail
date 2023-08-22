@@ -78,7 +78,10 @@ private:
                                             Config* pConfig,
                                             const DevInode& devInode,
                                             bool forceBeginingFlag = false);
+
     int32_t PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* logBuffer);
+
+    void ForceReadLogAndPush(LogFileReaderPtr reader);
 
     // no copy
     ModifyHandler(const ModifyHandler&);

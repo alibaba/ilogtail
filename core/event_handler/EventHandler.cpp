@@ -487,7 +487,7 @@ void ModifyHandler::Handle(const Event& event) {
             // only set when reader array size is 1
             if (readerArray.size() == (size_t)1) {
                 readerArray[0]->SetFileDeleted(true);
-                if (readerArray[0]->IsReadToEnd() || readerArray[0]->ShouldForceReleaseDeletedFileFd()) {
+                if (readerArray[0]->IsReadToEnd() || readerArray[0]->HasDataInCache() || readerArray[0]->ShouldForceReleaseDeletedFileFd()) {
                     if (readerArray[0]->IsFileOpened()) {
                         LOG_INFO(
                             sLogger,
@@ -499,14 +499,8 @@ void ModifyHandler::Handle(const Event& event) {
                                 "file device", readerArray[0]->GetDevInode().dev)(
                                 "file inode", readerArray[0]->GetDevInode().inode)("file size",
                                                                                    readerArray[0]->GetFileSize()));
-                        if (!readerArray[0]->ShouldForceReleaseDeletedFileFd()) {
-                            LogBuffer* logBuffer = new LogBuffer;
-                            Event pEvent = Event(event.GetSource(), event.GetObject(), EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0);
-                            // Set position to -1 to force read
-                            pEvent.SetLastFilePos(-1);
-                            pEvent.SetLastReadPos(-1);
-                            readerArray[0]->ReadLog(*logBuffer, &pEvent);
-                            PushLogToProcessor(readerArray[0], logBuffer);
+                        if (!readerArray[0]->ShouldForceReleaseDeletedFileFd() && readerArray[0]->HasDataInCache()) {
+                            ForceReadLogAndPush(readerArray[0]);
                         }
                         // release fd as quick as possible
                         readerArray[0]->CloseFilePtr();
@@ -519,7 +513,7 @@ void ModifyHandler::Handle(const Event& event) {
             LogFileReaderPtrArray& readerArray = pair.second;
             for (auto& reader : readerArray) {
                 reader->SetContainerStopped();
-                if (reader->IsReadToEnd() || reader->ShouldForceReleaseDeletedFileFd()) {
+                if (reader->IsReadToEnd() || reader->HasDataInCache() || reader->ShouldForceReleaseDeletedFileFd()) {
                     if (reader->IsFileOpened()) {
                         LOG_INFO(
                             sLogger,
@@ -529,14 +523,8 @@ void ModifyHandler::Handle(const Event& event) {
                                 "config", mConfigName)("log reader queue name",
                                                        reader->GetHostLogPath())("file device", reader->GetDevInode().dev)(
                                 "file inode", reader->GetDevInode().inode)("file size", reader->GetFileSize()));
-                        if (!readerArray[0]->ShouldForceReleaseDeletedFileFd()) {
-                            LogBuffer* logBuffer = new LogBuffer;
-                            Event pEvent = Event(event.GetSource(), event.GetObject(), EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0);
-                            // Set position to -1 to force read
-                            pEvent.SetLastFilePos(-1);
-                            pEvent.SetLastReadPos(-1);
-                            readerArray[0]->ReadLog(*logBuffer, &pEvent);
-                            PushLogToProcessor(readerArray[0], logBuffer);
+                        if (!readerArray[0]->ShouldForceReleaseDeletedFileFd() && reader->HasDataInCache()) {
+                            ForceReadLogAndPush(readerArray[0]);
                         }
                         // release fd as quick as possible
                         reader->CloseFilePtr();
@@ -764,13 +752,7 @@ void ModifyHandler::Handle(const Event& event) {
                                                         reader->GetHostLogPath())("file device", reader->GetDevInode().dev)(
                                  "file inode", reader->GetDevInode().inode)("file size", reader->GetFileSize()));
                     LogBuffer* logBuffer = new LogBuffer;
-                    Event pEvent
-                        = Event(event.GetSource(), event.GetObject(), EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0);
-                    // Set position to -1 to force read
-                    pEvent.SetLastFilePos(-1);
-                    pEvent.SetLastReadPos(-1);
-                    reader->ReadLog(*logBuffer, &pEvent);
-                    PushLogToProcessor(reader, logBuffer);
+                    ForceReadLogAndPush(reader);
                     reader->CloseFilePtr();
                 }
                 break;
@@ -822,14 +804,7 @@ void ModifyHandler::Handle(const Event& event) {
                     "log reader queue name", reader->GetHostLogPath())("log reader queue size", readerArrayPtr->size() - 1)(
                     "file device", reader->GetDevInode().dev)("file inode", reader->GetDevInode().inode)(
                     "file size", reader->GetFileSize())("rotator reader pool size", mRotatorReaderMap.size() + 1));
-            LogBuffer* logBuffer = new LogBuffer;
-            Event pEvent
-                = Event(event.GetSource(), event.GetObject(), EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0);
-            // Set position to -1 to force read
-            pEvent.SetLastFilePos(-1);
-            pEvent.SetLastReadPos(-1);
-            reader->ReadLog(*logBuffer, &pEvent);
-            PushLogToProcessor(reader, logBuffer);
+            ForceReadLogAndPush(reader);
             reader->CloseFilePtr();
             readerArrayPtr->pop_front();
             mDevInodeReaderMap.erase(reader->GetDevInode());
@@ -1021,6 +996,13 @@ void ModifyHandler::DeleteRollbackReader() {
     vector<DevInode>::iterator keyIter = deletedReaderKeys.begin();
     for (; keyIter != deletedReaderKeys.end(); ++keyIter)
         mRotatorReaderMap.erase(*keyIter);
+}
+
+void ModifyHandler::ForceReadLogAndPush(LogFileReaderPtr reader) {
+    LogBuffer* logBuffer = new LogBuffer;
+    Event* pEvent = reader->CreateFlushTimeoutEvent().get();
+    reader->ReadLog(*logBuffer, pEvent);
+    PushLogToProcessor(reader, logBuffer);
 }
 
 int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* logBuffer) {

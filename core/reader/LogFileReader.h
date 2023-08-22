@@ -259,6 +259,8 @@ public:
 
     bool IsReadToEnd() const { return mLastReadPos == mLastFileSize; }
 
+    bool HasDataInCache() const { return mLastFilePos != mLastReadPos; }
+
     LogFileReaderPtrArray* GetReaderArray();
 
     void SetReaderArray(LogFileReaderPtrArray* readerArray);
@@ -349,6 +351,8 @@ public:
     void SetAdjustApsaraMicroTimezone(bool adjustApsaraMicroTimezone = false) {
         mAdjustApsaraMicroTimezone = adjustApsaraMicroTimezone;
     }
+
+    std::unique_ptr<Event> CreateFlushTimeoutEvent();
 
 protected:
     bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);

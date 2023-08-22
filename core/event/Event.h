@@ -36,8 +36,6 @@ typedef uint32_t EventType;
 
 class Event {
 private:
-    Event() {} // disabled
-
     std::string mSource; // path of file or dir
     std::string mObject; // the object who has changed
     EventType mType;
@@ -53,20 +51,6 @@ private:
     int64_t mLastFilePos;
 
 public:
-    Event(const Event& ev) {
-        mSource = ev.mSource;
-        mObject = ev.mObject;
-        mType = ev.mType;
-        mWd = ev.mWd;
-        mCookie = ev.mCookie;
-        mDev = ev.mDev;
-        mInode = ev.mInode;
-        mHashKey = ev.mHashKey;
-        mConfigName = ev.mConfigName;
-        mLastReadPos = ev.mLastReadPos;
-        mLastFilePos = ev.mLastFilePos;
-    }
-
     Event(const std::string& source, const std::string& object, EventType type, int wd, uint32_t cookie = 0)
         : mSource(source),
           mObject(object),
@@ -159,7 +143,7 @@ public:
 
     bool IsContainerStopped() const { return mType & EVENT_CONTAINER_STOPPED; }
 
-    bool IsReadFlushTimeout() const { return mType & EVENT_READER_FLUSH_TIMEOUT; }
+    bool IsReaderFlushTimeout() const { return mType & EVENT_READER_FLUSH_TIMEOUT; }
 
     std::string GetTypeString() const {
         std::string type;

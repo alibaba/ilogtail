@@ -739,6 +739,7 @@ bool LogFileReader::CheckForFirstOpen(FileReadPolicy policy) {
         }
     }
 
+    policy = BACKWARD_TO_BEGINNING;
     if (policy == BACKWARD_TO_FIXED_POS) {
         SetFilePosBackwardToFixedPos(op);
     } else if (policy == BACKWARD_TO_BOOT_TIME) {
@@ -994,11 +995,9 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
     auto const beginOffset = mLastFilePos;
     size_t lastFilePos = mLastFilePos;
     bool allowRollback = true;
-    if (event != nullptr && event->IsReadFlushTimeout()) {
+    if (event != nullptr && event->IsReaderFlushTimeout()) {
         // If flush timeout event, we should filter whether the event is legacy.
-        if (((event->GetLastReadPos() == mLastReadPos && event->GetLastFilePos() == mLastFilePos)
-             || (event->GetLastReadPos() == -1 && event->GetLastFilePos() == -1))
-            && event->GetInode() == mDevInode.inode) {
+        if (event->GetLastReadPos() == mLastReadPos && event->GetLastFilePos() == mLastFilePos && event->GetInode() == mDevInode.inode) {
             allowRollback = false;
         } else {
             return false;
@@ -1021,13 +1020,10 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
               ("read log file", mRealLogPath)("last file pos", mLastFilePos)("last file size", mLastFileSize)(
                   "read size", mLastFilePos - lastFilePos));
     if (mLastFilePos != mLastReadPos) {
-        string fileName = mHostLogPath.substr(mHostLogPathDir.size() + 1, mHostLogPath.size() - mHostLogPathDir.size() - 1);
-        Event event = Event(mHostLogPathDir, fileName, EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0);
-        event.SetLastReadPos(mLastReadPos);
-        event.SetLastFilePos(mLastFilePos);
+        Event* event = CreateFlushTimeoutEvent().get();
         BlockedEventManager::GetInstance()->UpdateBlockEvent(GetLogstoreKey(),
                                                              mConfigName,
-                                                             event,
+                                                             *event,
                                                              mDevInode,
                                                              time(NULL) + mReaderFlushTimeout);
     }
@@ -1967,6 +1963,14 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
         }
     }
     return 0;
+}
+
+std::unique_ptr<Event> LogFileReader::CreateFlushTimeoutEvent() {
+    std::string fileName = mHostLogPath.substr(mHostLogPathDir.size() + 1, mHostLogPath.size() - mHostLogPathDir.size() - 1);
+    auto result = std::unique_ptr<Event>(new Event(mHostLogPathDir, fileName, EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0));
+    result->SetLastFilePos(mLastFilePos);
+    result->SetLastReadPos(mLastReadPos);
+    return result;
 }
 
 LogFileReader::~LogFileReader() {
