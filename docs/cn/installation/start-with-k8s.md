@@ -207,7 +207,6 @@ wget https://raw.githubusercontent.com/alibaba/ilogtail/main/example_config/star
         - name: logtail
           command:
           - /usr/local/ilogtail/ilogtail_control.sh
-          - start_and_block
           args:
           - "start_and_block"
           - "-enable_containerd_upper_dir_detect=true"
