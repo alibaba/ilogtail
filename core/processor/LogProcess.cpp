@@ -675,7 +675,7 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
         // static int linesCount = 0;
         // linesCount += lines;
         // LOG_INFO(sLogger, ("Logprocess lines", lines)("Total lines", linesCount));
-        time_t lastLogLineTime = 0;
+        LogtailTime lastLogLineTime = {0, 0};
         string lastLogTimeStr = "";
         uint32_t logGroupSize = 0;
         int32_t successLogSize = 0;
@@ -700,9 +700,6 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                     if (config.mUploadRawLog) {
                         LogParser::AddLog(
                             logPtr, config.mAdvancedConfig.mRawLogTag, logIndex[i].to_string(), logGroupSize);
-                    }
-                    if (successful && config.mTimeZoneAdjust) {
-                        LogParser::AdjustLogTime(logPtr, config.mLogTimeZoneOffsetSecond, mLocalTimeZoneOffsetSecond);
                     }
                     if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
                         logPtr->set_time(logPtr->time() + GetTimeDelta());

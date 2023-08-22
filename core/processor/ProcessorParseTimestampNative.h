@@ -33,10 +33,11 @@ private:
     /// @return false if parse time failed
     bool ParseLogTime(const StringView& curTimeStr, // str to parse
                       const StringView& logPath,
-                      time_t& logTime,
+                      LogtailTime& logTime,
                       uint64_t& preciseTimestamp,
                       StringView& timeStr // cache
     );
+    bool IsPrefixString(const StringView& all, const StringView& prefix);
     std::string mTimeKey;
     std::string mTimeFormat;
     int mLogTimeZoneOffsetSecond = 0;
