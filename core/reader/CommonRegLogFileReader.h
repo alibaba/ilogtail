@@ -41,7 +41,7 @@ protected:
     bool ParseLogLine(StringView buffer,
                       sls_logs::LogGroup& logGroup,
                       ParseLogError& error,
-                      time_t& lastLogLineTime,
+                      LogtailTime& lastLogLineTime,
                       std::string& lastLogTimeStr,
                       uint32_t& logGroupSize);
 
