@@ -37,6 +37,7 @@ int StringCaseInsensitiveCmp(const std::string& s1, const std::string& s2) {
     return _stricmp(s1.c_str(), s2.c_str());
 #else
     return strcasecmp(s1.c_str(), s2.c_str());
+#endif
 }
 
 int CStringNCaseInsensitiveCmp(const char* s1, const char* s2, size_t n) {
