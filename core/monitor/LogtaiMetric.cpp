@@ -201,9 +201,9 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
     }
 
     while (toDeleteHead) {
-        MetricsRecord* toDeleted = toDeleteHead;
+        MetricsRecord* toDelete = toDeleteHead;
         toDeleteHead = toDeleteHead->GetNext();
-        delete toDeleted;
+        delete toDelete;
     }
     return snapshot;
 }
@@ -300,9 +300,9 @@ MetricsRecord* ReadMetrics::GetHead() const {
 
 void ReadMetrics::Clear() {
     while (mHead) {
-        MetricsRecord* toDeleted = mHead;
+        MetricsRecord* toDelete = mHead;
         mHead = mHead->GetNext();
-        delete toDeleted;
+        delete toDelete;
     }
 }
 
