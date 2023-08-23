@@ -118,10 +118,17 @@ void MetricsRecordRef::SetMetricsRecord(MetricsRecord* metricRecord) {
     mMetrics = metricRecord;
 }
 
+CounterPtr MetricsRecordRef::CreateCounter(const std::string& Name) {
+    return mMetrics->CreateCounter(Name);
+}
+GaugePtr MetricsRecordRef::CreateGauge(const std::string& Name) {
+    return mMetrics->CreateGauge(Name);
+}
 
-MetricsRecord* MetricsRecordRef::operator->() const {
+const MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
 }
+
 
 WriteMetrics::WriteMetrics() {}
 
@@ -137,7 +144,7 @@ void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&&
     mHead = cur;
 }
 
-MetricsRecord* WriteMetrics::GetHead() const {
+MetricsRecord* WriteMetrics::GetHead() {
     return mHead;
 }
 
@@ -309,7 +316,7 @@ void ReadMetrics::UpdateMetrics() {
     }
 }
 
-MetricsRecord* ReadMetrics::GetHead() const {
+MetricsRecord* ReadMetrics::GetHead() {
     return mHead;
 }
 

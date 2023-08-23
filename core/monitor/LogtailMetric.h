@@ -70,7 +70,9 @@ private:
 public:
     ~MetricsRecordRef();
     void SetMetricsRecord(MetricsRecord* metricRecord);
-    MetricsRecord* operator->() const;
+    CounterPtr CreateCounter(const std::string& Name);
+    GaugePtr CreateGauge(const std::string& Name);
+    const MetricsRecord* operator->() const;
 };
 
 class WriteMetrics {
@@ -78,7 +80,9 @@ private:
     WriteMetrics();
     std::mutex mMutex;
     MetricsRecord* mHead = nullptr;
+
     void Clear();
+    MetricsRecord* GetHead();
 public:
     ~WriteMetrics();
     static WriteMetrics* GetInstance() {
@@ -87,7 +91,7 @@ public:
     }
     void PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& Labels);
     MetricsRecord* DoSnapshot();
-    MetricsRecord* GetHead() const;
+    
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ILogtailMetricUnittest;
@@ -100,6 +104,7 @@ private:
     mutable ReadWriteLock mReadWriteLock;
     MetricsRecord* mHead = nullptr;
     void Clear();
+    MetricsRecord* GetHead();
 public:
     ~ReadMetrics();
     static ReadMetrics* GetInstance() {
@@ -107,8 +112,7 @@ public:
         return ptr;
     }
     void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
-    void UpdateMetrics();
-    MetricsRecord* GetHead() const;
+    void UpdateMetrics();    
     
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ILogtailMetricUnittest;
