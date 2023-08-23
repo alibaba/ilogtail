@@ -55,14 +55,14 @@ public:
     MetricsRecord(LabelsPtr labels);
     MetricsRecord();
     void MarkDeleted();
-    bool IsDeleted();
+    const bool IsDeleted() const;
     const LabelsPtr& GetLabels() const;
     const std::vector<MetricNameValuePtr>& GetMetricNameValues() const;
     MetricNameValuePtr CreateCounter(const std::string& Name);
     MetricNameValuePtr CreateGauge(const std::string& Name);
     MetricsRecord* CopyAndReset();
     void SetNext(MetricsRecord* next);
-    MetricsRecord* GetNext();
+    MetricsRecord* GetNext() const;
 };
 
 class MetricsRecordRef {
@@ -90,13 +90,14 @@ public:
     }
     MetricsRecord* CreateMetricsRecords(LabelsPtr Labels);
     MetricsRecord* DoSnapshot();
-    MetricsRecord* GetHead();
+    MetricsRecord* GetHead() const;
+    void Clear();
 };
 
 class ReadMetrics {
 private:
     ReadMetrics();
-    ReadWriteLock mReadWriteLock;
+    mutable ReadWriteLock mReadWriteLock;
     MetricsRecord* mHead = nullptr;
 
 public:
@@ -105,8 +106,9 @@ public:
         static ReadMetrics* ptr = new ReadMetrics();
         return ptr;
     }
-    void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap);
+    void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
     void UpdateMetrics();
-    MetricsRecord* GetHead();
+    MetricsRecord* GetHead() const;
+    void Clear();
 };
 } // namespace logtail

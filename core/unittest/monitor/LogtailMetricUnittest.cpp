@@ -17,20 +17,26 @@ static std::atomic_bool running(true);
 
 class ILogtailMetricUnittest : public ::testing::Test {
 public:
-    void TestCreateMetric();
-    void TestCreateMetricMultiThread();
-    void TestCreateAndDeleteMetricMultiThread();
+    void SetUp() {}
+
+    void TearDown() {
+        ReadMetrics::GetInstance()->Clear();
+        WriteMetrics::GetInstance()->Clear();
+    }
+
+    void TestCreateMetricAutoDelete();
+    void TestCreateMetricAutoDeleteMultiThread();
+    void TestCreateAndDeleteMetric();
+
 };
 
-APSARA_UNIT_TEST_CASE(ILogtailMetricUnittest, TestCreateMetric, 0);
-APSARA_UNIT_TEST_CASE(ILogtailMetricUnittest, TestCreateMetricMultiThread, 1);
-APSARA_UNIT_TEST_CASE(ILogtailMetricUnittest, TestCreateAndDeleteMetricMultiThread, 2);
+APSARA_UNIT_TEST_CASE(ILogtailMetricUnittest, TestCreateMetricAutoDelete, 0);
+APSARA_UNIT_TEST_CASE(ILogtailMetricUnittest, TestCreateMetricAutoDeleteMultiThread, 1);
+APSARA_UNIT_TEST_CASE(ILogtailMetricUnittest, TestCreateAndDeleteMetric, 2);
 
 
-void ILogtailMetricUnittest::TestCreateMetric() {
-    // create
-    // PluginMetric* pluginMetric = new PluginMetric();
 
+void ILogtailMetricUnittest::TestCreateMetricAutoDelete() {
     std::vector<std::pair<std::string, std::string>> labels;
     labels.emplace_back(std::make_pair<std::string, std::string>("project", "project1"));
     labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "logstore1"));
@@ -43,9 +49,31 @@ void ILogtailMetricUnittest::TestCreateMetric() {
 
     MetricNameValuePtr fileCounter = fileMetric->CreateCounter("filed1");
     fileCounter->SetValue(111UL);
-    APSARA_TEST_EQUAL(fileCounter->GetValue(), 111);
+    fileCounter->SetValue(111UL);
+    APSARA_TEST_EQUAL(fileCounter->GetValue(), 222);
+
+    MetricExportor::GetInstance()->PushMetrics(true);
+
+    // assert WriteMetrics count
+    MetricsRecord* tmp = WriteMetrics::GetInstance()->GetHead();
+    int count = 0;
+    while (tmp) {
+        tmp = tmp->GetNext();
+        count++;
+    }
+    APSARA_TEST_EQUAL(count, 1);
 
 
+    // assert ReadMetrics count
+    tmp = ReadMetrics::GetInstance()->GetHead();
+    count = 0;
+    while (tmp) {
+        tmp = tmp->GetNext();
+        count++;
+    }
+    APSARA_TEST_EQUAL(count, 1);
+
+    // mock create in other class, should be delete after
     {
         std::vector<std::pair<std::string, std::string>> labels;
         labels.emplace_back(std::make_pair<std::string, std::string>("project", "project1"));
@@ -69,18 +97,26 @@ void ILogtailMetricUnittest::TestCreateMetric() {
         fileCounter3->SetValue(333UL);
     }
 
-    ReadMetrics::GetInstance()->UpdateMetrics();
+    MetricExportor::GetInstance()->PushMetrics(true);
 
-    MetricsRecord* head = ReadMetrics::GetInstance()->GetHead();
-    int count = 0;
-
-    while (head) {
-        head = head->GetNext();
+    // assert WriteMetrics count
+    tmp = WriteMetrics::GetInstance()->GetHead();
+    count = 0;
+    while (tmp) {
+        tmp = tmp->GetNext();
         count++;
     }
     APSARA_TEST_EQUAL(count, 1);
 
-    MetricExportor::GetInstance()->PushMetrics(true);
+
+    // assert ReadMetrics count
+    tmp = ReadMetrics::GetInstance()->GetHead();
+    count = 0;
+    while (tmp) {
+        tmp = tmp->GetNext();
+        count++;
+    }
+    APSARA_TEST_EQUAL(count, 1);
 }
 
 void PushMetrics() {
@@ -103,50 +139,7 @@ void createMetrics(int count) {
     }
 }
 
-void UpdateMetrics() {
-    for (int i = 0; i < 10; i++) {
-        ReadMetrics::GetInstance()->UpdateMetrics();
-        {
-            MetricsRecord* head = WriteMetrics::GetInstance()->GetHead();
-            int count = 0;
-            while (head) {
-                if (!head->IsDeleted()) {
-                    count++;
-                }
-                head = head->GetNext();
-            }
-            LOG_INFO(sLogger, ("WriteCount", count));
-        }
-        {
-            MetricsRecord* head = ReadMetrics::GetInstance()->GetHead();
-            int count = 0;
-            while (head) {
-                head = head->GetNext();
-                count++;
-            }
-            LOG_INFO(sLogger, ("ReadCount", count));
-        }
-    }
-}
-
-
-void createRunningMetrics() {
-    std::vector<std::pair<std::string, std::string>> labels;
-    labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
-    MetricsRecordRef fileMetric;
-
-
-    fileMetric.Init(labels);
-    MetricNameValuePtr fileCounter = fileMetric->CreateCounter("filed1");
-    int count = 0;
-    while (running) {
-        fileCounter->SetValue(111);
-        usleep(100000);
-    }
-}
-
-
-void ILogtailMetricUnittest::TestCreateMetricMultiThread() {
+void ILogtailMetricUnittest::TestCreateMetricAutoDeleteMultiThread() {
     std::thread t1(createMetrics, 1);
     std::thread t2(createMetrics, 2);
     std::thread t3(createMetrics, 3);
@@ -157,10 +150,24 @@ void ILogtailMetricUnittest::TestCreateMetricMultiThread() {
     t3.join();
     t4.join();
 
-    MetricsRecord* head = WriteMetrics::GetInstance()->GetHead();
-    MetricsRecord* tmp = head;
+    // assert WriteMetrics count
+    MetricsRecord* tmp = WriteMetrics::GetInstance()->GetHead();
     int count = 0;
-    while (tmp != nullptr) {
+    while (tmp) {
+        tmp = tmp->GetNext();
+        count++;
+    }
+    // 1 + 2 + 3 + 4 = 10
+    APSARA_TEST_EQUAL(count, 10);
+
+    for (int i = 0; i < 10; i++) {
+        MetricExportor::GetInstance()->PushMetrics(true);
+    }
+
+    // assert WriteMetrics count
+    tmp = WriteMetrics::GetInstance()->GetHead();
+    count = 0;
+    while (tmp) {
         for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
             std::pair<std::string, std::string> pair = *item;
             LOG_INFO(sLogger, ("key", pair.first)("value", pair.second));
@@ -168,128 +175,149 @@ void ILogtailMetricUnittest::TestCreateMetricMultiThread() {
         tmp = tmp->GetNext();
         count++;
     }
-    // first test left 1, 1 + (1 + 2 + 3 + 4)
-    APSARA_TEST_EQUAL(count, 11);
-    LOG_INFO(sLogger, ("Count", count));
+    APSARA_TEST_EQUAL(count, 0);
 
-    // UpdateMetrics multi time
-    for (int i = 0; i < 10; i++) {
-        ReadMetrics::GetInstance()->UpdateMetrics();
+    // assert ReadMetrics count
+    tmp = ReadMetrics::GetInstance()->GetHead();
+    count = 0;
+    while (tmp) {
+        tmp = tmp->GetNext();
+        count++;
     }
-
-    {
-        MetricsRecord* head = WriteMetrics::GetInstance()->GetHead();
-        MetricsRecord* tmp = head;
-        int count = 0;
-        while (tmp != nullptr) {
-            for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
-                std::pair<std::string, std::string> pair = *item;
-                LOG_INFO(sLogger, ("key", pair.first)("value", pair.second));
-            }
-            tmp = tmp->GetNext();
-            count++;
-        }
-        APSARA_TEST_EQUAL(count, 0);
-    }
+    APSARA_TEST_EQUAL(count, 0);
 }
 
 
-void ILogtailMetricUnittest::TestCreateAndDeleteMetricMultiThread() {
-    std::thread t1(createMetrics, 5);
-    std::thread t2(createMetrics, 6);
 
-    std::thread tRunning1(createRunningMetrics);
-    std::thread tRunning2(createRunningMetrics);
 
-    // UpdateMetrics multi time while createMetrics
-    std::thread tUpdate(PushMetrics);
+void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
+    std::thread t1(createMetrics, 1);
+    std::thread t2(createMetrics, 2);
 
-    std::thread t3(createMetrics, 7);
-    std::thread t4(createMetrics, 8);
+    MetricsRecordRef* fileMetric1 = new MetricsRecordRef();
+    MetricsRecordRef* fileMetric2 = new MetricsRecordRef();
+    MetricsRecordRef* fileMetric3 = new MetricsRecordRef();
+
+    
+    std::vector<std::pair<std::string, std::string>> labels;
+    labels.emplace_back(std::make_pair<std::string, std::string>("project", "test1"));
+    labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "test1"));
+    labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
+    fileMetric1 -> Init(labels);
+    MetricNameValuePtr fileCounter = fileMetric1->operator->()->CreateCounter("filed1");
+    fileCounter->SetValue(111UL);
+    
+    {
+        std::vector<std::pair<std::string, std::string>> labels;
+        labels.emplace_back(std::make_pair<std::string, std::string>("project", "test2"));
+        labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "test2"));
+        labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
+        fileMetric2 -> Init(labels);
+        MetricNameValuePtr fileCounter = fileMetric2->operator->()->CreateCounter("filed1");
+        fileCounter->SetValue(111UL);
+    }
+
+    {
+        std::vector<std::pair<std::string, std::string>> labels;
+        labels.emplace_back(std::make_pair<std::string, std::string>("project", "test3"));
+        labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "test3"));
+        labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
+        fileMetric3 -> Init(labels);
+        MetricNameValuePtr fileCounter = fileMetric3->operator->()->CreateCounter("filed1");
+        fileCounter->SetValue(111UL);
+    }
+    std::thread t3(createMetrics, 3);
+    std::thread t4(createMetrics, 4);
+
 
     t1.join();
     t2.join();
-    tUpdate.join();
     t3.join();
     t4.join();
-
-    // final UpdateMetrics after createMetrics
-    ReadMetrics::GetInstance()->UpdateMetrics();
-    {
-        MetricsRecord* head = WriteMetrics::GetInstance()->GetHead();
-        int count = 0;
-        while (head) {
-            if (!head->IsDeleted()) {
-                count++;
-            }
-            head = head->GetNext();
-        }
-        APSARA_TEST_EQUAL(count, 2);
-        LOG_INFO(sLogger, ("FinalWriteCount", count));
+    // assert WriteMetrics count
+    MetricsRecord* tmp = WriteMetrics::GetInstance()->GetHead();
+    int count = 0;
+    while (tmp) {
+        tmp = tmp->GetNext();
+        count++;
     }
+    // 10 + 3
+    APSARA_TEST_EQUAL(count, 13);
 
-    {
-        MetricsRecord* head = ReadMetrics::GetInstance()->GetHead();
-        int count = 0;
-        while (head) {
-            head = head->GetNext();
-            count++;
-        }
-        APSARA_TEST_EQUAL(count, 2);
-
-        head = ReadMetrics::GetInstance()->GetHead();
-
-        APSARA_TEST_EQUAL(head->GetLabels()->size(), 1);
-
-        LOG_INFO(sLogger, ("FinalReadCount", count));
-    }
-
-    std::thread tRunning3(createRunningMetrics);
-    std::thread tRunning4(createRunningMetrics);
-
-    usleep(100);
-
-    // final UpdateMetrics after createMetrics
-    ReadMetrics::GetInstance()->UpdateMetrics();
-    {
-        MetricsRecord* head = WriteMetrics::GetInstance()->GetHead();
-        int count = 0;
-        while (head) {
-            if (!head->IsDeleted()) {
-                count++;
-            }
-            head = head->GetNext();
-        }
-        APSARA_TEST_EQUAL(count, 4);
-        LOG_INFO(sLogger, ("FinalWriteCount", count));
-    }
-
-    {
-        MetricsRecord* head = ReadMetrics::GetInstance()->GetHead();
-        int count = 0;
-        while (head) {
-            head = head->GetNext();
-            count++;
-        }
-        APSARA_TEST_EQUAL(count, 4);
-        LOG_INFO(sLogger, ("FinalReadCount", count));
-    }
-
+    delete fileMetric2;
+    delete fileMetric3;
 
     MetricExportor::GetInstance()->PushMetrics(true);
-    running.store(false);
-    tRunning1.join();
-    tRunning2.join();
-    tRunning3.join();
-    tRunning4.join();
 
-    MetricsRecord* head = ReadMetrics::GetInstance()->GetHead();
-    std::vector<MetricNameValuePtr> nameValues = head->GetMetricNameValues();
+    // assert WriteMetrics count
+    tmp = WriteMetrics::GetInstance()->GetHead();
+    count = 0;
+    while (tmp) {
+        for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
+            std::pair<std::string, std::string> pair = *item;
+            LOG_INFO(sLogger, ("key", pair.first)("value", pair.second));
+        }
+        tmp = tmp->GetNext();
+        count++;
+    }
+    APSARA_TEST_EQUAL(count, 1);
+    // assert writeMetric value
+    if (count == 1) {
+        tmp = WriteMetrics::GetInstance()->GetHead();
+        std::vector<MetricNameValuePtr> values = tmp->GetMetricNameValues();
+        APSARA_TEST_EQUAL(values.size(), 1);
+        if (values.size() == 1) {
+            APSARA_TEST_EQUAL(values.at(0)->GetValue(), 0);
+        } 
+    }
 
-    APSARA_TEST_EQUAL(nameValues.size(), 1);
-    LOG_INFO(sLogger, ("end", "test"));
+    // assert ReadMetrics count
+    tmp = ReadMetrics::GetInstance()->GetHead();
+    count = 0;
+    while (tmp) {
+        tmp = tmp->GetNext();
+        count++;
+    }
+    APSARA_TEST_EQUAL(count, 1);
+
+    // assert readMetric value
+    if (count == 1) {
+        tmp = ReadMetrics::GetInstance()->GetHead();
+        std::vector<MetricNameValuePtr> values = tmp->GetMetricNameValues();
+        APSARA_TEST_EQUAL(values.size(), 1);
+        if (values.size() == 1) {
+            APSARA_TEST_EQUAL(values.at(0)->GetValue(), 111);
+        } 
+    }
+
+    // after dosnapshot, add value again
+    fileCounter->SetValue(111UL);
+    fileCounter->SetValue(111UL);
+    fileCounter->SetValue(111UL);
+
+    APSARA_TEST_EQUAL(fileCounter->GetValue(), 333);
+
+    MetricExportor::GetInstance()->PushMetrics(true);
+    // assert ReadMetrics count
+    tmp = ReadMetrics::GetInstance()->GetHead();
+    count = 0;
+    while (tmp) {
+        tmp = tmp->GetNext();
+        count++;
+    }
+    APSARA_TEST_EQUAL(count, 1);
+
+    // assert readMetric value
+    if (count == 1) {
+        tmp = ReadMetrics::GetInstance()->GetHead();
+        std::vector<MetricNameValuePtr> values = tmp->GetMetricNameValues();
+        APSARA_TEST_EQUAL(values.size(), 1);
+        if (values.size() == 1) {
+            APSARA_TEST_EQUAL(values.at(0)->GetValue(), 333);
+        } 
+    }
+    delete fileMetric1;
 }
-
 
 } // namespace logtail
 

@@ -63,7 +63,7 @@ void MetricsRecord::MarkDeleted() {
     mDeleted = true;
 }
 
-bool MetricsRecord::IsDeleted() {
+const bool MetricsRecord::IsDeleted() const {
     return mDeleted;
 }
 
@@ -84,7 +84,7 @@ MetricsRecord* MetricsRecord::CopyAndReset() {
     return metrics;
 }
 
-MetricsRecord* MetricsRecord::GetNext() {
+MetricsRecord* MetricsRecord::GetNext() const {
     return mNext;
 }
 
@@ -116,11 +116,7 @@ WriteMetrics::WriteMetrics() {
 }
 
 WriteMetrics::~WriteMetrics() {
-    while (mHead) {
-        MetricsRecord* toDeleted = mHead;
-        mHead = mHead->GetNext();
-        delete toDeleted;
-    }
+    Clear();
 }
 
 MetricsRecord* WriteMetrics::CreateMetricsRecords(LabelsPtr labels) {
@@ -131,8 +127,16 @@ MetricsRecord* WriteMetrics::CreateMetricsRecords(LabelsPtr labels) {
     return cur;
 }
 
-MetricsRecord* WriteMetrics::GetHead() {
+MetricsRecord* WriteMetrics::GetHead() const {
     return mHead;
+}
+
+void WriteMetrics::Clear() {
+    while (mHead) {
+        MetricsRecord* toDeleted = mHead;
+        mHead = mHead->GetNext();
+        delete toDeleted;
+    }
 }
 
 MetricsRecord* WriteMetrics::DoSnapshot() {
@@ -208,14 +212,10 @@ ReadMetrics::ReadMetrics() {
 }
 
 ReadMetrics::~ReadMetrics() {
-    while (mHead) {
-        MetricsRecord* toDeleted = mHead;
-        mHead = mHead->GetNext();
-        delete toDeleted;
-    }
+    Clear();
 }
 
-void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) {
+void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const {
     ReadLock lock(mReadWriteLock);
     MetricsRecord* tmp = mHead;
     while (tmp) {
@@ -294,8 +294,16 @@ void ReadMetrics::UpdateMetrics() {
     }
 }
 
-MetricsRecord* ReadMetrics::GetHead() {
+MetricsRecord* ReadMetrics::GetHead() const {
     return mHead;
+}
+
+void ReadMetrics::Clear() {
+    while (mHead) {
+        MetricsRecord* toDeleted = mHead;
+        mHead = mHead->GetNext();
+        delete toDeleted;
+    }
 }
 
 } // namespace logtail
