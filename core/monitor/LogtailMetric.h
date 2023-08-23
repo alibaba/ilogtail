@@ -83,6 +83,7 @@ private:
 
     void Clear();
     MetricsRecord* GetHead();
+
 public:
     ~WriteMetrics();
     static WriteMetrics* GetInstance() {
@@ -91,7 +92,7 @@ public:
     }
     void PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& Labels);
     MetricsRecord* DoSnapshot();
-    
+
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ILogtailMetricUnittest;
@@ -105,6 +106,7 @@ private:
     MetricsRecord* mHead = nullptr;
     void Clear();
     MetricsRecord* GetHead();
+
 public:
     ~ReadMetrics();
     static ReadMetrics* GetInstance() {
@@ -112,8 +114,8 @@ public:
         return ptr;
     }
     void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
-    void UpdateMetrics();    
-    
+    void UpdateMetrics();
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ILogtailMetricUnittest;
 #endif

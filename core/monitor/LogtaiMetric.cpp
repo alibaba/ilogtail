@@ -129,8 +129,8 @@ const MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
 }
 
-
-WriteMetrics::WriteMetrics() {}
+WriteMetrics::WriteMetrics() {
+}
 
 WriteMetrics::~WriteMetrics() {
     Clear();
@@ -225,7 +225,8 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
     return snapshot;
 }
 
-ReadMetrics::ReadMetrics() {}
+ReadMetrics::ReadMetrics() {
+}
 
 ReadMetrics::~ReadMetrics() {
     Clear();
