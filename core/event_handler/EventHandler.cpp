@@ -751,7 +751,6 @@ void ModifyHandler::Handle(const Event& event) {
                                  "config", mConfigName)("log reader queue name",
                                                         reader->GetHostLogPath())("file device", reader->GetDevInode().dev)(
                                  "file inode", reader->GetDevInode().inode)("file size", reader->GetFileSize()));
-                    LogBuffer* logBuffer = new LogBuffer;
                     ForceReadLogAndPush(reader);
                     reader->CloseFilePtr();
                 }

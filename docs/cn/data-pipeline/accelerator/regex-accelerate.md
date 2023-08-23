@@ -31,6 +31,7 @@
 | DiscardUnmatch | Boolean | 否 | 是否丢弃匹配失败的日志。如果未添加该参数，则默认使用true，表示丢弃匹配失败的日志。|
 | MergeType | String | 否 | 日志聚合方式。可选值包括“topic”和“logstore”。如果未添加该参数，则默认使用topic，表示根据topic聚合。 |
 | SensitiveKeys | Map<String, Object> | 否 | 脱敏功能，具体信息参见表2。 |
+| ReaderFlushTimeout | Boolean | 否 | 发送超时时间（秒），超时会强制读取剩余日志。默认为5秒。|
 
 - 表1:时间格式
 
