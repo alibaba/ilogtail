@@ -41,13 +41,13 @@ void ILogtailMetricUnittest::TestCreateMetricAutoDelete() {
     labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-hangzhou"));
 
     MetricsRecordRef fileMetric;
-    fileMetric.Init(labels);
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(fileMetric, std::move(labels));
     APSARA_TEST_EQUAL(fileMetric->GetLabels()->size(), 3);
 
 
-    MetricNameValuePtr fileCounter = fileMetric->CreateCounter("filed1");
-    fileCounter->SetValue(111UL);
-    fileCounter->SetValue(111UL);
+    CounterPtr fileCounter = fileMetric->CreateCounter("filed1");
+    fileCounter->Add(111UL);
+    fileCounter->Add(111UL);
     APSARA_TEST_EQUAL(fileCounter->GetValue(), 222);
 
     MetricExportor::GetInstance()->PushMetrics(true);
@@ -79,9 +79,9 @@ void ILogtailMetricUnittest::TestCreateMetricAutoDelete() {
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-hangzhou"));
 
         MetricsRecordRef fileMetric2;
-        fileMetric2.Init(labels);
-        MetricNameValuePtr fileCounter2 = fileMetric2->CreateCounter("filed2");
-        fileCounter2->SetValue(222UL);
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(fileMetric2, std::move(labels));
+        CounterPtr fileCounter2 = fileMetric2->CreateCounter("filed2");
+        fileCounter2->Add(222UL);
     }
 
     {
@@ -90,9 +90,9 @@ void ILogtailMetricUnittest::TestCreateMetricAutoDelete() {
         labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "logstore1"));
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-hangzhou"));
         MetricsRecordRef fileMetric3;
-        fileMetric3.Init(labels);
-        MetricNameValuePtr fileCounter3 = fileMetric3->CreateCounter("filed3");
-        fileCounter3->SetValue(333UL);
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(fileMetric3, std::move(labels));
+        CounterPtr fileCounter3 = fileMetric3->CreateCounter("filed3");
+        fileCounter3->Add(333UL);
     }
 
     MetricExportor::GetInstance()->PushMetrics(true);
@@ -131,9 +131,9 @@ void createMetrics(int count) {
         labels.emplace_back(std::make_pair<std::string, std::string>("count", std::to_string(count)));
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
         MetricsRecordRef fileMetric;
-        fileMetric.Init(labels);
-        MetricNameValuePtr fileCounter = fileMetric->CreateCounter("filed1");
-        fileCounter->SetValue(111UL);
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(fileMetric, std::move(labels));
+        CounterPtr fileCounter = fileMetric->CreateCounter("filed1");
+        fileCounter->Add(111UL);
     }
 }
 
@@ -199,18 +199,18 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
     labels.emplace_back(std::make_pair<std::string, std::string>("project", "test1"));
     labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "test1"));
     labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
-    fileMetric1->Init(labels);
-    MetricNameValuePtr fileCounter = fileMetric1->operator->()->CreateCounter("filed1");
-    fileCounter->SetValue(111UL);
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(*fileMetric1, std::move(labels));
+    CounterPtr fileCounter = fileMetric1->operator->()->CreateCounter("filed1");
+    fileCounter->Add(111UL);
 
     {
         std::vector<std::pair<std::string, std::string>> labels;
         labels.emplace_back(std::make_pair<std::string, std::string>("project", "test2"));
         labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "test2"));
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
-        fileMetric2->Init(labels);
-        MetricNameValuePtr fileCounter = fileMetric2->operator->()->CreateCounter("filed1");
-        fileCounter->SetValue(111UL);
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(*fileMetric2, std::move(labels));
+        CounterPtr fileCounter = fileMetric2->operator->()->CreateCounter("filed1");
+        fileCounter->Add(111UL);
     }
 
     {
@@ -218,9 +218,9 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
         labels.emplace_back(std::make_pair<std::string, std::string>("project", "test3"));
         labels.emplace_back(std::make_pair<std::string, std::string>("logstore", "test3"));
         labels.emplace_back(std::make_pair<std::string, std::string>("region", "cn-beijing"));
-        fileMetric3->Init(labels);
-        MetricNameValuePtr fileCounter = fileMetric3->operator->()->CreateCounter("filed1");
-        fileCounter->SetValue(111UL);
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(*fileMetric3, std::move(labels));
+        CounterPtr fileCounter = fileMetric3->operator->()->CreateCounter("filed1");
+        fileCounter->Add(111UL);
     }
     std::thread t3(createMetrics, 3);
     std::thread t4(createMetrics, 4);
@@ -260,7 +260,7 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
     // assert writeMetric value
     if (count == 1) {
         tmp = WriteMetrics::GetInstance()->GetHead();
-        std::vector<MetricNameValuePtr> values = tmp->GetMetricNameValues();
+        std::vector<CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
             APSARA_TEST_EQUAL(values.at(0)->GetValue(), 0);
@@ -279,7 +279,7 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
     // assert readMetric value
     if (count == 1) {
         tmp = ReadMetrics::GetInstance()->GetHead();
-        std::vector<MetricNameValuePtr> values = tmp->GetMetricNameValues();
+        std::vector<CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
             APSARA_TEST_EQUAL(values.at(0)->GetValue(), 111);
@@ -287,9 +287,9 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
     }
 
     // after dosnapshot, add value again
-    fileCounter->SetValue(111UL);
-    fileCounter->SetValue(111UL);
-    fileCounter->SetValue(111UL);
+    fileCounter->Add(111UL);
+    fileCounter->Add(111UL);
+    fileCounter->Add(111UL);
 
     APSARA_TEST_EQUAL(fileCounter->GetValue(), 333);
 
@@ -306,7 +306,7 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetric() {
     // assert readMetric value
     if (count == 1) {
         tmp = ReadMetrics::GetInstance()->GetHead();
-        std::vector<MetricNameValuePtr> values = tmp->GetMetricNameValues();
+        std::vector<CounterPtr> values = tmp->GetCounters();
         APSARA_TEST_EQUAL(values.size(), 1);
         if (values.size() == 1) {
             APSARA_TEST_EQUAL(values.at(0)->GetValue(), 333);

@@ -10,37 +10,41 @@ using namespace sls_logs;
 
 namespace logtail {
 
-MetricNameValue::MetricNameValue(const std::string& name, uint64_t val) : mName(name), mVal(val) {
+Counter::Counter(const std::string& name, uint64_t val = 0) : mName(name), mVal(val) {
 }
 
-
-const uint64_t MetricNameValue::GetValue() const {
+uint64_t Counter::GetValue() const {
     return mVal;
 }
 
-const std::string& MetricNameValue::GetName() const {
+const std::string& Counter::GetName() const {
     return mName;
-}
-
-Counter::Counter(const std::string& name, uint64_t val = 0) : MetricNameValue(name, val) {
 }
 
 Counter* Counter::CopyAndReset() {
     return new Counter(mName, mVal.exchange(0));
 }
 
-void Counter::SetValue(uint64_t value) {
+void Counter::Add(uint64_t value) {
     mVal += value;
 }
 
-Gauge::Gauge(const std::string& name, uint64_t val = 0) : MetricNameValue(name, val) {
+Gauge::Gauge(const std::string& name, uint64_t val = 0) : mName(name), mVal(val) {
+}
+
+uint64_t Gauge::GetValue() const {
+    return mVal;
+}
+
+const std::string& Gauge::GetName() const {
+    return mName;
 }
 
 Gauge* Gauge::CopyAndReset() {
     return new Gauge(mName, mVal.exchange(0));
 }
 
-void Gauge::SetValue(uint64_t value) {
+void Gauge::Set(uint64_t value) {
     mVal = value;
 }
 
@@ -50,15 +54,15 @@ MetricsRecord::MetricsRecord(LabelsPtr labels) : mLabels(labels), mDeleted(false
 MetricsRecord::MetricsRecord() : mDeleted(false) {
 }
 
-MetricNameValuePtr MetricsRecord::CreateCounter(const std::string& name) {
-    MetricNameValuePtr counterPtr = std::make_shared<Counter>(name);
-    mValues.emplace_back(counterPtr);
+CounterPtr MetricsRecord::CreateCounter(const std::string& name) {
+    CounterPtr counterPtr = std::make_shared<Counter>(name);
+    mCounters.emplace_back(counterPtr);
     return counterPtr;
 }
 
-MetricNameValuePtr MetricsRecord::CreateGauge(const std::string& name) {
-    MetricNameValuePtr gaugePtr = std::make_shared<Gauge>(name);
-    mValues.emplace_back(gaugePtr);
+GaugePtr MetricsRecord::CreateGauge(const std::string& name) {
+    GaugePtr gaugePtr = std::make_shared<Gauge>(name);
+    mGauges.emplace_back(gaugePtr);
     return gaugePtr;
 }
 
@@ -74,15 +78,23 @@ const LabelsPtr& MetricsRecord::GetLabels() const {
     return mLabels;
 }
 
-const std::vector<MetricNameValuePtr>& MetricsRecord::GetMetricNameValues() const {
-    return mValues;
+const std::vector<CounterPtr>& MetricsRecord::GetCounters() const {
+    return mCounters;
+}
+
+const std::vector<GaugePtr>& MetricsRecord::GetGauges() const {
+    return mGauges;
 }
 
 MetricsRecord* MetricsRecord::CopyAndReset() {
     MetricsRecord* metrics = new MetricsRecord(mLabels);
-    for (auto& item : mValues) {
-        MetricNameValuePtr newPtr(item->CopyAndReset());
-        metrics->mValues.emplace_back(newPtr);
+    for (auto& item : mCounters) {
+        CounterPtr newPtr(item->CopyAndReset());
+        metrics->mCounters.emplace_back(newPtr);
+    }
+    for (auto& item : mGauges) {
+        GaugePtr newPtr(item->CopyAndReset());
+        metrics->mGauges.emplace_back(newPtr);
     }
     return metrics;
 }
@@ -95,38 +107,32 @@ void MetricsRecord::SetNext(MetricsRecord* next) {
     mNext = next;
 }
 
-MetricsRecordRef::MetricsRecordRef() {
-}
-
 MetricsRecordRef::~MetricsRecordRef() {
     if (mMetrics) {
         mMetrics->MarkDeleted();
     }
 }
 
-void MetricsRecordRef::Init(const MetricLabels& labels) {
-    if (!mMetrics) {
-        mMetrics = WriteMetrics::GetInstance()->CreateMetricsRecords(std::make_shared<MetricLabels>(labels));
-    }
+
+void MetricsRecordRef::SetMetricsRecord(MetricsRecord* metricRecord) {
+    mMetrics = metricRecord;
 }
+
 
 MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
-}
-
-WriteMetrics::WriteMetrics() {
 }
 
 WriteMetrics::~WriteMetrics() {
     Clear();
 }
 
-MetricsRecord* WriteMetrics::CreateMetricsRecords(LabelsPtr labels) {
-    MetricsRecord* cur = new MetricsRecord(labels);
+void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels) {
+    MetricsRecord* cur = new MetricsRecord(std::make_shared<std::vector<std::pair<std::string, std::string>>>(labels));
+    ref.SetMetricsRecord(cur);
     std::lock_guard<std::mutex> lock(mMutex);
     cur->SetNext(mHead);
     mHead = cur;
-    return cur;
 }
 
 MetricsRecord* WriteMetrics::GetHead() const {
@@ -210,8 +216,6 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
     return snapshot;
 }
 
-ReadMetrics::ReadMetrics() {
-}
 
 ReadMetrics::~ReadMetrics() {
     Clear();
@@ -262,11 +266,17 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
             contentPtr->set_value(pair.second);
         }
 
-        for (auto& item : tmp->GetMetricNameValues()) {
-            MetricNameValuePtr counter = item;
+        for (auto& item : tmp->GetCounters()) {
+            CounterPtr counter = item;
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key(VALUE_PREFIX + counter->GetName());
             contentPtr->set_value(ToString(counter->GetValue()));
+        }
+        for (auto& item : tmp->GetGauges()) {
+            GaugePtr gauge = item;
+            Log_Content* contentPtr = logPtr->add_contents();
+            contentPtr->set_key(VALUE_PREFIX + gauge->GetName());
+            contentPtr->set_value(ToString(gauge->GetValue()));
         }
         // set default key
         {

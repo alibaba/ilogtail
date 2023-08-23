@@ -7,38 +7,36 @@
 
 namespace logtail {
 
-
-class MetricNameValue {
-protected:
+class Counter {
+private:
     std::string mName;
     std::atomic_long mVal;
 
 public:
-    MetricNameValue(const std::string& name, uint64_t val);
-    virtual ~MetricNameValue(){};
-    const uint64_t GetValue() const;
+    Counter(const std::string& name, uint64_t val);
+    uint64_t GetValue() const;
     const std::string& GetName() const;
-    virtual void SetValue(uint64_t val) = 0;
-    virtual MetricNameValue* CopyAndReset() = 0;
+    void Add(uint64_t val);
+    Counter* CopyAndReset();
 };
 
+class Gauge {
+private:
+    std::string mName;
+    std::atomic_long mVal;
 
-class Gauge : public MetricNameValue {
 public:
     Gauge(const std::string& name, uint64_t val);
-    void SetValue(uint64_t val) override;
-    Gauge* CopyAndReset() override;
+    uint64_t GetValue() const;
+    const std::string& GetName() const;
+    void Set(uint64_t val);
+    Gauge* CopyAndReset();
 };
 
 
-class Counter : public MetricNameValue {
-public:
-    Counter(const std::string& name, uint64_t val);
-    void SetValue(uint64_t val) override;
-    Counter* CopyAndReset() override;
-};
+using CounterPtr = std::shared_ptr<Counter>;
+using GaugePtr = std::shared_ptr<Gauge>;
 
-using MetricNameValuePtr = std::shared_ptr<MetricNameValue>;
 using MetricLabels = std::vector<std::pair<std::string, std::string>>;
 using LabelsPtr = std::shared_ptr<MetricLabels>;
 
@@ -46,7 +44,8 @@ class MetricsRecord {
 private:
     LabelsPtr mLabels;
     std::atomic_bool mDeleted;
-    std::vector<MetricNameValuePtr> mValues;
+    std::vector<CounterPtr> mCounters;
+    std::vector<GaugePtr> mGauges;
     MetricsRecord* mNext = nullptr;
 
 public:
@@ -55,9 +54,10 @@ public:
     void MarkDeleted();
     bool IsDeleted() const;
     const LabelsPtr& GetLabels() const;
-    const std::vector<MetricNameValuePtr>& GetMetricNameValues() const;
-    MetricNameValuePtr CreateCounter(const std::string& Name);
-    MetricNameValuePtr CreateGauge(const std::string& Name);
+    const std::vector<CounterPtr>& GetCounters() const;
+    const std::vector<GaugePtr>& GetGauges() const;
+    CounterPtr CreateCounter(const std::string& Name);
+    GaugePtr CreateGauge(const std::string& Name);
     MetricsRecord* CopyAndReset();
     void SetNext(MetricsRecord* next);
     MetricsRecord* GetNext() const;
@@ -68,9 +68,8 @@ private:
     MetricsRecord* mMetrics = nullptr;
 
 public:
-    MetricsRecordRef();
     ~MetricsRecordRef();
-    void Init(const MetricLabels& labels);
+    void SetMetricsRecord(MetricsRecord* metricRecord);
     MetricsRecord* operator->() const;
 };
 
@@ -86,7 +85,7 @@ public:
         static WriteMetrics* ptr = new WriteMetrics();
         return ptr;
     }
-    MetricsRecord* CreateMetricsRecords(LabelsPtr Labels);
+    void PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& Labels);
     MetricsRecord* DoSnapshot();
     MetricsRecord* GetHead() const;
     void Clear();
