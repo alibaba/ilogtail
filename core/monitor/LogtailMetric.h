@@ -14,10 +14,7 @@ protected:
     std::atomic_long mVal;
 
 public:
-    MetricNameValue(const std::string& name, uint64_t val) {
-        mName = name;
-        mVal = val;
-    };
+    MetricNameValue(const std::string& name, uint64_t val);
     virtual ~MetricNameValue(){};
     const uint64_t GetValue() const;
     const std::string& GetName() const;
@@ -42,7 +39,8 @@ public:
 };
 
 using MetricNameValuePtr = std::shared_ptr<MetricNameValue>;
-using LabelsPtr = std::shared_ptr<std::vector<std::pair<std::string, std::string>>>;
+using MetricLabels = std::vector<std::pair<std::string, std::string>>;
+using LabelsPtr = std::shared_ptr<MetricLabels>;
 
 class MetricsRecord {
 private:
@@ -55,7 +53,7 @@ public:
     MetricsRecord(LabelsPtr labels);
     MetricsRecord();
     void MarkDeleted();
-    const bool IsDeleted() const;
+    bool IsDeleted() const;
     const LabelsPtr& GetLabels() const;
     const std::vector<MetricNameValuePtr>& GetMetricNameValues() const;
     MetricNameValuePtr CreateCounter(const std::string& Name);
@@ -72,7 +70,7 @@ private:
 public:
     MetricsRecordRef();
     ~MetricsRecordRef();
-    void Init(const std::vector<std::pair<std::string, std::string>>& labels);
+    void Init(const MetricLabels& labels);
     MetricsRecord* operator->() const;
 };
 

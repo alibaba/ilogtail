@@ -10,6 +10,9 @@ using namespace sls_logs;
 
 namespace logtail {
 
+MetricNameValue::MetricNameValue(const std::string& name, uint64_t val) : mName(name), mVal(val) {
+}
+
 
 const uint64_t MetricNameValue::GetValue() const {
     return mVal;
@@ -63,7 +66,7 @@ void MetricsRecord::MarkDeleted() {
     mDeleted = true;
 }
 
-const bool MetricsRecord::IsDeleted() const {
+bool MetricsRecord::IsDeleted() const {
     return mDeleted;
 }
 
@@ -101,10 +104,9 @@ MetricsRecordRef::~MetricsRecordRef() {
     }
 }
 
-void MetricsRecordRef::Init(const std::vector<std::pair<std::string, std::string>>& labels) {
+void MetricsRecordRef::Init(const MetricLabels& labels) {
     if (!mMetrics) {
-        mMetrics = WriteMetrics::GetInstance()->CreateMetricsRecords(
-            std::make_shared<std::vector<std::pair<std::string, std::string>>>(labels));
+        mMetrics = WriteMetrics::GetInstance()->CreateMetricsRecords(std::make_shared<MetricLabels>(labels));
     }
 }
 
@@ -148,7 +150,6 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
     MetricsRecord emptyHead;
     MetricsRecord* preTmp = nullptr;
 
-    MetricsRecord* tmpHead = nullptr;
     // find the first undeleted node and set as new mHead
     {
         std::lock_guard<std::mutex> lock(mMutex);
@@ -165,7 +166,7 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
             } else {
                 // find head
                 mHead = tmp;
-                preTmp = tmp;
+                preTmp = mHead;
                 tmp = tmp->GetNext();
                 findHead = true;
                 break;
@@ -174,13 +175,13 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
         // if no undeleted node, set null to mHead
         if (!findHead) {
             mHead = nullptr;
+            preTmp = mHead;
         }
-        tmpHead = mHead;
     }
 
     // copy head
-    if (tmpHead) {
-        MetricsRecord* newMetrics = tmpHead->CopyAndReset();
+    if (preTmp) {
+        MetricsRecord* newMetrics = preTmp->CopyAndReset();
         newMetrics->SetNext(snapshot);
         snapshot = newMetrics;
     }
