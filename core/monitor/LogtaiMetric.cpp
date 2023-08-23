@@ -11,15 +11,16 @@ using namespace sls_logs;
 namespace logtail {
 
 
-const uint64_t BaseMetric::GetValue() const {
+const uint64_t MetricNameValue::GetValue() const {
     return mVal;
 }
 
-const std::string& BaseMetric::GetName() const {
+const std::string& MetricNameValue::GetName() const {
     return mName;
 }
 
-Counter::Counter(const std::string &name, uint64_t val = 0) : BaseMetric(name, val) {}
+Counter::Counter(const std::string& name, uint64_t val = 0) : MetricNameValue(name, val) {
+}
 
 Counter* Counter::CopyAndReset() {
     return new Counter(mName, mVal.exchange(0));
@@ -29,7 +30,8 @@ void Counter::SetValue(uint64_t value) {
     mVal += value;
 }
 
-Gauge::Gauge(const std::string &name, uint64_t val = 0) : BaseMetric(name, val) {}
+Gauge::Gauge(const std::string& name, uint64_t val = 0) : MetricNameValue(name, val) {
+}
 
 Gauge* Gauge::CopyAndReset() {
     return new Gauge(mName, mVal.exchange(0));
@@ -39,106 +41,113 @@ void Gauge::SetValue(uint64_t value) {
     mVal = value;
 }
 
+MetricsRecord::MetricsRecord(LabelsPtr labels) : mLabels(labels), mDeleted(false) {
+}
 
-Metrics::Metrics(const std::vector<std::pair<std::string, std::string>>&& labels) : mLabels(labels), mDeleted(false) {}
+MetricsRecord::MetricsRecord() : mDeleted(false) {
+}
 
-Metrics::Metrics() : mDeleted(false) {}
-
-MetricPtr Metrics::CreateCounter(const std::string& name) {
-    MetricPtr counterPtr = std::make_shared<Counter>(name);
+MetricNameValuePtr MetricsRecord::CreateCounter(const std::string& name) {
+    MetricNameValuePtr counterPtr = std::make_shared<Counter>(name);
     mValues.emplace_back(counterPtr);
     return counterPtr;
 }
 
-MetricPtr Metrics::CreateGauge(const std::string& name) {
-    MetricPtr gaugePtr = std::make_shared<Gauge>(name);
+MetricNameValuePtr MetricsRecord::CreateGauge(const std::string& name) {
+    MetricNameValuePtr gaugePtr = std::make_shared<Gauge>(name);
     mValues.emplace_back(gaugePtr);
     return gaugePtr;
 }
 
-void Metrics::MarkDeleted() {
+void MetricsRecord::MarkDeleted() {
     mDeleted = true;
 }
 
-bool Metrics::IsDeleted() {
+bool MetricsRecord::IsDeleted() {
     return mDeleted;
 }
 
-const std::vector<std::pair<std::string, std::string>>& Metrics::GetLabels() const {
+LabelsPtr MetricsRecord::GetLabels() {
     return mLabels;
 }
 
-const std::vector<MetricPtr>& Metrics::GetValues() const {
+const std::vector<MetricNameValuePtr>& MetricsRecord::GetValues() const {
     return mValues;
 }
 
-Metrics* Metrics::CopyAndReset() {
-    std::vector<std::pair<std::string, std::string>> newLabels(mLabels);
-    Metrics* metrics = new Metrics(std::move(newLabels)); 
-    for (auto &item: mValues) {
-        MetricPtr newPtr(item->CopyAndReset());
+MetricsRecord* MetricsRecord::CopyAndReset() {
+    MetricsRecord* metrics = new MetricsRecord(mLabels);
+    for (auto& item : mValues) {
+        MetricNameValuePtr newPtr(item->CopyAndReset());
         metrics->mValues.emplace_back(newPtr);
     }
     return metrics;
 }
 
-Metrics* Metrics::GetNext() {
+MetricsRecord* MetricsRecord::GetNext() {
     return mNext;
 }
 
-void Metrics::SetNext(Metrics* next) {
-    mNext = next; 
+void MetricsRecord::SetNext(MetricsRecord* next) {
+    mNext = next;
 }
 
-MetricsRef::MetricsRef() {}
+MetricsRecordRef::MetricsRecordRef() {
+}
 
-MetricsRef::~MetricsRef() {
+MetricsRecordRef::~MetricsRecordRef() {
     if (mMetrics) {
         mMetrics->MarkDeleted();
     }
 }
 
-void MetricsRef::Init(const std::vector<std::pair<std::string, std::string>>& Labels) {
+void MetricsRecordRef::Init(const std::vector<std::pair<std::string, std::string>>& labels) {
     if (!mMetrics) {
-        mMetrics = WriteMetrics::GetInstance()->CreateMetrics(std::move(Labels));
+        mMetrics = WriteMetrics::GetInstance()->CreateMetrics(
+            std::make_shared<std::vector<std::pair<std::string, std::string>>>(labels));
     }
 }
 
-Metrics* MetricsRef::Get() {
+MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
 }
 
-WriteMetrics::WriteMetrics() {}
+WriteMetrics::WriteMetrics() {
+}
 
-Metrics* WriteMetrics::CreateMetrics(const std::vector<std::pair<std::string, std::string>>& labels) {
-    Metrics* cur = new Metrics(std::move(labels)); 
-    std::lock_guard<std::mutex> lock(mMutex);   
+WriteMetrics::~WriteMetrics() {
+    while (mHead) {
+        MetricsRecord* toDeleted = mHead;
+        mHead = mHead->GetNext();
+        delete toDeleted;
+    }
+}
 
-    Metrics* oldHead = mHead;
+MetricsRecord* WriteMetrics::CreateMetrics(LabelsPtr labels) {
+    MetricsRecord* cur = new MetricsRecord(labels);
+    std::lock_guard<std::mutex> lock(mMutex);
+    cur->SetNext(mHead);
     mHead = cur;
-    mHead->SetNext(oldHead);
-
     return cur;
 }
 
-Metrics* WriteMetrics::GetHead() {
+MetricsRecord* WriteMetrics::GetHead() {
     return mHead;
 }
 
-Metrics* WriteMetrics::DoSnapshot() {
+MetricsRecord* WriteMetrics::DoSnapshot() {
     // new read head
-    Metrics* snapshot = nullptr;
-    Metrics* toDeleteHead = nullptr;
-    Metrics* tmp = nullptr;
-    
-    Metrics emptyHead;
-    Metrics* preTmp = nullptr;
+    MetricsRecord* snapshot = nullptr;
+    MetricsRecord* toDeleteHead = nullptr;
+    MetricsRecord* tmp = nullptr;
 
-    Metrics* tmpHead = nullptr;
-    Metrics* tmpHeadNext = nullptr;
-    // find the first not deleted node and set as new mHead
+    MetricsRecord emptyHead;
+    MetricsRecord* preTmp = nullptr;
+
+    MetricsRecord* tmpHead = nullptr;
+    // find the first undeleted node and set as new mHead
     {
-        std::lock_guard<std::mutex> lock(mMutex); 
+        std::lock_guard<std::mutex> lock(mMutex);
         emptyHead.SetNext(mHead);
         preTmp = &emptyHead;
         tmp = preTmp->GetNext();
@@ -151,40 +160,23 @@ Metrics* WriteMetrics::DoSnapshot() {
                 tmp = preTmp->GetNext();
             } else {
                 // find head
-                if (!findHead) {
-                    mHead = tmp;
-                    preTmp = tmp;
-                    tmp = tmp->GetNext();
-
-                    mHead->SetNext(nullptr);
-                    findHead = true;
-                // find head next
-                } else {
-                    mHead->SetNext(tmp);
-                    preTmp = tmp;
-                    tmp = tmp->GetNext();
-                    break;
-                } 
+                mHead = tmp;
+                preTmp = tmp;
+                tmp = tmp->GetNext();
+                findHead = true;
+                break;
             }
         }
         // if no undeleted node, set null to mHead
         if (!findHead) {
             mHead = nullptr;
-        } else {
-            tmpHead = mHead;
-            tmpHeadNext = mHead->GetNext();
         }
+        tmpHead = mHead;
     }
 
     // copy head
     if (tmpHead) {
-        Metrics* newMetrics = tmpHead->CopyAndReset();
-        newMetrics->SetNext(snapshot);
-        snapshot = newMetrics;
-    }
-    // copy head next
-    if (tmpHeadNext) {
-        Metrics* newMetrics = tmpHead->CopyAndReset();
+        MetricsRecord* newMetrics = tmpHead->CopyAndReset();
         newMetrics->SetNext(snapshot);
         snapshot = newMetrics;
     }
@@ -196,7 +188,7 @@ Metrics* WriteMetrics::DoSnapshot() {
             toDeleteHead = tmp;
             tmp = preTmp->GetNext();
         } else {
-            Metrics* newMetrics = tmp->CopyAndReset();
+            MetricsRecord* newMetrics = tmp->CopyAndReset();
             newMetrics->SetNext(snapshot);
             snapshot = newMetrics;
             preTmp = tmp;
@@ -204,23 +196,33 @@ Metrics* WriteMetrics::DoSnapshot() {
         }
     }
 
-    while(toDeleteHead) {
-        Metrics* toDeleted = toDeleteHead;
+    while (toDeleteHead) {
+        MetricsRecord* toDeleted = toDeleteHead;
         toDeleteHead = toDeleteHead->GetNext();
         delete toDeleted;
     }
     return snapshot;
 }
 
-ReadMetrics::ReadMetrics() {}
+ReadMetrics::ReadMetrics() {
+}
+
+ReadMetrics::~ReadMetrics() {
+    while (mHead) {
+        MetricsRecord* toDeleted = mHead;
+        mHead = mHead->GetNext();
+        delete toDeleted;
+    }
+}
 
 void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) {
     ReadLock lock(mReadWriteLock);
-    Metrics* tmp = mHead;
-    while(tmp) {
+    MetricsRecord* tmp = mHead;
+    while (tmp) {
         Log* logPtr = nullptr;
-        for (auto &item: tmp->GetLabels()) {
-            std::pair<std::string, std::string> pair = item;
+        // for (auto &item: tmp->GetLabels()) {
+        for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
+            std::pair<std::string, std::string> pair = *item;
             if (METRIC_FIELD_REGION == pair.first) {
                 std::map<std::string, sls_logs::LogGroup*>::iterator iter;
                 std::string region = pair.second;
@@ -248,16 +250,18 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
             }
         }
         auto now = GetCurrentLogtailTime();
-        SetLogTime(logPtr, AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec, now.tv_nsec);
-        for (auto &item: tmp->GetLabels()) {
-            std::pair<std::string, std::string> pair = item;
+        SetLogTime(logPtr,
+                   AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec,
+                   now.tv_nsec);
+        for (auto item = tmp->GetLabels()->begin(); item != tmp->GetLabels()->end(); ++item) {
+            std::pair<std::string, std::string> pair = *item;
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key(LABEL_PREFIX + pair.first);
             contentPtr->set_value(pair.second);
         }
 
-        for (auto &item: tmp->GetValues()) {
-            MetricPtr counter = item;
+        for (auto& item : tmp->GetValues()) {
+            MetricNameValuePtr counter = item;
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key(VALUE_PREFIX + counter->GetName());
             contentPtr->set_value(ToString(counter->GetValue()));
@@ -274,8 +278,8 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
 
 
 void ReadMetrics::UpdateMetrics() {
-    Metrics* snapshot = WriteMetrics::GetInstance()->DoSnapshot();
-    Metrics* toDelete;
+    MetricsRecord* snapshot = WriteMetrics::GetInstance()->DoSnapshot();
+    MetricsRecord* toDelete;
     {
         // Only lock when change head
         WriteLock lock(mReadWriteLock);
@@ -283,15 +287,15 @@ void ReadMetrics::UpdateMetrics() {
         mHead = snapshot;
     }
     // delete old linklist
-    while(toDelete) {
-        Metrics* obj = toDelete;
+    while (toDelete) {
+        MetricsRecord* obj = toDelete;
         toDelete = toDelete->GetNext();
         delete obj;
     }
 }
 
-Metrics* ReadMetrics::GetHead() {
+MetricsRecord* ReadMetrics::GetHead() {
     return mHead;
 }
 
-}
+} // namespace logtail
