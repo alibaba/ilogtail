@@ -238,7 +238,7 @@ Json::Value& ConfigManager::CheckPluginProcessor(Json::Value& pluginConfigJson, 
     }
     /*
     if (rootConfigJson["plugin"]
-        && !(rootConfigJson["advanced"] && rootConfigJson["advanced"]["force_enable_pipeline"])) {
+        && !(rootConfigJson["advanced"] && rootConfigJson["force_enable_pipeline"])) {
         return pluginConfigJson;
     }
     // when pipline is used, no need to split/parse/time using plugin
