@@ -50,7 +50,7 @@ private:
 
 public:
     MetricsRecord(LabelsPtr labels);
-    MetricsRecord();
+    MetricsRecord() = default;
     void MarkDeleted();
     bool IsDeleted() const;
     const LabelsPtr& GetLabels() const;
@@ -77,7 +77,7 @@ public:
 
 class WriteMetrics {
 private:
-    WriteMetrics();
+    WriteMetrics() = default;
     std::mutex mMutex;
     MetricsRecord* mHead = nullptr;
 
@@ -101,7 +101,7 @@ public:
 
 class ReadMetrics {
 private:
-    ReadMetrics();
+    ReadMetrics() = default;
     mutable ReadWriteLock mReadWriteLock;
     MetricsRecord* mHead = nullptr;
     void Clear();

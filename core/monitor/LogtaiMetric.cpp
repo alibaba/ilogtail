@@ -51,9 +51,6 @@ void Gauge::Set(uint64_t value) {
 MetricsRecord::MetricsRecord(LabelsPtr labels) : mLabels(labels), mDeleted(false) {
 }
 
-MetricsRecord::MetricsRecord() : mDeleted(false) {
-}
-
 CounterPtr MetricsRecord::CreateCounter(const std::string& name) {
     CounterPtr counterPtr = std::make_shared<Counter>(name);
     mCounters.emplace_back(counterPtr);
@@ -129,15 +126,12 @@ const MetricsRecord* MetricsRecordRef::operator->() const {
     return mMetrics;
 }
 
-WriteMetrics::WriteMetrics() {
-}
-
 WriteMetrics::~WriteMetrics() {
     Clear();
 }
 
 void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels) {
-    MetricsRecord* cur = new MetricsRecord(std::make_shared<std::vector<std::pair<std::string, std::string>>>(labels));
+    MetricsRecord* cur = new MetricsRecord(std::make_shared<MetricLabels>(labels));
     ref.SetMetricsRecord(cur);
     std::lock_guard<std::mutex> lock(mMutex);
     cur->SetNext(mHead);
@@ -223,9 +217,6 @@ MetricsRecord* WriteMetrics::DoSnapshot() {
         delete toDelete;
     }
     return snapshot;
-}
-
-ReadMetrics::ReadMetrics() {
 }
 
 ReadMetrics::~ReadMetrics() {
