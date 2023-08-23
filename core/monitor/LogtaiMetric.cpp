@@ -139,6 +139,7 @@ void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&&
 }
 
 MetricsRecord* WriteMetrics::GetHead() {
+    std::lock_guard<std::mutex> lock(mMutex);
     return mHead;
 }
 
@@ -309,6 +310,7 @@ void ReadMetrics::UpdateMetrics() {
 }
 
 MetricsRecord* ReadMetrics::GetHead() {
+    WriteLock lock(mReadWriteLock);
     return mHead;
 }
 
