@@ -78,7 +78,7 @@ private:
     WriteMetrics();
     std::mutex mMutex;
     MetricsRecord* mHead = nullptr;
-
+    void Clear();
 public:
     ~WriteMetrics();
     static WriteMetrics* GetInstance() {
@@ -88,7 +88,10 @@ public:
     void PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& Labels);
     MetricsRecord* DoSnapshot();
     MetricsRecord* GetHead() const;
-    void Clear();
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ILogtailMetricUnittest;
+#endif
 };
 
 class ReadMetrics {
@@ -96,7 +99,7 @@ private:
     ReadMetrics();
     mutable ReadWriteLock mReadWriteLock;
     MetricsRecord* mHead = nullptr;
-
+    void Clear();
 public:
     ~ReadMetrics();
     static ReadMetrics* GetInstance() {
@@ -106,6 +109,9 @@ public:
     void ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& logGroupMap) const;
     void UpdateMetrics();
     MetricsRecord* GetHead() const;
-    void Clear();
+    
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ILogtailMetricUnittest;
+#endif
 };
 } // namespace logtail
