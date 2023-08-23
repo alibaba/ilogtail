@@ -56,8 +56,8 @@ public:
     MetricsRecord();
     void MarkDeleted();
     bool IsDeleted();
-    LabelsPtr GetLabels();
-    const std::vector<MetricNameValuePtr>& GetValues() const;
+    const LabelsPtr& GetLabels() const;
+    const std::vector<MetricNameValuePtr>& GetMetricNameValues() const;
     MetricNameValuePtr CreateCounter(const std::string& Name);
     MetricNameValuePtr CreateGauge(const std::string& Name);
     MetricsRecord* CopyAndReset();
@@ -88,7 +88,7 @@ public:
         static WriteMetrics* ptr = new WriteMetrics();
         return ptr;
     }
-    MetricsRecord* CreateMetrics(LabelsPtr Labels);
+    MetricsRecord* CreateMetricsRecords(LabelsPtr Labels);
     MetricsRecord* DoSnapshot();
     MetricsRecord* GetHead();
 };

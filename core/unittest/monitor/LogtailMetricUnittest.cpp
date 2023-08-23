@@ -138,14 +138,10 @@ void createRunningMetrics() {
 
     fileMetric.Init(labels);
     MetricNameValuePtr fileCounter = fileMetric->CreateCounter("filed1");
-
-    // LOG_INFO(sLogger, ("createRunningMetrics", fileMetric));
-
     int count = 0;
     while (running) {
-        fileCounter->SetValue(1);
-        count++;
-        sleep(1);
+        fileCounter->SetValue(111);
+        usleep(100000);
     }
 }
 
@@ -287,6 +283,10 @@ void ILogtailMetricUnittest::TestCreateAndDeleteMetricMultiThread() {
     tRunning3.join();
     tRunning4.join();
 
+    MetricsRecord* head = ReadMetrics::GetInstance()->GetHead();
+    std::vector<MetricNameValuePtr> nameValues = head->GetMetricNameValues();
+
+    APSARA_TEST_EQUAL(nameValues.size(), 1);
     LOG_INFO(sLogger, ("end", "test"));
 }
 

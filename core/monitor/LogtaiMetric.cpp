@@ -67,11 +67,11 @@ bool MetricsRecord::IsDeleted() {
     return mDeleted;
 }
 
-LabelsPtr MetricsRecord::GetLabels() {
+const LabelsPtr& MetricsRecord::GetLabels() const {
     return mLabels;
 }
 
-const std::vector<MetricNameValuePtr>& MetricsRecord::GetValues() const {
+const std::vector<MetricNameValuePtr>& MetricsRecord::GetMetricNameValues() const {
     return mValues;
 }
 
@@ -103,7 +103,7 @@ MetricsRecordRef::~MetricsRecordRef() {
 
 void MetricsRecordRef::Init(const std::vector<std::pair<std::string, std::string>>& labels) {
     if (!mMetrics) {
-        mMetrics = WriteMetrics::GetInstance()->CreateMetrics(
+        mMetrics = WriteMetrics::GetInstance()->CreateMetricsRecords(
             std::make_shared<std::vector<std::pair<std::string, std::string>>>(labels));
     }
 }
@@ -123,7 +123,7 @@ WriteMetrics::~WriteMetrics() {
     }
 }
 
-MetricsRecord* WriteMetrics::CreateMetrics(LabelsPtr labels) {
+MetricsRecord* WriteMetrics::CreateMetricsRecords(LabelsPtr labels) {
     MetricsRecord* cur = new MetricsRecord(labels);
     std::lock_guard<std::mutex> lock(mMutex);
     cur->SetNext(mHead);
@@ -260,7 +260,7 @@ void ReadMetrics::ReadAsLogGroup(std::map<std::string, sls_logs::LogGroup*>& log
             contentPtr->set_value(pair.second);
         }
 
-        for (auto& item : tmp->GetValues()) {
+        for (auto& item : tmp->GetMetricNameValues()) {
             MetricNameValuePtr counter = item;
             Log_Content* contentPtr = logPtr->add_contents();
             contentPtr->set_key(VALUE_PREFIX + counter->GetName());
