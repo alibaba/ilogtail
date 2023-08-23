@@ -617,20 +617,25 @@ bool ConfigYamlToJson::FillupDefaultUserJsonConfig(const WorkMode& workMode, Jso
             }
         }
 
-        if (BOOL_FLAG(enable_new_pipeline) && !workMode.mLogSplitProcessorPluginType.empty()) {
+        // Copy SplitRegex to log_begin_reg. If enable_new_pipeline, the first split plugin should be removed.
+        if (!workMode.mLogSplitProcessorPluginType.empty()) {
             auto& processors = userJsonConfig["plugin"][PLUGIN_CATEGORY_PROCESSORS];
             auto& splitProcessor = processors[0];
             if (splitProcessor["type"].asString() == PROCESSOR_SPLIT_LINE_LOG_USING_SEP) {
-                Json::Value removed;
-                processors.removeIndex(0, &removed);
+                if (BOOL_FLAG(enable_new_pipeline)) {
+                    Json::Value removed;
+                    processors.removeIndex(0, &removed);
+                }
             } else if (splitProcessor["type"].asString() == PROCESSOR_SPLIT_LINE_LOG_USING_REG) {
                 for (const auto& name : splitProcessor["detail"].getMemberNames()) {
                     if (0 == StringCaseInsensitiveCmp(name.c_str(), "SplitRegex")) {
                         userJsonConfig["log_begin_reg"] = splitProcessor["detail"][name];
                     }
                 }
-                Json::Value removed;
-                processors.removeIndex(0, &removed);
+                if (BOOL_FLAG(enable_new_pipeline)) {
+                    Json::Value removed;
+                    processors.removeIndex(0, &removed);
+                }
             }
         }
     }
