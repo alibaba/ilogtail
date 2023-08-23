@@ -134,6 +134,7 @@ MetricsRecord* WriteMetrics::GetHead() const {
 }
 
 void WriteMetrics::Clear() {
+    std::lock_guard<std::mutex> lock(mMutex);
     while (mHead) {
         MetricsRecord* toDeleted = mHead;
         mHead = mHead->GetNext();
@@ -300,6 +301,7 @@ MetricsRecord* ReadMetrics::GetHead() const {
 }
 
 void ReadMetrics::Clear() {
+    WriteLock lock(mReadWriteLock);
     while (mHead) {
         MetricsRecord* toDelete = mHead;
         mHead = mHead->GetNext();
