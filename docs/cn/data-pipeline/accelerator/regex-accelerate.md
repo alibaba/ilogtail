@@ -15,8 +15,8 @@
 | 参数 | 类型 | 是否必选 | 说明 |
 | --- | --- | --- | --- |
 | Type | String | 是 | 插件类型，指定为`processor_regex_accelerate`。 |
-| Keys | Array | 是 | 提取的字段名列表。 |
-| Regex | String | 是 | 提取字段的正则表达式，使用()标注待提取的字段。 |
+| Keys | Array | 否 | 提取的字段名列表。默认值：`["content"]`。 |
+| Regex | String | 否 | 提取字段的正则表达式，使用()标注待提取的字段。默认值：`(.*)`。 |
 | LogBeginRegex | String | 否 | 起始行正则表达式，仅当待采集日志为多行日志时使用。支持组合参见表3。 |
 | LogContinueRegex | String | 否 | 中间行正则表达式，仅当待采集日志为多行日志时使用。支持组合参见表3。 |
 | LogEndRegex | String | 否 | 结尾行正则表达式，仅当待采集日志为多行日志时使用。支持组合参见表3。 |
@@ -27,7 +27,7 @@
 | PreciseTimestampKey | String | 否 | 保存高精度时间戳的字段。如果未添加该参数，则默认使用precise_timestamp字段。 |
 | PreciseTimestampUnit | String | 否 | 高精度时间戳的单位，取值包括ms（毫秒）、us（微秒）、ns（纳秒）。如果未添加该参数，则默认为ms。 |
 | AdjustTimezone | Boolean | 否 | 是否调整日志时区。仅当TimeFormat参数有效时有效。如果未添加该参数，则默认使用false，表示使用机器时区。 |
-| LogTimezone | String | 否 | 时区偏移量，格式为GMT+HH:MM（东区）、GMT-HH:MM（西区）。仅当AdjustTimezone参数值为false时有效。 |
+| LogTimezone | String | 否 | 时区偏移量，格式为GMT+HH:MM（东区）、GMT-HH:MM（西区）。仅当AdjustTimezone参数值为true时有效。 |
 | EnableRawLog | Boolean | 否 | 是否上传原始日志。如果未添加该参数，则默认使用false，表示不上传原始日志。|
 | RawLogTag | String | 否 | 上传原始日志时，用于存放原始日志的字段，默认值：`__raw__`。 |
 | DiscardUnmatch | Boolean | 否 | 是否丢弃匹配失败的日志。如果未添加该参数，则默认使用true，表示丢弃匹配失败的日志。|

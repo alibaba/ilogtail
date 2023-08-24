@@ -95,7 +95,6 @@ public:
         std::string mPreciseTimestampKey;
         TimeStampUnit mPreciseTimestampUnit;
         bool mAdjustApsaraMicroTimezone = false;
-        bool mForceEnablePipeline = false;
     };
 
 public:
@@ -185,6 +184,7 @@ public:
     bool mIsFuseMode = false;
     bool mMarkOffsetFlag = false;
     bool mCollectBackwardTillBootTime = false;
+    bool mForceEnablePipeline = false;
     AdvancedConfig mAdvancedConfig;
 
     // Blacklist control.

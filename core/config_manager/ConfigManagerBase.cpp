@@ -304,8 +304,17 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
         Json::Value::Members mem = config["plugin"].getMemberNames();
         for (auto it = mem.begin(); it != mem.end(); ++it) {
             if (*it == "inputs" || *it == "processors" || *it == "flushers") {
-                for (size_t i = 0; i < config["plugin"][*it].size(); ++i) {
-                    stats[*it].insert(config["plugin"][*it][int(i)]["type"].asString());
+                for (int i = 0; i < config["plugin"][*it].size(); ++i) {
+                    std::string type = config["plugin"][*it][i]["type"].asString();
+                    stats[*it].insert(type);
+                    if (type == "service_docker_stdout") {
+                        if (config["plugin"][*it][i].isMember("detail") && config["plugin"][*it][i]["detail"].isObject()
+                            && config["plugin"][*it][i]["detail"].isMember("CollectContainersFlag")
+                            && config["plugin"][*it][i]["detail"]["CollectContainersFlag"].isBool()
+                            && config["plugin"][*it][i]["detail"]["CollectContainersFlag"].asBool()) {
+                            stats["inner_function"].insert("collect_containers_meta");
+                        }
+                    }
                 }
             }
         }
@@ -331,6 +340,13 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
         stats["inputs"].insert("file_log");
         stats["processors"].insert(processor);
         stats["flushers"].insert("flusher_sls");
+
+        if (config.isMember("advanced") && config["advanced"].isObject()
+            && config["advanced"].isMember("collect_containers_flag")
+            && config["advanced"]["collect_containers_flag"].isBool()
+            && config["advanced"]["collect_containers_flag"].asBool()) {
+            stats["inner_function"].insert("collect_containers_meta");
+        }
     }
 
     ScopedSpinLock lock(mPluginStatsLock);
@@ -598,6 +614,14 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     discardUnmatch);
 
                 // normal log file config can have plugin too
+                // Boolean force_enable_pipeline.
+                if (value.isMember("force_enable_pipeline") && value["force_enable_pipeline"].isBool()
+                    && value["force_enable_pipeline"].asBool()) {
+                    config->mForceEnablePipeline = true;
+                    LOG_INFO(sLogger,
+                             ("set force enable pipeline",
+                              config->mForceEnablePipeline)("project", projectName)("config", logName));
+                }
                 if (!pluginConfig.empty() && !pluginConfigJson.isNull()) {
                     if (pluginConfigJson.isMember("processors")
                         && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())
@@ -1169,6 +1193,10 @@ bool ConfigManagerBase::LoadJsonConfig(const Json::Value& jsonRoot, bool localFl
 // if checkTimeout, will not register the dir which is timeout
 // if not checkTimeout, will register the dir which is timeout and add it to the timeout list
 bool ConfigManagerBase::RegisterHandlersRecursively(const std::string& path, Config* config, bool checkTimeout) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     bool result = false;
     if (checkTimeout && config->IsTimeout(path))
         return result;
@@ -1305,6 +1333,10 @@ bool ConfigManagerBase::RegisterHandlers() {
 }
 
 void ConfigManagerBase::RegisterWildcardPath(Config* config, const string& path, int32_t depth) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return;
+    }
     bool finish;
     if ((depth + 1) == ((int)config->mWildcardPaths.size() - 1))
         finish = true;
@@ -1475,6 +1507,10 @@ bool ConfigManagerBase::RegisterDirectory(const std::string& source, const std::
 }
 
 bool ConfigManagerBase::RegisterHandlersWithinDepth(const std::string& path, Config* config, int depth) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     if (depth <= 0) {
         DirCheckPointPtr dirCheckPoint;
         if (CheckPointManager::Instance()->GetDirCheckPoint(path, dirCheckPoint) == false)
@@ -1518,6 +1554,10 @@ bool ConfigManagerBase::RegisterHandlersWithinDepth(const std::string& path, Con
 
 // path not terminated by '/', path already registered
 bool ConfigManagerBase::RegisterDescendants(const string& path, Config* config, int withinDepth) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     if (withinDepth <= 0) {
         return true;
     }

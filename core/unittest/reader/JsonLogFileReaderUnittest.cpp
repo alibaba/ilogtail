@@ -409,7 +409,7 @@ void JsonParseLogLineUnittest::TestCanBeParsed() {
                                     false);
     sls_logs::LogGroup logGroup;
     ParseLogError error;
-    time_t lastLogLineTime = 0;
+    LogtailTime lastLogLineTime = {0, 0};
     std::string lastLogTimeStr = "";
     uint32_t logGroupSize = 0;
     std::string testLog = "{\n"
@@ -435,7 +435,7 @@ void JsonParseLogLineUnittest::TestCanNotBeParsedUnDiscard() {
                                     false);
     sls_logs::LogGroup logGroup;
     ParseLogError error;
-    time_t lastLogLineTime = 0;
+    LogtailTime lastLogLineTime = {0, 0};
     std::string lastLogTimeStr = "";
     uint32_t logGroupSize = 0;
     logFileReader.mDiscardUnmatch = false;
@@ -462,7 +462,7 @@ void JsonParseLogLineUnittest::TestCanNotBeParsedDiscard() {
                                     false);
     sls_logs::LogGroup logGroup;
     ParseLogError error;
-    time_t lastLogLineTime = 0;
+    LogtailTime lastLogLineTime = {0, 0};
     std::string lastLogTimeStr = "";
     uint32_t logGroupSize = 0;
     logFileReader.mDiscardUnmatch = true;

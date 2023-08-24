@@ -40,6 +40,9 @@ inline bool EndWith(const std::string& input, const std::string& pattern) {
 
 std::string ToLowerCaseString(const std::string& orig);
 
+int StringCaseInsensitiveCmp(const std::string& s1, const std::string& s2);
+int CStringNCaseInsensitiveCmp(const char* s1, const char* s2, size_t n);
+
 inline std::string LeftTrimString(const std::string& str, const char trimChar = ' ') {
     auto s = str;
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [trimChar](int ch) { return trimChar != ch; }));

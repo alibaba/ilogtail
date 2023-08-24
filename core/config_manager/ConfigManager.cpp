@@ -238,7 +238,7 @@ Json::Value& ConfigManager::CheckPluginProcessor(Json::Value& pluginConfigJson, 
     }
     /*
     if (rootConfigJson["plugin"]
-        && !(rootConfigJson["advanced"] && rootConfigJson["advanced"]["force_enable_pipeline"])) {
+        && !(rootConfigJson["advanced"] && rootConfigJson["force_enable_pipeline"])) {
         return pluginConfigJson;
     }
     // when pipline is used, no need to split/parse/time using plugin
@@ -333,7 +333,7 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     } catch (const sdk::LOGException& e) {
         LOG_WARNING(
             sLogger,
-            ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage()));
+            ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage())("host", configServerAddress.host)("port", configServerAddress.port));
         return emptyResult;
     }
 }

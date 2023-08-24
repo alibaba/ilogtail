@@ -201,16 +201,6 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
             cfg.mAdvancedConfig.mAdjustApsaraMicroTimezone = GetBoolValue(advancedVal, "adjust_apsara_micro_timezone");
         }
     }
-    // Boolean force_enable_pipeline.
-    {
-        const Json::Value& val = advancedVal["force_enable_pipeline"];
-        if (val.isBool()) {
-            cfg.mAdvancedConfig.mForceEnablePipeline = val.asBool();
-            LOG_INFO(sLogger,
-                     ("set force enable pipeline", cfg.mAdvancedConfig.mForceEnablePipeline)(
-                         "project", cfg.mProjectName)("config", cfg.mConfigName));
-        }
-    }
 }
 
 // Configurations:

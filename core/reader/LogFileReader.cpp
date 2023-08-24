@@ -695,7 +695,9 @@ int LogFileReader::ParseAllLines(
 int32_t LogFileReader::ParseTime(const char* buffer, const std::string& timeFormat) {
     struct tm tm;
     memset(&tm, 0, sizeof(tm));
-    const char* result = strptime(buffer, timeFormat.c_str(), &tm);
+    long nanosecond = 0;
+    int nanosecondLength;
+    const char* result = strptime_ns(buffer, timeFormat.c_str(), &tm, &nanosecond, &nanosecondLength);
     tm.tm_isdst = -1;
     if (result != NULL) {
         time_t logTime = mktime(&tm);
@@ -1544,7 +1546,7 @@ void LogFileReader::handleUnmatchLogs(const char* buffer,
 
 bool LogFileReader::ParseLogTime(const char* buffer,
                                  const boost::regex* reg,
-                                 time_t& logTime,
+                                 LogtailTime& logTime,
                                  const std::string& timeFormat,
                                  const std::string& region,
                                  const std::string& project,
@@ -1558,7 +1560,8 @@ bool LogFileReader::ParseLogTime(const char* buffer,
             // convert log time
             struct tm t;
             memset(&t, 0, sizeof(t));
-            if (strptime(timeStr.c_str(), timeFormat.c_str(), &t) == NULL) {
+            int nanosecondLength;
+            if (strptime_ns(timeStr.c_str(), timeFormat.c_str(), &t, &logTime.tv_nsec, &nanosecondLength) == NULL) {
                 LOG_ERROR(sLogger,
                           ("convert time failed, time str", timeStr)("time format", timeFormat)("project", project)(
                               "logstore", logStore)("file", logPath));
@@ -1566,7 +1569,7 @@ bool LogFileReader::ParseLogTime(const char* buffer,
             }
 
             t.tm_isdst = -1;
-            logTime = mktime(&t);
+            logTime.tv_sec = mktime(&t);
             return true;
         }
     }
@@ -1584,7 +1587,7 @@ bool LogFileReader::ParseLogTime(const char* buffer,
 
 bool LogFileReader::GetLogTimeByOffset(const char* buffer,
                                        int32_t pos,
-                                       time_t& logTime,
+                                       LogtailTime& logTime,
                                        const std::string& timeFormat,
                                        const std::string& region,
                                        const std::string& project,
@@ -1592,7 +1595,9 @@ bool LogFileReader::GetLogTimeByOffset(const char* buffer,
                                        const std::string& logPath) {
     struct tm t;
     memset(&t, 0, sizeof(t));
-    if (strptime(buffer + pos, timeFormat.c_str(), &t) == NULL) {
+    long nanosecond = 0;
+    int nanosecondLength = 0;
+    if (strptime_ns(buffer + pos, timeFormat.c_str(), &t, &nanosecond, &nanosecondLength) == NULL) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                 LOG_WARNING(sLogger,
@@ -1605,7 +1610,7 @@ bool LogFileReader::GetLogTimeByOffset(const char* buffer,
         return false;
     }
     t.tm_isdst = -1;
-    logTime = mktime(&t);
+    logTime.tv_sec = mktime(&t);
     return true;
 }
 

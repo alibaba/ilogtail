@@ -36,12 +36,5 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+- [public] [both] [updated] support continue/end regex patterns to split multiline log
 
-- [public] [both] [updated] elasticsearch flusher new features: send batch request by bulk api and format index
-- [public] [both] [fixed] elasticsearch flusher panic
-- [public] [both] [doc] elasticsearch flusher config examples
-- [public] [both] [added] add new plugin: input_command
-- [public] [both] [added] add new plugin: processor_log_to_sls_metric
-- [public] [both] [fixed] fix service_go_profile nil panic
-- [public] [both] [fixed] service_prometheus support scale in kubernetes
-- [public] [both] [updated] support multiple regex patterns to split multiline log
