@@ -20,6 +20,8 @@ public:
     Counter* CopyAndReset();
 };
 
+using CounterPtr = std::shared_ptr<Counter>;
+
 class Gauge {
 private:
     std::string mName;
@@ -33,8 +35,6 @@ public:
     Gauge* CopyAndReset();
 };
 
-
-using CounterPtr = std::shared_ptr<Counter>;
 using GaugePtr = std::shared_ptr<Gauge>;
 
 using MetricLabels = std::vector<std::pair<std::string, std::string>>;
@@ -56,8 +56,8 @@ public:
     const LabelsPtr& GetLabels() const;
     const std::vector<CounterPtr>& GetCounters() const;
     const std::vector<GaugePtr>& GetGauges() const;
-    CounterPtr CreateCounter(const std::string& Name);
-    GaugePtr CreateGauge(const std::string& Name);
+    CounterPtr CreateCounter(const std::string& name);
+    GaugePtr CreateGauge(const std::string& name);
     MetricsRecord* CopyAndReset();
     void SetNext(MetricsRecord* next);
     MetricsRecord* GetNext() const;
@@ -70,8 +70,8 @@ private:
 public:
     ~MetricsRecordRef();
     void SetMetricsRecord(MetricsRecord* metricRecord);
-    CounterPtr CreateCounter(const std::string& Name);
-    GaugePtr CreateGauge(const std::string& Name);
+    CounterPtr CreateCounter(const std::string& name);
+    GaugePtr CreateGauge(const std::string& name);
     const MetricsRecord* operator->() const;
 };
 
@@ -90,7 +90,7 @@ public:
         static WriteMetrics* ptr = new WriteMetrics();
         return ptr;
     }
-    void PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& Labels);
+    void PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels);
     MetricsRecord* DoSnapshot();
 
 

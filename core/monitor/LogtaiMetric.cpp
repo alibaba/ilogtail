@@ -115,11 +115,11 @@ void MetricsRecordRef::SetMetricsRecord(MetricsRecord* metricRecord) {
     mMetrics = metricRecord;
 }
 
-CounterPtr MetricsRecordRef::CreateCounter(const std::string& Name) {
-    return mMetrics->CreateCounter(Name);
+CounterPtr MetricsRecordRef::CreateCounter(const std::string& name) {
+    return mMetrics->CreateCounter(name);
 }
-GaugePtr MetricsRecordRef::CreateGauge(const std::string& Name) {
-    return mMetrics->CreateGauge(Name);
+GaugePtr MetricsRecordRef::CreateGauge(const std::string& name) {
+    return mMetrics->CreateGauge(name);
 }
 
 const MetricsRecord* MetricsRecordRef::operator->() const {
