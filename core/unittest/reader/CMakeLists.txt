@@ -24,6 +24,12 @@ target_link_libraries(source_buffer_unittest unittest_base)
 add_executable(log_file_reader_unittest LogFileReaderUnittest.cpp)
 target_link_libraries(log_file_reader_unittest unittest_base)
 
+add_executable(last_matched_line_unittest LastMatchedLineUnittest.cpp)
+target_link_libraries(last_matched_line_unittest unittest_base)
+
+add_executable(log_split_unittest LogSplitUnittest.cpp)
+target_link_libraries(log_split_unittest unittest_base)
+
 add_executable(json_log_file_reader_unittest JsonLogFileReaderUnittest.cpp)
 target_link_libraries(json_log_file_reader_unittest unittest_base)
 

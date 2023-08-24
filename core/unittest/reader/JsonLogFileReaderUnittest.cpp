@@ -61,6 +61,8 @@ public:
         }
     }
     void TearDown() override { LogFileReader::BUFFER_SIZE = 1024 * 512; }
+    void TestReadGBK();
+    void TestReadUTF8();
     void TestLastMatchedLine();
 
     std::string projectName = "projectName";
@@ -75,10 +77,170 @@ public:
 };
 
 UNIT_TEST_CASE(JsonLogFileReaderUnittest, TestLastMatchedLine);
+UNIT_TEST_CASE(JsonLogFileReaderUnittest, TestReadGBK);
+UNIT_TEST_CASE(JsonLogFileReaderUnittest, TestReadUTF8);
 
 std::string JsonLogFileReaderUnittest::logPathDir;
 std::string JsonLogFileReaderUnittest::gbkFile;
 std::string JsonLogFileReaderUnittest::utf8File;
+
+void JsonLogFileReaderUnittest::TestReadGBK() {
+    { // buffer size big enough and is json
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 gbkFile,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_GBK,
+                                 false,
+                                 false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        reader.ReadGBK(logBuffer, fileSize, moreData);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        std::string recovered = logBuffer.rawBuffer.to_string();
+        std::replace(recovered.begin(), recovered.end(), '\0', '\n');
+        APSARA_TEST_STREQ_FATAL(expectedContent.get(), recovered.c_str());
+    }
+    { // buffer size not big enough to hold any json
+      // should read buffer size
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 gbkFile,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_GBK,
+                                 false,
+                                 false);
+        LogFileReader::BUFFER_SIZE = 23;
+        size_t BUFFER_SIZE_UTF8 = 25; // "{"first":"iLogtail 为可"
+        reader.SetLogMultilinePolicy("no matching pattern", ".*", ".*");
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        reader.ReadGBK(logBuffer, fileSize, moreData);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        APSARA_TEST_STREQ_FATAL(std::string(expectedContent.get(), BUFFER_SIZE_UTF8).c_str(),
+                                logBuffer.rawBuffer.data());
+    }
+    { // buffer size not big enough to hold all json
+        // should read until last json
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 gbkFile,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_GBK,
+                                 false,
+                                 false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 11;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        reader.ReadGBK(logBuffer, fileSize, moreData);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind(R"({"second")") - 1); // exclude tailing \n
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), logBuffer.rawBuffer.data());
+    }
+}
+
+void JsonLogFileReaderUnittest::TestReadUTF8() {
+    { // buffer size big enough and is json
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 utf8File,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_GBK,
+                                 false,
+                                 false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        reader.ReadUTF8(logBuffer, fileSize, moreData);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        std::string recovered = logBuffer.rawBuffer.to_string();
+        std::replace(recovered.begin(), recovered.end(), '\0', '\n');
+        APSARA_TEST_STREQ_FATAL(expectedContent.get(), recovered.c_str());
+    }
+    { // buffer size not big enough to hold any json
+      // should read buffer size
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 utf8File,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_GBK,
+                                 false,
+                                 false);
+        LogFileReader::BUFFER_SIZE = 25;
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        reader.ReadUTF8(logBuffer, fileSize, moreData);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        APSARA_TEST_STREQ_FATAL(std::string(expectedContent.get(), LogFileReader::BUFFER_SIZE).c_str(),
+                                logBuffer.rawBuffer.data());
+    }
+    { // buffer size not big enough to hold all json
+        // should read until last json
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 gbkFile,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_GBK,
+                                 false,
+                                 false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 11;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        reader.ReadGBK(logBuffer, fileSize, moreData);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind(R"({"second")") - 1); // exclude tailing \n
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), logBuffer.rawBuffer.data());
+    }
+}
 
 void JsonLogFileReaderUnittest::TestLastMatchedLine() {
     JsonLogFileReader logFileReader(projectName,
@@ -226,9 +388,7 @@ public:
     void TestCanNotBeParsedUnDiscard();
     void TestCanNotBeParsedDiscard();
 
-    static void SetUpTestCase() {
-        BOOL_FLAG(ilogtail_discard_old_data) = false;
-    }
+    static void SetUpTestCase() { BOOL_FLAG(ilogtail_discard_old_data) = false; }
 };
 
 UNIT_TEST_CASE(JsonParseLogLineUnittest, TestCanBeParsed);

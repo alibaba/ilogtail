@@ -157,9 +157,9 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
                     }
                     multiBegIndex = begIndex;
                 }
-                state = SPLIT_START;
+                state = SPLIT_BEGIN;
             } else {
-                if (state == SPLIT_START || state == SPLIT_CONTINUE) {
+                if (state == SPLIT_BEGIN || state == SPLIT_CONTINUE) {
                     state = SPLIT_CONTINUE;
                 }
                 if (!exception.empty() && AppConfig::GetInstance()->IsLogParseAlarmValid()) {

@@ -512,7 +512,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
             if (logType == PLUGIN_LOG) {
                 config = new Config(
-                    "", "", logType, logName, "", projectName, false, 0, 0, category, false, "", discardUnmatch);
+                    "", "", logType, logName, "", "", "", projectName, false, 0, 0, category, false, "", discardUnmatch);
                 if (pluginConfig.empty()) {
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
@@ -547,6 +547,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     logType,
                                     logName,
                                     "",
+                                    "",
+                                    "",
                                     projectName,
                                     false,
                                     0,
@@ -576,9 +578,17 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (size > 0 && PATH_SEPARATOR[0] == logPath[size - 1])
                     logPath = logPath.substr(0, size - 1);
 
-                string logBeingReg = GetStringValue(value, "log_begin_reg", "");
-                if (logBeingReg != "" && CheckRegFormat(logBeingReg) == false) {
-                    throw ExceptionBase("The log begin line is not value regex : " + logBeingReg);
+                string logBeginReg = GetStringValue(value, "log_begin_reg", "");
+                if (logBeginReg != "" && CheckRegFormat(logBeginReg) == false) {
+                    throw ExceptionBase("The log begin line is not value regex : " + logBeginReg);
+                }
+                string logContinueReg = GetStringValue(value, "log_continue_reg", "");
+                if (logContinueReg != "" && CheckRegFormat(logContinueReg) == false) {
+                    throw ExceptionBase("The log continue line is not value regex : " + logContinueReg);
+                }
+                string logEndReg = GetStringValue(value, "log_end_reg", "");
+                if (logEndReg != "" && CheckRegFormat(logEndReg) == false) {
+                    throw ExceptionBase("The log end line is not value regex : " + logEndReg);
                 }
                 string filePattern = GetStringValue(value, "file_pattern");
                 // raw log flag
@@ -591,7 +601,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     filePattern,
                                     logType,
                                     logName,
-                                    logBeingReg,
+                                    logBeginReg,
+                                    logContinueReg,
+                                    logEndReg,
                                     projectName,
                                     isPreserve,
                                     preserveDepth,
