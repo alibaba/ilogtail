@@ -14,5 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 echo -n "5=====" >> /root/a.log  # create an event to trigger read
-sleep 3
+sleep 5
 echo -e "\n6=====" >> /root/a.log

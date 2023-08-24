@@ -28,7 +28,7 @@ ilogtail:
             - Type: flusher_stdout
               OnlyStdout: false
               FileName: ./ilogtail.log
-  close_wait: 5s
+  close_wait: 10s
   mounts:
     - "./a.log:/root/test/a.log"
 verify:
