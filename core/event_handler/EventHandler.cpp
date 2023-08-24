@@ -487,7 +487,7 @@ void ModifyHandler::Handle(const Event& event) {
             // only set when reader array size is 1
             if (readerArray.size() == (size_t)1) {
                 readerArray[0]->SetFileDeleted(true);
-                if (readerArray[0]->IsReadToEnd() || readerArray[0]->HasDataInCache() || readerArray[0]->ShouldForceReleaseDeletedFileFd()) {
+                if (readerArray[0]->IsReadToEnd() || readerArray[0]->ShouldForceReleaseDeletedFileFd()) {
                     if (readerArray[0]->IsFileOpened()) {
                         LOG_INFO(
                             sLogger,
@@ -513,7 +513,7 @@ void ModifyHandler::Handle(const Event& event) {
             LogFileReaderPtrArray& readerArray = pair.second;
             for (auto& reader : readerArray) {
                 reader->SetContainerStopped();
-                if (reader->IsReadToEnd() || reader->HasDataInCache() || reader->ShouldForceReleaseDeletedFileFd()) {
+                if (reader->IsReadToEnd() || reader->ShouldForceReleaseDeletedFileFd()) {
                     if (reader->IsFileOpened()) {
                         LOG_INFO(
                             sLogger,

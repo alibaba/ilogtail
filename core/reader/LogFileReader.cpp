@@ -739,7 +739,6 @@ bool LogFileReader::CheckForFirstOpen(FileReadPolicy policy) {
         }
     }
 
-    policy = BACKWARD_TO_BEGINNING;
     if (policy == BACKWARD_TO_FIXED_POS) {
         SetFilePosBackwardToFixedPos(op);
     } else if (policy == BACKWARD_TO_BOOT_TIME) {
@@ -1966,8 +1965,7 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
 }
 
 std::unique_ptr<Event> LogFileReader::CreateFlushTimeoutEvent() {
-    std::string fileName = mHostLogPath.substr(mHostLogPathDir.size() + 1, mHostLogPath.size() - mHostLogPathDir.size() - 1);
-    auto result = std::unique_ptr<Event>(new Event(mHostLogPathDir, fileName, EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0, mDevInode.dev, mDevInode.inode));
+    auto result = std::unique_ptr<Event>(new Event(mHostLogPathDir, mHostLogPathFile, EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0, mDevInode.dev, mDevInode.inode));
     result->SetLastFilePos(mLastFilePos);
     result->SetLastReadPos(mLastReadPos);
     return result;
