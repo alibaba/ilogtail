@@ -21,6 +21,6 @@ services:
       dockerfile: Dockerfile
     hostname: container
     volumes:
-      - ./volume:/root/volume
+      - ./a.log:/root/a.log
     environment:
       - STDOUT_SWITCH=true
