@@ -396,6 +396,7 @@ protected:
     boost::regex* mLogContinueRegPtr;
     boost::regex* mLogEndRegPtr;
     int mReaderFlushTimeout;
+    bool mLastForceRead;
     FileEncoding mFileEncoding;
     bool mDiscardUnmatch;
     LogType mLogType;

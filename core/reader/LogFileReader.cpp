@@ -431,6 +431,7 @@ LogFileReader::LogFileReader(const string& projectName,
     mLogContinueRegPtr = NULL;
     mLogEndRegPtr = NULL;
     mReaderFlushTimeout = 5;
+    mLastForceRead = false;
     mDiscardUnmatch = discardUnmatch;
     mLastUpdateTime = time(NULL);
     mLastEventTime = mLastUpdateTime;
@@ -487,6 +488,7 @@ LogFileReader::LogFileReader(const std::string& projectName,
     mLogContinueRegPtr = NULL;
     mLogEndRegPtr = NULL;
     mReaderFlushTimeout = 5;
+    mLastForceRead = false;
     mDiscardUnmatch = discardUnmatch;
     mLastUpdateTime = time(NULL);
     mLastEventTime = mLastUpdateTime;
@@ -1785,29 +1787,26 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     if (!READ_BYTE) {
         return;
     }
-    StringBuffer sbuffer = logBuffer.AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
+    StringBuffer stringMemory = logBuffer.AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
     TruncateInfo* truncateInfo = nullptr;
-    size_t nbytes = ReadFile(mLogFileOp, sbuffer.data, READ_BYTE, mLastFilePos, &truncateInfo);
+    size_t nbytes = ReadFile(mLogFileOp, stringMemory.data, READ_BYTE, mLastFilePos, &truncateInfo);
+    char* stringBuffer = stringMemory.data;
+    // Ignore \n if last is force read
+    if (stringBuffer[0] == '\n' && mLastForceRead) {
+        ++stringBuffer;
+        ++mLastFilePos;
+        --nbytes;
+    }
     logBuffer.truncateInfo.reset(truncateInfo);
     mLastReadPos = mLastFilePos + nbytes;
     LOG_DEBUG(sLogger, ("read bytes", nbytes)("last read pos", mLastReadPos));
     moreData = (nbytes == BUFFER_SIZE);
     if (allowRollback) {
         if (moreData) {
-            nbytes = AlignLastCharacter(sbuffer.data, nbytes);
+            nbytes = AlignLastCharacter(stringBuffer, nbytes);
         }
-
-        // before: bufferptr[nbytes-1] == ?
-        // after: bufferptr[nbytes-1] == '\n' or nbytes == READ_BYTE
-        bool adjustFlag = false;
-        while (nbytes > 0 && sbuffer.data[nbytes - 1] != '\n') {
-            nbytes--;
-            adjustFlag = true;
-        }
-        if ((nbytes > 0 && (adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
-            int32_t rollbackLineFeedCount;
-            nbytes = LastMatchedLine(sbuffer.data, nbytes, rollbackLineFeedCount);
-        }
+        int32_t rollbackLineFeedCount;
+        nbytes = LastMatchedLine(stringBuffer, nbytes, rollbackLineFeedCount);
     }
 
     if (nbytes == 0) {
@@ -1827,18 +1826,19 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
         }
     }
     size_t stringLen = nbytes;
-    if (sbuffer.data[stringLen - 1] == '\n' || sbuffer.data[stringLen - 1] == '\0') {
+    if (stringBuffer[stringLen - 1] == '\n' || stringBuffer[stringLen - 1] == '\0') {
         --stringLen;
     }
-    sbuffer.data[stringLen] = '\0';
+    stringBuffer[stringLen] = '\0';
 
     if (!moreData && fromCpt && mLastReadPos < end) {
         moreData = true;
     }
-    logBuffer.rawBuffer = StringView(sbuffer.data, stringLen); // set readable buffer
+    logBuffer.rawBuffer = StringView(stringBuffer, stringLen); // set readable buffer
     setExactlyOnceCheckpointAfterRead(nbytes);
     mLastFilePos += nbytes;
 
+    mLastForceRead = !allowRollback;
     LOG_DEBUG(sLogger, ("read size", nbytes)("last file pos", mLastFilePos));
 }
 
@@ -1852,25 +1852,10 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     mLastReadPos = mLastFilePos + readCharCount;
     size_t originReadCount = readCharCount;
     moreData = (readCharCount == BUFFER_SIZE);
-    bool adjustFlag = false;
     bool logTooLongSplitFlag = false;
     if (allowRollback) {
         if (moreData) {
             READ_BYTE = readCharCount = AlignLastCharacter(gbkBuffer.get(), readCharCount);
-        }
-        while (readCharCount > 0 && gbkBuffer[readCharCount - 1] != '\n') {
-            readCharCount--;
-            adjustFlag = true;
-        }
-    }
-
-    if (readCharCount == 0) {
-        if (moreData) {
-            readCharCount = READ_BYTE;
-            // Cannot get the split position here, so just mark a flag and send alarm later
-            logTooLongSplitFlag = moreData;
-        } else {
-            return;
         }
     }
     gbkBuffer[readCharCount] = '\0';
@@ -1889,18 +1874,25 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         mLastFilePos += readCharCount;
         return;
     }
-    StringBuffer stringBuffer = logBuffer.AllocateStringBuffer(requiredLen + 1);
+    StringBuffer stringMemory = logBuffer.AllocateStringBuffer(requiredLen + 1);
     size_t resultCharCount = EncodingConverter::GetInstance()->ConvertGbk2Utf8(
-        gbkBuffer.get(), &srcLength, stringBuffer.data, stringBuffer.capacity, lineFeedPos);
+        gbkBuffer.get(), &srcLength, stringMemory.data, stringMemory.capacity, lineFeedPos);
+    char* stringBuffer = stringMemory.data;
+    // Ignore \n if last is force read
+    if (stringBuffer[0] == '\n' && mLastForceRead) {
+        ++stringBuffer;
+        ++mLastFilePos;
+        --resultCharCount;
+    }
     if (resultCharCount == 0) {
         mLastFilePos += readCharCount;
         return;
     }
     int32_t rollbackLineFeedCount = 0;
     if (allowRollback) {
-        if (((adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
+        if (moreData || mLogType == JSON_LOG) {
             int32_t bakResultCharCount = resultCharCount;
-            resultCharCount = LastMatchedLine(stringBuffer.data, resultCharCount, rollbackLineFeedCount);
+            resultCharCount = LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount);
             if (resultCharCount == 0) {
                 resultCharCount = bakResultCharCount;
                 rollbackLineFeedCount = 0;
@@ -1915,14 +1907,14 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         readCharCount -= lineFeedPos[lineFeedCount - 1] - lineFeedPos[lineFeedCount - 1 - rollbackLineFeedCount];
     }
     size_t stringLen = resultCharCount;
-    if (stringBuffer.data[stringLen - 1] == '\n' || stringBuffer.data[stringLen - 1] == '\0') {
+    if (stringBuffer[stringLen - 1] == '\n' || stringBuffer[stringLen - 1] == '\0') {
         --stringLen;
     }
-    stringBuffer.data[stringLen] = '\0';
+    stringBuffer[stringLen] = '\0';
     if (!moreData && fromCpt && mLastReadPos < end) {
         moreData = true;
     }
-    logBuffer.rawBuffer = StringView(stringBuffer.data, stringLen);
+    logBuffer.rawBuffer = StringView(stringBuffer, stringLen);
     setExactlyOnceCheckpointAfterRead(resultCharCount);
     mLastFilePos += readCharCount;
     if (logTooLongSplitFlag) {
@@ -1935,6 +1927,7 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
             << " first 1024B log: " << logBuffer.rawBuffer.substr(0, 1024) << std::endl;
         LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM, oss.str(), mProjectName, mCategory, mRegion);
     }
+    mLastForceRead = !allowRollback;
     LOG_DEBUG(sLogger,
               ("read gbk buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }

@@ -13,6 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-echo -n "5=====" >> /root/volume/simple.log
-sleep 5
-rm /root/volume/simple.log
+echo -n "5=====" >> /root/a.log  # create an event to trigger read
+sleep 3
+echo -e "\n6=====" >> /root/a.log

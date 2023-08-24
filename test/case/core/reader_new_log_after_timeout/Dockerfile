@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # Copyright 2021 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-echo -n "5=====" >> /root/volume/simple.log
-sleep 5
-rm /root/volume/simple.log
+
+FROM bash
+COPY run.sh /run.sh
+RUN chmod 755 /run.sh
+CMD ["sh", "-c", "/run.sh"]
