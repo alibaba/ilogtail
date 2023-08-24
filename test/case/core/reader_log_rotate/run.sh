@@ -14,6 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 echo -n "5=====" >> /root/volume/simple.log
-sleep 3
+sleep 5
 mv /root/volume/simple.log /root/volume/simple.log.1
 echo "6=====" >> /root/volume/simple.log
