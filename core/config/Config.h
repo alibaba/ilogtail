@@ -95,7 +95,6 @@ public:
         std::string mPreciseTimestampKey;
         TimeStampUnit mPreciseTimestampUnit;
         bool mAdjustApsaraMicroTimezone = false;
-        bool mForceEnablePipeline = false;
     };
 
 public:
@@ -108,6 +107,8 @@ public:
     LogType mLogType;
     std::string mConfigName; // name of log e.g. aliyun_com "##1.0##sls-zc-test$home-log"
     std::string mLogBeginReg; // the log begin line regex
+    std::string mLogContinueReg; // the log continue line regex
+    std::string mLogEndReg; // the log end line regex
     int mReaderFlushTimeout; // timeout in seconds to flush a non-terminated log buffer.
     std::string mProjectName; // project name
     bool mIsPreserve; // true is service dir, false is job dir
@@ -184,6 +185,7 @@ public:
     bool mIsFuseMode = false;
     bool mMarkOffsetFlag = false;
     bool mCollectBackwardTillBootTime = false;
+    bool mForceEnablePipeline = false;
     AdvancedConfig mAdvancedConfig;
 
     // Blacklist control.
@@ -232,6 +234,8 @@ public:
            LogType logType,
            const std::string& logName,
            const std::string& logBeginReg,
+           const std::string& logContinueReg,
+           const std::string& logEndReg,
            const std::string& projectName,
            bool isPreserve,
            int preserveDepth,

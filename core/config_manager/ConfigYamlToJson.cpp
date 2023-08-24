@@ -14,6 +14,7 @@
 
 #include "ConfigYamlToJson.h"
 #include "common/LogtailCommonFlags.h"
+#include "common/StringTools.h"
 #include "logger/Logger.h"
 #include <iostream>
 
@@ -73,6 +74,8 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileConfigMap["Keys"] = "keys";
     mFileConfigMap["Regex"] = "regex";
     mFileConfigMap["LogBeginRegex"] = "log_begin_reg";
+    mFileConfigMap["LogContinueRegex"] = "log_continue_reg";
+    mFileConfigMap["LogEndRegex"] = "log_end_reg";
     mFileConfigMap["ReaderFlushTimeout"] = "reader_flush_timeout";
     // params specific to delimiter accelerate processor
     mFileConfigMap["Separator"] = "delimiter_separator";
@@ -233,7 +236,6 @@ bool ConfigYamlToJson::GenerateLocalJsonConfig(const string configName,
             return false;
         }
 
-        FillupDefaultUserJsonConfig(workMode, userJsonConfig);
         if (!pluginJsonConfig.empty()) {
             if (yamlConfig["version"])
                 pluginJsonConfig["version"] = yamlConfig["version"].as<std::string>();
@@ -242,6 +244,8 @@ bool ConfigYamlToJson::GenerateLocalJsonConfig(const string configName,
             userJsonConfig["plugin"] = pluginJsonConfig;
         }
         userJsonConfig["log_type"] = workMode.mLogType;
+        FillupDefaultUserJsonConfig(workMode, userJsonConfig);
+
         if (yamlConfig["enable"])
             userJsonConfig["enable"] = yamlConfig["enable"].as<bool>();
         else
@@ -317,12 +321,41 @@ bool ConfigYamlToJson::CheckPluginConfig(const string configName, const YAML::No
                               "accelerate_processor", workMode.mAccelerateProcessorPluginType));
                 return false;
             }
+            if (!BOOL_FLAG(enable_new_pipeline)) {
+                if (flusherPluginsInfo.size() > 1) {
+                    LOG_ERROR(
+                        sLogger,
+                        ("CheckPluginConfig failed", "accelerateProcessor must only be used with flusher_sls plugin.")(
+                            "config_name", configName)("flusher_plugin_size", flusherPluginsInfo.size())(
+                            "accelerate_processor", workMode.mAccelerateProcessorPluginType));
+                    return false;
+                }
+                if (flusherPluginsInfo.size() != 0
+                    && flusherPluginsInfo.find("flusher_sls") == flusherPluginsInfo.end()) {
+                    unordered_map<string, PluginInfo>::iterator it = flusherPluginsInfo.begin();
+                    LOG_ERROR(sLogger,
+                              ("CheckPluginConfig failed", "accelerateProcessor must be used with flusher_sls plugin.")(
+                                  "config_name", configName)("flusher_plugin_type", it->first)(
+                                  "accelerate_processor", workMode.mAccelerateProcessorPluginType));
+                    return false;
+                }
+            }
             break;
         } else {
             if (0 == workMode.mLogSplitProcessorPluginType.size()
                 && (0 == processorPluginType.compare(PROCESSOR_SPLIT_LINE_LOG_USING_SEP)
                     || 0 == processorPluginType.compare(PROCESSOR_SPLIT_LINE_LOG_USING_REG))) {
                 workMode.mLogSplitProcessorPluginType = processorPluginType;
+                if (!BOOL_FLAG(enable_new_pipeline)) {
+                    if (iter->second.mFirstPos != 0) {
+                        LOG_ERROR(sLogger,
+                                  ("CheckPluginConfig failed",
+                                   "processor_split_log_string and processor_split_log_regex must be first processor.")(
+                                      "config_name", configName)("processor_plugin_type", processorPluginType)(
+                                      "first_postion", iter->second.mFirstPos)("times", iter->second.mTimes));
+                        return false;
+                    }
+                }
             }
         }
     }
@@ -344,6 +377,14 @@ bool ConfigYamlToJson::CheckPluginConfig(const string configName, const YAML::No
             sLogger,
             ("CheckPluginConfig failed", "not file mode but has accelerate processor.")("config_name", configName));
         return false;
+    }
+    if (!BOOL_FLAG(enable_new_pipeline)) {
+        if (workMode.mIsFileMode && workMode.mHasAccelerateProcessor && processorPluginsInfo.size() != 1) {
+            LOG_ERROR(sLogger,
+                      ("CheckPluginConfig failed",
+                       "when use accelerate processor, can not use other processors.")("config_name", configName));
+            return false;
+        }
     }
 
     if (flusherPluginsInfo.size() == 0) {
@@ -524,13 +565,13 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForFileMode(const YAML::Node& yaml
             userJsonConfig["docker_file"] = true;
         }
     }
+    userJsonConfig["force_enable_pipeline"] = true;
     if (0 != k8sConfig.size()) {
         advancedConfig["k8s"] = k8sConfig;
     }
     if (0 != blackListConfig.size()) {
         advancedConfig["blacklist"] = blackListConfig;
     }
-    advancedConfig["force_enable_pipeline"] = true;
     if (0 != advancedConfig.size()) {
         userJsonConfig["advanced"] = advancedConfig;
     }
@@ -576,6 +617,28 @@ bool ConfigYamlToJson::FillupDefaultUserJsonConfig(const WorkMode& workMode, Jso
             }
             if (!userJsonConfig.isMember("keys")) {
                 userJsonConfig["keys"][0] = "content";
+            }
+        }
+
+        // Copy SplitRegex to log_begin_reg. If enable_new_pipeline, the first split plugin should be removed.
+        if (!workMode.mLogSplitProcessorPluginType.empty()) {
+            auto& processors = userJsonConfig["plugin"][PLUGIN_CATEGORY_PROCESSORS];
+            auto& splitProcessor = processors[0];
+            if (splitProcessor["type"].asString() == PROCESSOR_SPLIT_LINE_LOG_USING_SEP) {
+                if (BOOL_FLAG(enable_new_pipeline)) {
+                    Json::Value removed;
+                    processors.removeIndex(0, &removed);
+                }
+            } else if (splitProcessor["type"].asString() == PROCESSOR_SPLIT_LINE_LOG_USING_REG) {
+                for (const auto& name : splitProcessor["detail"].getMemberNames()) {
+                    if (0 == StringCaseInsensitiveCmp(name.c_str(), "SplitRegex")) {
+                        userJsonConfig["log_begin_reg"] = splitProcessor["detail"][name];
+                    }
+                }
+                if (BOOL_FLAG(enable_new_pipeline)) {
+                    Json::Value removed;
+                    processors.removeIndex(0, &removed);
+                }
             }
         }
     }

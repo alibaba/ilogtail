@@ -109,6 +109,7 @@ static void overwrite_community_edition_flags() {
     STRING_FLAG(ilogtail_docker_file_path_config) = "checkpoint/docker_path_config.json";
     INT32_FLAG(data_server_port) = 443;
     BOOL_FLAG(enable_env_ref_in_config) = true;
+    BOOL_FLAG(enable_containerd_upper_dir_detect) = true;
 }
 
 // Main routine of worker process.
@@ -215,7 +216,7 @@ void do_worker_process() {
     ConfigManager::GetInstance()->LoadConfig(AppConfig::GetInstance()->GetUserConfigPath());
     PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
-    // mNameCoonfigMap is empty, configExistFlag is false
+    // mNameConfigMap is empty, configExistFlag is false
     bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();
 
     // set max open file limit

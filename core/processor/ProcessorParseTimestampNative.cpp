@@ -66,31 +66,35 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
         return true;
     }
     const StringView& timeStr = sourceEvent.GetContent(mTimeKey);
-    time_t logTime = 0;
+    LogtailTime logTime = {0, 0};
     uint64_t preciseTimestamp = 0;
     bool parseSuccess = ParseLogTime(timeStr, logPath, logTime, preciseTimestamp, timeStrCache);
     if (!parseSuccess) {
         return true;
     }
-    if (logTime <= 0
-        || (BOOL_FLAG(ilogtail_discard_old_data) && (time(NULL) - logTime) > INT32_FLAG(ilogtail_discard_interval))) {
+    if (logTime.tv_sec <= 0
+        || (BOOL_FLAG(ilogtail_discard_old_data)
+            // Adjust time(NULL) from local timezone to target timezone
+            && (time(NULL) - logTime.tv_sec) > INT32_FLAG(ilogtail_discard_interval))) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-            if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
-                LOG_WARNING(
-                    GetContext().GetLogger(),
-                    ("discard history data", timeStr)("timestamp", logTime)("project", GetContext().GetProjectName())(
-                        "logstore", GetContext().GetLogstoreName())("file", logPath));
+            if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                LOG_WARNING(sLogger,
+                            ("discard history data", timeStr)("time now", time(NULL))("timestamp", logTime.tv_sec)(
+                                "nanosecond", logTime.tv_nsec)("tzOffsetSecond", mLogTimeZoneOffsetSecond)(
+                                "INT32_FLAG(ilogtail_discard_interval)",
+                                INT32_FLAG(ilogtail_discard_interval))("project", GetContext().GetProjectName())(
+                                "logstore", GetContext().GetLogstoreName())("file", logPath));
             }
-            GetContext().GetAlarm().SendAlarm(OUTDATED_LOG_ALARM,
-                                              std::string("logTime: ") + ToString(logTime),
-                                              GetContext().GetProjectName(),
-                                              GetContext().GetLogstoreName(),
-                                              GetContext().GetRegion());
+            LogtailAlarm::GetInstance()->SendAlarm(OUTDATED_LOG_ALARM,
+                                                   std::string("logTime: ") + ToString(logTime.tv_sec),
+                                                   GetContext().GetProjectName(),
+                                                   GetContext().GetLogstoreName(),
+                                                   GetContext().GetRegion());
         }
         ++(*mHistoryFailures);
         return false;
     }
-    sourceEvent.SetTimestamp(logTime);
+    sourceEvent.SetTimestamp(logTime.tv_sec);
     if (mLegacyPreciseTimestampConfig.enabled) {
         int preciseTimestampLen = 0;
         do {
@@ -105,75 +109,67 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
 
 bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, // str to parse
                                                  const StringView& logPath,
-                                                 time_t& logTime,
+                                                 LogtailTime& logTime,
                                                  uint64_t& preciseTimestamp,
-                                                 StringView& timeStr // cache
+                                                 StringView& timeStrCache // cache
 ) {
-    if (timeStr.empty() || !curTimeStr.starts_with(timeStr)) {
-        // current implementation requires curTimeStr to be a C-style zero terminated string
-        // have to copy it.
-        // TODO: use better strptime which accepts string length
-        char curTimeBuf[128] = "";
-        size_t curTimeBufSize = std::min(127UL, curTimeStr.size());
-        memcpy(curTimeBuf, curTimeStr.data(), curTimeBufSize);
-        curTimeBuf[curTimeBufSize] = '\0';
-        struct tm tm;
-        memset(&tm, 0, sizeof(tm));
-        // In order to handle timestamp not in seconds, curTimeStr will be truncated,
-        // only the front 10 charaters will be used.
-        // NOTE: This method can only work until 2286/11/21 1:46:39 (9999999999).
-        bool keepTimeStr = (strcmp("%s", mTimeFormat.c_str()) != 0);
-        const char* strptimeResult = NULL;
-        if (keepTimeStr) {
-            strptimeResult = Strptime(curTimeBuf, mTimeFormat.c_str(), &tm, mSpecifiedYear);
+    // Second-level cache only work when:
+    // 1. No %f in the time format
+    // 2. The %f is at the end of the time format
+    const char* compareResult = strstr(mTimeFormat.c_str(), "%f");
+    bool haveNanosecond = compareResult != nullptr;
+    bool endWithNanosecond = compareResult == (mTimeFormat.c_str() + mTimeFormat.size() - 2);
+    int nanosecondLength = -1;
+    const char* strptimeResult = NULL;
+    if ((!haveNanosecond || endWithNanosecond) && IsPrefixString(curTimeStr, timeStrCache)) {
+        if (endWithNanosecond) {
+            strptimeResult = Strptime(curTimeStr.data() + timeStrCache.length(), "%f", &logTime, nanosecondLength);
         } else {
-            size_t substrsize = std::min(10UL, curTimeBufSize);
-            char tmp = curTimeBuf[substrsize];
-            curTimeBuf[substrsize] = '\0';
-            strptimeResult = Strptime(curTimeBuf, mTimeFormat.c_str(), &tm);
-            curTimeBuf[substrsize] = tmp;
-        }
-        if (NULL == strptimeResult) {
-            if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-                if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
-                    LOG_WARNING(
-                        GetContext().GetLogger(),
-                        ("parse time fail", curTimeStr)("project", GetContext().GetProjectName())(
-                            "logstore", GetContext().GetLogstoreName())("file", logPath)("keep time str", keepTimeStr));
-                }
-                GetContext().GetAlarm().SendAlarm(PARSE_TIME_FAIL_ALARM,
-                                                  curTimeStr.to_string() + " " + mTimeFormat
-                                                      + " flag: " + std::to_string(keepTimeStr),
-                                                  GetContext().GetProjectName(),
-                                                  GetContext().GetLogstoreName(),
-                                                  GetContext().GetRegion());
-            }
-
-            ++mParseTimeFailures;
-            return false;
-        }
-        tm.tm_isdst = -1;
-        logTime = mktime(&tm);
-        timeStr = StringView(curTimeStr.data(), strptimeResult - curTimeBuf);
-
-        if (mLegacyPreciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(logTime,
-                                                   strptimeResult,
-                                                   curTimeBufSize - timeStr.size(),
-                                                   mLegacyPreciseTimestampConfig,
-                                                   mLogTimeZoneOffsetSecond);
+            strptimeResult = curTimeStr.data() + timeStrCache.length();
+            logTime.tv_nsec = 0;
         }
     } else {
-        if (mLegacyPreciseTimestampConfig.enabled) {
-            preciseTimestamp = GetPreciseTimestamp(logTime,
-                                                   curTimeStr.data() + timeStr.size(),
-                                                   curTimeStr.size() - timeStr.size(),
-                                                   mLegacyPreciseTimestampConfig,
-                                                   mLogTimeZoneOffsetSecond);
+        strptimeResult = Strptime(curTimeStr.data(), mTimeFormat.c_str(), &logTime, nanosecondLength, mSpecifiedYear);
+        timeStrCache = curTimeStr.substr(0, curTimeStr.length() - nanosecondLength);
+        logTime.tv_sec = logTime.tv_sec - mLogTimeZoneOffsetSecond;
+    }
+    if (NULL == strptimeResult) {
+        if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
+            if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                LOG_WARNING(sLogger,
+                            ("parse time fail", curTimeStr)("project", GetContext().GetProjectName())(
+                                "logstore", GetContext().GetLogstoreName())("file", logPath));
+            }
+            LogtailAlarm::GetInstance()->SendAlarm(PARSE_TIME_FAIL_ALARM,
+                                                   curTimeStr.to_string() + " " + mTimeFormat,
+                                                   GetContext().GetProjectName(),
+                                                   GetContext().GetLogstoreName(),
+                                                   GetContext().GetRegion());
         }
+
+        ++(*mParseTimeFailures);
+        return false;
     }
 
-    logTime -= mLogTimeZoneOffsetSecond;
+    if (mLegacyPreciseTimestampConfig.enabled) {
+        if (nanosecondLength < 0) {
+            preciseTimestamp = GetPreciseTimestamp(logTime.tv_sec, strptimeResult, mLegacyPreciseTimestampConfig);
+        } else {
+            preciseTimestamp = GetPreciseTimestampFromLogtailTime(logTime, mLegacyPreciseTimestampConfig);
+        }
+    }
+    return true;
+}
+
+bool ProcessorParseTimestampNative::IsPrefixString(const StringView& all, const StringView& prefix) {
+    if (all.size() < prefix.size())
+        return false;
+    if (prefix.size() == 0)
+        return false;
+    for (size_t i = 0; i < prefix.size(); ++i) {
+        if (all[i] != prefix[i])
+            return false;
+    }
     return true;
 }
 

@@ -64,7 +64,7 @@ void JsonLogFileReader::SetTimeKey(const std::string& timeKey) {
 bool JsonLogFileReader::ParseLogLine(StringView buffer,
                                      sls_logs::LogGroup& logGroup,
                                      ParseLogError& error,
-                                     time_t& lastLogLineTime,
+                                     LogtailTime& lastLogLineTime,
                                      std::string& lastLogTimeStr,
                                      uint32_t& logGroupSize) {
     if (buffer.empty())
@@ -146,14 +146,11 @@ bool JsonLogFileReader::ParseLogLine(StringView buffer,
 
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
-        timespec ts;
-        clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+        auto now = GetCurrentLogtailTime();
         if (mUseSystemTime) {
-            SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
+            SetLogTime(logPtr, now.tv_sec, now.tv_nsec);
         } else {
-            SetLogTime(logPtr,
-                       lastLogLineTime,
-                       GetNanoSecondsFromPreciseTimestamp(preciseTimestamp, mPreciseTimestampConfig.unit));
+            SetLogTime(logPtr, lastLogLineTime.tv_sec, lastLogLineTime.tv_nsec);
         }
         for (rapidjson::Value::ConstMemberIterator itr = doc.MemberBegin(); itr != doc.MemberEnd(); ++itr) {
             const rapidjson::Value& contentKey = itr->name;

@@ -37,14 +37,22 @@ bool Pipeline::Init(const PipelineConfig& config) {
     mContext.SetProjectName(config.mProjectName);
     mContext.SetRegion(config.mRegion);
 
-    if (config.mLogType == STREAM_LOG || config.mLogType == PLUGIN_LOG
-        || (config.mPluginProcessFlag && !config.mAdvancedConfig.mForceEnablePipeline)) {
-        return true; // this may not apply if flusher is part of the pipeline
-    }
-
     int pluginIndex = 0;
     // Input plugin
     pluginIndex++;
+
+    if (config.mLogType == STREAM_LOG || config.mLogType == PLUGIN_LOG) {
+        return true;
+    }
+    if (config.mPluginProcessFlag && !config.mForceEnablePipeline) {
+        std::unique_ptr<ProcessorInstance> pluginGroupInfo = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorFillGroupInfoNative::Name(),
+            std::string(ProcessorFillGroupInfoNative::Name()) + "/" + std::to_string(pluginIndex++));
+        if (!InitAndAddProcessor(std::move(pluginGroupInfo), config)) {
+            return false;
+        }
+        return true;
+    }
 
     std::unique_ptr<ProcessorInstance> pluginDecoder;
     if (config.mLogType == JSON_LOG || config.mLogBeginReg.empty() || config.mLogBeginReg == ".*") {

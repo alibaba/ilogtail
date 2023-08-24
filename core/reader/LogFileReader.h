@@ -28,6 +28,7 @@
 #include "common/EncodingConverter.h"
 #include "common/DevInode.h"
 #include "common/LogFileOperator.h"
+#include "logger/Logger.h"
 #include "log_pb/sls_logs.pb.h"
 #include "config/LogType.h"
 #include "common/FileInfo.h"
@@ -43,7 +44,7 @@ class DevInode;
 typedef std::shared_ptr<LogFileReader> LogFileReaderPtr;
 typedef std::deque<LogFileReaderPtr> LogFileReaderPtrArray;
 
-enum SplitState { SPLIT_UNMATCH, SPLIT_START, SPLIT_CONTINUE, SPLIT_END };
+enum SplitState { SPLIT_UNMATCH, SPLIT_BEGIN, SPLIT_CONTINUE };
 
 // Only get the currently written log file, it will choose the last modified file to read. There are several condition
 // to choose the lastmodify file:
@@ -118,14 +119,10 @@ public:
         return mLastUpdateTime;
     }
     // this function should only be called once
-    void SetLogBeginRegex(const std::string& reg) {
-        if (mLogBeginRegPtr != NULL) {
-            delete mLogBeginRegPtr;
-            mLogBeginRegPtr = NULL;
-        }
-        if (reg.empty() == false && reg != ".*") {
-            mLogBeginRegPtr = new boost::regex(reg.c_str());
-        }
+    void SetLogMultilinePolicy(const std::string& begReg, const std::string& conReg, const std::string& endReg);
+
+    bool IsMultiLine() {
+        return mLogBeginRegPtr != NULL || mLogContinueRegPtr != NULL || mLogEndRegPtr != NULL;
     }
 
     void SetReaderFlushTimeout(int timeout) { mReaderFlushTimeout = timeout; }
@@ -269,7 +266,7 @@ public:
     virtual bool ParseLogLine(StringView buffer,
                               sls_logs::LogGroup& logGroup,
                               ParseLogError& error,
-                              time_t& lastLogLineTime,
+                              LogtailTime& lastLogLineTime,
                               std::string& lastLogTimeStr,
                               uint32_t& logGroupSize)
         = 0;
@@ -282,7 +279,7 @@ public:
     // added by xianzhi(bowen.gbw@antfin.com)
     static bool ParseLogTime(const char* buffer,
                              const boost::regex* reg,
-                             time_t& logTime,
+                             LogtailTime& logTime,
                              const std::string& timeFormat,
                              const std::string& region = "",
                              const std::string& project = "",
@@ -290,7 +287,7 @@ public:
                              const std::string& logPath = "");
     static bool GetLogTimeByOffset(const char* buffer,
                                    int32_t pos,
-                                   time_t& logTime,
+                                   LogtailTime& logTime,
                                    const std::string& timeFormat,
                                    const std::string& region = "",
                                    const std::string& project = "",
@@ -396,6 +393,8 @@ protected:
     std::string mTopicName;
     time_t mLastUpdateTime;
     boost::regex* mLogBeginRegPtr;
+    boost::regex* mLogContinueRegPtr;
+    boost::regex* mLogEndRegPtr;
     int mReaderFlushTimeout;
     FileEncoding mFileEncoding;
     bool mDiscardUnmatch;
@@ -552,6 +551,12 @@ private:
     void updatePrimaryCheckpointSignature();
     void updatePrimaryCheckpointRealPath();
 
+    void handleUnmatchLogs(const char* buffer,
+                                   int& multiBeginIndex,
+                                   int endIndex,
+                                   std::vector<StringView>& logIndex,
+                                   std::vector<StringView>& discardIndex);
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class LogFileReaderUnittest;
@@ -560,6 +565,11 @@ private:
     friend class SenderUnittest;
     friend class AppConfigUnittest;
     friend class ModifyHandlerUnittest;
+    friend class LogSplitUnittest;
+    friend class LogSplitDiscardUnmatchUnittest;
+    friend class LogSplitNoDiscardUnmatchUnittest;
+    friend class LastMatchedLineDiscardUnmatchUnittest;
+    friend class LastMatchedLineNoDiscardUnmatchUnittest;
 
 protected:
     void UpdateReaderManual();
