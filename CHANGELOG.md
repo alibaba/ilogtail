@@ -36,6 +36,7 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+
 - [public] [both] [updated] support continue/end regex patterns to split multiline log
 - [public] [both] [updated] support reader flush timeout
-
+- [public] [both] [added] add new logtail metric module

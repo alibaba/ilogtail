@@ -122,7 +122,6 @@ target_link_libraries(${LOGTAIL_TARGET}
         models
         monitor
         sender
-        profiler
         profile_sender
         app_config
         sls_control
