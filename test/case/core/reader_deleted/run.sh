@@ -15,5 +15,5 @@
 # limitations under the License.
 sleep 3
 echo -n "5=====" >> /root/volume/simple.log
-sleep 1
+sleep 3
 rm /root/volume/simple.log
