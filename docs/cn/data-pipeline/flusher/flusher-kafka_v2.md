@@ -83,7 +83,7 @@ inputs:
     LogPath: /home/test_log
     FilePattern: "*.log"
 flushers:
-  - Type: flusher_kafka
+  - Type: flusher_kafka_v2
     Brokers:
       - 192.XX.XX.1:9092
       - 192.XX.XX.2:9092
@@ -102,7 +102,7 @@ inputs:
     LogPath: /home/test_log
     FilePattern: "*.log"
 flushers:
-  - Type: flusher_kafka
+  - Type: flusher_kafka_v2
     Brokers: 
       - 192.XX.XX.1:9092
       - 192.XX.XX.2:9092
@@ -222,7 +222,7 @@ inputs:
     LogPath: /home/test_log
     FilePattern: "*.log"
 flushers:
-  - Type: flusher_kafka
+  - Type: flusher_kafka_v2
     Brokers: 
       - 192.XX.XX.1:9092
       - 192.XX.XX.2:9092

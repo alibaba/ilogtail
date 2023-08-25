@@ -32,12 +32,12 @@
 #include "sender/Sender.h"
 #include "log_pb/sls_logs.pb.h"
 #include "common/StringTools.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
 #include "config/IntegrityConfig.h"
 #include "app_config/AppConfig.h"
-#include "profiler/LogFileProfiler.h"
+#include "monitor/LogFileProfiler.h"
 #include "config_manager/ConfigManager.h"
 #include "logger/Logger.h"
 #include "aggregator/Aggregator.h"
@@ -412,7 +412,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                 // linesCount += lines;
                 // LOG_INFO(sLogger, ("Logprocess lines", lines)("Total lines", linesCount));
                 LogGroup logGroup;
-                time_t lastLogLineTime = 0;
+                LogtailTime lastLogLineTime = {0, 0};
                 string lastLogTimeStr = "";
                 uint32_t logGroupSize = 0;
                 int32_t successLogSize = 0;
@@ -438,10 +438,6 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                             if (config->mUploadRawLog) {
                                 LogParser::AddLog(
                                     logPtr, config->mAdvancedConfig.mRawLogTag, buffer + logIndex[i], logGroupSize);
-                            }
-                            if (successful && config->mTimeZoneAdjust) {
-                                LogParser::AdjustLogTime(
-                                    logPtr, config->mLogTimeZoneOffsetSecond, localTimeZoneOffsetSecond);
                             }
                             if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
                                 logPtr->set_time(logPtr->time() + GetTimeDelta());

@@ -43,10 +43,10 @@
 #include "common/GlobalPara.h"
 #include "common/version.h"
 #include "config/UserLogConfigParser.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogFileProfiler.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
 #include "app_config/AppConfig.h"
 #include "config_manager/ConfigYamlToJson.h"
 #include "checkpoint/CheckPointManager.h"
@@ -1149,6 +1149,10 @@ bool ConfigManagerBase::LoadJsonConfig(const Json::Value& jsonRoot, bool localFl
 // if checkTimeout, will not register the dir which is timeout
 // if not checkTimeout, will register the dir which is timeout and add it to the timeout list
 bool ConfigManagerBase::RegisterHandlersRecursively(const std::string& path, Config* config, bool checkTimeout) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     bool result = false;
     if (checkTimeout && config->IsTimeout(path))
         return result;
@@ -1285,6 +1289,10 @@ bool ConfigManagerBase::RegisterHandlers() {
 }
 
 void ConfigManagerBase::RegisterWildcardPath(Config* config, const string& path, int32_t depth) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return;
+    }
     bool finish;
     if ((depth + 1) == ((int)config->mWildcardPaths.size() - 1))
         finish = true;
@@ -1455,6 +1463,10 @@ bool ConfigManagerBase::RegisterDirectory(const std::string& source, const std::
 }
 
 bool ConfigManagerBase::RegisterHandlersWithinDepth(const std::string& path, Config* config, int depth) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     if (depth <= 0) {
         DirCheckPointPtr dirCheckPoint;
         if (CheckPointManager::Instance()->GetDirCheckPoint(path, dirCheckPoint) == false)
@@ -1498,6 +1510,10 @@ bool ConfigManagerBase::RegisterHandlersWithinDepth(const std::string& path, Con
 
 // path not terminated by '/', path already registered
 bool ConfigManagerBase::RegisterDescendants(const string& path, Config* config, int withinDepth) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     if (withinDepth <= 0) {
         return true;
     }
