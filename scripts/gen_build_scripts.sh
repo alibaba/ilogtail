@@ -24,7 +24,7 @@ set -o pipefail
 # e2e: Build plugin dynamic lib with GOC and build the CPP part.
 CATEGORY=$1
 GENERATED_HOME=$2
-VERSION=${3:-1.7.0}
+VERSION=${3:-1.7.1}
 REPOSITORY=${4:-aliyun/ilogtail}
 OUT_DIR=${5:-output}
 EXPORT_GO_ENVS=${6:-${DOCKER_BUILD_EXPORT_GO_ENVS:-true}}
@@ -60,7 +60,7 @@ ram_limit_nproc=\$((ram_size / 1024 / 768))
 EOF
 
   if [ $EXPORT_GO_ENVS ]; then
-    envs=($(go env | grep -E 'GOPRIVATE=".+"|GOPROXY=".+"'))
+    envs=($(go env | grep -E 'GOPRIVATE=(".+"|'\''.+'\'')|GOPROXY=(".+"|'\''.+'\'')'))
     for v in ${envs[@]}; do
       echo "go env -w $v" >> $BUILD_SCRIPT_FILE
     done
