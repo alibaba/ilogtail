@@ -17,8 +17,8 @@
 #pragma once
 #include "models/PipelineEventGroup.h"
 #include "logger/Logger.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogFileProfiler.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogFileProfiler.h"
 
 namespace logtail {
 
