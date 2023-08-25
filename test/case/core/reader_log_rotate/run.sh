@@ -13,8 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-sleep 3
+sleep 6
 echo -n "5=====" >> /root/volume/simple.log
-sleep 3
 mv /root/volume/simple.log /root/volume/simple.log.1
 echo "6=====" >> /root/volume/simple.log
