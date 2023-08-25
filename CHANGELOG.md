@@ -37,4 +37,5 @@ your changes, such as:
 
 ## [Unreleased]
 - [public] [both] [updated] support continue/end regex patterns to split multiline log
+- [public] [both] [updated] support reader flush timeout
 
