@@ -15,4 +15,5 @@
 # limitations under the License.
 sleep 3
 echo -n "5=====" >> /root/a.log  # create an event to trigger read
+sleep 1
 echo -e "\n6=====" >> /root/a.log
