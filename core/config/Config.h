@@ -109,6 +109,7 @@ public:
     std::string mLogBeginReg; // the log begin line regex
     std::string mLogContinueReg; // the log continue line regex
     std::string mLogEndReg; // the log end line regex
+    int mReaderFlushTimeout; // timeout in seconds to flush a non-terminated log buffer.
     std::string mProjectName; // project name
     bool mIsPreserve; // true is service dir, false is job dir
     int mPreserveDepth; // for job dir, the depth that will not be watch timeout
@@ -243,6 +244,7 @@ public:
            bool uploadRawLog = false,
            const std::string& StreamLogTag = "",
            bool discardUnmatch = true,
+           int readerFlushTimeout = 5,
            std::list<std::string>* regs = NULL,
            std::list<std::string>* keys = NULL,
            std::string timeFormat = "");

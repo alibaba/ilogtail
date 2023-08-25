@@ -113,7 +113,7 @@ public:
                   bool discardUnmatch,
                   bool dockerFileFlag);
 
-    bool ReadLog(LogBuffer& logBuffer);
+    bool ReadLog(LogBuffer& logBuffer, const Event* event);
     time_t GetLastUpdateTime() const // actually it's the time whenever ReadLogs is called
     {
         return mLastUpdateTime;
@@ -124,6 +124,8 @@ public:
     bool IsMultiLine() {
         return mLogBeginRegPtr != NULL || mLogContinueRegPtr != NULL || mLogEndRegPtr != NULL;
     }
+
+    void SetReaderFlushTimeout(int timeout) { mReaderFlushTimeout = timeout; }
 
     std::string GetTopicName(const std::string& topicConfig, const std::string& path);
 
@@ -254,6 +256,8 @@ public:
 
     bool IsReadToEnd() const { return mLastReadPos == mLastFileSize; }
 
+    bool HasDataInCache() const { return mLastFilePos != mLastReadPos; }
+
     LogFileReaderPtrArray* GetReaderArray();
 
     void SetReaderArray(LogFileReaderPtrArray* readerArray);
@@ -345,10 +349,12 @@ public:
         mAdjustApsaraMicroTimezone = adjustApsaraMicroTimezone;
     }
 
+    std::unique_ptr<Event> CreateFlushTimeoutEvent();
+
 protected:
-    bool GetRawData(LogBuffer& logBuffer, int64_t fileSize);
-    void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData);
-    void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData);
+    bool GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allowRollback = true);
+    void ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
+    void ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback = true);
 
     size_t
     ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL);
@@ -372,6 +378,7 @@ protected:
     std::string mCategory;
     std::string mConfigName;
     std::string mHostLogPath;
+    std::string mHostLogPathDir;
     std::string mHostLogPathFile;
     std::string mRealLogPath; // real log path
     bool mSymbolicLinkFlag = false;
@@ -388,6 +395,8 @@ protected:
     boost::regex* mLogBeginRegPtr;
     boost::regex* mLogContinueRegPtr;
     boost::regex* mLogEndRegPtr;
+    int mReaderFlushTimeout;
+    bool mLastForceRead;
     FileEncoding mFileEncoding;
     bool mDiscardUnmatch;
     LogType mLogType;

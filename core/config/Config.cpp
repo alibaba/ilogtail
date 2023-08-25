@@ -97,6 +97,7 @@ Config::Config(const std::string& basePath,
                bool uploadRawLog /*= false*/,
                const std::string& StreamLogTag /*= ""*/,
                bool discardUnmatch /*= true*/,
+               int readerFlushTimeout /*= 5*/,
                std::list<std::string>* regs /*= NULL*/,
                std::list<std::string>* keys /*= NULL*/,
                std::string timeFormat /* = ""*/)
@@ -117,7 +118,8 @@ Config::Config(const std::string& basePath,
       mCategory(category),
       mStreamLogTag(StreamLogTag),
       mDiscardUnmatch(discardUnmatch),
-      mUploadRawLog(uploadRawLog) {
+      mUploadRawLog(uploadRawLog),
+      mReaderFlushTimeout(readerFlushTimeout) {
 #if defined(_MSC_VER)
     mBasePath = EncodingConverter::GetInstance()->FromUTF8ToACP(mBasePath);
     mFilePattern = EncodingConverter::GetInstance()->FromUTF8ToACP(mFilePattern);
@@ -588,6 +590,7 @@ LogFileReader* Config::CreateLogFileReader(const std::string& dir,
         reader->SetLogMultilinePolicy(STRING_DEEP_COPY(mLogBeginReg),
                                        STRING_DEEP_COPY(mLogContinueReg),
                                        STRING_DEEP_COPY(mLogEndReg));
+        reader->SetReaderFlushTimeout(mReaderFlushTimeout);
         reader->SetDevInode(devInode);
         if (forceFromBeginning)
             reader->SetReadFromBeginning();

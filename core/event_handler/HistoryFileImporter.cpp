@@ -100,7 +100,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
                 usleep(1000 * 10);
             }
             LogBuffer* logBuffer = new LogBuffer;
-            readerSharePtr->ReadLog(*logBuffer);
+            readerSharePtr->ReadLog(*logBuffer, nullptr);
             if (!logBuffer->rawBuffer.empty()) {
                 logBuffer->logFileReader = readerSharePtr;
                 logProcess->PushBuffer(logBuffer, 100000000);

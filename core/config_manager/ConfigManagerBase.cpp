@@ -590,6 +590,10 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (logEndReg != "" && CheckRegFormat(logEndReg) == false) {
                     throw ExceptionBase("The log end line is not value regex : " + logEndReg);
                 }
+                int readerFlushTimeout = 5;
+                if (value.isMember("reader_flush_timeout"))
+                    readerFlushTimeout = GetIntValue(value, "reader_flush_timeout");
+
                 string filePattern = GetStringValue(value, "file_pattern");
                 // raw log flag
                 bool rawLogFlag = false;
@@ -611,7 +615,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     category,
                                     rawLogFlag,
                                     "",
-                                    discardUnmatch);
+                                    discardUnmatch,
+                                    readerFlushTimeout);
 
                 // normal log file config can have plugin too
                 // Boolean force_enable_pipeline.

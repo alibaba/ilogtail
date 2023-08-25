@@ -107,6 +107,32 @@ void LogFileReaderUnittest::TestReadGBK() {
         APSARA_TEST_FALSE_FATAL(moreData);
         APSARA_TEST_STREQ_FATAL(expectedContent.get(), logBuffer.rawBuffer.data());
     }
+    { // buffer size big enough and match pattern, force read
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      gbkFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_GBK,
+                                      false,
+                                      false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        reader.ReadGBK(logBuffer, fileSize, moreData, false);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        char* expectedContentAll = expectedContent.get();
+        size_t tmp = strlen(expectedContentAll);
+        expectedContentAll[tmp+1] = '\n';
+        APSARA_TEST_STREQ_FATAL(expectedContent.get(), logBuffer.rawBuffer.data());
+        expectedContentAll[tmp+1] = '\0';
+    }
     { // buffer size not big enough and not match pattern
         CommonRegLogFileReader reader(projectName,
                                       category,
@@ -218,6 +244,32 @@ void LogFileReaderUnittest::TestReadUTF8() {
         reader.ReadUTF8(logBuffer, fileSize, moreData);
         APSARA_TEST_FALSE_FATAL(moreData);
         APSARA_TEST_STREQ_FATAL(expectedContent.get(), logBuffer.rawBuffer.data());
+    }
+    { // buffer size big enough and match pattern
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf8File,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF8,
+                                      false,
+                                      false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        reader.ReadUTF8(logBuffer, fileSize, moreData, false);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        char* expectedContentAll = expectedContent.get();
+        size_t tmp = strlen(expectedContentAll);
+        expectedContentAll[tmp+1] = '\n';
+        APSARA_TEST_STREQ_FATAL(expectedContent.get(), logBuffer.rawBuffer.data());
+        expectedContentAll[tmp+1] = '\0';
     }
     { // buffer size not big enough and not match pattern
         // should read buffer size
