@@ -164,7 +164,7 @@ func timeoutStop(config *LogstoreConfig, flag bool) bool {
 	select {
 	case <-done:
 		return true
-	case <-time.After(3 * time.Second):
+	case <-time.After(30 * time.Second):
 		return false
 	}
 }
