@@ -51,10 +51,11 @@
 #include "event/Event.h"
 #include "processor/LogProcess.h"
 #include "sender/Sender.h"
-#include "profiler/LogFileProfiler.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
+#include "monitor/MetricExportor.h"
 #include "log_pb/metric.pb.h"
 #include "log_pb/sls_logs.pb.h"
 #include "checkpoint/CheckPointManager.h"
@@ -66,6 +67,8 @@
 #include "polling/PollingEventQueue.h"
 #endif
 #include "plugin/LogtailPlugin.h"
+#include "plugin/PluginRegistry.h"
+#include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
 #if !defined(_MSC_VER)
 #include "LogtailInsightDispatcher.h"
@@ -474,7 +477,7 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
 
     int wd = pathIter->second;
     DevInode devInode = GetFileDevInode(realFilePath);
-    if (devInode.IsValid() && checkpoint->mDevInode == devInode) {
+    if (devInode.IsValid() && checkpoint->mDevInode.inode == devInode.inode) {
         if (!CheckFileSignature(
                 realFilePath, checkpoint->mSignatureHash, checkpoint->mSignatureSize, config->mIsFuseMode)) {
             LOG_INFO(sLogger,
@@ -483,6 +486,10 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.inode)(
                          "file inode", checkpoint->mDevInode.inode));
             return ValidateCheckpointResult::kSigChanged;
+        }
+        if (checkpoint->mDevInode.dev != devInode.dev) {
+            // all other checks passed. dev may be a statefulset pv remounted on another node
+            checkpoint->mDevInode.dev = devInode.dev;
         }
 
         LOG_INFO(sLogger,
@@ -874,6 +881,7 @@ bool EventDispatcherBase::Dispatch() {
         DumpCheckPointPeriod(curTime);
         if (curTime - lastCheckDir >= INT32_FLAG(main_loop_check_interval)) {
             LogFileProfiler::GetInstance()->SendProfileData();
+            MetricExportor::GetInstance()->PushMetrics(false);
 #if defined(__linux__)
             CheckShennong();
 #endif
@@ -1168,9 +1176,11 @@ void EventDispatcherBase::UpdateConfig() {
     mBrokenLinkSet.clear();
 
     PollingDirFile::GetInstance()->ClearCache();
+    PipelineManager::GetInstance()->RemoveAllPipelines();
     ConfigManager::GetInstance()->RemoveAllConfigs();
     if (ConfigManager::GetInstance()->LoadAllConfig() == false) {
         LOG_ERROR(sLogger, ("LoadConfig fail", ""));
+        PipelineManager::GetInstance()->LoadAllPipelines();
         ConfigManager::GetInstance()->LoadDockerConfig();
         ConfigManager::GetInstance()->DoUpdateContainerPaths();
         DumpAllHandlersMeta(true);
@@ -1188,6 +1198,7 @@ void EventDispatcherBase::UpdateConfig() {
     }
     ConfigManager::GetInstance()->CleanUnusedUserAK();
 
+    PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
     ConfigManager::GetInstance()->DoUpdateContainerPaths();
     ConfigManager::GetInstance()->SaveDockerConfig();
@@ -1282,6 +1293,7 @@ void EventDispatcherBase::ExitProcess() {
 #ifdef LOGTAIL_RUNTIME_PLUGIN
     LogtailRuntimePlugin::GetInstance()->UnLoadPluginBase();
 #endif
+    PluginRegistry::GetInstance()->UnloadPlugins();
 
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();

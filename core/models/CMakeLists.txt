@@ -13,7 +13,8 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 2.9)
-project(profiler_unittest)
+project(models)
 
-add_executable(profiler_data_integrity_unittest DataIntegrityUnittest.cpp)
-target_link_libraries(profiler_data_integrity_unittest unittest_base)
+file(GLOB LIB_SOURCE_FILES *.cpp *.h)
+append_source_files(LIB_SOURCE_FILES)
+add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})

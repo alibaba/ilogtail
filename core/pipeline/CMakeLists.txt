@@ -13,14 +13,10 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 2.9)
-project(profiler)
+project(pipeline)
 
 file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} common)
-target_link_libraries(${PROJECT_NAME} log_pb)
-target_link_libraries(${PROJECT_NAME} sender)
-target_link_libraries(${PROJECT_NAME} config_manager)
-target_link_libraries(${PROJECT_NAME} fuse)
-link_jsoncpp(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} models)
+target_link_libraries(${PROJECT_NAME} plugin)
