@@ -778,4 +778,8 @@ bool Config::DeleteDockerContainerPath(const std::string& paramsJSONStr) {
     return true;
 }
 
+bool Config::IsMultiline() const {
+    return (mLogBeginReg.empty() == false && mLogBeginReg != ".*") || (mLogContinueReg.empty() == false && mLogContinueReg != ".*") || (mLogEndReg.empty() == false && mLogEndReg != ".*");
+}
+
 } // namespace logtail
