@@ -21,6 +21,7 @@
 #include <spdlog/spdlog.h>
 
 namespace logtail {
+    using namespace spdlog::level;
 
 class Logger {
     const std::string DEFAULT_LOGGER_NAME = "/";
@@ -75,10 +76,12 @@ private:
 
     // LoadDefaultConfig only loads the default ("/") into @loggerCfgs and @sinkCfgs.
     void LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
-                           std::map<std::string, SinkConfig>& sinkCfgs);
+                           std::map<std::string, SinkConfig>& sinkCfgs,
+                           level_enum* envLogLvel);
     // LoadAllDefaultConfigs loads all default configs into @loggerCfgs and @sinkCfgs.
     void LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
-                               std::map<std::string, SinkConfig>& sinkCfgs);
+                               std::map<std::string, SinkConfig>& sinkCfgs,
+                               level_enum* envLogLvel);
 
     // EnsureSnapshotDirExist ensures the snapshot dir exists.
     void EnsureSnapshotDirExist(std::map<std::string, SinkConfig>& sinkCfgs);
