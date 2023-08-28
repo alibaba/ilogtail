@@ -98,32 +98,31 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
                     "log bytes", sourceVal.size() + 1)("first 1KB log", discardData.substr(0, 1024).to_string()));
         }
     }
-    if (splitSuccess) {
-        long sourceoffset = 0L;
-        if (sourceEvent.HasContent(EVENT_META_LOG_FILE_OFFSET)) {
-            sourceoffset = atol(sourceEvent.GetContent(EVENT_META_LOG_FILE_OFFSET).data()); // use safer method
+    if (logIndex.size() == 0) {
+        return;
+    }
+    long sourceoffset = 0L;
+    if (sourceEvent.HasContent(EVENT_META_LOG_FILE_OFFSET)) {
+        sourceoffset = atol(sourceEvent.GetContent(EVENT_META_LOG_FILE_OFFSET).data()); // use safer method
+    }
+    StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
+    for (auto& content : logIndex) {
+        std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
+        targetEvent->SetTimestamp(sourceEvent.GetTimestamp()); // it is easy to forget other fields, better solution?
+        targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
+        if (mEnableLogPositionMeta) {
+            auto const offset = sourceoffset + (content.data() - sourceVal.data());
+            StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
+            targetEvent->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
         }
-        StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
-        for (auto& content : logIndex) {
-            std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-            targetEvent->SetTimestamp(sourceEvent.GetTimestamp()); // it is easy to forget other fields, better solution?
-            targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
-            if (mEnableLogPositionMeta) {
-                auto const offset = sourceoffset + (content.data() - sourceVal.data());
-                StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
-                targetEvent->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
-            }
-            if (sourceEvent.GetContents().size() > 1) { // copy other fields
-                for (auto& kv : sourceEvent.GetContents()) {
-                    if (kv.first != mSplitKey && kv.first != EVENT_META_LOG_FILE_OFFSET) {
-                        targetEvent->SetContentNoCopy(kv.first, kv.second);
-                    }
+        if (sourceEvent.GetContents().size() > 1) { // copy other fields
+            for (auto& kv : sourceEvent.GetContents()) {
+                if (kv.first != mSplitKey && kv.first != EVENT_META_LOG_FILE_OFFSET) {
+                    targetEvent->SetContentNoCopy(kv.first, kv.second);
                 }
             }
-            newEvents.emplace_back(std::move(targetEvent));
         }
-    } else {
-        newEvents.emplace_back(e);
+        newEvents.emplace_back(std::move(targetEvent));
     }
 }
 
@@ -297,7 +296,8 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
             logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
         } else {
             endIndex = buffer[size-1] == '\n' ? size -1 : size;
-            if (mLogBeginRegPtr != NULL && mLogContinueRegPtr == NULL && mLogEndRegPtr == NULL) {
+            if (mLogBeginRegPtr != NULL && mLogEndRegPtr == NULL) {
+                anyMatched = true;
                 // If logs is unmatched, they have been handled immediately. So logs must be matched here.
                 logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
             } else if (mLogBeginRegPtr == NULL && mLogContinueRegPtr == NULL && mLogEndRegPtr != NULL) {

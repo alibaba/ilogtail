@@ -61,6 +61,8 @@ private:
     bool mEnableLogPositionMeta = false;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorSplitRegexNativeUnittest;
+    friend class ProcessorSplitRegexDisacardUnmatchUnittest;
+    friend class ProcessorSplitRegexKeepUnmatchUnittest;
 #endif
 };
 
