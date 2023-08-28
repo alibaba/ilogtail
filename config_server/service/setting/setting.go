@@ -22,12 +22,15 @@ import (
 )
 
 type Setting struct {
-	IP                  string `json:"ip"`                    // default: "127.0.0.1"
-	StoreMode           string `json:"store_mode"`            // support "leveldb", "mysql"
-	Port                string `json:"port"`                  // default: "8899"
-	DbPath              string `json:"db_path"`               // default: "./DB"
-	AgentUpdateInterval int    `json:"agent_update_interval"` // default: 1s
-	ConfigSyncInterval  int    `json:"config_sync_interval"`  // default: 3s
+	IP                     string `json:"ip"`                        // default: "127.0.0.1"
+	StoreMode              string `json:"store_mode"`                // support "leveldb", "mysql"
+	Port                   string `json:"port"`                      // default: "8899"
+	DbPath                 string `json:"db_path"`                   // default: "./DB"
+	AgentUpdateInterval    int    `json:"agent_update_interval"`     // default: 1s
+	ConfigSyncInterval     int    `json:"config_sync_interval"`      // default: 3s
+	OnlineAfterSuccess     int    `json:"online_after_success"`      // default: 2
+	OfflineAfterFail       int    `json:"offline_after_fail"`        // default: 3
+	ClearHoursAfterOffline int    `json:"clear_hours_after_offline"` // default: 12
 }
 
 var mySetting *Setting
@@ -89,5 +92,14 @@ func init() {
 	}
 	if mySetting.ConfigSyncInterval == 0 {
 		mySetting.ConfigSyncInterval = 3
+	}
+	if mySetting.OnlineAfterSuccess == 0 {
+		mySetting.OnlineAfterSuccess = 2
+	}
+	if mySetting.OfflineAfterFail == 0 {
+		mySetting.OfflineAfterFail = 3
+	}
+	if mySetting.ClearHoursAfterOffline == 0 {
+		mySetting.ClearHoursAfterOffline = 12
 	}
 }

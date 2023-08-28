@@ -22,7 +22,14 @@ import (
 	"github.com/alibaba/ilogtail/config_server/service/common"
 	"github.com/alibaba/ilogtail/config_server/service/model"
 	proto "github.com/alibaba/ilogtail/config_server/service/proto"
+	"github.com/alibaba/ilogtail/config_server/service/setting"
 	"github.com/alibaba/ilogtail/config_server/service/store"
+)
+
+const (
+	STATUS_INIT    string = "INIT"
+	STATUS_ONLINE  string = "ONLINE"
+	STATUS_OFFLINE string = "OFFLINE"
 )
 
 func (a *AgentManager) HeartBeat(req *proto.HeartBeatRequest, res *proto.HeartBeatResponse) (int, *proto.HeartBeatResponse) {
@@ -31,9 +38,30 @@ func (a *AgentManager) HeartBeat(req *proto.HeartBeatRequest, res *proto.HeartBe
 	agent.AgentType = req.AgentType
 	agent.Attributes.ParseProto(req.Attributes)
 	agent.Tags = req.Tags
-	agent.RunningStatus = req.RunningStatus
-	agent.StartupTime = req.StartupTime
 	agent.Interval = req.Interval
+	current := time.Now()
+	startupTime := current.Unix()
+	runningStatus := STATUS_INIT
+	var successBeatCount int32 = 1
+	s := store.GetStore()
+	value, err := s.Get(common.TypeAgent, req.AgentId)
+	if err == nil {
+		prev := value.(*model.Agent)
+		startupTime = prev.StartupTime
+		runningStatus = prev.RunningStatus
+		successBeatCount = prev.SuccessBeatCount + 1
+	}
+	onlineAfterSuccess := int32(setting.GetSetting().OnlineAfterSuccess)
+	if successBeatCount >= onlineAfterSuccess {
+		runningStatus = STATUS_ONLINE
+		successBeatCount = onlineAfterSuccess
+	}
+	agent.StartupTime = startupTime
+	agent.LatestBeatTime = current.Unix()
+	agent.BeatCycleTime = current.Unix()
+	agent.RunningStatus = runningStatus
+	agent.SuccessBeatCount = successBeatCount
+	agent.FailBeatCount = 0
 
 	a.AgentMessageList.Push(optHeartbeat, agent)
 
@@ -71,5 +99,46 @@ func (a *AgentManager) batchUpdateAgentMessage() {
 		log.Println(writeBatchErr)
 	}
 
+	a.handleFailure()
+
 	wg.Done()
+}
+
+func (a *AgentManager) handleFailure() {
+	s := store.GetStore()
+	agentList, err := s.GetAll(common.TypeAgent)
+	if err != nil {
+		return
+	}
+
+	current := time.Now()
+	deadline := current.Add(-time.Duration(setting.GetSetting().ClearHoursAfterOffline) * time.Hour).Unix()
+	for _, v := range agentList {
+		agent := v.(*model.Agent)
+		if agent.LatestBeatTime < deadline {
+			s.Delete(common.TypeAgent, agent.AgentID)
+			continue
+		}
+		if agent.Interval == 0 {
+			continue
+		}
+		duration := current.Unix() - int64(setting.GetSetting().AgentUpdateInterval) - agent.BeatCycleTime
+		isFresh := duration/int64(agent.Interval) == 0
+		if isFresh {
+			continue
+		}
+
+		runningStatus := agent.RunningStatus
+		failBeatCount := agent.FailBeatCount + 1
+		offlineAfterFail := int32(setting.GetSetting().OfflineAfterFail)
+		if failBeatCount >= offlineAfterFail {
+			runningStatus = STATUS_OFFLINE
+			failBeatCount = offlineAfterFail
+		}
+		agent.BeatCycleTime = current.Unix()
+		agent.RunningStatus = runningStatus
+		agent.SuccessBeatCount = 0
+		agent.FailBeatCount = failBeatCount
+		s.Update(common.TypeAgent, agent.AgentID, agent)
+	}
 }
