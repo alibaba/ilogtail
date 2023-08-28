@@ -21,7 +21,7 @@
 #include "BaseFilterNode.h"
 #include "common/util.h"
 #include "app_config/AppConfig.h"
-#include "profiler/LogtailAlarm.h"
+#include "monitor/LogtailAlarm.h"
 #include "logger/Logger.h"
 
 namespace logtail {
@@ -42,7 +42,7 @@ public:
             }
 
             std::string exception;
-            bool result = BoostRegexMatch(content.value().c_str(), reg, exception);
+            bool result = BoostRegexMatch(content.value().c_str(), content.value().size(), reg, exception);
             if (!result && !exception.empty() && AppConfig::GetInstance()->IsLogParseAlarmValid()) {
                 LOG_ERROR(sLogger, ("regex_match in Filter fail", exception));
                 if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
