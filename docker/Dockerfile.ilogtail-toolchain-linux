@@ -107,6 +107,9 @@ RUN go install golang.org/x/tools/gopls@v0.12.2 && \
     go install github.com/cweill/gotests/gotests@v1.6.0 && \
     go install honnef.co/go/tools/cmd/staticcheck@v0.4.3
 
+COPY libunwind-1.2.1-gcc9.3.1/lib/* /usr/local/lib/
+COPY libunwind-1.2.1-gcc9.3.1/include/* /usr/local/include/
+
 # install git
 COPY --from=toolchain-build /git-2.29.3/git /usr/bin
 RUN chmod +x /usr/bin/git
