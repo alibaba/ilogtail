@@ -295,9 +295,7 @@ func setLogConf(logConfig string) {
 	}
 	logtailLogger = logger
 
-	if aliyunLogtailLogLevel == "debug" {
-		debugFlag = 1
-	} else if strings.Contains(dat, "minlevel=\"debug\"") {
+	if aliyunLogtailLogLevel == "debug" || strings.Contains(dat, "minlevel=\"debug\"") {
 		debugFlag = 1
 	}
 }
