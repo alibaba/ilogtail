@@ -269,19 +269,18 @@ void Logger::LoadConfig(const std::string& filePath) {
     } while (0);
 
     // parse env log level
-    level::level_enum* envLogLevel = new(level::level_enum);
-    std::string aliyun_logtail_log_level = "" ;
-    std::string logLevelInfo;
-    const char* envVal = std::getenv("ALIYUN_LOGTAIL_LOG_LEVEL");
-    if (envVal) {
-        aliyun_logtail_log_level = envVal;
+    level::level_enum envLogLevel = level::info;
+    std::string aliyun_logtail_log_level;
+    const char* envLogLevelVal = std::getenv("ALIYUN_LOGTAIL_LOG_LEVEL");
+    if (envLogLevelVal) {
+        aliyun_logtail_log_level = envLogLevelVal;
     }
-    if (MapStringToLevel(ToUpperCaseString(aliyun_logtail_log_level), *envLogLevel)) {
-        logLevelInfo = "Load log level from the env success, level: " + aliyun_logtail_log_level;
+    if (MapStringToLevel(ToUpperCaseString(aliyun_logtail_log_level), envLogLevel)) {
+        LogMsg(std::string("Load log level from the env success, level: ") + aliyun_logtail_log_level);
     } else {
-        logLevelInfo = "Load log level from the env error, level: " + aliyun_logtail_log_level;
+        LogMsg(std::string("Load log level from the env error, level: ") + aliyun_logtail_log_level);
+        aliyun_logtail_log_level = ""; 
     }
-    LogMsg(logLevelInfo);
     
     // Add or supply default config(s).
     bool needSave = true;
@@ -321,8 +320,8 @@ void Logger::LoadConfig(const std::string& filePath) {
         spdlog::register_logger(logger);
         logger->set_level(loggerCfg.level);
         logger->set_pattern(DEFAULT_PATTERN);
-        if (name == "/apsara/sls/ilogtail" && envLogLevel) {
-            logger->flush_on(*envLogLevel);
+        if (name == "/apsara/sls/ilogtail" && aliyun_logtail_log_level != "" && envLogLevel) {
+            logger->flush_on(envLogLevel);
         } else {
             logger->flush_on(loggerCfg.level);
         }
@@ -396,12 +395,8 @@ void Logger::SaveConfig(const std::string& filePath,
 
 void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
                                std::map<std::string, SinkConfig>& sinkCfgs,
-                               level::level_enum* envLogLevel) {
-    level::level_enum logLevel = level::warn;
-    if (envLogLevel) {
-        logLevel = *envLogLevel;
-    }
-    loggerCfgs.insert({DEFAULT_LOGGER_NAME, LoggerConfig{"AsyncFileSink", logLevel}});
+                               level::level_enum envLogLevel) {
+    loggerCfgs.insert({DEFAULT_LOGGER_NAME, LoggerConfig{"AsyncFileSink", envLogLevel}});
     if (sinkCfgs.find("AsyncFileSink") != sinkCfgs.end())
         return;
     sinkCfgs.insert({"AsyncFileSink",
@@ -410,16 +405,11 @@ void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
 
 void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
                                    std::map<std::string, SinkConfig>& sinkCfgs,
-                                   level::level_enum* envLogLevel) {
+                                   level::level_enum envLogLevel) {
     LoadDefaultConfig(loggerCfgs, sinkCfgs, envLogLevel);
-
-    level::level_enum logLevel = level::info;
-    if (envLogLevel) {
-        logLevel = *envLogLevel;
-    }
-    loggerCfgs.insert({"/apsara/sls/ilogtail", LoggerConfig{"AsyncFileSink", logLevel}});
-    loggerCfgs.insert({"/apsara/sls/ilogtail/profile", LoggerConfig{"AsyncFileSinkProfile", logLevel}});
-    loggerCfgs.insert({"/apsara/sls/ilogtail/status", LoggerConfig{"AsyncFileSinkStatus", logLevel}});
+    loggerCfgs.insert({"/apsara/sls/ilogtail", LoggerConfig{"AsyncFileSink", envLogLevel}});
+    loggerCfgs.insert({"/apsara/sls/ilogtail/profile", LoggerConfig{"AsyncFileSinkProfile", envLogLevel}});
+    loggerCfgs.insert({"/apsara/sls/ilogtail/status", LoggerConfig{"AsyncFileSinkStatus", envLogLevel}});
 
     std::string dirPath = GetProcessExecutionDir() + STRING_FLAG(logtail_snapshot_dir);
     if (!Mkdir(dirPath)) {
