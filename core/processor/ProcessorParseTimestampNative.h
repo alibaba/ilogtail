@@ -29,7 +29,7 @@ protected:
 
 private:
     /// @return false if data need to be discarded
-    bool ProcessEvent(StringView logPath, PipelineEventPtr& e, StringView& timeStrCache);
+    bool ProcessEvent(StringView logPath, PipelineEventPtr& e, LogtailTime& logTime, StringView& timeStrCache);
     /// @return false if parse time failed
     bool ParseLogTime(const StringView& curTimeStr, // str to parse
                       const StringView& logPath,
@@ -48,6 +48,7 @@ private:
     int* mHistoryFailures = nullptr;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseTimestampNativeUnittest;
+    friend class ProcessorParseLogTimeUnittest;
 #endif
 };
 } // namespace logtail

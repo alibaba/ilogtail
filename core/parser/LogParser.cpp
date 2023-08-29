@@ -489,7 +489,8 @@ bool LogParser::ParseLogTime(const char* buffer,
     int nanosecondLength = -1;
     const char* strptimeResult = NULL;
     if ((!haveNanosecond || endWithNanosecond) && IsPrefixString(curTimeStr, timeStr)) {
-        if (endWithNanosecond) {
+        bool isTimestampNanosecond = (strcmp(timeFormat, "%s") == 0) && (curTimeStr.length() > timeStr.length());
+        if (endWithNanosecond || isTimestampNanosecond) {
             strptimeResult = Strptime(curTimeStr.c_str() + timeStr.length(), "%f", &logTime, nanosecondLength);
         } else {
             strptimeResult = curTimeStr.data() + timeStr.length();
