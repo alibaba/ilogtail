@@ -278,11 +278,11 @@ func setLogConf(logConfig string) {
 		return
 	}
 	dat := string(content)
-	aliyun_logtail_log_level := strings.ToLower(os.Getenv("ALIYUN_LOGTAIL_LOG_LEVEL"))
-	if aliyun_logtail_log_level != "" {
+	aliyunLogtailLogLevel := strings.ToLower(os.Getenv("ALIYUN_LOGTAIL_LOG_LEVEL"))
+	if aliyunLogtailLogLevel != "" {
 		pattern := `(?mi)(<seelog\s+[^>]*\bminlevel=")[^"]*(("[^>]*>)|("))`
 		regExp := regexp.MustCompile(pattern)
-		dat = regExp.ReplaceAllString(dat, `${1}`+aliyun_logtail_log_level+`${3}`)
+		dat = regExp.ReplaceAllString(dat, `${1}`+aliyunLogtailLogLevel+`${3}`)
 	}
 	logger, err := seelog.LoggerFromConfigAsString(dat)
 	if err != nil {
@@ -295,7 +295,7 @@ func setLogConf(logConfig string) {
 	}
 	logtailLogger = logger
 
-	if aliyun_logtail_log_level == "debug" {
+	if aliyunLogtailLogLevel == "debug" {
 		debugFlag = 1
 	} else if strings.Contains(dat, "minlevel=\"debug\"") {
 		debugFlag = 1

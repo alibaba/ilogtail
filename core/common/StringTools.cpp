@@ -16,7 +16,6 @@
 #include <string.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/xpressive/xpressive.hpp>
-#include <cctype>
 #include "logger/Logger.h"
 #if defined(_MSC_VER)
 #include <Shlwapi.h>

@@ -270,8 +270,12 @@ void Logger::LoadConfig(const std::string& filePath) {
 
     // parse env log level
     level::level_enum* envLogLevel = new(level::level_enum);
-    std::string aliyun_logtail_log_level = std::getenv("ALIYUN_LOGTAIL_LOG_LEVEL");
+    std::string aliyun_logtail_log_level = "" ;
     std::string logLevelInfo;
+    const char* envVal = std::getenv("ALIYUN_LOGTAIL_LOG_LEVEL");
+    if (envVal) {
+        aliyun_logtail_log_level = envVal;
+    }
     if (MapStringToLevel(ToUpperCaseString(aliyun_logtail_log_level), *envLogLevel)) {
         logLevelInfo = "Load log level from the env success, level: " + aliyun_logtail_log_level;
     } else {
