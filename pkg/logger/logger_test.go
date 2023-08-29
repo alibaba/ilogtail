@@ -189,6 +189,51 @@ func TestDebug(t *testing.T) {
 	}
 }
 
+func TestLogLevelFromEnv(t *testing.T) {
+	mu.Lock()
+	defer mu.Unlock()
+	flag.Set(FlagLevelName, seelog.DebugStr)
+	clean()
+	os.Setenv("ALIYUN_LOGTAIL_LOG_LEVEL", "info")
+	initNormalLogger()
+	os.Unsetenv("ALIYUN_LOGTAIL_LOG_LEVEL")
+	type args struct {
+		ctx     context.Context
+		kvPairs []interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "with-header",
+			args: args{
+				ctx:     ctx,
+				kvPairs: []interface{}{"a", "b"},
+			},
+			want: ".*\\[INF\\] \\[logger_test.go:\\d{1,}\\] \\[func\\d{1,}\\] \\[mock-configname,mock-logstore\\]\t\\[a b\\]:.*",
+		},
+		{
+			name: "without-header",
+			args: args{
+				ctx:     context.Background(),
+				kvPairs: []interface{}{"a", "b"},
+			},
+			want: ".*\\[INF\\] \\[logger_test.go:\\d{1,}\\] \\[func\\d{1,}\\] \\[a b\\]:.*",
+		},
+	}
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Info(tt.args.ctx, tt.args.kvPairs)
+			time.Sleep(time.Millisecond)
+			Flush()
+			log := readLog(i)
+			assert.True(t, regexp.MustCompile(tt.want).Match([]byte(log)), "want regexp %s, but got: %s", tt.want, log)
+		})
+	}
+}
+
 func TestDebugf(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()

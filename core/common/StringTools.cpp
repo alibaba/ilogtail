@@ -16,6 +16,7 @@
 #include <string.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/xpressive/xpressive.hpp>
+#include <cctype>
 #include "logger/Logger.h"
 #if defined(_MSC_VER)
 #include <Shlwapi.h>
@@ -29,6 +30,12 @@ namespace logtail {
 std::string ToLowerCaseString(const std::string& orig) {
     auto copy = orig;
     std::transform(copy.begin(), copy.end(), copy.begin(), ::tolower);
+    return copy;
+}
+
+std::string ToUpperCaseString(const std::string& orig) {
+    auto copy = orig;
+    std::transform(copy.begin(), copy.end(), copy.begin(), ::toupper);
     return copy;
 }
 

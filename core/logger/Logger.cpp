@@ -19,6 +19,7 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include "common/RuntimeUtil.h"
+#include "common/StringTools.h"
 #include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "common/ErrorUtil.h"
@@ -74,25 +75,6 @@ static std::string MapLevelToString(level::level_enum level) {
             return "INFO";
     }
 }
-
-std::string toUpperCase(const std::string& str) {
-    std::string result = str;
-    for (char& c : result) {
-        c = std::toupper(c);
-    }
-    return result;
-}
-
-bool ReadLogLevelFromEnv(level::level_enum* logLevel, std::string& aliyun_logtail_log_level) {
-    const char *env_log_level = std::getenv("ALIYUN_LOGTAIL_LOG_LEVEL");
-    if (env_log_level) {
-        aliyun_logtail_log_level = env_log_level;
-        return MapStringToLevel(toUpperCase(env_log_level), *logLevel);
-    }
-
-    return true;
-}
-
 
 Logger& Logger::Instance() {
     // Works fine after C++11.
@@ -288,21 +270,14 @@ void Logger::LoadConfig(const std::string& filePath) {
 
     // parse env log level
     level::level_enum* envLogLevel = new(level::level_enum);
-    std::string aliyun_logtail_log_level = "";
+    std::string aliyun_logtail_log_level = std::getenv("ALIYUN_LOGTAIL_LOG_LEVEL");
     std::string logLevelInfo;
-    if (ReadLogLevelFromEnv(envLogLevel, aliyun_logtail_log_level)) {
-        if (!aliyun_logtail_log_level.empty()) {
-            logLevelInfo = "read log level from the env successfully, level: " + aliyun_logtail_log_level;
-        }
-        for (auto& loggerConfig : loggerConfigs) {
-            loggerConfig.second.level = *envLogLevel;
-        }
+    if (MapStringToLevel(ToUpperCaseString(aliyun_logtail_log_level), *envLogLevel)) {
+        logLevelInfo = "Load log level from the env success, level: " + aliyun_logtail_log_level;
     } else {
-        logLevelInfo = "read log level from the env error, level: " + aliyun_logtail_log_level;
+        logLevelInfo = "Load log level from the env error, level: " + aliyun_logtail_log_level;
     }
-    if (!logLevelInfo.empty()) {
-        LogMsg(logLevelInfo);
-    }
+    LogMsg(logLevelInfo);
     
     // Add or supply default config(s).
     bool needSave = true;
@@ -342,7 +317,11 @@ void Logger::LoadConfig(const std::string& filePath) {
         spdlog::register_logger(logger);
         logger->set_level(loggerCfg.level);
         logger->set_pattern(DEFAULT_PATTERN);
-        logger->flush_on(loggerCfg.level);
+        if (name == "/apsara/sls/ilogtail" && envLogLevel) {
+            logger->flush_on(*envLogLevel);
+        } else {
+            logger->flush_on(loggerCfg.level);
+        }
         LogMsg(std::string("logger named ") + name + " created.");
     }
     if (failedLoggers.empty()) {
@@ -413,7 +392,7 @@ void Logger::SaveConfig(const std::string& filePath,
 
 void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
                                std::map<std::string, SinkConfig>& sinkCfgs,
-                               level_enum* envLogLevel) {
+                               level::level_enum* envLogLevel) {
     level::level_enum logLevel = level::warn;
     if (envLogLevel) {
         logLevel = *envLogLevel;
@@ -427,7 +406,7 @@ void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
 
 void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
                                    std::map<std::string, SinkConfig>& sinkCfgs,
-                                   level_enum* envLogLevel) {
+                                   level::level_enum* envLogLevel) {
     LoadDefaultConfig(loggerCfgs, sinkCfgs, envLogLevel);
 
     level::level_enum logLevel = level::info;
