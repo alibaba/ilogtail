@@ -14,7 +14,7 @@
 
 package model
 
-import proto "github.com/alibaba/ilogtail/config_server/service/proto"
+import proto "config-server/proto"
 
 var Operators = map[string]proto.TagOperator{
 	"LOGIC_AND": proto.TagOperator_LOGIC_AND,
