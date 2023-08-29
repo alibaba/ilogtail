@@ -220,8 +220,7 @@ func TestExpandArray(t *testing.T) {
 	assert.Equal(t, "a", log.Contents[4].Value)
 	assert.Equal(t, "js_key-k6[1]-x", log.Contents[5].Key)
 	assert.Equal(t, "b", log.Contents[5].Value)
-	assert.Equal(t, "js_key-k7", log.Contents[6].Key)
-	assert.Equal(t, "[]", log.Contents[6].Value)
+	assert.Equal(t, 6, len(log.Contents))
 }
 
 func TestSourceKeyV2(t *testing.T) {
@@ -400,6 +399,5 @@ func TestExpandArrayV2(t *testing.T) {
 	assert.Equal(t, "a", contents.Get("js_key-k6[0]-x"))
 	assert.True(t, contents.Contains("js_key-k6[1]-x"))
 	assert.Equal(t, "b", contents.Get("js_key-k6[1]-x"))
-	assert.True(t, contents.Contains("js_key-k7"))
-	assert.Equal(t, "[]", contents.Get("js_key-k7"))
+	assert.False(t, contents.Contains("js_key-k7"))
 }
