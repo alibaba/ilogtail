@@ -6,7 +6,7 @@ ARG TARGETPLATFORM
 RUN yum -y install epel-release centos-release-scl
 RUN yum -y install devtoolset-8-gcc devtoolset-8-gcc-c++ make
 RUN yum -y install curl-devel expat-devel gettext-devel openssl-devel perl-devel python3-devel zlib-devel \
-    asciidoc xmlto docbook2X wget
+    asciidoc xmlto docbook2X wget bison
 
 # using gcc8
 ENV MANPATH=/opt/rh/devtoolset-8/root/usr/share/man \
