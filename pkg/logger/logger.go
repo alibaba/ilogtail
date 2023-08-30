@@ -20,7 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
+
 	"os"
 	"path/filepath"
 	"regexp"
@@ -269,7 +269,7 @@ func setLogConf(logConfig string) {
 	path := filepath.Clean(logConfig)
 	if _, err := os.Stat(path); err != nil {
 		logConfigContent := generateDefaultConfig()
-		_ = ioutil.WriteFile(path, []byte(logConfigContent), os.ModePerm)
+		_ = os.WriteFile(path, []byte(logConfigContent), os.ModePerm)
 	}
 	fmt.Fprintf(os.Stderr, "load log config %s \n", path)
 	content, err := os.ReadFile(path)
@@ -280,7 +280,7 @@ func setLogConf(logConfig string) {
 	dat := string(content)
 	aliyunLogtailLogLevel := strings.ToLower(os.Getenv("ALIYUN_LOGTAIL_LOG_LEVEL"))
 	if aliyunLogtailLogLevel != "" {
-		pattern := `(?mi)(<seelog\s+[^>]*\bminlevel=")[^"]*(("[^>]*>)|("))`
+		pattern := `(?mi)(minlevel=")([^"]*)(")`
 		regExp := regexp.MustCompile(pattern)
 		dat = regExp.ReplaceAllString(dat, `${1}`+aliyunLogtailLogLevel+`${3}`)
 	}

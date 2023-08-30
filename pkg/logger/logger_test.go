@@ -18,7 +18,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -52,7 +51,7 @@ func clean() {
 }
 
 func readLog(index int) string {
-	bytes, _ := ioutil.ReadFile(util.GetCurrentBinaryPath() + "logtail_plugin.LOG")
+	bytes, _ := os.ReadFile(util.GetCurrentBinaryPath() + "logtail_plugin.LOG")
 	logs := strings.Split(string(bytes), "\n")
 	if index > len(logs)-1 {
 		return ""
@@ -192,9 +191,8 @@ func TestDebug(t *testing.T) {
 func TestLogLevelFromEnv(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
-	flag.Set(FlagLevelName, seelog.DebugStr)
 	clean()
-	os.Setenv("ALIYUN_LOGTAIL_LOG_LEVEL", "info")
+	os.Setenv("ALIYUN_LOGTAIL_LOG_LEVEL", "debug")
 	initNormalLogger()
 	os.Unsetenv("ALIYUN_LOGTAIL_LOG_LEVEL")
 	type args struct {
@@ -212,7 +210,7 @@ func TestLogLevelFromEnv(t *testing.T) {
 				ctx:     ctx,
 				kvPairs: []interface{}{"a", "b"},
 			},
-			want: ".*\\[INF\\] \\[logger_test.go:\\d{1,}\\] \\[func\\d{1,}\\] \\[mock-configname,mock-logstore\\]\t\\[a b\\]:.*",
+			want: ".*\\[DBG\\] \\[logger_test.go:\\d{1,}\\] \\[func\\d{1,}\\] \\[mock-configname,mock-logstore\\]\t\\[a b\\]:.*",
 		},
 		{
 			name: "without-header",
@@ -220,12 +218,12 @@ func TestLogLevelFromEnv(t *testing.T) {
 				ctx:     context.Background(),
 				kvPairs: []interface{}{"a", "b"},
 			},
-			want: ".*\\[INF\\] \\[logger_test.go:\\d{1,}\\] \\[func\\d{1,}\\] \\[a b\\]:.*",
+			want: ".*\\[DBG\\] \\[logger_test.go:\\d{1,}\\] \\[func\\d{1,}\\] \\[a b\\]:.*",
 		},
 	}
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Info(tt.args.ctx, tt.args.kvPairs)
+			Debug(tt.args.ctx, tt.args.kvPairs)
 			time.Sleep(time.Millisecond)
 			Flush()
 			log := readLog(i)

@@ -286,10 +286,10 @@ void Logger::LoadConfig(const std::string& filePath) {
     bool needSave = true;
     if (loggerConfigs.empty()) {
         logConfigInfo = "Load log config file failed, use default configs.";
-        LoadAllDefaultConfigs(loggerConfigs, sinkConfigs, envLogLevel);
+        LoadAllDefaultConfigs(loggerConfigs, sinkConfigs);
     } else if (loggerConfigs.end() == loggerConfigs.find(DEFAULT_LOGGER_NAME)) {
         logConfigInfo += ", and add default config.";
-        LoadDefaultConfig(loggerConfigs, sinkConfigs, envLogLevel);
+        LoadDefaultConfig(loggerConfigs, sinkConfigs);
     } else
         needSave = false;
 
@@ -320,7 +320,7 @@ void Logger::LoadConfig(const std::string& filePath) {
         spdlog::register_logger(logger);
         logger->set_level(loggerCfg.level);
         logger->set_pattern(DEFAULT_PATTERN);
-        if (name == "/apsara/sls/ilogtail" && aliyun_logtail_log_level != "" && envLogLevel) {
+        if (name == "/apsara/sls/ilogtail" && !aliyun_logtail_log_level.empty()) {
             logger->flush_on(envLogLevel);
         } else {
             logger->flush_on(loggerCfg.level);
@@ -394,9 +394,8 @@ void Logger::SaveConfig(const std::string& filePath,
 
 
 void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
-                               std::map<std::string, SinkConfig>& sinkCfgs,
-                               level::level_enum envLogLevel) {
-    loggerCfgs.insert({DEFAULT_LOGGER_NAME, LoggerConfig{"AsyncFileSink", envLogLevel}});
+                               std::map<std::string, SinkConfig>& sinkCfgs) {
+    loggerCfgs.insert({DEFAULT_LOGGER_NAME, LoggerConfig{"AsyncFileSink", level::warn}});
     if (sinkCfgs.find("AsyncFileSink") != sinkCfgs.end())
         return;
     sinkCfgs.insert({"AsyncFileSink",
@@ -404,12 +403,12 @@ void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
 }
 
 void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCfgs,
-                                   std::map<std::string, SinkConfig>& sinkCfgs,
-                                   level::level_enum envLogLevel) {
-    LoadDefaultConfig(loggerCfgs, sinkCfgs, envLogLevel);
-    loggerCfgs.insert({"/apsara/sls/ilogtail", LoggerConfig{"AsyncFileSink", envLogLevel}});
-    loggerCfgs.insert({"/apsara/sls/ilogtail/profile", LoggerConfig{"AsyncFileSinkProfile", envLogLevel}});
-    loggerCfgs.insert({"/apsara/sls/ilogtail/status", LoggerConfig{"AsyncFileSinkStatus", envLogLevel}});
+                                   std::map<std::string, SinkConfig>& sinkCfgs) {
+    LoadDefaultConfig(loggerCfgs, sinkCfgs);
+
+    loggerCfgs.insert({"/apsara/sls/ilogtail", LoggerConfig{"AsyncFileSink", level::info}});
+    loggerCfgs.insert({"/apsara/sls/ilogtail/profile", LoggerConfig{"AsyncFileSinkProfile", level::info}});
+    loggerCfgs.insert({"/apsara/sls/ilogtail/status", LoggerConfig{"AsyncFileSinkStatus", level::info}});
 
     std::string dirPath = GetProcessExecutionDir() + STRING_FLAG(logtail_snapshot_dir);
     if (!Mkdir(dirPath)) {
