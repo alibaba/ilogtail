@@ -177,7 +177,7 @@ func (p *ExpandParam) flattenArray(key []byte, value []byte) {
 	}
 
 	index := 0
-	jsonparser.ArrayEach(value, func(val []byte, dataType jsonparser.ValueType, offset int, err error) {
+	_, _ = jsonparser.ArrayEach(value, func(val []byte, dataType jsonparser.ValueType, offset int, err error) {
 		newKey := make([]byte, len(key), len(key)+10)
 		copy(newKey, key)
 		newKey = append(newKey, fmt.Sprintf("[%d]", index)...)
