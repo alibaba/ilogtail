@@ -1121,8 +1121,7 @@ bool LogFileReader::UpdateFilePtr() {
                          ("open file succeeded, project", mProjectName)("logstore", mCategory)("config", mConfigName)(
                              "log reader queue name", mHostLogPath)("file device", ToString(mDevInode.dev))(
                              "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                             "real file path", mRealLogPath)("file size", mLastFileSize)("last file position",
-                                                                                         mLastFilePos));
+                             "real file path", mRealLogPath)("last file position", mLastFilePos));
                 return true;
             } else {
                 mLogFileOp.Close();
@@ -1153,9 +1152,9 @@ bool LogFileReader::UpdateFilePtr() {
             GloablFileDescriptorManager::GetInstance()->OnFileOpen(this);
             LOG_INFO(sLogger,
                      ("open file succeeded, project", mProjectName)("logstore", mCategory)("config", mConfigName)(
-                         "log reader queue name", mHostLogPath)("file device", ToString(mDevInode.dev))(
-                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                         "file size", mLastFileSize)("last file position", mLastFilePos));
+                         "log reader queue name",
+                         mHostLogPath)("file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                         "file signature", mLastFileSignatureHash)("last file position", mLastFilePos));
             return true;
         } else {
             mLogFileOp.Close();
