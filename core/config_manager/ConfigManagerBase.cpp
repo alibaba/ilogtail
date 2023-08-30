@@ -841,6 +841,15 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
                 UserLogConfigParser::ParseAdvancedConfig(value, *config);
             }
+
+            if (pluginConfigJson.isMember("global")) {
+                SetNotFoundJsonMember(pluginConfigJson["global"], "EnableTimestampNanosecond", config->mAdvancedConfig.mEnableTimestampNanosecond);
+            } else {
+                Json::Value pluginGlobalConfigJson;
+                SetNotFoundJsonMember(pluginGlobalConfigJson, "EnableTimestampNanosecond", config->mAdvancedConfig.mEnableTimestampNanosecond);
+                pluginConfigJson["global"] = pluginGlobalConfigJson;
+            }
+
             if (logType == DELIMITER_LOG) {
                 config->mTimeFormat = GetStringValue(value, "timeformat", "");
                 string separatorStr = GetStringValue(value, "delimiter_separator");

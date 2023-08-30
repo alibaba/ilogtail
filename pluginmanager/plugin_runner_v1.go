@@ -15,6 +15,7 @@
 package pluginmanager
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/alibaba/ilogtail/pkg/helper"
@@ -256,6 +257,10 @@ func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 						}
 						if l.Time == uint32(0) {
 							protocol.SetLogTime(l, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
+						}
+						fmt.Println(p.LogstoreConfig.GlobalConfig.EnableTimestampNanosecond)
+						if !p.LogstoreConfig.GlobalConfig.EnableTimestampNanosecond {
+							l.TimeNs = nil
 						}
 						for tryCount := 1; true; tryCount++ {
 							err := aggregator.Aggregator.Add(l, logCtx.Context)

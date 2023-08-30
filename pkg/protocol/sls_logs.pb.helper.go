@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-
-	"github.com/alibaba/ilogtail/pkg/config"
 )
 
 func CloneLog(log *Log) *Log {
@@ -25,11 +23,7 @@ func CloneLog(log *Log) *Log {
 
 func SetLogTime(log *Log, second uint32, nanosecond uint32) {
 	log.Time = second
-	if config.LogtailGlobalConfig.EnableTimestampNanosecond {
-		log.TimeNs = &nanosecond
-	} else {
-		log.TimeNs = nil
-	}
+	log.TimeNs = &nanosecond
 }
 
 type Codec struct{}

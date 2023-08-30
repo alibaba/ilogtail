@@ -459,12 +459,14 @@ func createLogstoreConfig(project string, logstore string, configName string, lo
 	}
 
 	logstoreC.GlobalConfig = &config.LogtailGlobalConfig
+	fmt.Println(plugins)
 	// If plugins config has "global" field, then override the logstoreC.GlobalConfig
 	if pluginConfigInterface, flag := plugins["global"]; flag || enableAlwaysOnline {
 		pluginConfig := &config.GlobalConfig{}
 		*pluginConfig = config.LogtailGlobalConfig
 		if flag {
 			configJSONStr, err := json.Marshal(pluginConfigInterface) //nolint:govet
+			fmt.Println(configJSONStr)
 			if err != nil {
 				return nil, err
 			}
@@ -681,6 +683,7 @@ func LoadLogstoreConfig(project string, logstore string, configName string, logs
 		return nil
 	}
 	logger.Info(context.Background(), "load config", configName, "logstore", logstore)
+	fmt.Println(jsonStr)
 	logstoreC, err := createLogstoreConfig(project, logstore, configName, logstoreKey, jsonStr)
 	if err != nil {
 		return err
