@@ -779,7 +779,7 @@ bool Config::DeleteDockerContainerPath(const std::string& paramsJSONStr) {
 }
 
 bool Config::IsMultiline() const {
-    return (mLogBeginReg.empty() == false && mLogBeginReg != ".*") || (mLogContinueReg.empty() == false && mLogContinueReg != ".*") || (mLogEndReg.empty() == false && mLogEndReg != ".*");
+    return (!mLogBeginReg.empty() && mLogBeginReg != ".*") || (!mLogEndReg.empty() && mLogEndReg != ".*");
 }
 
 } // namespace logtail
