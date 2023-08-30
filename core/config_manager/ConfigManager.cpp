@@ -307,6 +307,7 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     operation.append("/").append("HeartBeat");
     map<string, string> httpHeader;
     httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
+    httpHeader[sdk::HOST] = configServerAddress.host;
     std::string reqBody;
     heartBeatReq.SerializeToString(&reqBody);
     sdk::HttpMessage httpResponse;
@@ -369,6 +370,7 @@ google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> ConfigMana
     operation.append("/").append("FetchPipelineConfig");
     map<string, string> httpHeader;
     httpHeader[sdk::CONTENT_TYPE] = sdk::TYPE_LOG_PROTOBUF;
+    httpHeader[sdk::HOST] = configServerAddress.host;
     string reqBody;
     fetchConfigReq.SerializeToString(&reqBody);
     sdk::HttpMessage httpResponse;

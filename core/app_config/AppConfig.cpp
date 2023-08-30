@@ -29,6 +29,20 @@ AppConfig::AppConfig() {
 AppConfig::~AppConfig() {
 }
 
+std::string getEnvValue(const std::string& value) {
+    if (value.empty()) {
+        return "";
+    }
+
+    if (value[0] == '$') {
+        std::string envVar = value.substr(1);
+        const char* envValue = std::getenv(envVar.c_str());
+        return envValue != nullptr ? envValue : "";
+    } else {
+        return value;
+    }
+}
+
 void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
     if (confJson.isMember("bind_interface") && confJson["bind_interface"].isString()) {
         mBindInterface = TrimString(confJson["bind_interface"].asString());
@@ -44,7 +58,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
             vector<string> configServerAddress
                 = SplitString(TrimString(confJson["ilogtail_configserver_address"][i].asString()), ":");
 
-            if (configServerAddress.size() != 2) {
+            if (configServerAddress.size() > 2) {
                 LOG_WARNING(sLogger,
                             ("ilogtail_configserver_address", "format error")(
                                 "wrong address", TrimString(confJson["ilogtail_configserver_address"][i].asString())));
@@ -52,7 +66,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
             }
 
             string host = configServerAddress[0];
-            int32_t port = atoi(configServerAddress[1].c_str());
+            int32_t port = configServerAddress.size() == 2 ? atoi(configServerAddress[1].c_str()) : 80;
 
             if (port < 1 || port > 65535)
                 LOG_WARNING(sLogger, ("ilogtail_configserver_address", "illegal port")("port", port));
@@ -71,7 +85,12 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
         for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
             std::string name = *it;
             std::string value = confJson["ilogtail_tags"][name].asString();
-            mConfigServerTags[name] = value;
+            std::string v = getEnvValue(value);
+            if (name.empty() || v.empty()) {
+                LOG_WARNING(sLogger, ("ilogtail_tags", "format error: empty tag name or value"));
+                continue;
+            }
+            mConfigServerTags[name] = v;
         }
 
         LOG_INFO(sLogger, ("ilogtail_configserver_tags", confJson["ilogtail_tags"].toStyledString()));
