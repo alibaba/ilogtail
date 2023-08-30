@@ -82,7 +82,7 @@ ENV MANPATH=/opt/rh/devtoolset-9/root/usr/share/man \
     PKG_CONFIG_PATH=/opt/rh/devtoolset-9/root/usr/lib64/pkgconfig \
     INFOPATH=/opt/rh/devtoolset-9/root/usr/share/info
 
-RUN yum install -y libdb glibc glibc-langpack-en glibc-langpack-zh python-devel emacs-filesystem file perl-Data-Dumper  perl-Thread-Queue autoconf automake m4 libtool
+RUN yum install -y bison libdb glibc glibc-langpack-en glibc-langpack-zh python-devel emacs-filesystem file perl-Data-Dumper  perl-Thread-Queue autoconf automake m4 libtool
 # install cmake
 COPY --from=toolchain-build /cmake-3.23.2 /usr/
 
