@@ -34,6 +34,7 @@ public:
     void TestProcessEventRegularFormat();
     void TestProcessEventRegularFormatFailed();
     void TestProcessEventHistoryDiscard();
+    void TestProcessEventPreciseTimestampLegacy();
 
     PipelineContext mContext;
 };
@@ -43,6 +44,7 @@ UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessNoFormat);
 UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessEventRegularFormat);
 UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessEventRegularFormatFailed);
 UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessEventHistoryDiscard);
+UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessEventPreciseTimestampLegacy);
 
 void ProcessorParseTimestampNativeUnittest::TestInit() {
     Config config;
@@ -97,6 +99,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessEventRegularFormat() {
     Config config;
     config.mTimeFormat = "%Y-%m-%d %H:%M:%S";
     config.mTimeKey = "time";
+    config.mTimeZoneAdjust = true;
     config.mLogTimeZoneOffsetSecond = 28800;
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -133,7 +136,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessEventRegularFormat() {
                  << timebuff << R"("
         },
         "timestamp" : )"
-                 << now - config.mLogTimeZoneOffsetSecond << R"(,
+                 << now - processor.mLogTimeZoneOffsetSecond << R"(,
         "type" : 1
     })"; // TODO: adjust time zone
     APSARA_TEST_EQUAL_FATAL(CompactJson(expectJsonSs.str()), CompactJson(outJson));
@@ -210,6 +213,52 @@ void ProcessorParseTimestampNativeUnittest::TestProcessEventHistoryDiscard() {
     APSARA_TEST_FALSE_FATAL(processor.ProcessEvent("/var/log/message", logEvent, logTime, timeStrCache));
     // check observablity
     APSARA_TEST_EQUAL_FATAL(1, processor.GetContext().GetProcessProfile().historyFailures);
+}
+
+void ProcessorParseTimestampNativeUnittest::TestProcessEventPreciseTimestampLegacy() {
+    // make config
+    BOOL_FLAG(ilogtail_discard_old_data) = false;
+    Config config;
+    config.mTimeFormat = "%Y-%m-%d %H:%M:%S.%f";
+    config.mTimeKey = "time";
+    config.mLogTimeZoneOffsetSecond = -GetLocalTimeZoneOffsetSecond();
+    config.mAdvancedConfig.mEnablePreciseTimestamp = true;
+    config.mAdvancedConfig.mPreciseTimestampKey = "precise_timestamp";
+    config.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
+    // make events
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    auto logEvent = PipelineEventPtr(LogEvent::CreateEvent(sourceBuffer));
+    std::stringstream inJsonSs;
+    inJsonSs << R"({
+        "contents" :
+        {
+            "time" : "2017-1-11 15:05:07.012"
+        },
+        "timestamp" : 12345678901,
+        "type" : 1
+    })";
+    logEvent->FromJsonString(inJsonSs.str());
+    // run function
+    ProcessorParseTimestampNative processor;
+    processor.SetContext(mContext);
+    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    logtail::StringView timeStrCache;
+    LogtailTime logTime = {0, 0};
+    APSARA_TEST_TRUE_FATAL(processor.ProcessEvent("/var/log/message", logEvent, logTime, timeStrCache));
+    // judge result
+    std::string outJson = logEvent->ToJsonString();
+    std::stringstream expectJsonSs;
+    expectJsonSs << R"({
+        "contents" :
+        {
+            "precise_timestamp": "1484147107012",
+            "time" : "2017-1-11 15:05:07.012"
+        },
+        "timestamp" : )"
+                 << 1484147107 - processor.mLogTimeZoneOffsetSecond << R"(,
+        "type" : 1
+    })";
+    APSARA_TEST_EQUAL_FATAL(CompactJson(expectJsonSs.str()), CompactJson(outJson));
 }
 
 class ProcessorParseLogTimeUnittest : public ::testing::Test {
@@ -495,7 +544,8 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         }
     }
     { // case: +7
-        config.mLogTimeZoneOffsetSecond = 7 * 3600 - GetLocalTimeZoneOffsetSecond();
+        config.mTimeZoneAdjust = true;
+        config.mLogTimeZoneOffsetSecond = 7 * 3600;
         config.mTimeFormat = "%Y-%m-%d %H:%M:%S.%f";
         // run function
         ProcessorParseTimestampNative processor;

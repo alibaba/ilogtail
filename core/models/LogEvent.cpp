@@ -74,6 +74,9 @@ Json::Value LogEvent::ToJson() const {
 
 bool LogEvent::FromJson(const Json::Value& root) {
     SetTimestamp(root["timestamp"].asInt64());
+    if (root.isMember("timestampNanosecond")) {
+        SetTimestampNanosecond(root["timestampNanosecond"].asInt64());
+    }
     if (root.isMember("contents")) {
         Json::Value contents = root["contents"];
         for (const auto& key : contents.getMemberNames()) {

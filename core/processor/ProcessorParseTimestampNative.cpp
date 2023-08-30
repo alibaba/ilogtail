@@ -28,7 +28,7 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& config) {
     mLegacyPreciseTimestampConfig.enabled = config.mAdvancedConfig.mEnablePreciseTimestamp;
     mLegacyPreciseTimestampConfig.key = config.mAdvancedConfig.mPreciseTimestampKey;
     mLegacyPreciseTimestampConfig.unit = config.mAdvancedConfig.mPreciseTimestampUnit;
-    mLogTimeZoneOffsetSecond = config.mLogTimeZoneOffsetSecond  - GetLocalTimeZoneOffsetSecond();
+    mLogTimeZoneOffsetSecond = config.mTimeZoneAdjust ? config.mLogTimeZoneOffsetSecond  - GetLocalTimeZoneOffsetSecond() : 0;
 
     mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
@@ -95,13 +95,10 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
         return false;
     }
     sourceEvent.SetTimestamp(logTime.tv_sec);
+    sourceEvent.SetTimestampNanosecond(logTime.tv_nsec);
     if (mLegacyPreciseTimestampConfig.enabled) {
-        int preciseTimestampLen = 0;
-        do {
-            ++preciseTimestampLen;
-        } while ((preciseTimestamp /= 10) > 0);
-        StringBuffer sb = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(preciseTimestampLen + 1);
-        snprintf(sb.data, sb.capacity, "%lu", preciseTimestamp);
+        StringBuffer sb = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(20);
+        sb.size = snprintf(sb.data, sb.capacity, "%lu", preciseTimestamp);
         sourceEvent.SetContentNoCopy(mLegacyPreciseTimestampConfig.key, StringView(sb.data, sb.size));
     }
     return true;
