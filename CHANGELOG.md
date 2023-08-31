@@ -36,7 +36,3 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
-- [public] [both] [fixed] add expand array switch for backward compatibility (#1094)
-- [public] [both] [fixed] processor\_otel\_trace document (#1090)
-- [public] [both] [fixed] skip dev check to avoid duplicated data collection when run as statefulset sidecar (#1082)
-
