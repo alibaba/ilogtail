@@ -32,7 +32,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "common/StringTools.h"
-#include <iostream>
 
 namespace logtail {
 /*
