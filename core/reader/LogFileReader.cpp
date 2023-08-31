@@ -424,7 +424,7 @@ LogFileReader::LogFileReader(const string& projectName,
     mHostLogPathDir = hostLogPathDir;
     mHostLogPathFile = hostLogPathFile;
     mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
-    mRealLogPath = mHostLogPath;
+    // mRealLogPath = mHostLogPath; fix it in 1.8
     mTailLimit = tailLimit;
     mLastFilePos = 0;
     mLastFileSize = 0;
@@ -470,7 +470,7 @@ LogFileReader::LogFileReader(const std::string& projectName,
     mHostLogPathDir = hostLogPathDir;
     mHostLogPathFile = hostLogPathFile;
     mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
-    mRealLogPath = mHostLogPath;
+    // mRealLogPath = mHostLogPath; fix it in 1.8
     mTailLimit = tailLimit;
     mLastFilePos = 0;
     mLastFileSize = 0;
