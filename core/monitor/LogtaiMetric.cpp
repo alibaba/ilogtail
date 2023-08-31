@@ -130,6 +130,13 @@ WriteMetrics::~WriteMetrics() {
     Clear();
 }
 
+void WriteMetrics::PrepareCommonLabels(MetricLabels& labels, const std::string& projectName, const std::string& logstoreName, const std::string& region,  const std::string& configName) {
+    labels.emplace_back(std::make_pair("project", projectName));
+    labels.emplace_back(std::make_pair("logstore", logstoreName));
+    labels.emplace_back(std::make_pair("region",  region));
+    labels.emplace_back(std::make_pair("configName",  configName));
+}
+
 void WriteMetrics::PrepareMetricsRecordRef(MetricsRecordRef& ref, MetricLabels&& labels) {
     MetricsRecord* cur = new MetricsRecord(std::make_shared<MetricLabels>(labels));
     ref.SetMetricsRecord(cur);

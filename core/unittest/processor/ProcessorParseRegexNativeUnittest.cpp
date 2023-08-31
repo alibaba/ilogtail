@@ -208,40 +208,47 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     config.mRegs->emplace_back(R"((\w+)\t(\w+).*)");
     config.mKeys = std::make_shared<std::list<std::string> >();
     config.mKeys->emplace_back("key1,key2");
-    // make events
-    auto sourceBuffer = std::make_shared<SourceBuffer>();
-    auto logEvent = PipelineEventPtr(LogEvent::CreateEvent(sourceBuffer));
-    std::string inJson = R"({
-        "contents" :
-        {
-            "content" : "value1",
-            "log.file.offset": "0"
-        },
-        "timestamp" : 12345678901,
-        "type" : 1
-    })";
-    logEvent->FromJsonString(inJson);
+    
     // run function
     ProcessorParseRegexNative processor;
     processor.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processor.Init(config));
-    processor.ProcessEvent("/var/log/message", logEvent);
-    // judge result
-    std::string expectJson = R"({
-        "contents" :
-        {
-            "__raw_log__" : "value1",
-            "content" : "value1",
-            "log.file.offset": "0"
-        },
-        "timestamp" : 12345678901,
-        "type" : 1
-    })";
-    std::string outJson = logEvent->ToJsonString();
-    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    int count = 10;
+    for (int i = 0; i < count; i ++) {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        auto logEvent = PipelineEventPtr(LogEvent::CreateEvent(sourceBuffer));
+        std::string inJson = R"({
+            "contents" :
+            {
+                "content" : "value1",
+                "log.file.offset": "0"
+            },
+            "timestamp" : 12345678901,
+            "type" : 1
+        })";
+        logEvent->FromJsonString(inJson);
+        processor.ProcessEvent("/var/log/message", logEvent);
+        // judge result
+        std::string expectJson = R"({
+            "contents" :
+            {
+                "__raw_log__" : "value1",
+                "content" : "value1",
+                "log.file.offset": "0"
+            },
+            "timestamp" : 12345678901,
+            "type" : 1
+        })";
+        std::string outJson = logEvent->ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
     // check observablity
-    APSARA_TEST_EQUAL_FATAL(1, processor.GetContext().GetProcessProfile().regexMatchFailures);
-    APSARA_TEST_EQUAL_FATAL(1, processor.GetContext().GetProcessProfile().parseFailures);
+    APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().regexMatchFailures);
+    APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
+
+    APSARA_TEST_EQUAL_FATAL(count, processor.mParseFailuresCounter->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor.mRegexMatchFailuresCounter->GetValue());
 }
 
 } // namespace logtail

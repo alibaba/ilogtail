@@ -18,6 +18,7 @@
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineConfig.h"
 #include "pipeline/PipelineContext.h"
+#include "monitor/LogtailMetric.h"
 
 namespace logtail {
 
@@ -32,5 +33,6 @@ public:
 protected:
     virtual bool IsSupportedEvent(const PipelineEventPtr& e) = 0;
     PipelineContext* mContext = nullptr;
+    MetricsRecordRef mMetricsRecordRef;
 };
 } // namespace logtail

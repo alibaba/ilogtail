@@ -18,6 +18,7 @@
 
 #include "parser/LogParser.h" // for UNMATCH_LOG_KEY
 #include "common/Constants.h"
+#include "monitor/LogtailMetric.h"
 
 namespace logtail {
 
@@ -45,6 +46,14 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
+    
+    std::vector<std::pair<std::string, std::string>> labels;
+    WriteMetrics::GetInstance()->PrepareCommonLabels(labels, GetContext().GetProjectName(), GetContext().GetLogstoreName(), GetContext().GetRegion(), GetContext().GetConfigName());
+    labels.emplace_back(std::make_pair("pluginType",  "ProcessorParseRegexNative"));
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
+    mParseFailuresCounter = mMetricsRecordRef.CreateCounter("parseFailures");
+    mRegexMatchFailuresCounter = mMetricsRecordRef.CreateCounter("regexMatchFailures");
+    mLogGroupSizeCounter = mMetricsRecordRef.CreateCounter("logGroupSize");
     return true;
 }
 
@@ -121,6 +130,7 @@ bool ProcessorParseRegexNative::WholeLineModeParser(LogEvent& sourceEvent, const
 void ProcessorParseRegexNative::AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent) {
     targetEvent.SetContentNoCopy(key, value);
     *mLogGroupSize += key.size() + value.size() + 5;
+    mLogGroupSizeCounter->Add(key.size() + value.size() + 5);
 }
 
 bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
@@ -162,6 +172,8 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
         }
         ++(*mRegexMatchFailures);
         ++(*mParseFailures);
+        mParseFailuresCounter->Add(1);
+        mRegexMatchFailuresCounter->Add(1);
         parseSuccess = false;
     } else if (what.size() <= keys.size()) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -180,6 +192,8 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
         }
         ++(*mRegexMatchFailures);
         ++(*mParseFailures);
+        mParseFailuresCounter->Add(1);
+        mRegexMatchFailuresCounter->Add(1);
         parseSuccess = false;
     }
     if (!parseSuccess) {

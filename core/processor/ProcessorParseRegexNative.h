@@ -51,6 +51,10 @@ private:
     int* mParseFailures = nullptr;
     int* mRegexMatchFailures = nullptr;
     int* mLogGroupSize = nullptr;
+
+    CounterPtr mParseFailuresCounter;
+    CounterPtr mRegexMatchFailuresCounter;
+    CounterPtr mLogGroupSizeCounter;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseRegexNativeUnittest;
 #endif
