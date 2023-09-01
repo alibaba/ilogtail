@@ -29,6 +29,16 @@ public:
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) override;
 
+private:
+    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, time_t& lastLogTime, StringView& timeStrCache);
+    time_t ApsaraEasyReadLogTimeParser(const char* buffer, std::string& timeStr, time_t& lastLogTime, int64_t& microTime);
+    int32_t GetApsaraLogMicroTime(const char* buffer);
+    bool IsPrefixString(const char* all, const std::string& prefix);
+
+    std::string mSourceKey;
+    bool mDiscardUnmatch = false;
+    bool mUploadRawLog = false;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;
 #endif
