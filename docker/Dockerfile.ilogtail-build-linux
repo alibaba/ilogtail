@@ -1,15 +1,15 @@
-FROM --platform=$TARGETPLATFORM quzard/ilogtail-toolchain-linux:latest as dep-build
+FROM --platform=$TARGETPLATFORM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-toolchain-linux:gcc_9.3.1 as dep-build
 
 ARG TARGETPLATFORM
 
 RUN curl -sSfL https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/toolchain/goc-v1.4.1-linux-${TARGETPLATFORM##*/}.tar.gz -o goc-v1.4.1-linux-${TARGETPLATFORM##*/}.tar.gz && \
     tar -xzf goc-v1.4.1-linux-${TARGETPLATFORM##*/}.tar.gz
 
-RUN curl -sSfL https://yitao-oss-logtail-deps.oss-cn-hangzhou.aliyuncs.com/logtail_deps.tar.gz -o ilogtail-deps.linux-${TARGETPLATFORM##*/}.tar.gz && \
+RUN curl -sSfL https://ilogtail-community-edition.oss-cn-shanghai.aliyuncs.com/prebuilt-dependencies/ilogtail-deps.linux-${TARGETPLATFORM##*/}.tar.gz -o ilogtail-deps.linux-${TARGETPLATFORM##*/}.tar.gz && \
     tar -xzf ilogtail-deps.linux-${TARGETPLATFORM##*/}.tar.gz && \
-    mv logtail_deps ilogtail-deps
+    mv ilogtail-deps.linux-${TARGETPLATFORM##*/} ilogtail-deps
 
-FROM --platform=$TARGETPLATFORM quzard/ilogtail-toolchain-linux:latest
+FROM --platform=$TARGETPLATFORM sls-opensource-registry.cn-shanghai.cr.aliyuncs.com/ilogtail-community-edition/ilogtail-toolchain-linux:gcc_9.3.1
 RUN mkdir -p /usr/local/bin /opt/logtail
 # install goc for coverage
 COPY --from=dep-build goc /usr/local/bin

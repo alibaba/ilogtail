@@ -52,7 +52,19 @@ jobs:
         shell: bash
         run: |
           echo "C:\msys64\mingw32\bin" >> $GITHUB_PATH
-
+      - name: clean
+        if: matrix.runner == 'ubuntu-latest'
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+      - name: Check disk space
+        run: |
+          df -h
+          df -hT $PWD
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v2
         with:

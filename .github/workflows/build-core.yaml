@@ -32,7 +32,7 @@ on:
 jobs:
   CI:
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 100
     strategy:
       matrix:
         go-version: [1.19]
@@ -44,7 +44,19 @@ jobs:
       - name: prepare ubuntu environment
         if: matrix.runner == 'ubuntu-latest'
         run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev
-
+      - name: clean
+        if: matrix.runner == 'ubuntu-latest'
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+      - name: Check disk space
+        run: |
+          df -h
+          df -hT $PWD
       # prepare windows environment
       # https://github.com/actions/virtual-environments/issues/2549
       - name: add mingw32 to path
@@ -52,7 +64,19 @@ jobs:
         shell: bash
         run: |
           echo "C:\msys64\mingw32\bin" >> $GITHUB_PATH
-
+      - name: clean
+        if: matrix.runner == 'ubuntu-latest'
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+      - name: Check disk space
+        run: |
+          df -h
+          df -hT $PWD
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v2
         with:
@@ -77,7 +101,7 @@ jobs:
 
   result:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 100
     needs: [CI]
     steps:
       - name: Build Result

@@ -280,14 +280,14 @@ template <typename reqType, typename respType, typename aggregatorType, typename
 class CommonCache {
 public:
     explicit CommonCache(aggregatorType* aggregators) : mAggregators(aggregators) {
-        for (int i = 0; i < capacity; ++i) {
+        for (long unsigned int i = 0; i < capacity; ++i) {
             mRequests[i] = new reqType;
             mResponses[i] = new respType;
         }
     }
 
     ~CommonCache() {
-        for (int i = 0; i < capacity; ++i) {
+        for (long unsigned int i = 0; i < capacity; ++i) {
             delete mRequests[i];
             delete mResponses[i];
         }
