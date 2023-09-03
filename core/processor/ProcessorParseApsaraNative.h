@@ -31,14 +31,18 @@ protected:
 
 private:
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, time_t& lastLogTime, StringView& timeStrCache);
-    time_t ApsaraEasyReadLogTimeParser(const char* buffer, std::string& timeStr, time_t& lastLogTime, int64_t& microTime);
-    int32_t GetApsaraLogMicroTime(const char* buffer);
-    bool IsPrefixString(const char* all, const std::string& prefix);
+    void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
+    time_t ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, time_t& lastLogTime, int64_t& microTime);
+    int32_t GetApsaraLogMicroTime(StringView& buffer);
+    bool IsPrefixString(const char* all, const StringView& prefix);
+    int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
 
     std::string mSourceKey;
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;
-
+    bool mAdjustApsaraMicroTimezone = false;
+    int mLogTimeZoneOffsetSecond = 0;
+    int* mLogGroupSize = nullptr;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;
 #endif
