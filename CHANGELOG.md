@@ -46,4 +46,6 @@ your changes, such as:
 - [public] [both] [fixed] fix multiline is splitted if not flushed to disk together
 - [public] [both] [fixed] fix line is truncated if \0 is in the middle of line
 - [public] [both] [fixed] container cannot exit for file reopened by checkpoint
+- [public] [both] [fixed] fix filename being mismatched to the deleted file if the deleted file size is 0 and their inode is same
+- [public] [both] [fixed] fix config server panic caused by concurrent read and write shared object
 

@@ -428,6 +428,7 @@ LogFileReader::LogFileReader(const string& projectName,
     mHostLogPathDir = hostLogPathDir;
     mHostLogPathFile = hostLogPathFile;
     mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
+    // mRealLogPath = mHostLogPath; fix it in 1.8
     mTailLimit = tailLimit;
     mLastFilePos = 0;
     mLastFileSize = 0;
@@ -473,6 +474,7 @@ LogFileReader::LogFileReader(const std::string& projectName,
     mHostLogPathDir = hostLogPathDir;
     mHostLogPathFile = hostLogPathFile;
     mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
+    // mRealLogPath = mHostLogPath; fix it in 1.8
     mTailLimit = tailLimit;
     mLastFilePos = 0;
     mLastFileSize = 0;
@@ -1332,6 +1334,11 @@ bool LogFileReader::CheckFileSignatureAndOffset(int64_t& fileSize) {
         }
     }
 
+    // If file size is 0 and filename is changed, we cannot judge if the inode is reused by signature,
+    // so we just recreate the reader to avoid filename mismatch
+    if (mLastFileSize == 0 && mRealLogPath != mHostLogPath) {
+        return false;
+    }
     fileSize = endSize;
     mLastFileSize = endSize;
     bool sigCheckRst = CheckAndUpdateSignature(string(firstLine), mLastFileSignatureHash, mLastFileSignatureSize);
@@ -1567,7 +1574,8 @@ bool LogFileReader::LogSplit(const char* buffer,
             logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
         } else {
             endIndex = buffer[size-1] == '\n' ? size -1 : size;
-            if (mLogBeginRegPtr != NULL && mLogContinueRegPtr == NULL && mLogEndRegPtr == NULL) {
+            if (mLogBeginRegPtr != NULL && mLogEndRegPtr == NULL) {
+                anyMatched = true;
                 // If logs is unmatched, they have been handled immediately. So logs must be matched here.
                 logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
             } else if (mLogBeginRegPtr == NULL && mLogContinueRegPtr == NULL && mLogEndRegPtr != NULL) {
@@ -1844,6 +1852,10 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     TruncateInfo* truncateInfo = nullptr;
     size_t nbytes = ReadFile(mLogFileOp, stringMemory.data, READ_BYTE, mLastFilePos, &truncateInfo);
     char* stringBuffer = stringMemory.data;
+    if (nbytes == 0) {
+        stringBuffer[0] = '\0';
+        return;
+    }
     // Ignore \n if last is force read
     if (stringBuffer[0] == '\n' && mLastForceRead) {
         ++stringBuffer;
@@ -1912,6 +1924,9 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         }
     }
     gbkBuffer[readCharCount] = '\0';
+    if (readCharCount == 0) {
+        return;
+    }
 
     vector<size_t> lineFeedPos = {0};
     for (size_t idx = 0; idx < readCharCount - 1; ++idx) {
@@ -2052,6 +2067,11 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
         sigStr[readSize] = '\0';
         uint64_t sigHash = mLastFileSignatureHash;
         uint32_t sigSize = mLastFileSignatureSize;
+        // If file size is 0 and filename is changed, we cannot judge if the inode is reused by signature,
+        // so we just recreate the reader to avoid filename mismatch
+        if (mLastFileSize == 0 && filePath != mHostLogPath) {
+            return FileCompareResult_SigChange;
+        }
         bool sigSameRst = CheckAndUpdateSignature(string(sigStr), sigHash, sigSize);
         if (!sigSameRst) {
             return FileCompareResult_SigChange;
@@ -2291,6 +2311,7 @@ void LogFileReader::UpdateReaderManual() {
     }
     mLogFileOp.Open(mHostLogPath.c_str(), mIsFuseMode);
     mDevInode = GetFileDevInode(mHostLogPath);
+    mRealLogPath = mHostLogPath;
 }
 #endif
 
