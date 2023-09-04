@@ -52,9 +52,11 @@ private:
     int* mRegexMatchFailures = nullptr;
     int* mLogGroupSize = nullptr;
 
-    CounterPtr mParseFailuresCounter;
-    CounterPtr mRegexMatchFailuresCounter;
-    CounterPtr mLogGroupSizeCounter;
+    CounterPtr mProcRecordsTotal;
+    CounterPtr mProcRecordsSizeBytes;
+    CounterPtr mProcParseErrorTotal;
+    CounterPtr mProcTimeMS;
+    
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseRegexNativeUnittest;
 #endif

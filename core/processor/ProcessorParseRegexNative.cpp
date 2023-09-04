@@ -19,6 +19,7 @@
 #include "parser/LogParser.h" // for UNMATCH_LOG_KEY
 #include "common/Constants.h"
 #include "monitor/LogtailMetric.h"
+#include "common/TimeUtil.h"
 
 namespace logtail {
 
@@ -51,11 +52,15 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     WriteMetrics::GetInstance()->PrepareCommonLabels(labels, GetContext().GetProjectName(), GetContext().GetLogstoreName(), GetContext().GetRegion(), GetContext().GetConfigName());
     labels.emplace_back(std::make_pair("pluginType",  "ProcessorParseRegexNative"));
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
-    mParseFailuresCounter = mMetricsRecordRef.CreateCounter("parseFailures");
-    mRegexMatchFailuresCounter = mMetricsRecordRef.CreateCounter("regexMatchFailures");
-    mLogGroupSizeCounter = mMetricsRecordRef.CreateCounter("logGroupSize");
+    
+    mProcRecordsTotal = mMetricsRecordRef.CreateCounter("proc_records_total");
+    mProcRecordsSizeBytes = mMetricsRecordRef.CreateCounter("proc_records_size_bytes");
+    mProcParseErrorTotal = mMetricsRecordRef.CreateCounter("proc_parse_error_total");
+    mProcTimeMS = mMetricsRecordRef.CreateCounter("proc_time_ms");
+
     return true;
 }
+
 
 void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty() || mUserDefinedFormat.empty()) {
@@ -63,6 +68,7 @@ void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
     }
     const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
     EventsContainer& events = logGroup.MutableEvents();
+    uint64_t startTime = GetCurrentTimeInMicroSeconds();
     // works good normally. poor performance if most data need to be discarded.
     for (auto it = events.begin(); it != events.end();) {
         if (ProcessorParseRegexNative::ProcessEvent(logPath, *it)) {
@@ -71,6 +77,8 @@ void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
             it = events.erase(it);
         }
     }
+    uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
+    mProcTimeMS->Add(durationTime);
     return;
 }
 
@@ -130,7 +138,6 @@ bool ProcessorParseRegexNative::WholeLineModeParser(LogEvent& sourceEvent, const
 void ProcessorParseRegexNative::AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent) {
     targetEvent.SetContentNoCopy(key, value);
     *mLogGroupSize += key.size() + value.size() + 5;
-    mLogGroupSizeCounter->Add(key.size() + value.size() + 5);
 }
 
 bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
@@ -172,8 +179,7 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
         }
         ++(*mRegexMatchFailures);
         ++(*mParseFailures);
-        mParseFailuresCounter->Add(1);
-        mRegexMatchFailuresCounter->Add(1);
+        
         parseSuccess = false;
     } else if (what.size() <= keys.size()) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -192,11 +198,17 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
         }
         ++(*mRegexMatchFailures);
         ++(*mParseFailures);
-        mParseFailuresCounter->Add(1);
-        mRegexMatchFailuresCounter->Add(1);
         parseSuccess = false;
     }
+
+
+    mProcRecordsTotal->Add(1);
+
+    int size = buffer.size();
+    mProcRecordsSizeBytes->Add(size);
+
     if (!parseSuccess) {
+        mProcParseErrorTotal->Add(1);
         return false;
     }
 

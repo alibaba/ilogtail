@@ -181,6 +181,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     })";
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    APSARA_TEST_GT_FATAL(processor.mProcTimeMS->GetValue(), 0);
 }
 
 void ProcessorParseRegexNativeUnittest::TestAddLog() {
@@ -247,8 +248,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().regexMatchFailures);
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
 
-    APSARA_TEST_EQUAL_FATAL(count, processor.mParseFailuresCounter->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processor.mRegexMatchFailuresCounter->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor.mProcRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor.mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count*6, processor.mProcRecordsSizeBytes->GetValue());
 }
 
 } // namespace logtail
