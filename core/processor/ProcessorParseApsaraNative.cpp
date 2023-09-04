@@ -23,15 +23,33 @@
 
 namespace logtail {
 
+static const int32_t MAX_BASE_FIELD_NUM = 10;
+
 bool ProcessorParseApsaraNative::Init(const ComponentConfig& config) {
     mSourceKey = DEFAULT_CONTENT_KEY;
     mDiscardUnmatch = config.mDiscardUnmatch;
     mUploadRawLog = config.mUploadRawLog;
     mLogTimeZoneOffsetSecond = config.mLogTimeZoneOffsetSecond;
+    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     return true;
 }
 
 void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
+    if (logGroup.GetEvents().empty()) {
+        return;
+    }
+    const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
+    EventsContainer& events = logGroup.MutableEvents();
+    StringView timeStrCache;
+    time_t lastLogTime;
+    // works good normally. poor performance if most data need to be discarded.
+    for (auto it = events.begin(); it != events.end();) {
+        if (ProcessEvent(logPath, *it, lastLogTime, timeStrCache)) {
+            ++it;
+        } else {
+            it = events.erase(it);
+        }
+    }
     return;
 }
 
@@ -126,7 +144,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
 #elif defined(_MSC_VER)
     sprintf(s_micro, "%lld", logTime_in_micro);
 #endif
-    AddLog("microtime", StringView(s_micro), sourceEvent);
+    AddLog("microtime", StringView(s_micro, strlen(s_micro)), sourceEvent);
     return true;
 }
 
@@ -282,8 +300,8 @@ static int32_t FindColonIndex(StringView& buffer, int32_t beginIndex, int32_t en
 
 int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent) {
     // TODO
-    int32_t beginIndexArray[10] = {0};
-    int32_t endIndexArray[10] = {0};
+    int32_t beginIndexArray[MAX_BASE_FIELD_NUM] = {0};
+    int32_t endIndexArray[MAX_BASE_FIELD_NUM] = {0};
     int32_t baseFieldNum = FindBaseFields(buffer, beginIndexArray, endIndexArray);
     if (baseFieldNum == 0) {
         return 0;
