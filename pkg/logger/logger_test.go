@@ -192,9 +192,9 @@ func TestLogLevelFromEnv(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
 	clean()
-	os.Setenv("ALIYUN_LOGTAIL_LOG_LEVEL", "debug")
+	os.Setenv("LOGTAIL_LOG_LEVEL", "debug")
 	initNormalLogger()
-	os.Unsetenv("ALIYUN_LOGTAIL_LOG_LEVEL")
+	os.Unsetenv("LOGTAIL_LOG_LEVEL")
 	type args struct {
 		ctx     context.Context
 		kvPairs []interface{}

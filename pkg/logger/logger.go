@@ -278,7 +278,7 @@ func setLogConf(logConfig string) {
 		return
 	}
 	dat := string(content)
-	aliyunLogtailLogLevel := strings.ToLower(os.Getenv("ALIYUN_LOGTAIL_LOG_LEVEL"))
+	aliyunLogtailLogLevel := strings.ToLower(os.Getenv("LOGTAIL_LOG_LEVEL"))
 	if aliyunLogtailLogLevel != "" {
 		pattern := `(?mi)(minlevel=")([^"]*)(")`
 		regExp := regexp.MustCompile(pattern)
