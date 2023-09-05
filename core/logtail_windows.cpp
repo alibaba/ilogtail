@@ -38,10 +38,10 @@
 #include "controller/EventDispatcher.h"
 #include "monitor/Monitor.h"
 #include "sender/Sender.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogFileProfiler.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
 #include "app_config/AppConfig.h"
 using namespace logtail;
 
@@ -201,11 +201,12 @@ void do_worker_process() {
     appInfoJson["update_time"] = GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
     std::string appInfo = appInfoJson.toStyledString();
     OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
-    APSARA_LOG_INFO(sLogger, ("Logtail started, appInfo", appInfo));
+    APSARA_LOG_INFO(sLogger, ("appInfo", appInfo));
 
     ConfigManager::GetInstance()->InitUpdateConfig(configExistFlag);
     ConfigManager::GetInstance()->RegisterHandlers();
     EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
+    APSARA_LOG_INFO(sLogger, ("Logtail started", "initialization completed"));
 
     EventDispatcher::GetInstance()->Dispatch();
 }

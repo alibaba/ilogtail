@@ -36,3 +36,15 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+
+- [public] [both] [added] refactoried C++ process pipeline
+- [public] [both] [added] support use accelerate processors with go processors
+- [public] [both] [added] add new logtail metric module
+- [public] [both] [added] use env `LOGTAIL_LOG_LEVEL` to control ilogtail log level
+- [public] [both] [updated] support continue/end regex patterns to split multiline log
+- [public] [both] [updated] support reader flush timeout
+- [public] [both] [updated] Flusher Kafka V2: support send the message with headers to kafka
+- [public] [both] [fixed] fix multiline is splitted if not flushed to disk together
+- [public] [both] [fixed] fix line is truncated if \0 is in the middle of line
+- [public] [both] [fixed] fix filename being mismatched to the deleted file if the deleted file size is 0 and their inode is same
+- [public] [both] [fixed] fix config server panic caused by concurrent read and write shared object
