@@ -38,6 +38,7 @@ jobs:
         runner: [ ubuntu ]
       fail-fast: true
     steps:
+      # Clean up space to prevent action from running out of disk space.
       - name: clean
         if: matrix.runner == 'ubuntu-latest'
         run: |
@@ -49,7 +50,6 @@ jobs:
           sudo -E apt-get -qq clean
       - name: Check disk space
         run: |
-          df -h
           df -hT $PWD
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v2

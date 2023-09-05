@@ -45,6 +45,7 @@ jobs:
       - name: prepare ubuntu environment
         if: matrix.runner == 'ubuntu'
         run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev
+      # Clean up space to prevent action from running out of disk space.
       - name: clean
         if: matrix.runner == 'ubuntu-latest'
         run: |
@@ -56,7 +57,6 @@ jobs:
           sudo -E apt-get -qq clean
       - name: Check disk space
         run: |
-          df -h
           df -hT $PWD
       - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v2
