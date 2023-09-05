@@ -21,6 +21,7 @@
 #include "monitor/LogtailMetric.h"
 #include "monitor/MetricConstants.h"
 #include "common/TimeUtil.h"
+#include "plugin/ProcessorInstance.h"
 
 namespace logtail {
 
@@ -29,6 +30,7 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     mDiscardUnmatch = config.mDiscardUnmatch;
     mUploadRawLog = config.mUploadRawLog;
     mRawLogTag = config.mAdvancedConfig.mRawLogTag;
+
     if (config.mRegs && config.mKeys) {
         std::list<std::string>::iterator regitr = config.mRegs->begin();
         std::list<std::string>::iterator keyitr = config.mKeys->begin();
@@ -50,21 +52,19 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
     std::vector<std::pair<std::string, std::string>> labels;
-    WriteMetrics::GetInstance()->PreparePluginCommonLabels(labels,
-                                                           GetContext().GetProjectName(),
+    WriteMetrics::GetInstance()->PreparePluginCommonLabels(GetContext().GetProjectName(),
                                                            GetContext().GetLogstoreName(),
                                                            GetContext().GetRegion(),
                                                            GetContext().GetConfigName(),
-                                                           PLUGIN_PROCESSOR_PARSE_REGEX_NATIVE);
+                                                           Name(),
+                                                           mProcessorInstance == nullptr ? "" : mProcessorInstance->Id(),
+                                                           labels);
+
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
 
-    mProcInRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
     mProcInRecordsSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_PROC_IN_RECORDS_SIZE_BYTES);
-    mProcOutRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
     mProcOutRecordsSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_PROC_OUT_RECORDS_SIZE_BYTES);
     mProcDiscardRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcTimeMS = mMetricsRecordRef.CreateCounter(METRIC_PROC_TIME_MS);
-
     mProcParseErrorTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     mProcKeyCountNotMatchErrorTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
     return true;
@@ -77,7 +77,6 @@ void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
     }
     const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
     EventsContainer& events = logGroup.MutableEvents();
-    uint64_t startTime = GetCurrentTimeInMicroSeconds();
     // works good normally. poor performance if most data need to be discarded.
     for (auto it = events.begin(); it != events.end();) {
         if (ProcessorParseRegexNative::ProcessEvent(logPath, *it)) {
@@ -86,8 +85,6 @@ void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
             it = events.erase(it);
         }
     }
-    uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
-    mProcTimeMS->Add(durationTime);
     return;
 }
 
@@ -127,7 +124,6 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
         if (res && !mSourceKeyOverwritten) {
             sourceEvent.DelContent(mSourceKey);
         }
-        mProcOutRecordsTotal->Add(1);
         return true;
     }
     mProcDiscardRecordsTotal->Add(1);
@@ -144,15 +140,14 @@ void ProcessorParseRegexNative::AddUserDefinedFormat(const std::string& regStr, 
 bool ProcessorParseRegexNative::WholeLineModeParser(LogEvent& sourceEvent, const std::string& key) {
     StringView buffer = sourceEvent.GetContent(mSourceKey);
     AddLog(StringView(key), buffer, sourceEvent);
-    mProcInRecordsTotal->Add(1);
     mProcInRecordsSizeBytes->Add(buffer.size());
     return true;
 }
 
 void ProcessorParseRegexNative::AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent) {
     targetEvent.SetContentNoCopy(key, value);
-    int keyValueSize = key.size() + value.size() + 5;
-    *mLogGroupSize += keyValueSize;
+    size_t keyValueSize = key.size() + value.size();
+    *mLogGroupSize += keyValueSize + 5;
     mProcOutRecordsSizeBytes->Add(keyValueSize);
 }
 
@@ -164,6 +159,7 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
     std::string exception;
     StringView buffer = sourceEvent.GetContent(mSourceKey);
     bool parseSuccess = true;
+    mProcInRecordsSizeBytes->Add(buffer.size());
     if (!BoostRegexMatch(buffer.data(), buffer.size(), reg, exception, what, boost::match_default)) {
         if (!exception.empty()) {
             if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -217,11 +213,6 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
         mProcKeyCountNotMatchErrorTotal->Add(1);
         parseSuccess = false;
     }
-
-
-    mProcInRecordsTotal->Add(1);
-    mProcInRecordsSizeBytes->Add(buffer.size());
-
     if (!parseSuccess) {
         return false;
     }

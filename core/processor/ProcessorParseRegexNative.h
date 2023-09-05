@@ -52,13 +52,10 @@ private:
     int* mRegexMatchFailures = nullptr;
     int* mLogGroupSize = nullptr;
 
-    CounterPtr mProcInRecordsTotal;
     CounterPtr mProcInRecordsSizeBytes;
-    CounterPtr mProcOutRecordsTotal;
     CounterPtr mProcOutRecordsSizeBytes;
+    
     CounterPtr mProcDiscardRecordsTotal;
-    CounterPtr mProcTimeMS;
-
     CounterPtr mProcParseErrorTotal;
     CounterPtr mProcKeyCountNotMatchErrorTotal;
 

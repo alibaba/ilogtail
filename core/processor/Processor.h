@@ -20,18 +20,24 @@
 #include "pipeline/PipelineContext.h"
 #include "monitor/LogtailMetric.h"
 
+
 namespace logtail {
 
+class ProcessorInstance;
 class Processor {
 public:
     virtual ~Processor() {}
+    void SetProcessorInstance(ProcessorInstance& instance) { mProcessorInstance = &instance; }
+    ProcessorInstance& GetProcessorInstance() { return *mProcessorInstance; }
     void SetContext(PipelineContext& context) { mContext = &context; }
     PipelineContext& GetContext() { return *mContext; }
+    MetricsRecordRef GetMetricsRecordRef() { return mMetricsRecordRef; }
     virtual bool Init(const ComponentConfig& config) = 0;
     virtual void Process(PipelineEventGroup& logGroup) = 0;
 
 protected:
     virtual bool IsSupportedEvent(const PipelineEventPtr& e) = 0;
+    ProcessorInstance* mProcessorInstance = nullptr;
     PipelineContext* mContext = nullptr;
     MetricsRecordRef mMetricsRecordRef;
 };
