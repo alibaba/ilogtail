@@ -25,6 +25,7 @@
 #include "Logger.h"
 #include <unordered_map>
 #include <ostream>
+#define LOG_TRACE(logger, fields) LOG_X_IF(logger, true, fields, spdlog::level::trace)
 
 namespace logtail {
 
@@ -323,15 +324,6 @@ public:
     void BindConvertFunc(std::function<bool(reqType* req, respType* resp, eventType&)> func) {
         this->mConvertEventFunc = func;
     }
-    #define LOG_X_IF(logger, condition, fields, level) \
-    do { \
-        if (condition && logger->should_log(level)) { \
-            LogMaker maker; \
-            (void)maker fields; \
-            logger->log(level, "{}:{}\t{}", __FILE__, __LINE__, maker.GetContent()); \
-        } \
-    } while (0)
-    #define LOG_TRACE(logger, fields) LOG_X_IF(logger, true, fields, spdlog::level::trace)
 
 private:
     bool TryStitcherByReq() {
