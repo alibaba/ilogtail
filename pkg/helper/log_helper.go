@@ -31,8 +31,9 @@ const (
 	// This value is chosen with many leading 0s, so we have scope to store more
 	// complicated values in the future. It is 2 rather than 1 to make
 	// it easier to distinguish from the NormalNaN by a human when debugging.
-	StaleNaN uint64 = 0x7ff0000000000002
-	StaleNan        = "__STALE_NAN__"
+	StaleNaN                              uint64 = 0x7ff0000000000002
+	StaleNan                                     = "__STALE_NAN__"
+	SlsMetricstoreInvalidReplaceCharacter        = '_'
 )
 
 func CreateLog(t time.Time, configTag map[string]string, logTags map[string]string, fields map[string]string) (*protocol.Log, error) {
@@ -291,7 +292,7 @@ func formatLabelKey(key string) string {
 			if newKey == nil {
 				newKey = []byte(key)
 			}
-			newKey[i] = '_'
+			newKey[i] = SlsMetricstoreInvalidReplaceCharacter
 		}
 	}
 	if newKey == nil {
@@ -313,7 +314,7 @@ func formatLabelValue(value string) string {
 			if newValue == nil {
 				newValue = []byte(value)
 			}
-			newValue[i] = '_'
+			newValue[i] = SlsMetricstoreInvalidReplaceCharacter
 		}
 	}
 	if newValue == nil {
@@ -335,7 +336,7 @@ func formatNewMetricName(name string) string {
 			b == ':' {
 			continue
 		} else {
-			newName[i] = '_'
+			newName[i] = SlsMetricstoreInvalidReplaceCharacter
 		}
 	}
 	return util.ZeroCopyBytesToString(newName)
