@@ -36,9 +36,6 @@ Json::Value SpanEvent::ToJson() const {
 
 bool SpanEvent::FromJson(const Json::Value& root) {
     SetTimestamp(root["timestamp"].asInt64());
-    if (root.isMember("timestampNanosecond")) {
-        SetTimestampNanosecond(root["timestampNanosecond"].asInt64());
-    }
     return true;
 }
 

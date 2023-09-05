@@ -19,6 +19,7 @@
 #include "app_config/AppConfig.h"
 #include "common/Constants.h"
 #include "common/LogtailCommonFlags.h"
+#include <algorithm>
 
 namespace logtail {
 bool ProcessorParseTimestampNative::Init(const ComponentConfig& config) {
@@ -94,11 +95,10 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
         ++(*mHistoryFailures);
         return false;
     }
-    sourceEvent.SetTimestamp(logTime.tv_sec);
-    sourceEvent.SetTimestampNanosecond(logTime.tv_nsec);
+    sourceEvent.SetTimestamp(logTime.tv_sec, logTime.tv_nsec);
     if (mLegacyPreciseTimestampConfig.enabled) {
         StringBuffer sb = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(20);
-        sb.size = snprintf(sb.data, sb.capacity, "%lu", preciseTimestamp);
+        sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lu", preciseTimestamp));
         sourceEvent.SetContentNoCopy(mLegacyPreciseTimestampConfig.key, StringView(sb.data, sb.size));
     }
     return true;

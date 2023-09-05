@@ -291,11 +291,13 @@ uint64_t GetPreciseTimestampFromLogtailTime(LogtailTime logTime, const PreciseTi
     return preciseTimestamp;
 }
 
-void SetLogTime(sls_logs::Log* log, time_t second, long nanosecond, bool ignoreNanosecond) {
+void SetLogTime(sls_logs::Log* log, time_t second) {
     log->set_time(second);
-    if (!ignoreNanosecond) {
-        log->set_time_ns(nanosecond);
-    }
+}
+
+void SetLogTime(sls_logs::Log* log, time_t second, long nanosecond) {
+    log->set_time(second);
+    log->set_time_ns(nanosecond);
 }
 
 LogtailTime GetCurrentLogtailTime() {

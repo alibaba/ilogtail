@@ -37,8 +37,11 @@ public:
 
     time_t GetTimestamp() const { return timestamp; }
     void SetTimestamp(time_t t) { timestamp = t; }
+    void SetTimestamp(time_t t, long ns) { 
+        timestamp = t; 
+        timestampNanosecond = ns; // Only nanosecond part
+    }
     long GetTimestampNanosecond() const { return timestampNanosecond; }
-    void SetTimestampNanosecond(long t) { timestampNanosecond = t; }
 
     // for debug and test
     virtual Json::Value ToJson() const = 0;

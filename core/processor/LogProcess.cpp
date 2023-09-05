@@ -476,9 +476,10 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup, sls_logs
         }
         sls_logs::Log* log = resultGroup.add_logs();
         auto& logEvent = event.Cast<LogEvent>();
-        log->set_time(logEvent.GetTimestamp());
         if (enableTimestampNanosecond) {
-            log->set_time_ns(logEvent.GetTimestampNanosecond());   
+            SetLogTime(log, logEvent.GetTimestamp(), logEvent.GetTimestampNanosecond());
+        } else {
+            SetLogTime(log, logEvent.GetTimestamp());
         }
         for (auto& kv : logEvent.GetContents()) {
             sls_logs::Log_Content* contPtr = log->add_contents();

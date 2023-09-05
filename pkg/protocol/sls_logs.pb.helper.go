@@ -21,7 +21,11 @@ func CloneLog(log *Log) *Log {
 	return cloneLog
 }
 
-func SetLogTime(log *Log, second uint32, nanosecond uint32) {
+func SetLogTime(log *Log, second uint32) {
+	log.Time = second
+}
+
+func SetLogTimeWithNano(log *Log, second uint32, nanosecond uint32) {
 	log.Time = second
 	log.TimeNs = &nanosecond
 }
