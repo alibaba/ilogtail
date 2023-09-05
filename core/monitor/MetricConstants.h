@@ -29,12 +29,19 @@ const std::string LABEL_PREFIX = "label.";
 const std::string VALUE_PREFIX = "value.";
 
 
-
-const std::string METRIC_PROC_RECORDS_TOTAL = "proc_records_total";
-const std::string METRIC_PROC_RECORDS_SIZE_BYTES = "proc_records_size_bytes";
-const std::string METRIC_PROC_PARSE_ERROR_TOTAL = "proc_parse_error_total";
+// processor common metrics
+const std::string METRIC_PROC_IN_RECORDS_TOTAL = "proc_in_records_total";
+const std::string METRIC_PROC_IN_RECORDS_SIZE_BYTES = "proc_in_records_size_bytes";
+const std::string METRIC_PROC_OUT_RECORDS_TOTAL = "proc_out_records_total";
+const std::string METRIC_PROC_OUT_RECORDS_SIZE_BYTES = "proc_out_records_size_bytes";
+const std::string METRIC_PROC_DISCARD_RECORDS_TOTAL = "proc_discard_records_total";
 const std::string METRIC_PROC_TIME_MS = "proc_time_ms";
 
+// processor cunstom metrics
+const std::string METRIC_PROC_PARSE_ERROR_TOTAL = "proc_parse_error_total";
+const std::string METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL = "proc_key_count_not_match_error_total";
+
+// processore plugin name
 const std::string PLUGIN_PROCESSOR_PARSE_REGEX_NATIVE = "processor_parse_regex_native";
 
 } // namespace logtail
