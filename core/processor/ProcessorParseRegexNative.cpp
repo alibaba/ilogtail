@@ -47,12 +47,16 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
-    
+
     std::vector<std::pair<std::string, std::string>> labels;
-    WriteMetrics::GetInstance()->PrepareCommonLabels(labels, GetContext().GetProjectName(), GetContext().GetLogstoreName(), GetContext().GetRegion(), GetContext().GetConfigName());
-    labels.emplace_back(std::make_pair("pluginType",  "ProcessorParseRegexNative"));
+    WriteMetrics::GetInstance()->PreparePluginCommonLabels(labels,
+                                                           GetContext().GetProjectName(),
+                                                           GetContext().GetLogstoreName(),
+                                                           GetContext().GetRegion(),
+                                                           GetContext().GetConfigName(),
+                                                           "processor_parse_regex_native");
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
-    
+
     mProcRecordsTotal = mMetricsRecordRef.CreateCounter("proc_records_total");
     mProcRecordsSizeBytes = mMetricsRecordRef.CreateCounter("proc_records_size_bytes");
     mProcParseErrorTotal = mMetricsRecordRef.CreateCounter("proc_parse_error_total");
@@ -179,7 +183,7 @@ bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,
         }
         ++(*mRegexMatchFailures);
         ++(*mParseFailures);
-        
+
         parseSuccess = false;
     } else if (what.size() <= keys.size()) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
