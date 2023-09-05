@@ -30,7 +30,11 @@ const std::string VALUE_PREFIX = "value.";
 
 
 
-const std::string METRIC_FILE_READ_COUNT = "file_read_count";
-const std::string METRIC_FILE_READ_BYTES = "file_read_bytes";
+const std::string METRIC_PROC_RECORDS_TOTAL = "proc_records_total";
+const std::string METRIC_PROC_RECORDS_SIZE_BYTES = "proc_records_size_bytes";
+const std::string METRIC_PROC_PARSE_ERROR_TOTAL = "proc_parse_error_total";
+const std::string METRIC_PROC_TIME_MS = "proc_time_ms";
+
+const std::string PLUGIN_PROCESSOR_PARSE_REGEX_NATIVE = "processor_parse_regex_native";
 
 } // namespace logtail

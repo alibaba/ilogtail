@@ -19,6 +19,7 @@
 #include "parser/LogParser.h" // for UNMATCH_LOG_KEY
 #include "common/Constants.h"
 #include "monitor/LogtailMetric.h"
+#include "monitor/MetricConstants.h"
 #include "common/TimeUtil.h"
 
 namespace logtail {
@@ -54,13 +55,13 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
                                                            GetContext().GetLogstoreName(),
                                                            GetContext().GetRegion(),
                                                            GetContext().GetConfigName(),
-                                                           "processor_parse_regex_native");
+                                                           PLUGIN_PROCESSOR_PARSE_REGEX_NATIVE);
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
 
-    mProcRecordsTotal = mMetricsRecordRef.CreateCounter("proc_records_total");
-    mProcRecordsSizeBytes = mMetricsRecordRef.CreateCounter("proc_records_size_bytes");
-    mProcParseErrorTotal = mMetricsRecordRef.CreateCounter("proc_parse_error_total");
-    mProcTimeMS = mMetricsRecordRef.CreateCounter("proc_time_ms");
+    mProcRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_RECORDS_TOTAL);
+    mProcRecordsSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_PROC_RECORDS_SIZE_BYTES);
+    mProcParseErrorTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcTimeMS = mMetricsRecordRef.CreateCounter(METRIC_PROC_TIME_MS);
 
     return true;
 }
