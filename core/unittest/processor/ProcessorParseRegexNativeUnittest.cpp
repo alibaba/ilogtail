@@ -369,8 +369,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcOutRecordsSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processor.mProcDiscardRecordsTotal->GetValue());
 
+    // mProcKeyCountNotMatchErrorTotal should equal count 
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(10, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(count, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
 }
 
 } // namespace logtail
