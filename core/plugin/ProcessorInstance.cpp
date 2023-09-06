@@ -34,11 +34,15 @@ bool ProcessorInstance::Init(const ComponentConfigPtr& config, PipelineContext& 
 
 void ProcessorInstance::Process(PipelineEventGroup& logGroup) {
     size_t inSize = logGroup.GetEvents().size();
+
     mProcInRecordsTotal->Add(inSize);
+
     uint64_t startTime = GetCurrentTimeInMicroSeconds();
     mPlugin->Process(logGroup);
     uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
+    
     mProcTimeMS->Add(durationTime);
+
     size_t outSize = logGroup.GetEvents().size();
     mProcOutRecordsTotal->Add(outSize);
     LOG_DEBUG(mContext->GetLogger(), ("Processor", Id())("InSize", inSize)("OutSize", outSize));

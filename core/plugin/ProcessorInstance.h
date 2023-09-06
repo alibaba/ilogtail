@@ -41,6 +41,8 @@ private:
 
     CounterPtr mProcInRecordsTotal;
     CounterPtr mProcOutRecordsTotal;
+    // CounterPtr mProcInRecordsSizeBytes;
+    // CounterPtr mProcOutRecordsSizeBytes;
     CounterPtr mProcTimeMS;
 
 #ifdef APSARA_UNIT_TEST_MAIN

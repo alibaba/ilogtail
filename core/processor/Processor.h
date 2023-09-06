@@ -35,7 +35,6 @@ public:
 
 protected:
     virtual bool IsSupportedEvent(const PipelineEventPtr& e) = 0;
-    ProcessorInstance* mProcessorInstance = nullptr;
     PipelineContext* mContext = nullptr;
     MetricsRecordRef mMetricsRecordRef;
 

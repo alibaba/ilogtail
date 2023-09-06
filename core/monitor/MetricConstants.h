@@ -37,6 +37,8 @@ extern const std::string METRIC_PROC_DISCARD_RECORDS_TOTAL;
 extern const std::string METRIC_PROC_TIME_MS;
 
 // processor custom metrics
+extern const std::string METRIC_PROC_IN_DATA_SIZE_BYTES;
+extern const std::string METRIC_PROC_OUT_DATA_SIZE_BYTES;
 extern const std::string METRIC_PROC_PARSE_ERROR_TOTAL;
 extern const std::string METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL;
 
