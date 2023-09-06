@@ -25,7 +25,6 @@
 #include "Logger.h"
 #include <unordered_map>
 #include <ostream>
-#define LOG_TRACE(logger, fields) LOG_X_IF(logger, true, fields, spdlog::level::trace)
 
 namespace logtail {
 
@@ -381,7 +380,7 @@ private:
         eventType event;
         bool success = true;
         if (this->mConvertEventFunc != nullptr && this->mConvertEventFunc(req, resp, event)) {
-            LOG_TRACE(sLogger,
+            APSARA_LOG_TRACE(sLogger,
                       ("head_req", this->mHeadRequestsIdx)("tail_req", this->mTailRequestsIdx)(
                           "head_resp", this->mHeadRequestsIdx)("tail_resp", this->mTailResponsesIdx));
             success = this->mAggregators->AddEvent(std::move(event));
