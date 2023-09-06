@@ -19,6 +19,7 @@
 #include "models/LogEvent.h"
 #include "app_config/AppConfig.h"
 #include "parser/LogParser.h" // for UNMATCH_LOG_KEY
+#include <algorithm>
 
 
 namespace logtail {
@@ -31,6 +32,7 @@ bool ProcessorParseApsaraNative::Init(const ComponentConfig& config) {
     mUploadRawLog = config.mUploadRawLog;
     mLogTimeZoneOffsetSecond = config.mLogTimeZoneOffsetSecond;
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
+    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     return true;
 }
 
@@ -89,6 +91,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
                    sourceEvent.GetContent(mSourceKey),
                    sourceEvent); // legacy behavior, should use sourceKey
         }
+        ++(*mParseFailures);
         return false;
     }
     if (BOOL_FLAG(ilogtail_discard_old_data)
@@ -110,11 +113,12 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
                                               GetContext().GetLogstoreName(),
                                               GetContext().GetRegion());
         }
+        ++(*mParseFailures);
         return false;
     }
 
-    sourceEvent.SetTimestamp(logTime); 
-    // TODO logTime_in_micro * 1000 % 1000000000
+    // TODO set miscrosecond logTime_in_micro * 1000 % 1000000000
+    sourceEvent.SetTimestamp(logTime);
     int32_t beg_index = 0;
     int32_t colon_index = -1;
     int32_t index = -1;
@@ -138,13 +142,13 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
     if (mAdjustApsaraMicroTimezone) {
         logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
     }
-    char s_micro[20] = {0};
+    StringBuffer sb = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(20);
 #if defined(__linux__)
-    sprintf(s_micro, "%ld", logTime_in_micro);
+    sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%ld", logTime_in_micro));
 #elif defined(_MSC_VER)
-    sprintf(s_micro, "%lld", logTime_in_micro);
+    sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lld", logTime_in_micro));
 #endif
-    AddLog("microtime", StringView(s_micro, strlen(s_micro)), sourceEvent);
+    AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
     return true;
 }
 
@@ -299,7 +303,6 @@ static int32_t FindColonIndex(StringView& buffer, int32_t beginIndex, int32_t en
 }
 
 int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent) {
-    // TODO
     int32_t beginIndexArray[MAX_BASE_FIELD_NUM] = {0};
     int32_t endIndexArray[MAX_BASE_FIELD_NUM] = {0};
     int32_t baseFieldNum = FindBaseFields(buffer, beginIndexArray, endIndexArray);

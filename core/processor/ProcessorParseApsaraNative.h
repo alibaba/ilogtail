@@ -42,7 +42,9 @@ private:
     bool mUploadRawLog = false;
     bool mAdjustApsaraMicroTimezone = false;
     int mLogTimeZoneOffsetSecond = 0;
+
     int* mLogGroupSize = nullptr;
+    int* mParseFailures = nullptr;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;
 #endif

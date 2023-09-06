@@ -373,7 +373,6 @@ bool ConfigYamlToJson::CheckPluginConfig(const string configName, const YAML::No
         workMode.mIsFileMode = false;
         workMode.mLogType = "plugin";
     }
-    workMode.mLogType = "apsara_log";
 
     if (!workMode.mIsFileMode && workMode.mHasAccelerateProcessor) {
         LOG_ERROR(
