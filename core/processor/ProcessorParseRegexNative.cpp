@@ -25,7 +25,10 @@
 
 namespace logtail {
 
-bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
+bool ProcessorParseRegexNative::Init(const ComponentConfigPtr& componentConfig) {
+
+    PipelineConfig config = *(componentConfig->GetConfig());
+
     mSourceKey = DEFAULT_CONTENT_KEY;
     mDiscardUnmatch = config.mDiscardUnmatch;
     mUploadRawLog = config.mUploadRawLog;
@@ -50,9 +53,7 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
-
-    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
-
+    SetMetricsRecordRef(Name(), componentConfig->GetId());
     mProcInRecordsSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_IN_RECORDS_SIZE_BYTES);
     mProcOutRecordsSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_OUT_RECORDS_SIZE_BYTES);
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);

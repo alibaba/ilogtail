@@ -24,7 +24,8 @@
 
 namespace logtail {
 
-bool ProcessorSplitRegexNative::Init(const ComponentConfig& config) {
+bool ProcessorSplitRegexNative::Init(const ComponentConfigPtr& componentConfig) {
+    PipelineConfig config = *(componentConfig->GetConfig());
     mSplitKey = DEFAULT_CONTENT_KEY;
     mIsMultline = config.IsMultiline();
     SetLogMultilinePolicy(config.mLogBeginReg, config.mLogContinueReg, config.mLogEndReg);
@@ -32,7 +33,7 @@ bool ProcessorSplitRegexNative::Init(const ComponentConfig& config) {
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
-    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
+    SetMetricsRecordRef(Name(), componentConfig->GetId());
     return true;
 }
 

@@ -22,8 +22,8 @@
 
 namespace logtail {
 
-bool ProcessorParseApsaraNative::Init(const ComponentConfig& config) {
-    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
+bool ProcessorParseApsaraNative::Init(const ComponentConfigPtr& componentConfig) {
+    SetMetricsRecordRef(Name(), componentConfig->GetId());
     return true;
 }
 

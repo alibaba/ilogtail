@@ -20,7 +20,18 @@
 
 namespace logtail {
 
-using ComponentConfig = Config; // use Config temporarily
 using PipelineConfig = Config; // should use json like object
+
+class ComponentConfig {
+public:
+    ComponentConfig(std::string id, const PipelineConfig& config) : mId(id), mConfig(&config) {}
+    const std::string& GetId() { return mId; }
+    const Config* GetConfig() { return mConfig; }
+
+private:
+    std::string mId;
+    const Config* mConfig; // use Config temporarily
+};
+using ComponentConfigPtr = std::shared_ptr<ComponentConfig>;
 
 } // namespace logtail

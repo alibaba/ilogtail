@@ -19,11 +19,9 @@
 
 namespace logtail {
 
-bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& context) {
+bool ProcessorInstance::Init(const ComponentConfigPtr& config, PipelineContext& context) {
     mContext = &context;
     mPlugin->SetContext(context);
-    mPlugin->SetProcessorInstance(*this);
-
     bool inited = mPlugin->Init(config);
     if (inited) {
         // should init plugin first， then could GetMetricsRecordRef from plugin

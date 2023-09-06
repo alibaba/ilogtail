@@ -23,7 +23,8 @@
 
 
 namespace logtail {
-bool ProcessorParseTimestampNative::Init(const ComponentConfig& config) {
+bool ProcessorParseTimestampNative::Init(const ComponentConfigPtr& componentConfig) {
+    PipelineConfig config = *(componentConfig->GetConfig());
     mTimeFormat = config.mTimeFormat;
     mTimeKey = config.mTimeKey;
     mSpecifiedYear = config.mAdvancedConfig.mSpecifiedYear;
@@ -34,7 +35,7 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& config) {
 
     mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
-    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
+    SetMetricsRecordRef(Name(), componentConfig->GetId());
     return true;
 }
 

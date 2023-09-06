@@ -22,13 +22,16 @@
 
 namespace logtail {
 
-bool ProcessorSplitLogStringNative::Init(const ComponentConfig& config) {
+bool ProcessorSplitLogStringNative::Init(const ComponentConfigPtr& componentConfig) {
+    PipelineConfig config = *(componentConfig->GetConfig());
+
     mSplitKey = DEFAULT_CONTENT_KEY;
     mSplitChar = config.mLogType == JSON_LOG ? '\0' : '\n';
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
-    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
+
+    SetMetricsRecordRef(Name(), componentConfig->GetId());
     return true;
 }
 

@@ -27,11 +27,10 @@ class ProcessorInstance;
 class Processor {
 public:
     virtual ~Processor() {}
-    void SetProcessorInstance(ProcessorInstance& instance) { mProcessorInstance = &instance; }
     void SetContext(PipelineContext& context) { mContext = &context; }
     PipelineContext& GetContext() { return *mContext; }
     MetricsRecordRef GetMetricsRecordRef() { return mMetricsRecordRef; }
-    virtual bool Init(const ComponentConfig& config) = 0;
+    virtual bool Init(const ComponentConfigPtr& config) = 0;
     virtual void Process(PipelineEventGroup& logGroup) = 0;
 
 protected:
@@ -40,7 +39,6 @@ protected:
     PipelineContext* mContext = nullptr;
     MetricsRecordRef mMetricsRecordRef;
 
-    ProcessorInstance* GetProcessorInstance() { return mProcessorInstance; }
     void SetMetricsRecordRef(std::string name, std::string id) {
         std::vector<std::pair<std::string, std::string>> labels;
         WriteMetrics::GetInstance()->PreparePluginCommonLabels(GetContext().GetProjectName(),

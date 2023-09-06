@@ -23,7 +23,7 @@ namespace logtail {
 class ProcessorSplitLogStringNative : public Processor {
 public:
     static const char* Name() { return "processor_split_string_native"; }
-    bool Init(const ComponentConfig& config) override;
+    bool Init(const ComponentConfigPtr& componentConfig) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 protected:

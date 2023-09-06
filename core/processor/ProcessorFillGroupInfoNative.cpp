@@ -23,7 +23,8 @@
 
 namespace logtail {
 
-bool ProcessorFillGroupInfoNative::Init(const ComponentConfig& config) {
+bool ProcessorFillGroupInfoNative::Init(const ComponentConfigPtr& componentConfig) {
+    PipelineConfig config = *(componentConfig->GetConfig());
     mTopicFormat = config.mTopicFormat;
     if (config.mLogType != APSARA_LOG && ToLowerCaseString(mTopicFormat) == "default") {
         mTopicFormat = "none";
@@ -33,7 +34,7 @@ bool ProcessorFillGroupInfoNative::Init(const ComponentConfig& config) {
         mStaticTopic = config.mCustomizedTopic;
         mIsStaticTopic = true;
     }
-    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
+    SetMetricsRecordRef(Name(), componentConfig->GetId());
     return true;
 }
 
