@@ -150,7 +150,7 @@ func (hd *HistogramData) ToMetricLogs(name string, timeMs int64, labels MetricLa
 func NewMetricLog(name string, timeMs int64, value string, labels []MetricLabel) *protocol.Log {
 	strTime := strconv.FormatInt(timeMs, 10)
 	metric := &protocol.Log{}
-	protocol.SetLogTime(metric, uint32(timeMs/1000))
+	protocol.SetLogTimeWithNano(metric, uint32(timeMs/1000), uint32((timeMs*1e6)%1e9))
 	metric.Contents = []*protocol.Log_Content{}
 	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__name__", Value: name})
 	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__time_nano__", Value: strTime})
