@@ -37,5 +37,3 @@ your changes, such as:
 
 ## [Unreleased]
 
-- [public] [both] [fixed] fix filename being mismatched to the deleted file if the deleted file size is 0 and their inode is same
-

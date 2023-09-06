@@ -495,7 +495,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                      "real file path", realFilePath)("file device", checkpoint->mDevInode.dev)(
                      "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                      "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                ToString(checkpoint->mFileOpenFlag))(
+                     "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
         eventVec.push_back(
             new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
         eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -537,7 +538,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
                          "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                          "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                    ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                    ToString(checkpoint->mFileOpenFlag))(
+                         "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
             eventVec.push_back(
                 new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
             eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -584,7 +586,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
                          "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                          "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                    ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                    ToString(checkpoint->mFileOpenFlag))(
+                         "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
             eventVec.push_back(
                 new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
             eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -651,7 +654,8 @@ void EventDispatcherBase::AddExistedCheckPointFileEvents() {
                                                       DevInode(cpt.dev(), cpt.inode()),
                                                       cpt.config_name(),
                                                       cpt.real_path(),
-                                                      1);
+                                                      1,
+                                                      0);
             const auto result = validateCheckpoint(v1Cpt, cachePathDevInodeMap, eventVec);
             switch (result) {
                 case ValidateCheckpointResult::kNormal:
