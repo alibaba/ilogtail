@@ -51,22 +51,13 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
-    std::vector<std::pair<std::string, std::string>> labels;
-    WriteMetrics::GetInstance()->PreparePluginCommonLabels(GetContext().GetProjectName(),
-                                                           GetContext().GetLogstoreName(),
-                                                           GetContext().GetRegion(),
-                                                           GetContext().GetConfigName(),
-                                                           Name(),
-                                                           mProcessorInstance == nullptr ? "" : mProcessorInstance->Id(),
-                                                           labels);
+    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
 
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
-
-    mProcInRecordsSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_PROC_IN_RECORDS_SIZE_BYTES);
-    mProcOutRecordsSizeBytes = mMetricsRecordRef.CreateCounter(METRIC_PROC_OUT_RECORDS_SIZE_BYTES);
-    mProcDiscardRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcParseErrorTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-    mProcKeyCountNotMatchErrorTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
+    mProcInRecordsSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_IN_RECORDS_SIZE_BYTES);
+    mProcOutRecordsSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_OUT_RECORDS_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcKeyCountNotMatchErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
     return true;
 }
 

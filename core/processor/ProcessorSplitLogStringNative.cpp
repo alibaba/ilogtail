@@ -17,6 +17,8 @@
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
+#include "plugin/ProcessorInstance.h"
+
 
 namespace logtail {
 
@@ -26,6 +28,7 @@ bool ProcessorSplitLogStringNative::Init(const ComponentConfig& config) {
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
+    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
     return true;
 }
 

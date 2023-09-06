@@ -19,6 +19,8 @@
 #include "app_config/AppConfig.h"
 #include "common/Constants.h"
 #include "common/LogtailCommonFlags.h"
+#include "plugin/ProcessorInstance.h"
+
 
 namespace logtail {
 bool ProcessorParseTimestampNative::Init(const ComponentConfig& config) {
@@ -32,6 +34,7 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& config) {
 
     mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
+    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
     return true;
 }
 

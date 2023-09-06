@@ -19,6 +19,8 @@
 #include "common/Constants.h"
 #include "common/FileSystemUtil.h"
 #include "reader/LogFileReader.h"
+#include "plugin/ProcessorInstance.h"
+
 namespace logtail {
 
 bool ProcessorFillGroupInfoNative::Init(const ComponentConfig& config) {
@@ -31,6 +33,7 @@ bool ProcessorFillGroupInfoNative::Init(const ComponentConfig& config) {
         mStaticTopic = config.mCustomizedTopic;
         mIsStaticTopic = true;
     }
+    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
     return true;
 }
 

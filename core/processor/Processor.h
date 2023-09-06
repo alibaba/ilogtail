@@ -31,6 +31,18 @@ public:
     ProcessorInstance& GetProcessorInstance() { return *mProcessorInstance; }
     void SetContext(PipelineContext& context) { mContext = &context; }
     PipelineContext& GetContext() { return *mContext; }
+    void SetMetricsRecordRef(std::string name, std::string id) {
+        std::vector<std::pair<std::string, std::string>> labels;
+        WriteMetrics::GetInstance()->PreparePluginCommonLabels(GetContext().GetProjectName(),
+                                                           GetContext().GetLogstoreName(),
+                                                           GetContext().GetRegion(),
+                                                           GetContext().GetConfigName(),
+                                                           name,
+                                                           id,
+                                                           labels);
+
+        WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
+    }
     MetricsRecordRef GetMetricsRecordRef() { return mMetricsRecordRef; }
     virtual bool Init(const ComponentConfig& config) = 0;
     virtual void Process(PipelineEventGroup& logGroup) = 0;

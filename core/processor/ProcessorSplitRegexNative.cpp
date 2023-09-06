@@ -19,6 +19,8 @@
 #include "reader/LogFileReader.h" //SplitState
 #include "models/LogEvent.h"
 #include "logger/Logger.h"
+#include "plugin/ProcessorInstance.h"
+
 
 namespace logtail {
 
@@ -32,6 +34,7 @@ bool ProcessorSplitRegexNative::Init(const ComponentConfig& config) {
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
+    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
     return true;
 }
 
@@ -108,7 +111,8 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
         for (auto& content : logIndex) {
             std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-            targetEvent->SetTimestamp(sourceEvent.GetTimestamp()); // it is easy to forget other fields, better solution?
+            targetEvent->SetTimestamp(
+                sourceEvent.GetTimestamp()); // it is easy to forget other fields, better solution?
             targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
             if (mEnableLogPositionMeta) {
                 auto const offset = sourceoffset + (content.data() - sourceVal.data());
@@ -189,9 +193,10 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
     if (!exception.empty()) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                LOG_ERROR(GetContext().GetLogger(),
-                          ("regex_match in LogSplit fail, exception", exception)("project", GetContext().GetProjectName())(
-                              "logstore", GetContext().GetLogstoreName())("file", logPath));
+                LOG_ERROR(
+                    GetContext().GetLogger(),
+                    ("regex_match in LogSplit fail, exception", exception)("project", GetContext().GetProjectName())(
+                        "logstore", GetContext().GetLogstoreName())("file", logPath));
             }
             GetContext().GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
                                               "regex_match in LogSplit fail:" + exception,
