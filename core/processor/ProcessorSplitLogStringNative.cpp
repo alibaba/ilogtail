@@ -28,7 +28,7 @@ bool ProcessorSplitLogStringNative::Init(const ComponentConfig& config) {
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
-    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
+    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
     return true;
 }
 

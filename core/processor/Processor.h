@@ -28,9 +28,19 @@ class Processor {
 public:
     virtual ~Processor() {}
     void SetProcessorInstance(ProcessorInstance& instance) { mProcessorInstance = &instance; }
-    ProcessorInstance& GetProcessorInstance() { return *mProcessorInstance; }
     void SetContext(PipelineContext& context) { mContext = &context; }
     PipelineContext& GetContext() { return *mContext; }
+    MetricsRecordRef GetMetricsRecordRef() { return mMetricsRecordRef; }
+    virtual bool Init(const ComponentConfig& config) = 0;
+    virtual void Process(PipelineEventGroup& logGroup) = 0;
+
+protected:
+    virtual bool IsSupportedEvent(const PipelineEventPtr& e) = 0;
+    ProcessorInstance* mProcessorInstance = nullptr;
+    PipelineContext* mContext = nullptr;
+    MetricsRecordRef mMetricsRecordRef;
+
+    ProcessorInstance* GetProcessorInstance() { return mProcessorInstance; }
     void SetMetricsRecordRef(std::string name, std::string id) {
         std::vector<std::pair<std::string, std::string>> labels;
         WriteMetrics::GetInstance()->PreparePluginCommonLabels(GetContext().GetProjectName(),
@@ -43,14 +53,5 @@ public:
 
         WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
     }
-    MetricsRecordRef GetMetricsRecordRef() { return mMetricsRecordRef; }
-    virtual bool Init(const ComponentConfig& config) = 0;
-    virtual void Process(PipelineEventGroup& logGroup) = 0;
-
-protected:
-    virtual bool IsSupportedEvent(const PipelineEventPtr& e) = 0;
-    ProcessorInstance* mProcessorInstance = nullptr;
-    PipelineContext* mContext = nullptr;
-    MetricsRecordRef mMetricsRecordRef;
 };
 } // namespace logtail

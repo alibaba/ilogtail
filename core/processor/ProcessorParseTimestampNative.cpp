@@ -34,7 +34,7 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& config) {
 
     mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
-    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
+    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
     return true;
 }
 

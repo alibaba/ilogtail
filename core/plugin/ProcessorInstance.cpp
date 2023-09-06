@@ -23,8 +23,10 @@ bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& con
     mContext = &context;
     mPlugin->SetContext(context);
     mPlugin->SetProcessorInstance(*this);
+
     bool inited = mPlugin->Init(config);
     if (inited) {
+        // should init plugin first， then could GetMetricsRecordRef from plugin
         mProcInRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
         mProcOutRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
         mProcTimeMS = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_TIME_MS);

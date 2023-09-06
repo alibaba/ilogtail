@@ -23,7 +23,7 @@
 namespace logtail {
 
 bool ProcessorParseDelimiterNative::Init(const ComponentConfig& config) {
-    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
+    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
     return true;
 }
 

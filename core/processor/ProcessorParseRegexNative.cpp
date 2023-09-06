@@ -51,7 +51,7 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& config) {
     mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
-    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
+    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
 
     mProcInRecordsSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_IN_RECORDS_SIZE_BYTES);
     mProcOutRecordsSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_OUT_RECORDS_SIZE_BYTES);

@@ -33,7 +33,7 @@ bool ProcessorFillGroupInfoNative::Init(const ComponentConfig& config) {
         mStaticTopic = config.mCustomizedTopic;
         mIsStaticTopic = true;
     }
-    SetMetricsRecordRef(Name(), mProcessorInstance == nullptr ? "" : mProcessorInstance->Id());
+    SetMetricsRecordRef(Name(), GetProcessorInstance() == nullptr ? "" : GetProcessorInstance()->Id());
     return true;
 }
 
