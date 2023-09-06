@@ -51,7 +51,7 @@ For the complexity of C++ dependencies, the compilation of iLogtail requires you
 
 ```bash
 make
-cp example/quick_start/* output
+cp -r example_config/quick_start/* output
 cd output
 ./ilogtail
 # Now, ilogtail is collecting data from output/simple.log and outputing the result to stdout
@@ -73,7 +73,7 @@ Our official **User Manual** is located here:
 
 [All Plugins](https://ilogtail.gitbook.io/ilogtail-docs/data-pipeline/overview)
 
-[Getting Started](https://ilogtail.gitbook.io/ilogtail-docs/getting-started/)
+[Getting Started](https://ilogtail.gitbook.io/ilogtail-docs/awesome-ilogtail/getting-started)
 
 [Developer Guide](https://ilogtail.gitbook.io/ilogtail-docs/developer-guide/)
 

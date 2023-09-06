@@ -19,9 +19,12 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include "common/RuntimeUtil.h"
+#include "common/StringTools.h"
 #include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "common/ErrorUtil.h"
+#include "common/FileSystemUtil.h"
+#include <boost/filesystem.hpp>
 
 DEFINE_FLAG_STRING(logtail_snapshot_dir, "snapshot dir on local disk", "snapshot");
 DEFINE_FLAG_BOOL(logtail_async_logger_enable, "", true);
@@ -265,6 +268,20 @@ void Logger::LoadConfig(const std::string& filePath) {
         logConfigInfo = "Load log config from " + filePath;
     } while (0);
 
+    // parse env log level
+    level::level_enum envLogLevel = level::info;
+    std::string aliyun_logtail_log_level;
+    const char* envLogLevelVal = std::getenv("LOGTAIL_LOG_LEVEL");
+    if (envLogLevelVal) {
+        aliyun_logtail_log_level = envLogLevelVal;
+    }
+    if (MapStringToLevel(ToUpperCaseString(aliyun_logtail_log_level), envLogLevel)) {
+        LogMsg(std::string("Load log level from the env success, level: ") + aliyun_logtail_log_level);
+    } else {
+        LogMsg(std::string("Load log level from the env error, level: ") + aliyun_logtail_log_level);
+        aliyun_logtail_log_level = ""; 
+    }
+    
     // Add or supply default config(s).
     bool needSave = true;
     if (loggerConfigs.empty()) {
@@ -275,6 +292,8 @@ void Logger::LoadConfig(const std::string& filePath) {
         LoadDefaultConfig(loggerConfigs, sinkConfigs);
     } else
         needSave = false;
+
+    EnsureSnapshotDirExist(sinkConfigs);
 
     LogMsg(logConfigInfo);
     LogMsg(std::string("Logger size in config: ") + std::to_string(loggerConfigs.size()));
@@ -301,7 +320,11 @@ void Logger::LoadConfig(const std::string& filePath) {
         spdlog::register_logger(logger);
         logger->set_level(loggerCfg.level);
         logger->set_pattern(DEFAULT_PATTERN);
-        logger->flush_on(loggerCfg.level);
+        if (name == "/apsara/sls/ilogtail" && !aliyun_logtail_log_level.empty()) {
+            logger->flush_on(envLogLevel);
+        } else {
+            logger->flush_on(loggerCfg.level);
+        }
         LogMsg(std::string("logger named ") + name + " created.");
     }
     if (failedLoggers.empty()) {
@@ -369,6 +392,7 @@ void Logger::SaveConfig(const std::string& filePath,
     out << Json::writeString(builder, rootVal);
 }
 
+
 void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
                                std::map<std::string, SinkConfig>& sinkCfgs) {
     loggerCfgs.insert({DEFAULT_LOGGER_NAME, LoggerConfig{"AsyncFileSink", level::warn}});
@@ -394,6 +418,27 @@ void Logger::LoadAllDefaultConfigs(std::map<std::string, LoggerConfig>& loggerCf
         {"AsyncFileSinkProfile", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "ilogtail_profile.LOG"}});
     sinkCfgs.insert(
         {"AsyncFileSinkStatus", SinkConfig{"AsyncFile", 61, 1, 1, dirPath + PATH_SEPARATOR + "ilogtail_status.LOG"}});
+}
+
+void Logger::EnsureSnapshotDirExist(std::map<std::string, SinkConfig>& sinkCfgs) {
+    if (sinkCfgs.size() == 0) {
+        return;
+    }
+
+    for (const auto& sink : sinkCfgs) {
+        std::string sinkName = sink.first;
+        SinkConfig sinkCfg = sink.second;
+
+        if (sinkName == "AsyncFileSinkStatus" || sinkName == "AsyncFileSinkProfile") {
+            boost::filesystem::path logFilePath(sinkCfg.logFilePath);
+            try {
+                boost::filesystem::create_directories(logFilePath.parent_path());
+            } catch (const boost::filesystem::filesystem_error& e) {
+                LogMsg(std::string("Create snapshot dir error ") + logFilePath.parent_path().string() + ", error"
+                       + std::string(e.what()));
+            }
+        }
+    }
 }
 
 } // namespace logtail

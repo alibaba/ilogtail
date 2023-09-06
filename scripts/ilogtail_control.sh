@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # If you want to investigate in the container, you may set env
-# PORT_CHECK_INTERVAL=3600 to keep it running when ilogtail exits.
+# LIVENESS_CHECK_INTERVAL=3600 to keep it running when ilogtail exits.
 
 set -ue
 set -o pipefail
@@ -27,7 +27,7 @@ pid_file="$ilogtail_dir/ilogtail.pid"
 kill_timeout=10
 port=${HTTP_PROBE_PORT:-7953}
 port_initial_delay_sec=${PORT_INITIAL_DELAY_SEC:-3}
-port_check_interval=${PORT_CHECK_INTERVAL:-3}
+liveness_check_interval=${LIVENESS_CHECK_INTERVAL:-3}
 port_retry_count=${PORT_RETRY_COUNT:-3}
 port_retry_interval=${PORT_RETRY_INTERVAL:-1}
 exit_flag=0
@@ -53,7 +53,7 @@ start_ilogtail() {
         local ilogtail_pid=$(load_pid)
         echo "ilogtail already started. pid: $ilogtail_pid"
     } || {
-        ($bin_file) &
+        ($bin_file $@) &
         local ilogtail_pid=$!
         save_pid $ilogtail_pid
         echo "ilogtail started. pid: $ilogtail_pid"
@@ -83,15 +83,26 @@ check_liveness_by_port() {
     return 1
 }
 
+block_on_check_liveness_by_pid() {
+    while [[ $exit_flag -eq 0 ]]
+    do
+        check_liveness_by_pid || {
+            echo "ilogtail exited unexpectedly"
+            exit 1
+        }
+        sleep $liveness_check_interval
+    done
+}
+
 block_on_check_liveness_by_port() {
     sleep $port_initial_delay_sec
     while [[ $exit_flag -eq 0 ]]
     do
         check_liveness_by_port || {
-            echo "ilogtail exited unexpectedly"
+            echo "ilogtail plugin exited unexpectedly"
             exit 1
         }
-        sleep $port_check_interval
+        sleep $liveness_check_interval
     done
 }
 
@@ -101,10 +112,10 @@ stop_ilogtail() {
     [[ ! -z $ilogtail_pid ]] || {
         echo "ilogtail not started"
         return
-    } 
+    }
 
     local delaySec=${1:-0}
-    echo 'delay stop ilogtail, sleep ' $delaySec
+    echo 'delay stop ilogtail, sleep' $delaySec
     sleep $delaySec
     echo "stop ilogtail"
     # try to kill with SIGTERM, and wait for process to exit
@@ -142,31 +153,37 @@ if [ $# -lt 1 ];then
     exit
 fi
 
-stop_delay_sec=0
+command="$1"
+args=""
 if [ $# -gt 1 ];then
-    stop_delay_sec=$2
+    shift
+    args="$@"
 fi
 
 trap 'exit_handler' SIGTERM
 trap 'exit_handler' SIGINT
 
-case "$1" in
+case "$command" in
     start)
-    start_ilogtail
+    start_ilogtail $args
     ;;
     stop)
-    stop_ilogtail $stop_delay_sec
+    stop_ilogtail $args
     ;;
     restart)
-    stop_ilogtail $stop_delay_sec
-    start_ilogtail
+    stop_ilogtail $args
+    start_ilogtail $args
     ;;
     status)
     check_liveness_by_pid && exit 0 || exit $?
     ;;
+    plugin_status)
+    check_liveness_by_port && exit 0 || exit $?
+    ;;
     start_and_block)
-    start_ilogtail
-    block_on_check_liveness_by_port
+    start_ilogtail $args
+    block_on_check_liveness_by_pid
+    stop_ilogtail $args
     ;;
     -h)
     usage

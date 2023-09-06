@@ -14,7 +14,7 @@
 
 #include "LogFilter.h"
 #include <re2/re2.h>
-#include "profiler/LogtailAlarm.h"
+#include "monitor/LogtailAlarm.h"
 #include "app_config/AppConfig.h"
 #include "common/util.h"
 #include "sdk/Common.h"
@@ -159,7 +159,7 @@ bool LogFilter::IsMatched(const Log& log, const LogFilterRule& rule, const LogGr
             if (key == keys[i]) {
                 found = true;
                 exception.clear();
-                if (!BoostRegexMatch(value.c_str(), regs[i], exception)) {
+                if (!BoostRegexMatch(value.c_str(), value.size(), regs[i], exception)) {
                     if (!exception.empty()) {
                         LOG_ERROR(sLogger, ("regex_match in Filter fail", exception));
 
