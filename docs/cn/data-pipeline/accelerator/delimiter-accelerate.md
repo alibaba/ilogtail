@@ -25,7 +25,7 @@
 | TimeFormat | String | 否 | 日志时间格式，具体信息参见表1。 |
 | AdjustTimezone | Boolean | 否 | 是否调整日志时区。仅在配置了TimeFormat参数后有效。如果未添加该参数，则默认使用false，表示使用机器时区。 |
 | LogTimezone | String | 否 | 时区偏移量，格式为GMT+HH:MM（东区）、GMT-HH:MM（西区）。仅当AdjustTimezone参数值为false时有效。 |
-| EnableTimestampNanosecond | Boolean | 否 | 是否发送纳秒级时间。如果未添加该参数，则默认使用false，表示不发送纳秒级时间。 |
+| EnableTimestampNanosecond | Boolean | 否 | 是否提取纳秒级时间。如果未添加该参数，则默认使用false，表示不提取纳秒级时间。 |
 | EnablePreciseTimestamp | Boolean | 否 | （废弃）是否提取高精度时间。如果未添加该参数，则默认使用false，表示不提取高精度时间。 |
 | PreciseTimestampKey | String | 否 |（废弃） 保存高精度时间戳的字段。如果未添加该参数，则默认使用precise_timestamp字段。 |
 | PreciseTimestampUnit | String | 否 | （废弃）高精度时间戳的单位，取值包括ms（毫秒）、us（微秒）、ns（纳秒）。如果未添加该参数，则默认为ms。 |

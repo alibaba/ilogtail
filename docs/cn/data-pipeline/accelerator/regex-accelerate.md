@@ -23,7 +23,7 @@
 | FilterKey | Array | 否 | 用于过滤日志的字段。仅当该字段的值与FilterRegex参数中对应设置的正则表达式匹配时，对应的日志才会被采集。 |
 | FilterRegex | Array | 否，当FilterKey参数不为空时必选 | 日志字段过滤的正则表达式。该参数元素个数必须与FilterKey参数的元素个数相同。 |
 | TimeFormat | String | 否 | 日志时间格式，仅当Keys参数中有“time”字段时有效，用于对“time”字段的值进行解析。未配置该字段时，默认使用系统时间作为日志时间。具体信息参见表1。 |
-| EnableTimestampNanosecond | Boolean | 否 | 是否发送纳秒级时间。如果未添加该参数，则默认使用false，表示不发送纳秒级时间。 |
+| EnableTimestampNanosecond | Boolean | 否 | 是否提取纳秒级时间。如果未添加该参数，则默认使用false，表示不提取纳秒级时间。 |
 | EnablePreciseTimestamp | Boolean | 否 | （废弃）是否提取高精度时间。如果未添加该参数，则默认使用false，表示不提取高精度时间。 |
 | PreciseTimestampKey | String | 否 | （废弃）保存高精度时间戳的字段。如果未添加该参数，则默认使用precise_timestamp字段。 |
 | PreciseTimestampUnit | String | 否 | （废弃）高精度时间戳的单位，取值包括ms（毫秒）、us（微秒）、ns（纳秒）。如果未添加该参数，则默认为ms。 |
