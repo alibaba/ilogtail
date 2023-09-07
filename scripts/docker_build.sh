@@ -132,6 +132,3 @@ if [[ $PUSH = "true" && $CATEGORY != "multi-arch-production" ]]; then
         docker push "$REPOSITORY:$VERSION"
     fi
 fi
-echo "=============df -hT=================="
-df -hT $PWD
-echo "========================================="
