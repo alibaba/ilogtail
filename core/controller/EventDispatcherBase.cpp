@@ -67,6 +67,8 @@
 #include "polling/PollingEventQueue.h"
 #endif
 #include "plugin/LogtailPlugin.h"
+#include "plugin/PluginRegistry.h"
+#include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
 #if !defined(_MSC_VER)
 #include "LogtailInsightDispatcher.h"
@@ -496,7 +498,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                      "real file path", realFilePath)("file device", checkpoint->mDevInode.dev)(
                      "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                      "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                ToString(checkpoint->mFileOpenFlag))(
+                     "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
         eventVec.push_back(
             new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
         eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -538,7 +541,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
                          "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                          "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                    ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                    ToString(checkpoint->mFileOpenFlag))(
+                         "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
             eventVec.push_back(
                 new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
             eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -585,7 +589,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
                          "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                          "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                    ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                    ToString(checkpoint->mFileOpenFlag))(
+                         "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
             eventVec.push_back(
                 new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
             eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -652,7 +657,8 @@ void EventDispatcherBase::AddExistedCheckPointFileEvents() {
                                                       DevInode(cpt.dev(), cpt.inode()),
                                                       cpt.config_name(),
                                                       cpt.real_path(),
-                                                      1);
+                                                      1,
+                                                      0);
             const auto result = validateCheckpoint(v1Cpt, cachePathDevInodeMap, eventVec);
             switch (result) {
                 case ValidateCheckpointResult::kNormal:
@@ -1174,9 +1180,11 @@ void EventDispatcherBase::UpdateConfig() {
     mBrokenLinkSet.clear();
 
     PollingDirFile::GetInstance()->ClearCache();
+    PipelineManager::GetInstance()->RemoveAllPipelines();
     ConfigManager::GetInstance()->RemoveAllConfigs();
     if (ConfigManager::GetInstance()->LoadAllConfig() == false) {
         LOG_ERROR(sLogger, ("LoadConfig fail", ""));
+        PipelineManager::GetInstance()->LoadAllPipelines();
         ConfigManager::GetInstance()->LoadDockerConfig();
         ConfigManager::GetInstance()->DoUpdateContainerPaths();
         DumpAllHandlersMeta(true);
@@ -1194,6 +1202,7 @@ void EventDispatcherBase::UpdateConfig() {
     }
     ConfigManager::GetInstance()->CleanUnusedUserAK();
 
+    PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
     ConfigManager::GetInstance()->DoUpdateContainerPaths();
     ConfigManager::GetInstance()->SaveDockerConfig();
@@ -1288,6 +1297,7 @@ void EventDispatcherBase::ExitProcess() {
 #ifdef LOGTAIL_RUNTIME_PLUGIN
     LogtailRuntimePlugin::GetInstance()->UnLoadPluginBase();
 #endif
+    PluginRegistry::GetInstance()->UnloadPlugins();
 
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
