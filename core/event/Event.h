@@ -32,6 +32,7 @@ typedef uint32_t EventType;
 #define EVENT_MOVE_TO (64)
 #define EVENT_DELETE (128)
 #define EVENT_CONTAINER_STOPPED (256)
+#define EVENT_STATIC_FILE (512)
 
 class Event {
 private:
@@ -144,6 +145,8 @@ public:
 
     bool IsContainerStopped() const { return mType & EVENT_CONTAINER_STOPPED; }
 
+    bool IsStaticFile() const { return mType & EVENT_STATIC_FILE; }
+
     std::string GetTypeString() const {
         std::string type;
         if (IsDir()) {
@@ -163,6 +166,8 @@ public:
             type += "DELETE_SELF";
         } else if (IsContainerStopped()) {
             type += "CONTAINER_STOPPED";
+        } else if (IsStaticFile()) {
+            type += "STATIC_FILE";
         }
         return type;
     }

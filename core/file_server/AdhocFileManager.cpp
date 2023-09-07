@@ -1,0 +1,150 @@
+/*
+ * Copyright 2023 iLogtail Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "AdhocFileManager.h"
+#include "common/Thread.h"
+#include "logger/Logger.h"
+
+namespace logtail {
+
+AdhocFileManager::AdhocFileManager() {
+    mRunFlag = false; 
+};
+
+void AdhocFileManager::Run() {
+    if (mRunFlag) {
+        return;
+    } else {
+        mRunFlag = true;
+    }
+
+    new Thread([this]() { ProcessLoop(); });
+    LOG_INFO(sLogger, ("AdhocFileManager", "Start"));
+}
+
+void AdhocFileManager::ProcessLoop() {
+    mAdhocCheckpointManager = AdhocCheckpointManager::GetInstance();
+    mAdhocCheckpointManager->Run();
+
+    while (mRunFlag) {
+        Event* ev = PopEventQueue();
+        if (NULL == ev) {
+            LOG_INFO(sLogger, ("AdhocFileManager", "All file loaded"));
+            mRunFlag = false;
+            break;
+        }
+        switch (ev->GetType()) {
+        case EVENT_STATIC_FILE:
+            ProcessStaticFileEvent(ev);
+            break;
+        case EVENT_DELETE:
+            ProcessDeleteEvent(ev);
+            break;
+        }
+    }
+    LOG_INFO(sLogger, ("AdhocFileManager", "Stop"));
+}
+
+void AdhocFileManager::ProcessStaticFileEvent(Event* ev) {
+    std::string jobName = ev->GetConfigName();
+    AdhocJobCheckpointPtr jobCpPtr = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName);
+    AdhocFileCheckpointKey cpKey(DevInode(ev->GetDev(), ev->GetInode()), jobName);
+    AdhocFileCheckpointPtr fileCpPtr = jobCpPtr->GetAdhocFileCheckpoint(cpKey);
+
+    int64_t newOffset = ReadFile(ev, fileCpPtr);
+
+    bool dumpFlag = false;
+    if (newOffset == -1) {
+        fileCpPtr->mStatus = STATUS_LOST;
+        dumpFlag = true;
+    } else {
+        fileCpPtr->mOffset = newOffset;
+        if (STATUS_WAITING == fileCpPtr->mStatus) {
+            fileCpPtr->mStatus = STATUS_LOADING;
+            dumpFlag = true;
+        }
+        if (fileCpPtr->mOffset == fileCpPtr->mSize) {
+            fileCpPtr->mStatus = STATUS_FINISHED;
+            dumpFlag = true;
+        }
+    }
+    int32_t nowFileIndex = jobCpPtr->UpdateAdhocFileCheckpoint(cpKey, fileCpPtr);
+    if (nowFileIndex != mJobFileLists[jobName].size()) {
+        StaticFile file = mJobFileLists[jobName][nowFileIndex];
+        Event* ev = new Event(file.filePath, file.fileName, EVENT_STATIC_FILE, -1, 0, file.Dev, file.Inode);
+        PushEventQueue(ev);
+    }
+    if (dumpFlag) {
+        jobCpPtr->DumpAdhocCheckpoint();
+    }
+}
+
+int64_t AdhocFileManager::ReadFile(Event* ev, AdhocFileCheckpointPtr cp) {
+    int64_t offset = cp->mOffset;
+    if (ev->GetInode() == cp->mDevInode.inode) { // check
+        // read
+        return offset;
+    }
+    // file cannot find
+    return -1;
+}
+
+void AdhocFileManager::ProcessDeleteEvent(Event* ev) {
+    std::string jobName = ev->GetConfigName();
+    mDeletedJobSet.insert(jobName);
+    mAdhocCheckpointManager->DeleteAdhocJobCheckpoint(jobName);
+}
+
+void AdhocFileManager::PushEventQueue(Event* ev) {
+    mEventQueue.push(ev);
+}
+
+Event* AdhocFileManager::PopEventQueue() {
+    while (mEventQueue.size() > 0) {
+        Event* ev = mEventQueue.front();
+        mEventQueue.pop();
+        std::string jobName = ev->GetConfigName();
+        if (mDeletedJobSet.find(jobName) != mDeletedJobSet.end()) {
+            continue;
+        }
+        return ev;
+    }
+    return NULL;
+}
+
+void AdhocFileManager::AddJob(std::string jobName, std::vector<StaticFile> fileList) {
+    mJobFileLists[jobName] = fileList;
+    std::vector<AdhocFileCheckpointKey> keys;
+    for (StaticFile file : fileList) {
+        AdhocFileCheckpointKey key(DevInode(file.Dev, file.Inode), jobName);
+        keys.push_back(key);
+    }
+    mAdhocCheckpointManager->CreateAdhocJobCheckpoint(jobName, keys);
+
+    if  (fileList.size() > 0) {
+        Event* ev = new Event(fileList[0].filePath, fileList[0].fileName, EVENT_STATIC_FILE, -1, 0, fileList[0].Dev, fileList[0].Inode);
+        PushEventQueue(ev);
+    }
+}
+
+void AdhocFileManager::DeleteJob(std::string jobName) {
+    mJobFileLists.erase(jobName);
+    Event* stopEvent = new Event("", "", EVENT_CONTAINER_STOPPED, -1, 0);
+    stopEvent->SetConfigName(jobName);
+    PushEventQueue(stopEvent);
+}
+
+}
