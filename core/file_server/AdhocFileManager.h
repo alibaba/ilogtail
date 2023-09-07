@@ -43,7 +43,7 @@ private:
     Event* PopEventQueue();
     void ProcessStaticFileEvent(Event* ev);
     void ProcessDeleteEvent(Event* ev);
-    int64_t ReadFile(Event* ev, AdhocFileCheckpointPtr cp);
+    void ReadFile(Event* ev, AdhocFileCheckpointPtr cp);
 
     AdhocCheckpointManager* mAdhocCheckpointManager;
     std::queue<Event*> mEventQueue;

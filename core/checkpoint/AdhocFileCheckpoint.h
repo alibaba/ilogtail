@@ -41,7 +41,8 @@ public:
                         DevInode devInode,
                         const std::string& jobName = std::string(),
                         const std::string& realFileName = std::string(),
-                        int32_t fileOpenFlag = 0)
+                        int32_t fileOpenFlag = 0,
+                        FileReadStatus status)
         : mFileName(filename),
           mRealFileName(realFileName),
           mOffset(offset),
@@ -51,7 +52,7 @@ public:
           mLastUpdateTime(0),
           mDevInode(devInode),
           mFileOpenFlag(fileOpenFlag),
-          mStatus(),
+          mStatus(status),
           mJobName(jobName) {}
     std::string mFileName;
     ~AdhocFileCheckpoint();
@@ -71,20 +72,10 @@ public:
 
 struct AdhocFileCheckpointKey {
     AdhocFileCheckpointKey() {}
-    AdhocFileCheckpointKey(const DevInode& devInode, const std::string& jobName)
-        : mDevInode(devInode), mJobName(jobName) {}
+    AdhocFileCheckpointKey(const DevInode& devInode, const std::string& fileName)
+        : mDevInode(devInode), mFileName(fileName) {}
     DevInode mDevInode;
-    std::string mJobName;
-
-    bool operator<(const AdhocFileCheckpointKey& o) const {
-        if (mDevInode < o.mDevInode) {
-            return true;
-        }
-        if (mDevInode == o.mDevInode) {
-            return mJobName < o.mJobName;
-        }
-        return false;
-    }
+    std::string mFileName;
 };
 
 typedef std::shared_ptr<AdhocFileCheckpoint> AdhocFileCheckpointPtr;

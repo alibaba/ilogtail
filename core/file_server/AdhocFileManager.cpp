@@ -42,7 +42,7 @@ void AdhocFileManager::ProcessLoop() {
     while (mRunFlag) {
         Event* ev = PopEventQueue();
         if (NULL == ev) {
-            LOG_INFO(sLogger, ("AdhocFileManager", "All file loaded"));
+            LOG_INFO(sLogger, ("AdhocFileManager", "All file loaded, exit"));
             mRunFlag = false;
             break;
         }
@@ -64,42 +64,35 @@ void AdhocFileManager::ProcessStaticFileEvent(Event* ev) {
     AdhocFileCheckpointKey cpKey(DevInode(ev->GetDev(), ev->GetInode()), jobName);
     AdhocFileCheckpointPtr fileCpPtr = jobCpPtr->GetAdhocFileCheckpoint(cpKey);
 
-    int64_t newOffset = ReadFile(ev, fileCpPtr);
+    // read file and change offset
+    ReadFile(ev, fileCpPtr);
 
-    bool dumpFlag = false;
-    if (newOffset == -1) {
-        fileCpPtr->mStatus = STATUS_LOST;
-        dumpFlag = true;
-    } else {
-        fileCpPtr->mOffset = newOffset;
-        if (STATUS_WAITING == fileCpPtr->mStatus) {
-            fileCpPtr->mStatus = STATUS_LOADING;
-            dumpFlag = true;
-        }
-        if (fileCpPtr->mOffset == fileCpPtr->mSize) {
-            fileCpPtr->mStatus = STATUS_FINISHED;
-            dumpFlag = true;
-        }
+    // if file's status changed, dump job's checkpoint
+    if (jobCpPtr->UpdateAdhocFileCheckpoint(cpKey, fileCpPtr)) {
+        jobCpPtr->DumpAdhocCheckpoint();
     }
-    int32_t nowFileIndex = jobCpPtr->UpdateAdhocFileCheckpoint(cpKey, fileCpPtr);
-    if (nowFileIndex != mJobFileLists[jobName].size()) {
+
+    // Push file of this job into queue
+    int32_t nowFileIndex = jobCpPtr->GetCurrentFileIndex();
+    if (nowFileIndex < mJobFileLists[jobName].size()) {
         StaticFile file = mJobFileLists[jobName][nowFileIndex];
         Event* ev = new Event(file.filePath, file.fileName, EVENT_STATIC_FILE, -1, 0, file.Dev, file.Inode);
         PushEventQueue(ev);
     }
-    if (dumpFlag) {
-        jobCpPtr->DumpAdhocCheckpoint();
-    }
 }
 
-int64_t AdhocFileManager::ReadFile(Event* ev, AdhocFileCheckpointPtr cp) {
-    int64_t offset = cp->mOffset;
-    if (ev->GetInode() == cp->mDevInode.inode) { // check
-        // read
-        return offset;
+void AdhocFileManager::ReadFile(Event* ev, AdhocFileCheckpointPtr ptr) {
+    if (ptr->mStartTime == 0) {
+        ptr->mStartTime = time(NULL);
     }
-    // file cannot find
-    return -1;
+    if (ev->GetInode() == ptr->mDevInode.inode) { // check
+        // read
+        // ptr->mOffset += 1024;
+    } else {
+        // file cannot find
+        ptr->mOffset = -1;
+    }
+    ptr->mLastUpdateTime = time(NULL);
 }
 
 void AdhocFileManager::ProcessDeleteEvent(Event* ev) {
@@ -134,6 +127,7 @@ void AdhocFileManager::AddJob(std::string jobName, std::vector<StaticFile> fileL
     }
     mAdhocCheckpointManager->CreateAdhocJobCheckpoint(jobName, keys);
 
+    // push first file to queue
     if  (fileList.size() > 0) {
         Event* ev = new Event(fileList[0].filePath, fileList[0].fileName, EVENT_STATIC_FILE, -1, 0, fileList[0].Dev, fileList[0].Inode);
         PushEventQueue(ev);

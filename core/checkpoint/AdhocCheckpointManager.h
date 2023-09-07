@@ -41,7 +41,7 @@ public:
     void LoadAdhocCheckpoint();
 
     AdhocJobCheckpointPtr GetAdhocJobCheckpoint(const std::string& jobName);
-    AdhocJobCheckpointPtr CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<AdhocFileCheckpointKey> adHocFileCheckpointKeyList);
+    AdhocJobCheckpointPtr CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<AdhocFileCheckpointKey> adhocFileCheckpointKeyList);
     void DeleteAdhocJobCheckpoint(const std::string& jobName);
 };
 

@@ -22,9 +22,10 @@ namespace logtail {
 
 class AdhocJobCheckpoint {
 private:
+    bool CheckFileInList(AdhocFileCheckpointKey adhocFileCheckpointKey);
     std::vector<AdhocFileCheckpointPtr> mAdhocFileCheckpointList;
     int32_t mFileCount;
-    int32_t mFilePos;
+    int32_t mCurrentFileIndex;
     std::string mAdhocJobName; 
     bool mDeleteFlag;
 
@@ -32,12 +33,13 @@ public:
     AdhocJobCheckpoint(const std::string& jobName);
     ~AdhocJobCheckpoint();
 
-    AdhocFileCheckpointPtr GetAdhocFileCheckpoint(AdhocFileCheckpointKey adHocFileCheckpointKey);
-    int32_t UpdateAdhocFileCheckpoint(AdhocFileCheckpointKey adHocFileCheckpointKey, AdhocFileCheckpointPtr adHocFileCheckpointPtr);
+    AdhocFileCheckpointPtr GetAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFileCheckpointKey);
+    bool UpdateAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFileCheckpointKey, AdhocFileCheckpointPtr adhocFileCheckpointPtr);
     void DumpAdhocCheckpoint();
     void Delete();
 
-    void AddAdhocFileCheckpoint(AdhocFileCheckpointKey adHocFileCheckpointKey);
+    void AddAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFileCheckpointKey);
+    int32_t GetCurrentFileIndex() { return mCurrentFileIndex; }
 };
 
 typedef std::shared_ptr<AdhocJobCheckpoint> AdhocJobCheckpointPtr;

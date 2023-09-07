@@ -21,27 +21,73 @@ namespace logtail {
 AdhocJobCheckpoint::AdhocJobCheckpoint(const std::string& jobName) {
     mAdhocJobName = jobName;
     mFileCount = 0;
-    mFilePos = 0;
+    mCurrentFileIndex = 0;
     mDeleteFlag = false;
 }
 
 AdhocJobCheckpoint::~AdhocJobCheckpoint() {
 }
 
-void AdhocJobCheckpoint::AddAdhocFileCheckpoint(AdhocFileCheckpointKey adHocFileCheckpointKey) {
+void AdhocJobCheckpoint::AddAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFileCheckpointKey) {
+    AdhocFileCheckpointPtr ptr = std::make_shared<AdhocFileCheckpoint>(
+        adhocFileCheckpointKey.mFileName,
+        0,
+        adhocFileCheckpointKey.mDevInode,
+        mAdhocJobName,
+        STATUS_WAITING);
+    mAdhocFileCheckpointList.push_back(ptr);
+    mFileCount++;
 }
 
-AdhocFileCheckpointPtr AdhocJobCheckpoint::GetAdhocFileCheckpoint(AdhocFileCheckpointKey adHocFileCheckpointKey) {
+AdhocFileCheckpointPtr AdhocJobCheckpoint::GetAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFileCheckpointKey) {
+    if (!CheckFileInList(adhocFileCheckpointKey)) {
+        return nullptr;
+    }
+
+    return mAdhocFileCheckpointList[mCurrentFileIndex];
 }
 
-int32_t AdhocJobCheckpoint::UpdateAdhocFileCheckpoint(AdhocFileCheckpointKey adHocFileCheckpointKey, AdhocFileCheckpointPtr adHocFileCheckpointPtr) {
-    return mFilePos;
+bool AdhocJobCheckpoint::UpdateAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFileCheckpointKey, AdhocFileCheckpointPtr ptr) {
+    if (!CheckFileInList(adhocFileCheckpointKey)) {
+        return -1;
+    }
+
+    bool dumpFlag = false;
+    if (ptr->mOffset == -1) {
+        ptr->mStatus = STATUS_LOST;
+        mCurrentFileIndex++;
+        dumpFlag = true;
+    } else {
+        if (STATUS_WAITING == ptr->mStatus) {
+            ptr->mStatus = STATUS_LOADING;
+            dumpFlag = true;
+        }
+        if (ptr->mOffset == ptr->mSize) {
+            ptr->mStatus = STATUS_FINISHED;
+            mCurrentFileIndex++;
+            dumpFlag = true;
+        }
+    }
+
+    return dumpFlag;
 }
 
 void AdhocJobCheckpoint::DumpAdhocCheckpoint() {
 }
 
 void AdhocJobCheckpoint::Delete() {
+}
+
+bool AdhocJobCheckpoint::CheckFileInList(AdhocFileCheckpointKey adhocFileCheckpointKey) {
+    if (mCurrentFileIndex >= mFileCount) {
+        return false;
+    }
+    AdhocFileCheckpointPtr ptr = mAdhocFileCheckpointList[mCurrentFileIndex];
+    if (ptr->mFileName == adhocFileCheckpointKey.mFileName &&
+        ptr->mDevInode == adhocFileCheckpointKey.mDevInode) {
+            return true;
+        }
+    return false;
 }
 
 } // namespace logtail

@@ -62,20 +62,20 @@ AdhocJobCheckpointPtr AdhocCheckpointManager::GetAdhocJobCheckpoint(const std::s
     }
 }
 
-AdhocJobCheckpointPtr AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<AdhocFileCheckpointKey> adHocFileCheckpointKeyList) {
-    AdhocJobCheckpointPtr adHocJobCheckpointPtr = GetAdhocJobCheckpoint(jobName);
-    if (nullptr == adHocJobCheckpointPtr) {
-        adHocJobCheckpointPtr = std::make_shared<AdhocJobCheckpoint>(jobName);
-        for (AdhocFileCheckpointKey key : adHocFileCheckpointKeyList) {
-            adHocJobCheckpointPtr->AddAdhocFileCheckpoint(key);
+AdhocJobCheckpointPtr AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<AdhocFileCheckpointKey> adhocFileCheckpointKeyList) {
+    AdhocJobCheckpointPtr adhocJobCheckpointPtr = GetAdhocJobCheckpoint(jobName);
+    if (nullptr == adhocJobCheckpointPtr) {
+        adhocJobCheckpointPtr = std::make_shared<AdhocJobCheckpoint>(jobName);
+        for (AdhocFileCheckpointKey key : adhocFileCheckpointKeyList) {
+            adhocJobCheckpointPtr->AddAdhocFileCheckpoint(key);
         }
-        mAdhocJobCheckpointMap[jobName] = adHocJobCheckpointPtr;
+        mAdhocJobCheckpointMap[jobName] = adhocJobCheckpointPtr;
 
         LOG_INFO(sLogger, ("Create AdhocJobCheckpoint success, job name", jobName));
-        return adHocJobCheckpointPtr;
+        return adhocJobCheckpointPtr;
     } else {
         LOG_INFO(sLogger, ("Create AdhocJobCheckpoint failed, job checkpoint already exists, job name", jobName));
-        return adHocJobCheckpointPtr;
+        return adhocJobCheckpointPtr;
     }
 }
 
