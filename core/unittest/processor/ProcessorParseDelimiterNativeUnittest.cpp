@@ -75,7 +75,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,PutData?Category\n=YunOsAccountOpLog\n,0.024",
+                    "content" : "2013-10-31 21:03:49,POST,PutData?Category=YunOsAccountOpLog,0.024",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -84,7 +84,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:04:49,POST,PutData?Category\n=YunOsAccountOpLog\n,0.024",
+                    "content" : "2013-10-31 21:04:49,POST,PutData?Category=YunOsAccountOpLog,0.024",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -104,12 +104,12 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,PutData?Category\n=YunOsAccountOpLog\n,0.024",
+                    "content" : "2013-10-31 21:03:49,POST,PutData?Category=YunOsAccountOpLog,0.024",
                     "log.file.offset": "0",
                     "method": "POST",
                     "request_time": "0.024",
                     "time": "2013-10-31 21:03:49",
-                    "url": "PutData?Category\n=YunOsAccountOpLog\n"
+                    "url": "PutData?Category=YunOsAccountOpLog"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -117,12 +117,12 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:04:49,POST,PutData?Category\n=YunOsAccountOpLog\n,0.024",
+                    "content" : "2013-10-31 21:04:49,POST,PutData?Category=YunOsAccountOpLog,0.024",
                     "log.file.offset": "0",
                     "method": "POST",
                     "request_time": "0.024",
                     "time": "2013-10-31 21:04:49",
-                    "url": "PutData?Category\n=YunOsAccountOpLog\n"
+                    "url": "PutData?Category=YunOsAccountOpLog"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
