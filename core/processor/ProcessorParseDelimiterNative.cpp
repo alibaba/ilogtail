@@ -127,8 +127,13 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
             parsedColCount = colBegIdxs.size();
         }
 
+        std::cout << "parseSuccess " << parseSuccess << std::endl;
         if (parseSuccess) {
             if (parsedColCount <= 0 || (!mAcceptNoEnoughKeys && parsedColCount < mColumnKeys.size())) {
+                    for (int i = 0; i < mColumnKeys.size(); i++) {
+                        std::cout << mColumnKeys[i] << " ";
+                    }
+                    std::cout << std::endl;
                 LOG_WARNING(sLogger,
                             ("parse delimiter log fail, keys count unmatch "
                              "columns count, parsed",
