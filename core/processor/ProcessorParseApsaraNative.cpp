@@ -19,6 +19,7 @@
 #include "models/LogEvent.h"
 #include "app_config/AppConfig.h"
 #include "parser/LogParser.h" // for UNMATCH_LOG_KEY
+#include "plugin/ProcessorInstance.h"
 #include <algorithm>
 
 
@@ -26,13 +27,14 @@ namespace logtail {
 
 static const int32_t MAX_BASE_FIELD_NUM = 10;
 
-bool ProcessorParseApsaraNative::Init(const ComponentConfig& config) {
+bool ProcessorParseApsaraNative::Init(const ComponentConfig& componentConfig) {
     mSourceKey = DEFAULT_CONTENT_KEY;
     mDiscardUnmatch = config.mDiscardUnmatch;
     mUploadRawLog = config.mUploadRawLog;
     mLogTimeZoneOffsetSecond = config.mLogTimeZoneOffsetSecond;
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    SetMetricsRecordRef(Name(), componentConfig.GetId());
     return true;
 }
 
