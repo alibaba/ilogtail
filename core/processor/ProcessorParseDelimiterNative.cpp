@@ -22,8 +22,8 @@
 
 namespace logtail {
 
-bool ProcessorParseDelimiterNative::Init(const ComponentConfigPtr& componentConfig) {
-    SetMetricsRecordRef(Name(), componentConfig->GetId());
+bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig) {
+    SetMetricsRecordRef(Name(), componentConfig.GetId());
     return true;
 }
 

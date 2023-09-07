@@ -67,7 +67,8 @@ void ProcessorSplitRegexNativeUnittest::TestInit() {
     config.mAdvancedConfig.mEnableLogPositionMeta = false;
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
 }
 
@@ -80,7 +81,8 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventSingleLine() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -140,7 +142,8 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultiline() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -208,7 +211,8 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -289,7 +293,8 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineDiscardUnmatch(
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -344,7 +349,8 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -421,7 +427,8 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchDisc
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -460,7 +467,8 @@ void ProcessorSplitRegexNativeUnittest::TestProcess() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -549,7 +557,8 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginContinue()
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
@@ -690,7 +699,8 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
@@ -850,7 +860,8 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBegin() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
@@ -937,7 +948,8 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
@@ -1068,7 +1080,8 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
@@ -1179,7 +1192,8 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
@@ -1362,7 +1376,8 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
@@ -1597,7 +1612,8 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBegin() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
@@ -1708,7 +1724,8 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
@@ -1872,7 +1889,8 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup

@@ -72,7 +72,7 @@ void ProcessorParseRegexNativeUnittest::TestInit() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfigPtr componentConfig(new ComponentConfig(pluginId, config));
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 }
 
@@ -117,7 +117,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfigPtr componentConfig(new ComponentConfig(pluginId, config));
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
     // judge result
@@ -126,10 +126,10 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     // metric
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "line1\nline2";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length())*2, processor.mProcInDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length())*2, processor.mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcOutRecordsTotal->GetValue());
     expectValue = "contentline1\nline2";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length())*2, processor.mProcOutDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length())*2, processor.mProcParseOutSizeBytes->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
@@ -179,7 +179,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfigPtr componentConfig(new ComponentConfig(pluginId, config));
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
     // judge result
@@ -220,7 +220,7 @@ void ProcessorParseRegexNativeUnittest::TestAddLog() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfigPtr componentConfig(new ComponentConfig(pluginId, config));
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -303,7 +303,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfigPtr componentConfig(new ComponentConfig(pluginId, config));
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
 
@@ -315,10 +315,10 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
 
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length())*count, processor.mProcInDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length())*count, processor.mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcOutRecordsTotal->GetValue());
     expectValue = "__raw_log__value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length())*count, processor.mProcOutDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length())*count, processor.mProcParseOutSizeBytes->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
 
@@ -396,7 +396,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfigPtr componentConfig(new ComponentConfig(pluginId, config));
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
 
@@ -408,10 +408,10 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
 
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length())*count, processor.mProcInDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length())*count, processor.mProcParseInSizeBytes->GetValue());
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(0, processorInstance.mProcOutRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcOutDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processor.mProcDiscardRecordsTotal->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(count, processor.mProcParseErrorTotal->GetValue());
@@ -490,7 +490,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfigPtr componentConfig(new ComponentConfig(pluginId, config));
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
 
@@ -501,10 +501,10 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
 
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "value1\tvalue2";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length())*count, processor.mProcInDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL((expectValue.length())*count, processor.mProcParseInSizeBytes->GetValue());
     // discard unmatch, so output is 0
     APSARA_TEST_EQUAL_FATAL(0, processorInstance.mProcOutRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcOutDataSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processor.mProcDiscardRecordsTotal->GetValue());
 
     // mProcKeyCountNotMatchErrorTotal should equal count 

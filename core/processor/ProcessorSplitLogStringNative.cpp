@@ -22,8 +22,8 @@
 
 namespace logtail {
 
-bool ProcessorSplitLogStringNative::Init(const ComponentConfigPtr& componentConfig) {
-    PipelineConfig config = *(componentConfig->GetConfig());
+bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig) {
+    PipelineConfig config = componentConfig.GetConfig();
 
     mSplitKey = DEFAULT_CONTENT_KEY;
     mSplitChar = config.mLogType == JSON_LOG ? '\0' : '\n';
@@ -31,7 +31,7 @@ bool ProcessorSplitLogStringNative::Init(const ComponentConfigPtr& componentConf
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
 
-    SetMetricsRecordRef(Name(), componentConfig->GetId());
+    SetMetricsRecordRef(Name(), componentConfig.GetId());
     return true;
 }
 

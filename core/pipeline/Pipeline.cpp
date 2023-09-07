@@ -127,7 +127,7 @@ bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processo
                   ("CreateProcessor", ProcessorSplitRegexNative::Name())("Error", "Cannot find plugin"));
         return false;
     }
-    ComponentConfigPtr componentConfig(new ComponentConfig(processor->Id(), config));
+    ComponentConfig componentConfig(processor->Id(), config);
     if (!processor->Init(componentConfig, mContext)) {
         LOG_ERROR(GetContext().GetLogger(), ("InitProcessor", processor->Id())("Error", "Init failed"));
         return false;

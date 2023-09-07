@@ -49,7 +49,8 @@ void ProcessorSplitLogStringNativeUnittest::TestInit() {
     config.mLogBeginReg = ".*";
     config.mAdvancedConfig.mEnableLogPositionMeta = false;
 
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     ProcessorSplitLogStringNative processor;
     processor.SetContext(mContext);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
@@ -84,7 +85,8 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
     ProcessorSplitLogStringNative processor;
     processor.SetContext(mContext);
 
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     processor.Process(eventGroup);
     // judge result
@@ -157,7 +159,8 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
     // run function
     ProcessorSplitLogStringNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     processor.Process(eventGroup);
     // judge result

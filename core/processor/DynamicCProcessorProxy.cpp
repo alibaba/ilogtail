@@ -30,7 +30,7 @@ const char* DynamicCProcessorProxy::Name() const {
     return _name.c_str();
 }
 
-bool DynamicCProcessorProxy::Init(const ComponentConfigPtr& componentConfig) {
+bool DynamicCProcessorProxy::Init(const ComponentConfig& componentConfig) {
     return _c_ins->plugin->init(_c_ins, (void*)(&componentConfig), (void*)(&GetContext())) == 0;
 }
 

@@ -22,8 +22,8 @@
 
 namespace logtail {
 
-bool ProcessorParseJsonNative::Init(const ComponentConfigPtr& componentConfig) {
-    SetMetricsRecordRef(Name(), componentConfig->GetId());
+bool ProcessorParseJsonNative::Init(const ComponentConfig& componentConfig) {
+    SetMetricsRecordRef(Name(), componentConfig.GetId());
     return true;
 }
 

@@ -32,7 +32,7 @@ class ProcessorInstance : public PluginInstance {
 public:
     ProcessorInstance(Processor* plugin, const std::string& pluginId) : PluginInstance(pluginId), mPlugin(plugin) {}
     PipelineContext& GetContext() { return *mContext; }
-    bool Init(const ComponentConfigPtr& config, PipelineContext& context);
+    bool Init(const ComponentConfig& config, PipelineContext& context);
     void Process(PipelineEventGroup& logGroup);
 
 private:

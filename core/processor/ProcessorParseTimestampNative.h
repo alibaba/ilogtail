@@ -21,7 +21,7 @@ namespace logtail {
 class ProcessorParseTimestampNative : public Processor {
 public:
     static const char* Name() { return "processor_parse_timestamp_native"; }
-    bool Init(const ComponentConfigPtr& componentConfig) override;
+    bool Init(const ComponentConfig& componentConfig) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 protected:

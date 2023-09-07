@@ -22,8 +22,8 @@ const std::string METRIC_PROC_DISCARD_RECORDS_TOTAL = "proc_discard_records_tota
 const std::string METRIC_PROC_TIME_MS = "proc_time_ms";
 
 // processor cunstom metrics
-const std::string METRIC_PROC_IN_DATA_SIZE_BYTES = "proc_in_data_size_bytes";
-const std::string METRIC_PROC_OUT_DATA_SIZE_BYTES = "proc_out_data_size_bytes";
+const std::string METRIC_PROC_PARSE_IN_SIZE_BYTES = "proc_parse_in_size_bytes";
+const std::string METRIC_PROC_PARSE_OUT_SIZE_BYTES = "proc_parse_out_size_bytes";
 
 const std::string METRIC_PROC_PARSE_ERROR_TOTAL = "proc_parse_error_total";
 const std::string METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL = "proc_key_count_not_match_error_total";

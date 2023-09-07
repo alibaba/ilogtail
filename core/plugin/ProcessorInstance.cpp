@@ -19,7 +19,7 @@
 
 namespace logtail {
 
-bool ProcessorInstance::Init(const ComponentConfigPtr& config, PipelineContext& context) {
+bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& context) {
     mContext = &context;
     mPlugin->SetContext(context);
     bool inited = mPlugin->Init(config);

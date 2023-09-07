@@ -56,7 +56,8 @@ void ProcessorParseTimestampNativeUnittest::TestInit() {
 
     ProcessorParseTimestampNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
 }
 
@@ -86,7 +87,8 @@ void ProcessorParseTimestampNativeUnittest::TestProcessNoFormat() {
     // run function
     ProcessorParseTimestampNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     processor.Process(eventGroup);
     // judge result
@@ -121,7 +123,8 @@ void ProcessorParseTimestampNativeUnittest::TestProcessEventRegularFormat() {
     // run function
     ProcessorParseTimestampNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     logtail::StringView timeStrCache;
     APSARA_TEST_TRUE_FATAL(processor.ProcessEvent("/var/log/message", logEvent, timeStrCache));
@@ -170,7 +173,8 @@ void ProcessorParseTimestampNativeUnittest::TestProcessEventRegularFormatFailed(
     // run function
     ProcessorParseTimestampNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     logtail::StringView timeStrCache;
     APSARA_TEST_TRUE_FATAL(processor.ProcessEvent("/var/log/message", logEvent, timeStrCache));
@@ -206,7 +210,8 @@ void ProcessorParseTimestampNativeUnittest::TestProcessEventHistoryDiscard() {
     // run function
     ProcessorParseTimestampNative processor;
     processor.SetContext(mContext);
-    ComponentConfigPtr componentConfig(new ComponentConfig("testID", config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     logtail::StringView timeStrCache;
     APSARA_TEST_FALSE_FATAL(processor.ProcessEvent("/var/log/message", logEvent, timeStrCache));
