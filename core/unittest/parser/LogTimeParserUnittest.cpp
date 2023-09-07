@@ -192,7 +192,7 @@ void LogParserUnittest::TestParseLogTimeSecondCache() {
         time_t expectLogTimeBase = 1484147107;
         long expectLogTimeNanosecondBase = 1484147107000000;
         for (size_t i = 0; i < 5; ++i) {
-            std::string second = to_string(1484147107 + i);
+            std::string second = to_string(expectLogTimeBase + i);
             for (size_t j = 0; j < 5; ++j) {
                 std::string inputTimeStr = second;
                 bool ret = LogParser::ParseLogTime("TestData",
@@ -221,7 +221,7 @@ void LogParserUnittest::TestParseLogTimeSecondCache() {
         time_t expectLogTimeBase = 1484147107;
         long expectLogTimeNanosecondBase = 1484147107000000;
         for (size_t i = 0; i < 5; ++i) {
-            std::string second = to_string(1484147107 + i);
+            std::string second = to_string(expectLogTimeBase + i);
             for (size_t j = 0; j < 5; ++j) {
                 std::string inputTimeStr = second + to_string(j);
                 bool ret = LogParser::ParseLogTime("TestData",

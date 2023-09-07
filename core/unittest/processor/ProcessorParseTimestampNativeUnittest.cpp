@@ -421,7 +421,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         uint64_t preciseTimestamp = 0;
         std::vector<Case> inputTimes;
         for (size_t i = 0; i < 5; ++i) {
-            std::string second = std::to_string(1484147107 + i);
+            std::string second = std::to_string(expectLogTimeBase + i);
             for (size_t j = 0; j < 5; ++j) {
                 inputTimes.emplace_back(std::string(second.data()), expectLogTimeBase + i, 0, expectLogTimeNanosecondBase + i * 1000000);
             }
@@ -449,7 +449,7 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         uint64_t preciseTimestamp = 0;
         std::vector<Case> inputTimes;
         for (size_t i = 0; i < 5; ++i) {
-            std::string second = std::to_string(1484147107 + i);
+            std::string second = std::to_string(expectLogTimeBase + i);
             for (size_t j = 0; j < 5; ++j) {
                 inputTimes.emplace_back(second + std::to_string(j), expectLogTimeBase + i, j * 100000000, expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
             }
