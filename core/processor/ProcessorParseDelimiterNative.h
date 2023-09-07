@@ -50,6 +50,10 @@ private:
     int* mParseFailures = nullptr;
 
     static const std::string s_mDiscardedFieldKey;
+    CounterPtr mProcParseInSizeBytes;
+    CounterPtr mProcParseOutSizeBytes;
+    CounterPtr mProcDiscardRecordsTotal;
+    CounterPtr mProcParseErrorTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseDelimiterNativeUnittest;

@@ -26,7 +26,6 @@ namespace logtail {
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
 
 bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig) {
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
     mSourceKey = DEFAULT_CONTENT_KEY;
     mSeparator = componentConfig.GetConfig().mSeparator;
     mColumnKeys = componentConfig.GetConfig().mColumnKeys;
@@ -43,6 +42,13 @@ bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig)
         mSeparatorChar = '\t';
     }
     mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
+    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
+    SetMetricsRecordRef(Name(), componentConfig.GetId());
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     return true;
 }
 
@@ -72,6 +78,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
         return true;
     }
     StringView buffer = sourceEvent.GetContent(mSourceKey);
+    mProcParseInSizeBytes->Add(buffer.size());
     int32_t endIdx = buffer.size();
     if (endIdx == 0)
         return true;
@@ -128,13 +135,8 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
             parsedColCount = colBegIdxs.size();
         }
 
-        std::cout << "parseSuccess " << parseSuccess << std::endl;
         if (parseSuccess) {
             if (parsedColCount <= 0 || (!mAcceptNoEnoughKeys && parsedColCount < mColumnKeys.size())) {
-                    for (int i = 0; i < mColumnKeys.size(); i++) {
-                        std::cout << mColumnKeys[i] << " ";
-                    }
-                    std::cout << std::endl;
                 LOG_WARNING(sLogger,
                             ("parse delimiter log fail, keys count unmatch "
                              "columns count, parsed",
@@ -148,6 +150,8 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                                                   GetContext().GetProjectName(),
                                                   GetContext().GetLogstoreName(),
                                                   GetContext().GetRegion());
+                mProcParseErrorTotal->Add(1);
+                ++(*mParseFailures);
                 parseSuccess = false;
             }
         } else {
@@ -157,6 +161,8 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                                                    GetContext().GetProjectName(),
                                                    GetContext().GetLogstoreName(),
                                                    GetContext().GetRegion());
+            mProcParseErrorTotal->Add(1);
+            ++(*mParseFailures);
             parseSuccess = false;
         }
     } else {
@@ -168,6 +174,8 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
         LOG_WARNING(sLogger,
                     ("parse delimiter log fail", "no column keys defined")("project", GetContext().GetProjectName())(
                         "logstore", GetContext().GetLogstoreName())("file", logPath));
+        mProcParseErrorTotal->Add(1);
+        ++(*mParseFailures);
         parseSuccess = false;
     }
 
@@ -178,14 +186,17 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                     continue;
                 }
                 AddLog(mColumnKeys[idx],
-                       useQuote ? columnValues[idx] : std::string(buffer.data() + colBegIdxs[idx], colLens[idx]),
+                       useQuote ? columnValues[idx] : StringView(buffer.data() + colBegIdxs[idx], colLens[idx]),
                        sourceEvent);
             } else {
                 if (mExtractPartialFields) {
                     continue;
                 }
-                AddLog(std::string("__column") + ToString(idx) + "__",
-                       useQuote ? columnValues[idx] : std::string(buffer.data() + colBegIdxs[idx], colLens[idx]),
+                StringBuffer sb = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(10 + idx / 10);
+                std::string key = "__column" + ToString(idx) + "__";
+                strcpy(sb.data, key.c_str());
+                AddLog(StringView(sb.data, sb.size),
+                       useQuote ? columnValues[idx] : StringView(buffer.data() + colBegIdxs[idx], colLens[idx]),
                        sourceEvent);
             }
         }
@@ -194,8 +205,9 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                sourceEvent.GetContent(mSourceKey),
                sourceEvent); // legacy behavior, should use sourceKey
+        return true;
     }
-    ++(*mParseFailures);
+    mProcDiscardRecordsTotal->Add(1);
     return false;
 }
 
@@ -241,6 +253,7 @@ bool ProcessorParseDelimiterNative::SplitString(
 void ProcessorParseDelimiterNative::AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent) {
     targetEvent.SetContentNoCopy(key, value);
     *mLogGroupSize += key.size() + value.size() + 5;
+    mProcParseOutSizeBytes->Add(key.size() + value.size());
 }
 
 bool ProcessorParseDelimiterNative::IsSupportedEvent(const PipelineEventPtr& e) {
