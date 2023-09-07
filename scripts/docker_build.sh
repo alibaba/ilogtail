@@ -106,6 +106,11 @@ echo "=============DOCKERFILE=================="
 cat $GEN_DOCKERFILE
 echo "========================================="
 
+echo "=============df -hT=================="
+df -hT $PWD
+df -hT $ROOTDIR
+echo "========================================="
+
 if [[ $CATEGORY != "multi-arch-production" ]]; then
     docker build --build-arg TARGETPLATFORM=linux/$ARCH \
         $BUILD_SSH_OPTS \
@@ -122,7 +127,10 @@ else
         -o type=registry \
         --no-cache -f $GEN_DOCKERFILE .
 fi
-
+echo "=============df -hT=================="
+df -hT $PWD
+df -hT $ROOTDIR
+echo "========================================="
 if [[ $PUSH = "true" && $CATEGORY != "multi-arch-production" ]]; then
     echo "COMMAND:"
     echo "docker push $REPOSITORY:$VERSION"
@@ -132,3 +140,7 @@ if [[ $PUSH = "true" && $CATEGORY != "multi-arch-production" ]]; then
         docker push "$REPOSITORY:$VERSION"
     fi
 fi
+echo "=============df -hT=================="
+df -hT $PWD
+df -hT $ROOTDIR
+echo "========================================="
