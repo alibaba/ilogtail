@@ -18,29 +18,30 @@
 #include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "parser/LogParser.h"
+#include "plugin/ProcessorInstance.h"
+
 
 namespace logtail {
 
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
 
-bool ProcessorParseDelimiterNative::Init(const ComponentConfig& config) {
+bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig) {
+    SetMetricsRecordRef(Name(), componentConfig.GetId());
     mSourceKey = DEFAULT_CONTENT_KEY;
-    mSeparator = config.mSeparator;
-    mColumnKeys = config.mColumnKeys;
-    mExtractPartialFields = config.mAdvancedConfig.mExtractPartialFields;
-    mAutoExtend = config.mAutoExtend;
-    mAcceptNoEnoughKeys = config.mAcceptNoEnoughKeys;
-    mDiscardUnmatch = config.mDiscardUnmatch;
-    mUploadRawLog = config.mUploadRawLog;
-    mQuote = config.mQuote;
+    mSeparator = componentConfig.GetConfig().mSeparator;
+    mColumnKeys = componentConfig.GetConfig().mColumnKeys;
+    mExtractPartialFields = componentConfig.GetConfig().mAdvancedConfig.mExtractPartialFields;
+    mAutoExtend = componentConfig.GetConfig().mAutoExtend;
+    mAcceptNoEnoughKeys = componentConfig.GetConfig().mAcceptNoEnoughKeys;
+    mDiscardUnmatch = componentConfig.GetConfig().mDiscardUnmatch;
+    mUploadRawLog = componentConfig.GetConfig().mUploadRawLog;
+    mQuote = componentConfig.GetConfig().mQuote;
     if (!mSeparator.empty())
         mSeparatorChar = mSeparator.data()[0];
     else {
         // This should never happened.
         mSeparatorChar = '\t';
     }
-    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
-    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
     return true;
 }
