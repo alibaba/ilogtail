@@ -81,6 +81,7 @@ jobs:
           BUILD_LOGTAIL_UT: ON
           ENABLE_COMPATIBLE_MODE: ON
           ENABLE_STATIC_LINK_CRT: ON
+          WITHOUTGDB: ON
         run: make core
 
       - name: Unit Test
