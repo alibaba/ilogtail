@@ -50,7 +50,7 @@ func CreateLog(t time.Time, configTag map[string]string, logTags map[string]stri
 		}
 		slsLog.Contents = append(slsLog.Contents, cont)
 	}
-	protocol.SetLogTime(&slsLog, uint32(t.Unix()))
+	protocol.SetLogTimeWithNano(&slsLog, uint32(t.Unix()), uint32(t.Nanosecond()))
 	return &slsLog, nil
 }
 
@@ -85,7 +85,7 @@ func CreateLogByArray(t time.Time, configTag map[string]string, logTags map[stri
 		}
 		slsLog.Contents = append(slsLog.Contents, cont)
 	}
-	protocol.SetLogTime(&slsLog, uint32(t.Unix()))
+	protocol.SetLogTimeWithNano(&slsLog, uint32(t.Unix()), uint32(t.Nanosecond()))
 	return &slsLog, nil
 }
 

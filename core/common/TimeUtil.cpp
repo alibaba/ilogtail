@@ -295,7 +295,8 @@ void SetLogTime(sls_logs::Log* log, time_t second) {
     log->set_time(second);
 }
 
-void SetLogTime(sls_logs::Log* log, time_t second, long nanosecond) {
+void SetLogTimeWithNano(sls_logs::Log* log, time_t second, long nanosecond) {
+    // Usage: set nanosecond first, and then discard at LogProcess@ProcessBufferLegacy
     log->set_time(second);
     log->set_time_ns(nanosecond);
 }

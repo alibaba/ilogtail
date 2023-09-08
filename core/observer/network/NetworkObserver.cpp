@@ -521,6 +521,7 @@ int NetworkObserver::OutputPluginProcess(std::vector<sls_logs::Log>& logs, Confi
     static auto sPlugin = LogtailPlugin::GetInstance();
     auto now = GetCurrentLogtailTime();
     for (auto& item : logs) {
+        // nanosecond of observer will not be discard after processors, so here is default to no nanosecond
         SetLogTime(&item, now.tv_sec);
         sPlugin->ProcessLog(config->mConfigName, item, "", config->mGroupTopic, "");
     }

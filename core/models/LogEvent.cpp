@@ -62,6 +62,7 @@ Json::Value LogEvent::ToJson() const {
     Json::Value root;
     root["type"] = GetType();
     root["timestamp"] = GetTimestamp();
+    root["timestampNanosecond"] = GetTimestampNanosecond();
     if (!GetContents().empty()) {
         Json::Value contents;
         for (const auto& content : this->GetContents()) {

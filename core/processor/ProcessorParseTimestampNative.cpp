@@ -37,6 +37,10 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig)
     mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
     SetMetricsRecordRef(Name(), componentConfig.GetId());
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     return true;
 }
 
@@ -72,6 +76,7 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
         return true;
     }
     const StringView& timeStr = sourceEvent.GetContent(mTimeKey);
+    mProcParseInSizeBytes->Add(timeStr.size());
     uint64_t preciseTimestamp = 0;
     bool parseSuccess = ParseLogTime(timeStr, logPath, logTime, preciseTimestamp, timeStrCache);
     if (!parseSuccess) {
@@ -97,6 +102,7 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
                                                    GetContext().GetRegion());
         }
         ++(*mHistoryFailures);
+        mProcDiscardRecordsTotal->Add(1);
         return false;
     }
     sourceEvent.SetTimestamp(logTime.tv_sec, logTime.tv_nsec);
@@ -105,6 +111,7 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
         sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lu", preciseTimestamp));
         sourceEvent.SetContentNoCopy(mLegacyPreciseTimestampConfig.key, StringView(sb.data, sb.size));
     }
+    mProcParseOutSizeBytes->Add(sizeof(logTime.tv_sec) + sizeof(logTime.tv_nsec));
     return true;
 }
 
@@ -132,8 +139,10 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
         }
     } else {
         strptimeResult = Strptime(curTimeStr.data(), mTimeFormat.c_str(), &logTime, nanosecondLength, mSpecifiedYear);
-        timeStrCache = curTimeStr.substr(0, curTimeStr.length() - nanosecondLength);
-        logTime.tv_sec = logTime.tv_sec - mLogTimeZoneOffsetSecond;
+        if (NULL != strptimeResult) {
+            timeStrCache = curTimeStr.substr(0, curTimeStr.length() - nanosecondLength);
+            logTime.tv_sec = logTime.tv_sec - mLogTimeZoneOffsetSecond;
+        }
     }
     if (NULL == strptimeResult) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -149,6 +158,8 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
                                                    GetContext().GetRegion());
         }
 
+        mProcParseErrorTotal->Add(1);
+        mProcDiscardRecordsTotal->Add(1);
         ++(*mParseTimeFailures);
         return false;
     }
