@@ -61,7 +61,7 @@ void AdhocFileManager::ProcessLoop() {
 void AdhocFileManager::ProcessStaticFileEvent(Event* ev) {
     std::string jobName = ev->GetConfigName();
     AdhocJobCheckpointPtr jobCpPtr = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName);
-    AdhocFileCheckpointKey cpKey(DevInode(ev->GetDev(), ev->GetInode()), jobName);
+    AdhocFileCheckpointKey cpKey(DevInode(ev->GetDev(), ev->GetInode()), jobName, 0);
     AdhocFileCheckpointPtr fileCpPtr = jobCpPtr->GetAdhocFileCheckpoint(cpKey);
 
     // read file and change offset
@@ -92,7 +92,6 @@ void AdhocFileManager::ReadFile(Event* ev, AdhocFileCheckpointPtr ptr) {
         // file cannot find
         ptr->mOffset = -1;
     }
-    ptr->mLastUpdateTime = time(NULL);
 }
 
 void AdhocFileManager::ProcessDeleteEvent(Event* ev) {
@@ -122,7 +121,7 @@ void AdhocFileManager::AddJob(std::string jobName, std::vector<StaticFile> fileL
     mJobFileLists[jobName] = fileList;
     std::vector<AdhocFileCheckpointKey> keys;
     for (StaticFile file : fileList) {
-        AdhocFileCheckpointKey key(DevInode(file.Dev, file.Inode), jobName);
+        AdhocFileCheckpointKey key(DevInode(file.Dev, file.Inode), jobName, file.Size);
         keys.push_back(key);
     }
     mAdhocCheckpointManager->CreateAdhocJobCheckpoint(jobName, keys);

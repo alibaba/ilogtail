@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include "common/DevInode.h"
+#include "common/StringTools.h"
 
 namespace logtail {
 
@@ -28,6 +29,31 @@ enum FileReadStatus {
     STATUS_LOST,
 };
 
+std::string TransStatusToString(FileReadStatus status) {
+    switch (status) {
+        case STATUS_WAITING:
+            return "waiting";
+        case STATUS_LOADING:
+            return "loading";
+        case STATUS_FINISHED:
+            return "finished";
+        case STATUS_LOST:
+            return "lost";
+    }
+}
+
+FileReadStatus GetStatusFromString(std::string statusStr) {
+    if (statusStr == "waiting") {
+        return STATUS_WAITING;
+    } else if (statusStr == "loading") {
+        return STATUS_LOADING;
+    } else if (statusStr == "finished") {
+        return STATUS_FINISHED;
+    } else if (statusStr == "lost") {
+        return STATUS_LOST;
+    }
+}
+
 class AdhocFileCheckpoint {
 private:
     /* data */
@@ -35,6 +61,7 @@ public:
     AdhocFileCheckpoint() {}
 
     AdhocFileCheckpoint(const std::string& filename,
+                        int64_t size,
                         int64_t offset,
                         uint32_t signatureSize,
                         uint64_t signatureHash,
@@ -45,6 +72,7 @@ public:
                         FileReadStatus status)
         : mFileName(filename),
           mRealFileName(realFileName),
+          mSize(size),
           mOffset(offset),
           mSignatureSize(signatureSize),
           mSignatureHash(signatureHash),
@@ -72,10 +100,11 @@ public:
 
 struct AdhocFileCheckpointKey {
     AdhocFileCheckpointKey() {}
-    AdhocFileCheckpointKey(const DevInode& devInode, const std::string& fileName)
-        : mDevInode(devInode), mFileName(fileName) {}
+    AdhocFileCheckpointKey(const DevInode& devInode, const std::string& fileName, const int64_t& fileSize)
+        : mDevInode(devInode), mFileName(fileName), mFileSize(fileSize) {}
     DevInode mDevInode;
     std::string mFileName;
+    int64_t mFileSize;
 };
 
 typedef std::shared_ptr<AdhocFileCheckpoint> AdhocFileCheckpointPtr;

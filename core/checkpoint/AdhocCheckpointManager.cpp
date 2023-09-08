@@ -15,7 +15,7 @@
  */
 
 #include "AdhocCheckpointManager.h"
-#include "common/Flags.h"
+#include "common/FileSystemUtil.h"
 #include "common/Thread.h"
 #include "logger/Logger.h"
 
@@ -83,13 +83,28 @@ void AdhocCheckpointManager::DeleteAdhocJobCheckpoint(const std::string& jobName
     auto it = mAdhocJobCheckpointMap.find(jobName);
     if (it != mAdhocJobCheckpointMap.end()) {
         it->second->Delete();
+        it->second.reset();
+        mAdhocJobCheckpointMap.erase(jobName);
+        LOG_INFO(sLogger, ("Delete AdhocJobCheckpoint success, job name", jobName));
     } else {
         LOG_WARNING(sLogger, ("Delete AdhocJobCheckpoint fail, job checkpoint doesn't exist, job name", jobName));
     }
 }
 
 void AdhocCheckpointManager::LoadAdhocCheckpoint() {
-    
+    std::string adhocCheckpointDir = STRING_FLAG(adhoc_check_point_file_dir);
+    if (CheckExistance(adhocCheckpointDir)) {
+        std::vector<std::string> jobList;
+        if (!GetAllFiles(adhocCheckpointDir, "*", jobList)) {
+            LOG_WARNING(sLogger, ("get all adhoc checkpoint files", "failed"));
+        }
+
+        for (std::string job : jobList) {
+            AdhocJobCheckpointPtr adhocJobCheckpointPtr = std::make_shared<AdhocJobCheckpoint>(job);
+            adhocJobCheckpointPtr->LoadAdhocCheckpoint();
+            mAdhocJobCheckpointMap[job] = adhocJobCheckpointPtr;
+        }
+    }
 }
 
 } // namespace logtail
