@@ -25,16 +25,20 @@
 
 namespace logtail {
 
-static const int32_t MAX_BASE_FIELD_NUM = 10;
+// static const int32_t MAX_BASE_FIELD_NUM = 10;
 
 bool ProcessorParseApsaraNative::Init(const ComponentConfig& componentConfig) {
     mSourceKey = DEFAULT_CONTENT_KEY;
-    mDiscardUnmatch = config.mDiscardUnmatch;
-    mUploadRawLog = config.mUploadRawLog;
-    mLogTimeZoneOffsetSecond = config.mLogTimeZoneOffsetSecond;
+    mDiscardUnmatch = componentConfig.GetConfig().mDiscardUnmatch;
+    mUploadRawLog = componentConfig.GetConfig().mUploadRawLog;
+    mLogTimeZoneOffsetSecond = componentConfig.GetConfig().mLogTimeZoneOffsetSecond;
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     SetMetricsRecordRef(Name(), componentConfig.GetId());
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     return true;
 }
 
@@ -66,6 +70,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
         return true;
     }
     StringView buffer = sourceEvent.GetContent(mSourceKey);
+    mProcParseInSizeBytes->Add(buffer.size());
     int64_t logTime_in_micro = 0;
     time_t logTime = ApsaraEasyReadLogTimeParser(buffer, timeStrCache, lastLogTime, logTime_in_micro);
     if (logTime <= 0) // this case will handle empty apsara log line
@@ -88,12 +93,15 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
                                                GetContext().GetProjectName(),
                                                GetContext().GetLogstoreName(),
                                                GetContext().GetRegion());
+        mProcParseErrorTotal->Add(1);
+        ++(*mParseFailures);
         if (!mDiscardUnmatch) {
             AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                    sourceEvent.GetContent(mSourceKey),
                    sourceEvent); // legacy behavior, should use sourceKey
+            return true;
         }
-        ++(*mParseFailures);
+        mProcDiscardRecordsTotal->Add(1);
         return false;
     }
     if (BOOL_FLAG(ilogtail_discard_old_data)
@@ -115,7 +123,9 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
                                               GetContext().GetLogstoreName(),
                                               GetContext().GetRegion());
         }
+        mProcParseErrorTotal->Add(1);
         ++(*mParseFailures);
+        mProcDiscardRecordsTotal->Add(1);
         return false;
     }
 
@@ -305,8 +315,8 @@ static int32_t FindColonIndex(StringView& buffer, int32_t beginIndex, int32_t en
 }
 
 int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent) {
-    int32_t beginIndexArray[MAX_BASE_FIELD_NUM] = {0};
-    int32_t endIndexArray[MAX_BASE_FIELD_NUM] = {0};
+    int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
     int32_t baseFieldNum = FindBaseFields(buffer, beginIndexArray, endIndexArray);
     if (baseFieldNum == 0) {
         return 0;
@@ -338,6 +348,7 @@ int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, Lo
 void ProcessorParseApsaraNative::AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent) {
     targetEvent.SetContentNoCopy(key, value);
     *mLogGroupSize += key.size() + value.size() + 5;
+    mProcParseOutSizeBytes->Add(key.size() + value.size());
 }
 
 bool ProcessorParseApsaraNative::IsSupportedEvent(const PipelineEventPtr& e) {
