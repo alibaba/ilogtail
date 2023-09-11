@@ -114,6 +114,7 @@ const int32_t Sender::BUFFER_META_BASE_SIZE = 65536;
 
 std::atomic_int gNetworkErrorCount{0};
 std::atomic_int gMetricsStoreSendErrorCount{0};
+std::atomic_int gMetricsFallbackCount{0};
 
 void SendClosure::OnSuccess(sdk::Response* response) {
     BOOL_FLAG(global_network_success) = true;
@@ -219,9 +220,14 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         }
         double serverErrorRatio
             = Sender::Instance()->IncSendServerErrorStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
-        if (serverErrorRatio < DOUBLE_FLAG(send_server_error_retry_ratio)
-            && mDataPtr->mSendRetryTimes < INT32_FLAG(send_retrytimes)) {
-            operation = RETRY_ASYNC_WHEN_FAIL;
+        if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+            LOG_INFO(sLogger, ("errmsg", errorMessage));
+            if (errorMessage.rfind(sMetricstoreVersionTooLowFlag) != std::string::npos) {
+                operation = METRICSTORE_CHANGE_LOGSOTER;
+                ++gMetricsFallbackCount;
+            } else {
+                ++gMetricsStoreSendErrorCount;
+            }
         } else {
             if (sendResult == SEND_NETWORK_ERROR) {
                 // only set network stat when no real ip
@@ -1460,6 +1466,7 @@ void Sender::DaemonSender() {
             sMonitor->UpdateMetric("net_err_stat", sNetErrCounter.Add(gNetworkErrorCount.exchange(0)));
             static SlidingWindowCounter sMetricsErrCounter = CreateLoadCounter();
             sMonitor->UpdateMetric("metrics_err_stat", sMetricsErrCounter.Add(gMetricsStoreSendErrorCount.exchange(0)));
+            sMonitor->UpdateMetric("metrics_fallback_count", gMetricsFallbackCount.exchange(0));
         }
 
         ///////////////////////////////////////
