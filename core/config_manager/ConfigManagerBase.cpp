@@ -201,7 +201,7 @@ bool ConfigManagerBase::CheckLogType(const string& logTypeStr, LogType& logType)
 }
 
 void ConfigManagerBase::ParseTelemetryType(const string& telemetryTypeStr, sls_logs::SlsTelemetryType& telemetryType) {
-    if (telemetryTypeStr == "log")
+    if (telemetryTypeStr == "logs")
         telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG;
     else if (telemetryTypeStr == "metrics")
         telemetryType = sls_logs::SLS_TELEMETRY_TYPE_METRICS;
@@ -402,7 +402,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             }
             projectName = GetStringValue(value, "project_name", "");
             category = GetStringValue(value, "category", "");
-            ParseTelemetryType(GetStringValue(value, "telemetry_type", "log"), telemetryType);
+            ParseTelemetryType(GetStringValue(value, "telemetry_type", "logs"), telemetryType);
             string logTypeStr = GetStringValue(value, "log_type", "plugin");
             auto region = GetStringValue(value, "region", AppConfig::GetInstance()->GetDefaultRegion());
             LogType logType;

@@ -470,7 +470,6 @@ public:
     void SendLogPackageList(std::vector<MergeItem*>& sendDataVec);
 
     friend class SendClosure;
-    friend class MetricsSendClosure;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;

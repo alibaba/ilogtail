@@ -14,6 +14,7 @@
 
 #include "CurlAsynInstance.h"
 #include "Closure.h"
+#include "Common.h"
 #include "Exception.h"
 #include "Result.h"
 #include <curl/curl.h>
@@ -123,7 +124,7 @@ namespace sdk {
         request->mCallBack->mHTTPMessage.statusCode = (int32_t)http_code;
         curl_easy_cleanup(curl);
         if (!request->mCallBack->mHTTPMessage.IsLogServiceResponse()) {
-            if (request->mUrl.find("/prometheus") != std::string::npos) {
+            if (request->mUrl.find(PROMETHEUS) != std::string::npos) {
                 request->mCallBack->OnFail(request->mResponse, LOGE_REQUEST_ERROR, request->mCallBack->mHTTPMessage.content);
                 return;
             }
