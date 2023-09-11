@@ -34,16 +34,18 @@
 #include "plugin/LogtailRuntimePlugin.h"
 #endif
 #include "plugin/LogtailPlugin.h"
+#include "plugin/PluginRegistry.h"
+#include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
 #include "checkpoint/CheckPointManager.h"
 #include "processor/LogFilter.h"
 #include "controller/EventDispatcher.h"
 #include "monitor/Monitor.h"
 #include "sender/Sender.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogFileProfiler.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
 #include "app_config/AppConfig.h"
 #include "ObserverManager.h"
 using namespace logtail;
@@ -107,6 +109,7 @@ static void overwrite_community_edition_flags() {
     STRING_FLAG(ilogtail_docker_file_path_config) = "checkpoint/docker_path_config.json";
     INT32_FLAG(data_server_port) = 443;
     BOOL_FLAG(enable_env_ref_in_config) = true;
+    BOOL_FLAG(enable_containerd_upper_dir_detect) = true;
 }
 
 // Main routine of worker process.
@@ -203,6 +206,7 @@ void do_worker_process() {
         APSARA_LOG_INFO(sLogger, ("get none dmi uuid", "maybe this is a docker runtime"));
     }
 
+    PluginRegistry::GetInstance()->LoadPlugins();
 #ifdef LOGTAIL_RUNTIME_PLUGIN
     LogtailRuntimePlugin::GetInstance()->LoadPluginBase();
 #endif
@@ -210,8 +214,9 @@ void do_worker_process() {
     // load local config first
     ConfigManager::GetInstance()->GetLocalConfigUpdate();
     ConfigManager::GetInstance()->LoadConfig(AppConfig::GetInstance()->GetUserConfigPath());
+    PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
-    // mNameCoonfigMap is empty, configExistFlag is false
+    // mNameConfigMap is empty, configExistFlag is false
     bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();
 
     // set max open file limit
@@ -283,11 +288,12 @@ void do_worker_process() {
     appInfoJson["update_time"] = GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
     std::string appInfo = appInfoJson.toStyledString();
     OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
-    APSARA_LOG_INFO(sLogger, ("Logtail started, appInfo", appInfo));
+    APSARA_LOG_INFO(sLogger, ("appInfo", appInfo));
 
     ConfigManager::GetInstance()->InitUpdateConfig(configExistFlag);
     ConfigManager::GetInstance()->RegisterHandlers();
     EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
+    APSARA_LOG_INFO(sLogger, ("Logtail started", "initialization completed"));
 
     // [Main thread] Run the Dispatch routine.
     EventDispatcher::GetInstance()->Dispatch();

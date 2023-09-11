@@ -51,10 +51,11 @@
 #include "event/Event.h"
 #include "processor/LogProcess.h"
 #include "sender/Sender.h"
-#include "profiler/LogFileProfiler.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
+#include "monitor/MetricExportor.h"
 #include "log_pb/metric.pb.h"
 #include "log_pb/sls_logs.pb.h"
 #include "checkpoint/CheckPointManager.h"
@@ -66,6 +67,8 @@
 #include "polling/PollingEventQueue.h"
 #endif
 #include "plugin/LogtailPlugin.h"
+#include "plugin/PluginRegistry.h"
+#include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
 #if !defined(_MSC_VER)
 #include "LogtailInsightDispatcher.h"
@@ -161,6 +164,10 @@ EventDispatcherBase::~EventDispatcherBase() {
 }
 
 bool EventDispatcherBase::RegisterEventHandler(const char* path, Config* config, EventHandler*& handler) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     // @todo
     // if this path belong to many config, if register one config with max_depth 0, then it will register fail
     if (!config->WithinMaxDepth(path)) {
@@ -470,7 +477,7 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
 
     int wd = pathIter->second;
     DevInode devInode = GetFileDevInode(realFilePath);
-    if (devInode.IsValid() && checkpoint->mDevInode == devInode) {
+    if (devInode.IsValid() && checkpoint->mDevInode.inode == devInode.inode) {
         if (!CheckFileSignature(
                 realFilePath, checkpoint->mSignatureHash, checkpoint->mSignatureSize, config->mIsFuseMode)) {
             LOG_INFO(sLogger,
@@ -480,6 +487,10 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "file inode", checkpoint->mDevInode.inode));
             return ValidateCheckpointResult::kSigChanged;
         }
+        if (checkpoint->mDevInode.dev != devInode.dev) {
+            // all other checks passed. dev may be a statefulset pv remounted on another node
+            checkpoint->mDevInode.dev = devInode.dev;
+        }
 
         LOG_INFO(sLogger,
                  ("generate MODIFY event for file with checkpoint",
@@ -487,7 +498,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                      "real file path", realFilePath)("file device", checkpoint->mDevInode.dev)(
                      "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                      "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                ToString(checkpoint->mFileOpenFlag))(
+                     "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
         eventVec.push_back(
             new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
         eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -529,7 +541,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
                          "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                          "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                    ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                    ToString(checkpoint->mFileOpenFlag))(
+                         "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
             eventVec.push_back(
                 new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
             eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -576,7 +589,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
                          "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                          "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                    ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                    ToString(checkpoint->mFileOpenFlag))(
+                         "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
             eventVec.push_back(
                 new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
             eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -643,7 +657,8 @@ void EventDispatcherBase::AddExistedCheckPointFileEvents() {
                                                       DevInode(cpt.dev(), cpt.inode()),
                                                       cpt.config_name(),
                                                       cpt.real_path(),
-                                                      1);
+                                                      1,
+                                                      0);
             const auto result = validateCheckpoint(v1Cpt, cachePathDevInodeMap, eventVec);
             switch (result) {
                 case ValidateCheckpointResult::kNormal:
@@ -870,6 +885,7 @@ bool EventDispatcherBase::Dispatch() {
         DumpCheckPointPeriod(curTime);
         if (curTime - lastCheckDir >= INT32_FLAG(main_loop_check_interval)) {
             LogFileProfiler::GetInstance()->SendProfileData();
+            MetricExportor::GetInstance()->PushMetrics(false);
 #if defined(__linux__)
             CheckShennong();
 #endif
@@ -1164,9 +1180,11 @@ void EventDispatcherBase::UpdateConfig() {
     mBrokenLinkSet.clear();
 
     PollingDirFile::GetInstance()->ClearCache();
+    PipelineManager::GetInstance()->RemoveAllPipelines();
     ConfigManager::GetInstance()->RemoveAllConfigs();
     if (ConfigManager::GetInstance()->LoadAllConfig() == false) {
         LOG_ERROR(sLogger, ("LoadConfig fail", ""));
+        PipelineManager::GetInstance()->LoadAllPipelines();
         ConfigManager::GetInstance()->LoadDockerConfig();
         ConfigManager::GetInstance()->DoUpdateContainerPaths();
         DumpAllHandlersMeta(true);
@@ -1184,6 +1202,7 @@ void EventDispatcherBase::UpdateConfig() {
     }
     ConfigManager::GetInstance()->CleanUnusedUserAK();
 
+    PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
     ConfigManager::GetInstance()->DoUpdateContainerPaths();
     ConfigManager::GetInstance()->SaveDockerConfig();
@@ -1278,6 +1297,7 @@ void EventDispatcherBase::ExitProcess() {
 #ifdef LOGTAIL_RUNTIME_PLUGIN
     LogtailRuntimePlugin::GetInstance()->UnLoadPluginBase();
 #endif
+    PluginRegistry::GetInstance()->UnloadPlugins();
 
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();

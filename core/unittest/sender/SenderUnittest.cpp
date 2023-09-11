@@ -43,8 +43,8 @@
 #include <boost/regex.hpp>
 #include "log_pb/metric.pb.h"
 #include "log_pb/sls_logs.pb.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogIntegrity.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogIntegrity.h"
 #include "event_handler/LogInput.h"
 #include "common/FileEncryption.h"
 #include "processor/LogProcess.h"
@@ -2072,11 +2072,10 @@ public:
         return noneUTF8Chars[index];
     }
     void GenerateNoneUTF8Char(LogGroup& logGroup) {
+        auto now = GetCurrentLogtailTime();
         for (int i = 0; i < 10; ++i) {
             Log* logPtr = logGroup.add_logs();
-            timespec ts;
-            clock_gettime(CLOCK_REALTIME_COARSE, &ts);
-            SetLogTime(logPtr, ts.tv_sec, ts.tv_nsec);
+            SetLogTime(logPtr, now.tv_sec, now.tv_nsec);
             for (int j = 0; j < 10; ++j) {
                 Log_Content* contentPtr = logPtr->add_contents();
                 if (j == i) {
@@ -2108,7 +2107,7 @@ public:
         LogGroup srcLog;
         srcLog.set_category(category);
         GenerateNoneUTF8Char(srcLog);
-        Config* config = new Config("", "", APSARA_LOG, "", "", "1000000_proj", false, 2, -1, category);
+        Config* config = new Config("", "", APSARA_LOG, "", "", "", "", "", "1000000_proj", false, 2, -1, category);
         config->mFilterRule = NULL;
         config->mDiscardNoneUtf8 = true;
         Sender::Instance()->Send("1000000_proj", "", srcLog, config, MERGE_BY_TOPIC, srcLog.ByteSize());

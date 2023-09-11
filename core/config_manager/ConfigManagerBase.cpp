@@ -46,10 +46,10 @@
 #include "common/GlobalPara.h"
 #include "common/version.h"
 #include "config/UserLogConfigParser.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogFileProfiler.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
 #include "app_config/AppConfig.h"
 #include "config_manager/ConfigYamlToJson.h"
 #include "checkpoint/CheckPointManager.h"
@@ -319,7 +319,16 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
         for (auto it = mem.begin(); it != mem.end(); ++it) {
             if (*it == "inputs" || *it == "processors" || *it == "flushers") {
                 for (int i = 0; i < config["plugin"][*it].size(); ++i) {
-                    stats[*it].insert(config["plugin"][*it][i]["type"].asString());
+                    std::string type = config["plugin"][*it][i]["type"].asString();
+                    stats[*it].insert(type);
+                    if (type == "service_docker_stdout") {
+                        if (config["plugin"][*it][i].isMember("detail") && config["plugin"][*it][i]["detail"].isObject()
+                            && config["plugin"][*it][i]["detail"].isMember("CollectContainersFlag")
+                            && config["plugin"][*it][i]["detail"]["CollectContainersFlag"].isBool()
+                            && config["plugin"][*it][i]["detail"]["CollectContainersFlag"].asBool()) {
+                            stats["inner_function"].insert("collect_containers_meta");
+                        }
+                    }
                 }
             }
         }
@@ -345,6 +354,13 @@ void ConfigManagerBase::UpdatePluginStats(const Json::Value& config) {
         stats["inputs"].insert("file_log");
         stats["processors"].insert(processor);
         stats["flushers"].insert("flusher_sls");
+
+        if (config.isMember("advanced") && config["advanced"].isObject()
+            && config["advanced"].isMember("collect_containers_flag")
+            && config["advanced"]["collect_containers_flag"].isBool()
+            && config["advanced"]["collect_containers_flag"].asBool()) {
+            stats["inner_function"].insert("collect_containers_meta");
+        }
     }
 
     ScopedSpinLock lock(mPluginStatsLock);
@@ -512,13 +528,12 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
             if (logType == PLUGIN_LOG) {
                 config = new Config(
-                    "", "", logType, telemetryType, logName, "", projectName, false, 0, 0, category, false, "", discardUnmatch);
+                    "", "", logType, telemetryType, logName, "","","", projectName, false, 0, 0, category, false, "", discardUnmatch);
                 if (pluginConfig.empty()) {
                     throw ExceptionBase(std::string("The plugin log type is invalid"));
                 }
                 if (!pluginConfigJson.isNull()) {
-                    pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
-                    pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
+                    config->mPluginProcessFlag = true;
                     if (pluginConfig.find("\"observer_ilogtail_") != string::npos) {
                         if (pluginConfigJson.isMember("inputs")) {
                             if (pluginConfigJson["inputs"].isObject() || pluginConfigJson["inputs"].isArray()) {
@@ -529,19 +544,18 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                             if (pluginConfigJson.isMember("processors")
                                 && (pluginConfigJson["processors"].isObject()
                                     || pluginConfigJson["processors"].isArray())) {
-                                config->mPluginProcessFlag = true;
                                 SetNotFoundJsonMember(pluginConfigJson, MIX_PROCESS_MODE, "observer");
-                                config->mPluginConfig = pluginConfigJson.toStyledString();
                             }
-
                         } else {
                             LOG_WARNING(sLogger,
                                         ("observer config is not a legal JSON object",
                                          logName)("project", projectName)("logstore", category));
+                            throw ExceptionBase(std::string("observer config is not a legal JSON object"));
                         }
-                    } else {
-                        config->mPluginConfig = pluginConfig;
                     }
+                    pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
+                    pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
+                    config->mPluginConfig = pluginConfig;
                 }
             } else if (logType == STREAM_LOG) {
                 config = new Config("",
@@ -549,6 +563,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     logType,
                                     telemetryType,
                                     logName,
+                                    "",
+                                    "",
                                     "",
                                     projectName,
                                     false,
@@ -579,10 +595,22 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (size > 0 && PATH_SEPARATOR[0] == logPath[size - 1])
                     logPath = logPath.substr(0, size - 1);
 
-                string logBeingReg = GetStringValue(value, "log_begin_reg", "");
-                if (logBeingReg != "" && CheckRegFormat(logBeingReg) == false) {
-                    throw ExceptionBase("The log begin line is not value regex : " + logBeingReg);
+                string logBeginReg = GetStringValue(value, "log_begin_reg", "");
+                if (logBeginReg != "" && CheckRegFormat(logBeginReg) == false) {
+                    throw ExceptionBase("The log begin line is not value regex : " + logBeginReg);
                 }
+                string logContinueReg = GetStringValue(value, "log_continue_reg", "");
+                if (logContinueReg != "" && CheckRegFormat(logContinueReg) == false) {
+                    throw ExceptionBase("The log continue line is not value regex : " + logContinueReg);
+                }
+                string logEndReg = GetStringValue(value, "log_end_reg", "");
+                if (logEndReg != "" && CheckRegFormat(logEndReg) == false) {
+                    throw ExceptionBase("The log end line is not value regex : " + logEndReg);
+                }
+                int readerFlushTimeout = 5;
+                if (value.isMember("reader_flush_timeout"))
+                    readerFlushTimeout = GetIntValue(value, "reader_flush_timeout");
+
                 string filePattern = GetStringValue(value, "file_pattern");
                 // raw log flag
                 bool rawLogFlag = false;
@@ -595,7 +623,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     logType,
                                     telemetryType,
                                     logName,
-                                    logBeingReg,
+                                    logBeginReg,
+                                    logContinueReg,
+                                    logEndReg,
                                     projectName,
                                     isPreserve,
                                     preserveDepth,
@@ -603,20 +633,38 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     category,
                                     rawLogFlag,
                                     "",
-                                    discardUnmatch);
+                                    discardUnmatch,
+                                    readerFlushTimeout);
 
                 // normal log file config can have plugin too
+                // Boolean force_enable_pipeline.
+                if (value.isMember("force_enable_pipeline") && value["force_enable_pipeline"].isBool()
+                    && value["force_enable_pipeline"].asBool()) {
+                    config->mForceEnablePipeline = true;
+                    LOG_INFO(sLogger,
+                             ("set force enable pipeline",
+                              config->mForceEnablePipeline)("project", projectName)("config", logName));
+                }
                 if (!pluginConfig.empty() && !pluginConfigJson.isNull()) {
+                    if (pluginConfigJson.isMember("processors")
+                        && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())
+                        && !pluginConfigJson["processors"].empty()) {
+                        config->mPluginProcessFlag = true;
+                    }
+                    if (pluginConfigJson.isMember("flushers")
+                        && (pluginConfigJson["flushers"].isObject() || pluginConfigJson["flushers"].isArray())
+                        && !pluginConfigJson["flushers"].empty() && IsMeaningfulFlusher(pluginConfigJson["flushers"])) {
+                        config->mPluginProcessFlag = true;
+                    }
                     // check processors
                     // set process flag when config have processors
                     if (pluginConfigJson.isMember("processors")
                         && (pluginConfigJson["processors"].isObject() || pluginConfigJson["processors"].isArray())) {
                         // patch enable_log_position_meta to split processor if exists ...
-                        config->mPluginProcessFlag = true;
                         pluginConfigJson = ConfigManager::GetInstance()->CheckPluginProcessor(pluginConfigJson, value);
                         pluginConfig = ConfigManager::GetInstance()->CheckPluginFlusher(pluginConfigJson);
-                        config->mPluginConfig = pluginConfig;
                     }
+                    config->mPluginConfig = pluginConfig;
                 }
                 if (value.isMember("docker_file") && value["docker_file"].isBool() && value["docker_file"].asBool()) {
                     if (AppConfig::GetInstance()->IsPurageContainerMode()) {
@@ -792,7 +840,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     GetRegexAndKeys(value, config);
                     if (config->mRegs && config->mKeys && config->mRegs->size() == (size_t)1
                         && config->mKeys->size() == (size_t)1) {
-                        if ((config->mLogBeginReg.empty() || config->mLogBeginReg == ".*")
+                        if ((!config->IsMultiline())
                             && *(config->mKeys->begin()) == DEFAULT_CONTENT_KEY
                             && *(config->mRegs->begin()) == DEFAULT_REG) {
                             LOG_DEBUG(sLogger,
@@ -1094,6 +1142,21 @@ LogFilterRule* ConfigManagerBase::GetFilterFule(const Json::Value& filterKeys, c
     return rulePtr;
 }
 
+bool ConfigManagerBase::IsMeaningfulFlusher(const Json::Value& flusherConfig) {
+    // Only one sls flusher without any option is not meaningful to use go plugin
+    if (flusherConfig.isArray() && flusherConfig.size() == 1) {
+        const auto& flusher = flusherConfig[0];
+        try {
+            if (flusher["type"].asString() == "flusher_sls" && flusher["detail"].empty()) {
+                return false;
+            }
+        } catch (Json::Exception& e) {
+            LOG_WARNING(sLogger, ("parse flusher plugin json failed", e.what()));
+        }
+    }
+    return true;
+}
+
 bool ConfigManagerBase::LoadAllConfig() {
     ClearPluginStats();
     bool rst = true;
@@ -1153,6 +1216,10 @@ bool ConfigManagerBase::LoadJsonConfig(const Json::Value& jsonRoot, bool localFl
 // if checkTimeout, will not register the dir which is timeout
 // if not checkTimeout, will register the dir which is timeout and add it to the timeout list
 bool ConfigManagerBase::RegisterHandlersRecursively(const std::string& path, Config* config, bool checkTimeout) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     bool result = false;
     if (checkTimeout && config->IsTimeout(path))
         return result;
@@ -1289,6 +1356,10 @@ bool ConfigManagerBase::RegisterHandlers() {
 }
 
 void ConfigManagerBase::RegisterWildcardPath(Config* config, const string& path, int32_t depth) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return;
+    }
     bool finish;
     if ((depth + 1) == ((int)config->mWildcardPaths.size() - 1))
         finish = true;
@@ -1459,6 +1530,10 @@ bool ConfigManagerBase::RegisterDirectory(const std::string& source, const std::
 }
 
 bool ConfigManagerBase::RegisterHandlersWithinDepth(const std::string& path, Config* config, int depth) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     if (depth <= 0) {
         DirCheckPointPtr dirCheckPoint;
         if (CheckPointManager::Instance()->GetDirCheckPoint(path, dirCheckPoint) == false)
@@ -1502,6 +1577,10 @@ bool ConfigManagerBase::RegisterHandlersWithinDepth(const std::string& path, Con
 
 // path not terminated by '/', path already registered
 bool ConfigManagerBase::RegisterDescendants(const string& path, Config* config, int withinDepth) {
+    if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
+        LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
+        return false;
+    }
     if (withinDepth <= 0) {
         return true;
     }

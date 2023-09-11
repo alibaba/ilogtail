@@ -37,34 +37,19 @@ your changes, such as:
 
 ## [Unreleased]
 
-- [public] [both] [updated] Elasticsearch flusher new features: send batch request by bulk api and format index
-- [public] [both] [added] Add new plugin: input_command
-- [public] [both] [added] Add new plugin: processor_log_to_sls_metric
-- [public] [both] [updated] Service_http_server support raw type on v1
-- [public] [both] [updated] Add v2 interface to processor_json
-- [public] [both] [updated] Json processor support parsing array
-- [public] [both] [updated] Service_prometheus support scale in kubernetes
-- [public] [both] [updated] Support to export logtail listening ports
-- [public] [both] [updated] Add containerd custom rootpath support
-- [public] [both] [updated] Upgrade go version to 1.19
-- [public] [both] [updated] Refactory LogBuffer structure
-- [inner] [both] [updated] Logtail containers monitor refine code
+- [public] [both] [added] refactoried C++ process pipeline
+- [public] [both] [added] support use accelerate processors with go processors
+- [public] [both] [added] add new logtail metric module
+- [public] [both] [added] use env `LOGTAIL_LOG_LEVEL` to control ilogtail log level
+- [public] [both] [updated] support continue/end regex patterns to split multiline log
+- [public] [both] [updated] support reader flush timeout
+- [public] [both] [updated] Flusher Kafka V2: support send the message with headers to kafka
+- [public] [both] [updated] update gcc version to 9.3.1
+- [public] [both] [updated] add make flag WITHOUTGDB
+- [public] [both] [fixed] Add APSARA_LOG_TRACE to solve the problem of not being able to find LOG_TRACE.
+- [public] [both] [fixed] fix multiline is splitted if not flushed to disk together
+- [public] [both] [fixed] fix line is truncated if \0 is in the middle of line
+- [public] [both] [fixed] container cannot exit for file reopened by checkpoint
+- [public] [both] [fixed] fix filename being mismatched to the deleted file if the deleted file size is 0 and their inode is same
+- [public] [both] [fixed] fix config server panic caused by concurrent read and write shared object
 - [inner] [both] [updated] Support SLS Metricstore output
-
-- [public] [both] [fixed] Fix service_go_profile nil panic
-- [public] [both] [fixed] Fix broken container log path link
-- [public] [both] [fixed] Fix zstd batch send error
-- [public] [both] [fixed] Fix go pb has TimeNs when not set
-- [public] [both] [fixed] Fix elasticsearch flusher panic
-- [public] [both] [fixed] Fix the abnormal shutdown issue of service_otlp
-- [public] [both] [fixed] Fix inconsistence of ttl when param invalid
-- [public] [both] [fixed] Fix proxy env key error
-- [public] [both] [fixed] Update map time after mark container removed
-- [public] [both] [fixed] Fix multi-bytes character cut off
-- [public] [both] [fixed] Add timeout func when collect disk metrics
-- [public] [both] [fixed] Fix too long log split alarm
-- [public] [both] [fixed] Fix updating agent config's check_status in heartbeat in config server
-- [inner] [both] [fixed] Fix file name of shennong profile data in container
-
-- [public] [both] [doc] Elasticsearch flusher config examples
-- [public] [both] [doc] Fix document of flusher kafka v2
