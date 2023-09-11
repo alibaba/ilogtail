@@ -251,7 +251,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcOutRecordsTotal->GetValue());
     // size of one timestamp and one nanosecond equals to 8 byte, respectively
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(2, processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(2, processor.mProcParseErrorTotal->GetValue());
 }
 

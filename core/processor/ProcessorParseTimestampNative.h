@@ -50,6 +50,7 @@ private:
     CounterPtr mProcParseOutSizeBytes;
     CounterPtr mProcDiscardRecordsTotal;
     CounterPtr mProcParseErrorTotal;
+    CounterPtr mProcHistoryFailureTotal;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseTimestampNativeUnittest;
     friend class ProcessorParseLogTimeUnittest;

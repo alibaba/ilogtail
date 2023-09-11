@@ -41,6 +41,7 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig)
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
     return true;
 }
 
@@ -102,6 +103,7 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
                                                    GetContext().GetRegion());
         }
         ++(*mHistoryFailures);
+        mProcHistoryFailureTotal->Add(1);
         mProcDiscardRecordsTotal->Add(1);
         return false;
     }
@@ -159,7 +161,6 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
         }
 
         mProcParseErrorTotal->Add(1);
-        mProcDiscardRecordsTotal->Add(1);
         ++(*mParseTimeFailures);
         return false;
     }
