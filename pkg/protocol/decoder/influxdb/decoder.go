@@ -16,17 +16,17 @@ package influxdb
 
 import (
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/helper"
-	"github.com/alibaba/ilogtail/pkg/util"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/influxdata/influxdb/models"
 
+	"github.com/alibaba/ilogtail/pkg/helper"
 	imodels "github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/common"
+	"github.com/alibaba/ilogtail/pkg/util"
 )
 
 const (

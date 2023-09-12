@@ -262,6 +262,7 @@ func NewMetricLogStringVal(name string, t int64, value string, labels *MetricLab
 	case 13:
 		metric = &protocol.Log{}
 		protocol.SetLogTime(metric, uint32(t/1000), uint32((t*1e6)%1e9))
+		strTime += "000000"
 	case 19:
 		metric = &protocol.Log{}
 		protocol.SetLogTime(metric, uint32(t/1e9), uint32(t%1e9))
