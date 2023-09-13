@@ -164,6 +164,7 @@ public:
         "##1.0##test$regex-1" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"keys" : 
 			[
@@ -185,6 +186,7 @@ public:
         "##1.0##test$regex-2" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"keys" : 
 			[
@@ -206,6 +208,7 @@ public:
         "##1.0##test$regex-3" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"keys" : 
 			[
@@ -227,6 +230,7 @@ public:
         "##1.0##test$json-1" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "json_log",
@@ -240,6 +244,7 @@ public:
         "##1.0##test$json-2" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "json_log",
@@ -253,6 +258,7 @@ public:
         "##1.0##test$json-3" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "json_log",
@@ -266,6 +272,7 @@ public:
         "##1.0##test$json-4" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "json_log",
@@ -279,6 +286,7 @@ public:
         "##1.0##test$json-5" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "json_log",
@@ -299,6 +307,7 @@ public:
 			],
 			"delimiter_quote": "'",
 			"delimiter_separator": " ",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
@@ -319,6 +328,7 @@ public:
 			],
 			"delimiter_quote": "'",
 			"delimiter_separator": " ",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
@@ -339,6 +349,7 @@ public:
 			],
 			"delimiter_quote": "'",
 			"delimiter_separator": " ",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
@@ -359,6 +370,7 @@ public:
 			],
 			"delimiter_quote": "'",
 			"delimiter_separator": " ",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
@@ -379,6 +391,7 @@ public:
 			],
 			"delimiter_quote": "'",
 			"delimiter_separator": " ",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_path" : ".",
 			"log_type" : "delimiter_log",
@@ -392,6 +405,7 @@ public:
 		"##1.0##test$apsara-1" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_begin_reg" : ".*",
 			"log_path" : ".",
@@ -406,9 +420,10 @@ public:
 			"timeformat" : "",
 			"tz_adjust" : false
 		},
-		"##1.0##test$apsara-1" : 
+		"##1.0##test$apsara-2" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_begin_reg" : ".*",
 			"log_path" : ".",
@@ -423,9 +438,10 @@ public:
 			"timeformat" : "",
 			"tz_adjust" : true
 		},
-		"##1.0##test$apsara-1" : 
+		"##1.0##test$apsara-3" : 
 		{
 			"category" : "test",
+			"enable": true,
 			"file_pattern" : "*.log",
 			"log_begin_reg" : ".*",
 			"log_path" : ".",
@@ -467,17 +483,10 @@ public:
     }
 };
 
-TEST_F(ConfigManagerBaseUnittest, TestReplaceEnvVarRefInStr) {
-    TestReplaceEnvVarRefInStr();
-}
+UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestReplaceEnvVarRefInStr);
+UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestReplaceEnvVarRefInConf);
+UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestTimeZoneAdjustment);
 
-TEST_F(ConfigManagerBaseUnittest, TestReplaceEnvVarRefInConf) {
-    TestReplaceEnvVarRefInConf();
-}
-
-TEST_F(ConfigManagerBaseUnittest, TestTimeZoneAdjustment) {
-    TestReplaceEnvVarRefInConf();
-}
 
 } // end of namespace logtail
 
