@@ -34,11 +34,13 @@ bool ProcessorParseApsaraNative::Init(const ComponentConfig& componentConfig) {
     mLogTimeZoneOffsetSecond = componentConfig.GetConfig().mLogTimeZoneOffsetSecond;
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
     SetMetricsRecordRef(Name(), componentConfig.GetId());
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
     return true;
 }
 
@@ -49,7 +51,7 @@ void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
     const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
     EventsContainer& events = logGroup.MutableEvents();
     StringView timeStrCache;
-    time_t lastLogTime;
+    LogtailTime lastLogTime;
     // works good normally. poor performance if most data need to be discarded.
     for (auto it = events.begin(); it != events.end();) {
         if (ProcessEvent(logPath, *it, lastLogTime, timeStrCache)) {
@@ -61,7 +63,7 @@ void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e, time_t& lastLogTime, StringView& timeStrCache) {
+bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
@@ -99,6 +101,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
             AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                    sourceEvent.GetContent(mSourceKey),
                    sourceEvent); // legacy behavior, should use sourceKey
+            sourceEvent.DelContent(mSourceKey);
             return true;
         }
         mProcDiscardRecordsTotal->Add(1);
@@ -123,14 +126,13 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
                                               GetContext().GetLogstoreName(),
                                               GetContext().GetRegion());
         }
-        mProcParseErrorTotal->Add(1);
-        ++(*mParseFailures);
+        ++(*mHistoryFailures);
+        mProcHistoryFailureTotal->Add(1);
         mProcDiscardRecordsTotal->Add(1);
         return false;
     }
 
-    // TODO set miscrosecond logTime_in_micro * 1000 % 1000000000
-    sourceEvent.SetTimestamp(logTime);
+    sourceEvent.SetTimestamp(logTime, logTime_in_micro * 1000 % 1000000000);
     int32_t beg_index = 0;
     int32_t colon_index = -1;
     int32_t index = -1;
@@ -151,6 +153,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
             }
         } while (buffer.data()[index]);
     }
+    // TODO: deprecated
     if (mAdjustApsaraMicroTimezone) {
         logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
     }
@@ -161,88 +164,46 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
     sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lld", logTime_in_micro));
 #endif
     AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
+    sourceEvent.DelContent(mSourceKey);
     return true;
 }
 
-time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, time_t& lastLogTime, int64_t& microTime) {
-    int beg_index = 0;
-    if (buffer[beg_index] != '[') {
+time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime) {
+    if (buffer[0] != '[') {
         return 0;
     }
-    int curTime = 0;
     if (buffer[1] == '1') // for normal time, e.g 1378882630, starts with '1'
     {
-        int i = 0;
-        for (; i < 16; i++) // 16 = 10(second width) + 6(micro part)
-        {
-            const char& c = buffer[1 + i];
-            if (c >= '0' && c <= '9') {
-                if (i < 10) {
-                    curTime = curTime * 10 + c - '0';
-                }
-                microTime = microTime * 10 + c - '0';
-            } else {
-                break;
-            }
+        int nanosecondLength = 0;
+        auto strptimeResult = Strptime(buffer.data() + 1, "%s", &lastLogTime, nanosecondLength);
+        if (NULL == strptimeResult || strptimeResult[0] != ']') {
+            LOG_WARNING(sLogger,
+                        ("parse apsara log time", "fail")("string", buffer)("timeformat", "%s"));
+            return 0;
         }
-        if (i >= 10) {
-            while (i < 16) {
-                microTime *= 10;
-                i++;
-            }
-            return curTime;
-        }
+        microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
+        return lastLogTime.tv_sec;
     }
     // test other date format case
     {
-        if (IsPrefixString(buffer.data() + beg_index + 1, timeStr) == true) {
-            microTime = (int64_t)lastLogTime * 1000000 + GetApsaraLogMicroTime(buffer);
-            return lastLogTime;
+        if (IsPrefixString(buffer.data() + 1, timeStr) == true) {
+            microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
+            return lastLogTime.tv_sec;
         }
         struct tm tm;
         memset(&tm, 0, sizeof(tm));
-        long nanosecond = 0;
         int nanosecondLength = 0;
-        if (NULL == strptime_ns(buffer.data() + beg_index + 1, "%Y-%m-%d %H:%M:%S", &tm, &nanosecond, &nanosecondLength)) {
+        auto strptimeResult = Strptime(buffer.data() + 1, "%Y-%m-%d %H:%M:%S.%f", &lastLogTime, nanosecondLength);
+        if (NULL == strptimeResult || strptimeResult[0] != ']') {
             LOG_WARNING(sLogger,
-                        ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S"));
+                        ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S.%f"));
             return 0;
         }
-        tm.tm_isdst = -1;
-        lastLogTime = mktime(&tm);
         // if the time is valid (strptime not return NULL), the date value size must be 19 ,like '2013-09-11 03:11:05'
-        timeStr = StringView(buffer.data() + beg_index + 1, 19);
-
-        microTime = (int64_t)lastLogTime * 1000000 + GetApsaraLogMicroTime(buffer);
-        return lastLogTime;
+        timeStr = StringView(buffer.data() + 1, 19);
+        microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
+        return lastLogTime.tv_sec;
     }
-}
-
-int32_t ProcessorParseApsaraNative::GetApsaraLogMicroTime(StringView& buffer) {
-    int begIndex = 0;
-    char tmp[6];
-    while (buffer[begIndex]) {
-        if (buffer[begIndex] == '.') {
-            begIndex++;
-            break;
-        }
-        begIndex++;
-    }
-    int index = 0;
-    while (buffer[begIndex + index] && index < 6) {
-        if (buffer[begIndex + index] == ']') {
-            break;
-        }
-        tmp[index] = buffer[begIndex + index];
-        index++;
-    }
-    if (index < 6) {
-        for (int i = index; i < 6; i++) {
-            tmp[i] = '0';
-        }
-    }
-    char* endPtr;
-    return strtol(tmp, &endPtr, 10);
 }
 
 bool ProcessorParseApsaraNative::IsPrefixString(const char* all, const StringView& prefix) {
@@ -315,8 +276,10 @@ static int32_t FindColonIndex(StringView& buffer, int32_t beginIndex, int32_t en
 }
 
 int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent) {
-    int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
-    int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    // int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    // int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    int32_t beginIndexArray[10] = {0};
+    int32_t endIndexArray[10] = {0};
     int32_t baseFieldNum = FindBaseFields(buffer, beginIndexArray, endIndexArray);
     if (baseFieldNum == 0) {
         return 0;
