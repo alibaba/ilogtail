@@ -103,6 +103,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
                     "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"}",
                     "log.file.offset": "0"
                 },
+                "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
                 "type" : 1
             }
@@ -129,6 +130,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
                     "url" : "POST /PutData?Category=YunOsAccountOpLog HTTP/1.1"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -157,6 +159,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
                     "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"",
                     "log.file.offset": "0"
                 },
+                "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
                 "type" : 1
             }
@@ -208,6 +211,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
                     "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"",
                     "log.file.offset": "0"
                 },
+                "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
                 "type" : 1
             }
