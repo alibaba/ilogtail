@@ -276,10 +276,8 @@ static int32_t FindColonIndex(StringView& buffer, int32_t beginIndex, int32_t en
 }
 
 int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent) {
-    // int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
-    // int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
-    int32_t beginIndexArray[10] = {0};
-    int32_t endIndexArray[10] = {0};
+    int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
     int32_t baseFieldNum = FindBaseFields(buffer, beginIndexArray, endIndexArray);
     if (baseFieldNum == 0) {
         return 0;
