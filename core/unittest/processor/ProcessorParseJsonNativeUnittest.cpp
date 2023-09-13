@@ -106,6 +106,16 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
                 "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
+                    "log.file.offset": "0"
+                },
+                "timestampNanosecond" : 0,
+                "timestamp" : 12345678901,
+                "type" : 1
             }
         ]
     })";
@@ -128,6 +138,22 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
                     "log.file.offset": "0",
                     "time" : "07/Jul/2022:10:30:28",
                     "url" : "POST /PutData?Category=YunOsAccountOpLog HTTP/1.1"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "__raw__" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
+                    "address" : "{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"}",
+                    "age":"25",
+                    "courses":"[\"Math\",\"English\",\"Science\"]",
+                    "is_student":"false",
+                    "log.file.offset":"0",
+                    "name":"Mike",
+                    "scores":"{\"Math\":90,\"English\":85,\"Science\":95}"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
