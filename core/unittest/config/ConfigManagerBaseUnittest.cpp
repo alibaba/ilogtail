@@ -154,6 +154,10 @@ public:
     }
 
     void TestTimeZoneAdjustment() {
+        /* xxx-{last} is valid time zone config,
+           others are invalid because either timeformat, timekey or log_tz is empty.
+           apasra-{last} should be valid regardless with timeformat and timekey.
+         */
         std::string configStr = R""""({
     "metrics" : 
     {
@@ -384,6 +388,57 @@ public:
 			"time_key": "time",
 			"timeformat" : "%Y-%M-%dT%h:%m:%s",
 			"tz_adjust" : true
+		},
+		"##1.0##test$apsara-1" : 
+		{
+			"category" : "test",
+			"file_pattern" : "*.log",
+			"log_begin_reg" : ".*",
+			"log_path" : ".",
+			"log_type" : "apsara_log",
+			"log_tz" : "",
+			"max_depth" : 0,
+			"project_name" : "test",
+			"regex" : 
+			[
+				"\\[([^]]+)]\\s(.*)"
+			],
+			"timeformat" : "",
+			"tz_adjust" : false
+		},
+		"##1.0##test$apsara-1" : 
+		{
+			"category" : "test",
+			"file_pattern" : "*.log",
+			"log_begin_reg" : ".*",
+			"log_path" : ".",
+			"log_type" : "apsara_log",
+			"log_tz" : "",
+			"max_depth" : 0,
+			"project_name" : "test",
+			"regex" : 
+			[
+				"\\[([^]]+)]\\s(.*)"
+			],
+			"timeformat" : "",
+			"tz_adjust" : true
+		},
+		"##1.0##test$apsara-1" : 
+		{
+			"category" : "test",
+			"file_pattern" : "*.log",
+			"log_begin_reg" : ".*",
+			"log_path" : ".",
+			"log_type" : "apsara_log",
+			"log_tz" : "GMT+08:00",
+			"max_depth" : 0,
+			"project_name" : "test",
+			"regex" : 
+			[
+				"\\[([^]]+)]\\s(.*)"
+			],
+			"timeformat" : "",
+			"tz_adjust" : true
 		}
     }
 })"""";
@@ -406,6 +461,9 @@ public:
         APSARA_TEST_FALSE(configNameEntityMap["##1.0##test$delimiter-3"]->mTimeZoneAdjust);
         APSARA_TEST_FALSE(configNameEntityMap["##1.0##test$delimiter-4"]->mTimeZoneAdjust);
         APSARA_TEST_TRUE(configNameEntityMap["##1.0##test$delimiter-5"]->mTimeZoneAdjust);
+        APSARA_TEST_FALSE(configNameEntityMap["##1.0##test$apsara-1"]->mTimeZoneAdjust);
+        APSARA_TEST_FALSE(configNameEntityMap["##1.0##test$apsara-2"]->mTimeZoneAdjust);
+        APSARA_TEST_TRUE(configNameEntityMap["##1.0##test$apsara-3"]->mTimeZoneAdjust);
     }
 };
 
