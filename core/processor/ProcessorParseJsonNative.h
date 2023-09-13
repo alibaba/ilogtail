@@ -16,7 +16,6 @@
 #pragma once
 #include "processor/Processor.h"
 #include <string>
-#include <boost/regex.hpp>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 
@@ -40,12 +39,7 @@ private:
     std::string mRawLogTag;
     bool mRawLogTagOverwritten = false;
 
-    std::string mTimeKey;
-    std::string mTimeFormat;
-    bool mUseSystemTime;
-
     int* mParseFailures = nullptr;
-    int* mRegexMatchFailures = nullptr;
     int* mLogGroupSize = nullptr;
 
     CounterPtr mProcParseInSizeBytes;
