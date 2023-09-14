@@ -63,7 +63,9 @@ bool DelimiterModeFsmParser::HandleSeparator(const char* ch, int& fieldStart, in
         case STATE_DOUBLE_QUOTE:
             fsm.currentState = STATE_INITIAL;
             columnValues.emplace_back(ch + fieldStart, fieldEnd - fieldStart);
-            fieldStart = ++fieldEnd;
+            // Skip the quote
+            fieldEnd += 2;
+            fieldStart = fieldEnd;
             return true;
         default:
             return false;
@@ -89,19 +91,20 @@ bool DelimiterModeFsmParser::HandleQuote(char ch, DelimiterModeFsm& fsm) {
     }
 }
 
-bool DelimiterModeFsmParser::HandleQuote(int& fieldEnd, DelimiterModeFsm& fsm) {
+bool DelimiterModeFsmParser::HandleQuote(int& fieldStart, int& fieldEnd, DelimiterModeFsm& fsm) {
     switch (fsm.currentState) {
         case STATE_INITIAL:
             fsm.currentState = STATE_QUOTE;
+            fieldStart++;
             return true;
         case STATE_QUOTE:
             fsm.currentState = STATE_DOUBLE_QUOTE;
+            fieldEnd++;
             return true;
         case STATE_DATA:
             return false;
         case STATE_DOUBLE_QUOTE:
             fsm.currentState = STATE_QUOTE;
-            fieldEnd++;
             return true;
         default:
             return false;
@@ -219,7 +222,7 @@ bool DelimiterModeFsmParser::ParseDelimiterLine(StringView buffer,
         if (ch[i] == separator) {
             result = HandleSeparator(ch, fieldStart, fieldEnd, fsm, columnValues);
         } else if (ch[i] == quote) {
-            result = HandleQuote(fieldEnd, fsm);
+            result = HandleQuote(fieldStart, fieldEnd, fsm);
         } else // data
         {
             result = HandleData(fieldEnd, fsm);

@@ -60,7 +60,7 @@ public:
     static bool HandleSeparator(char ch, DelimiterModeFsm& fsm, std::vector<std::string>& columnValues);
     static bool HandleSeparator(const char* ch, int& fieldStart, int& fieldEnd, DelimiterModeFsm& fsm, std::vector<StringView>& columnValues);
     static bool HandleQuote(char ch, DelimiterModeFsm& fsm);
-    static bool HandleQuote(int& fieldEnd, DelimiterModeFsm& fsm);
+    static bool HandleQuote(int& fieldStart, int& fieldEnd, DelimiterModeFsm& fsm);
     static bool HandleData(char ch, DelimiterModeFsm& fsm);
     static bool HandleData(int& fieldEnd, DelimiterModeFsm& fsm);
     static bool HandleEOF(DelimiterModeFsm& fsm, std::vector<std::string>& columnValues);

@@ -125,7 +125,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                 }
                 // remove extra fields
                 columnValues.resize(mColumnKeys.size());
-                columnValues.push_back(extraFields);
+                columnValues.push_back(StringView(sb.data, requiredLen));
             }
             parsedColCount = columnValues.size();
         } else {
@@ -200,11 +200,13 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                        sourceEvent);
             }
         }
+        sourceEvent.DelContent(mSourceKey);
         return true;
     } else if (!mDiscardUnmatch) {
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                sourceEvent.GetContent(mSourceKey),
                sourceEvent); // legacy behavior, should use sourceKey
+        sourceEvent.DelContent(mSourceKey);
         return true;
     }
     mProcDiscardRecordsTotal->Add(1);
