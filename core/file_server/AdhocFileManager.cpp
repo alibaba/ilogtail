@@ -37,7 +37,6 @@ void AdhocFileManager::Run() {
 
 void AdhocFileManager::ProcessLoop() {
     mAdhocCheckpointManager = AdhocCheckpointManager::GetInstance();
-    mAdhocCheckpointManager->Run();
 
     while (mRunFlag) {
         Event* ev = PopEventQueue();
@@ -62,13 +61,13 @@ void AdhocFileManager::ProcessStaticFileEvent(Event* ev) {
     std::string jobName = ev->GetConfigName();
     AdhocJobCheckpointPtr jobCpPtr = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName);
     AdhocFileCheckpointKey cpKey(DevInode(ev->GetDev(), ev->GetInode()), jobName, 0);
-    AdhocFileCheckpointPtr fileCpPtr = jobCpPtr->GetAdhocFileCheckpoint(cpKey);
+    AdhocFileCheckpointPtr fileCpPtr = jobCpPtr->GetAdhocFileCheckpoint(&cpKey);
 
     // read file and change offset
     ReadFile(ev, fileCpPtr);
 
     // if file's status changed, dump job's checkpoint
-    if (jobCpPtr->UpdateAdhocFileCheckpoint(cpKey, fileCpPtr)) {
+    if (jobCpPtr->UpdateAdhocFileCheckpoint(&cpKey, fileCpPtr)) {
         jobCpPtr->DumpAdhocCheckpoint();
     }
 
@@ -131,6 +130,8 @@ void AdhocFileManager::AddJob(std::string jobName, std::vector<StaticFile> fileL
         Event* ev = new Event(fileList[0].filePath, fileList[0].fileName, EVENT_STATIC_FILE, -1, 0, fileList[0].Dev, fileList[0].Inode);
         PushEventQueue(ev);
     }
+
+    Run();
 }
 
 void AdhocFileManager::DeleteJob(std::string jobName) {

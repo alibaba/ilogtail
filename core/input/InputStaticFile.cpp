@@ -32,7 +32,6 @@ void InputStaticFile::Init(Config &&config) {
 void InputStaticFile::Start() {
     // 暂时认为input这里已经把所有要采集的文件都整理出来了
     mAdhocFileManager->AddJob(mJobName, mFileList);
-    mAdhocFileManager->Run();
 }
 
 void InputStaticFile::Stop(bool isRemoving) {

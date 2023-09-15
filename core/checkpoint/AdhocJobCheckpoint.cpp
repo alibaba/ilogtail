@@ -37,14 +37,19 @@ AdhocJobCheckpoint::AdhocJobCheckpoint(const std::string& jobName) {
 AdhocJobCheckpoint::~AdhocJobCheckpoint() {
 }
 
-void AdhocJobCheckpoint::AddAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFileCheckpointKey) {
+void AdhocJobCheckpoint::AddAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey) {
+    if ("" != adhocFileCheckpointKey->mFileName || 0 != adhocFileCheckpointKey->mFileSize
+        || DevInode() != adhocFileCheckpointKey->mDevInode || "" != mAdhocJobName) {
+            LOG_WARNING(sLogger, ("Add AdhocFileCheckpoint fail, file checkpoint info", adhocFileCheckpointKey));
+            return;
+        }
     AdhocFileCheckpointPtr ptr = std::make_shared<AdhocFileCheckpoint>(
-        adhocFileCheckpointKey.mFileName,
-        adhocFileCheckpointKey.mFileSize,
+        adhocFileCheckpointKey->mFileName,
+        adhocFileCheckpointKey->mFileSize,
         0,
         0,
         0,
-        adhocFileCheckpointKey.mDevInode,
+        adhocFileCheckpointKey->mDevInode,
         mAdhocJobName,
         "",
         0,
@@ -53,7 +58,7 @@ void AdhocJobCheckpoint::AddAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFile
     mFileCount++;
 }
 
-AdhocFileCheckpointPtr AdhocJobCheckpoint::GetAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFileCheckpointKey) {
+AdhocFileCheckpointPtr AdhocJobCheckpoint::GetAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey) {
     if (!CheckFileInList(adhocFileCheckpointKey)) {
         return nullptr;
     }
@@ -61,15 +66,16 @@ AdhocFileCheckpointPtr AdhocJobCheckpoint::GetAdhocFileCheckpoint(AdhocFileCheck
     return mAdhocFileCheckpointList[mCurrentFileIndex];
 }
 
-bool AdhocJobCheckpoint::UpdateAdhocFileCheckpoint(AdhocFileCheckpointKey adhocFileCheckpointKey, AdhocFileCheckpointPtr ptr) {
+bool AdhocJobCheckpoint::UpdateAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey, AdhocFileCheckpointPtr ptr) {
     if (!CheckFileInList(adhocFileCheckpointKey)) {
         return -1;
     }
 
     bool dumpFlag = false;
+    bool indexChangeFlag = false;
     if (ptr->mOffset == -1) {
         ptr->mStatus = STATUS_LOST;
-        mCurrentFileIndex++;
+        indexChangeFlag = true;
         dumpFlag = true;
     } else {
         if (STATUS_WAITING == ptr->mStatus) {
@@ -78,21 +84,25 @@ bool AdhocJobCheckpoint::UpdateAdhocFileCheckpoint(AdhocFileCheckpointKey adhocF
         }
         if (ptr->mOffset == ptr->mSize) {
             ptr->mStatus = STATUS_FINISHED;
-            mCurrentFileIndex++;
+            indexChangeFlag = true;
             dumpFlag = true;
         }
+    }
+
+    if (indexChangeFlag) {
+        mCurrentFileIndex++;
     }
 
     return dumpFlag;
 }
 
-void AdhocJobCheckpoint::LoadAdhocCheckpoint() {
+bool AdhocJobCheckpoint::LoadAdhocCheckpoint() {
     if (CheckExistance(mStorePath)) {
-        std::ifstream ifs("json_file.json");
+        std::ifstream ifs(mStorePath);
         if (!ifs.is_open()) {
             LOG_ERROR(sLogger, ("open adhoc check point file error when load", mStorePath));
             LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "open check point file failed");
-            return;
+            return false;
         }
 
         Json::Value root;
@@ -140,6 +150,9 @@ void AdhocJobCheckpoint::LoadAdhocCheckpoint() {
             }
             mAdhocFileCheckpointList.push_back(ptr);
         }
+        return true;
+    } else {
+        return false;
     }
 }
 
@@ -209,19 +222,17 @@ void AdhocJobCheckpoint::DumpAdhocCheckpoint() {
 }
 
 void AdhocJobCheckpoint::Delete() {
-    for (AdhocFileCheckpointPtr ptr : mAdhocFileCheckpointList) {
-        ptr.reset();
-    }
     remove(mStorePath.c_str());
+    this->~AdhocJobCheckpoint();
 }
 
-bool AdhocJobCheckpoint::CheckFileInList(AdhocFileCheckpointKey adhocFileCheckpointKey) {
+bool AdhocJobCheckpoint::CheckFileInList(const AdhocFileCheckpointKey* adhocFileCheckpointKey) {
     if (mCurrentFileIndex >= mFileCount) {
         return false;
     }
     AdhocFileCheckpointPtr ptr = mAdhocFileCheckpointList[mCurrentFileIndex];
-    if (ptr->mFileName == adhocFileCheckpointKey.mFileName &&
-        ptr->mDevInode == adhocFileCheckpointKey.mDevInode) {
+    if (ptr->mFileName == adhocFileCheckpointKey->mFileName &&
+        ptr->mDevInode == adhocFileCheckpointKey->mDevInode) {
             return true;
         }
     return false;

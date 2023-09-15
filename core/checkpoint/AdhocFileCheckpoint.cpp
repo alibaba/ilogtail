@@ -15,15 +15,38 @@
  */
 
 #include "AdhocFileCheckpoint.h"
+#include "logger/Logger.h"
 
 namespace logtail {
 
-AdhocFileCheckpoint::AdhocFileCheckpoint(/* args */)
-{
+std::string TransStatusToString(FileReadStatus status) {
+    switch (status) {
+        case STATUS_WAITING:
+            return "waiting";
+        case STATUS_LOADING:
+            return "loading";
+        case STATUS_FINISHED:
+            return "finished";
+        case STATUS_LOST:
+            return "lost";
+        default:
+            return "";
+    }
 }
 
-AdhocFileCheckpoint::~AdhocFileCheckpoint()
-{
+FileReadStatus GetStatusFromString(std::string statusStr) {
+    if (statusStr == "waiting") {
+        return STATUS_WAITING;
+    } else if (statusStr == "loading") {
+        return STATUS_LOADING;
+    } else if (statusStr == "finished") {
+        return STATUS_FINISHED;
+    } else if (statusStr == "lost") {
+        return STATUS_LOST;
+    } else {
+        LOG_WARNING(sLogger, ("Adhoc file status wrong", statusStr));
+        return STATUS_LOST;
+    }
 }
 
 }

@@ -22,11 +22,9 @@ namespace logtail {
 
 class AdhocCheckpointManager {
 private:
-    AdhocCheckpointManager() { mRunFlag = false; };
+    AdhocCheckpointManager();
     AdhocCheckpointManager(const AdhocCheckpointManager&) = delete;
     AdhocCheckpointManager& operator=(const AdhocCheckpointManager&) = delete;
-    void ProcessLoop();
-    static bool mRunFlag;
 
     std::unordered_map<std::string, AdhocJobCheckpointPtr> mAdhocJobCheckpointMap;
     

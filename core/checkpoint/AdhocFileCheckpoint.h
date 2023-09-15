@@ -29,30 +29,8 @@ enum FileReadStatus {
     STATUS_LOST,
 };
 
-std::string TransStatusToString(FileReadStatus status) {
-    switch (status) {
-        case STATUS_WAITING:
-            return "waiting";
-        case STATUS_LOADING:
-            return "loading";
-        case STATUS_FINISHED:
-            return "finished";
-        case STATUS_LOST:
-            return "lost";
-    }
-}
-
-FileReadStatus GetStatusFromString(std::string statusStr) {
-    if (statusStr == "waiting") {
-        return STATUS_WAITING;
-    } else if (statusStr == "loading") {
-        return STATUS_LOADING;
-    } else if (statusStr == "finished") {
-        return STATUS_FINISHED;
-    } else if (statusStr == "lost") {
-        return STATUS_LOST;
-    }
-}
+std::string TransStatusToString(FileReadStatus status);
+FileReadStatus GetStatusFromString(std::string statusStr);
 
 class AdhocFileCheckpoint {
 private:
@@ -82,9 +60,9 @@ public:
           mFileOpenFlag(fileOpenFlag),
           mStatus(status),
           mJobName(jobName) {}
-    std::string mFileName;
     ~AdhocFileCheckpoint();
 
+    std::string mFileName;
     std::string mRealFileName;
     int64_t mOffset;
     int64_t mSize;
