@@ -17,6 +17,7 @@
 #pragma once
 #include <memory>
 #include <string>
+#include <mutex>
 #include "common/DevInode.h"
 #include "common/StringTools.h"
 
@@ -47,7 +48,7 @@ public:
                         const std::string& jobName = std::string(),
                         const std::string& realFileName = std::string(),
                         int32_t fileOpenFlag = 0,
-                        FileReadStatus status)
+                        FileReadStatus status = STATUS_WAITING)
         : mFileName(filename),
           mRealFileName(realFileName),
           mSize(size),

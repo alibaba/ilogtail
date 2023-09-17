@@ -39,7 +39,15 @@ public:
 UNIT_TEST_CASE(AdhocCheckpointManagerUnittest, TestAdhocCheckpointManager);
 
 void AdhocCheckpointManagerUnittest::TestAdhocCheckpointManager() {
-    
+    // test start, add job
+    {
+        AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();
+    }
+    // test run
+    {
+
+    }
+    // test stop
 }
 
 
