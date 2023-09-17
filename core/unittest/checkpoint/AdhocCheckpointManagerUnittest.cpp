@@ -22,7 +22,7 @@ namespace logtail {
 
 std::string kTestRootDir;
 
-class AdhocCheckpointManagerUnittest {
+class AdhocCheckpointManagerUnittest : public ::testing::Test {
 public:
     static void SetUpTestCase() {
         kTestRootDir = (bfs::path(GetProcessExecutionDir()) / "AdhocCheckpointManagerUnittest").string();

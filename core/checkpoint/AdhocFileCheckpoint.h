@@ -54,8 +54,6 @@ public:
           mOffset(offset),
           mSignatureSize(signatureSize),
           mSignatureHash(signatureHash),
-          mStartTime(0),
-          mLastUpdateTime(0),
           mDevInode(devInode),
           mFileOpenFlag(fileOpenFlag),
           mStatus(status),
@@ -74,6 +72,7 @@ public:
     int32_t mFileOpenFlag;
     FileReadStatus mStatus;
     std::string mJobName;
+    std::mutex mMutex;
 };
 
 struct AdhocFileCheckpointKey {

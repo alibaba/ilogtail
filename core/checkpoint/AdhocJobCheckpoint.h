@@ -36,6 +36,7 @@ private:
     std::string mAdhocJobName; 
     std::string mStorePath; 
     bool mDeleteFlag;
+    std::mutex mMutex;
 
 public:
     AdhocJobCheckpoint(const std::string& jobName);

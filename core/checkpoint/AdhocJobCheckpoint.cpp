@@ -162,6 +162,7 @@ void AdhocJobCheckpoint::DumpAdhocCheckpoint() {
         LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "open adhoc check point file dir failed");
         return;
     }
+    std::lock_guard<std::mutex> lock(mMutex);
 
     Json::Value root;
     root["job_name"] = mAdhocJobName;
@@ -170,6 +171,7 @@ void AdhocJobCheckpoint::DumpAdhocCheckpoint() {
     Json::Value files(Json::arrayValue);
 
     for (AdhocFileCheckpointPtr ptr : mAdhocFileCheckpointList) {
+        std::lock_guard<std::mutex> lock(ptr->mMutex);
         ptr->mLastUpdateTime = time(NULL);
 
         Json::Value file;
