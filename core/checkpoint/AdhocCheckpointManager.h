@@ -26,8 +26,6 @@ private:
     AdhocCheckpointManager(const AdhocCheckpointManager&) = delete;
     AdhocCheckpointManager& operator=(const AdhocCheckpointManager&) = delete;
 
-    std::string GetJobCheckpointPath(const std::string& jobName);
-
     std::unordered_map<std::string, AdhocJobCheckpointPtr> mAdhocJobCheckpointMap;
 
 public:
@@ -44,6 +42,7 @@ public:
     void DeleteAdhocJobCheckpoint(const std::string& jobName);
 
     std::string GetAdhocCheckpointDirPath();
+    std::string GetJobCheckpointPath(const std::string& jobName);
 };
 
 } // namespace logtail
