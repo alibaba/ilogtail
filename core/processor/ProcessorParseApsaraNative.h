@@ -38,9 +38,12 @@ private:
     int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
 
     std::string mSourceKey;
+    std::string mRawLogTag;
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;
     bool mAdjustApsaraMicroTimezone = false;
+    bool mSourceKeyOverwritten = false;
+    bool mRawLogTagOverwritten = false;
     int mLogTimeZoneOffsetSecond = 0;
 
     int* mLogGroupSize = nullptr;

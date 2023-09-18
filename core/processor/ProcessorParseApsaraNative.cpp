@@ -28,10 +28,15 @@ namespace logtail {
 // static const int32_t MAX_BASE_FIELD_NUM = 10;
 
 bool ProcessorParseApsaraNative::Init(const ComponentConfig& componentConfig) {
+    PipelineConfig config = componentConfig.GetConfig();
     mSourceKey = DEFAULT_CONTENT_KEY;
-    mDiscardUnmatch = componentConfig.GetConfig().mDiscardUnmatch;
-    mUploadRawLog = componentConfig.GetConfig().mUploadRawLog;
-    mLogTimeZoneOffsetSecond = componentConfig.GetConfig().mLogTimeZoneOffsetSecond;
+    mDiscardUnmatch = config.mDiscardUnmatch;
+    mUploadRawLog = config.mUploadRawLog;
+    mRawLogTag = config.mAdvancedConfig.mRawLogTag;
+    mLogTimeZoneOffsetSecond = config.mLogTimeZoneOffsetSecond;
+    if (mUploadRawLog && mRawLogTag == mSourceKey) {
+        mSourceKeyOverwritten = true;
+    }
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
@@ -101,7 +106,6 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
             AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                    sourceEvent.GetContent(mSourceKey),
                    sourceEvent); // legacy behavior, should use sourceKey
-            sourceEvent.DelContent(mSourceKey);
             return true;
         }
         mProcDiscardRecordsTotal->Add(1);
@@ -137,14 +141,21 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
     int32_t colon_index = -1;
     int32_t index = -1;
     index = ParseApsaraBaseFields(buffer, sourceEvent);
+    bool sourceKeyOverwritten = mSourceKeyOverwritten;
+    bool rawLogTagOverwritten = false;
     if (buffer.data()[index] != 0) {
         do {
             ++index;
             if (buffer.data()[index] == '\t' || buffer.data()[index] == '\0') {
                 if (colon_index >= 0) {
-                    AddLog(StringView(buffer.data() + beg_index, colon_index - beg_index),
-                           StringView(buffer.data() + colon_index + 1, index - colon_index - 1),
-                           sourceEvent);
+                    auto key = StringView(buffer.data() + beg_index, colon_index - beg_index);
+                    AddLog(key, StringView(buffer.data() + colon_index + 1, index - colon_index - 1), sourceEvent);
+                    if (key == mSourceKey) {
+                        sourceKeyOverwritten = true;
+                    }
+                    if (key == mRawLogTag) {
+                        rawLogTagOverwritten = true;
+                    }
                     colon_index = -1;
                 }
                 beg_index = index + 1;
@@ -164,7 +175,12 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
     sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lld", logTime_in_micro));
 #endif
     AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
-    sourceEvent.DelContent(mSourceKey);
+    if (mUploadRawLog && !rawLogTagOverwritten) {
+        AddLog(mRawLogTag, sourceEvent.GetContent(mSourceKey), sourceEvent); // __raw__
+    }
+    if (!sourceKeyOverwritten) {
+        sourceEvent.DelContent(mSourceKey);
+    }
     return true;
 }
 
@@ -276,8 +292,10 @@ static int32_t FindColonIndex(StringView& buffer, int32_t beginIndex, int32_t en
 }
 
 int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent) {
-    int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
-    int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    int32_t beginIndexArray[10] = {0};
+    int32_t endIndexArray[10] = {0};
+    // int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    // int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
     int32_t baseFieldNum = FindBaseFields(buffer, beginIndexArray, endIndexArray);
     if (baseFieldNum == 0) {
         return 0;
