@@ -72,6 +72,7 @@ bool AdhocJobCheckpoint::UpdateAdhocFileCheckpoint(const AdhocFileCheckpointKey*
     } else {
         if (STATUS_WAITING == ptr->mStatus) {
             ptr->mStatus = STATUS_LOADING;
+            ptr->mStartTime = time(NULL);
             dumpFlag = true;
         }
         if (ptr->mOffset == ptr->mSize) {
@@ -80,11 +81,11 @@ bool AdhocJobCheckpoint::UpdateAdhocFileCheckpoint(const AdhocFileCheckpointKey*
             dumpFlag = true;
         }
     }
+    ptr->mLastUpdateTime = time(NULL);
 
     if (indexChangeFlag) {
         mCurrentFileIndex++;
     }
-
     return dumpFlag;
 }
 
@@ -162,7 +163,6 @@ void AdhocJobCheckpoint::DumpAdhocCheckpoint(const std::string& path) {
 
     for (AdhocFileCheckpointPtr ptr : mAdhocFileCheckpointList) {
         std::lock_guard<std::mutex> lock(ptr->mMutex);
-        ptr->mLastUpdateTime = time(NULL);
 
         Json::Value file;
         file["file_name"] = ptr->mFileName;

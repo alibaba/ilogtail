@@ -59,10 +59,19 @@ public:
     check checkpoint files:
         /tmp/logtail_adhoc_checkpoint/test_job_A
         /tmp/logtail_adhoc_checkpoint/test_job_B
+    wait 10ms
+    update offset of test_file_A_2(should not dump)
+    wait 5s(auto dump)
+    check checkpoint files:
+        /tmp/logtail_adhoc_checkpoint/test_job_A
+        /tmp/logtail_adhoc_checkpoint/test_job_B
     */
     void TestAdhocCheckpointManagerDump();
     /*
     delete checkpoint files:
+        /tmp/logtail_adhoc_checkpoint/test_job_A
+        /tmp/logtail_adhoc_checkpoint/test_job_B
+    check checkpoint files(should not exist):
         /tmp/logtail_adhoc_checkpoint/test_job_A
         /tmp/logtail_adhoc_checkpoint/test_job_B
     */
@@ -72,6 +81,7 @@ private:
     void AddJob(const std::string& jobName, const std::vector<std::string> jobFiles);
     void MockFileLog(const std::string& jobName, const std::string& fileName);
     AdhocFileCheckpointKey* GetAdhocFileCheckpointKey(const std::string& jobName, const std::string& fileName);
+    long GetFileUpdateTime(const std::string& filePath);
 
     std::string jobName1 = "test_job_A";
     std::vector<std::string> jobFiles1 = {"test_file_A_1", "test_file_A_2", "test_file_A_3"};
@@ -115,36 +125,91 @@ void AdhocCheckpointManagerUnittest::TestAdhocCheckpointManagerRun() {
     // Get job checkpoint
     AdhocJobCheckpointPtr jobCheckpoint1 = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName1);
     AdhocJobCheckpointPtr jobCheckpoint2 = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName2);
+    EXPECT_EQ(nullptr != jobCheckpoint1, true);
+    EXPECT_EQ(nullptr != jobCheckpoint2, true);
 
-    AdhocFileCheckpointPtr fileCheckpointA1 = jobCheckpoint1->GetAdhocFileCheckpoint(GetAdhocFileCheckpointKey(jobName1, jobFiles1[0]));
-    EXPECT_EQ(nullptr != fileCheckpointA1, true);
     // Get file checkpoint
+    AdhocFileCheckpointKey* fileChakepointKeyA1 = GetAdhocFileCheckpointKey(jobName1, jobFiles1[0]);
+    AdhocFileCheckpointPtr fileCheckpointA1 = jobCheckpoint1->GetAdhocFileCheckpoint(fileChakepointKeyA1);
+    EXPECT_EQ(nullptr != fileCheckpointA1, true);
+    AdhocFileCheckpointKey* fileChakepointKeyA2 = GetAdhocFileCheckpointKey(jobName1, jobFiles1[1]);
+    AdhocFileCheckpointPtr fileCheckpointA2 = jobCheckpoint1->GetAdhocFileCheckpoint(fileChakepointKeyA2);
+    EXPECT_EQ(nullptr != fileCheckpointA2, false);
 
-    // Update job checkpoint
+    // Read test_file_A_1
+    fileCheckpointA1->mOffset = fileChakepointKeyA1->mFileSize;
+    if (jobCheckpoint1->UpdateAdhocFileCheckpoint(fileChakepointKeyA1, fileCheckpointA1)) {
+        jobCheckpoint1->DumpAdhocCheckpoint(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1));
+    }
+    EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1)), true);
+    EXPECT_EQ(fileCheckpointA1->mStatus == STATUS_FINISHED, true);
 
-    // Update file checkpoint 
+    // Read test_file_A_2 
+    fileCheckpointA2 = jobCheckpoint1->GetAdhocFileCheckpoint(fileChakepointKeyA2);
+    EXPECT_EQ(nullptr != fileCheckpointA2, true);
+    fileCheckpointA2->mOffset = fileChakepointKeyA2->mFileSize / 3;
+    if (jobCheckpoint1->UpdateAdhocFileCheckpoint(fileChakepointKeyA2, fileCheckpointA2)) {
+        jobCheckpoint1->DumpAdhocCheckpoint(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1));
+    }
+    EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1)), true);
+    EXPECT_EQ(fileCheckpointA2->mStatus == STATUS_LOADING, true);
+
+    // Read test_file_B_1 
+    AdhocFileCheckpointKey* fileChakepointKeyB1 = GetAdhocFileCheckpointKey(jobName2, jobFiles2[0]);
+    AdhocFileCheckpointPtr fileCheckpointB1 = jobCheckpoint2->GetAdhocFileCheckpoint(fileChakepointKeyB1);
+    EXPECT_EQ(nullptr != fileCheckpointB1, true);
+    fileCheckpointB1->mOffset = -1;
+    if (jobCheckpoint2->UpdateAdhocFileCheckpoint(fileChakepointKeyB1, fileCheckpointB1)) {
+        jobCheckpoint2->DumpAdhocCheckpoint(mAdhocCheckpointManager->GetJobCheckpointPath(jobName2));
+    }
+    EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName2)), true);
+    EXPECT_EQ(fileCheckpointB1->mStatus == STATUS_LOST, true);
+
+    // Read test_file_B_2 
+    AdhocFileCheckpointKey* fileChakepointKeyB2 = GetAdhocFileCheckpointKey(jobName2, jobFiles2[1]);
+    AdhocFileCheckpointPtr fileCheckpointB2 = jobCheckpoint2->GetAdhocFileCheckpoint(fileChakepointKeyB2);
+    EXPECT_EQ(nullptr != fileCheckpointB2, true);
+    fileCheckpointB2->mOffset = fileChakepointKeyB2->mFileSize;
+    if (jobCheckpoint2->UpdateAdhocFileCheckpoint(fileChakepointKeyB2, fileCheckpointB2)) {
+        jobCheckpoint2->DumpAdhocCheckpoint(mAdhocCheckpointManager->GetJobCheckpointPath(jobName2));
+    }
+    EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName2)), true);
+    EXPECT_EQ(fileCheckpointB2->mStatus == STATUS_FINISHED, true);
 }
 
 void AdhocCheckpointManagerUnittest::TestAdhocCheckpointManagerDump() {
     // check dump when file status change
+    AdhocJobCheckpointPtr jobCheckpoint1 = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName1);
+    AdhocFileCheckpointKey* fileChakepointKeyA2 = GetAdhocFileCheckpointKey(jobName1, jobFiles1[1]);
+    AdhocFileCheckpointPtr fileCheckpointA2 = jobCheckpoint1->GetAdhocFileCheckpoint(fileChakepointKeyA2);
+    EXPECT_EQ(nullptr != fileCheckpointA2, true);
+    fileCheckpointA2->mOffset = fileChakepointKeyA2->mFileSize / 3 * 2;
+
+    usleep(1 * 1000 * 1000);
+    EXPECT_EQ(jobCheckpoint1->UpdateAdhocFileCheckpoint(fileChakepointKeyA2, fileCheckpointA2), false);
+    EXPECT_EQ(fileCheckpointA2->mStatus == STATUS_LOADING, true);
+    EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1)), true);
+    long time1 = GetFileUpdateTime(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1));
 
     // check dump when auto dump per 5s
-    usleep(10 * 1000 * 1000);
+    usleep(5 * 1000 * 1000);
     EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1)), true);
+    long time2 = GetFileUpdateTime(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1));
+    EXPECT_EQ(time1 != time2, true);
     EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName2)), true);
 }
 
 void AdhocCheckpointManagerUnittest::TestAdhocCheckpointManagerStop() {
     // test delete
-    mAdhocCheckpointManager->DeleteAdhocJobCheckpoint(jobName1);
-    EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1)), false);
-    EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName2)), true);
-
     mAdhocCheckpointManager->DeleteAdhocJobCheckpoint(jobName2);
+    EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1)), true);
+    EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName2)), false);
+
+    usleep(5 * 1000 * 1000);
+    mAdhocCheckpointManager->DeleteAdhocJobCheckpoint(jobName1);
     EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1)), false);
     EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName2)), false);
 }
-
 
 void AdhocCheckpointManagerUnittest::AddJob(const std::string& jobName, const std::vector<std::string> jobFiles) {
     std::vector<AdhocFileCheckpointKey> keys;
@@ -171,7 +236,7 @@ void AdhocCheckpointManagerUnittest::MockFileLog(const std::string& jobName, con
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dist(1, 100);
+    std::uniform_int_distribution<int> dist(10, 100);
 
     int randomLogCount = dist(gen);
     for (int i = 0; i < randomLogCount; ++i) {
@@ -193,6 +258,12 @@ AdhocFileCheckpointKey* AdhocCheckpointManagerUnittest::GetAdhocFileCheckpointKe
     int64_t fileSize = statbuf.st_size;
     AdhocFileCheckpointKey* key = new AdhocFileCheckpointKey(GetFileDevInode(filePath), filePath, fileSize);
     return key;
+}
+
+long AdhocCheckpointManagerUnittest::GetFileUpdateTime(const std::string& filePath) {
+    struct stat statbuf;
+    stat(filePath.c_str(), &statbuf);
+    return statbuf.st_mtim.tv_nsec;
 }
 
 } // namespace logtail
