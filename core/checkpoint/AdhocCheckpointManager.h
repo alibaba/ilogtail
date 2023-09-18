@@ -26,8 +26,9 @@ private:
     AdhocCheckpointManager(const AdhocCheckpointManager&) = delete;
     AdhocCheckpointManager& operator=(const AdhocCheckpointManager&) = delete;
 
+    std::string GetJobCheckpointPath(const std::string& jobName);
+
     std::unordered_map<std::string, AdhocJobCheckpointPtr> mAdhocJobCheckpointMap;
-    
 
 public:
     static AdhocCheckpointManager* GetInstance() {

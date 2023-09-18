@@ -25,22 +25,25 @@ InputStaticFile::~InputStaticFile() {
 }
 
 void InputStaticFile::Init(Config &&config) {
-    mAdhocFileManager = AdhocFileManager::GetInstance();
-    GetStaticFileList();
+    // mAdhocFileManager = AdhocFileManager::GetInstance();
+    // GetStaticFileList();
 }
 
 void InputStaticFile::Start() {
     // 暂时认为input这里已经把所有要采集的文件都整理出来了
-    mAdhocFileManager->AddJob(mJobName, mFileList);
+    // mAdhocFileManager->AddJob(mJobName, mFileList);
 }
 
 void InputStaticFile::Stop(bool isRemoving) {
-    mAdhocFileManager->DeleteJob(mJobName);
+    // mAdhocFileManager->DeleteJob(mJobName);
 }
 
 // Init mFileList
 void InputStaticFile::GetStaticFileList() {
-    SortFileList();
+    // SortFileList();
+}
+
+void InputStaticFile::SortFileList() {
 }
 
 }

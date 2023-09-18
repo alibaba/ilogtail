@@ -26,12 +26,6 @@ AdhocJobCheckpoint::AdhocJobCheckpoint(const std::string& jobName) {
     mAdhocJobName = jobName;
     mFileCount = 0;
     mCurrentFileIndex = 0;
-    mDeleteFlag = false;
-#if defined(__linux__)
-    mStorePath = STRING_FLAG(adhoc_check_point_file_dir) + "/" + jobName;
-#elif defined(_MSC_VER)
-    mStorePath = STRING_FLAG(adhoc_check_point_file_dir) + "\\" + jobName;
-#endif
 }
 
 AdhocJobCheckpoint::~AdhocJobCheckpoint() {
@@ -50,10 +44,8 @@ void AdhocJobCheckpoint::AddAdhocFileCheckpoint(const AdhocFileCheckpointKey* ad
         0,
         0,
         adhocFileCheckpointKey->mDevInode,
-        mAdhocJobName,
-        "",
-        0,
-        STATUS_WAITING);
+        STATUS_WAITING,
+        mAdhocJobName);
     mAdhocFileCheckpointList.push_back(ptr);
     mFileCount++;
 }
@@ -96,11 +88,11 @@ bool AdhocJobCheckpoint::UpdateAdhocFileCheckpoint(const AdhocFileCheckpointKey*
     return dumpFlag;
 }
 
-bool AdhocJobCheckpoint::LoadAdhocCheckpoint() {
-    if (CheckExistance(mStorePath)) {
-        std::ifstream ifs(mStorePath);
+bool AdhocJobCheckpoint::LoadAdhocCheckpoint(const std::string& path) {
+    if (CheckExistance(path)) {
+        std::ifstream ifs(path);
         if (!ifs.is_open()) {
-            LOG_ERROR(sLogger, ("open adhoc check point file error when load", mStorePath));
+            LOG_ERROR(sLogger, ("open adhoc check point file error when load", path));
             LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "open check point file failed");
             return false;
         }
@@ -130,10 +122,8 @@ bool AdhocJobCheckpoint::LoadAdhocCheckpoint() {
             case STATUS_LOADING:
                 ptr->mDevInode.dev = file["dev"].asUInt64();
                 ptr->mDevInode.inode = file["inode"].asUInt64();
-                ptr->mFileOpenFlag = file["file_open"].asBool();
                 ptr->mOffset = file["offset"].asInt64();
                 ptr->mSize = file["size"].asInt64();
-                ptr->mRealFileName = file["real_file_name"].asString();
                 ptr->mSignatureHash = file["sig_hash"].asUInt64();
                 ptr->mSignatureSize = file["sig_size"].asUInt();
                 ptr->mStartTime = file["start_time"].asInt();
@@ -156,9 +146,9 @@ bool AdhocJobCheckpoint::LoadAdhocCheckpoint() {
     }
 }
 
-void AdhocJobCheckpoint::DumpAdhocCheckpoint() {
-    if (!Mkdirs(ParentPath(mStorePath))) {
-        LOG_ERROR(sLogger, ("open adhoc check point file dir error when dump", mStorePath));
+void AdhocJobCheckpoint::DumpAdhocCheckpoint(const std::string& path) {
+    if (!Mkdirs(ParentPath(path))) {
+        LOG_ERROR(sLogger, ("open adhoc check point file dir error when dump", path));
         LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "open adhoc check point file dir failed");
         return;
     }
@@ -187,10 +177,8 @@ void AdhocJobCheckpoint::DumpAdhocCheckpoint() {
         case STATUS_LOADING:
             file["dev"] = ptr->mDevInode.dev;
             file["inode"] = ptr->mDevInode.inode;
-            file["file_open"] = ptr->mFileOpenFlag;
             file["offset"] = ptr->mOffset;
             file["size"] = ptr->mSize;
-            file["real_file_name"] = ptr->mRealFileName;
             file["sig_hash"] = ptr->mSignatureHash;
             file["sig_size"] = ptr->mSignatureSize;
             file["start_time"] = ptr->mStartTime;
@@ -213,19 +201,14 @@ void AdhocJobCheckpoint::DumpAdhocCheckpoint() {
 
     Json::StreamWriterBuilder writerBuilder;
     std::string jsonString = Json::writeString(writerBuilder, root);
-    std::ofstream ofs(mStorePath);
+    std::ofstream ofs(path);
     if (!ofs.is_open()) {
-        LOG_ERROR(sLogger, ("open adhoc check point file error", mStorePath));
+        LOG_ERROR(sLogger, ("open adhoc check point file error", path));
         LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "open adhoc check point file failed");
         return;
     }
     ofs << jsonString;
     ofs.close();
-}
-
-void AdhocJobCheckpoint::Delete() {
-    remove(mStorePath.c_str());
-    this->~AdhocJobCheckpoint();
 }
 
 bool AdhocJobCheckpoint::CheckFileInList(const AdhocFileCheckpointKey* adhocFileCheckpointKey) {
@@ -238,6 +221,22 @@ bool AdhocJobCheckpoint::CheckFileInList(const AdhocFileCheckpointKey* adhocFile
             return true;
         }
     return false;
+}
+
+int32_t AdhocJobCheckpoint::GetCurrentFileIndex() {
+    return mCurrentFileIndex;
+}
+
+std::string AdhocJobCheckpoint::GetJobName() {
+    return mAdhocJobName;
+}
+
+std::vector<std::string> AdhocJobCheckpoint::GetFileList() {
+    std::vector<std::string> result;
+    for (AdhocFileCheckpointPtr filePtr : mAdhocFileCheckpointList) {
+        result.push_back(filePtr->mFileName);
+    }
+    return result;
 }
 
 } // namespace logtail

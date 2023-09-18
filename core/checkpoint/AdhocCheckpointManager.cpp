@@ -16,11 +16,17 @@
 
 #include "AdhocCheckpointManager.h"
 #include "common/FileSystemUtil.h"
-#include "common/Thread.h"
+#include "common/Flags.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
+#include "common/Thread.h"
 
 DEFINE_FLAG_INT32(adhoc_checkpoint_dump_thread_wait_interval, "microseconds", 5 * 1000);
+#if defined(__linux__)
+DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "/tmp/logtail_adhoc_checkpoint");
+#elif defined(_MSC_VER)
+DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "C:\\LogtailData\\logtail_adhoc_checkpoint");
+#endif
 
 namespace logtail {
 
@@ -35,7 +41,7 @@ void AdhocCheckpointManager::Run() {
         usleep(INT32_FLAG(adhoc_checkpoint_dump_thread_wait_interval));
 
         for (auto& p : mAdhocJobCheckpointMap) {
-            p.second->DumpAdhocCheckpoint();
+            p.second->DumpAdhocCheckpoint(GetJobCheckpointPath(p.second->GetJobName()));
         }
     }
 
@@ -71,7 +77,7 @@ AdhocJobCheckpointPtr AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std
 void AdhocCheckpointManager::DeleteAdhocJobCheckpoint(const std::string& jobName) {
     auto it = mAdhocJobCheckpointMap.find(jobName);
     if (it != mAdhocJobCheckpointMap.end()) {
-        it->second->Delete();
+        remove(GetJobCheckpointPath(jobName).c_str());
         mAdhocJobCheckpointMap.erase(jobName);
         LOG_INFO(sLogger, ("Delete AdhocJobCheckpoint success, job name", jobName));
     } else {
@@ -92,14 +98,24 @@ void AdhocCheckpointManager::LoadAdhocCheckpoint() {
 
         for (std::string job : jobList) {
             AdhocJobCheckpointPtr adhocJobCheckpointPtr = std::make_shared<AdhocJobCheckpoint>(job);
-            if (adhocJobCheckpointPtr->LoadAdhocCheckpoint()) {
+            if (adhocJobCheckpointPtr->LoadAdhocCheckpoint(GetJobCheckpointPath(job))) {
                 mAdhocJobCheckpointMap[job] = adhocJobCheckpointPtr;
             }
         }
-    } else {
-        LOG_WARNING(sLogger, ("Open adhoc checkpoint dir", "failed"));
-        LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "Load adhoc check point files failed");
+    } else if (!Mkdir(adhocCheckpointDir)) {
+        LOG_WARNING(sLogger, ("Create adhoc checkpoint dir", "failed"));
+        LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "Create adhoc check point dir failed");
     }
+}
+
+std::string AdhocCheckpointManager::GetJobCheckpointPath(const std::string& jobName) {
+    std::string path = STRING_FLAG(adhoc_check_point_file_dir);
+#if defined(__linux__)
+    path += "/" + jobName;
+#elif defined(_MSC_VER)
+    path += "\\" + jobName;
+#endif
+    return path;
 }
 
 } // namespace logtail

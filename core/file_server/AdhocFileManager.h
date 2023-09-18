@@ -23,12 +23,8 @@
 namespace logtail {
 
 struct StaticFile {
-    std::string fileName;
-    std::string filePath;
-    uint64_t Dev;
-    uint64_t Inode;
-    int32_t CreateTime;
-    int64_t Size;
+    std::string mFilePath;
+    DevInode mDevInode;
 };
 
 class AdhocFileManager {

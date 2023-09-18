@@ -17,13 +17,6 @@
 #pragma once
 #include <vector>
 #include "AdhocFileCheckpoint.h"
-#include "common/Flags.h"
-
-#if defined(__linux__)
-DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "/tmp/logtail_adhoc_checkpoint");
-#elif defined(_MSC_VER)
-DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "C:\\LogtailData\\logtail_adhoc_checkpoint");
-#endif
 
 namespace logtail {
 
@@ -34,8 +27,6 @@ private:
     int32_t mFileCount;
     int32_t mCurrentFileIndex;
     std::string mAdhocJobName; 
-    std::string mStorePath; 
-    bool mDeleteFlag;
     std::mutex mMutex;
 
 public:
@@ -44,12 +35,13 @@ public:
 
     AdhocFileCheckpointPtr GetAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey);
     bool UpdateAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey, AdhocFileCheckpointPtr adhocFileCheckpointPtr);
-    bool LoadAdhocCheckpoint();
-    void DumpAdhocCheckpoint();
-    void Delete();
+    bool LoadAdhocCheckpoint(const std::string& path);
+    void DumpAdhocCheckpoint(const std::string& path);
 
     void AddAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey);
-    int32_t GetCurrentFileIndex() { return mCurrentFileIndex; }
+    int32_t GetCurrentFileIndex();
+    std::string GetJobName();
+    std::vector<std::string> GetFileList();
 };
 
 typedef std::shared_ptr<AdhocJobCheckpoint> AdhocJobCheckpointPtr;

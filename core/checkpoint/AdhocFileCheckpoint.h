@@ -45,34 +45,28 @@ public:
                         uint32_t signatureSize,
                         uint64_t signatureHash,
                         DevInode devInode,
-                        const std::string& jobName = std::string(),
-                        const std::string& realFileName = std::string(),
-                        int32_t fileOpenFlag = 0,
-                        FileReadStatus status = STATUS_WAITING)
+                        FileReadStatus status = STATUS_WAITING,
+                        const std::string& jobName = std::string())
         : mFileName(filename),
-          mRealFileName(realFileName),
           mSize(size),
           mOffset(offset),
           mSignatureSize(signatureSize),
           mSignatureHash(signatureHash),
           mDevInode(devInode),
-          mFileOpenFlag(fileOpenFlag),
           mStatus(status),
           mJobName(jobName) {}
-    ~AdhocFileCheckpoint();
 
     std::string mFileName;
-    std::string mRealFileName;
-    int64_t mOffset;
     int64_t mSize;
+    int64_t mOffset;
     uint32_t mSignatureSize;
     uint64_t mSignatureHash;
-    int32_t mStartTime;
-    int32_t mLastUpdateTime;
     DevInode mDevInode;
-    int32_t mFileOpenFlag;
     FileReadStatus mStatus;
     std::string mJobName;
+    int32_t mStartTime;
+    int32_t mLastUpdateTime;
+
     std::mutex mMutex;
 };
 
