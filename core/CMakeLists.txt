@@ -89,7 +89,7 @@ set(SUB_DIRECTORIES_LIST
         aggregator app_config checkpoint common config config_manager config_server_pb
         controller event event_handler event_listener helper log_pb logger models monitor
         parser pipeline plugin polling processor reader profile_sender sender shennong sdk
-        fuse sls_control
+        fuse sls_control sls_spl
         )
 if (UNIX)
     set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} streamlog)
@@ -131,6 +131,7 @@ target_link_libraries(${LOGTAIL_TARGET}
         profile_sender
         app_config
         sls_control
+        sls_spl
         )
 if (UNIX)
     target_link_libraries(${LOGTAIL_TARGET} streamlog)

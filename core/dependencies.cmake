@@ -348,3 +348,176 @@ macro(link_leveldb target_name)
     endif ()
 endmacro()
 
+
+set(SPL_DEPS_INCLUDE_ROOT "/opt/logtail_spl")
+
+include_directories("/opt/logtail_spl/include")
+link_directories("/opt/logtail_spl/lib")
+
+
+
+# Dependencies list.
+set(SPL_DEP_NAME_LIST
+            pipeline
+            task
+            rw 
+            util
+            cmd
+            logger
+            plan
+            vector
+            thirdparty
+
+            presto_adapters
+            presto_common
+            presto_exception
+            presto_http
+            presto_log_rotate
+            presto_prometheus
+            presto_server_lib
+            presto_sls_lib
+            presto_sls_rpc
+            presto_sls_rpc_protocol
+            presto_thrift-cpp2
+            presto_thrift_extra
+            presto_types
+            velox_tpch_connector
+            velox_hive_connector
+            presto_protocol
+            presto_type_converter
+            presto_operators
+            velox_exec
+
+            velox_functions_prestosql
+            velox_functions_prestosql_impl
+            velox_aggregates
+            velox_arrow_bridge
+            velox_buffer
+            velox_codegen
+            velox_common_hyperloglog
+            velox_connector
+            velox_core
+            velox_config
+            velox_coverage_util
+            velox_dwio_catalog_fbhive
+
+            velox_dwio_dwrf_reader
+            velox_dwio_dwrf_writer
+            velox_dwio_dwrf_utils
+            velox_dwio_dwrf_common
+            velox_dwio_dwrf_proto
+            velox_dwio_common
+            velox_dwio_common_compression
+            velox_dwio_common_encryption
+            velox_dwio_common_exception
+            velox_dwio_parquet_reader
+            velox_dwio_parquet_writer
+            velox_encode
+            velox_exception
+            velox_presto_serializer
+            velox_caching
+            velox_expression
+            velox_expression_functions
+            velox_external_date
+            velox_file
+            velox_parse_expression
+            velox_function_registry
+            velox_functions_aggregates
+            velox_functions_json
+            velox_functions_lib
+            velox_functions_util
+            velox_functions_window
+            velox_hive_partition_function
+            velox_is_null_functions
+            velox_memory
+
+            velox_parse_parser
+            velox_parse_utils
+            velox_process
+            velox_row_fast
+            velox_rpc
+            velox_serialization
+            velox_test_util
+            velox_time
+            velox_tpch_gen
+            velox_type
+            velox_type_calculation
+            velox_type_fbhive
+            velox_type_tz
+            velox_vector
+            velox_vector_fuzzer
+            velox_window
+            velox_common_base
+            velox_duckdb_parser
+            velox_duckdb_allocator
+            velox_duckdb_conversion
+            velox_duckdb_functions
+
+            velox_presto_types
+            dbgen
+            duckdb
+            http_filters
+            md5
+            sls_connector_proto
+            sls_project_version
+            tpch_extension
+
+            fmt
+            proxygen
+            proxygenhttpserver
+            glog
+            gflags
+            folly
+            uuid
+            slsprotobuf
+            zstd
+            gtest
+            boost_context
+            boost_thread
+            boost_regex
+            re2
+
+            double-conversion
+            sodium
+            fizz
+            wangle
+            antlr4-runtime
+            thriftcpp2
+            thrift-core
+            thriftprotocol
+            thriftmetadata
+            transport
+            prometheus-cpp-core
+            prometheus-cpp-pull
+            simdjson
+            snappy
+            bz2
+            lzo2
+            y
+            event
+            lz4
+            z
+            curl
+            ssl
+            crypto
+            dl
+            -pthread
+        )
+
+set(SPL_LINK_OPTION_SUFFIX "LINK_OPTION")
+
+
+# Set link options, add user-defined INCLUDE_DIR and LIBRARY_DIR.
+foreach (DEP_NAME ${SPL_DEP_NAME_LIST})
+    logtaiL_define(${DEP_NAME}_${SPL_LINK_OPTION_SUFFIX} "Link option for ${DEP_NAME}" "")
+
+    if (${DEP_NAME}_${INCLUDE_DIR_SUFFIX})
+        include_directories("${${DEP_NAME}_${INCLUDE_DIR_SUFFIX}}")
+    endif ()
+
+    if (${DEP_NAME}_${LIBRARY_DIR_SUFFIX})
+        link_directories("${${DEP_NAME}_${LIBRARY_DIR_SUFFIX}}")
+    else ()
+        set(${DEP_NAME}_${LIBRARY_DIR_SUFFIX} "${DEPS_LIBRARY_ROOT}")
+    endif ()
+endforeach (DEP_NAME)
