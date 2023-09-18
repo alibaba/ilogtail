@@ -106,6 +106,9 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
             AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                    sourceEvent.GetContent(mSourceKey),
                    sourceEvent); // legacy behavior, should use sourceKey
+            if (mUploadRawLog) {
+                AddLog(mRawLogTag, sourceEvent.GetContent(mSourceKey), sourceEvent); // __raw__
+            }
             return true;
         }
         mProcDiscardRecordsTotal->Add(1);

@@ -43,7 +43,6 @@ private:
     bool mUploadRawLog = false;
     bool mAdjustApsaraMicroTimezone = false;
     bool mSourceKeyOverwritten = false;
-    bool mRawLogTagOverwritten = false;
     int mLogTimeZoneOffsetSecond = 0;
 
     int* mLogGroupSize = nullptr;

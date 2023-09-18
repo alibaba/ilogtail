@@ -296,6 +296,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
+                    "__raw__": "value1",
                     "__raw_log__": "value1",
                     "content": "value1",
                     "log.file.offset": "0"
@@ -373,6 +374,7 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
             {
                 "contents" :
                 {
+                    "__raw__": "value1",
                     "__raw_log__": "value1",
                     "content": "value1",
                     "log.file.offset": "0"
