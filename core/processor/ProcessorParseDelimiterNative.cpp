@@ -26,21 +26,35 @@ namespace logtail {
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
 
 bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig) {
+    PipelineConfig config = componentConfig.GetConfig();
     mSourceKey = DEFAULT_CONTENT_KEY;
-    mSeparator = componentConfig.GetConfig().mSeparator;
-    mColumnKeys = componentConfig.GetConfig().mColumnKeys;
-    mExtractPartialFields = componentConfig.GetConfig().mAdvancedConfig.mExtractPartialFields;
-    mAutoExtend = componentConfig.GetConfig().mAutoExtend;
-    mAcceptNoEnoughKeys = componentConfig.GetConfig().mAcceptNoEnoughKeys;
-    mDiscardUnmatch = componentConfig.GetConfig().mDiscardUnmatch;
-    mUploadRawLog = componentConfig.GetConfig().mUploadRawLog;
-    mQuote = componentConfig.GetConfig().mQuote;
+    mSeparator = config.mSeparator;
+    mColumnKeys = config.mColumnKeys;
+    mExtractPartialFields = config.mAdvancedConfig.mExtractPartialFields;
+    mAutoExtend = config.mAutoExtend;
+    mAcceptNoEnoughKeys = config.mAcceptNoEnoughKeys;
+    mDiscardUnmatch = config.mDiscardUnmatch;
+    mUploadRawLog = config.mUploadRawLog;
+    mRawLogTag = config.mAdvancedConfig.mRawLogTag;
+    mQuote = config.mQuote;
     if (!mSeparator.empty())
         mSeparatorChar = mSeparator.data()[0];
     else {
         // This should never happened.
         mSeparatorChar = '\t';
     }
+    if (mUploadRawLog && mRawLogTag == mSourceKey) {
+        mSourceKeyOverwritten = true;
+    }
+    for (auto key : mColumnKeys) {
+        if (key.compare(mSourceKey) == 0) {
+            mSourceKeyOverwritten = true;
+        }
+        if (key.compare(mRawLogTag) == 0) {
+            mRawLogTagOverwritten = true;
+        }
+    }
+
     mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
@@ -200,13 +214,18 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                        sourceEvent);
             }
         }
-        sourceEvent.DelContent(mSourceKey);
-        return true;
     } else if (!mDiscardUnmatch) {
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                sourceEvent.GetContent(mSourceKey),
                sourceEvent); // legacy behavior, should use sourceKey
-        sourceEvent.DelContent(mSourceKey);
+    }
+    if (parseSuccess || !mDiscardUnmatch) {
+        if (mUploadRawLog && (!parseSuccess || !mRawLogTagOverwritten)) {
+            AddLog(mRawLogTag, sourceEvent.GetContent(mSourceKey), sourceEvent); // __raw__
+        }
+        if (parseSuccess && !mSourceKeyOverwritten) {
+            sourceEvent.DelContent(mSourceKey);
+        }
         return true;
     }
     mProcDiscardRecordsTotal->Add(1);

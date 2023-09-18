@@ -36,6 +36,8 @@ public:
     void TestInit();
     void TestProcessWholeLine();
     void TestProcessQuote();
+    void TestProcessKeyOverwritten();
+    void TestUploadRawLog();
     void TestAddLog();
     void TestProcessEventKeepUnmatch();
     void TestProcessEventDiscardUnmatch();
@@ -46,6 +48,8 @@ public:
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestInit);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessWholeLine);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessQuote);
+UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessKeyOverwritten);
+UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestUploadRawLog);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestAddLog);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessEventKeepUnmatch);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessEventDiscardUnmatch);
@@ -216,6 +220,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
                 "contents" :
                 {
                     "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -226,6 +231,163 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
                 "contents" :
                 {
                     "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024",
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond": 0,
+                "type" : 1
+            }
+        ]
+    })";
+    // judge result
+    std::string outJson = eventGroup.ToJsonString();
+    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+}
+
+void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
+    // make config
+    Config config;
+    config.mSeparator = ",";
+    config.mQuote = '\'';
+    config.mColumnKeys = {"time", "__raw__", "content", "__raw_log__"};
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = false;
+    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    // make events
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+    })";
+    eventGroup.FromJsonString(inJson);
+    // run function
+    ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(eventGroup);
+    std::string expectJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "__raw__": "POST",
+                    "__raw_log__": "0.024",
+                    "content": "PutData?Category=YunOsAccountOpLog",
+                    "log.file.offset": "0",
+                    "time": "2013-10-31 21:03:49"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond": 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond": 0,
+                "type" : 1
+            }
+        ]
+    })";
+    // judge result
+    std::string outJson = eventGroup.ToJsonString();
+    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+}
+
+void ProcessorParseDelimiterNativeUnittest::TestUploadRawLog() {
+    // make config
+    Config config;
+    config.mSeparator = ",";
+    config.mQuote = '\'';
+    config.mColumnKeys = {"time", "method", "url", "request_time"};
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = true;
+    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    // make events
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "value1",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+    })";
+    eventGroup.FromJsonString(inJson);
+    // run function
+    ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(eventGroup);
+    std::string expectJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "__raw__" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
+                    "log.file.offset": "0",
+                    "method": "POST",
+                    "request_time": "0.024",
+                    "time": "2013-10-31 21:03:49",
+                    "url": "PutData?Category=YunOsAccountOpLog"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond": 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "__raw__": "value1",
+                    "__raw_log__": "value1",
+                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -335,6 +497,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
+                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -345,6 +508,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
+                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -355,6 +519,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
+                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -365,6 +530,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
+                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -375,6 +541,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "__raw_log__" : "value1",
+                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
