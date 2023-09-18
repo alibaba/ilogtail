@@ -37,6 +37,7 @@ public:
     void TestAddLog();
     void TestProcessEventKeepUnmatch();
     void TestProcessEventDiscardUnmatch();
+    void TestProcessJsonContent();
 
     PipelineContext mContext;
 };
@@ -51,6 +52,8 @@ UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJson);
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessEventKeepUnmatch);
 
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessEventDiscardUnmatch);
+
+UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJsonContent);
 
 
 void ProcessorParseJsonNativeUnittest::TestInit() {
@@ -166,6 +169,67 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
     APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
 
+
+void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
+    // make config
+    Config config;
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = true;
+    config.mAdvancedConfig.mRawLogTag = "__raw__";
+
+    // make events
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "{\"__raw__\":\"content_test\",\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
+                    "log.file.offset": "0"
+                },
+                "timestampNanosecond" : 0,
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+    })";
+    eventGroup.FromJsonString(inJson);
+    // run function
+    ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processorInstance.Process(eventGroup);
+    // judge result
+    std::string expectJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "__raw__" : "content_test",
+                    "address" : "{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"}",
+                    "age":"25",
+                    "courses":"[\"Math\",\"English\",\"Science\"]",
+                    "is_student":"false",
+                    "log.file.offset":"0",
+                    "name":"Mike",
+                    "scores":"{\"Math\":90,\"English\":85,\"Science\":95}"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ]
+    })";
+    std::string outJson = eventGroup.ToJsonString();
+    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+}
+
 void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
     // make config
     Config config;
@@ -210,7 +274,8 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
         = "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"";
     APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcOutRecordsTotal->GetValue());
-    expectValue = "__raw_log__{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"";
+    expectValue = "__raw_log__{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": "
+                  "\"07/Jul/2022:10:30:28\"";
     APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseOutSizeBytes->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
