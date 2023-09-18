@@ -31,6 +31,11 @@ logtail_define(DEPS_BINARY_ROOT "" "${DEPS_ROOT}/bin")
 include_directories("${DEPS_INCLUDE_ROOT}")
 link_directories("${DEPS_LIBRARY_ROOT}")
 
+
+#set(SPL_DEPS_INCLUDE_ROOT "/opt/logtail_spl")
+#include_directories("/opt/logtail_spl/include")
+#link_directories("/opt/logtail_spl/lib")
+
 # Each dependency has three related variables can be set:
 # - {dep_name}_INCLUDE_DIR
 # - {dep_name}_LIBRARY_DIR
@@ -348,176 +353,228 @@ macro(link_leveldb target_name)
     endif ()
 endmacro()
 
+macro(link_slsspl target_name)
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libLogAdapterV6.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libLogClientV6.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libShennongCommonLib.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libSplParserClient.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libantlr4-runtime.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libasync.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libatomic_value_lib.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_atomic.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_chrono.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_container.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_context.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_contract.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_coroutine.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_date_time.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_exception.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_fiber.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_filesystem.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_graph.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_iostreams.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_json.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_locale.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_log.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_log_setup.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_math_c99.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_math_c99f.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_math_c99l.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_math_tr1.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_math_tr1f.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_math_tr1l.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_nowide.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_prg_exec_monitor.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_program_options.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_random.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_regex.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_serialization.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_stacktrace_addr2line.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_stacktrace_basic.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_stacktrace_noop.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_system.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_test_exec_monitor.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_thread.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_timer.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_type_erasure.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_unit_test_framework.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_wave.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libboost_wserialization.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libbz2.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcmd.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcompiler.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcompiler_ast.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcompiler_base.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libconcurrency.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcrypto.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcurl.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libdbgen.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libdouble-conversion.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libduckdb.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent_core.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent_core.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent_extra.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent_extra.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent_pthreads.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent_pthreads.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libfizz.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libfizz_test_support.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libfmt.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libfolly.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libfolly_test_util.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libfollybenchmark.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libgflags.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libgflags_nothreads.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libglog.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libgmock.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libgmock_main.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libgtest.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libgtest_main.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libhttp_filters.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libkms_ehttpclient.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/liblogclient.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/liblogger.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/liblz4.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/liblzo2.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/liblzo2.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libmd5.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libmustache.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libnsp_simple.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libots_io_lib.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libots_sdk_common_shennong.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpipeline.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libplan.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_adapters.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_common.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_exception.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_http.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_log_rotate.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_operators.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_prometheus.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_protocol.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_server_lib.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_sls_lib.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_sls_rpc.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_sls_rpc_protocol.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_thrift-cpp2.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_thrift_extra.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_type_converter.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_types.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libprometheus-cpp-core.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libprometheus-cpp-pull.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libproxygen.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libproxygenhttpserver.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libre2.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/librpcmetadata.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/librw.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsimdjson.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsls_common_encrypt.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsls_connector_proto.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsls_logs_pb.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsls_project_version.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libslsprotobuf-lite.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libslsprotobuf-lite.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libslsprotobuf.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libslsprotobuf.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libslsprotoc.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libslsprotoc.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsnappy.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsnappy.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsodium.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsodium.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libssl.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libstdc++.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libtask.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthirdparty.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthrift-core.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthriftannotation.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthriftanyrep.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthriftcpp2.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthriftfrozen2.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthriftmetadata.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthriftprotocol.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthrifttype.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthrifttyperep.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libtpch_extension.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libtransport.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libutil.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libuuid.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libuuid.la")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvector.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_aggregates.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_arrow_bridge.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_buffer.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_caching.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_codegen.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_common_base.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_common_hyperloglog.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_config.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_connector.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_core.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_coverage_util.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_duckdb_allocator.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_duckdb_conversion.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_duckdb_functions.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_duckdb_parser.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_catalog_fbhive.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_common.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_common_compression.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_common_encryption.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_common_exception.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_common.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_proto.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_reader.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_utils.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_writer.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_parquet_reader.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_parquet_writer.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_encode.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_exception.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_exec.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_expression.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_expression_functions.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_external_date.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_file.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_function_registry.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_aggregates.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_json.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_lib.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_prestosql.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_prestosql_impl.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_spark.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_spark_aggregates.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_spark_window.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_util.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_window.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_hive_connector.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_hive_partition_function.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_is_null_functions.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_memory.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_parse_expression.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_parse_parser.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_parse_utils.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_presto_serializer.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_presto_types.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_process.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_row_fast.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_rpc.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_serialization.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_test_util.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_time.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_tpch_connector.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_tpch_gen.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_type.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_type_calculation.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_type_fbhive.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_type_tz.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_vector.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_vector_fuzzer.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_window.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libwangle.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/liby.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libz.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libzstd.a")
 
-set(SPL_DEPS_INCLUDE_ROOT "/opt/logtail_spl")
-
-include_directories("/opt/logtail_spl/include")
-link_directories("/opt/logtail_spl/lib")
-
-
-
-# Dependencies list.
-set(SPL_DEP_NAME_LIST
-            pipeline
-            task
-            rw 
-            util
-            cmd
-            logger
-            plan
-            vector
-            thirdparty
-
-            presto_adapters
-            presto_common
-            presto_exception
-            presto_http
-            presto_log_rotate
-            presto_prometheus
-            presto_server_lib
-            presto_sls_lib
-            presto_sls_rpc
-            presto_sls_rpc_protocol
-            presto_thrift-cpp2
-            presto_thrift_extra
-            presto_types
-            velox_tpch_connector
-            velox_hive_connector
-            presto_protocol
-            presto_type_converter
-            presto_operators
-            velox_exec
-
-            velox_functions_prestosql
-            velox_functions_prestosql_impl
-            velox_aggregates
-            velox_arrow_bridge
-            velox_buffer
-            velox_codegen
-            velox_common_hyperloglog
-            velox_connector
-            velox_core
-            velox_config
-            velox_coverage_util
-            velox_dwio_catalog_fbhive
-
-            velox_dwio_dwrf_reader
-            velox_dwio_dwrf_writer
-            velox_dwio_dwrf_utils
-            velox_dwio_dwrf_common
-            velox_dwio_dwrf_proto
-            velox_dwio_common
-            velox_dwio_common_compression
-            velox_dwio_common_encryption
-            velox_dwio_common_exception
-            velox_dwio_parquet_reader
-            velox_dwio_parquet_writer
-            velox_encode
-            velox_exception
-            velox_presto_serializer
-            velox_caching
-            velox_expression
-            velox_expression_functions
-            velox_external_date
-            velox_file
-            velox_parse_expression
-            velox_function_registry
-            velox_functions_aggregates
-            velox_functions_json
-            velox_functions_lib
-            velox_functions_util
-            velox_functions_window
-            velox_hive_partition_function
-            velox_is_null_functions
-            velox_memory
-
-            velox_parse_parser
-            velox_parse_utils
-            velox_process
-            velox_row_fast
-            velox_rpc
-            velox_serialization
-            velox_test_util
-            velox_time
-            velox_tpch_gen
-            velox_type
-            velox_type_calculation
-            velox_type_fbhive
-            velox_type_tz
-            velox_vector
-            velox_vector_fuzzer
-            velox_window
-            velox_common_base
-            velox_duckdb_parser
-            velox_duckdb_allocator
-            velox_duckdb_conversion
-            velox_duckdb_functions
-
-            velox_presto_types
-            dbgen
-            duckdb
-            http_filters
-            md5
-            sls_connector_proto
-            sls_project_version
-            tpch_extension
-
-            fmt
-            proxygen
-            proxygenhttpserver
-            glog
-            gflags
-            folly
-            uuid
-            slsprotobuf
-            zstd
-            gtest
-            boost_context
-            boost_thread
-            boost_regex
-            re2
-
-            double-conversion
-            sodium
-            fizz
-            wangle
-            antlr4-runtime
-            thriftcpp2
-            thrift-core
-            thriftprotocol
-            thriftmetadata
-            transport
-            prometheus-cpp-core
-            prometheus-cpp-pull
-            simdjson
-            snappy
-            bz2
-            lzo2
-            y
-            event
-            lz4
-            z
-            curl
-            ssl
-            crypto
-            dl
-            -pthread
-        )
-
-set(SPL_LINK_OPTION_SUFFIX "LINK_OPTION")
-
-
-# Set link options, add user-defined INCLUDE_DIR and LIBRARY_DIR.
-foreach (DEP_NAME ${SPL_DEP_NAME_LIST})
-    logtaiL_define(${DEP_NAME}_${SPL_LINK_OPTION_SUFFIX} "Link option for ${DEP_NAME}" "")
-
-    if (${DEP_NAME}_${INCLUDE_DIR_SUFFIX})
-        include_directories("${${DEP_NAME}_${INCLUDE_DIR_SUFFIX}}")
-    endif ()
-
-    if (${DEP_NAME}_${LIBRARY_DIR_SUFFIX})
-        link_directories("${${DEP_NAME}_${LIBRARY_DIR_SUFFIX}}")
-    else ()
-        set(${DEP_NAME}_${LIBRARY_DIR_SUFFIX} "${DEPS_LIBRARY_ROOT}")
-    endif ()
-endforeach (DEP_NAME)
+endmacro()
