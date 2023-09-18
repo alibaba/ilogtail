@@ -32,9 +32,9 @@ AdhocJobCheckpoint::~AdhocJobCheckpoint() {
 }
 
 void AdhocJobCheckpoint::AddAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey) {
-    if ("" != adhocFileCheckpointKey->mFileName || 0 != adhocFileCheckpointKey->mFileSize
-        || DevInode() != adhocFileCheckpointKey->mDevInode || "" != mAdhocJobName) {
-            LOG_WARNING(sLogger, ("Add AdhocFileCheckpoint fail, file checkpoint info", adhocFileCheckpointKey));
+    if ("" == adhocFileCheckpointKey->mFileName || 0 == adhocFileCheckpointKey->mFileSize
+        || DevInode() == adhocFileCheckpointKey->mDevInode || "" == mAdhocJobName) {
+            LOG_WARNING(sLogger, ("Add AdhocFileCheckpoint fail, file name", adhocFileCheckpointKey->mFileName));
             return;
         }
     AdhocFileCheckpointPtr ptr = std::make_shared<AdhocFileCheckpoint>(

@@ -21,7 +21,7 @@
 #include "monitor/LogtailAlarm.h"
 #include "common/Thread.h"
 
-DEFINE_FLAG_INT32(adhoc_checkpoint_dump_thread_wait_interval, "microseconds", 5 * 1000);
+DEFINE_FLAG_INT32(adhoc_checkpoint_dump_thread_wait_interval, "microseconds", 5 * 1000 * 1000);
 #if defined(__linux__)
 DEFINE_FLAG_STRING(adhoc_check_point_file_dir, "", "/tmp/logtail_adhoc_checkpoint");
 #elif defined(_MSC_VER)
@@ -86,7 +86,7 @@ void AdhocCheckpointManager::DeleteAdhocJobCheckpoint(const std::string& jobName
 }
 
 void AdhocCheckpointManager::LoadAdhocCheckpoint() {
-    std::string adhocCheckpointDir = STRING_FLAG(adhoc_check_point_file_dir);
+    std::string adhocCheckpointDir = GetAdhocCheckpointDirPath();
     if (CheckExistance(adhocCheckpointDir)) {
         LOG_INFO(sLogger, ("Open adhoc checkpoint dir", "success"));
         std::vector<std::string> jobList;
@@ -116,6 +116,10 @@ std::string AdhocCheckpointManager::GetJobCheckpointPath(const std::string& jobN
     path += "\\" + jobName;
 #endif
     return path;
+}
+
+std::string AdhocCheckpointManager::GetAdhocCheckpointDirPath() {
+    return STRING_FLAG(adhoc_check_point_file_dir);
 }
 
 } // namespace logtail
