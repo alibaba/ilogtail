@@ -252,7 +252,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
     config.mQuote = '\'';
     config.mColumnKeys = {"time", "__raw__", "content", "__raw_log__"};
     config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
+    config.mUploadRawLog = true;
     config.mAdvancedConfig.mRawLogTag = "__raw__";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -272,7 +272,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
+                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -307,8 +307,9 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "__raw_log__": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
+                    "__raw__": "value1",
+                    "__raw_log__": "value1",
+                    "content" : "value1",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
