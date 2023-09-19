@@ -138,14 +138,18 @@ bool ProcessorFilterNative::ProcessEvent(const StringView& logPath, PipelineEven
                 if (IsNoneUtf8(content.first.to_string())) {
                     StringBuffer keyBuffer
                         = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.first.size() + 1);
-
                     const std::string key = content.first.to_string();
                     FilterNoneUtf8(key);
-
                     strcpy(keyBuffer.data, key.c_str());
                     keyBuffer.size = key.size();
 
-                    contents[StringView(keyBuffer.data, keyBuffer.size)] = contents[content.first];
+                    StringBuffer valueBuffer
+                        = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.second.size() + 1);
+                    const std::string value = content.second.to_string();
+                    strcpy(valueBuffer.data, value.c_str());
+                    valueBuffer.size = value.size();
+
+                    contents[StringView(keyBuffer.data, keyBuffer.size)] = StringView(valueBuffer.data, valueBuffer.size);
                     contents.erase(content.first);
                 }
 
