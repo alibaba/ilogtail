@@ -34,7 +34,8 @@ private:
     std::shared_ptr<LogFilterRule> mFilterRule = nullptr;
     BaseFilterNodePtr mFilterExpressionRoot = nullptr;
     std::unordered_map<std::string, LogFilterRule*> mFilters;
-
+    LogType mLogType;
+    bool mDiscardNoneUtf8;
 
     int* mParseFailures = nullptr;
     int* mLogGroupSize = nullptr;
@@ -51,8 +52,9 @@ private:
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
     bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
     void FilterNoneUtf8(const std::string& strSrc);
+    bool IsNoneUtf8(const std::string& strSrc);
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorFilterNativeUnittest;
+        friend class ProcessorFilterNativeUnittest;
 #endif
 };
 

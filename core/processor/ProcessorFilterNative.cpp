@@ -32,6 +32,8 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
     if (mConfig.mFilterRule) {
         mFilterRule = mConfig.mFilterRule;
     }
+    mLogType = mConfig.mLogType;
+    mDiscardNoneUtf8 = mConfig.mDiscardNoneUtf8;
 
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
@@ -117,6 +119,39 @@ bool ProcessorFilterNative::ProcessEvent(const StringView& logPath, PipelineEven
     } else {
         res = Filter(sourceEvent);
     }
+    if (res) {
+        if ((mLogType != STREAM_LOG && mLogType != PLUGIN_LOG) && mDiscardNoneUtf8) {
+            LogContents& contents = sourceEvent.GetMutableContents();
+            for (auto& content : contents) {
+                if (IsNoneUtf8(content.second.to_string())) {
+                    StringBuffer valueBuffer
+                        = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.second.size() + 1);
+
+                    const std::string value = content.second.to_string();
+                    FilterNoneUtf8(value);
+
+                    strcpy(valueBuffer.data, value.c_str());
+                    valueBuffer.size = value.size();
+
+                    contents[content.first] = StringView(valueBuffer.data, valueBuffer.size);
+                }
+                if (IsNoneUtf8(content.first.to_string())) {
+                    StringBuffer keyBuffer
+                        = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.first.size() + 1);
+
+                    const std::string key = content.first.to_string();
+                    FilterNoneUtf8(key);
+
+                    strcpy(keyBuffer.data, key.c_str());
+                    keyBuffer.size = key.size();
+
+                    contents[StringView(keyBuffer.data, keyBuffer.size)] = contents[content.first];
+                    contents.erase(content.first);
+                }
+
+            }
+        }
+    }
     if (!res) {
         mProcDiscardRecordsTotal->Add(1);
     }
@@ -181,7 +216,6 @@ bool ProcessorFilterNative::Filter(LogEvent& sourceEvent) {
     return IsMatched(contents, rule);
 }
 
-
 bool ProcessorFilterNative::IsMatched(const LogContents& contents, const LogFilterRule& rule) {
     const std::vector<std::string>& keys = rule.FilterKeys;
     const std::vector<boost::regex> regs = rule.FilterRegs;
@@ -223,12 +257,14 @@ static const char UTF8_BYTE_MASK = 0xc0;
 
 void ProcessorFilterNative::FilterNoneUtf8(const std::string& strSrc) {
     std::string* str = const_cast<std::string*>(&strSrc);
+
 #define FILL_BLUNK_AND_CONTINUE_IF_TRUE(stat) \
     if (stat) { \
         *iter = ' '; \
         ++iter; \
         continue; \
     };
+
     std::string::iterator iter = str->begin();
     while (iter != str->end()) {
         uint16_t unicode = 0;
@@ -296,6 +332,86 @@ void ProcessorFilterNative::FilterNoneUtf8(const std::string& strSrc) {
         ++iter;
     }
 #undef FILL_BLUNK_AND_CONTINUE_IF_TRUE
+}
+
+bool ProcessorFilterNative::IsNoneUtf8(const std::string& strSrc) {
+    std::string* str = const_cast<std::string*>(&strSrc);
+
+#define FILL_BLUNK_AND_CONTINUE_IF_TRUE(stat) \
+    if (stat) { \
+        *iter = ' '; \
+        ++iter; \
+        return true; \
+    };
+
+    std::string::iterator iter = str->begin();
+    while (iter != str->end()) {
+        uint16_t unicode = 0;
+        char c;
+        if ((*iter & 0x80) == 0x00) // one byte
+        {
+            /**
+             * mapping rule: 0000 0000 - 0000 007F | 0xxxxxxx
+             */
+            // nothing to check
+        } else if ((*iter & 0xe0) == 0xc0) // two bytes
+        {
+            /**
+             * mapping rule: 0000 0080 - 0000 07FF | 110xxxxx 10xxxxxx
+             */
+            c = *iter;
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE(iter + 1 == str->end());
+            /* check whether the byte is in format 10xxxxxx */
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 1) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
+            /* get unicode value */
+            unicode = (((c & 0x1f) << 6) | (*(iter + 1) & 0x3f));
+            /* validate unicode range */
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE(!(unicode >= 0x80 && unicode <= 0x7ff));
+            ++iter;
+        } else if ((*iter & 0xf0) == 0xe0) // three bytes
+        {
+            /**
+             * mapping rule: 0000 0800 - 0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
+             */
+            c = *iter;
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((iter + 1 == str->end()) || (iter + 2 == str->end()));
+            /* check whether the byte is in format 10xxxxxx */
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 1) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 2) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
+            /* get unicode value */
+            unicode = (((c & 0x0f) << 12) | ((*(iter + 1) & 0x3f) << 6) | (*(iter + 2) & 0x3f));
+            /* validate unicode range */
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE(!(unicode >= 0x800 /* && unicode <= 0xffff */));
+            ++iter;
+            ++iter;
+        } else if ((*iter & 0xf8) == 0xf0) // four bytes
+        {
+            /**
+             * mapping rule: 0001 0000 - 0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+             */
+            c = *iter;
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((iter + 1 == str->end()) || (iter + 2 == str->end())
+                                            || (iter + 3 == str->end()));
+            /* check whether the byte is in format 10xxxxxx */
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 1) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 2) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 3) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
+            /* get unicode value */
+            uint32_t unicode = 0x00000000; // for 4 bytes utf-8 encoding
+            unicode = ((c & 0x07) << 18) | ((*(iter + 1) & 0x3f) << 12) | ((*(iter + 2) & 0x3f) << 6)
+                | ((*(iter + 3) & 0x3f));
+            /* validate unicode range */
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE(!(unicode >= 0x00010000 && unicode <= 0x0010ffff));
+            ++iter;
+            ++iter;
+            ++iter;
+        } else {
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE(true);
+        }
+        ++iter;
+    }
+#undef FILL_BLUNK_AND_CONTINUE_IF_TRUE
+    return false;
 }
 
 } // namespace logtail
