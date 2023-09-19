@@ -54,4 +54,4 @@ your changes, such as:
 - [public] [both] [fixed] fix config server panic caused by concurrent read and write shared object
 - [public] [both] [fixed] timezone adjust not working with apsara\_log
 - [public] [both] [added] support plugin ProcessorParseTimestampNative
-- [public] [both] [updated] add `db.connection_string` tag into `skywalking` plugin
+- [public] [both] [updated] skywalking plugin support to capture `db.connection_string` tag 
