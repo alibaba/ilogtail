@@ -160,7 +160,6 @@ bool ProcessorFilterNative::ProcessEvent(const StringView& logPath, PipelineEven
     return res;
 }
 
-
 bool ProcessorFilterNative::IsSupportedEvent(const PipelineEventPtr& e) {
     return e.Is<LogEvent>();
 }
@@ -174,7 +173,6 @@ bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const BaseFilterNodePt
     const LogContents& contents = sourceEvent.GetContents();
     return node->Match(contents, &GetContext());
 }
-
 
 bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const LogFilterRule* filterRule) {
     const LogContents& contents = sourceEvent.GetContents();
