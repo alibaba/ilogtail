@@ -23,7 +23,6 @@ func attrsToLabels(labels *KeyValues, attrs []*v1Common.KeyValue) {
 	}
 }
 
-
 func anyValueToString(value *v1Common.AnyValue) string {
 	switch value.Value.(type) {
 	case *v1Common.AnyValue_StringValue:

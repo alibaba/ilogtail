@@ -21,7 +21,7 @@ type ProcessorOtelMetricParser struct {
 	context    pipeline.Context
 }
 
-const otel_metric_pluginName = "processor_otel_metric"
+const otelMetricPluginName = "processor_otel_metric"
 
 func (p *ProcessorOtelMetricParser) Init(context pipeline.Context) error {
 	p.context = context
@@ -127,7 +127,7 @@ func (p *ProcessorOtelMetricParser) processProtoJSONMetricData(data string) ([]*
 }
 
 func init() {
-	pipeline.Processors[otel_metric_pluginName] = func() pipeline.Processor {
+	pipeline.Processors[otelMetricPluginName] = func() pipeline.Processor {
 		return &ProcessorOtelMetricParser{
 			SourceKey:  "",
 			NoKeyError: false,

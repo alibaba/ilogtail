@@ -3,9 +3,8 @@ package otel
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/alibaba/ilogtail/pkg/protocol"
+	"github.com/stretchr/testify/assert"
 )
 
 const protoJSONMetricData = `
