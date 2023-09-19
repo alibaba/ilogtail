@@ -28,7 +28,7 @@ namespace logtail {
 // static const int32_t MAX_BASE_FIELD_NUM = 10;
 
 bool ProcessorParseApsaraNative::Init(const ComponentConfig& componentConfig) {
-    PipelineConfig config = componentConfig.GetConfig();
+    const PipelineConfig& config = componentConfig.GetConfig();
     mSourceKey = DEFAULT_CONTENT_KEY;
     mDiscardUnmatch = config.mDiscardUnmatch;
     mUploadRawLog = config.mUploadRawLog;
