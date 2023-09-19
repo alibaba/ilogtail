@@ -2,22 +2,23 @@ package otel
 
 import (
 	"errors"
+	"strings"
+
+	"go.opentelemetry.io/collector/pdata/pmetric"
+	v1 "go.opentelemetry.io/proto/otlp/metrics/v1"
+	"google.golang.org/protobuf/encoding/protojson"
+
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/protocol/decoder/opentelemetry"
-	"go.opentelemetry.io/collector/pdata/pmetric"
-	"strings"
 )
 
 type ProcessorOtelMetricParser struct {
-	SourceKey              string
-	Format                 string
-	NoKeyError             bool
-	context                pipeline.Context
-	TraceIDNeedDecode      bool
-	SpanIDNeedDecode       bool
-	ParentSpanIDNeedDecode bool
+	SourceKey  string
+	Format     string
+	NoKeyError bool
+	context    pipeline.Context
 }
 
 const otel_metric_pluginName = "processor_otel_metric"
@@ -59,15 +60,15 @@ func (p *ProcessorOtelMetricParser) processLog(log *protocol.Log) (logs []*proto
 
 			switch strings.ToLower(p.Format) {
 			case "json":
-				if l, err = p.processJSONTraceData(objectVal); err != nil {
+				if l, err = p.processJSONMetricData(objectVal); err != nil {
 					return logs, err
 				}
 			case "protobuf":
-				if l, err = p.processProtobufTraceData(objectVal); err != nil {
+				if l, err = p.processProtobufMetricData(objectVal); err != nil {
 					return logs, err
 				}
 			case "protojson":
-				if l, err = p.processProtoJSONTraceData(objectVal); err != nil {
+				if l, err = p.processProtoJSONMetricData(objectVal); err != nil {
 					return logs, err
 				}
 			}
@@ -83,7 +84,7 @@ func (p *ProcessorOtelMetricParser) processLog(log *protocol.Log) (logs []*proto
 	return logs, nil
 }
 
-func (p *ProcessorOtelMetricParser) processJSONTraceData(data string) ([]*protocol.Log, error) {
+func (p *ProcessorOtelMetricParser) processJSONMetricData(data string) ([]*protocol.Log, error) {
 	jsonUnmarshaler := pmetric.JSONUnmarshaler{}
 	var metrics pmetric.Metrics
 	var err error
@@ -96,7 +97,7 @@ func (p *ProcessorOtelMetricParser) processJSONTraceData(data string) ([]*protoc
 	return log, nil
 }
 
-func (p *ProcessorOtelMetricParser) processProtobufTraceData(data string) ([]*protocol.Log, error) {
+func (p *ProcessorOtelMetricParser) processProtobufMetricData(data string) ([]*protocol.Log, error) {
 	protoUnmarshaler := pmetric.ProtoUnmarshaler{}
 	var metrics pmetric.Metrics
 	var err error
@@ -109,9 +110,20 @@ func (p *ProcessorOtelMetricParser) processProtobufTraceData(data string) ([]*pr
 	return log, nil
 }
 
-func (p *ProcessorOtelMetricParser) processProtoJSONTraceData(data string) ([]*protocol.Log, error) {
+func (p *ProcessorOtelMetricParser) processProtoJSONMetricData(data string) ([]*protocol.Log, error) {
+	metrics := &v1.ResourceMetrics{}
+	var err error
 
-	return nil, nil
+	if err = protojson.Unmarshal([]byte(data), metrics); err != nil {
+		return nil, err
+	}
+
+	var log []*protocol.Log
+	if log, err = opentelemetry.ConvertOtlpMetrics(metrics); err != nil {
+		return nil, err
+	}
+
+	return log, nil
 }
 
 func init() {
