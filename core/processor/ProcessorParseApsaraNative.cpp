@@ -104,10 +104,10 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
         ++(*mParseFailures);
         if (!mDiscardUnmatch) {
             AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
-                   sourceEvent.GetContent(mSourceKey),
+                   buffer,
                    sourceEvent); // legacy behavior, should use sourceKey
             if (mUploadRawLog) {
-                AddLog(mRawLogTag, sourceEvent.GetContent(mSourceKey), sourceEvent); // __raw__
+                AddLog(mRawLogTag, buffer, sourceEvent); // __raw__
             }
             return true;
         }
@@ -151,7 +151,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
             ++index;
             if (buffer.data()[index] == '\t' || buffer.data()[index] == '\0') {
                 if (colon_index >= 0) {
-                    auto key = StringView(buffer.data() + beg_index, colon_index - beg_index);
+                    StringView key(buffer.data() + beg_index, colon_index - beg_index);
                     AddLog(key, StringView(buffer.data() + colon_index + 1, index - colon_index - 1), sourceEvent);
                     if (key == mSourceKey) {
                         sourceKeyOverwritten = true;
@@ -179,7 +179,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
 #endif
     AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
     if (mUploadRawLog && !rawLogTagOverwritten) {
-        AddLog(mRawLogTag, sourceEvent.GetContent(mSourceKey), sourceEvent); // __raw__
+        AddLog(mRawLogTag, buffer, sourceEvent); // __raw__
     }
     if (!sourceKeyOverwritten) {
         sourceEvent.DelContent(mSourceKey);
@@ -295,10 +295,8 @@ static int32_t FindColonIndex(StringView& buffer, int32_t beginIndex, int32_t en
 }
 
 int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent) {
-    int32_t beginIndexArray[10] = {0};
-    int32_t endIndexArray[10] = {0};
-    // int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
-    // int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
     int32_t baseFieldNum = FindBaseFields(buffer, beginIndexArray, endIndexArray);
     if (baseFieldNum == 0) {
         return 0;
