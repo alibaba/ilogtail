@@ -27,6 +27,7 @@ private:
     AdhocCheckpointManager& operator=(const AdhocCheckpointManager&) = delete;
 
     std::unordered_map<std::string, AdhocJobCheckpointPtr> mAdhocJobCheckpointMap;
+    ReadWriteLock mRWL;
 
 public:
     static AdhocCheckpointManager* GetInstance() {
@@ -38,7 +39,9 @@ public:
     void LoadAdhocCheckpoint();
 
     AdhocJobCheckpointPtr GetAdhocJobCheckpoint(const std::string& jobName);
-    AdhocJobCheckpointPtr CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<AdhocFileCheckpointKey> adhocFileCheckpointKeyList);
+    AdhocFileCheckpointPtr GetAdhocFileCheckpoint(const std::string& jobName, const AdhocFileCheckpointKey* fileCheckpointKey);
+    AdhocJobCheckpointPtr CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<AdhocFileCheckpointKey> fileCheckpointKeyList);
+    void UpdateAdhocFileCheckpoint(const std::string& jobName, const AdhocFileCheckpointKey* fileCheckpointKey, AdhocFileCheckpointPtr fileCheckpoint);
     void DeleteAdhocJobCheckpoint(const std::string& jobName);
 
     std::string GetAdhocCheckpointDirPath();

@@ -58,9 +58,8 @@ void AdhocFileManager::ProcessLoop() {
 
 void AdhocFileManager::ProcessStaticFileEvent(Event* ev) {
     // std::string jobName = ev->GetConfigName();
-    // AdhocJobCheckpointPtr jobCpPtr = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName);
     // AdhocFileCheckpointKey cpKey(DevInode(ev->GetDev(), ev->GetInode()), jobName, 0);
-    // AdhocFileCheckpointPtr fileCpPtr = jobCpPtr->GetAdhocFileCheckpoint(&cpKey);
+    // AdhocFileCheckpointPtr fileCpPtr = mAdhocCheckpointManager->GetAdhocFileCheckpoint(jobname, &cpKey);
 
     // // read file and change offset
     // ReadFile(ev, fileCpPtr);

@@ -40,48 +40,78 @@ void AdhocCheckpointManager::Run() {
         // dump checkpoint per 5s
         usleep(INT32_FLAG(adhoc_checkpoint_dump_thread_wait_interval));
 
+        mRWL.lock_shared();
         for (auto& p : mAdhocJobCheckpointMap) {
-            p.second->DumpAdhocCheckpoint(GetJobCheckpointPath(p.second->GetJobName()));
+            p.second->Dump(GetJobCheckpointPath(p.second->GetJobName()));
         }
+        mRWL.unlock_shared();
     }
-
-    LOG_WARNING(sLogger, ("AdhocCheckpointManager", "Exit"));
 }
 
 AdhocJobCheckpointPtr AdhocCheckpointManager::GetAdhocJobCheckpoint(const std::string& jobName) {
+    mRWL.lock_shared();
+
+    AdhocJobCheckpointPtr jobCheckpoint = nullptr;
     auto it = mAdhocJobCheckpointMap.find(jobName);
     if (it != mAdhocJobCheckpointMap.end()) {
-        return it->second;
+        jobCheckpoint = it->second;
     } else {
-        return nullptr;
+        LOG_WARNING(sLogger, ("Get AdhocJobCheckpoint fail, job checkpoint doesn't exist, job name", jobName));
     }
+
+    mRWL.unlock_shared();
+    return jobCheckpoint;
 }
 
-AdhocJobCheckpointPtr AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<AdhocFileCheckpointKey> adhocFileCheckpointKeyList) {
-    AdhocJobCheckpointPtr adhocJobCheckpointPtr = GetAdhocJobCheckpoint(jobName);
-    if (nullptr == adhocJobCheckpointPtr) {
-        adhocJobCheckpointPtr = std::make_shared<AdhocJobCheckpoint>(jobName);
-        for (AdhocFileCheckpointKey key : adhocFileCheckpointKeyList) {
-            adhocJobCheckpointPtr->AddAdhocFileCheckpoint(&key);
+AdhocJobCheckpointPtr AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<AdhocFileCheckpointKey> fileCheckpointKeyList) {
+    AdhocJobCheckpointPtr jobCheckpoint = GetAdhocJobCheckpoint(jobName);
+    if (nullptr == jobCheckpoint) {
+        mRWL.lock();
+        jobCheckpoint = std::make_shared<AdhocJobCheckpoint>(jobName);
+        for (AdhocFileCheckpointKey fileCheckpointKey : fileCheckpointKeyList) {
+            jobCheckpoint->AddFileCheckpoint(&fileCheckpointKey);
         }
-        mAdhocJobCheckpointMap[jobName] = adhocJobCheckpointPtr;
+        mAdhocJobCheckpointMap[jobName] = jobCheckpoint;
+        mRWL.unlock();
 
         LOG_INFO(sLogger, ("Create AdhocJobCheckpoint success, job name", jobName));
-        return adhocJobCheckpointPtr;
+        return jobCheckpoint;
     } else {
         LOG_INFO(sLogger, ("Job checkpoint already exists, job name", jobName));
-        return adhocJobCheckpointPtr;
+        return jobCheckpoint;
     }
 }
 
 void AdhocCheckpointManager::DeleteAdhocJobCheckpoint(const std::string& jobName) {
-    auto it = mAdhocJobCheckpointMap.find(jobName);
-    if (it != mAdhocJobCheckpointMap.end()) {
+    mRWL.lock();
+
+    auto jobCheckpoint = mAdhocJobCheckpointMap.find(jobName);
+    if (jobCheckpoint != mAdhocJobCheckpointMap.end()) {
         remove(GetJobCheckpointPath(jobName).c_str());
         mAdhocJobCheckpointMap.erase(jobName);
         LOG_INFO(sLogger, ("Delete AdhocJobCheckpoint success, job name", jobName));
     } else {
         LOG_WARNING(sLogger, ("Delete AdhocJobCheckpoint fail, job checkpoint doesn't exist, job name", jobName));
+    }
+
+    mRWL.unlock();
+}
+
+AdhocFileCheckpointPtr AdhocCheckpointManager::GetAdhocFileCheckpoint(const std::string& jobName, const AdhocFileCheckpointKey* fileCheckpointKey) {
+    AdhocJobCheckpointPtr jobCheckpoint = GetAdhocJobCheckpoint(jobName);
+    if (nullptr != jobCheckpoint) {
+        return jobCheckpoint->GetFileCheckpoint(fileCheckpointKey);
+    } else {
+        return nullptr;
+    }
+}
+
+void AdhocCheckpointManager::UpdateAdhocFileCheckpoint(const std::string& jobName, const AdhocFileCheckpointKey* fileCheckpointKey, AdhocFileCheckpointPtr fileCheckpoint) {
+    AdhocJobCheckpointPtr jobCheckpoint = GetAdhocJobCheckpoint(jobName);
+    if (nullptr != jobCheckpoint) {
+        if (jobCheckpoint->UpdateFileCheckpoint(fileCheckpointKey, fileCheckpoint)) {
+            jobCheckpoint->Dump(GetJobCheckpointPath(jobName));
+        }
     }
 }
 
@@ -97,9 +127,9 @@ void AdhocCheckpointManager::LoadAdhocCheckpoint() {
         }
 
         for (std::string job : jobList) {
-            AdhocJobCheckpointPtr adhocJobCheckpointPtr = std::make_shared<AdhocJobCheckpoint>(job);
-            if (adhocJobCheckpointPtr->LoadAdhocCheckpoint(GetJobCheckpointPath(job))) {
-                mAdhocJobCheckpointMap[job] = adhocJobCheckpointPtr;
+            AdhocJobCheckpointPtr jobCheckpoint = std::make_shared<AdhocJobCheckpoint>(job);
+            if (jobCheckpoint->Load(GetJobCheckpointPath(job))) {
+                mAdhocJobCheckpointMap[job] = jobCheckpoint;
             }
         }
     } else if (!Mkdir(adhocCheckpointDir)) {

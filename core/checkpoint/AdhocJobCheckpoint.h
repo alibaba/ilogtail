@@ -17,28 +17,29 @@
 #pragma once
 #include <vector>
 #include "AdhocFileCheckpoint.h"
+#include "common/Lock.h"
 
 namespace logtail {
 
 class AdhocJobCheckpoint {
 private:
-    bool CheckFileInList(const AdhocFileCheckpointKey* adhocFileCheckpointKey);
+    bool CheckFileConsistence(const AdhocFileCheckpointKey* fileCheckpointKey);
     std::vector<AdhocFileCheckpointPtr> mAdhocFileCheckpointList;
     int32_t mFileCount;
     int32_t mCurrentFileIndex;
     std::string mAdhocJobName; 
-    std::mutex mMutex;
+    ReadWriteLock mRWL;
 
 public:
     AdhocJobCheckpoint(const std::string& jobName);
-    ~AdhocJobCheckpoint();
 
-    AdhocFileCheckpointPtr GetAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey);
-    bool UpdateAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey, AdhocFileCheckpointPtr adhocFileCheckpointPtr);
-    bool LoadAdhocCheckpoint(const std::string& path);
-    void DumpAdhocCheckpoint(const std::string& path);
+    void AddFileCheckpoint(const AdhocFileCheckpointKey* fileCheckpointKey);
+    AdhocFileCheckpointPtr GetFileCheckpoint(const AdhocFileCheckpointKey* fileCheckpointKey);
+    bool UpdateFileCheckpoint(const AdhocFileCheckpointKey* fileCheckpointKey, AdhocFileCheckpointPtr fileCheckpoint);
 
-    void AddAdhocFileCheckpoint(const AdhocFileCheckpointKey* adhocFileCheckpointKey);
+    bool Load(const std::string& path);
+    void Dump(const std::string& path);
+
     int32_t GetCurrentFileIndex();
     std::string GetJobName();
     std::vector<std::string> GetFileList();

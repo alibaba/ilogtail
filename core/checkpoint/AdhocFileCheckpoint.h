@@ -66,8 +66,6 @@ public:
     std::string mJobName;
     int32_t mStartTime;
     int32_t mLastUpdateTime;
-
-    std::mutex mMutex;
 };
 
 struct AdhocFileCheckpointKey {
