@@ -41,7 +41,7 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
 
     // old InitFilter
     Json::Value jsonRoot; // will contains the root value after parsing.
-    ParseConfResult userLogRes = ParseConfig(mConfig.mConfigName, jsonRoot);
+    ParseConfResult userLogRes = ParseConfig(GetContext().GetConfigName(), jsonRoot);
     if (userLogRes != CONFIG_OK) {
         if (userLogRes == CONFIG_NOT_EXIST)
             LOG_DEBUG(sLogger, (mConfig.mConfigName, "not found, uninitialized Filter"));
