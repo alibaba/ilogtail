@@ -23,6 +23,7 @@
 #include "app_config/AppConfig.h"
 #include "monitor/LogtailAlarm.h"
 #include "logger/Logger.h"
+#include "PipelineContext.h"
 
 namespace logtail {
 
@@ -47,6 +48,31 @@ public:
                 LOG_ERROR(sLogger, ("regex_match in Filter fail", exception));
                 if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                     context.SendAlarm(REGEX_MATCH_ALARM, "regex_match in Filter fail:" + exception);
+                }
+            }
+            return result;
+        }
+        return false;
+    }
+
+    virtual bool Match(const LogContents& contents, PipelineContext* mContext) {
+        for (const auto& content : contents) {
+            const auto& contentKey = content.first.to_string();
+            const auto& contentValue = content.first.to_string();
+            if (contentKey != key) {
+                continue;
+            }
+
+            std::string exception;
+            bool result = BoostRegexMatch(contentValue.c_str(), contentValue.size(), reg, exception);
+            if (!result && !exception.empty() && AppConfig::GetInstance()->IsLogParseAlarmValid()) {
+                LOG_ERROR(sLogger, ("regex_match in Filter fail", exception));
+                if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
+                    LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
+                                                           "regex_match in Filter fail:" + exception,
+                                                           mContext->GetProjectName(),
+                                                           mContext->GetLogstoreName(),
+                                                           mContext->GetRegion());
                 }
             }
             return result;
