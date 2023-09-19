@@ -626,6 +626,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (value.isMember("spl_script") && value["spl_script"].isString()) {
                     string splConfig = value["spl_script"].asString();
                     config->mSpl = splConfig;
+                    GetRegexAndKeys(value, config);
                 }
 
                 // normal log file config can have plugin too

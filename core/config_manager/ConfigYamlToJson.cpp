@@ -555,6 +555,8 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForFileMode(const YAML::Node& yaml
             // TODO: test for spl
             } else if (0 == key.compare("spl_script")) {
                 userJsonConfig[key] = ChangeYamlToJson(it->second);
+                userJsonConfig["regex"][0] = "(.*)";
+                userJsonConfig["keys"][0] = "content";
             } else if (0 == key.compare("keys")) {
                 string keys;
                 for (auto&& node : it->second) {

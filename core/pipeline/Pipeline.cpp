@@ -76,37 +76,38 @@ bool Pipeline::Init(const PipelineConfig& config) {
         return false;
     }
 
-    // APSARA_LOG, REGEX_LOG, STREAM_LOG, JSON_LOG, DELIMITER_LOG, PLUGIN_LOG
-    std::unique_ptr<ProcessorInstance> pluginParser;
-    switch (config.mLogType) {
-        case APSARA_LOG:
-            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
-                ProcessorParseApsaraNative::Name(),
-                std::string(ProcessorParseApsaraNative::Name()) + "/" + std::to_string(pluginIndex++));
-            break;
-        case REGEX_LOG:
-            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseRegexNative::Name(),
-                                                                          std::string(ProcessorParseRegexNative::Name())
-                                                                              + "/" + std::to_string(pluginIndex++));
-            break;
-        case JSON_LOG:
-            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseJsonNative::Name(),
-                                                                          std::string(ProcessorParseJsonNative::Name())
-                                                                              + "/" + std::to_string(pluginIndex++));
-            break;
-        case DELIMITER_LOG:
-            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
-                ProcessorParseDelimiterNative::Name(),
-                std::string(ProcessorParseDelimiterNative::Name()) + "/" + std::to_string(pluginIndex++));
-            break;
-        default:
-            return false;
-    }
+    
     if (config.mLogType == SPL_LOG) {
         if (!InitSplProcessor(config)) {
             return false;
         }
     } else {
+        // APSARA_LOG, REGEX_LOG, STREAM_LOG, JSON_LOG, DELIMITER_LOG, PLUGIN_LOG
+        std::unique_ptr<ProcessorInstance> pluginParser;
+        switch (config.mLogType) {
+            case APSARA_LOG:
+                pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
+                    ProcessorParseApsaraNative::Name(),
+                    std::string(ProcessorParseApsaraNative::Name()) + "/" + std::to_string(pluginIndex++));
+                break;
+            case REGEX_LOG:
+                pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseRegexNative::Name(),
+                                                                            std::string(ProcessorParseRegexNative::Name())
+                                                                                + "/" + std::to_string(pluginIndex++));
+                break;
+            case JSON_LOG:
+                pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseJsonNative::Name(),
+                                                                            std::string(ProcessorParseJsonNative::Name())
+                                                                                + "/" + std::to_string(pluginIndex++));
+                break;
+            case DELIMITER_LOG:
+                pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
+                    ProcessorParseDelimiterNative::Name(),
+                    std::string(ProcessorParseDelimiterNative::Name()) + "/" + std::to_string(pluginIndex++));
+                break;
+            default:
+                return false;
+        }
         if (!InitAndAddProcessor(std::move(pluginParser), config)) {
             return false;
         }
