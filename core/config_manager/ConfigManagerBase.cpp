@@ -190,6 +190,10 @@ bool ConfigManagerBase::CheckLogType(const string& logTypeStr, LogType& logType)
         logType = JSON_LOG;
     else if (logTypeStr == "plugin")
         logType = PLUGIN_LOG;
+
+    // TODO: test for spl
+    else if (logTypeStr == "spl_log")
+        logType = SPL_LOG;
     else {
         LOG_ERROR(sLogger, ("not supported log type", logTypeStr));
         return false;
@@ -617,6 +621,12 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     "",
                                     discardUnmatch,
                                     readerFlushTimeout);
+
+                // TODO: test for spl
+                if (value.isMember("spl_script") && value["spl_script"].isString()) {
+                    string splConfig = value["spl_script"].asString();
+                    config->mSpl = splConfig;
+                }
 
                 // normal log file config can have plugin too
                 // Boolean force_enable_pipeline.

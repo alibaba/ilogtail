@@ -36,10 +36,8 @@ void SlsSplUnittest::TestOutPut() {
     config.mDiscardUnmatch = false;
     config.mUploadRawLog = false;
     config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back("(.*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("content");
+    config.mSpl = "* | where c0 = 'value_3_0'";
+
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -61,7 +59,7 @@ void SlsSplUnittest::TestOutPut() {
             {
                 "contents" :
                 {
-                    "c0" : "value_3_0",
+                    "c0" : "value_4_0",
                     "c1": "value_4_0",
                     "c2": "value_4_0",
                     "c3": "value_4_0",

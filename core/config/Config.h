@@ -118,6 +118,10 @@ public:
     int mMaxDepth; // dirs exceed depth will not be monitored
     std::shared_ptr<std::list<std::string>> mRegs; // regex of log format
     std::shared_ptr<std::list<std::string>> mKeys; // description of each part of regex
+
+    // TODO: test for spl
+    std::string mSpl;
+
     std::string mTimeFormat; // for common_reg_log
     std::string mCategory;
     std::string mCompressType;

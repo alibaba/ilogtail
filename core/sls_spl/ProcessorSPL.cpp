@@ -120,7 +120,7 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig) {
     const std::string parserEndpoint = "http://11.164.91.19:15107/v1/spl";
     long httpCode = 0;
     //std::string splPlan;
-    std::string spl = "* | where c0 = 'value_3_0'";
+    std::string spl = config.mSpl;
     bool isSuccess = httpPost(parserEndpoint, spl, httpCode, mSplPlan, errorMsg);
     if (!isSuccess) {
         std::cerr << "request spl parser failed: " << errorMsg << ", spl is:" << spl << std::endl;
@@ -137,10 +137,7 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
     // logger初始化
     // logger由调用方提供
     auto logger = std::make_shared<StdoutLogger>();
-    // std::cout << "splPlan: " << splPlan << std::endl;
-
-    // 创建Pipeline
-    // 可以设置 logger, execute超时设置(ms), 最大内存(字节)
+    
     Error error;
     // const uint64_t timeoutMills = 100;
     // const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
