@@ -12,8 +12,10 @@ void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& er
     columnNames_ = header.columnNames;
     for (auto& constCol : header.constCols) {
         constColumns_.emplace(constCol.first, constCol.second.ToString());
+
+        std::cout << constCol.first << constCol.second.ToString() <<std::endl;
     }
-    std::cout << "====================================================" << std::endl;
+    
 }
 
 void PipelineEventGroupOutput::addRow(
@@ -44,6 +46,7 @@ void PipelineEventGroupOutput::addRow(
         sleep(1);
     }
 }
+
 
 void PipelineEventGroupOutput::finish(std::string& error) {
     std::cout << "#######====================================================#######" << std::endl;

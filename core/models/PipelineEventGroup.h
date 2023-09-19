@@ -42,7 +42,7 @@ using EventsContainer = std::vector<PipelineEventPtr>;
 class PipelineEventGroup {
 public:
     PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
-    PipelineEventGroup(const PipelineEventGroup&) = delete;
+    //PipelineEventGroup(const PipelineEventGroup&) = delete;
     PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
     const GroupInfo& GetGroupInfo() const { return mGroup; }
     const EventsContainer& GetEvents() const { return mEvents; }

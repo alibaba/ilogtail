@@ -458,7 +458,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     profile = processProfile;
     processProfile.Reset();
     
-    //for (auto eventGroup : outputList) {
+    for (auto& eventGroup : outputList) {
         // fill protobuf
         FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
         if (logFileReader->GetPluginFlag()) {
@@ -468,7 +468,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
             return 1;
         }
         FillLogGroupAllNative(eventGroup, logFileReader, resultGroup);
-    //}
+    }
     return 0;
 }
 

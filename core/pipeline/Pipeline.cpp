@@ -26,7 +26,6 @@
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
 #include "processor/ProcessorFillGroupInfoNative.h"
-#include "sls_spl/ProcessorSPL.h"
 
 namespace logtail {
 
@@ -100,16 +99,17 @@ bool Pipeline::Init(const PipelineConfig& config) {
                 ProcessorParseDelimiterNative::Name(),
                 std::string(ProcessorParseDelimiterNative::Name()) + "/" + std::to_string(pluginIndex++));
             break;
-        case SPL_LOG:
-            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
-                ProcessorSPL::Name(),
-                std::string(ProcessorSPL::Name()) + "/" + std::to_string(pluginIndex++));
-            break;
         default:
             return false;
     }
-    if (!InitAndAddProcessor(std::move(pluginParser), config)) {
-        return false;
+    if (config.mLogType == SPL_LOG) {
+        if (!InitSplProcessor(config)) {
+            return false;
+        }
+    } else {
+        if (!InitAndAddProcessor(std::move(pluginParser), config)) {
+            return false;
+        }
     }
 
     std::unique_ptr<ProcessorInstance> pluginTime = PluginRegistry::GetInstance()->CreateProcessor(
@@ -126,6 +126,19 @@ void Pipeline::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGr
     for (auto& p : mProcessorLine) {
         p->Process(logGroup);
     }
+    if (mSplProcessor) {
+        mSplProcessor->Process(logGroup, logGroupList);
+    } else {
+        logGroupList.emplace_back(logGroup);
+    }
+}
+
+bool Pipeline::InitSplProcessor(const PipelineConfig& config) {
+    mSplProcessor = std::unique_ptr<ProcessorSPL>(new ProcessorSPL());
+    std::string pluginId = "spl";
+    ComponentConfig componentConfig(pluginId, config);
+    mSplProcessor->Init(componentConfig, mContext);
+    return true;
 }
 
 bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config) {
@@ -139,13 +152,7 @@ bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processo
         LOG_ERROR(GetContext().GetLogger(), ("InitProcessor", processor->Id())("Error", "Init failed"));
         return false;
     }
-    if (mConfig.mLogType == SPL_LOG) {
-        mSplProcessor = std::move(processor);
-        // TODO: for test
-        mProcessorLine.emplace_back(std::move(processor));
-    } else {
-        mProcessorLine.emplace_back(std::move(processor));
-    }
+    mProcessorLine.emplace_back(std::move(processor));
     return true;
 }
 

@@ -19,20 +19,16 @@
 
 namespace logtail {
 
-class ProcessorSPL : public Processor {
+class ProcessorSPL  {
 public:
     static const char* Name() { return "processor_spl"; }
-    bool Init(const ComponentConfig& componentConfig) override;
-    void Process(PipelineEventGroup& logGroup) override;
+    bool Init(const ComponentConfig& config, PipelineContext& context);
+    void Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList);
 
 protected:
-    bool IsSupportedEvent(const PipelineEventPtr& e) override;
+    bool IsSupportedEvent(const PipelineEventPtr& e);
 
 private:
-    std::string GetTopicName(const std::string& path, std::vector<sls_logs::LogTag>& extraTags);
-
-    std::string mTopicFormat, mGroupTopic, mStaticTopic;
-    bool mIsStaticTopic = false;
 
     std::string mSplPlan;
 #ifdef APSARA_UNIT_TEST_MAIN

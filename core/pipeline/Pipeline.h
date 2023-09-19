@@ -18,6 +18,7 @@
 #include "plugin/ProcessorInstance.h"
 #include "pipeline/PipelineConfig.h"
 #include "pipeline/PipelineContext.h"
+#include "sls_spl/ProcessorSPL.h"
 
 namespace logtail {
 
@@ -31,11 +32,12 @@ public:
     PipelineConfig& GetPipelineConfig() { return mConfig; }
 
 private:
+    bool InitSplProcessor(const PipelineConfig& config);
     bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);
 
     std::string mName;
     std::vector<std::unique_ptr<ProcessorInstance> > mProcessorLine;
-    std::unique_ptr<ProcessorInstance> mSplProcessor;
+    std::unique_ptr<ProcessorSPL> mSplProcessor;
     PipelineContext mContext;
     PipelineConfig mConfig;
 };

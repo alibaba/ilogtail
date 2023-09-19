@@ -95,18 +95,10 @@ bool httpPost(
     return true;
 }
 
-bool ProcessorSPL::Init(const ComponentConfig& componentConfig) {
+bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext& context) {
     Config config = componentConfig.GetConfig();
-    mTopicFormat = config.mTopicFormat;
-    if (config.mLogType != APSARA_LOG && ToLowerCaseString(mTopicFormat) == "default") {
-        mTopicFormat = "none";
-    }
-    mGroupTopic = config.mGroupTopic;
-    if ("customized" == config.mTopicFormat) {
-        mStaticTopic = config.mCustomizedTopic;
-        mIsStaticTopic = true;
-    }
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
+   
+    // SetMetricsRecordRef(Name(), componentConfig.GetId());
 
     // 全局初始化一次SPLLib，多次调用幂等
     initSPL();
@@ -132,7 +124,7 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig) {
 
 
 
-void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
+void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
     std::string errorMsg;
     // logger初始化
     // logger由调用方提供
@@ -149,7 +141,7 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
         return;
     }
 
-    std::vector<std::string> colNames{"c0", "c1", "c2", "c3"};
+    std::vector<std::string> colNames{"content"};
     
     auto input = std::make_shared<PipelineEventGroupInput>(colNames, logGroup);
 
@@ -182,6 +174,8 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
         return;
     }
     logGroup.SwapEvents(newEvents);
+
+    logGroupList.emplace_back(logGroup);
     std::cout << "pipelineStats: " << *pipelineStatsPtr.get() << std::endl;
     return;
 }
@@ -189,10 +183,5 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
 bool ProcessorSPL::IsSupportedEvent(const PipelineEventPtr& /*e*/) {
     return true;
 }
-
-std::string ProcessorSPL::GetTopicName(const std::string& path, std::vector<sls_logs::LogTag>& extraTags) {
-    return "";
-}
-
 
 } // namespace logtail

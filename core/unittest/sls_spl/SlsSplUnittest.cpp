@@ -22,21 +22,23 @@ public:
         mContext.SetRegion("cn-shanghai");
     }
     PipelineContext mContext;
-    void TestOutPut();
+    void TestSimple();
+    void TestJsonParse();
 
 };
 
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestOutPut, 0);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestSimple, 0);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestJsonParse, 1);
 
 
 
-void SlsSplUnittest::TestOutPut() {
+void SlsSplUnittest::TestSimple() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;
     config.mUploadRawLog = false;
     config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mSpl = "* | where c0 = 'value_3_0'";
+    config.mSpl = "* | where content = 'value_3_0'";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -47,10 +49,7 @@ void SlsSplUnittest::TestOutPut() {
             {
                 "contents" :
                 {
-                    "c0" : "value_3_0",
-                    "c1": "value_3_0",
-                    "c2": "value_3_0",
-                    "c3": "value_3_0",
+                    "content" : "value_3_0"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -59,10 +58,7 @@ void SlsSplUnittest::TestOutPut() {
             {
                 "contents" :
                 {
-                    "c0" : "value_4_0",
-                    "c1": "value_4_0",
-                    "c2": "value_4_0",
-                    "c3": "value_4_0",
+                    "content" : "value_4_0"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -71,17 +67,82 @@ void SlsSplUnittest::TestOutPut() {
         ]
     })";
     eventGroup.FromJsonString(inJson);
+    
+    std::string pluginId = "testID";
+    std::vector<PipelineEventGroup> logGroupList;
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
+
+    
     ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
-    processorInstance.Process(eventGroup);
-    std::string outJson = eventGroup.ToJsonString();
+
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
+    processor.Process(eventGroup, logGroupList);
+
+    APSARA_TEST_EQUAL(logGroupList.size(), 1);
+
+    std::string outJson = logGroupList[0].ToJsonString();
     std::cout << "outJson: " << outJson << std::endl;
     return;
 }
+
+
+void SlsSplUnittest::TestJsonParse() {
+    // make config
+    Config config;
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = false;
+    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    config.mSpl = "* | parse-json content | project a1 ";
+
+    // make events
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "{\"a1\":\"bbbb\",\"c\":\"d\"}"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "{\"a1\":\"ccc\",\"c1\":\"d1\"}"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ],
+        "tags" : {
+            "__tag__": "123"
+        }
+    })";
+    eventGroup.FromJsonString(inJson);
+    
+    std::string pluginId = "testID";
+    std::vector<PipelineEventGroup> logGroupList;
+    // run function
+    ProcessorSPL& processor = *(new ProcessorSPL);
+
+    
+    ComponentConfig componentConfig(pluginId, config);
+
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
+    processor.Process(eventGroup, logGroupList);
+
+    APSARA_TEST_EQUAL(logGroupList.size(), 1);
+    std::string outJson = logGroupList[0].ToJsonString();
+    std::cout << "outJson: " << outJson << std::endl;
+    return;
+}
+
 
 
 } // namespace logtail

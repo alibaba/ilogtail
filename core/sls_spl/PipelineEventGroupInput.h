@@ -9,18 +9,21 @@ using namespace logtail;
 namespace apsara::sls::spl {
 
 class PipelineEventGroupInput : public Input {
-   public:
-    PipelineEventGroupInput(const std::vector<std::string> columnNames, const PipelineEventGroup& rows)
-        : columnNames_(columnNames), rows_(&rows) {}
+    public:
+        PipelineEventGroupInput(const std::vector<std::string> columnNames, const PipelineEventGroup& logGroup)
+            : mColumnNames(columnNames), mLogGroup(&logGroup) {}
 
-    ~PipelineEventGroupInput() {}
+        ~PipelineEventGroupInput() {}
 
-    virtual void getHeader(IOHeader& header, std::string& err);
-    virtual void getRow(const int32_t rowIndex, std::vector<KV>& pairs, std::string& err);
+        virtual void getHeader(IOHeader& header, std::string& err);
+        virtual void getRow(const int32_t rowIndex, std::vector<KV>& pairs, std::string& err);
+        // get non-const columns
+        //virtual void getColumn(const int32_t colIndex, std::vector<SplStringPiece>& values, std::string& err);
+        virtual bool isColumnar(); 
 
-   private:
-    std::vector<std::string> columnNames_;
-    const PipelineEventGroup* rows_;
+    private:
+        std::vector<std::string> mColumnNames;
+        const PipelineEventGroup* mLogGroup;
 };
 
 using PipelineEventGroupInputPtr = std::shared_ptr<PipelineEventGroupInput>;
