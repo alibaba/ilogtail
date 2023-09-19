@@ -25,7 +25,7 @@
 namespace logtail {
 
 bool ProcessorParseJsonNative::Init(const ComponentConfig& componentConfig) {
-    PipelineConfig config = componentConfig.GetConfig();
+    const PipelineConfig& config = componentConfig.GetConfig();
 
     mSourceKey = DEFAULT_CONTENT_KEY;
     mDiscardUnmatch = config.mDiscardUnmatch;
@@ -73,18 +73,21 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
     if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
+
+    auto rawContent = sourceEvent.GetContent(mSourceKey);
+
     bool res = true;
     res = JsonLogLineParser(sourceEvent, logPath, e);
 
 
     if (!res && !mDiscardUnmatch) {
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
-               sourceEvent.GetContent(mSourceKey),
+               rawContent,
                sourceEvent); // legacy behavior, should use sourceKey
     }
     if (res || !mDiscardUnmatch) {
         if (mUploadRawLog && (!res || !mRawLogTagOverwritten)) {
-            AddLog(mRawLogTag, sourceEvent.GetContent(mSourceKey), sourceEvent); // __raw__
+            AddLog(mRawLogTag, rawContent, sourceEvent); // __raw__
         }
         if (res && !mSourceKeyOverwritten) {
             sourceEvent.DelContent(mSourceKey);
