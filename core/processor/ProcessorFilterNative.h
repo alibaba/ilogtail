@@ -31,6 +31,13 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) override;
 
 private:
+    ~ProcessorFilterNative() {
+        std::unordered_map<std::string, LogFilterRule*>::iterator it = mFilters.begin();
+        for (; it != mFilters.end(); ++it) {
+            delete it->second;
+        }
+        mFilters.clear();
+    }
     std::shared_ptr<LogFilterRule> mFilterRule = nullptr;
     BaseFilterNodePtr mFilterExpressionRoot = nullptr;
     std::unordered_map<std::string, LogFilterRule*> mFilters;
@@ -38,11 +45,6 @@ private:
     bool mDiscardNoneUtf8;
 
     int* mParseFailures = nullptr;
-    int* mLogGroupSize = nullptr;
-
-    CounterPtr mProcParseInSizeBytes;
-    CounterPtr mProcParseOutSizeBytes;
-    CounterPtr mProcDiscardRecordsTotal;
     CounterPtr mProcParseErrorTotal;
 
     bool Filter(LogEvent& sourceEvent, const BaseFilterNodePtr& node);

@@ -36,11 +36,7 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
     mDiscardNoneUtf8 = mConfig.mDiscardNoneUtf8;
 
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
-    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     SetMetricsRecordRef(Name(), componentConfig.GetId());
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
 
     // old InitFilter
@@ -112,7 +108,7 @@ bool ProcessorFilterNative::ProcessEvent(const StringView& logPath, PipelineEven
     auto& sourceEvent = e.Cast<LogEvent>();
     bool res;
 
-    if (mFilterExpressionRoot.get() != nullptr) {
+    if (mFilterExpressionRoot && mFilterExpressionRoot.get() != nullptr) {
         res = Filter(sourceEvent, mFilterExpressionRoot);
     } else if (mFilterRule) {
         res = Filter(sourceEvent, mFilterRule.get());
@@ -149,15 +145,16 @@ bool ProcessorFilterNative::ProcessEvent(const StringView& logPath, PipelineEven
                     strcpy(valueBuffer.data, value.c_str());
                     valueBuffer.size = value.size();
 
-                    contents[StringView(keyBuffer.data, keyBuffer.size)] = StringView(valueBuffer.data, valueBuffer.size);
+                    contents[StringView(keyBuffer.data, keyBuffer.size)]
+                        = StringView(valueBuffer.data, valueBuffer.size);
                     contents.erase(content.first);
                 }
-
             }
         }
     }
     if (!res) {
-        mProcDiscardRecordsTotal->Add(1);
+        ++(*mParseFailures);
+        mProcParseErrorTotal->Add(1);
     }
 
     return res;
@@ -168,8 +165,6 @@ bool ProcessorFilterNative::IsSupportedEvent(const PipelineEventPtr& e) {
     return e.Is<LogEvent>();
 }
 
-
-// 1
 bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const BaseFilterNodePtr& node) {
     // null node, all logs are passed
     if (node.get() == nullptr) {
@@ -181,9 +176,7 @@ bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const BaseFilterNodePt
 }
 
 
-// 2
 bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const LogFilterRule* filterRule) {
-    // 获取日志组中的所有日志
     const LogContents& contents = sourceEvent.GetContents();
     if (contents.empty()) {
         return false;
@@ -199,12 +192,11 @@ bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const LogFilterRule* f
         return IsMatched(contents, *filterRule);
     } catch (...) {
         LOG_ERROR(sLogger, ("filter error ", ""));
+        return false;
     }
 }
 
-// 3
 bool ProcessorFilterNative::Filter(LogEvent& sourceEvent) {
-    // 获取日志组中的所有日志
     const LogContents& contents = sourceEvent.GetContents();
     if (contents.empty()) {
         return false;
