@@ -1,13 +1,17 @@
 #pragma once
 
 #include "rw/IO.h"
+#include "models/PipelineEventGroup.h"
+#include "models/LogEvent.h"
+
+using namespace logtail;
 
 namespace apsara::sls::spl {
 
 class PipelineEventGroupInput : public Input {
    public:
     PipelineEventGroupInput(const std::vector<std::string> columnNames, const PipelineEventGroup& rows)
-        : columnNames_(columnNames), rows_(rows) {}
+        : columnNames_(columnNames), rows_(&rows) {}
 
     ~PipelineEventGroupInput() {}
 
@@ -16,7 +20,7 @@ class PipelineEventGroupInput : public Input {
 
    private:
     std::vector<std::string> columnNames_;
-    std::vector<std::unordered_map<std::string, std::string>> rows_;
+    const PipelineEventGroup* rows_;
 };
 
 using PipelineEventGroupInputPtr = std::shared_ptr<PipelineEventGroupInput>;

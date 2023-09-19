@@ -38,4 +38,6 @@ foreach (DEP_NAME ${DEP_NAME_LIST})
     include_directories("/opt/logtail_spl/include/${DEP_NAME}")
 endforeach (DEP_NAME)
 
+target_link_libraries(${PROJECT_NAME} models)
+
 link_slsspl(${PROJECT_NAME})

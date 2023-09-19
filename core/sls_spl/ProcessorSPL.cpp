@@ -21,6 +21,7 @@
 #include "logger/StdoutLogger.h"
 #include "pipeline/SplPipeline.h"
 #include "sls_spl/StdoutOutput.h"
+#include "sls_spl/PipeLineEventGroupInput.h"
 
 using namespace apsara::sls::spl;
 
@@ -149,6 +150,7 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
         return;
     }
 
+    /*
     std::vector<std::unordered_map<std::string, std::string>> rows;
     for (auto r = 0; r < 10; ++r) {
         std::unordered_map<std::string, std::string> row;
@@ -157,8 +159,10 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
         }
         rows.emplace_back(std::move(row));
     }
-    std::vector<std::string> colNames{"c0", "c1", "c2", "c3", "c4"};
-    auto input = std::make_shared<MapRowInput>(colNames, rows);
+    */
+    std::vector<std::string> colNames{"c0", "c1", "c2", "c3"};
+    
+    auto input = std::make_shared<PipelineEventGroupInput>(colNames, logGroup);
 
     // 根据spip->getInputSearches()，设置input数组
     // 此处需要调用方实现 RowInput

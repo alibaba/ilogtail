@@ -47,8 +47,10 @@ void SlsSplUnittest::TestOutPut() {
             {
                 "contents" :
                 {
-                    "content" : "line1\nline2",
-                    "log.file.offset": "0"
+                    "c0" : "value_3_0",
+                    "c1": "value_3_0",
+                    "c2": "value_3_0",
+                    "c3": "value_3_0",
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -57,8 +59,10 @@ void SlsSplUnittest::TestOutPut() {
             {
                 "contents" :
                 {
-                    "content" : "line3\nline4",
-                    "log.file.offset": "0"
+                    "c0" : "value_4_0",
+                    "c1": "value_4_0",
+                    "c2": "value_4_0",
+                    "c3": "value_4_0",
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
