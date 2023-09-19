@@ -49,6 +49,7 @@ private:
     friend class ProcessorParseRegexNativeUnittest;
     friend class ProcessorParseTimestampNativeUnittest;
     friend class ProcessorParseJsonNativeUnittest;
+    friend class ProcessorFilterNativeUnittest;
 #endif
 };
 
