@@ -216,12 +216,12 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
         }
     } else if (!mDiscardUnmatch) {
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
-               sourceEvent.GetContent(mSourceKey),
+               buffer,
                sourceEvent); // legacy behavior, should use sourceKey
     }
     if (parseSuccess || !mDiscardUnmatch) {
         if (mUploadRawLog && (!parseSuccess || !mRawLogTagOverwritten)) {
-            AddLog(mRawLogTag, sourceEvent.GetContent(mSourceKey), sourceEvent); // __raw__
+            AddLog(mRawLogTag, buffer, sourceEvent); // __raw__
         }
         if (parseSuccess && !mSourceKeyOverwritten) {
             sourceEvent.DelContent(mSourceKey);
