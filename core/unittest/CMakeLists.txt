@@ -35,6 +35,10 @@ link_re2(${PROJECT_NAME})
 link_protobuf(${PROJECT_NAME})
 link_cityhash(${PROJECT_NAME})
 link_leveldb(${PROJECT_NAME})
+
+
+link_slsspl(${PROJECT_NAME})
+
 if (UNIX)
     target_link_libraries(${PROJECT_NAME} pthread uuid dl)
     if (ENABLE_COMPATIBLE_MODE)
@@ -62,6 +66,9 @@ add_subdirectory(reader)
 add_subdirectory(sender)
 add_subdirectory(monitor)
 add_subdirectory(sdk)
+add_subdirectory(sls_spl)
 if (UNIX)
     add_subdirectory(observer)
 endif ()
+
+include_directories("/opt/logtail_spl/include")

@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 namespace apsara::sls::spl {
 

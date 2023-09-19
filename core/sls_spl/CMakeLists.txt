@@ -22,4 +22,20 @@ add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
 include_directories("/opt/logtail_spl/include")
 link_directories("/opt/logtail_spl/lib")
 
+set(DEP_NAME_LIST
+        cmd                  # header-only
+        curl               # header-only
+        logger
+        pipeline
+        plan
+        re2                # (gperftools)
+        rw
+        vector
+        )
+
+foreach (DEP_NAME ${DEP_NAME_LIST})
+    logtaiL_define(SPL_${DEP_NAME} "" "/opt/logtail_spl/include/${DEP_NAME}")
+    include_directories("/opt/logtail_spl/include/${DEP_NAME}")
+endforeach (DEP_NAME)
+
 link_slsspl(${PROJECT_NAME})
