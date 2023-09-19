@@ -26,7 +26,7 @@ namespace logtail {
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
 
 bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig) {
-    PipelineConfig config = componentConfig.GetConfig();
+    const PipelineConfig& config = componentConfig.GetConfig();
     mSourceKey = DEFAULT_CONTENT_KEY;
     mSeparator = config.mSeparator;
     mColumnKeys = config.mColumnKeys;
