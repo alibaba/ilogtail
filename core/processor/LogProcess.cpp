@@ -449,23 +449,26 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     event->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
     eventGroup.AddEvent(std::move(event));
 
+    std::vector<PipelineEventGroup> outputList;
     // process logGroup
-    pipeline->Process(eventGroup);
+    pipeline->Process(eventGroup, outputList);
 
     // record profile
     auto& processProfile = pipeline->GetContext().GetProcessProfile();
     profile = processProfile;
     processProfile.Reset();
-
-    // fill protobuf
-    FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
-    if (logFileReader->GetPluginFlag()) {
-        FillLogGroupForPlugin(eventGroup, logFileReader, resultGroup);
-        LogtailPlugin::GetInstance()->ProcessLogGroup(
-            logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
-        return 1;
-    }
-    FillLogGroupAllNative(eventGroup, logFileReader, resultGroup);
+    
+    //for (auto eventGroup : outputList) {
+        // fill protobuf
+        FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
+        if (logFileReader->GetPluginFlag()) {
+            FillLogGroupForPlugin(eventGroup, logFileReader, resultGroup);
+            LogtailPlugin::GetInstance()->ProcessLogGroup(
+                logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
+            return 1;
+        }
+        FillLogGroupAllNative(eventGroup, logFileReader, resultGroup);
+    //}
     return 0;
 }
 

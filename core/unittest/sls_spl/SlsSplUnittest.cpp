@@ -5,6 +5,8 @@
 #include "sls_spl/ProcessorSPL.h"
 #include "models/LogEvent.h"
 #include "plugin/ProcessorInstance.h"
+#include <iostream>
+#include <sstream>
 
 namespace logtail {
 
@@ -59,7 +61,7 @@ void SlsSplUnittest::TestOutPut() {
             {
                 "contents" :
                 {
-                    "c0" : "value_4_0",
+                    "c0" : "value_3_0",
                     "c1": "value_4_0",
                     "c2": "value_4_0",
                     "c3": "value_4_0",
@@ -78,6 +80,8 @@ void SlsSplUnittest::TestOutPut() {
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
+    std::string outJson = eventGroup.ToJsonString();
+    std::cout << "outJson: " << outJson << std::endl;
     return;
 }
 

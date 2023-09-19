@@ -26,6 +26,7 @@
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
 #include "processor/ProcessorFillGroupInfoNative.h"
+#include "sls_spl/ProcessorSPL.h"
 
 namespace logtail {
 
@@ -99,6 +100,11 @@ bool Pipeline::Init(const PipelineConfig& config) {
                 ProcessorParseDelimiterNative::Name(),
                 std::string(ProcessorParseDelimiterNative::Name()) + "/" + std::to_string(pluginIndex++));
             break;
+        case SPL_LOG:
+            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
+                ProcessorSPL::Name(),
+                std::string(ProcessorSPL::Name()) + "/" + std::to_string(pluginIndex++));
+            break;
         default:
             return false;
     }
@@ -116,7 +122,7 @@ bool Pipeline::Init(const PipelineConfig& config) {
     return true;
 }
 
-void Pipeline::Process(PipelineEventGroup& logGroup) {
+void Pipeline::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
     for (auto& p : mProcessorLine) {
         p->Process(logGroup);
     }
@@ -133,7 +139,13 @@ bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processo
         LOG_ERROR(GetContext().GetLogger(), ("InitProcessor", processor->Id())("Error", "Init failed"));
         return false;
     }
-    mProcessorLine.emplace_back(std::move(processor));
+    if (mConfig.mLogType == SPL_LOG) {
+        mSplProcessor = std::move(processor);
+        // TODO: for test
+        mProcessorLine.emplace_back(std::move(processor));
+    } else {
+        mProcessorLine.emplace_back(std::move(processor));
+    }
     return true;
 }
 

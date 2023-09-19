@@ -1,10 +1,14 @@
 #pragma once
 
 #include "rw/IO.h"
+#include "models/PipelineEventGroup.h"
+#include "models/LogEvent.h"
+
+using namespace logtail;
 
 namespace apsara::sls::spl {
 
-class PipelineEventGroupInputOutput : public Output {
+class PipelineEventGroupOutput : public Output {
    private:
     std::string taskLabel_;
     int32_t rowSize_;
@@ -13,10 +17,14 @@ class PipelineEventGroupInputOutput : public Output {
     std::unordered_map<int32_t, std::string> constColumns_;
     bool withSleep_;
 
+    PipelineEventGroup* logGroups_;
+    EventsContainer* newEvents_;
+
+
    public:
-    PipelineEventGroupInputOutput(const std::string& taskLabel = "", bool withSleep = false)
-        : taskLabel_(taskLabel), withSleep_(withSleep) {}
-    virtual ~PipelineEventGroupInputOutput() {
+    PipelineEventGroupOutput(PipelineEventGroup& logGroups, EventsContainer& newEvents, const std::string& taskLabel = "", bool withSleep = false)
+        :logGroups_(&logGroups), newEvents_(&newEvents), taskLabel_(taskLabel), withSleep_(withSleep) {}
+    virtual ~PipelineEventGroupOutput() {
         
     }
     virtual void setHeader(const IOHeader& header, std::string& err);
@@ -27,6 +35,6 @@ class PipelineEventGroupInputOutput : public Output {
     virtual void finish(std::string& error);
 };
 
-using PipelineEventGroupInputOutputPtr = std::shared_ptr<PipelineEventGroupInputOutput>;
+using PipelineEventGroupOutputPtr = std::shared_ptr<PipelineEventGroupOutput>;
 
 }  // namespace apsara::sls::spl

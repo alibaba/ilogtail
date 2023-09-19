@@ -21,7 +21,9 @@
 #include "logger/StdoutLogger.h"
 #include "pipeline/SplPipeline.h"
 #include "sls_spl/StdoutOutput.h"
-#include "sls_spl/PipeLineEventGroupInput.h"
+#include "sls_spl/PipelineEventGroupInput.h"
+#include "sls_spl/PipelineEventGroupOutput.h"
+
 
 using namespace apsara::sls::spl;
 
@@ -150,16 +152,6 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
         return;
     }
 
-    /*
-    std::vector<std::unordered_map<std::string, std::string>> rows;
-    for (auto r = 0; r < 10; ++r) {
-        std::unordered_map<std::string, std::string> row;
-        for (auto c = 0; c < 5; ++c) {
-            row["c" + std::to_string(c)] = "value_" + std::to_string(r) + "_" + std::to_string(c);
-        }
-        rows.emplace_back(std::move(row));
-    }
-    */
     std::vector<std::string> colNames{"c0", "c1", "c2", "c3"};
     
     auto input = std::make_shared<PipelineEventGroupInput>(colNames, logGroup);
@@ -174,8 +166,10 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
     // 根据spip->getOutputLabels()，设置output数组
     // 此处需要调用方实现 Output
     std::vector<OutputPtr> outputs;
+    EventsContainer newEvents;
+
     for (auto resultTaskLabel : spip.getOutputLabels()) {
-        outputs.emplace_back(std::make_shared<StdoutOutput>(resultTaskLabel));
+        outputs.emplace_back(std::make_shared<PipelineEventGroupOutput>(logGroup, newEvents, resultTaskLabel));
     }
 
     // pipeline.execute可以多次调用，每次处理一个chunk构造readers/writers
@@ -190,19 +184,8 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
         SPL_LOG_ERROR(logger, ("execute error", errorMsg));
         return;
     }
+    logGroup.SwapEvents(newEvents);
     std::cout << "pipelineStats: " << *pipelineStatsPtr.get() << std::endl;
-
-    // 第二次调用pipeline.execute
-    std::vector<InputPtr> inputs2;
-    for (auto search : spip.getInputSearches()) {
-        inputs2.push_back(input);
-    }
-    errCode = spip.execute(inputs2, outputs, &errorMsg, pipelineStatsPtr);
-    if (errCode != StatusCode::OK) {
-        SPL_LOG_ERROR(logger, ("errorCode", errCode)("execute error", errorMsg));
-        return;
-    }
-    // std::cout << "pipelineStats: " << pipelineStats << std::endl;
     return;
 }
 

@@ -1,4 +1,4 @@
-#include "sls_spl/PipeLineEventGroupInput.h"
+#include "sls_spl/PipelineEventGroupInput.h"
 #include <iostream>
 #include "rw/SplStringPiece.h"
 
