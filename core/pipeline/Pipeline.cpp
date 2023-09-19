@@ -25,6 +25,7 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
+#include "processor/ProcessorDesensitizerNative.h"
 #include "processor/ProcessorFillGroupInfoNative.h"
 
 namespace logtail {
@@ -103,6 +104,13 @@ bool Pipeline::Init(const PipelineConfig& config) {
             return false;
     }
     if (!InitAndAddProcessor(std::move(pluginParser), config)) {
+        return false;
+    }
+
+    std::unique_ptr<ProcessorInstance> pluginDesensitizer = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorDesensitizerNative::Name(),
+        std::string(ProcessorDesensitizerNative::Name()) + "/" + std::to_string(pluginIndex++));
+    if (!InitAndAddProcessor(std::move(pluginDesensitizer), config)) {
         return false;
     }
 
