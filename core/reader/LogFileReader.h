@@ -386,9 +386,10 @@ protected:
     int32_t mTailLimit; // KB
     uint64_t mLastFileSignatureHash;
     uint32_t mLastFileSignatureSize;
-    int64_t mLastFilePos; // pos read and consumed, used for next read begin
+    int64_t mLastFilePos = 0; // pos read and consumed, used for next read begin
     int64_t mLastReadPos = 0; // pos read but may not consumed, used for read needed
-    int64_t mLastFileSize;
+    int64_t mLastFileSize = 0;
+    std::string mCache;
     std::string mProjectName;
     std::string mTopicName;
     time_t mLastUpdateTime;

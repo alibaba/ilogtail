@@ -111,6 +111,8 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
                                                mContainerStopped);
     // use last event time as checkpoint's last update time
     checkPointPtr->mLastUpdateTime = mLastEventTime;
+    checkPointPtr->mCacheOffset = mLastReadPos;
+    checkPointPtr->mCache = mCache;
     CheckPointManager::Instance()->AddCheckPoint(checkPointPtr);
 }
 
@@ -148,7 +150,10 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
         if (checkPointManagerPtr->GetCheckPoint(mDevInode, mConfigName, checkPointSharePtr)) {
             CheckPoint* checkPointPtr = checkPointSharePtr.get();
             mLastFilePos = checkPointPtr->mOffset;
-            mLastReadPos = mLastFilePos;
+            mLastFilePos = std::max(mLastFilePos, checkPointPtr->mCacheOffset);
+            if (!checkPointPtr->mCache.empty()) {
+                mCache = checkPointPtr->mCache;
+            }
             mLastFileSignatureHash = checkPointPtr->mSignatureHash;
             mLastFileSignatureSize = checkPointPtr->mSignatureSize;
             mRealLogPath = checkPointPtr->mRealFileName;
@@ -530,6 +535,7 @@ void LogFileReader::SetDockerPath(const std::string& dockerBasePath, size_t dock
 
 void LogFileReader::SetReadFromBeginning() {
     mLastFilePos = 0;
+    mCache.clear();
     mLastReadPos = 0;
     LOG_INFO(sLogger,
              ("force reading file from the beginning, project", mProjectName)("logstore", mCategory)(
@@ -1010,7 +1016,8 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
     bool allowRollback = true;
     if (event != nullptr && event->IsReaderFlushTimeout()) {
         // If flush timeout event, we should filter whether the event is legacy.
-        if (event->GetLastReadPos() == mLastReadPos && event->GetLastFilePos() == mLastFilePos && event->GetInode() == mDevInode.inode) {
+        if (event->GetLastReadPos() == mLastReadPos && event->GetLastFilePos() == mLastFilePos
+            && event->GetInode() == mDevInode.inode) {
             allowRollback = false;
         } else {
             return false;
@@ -1034,11 +1041,8 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
                   "read size", mLastFilePos - lastFilePos));
     if (mLastFilePos != mLastReadPos) {
         Event* event = CreateFlushTimeoutEvent().release();
-        BlockedEventManager::GetInstance()->UpdateBlockEvent(GetLogstoreKey(),
-                                                             mConfigName,
-                                                             *event,
-                                                             mDevInode,
-                                                             time(NULL) + mReaderFlushTimeout);
+        BlockedEventManager::GetInstance()->UpdateBlockEvent(
+            GetLogstoreKey(), mConfigName, *event, mDevInode, time(NULL) + mReaderFlushTimeout);
     }
     return moreData;
 }
@@ -1225,6 +1229,7 @@ bool LogFileReader::CloseTimeoutFilePtr(int32_t curTime) {
 
 void LogFileReader::CloseFilePtr() {
     if (mLogFileOp.IsOpen()) {
+        mCache.shrink_to_fit();
         LOG_DEBUG(sLogger, ("start close LogFileReader", mHostLogPath));
 
         // if mHostLogPath is symbolic link, then we should not update it accrding to /dev/fd/xx
@@ -1485,7 +1490,8 @@ bool LogFileReader::LogSplit(const char* buffer,
 
                 case SPLIT_BEGIN:
                     // mLogContinueRegPtr can be matched 0 or multiple times, if not match continue to try others.
-                    if (mLogContinueRegPtr != NULL && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                    if (mLogContinueRegPtr != NULL
+                        && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
                         state = SPLIT_CONTINUE;
                         break;
                     }
@@ -1518,7 +1524,8 @@ bool LogFileReader::LogSplit(const char* buffer,
 
                 case SPLIT_CONTINUE:
                     // mLogContinueRegPtr can be matched 0 or multiple times, if not match continue to try others.
-                    if (mLogContinueRegPtr != NULL && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                    if (mLogContinueRegPtr != NULL
+                        && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
                         break;
                     }
                     if (mLogEndRegPtr != NULL) {
@@ -1558,11 +1565,14 @@ bool LogFileReader::LogSplit(const char* buffer,
                 if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
                     if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
                         LOG_ERROR(sLogger,
-                                ("regex_match in LogSplit fail, exception",
-                                exception)("project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
+                                  ("regex_match in LogSplit fail, exception",
+                                   exception)("project", mProjectName)("logstore", mCategory)("file", mHostLogPath));
                     }
-                    LogtailAlarm::GetInstance()->SendAlarm(
-                        REGEX_MATCH_ALARM, "regex_match in LogSplit fail:" + exception, mProjectName, mCategory, mRegion);
+                    LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
+                                                           "regex_match in LogSplit fail:" + exception,
+                                                           mProjectName,
+                                                           mCategory,
+                                                           mRegion);
                 }
             }
         }
@@ -1573,7 +1583,7 @@ bool LogFileReader::LogSplit(const char* buffer,
         if (!IsMultiLine()) {
             logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
         } else {
-            endIndex = buffer[size-1] == '\n' ? size -1 : size;
+            endIndex = buffer[size - 1] == '\n' ? size - 1 : size;
             if (mLogBeginRegPtr != NULL && mLogEndRegPtr == NULL) {
                 anyMatched = true;
                 // If logs is unmatched, they have been handled immediately. So logs must be matched here.
@@ -1777,6 +1787,7 @@ bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allo
             mCategory,
             mRegion);
         mLastFilePos = fileSize;
+        mCache.clear();
         mLastReadPos = mLastFilePos;
     }
 
@@ -1849,12 +1860,19 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
         return;
     }
     StringBuffer stringMemory = logBuffer.AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
+    const size_t lastCacheSize = mCache.size();
+    if (lastCacheSize) {
+        READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
+    }
     TruncateInfo* truncateInfo = nullptr;
-    size_t nbytes = ReadFile(mLogFileOp, stringMemory.data, READ_BYTE, mLastFilePos, &truncateInfo);
+    size_t nbytes = ReadFile(mLogFileOp, stringMemory.data + lastCacheSize, READ_BYTE, mLastReadPos, &truncateInfo);
     char* stringBuffer = stringMemory.data;
-    if (nbytes == 0) {
-        stringBuffer[0] = '\0';
+    if (nbytes == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
         return;
+    }
+    if (lastCacheSize) {
+        memcpy(stringBuffer, mCache.data(), lastCacheSize); // copy from cache
+        nbytes += lastCacheSize;
     }
     // Ignore \n if last is force read
     if (stringBuffer[0] == '\n' && mLastForceRead) {
@@ -1862,6 +1880,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
         ++mLastFilePos;
         --nbytes;
     }
+    const size_t stringBufferLen = nbytes;
     logBuffer.truncateInfo.reset(truncateInfo);
     mLastReadPos = mLastFilePos + nbytes;
     LOG_DEBUG(sLogger, ("read bytes", nbytes)("last read pos", mLastReadPos));
@@ -1887,9 +1906,18 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
                 << " first 1024B log: " << logBuffer.rawBuffer.substr(0, 1024) << std::endl;
             LogtailAlarm::GetInstance()->SendAlarm(SPLIT_LOG_FAIL_ALARM, oss.str(), mProjectName, mCategory, mRegion);
         } else {
+            // line is not finished yet nor more data, put all data in cache
+            mCache.assign(stringBuffer, stringBufferLen);
             return;
         }
     }
+    if (nbytes < stringBufferLen) {
+        // rollback happend, put rollbacked part in cache
+        mCache.assign(stringBuffer + nbytes, stringBufferLen - nbytes);
+    } else {
+        mCache.clear();
+    }
+    // nbytes should no change any more
     size_t stringLen = nbytes;
     if (stringBuffer[stringLen - 1] == '\n' || stringBuffer[stringLen - 1] == '\0') {
         --stringLen;
@@ -1911,11 +1939,23 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     bool fromCpt = false;
     size_t READ_BYTE = getNextReadSize(end, fromCpt);
     std::unique_ptr<char[]> gbkBuffer(new char[READ_BYTE + 1]);
+    const size_t lastCacheSize = mCache.size();
+    if (lastCacheSize) {
+        READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
+    }
     TruncateInfo* truncateInfo = nullptr;
-    size_t readCharCount = ReadFile(mLogFileOp, gbkBuffer.get(), READ_BYTE, mLastFilePos, &truncateInfo);
+    size_t readCharCount
+        = ReadFile(mLogFileOp, gbkBuffer.get() + lastCacheSize, READ_BYTE, mLastReadPos, &truncateInfo);
+    if (readCharCount == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
+        return;
+    }
+    if (lastCacheSize) {
+        memcpy(gbkBuffer.get(), mCache.data(), lastCacheSize); // copy from cache
+        readCharCount += lastCacheSize;
+    }
     logBuffer.truncateInfo.reset(truncateInfo);
     mLastReadPos = mLastFilePos + readCharCount;
-    size_t originReadCount = readCharCount;
+    const size_t originReadCount = readCharCount;
     moreData = (readCharCount == BUFFER_SIZE);
     bool logTooLongSplitFlag = false;
     if (allowRollback) {
@@ -1925,6 +1965,8 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     }
     gbkBuffer[readCharCount] = '\0';
     if (readCharCount == 0) {
+        // line is not finished yet nor more data, put all data in cache
+        mCache.assign(gbkBuffer.get(), originReadCount);
         return;
     }
 
@@ -1938,7 +1980,13 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     size_t srcLength = readCharCount;
     size_t requiredLen
         = EncodingConverter::GetInstance()->ConvertGbk2Utf8(gbkBuffer.get(), &srcLength, nullptr, 0, lineFeedPos);
-    if (requiredLen == 0) {
+    if (requiredLen == 0) { // skip non-convertable part
+        if (readCharCount < originReadCount) {
+            // rollback happend, put rollbacked part in cache
+            mCache.assign(gbkBuffer.get() + readCharCount, originReadCount - readCharCount);
+        } else {
+            mCache.clear();
+        }
         mLastFilePos += readCharCount;
         return;
     }
@@ -1953,6 +2001,12 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         --resultCharCount;
     }
     if (resultCharCount == 0) {
+        if (readCharCount < originReadCount) {
+            // rollback happend, put rollbacked part in cache
+            mCache.assign(gbkBuffer.get() + readCharCount, originReadCount - readCharCount);
+        } else {
+            mCache.clear();
+        }
         mLastFilePos += readCharCount;
         return;
     }
@@ -1974,6 +2028,13 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     if (rollbackLineFeedCount > 0 && lineFeedCount >= (1 + rollbackLineFeedCount)) {
         readCharCount -= lineFeedPos[lineFeedCount - 1] - lineFeedPos[lineFeedCount - 1 - rollbackLineFeedCount];
     }
+    if (readCharCount < originReadCount) {
+        // rollback happend, put rollbacked part in cache
+        mCache.assign(gbkBuffer.get() + readCharCount, originReadCount - readCharCount);
+    } else {
+        mCache.clear();
+    }
+    // readCharCount should not change any more
     size_t stringLen = resultCharCount;
     if (stringBuffer[stringLen - 1] == '\n' || stringBuffer[stringLen - 1] == '\0') {
         --stringLen;
@@ -2134,10 +2195,12 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
     while (begPs >= 0) {
         if (buffer[begPs] == '\n' || begPs == 0) {
             int lineBegin = begPs == 0 ? 0 : begPs + 1;
-            if (mLogContinueRegPtr != NULL && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogContinueRegPtr, exception)) {
+            if (mLogContinueRegPtr != NULL
+                && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogContinueRegPtr, exception)) {
                 ++rollbackLineFeedCount;
                 endPs = begPs;
-            } else if (mLogEndRegPtr != NULL && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogEndRegPtr, exception)) {
+            } else if (mLogEndRegPtr != NULL
+                       && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogEndRegPtr, exception)) {
                 // Ensure the end line is complete
                 if (buffer[endPs] == '\n') {
                     buffer[endPs + 1] = '\0';
@@ -2146,7 +2209,8 @@ int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& roll
                     ++rollbackLineFeedCount;
                     endPs = begPs;
                 }
-            } else if (mLogBeginRegPtr != NULL && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogBeginRegPtr, exception)) {
+            } else if (mLogBeginRegPtr != NULL
+                       && BoostRegexMatch(buffer + lineBegin, endPs - lineBegin, *mLogBeginRegPtr, exception)) {
                 ++rollbackLineFeedCount;
                 // Keep all the buffer if rollback all
                 if (lineBegin != 0) {
@@ -2186,7 +2250,8 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
         // 1. The number of byte for one character can be 1, 2, 4.
         // 2. 1 byte character: the top bit is 0.
         // 3. 2 bytes character: the 1st byte is between 0x81 and 0xFE; the 2nd byte is between 0x40 and 0xFE.
-        // 4. 4 bytes character: the 1st and 3rd byte is between 0x81 and 0xFE; the 2nd and 4th byte are between 0x30 and 0x39. (not supported to align)
+        // 4. 4 bytes character: the 1st and 3rd byte is between 0x81 and 0xFE; the 2nd and 4th byte are between 0x30
+        // and 0x39. (not supported to align)
 
         // 1 byte character, 2nd byte of 2 bytes, 2nd or 4th byte of 4 bytes
         if ((buffer[endPs] & 0x80) == 0 || size == 1) {
@@ -2239,7 +2304,13 @@ size_t LogFileReader::AlignLastCharacter(char* buffer, size_t size) {
 }
 
 std::unique_ptr<Event> LogFileReader::CreateFlushTimeoutEvent() {
-    auto result = std::unique_ptr<Event>(new Event(mHostLogPathDir, mHostLogPathFile, EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY, -1, 0, mDevInode.dev, mDevInode.inode));
+    auto result = std::unique_ptr<Event>(new Event(mHostLogPathDir,
+                                                   mHostLogPathFile,
+                                                   EVENT_READER_FLUSH_TIMEOUT | EVENT_MODIFY,
+                                                   -1,
+                                                   0,
+                                                   mDevInode.dev,
+                                                   mDevInode.inode));
     result->SetLastFilePos(mLastFilePos);
     result->SetLastReadPos(mLastReadPos);
     return result;
