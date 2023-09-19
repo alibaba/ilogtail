@@ -33,7 +33,7 @@ private:
 public:
     AdhocJobCheckpoint(const std::string& jobName);
 
-    void AddFileCheckpoint(const AdhocFileCheckpointKey* fileCheckpointKey);
+    void AddFileCheckpoint(AdhocFileCheckpointPtr fileCheckpoint);
     AdhocFileCheckpointPtr GetFileCheckpoint(const AdhocFileCheckpointKey* fileCheckpointKey);
     bool UpdateFileCheckpoint(const AdhocFileCheckpointKey* fileCheckpointKey, AdhocFileCheckpointPtr fileCheckpoint);
 

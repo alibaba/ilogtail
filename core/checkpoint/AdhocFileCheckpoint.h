@@ -46,7 +46,8 @@ public:
                         uint64_t signatureHash,
                         DevInode devInode,
                         FileReadStatus status = STATUS_WAITING,
-                        const std::string& jobName = std::string())
+                        const std::string& jobName = std::string(),
+                        const std::string& realFileName = std::string())
         : mFileName(filename),
           mSize(size),
           mOffset(offset),
@@ -54,7 +55,8 @@ public:
           mSignatureHash(signatureHash),
           mDevInode(devInode),
           mStatus(status),
-          mJobName(jobName) {}
+          mJobName(jobName),
+          mRealFileName(realFileName) {}
 
     std::string mFileName;
     int64_t mSize;
@@ -64,17 +66,18 @@ public:
     DevInode mDevInode;
     FileReadStatus mStatus;
     std::string mJobName;
+    std::string mRealFileName;
     int32_t mStartTime;
     int32_t mLastUpdateTime;
 };
 
 struct AdhocFileCheckpointKey {
     AdhocFileCheckpointKey() {}
-    AdhocFileCheckpointKey(const DevInode& devInode, const std::string& fileName, const int64_t& fileSize)
-        : mDevInode(devInode), mFileName(fileName), mFileSize(fileSize) {}
+    AdhocFileCheckpointKey(const DevInode& devInode, const uint32_t signatureSize, const uint64_t signatureHash)
+        : mDevInode(devInode), mSignatureSize(signatureSize), mSignatureHash(signatureHash) {}
     DevInode mDevInode;
-    std::string mFileName;
-    int64_t mFileSize;
+    uint32_t mSignatureSize;
+    uint64_t mSignatureHash;
 };
 
 typedef std::shared_ptr<AdhocFileCheckpoint> AdhocFileCheckpointPtr;

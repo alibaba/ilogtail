@@ -28,24 +28,8 @@ AdhocJobCheckpoint::AdhocJobCheckpoint(const std::string& jobName) {
     mCurrentFileIndex = 0;
 }
 
-void AdhocJobCheckpoint::AddFileCheckpoint(const AdhocFileCheckpointKey* fileCheckpointKey) {
-    if ("" == fileCheckpointKey->mFileName || 0 == fileCheckpointKey->mFileSize
-        || DevInode() == fileCheckpointKey->mDevInode || "" == mAdhocJobName) {
-            LOG_WARNING(sLogger, ("Add AdhocFileCheckpoint fail, job name", mAdhocJobName)("file name", fileCheckpointKey->mFileName)
-                ("file size", fileCheckpointKey->mFileSize)("dev", fileCheckpointKey->mDevInode.dev)("inode", fileCheckpointKey->mDevInode.inode));
-            return;
-        }
-
+void AdhocJobCheckpoint::AddFileCheckpoint(AdhocFileCheckpointPtr fileCheckpoint) {
     mRWL.lock();
-    AdhocFileCheckpointPtr fileCheckpoint = std::make_shared<AdhocFileCheckpoint>(
-        fileCheckpointKey->mFileName,
-        fileCheckpointKey->mFileSize,
-        0,
-        0,
-        0,
-        fileCheckpointKey->mDevInode,
-        STATUS_WAITING,
-        mAdhocJobName);
     mAdhocFileCheckpointList.push_back(fileCheckpoint);
     mFileCount++;
     mRWL.unlock();
@@ -72,22 +56,22 @@ bool AdhocJobCheckpoint::UpdateFileCheckpoint(const AdhocFileCheckpointKey* file
         fileCheckpoint->mStatus = STATUS_LOST;
         indexChangeFlag = true;
         dumpFlag = true;
-        LOG_WARNING(sLogger, ("Adhoc file lost, job name", mAdhocJobName)("file name", fileCheckpointKey->mFileName)
-                ("file size", fileCheckpointKey->mFileSize)("dev", fileCheckpointKey->mDevInode.dev)("inode", fileCheckpointKey->mDevInode.inode));
+        LOG_WARNING(sLogger, ("Adhoc file lost, job name", mAdhocJobName)("file name", fileCheckpoint->mFileName)
+                ("file size", fileCheckpoint->mSize)("dev", fileCheckpoint->mDevInode.dev)("inode", fileCheckpoint->mDevInode.inode));
     } else {
         if (STATUS_WAITING == fileCheckpoint->mStatus) {
             fileCheckpoint->mStatus = STATUS_LOADING;
             fileCheckpoint->mStartTime = time(NULL);
             dumpFlag = true;
-            LOG_INFO(sLogger, ("Adhoc file start reading, job name", mAdhocJobName)("file name", fileCheckpointKey->mFileName)
-                ("file size", fileCheckpointKey->mFileSize)("dev", fileCheckpointKey->mDevInode.dev)("inode", fileCheckpointKey->mDevInode.inode));
+            LOG_INFO(sLogger, ("Adhoc file start reading, job name", mAdhocJobName)("file name", fileCheckpoint->mFileName)
+                ("file size", fileCheckpoint->mSize)("dev", fileCheckpoint->mDevInode.dev)("inode", fileCheckpoint->mDevInode.inode));
         }
         if (fileCheckpoint->mOffset == fileCheckpoint->mSize) {
             fileCheckpoint->mStatus = STATUS_FINISHED;
             indexChangeFlag = true;
             dumpFlag = true;
-            LOG_INFO(sLogger, ("Adhoc file finish reading, job name", mAdhocJobName)("file name", fileCheckpointKey->mFileName)
-                ("file size", fileCheckpointKey->mFileSize)("dev", fileCheckpointKey->mDevInode.dev)("inode", fileCheckpointKey->mDevInode.inode));
+            LOG_INFO(sLogger, ("Adhoc file finish reading, job name", mAdhocJobName)("file name", fileCheckpoint->mFileName)
+                ("file size", fileCheckpoint->mSize)("dev", fileCheckpoint->mDevInode.dev)("inode", fileCheckpoint->mDevInode.inode));
         }
     }
     fileCheckpoint->mLastUpdateTime = time(NULL);
@@ -140,11 +124,13 @@ bool AdhocJobCheckpoint::Load(const std::string& path) {
                 fileCheckpoint->mSignatureSize = file["sig_size"].asUInt();
                 fileCheckpoint->mStartTime = file["start_time"].asInt();
                 fileCheckpoint->mLastUpdateTime = file["update_time"].asInt();
+                fileCheckpoint->mRealFileName = file["real_file_name"].asString();
                 break;
             case STATUS_FINISHED:
                 fileCheckpoint->mSize = file["size"].asInt64();
                 fileCheckpoint->mStartTime = file["start_time"].asInt();
                 fileCheckpoint->mLastUpdateTime = file["update_time"].asInt();
+                fileCheckpoint->mRealFileName = file["real_file_name"].asString();
                 break;
             case STATUS_LOST:
                 fileCheckpoint->mLastUpdateTime = file["update_time"].asInt();
@@ -192,11 +178,13 @@ void AdhocJobCheckpoint::Dump(const std::string& path) {
             file["sig_size"] = fileCheckpoint->mSignatureSize;
             file["start_time"] = fileCheckpoint->mStartTime;
             file["update_time"] = fileCheckpoint->mLastUpdateTime;
+            file["real_file_name"] = fileCheckpoint->mRealFileName;
             break;
         case STATUS_FINISHED:
             file["size"] = fileCheckpoint->mSize;
             file["start_time"] = fileCheckpoint->mStartTime;
             file["update_time"] = fileCheckpoint->mLastUpdateTime;
+            file["real_file_name"] = fileCheckpoint->mRealFileName;
             break;
         case STATUS_LOST:
             file["update_time"] = fileCheckpoint->mLastUpdateTime;
@@ -227,12 +215,16 @@ bool AdhocJobCheckpoint::CheckFileConsistence(const AdhocFileCheckpointKey* file
         return false;
     }
     AdhocFileCheckpointPtr fileCheckpoint = mAdhocFileCheckpointList[mCurrentFileIndex];
-    if (fileCheckpoint->mFileName == fileCheckpointKey->mFileName && fileCheckpoint->mDevInode == fileCheckpointKey->mDevInode) {
+    if (fileCheckpoint->mSignatureHash == fileCheckpointKey->mSignatureHash
+        && fileCheckpoint->mSignatureSize == fileCheckpointKey->mSignatureSize
+        && fileCheckpoint->mDevInode == fileCheckpointKey->mDevInode) {
         return true;
     } else {
         LOG_WARNING(sLogger, 
-            ("Get AdhocFileCheckpoint fail, current FileCheckpoint in Job is not same as AdhocFileCheckpointKey, AdhocFileCheckpointKey's name",
-            fileCheckpointKey->mFileName)("AdhocFileCheckpoint's name", fileCheckpoint->mFileName));
+            ("Get AdhocFileCheckpoint fail", "current FileCheckpoint in Job is not same as AdhocFileCheckpointKey")
+            ("AdhocFileCheckpoint's name", fileCheckpoint->mFileName)
+            ("AdhocFileCheckpoint's Inode", fileCheckpoint->mDevInode.inode)
+            ("AdhocFileCheckpointKey's Inode", fileCheckpointKey->mDevInode.inode));
         return false;
     }
 }
