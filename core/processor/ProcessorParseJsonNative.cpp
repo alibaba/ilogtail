@@ -79,7 +79,6 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
     bool res = true;
     res = JsonLogLineParser(sourceEvent, logPath, e);
 
-
     if (!res && !mDiscardUnmatch) {
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                rawContent,
@@ -97,7 +96,6 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
     mProcDiscardRecordsTotal->Add(1);
     return false;
 }
-
 
 bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
                                                  const StringView& logPath,
@@ -199,7 +197,6 @@ void ProcessorParseJsonNative::AddLog(const StringView& key, const StringView& v
     *mLogGroupSize += keyValueSize + 5;
     mProcParseOutSizeBytes->Add(keyValueSize);
 }
-
 
 bool ProcessorParseJsonNative::IsSupportedEvent(const PipelineEventPtr& e) {
     return e.Is<LogEvent>();
