@@ -69,7 +69,6 @@ private:
     AdhocEvent* PopEventQueue();
     void ProcessReadFileEvent(AdhocEvent* ev);
     void ProcessStopJobEvent(AdhocEvent* ev);
-    void ReadFile(AdhocEvent* ev, AdhocFileCheckpointPtr cp);
 
     AdhocCheckpointManager* mAdhocCheckpointManager;
     std::queue<AdhocEvent*> mEventQueue;

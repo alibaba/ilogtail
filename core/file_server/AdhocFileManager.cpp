@@ -92,36 +92,19 @@ void AdhocFileManager::ProcessLoop() {
 void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
     std::string jobName = ev->GetJobName();
     AdhocFileKey* fileKey = ev->GetAdhocFileKey();
-    AdhocFileReaderKey* fileReaderKey = ev->GetAdhocFileReaderKey();
     AdhocJobCheckpointPtr jobCheckpoint = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName);
     AdhocFileCheckpointPtr fileCheckpoint = mAdhocCheckpointManager->GetAdhocFileCheckpoint(jobName, fileKey);
 
     // read file and change offset
-    ReadFile(ev, fileCheckpoint);
-
-    // if file's status changed, dump job's checkpoint
+    // ReadFile(ev);
     mAdhocCheckpointManager->UpdateAdhocFileCheckpoint(jobName, fileKey, fileCheckpoint);
 
     // Push file of this job into queue
     int32_t nowFileIndex = jobCheckpoint->GetCurrentFileIndex();
     if (nowFileIndex < mJobFileKeyLists[jobName].size()) {
-        AdhocFileKey* newFileKey = mJobFileKeyLists[jobName][nowFileIndex];
-        AdhocEvent* newEv = new AdhocEvent(EVENT_READ_FILE, ev->GetAdhocFileReaderKey());
+        AdhocEvent* newEv = new AdhocEvent(EVENT_READ_FILE, &AdhocFileReaderKey(jobName, mJobFileKeyLists[jobName][nowFileIndex]));
         PushEventQueue(newEv);
     }
-}
-
-void AdhocFileManager::ReadFile(AdhocEvent* ev, AdhocFileCheckpointPtr ptr) {
-    // if (ptr->mStartTime == 0) {
-    //     ptr->mStartTime = time(NULL);
-    // }
-    // if (ev->GetInode() == ptr->mDevInode.inode) { // check
-    //     // read
-    //     // ptr->mOffset += 1024;
-    // } else {
-    //     // file cannot find
-    //     ptr->mOffset = -1;
-    // }
 }
 
 void AdhocFileManager::ProcessStopJobEvent(AdhocEvent* ev) {
