@@ -38,12 +38,6 @@ bool ProcessorParseRegexNative::Init(const ComponentConfig& componentConfig) {
         std::list<std::string>::iterator keyitr = config.mKeys->begin();
         for (; regitr != config.mRegs->end() && keyitr != config.mKeys->end(); ++regitr, ++keyitr) {
             AddUserDefinedFormat(*regitr, *keyitr);
-            if (*keyitr == mSourceKey) {
-                mSourceKeyOverwritten = true;
-            }
-            if (*keyitr == mRawLogTag) {
-                mRawLogTagOverwritten = true;
-            }
         }
         if (mUploadRawLog && mRawLogTag == mSourceKey) {
             mSourceKeyOverwritten = true;
@@ -124,6 +118,14 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
 
 void ProcessorParseRegexNative::AddUserDefinedFormat(const std::string& regStr, const std::string& keys) {
     std::vector<std::string> keyParts = StringSpliter(keys, ",");
+    for (auto& it : keyParts) {
+        if (it == mSourceKey) {
+            mSourceKeyOverwritten = true;
+        }
+        if (it == mRawLogTag) {
+            mRawLogTagOverwritten = true;
+        }
+    }
     boost::regex reg(regStr);
     bool isWholeLineMode = regStr == "(.*)";
     mUserDefinedFormat.push_back(UserDefinedFormat(reg, keyParts, isWholeLineMode));
