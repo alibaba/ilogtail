@@ -19,8 +19,6 @@
 #include "models/LogEvent.h"
 #include "plugin/ProcessorInstance.h"
 #include "config_manager/ConfigManager.h"
-
-
 namespace logtail {
 
 ProcessorFilterNative::~ProcessorFilterNative() {
@@ -179,7 +177,7 @@ bool ProcessorFilterNative::FilterExpressionRoot(LogEvent& sourceEvent, const Ba
         return node->Match(contents, GetContext());
     } catch (...) {
         mProcFilterErrorTotal->Add(1);
-        LOG_ERROR(sLogger, ("filter error ", ""));
+        LOG_ERROR(GetContext().GetLogger(), ("filter error ", ""));
         return false;
     }
 }
@@ -194,7 +192,6 @@ bool ProcessorFilterNative::FilterFilterRule(LogEvent& sourceEvent, const LogFil
     if (filterRule == NULL) {
         return true;
     }
-
 
     try {
         return IsMatched(contents, *filterRule);
@@ -241,10 +238,10 @@ bool ProcessorFilterNative::IsMatched(const LogContents& contents, const LogFilt
                 LOG_ERROR(GetContext().GetLogger(), ("regex_match in Filter fail", exception));
                 if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
                     GetContext().GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
-                                                           "regex_match in Filter fail:" + exception,
-                                                           GetContext().GetProjectName(),
-                                                           GetContext().GetLogstoreName(),
-                                                           GetContext().GetRegion());
+                                                      "regex_match in Filter fail:" + exception,
+                                                      GetContext().GetProjectName(),
+                                                      GetContext().GetLogstoreName(),
+                                                      GetContext().GetRegion());
                 }
             }
             return false;
