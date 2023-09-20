@@ -484,53 +484,53 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         auto sourceBuffer1 = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup1(sourceBuffer1);
         std::string inJson = R"({
-        "events" :
-        [
-            {
-                "contents" :
+            "events" :
+            [
                 {
-                    "key1" : "value1xxxxx",
-                    "key2" : "value2xxxxx",
-                    "log.file.offset": "0"
+                    "contents" :
+                    {
+                        "key1" : "value1xxxxx",
+                        "key2" : "value2xxxxx",
+                        "log.file.offset": "0"
+                    },
+                    "timestampNanosecond" : 0,
+                    "timestamp" : 12345678901,
+                    "type" : 1
                 },
-                "timestampNanosecond" : 0,
-                "timestamp" : 12345678901,
-                "type" : 1
-            },
-            {
-                "contents" :
                 {
-                    "key1" : "abcdeavalue1",
-                    "key2" : "value2xxxxx",
-                    "log.file.offset": "0"
-                },
-                "timestampNanosecond" : 0,
-                "timestamp" : 12345678901,
-                "type" : 1
-            }
-        ]
-    })";
+                    "contents" :
+                    {
+                        "key1" : "abcdeavalue1",
+                        "key2" : "value2xxxxx",
+                        "log.file.offset": "0"
+                    },
+                    "timestampNanosecond" : 0,
+                    "timestamp" : 12345678901,
+                    "type" : 1
+                }
+            ]
+        })";
         eventGroup1.FromJsonString(inJson);
         // run function
         processorInstance.Process(eventGroup1);
         std::string outJson = eventGroup1.ToJsonString();
         // judge result
         std::string expectJson = R"({
-        "events" : 
-        [
-            {
-                "contents" : 
+            "events" : 
+            [
                 {
-                    "key1" : "abcdeavalue1",
-                    "key2" : "value2xxxxx",
-                    "log.file.offset" : "0"
-                },
-                "timestamp" : 12345678901,
-                "timestampNanosecond" : 0,
-                "type" : 1
-            }
-        ]
-    })";
+                    "contents" : 
+                    {
+                        "key1" : "abcdeavalue1",
+                        "key2" : "value2xxxxx",
+                        "log.file.offset" : "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
         APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 
@@ -538,20 +538,20 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         auto sourceBuffer2 = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup2(sourceBuffer2);
         inJson = R"({
-        "events" :
-        [
-            {
-                "contents" :
+            "events" :
+            [
                 {
-                    "key1" : "abcvalue1",
-                    "log.file.offset": "0"
-                },
-                "timestampNanosecond" : 0,
-                "timestamp" : 12345678901,
-                "type" : 1
-            }
-        ]
-    })";
+                    "contents" :
+                    {
+                        "key1" : "abcvalue1",
+                        "log.file.offset": "0"
+                    },
+                    "timestampNanosecond" : 0,
+                    "timestamp" : 12345678901,
+                    "type" : 1
+                }
+            ]
+        })";
         eventGroup2.FromJsonString(inJson);
         // run function
         processorInstance.Process(eventGroup2);
@@ -610,9 +610,259 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value rootNode;
         APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
 
+        // init
+        Config mConfig;
+        mConfig.mLogType = JSON_LOG;
+        mConfig.mDiscardNoneUtf8 = true;
+        mConfig.mAdvancedConfig.mFilterExpressionRoot = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        ComponentConfig componentConfig(pluginId, mConfig);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+
         // (a and not d) and (b or c)
         BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
         APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+
+        auto sourceBuffer1 = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup1(sourceBuffer1);
+        std::string inJson = R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "a" : "100",
+                        "b" : "xxx",
+                        "c" : "192.168.1.1",
+                        "d" : "2008-08-08",
+                        "log.file.offset": "0"
+                    },
+                    "timestampNanosecond" : 0,
+                    "timestamp" : 12345678901,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "a" : "100",
+                        "b" : "xxx",
+                        "c" : "888.168.1.1",
+                        "d" : "1999-1-1",
+                        "log.file.offset": "0"
+                    },
+                    "timestampNanosecond" : 0,
+                    "timestamp" : 12345678901,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "a" : "aaa",
+                        "b" : "xxx",
+                        "c" : "8.8.8.8",
+                        "d" : "2222-22-22",
+                        "log.file.offset": "0"
+                    },
+                    "timestampNanosecond" : 0,
+                    "timestamp" : 12345678901,
+                    "type" : 1
+                }
+            ]
+        })";
+        eventGroup1.FromJsonString(inJson);
+        // run function
+        processorInstance.Process(eventGroup1);
+        std::string outJson = eventGroup1.ToJsonString();
+        // judge result
+        APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
+        APSARA_TEST_EQUAL_FATAL(3, processor.mProcParseErrorTotal->GetValue());
+        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+    }
+    {
+        const char* jsonStr = "{\n"
+                              "  \"operator\": \"and\",\n"
+                              "  \"operands\": [\n"
+                              "    {\n"
+                              "      \"type\": \"regex\",\n"
+                              "      \"key\": \"a\",\n"
+                              "      \"exp\": \"regex1\"\n"
+                              "    },\n"
+                              "    {\n"
+                              "      \"type\": \"regex\",\n"
+                              "      \"key\": \"b\",\n"
+                              "      \"exp\": \"regex2\"\n"
+                              "    }\n"
+                              "  ]\n"
+                              "}";
+        Json::Reader reader;
+        Json::Value rootNode;
+        APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
+
+        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+    }
+
+    {
+        const char* jsonStr = "{\n"
+                              "    \"key\": \"a\",\n"
+                              "    \"exp\": \"xxx\",\n"
+                              "    \"type\": \"regex\"\n"
+                              "}";
+        Json::Reader reader;
+        Json::Value rootNode;
+        APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
+
+        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+    }
+
+    {
+        // not operator
+        const char* jsonStr = "{\n"
+                              "  \"operator\": \"not\",\n"
+                              "  \"operands\": [\n"
+                              "    {\n"
+                              "      \"type\": \"regex\",\n"
+                              "      \"key\": \"a\",\n"
+                              "      \"exp\": \"regex1\"\n"
+                              "    }\n"
+                              "  ]\n"
+                              "}";
+        Json::Reader reader;
+        Json::Value rootNode;
+        APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
+
+        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+    }
+
+    {
+        // missing reg
+        const char* jsonStr = "{\n"
+                              "  \"operator\": \"and\",\n"
+                              "  \"operands\": [\n"
+                              "    {\n"
+                              "      \"type\": \"regex\",\n"
+                              "      \"key\": \"a\",\n"
+                              "      \"exp\": \"regex1\"\n"
+                              "    },\n"
+                              "    {\n"
+                              "      \"operator\": \"or\",\n"
+                              "      \"operands\": [\n"
+                              "        {\n"
+                              "          \"type\": \"regex\",\n"
+                              "          \"key\": \"b\"\n"
+                              "        },\n"
+                              "        {\n"
+                              "          \"type\": \"regex\",\n"
+                              "          \"key\": \"c\",\n"
+                              "          \"exp\": \"regex3\"\n"
+                              "        }\n"
+                              "      ]\n"
+                              "    }\n"
+                              "  ]\n"
+                              "}";
+        Json::Reader reader;
+        Json::Value rootNode;
+        APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
+
+        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        APSARA_TEST_TRUE_FATAL(root.get() == NULL);
+    }
+
+    {
+        // missing right
+        const char* jsonStr = "{\n"
+                              "  \"operator\": \"and\",\n"
+                              "  \"operands\": [\n"
+                              "    {\n"
+                              "      \"type\": \"regex\",\n"
+                              "      \"key\": \"a\",\n"
+                              "      \"exp\": \"regex1\"\n"
+                              "    },\n"
+                              "    {\n"
+                              "      \"operator\": \"or\",\n"
+                              "      \"operands\": [\n"
+                              "        {\n"
+                              "          \"type\": \"regex\",\n"
+                              "          \"key\": \"b\",\n"
+                              "          \"exp\": \"regex2\"\n"
+                              "        }\n"
+                              "      ]\n"
+                              "    }\n"
+                              "  ]\n"
+                              "}";
+        Json::Reader reader;
+        Json::Value rootNode;
+        APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
+
+        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        APSARA_TEST_TRUE_FATAL(root.get() == NULL);
+    }
+
+    {
+        // missing op
+        const char* jsonStr = "{\n"
+                              "  \"operator\": \"and\",\n"
+                              "  \"operands\": [\n"
+                              "    {\n"
+                              "      \"type\": \"regex\",\n"
+                              "      \"key\": \"a\",\n"
+                              "      \"exp\": \"regex1\"\n"
+                              "    },\n"
+                              "    {\n"
+                              "      \"operands\": [\n"
+                              "        {\n"
+                              "          \"type\": \"regex\",\n"
+                              "          \"key\": \"b\",\n"
+                              "          \"exp\": \"regex2\"\n"
+                              "        },\n"
+                              "        {\n"
+                              "          \"type\": \"regex\",\n"
+                              "          \"key\": \"c\",\n"
+                              "          \"exp\": \"regex3\"\n"
+                              "        }\n"
+                              "      ]\n"
+                              "    }\n"
+                              "  ]\n"
+                              "}";
+        Json::Reader reader;
+        Json::Value rootNode;
+        APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
+
+        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        APSARA_TEST_TRUE_FATAL(root.get() == NULL);
+    }
+
+    // redundant fields
+    {
+        const char* jsonStr = "{\n"
+                              "  \"operator\": \"and\",\n"
+                              "  \"operands\": [\n"
+                              "    {\n"
+                              "      \"type\": \"regex\",\n"
+                              "      \"key\": \"b\",\n"
+                              "      \"exp\": \"regex2\"\n"
+                              "    },\n"
+                              "    {\n"
+                              "      \"type\": \"regex\",\n"
+                              "      \"key\": \"c\",\n"
+                              "      \"exp\": \"regex3\"\n"
+                              "    }\n"
+                              "  ],\n"
+                              "  \"type\": \"regex\",\n"
+                              "  \"key\": \"c\",\n"
+                              "  \"exp\": \"regex3\"\n"
+                              "}";
+        Json::Reader reader;
+        Json::Value rootNode;
+        APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
+
+        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+        APSARA_TEST_TRUE(root->GetNodeType() == OPERATOR_NODE);
     }
 }
 
