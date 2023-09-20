@@ -43,17 +43,14 @@ void ProcessorDesensitizerNative::Process(PipelineEventGroup& logGroup) {
     EventsContainer& events = logGroup.MutableEvents();
 
     for (auto it = events.begin(); it != events.end();) {
-        if (ProcessEvent(logPath, *it)) {
-            ++it;
-        } else {
-            it = events.erase(it);
-        }
+        ProcessEvent(logPath, *it);
+        ++it;
     }
 }
 
-bool ProcessorDesensitizerNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e) {
+void ProcessorDesensitizerNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e) {
     if (!IsSupportedEvent(e)) {
-        return true;
+        return ;
     }
 
     auto& sourceEvent = e.Cast<LogEvent>();
@@ -69,13 +66,12 @@ bool ProcessorDesensitizerNative::ProcessEvent(const StringView& logPath, Pipeli
         std::string value = content.second.to_string();
         CastOneSensitiveWord(key, &value);
 
-        StringBuffer valueBuffer
-            = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(value.size() + 1);
+        StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(value.size() + 1);
         strcpy(valueBuffer.data, value.c_str());
         valueBuffer.size = value.size();
         contents[content.first] = StringView(valueBuffer.data, valueBuffer.size);
     }
-    return true;
+    return ;
 }
 
 void ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, std::string* value) {
