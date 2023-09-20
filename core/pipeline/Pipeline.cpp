@@ -107,17 +107,17 @@ bool Pipeline::Init(const PipelineConfig& config) {
         return false;
     }
 
-    std::unique_ptr<ProcessorInstance> pluginDesensitizer = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorDesensitizerNative::Name(),
-        std::string(ProcessorDesensitizerNative::Name()) + "/" + std::to_string(pluginIndex++));
-    if (!InitAndAddProcessor(std::move(pluginDesensitizer), config)) {
-        return false;
-    }
-
     std::unique_ptr<ProcessorInstance> pluginTime = PluginRegistry::GetInstance()->CreateProcessor(
         ProcessorParseTimestampNative::Name(),
         std::string(ProcessorParseTimestampNative::Name()) + "/" + std::to_string(pluginIndex++));
     if (!InitAndAddProcessor(std::move(pluginTime), config)) {
+        return false;
+    }
+
+    std::unique_ptr<ProcessorInstance> pluginDesensitizer = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorDesensitizerNative::Name(),
+        std::string(ProcessorDesensitizerNative::Name()) + "/" + std::to_string(pluginIndex++));
+    if (!InitAndAddProcessor(std::move(pluginDesensitizer), config)) {
         return false;
     }
 
