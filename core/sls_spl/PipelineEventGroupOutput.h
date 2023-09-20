@@ -16,8 +16,8 @@ class PipelineEventGroupOutput : public Output {
     std::unordered_map<int32_t, std::string> mConstColumns;
     bool mWithSleep;
 
-    PipelineEventGroup* mLogGroup;
-    EventsContainer* mNewEvents;
+    PipelineEventGroup* mLogGroup = nullptr;
+    EventsContainer* mNewEvents = nullptr;
 
 
    public:

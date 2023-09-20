@@ -18,10 +18,7 @@ append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
 
 
-#set(SPL_DEPS_INCLUDE_ROOT "/opt/logtail_spl")
 include_directories("/opt/logtail_spl/include")
 link_directories("/opt/logtail_spl/lib")
-
-target_link_libraries(${PROJECT_NAME} models)
 
 link_slsspl(${PROJECT_NAME})

@@ -31,11 +31,6 @@ logtail_define(DEPS_BINARY_ROOT "" "${DEPS_ROOT}/bin")
 include_directories("${DEPS_INCLUDE_ROOT}")
 link_directories("${DEPS_LIBRARY_ROOT}")
 
-
-#set(SPL_DEPS_INCLUDE_ROOT "/opt/logtail_spl")
-#include_directories("/opt/logtail_spl/include")
-#link_directories("/opt/logtail_spl/lib")
-
 # Each dependency has three related variables can be set:
 # - {dep_name}_INCLUDE_DIR
 # - {dep_name}_LIBRARY_DIR
@@ -385,9 +380,8 @@ macro(link_slsspl target_name)
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_protocol.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_type_converter.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_operators.a")
-
-
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_exec.a")
+
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_prestosql.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_prestosql_impl.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_aggregates.a")
@@ -399,11 +393,11 @@ macro(link_slsspl target_name)
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_core.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_config.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_coverage_util.a")
-
-
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_catalog_fbhive.a")
+
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_reader.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_writer.a")
+    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_utils.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_common.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_proto.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_common.a")
@@ -448,36 +442,13 @@ macro(link_slsspl target_name)
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_vector_fuzzer.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_window.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_common_base.a")
-
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_duckdb_parser.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_duckdb_allocator.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_duckdb_conversion.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_duckdb_functions.a")
 
 
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_dwio_dwrf_utils.a")
-
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_spark.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_spark_aggregates.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_functions_spark_window.a")
-
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvelox_presto_types.a")
-
-
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libLogAdapterV6.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libLogClientV6.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libShennongCommonLib.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libSplParserClient.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libasync.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libatomic_value_lib.a")
-
-
-
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcompiler.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcompiler_ast.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcompiler_base.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libconcurrency.a")
-
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libdbgen.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libduckdb.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libhttp_filters.a")
@@ -537,25 +508,5 @@ macro(link_slsspl target_name)
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libssl.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcrypto.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libevent_pthreads.a")
-
-
-
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libgflags_nothreads.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libgmock.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libgmock_main.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libkms_ehttpclient.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/liblogclient.a")
- 
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libmustache.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libnsp_simple.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libots_io_lib.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libots_sdk_common_shennong.a")
-
-
-
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/librpcmetadata.a")
-
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libsls_common_encrypt.a")
-    target_link_libraries(${target_name} "/opt/logtail_spl/lib/libstdc++.a")
 
 endmacro()
