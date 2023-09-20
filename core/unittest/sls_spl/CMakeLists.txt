@@ -17,6 +17,3 @@ project(sls_spl_unittest)
 
 add_executable(sls_spl_unittest SlsSplUnittest.cpp)
 target_link_libraries(sls_spl_unittest unittest_base)
-
-include_directories("/opt/logtail_spl/include")
-link_slsspl(${PROJECT_NAME})

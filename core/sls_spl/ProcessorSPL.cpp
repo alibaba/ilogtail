@@ -20,9 +20,9 @@
 #include "cmd/MapRowInput.h"
 #include "logger/StdoutLogger.h"
 #include "pipeline/SplPipeline.h"
-#include "sls_spl/StdoutOutput.h"
 #include "sls_spl/PipelineEventGroupInput.h"
 #include "sls_spl/PipelineEventGroupOutput.h"
+#include "logger/Logger.h"
 
 
 using namespace apsara::sls::spl;
@@ -99,8 +99,6 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     Config config = componentConfig.GetConfig();
    
     // SetMetricsRecordRef(Name(), componentConfig.GetId());
-
-    // 全局初始化一次SPLLib，多次调用幂等
     initSPL();
 
     // logger初始化
@@ -111,15 +109,25 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     // 从parser服务，获取spl plan
     const std::string parserEndpoint = "http://11.164.91.19:15107/v1/spl";
     long httpCode = 0;
-    //std::string splPlan;
+    std::string splPlan;
     std::string spl = config.mSpl;
-    bool isSuccess = httpPost(parserEndpoint, spl, httpCode, mSplPlan, errorMsg);
+    bool isSuccess = httpPost(parserEndpoint, spl, httpCode, splPlan, errorMsg);
     if (!isSuccess) {
-        std::cerr << "request spl parser failed: " << errorMsg << ", spl is:" << spl << std::endl;
+        LOG_ERROR(sLogger, ("request spl parser failed ", errorMsg)("spl ", spl));
         return false;
     }
 
-    std::cout << "splPlan: " << mSplPlan << std::endl;
+    LOG_INFO(sLogger, ("splPlan", splPlan));
+
+    const uint64_t timeoutMills = 100;
+    const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
+    // SplPipeline spip = SplPipeline(splPlan, error, timeoutMills, maxMemoryBytes, logger);
+    Error error;
+    mSPLPipelinePtr = std::make_shared<SplPipeline>(splPlan, error, timeoutMills, maxMemoryBytes, logger);
+    if (error.code_ != StatusCode::OK) {
+        LOG_ERROR(sLogger, ("pipeline create error", error.msg_));
+        return false;
+    }
     return true;
 }
 
@@ -130,54 +138,39 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     // logger初始化
     // logger由调用方提供
     auto logger = std::make_shared<StdoutLogger>();
-    
-    Error error;
-    // const uint64_t timeoutMills = 100;
-    // const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
-    // SplPipeline spip = SplPipeline(splPlan, error, timeoutMills, maxMemoryBytes, logger);
-    Error err;
-    SplPipeline spip(mSplPlan, err);
-    if (error.code_ != StatusCode::OK) {
-        SPL_LOG_ERROR(logger, ("pipeline create error", error.msg_));
-        return;
-    }
 
     std::vector<std::string> colNames{"timestamp", "timestampNanosecond", "content"};
     
     auto input = std::make_shared<PipelineEventGroupInput>(colNames, logGroup);
 
     // 根据spip->getInputSearches()，设置input数组
-    // 此处需要调用方实现 RowInput
     std::vector<InputPtr> inputs;
-    for (auto search : spip.getInputSearches()) {
+    for (auto search : mSPLPipelinePtr->getInputSearches()) {
         inputs.push_back(input);
     }
 
     // 根据spip->getOutputLabels()，设置output数组
-    // 此处需要调用方实现 Output
     std::vector<OutputPtr> outputs;
     EventsContainer newEvents;
 
-    for (auto resultTaskLabel : spip.getOutputLabels()) {
+    for (auto resultTaskLabel : mSPLPipelinePtr->getOutputLabels()) {
         outputs.emplace_back(std::make_shared<PipelineEventGroupOutput>(logGroup, newEvents, resultTaskLabel));
     }
-
-    // pipeline.execute可以多次调用，每次处理一个chunk构造readers/writers
-    // pipeline.execute支持多线程调用
 
     // 开始调用pipeline.execute
     // 传入inputs, outputs
     // 输出pipelineStats, error
     PipelineStatsPtr pipelineStatsPtr = std::make_shared<PipelineStats>();
-    auto errCode = spip.execute(inputs, outputs, &errorMsg, pipelineStatsPtr);
+    auto errCode = mSPLPipelinePtr->execute(inputs, outputs, &errorMsg, pipelineStatsPtr);
     if (errCode != StatusCode::OK) {
-        SPL_LOG_ERROR(logger, ("execute error", errorMsg));
+        LOG_INFO(sLogger, ("execute error", errorMsg));
         return;
     }
+
     logGroup.SwapEvents(newEvents);
 
     logGroupList.emplace_back(logGroup);
-    std::cout << "pipelineStats: " << *pipelineStatsPtr.get() << std::endl;
+    LOG_INFO(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
     return;
 }
 

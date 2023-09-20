@@ -10,20 +10,19 @@ namespace apsara::sls::spl {
 
 class PipelineEventGroupOutput : public Output {
    private:
-    std::string taskLabel_;
-    int32_t rowSize_;
-    int32_t currentRow_;
-    std::vector<SplStringPiece> columnNames_;
-    std::unordered_map<int32_t, std::string> constColumns_;
-    bool withSleep_;
+    std::string mTaskLabel;
+    int32_t mRowSize;
+    std::vector<SplStringPiece> mColumnNames;
+    std::unordered_map<int32_t, std::string> mConstColumns;
+    bool mWithSleep;
 
-    PipelineEventGroup* logGroups_;
-    EventsContainer* newEvents_;
+    PipelineEventGroup* mLogGroup;
+    EventsContainer* mNewEvents;
 
 
    public:
     PipelineEventGroupOutput(PipelineEventGroup& logGroups, EventsContainer& newEvents, const std::string& taskLabel = "", bool withSleep = false)
-        :logGroups_(&logGroups), newEvents_(&newEvents), taskLabel_(taskLabel), withSleep_(withSleep) {}
+        :mLogGroup(&logGroups), mNewEvents(&newEvents), mTaskLabel(taskLabel), mWithSleep(withSleep) {}
     virtual ~PipelineEventGroupOutput() {
         
     }

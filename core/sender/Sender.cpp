@@ -763,8 +763,6 @@ bool Sender::HasNetworkAvailable() {
 }
 
 sdk::Client* Sender::GetSendClient(const std::string& region, const std::string& aliuid, bool createIfNotFound) {
-    //std::string region = "cn-hongkong";
-    //std::string aliuid = "1654218965343050";
     string key = region + "_" + aliuid;
     {
         PTScopedLock lock(mSendClientLock);
@@ -781,7 +779,6 @@ sdk::Client* Sender::GetSendClient(const std::string& region, const std::string&
 
     int32_t lastUpdateTime;
     string endpoint = GetRegionCurrentEndpoint(region);
-    //endpoint = "cn-hongkong.log.aliyuncs.com";
     sdk::Client* sendClient = new sdk::Client(endpoint,
                                               "",
                                               "",

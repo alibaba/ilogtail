@@ -17,6 +17,10 @@
 #include "processor/Processor.h"
 #include <string>
 
+namespace apsara::sls::spl {
+    class SplPipeline;
+}
+
 namespace logtail {
 
 class ProcessorSPL  {
@@ -29,11 +33,6 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e);
 
 private:
-
-    std::string mSplPlan;
-    //SplPipelinePtr mSPLPipelinePtr;
-#ifdef APSARA_UNIT_TEST_MAIN
-    //friend class ProcessorFillGroupInfoNativeUnittest;
-#endif
+    std::shared_ptr<apsara::sls::spl::SplPipeline> mSPLPipelinePtr;
 };
 } // namespace logtail
