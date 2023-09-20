@@ -15,27 +15,24 @@
  */
 
 #pragma once
-#include "config/Config.h"
+#include "Input.h"
 #include "file_server/AdhocFileManager.h"
 
 namespace logtail {
 
-class InputStaticFile {
+class InputStaticFile : Input {
 private:
     void GetStaticFileList();
     void SortFileList();
 
     std::string mJobName;
     AdhocFileManager* mAdhocFileManager;
-    std::vector<StaticFile> mFileList;
+    std::vector<std::string> mFilePathList;
     
 public:
-    InputStaticFile(/* args */);
-    ~InputStaticFile();
-
-    void Init(Config &&config);
-    void Start();
-    void Stop(bool isRemoving);
+    bool Init(const Config& config);
+    bool Start();
+    bool Stop(bool isPipelineRemoving);
 };
 
 }

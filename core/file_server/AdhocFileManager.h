@@ -17,14 +17,44 @@
 #pragma once
 #include <queue>
 #include <unordered_set>
+#include "config/Config.h"
 #include "checkpoint/AdhocCheckpointManager.h"
-#include "event/Event.h"
 
 namespace logtail {
 
-struct StaticFile {
-    std::string mFilePath;
-    DevInode mDevInode;
+struct AdhocFileReaderKey {
+    AdhocFileReaderKey() { mJobName = "", mFileKey = &AdhocFileKey(); }
+    AdhocFileReaderKey(std::string jobName): mJobName(jobName) { mFileKey = &AdhocFileKey(); }
+    AdhocFileReaderKey(std::string jobName, AdhocFileKey* fileKey): mJobName(jobName), mFileKey(fileKey) {}
+    std::string mJobName;
+    AdhocFileKey* mFileKey;
+};
+
+enum AdhocEventType {
+    EVENT_READ_FILE,
+    EVENT_STOP_JOB,
+};
+
+class AdhocEvent {
+private:
+    void FindJobByName();
+
+    AdhocEventType mType;
+    AdhocFileReaderKey* mReaderKey;
+    std::shared_ptr<Config> mJobConfig;
+
+public:
+    AdhocEvent() {};
+    AdhocEvent(AdhocEventType eventType) : mType(eventType) { mReaderKey = &AdhocFileReaderKey(); }
+    AdhocEvent(AdhocEventType eventType, AdhocFileReaderKey* readerKey) : mType(eventType), mReaderKey(readerKey) {}
+
+    AdhocEventType GetType();
+    std::string GetJobName();
+    AdhocFileKey* GetAdhocFileKey();
+    AdhocFileReaderKey* GetAdhocFileReaderKey();
+    std::shared_ptr<Config> GetJobConfig();
+
+    void SetConfigName(std::string jobName);
 };
 
 class AdhocFileManager {
@@ -35,16 +65,17 @@ private:
     void ProcessLoop();
     static bool mRunFlag;
 
-    void PushEventQueue(Event* ev);
-    Event* PopEventQueue();
-    void ProcessStaticFileEvent(Event* ev);
-    void ProcessDeleteEvent(Event* ev);
-    void ReadFile(Event* ev, AdhocFileCheckpointPtr cp);
+    void PushEventQueue(AdhocEvent* ev);
+    AdhocEvent* PopEventQueue();
+    void ProcessReadFileEvent(AdhocEvent* ev);
+    void ProcessStopJobEvent(AdhocEvent* ev);
+    void ReadFile(AdhocEvent* ev, AdhocFileCheckpointPtr cp);
 
     AdhocCheckpointManager* mAdhocCheckpointManager;
-    std::queue<Event*> mEventQueue;
+    std::queue<AdhocEvent*> mEventQueue;
     std::unordered_set<std::string> mDeletedJobSet;
-    std::unordered_map<std::string, std::vector<StaticFile> > mJobFileLists;
+    std::unordered_map<std::string, std::vector<AdhocFileKey*> > mJobFileKeyLists;
+
 public:
     static AdhocFileManager* GetInstance() {
         static AdhocFileManager* ptr = new AdhocFileManager();
@@ -52,8 +83,8 @@ public:
     }
 
     void Run();
-    void AddJob(std::string jobName, std::vector<StaticFile> fileList);
-    void DeleteJob(std::string jobName);
+    void AddJob(const std::string& jobName, std::vector<std::string> filePathList);
+    void DeleteJob(const std::string& jobName);
 };
 
-}
+} // namespace logtail

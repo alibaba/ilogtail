@@ -18,29 +18,23 @@
 
 namespace logtail {
 
-InputStaticFile::InputStaticFile(/* args */) {
+bool InputStaticFile::Init(const Config& config) {
+    mJobName = config.mConfigName;
+    mAdhocFileManager = AdhocFileManager::GetInstance();
 }
 
-InputStaticFile::~InputStaticFile() {
+bool InputStaticFile::Start() {
+    GetStaticFileList();
+    mAdhocFileManager->AddJob(mJobName, mFilePathList);
 }
 
-void InputStaticFile::Init(Config &&config) {
-    // mAdhocFileManager = AdhocFileManager::GetInstance();
-    // GetStaticFileList();
+bool InputStaticFile::Stop(bool isPipelineRemoving) {
+    mAdhocFileManager->DeleteJob(mJobName);
 }
 
-void InputStaticFile::Start() {
-    // 暂时认为input这里已经把所有要采集的文件都整理出来了
-    // mAdhocFileManager->AddJob(mJobName, mFileList);
-}
-
-void InputStaticFile::Stop(bool isRemoving) {
-    // mAdhocFileManager->DeleteJob(mJobName);
-}
-
-// Init mFileList
+// Init mFilePathList
 void InputStaticFile::GetStaticFileList() {
-    // SortFileList();
+    SortFileList();
 }
 
 void InputStaticFile::SortFileList() {
