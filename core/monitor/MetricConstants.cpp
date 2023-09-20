@@ -32,4 +32,7 @@ const std::string METRIC_PROC_HISTORY_FAILURE_TOTAL = "proc_history_failure_tota
 // processore plugin name
 const std::string PLUGIN_PROCESSOR_PARSE_REGEX_NATIVE = "processor_parse_regex_native";
 
+// processor desensitizer metrics
+const std::string METRIC_PROC_DESENSITIZER_RECORDS_TOTAL = "proc_desensitizer_records_total";
+
 }

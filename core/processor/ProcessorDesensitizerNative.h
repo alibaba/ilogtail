@@ -35,7 +35,7 @@ private:
     void ProcessEvent(PipelineEventPtr& e);
     bool CastOneSensitiveWord(const std::string& key, std::string* value);
 
-    CounterPtr mProcDesensitizerTotal;
+    CounterPtr mProcDesensitizerRecodesTotal;
     CounterPtr mProcParseInSizeBytes;
     CounterPtr mProcParseOutSizeBytes;
 

@@ -29,7 +29,7 @@ bool ProcessorDesensitizerNative::Init(const ComponentConfig& componentConfig) {
     mSensitiveWordCastOptions = mConfig.mSensitiveWordCastOptions;
 
     SetMetricsRecordRef(Name(), componentConfig.GetId());
-    mProcDesensitizerTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZER_TOTAL);
+    mProcDesensitizerRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZER_RECORDS_TOTAL);
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
 
@@ -38,9 +38,6 @@ bool ProcessorDesensitizerNative::Init(const ComponentConfig& componentConfig) {
 
 void ProcessorDesensitizerNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
-        return;
-    }
-    if (mSensitiveWordCastOptions.empty() || mSensitiveWordCastOptions.size() <= (size_t)0) {
         return;
     }
 
@@ -65,16 +62,18 @@ void ProcessorDesensitizerNative::ProcessEvent(PipelineEventPtr& e) {
         const std::string& key = it->first;
         const auto& content = contents.find(key);
         if (content == contents.end()) {
+            ++it;
             continue;
         }
         std::string value = sourceEvent.GetContent(key).to_string();
         mProcParseInSizeBytes->Add(value.size());
         if (CastOneSensitiveWord(key, &value)) {
-            mProcDesensitizerTotal->Add(1);
+            mProcDesensitizerRecodesTotal->Add(1);
             StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
-            sourceEvent.SetContent(key, StringView(valueBuffer.data, valueBuffer.size));
+            sourceEvent.SetContentNoCopy(content.first, StringView(valueBuffer.data, valueBuffer.size));
         }
         mProcParseOutSizeBytes->Add(value.size());
+        ++it;
     }
     return;
 }
