@@ -40,9 +40,8 @@ public:
     bool Load(const std::string& path);
     void Dump(const std::string& path);
 
-    int32_t GetCurrentFileIndex();
+    bool IsFinished();
     std::string GetJobName();
-    std::vector<std::string> GetFileList();
 };
 
 typedef std::shared_ptr<AdhocJobCheckpoint> AdhocJobCheckpointPtr;
