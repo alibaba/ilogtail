@@ -21,13 +21,14 @@
 using namespace std;
 using boost::regex;
 
+DECLARE_FLAG_STRING(user_log_config);
 
 namespace logtail {
 
 class ProcessorFilterNativeUnittest : public ::testing::Test {
 public:
     void SetUp() override {
-        mContext.SetConfigName("logtail_filter.json");
+        mContext.SetConfigName("project##config_0");
         mContext.SetLogstoreName("logstore");
         mContext.SetProjectName("project");
         mContext.SetRegion("cn-shanghai");
@@ -88,7 +89,7 @@ void ProcessorFilterNativeUnittest::TestInit() {
     string config = "{\"filters\" : [{\"project_name\" : \"123_proj\", \"category\" : \"test\", \"keys\" : [\"key1\", "
                     "\"key2\"], \"regs\" : [\"value1\",\"value2\"]}, {\"project_name\" : \"456_proj\", \"category\" : "
                     "\"test_1\", \"keys\" : [\"key1\", \"key2\"], \"regs\" : [\"value1\",\"value2\"]}]}";
-    string path = GetProcessExecutionDir() + "logtail_filter.json";
+    string path = GetProcessExecutionDir() + "user_log_config.json";
     ofstream file(path.c_str());
     file << config;
     file.close();
@@ -124,7 +125,7 @@ void ProcessorFilterNativeUnittest::TestInit() {
 void ProcessorFilterNativeUnittest::TestInitFilterFail() {
     string config = "{\"filters\" : [{\"project_name\" : \"123_proj\", \"category\" : \"test\", \"keys\" : "
                     "[\"key1\", \"key2\"], \"regs\" : [\"value1\",\"value2\", \"value3\"]}]}";
-    string path = GetProcessExecutionDir() + "logtail_filter.json";
+    string path = GetProcessExecutionDir() + "user_log_config.json";
     ofstream file(path.c_str());
     file << config;
     file.close();
@@ -147,7 +148,7 @@ void ProcessorFilterNativeUnittest::TestInitFilterFail() {
 void ProcessorFilterNativeUnittest::TestInitFilterMissFieldFail() {
     string config = "{\"filters\" : [{\"project_name\" : \"123_proj\", \"category\" : \"test\", \"keys\" : "
                     "[\"key1\", \"key2\", \"key3\"], \"regs\" : [\"value1\",\"value2\"]}]}";
-    string path = GetProcessExecutionDir() + "logtail_filter.json";
+    string path = GetProcessExecutionDir() + "user_log_config.json";
     ofstream file(path.c_str());
     file << config;
     file.close();
@@ -171,7 +172,7 @@ void ProcessorFilterNativeUnittest::TestInitFilterMissFieldFail() {
 void ProcessorFilterNativeUnittest::TestFilter() {
     string config = "{\"filters\" : [{\"project_name\" : \"project\", \"category\" : \"logstore\", \"keys\" : "
                     "[\"key1\", \"key2\"], \"regs\" : [\".*value1\",\"value2.*\"]}]}";
-    string path = GetProcessExecutionDir() + "logtail_filter.json";
+    string path = GetProcessExecutionDir() + "user_log_config.json";
     ofstream file(path.c_str());
     file << config;
     file.close();
@@ -442,45 +443,47 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
 }
 // To test bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const BaseFilterNodePtr& node)
 void ProcessorFilterNativeUnittest::TestBaseFilter() {
-    Json::Value root;
+    // case 1
+    {
+        Json::Value root;
 
-    root["operator"] = "and";
+        root["operator"] = "and";
 
-    Json::Value operands1;
-    operands1["key"] = "key1";
-    operands1["exp"] = ".*value1";
-    operands1["type"] = "regex";
+        Json::Value operands1;
+        operands1["key"] = "key1";
+        operands1["exp"] = ".*value1";
+        operands1["type"] = "regex";
 
-    Json::Value operands2;
-    operands2["operator"] = "and";
+        Json::Value operands2;
+        operands2["operator"] = "and";
 
-    Json::Value operands3;
-    operands3["key"] = "key2";
-    operands3["exp"] = "value2.*";
-    operands3["type"] = "regex";
+        Json::Value operands3;
+        operands3["key"] = "key2";
+        operands3["exp"] = "value2.*";
+        operands3["type"] = "regex";
 
-    operands2["operands"].append(operands3);
+        operands2["operands"].append(operands3);
 
-    root["operands"].append(operands1);
-    root["operands"].append(operands2);
+        root["operands"].append(operands1);
+        root["operands"].append(operands2);
 
-    Config mConfig;
-    mConfig.mLogType = JSON_LOG;
-    mConfig.mDiscardNoneUtf8 = true;
+        Config mConfig;
+        mConfig.mLogType = JSON_LOG;
+        mConfig.mDiscardNoneUtf8 = true;
 
-    mConfig.mAdvancedConfig.mFilterExpressionRoot = UserLogConfigParser::ParseExpressionFromJSON(root);
+        mConfig.mAdvancedConfig.mFilterExpressionRoot = UserLogConfigParser::ParseExpressionFromJSON(root);
 
-    // run function
-    ProcessorFilterNative& processor = *(new ProcessorFilterNative);
-    std::string pluginId = "testID";
-    ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, mConfig);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+        // run function
+        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        ComponentConfig componentConfig(pluginId, mConfig);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 
-    // case 1 : the field are all provided,  only one matched
-    auto sourceBuffer1 = std::make_shared<SourceBuffer>();
-    PipelineEventGroup eventGroup1(sourceBuffer1);
-    std::string inJson = R"({
+        // case 1 : the field are all provided,  only one matched
+        auto sourceBuffer1 = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup1(sourceBuffer1);
+        std::string inJson = R"({
         "events" :
         [
             {
@@ -507,12 +510,12 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
             }
         ]
     })";
-    eventGroup1.FromJsonString(inJson);
-    // run function
-    processorInstance.Process(eventGroup1);
-    std::string outJson = eventGroup1.ToJsonString();
-    // judge result
-    std::string expectJson = R"({
+        eventGroup1.FromJsonString(inJson);
+        // run function
+        processorInstance.Process(eventGroup1);
+        std::string outJson = eventGroup1.ToJsonString();
+        // judge result
+        std::string expectJson = R"({
         "events" : 
         [
             {
@@ -528,13 +531,13 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
             }
         ]
     })";
-    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 
-    // case 2 : NOT all fields exist, it
-    auto sourceBuffer2 = std::make_shared<SourceBuffer>();
-    PipelineEventGroup eventGroup2(sourceBuffer2);
-    inJson = R"({
+        // case 2 : NOT all fields exist, it
+        auto sourceBuffer2 = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup2(sourceBuffer2);
+        inJson = R"({
         "events" :
         [
             {
@@ -549,13 +552,68 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
             }
         ]
     })";
-    eventGroup2.FromJsonString(inJson);
-    // run function
-    processorInstance.Process(eventGroup2);
-    outJson = eventGroup2.ToJsonString();
-    // judge result
-    APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+        eventGroup2.FromJsonString(inJson);
+        // run function
+        processorInstance.Process(eventGroup2);
+        outJson = eventGroup2.ToJsonString();
+        // judge result
+        APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
+        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+    }
+    // case 2
+    {
+        // a: int, b: string c: ip, d: date
+        const char* jsonStr
+            = "{\n"
+              "  \"operator\": \"and\",\n"
+              "  \"operands\": [\n"
+              "    {\n"
+              "      \"operator\": \"and\",\n"
+              "      \"operands\": [\n"
+              "        {\n"
+              "          \"type\": \"regex\",\n"
+              "          \"key\": \"a\",\n"
+              "          \"exp\": \"\\\\d+\"\n"
+              "        },\n"
+              "      \t{\n"
+              "      \t  \"operator\": \"not\",\n"
+              "      \t  \"operands\": [\n"
+              "      \t    {\n"
+              "      \t      \"type\": \"regex\",\n"
+              "              \"key\": \"d\",\n"
+              "              \"exp\": \"20\\\\d{1,2}-\\\\d{1,2}-\\\\d{1,2}\"\n"
+              "      \t    }\n"
+              "      \t  ]\n"
+              "      \t}\n"
+              "      ]\n"
+              "    },\n"
+              "    {\n"
+              "      \"operator\": \"or\",\n"
+              "      \"operands\": [\n"
+              "        {\n"
+              "          \"type\": \"regex\",\n"
+              "          \"key\": \"b\",\n"
+              "          \"exp\": \"\\\\S+\"\n"
+              "        },\n"
+              "        {\n"
+              "          \"type\": \"regex\",\n"
+              "          \"key\": \"c\",\n"
+              "          \"exp\": "
+              "\"((2[0-4]\\\\d|25[0-5]|[01]?\\\\d\\\\d?)\\\\.){3}(2[0-4]\\\\d|25[0-5]|[01]?\\\\d\\\\d?)\"\n"
+              "        }\n"
+              "      ]\n"
+              "    }\n"
+              "  ]\n"
+              "}";
+
+        Json::Reader reader;
+        Json::Value rootNode;
+        APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
+
+        // (a and not d) and (b or c)
+        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+    }
 }
 
 static const char UTF8_BYTE_PREFIX = 0x80;
@@ -919,7 +977,6 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
         }
     }
 } // end of case
-
 
 } // namespace logtail
 
