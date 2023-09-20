@@ -33,6 +33,7 @@ const std::string INPUT_FILE_LOG = "file_log";
 const std::string PROCESSOR_REGEX_ACCELERATE = "processor_regex_accelerate";
 const std::string PROCESSOR_JSON_ACCELERATE = "processor_json_accelerate";
 const std::string PROCESSOR_DELIMITER_ACCELERATE = "processor_delimiter_accelerate";
+const std::string PROCESSOR_APSARA_ACCELERATE = "processor_apsara_accelerate";
 
 const std::string PROCESSOR_SPL_ACCELERATE = "processor_spl";
 
@@ -125,10 +126,9 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFilePluginToLogTypeMap[PROCESSOR_REGEX_ACCELERATE] = "common_reg_log";
     mFilePluginToLogTypeMap[PROCESSOR_JSON_ACCELERATE] = "json_log";
     mFilePluginToLogTypeMap[PROCESSOR_DELIMITER_ACCELERATE] = "delimiter_log";
-
+    mFilePluginToLogTypeMap[PROCESSOR_APSARA_ACCELERATE] = "apsara_log";
     // TODO: test for spl
     mFilePluginToLogTypeMap[PROCESSOR_SPL_ACCELERATE] = "spl_log";
-    
 }
 
 string ConfigYamlToJson::GetTransforKey(const string yamlKey) {
