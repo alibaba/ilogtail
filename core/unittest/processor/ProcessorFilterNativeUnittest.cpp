@@ -674,8 +674,28 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         processorInstance.Process(eventGroup1);
         std::string outJson = eventGroup1.ToJsonString();
         // judge result
-        APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
-        APSARA_TEST_EQUAL_FATAL(3, processor.mProcFilterRecordsTotal->GetValue());
+        // judge result
+        std::string expectJson = R"({
+            "events" : 
+            [
+                {
+                    "contents" : 
+                    {
+                        "a" : "100",
+                        "b" : "xxx",
+                        "c" : "888.168.1.1",
+                        "d" : "1999-1-1",
+                        "log.file.offset" : "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
+                    "type" : 1
+                }
+            ]
+        })";
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+
+        APSARA_TEST_EQUAL_FATAL(2, processor.mProcFilterRecordsTotal->GetValue());
     }
     {
         const char* jsonStr = "{\n"
@@ -1213,13 +1233,9 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
         processor.FilterNoneUtf8(testStr, false);
         for (uint32_t indexOfString = 0; indexOfString < testStr.size(); ++indexOfString) {
             if (flow[indexOfString] == true) {
-                if (testStr[indexOfString] != ' ')
-                    LOG_ERROR(sLogger, ("#indexOfString", indexOfString)("char", testStr[indexOfString]));
-                APSARA_TEST_TRUE(testStr[indexOfString] == ' ');
+                APSARA_TEST_EQUAL_FATAL(testStr[indexOfString], ' ');  
             } else {
-                if (testStr[indexOfString] == ' ')
-                    LOG_ERROR(sLogger, ("*indexOfString", indexOfString)("char", testStr[indexOfString]));
-                APSARA_TEST_TRUE(testStr[indexOfString] != ' ');
+                APSARA_TEST_NOT_EQUAL_FATAL(testStr[indexOfString], ' ');
             }
         }
     }
