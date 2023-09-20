@@ -114,11 +114,13 @@ bool Pipeline::Init(const PipelineConfig& config) {
         return false;
     }
 
-    std::unique_ptr<ProcessorInstance> pluginDesensitizer = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorDesensitizerNative::Name(),
-        std::string(ProcessorDesensitizerNative::Name()) + "/" + std::to_string(pluginIndex++));
-    if (!InitAndAddProcessor(std::move(pluginDesensitizer), config)) {
-        return false;
+    if (!config.mSensitiveWordCastOptions.empty()) {
+        std::unique_ptr<ProcessorInstance> pluginDesensitizer = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorDesensitizerNative::Name(),
+            std::string(ProcessorDesensitizerNative::Name()) + "/" + std::to_string(pluginIndex++));
+        if (!InitAndAddProcessor(std::move(pluginDesensitizer), config)) {
+            return false;
+        }
     }
 
     return true;

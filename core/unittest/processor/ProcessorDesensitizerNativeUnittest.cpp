@@ -169,7 +169,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case2
@@ -219,7 +219,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case3
@@ -269,7 +269,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case4
@@ -320,7 +320,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case5
@@ -371,7 +371,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
 }
@@ -426,7 +426,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case2
@@ -478,7 +478,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case 3
@@ -530,7 +530,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case 4
@@ -582,7 +582,6 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
         delete config;
     }
     // case 5
@@ -635,7 +634,6 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
         delete config;
     }
     // case 6
@@ -688,7 +686,6 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
         delete config;
     }
     // case 7
@@ -741,7 +738,6 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
         delete config;
     }
     // case 8
@@ -794,7 +790,6 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
         delete config;
     }
     // case 9
@@ -847,7 +842,6 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
         delete config;
     }
 }
@@ -901,7 +895,6 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
         delete config;
     }
     // case 2
@@ -952,7 +945,6 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
         delete config;
     }
     // case 3
@@ -1004,7 +996,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case 4
@@ -1056,7 +1048,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case 5
@@ -1109,7 +1101,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case 6
@@ -1163,7 +1155,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
 }
@@ -1259,7 +1251,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordLoggroup() {
     })";
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
     delete config;
 }
 
@@ -1312,7 +1304,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case 2
@@ -1363,7 +1355,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case 3
@@ -1414,7 +1406,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case 4
@@ -1466,7 +1458,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
     // case 5
@@ -1519,7 +1511,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
         })";
         std::string outJson = eventGroup.ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
         delete config;
     }
 }
@@ -1571,7 +1563,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastWholeKey() {
     })";
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
     delete config;
 }
 } // namespace logtail

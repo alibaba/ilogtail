@@ -25,12 +25,11 @@ namespace logtail {
 
 bool ProcessorDesensitizerNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& mConfig = componentConfig.GetConfig();
-    if (mConfig.mSensitiveWordCastOptions.empty() || mConfig.mSensitiveWordCastOptions.size() <= (size_t)0) {
-        return false;
-    }
+
     mSensitiveWordCastOptions = mConfig.mSensitiveWordCastOptions;
 
     SetMetricsRecordRef(Name(), componentConfig.GetId());
+    mProcDesensitizerTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZER_TOTAL);
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
 
@@ -60,35 +59,30 @@ void ProcessorDesensitizerNative::ProcessEvent(PipelineEventPtr& e) {
 
     auto& sourceEvent = e.Cast<LogEvent>();
 
-    LogContents& contents = sourceEvent.GetMutableContents();
-    for (auto content : contents) {
-        const std::string& key = content.first.to_string();
-        std::unordered_map<std::string, std::vector<SensitiveWordCastOption> >::const_iterator findRst
-            = mSensitiveWordCastOptions.find(key);
-        if (findRst == mSensitiveWordCastOptions.end()) {
+    const LogContents& contents = sourceEvent.GetContents();
+
+    for (auto it = mSensitiveWordCastOptions.begin(); it != mSensitiveWordCastOptions.end();) {
+        const std::string& key = it->first;
+        const auto& content = contents.find(key);
+        if (content == contents.end()) {
             continue;
         }
-        std::string value = content.second.to_string();
+        std::string value = sourceEvent.GetContent(key).to_string();
         mProcParseInSizeBytes->Add(value.size());
-        CastOneSensitiveWord(key, &value);
-
-        StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(value.size() + 1);
-        strcpy(valueBuffer.data, value.c_str());
-        valueBuffer.size = value.size();
-        contents[content.first] = StringView(valueBuffer.data, valueBuffer.size);
-        mProcParseOutSizeBytes->Add(valueBuffer.size);
+        if (CastOneSensitiveWord(key, &value)) {
+            mProcDesensitizerTotal->Add(1);
+            StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
+            sourceEvent.SetContent(key, StringView(valueBuffer.data, valueBuffer.size));
+        }
+        mProcParseOutSizeBytes->Add(value.size());
     }
     return;
 }
 
-void ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, std::string* value) {
-    std::unordered_map<std::string, std::vector<SensitiveWordCastOption> >::const_iterator findRst
-        = mSensitiveWordCastOptions.find(key);
-    if (findRst == mSensitiveWordCastOptions.end()) {
-        return;
-    }
-    const std::vector<SensitiveWordCastOption>& optionVec = findRst->second;
+bool ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, std::string* value) {
+    const std::vector<SensitiveWordCastOption>& optionVec = mSensitiveWordCastOptions[key];
     std::string* pVal = value;
+    bool isChanged = false;
     for (size_t i = 0; i < optionVec.size(); ++i) {
         const SensitiveWordCastOption& opt = optionVec[i];
         if (!opt.mRegex || !opt.mRegex->ok()) {
@@ -142,6 +136,7 @@ void ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, s
             if (rst) {
                 *value = destStr;
                 pVal = value;
+                isChanged = true;
             }
         }
 
@@ -152,6 +147,7 @@ void ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, s
         //     word fail", pConfig->mProjectName, pConfig->mCategory, pConfig->mRegion);
         // }
     }
+    return isChanged;
 }
 
 bool ProcessorDesensitizerNative::IsSupportedEvent(const PipelineEventPtr& e) {
