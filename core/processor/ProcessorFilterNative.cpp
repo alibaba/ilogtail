@@ -19,7 +19,7 @@
 #include "models/LogEvent.h"
 #include "plugin/ProcessorInstance.h"
 #include "config_manager/ConfigManager.h"
-#include <vertor>
+#include <vector>
 
 namespace logtail {
 

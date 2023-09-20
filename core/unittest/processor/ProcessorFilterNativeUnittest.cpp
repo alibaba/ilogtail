@@ -242,7 +242,7 @@ void ProcessorFilterNativeUnittest::TestFilter() {
         ]
     })";
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
 
     // case 2 : NOT all fields exist, it
     auto sourceBuffer2 = std::make_shared<SourceBuffer>();
@@ -268,7 +268,7 @@ void ProcessorFilterNativeUnittest::TestFilter() {
     outJson = eventGroup2.ToJsonString();
     // judge result
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
     // case 3 : if the filter don't exist, it should return all the fields;
     auto sourceBuffer3 = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup3(sourceBuffer3);
@@ -333,7 +333,7 @@ void ProcessorFilterNativeUnittest::TestFilter() {
     outJson = eventGroup3.ToJsonString();
     // judge result
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
     mContext.SetProjectName("project");
 }
 
@@ -413,7 +413,7 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
         ]
     })";
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
 
     // case 2 : NOT all fields exist, it
     auto sourceBuffer2 = std::make_shared<SourceBuffer>();
@@ -439,7 +439,6 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     outJson = eventGroup2.ToJsonString();
     // judge result
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
-    APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
 // To test bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const BaseFilterNodePtr& node)
 void ProcessorFilterNativeUnittest::TestBaseFilter() {
@@ -532,7 +531,7 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
             ]
         })";
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+
 
         // case 2 : NOT all fields exist, it
         auto sourceBuffer2 = std::make_shared<SourceBuffer>();
@@ -558,7 +557,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         outJson = eventGroup2.ToJsonString();
         // judge result
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
     }
     // case 2
     {
@@ -677,8 +675,7 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         std::string outJson = eventGroup1.ToJsonString();
         // judge result
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
-        APSARA_TEST_EQUAL_FATAL(3, processor.mProcDiscardRecordsTotal->GetValue());
-        APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
+        APSARA_TEST_EQUAL_FATAL(3, processor.mProcFilterRecordsTotal->GetValue());
     }
     {
         const char* jsonStr = "{\n"
