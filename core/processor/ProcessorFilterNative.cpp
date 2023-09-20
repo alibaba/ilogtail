@@ -139,6 +139,7 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
                     contents[content.first] = StringView(valueBuffer.data, valueBuffer.size);
                 }
                 if (FilterNoneUtf8(content.first.to_string(), true)) {
+                    // key
                     StringBuffer keyBuffer
                         = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.first.size() + 1);
                     const std::string key = content.first.to_string();
@@ -146,9 +147,10 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
                     strcpy(keyBuffer.data, key.c_str());
                     keyBuffer.size = key.size();
 
+                    // value
                     StringBuffer valueBuffer
-                        = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.second.size() + 1);
-                    const std::string value = content.second.to_string();
+                        = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(contents[content.first].size() + 1);
+                    const std::string value = contents[content.first].to_string();
                     strcpy(valueBuffer.data, value.c_str());
                     valueBuffer.size = value.size();
 
