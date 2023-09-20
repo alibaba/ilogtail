@@ -39,10 +39,13 @@ public:
     void LoadAdhocCheckpoint();
 
     AdhocJobCheckpointPtr GetAdhocJobCheckpoint(const std::string& jobName);
-    AdhocFileCheckpointPtr GetAdhocFileCheckpoint(const std::string& jobName, const AdhocFileCheckpointKey* fileCheckpointKey);
-    AdhocJobCheckpointPtr CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<AdhocFileCheckpointPtr> fileCheckpointList);
+    AdhocFileCheckpointPtr GetAdhocFileCheckpoint(const std::string& jobName, const AdhocFileKey* fileKey);
+    AdhocJobCheckpointPtr CreateAdhocJobCheckpoint(const std::string& jobName,
+                                                   std::vector<AdhocFileCheckpointPtr> fileCheckpointList);
     AdhocFileCheckpointPtr CreateAdhocFileCheckpoint(const std::string& jobName, const std::string& filePath);
-    void UpdateAdhocFileCheckpoint(const std::string& jobName, const AdhocFileCheckpointKey* fileCheckpointKey, AdhocFileCheckpointPtr fileCheckpoint);
+    void UpdateAdhocFileCheckpoint(const std::string& jobName,
+                                   const AdhocFileKey* fileKey,
+                                   AdhocFileCheckpointPtr fileCheckpoint);
     void DeleteAdhocJobCheckpoint(const std::string& jobName);
 
     std::string GetAdhocCheckpointDirPath();

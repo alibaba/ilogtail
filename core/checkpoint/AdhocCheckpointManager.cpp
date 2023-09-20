@@ -103,15 +103,16 @@ AdhocFileCheckpointPtr AdhocCheckpointManager::CreateAdhocFileCheckpoint(const s
         }
         firstLine[nbytes] = '\0';
         CheckAndUpdateSignature(std::string(firstLine), fileSignatureHash, fileSignatureSize);
-        AdhocFileCheckpointPtr fileCheckpoint = std::make_shared<AdhocFileCheckpoint>(filePath, // file path
-                                                                                      buf.GetFileSize(), // file size
-                                                                                      0, // offset
-                                                                                      fileSignatureSize, // signatureSize
-                                                                                      fileSignatureHash, // signatureHash
-                                                                                      buf.GetDevInode(), // DevInode
-                                                                                      STATUS_WAITING, // Status
-                                                                                      jobName, // job name
-                                                                                      filePath); // real file path
+        AdhocFileCheckpointPtr fileCheckpoint
+            = std::make_shared<AdhocFileCheckpoint>(filePath, // file path
+                                                    buf.GetFileSize(), // file size
+                                                    0, // offset
+                                                    fileSignatureSize, // signatureSize
+                                                    fileSignatureHash, // signatureHash
+                                                    buf.GetDevInode(), // DevInode
+                                                    STATUS_WAITING, // Status
+                                                    jobName, // job name
+                                                    filePath); // real file path
         return fileCheckpoint;
     } else {
         LOG_WARNING(sLogger, ("Create file checkpoint fail, job name", jobName)("file path", filePath));
@@ -135,21 +136,21 @@ void AdhocCheckpointManager::DeleteAdhocJobCheckpoint(const std::string& jobName
 }
 
 AdhocFileCheckpointPtr AdhocCheckpointManager::GetAdhocFileCheckpoint(const std::string& jobName,
-                                                                      const AdhocFileCheckpointKey* fileCheckpointKey) {
+                                                                      const AdhocFileKey* fileKey) {
     AdhocJobCheckpointPtr jobCheckpoint = GetAdhocJobCheckpoint(jobName);
     if (nullptr != jobCheckpoint) {
-        return jobCheckpoint->GetFileCheckpoint(fileCheckpointKey);
+        return jobCheckpoint->GetFileCheckpoint(fileKey);
     } else {
         return nullptr;
     }
 }
 
 void AdhocCheckpointManager::UpdateAdhocFileCheckpoint(const std::string& jobName,
-                                                       const AdhocFileCheckpointKey* fileCheckpointKey,
+                                                       const AdhocFileKey* fileKey,
                                                        AdhocFileCheckpointPtr fileCheckpoint) {
     AdhocJobCheckpointPtr jobCheckpoint = GetAdhocJobCheckpoint(jobName);
     if (nullptr != jobCheckpoint) {
-        if (jobCheckpoint->UpdateFileCheckpoint(fileCheckpointKey, fileCheckpoint)) {
+        if (jobCheckpoint->UpdateFileCheckpoint(fileKey, fileCheckpoint)) {
             jobCheckpoint->Dump(GetJobCheckpointPath(jobName));
         }
     }
@@ -179,7 +180,7 @@ void AdhocCheckpointManager::LoadAdhocCheckpoint() {
 }
 
 std::string AdhocCheckpointManager::GetJobCheckpointPath(const std::string& jobName) {
-    std::string path = STRING_FLAG(adhoc_check_point_file_dir);
+    std::string path = GetAdhocCheckpointDirPath();
 #if defined(__linux__)
     path += "/" + jobName;
 #elif defined(_MSC_VER)

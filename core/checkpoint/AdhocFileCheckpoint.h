@@ -71,9 +71,9 @@ public:
     int32_t mLastUpdateTime;
 };
 
-struct AdhocFileCheckpointKey {
-    AdhocFileCheckpointKey() {}
-    AdhocFileCheckpointKey(const DevInode& devInode, const uint32_t signatureSize, const uint64_t signatureHash)
+struct AdhocFileKey {
+    AdhocFileKey() {}
+    AdhocFileKey(const DevInode& devInode, const uint32_t signatureSize, const uint64_t signatureHash)
         : mDevInode(devInode), mSignatureSize(signatureSize), mSignatureHash(signatureHash) {}
     DevInode mDevInode;
     uint32_t mSignatureSize;
