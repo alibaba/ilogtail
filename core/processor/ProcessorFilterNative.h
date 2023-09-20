@@ -54,7 +54,7 @@ private:
     bool Filter(LogEvent& sourceEvent, const LogFilterRule* filterRule);
     bool Filter(LogEvent& sourceEvent);
 
-    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
+    bool ProcessEvent(PipelineEventPtr& e);
     bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
     bool FilterNoneUtf8(const std::string& strSrc, bool isNoneUtf8);
 #ifdef APSARA_UNIT_TEST_MAIN

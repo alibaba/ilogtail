@@ -96,11 +96,10 @@ void ProcessorFilterNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
 
-    const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
     EventsContainer& events = logGroup.MutableEvents();
 
     for (auto it = events.begin(); it != events.end();) {
-        if (ProcessEvent(logPath, *it)) {
+        if (ProcessEvent(*it)) {
             ++it;
         } else {
             it = events.erase(it);
@@ -108,7 +107,7 @@ void ProcessorFilterNative::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-bool ProcessorFilterNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e) {
+bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
@@ -172,13 +171,24 @@ bool ProcessorFilterNative::IsSupportedEvent(const PipelineEventPtr& e) {
 }
 
 bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const BaseFilterNodePtr& node) {
+    const LogContents& contents = sourceEvent.GetContents();
+    if (contents.empty()) {
+        return false;
+    }
+
     // null node, all logs are passed
     if (node.get() == nullptr) {
         return true;
     }
 
-    const LogContents& contents = sourceEvent.GetContents();
-    return node->Match(contents, &GetContext());
+    try {
+        return node->Match(contents, &GetContext());
+    } catch (...) {
+        mProcParseErrorTotal->Add(1);
+        ++(*mParseFailures);
+        LOG_ERROR(sLogger, ("filter error ", ""));
+        return false;
+    }
 }
 
 bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const LogFilterRule* filterRule) {
@@ -196,6 +206,8 @@ bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const LogFilterRule* f
     try {
         return IsMatched(contents, *filterRule);
     } catch (...) {
+        mProcParseErrorTotal->Add(1);
+        ++(*mParseFailures);
         LOG_ERROR(sLogger, ("filter error ", ""));
         return false;
     }
@@ -214,7 +226,14 @@ bool ProcessorFilterNative::Filter(LogEvent& sourceEvent) {
     }
 
     const LogFilterRule& rule = *(it->second);
-    return IsMatched(contents, rule);
+    try {
+        return IsMatched(contents, rule);
+    } catch (...) {
+        mProcParseErrorTotal->Add(1);
+        ++(*mParseFailures);
+        LOG_ERROR(sLogger, ("filter error ", ""));
+        return false;
+    }
 }
 
 bool ProcessorFilterNative::IsMatched(const LogContents& contents, const LogFilterRule& rule) {
@@ -263,7 +282,11 @@ bool ProcessorFilterNative::FilterNoneUtf8(const std::string& strSrc, bool isNon
     if (stat) { \
         *iter = ' '; \
         ++iter; \
-        if (isNoneUtf8) return true; else continue; \
+        if (isNoneUtf8) { \
+            return true; \
+        } else { \
+            continue; \
+        } \
     };
 
     std::string::iterator iter = str->begin();
