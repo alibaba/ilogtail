@@ -76,6 +76,7 @@ bool ProcessorDesensitizerNative::ProcessEvent(const StringView& logPath, Pipeli
         valueBuffer.size = value.size();
         contents[content.first] = StringView(valueBuffer.data, valueBuffer.size);
     }
+    return true;
 }
 
 void ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, std::string* value) {
