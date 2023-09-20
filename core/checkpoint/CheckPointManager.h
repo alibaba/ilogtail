@@ -42,7 +42,6 @@ public:
     int32_t mLastUpdateTime = 0;
     bool mFileOpenFlag = false;
     bool mContainerStopped = false;
-    int64_t mCacheOffset = 0;
     std::string mCache;
     std::string mConfigName;
     std::string mFileName;
