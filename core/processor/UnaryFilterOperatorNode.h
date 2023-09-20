@@ -37,7 +37,7 @@ public:
         return false;
     }
 
-    virtual bool Match(const LogContents& contents, PipelineContext* mContext) {
+    virtual bool Match(const LogContents& contents, const PipelineContext& mContext) {
         if (BOOST_LIKELY(child.get() != NULL)) {
             return !child->Match(contents, mContext);
         }
