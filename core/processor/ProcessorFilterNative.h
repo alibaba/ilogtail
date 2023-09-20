@@ -26,37 +26,31 @@ public:
     static const char* Name() { return "processor_filter_native"; }
     bool Init(const ComponentConfig& componentConfig) override;
     void Process(PipelineEventGroup& logGroup) override;
+    ~ProcessorFilterNative();
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) override;
 
 private:
-    ~ProcessorFilterNative() {
-        std::unordered_map<std::string, LogFilterRule*>::iterator it = mFilters.begin();
-        for (; it != mFilters.end(); ++it) {
-            delete it->second;
-        }
-        mFilters.clear();
-    }
-    std::shared_ptr<LogFilterRule> mFilterRule = nullptr;
+    std::shared_ptr<LogFilterRule> mFilterRule;
     BaseFilterNodePtr mFilterExpressionRoot = nullptr;
     std::unordered_map<std::string, LogFilterRule*> mFilters;
     LogType mLogType;
     bool mDiscardNoneUtf8;
+    std::string mFilterMode;
 
-    int* mParseFailures = nullptr;
-    CounterPtr mProcParseInSizeBytes;
-    CounterPtr mProcParseOutSizeBytes;
-    CounterPtr mProcParseErrorTotal;
-    CounterPtr mProcDiscardRecordsTotal;
+    CounterPtr mProcFilterInSizeBytes;
+    CounterPtr mProcFilterOutSizeBytes;
+    CounterPtr mProcFilterErrorTotal;
+    CounterPtr mProcFilterRecordsTotal;
 
-    bool Filter(LogEvent& sourceEvent, const BaseFilterNodePtr& node);
-    bool Filter(LogEvent& sourceEvent, const LogFilterRule* filterRule);
-    bool Filter(LogEvent& sourceEvent);
+    bool FilterExpressionRoot(LogEvent& sourceEvent, const BaseFilterNodePtr& node);
+    bool FilterFilterRule(LogEvent& sourceEvent, const LogFilterRule* filterRule);
+    bool FilterGlobal(LogEvent& sourceEvent);
 
     bool ProcessEvent(PipelineEventPtr& e);
     bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
-    bool FilterNoneUtf8(const std::string& strSrc, bool isNoneUtf8);
+    bool FilterNoneUtf8(const std::string& strSrc, bool findNoneUtf8);
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorFilterNativeUnittest;
 #endif

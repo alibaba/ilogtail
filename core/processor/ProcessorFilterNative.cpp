@@ -23,38 +23,45 @@
 
 namespace logtail {
 
+ProcessorFilterNative::~ProcessorFilterNative() {
+    for (auto& mFilter : mFilters) {
+        delete mFilter.second;
+    }
+    mFilters.clear();
+}
+
 bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& mConfig = componentConfig.GetConfig();
 
     if (mConfig.mAdvancedConfig.mFilterExpressionRoot.get() != nullptr) {
         mFilterExpressionRoot = mConfig.mAdvancedConfig.mFilterExpressionRoot;
-    }
-    if (mConfig.mFilterRule) {
+        mFilterMode = "FilterExpressionRoot";
+    } else if (mConfig.mFilterRule) {
         mFilterRule = mConfig.mFilterRule;
+        mFilterMode = "FilterRule";
+    } else {
+        mFilterMode = "Global";
     }
-    mLogType = mConfig.mLogType;
+
     mDiscardNoneUtf8 = mConfig.mDiscardNoneUtf8;
 
-    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     SetMetricsRecordRef(Name(), componentConfig.GetId());
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcFilterInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_IN_SIZE_BYTES);
+    mProcFilterOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_OUT_SIZE_BYTES);
+    mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);
+    mProcFilterRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_RECORDS_TOTAL);
     // old InitFilter
     Json::Value jsonRoot; // will contains the root value after parsing.
     ParseConfResult userLogRes = ParseConfig(STRING_FLAG(user_log_config), jsonRoot);
     if (userLogRes != CONFIG_OK) {
         if (userLogRes == CONFIG_NOT_EXIST)
-            LOG_DEBUG(sLogger, (mConfig.mConfigName, "not found, uninitialized Filter"));
+            LOG_DEBUG(GetContext().GetLogger(), (mConfig.mConfigName, "not found, uninitialized Filter"));
         if (userLogRes == CONFIG_INVALID_FORMAT)
-            LOG_ERROR(sLogger,
+            LOG_ERROR(GetContext().GetLogger(),
                       ("load user config for filter fail, file content is not valid json", mConfig.mConfigName));
-        mProcParseErrorTotal->Add(1);
-        ++(*mParseFailures);
         return false;
     }
-    if (jsonRoot.isMember("filters") == false) {
+    if (!jsonRoot.isMember("filters")) {
         return true;
     }
     const Json::Value& filters = jsonRoot["filters"];
@@ -67,10 +74,8 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
             const Json::Value& keys = item["keys"];
             const Json::Value& regs = item["regs"];
             if (keys.size() != regs.size()) {
-                LOG_ERROR(sLogger,
+                LOG_ERROR(GetContext().GetLogger(),
                           ("invalid filter config", "ignore it")("project", projectName)("logstore", category));
-                mProcParseErrorTotal->Add(1);
-                ++(*mParseFailures);
                 return false;
             }
             // default filter relation is AND
@@ -82,9 +87,7 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
             mFilters[projectName + "_" + category] = filterRule;
         }
     } catch (...) {
-        mProcParseErrorTotal->Add(1);
-        ++(*mParseFailures);
-        LOG_ERROR(sLogger, ("Can't parse the filter config", ""));
+        LOG_ERROR(GetContext().GetLogger(), ("Can't parse the filter config", ""));
         return false;
     }
 
@@ -103,6 +106,7 @@ void ProcessorFilterNative::Process(PipelineEventGroup& logGroup) {
             ++it;
         } else {
             it = events.erase(it);
+            mProcFilterRecordsTotal->Add(1);
         }
     }
 }
@@ -115,54 +119,42 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
     auto& sourceEvent = e.Cast<LogEvent>();
     bool res;
 
-    if (mFilterExpressionRoot && mFilterExpressionRoot.get() != nullptr) {
-        res = Filter(sourceEvent, mFilterExpressionRoot);
-    } else if (mFilterRule) {
-        res = Filter(sourceEvent, mFilterRule.get());
-    } else {
-        res = Filter(sourceEvent);
+    if (mFilterMode == "FilterExpressionRoot") {
+        res = FilterExpressionRoot(sourceEvent, mFilterExpressionRoot);
+    } else if (mFilterMode == "FilterRule") {
+        res = FilterFilterRule(sourceEvent, mFilterRule.get());
+    } else if (mFilterMode == "Global") {
+        res = FilterGlobal(sourceEvent);
     }
-    if (res) {
-        if ((mLogType != STREAM_LOG && mLogType != PLUGIN_LOG) && mDiscardNoneUtf8) {
-            LogContents& contents = sourceEvent.GetMutableContents();
-            for (auto& content : contents) {
-                if (FilterNoneUtf8(content.second.to_string(), true)) {
-                    StringBuffer valueBuffer
-                        = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.second.size() + 1);
+    if (res && mDiscardNoneUtf8) {
+        LogContents& contents = sourceEvent.MutableContents();
+        for (auto content = contents.begin(); content != contents.end(); ++content) {
+            if (FilterNoneUtf8(content->second.data(), true)) {
+                std::string value = content->second.to_string();
+                FilterNoneUtf8(value, false);
 
-                    const std::string value = content.second.to_string();
-                    FilterNoneUtf8(value, false);
+                StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
+                sourceEvent.SetContent(content->first, StringView(valueBuffer.data, valueBuffer.size));
+            }
+            if (FilterNoneUtf8(content->first.data(), true)) {
+                // key
+                StringBuffer keyBuffer = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content->first.size() + 1);
+                const std::string key = content->first.to_string();
+                FilterNoneUtf8(key, false);
+                strcpy(keyBuffer.data, key.c_str());
+                keyBuffer.size = key.size();
 
-                    strcpy(valueBuffer.data, value.c_str());
-                    valueBuffer.size = value.size();
+                // value
+                StringBuffer valueBuffer
+                    = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(contents[content->first].size() + 1);
+                const std::string value = contents[content->first].to_string();
+                strcpy(valueBuffer.data, value.c_str());
+                valueBuffer.size = value.size();
 
-                    contents[content.first] = StringView(valueBuffer.data, valueBuffer.size);
-                }
-                if (FilterNoneUtf8(content.first.to_string(), true)) {
-                    // key
-                    StringBuffer keyBuffer
-                        = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.first.size() + 1);
-                    const std::string key = content.first.to_string();
-                    FilterNoneUtf8(key, false);
-                    strcpy(keyBuffer.data, key.c_str());
-                    keyBuffer.size = key.size();
-
-                    // value
-                    StringBuffer valueBuffer
-                        = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(contents[content.first].size() + 1);
-                    const std::string value = contents[content.first].to_string();
-                    strcpy(valueBuffer.data, value.c_str());
-                    valueBuffer.size = value.size();
-
-                    contents[StringView(keyBuffer.data, keyBuffer.size)]
-                        = StringView(valueBuffer.data, valueBuffer.size);
-                    contents.erase(content.first);
-                }
+                contents[StringView(keyBuffer.data, keyBuffer.size)] = StringView(valueBuffer.data, valueBuffer.size);
+                contents.erase(content->first);
             }
         }
-    }
-    if (!res) {
-        mProcDiscardRecordsTotal->Add(1);
     }
 
     return res;
@@ -172,7 +164,7 @@ bool ProcessorFilterNative::IsSupportedEvent(const PipelineEventPtr& e) {
     return e.Is<LogEvent>();
 }
 
-bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const BaseFilterNodePtr& node) {
+bool ProcessorFilterNative::FilterExpressionRoot(LogEvent& sourceEvent, const BaseFilterNodePtr& node) {
     const LogContents& contents = sourceEvent.GetContents();
     if (contents.empty()) {
         return false;
@@ -184,16 +176,15 @@ bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const BaseFilterNodePt
     }
 
     try {
-        return node->Match(contents, &GetContext());
+        return node->Match(contents, GetContext());
     } catch (...) {
-        mProcParseErrorTotal->Add(1);
-        ++(*mParseFailures);
+        mProcFilterErrorTotal->Add(1);
         LOG_ERROR(sLogger, ("filter error ", ""));
         return false;
     }
 }
 
-bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const LogFilterRule* filterRule) {
+bool ProcessorFilterNative::FilterFilterRule(LogEvent& sourceEvent, const LogFilterRule* filterRule) {
     const LogContents& contents = sourceEvent.GetContents();
     if (contents.empty()) {
         return false;
@@ -208,14 +199,13 @@ bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const LogFilterRule* f
     try {
         return IsMatched(contents, *filterRule);
     } catch (...) {
-        mProcParseErrorTotal->Add(1);
-        ++(*mParseFailures);
+        mProcFilterErrorTotal->Add(1);
         LOG_ERROR(sLogger, ("filter error ", ""));
         return false;
     }
 }
 
-bool ProcessorFilterNative::Filter(LogEvent& sourceEvent) {
+bool ProcessorFilterNative::FilterGlobal(LogEvent& sourceEvent) {
     const LogContents& contents = sourceEvent.GetContents();
     if (contents.empty()) {
         return false;
@@ -231,8 +221,7 @@ bool ProcessorFilterNative::Filter(LogEvent& sourceEvent) {
     try {
         return IsMatched(contents, rule);
     } catch (...) {
-        mProcParseErrorTotal->Add(1);
-        ++(*mParseFailures);
+        mProcFilterErrorTotal->Add(1);
         LOG_ERROR(sLogger, ("filter error ", ""));
         return false;
     }
@@ -243,31 +232,21 @@ bool ProcessorFilterNative::IsMatched(const LogContents& contents, const LogFilt
     const std::vector<boost::regex> regs = rule.FilterRegs;
     std::string exception;
     for (uint32_t i = 0; i < keys.size(); i++) {
-        bool found = false;
-        for (auto content : contents) {
-            const std::string& key = content.first.to_string();
-            const std::string& value = content.second.to_string();
-            if (key == keys[i]) {
-                found = true;
-                exception.clear();
-                if (!BoostRegexMatch(value.c_str(), value.size(), regs[i], exception)) {
-                    if (!exception.empty()) {
-                        LOG_ERROR(sLogger, ("regex_match in Filter fail", exception));
-
-                        if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                            LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
-                                                                   "regex_match in Filter fail:" + exception,
-                                                                   GetContext().GetProjectName(),
-                                                                   GetContext().GetLogstoreName(),
-                                                                   GetContext().GetRegion());
-                        }
-                    }
-                    return false;
-                }
-                break;
-            }
+        const auto& content = contents.find(keys[i]);
+        if (content == contents.end()) {
+            return false;
         }
-        if (false == found) {
+        if (!BoostRegexMatch(content->second.data(), content->second.size(), regs[i], exception)) {
+            if (!exception.empty()) {
+                LOG_ERROR(GetContext().GetLogger(), ("regex_match in Filter fail", exception));
+                if (GetContext().GetAlarm().IsLowLevelAlarmValid()) {
+                    GetContext().GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
+                                                           "regex_match in Filter fail:" + exception,
+                                                           GetContext().GetProjectName(),
+                                                           GetContext().GetLogstoreName(),
+                                                           GetContext().GetRegion());
+                }
+            }
             return false;
         }
     }
@@ -277,18 +256,17 @@ bool ProcessorFilterNative::IsMatched(const LogContents& contents, const LogFilt
 static const char UTF8_BYTE_PREFIX = 0x80;
 static const char UTF8_BYTE_MASK = 0xc0;
 
-bool ProcessorFilterNative::FilterNoneUtf8(const std::string& strSrc, bool isNoneUtf8) {
+bool ProcessorFilterNative::FilterNoneUtf8(const std::string& strSrc, bool findNoneUtf8) {
     std::string* str = const_cast<std::string*>(&strSrc);
 
 #define FILL_BLUNK_AND_CONTINUE_IF_TRUE(stat) \
     if (stat) { \
+        if (findNoneUtf8) { \
+            return true; \
+        } \
         *iter = ' '; \
         ++iter; \
-        if (isNoneUtf8) { \
-            return true; \
-        } else { \
-            continue; \
-        } \
+        continue; \
     };
 
     std::string::iterator iter = str->begin();

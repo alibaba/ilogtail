@@ -55,7 +55,8 @@ public:
         return false;
     }
 
-    virtual bool Match(const LogContents& contents, const PipelineContext& mContext) {
+    virtual bool Match(const LogContents& contents,  PipelineContext& mContext) {
+
         const auto& content = contents.find(key);
         if (content == contents.end()) {
             return false;
@@ -65,8 +66,8 @@ public:
         bool result = BoostRegexMatch(content->second.data(), content->second.size(), reg, exception);
         if (!result && !exception.empty() && AppConfig::GetInstance()->IsLogParseAlarmValid()) {
             LOG_ERROR(sLogger, ("regex_match in Filter fail", exception));
-            if (LogtailAlarm::GetInstance()->IsLowLevelAlarmValid()) {
-                LogtailAlarm::GetInstance()->SendAlarm(REGEX_MATCH_ALARM,
+            if (mContext.GetAlarm().IsLowLevelAlarmValid()) {
+                mContext.GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
                                                        "regex_match in Filter fail:" + exception,
                                                        mContext.GetProjectName(),
                                                        mContext.GetLogstoreName(),
