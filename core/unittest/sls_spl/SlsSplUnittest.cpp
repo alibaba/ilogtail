@@ -93,7 +93,7 @@ void SlsSplUnittest::TestJsonParse() {
     config.mDiscardUnmatch = false;
     config.mUploadRawLog = false;
     config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mSpl = "* | parse-json content | project a1 ";
+    config.mSpl = "* | parse-json content ";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();

@@ -20,10 +20,22 @@ void PipelineEventGroupInput::getHeader(IOHeader& header, std::string& err) {
 }
 void PipelineEventGroupInput::getRow(const int32_t rowIndex, std::vector<KV>& pairs, std::string& err) {
     auto currentEvent = mLogGroup->GetEvents()[rowIndex];
-
     LogEvent& sourceEvent = currentEvent.Cast<LogEvent>();
+
+    std::string timestampValue = std::to_string(sourceEvent.GetTimestamp());
+    mTmpSave.emplace_back(timestampValue);
+    std::string timestampNanosecondValue = std::to_string(sourceEvent.GetTimestampNanosecond());
+    mTmpSave.emplace_back(timestampNanosecondValue);
+
+    pairs.emplace_back(SplStringPiece(timestamp), SplStringPiece(timestampValue));
+    pairs.emplace_back(SplStringPiece(timestampNanosecond), SplStringPiece(timestampNanosecondValue));
+
+    std::cout << rowIndex << " input timestamp:" << std::to_string(sourceEvent.GetTimestamp()) << std::endl;
+    std::cout << rowIndex << " input timestampNanosecond:" << std::to_string(sourceEvent.GetTimestampNanosecond()) << std::endl;
+
     for (auto& kv : sourceEvent.GetContents()) {
         pairs.emplace_back(SplStringPiece(kv.first.data(), kv.first.size()), SplStringPiece(kv.second.data(), kv.second.size()));
+        std::cout << rowIndex << " input content:" << SplStringPiece(kv.second.data(), kv.second.size()) << std::endl;
     }
 }
 

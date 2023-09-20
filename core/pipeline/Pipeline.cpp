@@ -124,10 +124,12 @@ bool Pipeline::Init(const PipelineConfig& config) {
 }
 
 void Pipeline::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
+    std::cout << "mProcessorLine size: " << mProcessorLine.size() << std::endl;
     for (auto& p : mProcessorLine) {
         p->Process(logGroup);
     }
     if (mSplProcessor) {
+        std::cout << "mSplProcessor: " << std::endl;
         mSplProcessor->Process(logGroup, logGroupList);
     } else {
         logGroupList.emplace_back(logGroup);

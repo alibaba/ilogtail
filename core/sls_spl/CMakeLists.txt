@@ -39,5 +39,6 @@ foreach (DEP_NAME ${DEP_NAME_LIST})
 endforeach (DEP_NAME)
 
 target_link_libraries(${PROJECT_NAME} models)
+target_link_libraries(${PROJECT_NAME} pipeline)
 
 link_slsspl(${PROJECT_NAME})

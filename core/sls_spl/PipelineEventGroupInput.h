@@ -23,6 +23,11 @@ class PipelineEventGroupInput : public Input {
 
     private:
         std::vector<std::string> mColumnNames;
+
+        std::vector<std::string> mTmpSave;
+
+        std::string timestamp =  "timestamp"; 
+        std::string timestampNanosecond =  "timestampNanosecond"; 
         const PipelineEventGroup* mLogGroup;
 };
 

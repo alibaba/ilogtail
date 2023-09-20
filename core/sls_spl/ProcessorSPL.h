@@ -31,6 +31,7 @@ protected:
 private:
 
     std::string mSplPlan;
+    //SplPipelinePtr mSPLPipelinePtr;
 #ifdef APSARA_UNIT_TEST_MAIN
     //friend class ProcessorFillGroupInfoNativeUnittest;
 #endif

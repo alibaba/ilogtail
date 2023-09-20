@@ -118,6 +118,7 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
         std::cerr << "request spl parser failed: " << errorMsg << ", spl is:" << spl << std::endl;
         return false;
     }
+
     std::cout << "splPlan: " << mSplPlan << std::endl;
     return true;
 }
@@ -141,7 +142,7 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
         return;
     }
 
-    std::vector<std::string> colNames{"content"};
+    std::vector<std::string> colNames{"timestamp", "timestampNanosecond", "content"};
     
     auto input = std::make_shared<PipelineEventGroupInput>(colNames, logGroup);
 
