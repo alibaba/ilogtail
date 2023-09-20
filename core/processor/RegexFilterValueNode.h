@@ -56,7 +56,6 @@ public:
     }
 
     virtual bool Match(const LogContents& contents,  PipelineContext& mContext) {
-
         const auto& content = contents.find(key);
         if (content == contents.end()) {
             return false;
@@ -65,7 +64,7 @@ public:
         std::string exception;
         bool result = BoostRegexMatch(content->second.data(), content->second.size(), reg, exception);
         if (!result && !exception.empty() && AppConfig::GetInstance()->IsLogParseAlarmValid()) {
-            LOG_ERROR(sLogger, ("regex_match in Filter fail", exception));
+            LOG_ERROR(mContext.GetLogger(), ("regex_match in Filter fail", exception));
             if (mContext.GetAlarm().IsLowLevelAlarmValid()) {
                 mContext.GetAlarm().SendAlarm(REGEX_MATCH_ALARM,
                                                        "regex_match in Filter fail:" + exception,
