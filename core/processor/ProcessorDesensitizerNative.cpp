@@ -17,7 +17,6 @@
 #include "processor/ProcessorDesensitizerNative.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
-#include "plugin/ProcessorInstance.h"
 #include "sdk/Common.h"
 
 
