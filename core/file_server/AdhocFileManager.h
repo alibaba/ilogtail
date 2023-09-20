@@ -19,15 +19,15 @@
 #include <unordered_set>
 #include "config/Config.h"
 #include "checkpoint/AdhocCheckpointManager.h"
+#include "reader/LogFileReader.h"
 
 namespace logtail {
 
 struct AdhocFileReaderKey {
-    AdhocFileReaderKey() { mJobName = "", mFileKey = &AdhocFileKey(); }
-    AdhocFileReaderKey(std::string jobName): mJobName(jobName) { mFileKey = &AdhocFileKey(); }
-    AdhocFileReaderKey(std::string jobName, AdhocFileKey* fileKey): mJobName(jobName), mFileKey(fileKey) {}
+    AdhocFileReaderKey() {}
+    AdhocFileReaderKey(std::string jobName, AdhocFileKey fileKey) : mJobName(jobName), mFileKey(fileKey) {}
     std::string mJobName;
-    AdhocFileKey* mFileKey;
+    AdhocFileKey mFileKey;
 };
 
 enum AdhocEventType {
@@ -40,13 +40,13 @@ private:
     void FindJobByName();
 
     AdhocEventType mType;
-    AdhocFileReaderKey* mReaderKey;
+    AdhocFileReaderKey mReaderKey;
     std::shared_ptr<Config> mJobConfig;
 
 public:
-    AdhocEvent() {};
-    AdhocEvent(AdhocEventType eventType) : mType(eventType) { mReaderKey = &AdhocFileReaderKey(); }
-    AdhocEvent(AdhocEventType eventType, AdhocFileReaderKey* readerKey) : mType(eventType), mReaderKey(readerKey) {}
+    AdhocEvent() {}
+    AdhocEvent(AdhocEventType eventType) : mType(eventType) {}
+    AdhocEvent(AdhocEventType eventType, AdhocFileReaderKey readerKey) : mType(eventType), mReaderKey(readerKey) {}
 
     AdhocEventType GetType();
     std::string GetJobName();
@@ -73,7 +73,8 @@ private:
     AdhocCheckpointManager* mAdhocCheckpointManager;
     std::queue<AdhocEvent*> mEventQueue;
     std::unordered_set<std::string> mDeletedJobSet;
-    std::unordered_map<std::string, std::vector<AdhocFileKey*> > mJobFileKeyLists;
+    std::unordered_map<std::string, std::vector<AdhocFileKey> > mJobFileKeyLists;
+    std::unordered_map<AdhocFileReaderKey*, LogFileReaderPtr> mAdhocFileReaderMap;
 
 public:
     static AdhocFileManager* GetInstance() {

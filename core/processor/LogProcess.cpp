@@ -132,6 +132,12 @@ bool LogProcess::IsValidToReadLog(const LogstoreFeedBackKey& logstoreKey) {
     return mLogFeedbackQueue.IsValidToPush(logstoreKey);
 }
 
+bool LogProcess::IsValidToReadAdhocLog(const LogstoreFeedBackKey& logstoreKey) {
+    if (INT32_FLAG(debug_logprocess_queue_flag) > 0) {
+        return INT32_FLAG(debug_logprocess_queue_flag) == 1;
+    }
+    return mLogFeedbackQueue.IsValidToPushAdhocData(logstoreKey);
+}
 
 void LogProcess::SetFeedBack(LogstoreFeedBackInterface* pInterface) {
     mLogFeedbackQueue.SetFeedBackObject(pInterface);

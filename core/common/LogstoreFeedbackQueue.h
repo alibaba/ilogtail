@@ -112,6 +112,8 @@ public:
 
     bool IsValid() const { return mValid; }
 
+    bool IsAdhocValid() const { return mSize < LOW_SIZE; }
+
     bool IsEmpty() const { return mSize == 0; }
 
     bool IsFull() const { return mSize == SIZE; }
@@ -464,6 +466,12 @@ public:
         PTScopedLock dataLock(mLock);
         auto& singleQueue = mLogstoreQueueMap[key];
         return singleQueue.IsValid();
+    }
+
+    virtual bool IsValidToPushAdhocData(const LogstoreFeedBackKey& key) {
+        PTScopedLock dataLock(mLock);
+        auto& singleQueue = mLogstoreQueueMap[key];
+        return singleQueue.IsAdhocValid();
     }
 
     void
