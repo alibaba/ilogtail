@@ -1213,7 +1213,7 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
             }
         }
         ProcessorFilterNative& processor = *(new ProcessorFilterNative);
-        processor.FilterNoneUtf8(testStr);
+        processor.FilterNoneUtf8(testStr, false);
         for (uint32_t indexOfString = 0; indexOfString < testStr.size(); ++indexOfString) {
             if (flow[indexOfString] == true) {
                 if (testStr[indexOfString] != ' ')

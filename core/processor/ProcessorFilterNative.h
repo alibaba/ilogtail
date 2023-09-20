@@ -45,7 +45,10 @@ private:
     bool mDiscardNoneUtf8;
 
     int* mParseFailures = nullptr;
+    CounterPtr mProcParseInSizeBytes;
+    CounterPtr mProcParseOutSizeBytes;
     CounterPtr mProcParseErrorTotal;
+    CounterPtr mProcDiscardRecordsTotal;
 
     bool Filter(LogEvent& sourceEvent, const BaseFilterNodePtr& node);
     bool Filter(LogEvent& sourceEvent, const LogFilterRule* filterRule);
@@ -53,10 +56,9 @@ private:
 
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
     bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
-    void FilterNoneUtf8(const std::string& strSrc);
-    bool IsNoneUtf8(const std::string& strSrc);
+    bool FilterNoneUtf8(const std::string& strSrc, bool isNoneUtf8);
 #ifdef APSARA_UNIT_TEST_MAIN
-        friend class ProcessorFilterNativeUnittest;
+    friend class ProcessorFilterNativeUnittest;
 #endif
 };
 

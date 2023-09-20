@@ -37,8 +37,10 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
 
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     SetMetricsRecordRef(Name(), componentConfig.GetId());
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
     // old InitFilter
     Json::Value jsonRoot; // will contains the root value after parsing.
     ParseConfResult userLogRes = ParseConfig(STRING_FLAG(user_log_config), jsonRoot);
@@ -48,6 +50,8 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
         if (userLogRes == CONFIG_INVALID_FORMAT)
             LOG_ERROR(sLogger,
                       ("load user config for filter fail, file content is not valid json", mConfig.mConfigName));
+        mProcParseErrorTotal->Add(1);
+        ++(*mParseFailures);
         return false;
     }
     if (jsonRoot.isMember("filters") == false) {
@@ -65,6 +69,8 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
             if (keys.size() != regs.size()) {
                 LOG_ERROR(sLogger,
                           ("invalid filter config", "ignore it")("project", projectName)("logstore", category));
+                mProcParseErrorTotal->Add(1);
+                ++(*mParseFailures);
                 return false;
             }
             // default filter relation is AND
@@ -76,6 +82,8 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
             mFilters[projectName + "_" + category] = filterRule;
         }
     } catch (...) {
+        mProcParseErrorTotal->Add(1);
+        ++(*mParseFailures);
         LOG_ERROR(sLogger, ("Can't parse the filter config", ""));
         return false;
     }
@@ -119,23 +127,23 @@ bool ProcessorFilterNative::ProcessEvent(const StringView& logPath, PipelineEven
         if ((mLogType != STREAM_LOG && mLogType != PLUGIN_LOG) && mDiscardNoneUtf8) {
             LogContents& contents = sourceEvent.GetMutableContents();
             for (auto& content : contents) {
-                if (IsNoneUtf8(content.second.to_string())) {
+                if (FilterNoneUtf8(content.second.to_string(), true)) {
                     StringBuffer valueBuffer
                         = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.second.size() + 1);
 
                     const std::string value = content.second.to_string();
-                    FilterNoneUtf8(value);
+                    FilterNoneUtf8(value, false);
 
                     strcpy(valueBuffer.data, value.c_str());
                     valueBuffer.size = value.size();
 
                     contents[content.first] = StringView(valueBuffer.data, valueBuffer.size);
                 }
-                if (IsNoneUtf8(content.first.to_string())) {
+                if (FilterNoneUtf8(content.first.to_string(), true)) {
                     StringBuffer keyBuffer
                         = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content.first.size() + 1);
                     const std::string key = content.first.to_string();
-                    FilterNoneUtf8(key);
+                    FilterNoneUtf8(key, false);
                     strcpy(keyBuffer.data, key.c_str());
                     keyBuffer.size = key.size();
 
@@ -153,8 +161,7 @@ bool ProcessorFilterNative::ProcessEvent(const StringView& logPath, PipelineEven
         }
     }
     if (!res) {
-        ++(*mParseFailures);
-        mProcParseErrorTotal->Add(1);
+        mProcDiscardRecordsTotal->Add(1);
     }
 
     return res;
@@ -249,93 +256,14 @@ bool ProcessorFilterNative::IsMatched(const LogContents& contents, const LogFilt
 static const char UTF8_BYTE_PREFIX = 0x80;
 static const char UTF8_BYTE_MASK = 0xc0;
 
-void ProcessorFilterNative::FilterNoneUtf8(const std::string& strSrc) {
+bool ProcessorFilterNative::FilterNoneUtf8(const std::string& strSrc, bool isNoneUtf8) {
     std::string* str = const_cast<std::string*>(&strSrc);
 
 #define FILL_BLUNK_AND_CONTINUE_IF_TRUE(stat) \
     if (stat) { \
         *iter = ' '; \
         ++iter; \
-        continue; \
-    };
-
-    std::string::iterator iter = str->begin();
-    while (iter != str->end()) {
-        uint16_t unicode = 0;
-        char c;
-        if ((*iter & 0x80) == 0x00) // one byte
-        {
-            /**
-             * mapping rule: 0000 0000 - 0000 007F | 0xxxxxxx
-             */
-            // nothing to check
-        } else if ((*iter & 0xe0) == 0xc0) // two bytes
-        {
-            /**
-             * mapping rule: 0000 0080 - 0000 07FF | 110xxxxx 10xxxxxx
-             */
-            c = *iter;
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE(iter + 1 == str->end());
-            /* check whether the byte is in format 10xxxxxx */
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 1) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
-            /* get unicode value */
-            unicode = (((c & 0x1f) << 6) | (*(iter + 1) & 0x3f));
-            /* validate unicode range */
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE(!(unicode >= 0x80 && unicode <= 0x7ff));
-            ++iter;
-        } else if ((*iter & 0xf0) == 0xe0) // three bytes
-        {
-            /**
-             * mapping rule: 0000 0800 - 0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
-             */
-            c = *iter;
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((iter + 1 == str->end()) || (iter + 2 == str->end()));
-            /* check whether the byte is in format 10xxxxxx */
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 1) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 2) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
-            /* get unicode value */
-            unicode = (((c & 0x0f) << 12) | ((*(iter + 1) & 0x3f) << 6) | (*(iter + 2) & 0x3f));
-            /* validate unicode range */
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE(!(unicode >= 0x800 /* && unicode <= 0xffff */));
-            ++iter;
-            ++iter;
-        } else if ((*iter & 0xf8) == 0xf0) // four bytes
-        {
-            /**
-             * mapping rule: 0001 0000 - 0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-             */
-            c = *iter;
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((iter + 1 == str->end()) || (iter + 2 == str->end())
-                                            || (iter + 3 == str->end()));
-            /* check whether the byte is in format 10xxxxxx */
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 1) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 2) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 3) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
-            /* get unicode value */
-            uint32_t unicode = 0x00000000; // for 4 bytes utf-8 encoding
-            unicode = ((c & 0x07) << 18) | ((*(iter + 1) & 0x3f) << 12) | ((*(iter + 2) & 0x3f) << 6)
-                | ((*(iter + 3) & 0x3f));
-            /* validate unicode range */
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE(!(unicode >= 0x00010000 && unicode <= 0x0010ffff));
-            ++iter;
-            ++iter;
-            ++iter;
-        } else {
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE(true);
-        }
-        ++iter;
-    }
-#undef FILL_BLUNK_AND_CONTINUE_IF_TRUE
-}
-
-bool ProcessorFilterNative::IsNoneUtf8(const std::string& strSrc) {
-    std::string* str = const_cast<std::string*>(&strSrc);
-
-#define FILL_BLUNK_AND_CONTINUE_IF_TRUE(stat) \
-    if (stat) { \
-        *iter = ' '; \
-        ++iter; \
-        return true; \
+        if (isNoneUtf8) return true; else continue; \
     };
 
     std::string::iterator iter = str->begin();
