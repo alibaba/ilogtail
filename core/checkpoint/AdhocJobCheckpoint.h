@@ -39,7 +39,7 @@ public:
     bool Load(const std::string& path);
     void Dump(const std::string& path, bool isAuto);
 
-    bool IsFinished();
+    int32_t GetCurrentFileIndex();
     std::string GetJobName();
 };
 

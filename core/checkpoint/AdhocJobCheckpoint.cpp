@@ -236,8 +236,8 @@ bool AdhocJobCheckpoint::CheckFileConsistence(const AdhocFileKey* fileKey) {
     }
 }
 
-bool AdhocJobCheckpoint::IsFinished() {
-    return mCurrentFileIndex >= mFileCount;
+int32_t AdhocJobCheckpoint::GetCurrentFileIndex() {
+    return mCurrentFileIndex;
 }
 
 std::string AdhocJobCheckpoint::GetJobName() {
