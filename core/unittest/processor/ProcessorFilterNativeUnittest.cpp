@@ -677,7 +677,7 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         std::string outJson = eventGroup1.ToJsonString();
         // judge result
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
-        APSARA_TEST_EQUAL_FATAL(3, processor.mProcParseErrorTotal->GetValue());
+        APSARA_TEST_EQUAL_FATAL(3, processor.mProcDiscardRecordsTotal->GetValue());
         APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
     }
     {
