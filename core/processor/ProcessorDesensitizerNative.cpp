@@ -41,6 +41,9 @@ void ProcessorDesensitizerNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;
     }
+    if (mSensitiveWordCastOptions.empty() || mSensitiveWordCastOptions.size() <= (size_t)0) {
+        return;
+    }
 
     const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
     EventsContainer& events = logGroup.MutableEvents();
@@ -53,7 +56,7 @@ void ProcessorDesensitizerNative::Process(PipelineEventGroup& logGroup) {
 
 void ProcessorDesensitizerNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e) {
     if (!IsSupportedEvent(e)) {
-        return ;
+        return;
     }
 
     auto& sourceEvent = e.Cast<LogEvent>();
@@ -76,7 +79,7 @@ void ProcessorDesensitizerNative::ProcessEvent(const StringView& logPath, Pipeli
         contents[content.first] = StringView(valueBuffer.data, valueBuffer.size);
         mProcParseOutSizeBytes->Add(valueBuffer.size);
     }
-    return ;
+    return;
 }
 
 void ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, std::string* value) {
