@@ -203,19 +203,11 @@ void AdhocCheckpointManagerUnittest::AddJob(const std::string& jobName, const st
     for (std::string fileName : jobFiles) {
         std::string jobDataPath = GetProcessExecutionDir() + jobName;
         std::string filePath = PathJoin(jobDataPath, fileName);
-        AdhocFileCheckpointPtr fileCheckpoint = mAdhocCheckpointManager->CreateAdhocFileCheckpoint(jobName, filePath);
-        fileCheckpointList.push_back(fileCheckpoint);
-        AdhocFileKey fileKey(fileCheckpoint->mDevInode, fileCheckpoint->mSignatureSize, fileCheckpoint->mSignatureHash);
-        fileKeyMap[std::make_pair(jobName, fileName)] = fileKey;
 
         // mock file
         Mkdir(jobDataPath);
         std::ofstream file(filePath);
-
-        if (!file) {
-            std::cout << "Create file failed" << filePath << std::endl;
-            return;
-        }
+        EXPECT_EQ(!file, false);
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -230,6 +222,12 @@ void AdhocCheckpointManagerUnittest::AddJob(const std::string& jobName, const st
         }
 
         file.close();
+
+        // create file checkpoint
+        AdhocFileCheckpointPtr fileCheckpoint = mAdhocCheckpointManager->CreateAdhocFileCheckpoint(jobName, filePath);
+        fileCheckpointList.push_back(fileCheckpoint);
+        AdhocFileKey fileKey(fileCheckpoint->mDevInode, fileCheckpoint->mSignatureSize, fileCheckpoint->mSignatureHash);
+        fileKeyMap[std::make_pair(jobName, fileName)] = fileKey;
     }
     AdhocJobCheckpointPtr jobCheckpoint
         = AdhocCheckpointManager::GetInstance()->CreateAdhocJobCheckpoint(jobName, fileCheckpointList);
