@@ -40,8 +40,9 @@ void PipelineEventGroupInput::getRow(const int32_t rowIndex, std::vector<KV>& pa
 }
 
 void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplStringPiece>& values, std::string& err) {
-    LOG_INFO(sLogger, ("colIndex", colIndex));
+    
     std::string columnName = mColumnNames[colIndex];
+    LOG_INFO(sLogger, ("colIndex", colIndex)("columnName", columnName));
     for (auto event : mLogGroup->GetEvents()) {
         LogEvent& sourceEvent = event.Cast<LogEvent>();
         if (timestamp == columnName) {
@@ -54,13 +55,14 @@ void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplS
             values.emplace_back(SplStringPiece(timestampNanosecondValue));
         } else {
             StringView content = sourceEvent.GetContent(columnName);
+            LOG_INFO(sLogger, ("colIndex", colIndex)("columnName", columnName)("columnValue", content));
             values.emplace_back(SplStringPiece(content.data(), content.size()));
         }
     }
 }
 
 bool PipelineEventGroupInput::isColumnar() {
-    return true;
+    return false;
 }
 
 }  // namespace apsara::sls::spl

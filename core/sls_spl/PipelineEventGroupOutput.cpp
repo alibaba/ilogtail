@@ -11,6 +11,9 @@ namespace apsara::sls::spl {
 void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& err) {
     mRowSize = header.rowSize;
     mColumnNames = header.columnNames;
+    for (auto& columeName : mColumnNames) {
+        LOG_INFO(sLogger, ("columeName", columeName));
+    }
     for (auto& constCol : header.constCols) {
         mConstColumns.emplace(constCol.first, constCol.second.ToString());
         LOG_INFO(sLogger, ("constCol key", constCol.first)("constCol value", constCol.second.ToString()));
@@ -26,6 +29,7 @@ void PipelineEventGroupOutput::addRow(
     StringView timestamp;
     StringView timestampNanosecond;
 
+    LOG_INFO(sLogger, ("row.size()", row.size()));
     for (auto col = 0; col < row.size(); ++col) {
         if (row[col].hasValue()) {
             if (StringView(mColumnNames[col].mPtr, mColumnNames[col].mLen) == "timestamp") {

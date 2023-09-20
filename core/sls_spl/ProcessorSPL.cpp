@@ -123,7 +123,7 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
     // SplPipeline spip = SplPipeline(splPlan, error, timeoutMills, maxMemoryBytes, logger);
     Error error;
-    mSPLPipelinePtr = std::make_shared<SplPipeline>(splPlan, error, timeoutMills, maxMemoryBytes, logger);
+    mSPLPipelinePtr = std::make_shared<SplPipeline>(splPlan, error);
     if (error.code_ != StatusCode::OK) {
         LOG_ERROR(sLogger, ("pipeline create error", error.msg_));
         return false;
@@ -140,6 +140,9 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     auto logger = std::make_shared<StdoutLogger>();
 
     std::vector<std::string> colNames{"timestamp", "timestampNanosecond", "content"};
+
+    std::string outJson = logGroup.ToJsonString();
+    LOG_INFO(sLogger, ("before execute", outJson));
     
     auto input = std::make_shared<PipelineEventGroupInput>(colNames, logGroup);
 
@@ -168,6 +171,10 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     }
 
     logGroup.SwapEvents(newEvents);
+
+    outJson = logGroup.ToJsonString();
+    LOG_INFO(sLogger, ("after swap", outJson));
+    
 
     logGroupList.emplace_back(logGroup);
     LOG_INFO(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
