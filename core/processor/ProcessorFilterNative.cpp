@@ -19,6 +19,8 @@
 #include "models/LogEvent.h"
 #include "plugin/ProcessorInstance.h"
 #include "config_manager/ConfigManager.h"
+#include <vertor>
+
 namespace logtail {
 
 ProcessorFilterNative::~ProcessorFilterNative() {
@@ -126,7 +128,8 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
     }
     if (res && mDiscardNoneUtf8) {
         LogContents& contents = sourceEvent.MutableContents();
-        for (auto content = contents.begin(); content != contents.end(); ++content) {
+        std::vector<std::vector<StringView>> newContents;
+        for (auto content = contents.begin(); content != contents.end();) {
             if (FilterNoneUtf8(content->second.data(), true)) {
                 std::string value = content->second.to_string();
                 FilterNoneUtf8(value, false);
@@ -136,21 +139,20 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
             }
             if (FilterNoneUtf8(content->first.data(), true)) {
                 // key
-                StringBuffer keyBuffer = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(content->first.size() + 1);
                 const std::string key = content->first.to_string();
                 FilterNoneUtf8(key, false);
-                strcpy(keyBuffer.data, key.c_str());
-                keyBuffer.size = key.size();
+                StringBuffer keyBuffer = sourceEvent.GetSourceBuffer()->CopyString(key);
 
                 // value
-                StringBuffer valueBuffer
-                    = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(contents[content->first].size() + 1);
-                const std::string value = contents[content->first].to_string();
-                strcpy(valueBuffer.data, value.c_str());
-                valueBuffer.size = value.size();
-
-                contents[StringView(keyBuffer.data, keyBuffer.size)] = StringView(valueBuffer.data, valueBuffer.size);
-                contents.erase(content->first);
+                StringBuffer valueBuffer = (StringBuffer&&)sourceEvent.GetContent(content->first);
+                newContents.push_back({StringView(keyBuffer.data, keyBuffer.size),
+                                       StringView(valueBuffer.data, valueBuffer.size)});
+                content = contents.erase(content);
+            } else {
+                content++;
+            }
+            for (auto& newContent : newContents) {
+                sourceEvent.SetContentNoCopy(newContent[0], newContent[1]);
             }
         }
     }
