@@ -17,7 +17,6 @@
 #pragma once
 #include <vector>
 #include "AdhocFileCheckpoint.h"
-#include "common/Lock.h"
 
 namespace logtail {
 
@@ -28,7 +27,7 @@ private:
     int32_t mFileCount;
     int32_t mCurrentFileIndex;
     std::string mAdhocJobName;
-    ReadWriteLock mRWL;
+    int32_t mLastDumpTime;
 
 public:
     AdhocJobCheckpoint(const std::string& jobName);
@@ -38,7 +37,7 @@ public:
     bool UpdateFileCheckpoint(const AdhocFileKey* fileKey, AdhocFileCheckpointPtr fileCheckpoint);
 
     bool Load(const std::string& path);
-    void Dump(const std::string& path);
+    void Dump(const std::string& path, bool isAuto);
 
     bool IsFinished();
     std::string GetJobName();
