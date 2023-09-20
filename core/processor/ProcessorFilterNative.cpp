@@ -200,7 +200,7 @@ bool ProcessorFilterNative::FilterFilterRule(LogEvent& sourceEvent, const LogFil
         return IsMatched(contents, *filterRule);
     } catch (...) {
         mProcFilterErrorTotal->Add(1);
-        LOG_ERROR(sLogger, ("filter error ", ""));
+        LOG_ERROR(GetContext().GetLogger(), ("filter error ", ""));
         return false;
     }
 }
@@ -222,7 +222,7 @@ bool ProcessorFilterNative::FilterGlobal(LogEvent& sourceEvent) {
         return IsMatched(contents, rule);
     } catch (...) {
         mProcFilterErrorTotal->Add(1);
-        LOG_ERROR(sLogger, ("filter error ", ""));
+        LOG_ERROR(GetContext().GetLogger(), ("filter error ", ""));
         return false;
     }
 }
