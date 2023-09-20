@@ -36,8 +36,6 @@ private:
     bool CastOneSensitiveWord(const std::string& key, std::string* value);
 
     CounterPtr mProcDesensitizerRecodesTotal;
-    CounterPtr mProcParseInSizeBytes;
-    CounterPtr mProcParseOutSizeBytes;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;
