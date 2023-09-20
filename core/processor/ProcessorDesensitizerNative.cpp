@@ -45,16 +45,15 @@ void ProcessorDesensitizerNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
 
-    const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
     EventsContainer& events = logGroup.MutableEvents();
 
     for (auto it = events.begin(); it != events.end();) {
-        ProcessEvent(logPath, *it);
+        ProcessEvent(*it);
         ++it;
     }
 }
 
-void ProcessorDesensitizerNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e) {
+void ProcessorDesensitizerNative::ProcessEvent(PipelineEventPtr& e) {
     if (!IsSupportedEvent(e)) {
         return;
     }

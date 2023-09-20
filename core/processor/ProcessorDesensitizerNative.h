@@ -32,7 +32,7 @@ protected:
 private:
     std::unordered_map<std::string, std::vector<SensitiveWordCastOption>> mSensitiveWordCastOptions;
 
-    void ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
+    void ProcessEvent(PipelineEventPtr& e);
     void CastOneSensitiveWord(const std::string& key, std::string* value);
 
     CounterPtr mProcParseInSizeBytes;
