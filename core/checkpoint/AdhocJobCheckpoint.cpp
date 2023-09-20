@@ -26,6 +26,7 @@ AdhocJobCheckpoint::AdhocJobCheckpoint(const std::string& jobName) {
     mAdhocJobName = jobName;
     mFileCount = 0;
     mCurrentFileIndex = 0;
+    mLastDumpTime = 0;
 }
 
 void AdhocJobCheckpoint::AddFileCheckpoint(AdhocFileCheckpointPtr fileCheckpoint) {
@@ -34,20 +35,14 @@ void AdhocJobCheckpoint::AddFileCheckpoint(AdhocFileCheckpointPtr fileCheckpoint
 }
 
 AdhocFileCheckpointPtr AdhocJobCheckpoint::GetFileCheckpoint(const AdhocFileKey* fileKey) {
-    mRWL.lock_shared();
-
     AdhocFileCheckpointPtr fileCheckpoint = nullptr;
     if (CheckFileConsistence(fileKey)) {
         fileCheckpoint = mAdhocFileCheckpointList[mCurrentFileIndex];
     }
-
-    mRWL.unlock_shared();
     return fileCheckpoint;
 }
 
 bool AdhocJobCheckpoint::UpdateFileCheckpoint(const AdhocFileKey* fileKey, AdhocFileCheckpointPtr fileCheckpoint) {
-    mRWL.lock();
-
     bool dumpFlag = false;
     bool indexChangeFlag = false;
     if (!CheckFileConsistence(fileKey) || fileCheckpoint->mOffset == -1) {
@@ -83,8 +78,6 @@ bool AdhocJobCheckpoint::UpdateFileCheckpoint(const AdhocFileKey* fileKey, Adhoc
     if (indexChangeFlag) {
         mCurrentFileIndex++;
     }
-
-    mRWL.unlock();
     return dumpFlag;
 }
 
@@ -92,7 +85,7 @@ bool AdhocJobCheckpoint::Load(const std::string& path) {
     if (CheckExistance(path)) {
         std::ifstream ifs(path);
         if (!ifs.is_open()) {
-            LOG_ERROR(sLogger, ("open adhoc check point file error when load", path));
+            LOG_ERROR(sLogger, ("open adhoc check point file error when load, file path", path));
             LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "open check point file failed");
             return false;
         }
@@ -101,46 +94,54 @@ bool AdhocJobCheckpoint::Load(const std::string& path) {
         ifs >> root;
         ifs.close();
 
-        mAdhocJobName = root["job_name"].asString();
-        mFileCount = root["job_file_count"].asInt();
-        mCurrentFileIndex = root["job_current_file_index"].asInt();
+        if (root.isMember("job_name")) {
+            mAdhocJobName = root["job_name"].asString();
+        } else {
+            LOG_ERROR(sLogger, ("Adhoc check point file does not have field \"job_name\", file path", path));
+            return false;
+        }
+        mFileCount = root.get("job_file_count", 0).asInt();
+        mCurrentFileIndex = root.get("job_current_file_index", 0).asInt();
+        if (root.isMember("job_files")) {
+            Json::Value files = root["job_files"];
+            for (Json::Value file : files) {
+                AdhocFileCheckpointPtr fileCheckpoint = std::make_shared<AdhocFileCheckpoint>();
+                fileCheckpoint->mFileName = file.get("file_name", "").asString();
+                fileCheckpoint->mStatus = GetStatusFromString(file.get("status", "").asString());
+                fileCheckpoint->mJobName = mAdhocJobName;
 
-        Json::Value files = root["job_files"];
-
-        for (Json::Value file : files) {
-            AdhocFileCheckpointPtr fileCheckpoint = std::make_shared<AdhocFileCheckpoint>();
-            fileCheckpoint->mFileName = file["file_name"].asString();
-            fileCheckpoint->mStatus = GetStatusFromString(file["status"].asString());
-            fileCheckpoint->mJobName = mAdhocJobName;
-
-            switch (fileCheckpoint->mStatus) {
-                case STATUS_WAITING:
-                    fileCheckpoint->mDevInode.dev = file["dev"].asUInt64();
-                    fileCheckpoint->mDevInode.inode = file["inode"].asUInt64();
-                    fileCheckpoint->mSize = file["size"].asInt64();
-                    break;
-                case STATUS_LOADING:
-                    fileCheckpoint->mDevInode.dev = file["dev"].asUInt64();
-                    fileCheckpoint->mDevInode.inode = file["inode"].asUInt64();
-                    fileCheckpoint->mOffset = file["offset"].asInt64();
-                    fileCheckpoint->mSize = file["size"].asInt64();
-                    fileCheckpoint->mSignatureHash = file["sig_hash"].asUInt64();
-                    fileCheckpoint->mSignatureSize = file["sig_size"].asUInt();
-                    fileCheckpoint->mStartTime = file["start_time"].asInt();
-                    fileCheckpoint->mLastUpdateTime = file["update_time"].asInt();
-                    fileCheckpoint->mRealFileName = file["real_file_name"].asString();
-                    break;
-                case STATUS_FINISHED:
-                    fileCheckpoint->mSize = file["size"].asInt64();
-                    fileCheckpoint->mStartTime = file["start_time"].asInt();
-                    fileCheckpoint->mLastUpdateTime = file["update_time"].asInt();
-                    fileCheckpoint->mRealFileName = file["real_file_name"].asString();
-                    break;
-                case STATUS_LOST:
-                    fileCheckpoint->mLastUpdateTime = file["update_time"].asInt();
-                    break;
+                switch (fileCheckpoint->mStatus) {
+                    case STATUS_WAITING:
+                        fileCheckpoint->mDevInode.dev = file.get("dev", 0).asUInt64();
+                        fileCheckpoint->mDevInode.inode = file.get("inode", 0).asUInt64();
+                        fileCheckpoint->mSize = file.get("size", 0).asInt64();
+                        break;
+                    case STATUS_LOADING:
+                        fileCheckpoint->mDevInode.dev = file.get("dev", 0).asUInt64();
+                        fileCheckpoint->mDevInode.inode = file.get("inode", 0).asUInt64();
+                        fileCheckpoint->mOffset = file.get("offset", 0).asInt64();
+                        fileCheckpoint->mSize = file.get("size", 0).asInt64();
+                        fileCheckpoint->mSignatureHash = file.get("sig_hash", 0).asUInt64();
+                        fileCheckpoint->mSignatureSize = file.get("sig_size", 0).asUInt();
+                        fileCheckpoint->mStartTime = file.get("start_time", 0).asInt();
+                        fileCheckpoint->mLastUpdateTime = file.get("update_time", 0).asInt();
+                        fileCheckpoint->mRealFileName = file.get("real_file_name", "").asString();
+                        break;
+                    case STATUS_FINISHED:
+                        fileCheckpoint->mSize = file.get("size", 0).asInt64();
+                        fileCheckpoint->mStartTime = file.get("start_time", 0).asInt();
+                        fileCheckpoint->mLastUpdateTime = file.get("update_time", 0).asInt();
+                        fileCheckpoint->mRealFileName = file.get("real_file_name", "").asString();
+                        break;
+                    case STATUS_LOST:
+                        fileCheckpoint->mLastUpdateTime = file.get("update_time", 0).asInt();
+                        break;
+                }
+                mAdhocFileCheckpointList.push_back(fileCheckpoint);
             }
-            mAdhocFileCheckpointList.push_back(fileCheckpoint);
+        } else if (0 != mFileCount) {
+            LOG_ERROR(sLogger, ("Adhoc check point file lost field \"job_files\", file path", path));
+            return false;
         }
         return true;
     } else {
@@ -148,13 +149,17 @@ bool AdhocJobCheckpoint::Load(const std::string& path) {
     }
 }
 
-void AdhocJobCheckpoint::Dump(const std::string& path) {
+void AdhocJobCheckpoint::Dump(const std::string& path, bool isAuto) {
+    if (isAuto && (time(NULL) - mLastDumpTime < 5)) {
+        return;
+    }
+    mLastDumpTime = time(NULL);
+
     if (!Mkdirs(ParentPath(path))) {
-        LOG_ERROR(sLogger, ("open adhoc check point file dir error when dump", path));
+        LOG_ERROR(sLogger, ("open adhoc check point file dir error when dump, file path", path));
         LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "open adhoc check point file dir failed");
         return;
     }
-    mRWL.lock_shared();
 
     Json::Value root;
     root["job_name"] = mAdhocJobName;
@@ -199,13 +204,11 @@ void AdhocJobCheckpoint::Dump(const std::string& path) {
     }
     root["job_files"] = files;
 
-    mRWL.unlock_shared();
-
     Json::StreamWriterBuilder writerBuilder;
     std::string jsonString = Json::writeString(writerBuilder, root);
     std::ofstream ofs(path);
     if (!ofs.is_open()) {
-        LOG_ERROR(sLogger, ("open adhoc check point file error", path));
+        LOG_ERROR(sLogger, ("open adhoc check point file error, file path", path));
         LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM, "open adhoc check point file failed");
         return;
     }

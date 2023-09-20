@@ -116,11 +116,9 @@ void AdhocCheckpointManagerUnittest::TestAdhocCheckpointManagerStart() {
     AdhocJobCheckpointPtr jobCheckpoint3
         = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName3); // return jobCheckpoint1
     EXPECT_EQ(jobCheckpoint3->GetJobName(), jobName3);
-    std::vector<std::string> jobFilesTmp = jobCheckpoint3->GetFileList();
-    EXPECT_EQ(jobFilesTmp.size(), jobFiles1.size());
-    for (size_t i = 0; i < jobFilesTmp.size(); i++) {
-        EXPECT_EQ(jobFilesTmp[i].find(jobFiles1[i]) != std::string::npos, true);
-    }
+    AdhocFileKey* fileKeyA1 = GetAdhocFileKey(jobName1, jobFiles1[0]);
+    AdhocFileCheckpointPtr fileCheckpointA1 = mAdhocCheckpointManager->GetAdhocFileCheckpoint(jobName3, fileKeyA1);
+    EXPECT_EQ(nullptr != fileCheckpointA1, true);
 }
 
 void AdhocCheckpointManagerUnittest::TestAdhocCheckpointManagerRun() {
