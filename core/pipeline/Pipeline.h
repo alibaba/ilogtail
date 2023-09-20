@@ -28,12 +28,14 @@ public:
     bool Init(const PipelineConfig& config);
     void Process(PipelineEventGroup& logGroup);
     PipelineContext& GetContext() { return mContext; }
+    PipelineConfig& GetPipelineConfig() { return mConfig; }
 
 private:
-    bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const ComponentConfig& config);
+    bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);
 
     std::string mName;
     std::vector<std::unique_ptr<ProcessorInstance> > mProcessorLine;
     PipelineContext mContext;
+    PipelineConfig mConfig;
 };
 } // namespace logtail

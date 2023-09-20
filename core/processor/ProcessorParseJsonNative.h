@@ -13,21 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#pragma once
 #include "processor/Processor.h"
 #include <string>
-#include <boost/regex.hpp>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
 
 namespace logtail {
 
 class ProcessorParseJsonNative : public Processor {
 public:
     static const char* Name() { return "processor_parse_json_native"; }
-    bool Init(const ComponentConfig& config) override;
+    bool Init(const ComponentConfig& componentConfig) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) override;
+
+private:
+    std::string mSourceKey;
+
+    bool mDiscardUnmatch = false;
+    bool mUploadRawLog = false;
+    bool mSourceKeyOverwritten = false;
+    std::string mRawLogTag;
+    bool mRawLogTagOverwritten = false;
+
+    int* mParseFailures = nullptr;
+    int* mLogGroupSize = nullptr;
+
+    CounterPtr mProcParseInSizeBytes;
+    CounterPtr mProcParseOutSizeBytes;
+    CounterPtr mProcDiscardRecordsTotal;
+    CounterPtr mProcParseErrorTotal;
+
+    bool JsonLogLineParser(LogEvent& sourceEvent, const StringView& logPath, PipelineEventPtr& e);
+    void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
+    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
+    static std::string RapidjsonValueToString(const rapidjson::Value& value);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseJsonNativeUnittest;

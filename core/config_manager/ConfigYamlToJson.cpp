@@ -33,6 +33,7 @@ const std::string INPUT_FILE_LOG = "file_log";
 const std::string PROCESSOR_REGEX_ACCELERATE = "processor_regex_accelerate";
 const std::string PROCESSOR_JSON_ACCELERATE = "processor_json_accelerate";
 const std::string PROCESSOR_DELIMITER_ACCELERATE = "processor_delimiter_accelerate";
+const std::string PROCESSOR_APSARA_ACCELERATE = "processor_apsara_accelerate";
 
 const std::string PROCESSOR_SPLIT_LINE_LOG_USING_SEP = "processor_split_log_string";
 const std::string PROCESSOR_SPLIT_LINE_LOG_USING_REG = "processor_split_log_regex";
@@ -94,6 +95,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
 
     mFileAdvancedConfigMap["DirBlackList"] = "dir_blacklist";
     mFileAdvancedConfigMap["FilepathBlackList"] = "filepath_blacklist";
+    mFileAdvancedConfigMap["EnableTimestampNanosecond"] = "enable_timestamp_nanosecond";
     mFileAdvancedConfigMap["EnablePreciseTimestamp"] = "enable_precise_timestamp";
     mFileAdvancedConfigMap["PreciseTimestampKey"] = "precise_timestamp_key";
     mFileAdvancedConfigMap["PreciseTimestampUnit"] = "precise_timestamp_unit";
@@ -118,6 +120,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFilePluginToLogTypeMap[PROCESSOR_REGEX_ACCELERATE] = "common_reg_log";
     mFilePluginToLogTypeMap[PROCESSOR_JSON_ACCELERATE] = "json_log";
     mFilePluginToLogTypeMap[PROCESSOR_DELIMITER_ACCELERATE] = "delimiter_log";
+    mFilePluginToLogTypeMap[PROCESSOR_APSARA_ACCELERATE] = "apsara_log";
 }
 
 string ConfigYamlToJson::GetTransforKey(const string yamlKey) {

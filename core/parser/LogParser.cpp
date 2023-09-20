@@ -35,11 +35,11 @@ using namespace sls_logs;
 
 namespace logtail {
 
-static const char* SLS_KEY_LEVEL = "__LEVEL__";
-static const char* SLS_KEY_THREAD = "__THREAD__";
-static const char* SLS_KEY_FILE = "__FILE__";
-static const char* SLS_KEY_LINE = "__LINE__";
-static const int32_t MAX_BASE_FIELD_NUM = 10;
+const char* LogParser::SLS_KEY_LEVEL = "__LEVEL__";
+const char* LogParser::SLS_KEY_THREAD = "__THREAD__";
+const char* LogParser::SLS_KEY_FILE = "__FILE__";
+const char* LogParser::SLS_KEY_LINE = "__LINE__";
+const int32_t LogParser::MAX_BASE_FIELD_NUM = 10;
 const char* LogParser::UNMATCH_LOG_KEY = "__raw_log__";
 
 bool LogParser::IsPrefixString(const string& all, const string& prefix) {
@@ -124,7 +124,7 @@ LogParser::ApsaraEasyReadLogTimeParser(const char* buffer, string& timeStr, time
 void LogParser::AddUnmatchLog(StringView buffer, sls_logs::LogGroup& logGroup, uint32_t& logGroupSize) {
     Log* logPtr = logGroup.add_logs();
     auto now = GetCurrentLogtailTime();
-    SetLogTime(logPtr, now.tv_sec, now.tv_nsec);
+    SetLogTimeWithNano(logPtr, now.tv_sec, now.tv_nsec);
     AddLog(logPtr, UNMATCH_LOG_KEY, buffer.to_string(), logGroupSize);
 }
 
@@ -374,7 +374,7 @@ bool LogParser::RegexLogLineParser(StringView buffer,
 
     if (parseSuccess) {
         Log* logPtr = logGroup.add_logs();
-        SetLogTime(logPtr, logTime.tv_sec, logTime.tv_nsec);
+        SetLogTimeWithNano(logPtr, logTime.tv_sec, logTime.tv_nsec);
         for (uint32_t i = 0; i < keys.size(); i++) {
             AddLog(logPtr, keys[i], what[i + 1].str(), logGroupSize);
         }
@@ -459,7 +459,7 @@ bool LogParser::RegexLogLineParser(StringView buffer,
     }
 
     Log* logPtr = logGroup.add_logs();
-    SetLogTime(logPtr, logTime.tv_sec, logTime.tv_nsec); // current system time, no need history check
+    SetLogTimeWithNano(logPtr, logTime.tv_sec, logTime.tv_nsec); // current system time, no need history check
     for (uint32_t i = 0; i < keys.size(); i++) {
         AddLog(logPtr, keys[i], what[i + 1].str(), logGroupSize);
     }
@@ -489,7 +489,8 @@ bool LogParser::ParseLogTime(const char* buffer,
     int nanosecondLength = -1;
     const char* strptimeResult = NULL;
     if ((!haveNanosecond || endWithNanosecond) && IsPrefixString(curTimeStr, timeStr)) {
-        if (endWithNanosecond) {
+        bool isTimestampNanosecond = (strcmp(timeFormat, "%s") == 0) && (curTimeStr.length() > timeStr.length());
+        if (endWithNanosecond || isTimestampNanosecond) {
             strptimeResult = Strptime(curTimeStr.c_str() + timeStr.length(), "%f", &logTime, nanosecondLength);
         } else {
             strptimeResult = curTimeStr.data() + timeStr.length();
@@ -497,8 +498,10 @@ bool LogParser::ParseLogTime(const char* buffer,
         }
     } else {
         strptimeResult = Strptime(curTimeStr.c_str(), timeFormat, &logTime, nanosecondLength, specifiedYear);
-        timeStr = curTimeStr.substr(0, curTimeStr.length() - nanosecondLength);
-        AdjustLogTime(logTime, tzOffsetSecond);
+        if (NULL != strptimeResult) {
+            timeStr = curTimeStr.substr(0, curTimeStr.length() - nanosecondLength);
+            AdjustLogTime(logTime, tzOffsetSecond);
+        }
     }
     if (NULL == strptimeResult) {
         if (AppConfig::GetInstance()->IsLogParseAlarmValid()) {
@@ -545,7 +548,7 @@ bool LogParser::ParseLogTime(const char* buffer,
 bool LogParser::WholeLineModeParser(
     logtail::StringView buffer, LogGroup& logGroup, const string& key, LogtailTime& logTime, uint32_t& logGroupSize) {
     Log* logPtr = logGroup.add_logs();
-    SetLogTime(logPtr, logTime.tv_sec, logTime.tv_nsec); // current system time, no need history check
+    SetLogTimeWithNano(logPtr, logTime.tv_sec, logTime.tv_nsec); // current system time, no need history check
     AddLog(logPtr, key, buffer.to_string(), logGroupSize);
     return true;
 }
@@ -588,7 +591,7 @@ static int32_t FindBaseFields(const char* buffer, int32_t beginIndexArray[], int
                 endIndexArray[baseFieldNum] = i;
                 baseFieldNum++;
             }
-            if (baseFieldNum >= MAX_BASE_FIELD_NUM) {
+            if (baseFieldNum >= LogParser::MAX_BASE_FIELD_NUM) {
                 break;
             }
             if (buffer[i + 1] == '\t' && buffer[i + 2] != '[') {
@@ -632,8 +635,8 @@ static int32_t FindColonIndex(const char* buffer, int32_t beginIndex, int32_t en
 }
 
 static int32_t ParseApsaraBaseFields(const char* buffer, Log* logPtr, uint32_t& logGroupSize) {
-    int32_t beginIndexArray[MAX_BASE_FIELD_NUM] = {0};
-    int32_t endIndexArray[MAX_BASE_FIELD_NUM] = {0};
+    int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
+    int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
     int32_t baseFieldNum = FindBaseFields(buffer, beginIndexArray, endIndexArray);
     if (baseFieldNum == 0) {
         return 0;
@@ -646,17 +649,17 @@ static int32_t ParseApsaraBaseFields(const char* buffer, Log* logPtr, uint32_t& 
         endIndex = endIndexArray[i];
         if ((findFieldBitMap & 0x1) == 0 && IsFieldLevel(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x1;
-            LogParser::AddLog(logPtr, SLS_KEY_LEVEL, string(buffer + beginIndex, endIndex - beginIndex), logGroupSize);
+            LogParser::AddLog(logPtr, LogParser::SLS_KEY_LEVEL, string(buffer + beginIndex, endIndex - beginIndex), logGroupSize);
         } else if ((findFieldBitMap & 0x10) == 0 && IsFieldThread(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x10;
-            LogParser::AddLog(logPtr, SLS_KEY_THREAD, string(buffer + beginIndex, endIndex - beginIndex), logGroupSize);
+            LogParser::AddLog(logPtr, LogParser::SLS_KEY_THREAD, string(buffer + beginIndex, endIndex - beginIndex), logGroupSize);
         } else if ((findFieldBitMap & 0x100) == 0 && IsFieldFileLine(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x100;
             int32_t colonIndex = FindColonIndex(buffer, beginIndex, endIndex);
-            LogParser::AddLog(logPtr, SLS_KEY_FILE, string(buffer + beginIndex, colonIndex - beginIndex), logGroupSize);
+            LogParser::AddLog(logPtr, LogParser::SLS_KEY_FILE, string(buffer + beginIndex, colonIndex - beginIndex), logGroupSize);
             if (colonIndex < endIndex) {
                 LogParser::AddLog(
-                    logPtr, SLS_KEY_LINE, string(buffer + colonIndex + 1, endIndex - colonIndex - 1), logGroupSize);
+                    logPtr, LogParser::SLS_KEY_LINE, string(buffer + colonIndex + 1, endIndex - colonIndex - 1), logGroupSize);
             }
         }
     }
@@ -726,7 +729,7 @@ bool LogParser::ApsaraEasyReadLogLineParser(StringView buffer,
     }
 
     Log* logPtr = logGroup.add_logs();
-    SetLogTime(logPtr, logTime, logTime_in_micro * 1000 % 1000000000);
+    SetLogTimeWithNano(logPtr, logTime, logTime_in_micro * 1000 % 1000000000);
     int32_t beg_index = 0;
     int32_t colon_index = -1;
     int32_t index = -1;
