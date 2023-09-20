@@ -233,20 +233,12 @@ bool AdhocJobCheckpoint::CheckFileConsistence(const AdhocFileKey* fileKey) {
     }
 }
 
-int32_t AdhocJobCheckpoint::GetCurrentFileIndex() {
-    return mCurrentFileIndex;
+bool AdhocJobCheckpoint::IsFinished() {
+    return mCurrentFileIndex >= mFileCount;
 }
 
 std::string AdhocJobCheckpoint::GetJobName() {
     return mAdhocJobName;
-}
-
-std::vector<std::string> AdhocJobCheckpoint::GetFileList() {
-    std::vector<std::string> result;
-    for (AdhocFileCheckpointPtr filePtr : mAdhocFileCheckpointList) {
-        result.push_back(filePtr->mFileName);
-    }
-    return result;
 }
 
 } // namespace logtail
