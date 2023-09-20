@@ -18,6 +18,7 @@
 #include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "sdk/Common.h"
+#include "plugin/ProcessorInstance.h"
 
 
 namespace logtail {
@@ -30,6 +31,8 @@ bool ProcessorDesensitizerNative::Init(const ComponentConfig& componentConfig) {
     mSensitiveWordCastOptions = mConfig.mSensitiveWordCastOptions;
 
     SetMetricsRecordRef(Name(), componentConfig.GetId());
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
 
     return true;
 }
@@ -64,12 +67,14 @@ void ProcessorDesensitizerNative::ProcessEvent(const StringView& logPath, Pipeli
             continue;
         }
         std::string value = content.second.to_string();
+        mProcParseInSizeBytes->Add(value.size());
         CastOneSensitiveWord(key, &value);
 
         StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(value.size() + 1);
         strcpy(valueBuffer.data, value.c_str());
         valueBuffer.size = value.size();
         contents[content.first] = StringView(valueBuffer.data, valueBuffer.size);
+        mProcParseOutSizeBytes->Add(valueBuffer.size);
     }
     return ;
 }

@@ -34,6 +34,10 @@ private:
 
     void ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
     void CastOneSensitiveWord(const std::string& key, std::string* value);
+
+    CounterPtr mProcParseInSizeBytes;
+    CounterPtr mProcParseOutSizeBytes;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;
 #endif
