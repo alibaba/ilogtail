@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <iostream>
 #include "processor/ProcessorDesensitizerNative.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
@@ -64,20 +64,22 @@ void ProcessorDesensitizerNative::ProcessEvent(PipelineEventPtr& e) {
             continue;
         }
         std::string value = sourceEvent.GetContent(key).to_string();
-        if (CastOneSensitiveWord(key, &value)) {
-            mProcDesensitizerRecodesTotal->Add(1);
-            StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
-            contents[key] = StringView(valueBuffer.data, valueBuffer.size);
-        }
+
+        CastOneSensitiveWord(key, &value);
+
+        mProcDesensitizerRecodesTotal->Add(1);
+
+        StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
+        contents[content->first] = StringView(valueBuffer.data, valueBuffer.size);
+
         ++it;
     }
     return;
 }
 
-bool ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, std::string* value) {
+void ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, std::string* value) {
     const std::vector<SensitiveWordCastOption>& optionVec = mSensitiveWordCastOptions[key];
     std::string* pVal = value;
-    bool isChanged = false;
     for (size_t i = 0; i < optionVec.size(); ++i) {
         const SensitiveWordCastOption& opt = optionVec[i];
         if (!opt.mRegex || !opt.mRegex->ok()) {
@@ -131,7 +133,6 @@ bool ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, s
             if (rst) {
                 *value = destStr;
                 pVal = value;
-                isChanged = true;
             }
         }
 
@@ -142,7 +143,6 @@ bool ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, s
         //     word fail", pConfig->mProjectName, pConfig->mCategory, pConfig->mRegion);
         // }
     }
-    return isChanged;
 }
 
 bool ProcessorDesensitizerNative::IsSupportedEvent(const PipelineEventPtr& e) {

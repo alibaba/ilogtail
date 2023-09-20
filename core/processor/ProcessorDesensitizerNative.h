@@ -33,7 +33,7 @@ private:
     std::unordered_map<std::string, std::vector<SensitiveWordCastOption>> mSensitiveWordCastOptions;
 
     void ProcessEvent(PipelineEventPtr& e);
-    bool CastOneSensitiveWord(const std::string& key, std::string* value);
+    void CastOneSensitiveWord(const std::string& key, std::string* value);
 
     CounterPtr mProcDesensitizerRecodesTotal;
 
