@@ -1230,7 +1230,7 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
             }
         }
         ProcessorFilterNative& processor = *(new ProcessorFilterNative);
-        processor.FilterNoneUtf8(testStr, false);
+        processor.FilterNoneUtf8(testStr);
         for (uint32_t indexOfString = 0; indexOfString < testStr.size(); ++indexOfString) {
             if (flow[indexOfString] == true) {
                 APSARA_TEST_EQUAL_FATAL(testStr[indexOfString], ' ');  
