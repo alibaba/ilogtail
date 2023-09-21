@@ -73,14 +73,15 @@ else
   "$CURRDIR/import_plugins.sh" "$PLUGINS_CONFIG_FILE" "$GO_MOD_FILE"
   cd $(go env GOPATH)/pkg/mod/github.com/valyala/gozstd@*
 fi
-
 # if libzstd.a is available in the image, copy instead of rebuild
 lib_name=libzstd_${GOOS}_${GOARCH}.a
-if [[ -f /opt/logtail/deps/lib64/libzstd.a ]]; then
-  sudo cp /opt/logtail/deps/lib64/libzstd.a libzstd_${GOOS}_${GOARCH}.a
-else
-  sudo MOREFLAGS=-fPIC make clean libzstd.a
-  sudo mv libzstd__.a ${lib_name}
+if [[ ! -f "$lib_name" ]]; then
+  if [[ -f /opt/logtail/deps/lib64/libzstd.a ]]; then
+    sudo cp /opt/logtail/deps/lib64/libzstd.a libzstd_${GOOS}_${GOARCH}.a
+  else
+    sudo MOREFLAGS=-fPIC make clean libzstd.a
+    sudo mv libzstd__.a ${lib_name}
+  fi
 fi
 GROUP=$(id -gn $USER)
 sudo chown ${USER}:${GROUP} ${lib_name}
