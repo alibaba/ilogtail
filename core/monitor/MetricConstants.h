@@ -46,5 +46,4 @@ extern const std::string METRIC_PROC_HISTORY_FAILURE_TOTAL;
 // processor desensitizer metrics
 extern const std::string METRIC_PROC_DESENSITIZER_RECORDS_TOTAL;
 
-
 } // namespace logtail
