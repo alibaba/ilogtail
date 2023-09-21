@@ -50,7 +50,11 @@ private:
 
     bool ProcessEvent(PipelineEventPtr& e);
     bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
-    bool FilterNoneUtf8(const std::string& strSrc, bool findNoneUtf8);
+
+    bool noneUtf8(std::string& strSrc, bool modify);
+    bool CheckNoneUtf8(const std::string& strSrc);
+    void FilterNoneUtf8(std::string& strSrc);
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorFilterNativeUnittest;
 #endif

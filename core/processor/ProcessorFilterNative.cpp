@@ -130,17 +130,17 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
         LogContents& contents = sourceEvent.MutableContents();
         std::vector<std::vector<StringView>> newContents;
         for (auto content = contents.begin(); content != contents.end();) {
-            if (FilterNoneUtf8(content->second.data(), true)) {
+            if (CheckNoneUtf8(content->second.data())) {
                 std::string value = content->second.to_string();
-                FilterNoneUtf8(value, false);
+                FilterNoneUtf8(value);
 
                 StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
                 sourceEvent.SetContent(content->first, StringView(valueBuffer.data, valueBuffer.size));
             }
-            if (FilterNoneUtf8(content->first.data(), true)) {
+            if (CheckNoneUtf8(content->second.data())) {
                 // key
-                const std::string key = content->first.to_string();
-                FilterNoneUtf8(key, false);
+                std::string key = content->first.to_string();
+                FilterNoneUtf8(key);
                 StringBuffer keyBuffer = sourceEvent.GetSourceBuffer()->CopyString(key);
 
                 // value
@@ -255,12 +255,22 @@ bool ProcessorFilterNative::IsMatched(const LogContents& contents, const LogFilt
 static const char UTF8_BYTE_PREFIX = 0x80;
 static const char UTF8_BYTE_MASK = 0xc0;
 
-bool ProcessorFilterNative::FilterNoneUtf8(const std::string& strSrc, bool findNoneUtf8) {
-    std::string* str = const_cast<std::string*>(&strSrc);
+
+bool ProcessorFilterNative::CheckNoneUtf8(const std::string& strSrc){
+
+    return noneUtf8(const_cast<std::string&>(strSrc), false);
+}
+
+void ProcessorFilterNative::FilterNoneUtf8(std::string& strSrc){
+    noneUtf8(strSrc, true);
+}
+
+bool ProcessorFilterNative::noneUtf8(std::string& strSrc, bool modify) {
+    std::string* str = &strSrc;
 
 #define FILL_BLUNK_AND_CONTINUE_IF_TRUE(stat) \
     if (stat) { \
-        if (findNoneUtf8) { \
+        if (!modify) { \
             return true; \
         } \
         *iter = ' '; \
