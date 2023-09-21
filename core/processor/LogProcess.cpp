@@ -470,9 +470,8 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     if (logBuffer->exactlyOnceCheckpoint) {
         // I think one just record buffer offset and length is enough
         // There is no need to record offset and length for each event
-        std::fill_n(logBuffer->exactlyOnceCheckpoint->positions,
-                    eventGroup.GetEvents().size(),
-                    std::make_pair(logBuffer->beginOffset, logBuffer->rawBuffer.size()));
+        std::pair<size_t, size_t> pos(logBuffer->beginOffset, logBuffer->rawBuffer.size());
+        logBuffer->exactlyOnceCheckpoint->positions.assign(eventGroup.GetEvents().size(), pos);
     }
     return 0;
 }

@@ -67,7 +67,7 @@ public:
           mLastUpdateTime(0),
           mFileOpenFlag(fileOpenFlag),
           mContainerStopped(containerStopped),
-          mLastForceRead(mLastForceRead),
+          mLastForceRead(lastForceRead),
           mConfigName(configName),
           mFileName(filename),
           mRealFileName(realFileName) {}
