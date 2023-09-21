@@ -174,7 +174,6 @@ int ReadUtmp(const char* filename, int* n_entries, utmp** utmp_buf) {
         buf = (utmp*)malloc(size);
     else {
         fclose(utmp_file);
-        delete utmp_file;
         return 1;
     }
 

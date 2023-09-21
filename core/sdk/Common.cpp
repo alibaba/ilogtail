@@ -865,9 +865,11 @@ namespace sdk {
         unsigned mlen = (unsigned)((bits >> 3) % SHA1_INPUT_BYTES), padding = SHA1_INPUT_BYTES - mlen;
         M[mlen++] = 0x80;
         if (padding > BIT_COUNT_BYTES) {
+            // Overrunning array of 64 bytes at byte offset 64 by dereferencing pointer "this->M + mlen".
             memset(M + mlen, 0x00, padding - BIT_COUNT_BYTES);
             make_big_endian32((uint32_t*)M, SHA1_INPUT_WORDS - BIT_COUNT_WORDS);
         } else {
+            // Overrunning array of 64 bytes at byte offset 64 by dereferencing pointer "this->M + mlen".
             memset(M + mlen, 0x00, SHA1_INPUT_BYTES - mlen);
             make_big_endian32((uint32_t*)M, SHA1_INPUT_WORDS);
             transform();
