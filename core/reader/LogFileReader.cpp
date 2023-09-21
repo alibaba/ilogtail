@@ -149,9 +149,7 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
         if (checkPointManagerPtr->GetCheckPoint(mDevInode, mConfigName, checkPointSharePtr)) {
             CheckPoint* checkPointPtr = checkPointSharePtr.get();
             mLastFilePos = checkPointPtr->mOffset;
-            if (!checkPointPtr->mCache.empty()) {
-                mCache = checkPointPtr->mCache;
-            }
+            mCache = checkPointPtr->mCache;
             mLastFileSignatureHash = checkPointPtr->mSignatureHash;
             mLastFileSignatureSize = checkPointPtr->mSignatureSize;
             mRealLogPath = checkPointPtr->mRealFileName;
@@ -1015,7 +1013,7 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
     bool allowRollback = true;
     if (event != nullptr && event->IsReaderFlushTimeout()) {
         // If flush timeout event, we should filter whether the event is legacy.
-        if (event->GetLastReadPos() == LastReadPos() && event->GetLastFilePos() == mLastFilePos
+        if (event->GetLastReadPos() == GetLastReadPos() && event->GetLastFilePos() == mLastFilePos
             && event->GetInode() == mDevInode.inode) {
             allowRollback = false;
         } else {
@@ -1796,7 +1794,7 @@ bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allo
         fileInfo->offset = mLastFilePos - (int64_t)logBuffer.rawBuffer.size();
         fileInfo->len = (int64_t)logBuffer.rawBuffer.size();
         fileInfo->filePos = mLastFilePos;
-        fileInfo->readPos = LastReadPos();
+        fileInfo->readPos = GetLastReadPos();
         fileInfo->fileSize = fileSize;
     }
 
@@ -1857,16 +1855,20 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     if (!READ_BYTE) {
         return;
     }
-    StringBuffer stringMemory = logBuffer.AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
     const size_t lastCacheSize = mCache.size();
+    if (READ_BYTE < lastCacheSize) {
+        READ_BYTE = lastCacheSize; // this should not happen, just avoid READ_BYTE >= 0 theoratically
+    }
+    StringBuffer stringMemory = logBuffer.AllocateStringBuffer(READ_BYTE); // allocate modifiable buffer
     if (lastCacheSize) {
         READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
     }
     TruncateInfo* truncateInfo = nullptr;
-    int64_t lastReadPos = LastReadPos();
+    int64_t lastReadPos = GetLastReadPos();
     size_t nbytes = ReadFile(mLogFileOp, stringMemory.data + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo);
     char* stringBuffer = stringMemory.data;
-    if (nbytes == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
+    if (nbytes == 0 && (!lastCacheSize || allowRollback)) { // read nothing, if no cached data or allow rollback the
+                                                            // reader's state cannot be changed
         return;
     }
     if (lastCacheSize) {
@@ -1938,13 +1940,16 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
 void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, bool allowRollback) {
     bool fromCpt = false;
     size_t READ_BYTE = getNextReadSize(end, fromCpt);
-    std::unique_ptr<char[]> gbkBuffer(new char[READ_BYTE + 1]);
     const size_t lastCacheSize = mCache.size();
+    if (READ_BYTE < lastCacheSize) {
+        READ_BYTE = lastCacheSize; // this should not happen, just avoid READ_BYTE >= 0 theoratically
+    }
+    std::unique_ptr<char[]> gbkBuffer(new char[READ_BYTE + 1]);
     if (lastCacheSize) {
         READ_BYTE -= lastCacheSize; // reserve space to copy from cache if needed
     }
     TruncateInfo* truncateInfo = nullptr;
-    int64_t lastReadPos = LastReadPos();
+    int64_t lastReadPos = GetLastReadPos();
     size_t readCharCount = ReadFile(mLogFileOp, gbkBuffer.get() + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo);
     if (readCharCount == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
         return;
@@ -2315,7 +2320,7 @@ std::unique_ptr<Event> LogFileReader::CreateFlushTimeoutEvent() {
                                                    mDevInode.dev,
                                                    mDevInode.inode));
     result->SetLastFilePos(mLastFilePos);
-    result->SetLastReadPos(LastReadPos());
+    result->SetLastReadPos(GetLastReadPos());
     return result;
 }
 

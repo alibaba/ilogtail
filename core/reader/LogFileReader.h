@@ -253,7 +253,7 @@ public:
 
     std::string GetTimeFormat() const { return mTimeFormat; }
 
-    bool IsReadToEnd() const { return LastReadPos() == mLastFileSize; }
+    bool IsReadToEnd() const { return GetLastReadPos() == mLastFileSize; }
 
     bool HasDataInCache() const { return mCache.size(); }
 
@@ -371,7 +371,7 @@ protected:
 
     bool CheckForFirstOpen(FileReadPolicy policy = BACKWARD_TO_FIXED_POS);
     void FixLastFilePos(LogFileOperator& logFileOp, int64_t endOffset);
-    inline int64_t LastReadPos() const { // pos read but may not consumed, used for read needed
+    inline int64_t GetLastReadPos() const { // pos read but may not consumed, used for read needed
         return mLastFilePos + mCache.size();
     }
 
@@ -526,7 +526,7 @@ private:
     // Adjust parameters for first read by range checkpoints.
     //
     // Includes:
-    // - mLastFilePos, LastReadPos
+    // - mLastFilePos, GetLastReadPos
     // - mFirstWatched
     // - mEOOption->toReplayCheckpoints
     // - mEOOption->lastComittedOffset
@@ -540,13 +540,13 @@ private:
     //  3.2. uncommitted checkpoints are found:
     //   - Sort them by read offset
     //   - Set them as toReplayCheckpoints
-    //   - Set LastReadPos = mLastFilePos = ReadOffsetOfFirstCheckpoint
+    //   - Set GetLastReadPos = mLastFilePos = ReadOffsetOfFirstCheckpoint
     //   - Set mFirstWatched = false
     //   - If maximum is found and the checkpoint is committed, use it to update
     //    the last committed offset
     //  3.3. no minimum but maximum is found, it means all data in checkpoints have
     //   already been committed, so read should start from the position after it.
-    //   - Set LastReadPos = mLastFilePos = ReadOffset(maxOffset) + ReadLength(maxOffset)
+    //   - Set GetLastReadPos = mLastFilePos = ReadOffset(maxOffset) + ReadLength(maxOffset)
     //   - Set mFirstWatched = false
     void adjustParametersByRangeCheckpoints();
 
