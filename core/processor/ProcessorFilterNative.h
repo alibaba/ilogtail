@@ -32,12 +32,13 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) override;
 
 private:
+    enum Mode { FilterExpressionRootMode, FilterRuleMode, GlobalMode };
     std::shared_ptr<LogFilterRule> mFilterRule;
     BaseFilterNodePtr mFilterExpressionRoot = nullptr;
     std::unordered_map<std::string, LogFilterRule*> mFilters;
     LogType mLogType;
     bool mDiscardNoneUtf8;
-    std::string mFilterMode;
+    Mode mFilterMode;
 
     CounterPtr mProcFilterInSizeBytes;
     CounterPtr mProcFilterOutSizeBytes;
@@ -53,7 +54,7 @@ private:
 
     bool noneUtf8(StringView & strSrc, bool modify);
     bool CheckNoneUtf8(const StringView & strSrc);
-    void FilterNoneUtf8(StringView & strSrc);
+    void FilterNoneUtf8(std::string& strSrc);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorFilterNativeUnittest;

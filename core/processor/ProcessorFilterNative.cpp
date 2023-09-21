@@ -35,12 +35,12 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
 
     if (mConfig.mAdvancedConfig.mFilterExpressionRoot.get() != nullptr) {
         mFilterExpressionRoot = mConfig.mAdvancedConfig.mFilterExpressionRoot;
-        mFilterMode = "FilterExpressionRoot";
+        mFilterMode = FilterExpressionRootMode;
     } else if (mConfig.mFilterRule) {
         mFilterRule = mConfig.mFilterRule;
-        mFilterMode = "FilterRule";
+        mFilterMode = FilterRuleMode;
     } else {
-        mFilterMode = "Global";
+        mFilterMode = GlobalMode;
     }
 
     mDiscardNoneUtf8 = mConfig.mDiscardNoneUtf8;
@@ -119,37 +119,37 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
     auto& sourceEvent = e.Cast<LogEvent>();
     bool res;
 
-    if (mFilterMode == "FilterExpressionRoot") {
+    if (mFilterMode == FilterExpressionRootMode) {
         res = FilterExpressionRoot(sourceEvent, mFilterExpressionRoot);
-    } else if (mFilterMode == "FilterRule") {
+    } else if (mFilterMode == FilterRuleMode) {
         res = FilterFilterRule(sourceEvent, mFilterRule.get());
-    } else if (mFilterMode == "Global") {
+    } else if (mFilterMode == GlobalMode) {
         res = FilterGlobal(sourceEvent);
     }
     if (res && mDiscardNoneUtf8) {
         LogContents& contents = sourceEvent.MutableContents();
-        std::vector<std::vector<StringView>> newContents;
+        std::vector<std::pair<StringView,StringView> > newContents;
         for (auto content = contents.begin(); content != contents.end();) {
             if (CheckNoneUtf8(content->second)) {
-                FilterNoneUtf8(content->second);
+                auto value = content->second.to_string();
+                FilterNoneUtf8(value);
+                StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
+                content->second = StringView(valueBuffer.data, valueBuffer.size);
             }
             if (CheckNoneUtf8(content->first)) {
                 // key
-                StringView keyView(content->first.data());
-                FilterNoneUtf8(keyView);
-                StringBuffer keyBuffer = sourceEvent.GetSourceBuffer()->CopyString(keyView);
+                auto key = content->first.to_string();
+                FilterNoneUtf8(key);
+                StringBuffer keyBuffer = sourceEvent.GetSourceBuffer()->CopyString(key);
 
-                // value
-                StringBuffer valueBuffer = (StringBuffer&&)sourceEvent.GetContent(content->first);
-                newContents.push_back(
-                    {StringView(keyBuffer.data, keyBuffer.size), StringView(valueBuffer.data, valueBuffer.size)});
+                newContents.emplace_back(StringView(keyBuffer.data, keyBuffer.size), content->second);
                 content = contents.erase(content);
             } else {
                 content++;
             }
         }
         for (auto& newContent : newContents) {
-            sourceEvent.SetContentNoCopy(newContent[0], newContent[1]);
+            sourceEvent.SetContentNoCopy(newContent.first, newContent.second);
         }
     }
 
@@ -256,8 +256,9 @@ bool ProcessorFilterNative::CheckNoneUtf8(const StringView& strSrc) {
     return noneUtf8(const_cast<StringView&>(strSrc), false);
 }
 
-void ProcessorFilterNative::FilterNoneUtf8(StringView& strSrc) {
-    noneUtf8(strSrc, true);
+void ProcessorFilterNative::FilterNoneUtf8(std::string& strSrc) {
+    StringView strView(strSrc.data(), strSrc.size());
+    noneUtf8(strView, true);
 }
 
 bool ProcessorFilterNative::noneUtf8(StringView& str, bool modify) {
