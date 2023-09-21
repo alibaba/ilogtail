@@ -108,7 +108,8 @@ void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
                                                mConfigName,
                                                mRealLogPath,
                                                mLogFileOp.IsOpen(),
-                                               mContainerStopped);
+                                               mContainerStopped,
+                                               mLastForceRead);
     // use last event time as checkpoint's last update time
     checkPointPtr->mLastUpdateTime = mLastEventTime;
     checkPointPtr->mCache = mCache;
@@ -149,6 +150,7 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
         if (checkPointManagerPtr->GetCheckPoint(mDevInode, mConfigName, checkPointSharePtr)) {
             CheckPoint* checkPointPtr = checkPointSharePtr.get();
             mLastFilePos = checkPointPtr->mOffset;
+            mLastForceRead = checkPointPtr->mLastForceRead;
             mCache = checkPointPtr->mCache;
             mLastFileSignatureHash = checkPointPtr->mSignatureHash;
             mLastFileSignatureSize = checkPointPtr->mSignatureSize;
@@ -430,7 +432,7 @@ LogFileReader::LogFileReader(const string& projectName,
     mTopicName = "";
     mHostLogPathDir = hostLogPathDir;
     mHostLogPathFile = hostLogPathFile;
-    mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
+    mHostLogPath = AbsolutePath(hostLogPathFile, hostLogPathDir);
     // mRealLogPath = mHostLogPath; fix it in 1.8
     mTailLimit = tailLimit;
     mLastFilePos = 0;
@@ -476,7 +478,7 @@ LogFileReader::LogFileReader(const std::string& projectName,
     mCategory = category;
     mHostLogPathDir = hostLogPathDir;
     mHostLogPathFile = hostLogPathFile;
-    mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
+    mHostLogPath = AbsolutePath(hostLogPathFile, hostLogPathDir);
     // mRealLogPath = mHostLogPath; fix it in 1.8
     mTailLimit = tailLimit;
     mLastFilePos = 0;
