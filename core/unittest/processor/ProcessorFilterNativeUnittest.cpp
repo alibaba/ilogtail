@@ -193,6 +193,7 @@ void ProcessorFilterNativeUnittest::TestFilter() {
     // case 1 : the field are all provided,  only one matched
     auto sourceBuffer1 = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup1(sourceBuffer1);
+    char illegalUtf8[] = {char(0xFF), char(0x80), '\0'};
     std::string inJson = R"({
         "events" :
         [
@@ -212,6 +213,7 @@ void ProcessorFilterNativeUnittest::TestFilter() {
                 {
                     "key1" : "abcdeavalue1",
                     "key2" : "value2xxxxx",
+                    "key3)" + std::string(illegalUtf8) + R"(": "abcdea)" + std::string(illegalUtf8) + R"(value1",
                     "log.file.offset": "0"
                 },
                 "timestampNanosecond" : 0,
@@ -221,6 +223,7 @@ void ProcessorFilterNativeUnittest::TestFilter() {
         ]
     })";
     eventGroup1.FromJsonString(inJson);
+    std::cout<<inJson<<std::endl;
     // run function
     processorInstance.Process(eventGroup1);
     std::string outJson = eventGroup1.ToJsonString();
@@ -233,6 +236,7 @@ void ProcessorFilterNativeUnittest::TestFilter() {
                 {
                     "key1" : "abcdeavalue1",
                     "key2" : "value2xxxxx",
+                    "key3  " : "abcdea  value1",
                     "log.file.offset" : "0"
                 },
                 "timestamp" : 12345678901,
