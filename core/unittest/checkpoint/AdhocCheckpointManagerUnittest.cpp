@@ -80,7 +80,7 @@ public:
     void TestAdhocCheckpointManagerStop();
 
 private:
-    void AddJob(const std::string& jobName, const std::vector<std::string> jobFiles);
+    void AddJob(const std::string& jobName, const std::vector<std::string>& jobFiles);
     void MockFileLog(const std::string& jobName, const std::string& fileName);
     AdhocFileKey* GetAdhocFileKey(const std::string& jobName, const std::string& fileName);
     long GetFileUpdateTime(const std::string& filePath);
@@ -178,6 +178,7 @@ void AdhocCheckpointManagerUnittest::TestAdhocCheckpointManagerDump() {
 
     // check dump when auto dump per 5s
     usleep(5 * 1000 * 1000);
+    mAdhocCheckpointManager->DumpAdhocCheckpoint();
     EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1)), true);
     long time2 = GetFileUpdateTime(mAdhocCheckpointManager->GetJobCheckpointPath(jobName1));
     EXPECT_EQ(time1 != time2, true);
@@ -196,7 +197,7 @@ void AdhocCheckpointManagerUnittest::TestAdhocCheckpointManagerStop() {
     EXPECT_EQ(CheckExistance(mAdhocCheckpointManager->GetJobCheckpointPath(jobName2)), false);
 }
 
-void AdhocCheckpointManagerUnittest::AddJob(const std::string& jobName, const std::vector<std::string> jobFiles) {
+void AdhocCheckpointManagerUnittest::AddJob(const std::string& jobName, const std::vector<std::string>& jobFiles) {
     std::vector<AdhocFileCheckpointPtr> fileCheckpointList;
     for (std::string fileName : jobFiles) {
         std::string jobDataPath = GetProcessExecutionDir() + jobName;

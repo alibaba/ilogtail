@@ -44,7 +44,7 @@ public:
                         int64_t offset,
                         uint32_t signatureSize,
                         uint64_t signatureHash,
-                        DevInode devInode,
+                        const DevInode& devInode,
                         FileReadStatus status = STATUS_WAITING,
                         const std::string& jobName = std::string(),
                         const std::string& realFileName = std::string())
@@ -73,7 +73,7 @@ public:
 
 struct AdhocFileKey {
     AdhocFileKey() {}
-    AdhocFileKey(const DevInode& devInode, const uint32_t signatureSize, const uint64_t signatureHash)
+    AdhocFileKey(const DevInode& devInode, uint32_t signatureSize, uint64_t signatureHash)
         : mDevInode(devInode), mSignatureSize(signatureSize), mSignatureHash(signatureHash) {}
     DevInode mDevInode;
     uint32_t mSignatureSize;
