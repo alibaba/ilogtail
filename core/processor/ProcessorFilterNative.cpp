@@ -130,30 +130,26 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
         LogContents& contents = sourceEvent.MutableContents();
         std::vector<std::vector<StringView>> newContents;
         for (auto content = contents.begin(); content != contents.end();) {
-            if (CheckNoneUtf8(content->second.data())) {
-                std::string value = content->second.to_string();
-                FilterNoneUtf8(value);
-
-                StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
-                sourceEvent.SetContent(content->first, StringView(valueBuffer.data, valueBuffer.size));
+            if (CheckNoneUtf8(content->second)) {
+                FilterNoneUtf8(content->second);
             }
-            if (CheckNoneUtf8(content->second.data())) {
+            if (CheckNoneUtf8(content->first)) {
                 // key
-                std::string key = content->first.to_string();
-                FilterNoneUtf8(key);
-                StringBuffer keyBuffer = sourceEvent.GetSourceBuffer()->CopyString(key);
+                StringView keyView(content->first.data());
+                FilterNoneUtf8(keyView);
+                StringBuffer keyBuffer = sourceEvent.GetSourceBuffer()->CopyString(keyView);
 
                 // value
                 StringBuffer valueBuffer = (StringBuffer&&)sourceEvent.GetContent(content->first);
-                newContents.push_back({StringView(keyBuffer.data, keyBuffer.size),
-                                       StringView(valueBuffer.data, valueBuffer.size)});
+                newContents.push_back(
+                    {StringView(keyBuffer.data, keyBuffer.size), StringView(valueBuffer.data, valueBuffer.size)});
                 content = contents.erase(content);
             } else {
                 content++;
             }
-            for (auto& newContent : newContents) {
-                sourceEvent.SetContentNoCopy(newContent[0], newContent[1]);
-            }
+        }
+        for (auto& newContent : newContents) {
+            sourceEvent.SetContentNoCopy(newContent[0], newContent[1]);
         }
     }
 
@@ -256,30 +252,27 @@ static const char UTF8_BYTE_PREFIX = 0x80;
 static const char UTF8_BYTE_MASK = 0xc0;
 
 
-bool ProcessorFilterNative::CheckNoneUtf8(const std::string& strSrc){
-
-    return noneUtf8(const_cast<std::string&>(strSrc), false);
+bool ProcessorFilterNative::CheckNoneUtf8(const StringView& strSrc) {
+    return noneUtf8(const_cast<StringView&>(strSrc), false);
 }
 
-void ProcessorFilterNative::FilterNoneUtf8(std::string& strSrc){
+void ProcessorFilterNative::FilterNoneUtf8(StringView& strSrc) {
     noneUtf8(strSrc, true);
 }
 
-bool ProcessorFilterNative::noneUtf8(std::string& strSrc, bool modify) {
-    std::string* str = &strSrc;
-
+bool ProcessorFilterNative::noneUtf8(StringView& str, bool modify) {
 #define FILL_BLUNK_AND_CONTINUE_IF_TRUE(stat) \
     if (stat) { \
         if (!modify) { \
             return true; \
         } \
-        *iter = ' '; \
+        const_cast<char&>(*iter) = ' '; \
         ++iter; \
         continue; \
     };
 
-    std::string::iterator iter = str->begin();
-    while (iter != str->end()) {
+    auto iter = str.begin();
+    while (iter != str.end()) {
         uint16_t unicode = 0;
         char c;
         if ((*iter & 0x80) == 0x00) // one byte
@@ -294,7 +287,7 @@ bool ProcessorFilterNative::noneUtf8(std::string& strSrc, bool modify) {
              * mapping rule: 0000 0080 - 0000 07FF | 110xxxxx 10xxxxxx
              */
             c = *iter;
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE(iter + 1 == str->end());
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE(iter + 1 == str.end());
             /* check whether the byte is in format 10xxxxxx */
             FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 1) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
             /* get unicode value */
@@ -308,7 +301,7 @@ bool ProcessorFilterNative::noneUtf8(std::string& strSrc, bool modify) {
              * mapping rule: 0000 0800 - 0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
              */
             c = *iter;
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((iter + 1 == str->end()) || (iter + 2 == str->end()));
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((iter + 1 == str.end()) || (iter + 2 == str.end()));
             /* check whether the byte is in format 10xxxxxx */
             FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 1) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
             FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 2) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
@@ -324,8 +317,8 @@ bool ProcessorFilterNative::noneUtf8(std::string& strSrc, bool modify) {
              * mapping rule: 0001 0000 - 0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
              */
             c = *iter;
-            FILL_BLUNK_AND_CONTINUE_IF_TRUE((iter + 1 == str->end()) || (iter + 2 == str->end())
-                                            || (iter + 3 == str->end()));
+            FILL_BLUNK_AND_CONTINUE_IF_TRUE((iter + 1 == str.end()) || (iter + 2 == str.end())
+                                            || (iter + 3 == str.end()));
             /* check whether the byte is in format 10xxxxxx */
             FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 1) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
             FILL_BLUNK_AND_CONTINUE_IF_TRUE((*(iter + 2) & UTF8_BYTE_MASK) != UTF8_BYTE_PREFIX);
