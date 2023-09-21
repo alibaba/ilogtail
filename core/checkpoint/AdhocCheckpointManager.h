@@ -17,7 +17,6 @@
 #pragma once
 #include <unordered_map>
 #include "AdhocJobCheckpoint.h"
-#include "common/Lock.h"
 
 namespace logtail {
 
@@ -28,7 +27,6 @@ private:
     AdhocCheckpointManager& operator=(const AdhocCheckpointManager&) = delete;
 
     std::unordered_map<std::string, AdhocJobCheckpointPtr> mAdhocJobCheckpointMap;
-    ReadWriteLock mRWL;
 
 public:
     static AdhocCheckpointManager* GetInstance() {

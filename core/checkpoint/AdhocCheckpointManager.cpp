@@ -45,17 +45,13 @@ void AdhocCheckpointManager::Run() {
         // dump checkpoint per 5s
         usleep(INT32_FLAG(adhoc_checkpoint_dump_thread_wait_interval));
 
-        mRWL.lock_shared();
         for (auto& p : mAdhocJobCheckpointMap) {
             p.second->Dump(GetJobCheckpointPath(p.second->GetJobName()), true);
         }
-        mRWL.unlock_shared();
     }
 }
 
 AdhocJobCheckpointPtr AdhocCheckpointManager::GetAdhocJobCheckpoint(const std::string& jobName) {
-    mRWL.lock_shared();
-
     AdhocJobCheckpointPtr jobCheckpoint = nullptr;
     auto it = mAdhocJobCheckpointMap.find(jobName);
     if (it != mAdhocJobCheckpointMap.end()) {
@@ -64,7 +60,6 @@ AdhocJobCheckpointPtr AdhocCheckpointManager::GetAdhocJobCheckpoint(const std::s
         LOG_WARNING(sLogger, ("Get AdhocJobCheckpoint fail, job checkpoint doesn't exist, job name", jobName));
     }
 
-    mRWL.unlock_shared();
     return jobCheckpoint;
 }
 
@@ -73,7 +68,6 @@ AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std::string& jobName,
                                                  std::vector<AdhocFileCheckpointPtr> fileCheckpointList) {
     AdhocJobCheckpointPtr jobCheckpoint = GetAdhocJobCheckpoint(jobName);
 
-    mRWL.lock();
     if (nullptr == jobCheckpoint) {
         jobCheckpoint = std::make_shared<AdhocJobCheckpoint>(jobName);
         for (AdhocFileCheckpointPtr fileCheckpoint : fileCheckpointList) {
@@ -86,7 +80,6 @@ AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std::string& jobName,
     } else {
         LOG_INFO(sLogger, ("Job checkpoint already exists, job name", jobName));
     }
-    mRWL.unlock();
 
     return jobCheckpoint;
 }
@@ -123,8 +116,6 @@ AdhocFileCheckpointPtr AdhocCheckpointManager::CreateAdhocFileCheckpoint(const s
 }
 
 void AdhocCheckpointManager::DeleteAdhocJobCheckpoint(const std::string& jobName) {
-    mRWL.lock();
-
     auto jobCheckpoint = mAdhocJobCheckpointMap.find(jobName);
     if (jobCheckpoint != mAdhocJobCheckpointMap.end()) {
         remove(GetJobCheckpointPath(jobName).c_str());
@@ -133,8 +124,6 @@ void AdhocCheckpointManager::DeleteAdhocJobCheckpoint(const std::string& jobName
     } else {
         LOG_WARNING(sLogger, ("Delete AdhocJobCheckpoint fail, job checkpoint doesn't exist, job name", jobName));
     }
-
-    mRWL.unlock();
 }
 
 AdhocFileCheckpointPtr AdhocCheckpointManager::GetAdhocFileCheckpoint(const std::string& jobName,
