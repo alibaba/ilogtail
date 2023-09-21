@@ -34,7 +34,7 @@ void AdhocJobCheckpoint::AddFileCheckpoint(AdhocFileCheckpointPtr fileCheckpoint
     mFileCount++;
 }
 
-AdhocFileCheckpointPtr AdhocJobCheckpoint::GetFileCheckpoint(const AdhocFileKey* fileKey) {
+AdhocFileCheckpointPtr AdhocJobCheckpoint::GetFileCheckpoint(AdhocFileKey* fileKey) {
     AdhocFileCheckpointPtr fileCheckpoint = nullptr;
     if (CheckFileConsistence(fileKey)) {
         fileCheckpoint = mAdhocFileCheckpointList[mCurrentFileIndex];
@@ -42,7 +42,7 @@ AdhocFileCheckpointPtr AdhocJobCheckpoint::GetFileCheckpoint(const AdhocFileKey*
     return fileCheckpoint;
 }
 
-bool AdhocJobCheckpoint::UpdateFileCheckpoint(const AdhocFileKey* fileKey, AdhocFileCheckpointPtr fileCheckpoint) {
+bool AdhocJobCheckpoint::UpdateFileCheckpoint(AdhocFileKey* fileKey, AdhocFileCheckpointPtr fileCheckpoint) {
     bool dumpFlag = false;
     bool indexChangeFlag = false;
     if (!CheckFileConsistence(fileKey) || fileCheckpoint->mOffset == -1) {
@@ -149,8 +149,8 @@ bool AdhocJobCheckpoint::Load(const std::string& path) {
     }
 }
 
-void AdhocJobCheckpoint::Dump(const std::string& path, bool isAuto) {
-    if (isAuto && (time(NULL) - mLastDumpTime < 5)) {
+void AdhocJobCheckpoint::Dump(const std::string& path, bool isAutoDump) {
+    if (isAutoDump && (time(NULL) - mLastDumpTime < 5)) {
         return;
     }
     mLastDumpTime = time(NULL);
@@ -216,7 +216,7 @@ void AdhocJobCheckpoint::Dump(const std::string& path, bool isAuto) {
     ofs.close();
 }
 
-bool AdhocJobCheckpoint::CheckFileConsistence(const AdhocFileKey* fileKey) {
+bool AdhocJobCheckpoint::CheckFileConsistence(AdhocFileKey* fileKey) {
     if (mCurrentFileIndex >= mFileCount) {
         LOG_WARNING(sLogger, ("Get AdhocFileCheckpoint fail, job is finished, job name", mAdhocJobName));
         return false;
