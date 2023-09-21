@@ -177,6 +177,7 @@ void CheckPointManager::LoadDirCheckPoint(const Json::Value& root) {
             LogtailAlarm::GetInstance()->SendAlarm(CHECKPOINT_ALARM,
                                                    "failed to parse dir checkpoint, unkonw exception");
         }
+        delete dir;
     }
 }
 void CheckPointManager::LoadFileCheckPoint(const Json::Value& root) {
