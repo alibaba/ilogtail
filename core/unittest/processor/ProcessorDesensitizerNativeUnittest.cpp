@@ -15,7 +15,7 @@
 #include "unittest/Unittest.h"
 #include "common/JsonUtil.h"
 #include "config/Config.h"
-#include "processor/ProcessorDesensitizerNative.h"
+#include "processor/ProcessorDesensitizeNative.h"
 #include "models/LogEvent.h"
 #include "plugin/ProcessorInstance.h"
 #include "config_manager/ConfigManager.h"
@@ -24,7 +24,7 @@ using namespace std;
 
 namespace logtail {
 
-class ProcessorDesensitizerNativeUnittest : public ::testing::Test {
+class ProcessorDesensitizeNativeUnittest : public ::testing::Test {
 public:
     void SetUp() override {
         mContext.SetConfigName("project##config_0");
@@ -44,23 +44,23 @@ public:
     PipelineContext mContext;
 };
 
-UNIT_TEST_CASE(ProcessorDesensitizerNativeUnittest, TestInit);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestInit);
 
-UNIT_TEST_CASE(ProcessorDesensitizerNativeUnittest, TestParseCastSensWordConfig);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestParseCastSensWordConfig);
 
-UNIT_TEST_CASE(ProcessorDesensitizerNativeUnittest, TestCastSensWordConst);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordConst);
 
-UNIT_TEST_CASE(ProcessorDesensitizerNativeUnittest, TestCastSensWordMD5);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordMD5);
 
-UNIT_TEST_CASE(ProcessorDesensitizerNativeUnittest, TestCastSensWordFail);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordFail);
 
-UNIT_TEST_CASE(ProcessorDesensitizerNativeUnittest, TestCastSensWordLoggroup);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordLoggroup);
 
-UNIT_TEST_CASE(ProcessorDesensitizerNativeUnittest, TestCastSensWordMulti);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordMulti);
 
-UNIT_TEST_CASE(ProcessorDesensitizerNativeUnittest, TestCastWholeKey);
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastWholeKey);
 
-Config* ProcessorDesensitizerNativeUnittest::GetCastSensWordConfig(string key = string("cast1"),
+Config* ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(string key = string("cast1"),
                                                                    string regex = string("(pwd=)[^,]+"),
                                                                    int type = SensitiveWordCastOption::CONST_OPTION,
                                                                    bool replaceAll = false,
@@ -76,17 +76,17 @@ Config* ProcessorDesensitizerNativeUnittest::GetCastSensWordConfig(string key = 
     return oneConfig;
 }
 
-void ProcessorDesensitizerNativeUnittest::TestInit() {
+void ProcessorDesensitizeNativeUnittest::TestInit() {
     Config* config = GetCastSensWordConfig();
     // run function
-    ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+    ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, *config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
 }
 
-void ProcessorDesensitizerNativeUnittest::TestParseCastSensWordConfig() {
+void ProcessorDesensitizeNativeUnittest::TestParseCastSensWordConfig() {
     Json::Value constVal;
     constVal["key"] = Json::Value("param1");
     constVal["type"] = Json::Value("const");
@@ -121,11 +121,11 @@ void ProcessorDesensitizerNativeUnittest::TestParseCastSensWordConfig() {
     APSARA_TEST_EQUAL(param2Vec[0].mRegex->ok(), true);
 }
 
-void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
+void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
     // case1
     {
         Config* config = GetCastSensWordConfig();
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -175,7 +175,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
     // case2
     {
         Config* config = GetCastSensWordConfig();
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -225,7 +225,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
     // case3
     {
         Config* config = GetCastSensWordConfig();
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -276,7 +276,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
     {
         Config* config = GetCastSensWordConfig();
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -327,7 +327,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
     {
         Config* config = GetCastSensWordConfig();
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -376,13 +376,13 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordConst() {
     }
 }
 
-void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
+void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
     // case1
     {
         Config* config = GetCastSensWordConfig();
         config->mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -434,7 +434,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         Config* config = GetCastSensWordConfig();
         config->mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -486,7 +486,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         Config* config = GetCastSensWordConfig();
         config->mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -538,7 +538,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         Config* config = GetCastSensWordConfig();
         config->mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -590,7 +590,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         config->mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -642,7 +642,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         config->mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -694,7 +694,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         config->mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -746,7 +746,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         config->mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -798,7 +798,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
         config->mSensitiveWordCastOptions.begin()->second[0].option = SensitiveWordCastOption::MD5_OPTION;
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -846,12 +846,12 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMD5() {
     }
 }
 
-void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
+void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
     // case 1
     {
         Config* config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -901,7 +901,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
     {
         Config* config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -952,7 +952,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         Config* config = GetCastSensWordConfig();
         config->mSensitiveWordCastOptions.begin()->second[0].constValue = "********";
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -1004,7 +1004,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         Config* config = GetCastSensWordConfig();
         config->mSensitiveWordCastOptions.begin()->second[0].constValue = "\\2********";
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -1057,7 +1057,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         config->mSensitiveWordCastOptions.begin()->second[0].constValue = "\\2********";
         config->mSensitiveWordCastOptions.begin()->second[0].mRegex.reset(new re2::RE2("pwd=[^,]+"));
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -1111,7 +1111,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
         config->mSensitiveWordCastOptions.begin()->second[0].mRegex.reset(new re2::RE2("pwd=[^,]+"));
         config->mSensitiveWordCastOptions.begin()->second[0].mRegex.reset(new re2::RE2(""));
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -1160,7 +1160,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordFail() {
     }
 }
 
-void ProcessorDesensitizerNativeUnittest::TestCastSensWordLoggroup() {
+void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
     Config* config = GetCastSensWordConfig();
     vector<SensitiveWordCastOption>& optVec = config->mSensitiveWordCastOptions["id"];
     vector<SensitiveWordCastOption>& cntVec = config->mSensitiveWordCastOptions["content"];
@@ -1177,7 +1177,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordLoggroup() {
     cntVec[0].replaceAll = true;
     cntVec[0].mRegex.reset(new re2::RE2("('password':')[^']*"));
     // init
-    ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+    ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, *config);
@@ -1255,12 +1255,12 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordLoggroup() {
     delete config;
 }
 
-void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
+void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
     // case 1
     {
         Config* config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -1311,7 +1311,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
     {
         Config* config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -1362,7 +1362,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
     {
         Config* config = GetCastSensWordConfig();
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -1414,7 +1414,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
         Config* config = GetCastSensWordConfig();
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -1467,7 +1467,7 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         config->mSensitiveWordCastOptions.begin()->second[0].replaceAll = true;
         // init
-        ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, *config);
@@ -1516,10 +1516,10 @@ void ProcessorDesensitizerNativeUnittest::TestCastSensWordMulti() {
     }
 }
 
-void ProcessorDesensitizerNativeUnittest::TestCastWholeKey() {
+void ProcessorDesensitizeNativeUnittest::TestCastWholeKey() {
     Config* config = GetCastSensWordConfig("pwd", "().*", 1, false, "\\1********");
     // init
-    ProcessorDesensitizerNative& processor = *(new ProcessorDesensitizerNative);
+    ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, *config);

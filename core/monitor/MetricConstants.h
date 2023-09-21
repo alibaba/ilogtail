@@ -43,7 +43,7 @@ extern const std::string METRIC_PROC_PARSE_ERROR_TOTAL;
 extern const std::string METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL;
 extern const std::string METRIC_PROC_HISTORY_FAILURE_TOTAL;
 
-// processor desensitizer metrics
-extern const std::string METRIC_PROC_DESENSITIZER_RECORDS_TOTAL;
+// processor desensitize metrics
+extern const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL;
 
 } // namespace logtail

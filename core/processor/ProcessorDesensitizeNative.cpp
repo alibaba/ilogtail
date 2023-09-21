@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include <iostream>
-#include "processor/ProcessorDesensitizerNative.h"
+#include "processor/ProcessorDesensitizeNative.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "sdk/Common.h"
@@ -23,18 +23,18 @@
 
 namespace logtail {
 
-bool ProcessorDesensitizerNative::Init(const ComponentConfig& componentConfig) {
+bool ProcessorDesensitizeNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& mConfig = componentConfig.GetConfig();
 
     mSensitiveWordCastOptions = mConfig.mSensitiveWordCastOptions;
 
     SetMetricsRecordRef(Name(), componentConfig.GetId());
-    mProcDesensitizerRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZER_RECORDS_TOTAL);
+    mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
 
     return true;
 }
 
-void ProcessorDesensitizerNative::Process(PipelineEventGroup& logGroup) {
+void ProcessorDesensitizeNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;
     }
@@ -47,7 +47,7 @@ void ProcessorDesensitizerNative::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-void ProcessorDesensitizerNative::ProcessEvent(PipelineEventPtr& e) {
+void ProcessorDesensitizeNative::ProcessEvent(PipelineEventPtr& e) {
     if (!IsSupportedEvent(e)) {
         return;
     }
@@ -67,7 +67,7 @@ void ProcessorDesensitizerNative::ProcessEvent(PipelineEventPtr& e) {
 
         CastOneSensitiveWord(key, &value);
 
-        mProcDesensitizerRecodesTotal->Add(1);
+        mProcDesensitizeRecodesTotal->Add(1);
 
         StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
         contents[content->first] = StringView(valueBuffer.data, valueBuffer.size);
@@ -77,7 +77,7 @@ void ProcessorDesensitizerNative::ProcessEvent(PipelineEventPtr& e) {
     return;
 }
 
-void ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, std::string* value) {
+void ProcessorDesensitizeNative::CastOneSensitiveWord(const std::string& key, std::string* value) {
     const std::vector<SensitiveWordCastOption>& optionVec = mSensitiveWordCastOptions[key];
     std::string* pVal = value;
     for (size_t i = 0; i < optionVec.size(); ++i) {
@@ -145,7 +145,7 @@ void ProcessorDesensitizerNative::CastOneSensitiveWord(const std::string& key, s
     }
 }
 
-bool ProcessorDesensitizerNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorDesensitizeNative::IsSupportedEvent(const PipelineEventPtr& e) {
     return e.Is<LogEvent>();
 }
 

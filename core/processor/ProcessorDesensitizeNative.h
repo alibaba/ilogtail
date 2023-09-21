@@ -20,9 +20,9 @@
 
 namespace logtail {
 
-class ProcessorDesensitizerNative : public Processor {
+class ProcessorDesensitizeNative : public Processor {
 public:
-    static const char* Name() { return "processor_desensitizer_native"; }
+    static const char* Name() { return "processor_desensitize_native"; }
     bool Init(const ComponentConfig& componentConfig) override;
     void Process(PipelineEventGroup& logGroup) override;
 
@@ -35,7 +35,7 @@ private:
     void ProcessEvent(PipelineEventPtr& e);
     void CastOneSensitiveWord(const std::string& key, std::string* value);
 
-    CounterPtr mProcDesensitizerRecodesTotal;
+    CounterPtr mProcDesensitizeRecodesTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseApsaraNativeUnittest;
