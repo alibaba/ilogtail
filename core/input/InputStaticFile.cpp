@@ -19,8 +19,8 @@
 namespace logtail {
 
 bool InputStaticFile::Init(const Config& config) {
-    mJobName = config.mConfigName;
     mAdhocFileManager = AdhocFileManager::GetInstance();
+    mJobName = config.mConfigName;
 }
 
 bool InputStaticFile::Start() {
@@ -29,11 +29,14 @@ bool InputStaticFile::Start() {
 }
 
 bool InputStaticFile::Stop(bool isPipelineRemoving) {
-    mAdhocFileManager->DeleteJob(mJobName);
+    if (isPipelineRemoving) {
+        mAdhocFileManager->DeleteJob(mJobName);
+    }
 }
 
 // Init mFilePathList
 void InputStaticFile::GetStaticFileList() {
+    
     SortFileList();
 }
 

@@ -42,19 +42,24 @@ private:
     AdhocEventType mType;
     AdhocFileReaderKey mReaderKey;
     std::shared_ptr<Config> mJobConfig;
+    int32_t mWaitTimes;
 
 public:
     AdhocEvent() {}
     AdhocEvent(AdhocEventType eventType) : mType(eventType) {}
-    AdhocEvent(AdhocEventType eventType, AdhocFileReaderKey readerKey) : mType(eventType), mReaderKey(readerKey) {}
+    AdhocEvent(AdhocEventType eventType, AdhocFileReaderKey readerKey) : mType(eventType), mReaderKey(readerKey) {
+        mWaitTimes = 0;
+        FindJobByName();
+    }
 
-    AdhocEventType GetType();
-    std::string GetJobName();
-    AdhocFileKey* GetAdhocFileKey();
-    AdhocFileReaderKey* GetAdhocFileReaderKey();
-    std::shared_ptr<Config> GetJobConfig();
+    inline AdhocEventType GetType() { return mType; }
+    inline std::string GetJobName() { return mReaderKey.mJobName; }
+    inline AdhocFileKey* GetAdhocFileKey() { return &mReaderKey.mFileKey; }
+    inline AdhocFileReaderKey* GetAdhocFileReaderKey() { return &mReaderKey; }
+    inline std::shared_ptr<Config> GetJobConfig() { return mJobConfig; }
+    inline int32_t IncreaseWaitTimes() { return ++mWaitTimes; }
 
-    void SetConfigName(std::string jobName);
+    inline void SetConfigName(std::string jobName) { mReaderKey.mJobName = jobName; }
 };
 
 class AdhocFileManager {
@@ -63,13 +68,13 @@ private:
     AdhocFileManager(const AdhocFileManager&) = delete;
     AdhocFileManager& operator=(const AdhocFileManager&) = delete;
     void ProcessLoop();
-    static bool mRunFlag;
 
     void PushEventQueue(AdhocEvent* ev);
     AdhocEvent* PopEventQueue();
     void ProcessReadFileEvent(AdhocEvent* ev);
     void ProcessStopJobEvent(AdhocEvent* ev);
 
+    static bool mRunFlag;
     AdhocCheckpointManager* mAdhocCheckpointManager;
     std::queue<AdhocEvent*> mEventQueue;
     std::unordered_set<std::string> mDeletedJobSet;

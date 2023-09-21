@@ -23,31 +23,6 @@
 
 namespace logtail {
 
-AdhocEventType AdhocEvent::GetType() {
-    return mType;
-}
-
-std::string AdhocEvent::GetJobName() {
-    return mReaderKey.mJobName;
-}
-
-AdhocFileKey* AdhocEvent::GetAdhocFileKey() {
-    return &mReaderKey.mFileKey;
-}
-
-AdhocFileReaderKey* AdhocEvent::GetAdhocFileReaderKey() {
-    return &mReaderKey;
-}
-
-std::shared_ptr<Config> AdhocEvent::GetJobConfig() {
-    FindJobByName();
-    return mJobConfig;
-}
-
-void AdhocEvent::SetConfigName(std::string jobName) {
-    mReaderKey.mJobName = jobName;
-}
-
 void AdhocEvent::FindJobByName() {
     Config* pConfig = ConfigManager::GetInstance()->FindConfigByName(GetJobName());
     mJobConfig.reset(new Config(*pConfig));
@@ -86,6 +61,8 @@ void AdhocFileManager::ProcessLoop() {
                 ProcessStopJobEvent(ev);
                 break;
         }
+
+        
     }
     LOG_INFO(sLogger, ("AdhocFileManager", "Stop"));
 }
@@ -107,8 +84,22 @@ void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
     }
 
     LogFileReaderPtr fileReader = mAdhocFileReaderMap[fileReaderKey];
-    while (!LogProcess::GetInstance()->IsValidToReadAdhocLog(fileReader->GetLogstoreKey())) {
+    if (!LogProcess::GetInstance()->IsValidToReadAdhocLog(fileReader->GetLogstoreKey())) {
+        // Log warning and send alarm per 10s( >10s if multi jobs exist)
+        if (0 == ev->IncreaseWaitTimes() % 1000) {
+            LOG_WARNING(sLogger,
+                        ("read adhoc file failed, logprocess queue is full, put adhoc event to event queue again",
+                         fileReader->GetHostLogPath())(fileReader->GetProjectName(), fileReader->GetCategory()));
+            LogtailAlarm::GetInstance()->SendAlarm(
+                PROCESS_QUEUE_BUSY_ALARM,
+                std::string("read adhoc file failed, logprocess queue is full, put adhoc event to event queue again, file:")
+                    + fileReader->GetHostLogPath() + " ,project:" + fileReader->GetProjectName()
+                    + " ,logstore:" + fileReader->GetCategory());
+        }
+
+        PushEventQueue(ev);
         usleep(1000 * 10);
+        return;
     }
     LogBuffer* logBuffer = new LogBuffer;
     fileReader->ReadLog(*logBuffer, nullptr);
@@ -116,6 +107,7 @@ void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
         logBuffer->logFileReader = fileReader;
         LogProcess::GetInstance()->PushBuffer(logBuffer, 100000000);
         fileCheckpoint->mOffset = fileReader->GetLastFilePos();
+        fileCheckpoint->mRealFileName = fileReader->GetHostLogPathFile();
     } else {
         delete logBuffer;
     }
