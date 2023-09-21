@@ -22,7 +22,7 @@ namespace logtail {
 
 class ProcessorDesensitizerNative : public Processor {
 public:
-    static const char* Name() { return "processor_parse_apsara_native"; }
+    static const char* Name() { return "processor_desensitizer_native"; }
     bool Init(const ComponentConfig& componentConfig) override;
     void Process(PipelineEventGroup& logGroup) override;
 
