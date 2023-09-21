@@ -55,11 +55,10 @@ void ProcessorDesensitizeNative::ProcessEvent(PipelineEventPtr& e) {
 
     const LogContents& contents = sourceEvent.GetContents();
 
-    for (auto it = mSensitiveWordCastOptions.begin(); it != mSensitiveWordCastOptions.end();) {
-        const std::string& key = it->first;
+    for (auto it : mSensitiveWordCastOptions) {
+        const std::string& key = it.first;
         const auto& content = contents.find(key);
         if (content == contents.end()) {
-            ++it;
             continue;
         }
         std::string value = sourceEvent.GetContent(key).to_string();
@@ -71,8 +70,6 @@ void ProcessorDesensitizeNative::ProcessEvent(PipelineEventPtr& e) {
         StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
 
         sourceEvent.SetContentNoCopy(content->first, StringView(valueBuffer.data, valueBuffer.size));
-
-        ++it;
     }
     return;
 }
