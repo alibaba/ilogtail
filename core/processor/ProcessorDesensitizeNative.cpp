@@ -57,24 +57,21 @@ void ProcessorDesensitizeNative::ProcessEvent(PipelineEventPtr& e) {
 
     for (auto it : mSensitiveWordCastOptions) {
         const std::string& key = it.first;
-        const auto& content = contents.find(key);
-        if (content == contents.end()) {
+        if (!sourceEvent.HasContent(key)) {
             continue;
         }
+        const auto& content = contents.find(key);
         std::string value = sourceEvent.GetContent(key).to_string();
-
         CastOneSensitiveWord(mSensitiveWordCastOptions[key], &value);
-
         mProcDesensitizeRecodesTotal->Add(1);
-
         StringBuffer valueBuffer = sourceEvent.GetSourceBuffer()->CopyString(value);
-
         sourceEvent.SetContentNoCopy(content->first, StringView(valueBuffer.data, valueBuffer.size));
     }
     return;
 }
 
-void ProcessorDesensitizeNative::CastOneSensitiveWord(const std::vector<SensitiveWordCastOption>& optionVec, std::string* value) {
+void ProcessorDesensitizeNative::CastOneSensitiveWord(const std::vector<SensitiveWordCastOption>& optionVec,
+                                                      std::string* value) {
     std::string* pVal = value;
     for (size_t i = 0; i < optionVec.size(); ++i) {
         const SensitiveWordCastOption& opt = optionVec[i];
