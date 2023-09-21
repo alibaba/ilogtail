@@ -54,6 +54,9 @@ void AdhocFileManager::ProcessLoop() {
             break;
         }
         switch (ev->GetType()) {
+            case EVENT_START_JOB:
+                ProcessStartJobEvent(ev);
+                break;
             case EVENT_READ_FILE:
                 ProcessReadFileEvent(ev);
                 break;
@@ -62,9 +65,33 @@ void AdhocFileManager::ProcessLoop() {
                 break;
         }
 
-        
+        mAdhocCheckpointManager->DumpAdhocCheckpoint();
     }
     LOG_INFO(sLogger, ("AdhocFileManager", "Stop"));
+}
+
+void AdhocFileManager::ProcessStartJobEvent(AdhocEvent* ev) {
+    std::string jobName = ev->GetJobName();
+    AdhocFileCheckpointListPtr fileCheckpointList = ev->GetFileCheckpointList();
+
+    AdhocJobCheckpointPtr jobCheckpoint
+        = mAdhocCheckpointManager->CreateAdhocJobCheckpoint(jobName, *fileCheckpointList);
+    // makesure jobCheckpoint exists and doesn't have fileKeyList
+    if (nullptr != jobCheckpoint && mJobFileKeyListMap.find(jobName) == mJobFileKeyListMap.end()) {
+        std::vector<AdhocFileKey> fileKeyList;
+        for (AdhocFileCheckpointPtr fileCheckpoint : *fileCheckpointList) {
+            AdhocFileKey fileKey(
+                fileCheckpoint->mDevInode, fileCheckpoint->mSignatureSize, fileCheckpoint->mSignatureHash);
+            fileKeyList.push_back(fileKey);
+        }
+        mJobFileKeyListMap[jobName] = fileKeyList;
+
+        // push first file to queue
+        if (fileKeyList.size() > 0) {
+            AdhocEvent* newEv = new AdhocEvent(EVENT_READ_FILE, AdhocFileReaderKey(jobName, fileKeyList[0]));
+            PushEventQueue(newEv);
+        }
+    }
 }
 
 void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
@@ -92,7 +119,8 @@ void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
                          fileReader->GetHostLogPath())(fileReader->GetProjectName(), fileReader->GetCategory()));
             LogtailAlarm::GetInstance()->SendAlarm(
                 PROCESS_QUEUE_BUSY_ALARM,
-                std::string("read adhoc file failed, logprocess queue is full, put adhoc event to event queue again, file:")
+                std::string(
+                    "read adhoc file failed, logprocess queue is full, put adhoc event to event queue again, file:")
                     + fileReader->GetHostLogPath() + " ,project:" + fileReader->GetProjectName()
                     + " ,logstore:" + fileReader->GetCategory());
         }
@@ -115,9 +143,9 @@ void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
 
     // Push file of this job into queue
     int32_t nowFileIndex = jobCheckpoint->GetCurrentFileIndex();
-    if (nowFileIndex < mJobFileKeyLists[jobName].size()) {
+    if (nowFileIndex < mJobFileKeyListMap[jobName].size()) {
         AdhocEvent* newEv
-            = new AdhocEvent(EVENT_READ_FILE, AdhocFileReaderKey(jobName, mJobFileKeyLists[jobName][nowFileIndex]));
+            = new AdhocEvent(EVENT_READ_FILE, AdhocFileReaderKey(jobName, mJobFileKeyListMap[jobName][nowFileIndex]));
         PushEventQueue(newEv);
     }
 }
@@ -125,60 +153,43 @@ void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
 void AdhocFileManager::ProcessStopJobEvent(AdhocEvent* ev) {
     std::string jobName = ev->GetJobName();
     mDeletedJobSet.insert(jobName);
+    mJobFileKeyListMap.erase(jobName);
     mAdhocCheckpointManager->DeleteAdhocJobCheckpoint(jobName);
 }
 
 void AdhocFileManager::PushEventQueue(AdhocEvent* ev) {
-    mEventQueue.push(ev);
+    mEventQueue.PushItem(ev);
 }
 
 AdhocEvent* AdhocFileManager::PopEventQueue() {
-    while (mEventQueue.size() > 0) {
-        AdhocEvent* ev = mEventQueue.front();
-        mEventQueue.pop();
+    while (mEventQueue.GetItemNumber() > 0) {
+        AdhocEvent* ev;
+        mEventQueue.PopItem(ev);
 
         std::string jobName = ev->GetJobName();
         if (mDeletedJobSet.find(jobName) != mDeletedJobSet.end()) {
             continue;
         }
-
         return ev;
     }
     return NULL;
 }
 
-void AdhocFileManager::AddJob(const std::string& jobName, std::vector<std::string> filePathList) {
-    std::vector<AdhocFileCheckpointPtr> fileCheckpointList;
-    std::vector<AdhocFileKey> fileKeyList;
+void AdhocFileManager::AddJob(const std::string& jobName, const std::vector<std::string>& filePathList) {
+    AdhocFileCheckpointListPtr fileCheckpointList = std::make_shared<std::vector<AdhocFileCheckpointPtr> >();
     for (std::string filePath : filePathList) {
         AdhocFileCheckpointPtr fileCheckpoint = mAdhocCheckpointManager->CreateAdhocFileCheckpoint(jobName, filePath);
         if (nullptr != fileCheckpoint) {
-            AdhocFileKey fileKey(
-                fileCheckpoint->mDevInode, fileCheckpoint->mSignatureSize, fileCheckpoint->mSignatureHash);
-            fileKeyList.push_back(fileKey);
-            fileCheckpointList.push_back(fileCheckpoint);
+            fileCheckpointList->push_back(fileCheckpoint);
         }
     }
-
-    AdhocJobCheckpointPtr jobCheckpoint
-        = mAdhocCheckpointManager->CreateAdhocJobCheckpoint(jobName, fileCheckpointList);
-    if (nullptr != jobCheckpoint) {
-        mJobFileKeyLists[jobName] = fileKeyList;
-
-        // push first file to queue
-        if (fileKeyList.size() > 0) {
-            AdhocEvent* ev = new AdhocEvent(EVENT_READ_FILE, AdhocFileReaderKey(jobName, fileKeyList[0]));
-            PushEventQueue(ev);
-        }
-
-        Run();
-    }
+    AdhocEvent* ev = new AdhocEvent(EVENT_START_JOB, jobName, fileCheckpointList);
+    PushEventQueue(ev);
+    Run();
 }
 
 void AdhocFileManager::DeleteJob(const std::string& jobName) {
-    mJobFileKeyLists.erase(jobName);
-    AdhocEvent* stopEvent = new AdhocEvent(EVENT_STOP_JOB);
-    stopEvent->SetConfigName(jobName);
+    AdhocEvent* stopEvent = new AdhocEvent(EVENT_STOP_JOB, jobName);
     PushEventQueue(stopEvent);
 }
 

@@ -15,22 +15,26 @@
  */
 
 #pragma once
-#include <queue>
 #include <unordered_set>
 #include "config/Config.h"
 #include "checkpoint/AdhocCheckpointManager.h"
 #include "reader/LogFileReader.h"
+#include "common/CircularBuffer.h"
 
 namespace logtail {
 
+typedef std::shared_ptr<std::vector<AdhocFileCheckpointPtr> > AdhocFileCheckpointListPtr;
+
 struct AdhocFileReaderKey {
     AdhocFileReaderKey() {}
-    AdhocFileReaderKey(std::string jobName, AdhocFileKey fileKey) : mJobName(jobName), mFileKey(fileKey) {}
+    AdhocFileReaderKey(const std::string& jobName, const AdhocFileKey& fileKey)
+        : mJobName(jobName), mFileKey(fileKey) {}
     std::string mJobName;
     AdhocFileKey mFileKey;
 };
 
 enum AdhocEventType {
+    EVENT_START_JOB,
     EVENT_READ_FILE,
     EVENT_STOP_JOB,
 };
@@ -42,12 +46,20 @@ private:
     AdhocEventType mType;
     AdhocFileReaderKey mReaderKey;
     std::shared_ptr<Config> mJobConfig;
+    AdhocFileCheckpointListPtr mFileCheckpointList;
     int32_t mWaitTimes;
 
 public:
     AdhocEvent() {}
-    AdhocEvent(AdhocEventType eventType) : mType(eventType) {}
-    AdhocEvent(AdhocEventType eventType, AdhocFileReaderKey readerKey) : mType(eventType), mReaderKey(readerKey) {
+    // for start job
+    AdhocEvent(AdhocEventType eventType, const std::string& jobName, AdhocFileCheckpointListPtr fileCheckpointList)
+        : mType(eventType), mReaderKey(AdhocFileReaderKey(jobName, AdhocFileKey())), mFileCheckpointList(fileCheckpointList) {}
+    // for stop job
+    AdhocEvent(AdhocEventType eventType, const std::string& jobName)
+        : mType(eventType), mReaderKey(AdhocFileReaderKey(jobName, AdhocFileKey())) {}
+    // for read file
+    AdhocEvent(AdhocEventType eventType, const AdhocFileReaderKey& readerKey)
+        : mType(eventType), mReaderKey(readerKey) {
         mWaitTimes = 0;
         FindJobByName();
     }
@@ -57,9 +69,8 @@ public:
     inline AdhocFileKey* GetAdhocFileKey() { return &mReaderKey.mFileKey; }
     inline AdhocFileReaderKey* GetAdhocFileReaderKey() { return &mReaderKey; }
     inline std::shared_ptr<Config> GetJobConfig() { return mJobConfig; }
+    inline AdhocFileCheckpointListPtr GetFileCheckpointList() { return mFileCheckpointList; }
     inline int32_t IncreaseWaitTimes() { return ++mWaitTimes; }
-
-    inline void SetConfigName(std::string jobName) { mReaderKey.mJobName = jobName; }
 };
 
 class AdhocFileManager {
@@ -67,18 +78,21 @@ private:
     AdhocFileManager();
     AdhocFileManager(const AdhocFileManager&) = delete;
     AdhocFileManager& operator=(const AdhocFileManager&) = delete;
+    void Run();
     void ProcessLoop();
 
     void PushEventQueue(AdhocEvent* ev);
     AdhocEvent* PopEventQueue();
+    void ProcessStartJobEvent(AdhocEvent* ev);
     void ProcessReadFileEvent(AdhocEvent* ev);
     void ProcessStopJobEvent(AdhocEvent* ev);
 
     static bool mRunFlag;
     AdhocCheckpointManager* mAdhocCheckpointManager;
-    std::queue<AdhocEvent*> mEventQueue;
+    static const int32_t ADHOC_JOB_MAX = 100 * 2;
+    CircularBufferSem<AdhocEvent*, ADHOC_JOB_MAX> mEventQueue;
     std::unordered_set<std::string> mDeletedJobSet;
-    std::unordered_map<std::string, std::vector<AdhocFileKey> > mJobFileKeyLists;
+    std::unordered_map<std::string, std::vector<AdhocFileKey> > mJobFileKeyListMap;
     std::unordered_map<AdhocFileReaderKey*, LogFileReaderPtr> mAdhocFileReaderMap;
 
 public:
@@ -87,8 +101,7 @@ public:
         return ptr;
     }
 
-    void Run();
-    void AddJob(const std::string& jobName, std::vector<std::string> filePathList);
+    void AddJob(const std::string& jobName, const std::vector<std::string>& filePathList);
     void DeleteJob(const std::string& jobName);
 };
 
