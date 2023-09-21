@@ -35,12 +35,12 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
 
     if (mConfig.mAdvancedConfig.mFilterExpressionRoot.get() != nullptr) {
         mFilterExpressionRoot = mConfig.mAdvancedConfig.mFilterExpressionRoot;
-        mFilterMode = "FilterExpressionRoot";
+        mFilterMode = FilterExpressionRootMode;
     } else if (mConfig.mFilterRule) {
         mFilterRule = mConfig.mFilterRule;
-        mFilterMode = "FilterRule";
+        mFilterMode = FilterRuleMode;
     } else {
-        mFilterMode = "Global";
+        mFilterMode = GlobalMode;
     }
 
     mDiscardNoneUtf8 = mConfig.mDiscardNoneUtf8;
@@ -119,11 +119,11 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
     auto& sourceEvent = e.Cast<LogEvent>();
     bool res;
 
-    if (mFilterMode == "FilterExpressionRoot") {
+    if (mFilterMode == FilterExpressionRootMode) {
         res = FilterExpressionRoot(sourceEvent, mFilterExpressionRoot);
-    } else if (mFilterMode == "FilterRule") {
+    } else if (mFilterMode == FilterRuleMode) {
         res = FilterFilterRule(sourceEvent, mFilterRule.get());
-    } else if (mFilterMode == "Global") {
+    } else if (mFilterMode == GlobalMode) {
         res = FilterGlobal(sourceEvent);
     }
     if (res && mDiscardNoneUtf8) {
