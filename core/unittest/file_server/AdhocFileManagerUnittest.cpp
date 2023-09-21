@@ -12,3 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "file_server/AdhocFileManager.h"
+#include "unittest/Unittest.h"
+
+namespace logtail {
+
+std::string kTestRootDir;
+
+class AdhocFileManagerUnittest : public ::testing::Test {
+public:
+    static void SetUpTestCase() {
+        kTestRootDir = (bfs::path(GetProcessExecutionDir()) / "AdhocFileManagerUnittest").string();
+        bfs::remove_all(kTestRootDir);
+        bfs::create_directories(kTestRootDir);
+        AppConfig::GetInstance()->SetLogtailSysConfDir(kTestRootDir);
+    }
+
+    static void TearDownTestCase() { bfs::remove_all(kTestRootDir); }
+
+    void TestAdhocFileManagerUnittest();
+
+private:
+};
+
+UNIT_TEST_CASE(AdhocFileManagerUnittest, TestAdhocFileManagerUnittest);
+
+void AdhocFileManagerUnittest::TestAdhocFileManagerUnittest() {
+    
+}
+
+} // namespace logtail
+
+UNIT_TEST_MAIN
