@@ -1039,6 +1039,7 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
                                                              *event,
                                                              mDevInode,
                                                              time(NULL) + mReaderFlushTimeout);
+        delete event;
     }
     return moreData;
 }
