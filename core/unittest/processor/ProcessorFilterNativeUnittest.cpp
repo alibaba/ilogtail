@@ -1234,13 +1234,12 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
             }
         }
         ProcessorFilterNative& processor = *(new ProcessorFilterNative);
-        StringView testStrView(testStr);
-        processor.FilterNoneUtf8(testStrView);
+        processor.FilterNoneUtf8(testStr);
         for (uint32_t indexOfString = 0; indexOfString < testStr.size(); ++indexOfString) {
             if (flow[indexOfString] == true) {
-                APSARA_TEST_EQUAL_FATAL(testStrView[indexOfString], ' ');  
+                APSARA_TEST_EQUAL_FATAL(testStr[indexOfString], ' ');  
             } else {
-                APSARA_TEST_NOT_EQUAL_FATAL(testStrView[indexOfString], ' ');
+                APSARA_TEST_NOT_EQUAL_FATAL(testStr[indexOfString], ' ');
             }
         }
     }
