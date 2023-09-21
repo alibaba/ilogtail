@@ -118,12 +118,16 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     }
 
     LOG_INFO(sLogger, ("splPlan", splPlan));
+    if (splPlan.find("{\"error\"") != std::string::npos) {
+        LOG_ERROR(sLogger, ("request spl parser failed ", splPlan)("spl ", spl));
+        return false;
+    }
 
     const uint64_t timeoutMills = 100;
     const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
     // SplPipeline spip = SplPipeline(splPlan, error, timeoutMills, maxMemoryBytes, logger);
     Error error;
-    mSPLPipelinePtr = std::make_shared<SplPipeline>(splPlan, error);
+    mSPLPipelinePtr = std::make_shared<SplPipeline>(splPlan, error, timeoutMills, maxMemoryBytes, logger);
     if (error.code_ != StatusCode::OK) {
         LOG_ERROR(sLogger, ("pipeline create error", error.msg_));
         return false;

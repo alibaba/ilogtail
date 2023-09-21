@@ -140,7 +140,10 @@ bool Pipeline::InitSplProcessor(const PipelineConfig& config) {
     mSplProcessor = std::unique_ptr<ProcessorSPL>(new ProcessorSPL());
     std::string pluginId = "spl";
     ComponentConfig componentConfig(pluginId, config);
-    mSplProcessor->Init(componentConfig, mContext);
+    if (!mSplProcessor->Init(componentConfig, mContext)) {
+        LOG_ERROR(GetContext().GetLogger(), ("InitSplProcessor", "spl")("Error", "Init failed"));
+        return false;
+    }
     return true;
 }
 
