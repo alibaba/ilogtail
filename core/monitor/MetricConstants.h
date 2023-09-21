@@ -49,4 +49,7 @@ extern const std::string METRIC_PROC_FILTER_OUT_SIZE_BYTES;
 extern const std::string METRIC_PROC_FILTER_ERROR_TOTAL;
 extern const std::string METRIC_PROC_FILTER_RECORDS_TOTAL;
 
+// processor desensitize metrics
+extern const std::string METRIC_PROC_DESENSITIZE_RECORDS_TOTAL;
+
 } // namespace logtail

@@ -25,6 +25,7 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
+#include "processor/ProcessorDesensitizeNative.h"
 #include "processor/ProcessorFillGroupInfoNative.h"
 #include "processor/ProcessorFilterNative.h"
 
@@ -119,6 +120,15 @@ bool Pipeline::Init(const PipelineConfig& config) {
         std::string(ProcessorFilterNative::Name()) + "/" + std::to_string(pluginIndex++));
     if (!InitAndAddProcessor(std::move(pluginFilter), config)) {
         return false;
+    }
+
+    if (!config.mSensitiveWordCastOptions.empty()) {
+        std::unique_ptr<ProcessorInstance> pluginDesensitize = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorDesensitizeNative::Name(),
+            std::string(ProcessorDesensitizeNative::Name()) + "/" + std::to_string(pluginIndex++));
+        if (!InitAndAddProcessor(std::move(pluginDesensitize), config)) {
+            return false;
+        }
     }
 
     return true;
