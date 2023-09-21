@@ -97,8 +97,6 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
     if (endIdx == 0)
         return true;
 
-    auto rawContent = sourceEvent.GetContent(mSourceKey);
-
     for (int32_t i = endIdx - 1; i >= 0; --i) {
         if (buffer.data()[i] == ' ' || '\r' == buffer.data()[i])
             endIdx = i;
@@ -218,12 +216,12 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
         }
     } else if (!mDiscardUnmatch) {
         AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
-               rawContent,
+               buffer,
                sourceEvent); // legacy behavior, should use sourceKey
     }
     if (parseSuccess || !mDiscardUnmatch) {
         if (mUploadRawLog && (!parseSuccess || !mRawLogTagOverwritten)) {
-            AddLog(mRawLogTag, rawContent, sourceEvent); // __raw__
+            AddLog(mRawLogTag, buffer, sourceEvent); // __raw__
         }
         if (parseSuccess && !mSourceKeyOverwritten) {
             sourceEvent.DelContent(mSourceKey);
