@@ -125,10 +125,6 @@ func (d *Decoder) decodeInRemoteWriteFormat(data []byte, req *http.Request) (log
 	}
 
 	db := req.FormValue(metaDBKey)
-	contentLen := 4
-	if len(db) > 0 {
-		contentLen++
-	}
 	for _, m := range metrics.Timeseries {
 		var metricName string
 		var labels helper.MetricLabels
