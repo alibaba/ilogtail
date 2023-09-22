@@ -171,10 +171,8 @@ bool Aggregator::Add(const std::string& projectName,
             LogFilter::CastSensitiveWords(logGroup, config);
         }
     } else {
-        neededLogs.resize(logGroup.logs_size());
-        for (int i = 0; i < logGroup.logs_size(); ++i) {
-            neededLogs[i] = i;
-        }
+        std::vector<int> v(logGroup.logs_size());
+        std::iota(std::begin(neededLogs), std::end(neededLogs), 0);
         neededLogSize = (int32_t)neededLogs.size();
     }
 
