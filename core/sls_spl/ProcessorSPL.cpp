@@ -176,18 +176,11 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
 
     LOG_INFO(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
 
-    //logGroupList.emplace_back(logGroup.GetSourceBuffer());
-    //logGroupList.back().SwapEvents(newEvents);
-    //logGroupList.back().SwapGroupInfo(logGroup.MutableGroupInfo().MutableMetadata(), logGroup.MutableGroupInfo().MutableTags());
 
     for (auto& logGroup : logGroupList) {
         std::string outJson = logGroup.ToJsonString();
-        LOG_INFO(sLogger, ("after swap", outJson));
-
+        LOG_INFO(sLogger, ("after execute", outJson));
     }    
-
-    //logGroupList.emplace_back(logGroup);
-    
     return;
 }
 

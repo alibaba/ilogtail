@@ -9,4 +9,6 @@ namespace apsara::sls::spl {
     const size_t LENGTH_FIELD_TIMESTAMP = FIELD_TIMESTAMP.length();
     const size_t LENGTH_FIELD_TIMESTAMP_NANOSECOND = FIELD_TIMESTAMP_NANOSECOND.length();
 
+    const std::string NULL_STR = "null";
+
 } // namespace apsara::sls::spl
