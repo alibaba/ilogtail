@@ -9,29 +9,39 @@ using namespace logtail;
 namespace apsara::sls::spl {
 
 class PipelineEventGroupOutput : public Output {
-   private:
-    std::string mTaskLabel;
-    int32_t mRowSize;
-    std::vector<SplStringPiece> mColumnNames;
-    std::unordered_map<int32_t, std::string> mConstColumns;
-    bool mWithSleep;
+     public:
+        PipelineEventGroupOutput(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroups, const std::string& taskLabel = "", bool withSleep = false)
+            :mLogGroup(&logGroup), mLogGroupList(&logGroups), mTaskLabel(taskLabel), mWithSleep(withSleep) {}
+        virtual ~PipelineEventGroupOutput() {
+            
+        }
+        virtual void setHeader(const IOHeader& header, std::string& err);
+        virtual void addRow(
+            const std::vector<SplStringPiece>& row, 
+            const ErrorKV& errorKV, 
+            std::string& error);
+        virtual void finish(std::string& error);
 
-    PipelineEventGroup* mLogGroup = nullptr;
-    EventsContainer* mNewEvents = nullptr;
+    private:
+        int32_t mRowSize;
+        std::vector<SplStringPiece> mColumnNames;
+        std::unordered_map<int32_t, std::string> mConstColumns;
+
+        PipelineEventGroup* mLogGroup = nullptr;
+        std::vector<PipelineEventGroup>* mLogGroupList;
+
+        //EventsContainer* mNewEvents = nullptr;
+        std::string mTaskLabel;
+        bool mWithSleep;
+
+        std::unordered_map<std::string, int32_t> mLogGroupKeyIdxs;
 
 
-   public:
-    PipelineEventGroupOutput(PipelineEventGroup& logGroups, EventsContainer& newEvents, const std::string& taskLabel = "", bool withSleep = false)
-        :mLogGroup(&logGroups), mNewEvents(&newEvents), mTaskLabel(taskLabel), mWithSleep(withSleep) {}
-    virtual ~PipelineEventGroupOutput() {
-        
-    }
-    virtual void setHeader(const IOHeader& header, std::string& err);
-    virtual void addRow(
-        const std::vector<SplStringPiece>& row, 
-        const ErrorKV& errorKV, 
-        std::string& error);
-    virtual void finish(std::string& error);
+        int32_t mTimeIdx = -1;
+        int32_t mTimeNSIdx = -1;
+        std::vector<int32_t> mTagsIdxs;
+        std::vector<int32_t> mContentsIdxs;
+
 };
 
 using PipelineEventGroupOutputPtr = std::shared_ptr<PipelineEventGroupOutput>;

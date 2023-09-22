@@ -2,6 +2,8 @@
 #include <iostream>
 #include "rw/SplStringPiece.h"
 #include "logger/Logger.h"
+#include "sls_spl/SplConstants.h"
+
 
 namespace apsara::sls::spl {
 
@@ -26,8 +28,8 @@ void PipelineEventGroupInput::getRow(const int32_t rowIndex, std::vector<KV>& pa
     std::string timestampNanosecondValue = std::to_string(sourceEvent.GetTimestampNanosecond());
     mTmpSave.emplace_back(timestampNanosecondValue);
 
-    pairs.emplace_back(SplStringPiece(timestamp), SplStringPiece(timestampValue));
-    pairs.emplace_back(SplStringPiece(timestampNanosecond), SplStringPiece(timestampNanosecondValue));
+    pairs.emplace_back(SplStringPiece(FIELD_TIMESTAMP), SplStringPiece(timestampValue));
+    pairs.emplace_back(SplStringPiece(FIELD_TIMESTAMP_NANOSECOND), SplStringPiece(timestampNanosecondValue));
 
     LOG_INFO(sLogger, ("rowIndex", rowIndex)("input timestamp", std::to_string(sourceEvent.GetTimestamp())));
     LOG_INFO(sLogger, ("rowIndex", rowIndex)("input timestampNanosecond", std::to_string(sourceEvent.GetTimestampNanosecond())));
@@ -45,11 +47,11 @@ void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplS
     LOG_INFO(sLogger, ("colIndex", colIndex)("columnName", columnName));
     for (auto event : mLogGroup->GetEvents()) {
         LogEvent& sourceEvent = event.Cast<LogEvent>();
-        if (timestamp == columnName) {
+        if (FIELD_TIMESTAMP == columnName) {
             std::string timestampValue = std::to_string(sourceEvent.GetTimestamp());
             mTmpSave.emplace_back(timestampValue);
             values.emplace_back(SplStringPiece(timestampValue));
-        } else if (timestampNanosecond == columnName) { 
+        } else if (FIELD_TIMESTAMP_NANOSECOND == columnName) { 
             std::string timestampNanosecondValue = std::to_string(sourceEvent.GetTimestampNanosecond());
             mTmpSave.emplace_back(timestampNanosecondValue);
             values.emplace_back(SplStringPiece(timestampNanosecondValue));

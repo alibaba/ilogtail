@@ -29,10 +29,14 @@ class GroupInfo {
 public:
     const GroupInfoMetadata& GetAllMetadata() const { return metadata; }
     const GroupInfoTags& GetAllTags() const { return tags; }
-
+    GroupInfoMetadata& MutableMetadata() { return metadata; }
+    GroupInfoTags& MutableTags() { return tags; } 
+    
 private:
     std::map<StringView, StringView> metadata; // predefined source/topic etc. should have conventional protocol
     std::map<StringView, StringView> tags; // custom tags
+    void SwapMetadata(GroupInfoMetadata& other) { metadata.swap(other); }
+    void SwapTags(GroupInfoTags& other) { tags.swap(other); }
     friend class PipelineEventGroup;
 };
 
@@ -42,9 +46,19 @@ using EventsContainer = std::vector<PipelineEventPtr>;
 class PipelineEventGroup {
 public:
     PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
-    //PipelineEventGroup(const PipelineEventGroup&) = delete;
+    PipelineEventGroup(const PipelineEventGroup&) = delete;
     PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
+    PipelineEventGroup(PipelineEventGroup&&) = default;
     const GroupInfo& GetGroupInfo() const { return mGroup; }
+    GroupInfo& MutableGroupInfo() { return mGroup; }
+    void SwapGroupInfo(GroupInfoMetadata& otherMeta, GroupInfoTags& otherTag) {
+        mGroup.SwapMetadata(otherMeta);
+        mGroup.SwapTags(otherTag);
+    }
+
+    void SetGroupInfoMeta(GroupInfoMetadata& otherMeta) {
+        mGroup.metadata = otherMeta;
+    }
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& MutableEvents() { return mEvents; }
     void AddEvent(const PipelineEventPtr& event);

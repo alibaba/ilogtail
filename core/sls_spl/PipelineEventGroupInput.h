@@ -28,8 +28,6 @@ class PipelineEventGroupInput : public Input {
         // 存储时间戳转换后的字符串
         std::vector<std::string> mTmpSave;
 
-        std::string timestamp =  "timestamp"; 
-        std::string timestampNanosecond =  "timestampNanosecond"; 
         const PipelineEventGroup* mLogGroup;
 };
 

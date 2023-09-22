@@ -158,10 +158,10 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
 
     // 根据spip->getOutputLabels()，设置output数组
     std::vector<OutputPtr> outputs;
-    EventsContainer newEvents;
+    //EventsContainer newEvents;
 
     for (auto resultTaskLabel : mSPLPipelinePtr->getOutputLabels()) {
-        outputs.emplace_back(std::make_shared<PipelineEventGroupOutput>(logGroup, newEvents, resultTaskLabel));
+        outputs.emplace_back(std::make_shared<PipelineEventGroupOutput>(logGroup, logGroupList, resultTaskLabel));
     }
 
     // 开始调用pipeline.execute
@@ -174,13 +174,15 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
         return;
     }
 
-    logGroup.SwapEvents(newEvents);
+    //logGroupList.emplace_back(logGroup.GetSourceBuffer());
+    //logGroupList.back().SwapEvents(newEvents);
+    //logGroupList.back().SwapGroupInfo(logGroup.MutableGroupInfo().MutableMetadata(), logGroup.MutableGroupInfo().MutableTags());
 
-    outJson = logGroup.ToJsonString();
+    outJson = logGroupList.back().ToJsonString();
     LOG_INFO(sLogger, ("after swap", outJson));
     
 
-    logGroupList.emplace_back(logGroup);
+    //logGroupList.emplace_back(logGroup);
     LOG_INFO(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
     return;
 }

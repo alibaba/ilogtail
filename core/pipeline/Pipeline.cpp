@@ -132,7 +132,9 @@ void Pipeline::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGr
         std::cout << "mSplProcessor: " << std::endl;
         mSplProcessor->Process(logGroup, logGroupList);
     } else {
-        logGroupList.emplace_back(logGroup);
+        logGroupList.emplace_back(logGroup.GetSourceBuffer());
+        logGroupList.back().SwapEvents(logGroup.MutableEvents());
+        logGroupList.back().SwapGroupInfo(logGroup.MutableGroupInfo().MutableMetadata(), logGroup.MutableGroupInfo().MutableTags());
     }
 }
 

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 #include "logger/Logger.h"
+#include "sls_spl/SplConstants.h"
+
 
 
 namespace apsara::sls::spl {
@@ -11,8 +13,24 @@ namespace apsara::sls::spl {
 void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& err) {
     mRowSize = header.rowSize;
     mColumnNames = header.columnNames;
-    for (auto& columeName : mColumnNames) {
-        LOG_INFO(sLogger, ("columeName", columeName));
+    for (int32_t i=0; i<header.columnNames.size(); i++) {
+
+        auto field = header.columnNames[i].ToString();
+
+        LOG_INFO(sLogger, ("columeName", field));
+
+        auto length = field.length();
+
+        if (length == LENGTH_FIELD_TIMESTAMP && field == FIELD_TIMESTAMP) {
+            mTimeIdx = i;
+        } else if (length == LENGTH_FIELD_TIMESTAMP_NANOSECOND && field == FIELD_TIMESTAMP_NANOSECOND) {
+            mTimeNSIdx = i;
+        } else if (length >= LENGTH_FIELD_PREFIX_TAG && 
+                field.compare(0, LENGTH_FIELD_PREFIX_TAG, FIELD_PREFIX_TAG) == 0) { // __tag__:*
+            mTagsIdxs.push_back(i);
+        } else { // content
+            mContentsIdxs.push_back(i);
+        }
     }
     for (auto& constCol : header.constCols) {
         mConstColumns.emplace(constCol.first, constCol.second.ToString());
@@ -30,22 +48,45 @@ void PipelineEventGroupOutput::addRow(
     StringView timestampNanosecond;
 
     LOG_INFO(sLogger, ("row.size()", row.size()));
-    for (auto col = 0; col < row.size(); ++col) {
-        if (row[col].hasValue()) {
-            if (StringView(mColumnNames[col].mPtr, mColumnNames[col].mLen) == "timestamp") {
-                timestamp = StringView(row[col].mPtr, row[col].mLen);
-            } else if (StringView(mColumnNames[col].mPtr, mColumnNames[col].mLen) == "timestampNanosecond") {
-                timestampNanosecond = StringView(row[col].mPtr, row[col].mLen);
-            } else {
-                targetEvent->SetContent(StringView(mColumnNames[col].mPtr, mColumnNames[col].mLen), StringView(row[col].mPtr, row[col].mLen));
 
-                LOG_INFO(sLogger, ("content key", StringView(mColumnNames[col].mPtr, mColumnNames[col].mLen))("content value", StringView(row[col].mPtr, row[col].mLen)));
-            }
-        }
+    std::string tagStr = "";
+    for (const auto& idxTag : mTagsIdxs) { 
+        tagStr += StringView(row[idxTag].mPtr, row[idxTag].mLen).to_string();
+        LOG_INFO(sLogger, ("tag key", StringView(mColumnNames[idxTag].mPtr, mColumnNames[idxTag].mLen))("tag value", StringView(row[idxTag].mPtr, row[idxTag].mLen)));
     }
 
+    int32_t logGroupKeyIdx = -1;
+    auto it = mLogGroupKeyIdxs.find(tagStr);
+    if (it != mLogGroupKeyIdxs.end()) {
+        logGroupKeyIdx = it->second;
+    } else {
+        mLogGroupList->emplace_back(mLogGroup->GetSourceBuffer());
+        mLogGroupList->back().SetGroupInfoMeta(mLogGroup->MutableGroupInfo().MutableMetadata());
+        logGroupKeyIdx = mLogGroupList->size() - 1;
+        mLogGroupKeyIdxs.emplace(tagStr, logGroupKeyIdx);
+    }
+
+    if (mTimeIdx >= 0 && row[mTimeIdx].hasValue()) {
+        timestamp = StringView(row[mTimeIdx].mPtr, row[mTimeIdx].mLen);
+    }
+    if (mTimeNSIdx >= 0 && row[mTimeNSIdx].hasValue()) {
+        timestampNanosecond = StringView(row[mTimeNSIdx].mPtr, row[mTimeNSIdx].mLen);
+    }
     targetEvent->SetTimestamp(atol(timestamp.data()), atol(timestampNanosecond.data()));
-    mNewEvents->emplace_back(std::move(targetEvent));
+
+    for (const auto& idxContent : mContentsIdxs) {
+        targetEvent->SetContent(StringView(mColumnNames[idxContent].mPtr, mColumnNames[idxContent].mLen), StringView(row[idxContent].mPtr, row[idxContent].mLen));
+        LOG_INFO(sLogger, ("content key", StringView(mColumnNames[idxContent].mPtr, mColumnNames[idxContent].mLen))("content value", StringView(row[idxContent].mPtr, row[idxContent].mLen)));
+    }
+
+    for (const auto& idxTag : mTagsIdxs) { 
+        mLogGroupList->at(logGroupKeyIdx).SetTag(StringView(mColumnNames[idxTag].mPtr, mColumnNames[idxTag].mLen), StringView(row[idxTag].mPtr, row[idxTag].mLen));
+        //tagStr += StringView(row[idxTag].mPtr, row[idxTag].mLen).to_string();
+        //LOG_INFO(sLogger, ("tag key", StringView(mColumnNames[idxTag].mPtr, mColumnNames[idxTag].mLen))("tag value", StringView(row[idxTag].mPtr, row[idxTag].mLen)));
+    }
+    
+    mLogGroupList->at(logGroupKeyIdx).AddEvent(std::move(targetEvent));
+    //mNewEvents->emplace_back(std::move(targetEvent));
     if (!errorKV.second.empty()) {
         LOG_INFO(sLogger, ("__error__", errorKV.second));
     }
