@@ -1340,7 +1340,7 @@ bool LogFileReader::CheckFileSignatureAndOffset(int64_t& fileSize) {
 
     // If file size is 0 and filename is changed, we cannot judge if the inode is reused by signature,
     // so we just recreate the reader to avoid filename mismatch
-    if (mLastFileSize == 0 && mRealLogPath != mHostLogPath) {
+    if (mLastFileSignatureSize == 0 && mRealLogPath != mHostLogPath) {
         return false;
     }
     fileSize = endSize;
