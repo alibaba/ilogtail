@@ -16,12 +16,12 @@ package influxdb
 
 import (
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/config"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 )
