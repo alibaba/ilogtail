@@ -202,12 +202,12 @@ bool ConfigManagerBase::CheckLogType(const string& logTypeStr, LogType& logType)
 
 void ConfigManagerBase::ParseTelemetryType(const string& telemetryTypeStr, sls_logs::SlsTelemetryType& telemetryType) {
     if (telemetryTypeStr == "logs")
-        telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG;
+        telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
     else if (telemetryTypeStr == "metrics")
         telemetryType = sls_logs::SLS_TELEMETRY_TYPE_METRICS;
     else {
         LOG_WARNING(sLogger, ("not supported log type, use default log telemetry type", telemetryType));
-         telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG;
+         telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
     }
 }
 

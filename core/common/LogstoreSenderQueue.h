@@ -92,7 +92,7 @@ struct LoggroupTimeValue {
                       const std::string& shardHashKey,
                       const LogstoreFeedBackKey& logstoreKey,
                       const LogGroupContext& context = LogGroupContext(),
-                      sls_logs::SlsTelemetryType telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG) {
+                      sls_logs::SlsTelemetryType telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS) {
         mProjectName = projectName;
         mLogstore = logstore;
         mConfigName = configName;

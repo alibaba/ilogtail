@@ -25,7 +25,7 @@ enum SlsCompressType
 
 enum SlsTelemetryType
 {
-    SLS_TELEMETRY_TYPE_LOG = 0;
+    SLS_TELEMETRY_TYPE_LOGS = 0;
     SLS_TELEMETRY_TYPE_METRICS = 1;
 }
 

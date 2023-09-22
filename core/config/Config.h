@@ -221,7 +221,7 @@ public:
         mMaxSendBytesPerSecond = -1;
         mSendRateExpireTime = -1;
         mMergeType = MERGE_BY_TOPIC;
-        mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG;
+        mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
         mTimeZoneAdjust = false;
         mLogTimeZoneOffsetSecond = 0;
         mLocalFlag = false;

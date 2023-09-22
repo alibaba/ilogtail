@@ -198,7 +198,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
     }
     if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS
         && errorMessage.rfind(sMetricstoreVersionTooLowFlag) != std::string::npos) {
-        operation = METRICSTORE_CHANGE_LOGSOTER;
+        operation = METRICSTORE_CHANGE_LOGSTORE;
     } else if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
         if (SEND_NETWORK_ERROR == sendResult) {
             gNetworkErrorCount++;
@@ -223,7 +223,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
             LOG_INFO(sLogger, ("errmsg", errorMessage));
             if (errorMessage.rfind(sMetricstoreVersionTooLowFlag) != std::string::npos) {
-                operation = METRICSTORE_CHANGE_LOGSOTER;
+                operation = METRICSTORE_CHANGE_LOGSTORE;
                 ++gMetricsFallbackCount;
             } else {
                 ++gMetricsStoreSendErrorCount;
@@ -372,9 +372,9 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
 
     // Log warning if retry for too long or will discard data
     switch (operation) {
-        case METRICSTORE_CHANGE_LOGSOTER:
+        case METRICSTORE_CHANGE_LOGSTORE:
             // switch to log channel because metricstore version too low
-            mDataPtr->mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOG;
+            mDataPtr->mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
         case RETRY_ASYNC_WHEN_FAIL:
             if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
                 LOG_WARNING(sLogger, LOG_PATTERN);
