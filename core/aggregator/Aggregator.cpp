@@ -23,6 +23,8 @@
 #include "sender/Sender.h"
 #include "config/Config.h"
 #include <app_config/AppConfig.h>
+#include <numeric>
+#include <vector>
 
 using namespace std;
 using namespace sls_logs;
@@ -159,13 +161,21 @@ bool Aggregator::Add(const std::string& projectName,
             }
         }
     }
-
     vector<int32_t> neededLogs;
-    int32_t neededLogSize = FilterNoneUtf8Metric(logGroup, config, neededLogs, context);
-    if (neededLogSize == 0)
-        return true;
-    if (config != NULL && config->mSensitiveWordCastOptions.size() > (size_t)0) {
-        LogFilter::CastSensitiveWords(logGroup, config);
+    int32_t neededLogSize;
+    if (!BOOL_FLAG(enable_new_pipeline)) {
+        neededLogSize = FilterNoneUtf8Metric(logGroup, config, neededLogs, context);
+        if (neededLogSize == 0)
+            return true;
+        if (config != NULL && config->mSensitiveWordCastOptions.size() > (size_t)0) {
+            LogFilter::CastSensitiveWords(logGroup, config);
+        }
+    } else {
+        neededLogs.resize(logGroup.logs_size());
+        for (int i = 0; i < logGroup.logs_size(); ++i) {
+            neededLogs[i] = i;
+        }
+        neededLogSize = (int32_t)neededLogs.size();
     }
 
     static Sender* sender = Sender::Instance();
