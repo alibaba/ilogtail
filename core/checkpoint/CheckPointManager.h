@@ -149,6 +149,7 @@ public:
     friend class ConfigUpdatorUnittest;
     void RemoveLocalCheckPoint();
     void PrintStatus();
+#endif
 };
 
 // Iterate files in dirPath, find the file with devInode.
