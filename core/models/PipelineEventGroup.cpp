@@ -43,22 +43,22 @@ void PipelineEventGroup::SetMetadataNoCopy(const StringBuffer& key, const String
 }
 
 bool PipelineEventGroup::HasMetadata(const StringView& key) const {
-    return mGroup.metadata.find(key) != mGroup.metadata.end();
+    return mMetadata.find(key) != mMetadata.end();
 }
 void PipelineEventGroup::SetMetadataNoCopy(const StringView& key, const StringView& val) {
-    mGroup.metadata[key] = val;
+    mMetadata[key] = val;
 }
 
 const StringView& PipelineEventGroup::GetMetadata(const StringView& key) const {
-    auto it = mGroup.metadata.find(key);
-    if (it != mGroup.metadata.end()) {
+    auto it = mMetadata.find(key);
+    if (it != mMetadata.end()) {
         return it->second;
     }
     return gEmptyStringView;
 }
 
 void PipelineEventGroup::DelMetadata(const StringView& key) {
-    mGroup.metadata.erase(key);
+    mMetadata.erase(key);
 }
 
 void PipelineEventGroup::SetTag(const StringView& key, const StringView& val) {
@@ -74,38 +74,37 @@ void PipelineEventGroup::SetTagNoCopy(const StringBuffer& key, const StringBuffe
 }
 
 bool PipelineEventGroup::HasTag(const StringView& key) const {
-    return mGroup.tags.find(key) != mGroup.tags.end();
+    return mTags.find(key) != mTags.end();
 }
 
 void PipelineEventGroup::SetTagNoCopy(const StringView& key, const StringView& val) {
-    mGroup.tags[key] = val;
+    mTags[key] = val;
 }
 
 const StringView& PipelineEventGroup::GetTag(const StringView& key) const {
-    auto it = mGroup.tags.find(key);
-    if (it != mGroup.tags.end()) {
+    auto it = mTags.find(key);
+    if (it != mTags.end()) {
         return it->second;
     }
     return gEmptyStringView;
 }
 
 void PipelineEventGroup::DelTag(const StringView& key) {
-    mGroup.tags.erase(key);
+    mTags.erase(key);
 }
 
 Json::Value PipelineEventGroup::ToJson() const {
     Json::Value root;
-    const auto& groupInfo = this->GetGroupInfo();
-    if (!groupInfo.metadata.empty()) {
+    if (!mMetadata.empty()) {
         Json::Value metadata;
-        for (const auto& meta : groupInfo.metadata) {
+        for (const auto& meta : mMetadata) {
             metadata[meta.first.to_string()] = meta.second.to_string();
         }
         root["metadata"] = metadata;
     }
-    if (!groupInfo.tags.empty()) {
+    if (!mTags.empty()) {
         Json::Value tags;
-        for (const auto& tag : groupInfo.tags) {
+        for (const auto& tag : mTags) {
             tags[tag.first.to_string()] = tag.second.to_string();
         }
         root["tags"] = tags;

@@ -30,7 +30,6 @@ using namespace sls_logs;
 DECLARE_FLAG_INT32(merge_log_count_limit);
 DECLARE_FLAG_INT32(same_topic_merge_send_count);
 DECLARE_FLAG_INT32(max_send_log_group_size);
-DECLARE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS);
 
 namespace logtail {
 

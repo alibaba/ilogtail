@@ -434,10 +434,10 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     }
     // construct a logGroup, it should be moved into input later
     PipelineEventGroup eventGroup(logBuffer);
-    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH, logBuffer->logFileReader->GetConvertedPath());
-    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH_RESOLVED, logBuffer->logFileReader->GetHostLogPath());
-    auto inodebuf = logBuffer->CopyString(std::to_string(logBuffer->logFileReader->GetDevInode().inode));
-    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_INODE, StringView(inodebuf.data, inodebuf.size));
+
+    // TODO: metadata should be set in reader
+    FillEventGroupMetadata(*logBuffer, eventGroup);
+
     std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
     time_t logtime = time(NULL);
     if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
@@ -459,13 +459,12 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
 
     // fill protobuf
     FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
+    FillLogGroupTags(eventGroup, logFileReader, resultGroup);
     if (logFileReader->GetPluginFlag()) {
-        FillLogGroupForPlugin(eventGroup, logFileReader, resultGroup);
         LogtailPlugin::GetInstance()->ProcessLogGroup(
             logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
         return 1;
     }
-    FillLogGroupAllNative(eventGroup, logFileReader, resultGroup);
     // record log positions for exactly once.
     if (logBuffer->exactlyOnceCheckpoint) {
         // I think one just record buffer offset and length is enough
@@ -476,9 +475,22 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     return 0;
 }
 
+void LogProcess::FillEventGroupMetadata(LogBuffer& logBuffer, PipelineEventGroup& eventGroup) const {
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH, logBuffer.logFileReader->GetConvertedPath());
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH_RESOLVED, logBuffer.logFileReader->GetHostLogPath());
+    auto inodebuf = logBuffer.CopyString(std::to_string(logBuffer.logFileReader->GetDevInode().inode));
+    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_INODE, StringView(inodebuf.data, inodebuf.size));
+    std::string agentTag = ConfigManager::GetInstance()->GetUserDefinedIdSet();
+    if (!agentTag.empty()) {
+        eventGroup.SetMetadata(EVENT_META_AGENT_TAG, ConfigManager::GetInstance()->GetUserDefinedIdSet());
+    }
+    eventGroup.SetMetadataNoCopy(EVENT_META_HOST_IP, LogFileProfiler::mIpAddr);
+    eventGroup.SetMetadataNoCopy(EVENT_META_HOST_NAME, LogFileProfiler::mHostname);
+}
+
 void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup,
                                   sls_logs::LogGroup& resultGroup,
-                                  bool enableTimestampNanosecond) {
+                                  bool enableTimestampNanosecond) const {
     for (auto& event : eventGroup.GetEvents()) {
         if (!event.Is<LogEvent>()) {
             continue;
@@ -500,76 +512,25 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup,
     }
 }
 
-void LogProcess::FillLogGroupForPlugin(const PipelineEventGroup& eventGroup,
-                                       LogFileReaderPtr& logFileReader,
-                                       sls_logs::LogGroup& resultGroup) {
-    // __path__
+void LogProcess::FillLogGroupTags(const PipelineEventGroup& eventGroup,
+                                  LogFileReaderPtr& logFileReader,
+                                  sls_logs::LogGroup& resultGroup) const {
     sls_logs::LogTag* logTagPtr = resultGroup.add_logtags();
-    logTagPtr->set_key(LOG_RESERVED_KEY_PATH);
-    logTagPtr->set_value(eventGroup.GetMetadata(EVENT_META_LOG_FILE_PATH).substr(0, 511).to_string());
 
-    // __user_defined_id__
-    const logtail::StringView& agent_tag = eventGroup.GetMetadata(EVENT_META_AGENT_TAG);
-    if (!agent_tag.empty()) {
+    // fill tags from eventGroup
+    for (auto& tag : eventGroup.GetTags()) {
         logTagPtr = resultGroup.add_logtags();
-        logTagPtr->set_key(LOG_RESERVED_KEY_USER_DEFINED_ID);
-        logTagPtr->set_value(eventGroup.GetMetadata(EVENT_META_AGENT_TAG).substr(0, 99).to_string());
+        logTagPtr->set_key(tag.first.to_string());
+        logTagPtr->set_value(tag.second.to_string());
     }
 
+    // special tags from reader
     const std::vector<sls_logs::LogTag>& extraTags = logFileReader->GetExtraTags();
     for (size_t i = 0; i < extraTags.size(); ++i) {
         logTagPtr = resultGroup.add_logtags();
         logTagPtr->set_key(extraTags[i].key());
         logTagPtr->set_value(extraTags[i].value());
     }
-
-    if (resultGroup.topic().empty()) {
-        resultGroup.set_topic(logFileReader->GetTopicName());
-    }
-}
-
-void LogProcess::FillLogGroupAllNative(const PipelineEventGroup& eventGroup,
-                                       LogFileReaderPtr& logFileReader,
-                                       sls_logs::LogGroup& resultGroup) {
-    // __hostname__
-    sls_logs::LogTag* logTagPtr = resultGroup.add_logtags();
-    logTagPtr->set_key(LOG_RESERVED_KEY_HOSTNAME);
-    logTagPtr->set_value(eventGroup.GetMetadata(EVENT_META_HOST_NAME).substr(0, 99).to_string());
-
-    // __path__
-    logTagPtr = resultGroup.add_logtags();
-    logTagPtr->set_key(LOG_RESERVED_KEY_PATH);
-    logTagPtr->set_value(eventGroup.GetMetadata(EVENT_META_LOG_FILE_PATH).substr(0, 511).to_string());
-
-    // zone info for ant
-    const std::string& alipayZone = AppConfig::GetInstance()->GetAlipayZone();
-    if (!alipayZone.empty()) {
-        logTagPtr = resultGroup.add_logtags();
-        logTagPtr->set_key(LOG_RESERVED_KEY_ALIPAY_ZONE);
-        logTagPtr->set_value(alipayZone);
-    }
-
-    // __user_defined_id__
-    const logtail::StringView& agent_tag = eventGroup.GetMetadata(EVENT_META_AGENT_TAG);
-    if (!agent_tag.empty()) {
-        logTagPtr = resultGroup.add_logtags();
-        logTagPtr->set_key(LOG_RESERVED_KEY_USER_DEFINED_ID);
-        logTagPtr->set_value(eventGroup.GetMetadata(EVENT_META_AGENT_TAG).substr(0, 99).to_string());
-    }
-
-    const std::vector<sls_logs::LogTag>& extraTags = logFileReader->GetExtraTags();
-    for (size_t i = 0; i < extraTags.size(); ++i) {
-        logTagPtr = resultGroup.add_logtags();
-        logTagPtr->set_key(extraTags[i].key());
-        logTagPtr->set_value(extraTags[i].value());
-    }
-
-    // add truncate info to loggroup, used in Fuse mode, not sure its value
-    // if (logBuffer->truncateInfo.get() != NULL && logBuffer->truncateInfo->empty() == false) {
-    //     sls_logs::LogTag* logTagPtr = resultGroup.add_logtags();
-    //     logTagPtr->set_key(LOG_RESERVED_KEY_TRUNCATE_INFO);
-    //     logTagPtr->set_value(logBuffer->truncateInfo->toString());
-    // }
 
     if (resultGroup.category() != logFileReader->GetCategory()) {
         resultGroup.set_category(logFileReader->GetCategory());

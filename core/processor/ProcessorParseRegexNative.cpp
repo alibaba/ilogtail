@@ -16,6 +16,7 @@
 
 #include "processor/ProcessorParseRegexNative.h"
 
+#include "app_config/AppConfig.h"
 #include "parser/LogParser.h" // for UNMATCH_LOG_KEY
 #include "common/Constants.h"
 #include "monitor/LogtailMetric.h"

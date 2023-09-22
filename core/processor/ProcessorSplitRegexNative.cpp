@@ -15,6 +15,8 @@
  */
 
 #include "processor/ProcessorSplitRegexNative.h"
+
+#include "app_config/AppConfig.h"
 #include "common/Constants.h"
 #include "reader/LogFileReader.h" //SplitState
 #include "models/LogEvent.h"

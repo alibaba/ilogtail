@@ -22,19 +22,8 @@
 
 namespace logtail {
 
-using GroupInfoMetadata = std::map<StringView, StringView>;
-using GroupInfoTags = std::map<StringView, StringView>;
-
-class GroupInfo {
-public:
-    const GroupInfoMetadata& GetAllMetadata() const { return metadata; }
-    const GroupInfoTags& GetAllTags() const { return tags; }
-
-private:
-    std::map<StringView, StringView> metadata; // predefined source/topic etc. should have conventional protocol
-    std::map<StringView, StringView> tags; // custom tags
-    friend class PipelineEventGroup;
-};
+using GroupMetadata = std::map<StringView, StringView>;
+using GroupTags = std::map<StringView, StringView>;
 
 // DeepCopy is required if we want to support no-linear topology
 // We cannot just use default copy constructor as it won't deep copy PipelineEvent pointed in Events vector.
@@ -44,7 +33,6 @@ public:
     PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
     PipelineEventGroup(const PipelineEventGroup&) = delete;
     PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
-    const GroupInfo& GetGroupInfo() const { return mGroup; }
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& MutableEvents() { return mEvents; }
     void AddEvent(const PipelineEventPtr& event);
@@ -57,6 +45,7 @@ public:
     void SetMetadata(const std::string& key, const std::string& val);
     void SetMetadataNoCopy(const StringBuffer& key, const StringBuffer& val);
     const StringView& GetMetadata(const StringView& key) const;
+    const GroupMetadata& GetMetadatum() const { return mMetadata; };
     bool HasMetadata(const StringView& key) const;
     void SetMetadataNoCopy(const StringView& key, const StringView& val);
     void DelMetadata(const StringView& key);
@@ -65,6 +54,7 @@ public:
     void SetTag(const std::string& key, const std::string& val);
     void SetTagNoCopy(const StringBuffer& key, const StringBuffer& val);
     const StringView& GetTag(const StringView& key) const;
+    const GroupTags& GetTags() const { return mTags; };
     bool HasTag(const StringView& key) const;
     void SetTagNoCopy(const StringView& key, const StringView& val);
     void DelTag(const StringView& key);
@@ -77,7 +67,8 @@ public:
     uint64_t EventGroupSizeBytes();
 
 private:
-    GroupInfo mGroup;
+    GroupMetadata mMetadata; // Keys are EVENT_META_XXX in Constants.h. Used to generate tag/log. Will not output.
+    GroupTags mTags; // custom tags to output
     EventsContainer mEvents;
     std::shared_ptr<SourceBuffer> mSourceBuffer;
 };

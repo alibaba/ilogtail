@@ -1867,7 +1867,9 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     }
     TruncateInfo* truncateInfo = nullptr;
     int64_t lastReadPos = GetLastReadPos();
-    size_t nbytes = ReadFile(mLogFileOp, stringMemory.data + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo);
+    size_t nbytes = READ_BYTE
+        ? ReadFile(mLogFileOp, stringMemory.data + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo)
+        : 0UL;
     char* stringBuffer = stringMemory.data;
     if (nbytes == 0 && (!lastCacheSize || allowRollback)) { // read nothing, if no cached data or allow rollback the
                                                             // reader's state cannot be changed
@@ -1952,7 +1954,9 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     }
     TruncateInfo* truncateInfo = nullptr;
     int64_t lastReadPos = GetLastReadPos();
-    size_t readCharCount = ReadFile(mLogFileOp, gbkBuffer.get() + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo);
+    size_t readCharCount = READ_BYTE
+        ? ReadFile(mLogFileOp, gbkBuffer.get() + lastCacheSize, READ_BYTE, lastReadPos, &truncateInfo)
+        : 0UL;
     if (readCharCount == 0 && (!lastCacheSize || allowRollback)) { // just keep last cache
         return;
     }
