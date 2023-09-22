@@ -1326,7 +1326,7 @@ bool LogFileReader::CheckFileSignatureAndOffset(int64_t& fileSize) {
 
     // If file size is 0 and filename is changed, we cannot judge if the inode is reused by signature,
     // so we just recreate the reader to avoid filename mismatch
-    if (mLastFileSize == 0 && mRealLogPath != mHostLogPath) {
+    if (mLastFileSignatureSize == 0 && mRealLogPath != mHostLogPath) {
         return false;
     }
     fileSize = endSize;
@@ -1879,7 +1879,7 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
         uint32_t sigSize = mLastFileSignatureSize;
         // If file size is 0 and filename is changed, we cannot judge if the inode is reused by signature,
         // so we just recreate the reader to avoid filename mismatch
-        if (mLastFileSize == 0 && filePath != mHostLogPath) {
+        if (sigSize == 0 && filePath != mHostLogPath) {
             return FileCompareResult_SigChange;
         }
         bool sigSameRst = CheckAndUpdateSignature(string(sigStr), sigHash, sigSize);
