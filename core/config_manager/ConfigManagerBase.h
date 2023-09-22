@@ -552,6 +552,7 @@ private:
     friend class FuseFileUnittest;
     friend class MultiServerConfigUpdatorUnitest;
     friend class CreateModifyHandlerUnittest;
+    friend class ProcessorDesensitizeNativeUnittest;
 #endif
 };
 

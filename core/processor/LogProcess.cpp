@@ -458,7 +458,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     processProfile.Reset();
 
     // fill protobuf
-    FillLogGroupLogs(eventGroup, resultGroup);
+    FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
     if (logFileReader->GetPluginFlag()) {
         FillLogGroupForPlugin(eventGroup, logFileReader, resultGroup);
         LogtailPlugin::GetInstance()->ProcessLogGroup(
@@ -466,17 +466,30 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         return 1;
     }
     FillLogGroupAllNative(eventGroup, logFileReader, resultGroup);
+    // record log positions for exactly once.
+    if (logBuffer->exactlyOnceCheckpoint) {
+        // I think one just record buffer offset and length is enough
+        // There is no need to record offset and length for each event
+        std::pair<size_t, size_t> pos(logBuffer->beginOffset, logBuffer->rawBuffer.size());
+        logBuffer->exactlyOnceCheckpoint->positions.assign(eventGroup.GetEvents().size(), pos);
+    }
     return 0;
 }
 
-void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup, sls_logs::LogGroup& resultGroup) {
+void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup,
+                                  sls_logs::LogGroup& resultGroup,
+                                  bool enableTimestampNanosecond) {
     for (auto& event : eventGroup.GetEvents()) {
         if (!event.Is<LogEvent>()) {
             continue;
         }
         sls_logs::Log* log = resultGroup.add_logs();
         auto& logEvent = event.Cast<LogEvent>();
-        log->set_time(logEvent.GetTimestamp());
+        if (enableTimestampNanosecond) {
+            SetLogTimeWithNano(log, logEvent.GetTimestamp(), logEvent.GetTimestampNanosecond());
+        } else {
+            SetLogTime(log, logEvent.GetTimestamp());
+        }
         for (auto& kv : logEvent.GetContents()) {
             sls_logs::Log_Content* contPtr = log->add_contents();
             // need to rename EVENT_META_LOG_FILE_OFFSET
@@ -692,6 +705,10 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                 if (errorLine.empty())
                     errorLine = logIndex[i].to_string();
             }
+            if (!config.mAdvancedConfig.mEnableTimestampNanosecond) {
+                sls_logs::Log* logPtr = logGroup.mutable_logs(successLogSize);
+                logPtr->clear_time_ns();
+            }
             // add source raw line, time zone adjust
             if (successLogSize < logGroup.logs_size()) {
                 sls_logs::Log* logPtr = logGroup.mutable_logs(successLogSize);
@@ -717,18 +734,16 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                 }
                 // record log positions for exactly once.
                 if (logBuffer->exactlyOnceCheckpoint && logPtr != nullptr) {
-                    if (logBuffer->exactlyOnceCheckpoint) {
-                        int32_t length = 0;
-                        if (1 == lines) {
-                            length = rawBuffer.size() + 1;
-                        } else if (i != lines - 1) {
-                            length = logIndex[i].size() + 1;
-                        } else {
-                            length = rawBuffer.size() - (logIndex[i].data() - rawBuffer.data());
-                        }
-                        logBuffer->exactlyOnceCheckpoint->positions.emplace_back(
-                            std::make_pair(offset, static_cast<size_t>(length)));
+                    int32_t length = 0;
+                    if (1 == lines) {
+                        length = rawBuffer.size();
+                    } else if (i != lines - 1) {
+                        length = logIndex[i + 1].data() - logIndex[i].data();
+                    } else {
+                        length = rawBuffer.size() - (logIndex[i].data() - rawBuffer.data());
                     }
+                    logBuffer->exactlyOnceCheckpoint->positions.emplace_back(
+                        std::make_pair(offset, static_cast<size_t>(length)));
                 }
             }
         }
