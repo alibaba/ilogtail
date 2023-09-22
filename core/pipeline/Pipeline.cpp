@@ -25,7 +25,9 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
+#include "processor/ProcessorDesensitizeNative.h"
 #include "processor/ProcessorFillGroupInfoNative.h"
+#include "processor/ProcessorFilterNative.h"
 
 namespace logtail {
 
@@ -111,6 +113,22 @@ bool Pipeline::Init(const PipelineConfig& config) {
         std::string(ProcessorParseTimestampNative::Name()) + "/" + std::to_string(pluginIndex++));
     if (!InitAndAddProcessor(std::move(pluginTime), config)) {
         return false;
+    }
+
+    std::unique_ptr<ProcessorInstance> pluginFilter = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorFilterNative::Name(),
+        std::string(ProcessorFilterNative::Name()) + "/" + std::to_string(pluginIndex++));
+    if (!InitAndAddProcessor(std::move(pluginFilter), config)) {
+        return false;
+    }
+
+    if (!config.mSensitiveWordCastOptions.empty()) {
+        std::unique_ptr<ProcessorInstance> pluginDesensitize = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorDesensitizeNative::Name(),
+            std::string(ProcessorDesensitizeNative::Name()) + "/" + std::to_string(pluginIndex++));
+        if (!InitAndAddProcessor(std::move(pluginDesensitize), config)) {
+            return false;
+        }
     }
 
     return true;
