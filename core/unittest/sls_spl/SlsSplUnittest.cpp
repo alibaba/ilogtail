@@ -29,6 +29,7 @@ public:
     void TestRegexCSV();
 
     void TestTag();
+    void TestMultiParse();
 };
 
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestSimple, 0);
@@ -37,7 +38,7 @@ APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexParse, 2);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexCSV, 3);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexKV, 4);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestTag, 5);
-
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestMultiParse, 6);
 
 
 
@@ -346,6 +347,77 @@ void SlsSplUnittest::TestTag() {
                 "contents" :
                 {
                     "content" : "{\"a1\":\"cccc\",\"c\":\"d\"}"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ],
+        "tags" : {
+            "__tag__:taiye": "123"
+        }
+    })";
+    eventGroup.FromJsonString(inJson);
+    
+    std::string pluginId = "testID";
+    std::vector<PipelineEventGroup> logGroupList;
+    // run function
+    ProcessorSPL& processor = *(new ProcessorSPL);
+
+    
+    ComponentConfig componentConfig(pluginId, config);
+
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
+    processor.Process(eventGroup, logGroupList);
+
+    APSARA_TEST_EQUAL(logGroupList.size(), 2);
+    if (logGroupList.size() > 0) {
+        for (auto& logGroup : logGroupList) {
+            std::string outJson = logGroup.ToJsonString();
+            std::cout << "outJson: " << outJson << std::endl;
+        }
+    }
+    
+    return;
+}
+
+
+void SlsSplUnittest::TestMultiParse() {
+    // make config
+    Config config;
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = false;
+    config.mSpl = R"(.let src = * 
+| parse-json content;
+.let ds1 = $src
+| where type = 'kv'
+| parse-kv -delims='&?' message;
+$ds1;
+.let ds2 = $src
+| where type = 'csv'
+| parse-csv message as x, y, z;
+$ds2;
+)";
+
+    // make events
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "{\"type\":\"kv\",\"message\":\"k1=v1&k2=v2?k3=v3\"}"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "{\"type\":\"csv\",\"message\":\"a,b,c\"}"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
