@@ -486,6 +486,23 @@ func checkFileConfigChanged(filePath, filePattern, includeEnv, includeLabel stri
 		includeLabel != serverIncludeLabel
 }
 
+func (o *operationWrapper) TagLogtailConfig(project, logtailConfig, tagKey, tagValue string) error {
+	ResourceTags := aliyunlog.ResourceTags{
+		ResourceType: "logtailconfig",
+		ResourceID:   []string{project + "#" + logtailConfig},
+		Tags:         []aliyunlog.ResourceTag{{Key: tagKey, Value: tagValue}},
+	}
+	var err error
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
+		err = o.logClient.TagResources(project, &ResourceTags)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+	return err
+}
+
 // nolint:govet,ineffassign
 func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error {
 	project := o.project
@@ -632,6 +649,14 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		return fmt.Errorf("UpdateConfig error, config : %s, error : %s", config.LogtailConfig.ConfigName, err.Error())
 	}
 	logger.Info(context.Background(), "create or update config success", config.LogtailConfig.ConfigName)
+	// Tag config
+	err = o.TagLogtailConfig(project, config.LogtailConfig.ConfigName, "sls.logtail.channel", "ENV")
+	annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
+	if err != nil {
+		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, CustomErrorFromSlsSDKError(err)), k8s_event.CreateTag, "", fmt.Sprintf("tag config \"sls.logtail.channel=ENV\" error :%s", err.Error()))
+	} else {
+		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateTag, "tag config \"sls.logtail.channel=ENV\" success")
+	}
 	// check if config is in the machine group
 	// only check when create config
 	var machineGroup string
