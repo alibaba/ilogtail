@@ -545,7 +545,7 @@ void CheckPointManager::PrintStatus() {
     for (DevInodeCheckPointHashMap::iterator it = mDevInodeCheckPointPtrMap.begin();
          it != mDevInodeCheckPointPtrMap.end();
          ++it) {
-        printf("File %s\n", it->second.get()->mFileName.c_str());
+        printf("Inode %lu, File %s\n", it->first.mDevInode.inode, it->second.get()->mFileName.c_str());
     }
     printf("\n");
     for (std::unordered_map<std::string, DirCheckPointPtr>::iterator it = mDirNameMap.begin(); it != mDirNameMap.end();

@@ -432,7 +432,7 @@ LogFileReader::LogFileReader(const string& projectName,
     mTopicName = "";
     mHostLogPathDir = hostLogPathDir;
     mHostLogPathFile = hostLogPathFile;
-    mHostLogPath = AbsolutePath(hostLogPathFile, hostLogPathDir);
+    mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
     // mRealLogPath = mHostLogPath; fix it in 1.8
     mTailLimit = tailLimit;
     mLastFilePos = 0;
@@ -478,7 +478,7 @@ LogFileReader::LogFileReader(const std::string& projectName,
     mCategory = category;
     mHostLogPathDir = hostLogPathDir;
     mHostLogPathFile = hostLogPathFile;
-    mHostLogPath = AbsolutePath(hostLogPathFile, hostLogPathDir);
+    mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
     // mRealLogPath = mHostLogPath; fix it in 1.8
     mTailLimit = tailLimit;
     mLastFilePos = 0;
@@ -2147,7 +2147,7 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
         uint32_t sigSize = mLastFileSignatureSize;
         // If file size is 0 and filename is changed, we cannot judge if the inode is reused by signature,
         // so we just recreate the reader to avoid filename mismatch
-        if (mLastFileSize == 0 && filePath != mHostLogPath) {
+        if (sigSize == 0 && filePath != mHostLogPath) {
             return FileCompareResult_SigChange;
         }
         bool sigSameRst = CheckAndUpdateSignature(string(sigStr), sigHash, sigSize);
