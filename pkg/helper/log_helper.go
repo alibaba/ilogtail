@@ -63,7 +63,7 @@ func CreateLog(t time.Time, configTag map[string]string, logTags map[string]stri
 		}
 		slsLog.Contents = append(slsLog.Contents, cont)
 	}
-	protocol.SetLogTime(&slsLog, uint32(t.Unix()), uint32(t.Nanosecond()))
+	protocol.SetLogTimeWithNano(&slsLog, uint32(t.Unix()), uint32(t.Nanosecond()))
 	return &slsLog, nil
 }
 
@@ -98,7 +98,7 @@ func CreateLogByArray(t time.Time, configTag map[string]string, logTags map[stri
 		}
 		slsLog.Contents = append(slsLog.Contents, cont)
 	}
-	protocol.SetLogTime(&slsLog, uint32(t.Unix()), uint32(t.Nanosecond()))
+	protocol.SetLogTimeWithNano(&slsLog, uint32(t.Unix()), uint32(t.Nanosecond()))
 	return &slsLog, nil
 }
 
@@ -262,11 +262,11 @@ func NewMetricLogStringVal(name string, t int64, value string, labels *MetricLab
 	switch len(strTime) {
 	case 13:
 		metric = &protocol.Log{}
-		protocol.SetLogTime(metric, uint32(t/1000), uint32((t*1e6)%1e9))
+		protocol.SetLogTimeWithNano(metric, uint32(t/1000), uint32((t*1e6)%1e9))
 		strTime += "000000"
 	case 19:
 		metric = &protocol.Log{}
-		protocol.SetLogTime(metric, uint32(t/1e9), uint32(t%1e9))
+		protocol.SetLogTimeWithNano(metric, uint32(t/1e9), uint32(t%1e9))
 	default:
 		return nil
 	}

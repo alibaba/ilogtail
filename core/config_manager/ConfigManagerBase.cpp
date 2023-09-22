@@ -573,6 +573,10 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     if (!tmpLogPath.empty())
                         logPath = tmpLogPath;
                 }
+                if (IsRelativePath(logPath)) {
+                    logPath = NormalizePath(AbsolutePath(logPath, AppConfig::GetInstance()->GetProcessExecutionDir()));
+                }
+
                 // one may still make mistakes, teminate logPath by '/'
                 size_t size = logPath.size();
                 if (size > 0 && PATH_SEPARATOR[0] == logPath[size - 1])
@@ -838,9 +842,22 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 config->mTailExisted = GetBoolValue(value, "tail_existed", false);
                 int32_t tailLimit = GetIntValue(value, "tail_limit", INT32_FLAG(default_tail_limit_kb));
                 config->SetTailLimit(tailLimit);
-
-                UserLogConfigParser::ParseAdvancedConfig(value, *config);
             }
+
+            UserLogConfigParser::ParseAdvancedConfig(value, *config);
+            if (pluginConfigJson.isMember("global")) {
+                SetNotFoundJsonMember(pluginConfigJson["global"],
+                                      "EnableTimestampNanosecond",
+                                      config->mAdvancedConfig.mEnableTimestampNanosecond);
+            } else {
+                Json::Value pluginGlobalConfigJson;
+                SetNotFoundJsonMember(pluginGlobalConfigJson,
+                                      "EnableTimestampNanosecond",
+                                      config->mAdvancedConfig.mEnableTimestampNanosecond);
+                pluginConfigJson["global"] = pluginGlobalConfigJson;
+            }
+            config->mPluginConfig = pluginConfigJson.toStyledString();
+
             if (logType == DELIMITER_LOG) {
                 config->mTimeFormat = GetStringValue(value, "timeformat", "");
                 string separatorStr = GetStringValue(value, "delimiter_separator");
@@ -868,6 +885,10 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             } else if (logType == JSON_LOG) {
                 config->mTimeFormat = GetStringValue(value, "timeformat", "");
                 config->mTimeKey = GetStringValue(value, "time_key", "");
+            } else if (logType == APSARA_LOG) {
+                // APSARA_LOG is a fix format, setting timeformat and timekey to pass adjust time zone validation
+                config->mTimeFormat = "%Y-%m-%d %H%:M:%S";
+                config->mTimeKey = "time";
             }
 
             if (value.isMember("merge_type") && value["merge_type"].isString()) {

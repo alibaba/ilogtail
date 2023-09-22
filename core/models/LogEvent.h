@@ -24,6 +24,7 @@ class LogEvent : public PipelineEvent {
 public:
     static std::unique_ptr<LogEvent> CreateEvent(std::shared_ptr<SourceBuffer>& sb);
     const LogContents& GetContents() const { return contents; }
+    LogContents& MutableContents() { return contents; }
     void SetContent(const StringView& key, const StringView& val);
     void SetContent(const std::string& key, const std::string& val);
     void SetContentNoCopy(const StringBuffer& key, const StringBuffer& val);
@@ -35,6 +36,7 @@ public:
     // for debug and test
     Json::Value ToJson() const override;
     bool FromJson(const Json::Value&) override;
+    uint64_t EventsSizeBytes() override;
 
 private:
     LogEvent();

@@ -25,12 +25,15 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
+#include "processor/ProcessorDesensitizeNative.h"
 #include "processor/ProcessorFillGroupInfoNative.h"
+#include "processor/ProcessorFilterNative.h"
 
 namespace logtail {
 
 bool Pipeline::Init(const PipelineConfig& config) {
     mName = config.mConfigName;
+    mConfig = config;
 
     mContext.SetConfigName(config.mConfigName);
     mContext.SetLogstoreName(config.mCategory);
@@ -112,6 +115,22 @@ bool Pipeline::Init(const PipelineConfig& config) {
         return false;
     }
 
+    std::unique_ptr<ProcessorInstance> pluginFilter = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorFilterNative::Name(),
+        std::string(ProcessorFilterNative::Name()) + "/" + std::to_string(pluginIndex++));
+    if (!InitAndAddProcessor(std::move(pluginFilter), config)) {
+        return false;
+    }
+
+    if (!config.mSensitiveWordCastOptions.empty()) {
+        std::unique_ptr<ProcessorInstance> pluginDesensitize = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorDesensitizeNative::Name(),
+            std::string(ProcessorDesensitizeNative::Name()) + "/" + std::to_string(pluginIndex++));
+        if (!InitAndAddProcessor(std::move(pluginDesensitize), config)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -121,13 +140,14 @@ void Pipeline::Process(PipelineEventGroup& logGroup) {
     }
 }
 
-bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const ComponentConfig& config) {
+bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config) {
     if (!processor) {
         LOG_ERROR(GetContext().GetLogger(),
                   ("CreateProcessor", ProcessorSplitRegexNative::Name())("Error", "Cannot find plugin"));
         return false;
     }
-    if (!processor->Init(config, mContext)) {
+    ComponentConfig componentConfig(processor->Id(), config);
+    if (!processor->Init(componentConfig, mContext)) {
         LOG_ERROR(GetContext().GetLogger(), ("InitProcessor", processor->Id())("Error", "Init failed"));
         return false;
     }

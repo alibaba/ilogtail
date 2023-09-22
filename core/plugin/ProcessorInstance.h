@@ -18,23 +18,42 @@
 
 #include <string>
 #include "plugin/PluginInstance.h"
-#include "processor/Processor.h"
 #include "plugin/PluginCreator.h"
+#include "processor/Processor.h"
 #include "pipeline/PipelineConfig.h"
 #include "pipeline/PipelineContext.h"
+#include "monitor/LogtailMetric.h"
+#include "monitor/MetricConstants.h"
 
 namespace logtail {
+
 
 class ProcessorInstance : public PluginInstance {
 public:
     ProcessorInstance(Processor* plugin, const std::string& pluginId) : PluginInstance(pluginId), mPlugin(plugin) {}
-
+    PipelineContext& GetContext() { return *mContext; }
     bool Init(const ComponentConfig& config, PipelineContext& context);
     void Process(PipelineEventGroup& logGroup);
 
 private:
     std::unique_ptr<Processor> mPlugin;
     PipelineContext* mContext = nullptr;
+
+    CounterPtr mProcInRecordsTotal;
+    CounterPtr mProcOutRecordsTotal;
+    // CounterPtr mProcInRecordsSizeBytes;
+    // CounterPtr mProcOutRecordsSizeBytes;
+    CounterPtr mProcTimeMS;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorParseRegexNativeUnittest;
+    friend class ProcessorParseTimestampNativeUnittest;
+    friend class ProcessorParseJsonNativeUnittest;
+    friend class ProcessorParseApsaraNativeUnittest;
+    friend class ProcessorParseDelimiterNativeUnittest;
+    friend class ProcessorFilterNativeUnittest;
+    friend class ProcessorDesensitizeNativeUnittest;
+#endif
 };
 
 } // namespace logtail

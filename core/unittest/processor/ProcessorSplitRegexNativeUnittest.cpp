@@ -67,7 +67,9 @@ void ProcessorSplitRegexNativeUnittest::TestInit() {
     config.mAdvancedConfig.mEnableLogPositionMeta = false;
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
 }
 
 void ProcessorSplitRegexNativeUnittest::TestProcessEventSingleLine() {
@@ -79,7 +81,9 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventSingleLine() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -93,6 +97,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventSingleLine() {
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -113,6 +118,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventSingleLine() {
                     "content" : "line1"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -121,6 +127,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventSingleLine() {
                     "content" : "line2"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -138,7 +145,9 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultiline() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -150,11 +159,12 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultiline() {
                 "contents" :
                 {
                     "content" : ")"
-                    << LOG_BEGIN_STRING << R"(first.\nmultiline1\nmultiline2\n)"
-                    << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
-                    << R"("
+           << LOG_BEGIN_STRING << R"(first.\nmultiline1\nmultiline2\n)" << LOG_BEGIN_STRING
+           << R"(second.\nmultiline1\nmultiline2)"
+           << R"("
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -174,20 +184,22 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultiline() {
                 "contents" :
                 {
                     "content" : ")"
-                    << LOG_BEGIN_STRING << R"(first.\nmultiline1\nmultiline2)"
-                    << R"("
+               << LOG_BEGIN_STRING << R"(first.\nmultiline1\nmultiline2)"
+               << R"("
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
                 "contents" :
                 {
                     "content" : ")"
-                    << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
-                    << R"("
+               << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
+               << R"("
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -205,7 +217,9 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -217,11 +231,11 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
                 "contents" :
                 {
                     "content" : ")"
-                    << R"(first.\nmultiline1\nmultiline2\n)"
-                    << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
-                    << R"("
+           << R"(first.\nmultiline1\nmultiline2\n)" << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
+           << R"("
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -243,6 +257,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
                     "content" : "first."
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -251,6 +266,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
                     "content" : "multiline1"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -259,16 +275,18 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineKeepUnmatch() {
                     "content" : "multiline2"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
                 "contents" :
                 {
                     "content" : ")"
-                    << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
-                    << R"("
+               << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2)"
+               << R"("
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -286,7 +304,9 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineDiscardUnmatch(
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -298,10 +318,10 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineDiscardUnmatch(
                 "contents" :
                 {
                     "content" : ")"
-                    << R"(first.\nmultiline1\nmultiline2\n)"
-                    << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2"
+           << R"(first.\nmultiline1\nmultiline2\n)" << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -321,9 +341,10 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineDiscardUnmatch(
                 "contents" :
                 {
                     "content" : ")"
-                    << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2"
+               << LOG_BEGIN_STRING << R"(second.\nmultiline1\nmultiline2"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -341,7 +362,9 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -355,6 +378,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
                     "content" : "first.\nmultiline1\nsecond.\nmultiline1"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -376,6 +400,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
                     "content" : "first."
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -384,6 +409,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
                     "content" : "multiline1"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -392,6 +418,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
                     "content" : "second."
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -400,6 +427,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchKeep
                     "content" : "multiline1"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -417,7 +445,9 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchDisc
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -431,6 +461,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcessEventMultilineAllNotMatchDisc
                     "content" : "first.\nmultiline1\nsecond.\nmultiline1"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -455,7 +486,9 @@ void ProcessorSplitRegexNativeUnittest::TestProcess() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     // make eventGroup
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -469,6 +502,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcess() {
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -488,6 +522,7 @@ void ProcessorSplitRegexNativeUnittest::TestProcess() {
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -495,9 +530,10 @@ void ProcessorSplitRegexNativeUnittest::TestProcess() {
                 {
                     "content" : "line2\ncontinue",
                     "log.file.offset": ")"
-                << strlen(R"(line1ncontinuen)") << R"("
+               << strlen(R"(line1ncontinuen)") << R"("
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -543,7 +579,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginContinue()
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -556,10 +594,11 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginContinue()
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"
+               << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -579,10 +618,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginContinue()
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING
-                        << R"("
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -602,10 +641,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginContinue()
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -625,18 +664,20 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginContinue()
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"("
+                   << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"("
+                   << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -656,9 +697,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginContinue()
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -685,7 +727,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -698,10 +742,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -721,9 +765,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -743,10 +788,11 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING
+               << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -766,9 +812,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -788,10 +835,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -818,9 +865,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -846,7 +894,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBegin() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -859,10 +909,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBegin() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -881,9 +931,11 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBegin() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_BEGIN_STRING << R"("
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -902,9 +954,11 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithBegin() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+               << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -931,7 +985,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -944,10 +1000,11 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"
+               << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -967,9 +1024,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
+                   << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -989,9 +1047,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1010,9 +1069,11 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_END_STRING << R"("
+                        "content" : ")"
+                   << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1031,9 +1092,11 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithContinueEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+               << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1059,7 +1122,9 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1072,9 +1137,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1094,9 +1160,10 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+                   << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1115,9 +1182,11 @@ void ProcessorSplitRegexDisacardUnmatchUnittest::TestLogSplitWithEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+               << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1168,7 +1237,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1181,10 +1252,11 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"
+               << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1203,19 +1275,21 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING
-                        << R"("
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1235,10 +1309,10 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1258,27 +1332,30 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"("
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"("
+                   << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"("
+                   << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1298,9 +1375,10 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1320,18 +1398,20 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginContinue() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"("
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"("
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1351,7 +1431,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1364,10 +1446,10 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1387,18 +1469,20 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"("
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1418,10 +1502,11 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING
+               << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1441,18 +1526,20 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"("
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+                   << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1472,10 +1559,10 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1495,25 +1582,30 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"("
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_BEGIN_STRING << R"("
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1533,9 +1625,10 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1554,17 +1647,21 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBeginEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1583,7 +1680,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBegin() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1596,10 +1695,10 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBegin() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_BEGIN_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1618,17 +1717,21 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBegin() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_BEGIN_STRING << R"("
+                        "content" : ")"
+                   << LOG_BEGIN_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1647,9 +1750,11 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBegin() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+               << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1668,9 +1773,11 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithBegin() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1690,7 +1797,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1703,10 +1812,11 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)"
-                        << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)"
+               << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1725,18 +1835,21 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
+                   << LOG_CONTINUE_STRING << R"(\n)" << LOG_CONTINUE_STRING << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1756,9 +1869,10 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1777,17 +1891,21 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 },
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_END_STRING << R"("
+                        "content" : ")"
+                   << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1806,9 +1924,11 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+               << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1827,9 +1947,11 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithContinueEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1848,7 +1970,9 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithEnd() {
     // make processor
     ProcessorSplitRegexNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     { // case: complete log
         // make eventGroup
         auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -1861,9 +1985,10 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+               << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1883,9 +2008,10 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithEnd() {
                     "contents" :
                     {
                         "content" : ")"
-                        << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
+                   << LOG_UNMATCH << R"(\n)" << LOG_END_STRING << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1904,9 +2030,11 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+               << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]
@@ -1925,9 +2053,11 @@ void ProcessorSplitRegexKeepUnmatchUnittest::TestLogSplitWithEnd() {
                 {
                     "contents" :
                     {
-                        "content" : ")" << LOG_UNMATCH << R"("
+                        "content" : ")"
+                   << LOG_UNMATCH << R"("
                     },
                     "timestamp" : 12345678901,
+                    "timestampNanosecond" : 0,
                     "type" : 1
                 }
             ]

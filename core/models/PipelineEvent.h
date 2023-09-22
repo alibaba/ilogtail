@@ -37,6 +37,11 @@ public:
 
     time_t GetTimestamp() const { return timestamp; }
     void SetTimestamp(time_t t) { timestamp = t; }
+    void SetTimestamp(time_t t, long ns) { 
+        timestamp = t; 
+        timestampNanosecond = ns; // Only nanosecond part
+    }
+    long GetTimestampNanosecond() const { return timestampNanosecond; }
 
     // for debug and test
     virtual Json::Value ToJson() const = 0;
@@ -44,10 +49,13 @@ public:
     std::string ToJsonString() const;
     bool FromJsonString(const std::string&);
 
+    virtual uint64_t EventsSizeBytes() = 0;
+
 protected:
     void SetSourceBuffer(std::shared_ptr<SourceBuffer> sourceBuffer) { mSourceBuffer = sourceBuffer; }
 
     time_t timestamp = 0;
+    long timestampNanosecond = 0;
     PipelineEventType mType = VOID_EVENT_TYPE;
     std::shared_ptr<SourceBuffer> mSourceBuffer;
 };

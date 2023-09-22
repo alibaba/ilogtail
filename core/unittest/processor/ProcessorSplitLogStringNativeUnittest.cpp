@@ -48,9 +48,12 @@ void ProcessorSplitLogStringNativeUnittest::TestInit() {
     config.mLogType = REGEX_LOG;
     config.mLogBeginReg = ".*";
     config.mAdvancedConfig.mEnableLogPositionMeta = false;
+
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     ProcessorSplitLogStringNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
 }
 
 void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
@@ -73,6 +76,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -81,7 +85,10 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
     // run function
     ProcessorSplitLogStringNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     processor.Process(eventGroup);
     // judge result
     std::stringstream expectJson;
@@ -95,6 +102,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -105,6 +113,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
                << strlen(R"({n"k1":"v1"n}0)") << R"("
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -136,6 +145,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -145,6 +155,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -153,7 +164,9 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
     // run function
     ProcessorSplitLogStringNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     processor.Process(eventGroup);
     // judge result
     std::string expectJson = R"({
@@ -165,6 +178,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "content" : "line1"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -173,6 +187,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "content" : "line2"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -181,6 +196,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "content" : "line3"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -189,6 +205,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "content" : "line4"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]

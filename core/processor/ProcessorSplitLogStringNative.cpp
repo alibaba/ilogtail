@@ -17,15 +17,21 @@
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
+#include "plugin/ProcessorInstance.h"
+
 
 namespace logtail {
 
-bool ProcessorSplitLogStringNative::Init(const ComponentConfig& config) {
+bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig) {
+    const PipelineConfig& config = componentConfig.GetConfig();
+
     mSplitKey = DEFAULT_CONTENT_KEY;
     mSplitChar = config.mLogType == JSON_LOG ? '\0' : '\n';
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
+
+    SetMetricsRecordRef(Name(), componentConfig.GetId());
     return true;
 }
 
@@ -72,7 +78,7 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
     for (auto& content : logIndex) {
         std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-        targetEvent->SetTimestamp(sourceEvent.GetTimestamp()); // it is easy to forget other fields, better solution?
+        targetEvent->SetTimestamp(sourceEvent.GetTimestamp(), sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
         targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
         if (mEnableLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
