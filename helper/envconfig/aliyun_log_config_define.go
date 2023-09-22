@@ -63,6 +63,9 @@ import (
 // # 机器组（不填使用默认的机器组）
 // - name: aliyun_logs_catalina_machinegroup
 //   value: "machinegroup1"
+// # configTags（打给采集配置，是一个json字符串）
+// - name: aliyun_logs_catalina_configtags
+//   value: `{"sls.logtail.creator":"test-user", "sls.logtail.group":"test-group", "sls.logtail.datasource":"k8s", "test-tag":"test-value"}`
 // # 详细配置信息，是一个json
 // - name: aliyun_logs_catalina_detail
 //   value: "{\n  \"logType\": \"delimiter_log\",\n  \"logPath\": \"/usr/local/ilogtail\",\n  \"filePattern\": \"delimiter_log.LOG\",\n  \"separator\": \"|&|\",\n  \"key\": [\n    \"time\",\n    \"level\",\n    \"method\",\n    \"file\",\n    \"line\",\n    \"message\"\n  ],\n  \"timeKey\": \"time\",\n  \"timeFormat\": \"%Y-%m-%dT%H:%M:%S\",\n  \"dockerFile\": true,\n  \"dockerIncludeEnv\": {\n    \"ALIYUN_LOGTAIL_USER_DEFINED_ID\": \"\"\n  }\n}"
@@ -112,6 +115,7 @@ type AliyunLogConfigSpec struct {
 	LogstoreEnableTracking bool                  `json:"logstoreEnableTracking"`
 	LogstoreAutoSplit      bool                  `json:"logstoreAutoSplit"`
 	LogstoreEncryptConf    aliyunlog.EncryptConf `json:"logstoreEncryptConf"`
+	ConfigTags             map[string]string     `json:"configTags"`
 }
 
 const (
@@ -391,6 +395,13 @@ func makeLogConfigSpec(dockerInfo *helper.DockerInfoDetail, envConfigInfo *helpe
 		totalConfig += val
 		if err := json.Unmarshal([]byte(val), &config.LogstoreEncryptConf); err != nil {
 			logger.Error(context.Background(), "INVALID_ENV_CONFIG_DETAIL", "unmarshal error", err, "logstoreencryptconf", val)
+		}
+	}
+
+	if val, ok := envConfigInfo.ConfigItemMap["configtags"]; ok {
+		totalConfig += val
+		if err := json.Unmarshal([]byte(val), &config.ConfigTags); err != nil {
+			logger.Error(context.Background(), "INVALID_ENV_CONFIG_DETAIL", "unmarshal error", err, "configTags", val)
 		}
 	}
 

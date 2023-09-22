@@ -433,6 +433,17 @@ func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup strin
 			break
 		}
 	}
+	if err == nil {
+		for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
+			err = o.TagMachineGroup(project, machineGroup, "sls.machinegroup.deploy_mode", "deamonset")
+			if err != nil {
+				time.Sleep(time.Millisecond * 100)
+			} else {
+				break
+			}
+		}
+	}
+
 	return err
 }
 
@@ -490,6 +501,23 @@ func (o *operationWrapper) TagLogtailConfig(project, logtailConfig, tagKey, tagV
 	ResourceTags := aliyunlog.ResourceTags{
 		ResourceType: "logtailconfig",
 		ResourceID:   []string{project + "#" + logtailConfig},
+		Tags:         []aliyunlog.ResourceTag{{Key: tagKey, Value: tagValue}},
+	}
+	var err error
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
+		err = o.logClient.TagResources(project, &ResourceTags)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+	return err
+}
+
+func (o *operationWrapper) TagMachineGroup(project, machineGroup, tagKey, tagValue string) error {
+	ResourceTags := aliyunlog.ResourceTags{
+		ResourceType: "machinegroup",
+		ResourceID:   []string{project + "#" + machineGroup},
 		Tags:         []aliyunlog.ResourceTag{{Key: tagKey, Value: tagValue}},
 	}
 	var err error
@@ -656,6 +684,14 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, CustomErrorFromSlsSDKError(err)), k8s_event.CreateTag, "", fmt.Sprintf("tag config \"sls.logtail.channel=ENV\" error :%s", err.Error()))
 	} else {
 		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateTag, "tag config \"sls.logtail.channel=ENV\" success")
+	}
+	for k, v := range config.ConfigTags {
+		err = o.TagLogtailConfig(project, config.LogtailConfig.ConfigName, k, v)
+		if err != nil {
+			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, CustomErrorFromSlsSDKError(err)), k8s_event.CreateTag, "", fmt.Sprintf("tag config \"%s=%s\" error :%s", k, v, err.Error()))
+		} else {
+			k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateTag, fmt.Sprintf("tag config \"%s=%s\" success", k, v))
+		}
 	}
 	// check if config is in the machine group
 	// only check when create config
