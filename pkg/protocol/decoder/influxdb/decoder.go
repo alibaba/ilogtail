@@ -158,14 +158,6 @@ func (d *Decoder) parsePointFieldsToMetricValues(p models.Point) (imodels.Metric
 
 func (d *Decoder) parsePointsToLogs(points []models.Point, req *http.Request) []*protocol.Log {
 	db := req.FormValue("db")
-	contentLen := 4
-	if d.FieldsExtend && len(db) > 0 {
-		contentLen++
-	}
-	if d.FieldsExtend {
-		contentLen += 2
-	}
-
 	logs := make([]*protocol.Log, 0, len(points))
 	for _, s := range points {
 		fields, err := s.Fields()
