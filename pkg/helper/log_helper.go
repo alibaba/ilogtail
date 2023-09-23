@@ -237,7 +237,7 @@ func (hd *HistogramData) ToMetricLogs(name string, timeMs int64, labels *MetricL
 	logs = append(logs, NewMetricLog(name+"_sum", timeMs, hd.Sum, labels))
 	for _, v := range hd.Buckets {
 		labels.Replace("le", strconv.FormatFloat(v.Le, 'g', -1, 64))
-		logs = append(logs, NewMetricLog(name+"_bucket", timeMs, hd.Sum, labels))
+		logs = append(logs, NewMetricLog(name+"_bucket", timeMs, float64(v.Count), labels))
 	}
 
 	return logs
@@ -257,18 +257,17 @@ func NewMetricLog(name string, t int64, value float64, labels *MetricLabels) *pr
 // NewMetricLogStringVal create a metric log with val string, time support unix milliseconds and unix nanoseconds.
 func NewMetricLogStringVal(name string, t int64, value string, labels *MetricLabels) *protocol.Log {
 	strTime := strconv.FormatInt(t, 10)
-	var metric *protocol.Log
-
+	metric := &protocol.Log{}
 	switch len(strTime) {
 	case 13:
-		metric = &protocol.Log{}
 		protocol.SetLogTimeWithNano(metric, uint32(t/1000), uint32((t*1e6)%1e9))
 		strTime += "000000"
 	case 19:
-		metric = &protocol.Log{}
 		protocol.SetLogTimeWithNano(metric, uint32(t/1e9), uint32(t%1e9))
 	default:
-		return nil
+		t = int64(float64(t) * math.Pow10(19-len(strTime)))
+		strTime = strconv.FormatInt(t, 10)
+		protocol.SetLogTimeWithNano(metric, uint32(t/1e9), uint32(t%1e9))
 	}
 	metric.Contents = make([]*protocol.Log_Content, 0, 4)
 	metric.Contents = append(metric.Contents, &protocol.Log_Content{Key: "__name__", Value: formatNewMetricName(name)})
