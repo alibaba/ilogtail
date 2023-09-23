@@ -20,3 +20,6 @@ target_link_libraries(checkpoint_manager_unittest unittest_base)
 
 # add_executable(checkpoint_manager_v2_unittest CheckpointManagerV2Unittest.cpp)
 # target_link_libraries(checkpoint_manager_v2_unittest unittest_base)
+
+add_executable(adhoc_checkpoint_manager_unittest AdhocCheckpointManagerUnittest.cpp)
+target_link_libraries(adhoc_checkpoint_manager_unittest unittest_base)

@@ -47,6 +47,7 @@ your changes, such as:
 - [public] [both] [updated] Flusher Kafka V2: support send the message with headers to kafka
 - [public] [both] [updated] update gcc version to 9.3.1
 - [public] [both] [updated] add make flag WITHOUTGDB
+- [public] [both] [updated] cache incomplete line in memory to avoid repeated read system call
 - [public] [both] [fixed] Add APSARA\_LOG\_TRACE to solve the problem of not being able to find LOG\_TRACE.
 - [public] [both] [fixed] fix multiline is splitted if not flushed to disk together
 - [public] [both] [fixed] fix line is truncated if \0 is in the middle of line
@@ -56,5 +57,8 @@ your changes, such as:
 - [public] [both] [fixed] timezone adjust not working with apsara\_log
 - [public] [both] [added] support plugin ProcessorParseTimestampNative
 - [public] [both] [added] support plugin ProcessorOtelMetric
+- [public] [both] [updated] skywalking plugin support to capture `db.connection_string` tag 
 - [public] [both] [added] support plugin ProcessorParseApsaraNative
 - [public] [both] [added] support plugin ProcessorParseDelimiterNative
+- [public] [both] [added] support plugin ProcessorFilterNative
+- [public] [both] [added] support plugin ProcessorDesensitizeNative
