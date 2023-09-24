@@ -164,8 +164,8 @@ int ReadUtmp(const char* filename, int* n_entries, utmp** utmp_buf) {
     if (utmp_file == NULL)
         return 1;
 
-    if (fstat(fileno(utmp_file), &file_stats) != 0){
-        delete utmp_file;
+    if (fstat(fileno(utmp_file), &file_stats) != 0) {
+        fclose(utmp_file);
         return 1;
     }
 
@@ -181,13 +181,12 @@ int ReadUtmp(const char* filename, int* n_entries, utmp** utmp_buf) {
     n_read = fread(buf, 1, size, utmp_file);
     if (ferror(utmp_file) || fclose(utmp_file) == EOF || n_read < size) {
         free(buf);
-        delete utmp_file;
         return 1;
     }
 
     *n_entries = size / sizeof(utmp);
     *utmp_buf = buf;
-    delete utmp_file;
+
     return 0;
 }
 
