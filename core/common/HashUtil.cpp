@@ -75,6 +75,8 @@ struct Md5Block {
  */
 void CopyBytesToBlock(const uint8_t* poolIn, struct Md5Block& block) {
     uint32_t j = 0;
+    // Overrunning array "block.word" of 16 4-byte elements at element index 31 (byte offset 127) using index "i" (which
+    // evaluates to 31).
     for (uint32_t i = 0; i < 32; ++i, j += 4) {
         block.word[i] = ((uint32_t)poolIn[j]) | (((uint32_t)poolIn[j + 1]) << 8) | (((uint32_t)poolIn[j + 2]) << 16)
             | (((uint32_t)poolIn[j + 3]) << 24);
