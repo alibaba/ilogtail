@@ -82,12 +82,15 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
             project, logstore, "", "", false, "", region, LOGGROUP_COMPRESSED, 1, logBody.size(), curTime, "", 0);
 
         if (!CompressLz4(logBody, data->mLogData)) {
+            // CWE404: Leak of memory or pointers to system resources
+            // Variable "data" going out of scope leaks the storage it points to.
+            delete data;
             LOG_ERROR(sLogger, ("lz4 compress data", "fail"));
             return;
         }
 
-        sdk::PostLogStoreLogsResponse resp
-            = client.PostLogUsingWebTracking(data->mProjectName, data->mLogstore, sls_logs::SLS_CMP_LZ4, data->mLogData, data->mRawSize);
+        sdk::PostLogStoreLogsResponse resp = client.PostLogUsingWebTracking(
+            data->mProjectName, data->mLogstore, sls_logs::SLS_CMP_LZ4, data->mLogData, data->mRawSize);
 
         LOG_DEBUG(sLogger,
                   ("SendToProfileProject",

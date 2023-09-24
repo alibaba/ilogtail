@@ -84,6 +84,7 @@ void LogInput::Start() {
         initialized = true;
 
     mInteruptFlag = false;
+    // CWE404: Leak of memory or pointers to system resources
     // Ignoring storage allocated by "new logtail::Thread(logtail::LogInput::Start()::[lambda() (instance 1)](this))"
     // leaks it.
     new Thread([this]() { ProcessLoop(); });

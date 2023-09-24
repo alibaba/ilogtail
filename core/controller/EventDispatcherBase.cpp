@@ -1411,6 +1411,9 @@ bool EventDispatcherBase::AcceptConnection(int listenFd, int epollFd) {
     }
 
     if (fcntl(eventFd, F_SETFL, O_NONBLOCK) == -1) {
+        // CWE404: Leak of memory or pointers to system resources
+        // Handle variable "eventFd" going out of scope leaks the handle.
+        close(eventFd);
         LOG_ERROR(
             sLogger,
             ("Set Non Blocking", "Failed")(ToString(errno), ErrnoToString(GetErrno()))("File Path", sun.sun_path));
@@ -1421,6 +1424,7 @@ bool EventDispatcherBase::AcceptConnection(int listenFd, int epollFd) {
     ev.events = EPOLLIN;
     ev.data.fd = eventFd;
     if (epoll_ctl(epollFd, EPOLL_CTL_ADD, eventFd, &ev) == -1) {
+        close(eventFd);
         LOG_ERROR(sLogger,
                   ("Add epoll event", "Failed")(ToString(errno), ErrnoToString(GetErrno()))("File Path", sun.sun_path));
         return false;
