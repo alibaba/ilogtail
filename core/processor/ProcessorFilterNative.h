@@ -41,6 +41,10 @@ private:
     Mode mFilterMode;
 
     CounterPtr mProcFilterInSizeBytes;
+    //CWE457: A scalar field is not initialized by the constructor
+// The compiler-generated constructor for this class does not initialize "mFilterMode".
+
+
     CounterPtr mProcFilterOutSizeBytes;
     CounterPtr mProcFilterErrorTotal;
     CounterPtr mProcFilterRecordsTotal;
