@@ -37,7 +37,8 @@ std::string GetProcessExecutionDir(void) {
 #if defined(__linux__)
     char exePath[PATH_MAX + 1] = {0};
     readlink("/proc/self/exe", exePath, sizeof(exePath));
-    // CWE170: A character buffer that has not been null terminated is passed to a function expecting a null terminated string
+    // CWE170: A character buffer that has not been null terminated is passed to a function expecting a null terminated
+    // string
 
     // Passing unterminated string "exePath" to "basic_string", which expects a null-terminated string.
 
@@ -58,6 +59,9 @@ std::string GetBinaryName(void) {
 #if defined(__linux__)
     char exePath[PATH_MAX + 1] = {0};
     readlink("/proc/self/exe", exePath, sizeof(exePath));
+    // CWE170: A character buffer that has not been null terminated is passed to a function expecting a null terminated string
+
+    // Passing unterminated string "exePath" to "basic_string", which expects a null-terminated string.
     std::string fullPath(exePath);
     return fullPath;
 #elif defined(_MSC_VER)

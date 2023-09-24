@@ -259,6 +259,8 @@ void DoMd5Big(const uint8_t* poolIn, const uint64_t inputBytesNum, uint8_t hash[
         memcpy(&(tempBlock[partLen]), gPadding, (64 - partLen));
 
         /// copy temporary data into block, in little endian
+
+        // Overrunning array "tempBlock" of 64 bytes by passing it to a function which accesses it at byte offset 127.
         CopyBytesToBlock(tempBlock, block);
 
         /// calculate Md5
@@ -276,6 +278,8 @@ void DoMd5Big(const uint8_t* poolIn, const uint64_t inputBytesNum, uint8_t hash[
     memcpy(&(tempBlock[56]), &bitsNum, 8);
 
     /// copy temporary data into block, in little endian
+
+    // Overrunning array "tempBlock" of 64 bytes by passing it to a function which accesses it at byte offset 127.
     CopyBytesToBlock(tempBlock, block);
 
     /// calculate Md5
