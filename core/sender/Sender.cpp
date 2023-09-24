@@ -2176,6 +2176,11 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
                                                    sendClosure,
                                                    dataPtr->mShardHashKey);
     }
+    // CWE404: Leak of memory or pointers to system resources
+
+    // Variable "sendClosure" going out of scope leaks the storage it points to.
+
+    // delete sendClosure;
 }
 
 // config NULL means Logtail Profiling data
