@@ -41,9 +41,8 @@ private:
     Mode mFilterMode;
 
     CounterPtr mProcFilterInSizeBytes;
-    //CWE457: A scalar field is not initialized by the constructor
-// The compiler-generated constructor for this class does not initialize "mFilterMode".
-
+    // CWE457: A scalar field is not initialized by the constructor
+    // The compiler-generated constructor for this class does not initialize "mFilterMode".
 
     CounterPtr mProcFilterOutSizeBytes;
     CounterPtr mProcFilterErrorTotal;
@@ -56,8 +55,8 @@ private:
     bool ProcessEvent(PipelineEventPtr& e);
     bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
 
-    bool noneUtf8(StringView & strSrc, bool modify);
-    bool CheckNoneUtf8(const StringView & strSrc);
+    bool noneUtf8(StringView& strSrc, bool modify);
+    bool CheckNoneUtf8(const StringView& strSrc);
     void FilterNoneUtf8(std::string& strSrc);
 
 #ifdef APSARA_UNIT_TEST_MAIN
