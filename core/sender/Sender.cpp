@@ -510,9 +510,17 @@ Sender::Sender() {
     }
     mSenderQueue.SetParam((size_t)(concurrencyCount * 1.5), (size_t)(concurrencyCount * 2), 200);
     LOG_INFO(sLogger, ("Set sender queue param depend value", concurrencyCount));
+    // CWE404: Leak of memory or pointers to system resources
+
+    // Ignoring storage allocated by "new logtail::Thread(std::_Bind_helper::type(std::bind(void
+    // (logtail::Sender::*)()(&TestNetwork), logtail::Sender *(this))))" leaks it.
     new Thread(bind(&Sender::TestNetwork, this)); // be careful: this thread will not stop until process exit
     if (BOOL_FLAG(send_prefer_real_ip)) {
         LOG_INFO(sLogger, ("start real ip update thread", ""));
+        // CWE404: Leak of memory or pointers to system resources
+
+        // Ignoring storage allocated by "new logtail::Thread(std::_Bind_helper::type(std::bind(void
+        // (logtail::Sender::*)()(&TestNetwork), logtail::Sender *(this))))" leaks it.
         new Thread(bind(&Sender::RealIpUpdateThread, this)); // be careful: this thread will not stop until process exit
     }
     new Thread(bind(&Sender::DaemonSender, this)); // be careful: this thread will not stop until process exit

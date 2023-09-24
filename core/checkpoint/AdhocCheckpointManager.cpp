@@ -83,6 +83,13 @@ AdhocFileCheckpointPtr AdhocCheckpointManager::CreateAdhocFileCheckpoint(const s
         }
         int nbytes = pread(fd, firstLine, 1024, 0);
         if (nbytes < 0) {
+            // Close file handle
+            int ret = close(fd);
+            // Check if the file handle is successfully closed.
+            if (ret == -1) {
+                // Handle the case of failing to close file handles.
+                LOG_ERROR(sLogger, ("fail to close file", filePath));
+            }
             LOG_ERROR(sLogger, ("fail to read file", filePath)("nbytes", nbytes)("job name", jobName));
             return nullptr;
         }
