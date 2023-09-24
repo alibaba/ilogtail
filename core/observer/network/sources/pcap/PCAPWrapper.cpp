@@ -422,6 +422,8 @@ void PCAPWrapper::PCAPCallBack(const struct pcap_pkthdr* header, const u_char* p
         needRebuildHash = true;
     }
     if (needRebuildHash) {
+        // CWE457: Use of an uninitialized variable
+        // Using uninitialized value "key". Field "key.RoleType" is uninitialized when calling "XXH32".
         key.SockHash = 0;
         key.SockHash = XXH32(&key, sizeof(NetStatisticsKey), 0);
     }
