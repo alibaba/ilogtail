@@ -84,6 +84,8 @@ void LogInput::Start() {
         initialized = true;
 
     mInteruptFlag = false;
+    // Ignoring storage allocated by "new logtail::Thread(logtail::LogInput::Start()::[lambda() (instance 1)](this))"
+    // leaks it.
     new Thread([this]() { ProcessLoop(); });
     LOG_INFO(sLogger, ("LogInput", "start"));
 }
