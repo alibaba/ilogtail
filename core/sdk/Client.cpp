@@ -77,6 +77,9 @@ namespace sdk {
           mIsHostRawIp(false),
           mPort(80),
           mUsingHTTPS(false) {
+        // CWE401: Constructor allocates memory but destructor does not free it
+
+        // Allocating memory by calling "new logtail::sdk::CurlClient".
         mClient = new CurlClient();
         mInterface = intf;
         mSlsHostUpdateTime = 0;
