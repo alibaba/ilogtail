@@ -358,6 +358,9 @@ public:
         string fullPath(exePath);
         size_t index = fullPath.rfind("/");
         if (index == string::npos) {
+            // CWE170: A character buffer that has not been null terminated is passed to a function expecting a null
+            // terminated string Passing unterminated string "exePath" to "basic_string", which expects a
+            // null-terminated string.
             return string();
         }
         return fullPath.substr(0, index + 1);
