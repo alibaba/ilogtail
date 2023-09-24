@@ -100,6 +100,10 @@ LogtailAlarm::LogtailAlarm() {
     mMessageType[OBSERVER_RUNTIME_ALARM] = "OBSERVER_RUNTIME_ALARM";
     mMessageType[OBSERVER_STOP_ALARM] = "OBSERVER_STOP_ALARM";
 
+    // CWE404: Leak of memory or pointers to system resources
+
+    // Ignoring storage allocated by "new logtail::Thread(logtail::LogtailAlarm::LogtailAlarm()::[lambda() (instance
+    // 1)](this))" leaks it.
     new Thread([this]() { SendAlarmLoop(); });
 }
 
@@ -185,7 +189,9 @@ bool LogtailAlarm::SendAlarmLoop() {
                     // sendAlarmTypeIndex)("msg", messagePtr->mMessage));
 
                     Log* logPtr = logGroup.add_logs();
-                    SetLogTime(logPtr, AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
+                    SetLogTime(logPtr,
+                               AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta()
+                                                                                   : now.tv_sec);
                     Log_Content* contentPtr = logPtr->add_contents();
                     contentPtr->set_key("alarm_type");
                     contentPtr->set_value(messagePtr->mMessageType);
