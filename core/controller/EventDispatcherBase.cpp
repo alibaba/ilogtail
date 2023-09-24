@@ -1344,6 +1344,10 @@ int EventDispatcherBase::InitStreamLogTcpSocket() {
     int reuseAddr = 1;
     if (fcntl(listenFd, F_SETFL, O_NONBLOCK) == -1
         || setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr)) == -1) {
+        // CWE404: Leak of memory or pointers to system resources
+        // Handle variable "listenFd" going out of scope leaks the handle.
+
+        close(listenFd);
         LOG_ERROR(
             sLogger,
             ("Set Non Blocking or set sock opt to REUSEPORT", "Failed")(ToString(errno), ErrnoToString(GetErrno())));
@@ -1360,6 +1364,10 @@ int EventDispatcherBase::InitStreamLogTcpSocket() {
     in_addr_t addr = inet_addr(AppConfig::GetInstance()->GetStreamLogAddress().c_str());
     addr_serv.sin_addr.s_addr = addr;
     if (addr == (in_addr_t)-1 || bind(listenFd, (const sockaddr*)&addr_serv, sizeof(struct sockaddr)) == -1) {
+        // CWE404: Leak of memory or pointers to system resources
+        // Handle variable "listenFd" going out of scope leaks the handle.
+
+        close(listenFd);
         LOG_ERROR(sLogger,
                   ("Bind StreamLog tcp socket", "Failed")(ToString(errno),
                                                           ErrnoToString(GetErrno()))("fd", ToString(listenFd)));
@@ -1371,6 +1379,10 @@ int EventDispatcherBase::InitStreamLogTcpSocket() {
 
     // 128 represent backlog num
     if (listen(listenFd, 128) == -1) {
+        // CWE404: Leak of memory or pointers to system resources
+        // Handle variable "listenFd" going out of scope leaks the handle.
+
+        close(listenFd);
         LOG_ERROR(sLogger,
                   ("Listen StreamLog tcp socket",
                    "Failed")(ToString(errno), ErrnoToString(GetErrno()))("File Descriptor", ToString(listenFd)));
