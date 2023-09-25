@@ -475,28 +475,21 @@ Sender::Sender() {
     srand(time(NULL));
     mFlushLog = false;
     SetBufferFilePath(AppConfig::GetInstance()->GetBufferFilePath());
-    mTestNetworkClient = new sdk::Client("",
+    mTestNetworkClient.reset(new sdk::Client("",
                                          STRING_FLAG(default_access_key_id),
                                          STRING_FLAG(default_access_key),
                                          INT32_FLAG(sls_client_send_timeout),
                                          LogFileProfiler::mIpAddr,
-                                         AppConfig::GetInstance()->GetBindInterface());
-    SLSControl::Instance()->SetSlsSendClientCommonParam(mTestNetworkClient);
+                                         AppConfig::GetInstance()->GetBindInterface()));
+    SLSControl::Instance()->SetSlsSendClientCommonParam(mTestNetworkClient.get());
 
-    // CWE401: Constructor allocates memory but destructor does not free it
-
-    // Allocating memory by calling "new logtail::sdk::Client(std::string const("", std::allocator()),
-    // fLS::FLAGS_default_access_key_id, fLS::FLAGS_default_access_key, fLI::FLAGS_sls_client_send_timeout,
-    // logtail::LogFileProfiler::mIpAddr, logtail::AppConfig::GetInstance()->GetBindInterface())".
-
-
-    mUpdateRealIpClient = new sdk::Client("",
+    mUpdateRealIpClient.reset(new sdk::Client("",
                                           STRING_FLAG(default_access_key_id),
                                           STRING_FLAG(default_access_key),
                                           INT32_FLAG(sls_client_send_timeout),
                                           LogFileProfiler::mIpAddr,
-                                          AppConfig::GetInstance()->GetBindInterface());
-    SLSControl::Instance()->SetSlsSendClientCommonParam(mUpdateRealIpClient);
+                                          AppConfig::GetInstance()->GetBindInterface()));
+    SLSControl::Instance()->SetSlsSendClientCommonParam(mUpdateRealIpClient.get());
     SetSendingBufferCount(0);
     size_t concurrencyCount = (size_t)AppConfig::GetInstance()->GetSendRequestConcurrency();
     if (concurrencyCount < 10) {
@@ -507,17 +500,9 @@ Sender::Sender() {
     }
     mSenderQueue.SetParam((size_t)(concurrencyCount * 1.5), (size_t)(concurrencyCount * 2), 200);
     LOG_INFO(sLogger, ("Set sender queue param depend value", concurrencyCount));
-    // CWE404: Leak of memory or pointers to system resources
-
-    // Ignoring storage allocated by "new logtail::Thread(std::_Bind_helper::type(std::bind(void
-    // (logtail::Sender::*)()(&TestNetwork), logtail::Sender *(this))))" leaks it.
     new Thread(bind(&Sender::TestNetwork, this)); // be careful: this thread will not stop until process exit
     if (BOOL_FLAG(send_prefer_real_ip)) {
         LOG_INFO(sLogger, ("start real ip update thread", ""));
-        // CWE404: Leak of memory or pointers to system resources
-
-        // Ignoring storage allocated by "new logtail::Thread(std::_Bind_helper::type(std::bind(void
-        // (logtail::Sender::*)()(&TestNetwork), logtail::Sender *(this))))" leaks it.
         new Thread(bind(&Sender::RealIpUpdateThread, this)); // be careful: this thread will not stop until process exit
     }
     new Thread(bind(&Sender::DaemonSender, this)); // be careful: this thread will not stop until process exit
@@ -1896,7 +1881,7 @@ bool Sender::TestEndpoint(const std::string& region, const std::string& endpoint
         return false;
     static LogGroup logGroup;
     mTestNetworkClient->SetSlsHost(endpoint);
-    ResetPort(region, mTestNetworkClient);
+    ResetPort(region, mTestNetworkClient.get());
     bool status = true;
     int64_t beginTime = GetCurrentTimeInMicroSeconds();
     try {
@@ -2173,11 +2158,6 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
                                                    sendClosure,
                                                    dataPtr->mShardHashKey);
     }
-    // CWE404: Leak of memory or pointers to system resources
-
-    // Variable "sendClosure" going out of scope leaks the storage it points to.
-
-    // delete sendClosure;
 }
 
 // config NULL means Logtail Profiling data
@@ -2573,7 +2553,7 @@ Sender::~Sender() {
     }
     RemoveSender();
     if (mTestNetworkClient) {
-        delete mTestNetworkClient;
+        // delete mTestNetworkClient;
         mTestNetworkClient = NULL;
     }
 }
