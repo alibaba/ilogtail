@@ -354,7 +354,7 @@ bool Aggregator::Add(const std::string& projectName,
         }
 
         for (int32_t logIdx = 0; logIdx < logSize; logIdx++)
-            logGroup.mutable_logs()->RemoveLast();
+            logGroup.mutable_logs()->ReleaseLast();
         if (value != NULL && (value->IsReady() || sender->IsFlush())) {
             if (mergeType == MERGE_BY_LOGSTORE)
                 (pIter->second)->AddMergeItem(value);
