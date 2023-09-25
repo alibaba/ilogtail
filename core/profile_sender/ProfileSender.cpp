@@ -76,10 +76,11 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
     std::string logBody = logtailStatus.toStyledString();
     sdk::Client client(endpoint, "", "", INT32_FLAG(sls_client_send_timeout), "", "");
     SLSControl::Instance()->SetSlsSendClientCommonParam(&client);
-    time_t curTime = time(NULL);
-    LoggroupTimeValue* data = new LoggroupTimeValue(
-        project, logstore, "", "", false, "", region, LOGGROUP_COMPRESSED, 1, logBody.size(), curTime, "", 0);
     try {
+        time_t curTime = time(NULL);
+        std::unique_ptr<LoggroupTimeValue> data = new LoggroupTimeValue(
+            project, logstore, "", "", false, "", region, LOGGROUP_COMPRESSED, 1, logBody.size(), curTime, "", 0);
+
         if (!CompressLz4(logBody, data->mLogData)) {
             LOG_ERROR(sLogger, ("lz4 compress data", "fail"));
             return;
@@ -96,9 +97,6 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
                   ("SendToProfileProject", "fail")("logBody", logBody)("errCode", e.GetErrorCode())("errMsg",
                                                                                                     e.GetMessage()));
     }
-    // CWE404: Leak of memory or pointers to system resources
-    // Variable "data" going out of scope leaks the storage it points to.
-    delete data;
 }
 
 bool ProfileSender::SendInstantly(sls_logs::LogGroup& logGroup,

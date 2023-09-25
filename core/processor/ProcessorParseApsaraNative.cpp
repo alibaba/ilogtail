@@ -151,8 +151,6 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
             ++index;
             if (buffer.data()[index] == '\t' || buffer.data()[index] == '\0') {
                 if (colon_index >= 0) {
-                    // CWE457: Use of an uninitialized variable
-                    // Using uninitialized value "key" when calling "AddLog".
                     StringView key(buffer.data() + beg_index, colon_index - beg_index);
                     AddLog(key, StringView(buffer.data() + colon_index + 1, index - colon_index - 1), sourceEvent);
                     if (key == mSourceKey) {

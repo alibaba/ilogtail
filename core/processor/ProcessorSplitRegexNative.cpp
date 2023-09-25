@@ -360,8 +360,6 @@ void ProcessorSplitRegexNative::SetLogMultilinePolicy(const std::string& begReg,
                                                       const std::string& conReg,
                                                       const std::string& endReg) {
     mLogBeginReg = begReg;
-    // CWE404: Leak of memory or pointers to system resources
-    // Ignoring storage allocated by "this->mLogBeginRegPtr.release()" leaks it.
     if (mLogBeginRegPtr != nullptr) {
         mLogBeginRegPtr.reset();
     }

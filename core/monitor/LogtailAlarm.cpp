@@ -100,10 +100,6 @@ LogtailAlarm::LogtailAlarm() {
     mMessageType[OBSERVER_RUNTIME_ALARM] = "OBSERVER_RUNTIME_ALARM";
     mMessageType[OBSERVER_STOP_ALARM] = "OBSERVER_STOP_ALARM";
 
-    // CWE404: Leak of memory or pointers to system resources
-
-    // Ignoring storage allocated by "new logtail::Thread(logtail::LogtailAlarm::LogtailAlarm()::[lambda() (instance
-    // 1)](this))" leaks it.
     new Thread([this]() { SendAlarmLoop(); });
 }
 

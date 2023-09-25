@@ -999,11 +999,8 @@ void ModifyHandler::DeleteRollbackReader() {
 
 void ModifyHandler::ForceReadLogAndPush(LogFileReaderPtr reader) {
     LogBuffer* logBuffer = new LogBuffer;
-    Event* pEvent = reader->CreateFlushTimeoutEvent().release();
-    reader->ReadLog(*logBuffer, pEvent);
-    // CWE404: Leak of memory or pointers to system resources
-
-    // Variable "pEvent" going out of scope leaks the storage it points to.
+    auto pEvent = reader->CreateFlushTimeoutEvent();
+    reader->ReadLog(*logBuffer, pEvent.get());
     PushLogToProcessor(reader, logBuffer);
 }
 
