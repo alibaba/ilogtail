@@ -100,13 +100,14 @@ func newExemplarMetricLogFromRaw(name string, exemplar pmetric.Exemplar, labels 
 				Value: formatMetricName(metricName),
 			},
 			{
+				Key:   timeNanoKey,
+				Value: strconv.FormatInt(exemplar.Timestamp().AsTime().Unix(), 10),
+			},
+			{
 				Key:   labelsKey,
 				Value: labels.String(),
 			},
 			{
-				Key:   timeNanoKey,
-				Value: strconv.FormatInt(exemplar.Timestamp().AsTime().Unix(), 10),
-			}, {
 				Key:   valueKey,
 				Value: strconv.FormatFloat(exemplar.DoubleValue(), 'g', -1, 64),
 			},
