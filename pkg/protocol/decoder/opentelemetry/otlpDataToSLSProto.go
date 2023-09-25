@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 	"time"
-	"unicode"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
@@ -69,31 +67,6 @@ func formatMetricName(name string) string {
 
 func newMetricLogFromRaw(name string, labels *helper.MetricLabels, nsec int64, value float64) *protocol.Log {
 	return helper.NewMetricLog(name, nsec, value, labels)
-}
-
-func sanitize(s string) string {
-	if len(s) == 0 {
-		return s
-	}
-
-	s = strings.Map(sanitizeRune, s)
-	if unicode.IsDigit(rune(s[0])) {
-		s = "key_" + s
-	}
-
-	if s[0] == '_' {
-		s = "key" + s
-	}
-
-	return s
-}
-
-func sanitizeRune(r rune) rune {
-	if unicode.IsLetter(r) || unicode.IsDigit(r) {
-		return r
-	}
-
-	return '_'
 }
 
 func attrs2Labels(labels *helper.MetricLabels, attrs pcommon.Map) {
