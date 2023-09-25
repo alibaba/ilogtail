@@ -68,10 +68,7 @@ void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
-                                              PipelineEventPtr& e,
-                                              LogtailTime& lastLogTime,
-                                              StringView& timeStrCache) {
+bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache) {
     if (!IsSupportedEvent(e)) {
         return true;
     }
@@ -99,10 +96,10 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
         }
 
         GetContext().GetAlarm().SendAlarm(PARSE_TIME_FAIL_ALARM,
-                                          bufOut.to_string() + " $ " + ToString(logTime),
-                                          GetContext().GetProjectName(),
-                                          GetContext().GetLogstoreName(),
-                                          GetContext().GetRegion());
+                                               bufOut.to_string() + " $ " + ToString(logTime),
+                                               GetContext().GetProjectName(),
+                                               GetContext().GetLogstoreName(),
+                                               GetContext().GetRegion());
         mProcParseErrorTotal->Add(1);
         ++(*mParseFailures);
         if (!mDiscardUnmatch) {
@@ -131,8 +128,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
                                 "logstore", GetContext().GetLogstoreName())("file", logPath));
             }
             GetContext().GetAlarm().SendAlarm(OUTDATED_LOG_ALARM,
-                                              std::string("logTime: ") + ToString(logTime)
-                                                  + ", log:" + bufOut.to_string(),
+                                              std::string("logTime: ") + ToString(logTime) + ", log:" + bufOut.to_string(),
                                               GetContext().GetProjectName(),
                                               GetContext().GetLogstoreName(),
                                               GetContext().GetRegion());
@@ -193,10 +189,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
     return true;
 }
 
-time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffer,
-                                                               StringView& timeStr,
-                                                               LogtailTime& lastLogTime,
-                                                               int64_t& microTime) {
+time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime) {
     if (buffer[0] != '[') {
         return 0;
     }
@@ -205,7 +198,8 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
         int nanosecondLength = 0;
         auto strptimeResult = Strptime(buffer.data() + 1, "%s", &lastLogTime, nanosecondLength);
         if (NULL == strptimeResult || strptimeResult[0] != ']') {
-            LOG_WARNING(sLogger, ("parse apsara log time", "fail")("string", buffer)("timeformat", "%s"));
+            LOG_WARNING(sLogger,
+                        ("parse apsara log time", "fail")("string", buffer)("timeformat", "%s"));
             return 0;
         }
         microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
@@ -317,20 +311,16 @@ int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(StringView& buffer, Lo
         endIndex = endIndexArray[i];
         if ((findFieldBitMap & 0x1) == 0 && IsFieldLevel(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x1;
-            AddLog(
-                LogParser::SLS_KEY_LEVEL, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
+            AddLog(LogParser::SLS_KEY_LEVEL, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
         } else if ((findFieldBitMap & 0x10) == 0 && IsFieldThread(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x10;
-            AddLog(
-                LogParser::SLS_KEY_THREAD, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
+            AddLog(LogParser::SLS_KEY_THREAD, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
         } else if ((findFieldBitMap & 0x100) == 0 && IsFieldFileLine(buffer, beginIndex, endIndex)) {
             findFieldBitMap |= 0x100;
             int32_t colonIndex = FindColonIndex(buffer, beginIndex, endIndex);
             AddLog(LogParser::SLS_KEY_FILE, StringView(buffer.data() + beginIndex, endIndex - beginIndex), sourceEvent);
             if (colonIndex < endIndex) {
-                AddLog(LogParser::SLS_KEY_LINE,
-                       StringView(buffer.data() + colonIndex + 1, endIndex - colonIndex - 1),
-                       sourceEvent);
+                AddLog(LogParser::SLS_KEY_LINE, StringView(buffer.data() + colonIndex + 1, endIndex - colonIndex - 1), sourceEvent);
             }
         }
     }

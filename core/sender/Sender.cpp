@@ -100,10 +100,7 @@ DEFINE_FLAG_INT32(sending_cost_time_alarm_interval, "sending log group cost too 
 DEFINE_FLAG_INT32(log_group_wait_in_queue_alarm_interval,
                   "log group wait in queue alarm interval, may blocked by concurrency or quota, second",
                   3);
-DEFINE_FLAG_STRING(data_endpoint_policy,
-                   "policy for switching between data server endpoints, possible options include "
-                   "'designated_first'(default) and 'designated_locked'",
-                   "designated_first");
+DEFINE_FLAG_STRING(data_endpoint_policy, "policy for switching between data server endpoints, possible options include 'designated_first'(default) and 'designated_locked'", "designated_first");
 
 namespace logtail {
 const string Sender::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";
@@ -805,9 +802,7 @@ sdk::Client* Sender::GetSendClient(const std::string& region, const std::string&
                                               AppConfig::GetInstance()->GetBindInterface());
     SLSControl::Instance()->SetSlsSendClientCommonParam(sendClient);
     ResetPort(region, sendClient);
-    LOG_INFO(sLogger,
-             ("init endpoint for sender, region",
-              region)("uid", aliuid)("endpoint", endpoint)("use https", ToString(sendClient->IsUsingHTTPS())));
+    LOG_INFO(sLogger, ("init endpoint for sender, region", region)("uid", aliuid)("endpoint", endpoint)("use https",ToString(sendClient->IsUsingHTTPS())));
     SLSControl::Instance()->SetSlsSendClientAuth(aliuid, true, sendClient, lastUpdateTime);
     SlsClientInfo* clientInfo = new SlsClientInfo(sendClient, time(NULL));
     {
@@ -835,9 +830,7 @@ bool Sender::ResetSendClientEndpoint(const std::string aliuid, const std::string
     mSenderQueue.OnRegionRecover(region);
     sendClient->SetSlsHost(endpoint);
     ResetPort(region, sendClient);
-    LOG_INFO(sLogger,
-             ("reset endpoint for sender, region", region)("uid", aliuid)("from", originalEndpoint)("to", endpoint)(
-                 "use https", ToString(sendClient->IsUsingHTTPS())));
+    LOG_INFO(sLogger, ("reset endpoint for sender, region", region)("uid", aliuid)("from", originalEndpoint)("to", endpoint)("use https",ToString(sendClient->IsUsingHTTPS())));
     return true;
 }
 
@@ -1909,12 +1902,8 @@ bool Sender::TestEndpoint(const std::string& region, const std::string& endpoint
     try {
         if (BOOL_FLAG(enable_mock_send) && MockTestEndpoint) {
             string logData;
-            MockTestEndpoint("logtail-test-network-project",
-                             "logtail-test-network-logstore",
-                             logData,
-                             LOGGROUP_COMPRESSED,
-                             0,
-                             SLS_CMP_LZ4);
+            MockTestEndpoint(
+                "logtail-test-network-project", "logtail-test-network-logstore", logData, LOGGROUP_COMPRESSED, 0, SLS_CMP_LZ4);
         } else
             status = mTestNetworkClient->TestNetwork();
     } catch (sdk::LOGException& ex) {

@@ -85,8 +85,8 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
             return;
         }
 
-        sdk::PostLogStoreLogsResponse resp = client.PostLogUsingWebTracking(
-            data->mProjectName, data->mLogstore, sls_logs::SLS_CMP_LZ4, data->mLogData, data->mRawSize);
+        sdk::PostLogStoreLogsResponse resp
+            = client.PostLogUsingWebTracking(data->mProjectName, data->mLogstore, sls_logs::SLS_CMP_LZ4, data->mLogData, data->mRawSize);
 
         LOG_DEBUG(sLogger,
                   ("SendToProfileProject",

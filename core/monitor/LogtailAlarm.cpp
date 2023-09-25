@@ -189,9 +189,7 @@ bool LogtailAlarm::SendAlarmLoop() {
                     // sendAlarmTypeIndex)("msg", messagePtr->mMessage));
 
                     Log* logPtr = logGroup.add_logs();
-                    SetLogTime(logPtr,
-                               AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta()
-                                                                                   : now.tv_sec);
+                    SetLogTime(logPtr, AppConfig::GetInstance()->EnableLogTimeAutoAdjust() ? now.tv_sec + GetTimeDelta() : now.tv_sec);
                     Log_Content* contentPtr = logPtr->add_contents();
                     contentPtr->set_key("alarm_type");
                     contentPtr->set_value(messagePtr->mMessageType);
