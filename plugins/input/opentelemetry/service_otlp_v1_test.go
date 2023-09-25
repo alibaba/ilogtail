@@ -16,7 +16,6 @@ package opentelemetry
 
 import (
 	"fmt"
-	"github.com/alibaba/ilogtail/pkg/config"
 	"net/http"
 	"testing"
 
@@ -28,6 +27,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/helper"
 	"github.com/alibaba/ilogtail/plugins/test"
 )
