@@ -686,9 +686,6 @@ namespace sdk {
             memcpy(&(tempBlock[partLen]), gPadding, (64 - partLen));
 
             /// copy temporary data into block, in little endian
-
-            // Overrunning array "tempBlock" of 64 bytes by passing it to a function which accesses it at byte offset
-            // 127.
             CopyBytesToBlock(tempBlock, block);
 
             /// calculate Md5
@@ -706,8 +703,6 @@ namespace sdk {
         memcpy(&(tempBlock[56]), &bitsNum, 8);
 
         /// copy temporary data into block, in little endian
-
-        // Overrunning array "tempBlock" of 64 bytes by passing it to a function which accesses it at byte offset 127.
         CopyBytesToBlock(tempBlock, block);
 
         /// calculate Md5
@@ -870,12 +865,10 @@ namespace sdk {
         unsigned mlen = (unsigned)((bits >> 3) % SHA1_INPUT_BYTES), padding = SHA1_INPUT_BYTES - mlen;
         M[mlen++] = 0x80;
         if (padding > BIT_COUNT_BYTES) {
-            // Overrunning array of 64 bytes at byte offset 64 by dereferencing pointer "this->M + mlen".
-            memset(M + mlen, 0x00, padding - BIT_COUNT_BYTES);
+                        memset(M + mlen, 0x00, padding - BIT_COUNT_BYTES);
             make_big_endian32((uint32_t*)M, SHA1_INPUT_WORDS - BIT_COUNT_WORDS);
         } else {
-            // Overrunning array of 64 bytes at byte offset 64 by dereferencing pointer "this->M + mlen".
-            memset(M + mlen, 0x00, SHA1_INPUT_BYTES - mlen);
+                        memset(M + mlen, 0x00, SHA1_INPUT_BYTES - mlen);
             make_big_endian32((uint32_t*)M, SHA1_INPUT_WORDS);
             transform();
             memset(M, 0x00, SHA1_INPUT_BYTES - BIT_COUNT_BYTES);
