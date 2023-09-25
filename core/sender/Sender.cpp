@@ -2553,7 +2553,6 @@ Sender::~Sender() {
     }
     RemoveSender();
     if (mTestNetworkClient) {
-        // delete mTestNetworkClient;
         mTestNetworkClient = NULL;
     }
 }
