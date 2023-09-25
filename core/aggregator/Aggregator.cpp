@@ -35,7 +35,7 @@ namespace logtail {
 
 
 bool MergeItem::IsReady() {
-    return (mRawBytes > INT32_FLAG(batch_send_metric_size) || ((time(NULL) - mLastUpdateTime) >= mBatchSendInterval));
+    return mRawBytes > INT32_FLAG(batch_send_metric_size) || ((time(NULL) - mLastUpdateTime) >= mBatchSendInterval);
 }
 
 bool PackageListMergeBuffer::IsReady(int32_t curTime) {
@@ -239,9 +239,13 @@ bool Aggregator::Add(const std::string& projectName,
         bool mergeFinishedFlag = false, initFlag = false;
         for (int32_t logIdx = 0; logIdx < logSize; logIdx++) {
             if (neededIdx < neededLogSize && logIdx == neededLogs[neededIdx]) {
-                if (value == NULL || value->mLines > logCountMin || value->mRawBytes > logGroupByteMin
-                    || (curTime - value->mLastUpdateTime) >= INT32_FLAG(batch_send_interval)
-                    || ((value->mLogGroup).logs(0).time() / 60 != (*(mutableLogPtr + logIdx))->time() / 60)) {
+                // TODO: enforce exactly once to send all logs in one shot, because we do not calc offset and length
+                // correctly for each log, especially in GBK encoding mode
+                if (value == NULL
+                    || (!context.mExactlyOnceCheckpoint
+                        && (value->mLines > logCountMin || value->mRawBytes > logGroupByteMin
+                            || (curTime - value->mLastUpdateTime) >= INT32_FLAG(batch_send_interval)
+                            || ((value->mLogGroup).logs(0).time() / 60 != (*(mutableLogPtr + logIdx))->time() / 60)))) {
                     // value is not NULL, log group merging finished
                     if (value != NULL) {
                         if (context.mMarkOffsetFlag) {
@@ -346,7 +350,7 @@ bool Aggregator::Add(const std::string& projectName,
 
         for (int32_t logIdx = 0; logIdx < logSize; logIdx++)
             logGroup.mutable_logs()->ReleaseLast();
-        if (value != NULL && (value->IsReady() || sender->IsFlush())) {
+        if (value != NULL && (value->IsReady() || sender->IsFlush() || context.mExactlyOnceCheckpoint)) {
             if (mergeType == MERGE_BY_LOGSTORE)
                 (pIter->second)->AddMergeItem(value);
             else

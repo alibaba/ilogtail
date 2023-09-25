@@ -42,13 +42,13 @@ void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
     }
 
     // __path__
-    const logtail::StringView& filePath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH);
+    const logtail::StringView& filePath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH);
     if (!filePath.empty()) {
         logGroup.SetTagNoCopy(LOG_RESERVED_KEY_PATH, filePath.substr(0, 511));
     }
 
     // __user_defined_id__
-    const logtail::StringView& agent_tag = logGroup.GetMetadata(EVENT_META_AGENT_TAG);
+    const logtail::StringView& agent_tag = logGroup.GetMetadata(EventGroupMetaKey::AGENT_TAG);
     if (!agent_tag.empty()) {
         logGroup.SetTagNoCopy(LOG_RESERVED_KEY_USER_DEFINED_ID, agent_tag.substr(0, 99));
     }
@@ -58,7 +58,7 @@ void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
     }
 
     // __hostname__
-    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_HOSTNAME, logGroup.GetMetadata(EVENT_META_HOST_NAME).substr(0, 99));
+    logGroup.SetTagNoCopy(LOG_RESERVED_KEY_HOSTNAME, logGroup.GetMetadata(EventGroupMetaKey::HOST_NAME).substr(0, 99));
 
     // zone info for ant
     const std::string& alipayZone = AppConfig::GetInstance()->GetAlipayZone();

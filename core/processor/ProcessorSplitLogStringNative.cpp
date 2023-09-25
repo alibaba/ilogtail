@@ -27,7 +27,8 @@ bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig)
 
     mSplitKey = DEFAULT_CONTENT_KEY;
     mSplitChar = config.mLogType == JSON_LOG ? '\0' : '\n';
-    mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
+    mEnableLogPositionMeta
+        = config.mAdvancedConfig.mEnableLogPositionMeta || config.mAdvancedConfig.mExactlyOnceConcurrency > 0;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
 
@@ -72,8 +73,8 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
     *mFeedLines += feedLines;
 
     long sourceoffset = 0L;
-    if (sourceEvent.HasContent(EVENT_META_LOG_FILE_OFFSET)) {
-        sourceoffset = atol(sourceEvent.GetContent(EVENT_META_LOG_FILE_OFFSET).data()); // use safer method
+    if (sourceEvent.HasContent(LOG_RESERVED_KEY_FILE_OFFSET)) {
+        sourceoffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
     }
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
     for (auto& content : logIndex) {
@@ -83,11 +84,11 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
         if (mEnableLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
-            targetEvent->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+            targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
         }
         if (sourceEvent.GetContents().size() > 1) { // copy other fields
             for (auto& kv : sourceEvent.GetContents()) {
-                if (kv.first != mSplitKey && kv.first != EVENT_META_LOG_FILE_OFFSET) {
+                if (kv.first != mSplitKey && kv.first != LOG_RESERVED_KEY_FILE_OFFSET) {
                     targetEvent->SetContentNoCopy(kv.first, kv.second);
                 }
             }

@@ -15,14 +15,30 @@
  */
 
 #pragma once
-#include "models/PipelineEventPtr.h"
 #include <memory>
 #include <string>
+#include "common/Constants.h"
+#include "models/PipelineEventPtr.h"
 #include "reader/SourceBuffer.h"
 
 namespace logtail {
 
-using GroupMetadata = std::map<StringView, StringView>;
+// referrence: https://opentelemetry.io/docs/specs/otel/logs/data-model-appendix/#elastic-common-schema
+// referrence: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/logs-general.md
+enum class EventGroupMetaKey {
+    UNKNOWN,
+    AGENT_TAG,
+    HOST_IP,
+    HOST_NAME,
+    LOG_TOPIC,
+    LOG_FILE_PATH,
+    LOG_FILE_PATH_RESOLVED,
+    LOG_FILE_INODE,
+    LOG_READ_OFFSET,
+    LOG_READ_LENGTH
+};
+
+using GroupMetadata = std::map<EventGroupMetaKey, StringView>;
 using GroupTags = std::map<StringView, StringView>;
 
 // DeepCopy is required if we want to support no-linear topology
@@ -33,6 +49,7 @@ public:
     PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
     PipelineEventGroup(const PipelineEventGroup&) = delete;
     PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
+
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& MutableEvents() { return mEvents; }
     void AddEvent(const PipelineEventPtr& event);
@@ -41,14 +58,14 @@ public:
     // void SetSourceBuffer(std::shared_ptr<SourceBuffer> sourceBuffer) { mSourceBuffer = sourceBuffer; }
     std::shared_ptr<SourceBuffer>& GetSourceBuffer() { return mSourceBuffer; }
 
-    void SetMetadata(const StringView& key, const StringView& val);
-    void SetMetadata(const std::string& key, const std::string& val);
-    void SetMetadataNoCopy(const StringBuffer& key, const StringBuffer& val);
-    const StringView& GetMetadata(const StringView& key) const;
+    void SetMetadata(EventGroupMetaKey key, const StringView& val);
+    void SetMetadata(EventGroupMetaKey key, const std::string& val);
+    void SetMetadataNoCopy(EventGroupMetaKey key, const StringBuffer& val);
+    const StringView& GetMetadata(EventGroupMetaKey key) const;
     const GroupMetadata& GetMetadatum() const { return mMetadata; };
-    bool HasMetadata(const StringView& key) const;
-    void SetMetadataNoCopy(const StringView& key, const StringView& val);
-    void DelMetadata(const StringView& key);
+    bool HasMetadata(EventGroupMetaKey key) const;
+    void SetMetadataNoCopy(EventGroupMetaKey key, const StringView& val);
+    void DelMetadata(EventGroupMetaKey key);
 
     void SetTag(const StringView& key, const StringView& val);
     void SetTag(const std::string& key, const std::string& val);
@@ -67,7 +84,7 @@ public:
     uint64_t EventGroupSizeBytes();
 
 private:
-    GroupMetadata mMetadata; // Keys are EVENT_META_XXX in Constants.h. Used to generate tag/log. Will not output.
+    GroupMetadata mMetadata; // Used to generate tag/log. Will not output.
     GroupTags mTags; // custom tags to output
     EventsContainer mEvents;
     std::shared_ptr<SourceBuffer> mSourceBuffer;

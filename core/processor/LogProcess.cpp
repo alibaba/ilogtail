@@ -445,8 +445,8 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     }
     event->SetTimestamp(logtime);
     event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
-    auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->beginOffset));
-    event->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+    auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
+    event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
     eventGroup.AddEvent(std::move(event));
 
     // process logGroup
@@ -467,25 +467,25 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     }
     // record log positions for exactly once.
     if (logBuffer->exactlyOnceCheckpoint) {
-        // I think one just record buffer offset and length is enough
-        // There is no need to record offset and length for each event
-        std::pair<size_t, size_t> pos(logBuffer->beginOffset, logBuffer->rawBuffer.size());
+        std::pair<size_t, size_t> pos(logBuffer->readOffset, logBuffer->readLength);
         logBuffer->exactlyOnceCheckpoint->positions.assign(eventGroup.GetEvents().size(), pos);
     }
     return 0;
 }
 
 void LogProcess::FillEventGroupMetadata(LogBuffer& logBuffer, PipelineEventGroup& eventGroup) const {
-    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH, logBuffer.logFileReader->GetConvertedPath());
-    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_PATH_RESOLVED, logBuffer.logFileReader->GetHostLogPath());
-    auto inodebuf = logBuffer.CopyString(std::to_string(logBuffer.logFileReader->GetDevInode().inode));
-    eventGroup.SetMetadataNoCopy(EVENT_META_LOG_FILE_INODE, StringView(inodebuf.data, inodebuf.size));
+    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH, logBuffer.logFileReader->GetConvertedPath());
+    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, logBuffer.logFileReader->GetHostLogPath());
+    eventGroup.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE,
+                           std::to_string(logBuffer.logFileReader->GetDevInode().inode));
     std::string agentTag = ConfigManager::GetInstance()->GetUserDefinedIdSet();
     if (!agentTag.empty()) {
-        eventGroup.SetMetadata(EVENT_META_AGENT_TAG, ConfigManager::GetInstance()->GetUserDefinedIdSet());
+        eventGroup.SetMetadata(EventGroupMetaKey::AGENT_TAG, ConfigManager::GetInstance()->GetUserDefinedIdSet());
     }
-    eventGroup.SetMetadataNoCopy(EVENT_META_HOST_IP, LogFileProfiler::mIpAddr);
-    eventGroup.SetMetadataNoCopy(EVENT_META_HOST_NAME, LogFileProfiler::mHostname);
+    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::HOST_IP, LogFileProfiler::mIpAddr);
+    eventGroup.SetMetadataNoCopy(EventGroupMetaKey::HOST_NAME, LogFileProfiler::mHostname);
+    eventGroup.SetMetadata(EventGroupMetaKey::LOG_READ_OFFSET, std::to_string(logBuffer.readOffset));
+    eventGroup.SetMetadata(EventGroupMetaKey::LOG_READ_OFFSET, std::to_string(logBuffer.readLength));
 }
 
 void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup,
@@ -505,8 +505,7 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup,
         for (auto& kv : logEvent.GetContents()) {
             sls_logs::Log_Content* contPtr = log->add_contents();
             // need to rename EVENT_META_LOG_FILE_OFFSET
-            contPtr->set_key(kv.first == EVENT_META_LOG_FILE_OFFSET ? LOG_RESERVED_KEY_FILE_OFFSET
-                                                                    : kv.first.to_string());
+            contPtr->set_key(kv.first.to_string());
             contPtr->set_value(kv.second.to_string());
         }
     }
@@ -590,7 +589,7 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                     .append(TAG_PREFIX)
                     .append(LOG_RESERVED_KEY_FILE_OFFSET)
                     .append(TAG_SEPARATOR)
-                    .append(std::to_string(logBuffer->beginOffset));
+                    .append(std::to_string(logBuffer->readOffset));
             }
 
             LogtailPlugin::GetInstance()->ProcessRawLogV2(logFileReader->GetConfigName(),
@@ -686,7 +685,7 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
 
                 // record offset in content
                 // TODO: I don't think all offsets calc below works with GBK
-                auto const offset = logBuffer->beginOffset + (logIndex[i].data() - rawBuffer.data());
+                auto const offset = logBuffer->readOffset + (logIndex[i].data() - rawBuffer.data());
                 if ((logBuffer->exactlyOnceCheckpoint || config.mAdvancedConfig.mEnableLogPositionMeta)
                     && logPtr != nullptr) {
                     auto content = logPtr->add_contents();
@@ -697,11 +696,11 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                 if (logBuffer->exactlyOnceCheckpoint && logPtr != nullptr) {
                     int32_t length = 0;
                     if (1 == lines) {
-                        length = rawBuffer.size();
+                        length = logBuffer->readLength;
                     } else if (i != lines - 1) {
                         length = logIndex[i + 1].data() - logIndex[i].data();
                     } else {
-                        length = rawBuffer.size() - (logIndex[i].data() - rawBuffer.data());
+                        length = logBuffer->readLength - (logIndex[i].data() - rawBuffer.data());
                     }
                     logBuffer->exactlyOnceCheckpoint->positions.emplace_back(
                         std::make_pair(offset, static_cast<size_t>(length)));

@@ -33,7 +33,8 @@ bool ProcessorSplitRegexNative::Init(const ComponentConfig& componentConfig) {
     mIsMultline = config.IsMultiline();
     SetLogMultilinePolicy(config.mLogBeginReg, config.mLogContinueReg, config.mLogEndReg);
     mDiscardUnmatch = config.mDiscardUnmatch;
-    mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
+    mEnableLogPositionMeta
+        = config.mAdvancedConfig.mEnableLogPositionMeta || config.mAdvancedConfig.mExactlyOnceConcurrency > 0;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
     SetMetricsRecordRef(Name(), componentConfig.GetId());
@@ -45,7 +46,7 @@ void ProcessorSplitRegexNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
     EventsContainer newEvents;
-    const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
+    const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
     for (const PipelineEventPtr& e : logGroup.GetEvents()) {
         ProcessEvent(logGroup, logPath, e, newEvents);
     }
@@ -109,8 +110,8 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         return;
     }
     long sourceoffset = 0L;
-    if (sourceEvent.HasContent(EVENT_META_LOG_FILE_OFFSET)) {
-        sourceoffset = atol(sourceEvent.GetContent(EVENT_META_LOG_FILE_OFFSET).data()); // use safer method
+    if (sourceEvent.HasContent(LOG_RESERVED_KEY_FILE_OFFSET)) {
+        sourceoffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
     }
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
     for (auto& content : logIndex) {
@@ -120,11 +121,11 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         if (mEnableLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
-            targetEvent->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+            targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
         }
         if (sourceEvent.GetContents().size() > 1) { // copy other fields
             for (auto& kv : sourceEvent.GetContents()) {
-                if (kv.first != mSplitKey && kv.first != EVENT_META_LOG_FILE_OFFSET) {
+                if (kv.first != mSplitKey && kv.first != LOG_RESERVED_KEY_FILE_OFFSET) {
                     targetEvent->SetContentNoCopy(kv.first, kv.second);
                 }
             }
