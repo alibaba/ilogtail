@@ -430,17 +430,15 @@ func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup strin
 		if err != nil {
 			time.Sleep(time.Millisecond * 100)
 		} else {
-			break
-		}
-	}
-	if err == nil {
-		for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-			err = o.TagMachineGroup(project, machineGroup, "sls.machinegroup.deploy_mode", "deamonset")
-			if err != nil {
-				time.Sleep(time.Millisecond * 100)
-			} else {
-				break
+			for j := 0; j < *flags.LogOperationMaxRetryTimes; j++ {
+				err = o.TagMachineGroup(project, machineGroup, "sls.machinegroup.deploy_mode", "deamonset")
+				if err != nil {
+					time.Sleep(time.Millisecond * 100)
+				} else {
+					break
+				}
 			}
+			break
 		}
 	}
 
