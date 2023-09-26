@@ -93,6 +93,12 @@ void PipelineEventGroup::DelTag(const StringView& key) {
     mTags.erase(key);
 }
 
+uint64_t PipelineEventGroup::EventGroupSizeBytes() {
+    // TODO
+    return 0;
+}
+
+#ifdef APSARA_UNIT_TEST_MAIN
 const std::string EVENT_GROUP_META_AGENT_TAG = "agent.tag";
 const std::string EVENT_GROUP_META_HOST_IP = "host.ip";
 const std::string EVENT_GROUP_META_HOST_NAME = "host.name";
@@ -226,10 +232,6 @@ bool PipelineEventGroup::FromJsonString(const std::string& inJson) {
     }
     return FromJson(root);
 }
-
-uint64_t PipelineEventGroup::EventGroupSizeBytes() {
-    // TODO
-    return 0;
-}
+#endif
 
 } // namespace logtail

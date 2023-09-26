@@ -27,8 +27,7 @@ bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig)
 
     mSplitKey = DEFAULT_CONTENT_KEY;
     mSplitChar = config.mLogType == JSON_LOG ? '\0' : '\n';
-    mEnableLogPositionMeta
-        = config.mAdvancedConfig.mEnableLogPositionMeta || config.mAdvancedConfig.mExactlyOnceConcurrency > 0;
+    mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
 

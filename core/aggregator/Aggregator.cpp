@@ -142,7 +142,7 @@ bool Aggregator::Add(const std::string& projectName,
     if (logSize == 0)
         return true;
     vector<int32_t> neededLogs;
-    int32_t neededLogSize;
+    int32_t neededLogSize = logSize;
     if (!BOOL_FLAG(enable_new_pipeline)) {
         static const vector<sls_logs::LogTag>& sEnvTags = AppConfig::GetInstance()->GetEnvTags();
         if (!sEnvTags.empty()) {
@@ -170,9 +170,8 @@ bool Aggregator::Add(const std::string& projectName,
             LogFilter::CastSensitiveWords(logGroup, config);
         }
     } else {
-        std::vector<int> v(logGroup.logs_size());
+        neededLogs.resize(logSize);
         std::iota(std::begin(neededLogs), std::end(neededLogs), 0);
-        neededLogSize = (int32_t)neededLogs.size();
     }
 
     static Sender* sender = Sender::Instance();

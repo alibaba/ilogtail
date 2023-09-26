@@ -33,8 +33,7 @@ bool ProcessorSplitRegexNative::Init(const ComponentConfig& componentConfig) {
     mIsMultline = config.IsMultiline();
     SetLogMultilinePolicy(config.mLogBeginReg, config.mLogContinueReg, config.mLogEndReg);
     mDiscardUnmatch = config.mDiscardUnmatch;
-    mEnableLogPositionMeta
-        = config.mAdvancedConfig.mEnableLogPositionMeta || config.mAdvancedConfig.mExactlyOnceConcurrency > 0;
+    mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
     SetMetricsRecordRef(Name(), componentConfig.GetId());

@@ -1967,6 +1967,13 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         memcpy(gbkBuffer, mCache.data(), lastCacheSize); // copy from cache
         readCharCount += lastCacheSize;
     }
+    // Ignore \n if last is force read
+    if (gbkBuffer[0] == '\n' && mLastForceRead) {
+        ++gbkBuffer;
+        --readCharCount;
+        ++mLastFilePos;
+        logBuffer.readOffset = mLastFilePos;
+    }
     logBuffer.truncateInfo.reset(truncateInfo);
     lastReadPos = mLastFilePos + readCharCount;
     const size_t originReadCount = readCharCount;
@@ -1999,33 +2006,13 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     size_t srcLength = readCharCount;
     size_t requiredLen
         = EncodingConverter::GetInstance()->ConvertGbk2Utf8(gbkBuffer, &srcLength, nullptr, 0, lineFeedPos);
-    if (requiredLen == 0) { // skip non-convertable part
-        if (readCharCount < originReadCount) {
-            // rollback due to convert, put rollbacked part in cache
-            mCache.assign(gbkBuffer + readCharCount, originReadCount - readCharCount);
-        } else {
-            mCache.clear();
-        }
-        mLastFilePos += readCharCount;
-        logBuffer.readOffset = mLastFilePos;
-        return;
-    }
     StringBuffer stringMemory = logBuffer.AllocateStringBuffer(requiredLen + 1);
     size_t resultCharCount = EncodingConverter::GetInstance()->ConvertGbk2Utf8(
         gbkBuffer, &srcLength, stringMemory.data, stringMemory.capacity, lineFeedPos);
     char* stringBuffer = stringMemory.data; // utf8 buffer
-    // Ignore \n if last is force read
-    if (stringBuffer[0] == '\n' && mLastForceRead) {
-        ++gbkBuffer;
-        --readCharCount;
-        ++stringBuffer;
-        --resultCharCount;
-        ++mLastFilePos;
-        logBuffer.readOffset = mLastFilePos;
-    }
     if (resultCharCount == 0) {
         if (readCharCount < originReadCount) {
-            // rollback due to convert, put rollbacked part in cache
+            // skip unconvertable part, put rollbacked part in cache
             mCache.assign(gbkBuffer + readCharCount, originReadCount - readCharCount);
         } else {
             mCache.clear();
@@ -2045,6 +2032,10 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
             rollbackLineFeedCount = 0;
             // Cannot get the split position here, so just mark a flag and send alarm later
             logTooLongSplitFlag = true;
+        } else {
+            // line is not finished yet nor more data, put all data in cache
+            mCache.assign(gbkBuffer, originReadCount);
+            return;
         }
     }
 

@@ -76,13 +76,15 @@ public:
     void SetTagNoCopy(const StringView& key, const StringView& val);
     void DelTag(const StringView& key);
 
+    uint64_t EventGroupSizeBytes();
+
+#ifdef APSARA_UNIT_TEST_MAIN
     // for debug and test
     Json::Value ToJson() const;
     bool FromJson(const Json::Value&);
     std::string ToJsonString() const;
     bool FromJsonString(const std::string&);
-    uint64_t EventGroupSizeBytes();
-
+#endif
 private:
     GroupMetadata mMetadata; // Used to generate tag/log. Will not output.
     GroupTags mTags; // custom tags to output
