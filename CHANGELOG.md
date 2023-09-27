@@ -62,3 +62,4 @@ your changes, such as:
 - [public] [both] [added] support plugin ProcessorParseDelimiterNative
 - [public] [both] [added] support plugin ProcessorFilterNative
 - [public] [both] [added] support plugin ProcessorDesensitizeNative
+- [public] [both] [fixed] fix droping jvm metrics when collecting multiple skywalking instances's data
