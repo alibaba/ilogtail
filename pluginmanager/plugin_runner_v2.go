@@ -441,10 +441,11 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 		}
 	}
 	switch {
-	case in.Log.TimeNs != nil:
-		log.Timestamp = uint64(*in.Log.TimeNs)
 	case in.Log.Time != 0:
 		log.Timestamp = uint64(time.Second * time.Duration(in.Log.Time))
+		if in.Log.TimeNs != nil {
+			log.Timestamp += uint64(*in.Log.TimeNs)
+		}
 	default:
 		log.Timestamp = uint64(time.Now().UnixNano())
 	}

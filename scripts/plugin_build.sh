@@ -31,8 +31,7 @@ VERSION=${4:-1.7.1}
 PLUGINS_CONFIG_FILE=${5:-${PLUGINS_CONFIG_FILE:-plugins.yml,external_plugins.yml}}
 GO_MOD_FILE=${6:-${GO_MOD_FILE:-go.mod}}
 NAME=ilogtail
-LDFLAGS=${GO_LDFLAGS:-}
-LDFLAGS=$LDFLAGS'-X "github.com/alibaba/ilogtail/pluginmanager.BaseVersion='$VERSION'"'
+LDFLAGS="${GO_LDFLAGS:-}"' -X "github.com/alibaba/ilogtail/pluginmanager.BaseVersion='$VERSION'"'
 BUILD_FLAG=${BUILD_FLAG:-}
 
 os
@@ -76,13 +75,11 @@ else
 fi
 # if libzstd.a is available in the image, copy instead of rebuild
 lib_name=libzstd_${GOOS}_${GOARCH}.a
-if [[ ! -f "$lib_name" ]]; then
-  if [[ -f /opt/logtail/deps/lib64/libzstd.a ]]; then
-    sudo cp /opt/logtail/deps/lib64/libzstd.a libzstd_${GOOS}_${GOARCH}.a
-  else
-    sudo MOREFLAGS=-fPIC make clean libzstd.a
-    sudo mv libzstd__.a ${lib_name}
-  fi
+if [[ -f /opt/logtail/deps/lib64/libzstd.a ]]; then
+  sudo cp /opt/logtail/deps/lib64/libzstd.a libzstd_${GOOS}_${GOARCH}.a
+else
+  sudo MOREFLAGS=-fPIC make clean libzstd.a
+  sudo mv libzstd__.a ${lib_name}
 fi
 GROUP=$(id -gn $USER)
 sudo chown ${USER}:${GROUP} ${lib_name}
