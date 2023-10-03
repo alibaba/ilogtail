@@ -96,6 +96,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileAdvancedConfigMap["DirBlackList"] = "dir_blacklist";
     mFileAdvancedConfigMap["FilepathBlackList"] = "filepath_blacklist";
     mFileAdvancedConfigMap["EnableTimestampNanosecond"] = "enable_timestamp_nanosecond";
+    mFileAdvancedConfigMap["UsingOldContentTag"] = "using_Old_content_tag";
     mFileAdvancedConfigMap["EnablePreciseTimestamp"] = "enable_precise_timestamp";
     mFileAdvancedConfigMap["PreciseTimestampKey"] = "precise_timestamp_key";
     mFileAdvancedConfigMap["PreciseTimestampUnit"] = "precise_timestamp_unit";
