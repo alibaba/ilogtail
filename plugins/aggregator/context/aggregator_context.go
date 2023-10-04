@@ -95,7 +95,9 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		logGroupList = make([]*protocol.LogGroup, 0, p.MaxLogGroupCount)
 	}
 	if len(logGroupList) == 0 {
-		logGroupList = append(logGroupList, p.newLogGroup(source, topic))
+		newLogGroup := p.newLogGroup(source, topic)
+		fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
+		logGroupList = append(logGroupList, newLogGroup)
 	}
 	nowLogGroup := logGroupList[len(logGroupList)-1]
 
@@ -124,6 +126,10 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	nowLogGroup.Logs = append(nowLogGroup.Logs, log)
 	p.logGroupPoolMap[source] = logGroupList
 	return nil
+}
+
+func fillTags(logTags []*protocol.LogTag, logGroup *protocol.LogGroup) {
+	logGroup.LogTags = append(logGroup.LogTags, logTags...)
 }
 
 // Flush ...

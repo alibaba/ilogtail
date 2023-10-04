@@ -298,13 +298,17 @@ func (lc *LogstoreConfig) ProcessLogGroup(logByte []byte, packID string) int {
 		if len(topic) > 0 {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 		}
-		for _, tag := range logGroup.LogTags {
-			log.Contents = append(log.Contents, &protocol.Log_Content{
-				Key:   tagPrefix + tag.GetKey(),
-				Value: tag.GetValue(),
-			})
+		if lc.GlobalConfig.UsingOldContentTag {
+			for _, tag := range logGroup.LogTags {
+				log.Contents = append(log.Contents, &protocol.Log_Content{
+					Key:   tagPrefix + tag.GetKey(),
+					Value: tag.GetValue(),
+				})
+			}
+			lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
+		} else {
+			lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logGroup.LogTags}})
 		}
-		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
 	}
 	return 0
 }
