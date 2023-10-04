@@ -251,6 +251,39 @@ func extractTags(rawTags []byte, log *protocol.Log) {
 	}
 }
 
+// extractLogTags extracts tags from rawTags and append them into logTag.
+// Rule: k1~=~v1^^^k2~=~v2
+// rawTags
+func extractLogTags(rawTags []byte, logTag []*protocol.LogTag) {
+	defaultPrefixIndex := 0
+	for len(rawTags) != 0 {
+		idx := bytes.Index(rawTags, tagDelimiter)
+		var part []byte
+		if idx < 0 {
+			part = rawTags
+			rawTags = rawTags[len(rawTags):]
+		} else {
+			part = rawTags[:idx]
+			rawTags = rawTags[idx+len(tagDelimiter):]
+		}
+		if len(part) > 0 {
+			pos := bytes.Index(part, tagSeparator)
+			if pos > 0 {
+				logTag = append(logTag, &protocol.LogTag{
+					Key:   string(part[:pos]),
+					Value: string(part[pos+len(tagSeparator):]),
+				})
+			} else {
+				logTag = append(logTag, &protocol.LogTag{
+					Key:   defaultTagPrefix + strconv.Itoa(defaultPrefixIndex),
+					Value: string(part),
+				})
+			}
+			defaultPrefixIndex++
+		}
+	}
+}
+
 // ProcessRawLogV2 ...
 // V1 -> V2: enable topic field, and use tags field to pass more tags.
 // unsafe parameter: rawLog,packID and tags
@@ -263,8 +296,14 @@ func (lc *LogstoreConfig) ProcessRawLogV2(rawLog []byte, packID string, topic st
 	if len(topic) > 0 {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
-	extractTags(tags, log)
-	lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
+	if lc.GlobalConfig.UsingOldContentTag {
+		extractTags(tags, log)
+		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
+	} else {
+		logTag := []*protocol.LogTag{}
+		extractLogTags(tags, logTag)
+		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logTag}})
+	}
 	return 0
 }
 
@@ -279,8 +318,14 @@ func (lc *LogstoreConfig) ProcessLog(logByte []byte, packID string, topic string
 	if len(topic) > 0 {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
-	extractTags(tags, log)
-	lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
+	if lc.GlobalConfig.UsingOldContentTag {
+		extractTags(tags, log)
+		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
+	} else {
+		logTag := []*protocol.LogTag{}
+		extractLogTags(tags, logTag)
+		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logTag}})
+	}
 	return 0
 }
 
