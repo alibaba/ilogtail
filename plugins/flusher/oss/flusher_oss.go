@@ -42,6 +42,7 @@ type FlusherOss struct {
 	Convert convertConfig
 	// Authentication
 	Authentication Authentication
+	ContentKey     string
 
 	indexKeys []string
 	context   pipeline.Context
@@ -69,6 +70,7 @@ func NewFlusherOss() *FlusherOss {
 		ObjectAcl:          "",
 		ObjectStorageClass: "",
 		Tagging:            "",
+		ContentKey:         "",
 		MaximumFileSize:    0,
 		Authentication: Authentication{
 			PlainText: &PlainTextConfig{
@@ -77,7 +79,7 @@ func NewFlusherOss() *FlusherOss {
 			},
 		},
 		Convert: convertConfig{
-			Protocol: converter.ProtocolCustomSingle,
+			Protocol: converter.ProtocolCustomSingleFlatten,
 			Encoding: converter.EncodingJSON,
 		},
 	}
@@ -95,7 +97,7 @@ func (f *FlusherOss) Init(context pipeline.Context) error {
 		f.converter.Encoding = converter.EncodingJSON
 	}
 	if f.Convert.Protocol == "" {
-		f.Convert.Protocol = converter.ProtocolCustomSingle
+		f.Convert.Protocol = converter.ProtocolCustomSingleFlatten
 	}
 	// Init converter
 	convert, err := f.getConverter()
@@ -106,7 +108,7 @@ func (f *FlusherOss) Init(context pipeline.Context) error {
 	f.converter = convert
 
 	if f.Endpoint == "" {
-		return errors.New("bucket can't be empty")
+		return errors.New("endpoint can't be empty")
 	}
 
 	if f.Bucket == "" {
@@ -117,6 +119,10 @@ func (f *FlusherOss) Init(context pipeline.Context) error {
 		return errors.New("keyFormat can't be empty")
 	}
 
+	if f.ContentKey == "" {
+		return errors.New("ContentKey can't be empty")
+	}
+
 	// Obtain index keys from dynamic index expression
 	indexKeys, err := fmtstr.CompileKeys(f.KeyFormat)
 	if err != nil {
@@ -124,15 +130,6 @@ func (f *FlusherOss) Init(context pipeline.Context) error {
 		return err
 	}
 	f.indexKeys = indexKeys
-
-	// cfg := elasticsearch.Config{
-	// 	Addresses: f.Addresses,
-	// }
-	// if err = f.Authentication.ConfigureAuthenticationAndHTTP(f.HTTPConfig, &cfg); err != nil {
-	// 	err = fmt.Errorf("configure oss, err: %w", err)
-	// 	logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init oss flusher error", err)
-	// 	return err
-	// }
 
 	ossClient, err := oss.New(f.Endpoint, f.Authentication.PlainText.AccessKeyId, f.Authentication.PlainText.AccessKeySecret)
 	if err != nil {
@@ -178,44 +175,73 @@ func (f *FlusherOss) Stop() error {
 }
 
 func (f *FlusherOss) Flush(projectName string, logstoreName string, configName string, logGroupList []*protocol.LogGroup) error {
+	logContentMap := make(map[string]string)
 	for _, logGroup := range logGroupList {
 		logger.Debug(f.context.GetRuntimeContext(), "[LogGroup] topic", logGroup.Topic, "logstore", logGroup.Category, "logcount", len(logGroup.Logs), "tags", logGroup.LogTags)
-		serializedLogs, values, err := f.converter.ToByteStreamWithSelectedFields(logGroup, f.indexKeys)
+		serializedLogs, values, err := f.converter.DoWithSelectedFields(logGroup, f.indexKeys)
 		if err != nil {
-			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush elasticsearch convert log fail, error", err)
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush oss convert log fail, error", err)
 		}
-		for index, log := range serializedLogs.([][]byte) {
+		for index, log := range serializedLogs.([]map[string]interface{}) {
+			contentValue, ok := log[f.ContentKey]
+			if !ok {
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush oss get contentKey fail, error", err)
+			}
 			valueMap := values[index]
-			objectKey := ""
-			props, err := f.bucket.GetObjectDetailedMeta(objectKey)
-			nextPos, err := strconv.ParseInt(props.Get(oss.HTTPHeaderOssNextAppendPosition), 10, 64)
+			objectKey, err := fmtstr.FormatPath(valueMap, f.KeyFormat)
 			if err != nil {
-				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "parse oss next append position fail, err", err)
-				return err
-			}
-			//if object exceed maximum filesize
-			if nextPos > int64(f.MaximumFileSize) {
-				destObject := objectKey + "_1"
-				_, err = f.bucket.CopyObject(objectKey, destObject)
-				if err != nil {
-					logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "copy oss object fail, object", objectKey, "err", err)
-				}
-				err = f.bucket.DeleteObject(objectKey)
-				if err != nil {
-					logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "delete oss object fail, object", objectKey, "err", err)
-				}
-				nextPos = 0
-			}
-
-			nextPos, err = f.bucket.AppendObject(objectKey, strings.NewReader(string(log)), nextPos)
-			if err != nil {
-				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "append oss data fail, err", err)
-				return err
+				logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "flush oss format path fail, error", err)
+			} else {
+				logContentMap[*objectKey] += (contentValue.(string) + "\n")
 			}
 		}
 		logger.Debug(f.context.GetRuntimeContext(), "oss success send events: messageID")
 	}
 
+	for key, value := range logContentMap {
+		f.flushKeyValue(key, value)
+	}
+	return nil
+}
+
+func (f *FlusherOss) flushKeyValue(key string, value string) error {
+	var nextPos int64 = 0
+	var err error
+	exists, _ := f.bucket.IsObjectExist(key)
+	if exists {
+		props, err := f.bucket.GetObjectDetailedMeta(key)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "GetObjectDetailedMeta fail, err", err)
+			return err
+		}
+		nextPos, err = strconv.ParseInt(props.Get(oss.HTTPHeaderOssNextAppendPosition), 10, 64)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "parse oss next append position fail, err", err)
+			return err
+		}
+	}
+
+	//if object exceed maximum filesize
+	if nextPos > int64(f.MaximumFileSize) {
+		destObject := key + "_1"
+		_, err = f.bucket.CopyObject(key, destObject)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "copy oss object fail, object", key, "err", err)
+			return err
+		}
+		err = f.bucket.DeleteObject(key)
+		if err != nil {
+			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "delete oss object fail, object", key, "err", err)
+			return err
+		}
+		nextPos = 0
+	}
+
+	_, err = f.bucket.AppendObject(key, strings.NewReader(value), nextPos)
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "append oss data fail, err", err)
+		return err
+	}
 	return nil
 }
 
