@@ -13,9 +13,9 @@
 | 参数              | 类型       | 是否必选 | 说明                                                          |
 | --------------- | -------- | ---- | ----------------------------------------------------------- |
 | Bucket            | String   | 是    | Oss Bucket名                                                |
-| Endpoint            | String   | 是    | Oss接口自定义Endpoint，Endpoint包含schema和端口<br> Region+Bucket或者Endpoint必须指定一组。            |
-| KeyFormat           | String   | 是    | Object key格式，支持动态变量。<br>当PutObject模式下，KeyFormat中不包含$UUID的话自动在末尾加上$UUID，保证每次上传文件名不冲突。                                               |
-| ContentKey            | String   | 是    | 日志数据字段。   |
+| Endpoint            | String   | 是    | Oss接口自定义Endpoint。            |
+| KeyFormat           | String   | 是    | Object key格式，支持动态变量。多节点下需要保证每次上传文件名不冲突。                                               |
+| ContentKey            | String   | 是    | 日志数据字段名。   |
 | Encoding            | String   | 否    | 声明Object的编码方式。<br>identity（默认值）：表示Object未经过压缩或编码。<br>gzip：表示Object采用Lempel-Ziv（LZ77）压缩算法以及32位CRC校验的编码方式。<br>compress：表示Object采用Lempel-Ziv-Welch（LZW）压缩算法的编码方式。<br>deflate：表示Object采用zlib结构和deflate压缩算法的编码方式。<br>br：表示Object采用Brotli算法的编码方式。 |
 | ObjectAcl            | String   | 否    | 指定OSS创建Object时的访问权限。<br>default（默认）：Object遵循所在存储空间的访问权限。<br>private：Object是私有资源。只有Object的拥有者和授权用户有该Object的读写权限，其他用户没有权限操作该Object。<br>public-read：Object是公共读资源。只有Object的拥有者和授权用户有该Object的读写权限，其他用户只有该Object的读权限。<br>public-read-write：Object是公共读写资源。所有用户都有该Object的读写权限。                       |
 | ObjectStorageClass            | String   | 否    | 指定Object的存储类型。<br>Standard：标准存储（默认）<br>IA：低频访问<br>Archive：归档存储<br>ColdArchive：冷归档存储<br>DeepColdArchive：极冷归档存储                                                        |

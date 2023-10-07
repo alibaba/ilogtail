@@ -216,7 +216,7 @@ func (f *FlusherOss) flushKeyValue(key string, value string) error {
 			return err
 		}
 
-		//if object exceed maximum filesize
+		//if object exceed maximum filesize, backup old file and make new
 		if nextPos > int64(f.MaximumFileSize) {
 			destObject := key + "." + strconv.FormatInt(time.Now().Local().Unix(), 10)
 			_, err = f.bucket.CopyObject(key, destObject)
@@ -266,7 +266,7 @@ func (f *FlusherOss) initOption() []oss.Option {
 }
 
 func contentEncodingMethod(contentEncoding string) string {
-	switch strings.ToLower(contentEncoding) {
+	switch contentEncoding {
 	case "gzip", "compress", "deflate", "br":
 		return contentEncoding
 	default:
