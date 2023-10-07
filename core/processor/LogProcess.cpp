@@ -60,7 +60,7 @@ DEFINE_FLAG_BOOL(enable_chinese_tag_path, "Enable Chinese __tag__.__path__", tru
 #endif
 DEFINE_FLAG_STRING(raw_log_tag, "", "__raw__");
 DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged buffer, seconds", 1);
-DEFINE_FLAG_BOOL(enable_new_pipeline, "", false);
+DEFINE_FLAG_BOOL(enable_new_pipeline, "use C++ pipline with refactoried plugins", true);
 
 namespace logtail {
 
@@ -517,11 +517,9 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup,
 void LogProcess::FillLogGroupTags(const PipelineEventGroup& eventGroup,
                                   LogFileReaderPtr& logFileReader,
                                   sls_logs::LogGroup& resultGroup) const {
-    sls_logs::LogTag* logTagPtr = resultGroup.add_logtags();
-
     // fill tags from eventGroup
     for (auto& tag : eventGroup.GetTags()) {
-        logTagPtr = resultGroup.add_logtags();
+        auto logTagPtr = resultGroup.add_logtags();
         logTagPtr->set_key(tag.first.to_string());
         logTagPtr->set_value(tag.second.to_string());
     }
@@ -529,7 +527,7 @@ void LogProcess::FillLogGroupTags(const PipelineEventGroup& eventGroup,
     // special tags from reader
     const std::vector<sls_logs::LogTag>& extraTags = logFileReader->GetExtraTags();
     for (size_t i = 0; i < extraTags.size(); ++i) {
-        logTagPtr = resultGroup.add_logtags();
+        auto logTagPtr = resultGroup.add_logtags();
         logTagPtr->set_key(extraTags[i].key());
         logTagPtr->set_value(extraTags[i].value());
     }
