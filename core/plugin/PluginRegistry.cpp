@@ -152,6 +152,7 @@ PluginRegistry::PluginRegistry() {
                   "processor_split_string",
                   "processor_string_replace",
                   "processor_strptime",
+                  "processor_sql",
 #ifdef __ENTERPRISE__
                   "processor_guess_timestamp",
                   "processor_uniquedim",
