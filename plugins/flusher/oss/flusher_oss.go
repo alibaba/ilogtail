@@ -16,6 +16,7 @@ package oss
 
 import (
 	"errors"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -195,7 +196,7 @@ func (f *FlusherOss) Flush(projectName string, logstoreName string, configName s
 	}
 
 	for key, value := range logContentMap {
-		f.flushKeyValue(key, value)
+		_ = f.flushKeyValue(key, value)
 	}
 	return nil
 }
@@ -205,7 +206,8 @@ func (f *FlusherOss) flushKeyValue(key string, value string) error {
 	var err error
 	exists, _ := f.bucket.IsObjectExist(key)
 	if exists {
-		props, err := f.bucket.GetObjectDetailedMeta(key)
+		var props http.Header
+		props, err = f.bucket.GetObjectDetailedMeta(key)
 		if err != nil {
 			logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "get object detail meta fail, err", err)
 			return err
@@ -216,7 +218,7 @@ func (f *FlusherOss) flushKeyValue(key string, value string) error {
 			return err
 		}
 
-		//if object exceed maximum filesize, backup old file and make new
+		// if object exceed maximum filesize, backup old file and make new
 		if nextPos > int64(f.MaximumFileSize) {
 			destObject := key + "." + strconv.FormatInt(time.Now().Local().Unix(), 10)
 			_, err = f.bucket.CopyObject(key, destObject)

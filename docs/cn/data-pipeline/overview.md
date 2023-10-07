@@ -71,6 +71,7 @@
 | [`flusher_clickhouse`](flusher/flusher-clickhouse.md)<br>ClickHouse          | 社区<br>[`kl7sn`](https://github.com/kl7sn)           | 将采集到的数据输出到ClickHouse。                     |
 | [`flusher_elasticsearch`](flusher/flusher-elasticsearch.md)<br>ElasticSearch | 社区<br>[`joeCarf`](https://github.com/joeCarf)       | 将采集到的数据输出到ElasticSearch。                  |
 | [`flusher_loki`](flusher/loki.md)<br>Loki                                    | 社区<br>[`abingcbc`](https://github.com/abingcbc)     | 将采集到的数据输出到Loki。                           |
+| [`flusher_oss`](flusher/flusher-oss.md)<br>OSS                                    | 社区<br>[`pj1987111`](https://github.com/pj1987111)     | 将采集到的数据输出到OSS。                           |
 
 ## 加速
 
