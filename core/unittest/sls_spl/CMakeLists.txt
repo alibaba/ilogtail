@@ -15,5 +15,10 @@
 cmake_minimum_required(VERSION 2.9)
 project(sls_spl_unittest)
 
+
 add_executable(sls_spl_unittest SlsSplUnittest.cpp)
+add_executable(spl_benchmark_test SplBenchmark.cpp)
 target_link_libraries(sls_spl_unittest unittest_base)
+
+target_link_libraries(spl_benchmark_test "/opt/logtail/deps/lib64/libbenchmark.a")
+target_link_libraries(spl_benchmark_test unittest_base)
