@@ -18,6 +18,8 @@ class PipelineEventGroupOutput : public Output {
         virtual void setHeader(const IOHeader& header, std::string& err);
         virtual void addRow(
             const std::vector<SplStringPiece>& row, 
+            const uint32_t time,
+            const uint32_t timeNsPart,
             const ErrorKV& errorKV, 
             std::string& error);
         virtual void finish(std::string& error);

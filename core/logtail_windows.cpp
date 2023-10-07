@@ -34,6 +34,7 @@
 #include "plugin/LogtailPlugin.h"
 #include "config_manager/ConfigManager.h"
 #include "checkpoint/CheckPointManager.h"
+#include "checkpoint/AdhocCheckpointManager.h"
 #include "processor/LogFilter.h"
 #include "controller/EventDispatcher.h"
 #include "monitor/Monitor.h"
@@ -63,6 +64,7 @@ static void overwrite_community_edition_flags() {
     INT32_FLAG(data_server_port) = 443;
     BOOL_FLAG(enable_env_ref_in_config) = true;
     BOOL_FLAG(enable_containerd_upper_dir_detect) = true;
+    BOOL_FLAG(enable_sls_metrics_format) = false;
 }
 
 void do_worker_process() {
@@ -151,7 +153,9 @@ void do_worker_process() {
         APSARA_LOG_ERROR(sLogger, ("last logtail crash stack", backTraceStr)("stack size", backTraceStr.length()));
         LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_STACK_ALARM, backTraceStr);
     }
-    InitCrashBackTrace();
+    if (BOOL_FLAG(ilogtail_disable_core)) {
+        InitCrashBackTrace();
+    }
 
     auto& startupHints = STRING_FLAG(ilogtail_daemon_startup_hints);
     if (!startupHints.empty()) {
@@ -178,6 +182,7 @@ void do_worker_process() {
     }
 
     CheckPointManager::Instance()->LoadCheckPoint();
+    // AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();
 
     // added by xianzhi(bowen.gbw@antfin.com)
     // read local data_integrity json file and line count file

@@ -40,12 +40,12 @@ void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& er
 
 void PipelineEventGroupOutput::addRow(
     const std::vector<SplStringPiece>& row,
+    const uint32_t time,
+    const uint32_t timeNsPart,
     const ErrorKV& errorKV,
     std::string& error) {
 
     std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(mLogGroup->GetSourceBuffer());
-    StringView timestamp;
-    StringView timestampNanosecond;
 
     LOG_INFO(sLogger, ("row.size()", row.size()));
 
@@ -61,18 +61,12 @@ void PipelineEventGroupOutput::addRow(
         logGroupKeyIdx = it->second;
     } else {
         mLogGroupList->emplace_back(mLogGroup->GetSourceBuffer());
-        mLogGroupList->back().SetGroupInfoMeta(mLogGroup->MutableGroupInfo().MutableMetadata());
+        mLogGroupList->back().SetGroupMeta(mLogGroup->MutableGroupMetadata());
         logGroupKeyIdx = mLogGroupList->size() - 1;
         mLogGroupKeyIdxs.emplace(tagStr, logGroupKeyIdx);
     }
 
-    if (mTimeIdx >= 0 && row[mTimeIdx].hasValue()) {
-        timestamp = StringView(row[mTimeIdx].mPtr, row[mTimeIdx].mLen);
-    }
-    if (mTimeNSIdx >= 0 && row[mTimeNSIdx].hasValue()) {
-        timestampNanosecond = StringView(row[mTimeNSIdx].mPtr, row[mTimeNSIdx].mLen);
-    }
-    targetEvent->SetTimestamp(atol(timestamp.data()), atol(timestampNanosecond.data()));
+    targetEvent->SetTimestamp(time, timeNsPart);
 
     for (const auto& idxContent : mContentsIdxs) {
         if (!row[idxContent].hasValue()) {

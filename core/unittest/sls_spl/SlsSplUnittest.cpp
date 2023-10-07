@@ -60,7 +60,7 @@ void SlsSplUnittest::TestSimple() {
                 {
                     "content" : "value_3_0"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -69,7 +69,7 @@ void SlsSplUnittest::TestSimple() {
                 {
                     "content" : "value_4_0"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             }
@@ -114,7 +114,7 @@ void SlsSplUnittest::TestJsonParse() {
                 {
                     "content" : "{\"a1\":\"bbbb\",\"c\":\"d\"}"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -123,7 +123,7 @@ void SlsSplUnittest::TestJsonParse() {
                 {
                     "content" : "{\"a1\":\"ccc\",\"c1\":\"d1\"}"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             }
@@ -170,7 +170,7 @@ void SlsSplUnittest::TestRegexParse() {
                 {
                     "content" : "10.0.0.0 GET /index.html 15824 0.043"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -179,7 +179,7 @@ void SlsSplUnittest::TestRegexParse() {
                 {
                     "content" : "10.0.0.0 GET /index.html 15824 0.043"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             }
@@ -225,7 +225,7 @@ void SlsSplUnittest::TestRegexCSV() {
                 {
                     "content" : "a,b,c"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -234,7 +234,7 @@ void SlsSplUnittest::TestRegexCSV() {
                 {
                     "content" : "a,b,c"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             }
@@ -282,7 +282,7 @@ void SlsSplUnittest::TestRegexKV() {
                 {
                     "content" : "k1=v1&k2=v2?k3=v3"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -291,7 +291,7 @@ void SlsSplUnittest::TestRegexKV() {
                 {
                     "content" : "k1=v1&k2=v2?k3=v3"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             }
@@ -339,7 +339,7 @@ void SlsSplUnittest::TestTag() {
                 {
                     "content" : "{\"a1\":\"bbbb\",\"c\":\"d\"}"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -348,7 +348,7 @@ void SlsSplUnittest::TestTag() {
                 {
                     "content" : "{\"a1\":\"cccc\",\"c\":\"d\"}"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             }
@@ -410,7 +410,7 @@ $ds2;
                 {
                     "content" : "{\"type\":\"kv\",\"message\":\"k1=v1&k2=v2?k3=v3\"}"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             },
@@ -419,7 +419,7 @@ $ds2;
                 {
                     "content" : "{\"type\":\"csv\",\"message\":\"a,b,c\"}"
                 },
-                "timestamp" : 12345678901,
+                "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
                 "type" : 1
             }

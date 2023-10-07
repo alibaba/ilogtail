@@ -98,36 +98,18 @@ bool httpPost(
 bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext& context) {
     Config config = componentConfig.GetConfig();
    
-    // SetMetricsRecordRef(Name(), componentConfig.GetId());
     initSPL();
 
     // logger初始化
     // logger由调用方提供
     auto logger = std::make_shared<StdoutLogger>();
 
-    std::string errorMsg;
-    // 从parser服务，获取spl plan
-    const std::string parserEndpoint = "http://11.164.91.19:15107/v1/spl";
-    long httpCode = 0;
-    std::string splPlan;
     std::string spl = config.mSpl;
-    bool isSuccess = httpPost(parserEndpoint, spl, httpCode, splPlan, errorMsg);
-    if (!isSuccess) {
-        LOG_ERROR(sLogger, ("request spl parser failed ", errorMsg)("spl ", spl));
-        return false;
-    }
-
-    LOG_INFO(sLogger, ("splPlan", splPlan));
-    if (splPlan.find("{\"error\"") != std::string::npos) {
-        LOG_ERROR(sLogger, ("request spl parser failed ", splPlan)("spl ", spl));
-        return false;
-    }
 
     const uint64_t timeoutMills = 100;
     const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
-    // SplPipeline spip = SplPipeline(splPlan, error, timeoutMills, maxMemoryBytes, logger);
     Error error;
-    mSPLPipelinePtr = std::make_shared<SplPipeline>(splPlan, error, timeoutMills, maxMemoryBytes, logger);
+    mSPLPipelinePtr = std::make_shared<SplPipeline>(spl, error, timeoutMills, maxMemoryBytes, logger);
     if (error.code_ != StatusCode::OK) {
         LOG_ERROR(sLogger, ("pipeline create error", error.msg_));
         return false;
@@ -139,15 +121,9 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
 
 void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
     std::string errorMsg;
-    // logger初始化
-    // logger由调用方提供
-    auto logger = std::make_shared<StdoutLogger>();
 
     std::vector<std::string> colNames{"timestamp", "timestampNanosecond", "content"};
 
-    std::string outJson = logGroup.ToJsonString();
-    LOG_INFO(sLogger, ("before execute", outJson));
-    
     auto input = std::make_shared<PipelineEventGroupInput>(colNames, logGroup);
 
     // 根据spip->getInputSearches()，设置input数组
@@ -158,7 +134,6 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
 
     // 根据spip->getOutputLabels()，设置output数组
     std::vector<OutputPtr> outputs;
-    //EventsContainer newEvents;
 
     for (auto resultTaskLabel : mSPLPipelinePtr->getOutputLabels()) {
         outputs.emplace_back(std::make_shared<PipelineEventGroupOutput>(logGroup, logGroupList, resultTaskLabel));
@@ -175,12 +150,6 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     }
 
     LOG_INFO(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
-
-
-    for (auto& logGroup : logGroupList) {
-        std::string outJson = logGroup.ToJsonString();
-        LOG_INFO(sLogger, ("after execute", outJson));
-    }    
     return;
 }
 

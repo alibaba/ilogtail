@@ -25,7 +25,9 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
-#include "processor/ProcessorFillGroupInfoNative.h"
+#include "processor/ProcessorDesensitizeNative.h"
+#include "processor/ProcessorTagNative.h"
+#include "processor/ProcessorFilterNative.h"
 
 namespace logtail {
 
@@ -45,13 +47,14 @@ bool Pipeline::Init(const PipelineConfig& config) {
     if (config.mLogType == STREAM_LOG || config.mLogType == PLUGIN_LOG) {
         return true;
     }
+
+    std::unique_ptr<ProcessorInstance> pluginGroupInfo = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorTagNative::Name(), std::string(ProcessorTagNative::Name()) + "/" + std::to_string(pluginIndex++));
+    if (!InitAndAddProcessor(std::move(pluginGroupInfo), config)) {
+        return false;
+    }
+
     if (config.mPluginProcessFlag && !config.mForceEnablePipeline) {
-        std::unique_ptr<ProcessorInstance> pluginGroupInfo = PluginRegistry::GetInstance()->CreateProcessor(
-            ProcessorFillGroupInfoNative::Name(),
-            std::string(ProcessorFillGroupInfoNative::Name()) + "/" + std::to_string(pluginIndex++));
-        if (!InitAndAddProcessor(std::move(pluginGroupInfo), config)) {
-            return false;
-        }
         return true;
     }
 
@@ -66,13 +69,6 @@ bool Pipeline::Init(const PipelineConfig& config) {
                                                                            + "/" + std::to_string(pluginIndex++));
     }
     if (!InitAndAddProcessor(std::move(pluginDecoder), config)) {
-        return false;
-    }
-
-    std::unique_ptr<ProcessorInstance> pluginGroupInfo = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorFillGroupInfoNative::Name(),
-        std::string(ProcessorFillGroupInfoNative::Name()) + "/" + std::to_string(pluginIndex++));
-    if (!InitAndAddProcessor(std::move(pluginGroupInfo), config)) {
         return false;
     }
 
@@ -120,6 +116,22 @@ bool Pipeline::Init(const PipelineConfig& config) {
         return false;
     }
 
+    std::unique_ptr<ProcessorInstance> pluginFilter = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorFilterNative::Name(),
+        std::string(ProcessorFilterNative::Name()) + "/" + std::to_string(pluginIndex++));
+    if (!InitAndAddProcessor(std::move(pluginFilter), config)) {
+        return false;
+    }
+
+    if (!config.mSensitiveWordCastOptions.empty()) {
+        std::unique_ptr<ProcessorInstance> pluginDesensitize = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorDesensitizeNative::Name(),
+            std::string(ProcessorDesensitizeNative::Name()) + "/" + std::to_string(pluginIndex++));
+        if (!InitAndAddProcessor(std::move(pluginDesensitize), config)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -134,7 +146,8 @@ void Pipeline::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGr
     } else {
         logGroupList.emplace_back(logGroup.GetSourceBuffer());
         logGroupList.back().SwapEvents(logGroup.MutableEvents());
-        logGroupList.back().SwapGroupInfo(logGroup.MutableGroupInfo().MutableMetadata(), logGroup.MutableGroupInfo().MutableTags());
+        logGroupList.back().SwapGroupMetadata(logGroup.MutableGroupMetadata());
+        logGroupList.back().SwapGroupTags(logGroup.MutableTags());
     }
 }
 

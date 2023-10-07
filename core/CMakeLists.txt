@@ -49,10 +49,10 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/common/Version.cpp.in ${VERSION_CPP_F
 if (UNIX)
     if (WITHOUTGDB)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
     else ()
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -ggdb -fpic -fPIC -D_LARGEFILE64_SOURCE")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -g -ggdb -fpic -fPIC -D_LARGEFILE64_SOURCE")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -g -ggdb -fpic -fPIC -D_LARGEFILE64_SOURCE")
     endif ()
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
@@ -87,7 +87,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake)
 # Subdirectories (modules).
 set(SUB_DIRECTORIES_LIST
         aggregator app_config checkpoint common config config_manager config_server_pb
-        controller event event_handler event_listener helper log_pb logger models monitor
+        controller event event_handler event_listener file_server helper input log_pb logger models monitor
         parser pipeline plugin polling processor reader profile_sender sender shennong sdk
         fuse sls_control sls_spl
         )

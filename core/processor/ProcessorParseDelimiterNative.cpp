@@ -70,7 +70,7 @@ void ProcessorParseDelimiterNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;
     }
-    const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
+    const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
     EventsContainer& events = logGroup.MutableEvents();
     // works good normally. poor performance if most data need to be discarded.
     for (auto it = events.begin(); it != events.end();) {
@@ -134,7 +134,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                 for (size_t i = mColumnKeys.size(); i < columnValues.size(); ++i) {
                     extraFields[0] = mSeparatorChar;
                     extraFields++;
-                    strcpy(extraFields, columnValues[i].data());
+                    memcpy(extraFields, columnValues[i].data(), columnValues[i].size());
                     extraFields += columnValues[i].size();
                 }
                 // remove extra fields
@@ -206,9 +206,8 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                 if (mExtractPartialFields) {
                     continue;
                 }
-                StringBuffer sb = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(10 + idx / 10);
                 std::string key = "__column" + ToString(idx) + "__";
-                strcpy(sb.data, key.c_str());
+                StringBuffer sb = sourceEvent.GetSourceBuffer()->CopyString(key);
                 AddLog(StringView(sb.data, sb.size),
                        useQuote ? columnValues[idx] : StringView(buffer.data() + colBegIdxs[idx], colLens[idx]),
                        sourceEvent);
