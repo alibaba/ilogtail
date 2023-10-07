@@ -495,11 +495,14 @@ func checkFileConfigChanged(filePath, filePattern, includeEnv, includeLabel stri
 		includeLabel != serverIncludeLabel
 }
 
-func (o *operationWrapper) TagLogtailConfig(project, logtailConfig, tagKey, tagValue string) error {
-	ResourceTags := aliyunlog.ResourceTags{
-		ResourceType: "logtailconfig",
-		ResourceID:   []string{project + "#" + logtailConfig},
-		Tags:         []aliyunlog.ResourceTag{{Key: tagKey, Value: tagValue}},
+func (o *operationWrapper) TagLogtailConfig(project string, logtailConfig string, tags map[string]string) error {
+	ResourceTags := aliyunlog.ResourceTags{ResourceType: "logtailconfig",
+		ResourceID: []string{project + "#" + logtailConfig},
+		Tags:       []aliyunlog.ResourceTag{},
+	}
+	for k, v := range tags {
+		tag := aliyunlog.ResourceTag{Key: k, Value: v}
+		ResourceTags.Tags = append(ResourceTags.Tags, tag)
 	}
 	var err error
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
@@ -675,22 +678,21 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 		return fmt.Errorf("UpdateConfig error, config : %s, error : %s", config.LogtailConfig.ConfigName, err.Error())
 	}
 	logger.Info(context.Background(), "create or update config success", config.LogtailConfig.ConfigName)
+
 	// Tag config
-	err = o.TagLogtailConfig(project, config.LogtailConfig.ConfigName, "sls.logtail.channel", "ENV")
+	logtailConfigTags := map[string]string{}
+	for k, v := range config.ConfigTags {
+		logtailConfigTags[k] = v
+	}
+	logtailConfigTags["sls.logtail.channel"] = "ENV"
+	err = o.TagLogtailConfig(project, config.LogtailConfig.ConfigName, logtailConfigTags)
 	annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
 	if err != nil {
-		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, CustomErrorFromSlsSDKError(err)), k8s_event.CreateTag, "", fmt.Sprintf("tag config \"sls.logtail.channel=ENV\" error :%s", err.Error()))
+		k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, CustomErrorFromSlsSDKError(err)), k8s_event.CreateTag, "", fmt.Sprintf("tag config %s error :%s", config.LogtailConfig.ConfigName, err.Error()))
 	} else {
-		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateTag, "tag config \"sls.logtail.channel=ENV\" success")
+		k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateTag, fmt.Sprintf("tag config %s success", config.LogtailConfig.ConfigName))
 	}
-	for k, v := range config.ConfigTags {
-		err = o.TagLogtailConfig(project, config.LogtailConfig.ConfigName, k, v)
-		if err != nil {
-			k8s_event.GetEventRecorder().SendErrorEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), GetAnnotationByError(annotations, CustomErrorFromSlsSDKError(err)), k8s_event.CreateTag, "", fmt.Sprintf("tag config \"%s=%s\" error :%s", k, v, err.Error()))
-		} else {
-			k8s_event.GetEventRecorder().SendNormalEventWithAnnotation(k8s_event.GetEventRecorder().GetObject(), annotations, k8s_event.CreateTag, fmt.Sprintf("tag config \"%s=%s\" success", k, v))
-		}
-	}
+
 	// check if config is in the machine group
 	// only check when create config
 	var machineGroup string
