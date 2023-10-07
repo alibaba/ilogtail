@@ -22,7 +22,8 @@ public:
         mContext.SetRegion("cn-shanghai");
     }
     PipelineContext mContext;
-    void TestSimple();
+    void TestWhere();
+    void TestExtend();
     void TestJsonParse();
     void TestRegexParse();
     void TestRegexKV();
@@ -32,17 +33,18 @@ public:
     void TestMultiParse();
 };
 
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestSimple, 0);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestJsonParse, 1);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexParse, 2);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexCSV, 3);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexKV, 4);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestTag, 5);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestMultiParse, 6);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestWhere, 0);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestExtend, 1);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestJsonParse, 2);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexParse, 3);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexCSV, 4);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexKV, 5);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestTag, 6);
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestMultiParse, 7);
 
 
 
-void SlsSplUnittest::TestSimple() {
+void SlsSplUnittest::TestWhere() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;
@@ -89,9 +91,67 @@ void SlsSplUnittest::TestSimple() {
     processor.Process(eventGroup, logGroupList);
 
     APSARA_TEST_EQUAL((u_int)1, logGroupList.size());
+    if (logGroupList.size() > 0) {
+        for (auto& logGroup : logGroupList) {
+            for (auto& event : logGroup.GetEvents()) {
+                const LogEvent* log = event.Get<LogEvent>();
+                StringView content = log->GetContent("content");
+                APSARA_TEST_EQUAL("value_3_0", content);
+            }
+            //std::string outJson = logGroup.ToJsonString();
+            //std::cout << "outJson: " << outJson << std::endl;
+        }
+    }
 
-    std::string outJson = logGroupList[0].ToJsonString();
-    std::cout << "outJson: " << outJson << std::endl;
+    return;
+}
+
+
+void SlsSplUnittest::TestExtend() {
+    // make config
+    Config config;
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = false;
+    config.mSpl = R"(* | extend a=json_extract(content, '$.body.a'), b=json_extract(content, '$.body.b'))";
+
+    // make events
+    auto sourceBuffer = std::make_shared<SourceBuffer>();
+    PipelineEventGroup eventGroup(sourceBuffer);
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "{\"body\": {\"a\": 1, \"b\": 2}}"
+                },
+                "timestamp" : 1234567890,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ]
+    })";
+    eventGroup.FromJsonString(inJson);
+    
+    std::string pluginId = "testID";
+    std::vector<PipelineEventGroup> logGroupList;
+    // run function
+    ProcessorSPL& processor = *(new ProcessorSPL);
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
+    processor.Process(eventGroup, logGroupList);
+
+    APSARA_TEST_EQUAL((u_int)1, logGroupList.size());
+    if (logGroupList.size() == 1) {
+        auto& logGroup = logGroupList[0];
+        for (auto& event : logGroup.GetEvents()) {
+            const LogEvent* log = event.Get<LogEvent>();
+            StringView content = log->GetContent("a");
+            APSARA_TEST_EQUAL("1", content);
+            content = log->GetContent("b");
+            APSARA_TEST_EQUAL("2", content);
+        }        
+    }
     return;
 }
 
@@ -144,10 +204,29 @@ void SlsSplUnittest::TestJsonParse() {
 
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
     processor.Process(eventGroup, logGroupList);
-
     APSARA_TEST_EQUAL(logGroupList.size(), 1);
-    std::string outJson = logGroupList[0].ToJsonString();
-    std::cout << "outJson: " << outJson << std::endl;
+
+    if (logGroupList.size() > 0) {
+        for (auto& logGroup : logGroupList) {
+            APSARA_TEST_EQUAL(2, logGroup.GetEvents().size());
+            if (logGroup.GetEvents().size() == 2) {
+                {
+                    const LogEvent* log = logGroup.GetEvents()[0].Get<LogEvent>();
+                    StringView content = log->GetContent("a1");
+                    APSARA_TEST_EQUAL("bbbb", content);
+                    content = log->GetContent("c");
+                    APSARA_TEST_EQUAL("d", content);
+                }
+                {
+                    const LogEvent* log = logGroup.GetEvents()[1].Get<LogEvent>();
+                    StringView content = log->GetContent("a1");
+                    APSARA_TEST_EQUAL("ccc", content);
+                    content = log->GetContent("c1");
+                    APSARA_TEST_EQUAL("d1", content);
+                }
+            }
+        }
+    }
     return;
 }
 
@@ -177,7 +256,7 @@ void SlsSplUnittest::TestRegexParse() {
             {
                 "contents" :
                 {
-                    "content" : "10.0.0.0 GET /index.html 15824 0.043"
+                    "content" : "10.0.0.1 POST /index.html 15824 0.043"
                 },
                 "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
@@ -202,8 +281,29 @@ void SlsSplUnittest::TestRegexParse() {
     processor.Process(eventGroup, logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 1);
-    std::string outJson = logGroupList[0].ToJsonString();
-    std::cout << "outJson: " << outJson << std::endl;
+
+
+    if (logGroupList.size() > 0) {
+        for (auto& logGroup : logGroupList) {
+            APSARA_TEST_EQUAL(2, logGroup.GetEvents().size());
+            if (logGroup.GetEvents().size() == 2) {
+                {
+                    const LogEvent* log = logGroup.GetEvents()[0].Get<LogEvent>();
+                    StringView content = log->GetContent("ip");
+                    APSARA_TEST_EQUAL("10.0.0.0", content);
+                    content = log->GetContent("method");
+                    APSARA_TEST_EQUAL("GET", content);
+                }
+                {
+                    const LogEvent* log = logGroup.GetEvents()[1].Get<LogEvent>();
+                    StringView content = log->GetContent("ip");
+                    APSARA_TEST_EQUAL("10.0.0.1", content);
+                    content = log->GetContent("method");
+                    APSARA_TEST_EQUAL("POST", content);
+                }
+            }
+        }
+    }
     return;
 }
 
@@ -232,7 +332,7 @@ void SlsSplUnittest::TestRegexCSV() {
             {
                 "contents" :
                 {
-                    "content" : "a,b,c"
+                    "content" : "e,f,g"
                 },
                 "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
@@ -257,8 +357,33 @@ void SlsSplUnittest::TestRegexCSV() {
     processor.Process(eventGroup, logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 1);
-    std::string outJson = logGroupList[0].ToJsonString();
-    std::cout << "outJson: " << outJson << std::endl;
+
+    if (logGroupList.size() > 0) {
+        for (auto& logGroup : logGroupList) {
+            APSARA_TEST_EQUAL(2, logGroup.GetEvents().size());
+            if (logGroup.GetEvents().size() == 2) {
+                {
+                    const LogEvent* log = logGroup.GetEvents()[0].Get<LogEvent>();
+                    StringView content = log->GetContent("x");
+                    APSARA_TEST_EQUAL("a", content);
+                    content = log->GetContent("y");
+                    APSARA_TEST_EQUAL("b", content);
+                    content = log->GetContent("z");
+                    APSARA_TEST_EQUAL("c", content);
+                }
+                {
+                    const LogEvent* log = logGroup.GetEvents()[1].Get<LogEvent>();
+                    StringView content = log->GetContent("x");
+                    APSARA_TEST_EQUAL("e", content);
+                    content = log->GetContent("y");
+                    APSARA_TEST_EQUAL("f", content);
+                    content = log->GetContent("z");
+                    APSARA_TEST_EQUAL("g", content);
+                }
+            }
+        }
+    }
+
     return;
 }
 
@@ -289,7 +414,7 @@ void SlsSplUnittest::TestRegexKV() {
             {
                 "contents" :
                 {
-                    "content" : "k1=v1&k2=v2?k3=v3"
+                    "content" : "k11=v11&k22=v22?k33=v33"
                 },
                 "timestamp" : 1234567890,
                 "timestampNanosecond" : 0,
@@ -314,8 +439,32 @@ void SlsSplUnittest::TestRegexKV() {
     processor.Process(eventGroup, logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 1);
-    std::string outJson = logGroupList[0].ToJsonString();
-    std::cout << "outJson: " << outJson << std::endl;
+
+    if (logGroupList.size() > 0) {
+        for (auto& logGroup : logGroupList) {
+            APSARA_TEST_EQUAL(2, logGroup.GetEvents().size());
+            if (logGroup.GetEvents().size() == 2) {
+                {
+                    const LogEvent* log = logGroup.GetEvents()[0].Get<LogEvent>();
+                    StringView content = log->GetContent("k1");
+                    APSARA_TEST_EQUAL("v1", content);
+                    content = log->GetContent("k2");
+                    APSARA_TEST_EQUAL("v2", content);
+                    content = log->GetContent("k3");
+                    APSARA_TEST_EQUAL("v3", content);
+                }
+                {
+                    const LogEvent* log = logGroup.GetEvents()[1].Get<LogEvent>();
+                    StringView content = log->GetContent("k11");
+                    APSARA_TEST_EQUAL("v11", content);
+                    content = log->GetContent("k22");
+                    APSARA_TEST_EQUAL("v22", content);
+                    content = log->GetContent("k33");
+                    APSARA_TEST_EQUAL("v33", content);
+                }
+            }
+        }
+    }
     return;
 }
 
@@ -371,10 +520,20 @@ void SlsSplUnittest::TestTag() {
     processor.Process(eventGroup, logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 2);
-    if (logGroupList.size() > 0) {
-        for (auto& logGroup : logGroupList) {
-            std::string outJson = logGroup.ToJsonString();
-            std::cout << "outJson: " << outJson << std::endl;
+    if (logGroupList.size() == 2) {
+        {
+            auto& logGroup = logGroupList[0];
+            StringView tag = logGroup.GetTag("__tag__:taiye2");
+            APSARA_TEST_EQUAL("bbbb", tag);
+            tag = logGroup.GetTag("__tag__:taiye");
+            APSARA_TEST_EQUAL("123", tag);
+        }
+        {
+            auto& logGroup = logGroupList[1];
+            StringView tag = logGroup.GetTag("__tag__:taiye2");
+            APSARA_TEST_EQUAL("cccc", tag);
+            tag = logGroup.GetTag("__tag__:taiye");
+            APSARA_TEST_EQUAL("123", tag);
         }
     }
     
@@ -442,13 +601,42 @@ $ds2;
     processor.Process(eventGroup, logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 2);
-    if (logGroupList.size() > 0) {
-        for (auto& logGroup : logGroupList) {
-            std::string outJson = logGroup.ToJsonString();
-            std::cout << "outJson: " << outJson << std::endl;
+
+    if (logGroupList.size() == 2) {
+        {
+            auto& logGroup = logGroupList[0];
+            StringView tag = logGroup.GetTag("__tag__:taiye");
+            APSARA_TEST_EQUAL("123", tag);
+
+            APSARA_TEST_EQUAL(1, logGroup.GetEvents().size());
+            if (logGroup.GetEvents().size() == 1) {
+                const LogEvent* log = logGroup.GetEvents()[0].Get<LogEvent>();
+                StringView content = log->GetContent("k1");
+                APSARA_TEST_EQUAL("v1", content);
+                content = log->GetContent("k2");
+                APSARA_TEST_EQUAL("v2", content);
+                content = log->GetContent("k3");
+                APSARA_TEST_EQUAL("v3", content);
+            }
+
         }
-    }
-    
+        {
+            auto& logGroup = logGroupList[1];
+            StringView tag = logGroup.GetTag("__tag__:taiye");
+            APSARA_TEST_EQUAL("123", tag);
+
+            APSARA_TEST_EQUAL(1, logGroup.GetEvents().size());
+            if (logGroup.GetEvents().size() == 1) {
+                const LogEvent* log = logGroup.GetEvents()[0].Get<LogEvent>();
+                StringView content = log->GetContent("x");
+                APSARA_TEST_EQUAL("a", content);
+                content = log->GetContent("y");
+                APSARA_TEST_EQUAL("b", content);
+                content = log->GetContent("z");
+                APSARA_TEST_EQUAL("c", content);
+            }
+        }
+    }    
     return;
 }
 
