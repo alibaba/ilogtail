@@ -296,3 +296,5 @@ replace (
 	github.com/siddontang/go-mysql => github.com/iLogtail/go-mysql v0.0.0-20180725024449-535abe8f2eba-ilogtail
 	github.com/streadway/handy => github.com/iLogtail/handy v0.0.0-20230327021402-6a47ec586270
 )
+
+require github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
