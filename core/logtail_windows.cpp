@@ -177,9 +177,7 @@ void do_worker_process() {
     Sender::Instance()->InitSender();
 
     LogtailPlugin* pPlugin = LogtailPlugin::GetInstance();
-    if (pPlugin->LoadPluginBase()) {
-        pPlugin->Resume();
-    }
+    pPlugin->Resume();
 
     CheckPointManager::Instance()->LoadCheckPoint();
     // AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();

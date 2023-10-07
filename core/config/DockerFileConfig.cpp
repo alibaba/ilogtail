@@ -81,10 +81,13 @@ bool DockerContainerPath::ParseByJSONObj(const Json::Value& params, DockerContai
 }
 
 bool DockerContainerPath::ParseByJSONStr(const std::string& jsonStr, DockerContainerPath& dockerContainerPath) {
-    Json::Value params;
-    Json::Reader reader;
     dockerContainerPath.mJsonStr = jsonStr;
-    if (jsonStr.size() < (size_t)5 || !reader.parse(jsonStr, params)) {
+    Json::Value params;
+    Json::CharReaderBuilder builder;
+    builder["collectComments"] = false;
+    std::unique_ptr<Json::CharReader> jsonReader(builder.newCharReader());
+    std::string jsonParseErrs;
+    if (jsonStr.size() < (size_t)5 || !jsonReader->parse(jsonStr.data(), jsonStr.data() + jsonStr.size(), &params, &jsonParseErrs)) {
         LOG_ERROR(sLogger, ("invalid docker container params", jsonStr));
         return false;
     }
