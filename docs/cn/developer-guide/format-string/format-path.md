@@ -18,7 +18,7 @@
 
 格式化动态索引的函数如下：
 ```go
-func FormatPath(targetValues map[string]string, indexPattern string) (*string, error)
+func FormatPath(targetValues map[string]string, pathPattern string) (*string, error)
 ```
 - `targetValues`使用Convert协议转换处理后需要替换的键值对。可参考`flusher_kafka_v2`中的对`ToByteStreamWithSelectedFields`的使用。
-- `indexPattern`动态索引表达式。
+- `pathPattern`动态路径表达式。

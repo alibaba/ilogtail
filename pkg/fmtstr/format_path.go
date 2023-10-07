@@ -20,8 +20,8 @@ import (
 )
 
 // FormatPath name oss path
-func FormatPath(targetValues map[string]string, indexPattern string) (*string, error) {
-	sf, err := Compile(indexPattern, func(key string, ops []VariableOp) (FormatEvaler, error) {
+func FormatPath(targetValues map[string]string, pathPattern string) (*string, error) {
+	sf, err := Compile(pathPattern, func(key string, ops []VariableOp) (FormatEvaler, error) {
 		// with timestamp expression, like %{+yyyyMM}
 		if key[0] == '+' {
 			indexTime := time.Unix(time.Now().Local().Unix(), 0)
