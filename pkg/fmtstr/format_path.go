@@ -14,7 +14,10 @@
 
 package fmtstr
 
-import "time"
+import (
+	"os"
+	"time"
+)
 
 // FormatPath name oss path
 func FormatPath(targetValues map[string]string, indexPattern string) (*string, error) {
@@ -24,6 +27,10 @@ func FormatPath(targetValues map[string]string, indexPattern string) (*string, e
 			indexTime := time.Unix(time.Now().Local().Unix(), 0)
 			index := FormatTimestamp(&indexTime, key[1:])
 			return StringElement{S: index}, nil
+		}
+		if key == "ilogtail.hostname" {
+			hostName, _ := os.Hostname()
+			return StringElement{S: hostName}, nil
 		}
 		if value, ok := targetValues[key]; ok {
 			return StringElement{S: value}, nil

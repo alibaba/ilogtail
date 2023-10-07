@@ -136,7 +136,7 @@
 * [测试](developer-guide/test/README.md)
   * [单元测试](developer-guide/test/unit-test.md)
   * [E2E测试](developer-guide/test/e2e-test.md)
-* [代码检查](developer-guide3/code-check/README.md)
+* [代码检查](developer-guide/code-check/README.md)
   * [检查代码规范](developer-guide/code-check/check-codestyle.md)
   * [检查文件许可证](developer-guide/code-check/check-license.md)
   * [检查依赖包许可证](developer-guide/code-check/check-dependency-license.md)

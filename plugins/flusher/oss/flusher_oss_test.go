@@ -25,27 +25,45 @@ import (
 )
 
 func TestConnectAndWrite(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
-
-	f := NewFlusherOss()
-	f.Endpoint = "oss-cn-hangzhou.aliyuncs.com"
-	f.Bucket = "taihao-llm"
-	f.KeyFormat = "ilogtail/%{content.hostid}/var/log/%{content.filename}"
-	f.MaximumFileSize = 5000
-	f.Authentication.PlainText.AccessKeyId = ""
-	f.Authentication.PlainText.AccessKeySecret = ""
-	f.ContentKey = "message"
-	lctx := mock.NewEmptyContext("p", "l", "c")
-	err := f.Init(lctx)
-	require.NoError(t, err)
-
-	// Verify that we can successfully write data to oss
+	f := initOssClient()
 	lgl := makeTestLogGroupList()
-	err = f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
+	err := f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
 	require.NoError(t, err)
 	_ = f.Stop()
+}
+
+func TestPath(t *testing.T) {
+	f := initOssClient()
+	f.KeyFormat = "ilogtail1/%{ilogtail.hostname}/%{+yyyy}/%{+MM}/%{+dd}/var/log/%{content.filename}"
+	lgl := makeTestLogGroupList()
+	err := f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
+	require.NoError(t, err)
+	_ = f.Stop()
+}
+
+func TestConfigs(t *testing.T) {
+	f := initOssClient()
+	f.KeyFormat = "ilogtail2/%{ilogtail.hostname}/%{+yyyy.MM.dd}/var/log/%{content.filename}"
+	f.Encoding = "gzip"
+	f.ObjectAcl = "private"
+	f.ObjectStorageClass = "IA"
+	f.Tagging = "TagA=A&TagB=B"
+	lgl := makeTestLogGroupList()
+	err := f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
+	require.NoError(t, err)
+	_ = f.Stop()
+}
+
+func initOssClient() *FlusherOss {
+	f := NewFlusherOss()
+	f.Endpoint = "oss-cn-hangzhou.aliyuncs.com"
+	f.Bucket = "jinchen-test"
+	f.KeyFormat = "ilogtail/%{content.hostid}/var/log/%{content.filename}"
+	// f.MaximumFileSize = 500
+	f.ContentKey = "message"
+	lctx := mock.NewEmptyContext("p", "l", "c")
+	f.Init(lctx)
+	return f
 }
 
 func makeTestLogGroupList() *protocol.LogGroupList {
