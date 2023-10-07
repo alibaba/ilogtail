@@ -141,7 +141,6 @@ When distributed in a binary form, Logtailplugin Test Engine may contain portion
 - [github.com/shopspring/decimal](https://pkg.go.dev/github.com/shopspring/decimal?tab=licenses)
 - [github.com/andybalholm/brotli](https://pkg.go.dev/github.com/andybalholm/brotli?tab=licenses)
 - [github.com/influxdata/telegraf](https://pkg.go.dev/github.com/influxdata/telegraf?tab=licenses)
-- [github.com/aliyun/aliyun-oss-go-sdk](https://pkg.go.dev/github.com/aliyun/aliyun-oss-go-sdk?tab=licenses)
 
 ## ISC licenses
 
