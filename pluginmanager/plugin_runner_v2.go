@@ -440,13 +440,12 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 			log.Tags.Add(content.Key, content.Value)
 		}
 	}
-	switch {
-	case in.Log.Time != 0:
+	if in.Log.Time != 0 {
 		log.Timestamp = uint64(time.Second * time.Duration(in.Log.Time))
 		if in.Log.TimeNs != nil {
 			log.Timestamp += uint64(*in.Log.TimeNs)
 		}
-	default:
+	} else {
 		log.Timestamp = uint64(time.Now().UnixNano())
 	}
 	group := models.NewGroup(md, models.NewTags())
