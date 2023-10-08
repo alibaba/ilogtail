@@ -149,7 +149,7 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
         return;
     }
 
-    LOG_INFO(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
+    //LOG_INFO(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
     return;
 }
 
