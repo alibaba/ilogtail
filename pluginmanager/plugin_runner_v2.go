@@ -22,7 +22,6 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
-	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
@@ -439,17 +438,6 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 			log.Tags.Add(content.Key[len(tagPrefix)-1:], content.Value)
 		default:
 			log.Tags.Add(content.Key, content.Value)
-		}
-	}
-	if !p.LogstoreConfig.GlobalConfig.UsingOldContentTag {
-		for _, tag := range in.Context["tags"].([]*protocol.LogTag) {
-			if tag.GetKey() == fileOffsetKey {
-				if offset, err := strconv.ParseInt(tag.GetValue(), 10, 64); err == nil {
-					log.Offset = uint64(offset)
-				}
-				break
-			}
-			// 疑问 是否要把tagPrefix去掉
 		}
 	}
 	if in.Log.Time != uint32(0) {
