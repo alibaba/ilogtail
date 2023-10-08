@@ -34,18 +34,20 @@ void AdhocJobCheckpoint::AddFileCheckpoint(AdhocFileCheckpointPtr fileCheckpoint
     mFileCount++;
 }
 
-AdhocFileCheckpointPtr AdhocJobCheckpoint::GetFileCheckpoint(AdhocFileKey* fileKey) {
+AdhocFileCheckpointPtr AdhocJobCheckpoint::GetFileCheckpoint() {
     AdhocFileCheckpointPtr fileCheckpoint = nullptr;
-    if (CheckFileConsistence(fileKey)) {
+    if (mCurrentFileIndex < mFileCount) {
         fileCheckpoint = mAdhocFileCheckpointList[mCurrentFileIndex];
+    } else {
+        LOG_INFO(sLogger, ("Adhoc job finished", mAdhocJobName));
     }
     return fileCheckpoint;
 }
 
-bool AdhocJobCheckpoint::UpdateFileCheckpoint(AdhocFileKey* fileKey, AdhocFileCheckpointPtr fileCheckpoint) {
+bool AdhocJobCheckpoint::UpdateFileCheckpoint(AdhocFileCheckpointPtr fileCheckpoint) {
     bool dumpFlag = false;
     bool indexChangeFlag = false;
-    if (!CheckFileConsistence(fileKey) || fileCheckpoint->mOffset == -1) {
+    if (fileCheckpoint->mOffset == -1) {
         fileCheckpoint->mStatus = STATUS_LOST;
         indexChangeFlag = true;
         dumpFlag = true;
@@ -214,26 +216,6 @@ void AdhocJobCheckpoint::Dump(const std::string& path, bool isAutoDump) {
     }
     ofs << jsonString;
     ofs.close();
-}
-
-bool AdhocJobCheckpoint::CheckFileConsistence(AdhocFileKey* fileKey) {
-    if (mCurrentFileIndex >= mFileCount) {
-        LOG_WARNING(sLogger, ("Get AdhocFileCheckpoint fail, job is finished, job name", mAdhocJobName));
-        return false;
-    }
-    AdhocFileCheckpointPtr fileCheckpoint = mAdhocFileCheckpointList[mCurrentFileIndex];
-    if (fileCheckpoint->mSignatureHash == fileKey->mSignatureHash
-        && fileCheckpoint->mSignatureSize == fileKey->mSignatureSize
-        && fileCheckpoint->mDevInode == fileKey->mDevInode) {
-        return true;
-    } else {
-        LOG_WARNING(sLogger,
-                    ("Get AdhocFileCheckpoint fail", "current FileCheckpoint in Job is not same as AdhocFileKey")(
-                        "AdhocFileCheckpoint's name", fileCheckpoint->mFileName)(
-                        "AdhocFileCheckpoint's Inode", fileCheckpoint->mDevInode.inode)("AdhocFileKey's Inode",
-                                                                                        fileKey->mDevInode.inode));
-        return false;
-    }
 }
 
 int32_t AdhocJobCheckpoint::GetCurrentFileIndex() {

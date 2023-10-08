@@ -23,11 +23,6 @@
 
 namespace logtail {
 
-void AdhocEvent::FindJobByName() {
-    Config* pConfig = ConfigManager::GetInstance()->FindConfigByName(GetJobName());
-    mJobConfig.reset(new Config(*pConfig));
-}
-
 AdhocFileManager::AdhocFileManager() {
     mRunFlag = false;
 }
@@ -53,7 +48,7 @@ void AdhocFileManager::ProcessLoop() {
             mRunFlag = false;
             break;
         }
-        switch (ev->GetType()) {
+        switch (ev->mType) {
             case EVENT_START_JOB:
                 ProcessStartJobEvent(ev);
                 break;
@@ -71,49 +66,40 @@ void AdhocFileManager::ProcessLoop() {
 }
 
 void AdhocFileManager::ProcessStartJobEvent(AdhocEvent* ev) {
-    std::string jobName = ev->GetJobName();
-    AdhocFileCheckpointListPtr fileCheckpointList = ev->GetFileCheckpointList();
-
     AdhocJobCheckpointPtr jobCheckpoint
-        = mAdhocCheckpointManager->CreateAdhocJobCheckpoint(jobName, *fileCheckpointList);
-    // makesure jobCheckpoint exists and doesn't have fileKeyList
-    if (nullptr != jobCheckpoint && mJobFileKeyListMap.find(jobName) == mJobFileKeyListMap.end()) {
-        std::vector<AdhocFileKey> fileKeyList;
-        for (AdhocFileCheckpointPtr fileCheckpoint : *fileCheckpointList) {
-            AdhocFileKey fileKey(
-                fileCheckpoint->mDevInode, fileCheckpoint->mSignatureSize, fileCheckpoint->mSignatureHash);
-            fileKeyList.push_back(fileKey);
-        }
-        mJobFileKeyListMap[jobName] = fileKeyList;
-
+        = mAdhocCheckpointManager->CreateAdhocJobCheckpoint(ev->mJobName, ev->mFilePathList);
+    if (nullptr != jobCheckpoint) {
         // push first file to queue
-        if (fileKeyList.size() > 0) {
-            AdhocEvent* newEv = new AdhocEvent(EVENT_READ_FILE, AdhocFileReaderKey(jobName, fileKeyList[0]));
-            PushEventQueue(newEv);
-        }
+        AdhocEvent* newEv = new AdhocEvent(EVENT_READ_FILE, ev->mJobName, 0);
+        PushEventQueue(newEv);
     }
 }
 
 void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
-    std::string jobName = ev->GetJobName();
-    AdhocFileKey* fileKey = ev->GetAdhocFileKey();
-    AdhocFileReaderKey* fileReaderKey = ev->GetAdhocFileReaderKey();
-    AdhocJobCheckpointPtr jobCheckpoint = mAdhocCheckpointManager->GetAdhocJobCheckpoint(jobName);
-    AdhocFileCheckpointPtr fileCheckpoint = mAdhocCheckpointManager->GetAdhocFileCheckpoint(jobName, fileKey);
+    std::string jobName = ev->mJobName;
+    AdhocFileCheckpointPtr fileCheckpoint = mAdhocCheckpointManager->GetAdhocFileCheckpoint(jobName);
+    // if job doesn't exist or is finished
+    if (fileCheckpoint == nullptr) {
+        return;
+    }
 
-    // read file and change offset
-    if (mAdhocFileReaderMap.find(fileReaderKey) == mAdhocFileReaderMap.end()) {
+    AdhocFileReaderKey fileReaderKey = AdhocFileReaderKey(
+        jobName, fileCheckpoint->mDevInode, fileCheckpoint->mSignatureSize, fileCheckpoint->mSignatureHash);
+    std::string fileReaderKeyString = fileReaderKey.ToString();
+    // if reader doesn't exist, create it
+    if (mAdhocFileReaderMap.find(fileReaderKeyString) == mAdhocFileReaderMap.end()) {
         std::string dirPath = ParentPath(fileCheckpoint->mRealFileName);
         std::string fileName = fileCheckpoint->mRealFileName.substr(dirPath.length());
         LogFileReaderPtr readerSharePtr(
-            ev->GetJobConfig()->CreateLogFileReader(dirPath, fileName, fileKey->mDevInode, true));
-        mAdhocFileReaderMap[fileReaderKey] = readerSharePtr;
+            GetJobConfig(jobName)->CreateLogFileReader(dirPath, fileName, fileCheckpoint->mDevInode, true));
+        mAdhocFileReaderMap[fileReaderKeyString] = readerSharePtr;
     }
+    LogFileReaderPtr fileReader = mAdhocFileReaderMap[fileReaderKeyString];
 
-    LogFileReaderPtr fileReader = mAdhocFileReaderMap[fileReaderKey];
+    // Return if process queue busy
     if (!LogProcess::GetInstance()->IsValidToReadAdhocLog(fileReader->GetLogstoreKey())) {
         // Log warning and send alarm per 10s( >10s if multi jobs exist)
-        if (0 == ev->IncreaseWaitTimes() % 1000) {
+        if (0 == (ev->mWaitTimes % 1000)) {
             LOG_WARNING(sLogger,
                         ("read adhoc file failed, logprocess queue is full, put adhoc event to event queue again",
                          fileReader->GetHostLogPath())(fileReader->GetProjectName(), fileReader->GetCategory()));
@@ -125,10 +111,13 @@ void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
                     + " ,logstore:" + fileReader->GetCategory());
         }
 
+        ev->mWaitTimes++;
         PushEventQueue(ev);
         usleep(1000 * 10);
         return;
     }
+
+    // read file
     LogBuffer* logBuffer = new LogBuffer;
     fileReader->ReadLog(*logBuffer, nullptr);
     if (!logBuffer->rawBuffer.empty()) {
@@ -139,22 +128,14 @@ void AdhocFileManager::ProcessReadFileEvent(AdhocEvent* ev) {
     } else {
         delete logBuffer;
     }
-    mAdhocCheckpointManager->UpdateAdhocFileCheckpoint(jobName, fileKey, fileCheckpoint);
+    mAdhocCheckpointManager->UpdateAdhocFileCheckpoint(jobName, fileCheckpoint);
 
-    // Push file of this job into queue
-    int32_t nowFileIndex = jobCheckpoint->GetCurrentFileIndex();
-    if (nowFileIndex < mJobFileKeyListMap[jobName].size()) {
-        AdhocEvent* newEv
-            = new AdhocEvent(EVENT_READ_FILE, AdhocFileReaderKey(jobName, mJobFileKeyListMap[jobName][nowFileIndex]));
-        PushEventQueue(newEv);
-    }
+    PushEventQueue(ev);
 }
 
 void AdhocFileManager::ProcessStopJobEvent(AdhocEvent* ev) {
-    std::string jobName = ev->GetJobName();
-    mDeletedJobSet.insert(jobName);
-    mJobFileKeyListMap.erase(jobName);
-    mAdhocCheckpointManager->DeleteAdhocJobCheckpoint(jobName);
+    mDeletedJobSet.insert(ev->mJobName);
+    mAdhocCheckpointManager->DeleteAdhocJobCheckpoint(ev->mJobName);
 }
 
 void AdhocFileManager::PushEventQueue(AdhocEvent* ev) {
@@ -166,8 +147,7 @@ AdhocEvent* AdhocFileManager::PopEventQueue() {
         AdhocEvent* ev;
         mEventQueue.PopItem(ev);
 
-        std::string jobName = ev->GetJobName();
-        if (mDeletedJobSet.find(jobName) != mDeletedJobSet.end()) {
+        if (mDeletedJobSet.find(ev->mJobName) != mDeletedJobSet.end()) {
             continue;
         }
         return ev;
@@ -175,15 +155,8 @@ AdhocEvent* AdhocFileManager::PopEventQueue() {
     return NULL;
 }
 
-void AdhocFileManager::AddJob(const std::string& jobName, const std::vector<std::string>& filePathList) {
-    AdhocFileCheckpointListPtr fileCheckpointList = std::make_shared<std::vector<AdhocFileCheckpointPtr> >();
-    for (std::string filePath : filePathList) {
-        AdhocFileCheckpointPtr fileCheckpoint = mAdhocCheckpointManager->CreateAdhocFileCheckpoint(jobName, filePath);
-        if (nullptr != fileCheckpoint) {
-            fileCheckpointList->push_back(fileCheckpoint);
-        }
-    }
-    AdhocEvent* ev = new AdhocEvent(EVENT_START_JOB, jobName, fileCheckpointList);
+void AdhocFileManager::AddJob(const std::string& jobName, std::vector<std::string>& filePathList) {
+    AdhocEvent* ev = new AdhocEvent(EVENT_START_JOB, jobName, filePathList);
     PushEventQueue(ev);
     Run();
 }
@@ -191,6 +164,10 @@ void AdhocFileManager::AddJob(const std::string& jobName, const std::vector<std:
 void AdhocFileManager::DeleteJob(const std::string& jobName) {
     AdhocEvent* stopEvent = new AdhocEvent(EVENT_STOP_JOB, jobName);
     PushEventQueue(stopEvent);
+}
+
+Config* AdhocFileManager::GetJobConfig(const std::string& jobName) {
+    return ConfigManager::GetInstance()->FindConfigByName(jobName);
 }
 
 } // namespace logtail

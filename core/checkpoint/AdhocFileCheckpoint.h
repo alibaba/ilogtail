@@ -71,15 +71,6 @@ public:
     int32_t mLastUpdateTime;
 };
 
-struct AdhocFileKey {
-    AdhocFileKey() {}
-    AdhocFileKey(const DevInode& devInode, uint32_t signatureSize, uint64_t signatureHash)
-        : mDevInode(devInode), mSignatureSize(signatureSize), mSignatureHash(signatureHash) {}
-    DevInode mDevInode;
-    uint32_t mSignatureSize;
-    uint64_t mSignatureHash;
-};
-
 typedef std::shared_ptr<AdhocFileCheckpoint> AdhocFileCheckpointPtr;
 
 } // namespace logtail

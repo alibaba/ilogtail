@@ -26,6 +26,9 @@ private:
     AdhocCheckpointManager(const AdhocCheckpointManager&) = delete;
     AdhocCheckpointManager& operator=(const AdhocCheckpointManager&) = delete;
 
+
+    AdhocFileCheckpointPtr CreateAdhocFileCheckpoint(const std::string& jobName, const std::string& filePath);
+
     std::unordered_map<std::string, AdhocJobCheckpointPtr> mAdhocJobCheckpointMap;
     int32_t mLastDumpTime = 0;
 
@@ -39,12 +42,9 @@ public:
     void LoadAdhocCheckpoint();
 
     AdhocJobCheckpointPtr GetAdhocJobCheckpoint(const std::string& jobName);
-    AdhocFileCheckpointPtr GetAdhocFileCheckpoint(const std::string& jobName, AdhocFileKey* fileKey);
-    AdhocJobCheckpointPtr CreateAdhocJobCheckpoint(const std::string& jobName,
-                                                   std::vector<AdhocFileCheckpointPtr>& fileCheckpointList);
-    AdhocFileCheckpointPtr CreateAdhocFileCheckpoint(const std::string& jobName, const std::string& filePath);
-    void
-    UpdateAdhocFileCheckpoint(const std::string& jobName, AdhocFileKey* fileKey, AdhocFileCheckpointPtr fileCheckpoint);
+    AdhocFileCheckpointPtr GetAdhocFileCheckpoint(const std::string& jobName);
+    AdhocJobCheckpointPtr CreateAdhocJobCheckpoint(const std::string& jobName, std::vector<std::string>& filePathList);
+    void UpdateAdhocFileCheckpoint(const std::string& jobName, AdhocFileCheckpointPtr fileCheckpoint);
     void DeleteAdhocJobCheckpoint(const std::string& jobName);
 
     std::string GetAdhocCheckpointDirPath();

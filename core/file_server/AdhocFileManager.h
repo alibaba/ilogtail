@@ -23,14 +23,22 @@
 
 namespace logtail {
 
-typedef std::shared_ptr<std::vector<AdhocFileCheckpointPtr> > AdhocFileCheckpointListPtr;
-
 struct AdhocFileReaderKey {
     AdhocFileReaderKey() {}
-    AdhocFileReaderKey(const std::string& jobName, const AdhocFileKey& fileKey)
-        : mJobName(jobName), mFileKey(fileKey) {}
+    AdhocFileReaderKey(const std::string& jobName,
+                       const DevInode& devInode,
+                       uint32_t signatureSize,
+                       uint64_t signatureHash)
+        : mJobName(jobName), mDevInode(devInode), mSignatureSize(signatureSize), mSignatureHash(signatureHash) {}
     std::string mJobName;
-    AdhocFileKey mFileKey;
+    DevInode mDevInode;
+    uint32_t mSignatureSize;
+    uint64_t mSignatureHash;
+
+    inline std::string ToString() {
+        return mJobName + std::to_string(mDevInode.dev) + std::to_string(mDevInode.inode)
+            + std::to_string(mSignatureSize) + std::to_string(mSignatureHash);
+    }
 };
 
 enum AdhocEventType {
@@ -39,38 +47,21 @@ enum AdhocEventType {
     EVENT_STOP_JOB,
 };
 
-class AdhocEvent {
-private:
-    void FindJobByName();
-
-    AdhocEventType mType;
-    AdhocFileReaderKey mReaderKey;
-    std::shared_ptr<Config> mJobConfig;
-    AdhocFileCheckpointListPtr mFileCheckpointList;
-    int32_t mWaitTimes;
-
-public:
+struct AdhocEvent {
     AdhocEvent() {}
     // for start job
-    AdhocEvent(AdhocEventType eventType, const std::string& jobName, AdhocFileCheckpointListPtr fileCheckpointList)
-        : mType(eventType), mReaderKey(AdhocFileReaderKey(jobName, AdhocFileKey())), mFileCheckpointList(fileCheckpointList) {}
+    AdhocEvent(AdhocEventType eventType, const std::string& jobName, std::vector<std::string>& filePathList)
+        : mType(eventType), mJobName(jobName), mFilePathList(filePathList) {}
     // for stop job
-    AdhocEvent(AdhocEventType eventType, const std::string& jobName)
-        : mType(eventType), mReaderKey(AdhocFileReaderKey(jobName, AdhocFileKey())) {}
+    AdhocEvent(AdhocEventType eventType, const std::string& jobName) : mType(eventType), mJobName(jobName) {}
     // for read file
-    AdhocEvent(AdhocEventType eventType, const AdhocFileReaderKey& readerKey)
-        : mType(eventType), mReaderKey(readerKey) {
-        mWaitTimes = 0;
-        FindJobByName();
-    }
+    AdhocEvent(AdhocEventType eventType, const std::string& jobName, int32_t waitTimes)
+        : mType(eventType), mJobName(jobName), mWaitTimes(waitTimes) {}
 
-    inline AdhocEventType GetType() { return mType; }
-    inline std::string GetJobName() { return mReaderKey.mJobName; }
-    inline AdhocFileKey* GetAdhocFileKey() { return &mReaderKey.mFileKey; }
-    inline AdhocFileReaderKey* GetAdhocFileReaderKey() { return &mReaderKey; }
-    inline std::shared_ptr<Config> GetJobConfig() { return mJobConfig; }
-    inline AdhocFileCheckpointListPtr GetFileCheckpointList() { return mFileCheckpointList; }
-    inline int32_t IncreaseWaitTimes() { return ++mWaitTimes; }
+    AdhocEventType mType;
+    std::string mJobName;
+    int32_t mWaitTimes;
+    std::vector<std::string> mFilePathList;
 };
 
 class AdhocFileManager {
@@ -87,13 +78,14 @@ private:
     void ProcessReadFileEvent(AdhocEvent* ev);
     void ProcessStopJobEvent(AdhocEvent* ev);
 
+    Config* GetJobConfig(const std::string& jobName);
+
     static bool mRunFlag;
     AdhocCheckpointManager* mAdhocCheckpointManager;
     static const int32_t ADHOC_JOB_MAX = 100 * 2;
     CircularBufferSem<AdhocEvent*, ADHOC_JOB_MAX> mEventQueue;
     std::unordered_set<std::string> mDeletedJobSet;
-    std::unordered_map<std::string, std::vector<AdhocFileKey> > mJobFileKeyListMap;
-    std::unordered_map<AdhocFileReaderKey*, LogFileReaderPtr> mAdhocFileReaderMap;
+    std::unordered_map<std::string, LogFileReaderPtr> mAdhocFileReaderMap;
 
 public:
     static AdhocFileManager* GetInstance() {
@@ -101,7 +93,7 @@ public:
         return ptr;
     }
 
-    void AddJob(const std::string& jobName, const std::vector<std::string>& filePathList);
+    void AddJob(const std::string& jobName, std::vector<std::string>& filePathList);
     void DeleteJob(const std::string& jobName);
 };
 

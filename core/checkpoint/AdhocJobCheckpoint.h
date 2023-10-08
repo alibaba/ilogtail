@@ -22,7 +22,6 @@ namespace logtail {
 
 class AdhocJobCheckpoint {
 private:
-    bool CheckFileConsistence(AdhocFileKey* fileKey);
     std::vector<AdhocFileCheckpointPtr> mAdhocFileCheckpointList;
     int32_t mFileCount;
     int32_t mCurrentFileIndex;
@@ -33,8 +32,8 @@ public:
     AdhocJobCheckpoint(const std::string& jobName);
 
     void AddFileCheckpoint(AdhocFileCheckpointPtr fileCheckpoint);
-    AdhocFileCheckpointPtr GetFileCheckpoint(AdhocFileKey* fileKey);
-    bool UpdateFileCheckpoint(AdhocFileKey* fileKey, AdhocFileCheckpointPtr fileCheckpoint);
+    AdhocFileCheckpointPtr GetFileCheckpoint();
+    bool UpdateFileCheckpoint(AdhocFileCheckpointPtr fileCheckpoint);
 
     bool Load(const std::string& path);
     void Dump(const std::string& path, bool isAutoDump);

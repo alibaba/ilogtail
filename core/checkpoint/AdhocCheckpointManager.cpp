@@ -47,14 +47,14 @@ AdhocJobCheckpointPtr AdhocCheckpointManager::GetAdhocJobCheckpoint(const std::s
     return jobCheckpoint;
 }
 
-AdhocJobCheckpointPtr
-AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std::string& jobName,
-                                                 std::vector<AdhocFileCheckpointPtr>& fileCheckpointList) {
+AdhocJobCheckpointPtr AdhocCheckpointManager::CreateAdhocJobCheckpoint(const std::string& jobName,
+                                                                       std::vector<std::string>& filePathList) {
     AdhocJobCheckpointPtr jobCheckpoint = GetAdhocJobCheckpoint(jobName);
 
     if (nullptr == jobCheckpoint) {
         jobCheckpoint = std::make_shared<AdhocJobCheckpoint>(jobName);
-        for (AdhocFileCheckpointPtr fileCheckpoint : fileCheckpointList) {
+        for (std::string filePath : filePathList) {
+            AdhocFileCheckpointPtr fileCheckpoint = CreateAdhocFileCheckpoint(jobName, filePath);
             jobCheckpoint->AddFileCheckpoint(fileCheckpoint);
         }
         mAdhocJobCheckpointMap[jobName] = jobCheckpoint;
@@ -110,22 +110,20 @@ void AdhocCheckpointManager::DeleteAdhocJobCheckpoint(const std::string& jobName
     }
 }
 
-AdhocFileCheckpointPtr AdhocCheckpointManager::GetAdhocFileCheckpoint(const std::string& jobName,
-                                                                      AdhocFileKey* fileKey) {
+AdhocFileCheckpointPtr AdhocCheckpointManager::GetAdhocFileCheckpoint(const std::string& jobName) {
     AdhocJobCheckpointPtr jobCheckpoint = GetAdhocJobCheckpoint(jobName);
     if (nullptr != jobCheckpoint) {
-        return jobCheckpoint->GetFileCheckpoint(fileKey);
+        return jobCheckpoint->GetFileCheckpoint();
     } else {
         return nullptr;
     }
 }
 
 void AdhocCheckpointManager::UpdateAdhocFileCheckpoint(const std::string& jobName,
-                                                       AdhocFileKey* fileKey,
                                                        AdhocFileCheckpointPtr fileCheckpoint) {
     AdhocJobCheckpointPtr jobCheckpoint = GetAdhocJobCheckpoint(jobName);
     if (nullptr != jobCheckpoint) {
-        if (jobCheckpoint->UpdateFileCheckpoint(fileKey, fileCheckpoint)) {
+        if (jobCheckpoint->UpdateFileCheckpoint(fileCheckpoint)) {
             jobCheckpoint->Dump(GetJobCheckpointPath(jobName), false);
         }
     }
