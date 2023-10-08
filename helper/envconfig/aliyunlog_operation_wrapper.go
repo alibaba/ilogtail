@@ -431,7 +431,7 @@ func (o *operationWrapper) makesureMachineGroupExist(project, machineGroup strin
 			time.Sleep(time.Millisecond * 100)
 		} else {
 			for j := 0; j < *flags.LogOperationMaxRetryTimes; j++ {
-				err = o.TagMachineGroup(project, machineGroup, "sls.machinegroup.deploy_mode", "deamonset")
+				err = o.TagMachineGroup(project, machineGroup, SLS_MACHINEGROUP_DEPLOY_MODE_KEY, SLS_MACHINEGROUP_DEPLOY_MODE_DEAMONSET)
 				if err != nil {
 					time.Sleep(time.Millisecond * 100)
 				} else {
@@ -501,7 +501,7 @@ func (o *operationWrapper) UnTagLogtailConfig(project string, logtailConfig stri
 	// "github.com/aliyun/aliyun-log-go-sdk" doesn't support Untag all, we should list all first
 	var ResourceTags []*aliyunlog.ResourceTagResponse
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
-		ResourceTags, _, err = o.logClient.ListTagResources(project, "logtailconfig", []string{project + "#" + logtailConfig}, []aliyunlog.ResourceFilterTag{}, "")
+		ResourceTags, _, err = o.logClient.ListTagResources(project, TAG_LOGTAILCONFIG, []string{project + "#" + logtailConfig}, []aliyunlog.ResourceFilterTag{}, "")
 		if err == nil {
 			break
 		}
@@ -511,7 +511,7 @@ func (o *operationWrapper) UnTagLogtailConfig(project string, logtailConfig stri
 		return err
 	}
 
-	ResourceUnTags := aliyunlog.ResourceUnTags{ResourceType: "logtailconfig",
+	ResourceUnTags := aliyunlog.ResourceUnTags{ResourceType: TAG_LOGTAILCONFIG,
 		ResourceID: []string{project + "#" + logtailConfig},
 		Tags:       []string{},
 	}
@@ -537,7 +537,7 @@ func (o *operationWrapper) TagLogtailConfig(project string, logtailConfig string
 		return err
 	}
 
-	ResourceTags := aliyunlog.ResourceTags{ResourceType: "logtailconfig",
+	ResourceTags := aliyunlog.ResourceTags{ResourceType: TAG_LOGTAILCONFIG,
 		ResourceID: []string{project + "#" + logtailConfig},
 		Tags:       []aliyunlog.ResourceTag{},
 	}
@@ -558,7 +558,7 @@ func (o *operationWrapper) TagLogtailConfig(project string, logtailConfig string
 
 func (o *operationWrapper) TagMachineGroup(project, machineGroup, tagKey, tagValue string) error {
 	ResourceTags := aliyunlog.ResourceTags{
-		ResourceType: "machinegroup",
+		ResourceType: TAG_MACHINEGROUP,
 		ResourceID:   []string{project + "#" + machineGroup},
 		Tags:         []aliyunlog.ResourceTag{{Key: tagKey, Value: tagValue}},
 	}
@@ -725,7 +725,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 	for k, v := range config.ConfigTags {
 		logtailConfigTags[k] = v
 	}
-	logtailConfigTags["sls.logtail.channel"] = "ENV"
+	logtailConfigTags[SLS_LOGTAIL_CHANNAL_KEY] = SLS_LOGTAIL_CHANNAL_ENV
 	err = o.TagLogtailConfig(project, config.LogtailConfig.ConfigName, logtailConfigTags)
 	annotations := GetAnnotationByObject(config, project, logstore, "", config.LogtailConfig.ConfigName, true)
 	if err != nil {

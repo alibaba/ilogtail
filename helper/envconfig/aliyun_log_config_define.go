@@ -119,10 +119,16 @@ type AliyunLogConfigSpec struct {
 }
 
 const (
-	QueryMode            string = "query"
-	StandardMode         string = "standard"
-	NoneTelemetryType    string = "None"
-	MetricsTelemetryType string = "Metrics"
+	QueryMode                              string = "query"
+	StandardMode                           string = "standard"
+	NoneTelemetryType                      string = "None"
+	MetricsTelemetryType                   string = "Metrics"
+	TAG_LOGTAILCONFIG                      string = "logtailconfig"
+	TAG_MACHINEGROUP                       string = "machinegroup"
+	SLS_LOGTAIL_CHANNAL_KEY                string = "sls.logtail.channel"
+	SLS_LOGTAIL_CHANNAL_ENV                string = "ENV"
+	SLS_MACHINEGROUP_DEPLOY_MODE_KEY       string = "sls.machinegroup.deploy_mode"
+	SLS_MACHINEGROUP_DEPLOY_MODE_DEAMONSET string = "deamonset"
 )
 
 // AliyunLogConfigDetail logtail config detail
