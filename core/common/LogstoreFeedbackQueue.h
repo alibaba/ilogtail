@@ -468,7 +468,7 @@ public:
         return singleQueue.IsValid();
     }
 
-    virtual bool IsValidToPushAdhocData(const LogstoreFeedBackKey& key) {
+    bool IsValidToPushAdhocData(const LogstoreFeedBackKey& key) {
         PTScopedLock dataLock(mLock);
         auto& singleQueue = mLogstoreQueueMap[key];
         return singleQueue.IsAdhocValid();
