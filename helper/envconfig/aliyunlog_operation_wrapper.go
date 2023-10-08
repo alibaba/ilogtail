@@ -495,7 +495,48 @@ func checkFileConfigChanged(filePath, filePattern, includeEnv, includeLabel stri
 		includeLabel != serverIncludeLabel
 }
 
+func (o *operationWrapper) UnTagLogtailConfig(project string, logtailConfig string) error {
+	var err error
+
+	// "github.com/aliyun/aliyun-log-go-sdk" doesn't support Untag all, we should list all first
+	var ResourceTags []*aliyunlog.ResourceTagResponse
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
+		ResourceTags, _, err = o.logClient.ListTagResources(project, "logtailconfig", []string{project + "#" + logtailConfig}, []aliyunlog.ResourceFilterTag{}, "")
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+	if err != nil {
+		return err
+	}
+
+	ResourceUnTags := aliyunlog.ResourceUnTags{ResourceType: "logtailconfig",
+		ResourceID: []string{project + "#" + logtailConfig},
+		Tags:       []string{},
+	}
+	for _, tags := range ResourceTags {
+		ResourceUnTags.Tags = append(ResourceUnTags.Tags, tags.TagKey)
+	}
+	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
+		err = o.logClient.UnTagResources(project, &ResourceUnTags)
+		if err == nil {
+			return nil
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+	return err
+}
+
 func (o *operationWrapper) TagLogtailConfig(project string, logtailConfig string, tags map[string]string) error {
+	var err error
+
+	// delete all before create
+	err = o.UnTagLogtailConfig(project, logtailConfig)
+	if err != nil {
+		return err
+	}
+
 	ResourceTags := aliyunlog.ResourceTags{ResourceType: "logtailconfig",
 		ResourceID: []string{project + "#" + logtailConfig},
 		Tags:       []aliyunlog.ResourceTag{},
@@ -504,7 +545,7 @@ func (o *operationWrapper) TagLogtailConfig(project string, logtailConfig string
 		tag := aliyunlog.ResourceTag{Key: k, Value: v}
 		ResourceTags.Tags = append(ResourceTags.Tags, tag)
 	}
-	var err error
+
 	for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
 		err = o.logClient.TagResources(project, &ResourceTags)
 		if err == nil {
