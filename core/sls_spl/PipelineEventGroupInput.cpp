@@ -23,20 +23,10 @@ void PipelineEventGroupInput::getRow(const int32_t rowIndex, std::vector<KV>& pa
     auto currentEvent = mLogGroup->GetEvents()[rowIndex];
     LogEvent& sourceEvent = currentEvent.Cast<LogEvent>();
 
-    //std::string timestampValue = std::to_string(sourceEvent.GetTimestamp());
-    //mTmpSave.emplace_back(timestampValue);
-    //std::string timestampNanosecondValue = std::to_string(sourceEvent.GetTimestampNanosecond());
-    //mTmpSave.emplace_back(timestampNanosecondValue);
-
     time = sourceEvent.GetTimestamp();
     timeNsPart = sourceEvent.GetTimestampNanosecond();
-
-    //pairs.emplace_back(SplStringPiece(FIELD_TIMESTAMP), SplStringPiece(timestampValue));
-    //pairs.emplace_back(SplStringPiece(FIELD_TIMESTAMP_NANOSECOND), SplStringPiece(timestampNanosecondValue));
-
     //LOG_INFO(sLogger, ("rowIndex", rowIndex)("input timestamp", std::to_string(sourceEvent.GetTimestamp())));
     //LOG_INFO(sLogger, ("rowIndex", rowIndex)("input timestampNanosecond", std::to_string(sourceEvent.GetTimestampNanosecond())));
-
 
     for (auto& kv : sourceEvent.GetContents()) {
         pairs.emplace_back(SplStringPiece(kv.first.data(), kv.first.size()), SplStringPiece(kv.second.data(), kv.second.size()));

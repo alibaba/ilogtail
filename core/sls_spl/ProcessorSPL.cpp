@@ -23,7 +23,7 @@
 #include "sls_spl/PipelineEventGroupInput.h"
 #include "sls_spl/PipelineEventGroupOutput.h"
 #include "logger/Logger.h"
-
+#include "sls_spl/LogtailLogger.h"
 
 using namespace apsara::sls::spl;
 
@@ -102,7 +102,7 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
 
     // logger初始化
     // logger由调用方提供
-    auto logger = std::make_shared<StdoutLogger>();
+    auto logger = std::make_shared<LogtailLogger>();
 
     std::string spl = config.mSpl;
 

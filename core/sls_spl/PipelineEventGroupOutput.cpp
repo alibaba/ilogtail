@@ -88,10 +88,6 @@ void PipelineEventGroupOutput::addRow(
     if (!errorKV.second.empty()) {
         LOG_INFO(sLogger, ("__error__", errorKV.second));
     }
-    
-    //if (mWithSleep) {
-    //    sleep(1);
-    //}
 }
 
 
