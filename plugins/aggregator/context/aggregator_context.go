@@ -95,14 +95,18 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		logGroupList = make([]*protocol.LogGroup, 0, p.MaxLogGroupCount)
 	}
 	if len(logGroupList) == 0 {
-		newLogGroup := p.newLogGroup(source, topic)
-		fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
-		logGroupList = append(logGroupList, newLogGroup)
+		if _, ok := ctx["tags"]; ok {
+			newLogGroup := p.newLogGroup(source, topic)
+			fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
+			logGroupList = append(logGroupList, newLogGroup)
+		} else {
+			logGroupList = append(logGroupList, p.newLogGroup(source, topic))
+		}
 	}
 	nowLogGroup := logGroupList[len(logGroupList)-1]
 	tagChanged := false
-	// Determine whether the tag of the current log is consistent with that of the previous log. If it is inconsistent, need to create a new logGroup.
-	if len(nowLogGroup.Logs) > 0 {
+	// Determine whether the tag of the current log is consistent with that of the previous logs. If it is inconsistent, need to create a new logGroup.
+	if _, ok := ctx["tags"]; ok && len(nowLogGroup.Logs) > 0 {
 		tags := map[string]string{}
 		for _, tag := range nowLogGroup.LogTags {
 			tags[tag.GetKey()] = tag.GetValue()
@@ -131,12 +135,13 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		}
 		// New log group, reset size.
 		p.nowLogGroupSizeMap[source] = 0
-
-		// Allocate a new log group.
-		newLogGroup := p.newLogGroup(source, topic)
-		fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
-		logGroupList = append(logGroupList, newLogGroup)
-
+		if _, ok := ctx["tags"]; ok {
+			newLogGroup := p.newLogGroup(source, topic)
+			fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
+			logGroupList = append(logGroupList, newLogGroup)
+		} else {
+			logGroupList = append(logGroupList, p.newLogGroup(source, topic))
+		}
 		nowLogGroup = logGroupList[len(logGroupList)-1]
 	}
 
