@@ -276,8 +276,8 @@ func contentEncodingMethod(contentEncoding string) string {
 	}
 }
 
-func objectACLMethod(objectAcl string) oss.ACLType {
-	switch strings.ToLower(objectAcl) {
+func objectACLMethod(objectACL string) oss.ACLType {
+	switch strings.ToLower(objectACL) {
 	case "private":
 		return oss.ACLPrivate
 	case "public-read":
