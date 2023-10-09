@@ -24,76 +24,12 @@
 #include "sls_spl/PipelineEventGroupOutput.h"
 #include "logger/Logger.h"
 #include "sls_spl/LogtailLogger.h"
+#include "sls_spl/SplConstants.h"
+
 
 using namespace apsara::sls::spl;
 
 namespace logtail {
-
-// callback function to store the response
-static size_t write_callback(char* buffer, size_t size, size_t nmemb, std::string* write_buf) {
-    unsigned long sizes = size * nmemb;
-    if (buffer == NULL) {
-        return 0;
-    }
-
-    write_buf->append(buffer, sizes);
-    return sizes;
-}
-
-bool httpPost(
-    const std::string& requestUri,
-    const std::string& requestBody,
-    long& httpCode,
-    std::string& respBody,
-    std::string& errorMessage) {
-    if (requestUri.empty()) {
-        errorMessage = "request uri is empty";
-        return false;
-    }
-
-    CURLcode res;
-    struct curl_slist* headers = NULL;
-    // headers = curl_slist_append(headers, "Content-Type:application/json;charset=UTF-8");
-    headers = curl_slist_append(headers, "X-Presto-Time-Zone:Asia/Shanghai");
-    headers = curl_slist_append(headers, "User-Agent:Spl");
-    headers = curl_slist_append(headers, "X-Presto-Source:presto-cli");
-    headers = curl_slist_append(headers, "X-Presto-Language:en-US");
-    headers = curl_slist_append(headers, "X-Presto-User:u_1");
-    headers = curl_slist_append(headers, "X-Presto-Transaction-id:NONE");
-    headers = curl_slist_append(headers, "X-Presto-Catalog: sls");
-    headers = curl_slist_append(headers, "X-Presto-Schema: p_1");
-    headers = curl_slist_append(headers, "Content-type: application/octet-stream");
-
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-    CURL* curlInstance = curl_easy_init();
-    if (!curlInstance) {
-        curl_slist_free_all(headers);
-        errorMessage = "init curl handler failed";
-        return false;
-    }
-    curl_easy_setopt(curlInstance, CURLOPT_URL, requestUri.c_str());
-    curl_easy_setopt(curlInstance, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curlInstance, CURLOPT_TIMEOUT, 5);
-    curl_easy_setopt(curlInstance, CURLOPT_CONNECTTIMEOUT, 5);
-    curl_easy_setopt(curlInstance, CURLOPT_NOSIGNAL, 1);
-
-    curl_easy_setopt(curlInstance, CURLOPT_POST, 1);
-    curl_easy_setopt(curlInstance, CURLOPT_POSTFIELDSIZE_LARGE, requestBody.size());
-    curl_easy_setopt(curlInstance, CURLOPT_POSTFIELDS, requestBody.c_str());
-
-    curl_easy_setopt(curlInstance, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(curlInstance, CURLOPT_WRITEDATA, &respBody);
-
-    res = curl_easy_perform(curlInstance);
-    curl_easy_getinfo(curlInstance, CURLINFO_RESPONSE_CODE, &httpCode);
-    curl_easy_cleanup(curlInstance);
-    curl_slist_free_all(headers);
-    if (res != CURLE_OK) {
-        errorMessage = curl_easy_strerror(res);
-        return false;
-    }
-    return true;
-}
 
 bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext& context) {
     Config config = componentConfig.GetConfig();
@@ -118,11 +54,10 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
 }
 
 
-
 void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
     std::string errorMsg;
 
-    std::vector<std::string> colNames{"timestamp", "timestampNanosecond", "content"};
+    std::vector<std::string> colNames{FIELD_CONTENT};
 
     auto input = std::make_shared<PipelineEventGroupInput>(colNames, logGroup);
 

@@ -42,11 +42,9 @@ void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplS
         LogEvent& sourceEvent = event.Cast<LogEvent>();
         if (FIELD_TIMESTAMP == columnName) {
             std::string timestampValue = std::to_string(sourceEvent.GetTimestamp());
-            mTmpSave.emplace_back(timestampValue);
             values.emplace_back(SplStringPiece(timestampValue));
         } else if (FIELD_TIMESTAMP_NANOSECOND == columnName) { 
             std::string timestampNanosecondValue = std::to_string(sourceEvent.GetTimestampNanosecond());
-            mTmpSave.emplace_back(timestampNanosecondValue);
             values.emplace_back(SplStringPiece(timestampNanosecondValue));
         } else {
             StringView content = sourceEvent.GetContent(columnName);

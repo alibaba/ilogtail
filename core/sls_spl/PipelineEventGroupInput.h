@@ -24,10 +24,6 @@ class PipelineEventGroupInput : public Input {
 
     private:
         std::vector<std::string> mColumnNames;
-
-        // 存储时间戳转换后的字符串
-        std::vector<std::string> mTmpSave;
-
         const PipelineEventGroup* mLogGroup;
 };
 
