@@ -100,11 +100,25 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		logGroupList = append(logGroupList, newLogGroup)
 	}
 	nowLogGroup := logGroupList[len(logGroupList)-1]
+	tagChanged := false
+	// Determine whether the tag of the current log is consistent with that of the previous log. If it is inconsistent, need to create a new logGroup.
+	if len(nowLogGroup.Logs) > 0 {
+		tags := map[string]string{}
+		for _, tag := range nowLogGroup.LogTags {
+			tags[tag.GetKey()] = tag.GetValue()
+		}
+		for _, tag := range ctx["tags"].([]*protocol.LogTag) {
+			if v, ok := tags[tag.GetKey()]; !ok || v != tag.GetValue() {
+				tagChanged = true
+				break
+			}
+		}
+	}
 
 	logSize := p.evaluateLogSize(log)
 	// When current log group is full (log count or no more capacity for current log),
 	// allocate a new log group.
-	if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSizeMap[source]+logSize > MaxLogGroupSize {
+	if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSizeMap[source]+logSize > MaxLogGroupSize || tagChanged {
 		// The number of log group exceeds limit, make a quick flush.
 		if len(logGroupList) == p.MaxLogGroupCount {
 			// Quick flush to avoid becoming bottleneck when large logs come.
@@ -117,7 +131,12 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		}
 		// New log group, reset size.
 		p.nowLogGroupSizeMap[source] = 0
-		logGroupList = append(logGroupList, p.newLogGroup(source, topic))
+
+		// Allocate a new log group.
+		newLogGroup := p.newLogGroup(source, topic)
+		fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
+		logGroupList = append(logGroupList, newLogGroup)
+
 		nowLogGroup = logGroupList[len(logGroupList)-1]
 	}
 
