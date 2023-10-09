@@ -64,6 +64,7 @@ public:
     PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
     PipelineEventGroup(const PipelineEventGroup&) = delete;
     PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
+    PipelineEventGroup(PipelineEventGroup&&) = default;
 
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& MutableEvents() { return mEvents; }
@@ -77,10 +78,15 @@ public:
     void SetMetadata(EventGroupMetaKey key, const std::string& val);
     void SetMetadataNoCopy(EventGroupMetaKey key, const StringBuffer& val);
     const StringView& GetMetadata(EventGroupMetaKey key) const;
-    const GroupMetadata& GetMetadatum() const { return mMetadata; };
+    const GroupMetadata& GetGroupMetadata() const { return mMetadata; };
     bool HasMetadata(EventGroupMetaKey key) const;
     void SetMetadataNoCopy(EventGroupMetaKey key, const StringView& val);
     void DelMetadata(EventGroupMetaKey key);
+    GroupMetadata& MutableGroupMetadata() { return mMetadata; };
+    void SwapGroupMetadata(GroupMetadata& other) { mMetadata.swap(other); }
+    void SetGroupMetadata(GroupMetadata& otherMeta) {
+        mMetadata = otherMeta;
+    }
 
     void SetTag(const StringView& key, const StringView& val);
     void SetTag(const std::string& key, const std::string& val);
@@ -90,6 +96,8 @@ public:
     bool HasTag(const StringView& key) const;
     void SetTagNoCopy(const StringView& key, const StringView& val);
     void DelTag(const StringView& key);
+    GroupTags& MutableTags() { return mTags; };
+    void SwapTags(GroupTags& other) { mTags.swap(other); }
 
     uint64_t EventGroupSizeBytes();
 

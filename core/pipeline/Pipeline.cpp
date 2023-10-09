@@ -128,10 +128,14 @@ bool Pipeline::Init(const PipelineConfig& config) {
     return true;
 }
 
-void Pipeline::Process(PipelineEventGroup& logGroup) {
+void Pipeline::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
     for (auto& p : mProcessorLine) {
         p->Process(logGroup);
     }
+    logGroupList.emplace_back(logGroup.GetSourceBuffer());
+    logGroupList.back().SwapEvents(logGroup.MutableEvents());
+    logGroupList.back().SwapGroupMetadata(logGroup.MutableGroupMetadata());
+    logGroupList.back().SwapTags(logGroup.MutableTags());
 }
 
 bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config) {

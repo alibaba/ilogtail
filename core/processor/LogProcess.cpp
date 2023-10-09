@@ -449,27 +449,31 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
     eventGroup.AddEvent(std::move(event));
 
+    std::vector<PipelineEventGroup> outputList;
+
     // process logGroup
-    pipeline->Process(eventGroup);
+    pipeline->Process(eventGroup, outputList);
 
     // record profile
     auto& processProfile = pipeline->GetContext().GetProcessProfile();
     profile = processProfile;
     processProfile.Reset();
 
-    // fill protobuf
-    FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
-    FillLogGroupTags(eventGroup, logFileReader, resultGroup);
-    if (logFileReader->GetPluginFlag()) {
-        LogtailPlugin::GetInstance()->ProcessLogGroup(
-            logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
-        return 1;
-    }
-    // record log positions for exactly once. TODO: make it correct for each log, current implementation requires
-    // loggroup send in one shot
-    if (logBuffer->exactlyOnceCheckpoint) {
-        std::pair<size_t, size_t> pos(logBuffer->readOffset, logBuffer->readLength);
-        logBuffer->exactlyOnceCheckpoint->positions.assign(eventGroup.GetEvents().size(), pos);
+    for (auto& eventGroup : outputList) {
+        // fill protobuf
+        FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
+        FillLogGroupTags(eventGroup, logFileReader, resultGroup);
+        if (logFileReader->GetPluginFlag()) {
+            LogtailPlugin::GetInstance()->ProcessLogGroup(
+                logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
+            return 1;
+        }
+        // record log positions for exactly once. TODO: make it correct for each log, current implementation requires
+        // loggroup send in one shot
+        if (logBuffer->exactlyOnceCheckpoint) {
+            std::pair<size_t, size_t> pos(logBuffer->readOffset, logBuffer->readLength);
+            logBuffer->exactlyOnceCheckpoint->positions.assign(eventGroup.GetEvents().size(), pos);
+        }
     }
     return 0;
 }
