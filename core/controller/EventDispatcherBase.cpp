@@ -498,7 +498,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                      "real file path", realFilePath)("file device", checkpoint->mDevInode.dev)(
                      "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                      "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                ToString(checkpoint->mFileOpenFlag))(
+                     "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
         eventVec.push_back(
             new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
         eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -540,7 +541,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
                          "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                          "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                    ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                    ToString(checkpoint->mFileOpenFlag))(
+                         "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
             eventVec.push_back(
                 new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
             eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -587,7 +589,8 @@ EventDispatcherBase::validateCheckpoint(CheckPointPtr& checkpoint,
                          "new real file path", checkpoint->mRealFileName)("file device", checkpoint->mDevInode.dev)(
                          "file inode", checkpoint->mDevInode.inode)("signature", checkpoint->mSignatureHash)(
                          "last file position", checkpoint->mOffset)("is file open when dumped",
-                                                                    ToString((bool)checkpoint->mFileOpenFlag)));
+                                                                    ToString(checkpoint->mFileOpenFlag))(
+                         "is container stopped when dumped", ToString(checkpoint->mContainerStopped)));
             eventVec.push_back(
                 new Event(path, fileName, EVENT_MODIFY, wd, 0, checkpoint->mDevInode.dev, checkpoint->mDevInode.inode));
             eventVec[eventVec.size() - 1]->SetConfigName(checkpoint->mConfigName);
@@ -654,7 +657,9 @@ void EventDispatcherBase::AddExistedCheckPointFileEvents() {
                                                       DevInode(cpt.dev(), cpt.inode()),
                                                       cpt.config_name(),
                                                       cpt.real_path(),
-                                                      1);
+                                                      1,
+                                                      0,
+                                                      0);
             const auto result = validateCheckpoint(v1Cpt, cachePathDevInodeMap, eventVec);
             switch (result) {
                 case ValidateCheckpointResult::kNormal:
@@ -1340,6 +1345,7 @@ int EventDispatcherBase::InitStreamLogTcpSocket() {
     int reuseAddr = 1;
     if (fcntl(listenFd, F_SETFL, O_NONBLOCK) == -1
         || setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr)) == -1) {
+        close(listenFd);
         LOG_ERROR(
             sLogger,
             ("Set Non Blocking or set sock opt to REUSEPORT", "Failed")(ToString(errno), ErrnoToString(GetErrno())));
@@ -1356,6 +1362,7 @@ int EventDispatcherBase::InitStreamLogTcpSocket() {
     in_addr_t addr = inet_addr(AppConfig::GetInstance()->GetStreamLogAddress().c_str());
     addr_serv.sin_addr.s_addr = addr;
     if (addr == (in_addr_t)-1 || bind(listenFd, (const sockaddr*)&addr_serv, sizeof(struct sockaddr)) == -1) {
+        close(listenFd);
         LOG_ERROR(sLogger,
                   ("Bind StreamLog tcp socket", "Failed")(ToString(errno),
                                                           ErrnoToString(GetErrno()))("fd", ToString(listenFd)));
@@ -1367,6 +1374,7 @@ int EventDispatcherBase::InitStreamLogTcpSocket() {
 
     // 128 represent backlog num
     if (listen(listenFd, 128) == -1) {
+        close(listenFd);
         LOG_ERROR(sLogger,
                   ("Listen StreamLog tcp socket",
                    "Failed")(ToString(errno), ErrnoToString(GetErrno()))("File Descriptor", ToString(listenFd)));
@@ -1394,6 +1402,7 @@ bool EventDispatcherBase::AcceptConnection(int listenFd, int epollFd) {
     }
 
     if (fcntl(eventFd, F_SETFL, O_NONBLOCK) == -1) {
+        close(eventFd);
         LOG_ERROR(
             sLogger,
             ("Set Non Blocking", "Failed")(ToString(errno), ErrnoToString(GetErrno()))("File Path", sun.sun_path));
@@ -1404,6 +1413,7 @@ bool EventDispatcherBase::AcceptConnection(int listenFd, int epollFd) {
     ev.events = EPOLLIN;
     ev.data.fd = eventFd;
     if (epoll_ctl(epollFd, EPOLL_CTL_ADD, eventFd, &ev) == -1) {
+        close(eventFd);
         LOG_ERROR(sLogger,
                   ("Add epoll event", "Failed")(ToString(errno), ErrnoToString(GetErrno()))("File Path", sun.sun_path));
         return false;

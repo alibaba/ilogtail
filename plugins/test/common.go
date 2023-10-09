@@ -16,8 +16,8 @@ package test
 
 import (
 	"context"
-	"io/ioutil"
 	"net"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -41,7 +41,7 @@ import (
 
 func GetTestConfig(configName string) string {
 	fileName := "./" + configName + ".json"
-	byteStr, err := ioutil.ReadFile(filepath.Clean(fileName))
+	byteStr, err := os.ReadFile(filepath.Clean(fileName))
 	if err != nil {
 		logger.Warning(context.Background(), "read", fileName, "error", err)
 	}
@@ -76,7 +76,7 @@ func CreateLogs(kvs ...string) *protocol.Log {
 		slsLog.Contents = append(slsLog.Contents, cont)
 	}
 	nowTime := time.Now()
-	protocol.SetLogTime(&slsLog, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
+	protocol.SetLogTime(&slsLog, uint32(nowTime.Unix()))
 	return &slsLog
 }
 
@@ -87,7 +87,7 @@ func CreateLogByFields(fields map[string]string) *protocol.Log {
 		slsLog.Contents = append(slsLog.Contents, cont)
 	}
 	nowTime := time.Now()
-	protocol.SetLogTime(&slsLog, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
+	protocol.SetLogTime(&slsLog, uint32(nowTime.Unix()))
 	return &slsLog
 }
 

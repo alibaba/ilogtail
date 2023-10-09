@@ -16,26 +16,30 @@
 
 #include "processor/Processor.h"
 #include <string>
+#include <boost/regex.hpp>
 
 namespace logtail {
 
-class ProcessorFillGroupInfoNative : public Processor {
+class ProcessorDesensitizeNative : public Processor {
 public:
-    static const char* Name() { return "processor_fill_group_info_native"; }
-    bool Init(const ComponentConfig& config) override;
+    static const char* Name() { return "processor_desensitize_native"; }
+    bool Init(const ComponentConfig& componentConfig) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) override;
 
 private:
-    std::string GetTopicName(const std::string& path, std::vector<sls_logs::LogTag>& extraTags);
+    std::unordered_map<std::string, std::vector<SensitiveWordCastOption>> mSensitiveWordCastOptions;
 
-    std::string mTopicFormat, mGroupTopic, mStaticTopic;
-    bool mIsStaticTopic = false;
+    void ProcessEvent(PipelineEventPtr& e);
+    void CastOneSensitiveWord(const std::vector<SensitiveWordCastOption>& optionVec, std::string* value);
+
+    CounterPtr mProcDesensitizeRecodesTotal;
 
 #ifdef APSARA_UNIT_TEST_MAIN
-    friend class ProcessorFillGroupInfoNativeUnittest;
+    friend class ProcessorParseApsaraNativeUnittest;
 #endif
 };
+
 } // namespace logtail

@@ -48,9 +48,12 @@ void ProcessorSplitLogStringNativeUnittest::TestInit() {
     config.mLogType = REGEX_LOG;
     config.mLogBeginReg = ".*";
     config.mAdvancedConfig.mEnableLogPositionMeta = false;
+
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
     ProcessorSplitLogStringNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
 }
 
 void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
@@ -70,9 +73,10 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
                 "contents" :
                 {
                     "content" : "{\n\"k1\":\"v1\"\n}\u0000{\n\"k2\":\"v2\"\n}",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -81,7 +85,10 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
     // run function
     ProcessorSplitLogStringNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     processor.Process(eventGroup);
     // judge result
     std::stringstream expectJson;
@@ -91,20 +98,22 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
             {
                 "contents" :
                 {
-                    "content" : "{\n\"k1\":\"v1\"\n}",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0",
+                    "content" : "{\n\"k1\":\"v1\"\n}"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
                 "contents" :
                 {
-                    "content" : "{\n\"k2\":\"v2\"\n}",
-                    "log.file.offset": ")"
-               << strlen(R"({n"k1":"v1"n}0)") << R"("
+                    "__file_offset__": ")"
+               << strlen(R"({n"k1":"v1"n}0)") << R"(",
+                    "content" : "{\n\"k2\":\"v2\"\n}"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -132,19 +141,21 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
             {
                 "contents" :
                 {
-                    "content" : "line1\nline2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0",
+                    "content" : "line1\nline2"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
                 "contents" :
                 {
-                    "content" : "line3\nline4",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0",
+                    "content" : "line3\nline4"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]
@@ -153,7 +164,9 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
     // run function
     ProcessorSplitLogStringNative processor;
     processor.SetContext(mContext);
-    APSARA_TEST_TRUE_FATAL(processor.Init(config));
+    std::string pluginId = "testID";
+    ComponentConfig componentConfig(pluginId, config);
+    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
     processor.Process(eventGroup);
     // judge result
     std::string expectJson = R"({
@@ -165,6 +178,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "content" : "line1"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -173,6 +187,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "content" : "line2"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -181,6 +196,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "content" : "line3"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             },
             {
@@ -189,6 +205,7 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
                     "content" : "line4"
                 },
                 "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
                 "type" : 1
             }
         ]

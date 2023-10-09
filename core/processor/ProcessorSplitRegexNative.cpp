@@ -15,14 +15,20 @@
  */
 
 #include "processor/ProcessorSplitRegexNative.h"
+
+#include "app_config/AppConfig.h"
 #include "common/Constants.h"
 #include "reader/LogFileReader.h" //SplitState
 #include "models/LogEvent.h"
 #include "logger/Logger.h"
+#include "plugin/ProcessorInstance.h"
+
 
 namespace logtail {
 
-bool ProcessorSplitRegexNative::Init(const ComponentConfig& config) {
+bool ProcessorSplitRegexNative::Init(const ComponentConfig& componentConfig) {
+    const PipelineConfig& config = componentConfig.GetConfig();
+
     mSplitKey = DEFAULT_CONTENT_KEY;
     mIsMultline = config.IsMultiline();
     SetLogMultilinePolicy(config.mLogBeginReg, config.mLogContinueReg, config.mLogEndReg);
@@ -30,6 +36,7 @@ bool ProcessorSplitRegexNative::Init(const ComponentConfig& config) {
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
+    SetMetricsRecordRef(Name(), componentConfig.GetId());
     return true;
 }
 
@@ -38,7 +45,7 @@ void ProcessorSplitRegexNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
     EventsContainer newEvents;
-    const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
+    const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
     for (const PipelineEventPtr& e : logGroup.GetEvents()) {
         ProcessEvent(logGroup, logPath, e, newEvents);
     }
@@ -102,22 +109,22 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         return;
     }
     long sourceoffset = 0L;
-    if (sourceEvent.HasContent(EVENT_META_LOG_FILE_OFFSET)) {
-        sourceoffset = atol(sourceEvent.GetContent(EVENT_META_LOG_FILE_OFFSET).data()); // use safer method
+    if (sourceEvent.HasContent(LOG_RESERVED_KEY_FILE_OFFSET)) {
+        sourceoffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
     }
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
     for (auto& content : logIndex) {
         std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-        targetEvent->SetTimestamp(sourceEvent.GetTimestamp()); // it is easy to forget other fields, better solution?
+        targetEvent->SetTimestamp(sourceEvent.GetTimestamp(), sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
         targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
         if (mEnableLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
-            targetEvent->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+            targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
         }
         if (sourceEvent.GetContents().size() > 1) { // copy other fields
             for (auto& kv : sourceEvent.GetContents()) {
-                if (kv.first != mSplitKey && kv.first != EVENT_META_LOG_FILE_OFFSET) {
+                if (kv.first != mSplitKey && kv.first != LOG_RESERVED_KEY_FILE_OFFSET) {
                     targetEvent->SetContentNoCopy(kv.first, kv.second);
                 }
             }
@@ -356,21 +363,21 @@ void ProcessorSplitRegexNative::SetLogMultilinePolicy(const std::string& begReg,
                                                       const std::string& endReg) {
     mLogBeginReg = begReg;
     if (mLogBeginRegPtr != nullptr) {
-        mLogBeginRegPtr.release();
+        mLogBeginRegPtr.reset();
     }
     if (begReg.empty() == false && begReg != ".*") {
         mLogBeginRegPtr.reset(new boost::regex(begReg));
     }
     mLogContinueReg = conReg;
     if (mLogContinueRegPtr != nullptr) {
-        mLogContinueRegPtr.release();
+        mLogContinueRegPtr.reset();
     }
     if (conReg.empty() == false && conReg != ".*") {
         mLogContinueRegPtr.reset(new boost::regex(conReg));
     }
     mLogEndReg = endReg;
     if (mLogEndRegPtr != nullptr) {
-        mLogEndRegPtr.release();
+        mLogEndRegPtr.reset();
     }
     if (endReg.empty() == false && endReg != ".*") {
         mLogEndRegPtr.reset(new boost::regex(endReg));

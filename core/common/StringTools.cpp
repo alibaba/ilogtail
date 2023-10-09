@@ -32,6 +32,12 @@ std::string ToLowerCaseString(const std::string& orig) {
     return copy;
 }
 
+std::string ToUpperCaseString(const std::string& orig) {
+    auto copy = orig;
+    std::transform(copy.begin(), copy.end(), copy.begin(), ::toupper);
+    return copy;
+}
+
 int StringCaseInsensitiveCmp(const std::string& s1, const std::string& s2) {
 #if defined(_MSC_VER)
     return _stricmp(s1.c_str(), s2.c_str());
@@ -83,7 +89,7 @@ std::vector<std::string> StringSpliter(const std::string& str, const std::string
             tokens.push_back(token);
         prev = pos + delim.length();
     } while (pos < str.length() && prev < str.length());
-    return std::move(tokens);
+    return tokens;
 }
 
 void ReplaceString(std::string& raw, const std::string& src, const std::string& dst) {

@@ -156,15 +156,15 @@ void CheckPointManager::LoadDirCheckPoint(const Json::Value& root) {
     const Json::Value::Members& dirNames = root["dir_check_point"].getMemberNames();
     for (size_t index = 0; index < dirNames.size(); ++index) {
         const string& dirname = dirNames[index];
-        DirCheckPoint* dir = new DirCheckPoint(dirname);
         const Json::Value& dirMeta = root["dir_check_point"][dirname];
         try {
             int32_t updateTime = dirMeta["update_time"].asInt();
+            DirCheckPointPtr dir(new DirCheckPoint(dirname));
             if (updateTime >= (time(NULL) - INT32_FLAG(file_check_point_time_out))) {
                 for (unsigned int i = 0; i < dirMeta["sub_dir"].size(); ++i) {
                     dir->mSubDir.insert(dirMeta["sub_dir"][i].asString());
                 }
-                mDirNameMap.insert(make_pair(dirname, DirCheckPointPtr(dir)));
+                mDirNameMap.insert(make_pair(dirname, dir));
             } else {
                 LOG_INFO(sLogger, ("load timeout dir check point, ignore", dirname)(ToString(updateTime), time(NULL)));
             }
@@ -197,6 +197,8 @@ void CheckPointManager::LoadFileCheckPoint(const Json::Value& root) {
             string filePath = meta["file_name"].asString();
             string realFilePath;
             int32_t fileOpenFlag = 0; // default, we close file ptr
+            int32_t containerStopped = 0;
+            int32_t lastForceRead = 0;
             if (meta.isMember("real_file_name")) {
                 realFilePath = meta["real_file_name"].asString();
             }
@@ -228,7 +230,12 @@ void CheckPointManager::LoadFileCheckPoint(const Json::Value& root) {
             if (meta.isMember("file_open")) {
                 fileOpenFlag = meta["file_open"].asInt();
             }
-
+            if (meta.isMember("container_stopped")) {
+                containerStopped = meta["container_stopped"].asInt();
+            }
+            if (meta.isMember("last_force_read")) {
+                lastForceRead = meta["last_force_read"].asInt();
+            }
             // can not get file's dev inode
             if (!devInode.IsValid()) {
                 LOG_WARNING(sLogger, ("can not find check point dev inode, discard it", filePath));
@@ -239,8 +246,16 @@ void CheckPointManager::LoadFileCheckPoint(const Json::Value& root) {
             if (meta.isMember("config_name") && meta["config_name"].isString()) {
                 // No need to check if the config still matches the file here.
                 configName = meta["config_name"].asString();
-                CheckPoint* ptr = new CheckPoint(
-                    filePath, offset, sigSize, sigHash, devInode, configName, realFilePath, fileOpenFlag);
+                CheckPoint* ptr = new CheckPoint(filePath,
+                                                 offset,
+                                                 sigSize,
+                                                 sigHash,
+                                                 devInode,
+                                                 configName,
+                                                 realFilePath,
+                                                 fileOpenFlag != 0,
+                                                 containerStopped != 0,
+                                                 lastForceRead != 0);
                 ptr->mLastUpdateTime = update_time;
                 AddCheckPoint(ptr);
             } else {
@@ -270,7 +285,9 @@ void CheckPointManager::LoadFileCheckPoint(const Json::Value& root) {
                                                      devInode,
                                                      allConfig[i]->mConfigName,
                                                      realFilePath,
-                                                     fileOpenFlag);
+                                                     fileOpenFlag != 0,
+                                                     containerStopped != 0,
+                                                     lastForceRead != 0);
                     ptr->mLastUpdateTime = update_time;
                     AddCheckPoint(ptr);
                 }
@@ -312,7 +329,9 @@ bool CheckPointManager::DumpCheckPointToLocal() {
             leaf["update_time"] = Json::Value(checkPointPtr->mLastUpdateTime);
             leaf["inode"] = Json::Value(Json::UInt64(checkPointPtr->mDevInode.inode));
             leaf["dev"] = Json::Value(Json::UInt64(checkPointPtr->mDevInode.dev));
-            leaf["file_open"] = Json::Value(checkPointPtr->mFileOpenFlag);
+            leaf["file_open"] = Json::Value(checkPointPtr->mFileOpenFlag ? 1 : 0);
+            leaf["container_stopped"] = Json::Value(checkPointPtr->mContainerStopped ? 1 : 0);
+            leaf["last_force_read"] = Json::Value(checkPointPtr->mLastForceRead ? 1 : 0);
             leaf["config_name"] = Json::Value(checkPointPtr->mConfigName);
             // forward compatible
             leaf["sig"] = Json::Value(string(""));
@@ -339,7 +358,9 @@ bool CheckPointManager::DumpCheckPointToLocal() {
             leaf["update_time"] = Json::Value(checkPointPtr->mLastUpdateTime);
             leaf["inode"] = Json::Value(Json::UInt64(checkPointPtr->mDevInode.inode));
             leaf["dev"] = Json::Value(Json::UInt64(checkPointPtr->mDevInode.dev));
-            leaf["file_open"] = Json::Value(checkPointPtr->mFileOpenFlag);
+            leaf["file_open"] = Json::Value(checkPointPtr->mFileOpenFlag ? 1 : 0);
+            leaf["container_stopped"] = Json::Value(checkPointPtr->mContainerStopped ? 1 : 0);
+            leaf["last_force_read"] = Json::Value(checkPointPtr->mLastForceRead ? 1 : 0);
             leaf["config_name"] = Json::Value(checkPointPtr->mConfigName);
             // forward compatible
             leaf["sig"] = Json::Value(string(""));
@@ -524,7 +545,7 @@ void CheckPointManager::PrintStatus() {
     for (DevInodeCheckPointHashMap::iterator it = mDevInodeCheckPointPtrMap.begin();
          it != mDevInodeCheckPointPtrMap.end();
          ++it) {
-        printf("File %s\n", it->second.get()->mFileName.c_str());
+        printf("Inode %lu, File %s\n", it->first.mDevInode.inode, it->second.get()->mFileName.c_str());
     }
     printf("\n");
     for (std::unordered_map<std::string, DirCheckPointPtr>::iterator it = mDirNameMap.begin(); it != mDirNameMap.end();
