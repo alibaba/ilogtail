@@ -38,7 +38,7 @@ type FlusherOss struct {
 	ObjectAcl          string
 	ObjectStorageClass string
 	Tagging            string
-	MaximumFileSize    int
+	MaximumFileSize    int64
 	// Convert ilogtail data convert config
 	Convert convertConfig
 	// Authentication
