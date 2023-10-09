@@ -35,7 +35,7 @@ type FlusherOss struct {
 	KeyFormat          string
 	ContentKey         string
 	Encoding           string
-	ObjectAcl          string
+	ObjectACL          string
 	ObjectStorageClass string
 	Tagging            string
 	MaximumFileSize    int64
@@ -69,13 +69,13 @@ func NewFlusherOss() *FlusherOss {
 		KeyFormat:          "",
 		ContentKey:         "",
 		Encoding:           "",
-		ObjectAcl:          "",
+		ObjectACL:          "",
 		ObjectStorageClass: "",
 		Tagging:            "",
 		MaximumFileSize:    4 * 1024 * 1024 * 1024,
 		Authentication: Authentication{
 			PlainText: &PlainTextConfig{
-				AccessKeyId:     "",
+				AccessKeyID:     "",
 				AccessKeySecret: "",
 			},
 		},
@@ -119,9 +119,9 @@ func (f *FlusherOss) Init(context pipeline.Context) error {
 	// read ak and sk from env params
 	provider, err := oss.NewEnvironmentVariableCredentialsProvider()
 	if err != nil {
-		ossClient, err = oss.New(f.Endpoint, f.Authentication.PlainText.AccessKeyId, f.Authentication.PlainText.AccessKeySecret)
+		ossClient, err = oss.New(f.Endpoint, f.Authentication.PlainText.AccessKeyID, f.Authentication.PlainText.AccessKeySecret)
 	} else {
-		ossClient, err = oss.New(f.Endpoint, f.Authentication.PlainText.AccessKeyId, f.Authentication.PlainText.AccessKeySecret, oss.SetCredentialsProvider(&provider))
+		ossClient, err = oss.New(f.Endpoint, f.Authentication.PlainText.AccessKeyID, f.Authentication.PlainText.AccessKeySecret, oss.SetCredentialsProvider(&provider))
 	}
 	if err != nil {
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "create oss client error", err)
@@ -255,8 +255,8 @@ func (f *FlusherOss) initOption() []oss.Option {
 	if len(f.Encoding) > 0 {
 		option = append(option, oss.ContentEncoding(contentEncodingMethod(f.Encoding)))
 	}
-	if len(f.ObjectAcl) > 0 {
-		option = append(option, oss.ObjectACL(objectAclMethod(f.ObjectAcl)))
+	if len(f.ObjectACL) > 0 {
+		option = append(option, oss.ObjectACL(objectACLMethod(f.ObjectACL)))
 	}
 	if len(f.ObjectStorageClass) > 0 {
 		option = append(option, oss.ObjectStorageClass(objectStorageClassMethod(f.ObjectStorageClass)))
@@ -276,7 +276,7 @@ func contentEncodingMethod(contentEncoding string) string {
 	}
 }
 
-func objectAclMethod(objectAcl string) oss.ACLType {
+func objectACLMethod(objectAcl string) oss.ACLType {
 	switch strings.ToLower(objectAcl) {
 	case "private":
 		return oss.ACLPrivate

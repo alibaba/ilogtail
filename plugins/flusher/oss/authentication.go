@@ -20,8 +20,8 @@ type Authentication struct {
 }
 
 type PlainTextConfig struct {
-	// The accessKeyId for connecting to oss.
-	AccessKeyId string
+	// The AccessKeyID for connecting to oss.
+	AccessKeyID string
 	// The accessKeySecret for connecting to oss.
 	AccessKeySecret string
 }
