@@ -124,7 +124,7 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	// allocate a new log group.
 	if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSizeMap[source]+logSize > MaxLogGroupSize || tagChanged {
 		// The number of log group exceeds limit, make a quick flush.
-		if len(logGroupList) == p.MaxLogGroupCount {
+		if len(logGroupList) == p.MaxLogGroupCount || tagChanged {
 			// Quick flush to avoid becoming bottleneck when large logs come.
 			if err := p.queue.Add(logGroupList[0]); err == nil {
 				// add success, remove head log group
