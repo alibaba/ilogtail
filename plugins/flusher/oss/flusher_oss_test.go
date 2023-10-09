@@ -45,7 +45,7 @@ func TestConfigs(t *testing.T) {
 	f := initOssClient()
 	f.KeyFormat = "ilogtail2/%{ilogtail.hostname}/%{+yyyy.MM.dd}/var/log/%{content.filename}"
 	f.Encoding = "gzip"
-	f.ObjectAcl = "private"
+	f.ObjectACL = "private"
 	f.ObjectStorageClass = "IA"
 	f.Tagging = "TagA=A&TagB=B"
 	lgl := makeTestLogGroupList()
