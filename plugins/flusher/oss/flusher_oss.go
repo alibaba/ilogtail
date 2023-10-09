@@ -202,7 +202,7 @@ func (f *FlusherOss) Flush(projectName string, logstoreName string, configName s
 }
 
 func (f *FlusherOss) flushKeyValue(key string, value string) error {
-	var nextPos int64 = 0
+	var nextPos int64
 	var err error
 	exists, _ := f.bucket.IsObjectExist(key)
 	if exists {
@@ -219,7 +219,7 @@ func (f *FlusherOss) flushKeyValue(key string, value string) error {
 		}
 
 		// if object exceed maximum filesize, backup old file and make new
-		if nextPos > int64(f.MaximumFileSize) {
+		if nextPos > f.MaximumFileSize {
 			destObject := key + "." + strconv.FormatInt(time.Now().Local().Unix(), 10)
 			_, err = f.bucket.CopyObject(key, destObject)
 			if err != nil {
