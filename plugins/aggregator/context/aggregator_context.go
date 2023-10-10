@@ -104,27 +104,15 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		}
 	}
 	nowLogGroup := logGroupList[len(logGroupList)-1]
-	tagChanged := false
-	// Determine whether the tag of the current log is consistent with that of the previous logs. If it is inconsistent, need to create a new logGroup.
-	if _, ok := ctx["tags"]; ok && len(nowLogGroup.Logs) > 0 {
-		tags := map[string]string{}
-		for _, tag := range nowLogGroup.LogTags {
-			tags[tag.GetKey()] = tag.GetValue()
-		}
-		for _, tag := range ctx["tags"].([]*protocol.LogTag) {
-			if v, ok := tags[tag.GetKey()]; !ok || v != tag.GetValue() {
-				tagChanged = true
-				break
-			}
-		}
-	}
+
+	// TODO: 是否需要判断tag是否改变
 
 	logSize := p.evaluateLogSize(log)
 	// When current log group is full (log count or no more capacity for current log),
 	// allocate a new log group.
-	if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSizeMap[source]+logSize > MaxLogGroupSize || tagChanged {
+	if len(nowLogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSizeMap[source]+logSize > MaxLogGroupSize {
 		// The number of log group exceeds limit, make a quick flush.
-		if len(logGroupList) == p.MaxLogGroupCount || (tagChanged && len(logGroupList) > 0) {
+		if len(logGroupList) == p.MaxLogGroupCount {
 			// Quick flush to avoid becoming bottleneck when large logs come.
 			if err := p.queue.Add(logGroupList[0]); err == nil {
 				// add success, remove head log group
