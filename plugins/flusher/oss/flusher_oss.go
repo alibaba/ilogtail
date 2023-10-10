@@ -107,13 +107,7 @@ func (f *FlusherOss) Init(context pipeline.Context) error {
 		return err
 	}
 	f.converter = convert
-	// Obtain index keys from dynamic index expression
-	pathKeys, err := fmtstr.CompileKeys(f.KeyFormat)
-	if err != nil {
-		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init oss flusher index fail, error", err)
-		return err
-	}
-	f.pathKeys = pathKeys
+	f.pathKeys = f.getPathKeys()
 
 	var ossClient *oss.Client
 	// read ak and sk from env params
@@ -199,6 +193,26 @@ func (f *FlusherOss) Flush(projectName string, logstoreName string, configName s
 		_ = f.flushKeyValue(key, value)
 	}
 	return nil
+}
+
+func (f *FlusherOss) getPathKeys() []string {
+	// Obtain index keys from dynamic index expression
+	compileKeys, err := fmtstr.CompileKeys(f.KeyFormat)
+	if err != nil {
+		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_INIT_ALARM", "init oss flusher index fail, error", err)
+		return nil
+	}
+
+	// CompileKeys() parse all variables inside %{}
+	// but indexKeys is used to find field express starting with 'content.' or 'tag.'
+	// so date express starting with '+' should be ignored
+	pathKeys := make([]string, 0, len(compileKeys))
+	for _, key := range compileKeys {
+		if key[0] != '+' && key != "ilogtail.hostname" && key != "ilogtail.filename" {
+			pathKeys = append(pathKeys, key)
+		}
+	}
+	return pathKeys
 }
 
 func (f *FlusherOss) flushKeyValue(key string, value string) error {

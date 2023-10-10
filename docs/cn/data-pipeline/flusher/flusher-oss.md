@@ -26,7 +26,7 @@
 | Convert.Encoding                  | String   | 否    | ilogtail flusher数据转换编码，可选值：`json`、`none`、`protobuf`，默认值：`json`                     |
 | Convert.TagFieldsRename           | Map      | 否    | 对日志中tags中的json字段重命名                                                                |
 | Convert.ProtocolFieldsRename      | Map      | 否    | ilogtail日志协议字段重命名，可当前可重命名的字段：`contents`,`tags`和`time`                              |
-| Authentication                    | Struct   | 否    | OSS 连接访问认证配置，优先会读取环境变量中OSS_ACCESS_KEY_ID、OSS_ACCESS_KEY_SECRET变量值，若没有才会读取 Authentication结构下的ak和sk                                                               |
+| Authentication                    | Struct   | 是    | OSS 连接访问认证配置，优先会读取环境变量中OSS_ACCESS_KEY_ID、OSS_ACCESS_KEY_SECRET变量值，若没有才会读取 Authentication结构下的ak和sk                                                               |
 | Authentication.PlainText.AccessKeyID | String   | 否    | OSS AccessKeyId                                                                     |
 | Authentication.PlainText.AccessKeySecret | String   | 否    | OSS AccessKeySecret                                                                      |
 

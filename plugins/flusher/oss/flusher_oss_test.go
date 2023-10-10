@@ -27,6 +27,8 @@ import (
 func TestConnectAndWrite(t *testing.T) {
 	f := initOssClient()
 	lgl := makeTestLogGroupList()
+	lctx := mock.NewEmptyContext("p", "l", "c")
+	f.Init(lctx)
 	err := f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
 	require.NoError(t, err)
 	_ = f.Stop()
@@ -34,7 +36,9 @@ func TestConnectAndWrite(t *testing.T) {
 
 func TestPath(t *testing.T) {
 	f := initOssClient()
-	f.KeyFormat = "ilogtail1/%{ilogtail.hostname}/%{+yyyy}/%{+MM}/%{+dd}/var/log/%{content.filename}"
+	f.KeyFormat = "ilogtail1/%{ilogtail.hostname}/%{+yyyy}/%{+MM}/%{+dd}/var/log/%{ilogtail.filename}"
+	lctx := mock.NewEmptyContext("p", "l", "c")
+	f.Init(lctx)
 	lgl := makeTestLogGroupList()
 	err := f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
 	require.NoError(t, err)
@@ -43,11 +47,28 @@ func TestPath(t *testing.T) {
 
 func TestConfigs(t *testing.T) {
 	f := initOssClient()
-	f.KeyFormat = "ilogtail2/%{ilogtail.hostname}/%{+yyyy.MM.dd}/var/log/%{content.filename}"
+	f.KeyFormat = "ilogtail2/%{ilogtail.hostname}/%{+yyyy.MM.dd}/var/log/%{ilogtail.filename}"
 	f.Encoding = "gzip"
 	f.ObjectACL = "private"
 	f.ObjectStorageClass = "IA"
 	f.Tagging = "TagA=A&TagB=B"
+	lctx := mock.NewEmptyContext("p", "l", "c")
+	f.Init(lctx)
+	lgl := makeTestLogGroupList()
+	err := f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
+	require.NoError(t, err)
+	_ = f.Stop()
+}
+
+func TestPath1(t *testing.T) {
+	f := initOssClient()
+	f.KeyFormat = "ilogtail3/%{ilogtail.hostname}/%{tag.log.file.path}"
+	f.Encoding = "gzip"
+	f.ObjectACL = "private"
+	f.ObjectStorageClass = "IA"
+	f.Tagging = "TagA=A&TagB=B"
+	lctx := mock.NewEmptyContext("p", "l", "c")
+	f.Init(lctx)
 	lgl := makeTestLogGroupList()
 	err := f.Flush("projectName", "logstoreName", "configName", lgl.GetLogGroupList())
 	require.NoError(t, err)
@@ -61,8 +82,6 @@ func initOssClient() *FlusherOss {
 	f.KeyFormat = "ilogtail/%{content.hostid}/var/log/%{content.filename}"
 	// f.MaximumFileSize = 500
 	f.ContentKey = "message"
-	lctx := mock.NewEmptyContext("p", "l", "c")
-	f.Init(lctx)
 	return f
 }
 
@@ -71,7 +90,7 @@ func makeTestLogGroupList() *protocol.LogGroupList {
 	lgl := &protocol.LogGroupList{
 		LogGroupList: make([]*protocol.LogGroup, 0, 10),
 	}
-	f["filename"] = "messages"
+	f["__tag__:__path__"] = "/var/log/messages"
 	for i := 1; i <= 10; i++ {
 		lg := &protocol.LogGroup{
 			Logs: make([]*protocol.Log, 0, 10),
