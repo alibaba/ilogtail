@@ -208,7 +208,7 @@ func (f *FlusherOss) getPathKeys() []string {
 	// so date express starting with '+' should be ignored
 	pathKeys := make([]string, 0, len(compileKeys))
 	for _, key := range compileKeys {
-		if key[0] != '+' && key != "ilogtail.hostname" && key != "ilogtail.filename" {
+		if key[0] != '+' && key != "ilogtail.hostname" {
 			pathKeys = append(pathKeys, key)
 		}
 	}
