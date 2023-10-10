@@ -62,3 +62,4 @@ your changes, such as:
 - [public] [both] [added] support plugin ProcessorParseDelimiterNative
 - [public] [both] [added] support plugin ProcessorFilterNative
 - [public] [both] [added] support plugin ProcessorDesensitizeNative
+- [public] [both] [added] added UsingOldContentTag. When UsingOldContentTag is set to false, the tag is now put into the context during cgo.
