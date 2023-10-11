@@ -215,10 +215,6 @@ static void BM_RawJson(benchmark::State& state) {
     config.mDiscardUnmatch = false;
     config.mUploadRawLog = true;
     config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back(R"((\S+)\s+(\w+).*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("ip,method");
 
     // make events
     Json::Value root;
