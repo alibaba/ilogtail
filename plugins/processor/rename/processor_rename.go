@@ -124,10 +124,14 @@ func (p *ProcessorRename) Process(in *models.PipelineGroupEvents, context pipeli
 
 func (p *ProcessorRename) processLogEvent(logEvent *models.Log) {
 	contents := logEvent.GetIndices()
+	tags := logEvent.GetTags()
 	for oldKey, newKey := range p.keyDictionary {
 		if contents.Contains(oldKey) {
 			contents.Add(newKey, contents.Get(oldKey))
 			contents.Delete(oldKey)
+		} else if tags.Contains(oldKey) {
+			tags.Add(newKey, tags.Get(oldKey))
+			tags.Delete(oldKey)
 		} else if p.NoKeyError {
 			p.noKeyErrorArray = append(p.noKeyErrorArray, oldKey)
 		}
