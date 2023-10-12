@@ -251,7 +251,7 @@ func extractTags(rawTags []byte, log *protocol.Log) {
 	}
 }
 
-func extractTagsToLogtags(rawTags []byte, logTags []*protocol.LogTag) []*protocol.LogTag {
+func extractTagsToLogTags(rawTags []byte, logTags []*protocol.LogTag) []*protocol.LogTag {
 	defaultPrefixIndex := 0
 	for len(rawTags) != 0 {
 		idx := bytes.Index(rawTags, tagDelimiter)
