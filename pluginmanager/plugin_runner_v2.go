@@ -22,6 +22,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
@@ -417,6 +418,7 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 	return nil
 }
 
+// TODO: Design the ReceiveRawLogV2, which is passed in a loggroup, not a log.
 func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 	md := models.NewMetadata()
 	if in.Context != nil {
@@ -426,18 +428,42 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 	}
 	log := &models.Log{}
 	log.Tags = models.NewTags()
-	for i, content := range in.Log.Contents {
-		switch {
-		case content.Key == contentKey || i == 0:
-			log.SetBody(util.ZeroCopyStringToBytes(content.Value))
-		case content.Key == fileOffsetKey:
-			if offset, err := strconv.ParseInt(content.Value, 10, 64); err == nil {
-				log.Offset = uint64(offset)
+	if p.LogstoreConfig.GlobalConfig.UsingOldContentTag {
+		for i, content := range in.Log.Contents {
+			switch {
+			case content.Key == contentKey || i == 0:
+				log.SetBody(util.ZeroCopyStringToBytes(content.Value))
+			case content.Key == fileOffsetKey:
+				if offset, err := strconv.ParseInt(content.Value, 10, 64); err == nil {
+					log.Offset = uint64(offset)
+				}
+			case strings.Contains(content.Key, tagPrefix):
+				log.Tags.Add(content.Key[len(tagPrefix):], content.Value)
+			default:
+				log.Tags.Add(content.Key, content.Value)
 			}
-		case strings.Contains(content.Key, tagPrefix):
-			log.Tags.Add(content.Key[len(tagPrefix):], content.Value)
-		default:
-			log.Tags.Add(content.Key, content.Value)
+		}
+	} else {
+		for i, content := range in.Log.Contents {
+			switch {
+			case content.Key == contentKey || i == 0:
+				log.SetBody(util.ZeroCopyStringToBytes(content.Value))
+			case content.Key == fileOffsetKey:
+				if offset, err := strconv.ParseInt(content.Value, 10, 64); err == nil {
+					log.Offset = uint64(offset)
+				}
+			}
+		}
+		if tags, ok := in.Context["tags"].([]*protocol.LogTag); ok {
+			for _, tag := range tags {
+				if tag.Key != fileOffsetKey {
+					continue
+				}
+				if offset, err := strconv.ParseInt(tag.Value, 10, 64); err == nil {
+					log.Offset = uint64(offset)
+				}
+				break
+			}
 		}
 	}
 	if in.Log.Time != 0 {
