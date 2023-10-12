@@ -32,6 +32,8 @@
 #include "plugin/LogtailRuntimePlugin.h"
 #endif
 #include "plugin/LogtailPlugin.h"
+#include "plugin/PluginRegistry.h"
+#include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
 #include "checkpoint/CheckPointManager.h"
 #include "checkpoint/AdhocCheckpointManager.h"
@@ -64,6 +66,7 @@ static void overwrite_community_edition_flags() {
     INT32_FLAG(data_server_port) = 443;
     BOOL_FLAG(enable_env_ref_in_config) = true;
     BOOL_FLAG(enable_containerd_upper_dir_detect) = true;
+    BOOL_FLAG(enable_sls_metrics_format) = false;
 }
 
 void do_worker_process() {
@@ -135,6 +138,7 @@ void do_worker_process() {
         APSARA_LOG_INFO(sLogger, ("get none dmi uuid", "maybe this is a docker runtime"));
     }
 
+    PluginRegistry::GetInstance()->LoadPlugins();
 #ifdef LOGTAIL_RUNTIME_PLUGIN
     LogtailRuntimePlugin::GetInstance()->LoadPluginBase();
 #endif
@@ -142,9 +146,9 @@ void do_worker_process() {
     // load local config first
     ConfigManager::GetInstance()->GetLocalConfigUpdate();
     ConfigManager::GetInstance()->LoadConfig(AppConfig::GetInstance()->GetUserConfigPath());
+    PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
-
-    // mNameCoonfigMap is empty, configExistFlag is false
+    // mNameConfigMap is empty, configExistFlag is false
     bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();
 
     std::string backTraceStr = GetCrashBackTrace();
@@ -152,7 +156,9 @@ void do_worker_process() {
         APSARA_LOG_ERROR(sLogger, ("last logtail crash stack", backTraceStr)("stack size", backTraceStr.length()));
         LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_STACK_ALARM, backTraceStr);
     }
-    InitCrashBackTrace();
+    if (BOOL_FLAG(ilogtail_disable_core)) {
+        InitCrashBackTrace();
+    }
 
     auto& startupHints = STRING_FLAG(ilogtail_daemon_startup_hints);
     if (!startupHints.empty()) {
@@ -174,9 +180,7 @@ void do_worker_process() {
     Sender::Instance()->InitSender();
 
     LogtailPlugin* pPlugin = LogtailPlugin::GetInstance();
-    if (pPlugin->LoadPluginBase()) {
-        pPlugin->Resume();
-    }
+    pPlugin->Resume();
 
     CheckPointManager::Instance()->LoadCheckPoint();
     // AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();

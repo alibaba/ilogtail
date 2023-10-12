@@ -15,6 +15,8 @@
  */
 
 #include "processor/ProcessorSplitRegexNative.h"
+
+#include "app_config/AppConfig.h"
 #include "common/Constants.h"
 #include "reader/LogFileReader.h" //SplitState
 #include "models/LogEvent.h"
@@ -43,7 +45,7 @@ void ProcessorSplitRegexNative::Process(PipelineEventGroup& logGroup) {
         return;
     }
     EventsContainer newEvents;
-    const StringView& logPath = logGroup.GetMetadata(EVENT_META_LOG_FILE_PATH_RESOLVED);
+    const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
     for (const PipelineEventPtr& e : logGroup.GetEvents()) {
         ProcessEvent(logGroup, logPath, e, newEvents);
     }
@@ -107,8 +109,8 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         return;
     }
     long sourceoffset = 0L;
-    if (sourceEvent.HasContent(EVENT_META_LOG_FILE_OFFSET)) {
-        sourceoffset = atol(sourceEvent.GetContent(EVENT_META_LOG_FILE_OFFSET).data()); // use safer method
+    if (sourceEvent.HasContent(LOG_RESERVED_KEY_FILE_OFFSET)) {
+        sourceoffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
     }
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
     for (auto& content : logIndex) {
@@ -118,11 +120,11 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         if (mEnableLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
-            targetEvent->SetContentNoCopy(EVENT_META_LOG_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+            targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
         }
         if (sourceEvent.GetContents().size() > 1) { // copy other fields
             for (auto& kv : sourceEvent.GetContents()) {
-                if (kv.first != mSplitKey && kv.first != EVENT_META_LOG_FILE_OFFSET) {
+                if (kv.first != mSplitKey && kv.first != LOG_RESERVED_KEY_FILE_OFFSET) {
                     targetEvent->SetContentNoCopy(kv.first, kv.second);
                 }
             }
@@ -361,21 +363,21 @@ void ProcessorSplitRegexNative::SetLogMultilinePolicy(const std::string& begReg,
                                                       const std::string& endReg) {
     mLogBeginReg = begReg;
     if (mLogBeginRegPtr != nullptr) {
-        mLogBeginRegPtr.release();
+        mLogBeginRegPtr.reset();
     }
     if (begReg.empty() == false && begReg != ".*") {
         mLogBeginRegPtr.reset(new boost::regex(begReg));
     }
     mLogContinueReg = conReg;
     if (mLogContinueRegPtr != nullptr) {
-        mLogContinueRegPtr.release();
+        mLogContinueRegPtr.reset();
     }
     if (conReg.empty() == false && conReg != ".*") {
         mLogContinueRegPtr.reset(new boost::regex(conReg));
     }
     mLogEndReg = endReg;
     if (mLogEndRegPtr != nullptr) {
-        mLogEndRegPtr.release();
+        mLogEndRegPtr.reset();
     }
     if (endReg.empty() == false && endReg != ".*") {
         mLogEndRegPtr.reset(new boost::regex(endReg));

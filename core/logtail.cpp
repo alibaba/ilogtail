@@ -111,6 +111,7 @@ static void overwrite_community_edition_flags() {
     INT32_FLAG(data_server_port) = 443;
     BOOL_FLAG(enable_env_ref_in_config) = true;
     BOOL_FLAG(enable_containerd_upper_dir_detect) = true;
+    BOOL_FLAG(enable_sls_metrics_format) = false;
 }
 
 // Main routine of worker process.
@@ -255,15 +256,15 @@ void do_worker_process() {
         LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_STACK_ALARM, backTraceStr);
     }
 
-    InitCrashBackTrace();
+    if (BOOL_FLAG(ilogtail_disable_core)) {
+        InitCrashBackTrace();
+    }
 
     LogtailMonitor::Instance()->InitMonitor();
     LogFilter::Instance()->InitFilter(STRING_FLAG(user_log_config));
     Sender::Instance()->InitSender();
     LogtailPlugin* pPlugin = LogtailPlugin::GetInstance();
-    if (pPlugin->LoadPluginBase()) {
-        pPlugin->Resume();
-    }
+    pPlugin->Resume();
     ObserverManager::GetInstance()->Reload();
     CheckPointManager::Instance()->LoadCheckPoint();
     // AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();

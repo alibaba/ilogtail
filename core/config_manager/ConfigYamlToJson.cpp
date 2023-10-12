@@ -101,6 +101,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileAdvancedConfigMap["PreciseTimestampUnit"] = "precise_timestamp_unit";
     mFileAdvancedConfigMap["ForceMultiConfig"] = "force_multiconfig";
     mFileAdvancedConfigMap["TailSizeKB"] = "tail_size_kb";
+    mFileAdvancedConfigMap["ExactlyOnceConcurrency"] = "exactly_once_concurrency";
     mFileAdvancedConfigMap["EnableLogPositionMeta"] = "enable_log_position_meta";
     mFileAdvancedConfigMap["RawLogTag"] = "raw_log_tag";
 
@@ -152,7 +153,7 @@ Json::Value ConfigYamlToJson::ParseScalar(const YAML::Node& node) {
         return node.as<std::string>();
     }
 
-    int i;
+    int i = 0;
     if (YAML::convert<int>::decode(node, i))
         return i;
 
