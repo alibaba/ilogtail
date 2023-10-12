@@ -1066,7 +1066,7 @@ void AppConfigBase::ReadFlagsFromMap(const std::unordered_map<std::string, std::
 
 void AppConfigBase::ParseJsonToFlags(const Json::Value& confJson) {
     const static unordered_set<string> sForceKeySet = {"config_server_address_list"};
-    const static unordered_set<string> sIgnoreKeySet = {"data_server_list"};
+    const static unordered_set<string> sIgnoreKeySet = {"data_server_list", "ilogtail_configserver_address", "ilogtail_tags"};
     for (auto name : confJson.getMemberNames()) {
         if (sIgnoreKeySet.find(name) != sIgnoreKeySet.end()) {
             continue;
