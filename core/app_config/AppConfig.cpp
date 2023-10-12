@@ -87,7 +87,7 @@ void AppConfig::LoadAddrConfig(const Json::Value& confJson) {
             std::string value = confJson["ilogtail_tags"][name].asString();
             std::string v = getEnvValue(value);
             if (name.empty() || v.empty()) {
-                LOG_WARNING(sLogger, ("ilogtail_tags", "format error: empty tag name or value"));
+                LOG_WARNING(sLogger, ("ilogtail_tags", "format error: empty tag name or value")("name", name)("value", v));
                 continue;
             }
             mConfigServerTags[name] = v;
