@@ -263,6 +263,7 @@ func (lc *LogstoreConfig) ProcessRawLogV2(rawLog []byte, packID string, topic st
 	if len(topic) > 0 {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
+	// TODO
 	extractTags(tags, log)
 	lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
 	return 0
@@ -279,6 +280,7 @@ func (lc *LogstoreConfig) ProcessLog(logByte []byte, packID string, topic string
 	if len(topic) > 0 {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
+	// TODO
 	extractTags(tags, log)
 	lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
 	return 0

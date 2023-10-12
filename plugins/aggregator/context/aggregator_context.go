@@ -105,8 +105,6 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	}
 	nowLogGroup := logGroupList[len(logGroupList)-1]
 
-	// TODO: 是否需要判断tag是否改变
-
 	logSize := p.evaluateLogSize(log)
 	// When current log group is full (log count or no more capacity for current log),
 	// allocate a new log group.
