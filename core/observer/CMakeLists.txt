@@ -13,6 +13,3 @@ target_link_libraries(${PROJECT_NAME} event)
 target_link_libraries(${PROJECT_NAME} log_pb)
 
 add_subdirectory(network)
-
-
-
