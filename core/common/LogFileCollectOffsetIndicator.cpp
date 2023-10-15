@@ -20,7 +20,7 @@
 #include "common/LogstoreSenderQueue.h"
 #include "sender/Sender.h"
 #include "util.h"
-#include "ulogfslib_file.h"
+// #include "ulogfslib_file.h"
 
 DEFINE_FLAG_INT32(file_eliminate_interval, "time interval for file eliminating, seconds", 86400 * 2);
 DEFINE_FLAG_INT32(file_map_shrink_size, "shrink size for file map", 2000);

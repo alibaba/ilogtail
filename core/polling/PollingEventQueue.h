@@ -44,7 +44,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcher;
-    friend class EventDispatcherBase;
+    friend class EventDispatcher;
     friend class PollingUnittest;
 
     void Clear();

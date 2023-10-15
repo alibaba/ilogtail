@@ -15,8 +15,8 @@
  */
 
 #include "pipeline/Pipeline.h"
-
 #include "pipeline/PipelineContext.h"
+#include "Go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
@@ -28,12 +28,15 @@
 #include "processor/ProcessorDesensitizeNative.h"
 #include "processor/ProcessorTagNative.h"
 #include "processor/ProcessorFilterNative.h"
+#include "Pipeline.h"
+
+using namespace std;
 
 namespace logtail {
 
 bool Pipeline::Init(const PipelineConfig& config) {
     mName = config.mConfigName;
-    mConfig = config;
+    mConfig1 = config;
 
     mContext.SetConfigName(config.mConfigName);
     mContext.SetLogstoreName(config.mCategory);
@@ -128,10 +131,280 @@ bool Pipeline::Init(const PipelineConfig& config) {
     return true;
 }
 
+bool Pipeline::Init(NewConfig&& config) {
+    // TODO:
+    // 1. exactlyonce
+    // 2. priority
+    const Table& table = *config.mDetail;
+    int16_t pluginIndex = 0;
+    Table* itr = nullptr;
+
+    itr = table.find("global");
+    if (!itr->is_object()) {
+        LOG_ERROR(sLogger, ("failed to init pipeline", "global module is not of type object")("pipeline", Name()));
+        return false;
+    }
+    if (mContext.InitGlobal(*itr)) {
+        return false;
+    }
+
+    itr = table.find("inputs");
+    if (!itr) {
+        LOG_ERROR(sLogger, ("failed to init pipeline", "mandatory inputs module is missing")("pipeline", Name()));
+        return false;
+    }
+    if (!itr->is_array()) {
+        LOG_ERROR(sLogger,
+                  ("failed to init pipeline", "mandatory inputs module is not of type array")("pipeline", Name()));
+        return false;
+    }
+    if (itr->empty()) {
+        LOG_ERROR(sLogger, ("failed to init pipeline", "mandatory inputs module has no plugin")("pipeline", Name()));
+        return false;
+    }
+    for (size_t i = 0; i < itr->size(); ++i) {
+        const Table& plugin = (*itr)[i];
+        if (!plugin.is_object()) {
+            LOG_ERROR(sLogger,
+                      ("failed to init pipeline", "param inputs[" + ToString(i) + "] is not of type object")("pipeline",
+                                                                                                             Name()));
+            return false;
+        }
+        Table* it = plugin.find("Type");
+        if (!it->is_string()) {
+            LOG_ERROR(sLogger,
+                      ("failed to init pipeline",
+                       "param inputs[" + ToString(i) + "].Type is not of type string")("pipeline", Name()));
+            return false;
+        }
+        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(
+            it->as_string(), it->as_string() + "/" + std::to_string(++pluginIndex));
+        if (input) {
+            if (!input->Init(plugin, mContext)) {
+                return false;
+            }
+            mInputs.emplace_back(std::move(input));
+        } else {
+            if (!PluginRegistry::GetInstance()->IsValidGoPlugin(it->as_string())) {
+                LOG_ERROR(
+                    sLogger,
+                    ("failed to init pipeline", "plugin" + it->as_string() + "is not supported")("pipeline", Name()));
+                return false;
+            }
+            PushPluginToGoPipelines(plugin, mGoPipelineWithInput);
+        }
+    }
+
+    itr = table.find("processors");
+    if (!itr->is_array()) {
+        LOG_ERROR(sLogger, ("failed to init pipeline", "processors module is not of type array")("pipeline", Name()));
+        return false;
+    }
+    for (size_t i = 0; i < itr->size(); ++i) {
+        const Table& plugin = (*itr)[i];
+        if (!plugin.is_object()) {
+            LOG_ERROR(sLogger,
+                      ("failed to init pipeline",
+                       "param processors[" + ToString(i) + "] is not of type object")("pipeline", Name()));
+            return false;
+        }
+        Table* it = plugin.find("Type");
+        if (!it->is_string()) {
+            LOG_ERROR(sLogger,
+                      ("failed to init pipeline",
+                       "param processors[" + ToString(i) + "].Type is not of type string")("pipeline", Name()));
+            return false;
+        }
+        unique_ptr<ProcessorInstance> processor = PluginRegistry::GetInstance()->CreateProcessor(
+            it->as_string(), it->as_string() + "/" + std::to_string(++pluginIndex));
+        if (processor) {
+            if (!processor->Init(plugin, mContext)) {
+                return false;
+            }
+            mProcessorLine.emplace_back(std::move(processor));
+        } else {
+            if (!PluginRegistry::GetInstance()->IsValidGoPlugin(it->as_string())) {
+                LOG_ERROR(
+                    sLogger,
+                    ("failed to init pipeline", "plugin" + it->as_string() + "is not supported")("pipeline", Name()));
+                return false;
+            }
+            if (!mGoPipelineWithInput.is_null() && mProcessorLine.empty()) {
+                PushPluginToGoPipelines(plugin, mGoPipelineWithInput);
+            } else {
+                PushPluginToGoPipelines(plugin, mGoPipelineWithoutInput);
+            }
+        }
+    }
+
+    itr = table.find("aggregators");
+    if (!itr->is_array()) {
+        LOG_ERROR(sLogger, ("failed to init pipeline", "aggregators module is not of type array")("pipeline", Name()));
+        return false;
+    }
+    if (itr->size() > 1) {
+        LOG_ERROR(sLogger,
+                  ("failed to init pipeline", "aggregators module has more than 1 plugin")("pipeline", Name()));
+        return false;
+    }
+    for (size_t i = 0; i < itr->size(); ++i) {
+        const Table& plugin = (*itr)[i];
+        if (!plugin.is_object()) {
+            LOG_ERROR(sLogger,
+                      ("failed to init pipeline",
+                       "param aggregators[" + ToString(i) + "] is not of type object")("pipeline", Name()));
+            return false;
+        }
+        Table* it = plugin.find("Type");
+        if (!it->is_string()) {
+            LOG_ERROR(sLogger,
+                      ("failed to init pipeline",
+                       "param aggregators[" + ToString(i) + "].Type is not of type string")("pipeline", Name()));
+            return false;
+        }
+        if (!PluginRegistry::GetInstance()->IsValidGoPlugin(it->as_string())) {
+            LOG_ERROR(sLogger,
+                      ("failed to init pipeline", "plugin" + it->as_string() + "is not supported")("pipeline", Name()));
+            return false;
+        }
+        if (!mGoPipelineWithInput.is_null() && mProcessorLine.empty() && mGoPipelineWithoutInput.is_null()) {
+            PushPluginToGoPipelines(plugin, mGoPipelineWithInput);
+        } else {
+            PushPluginToGoPipelines(plugin, mGoPipelineWithoutInput);
+        }
+    }
+
+    itr = table.find("flushers");
+    if (!itr) {
+        LOG_ERROR(sLogger, ("failed to init pipeline", "mandatory flushers module is missing")("pipeline", Name()));
+        return false;
+    }
+    if (!itr->is_array()) {
+        LOG_ERROR(sLogger,
+                  ("failed to init pipeline", "mandatory flushers module is not of type array")("pipeline", Name()));
+        return false;
+    }
+    if (itr->empty()) {
+        LOG_ERROR(sLogger, ("failed to init pipeline", "mandatory flushers module has no plugin")("pipeline", Name()));
+        return false;
+    }
+    for (size_t i = 0; i < itr->size(); ++i) {
+        const Table& plugin = (*itr)[i];
+        if (!plugin.is_object()) {
+            LOG_ERROR(sLogger,
+                      ("failed to init pipeline",
+                       "param flushers[" + ToString(i) + "] is not of type object")("pipeline", Name()));
+            return false;
+        }
+        Table* it = plugin.find("Type");
+        if (!it->is_string()) {
+            LOG_ERROR(sLogger,
+                      ("failed to init pipeline",
+                       "param flushers[" + ToString(i) + "].Type is not of type string")("pipeline", Name()));
+            return false;
+        }
+        unique_ptr<FlusherInstance> flusher = PluginRegistry::GetInstance()->CreateFlusher(
+            it->as_string(), it->as_string() + "/" + std::to_string(++pluginIndex));
+        if (flusher) {
+            if (!flusher->Init(plugin, mContext)) {
+                return false;
+            }
+            mFlushers.emplace_back(std::move(flusher));
+        } else {
+            if (!PluginRegistry::GetInstance()->IsValidGoPlugin(it->as_string())) {
+                LOG_ERROR(
+                    sLogger,
+                    ("failed to init pipeline", "plugin" + it->as_string() + "is not supported")("pipeline", Name()));
+                return false;
+            }
+            // note: When input and flusher both have both C++ and Go plugin, and no processor is given, there are
+            // actually 2 possible topology. For the sake of simplicity here, we choose the go dominated one.
+            if (!mGoPipelineWithInput.is_null() && mProcessorLine.empty() && mGoPipelineWithoutInput.is_null()) {
+                PushPluginToGoPipelines(plugin, mGoPipelineWithInput);
+            } else {
+                PushPluginToGoPipelines(plugin, mGoPipelineWithoutInput);
+            }
+        }
+    }
+
+    if (!LoadGoPipelines()) {
+        LOG_ERROR(sLogger,
+                  ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")("pipeline",
+                                                                                                           Name()));
+        return false;
+    }
+
+    mConfig = std::move(config);
+    return true;
+}
+
+void Pipeline::Start() {
+    // TODO: 应该保证指定时间内返回，如果无法返回，将配置放入startDisabled里
+    for (const auto& flusher : mFlushers) {
+        flusher->Start();
+    }
+    if (!mGoPipelineWithoutInput.is_null()) {
+        // TODO: 加载该Go流水线
+    }
+    // TODO: 启用Process中改流水线对应的输入队列
+    if (!mGoPipelineWithInput.is_null()) {
+        // TODO: 加载该Go流水线
+    }
+    for (const auto& input : mInputs) {
+        input->Start();
+    }
+}
+
 void Pipeline::Process(PipelineEventGroup& logGroup) {
     for (auto& p : mProcessorLine) {
         p->Process(logGroup);
     }
+}
+
+void Pipeline::Stop(bool isRemoving) {
+    // TODO: 应该保证指定时间内返回，如果无法返回，将配置放入stopDisabled里
+    if (!mInputs.empty()) {
+        for (const auto& input : mInputs) {
+            input->Stop(isRemoving);
+        }
+    }
+    if (!mRequiringSpecialStopOrder) {
+        // TODO: 禁用Process中改流水线对应的输入队列
+        if (!mGoPipelineWithInput.is_null()) {
+            // TODO: 卸载该Go流水线
+        }
+    } else {
+        if (!mGoPipelineWithInput.is_null()) {
+            // TODO: 卸载该Go流水线
+        }
+        // TODO: 禁用Process中改流水线对应的输入队列
+    }
+    if (!mGoPipelineWithoutInput.is_null()) {
+        // TODO: 卸载该Go流水线
+    }
+    for (const auto& flusher : mFlushers) {
+        flusher->Stop(isRemoving);
+    }
+}
+
+bool Pipeline::LoadGoPipelines() const {
+    std::string project, logstore, region;
+    LogstoreFeedBackKey logstoreKey;
+    // TODO：目前mGoPipelineWithInput和mGoPipelineWithoutInput只会有1个，因此不存在问题。当Go
+    // input支持向C++发送时，需要将下面的代码替换成批量原子Load。
+    if (!mGoPipelineWithInput.is_null()) {
+        if (!LogtailPlugin::GetInstance()->LoadPipeline(
+                mName, mGoPipelineWithInput.serialize(), project, logstore, region, logstoreKey)) {
+            return false;
+        }
+    }
+    if (!mGoPipelineWithoutInput.is_null()) {
+        if (!LogtailPlugin::GetInstance()->LoadPipeline(
+                mName, mGoPipelineWithInput.serialize(), project, logstore, region, logstoreKey)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config) {

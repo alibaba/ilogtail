@@ -46,7 +46,6 @@ public:
     void TestSeek();
     void TestStat();
     void TestPread();
-    void TestSkipHoleRead();
     void TestTell();
     void TestClose();
     void TestFuseTruncate();
@@ -57,7 +56,6 @@ APSARA_UNIT_TEST_CASE(LogFileOperatorUnittest, TestOpen, 1);
 APSARA_UNIT_TEST_CASE(LogFileOperatorUnittest, TestSeek, 2);
 APSARA_UNIT_TEST_CASE(LogFileOperatorUnittest, TestStat, 3);
 APSARA_UNIT_TEST_CASE(LogFileOperatorUnittest, TestPread, 4);
-APSARA_UNIT_TEST_CASE(LogFileOperatorUnittest, TestSkipHoleRead, 5);
 APSARA_UNIT_TEST_CASE(LogFileOperatorUnittest, TestTell, 6);
 APSARA_UNIT_TEST_CASE(LogFileOperatorUnittest, TestClose, 7);
 APSARA_UNIT_TEST_CASE(LogFileOperatorUnittest, TestFuseTruncate, 8);
@@ -347,64 +345,6 @@ void LogFileOperatorUnittest::TestPread() {
     APSARA_TEST_EQUAL(readData, logData);
 
     delete[] buf;
-}
-
-void LogFileOperatorUnittest::TestSkipHoleRead() {
-#if defined(ENABLE_FUSE)
-    int mainVersion = 0, subVersion = 0;
-    if (UnitTestHelper::GetKernelVersion(mainVersion, subVersion)) {
-        if (mainVersion < 3 || (mainVersion == 3 && subVersion < 1)) {
-            LOG_INFO(sLogger, ("linux kernel version is lower than 3.1", "skip this case"));
-            return;
-        }
-    } else {
-        LOG_INFO(sLogger, ("failed to get linux kernel version", "skip this case"));
-        APSARA_TEST_TRUE(false);
-        return;
-    }
-
-    std::string cmd;
-    size_t readBytes;
-    size_t bytes;
-
-    std::string fuse_dir = gRootDir + "/fuse_dir";
-    MountFuseDir(fuse_dir);
-    std::string file = fuse_dir + "/" + gTestFile;
-
-    std::string logData = GenerateData(1024, 9);
-    FILE* pFile = fopen(file.c_str(), "w");
-    fwrite(logData.c_str(), 1, logData.size(), pFile);
-    fclose(pFile);
-
-    char* buf = new char[logData.size() + 1];
-
-    LogFileOperator logFileOp;
-
-    int64_t offset = 0;
-    readBytes = logFileOp.SkipHoleRead(buf, 1, 1024, &offset);
-    APSARA_TEST_TRUE(readBytes == 0);
-    APSARA_TEST_TRUE(offset == 0);
-
-    logFileOp.Open(file.c_str(), true);
-    APSARA_TEST_EQUAL(logFileOp.IsOpen(), true);
-
-    do {
-        bytes = logFileOp.SkipHoleRead(buf + readBytes, 1, logData.size() - readBytes, &offset);
-        readBytes += bytes;
-    } while (bytes);
-    buf[readBytes] = '\0';
-    std::string readData(buf);
-
-    APSARA_TEST_EQUAL(readBytes, logData.size());
-    APSARA_TEST_EQUAL(readData, logData);
-
-    logFileOp.Close();
-    APSARA_TEST_EQUAL(logFileOp.IsOpen(), false);
-
-    delete[] buf;
-
-    UmountFuseDir(fuse_dir);
-#endif
 }
 
 void LogFileOperatorUnittest::TestTell() {

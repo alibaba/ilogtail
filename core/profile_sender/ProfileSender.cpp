@@ -12,23 +12,97 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "app_config/AppConfig.h"
-#include "config_manager/ConfigManager.h"
-#include "logger/Logger.h"
 #include "ProfileSender.h"
+#ifdef __ENTERPRISE__
+#include "EnterpriseProfileSender.h"
+#endif
+#include "common/Flags.h"
+#include "common/LogtailCommonFlags.h"
+#include "logger/Logger.h"
 #include "sender/Sender.h"
-#include "sdk/Common.h"
-#include "sdk/Client.h"
+#include "json/json.h"
 #include "sdk/Exception.h"
 #include "common/CompressTools.h"
-#include "common/LogtailCommonFlags.h"
 #include "sls_control/SLSControl.h"
 
 using namespace std;
 
 DEFINE_FLAG_BOOL(send_running_status, "", true);
+DEFINE_FLAG_STRING(profile_project_name, "profile project_name for logtail", "");
 
 namespace logtail {
+
+ProfileSender::ProfileSender()
+    : mDefaultProfileProjectName(STRING_FLAG(profile_project_name)),
+      mDefaultProfileRegion(STRING_FLAG(default_region_name)) {
+}
+
+ProfileSender* ProfileSender::GetInstance() {
+#ifdef __ENTERPRISE__
+    static ProfileSender* ptr = new EnterpriseProfileSender();
+#else
+    static ProfileSender* ptr = new ProfileSender();
+#endif
+    return ptr;
+}
+
+std::string ProfileSender::GetDefaultProfileRegion() {
+    ScopedSpinLock lock(mProfileLock);
+    return mDefaultProfileRegion;
+}
+
+void ProfileSender::SetDefaultProfileRegion(const string& profileRegion) {
+    ScopedSpinLock lock(mProfileLock);
+    mDefaultProfileRegion = profileRegion;
+}
+
+std::string ProfileSender::GetDefaultProfileProjectName() {
+    ScopedSpinLock lock(mProfileLock);
+    return mDefaultProfileProjectName;
+}
+
+void ProfileSender::SetDefaultProfileProjectName(const string& profileProjectName) {
+    ScopedSpinLock lock(mProfileLock);
+    mDefaultProfileProjectName = profileProjectName;
+}
+
+std::string ProfileSender::GetProfileProjectName(const std::string& region, bool* existFlag) {
+    ScopedSpinLock lock(mProfileLock);
+    if (region.empty()) {
+        if (existFlag != NULL) {
+            *existFlag = false;
+        }
+        return mDefaultProfileProjectName;
+    }
+    std::unordered_map<std::string, std::string>::iterator iter = mAllProfileProjectNames.find(region);
+    if (iter == mAllProfileProjectNames.end()) {
+        if (existFlag != NULL) {
+            *existFlag = false;
+        }
+        return mDefaultProfileProjectName;
+    }
+    if (existFlag != NULL) {
+        *existFlag = true;
+    }
+    return iter->second;
+}
+
+void ProfileSender::GetAllProfileRegion(std::vector<std::string>& allRegion) {
+    ScopedSpinLock lock(mProfileLock);
+    if (mAllProfileProjectNames.find(mDefaultProfileRegion) == mAllProfileProjectNames.end()) {
+        allRegion.push_back(mDefaultProfileRegion);
+    }
+    for (std::unordered_map<std::string, std::string>::iterator iter = mAllProfileProjectNames.begin();
+         iter != mAllProfileProjectNames.end();
+         ++iter) {
+        allRegion.push_back(iter->first);
+    }
+}
+
+void ProfileSender::SetProfileProjectName(const std::string& region, const std::string& profileProject) {
+    ScopedSpinLock lock(mProfileLock);
+    mAllProfileProjectNames[region] = profileProject;
+}
 
 void ProfileSender::SendToProfileProject(const std::string& region, sls_logs::LogGroup& logGroup) {
     if (0 == logGroup.category().compare("logtail_status_profile")) {
@@ -37,7 +111,7 @@ void ProfileSender::SendToProfileProject(const std::string& region, sls_logs::Lo
 
     // Opensource is not necessary to synchronize data with SLS
     Sender::Instance()->RestLastSenderTime();
-    ConfigManager::GetInstance()->RestLastConfigTime();
+    // ConfigManager::GetInstance()->RestLastConfigTime();
     return;
 }
 
@@ -75,7 +149,7 @@ void ProfileSender::SendRunningStatus(sls_logs::LogGroup& logGroup) {
     logtailStatus["__logs__"][0] = status;
     std::string logBody = logtailStatus.toStyledString();
     sdk::Client client(endpoint, "", "", INT32_FLAG(sls_client_send_timeout), "", "");
-    SLSControl::Instance()->SetSlsSendClientCommonParam(&client);
+    SLSControl::GetInstance()->SetSlsSendClientCommonParam(&client);
     try {
         time_t curTime = time(NULL);
         std::unique_ptr<LoggroupTimeValue> data(new LoggroupTimeValue(

@@ -30,10 +30,10 @@
 #include "common/ErrorUtil.h"
 #include "common/GlobalPara.h"
 #include "logger/Logger.h"
-#ifdef LOGTAIL_RUNTIME_PLUGIN
-#include "plugin/LogtailRuntimePlugin.h"
-#endif
-#include "plugin/LogtailPlugin.h"
+// #ifdef LOGTAIL_RUNTIME_PLUGIN
+// #include "plugin/LogtailRuntimePlugin.h"
+// #endif
+#include "Go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
 #include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
@@ -49,6 +49,8 @@
 #include "monitor/LogLineCount.h"
 #include "app_config/AppConfig.h"
 #include "ObserverManager.h"
+#include "app/App.h"
+
 using namespace logtail;
 
 #ifdef ENABLE_COMPATIBLE_MODE
@@ -73,10 +75,10 @@ DECLARE_FLAG_STRING(ilogtail_docker_file_path_config);
 DECLARE_FLAG_INT32(data_server_port);
 DECLARE_FLAG_BOOL(enable_env_ref_in_config);
 
-void HandleSighupSignal(int signum, siginfo_t* info, void* context) {
-    APSARA_LOG_INFO(sLogger, ("received signal", "SIGHUP"));
-    ConfigManager::GetInstance()->SetMappingPathsChanged();
-}
+// void HandleSighupSignal(int signum, siginfo_t* info, void* context) {
+//     APSARA_LOG_INFO(sLogger, ("received signal", "SIGHUP"));
+//     ConfigManager::GetInstance()->SetMappingPathsChanged();
+// }
 
 void HandleSigtermSignal(int signum, siginfo_t* info, void* context) {
     APSARA_LOG_INFO(sLogger, ("received signal", "SIGTERM"));
@@ -131,14 +133,14 @@ void do_worker_process() {
         exit(5);
     }
 
-    struct sigaction sighupSig;
-    sigemptyset(&sighupSig.sa_mask);
-    sighupSig.sa_sigaction = HandleSighupSignal;
-    sighupSig.sa_flags = SA_SIGINFO;
-    if (sigaction(SIGHUP, &sighupSig, NULL) < 0) {
-        APSARA_LOG_ERROR(sLogger, ("install SIGHUP", "fail"));
-        exit(5);
-    }
+    // struct sigaction sighupSig;
+    // sigemptyset(&sighupSig.sa_mask);
+    // sighupSig.sa_sigaction = HandleSighupSignal;
+    // sighupSig.sa_flags = SA_SIGINFO;
+    // if (sigaction(SIGHUP, &sighupSig, NULL) < 0) {
+    //     APSARA_LOG_ERROR(sLogger, ("install SIGHUP", "fail"));
+    //     exit(5);
+    // }
 
 #ifndef LOGTAIL_NO_TC_MALLOC
     if (BOOL_FLAG(ilogtail_disable_core)) {
@@ -204,22 +206,21 @@ void do_worker_process() {
     LogtailMonitor::Instance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
 
     // use a thread to get uuid
-    if (!ConfigManager::GetInstance()->TryGetUUID()) {
+    if (!AppConfig::GetInstance()->TryGetUUID()) {
         APSARA_LOG_INFO(sLogger, ("get none dmi uuid", "maybe this is a docker runtime"));
     }
 
-    PluginRegistry::GetInstance()->LoadPlugins();
-#ifdef LOGTAIL_RUNTIME_PLUGIN
-    LogtailRuntimePlugin::GetInstance()->LoadPluginBase();
-#endif
+// #ifdef LOGTAIL_RUNTIME_PLUGIN
+//     LogtailRuntimePlugin::GetInstance()->LoadPluginBase();
+// #endif
 
     // load local config first
-    ConfigManager::GetInstance()->GetLocalConfigUpdate();
-    ConfigManager::GetInstance()->LoadConfig(AppConfig::GetInstance()->GetUserConfigPath());
-    PipelineManager::GetInstance()->LoadAllPipelines();
-    ConfigManager::GetInstance()->LoadDockerConfig();
+    // ConfigManager::GetInstance()->GetLocalConfigUpdate();
+    // ConfigManager::GetInstance()->LoadConfig(AppConfig::GetInstance()->GetUserConfigPath());
+    // PipelineManager::GetInstance()->LoadAllPipelines();
+    // ConfigManager::GetInstance()->LoadDockerConfig();
     // mNameConfigMap is empty, configExistFlag is false
-    bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();
+    // bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();
 
     // set max open file limit
     struct rlimit rlimMaxOpenFiles;
@@ -260,26 +261,27 @@ void do_worker_process() {
         InitCrashBackTrace();
     }
 
-    LogtailMonitor::Instance()->InitMonitor();
-    LogFilter::Instance()->InitFilter(STRING_FLAG(user_log_config));
-    Sender::Instance()->InitSender();
-    LogtailPlugin* pPlugin = LogtailPlugin::GetInstance();
-    pPlugin->Resume();
-    ObserverManager::GetInstance()->Reload();
-    CheckPointManager::Instance()->LoadCheckPoint();
+    // LogtailMonitor::Instance()->InitMonitor();
+    // LogFilter::Instance()->InitFilter(STRING_FLAG(user_log_config));
+    // Sender::Instance()->InitSender();
+    // LogtailPlugin* pPlugin = LogtailPlugin::GetInstance();
+    // pPlugin->Resume();
+    // ObserverManager::GetInstance()->Reload();
+    // CheckPointManager::Instance()->LoadCheckPoint();
+    
     // AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();
 
     // added by xianzhi(bowen.gbw@antfin.com)
     // read local data_integrity json file and line count file
-    LogIntegrity::GetInstance()->ReloadIntegrityDataFromLocalFile();
-    LogLineCount::GetInstance()->ReloadLineCountDataFromLocalFile();
+    // LogIntegrity::GetInstance()->ReloadIntegrityDataFromLocalFile();
+    // LogLineCount::GetInstance()->ReloadLineCountDataFromLocalFile();
 
     // Collect application information and write them to app_info.json.
     Json::Value appInfoJson;
     appInfoJson["ip"] = Json::Value(LogFileProfiler::mIpAddr);
     appInfoJson["hostname"] = Json::Value(LogFileProfiler::mHostname);
-    appInfoJson["UUID"] = Json::Value(ConfigManager::GetInstance()->GetUUID());
-    appInfoJson["instance_id"] = Json::Value(ConfigManager::GetInstance()->GetInstanceId());
+    appInfoJson["UUID"] = Json::Value(AppConfig::GetInstance()->GetUUID());
+    appInfoJson["instance_id"] = Json::Value(AppConfig::GetInstance()->GetInstanceId());
     appInfoJson["logtail_version"] = Json::Value(std::string(ILOGTAIL_VERSION) + " Community Edition");
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
 #define STRINGIFY(x) #x
@@ -293,13 +295,18 @@ void do_worker_process() {
     OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
     APSARA_LOG_INFO(sLogger, ("appInfo", appInfo));
 
-    ConfigManager::GetInstance()->InitUpdateConfig(configExistFlag);
-    ConfigManager::GetInstance()->RegisterHandlers();
-    EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
-    APSARA_LOG_INFO(sLogger, ("Logtail started", "initialization completed"));
+// #ifdef __ENTERPRISE__
+//     EnterpriseConfigProvider::GetInstance()->Init();
+// #else
+//     CommonConfigProvider::GetInstance()->Init();
+// #endif
+    // ConfigManager::GetInstance()->RegisterHandlers();
+    // EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
+    // APSARA_LOG_INFO(sLogger, ("Logtail started", "initialization completed"));
 
     // [Main thread] Run the Dispatch routine.
-    EventDispatcher::GetInstance()->Dispatch();
+    // EventDispatcher::GetInstance()->Dispatch();
+    App::GetInstance()->Start();
 }
 
 int main(int argc, char** argv) {

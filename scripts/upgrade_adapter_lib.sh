@@ -31,9 +31,9 @@ function os() {
 os
 
 ROOTDIR=$(cd $(dirname "${BASH_SOURCE[0]}") && cd .. && pwd)
-SOURCEDIR="core/build/plugin"
+SOURCEDIR="core/build/Go_pipeline"
 [[ $# -eq 2 ]] && SOURCEDIR="$1" || :
 
 if [ $OS_FLAG = 1 ]; then
-  cp ${ROOTDIR}/core/build/plugin/libPluginAdapter.so ${ROOTDIR}/pkg/logtail/libPluginAdapter.so
+  cp ${ROOTDIR}/core/build/Go_pipeline/libPluginAdapter.so ${ROOTDIR}/pkg/logtail/libPluginAdapter.so
 fi

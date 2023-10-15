@@ -33,11 +33,11 @@
 #include "common/Thread.h"
 #include "event/Event.h"
 
-DECLARE_FLAG_BOOL(https_verify_peer);
-DECLARE_FLAG_STRING(https_ca_cert);
-DECLARE_FLAG_INT32(request_access_key_interval);
-DECLARE_FLAG_STRING(profile_project_name);
-DECLARE_FLAG_INT32(logtail_sys_conf_update_interval);
+// DECLARE_FLAG_BOOL(https_verify_peer);
+// DECLARE_FLAG_STRING(https_ca_cert);
+// DECLARE_FLAG_INT32(request_access_key_interval);
+// DECLARE_FLAG_STRING(profile_project_name);
+// DECLARE_FLAG_INT32(logtail_sys_conf_update_interval);
 DECLARE_FLAG_STRING(fuse_customized_config_name);
 DECLARE_FLAG_INT32(default_max_depth_from_root);
 DECLARE_FLAG_BOOL(logtail_config_update_enable);
@@ -79,16 +79,34 @@ private:
 
 class ConfigManagerBase {
 protected:
+    // 废弃
+    // volatile bool mRemoveConfigFlag;
+    // int32_t mProcessStartTime;
+    // volatile bool mEnvFlag;
+    // int32_t mRapidUpdateConfigTryCount = 0;
+    // bool LoadGlobalConfig(const Json::Value& jsonRoot);
+    // 蚂蚁废弃
+    // PTMutex mDockerMountPathsLock;
+    // DockerMountPaths mDockerMountPaths;
+    // bool mCollectionMarkFileExistFlag = false;
+    // mutable PTMutex mCollectionMarkLock;
+    // bool mHaveFuseConfigFlag = false;
+    // std::unordered_map<std::string, std::string> mMappingPaths;
+    // PTMutex mMappingPathsLock;
+    // bool mMappingPathsChanged;
+    // bool mHaveMappingPathConfig;
+    // virtual void CreateCustomizedFuseConfig() = 0;
+
     int32_t mStartTime;
 
-    Json::Value mConfigJson;
-    Json::Value mLocalConfigJson;
+    // Json::Value mConfigJson;
+    // Json::Value mLocalConfigJson;
     Json::Value mFileTagsJson;
-    std::unordered_map<std::string, Json::Value> mLocalConfigDirMap;
-    std::unordered_map<std::string, YAML::Node> mYamlConfigDirMap;
+    // std::unordered_map<std::string, Json::Value> mLocalConfigDirMap;
+    // std::unordered_map<std::string, YAML::Node> mYamlConfigDirMap;
 
-    std::unordered_map<std::string, int64_t> mServerYamlConfigVersionMap; // the key is config name
-    std::unordered_map<std::string, int64_t> mYamlConfigMTimeMap; // the key is config name
+    // std::unordered_map<std::string, int64_t> mServerYamlConfigVersionMap; // the key is config name
+    // std::unordered_map<std::string, int64_t> mYamlConfigMTimeMap; // the key is config name
     SpinLock mPluginStatsLock;
     std::unordered_map<std::string, std::unordered_map<std::string, int>> mPluginStats;
 
@@ -96,58 +114,50 @@ protected:
     EventHandler* mSharedHandler;
     // one modify handler corresponds to one "leaf" directory
     std::unordered_map<std::string, EventHandler*> mDirEventHandlerMap;
-    ThreadPtr mUUIDthreadPtr;
-    volatile bool mThreadIsRunning;
-    volatile bool mRemoveConfigFlag;
+    // ThreadPtr mUUIDthreadPtr;
+    // volatile bool mThreadIsRunning;
+    
     volatile CheckUpdateStat mUpdateStat;
     std::vector<EventHandler*> mHandlersToDelete;
 
-    SpinLock mProfileLock;
-    RegionType mRegionType;
+    // SpinLock mProfileLock;
+    // RegionType mRegionType;
 
-    std::string mDefaultPubAliuid;
-    std::string mDefaultPubAccessKeyId;
-    std::string mDefaultPubAccessKey;
+    // std::string mDefaultPubAliuid;
+    // std::string mDefaultPubAccessKeyId;
+    // std::string mDefaultPubAccessKey;
 
-    SpinLock mDefaultPubAKLock;
+    // SpinLock mDefaultPubAKLock;
 
-    std::unordered_map<std::string, UserInfo*> mUserInfos;
-    PTMutex mUserInfosLock;
+    // std::unordered_map<std::string, UserInfo*> mUserInfos;
+    // PTMutex mUserInfosLock;
 
-    std::unordered_map<std::string, std::string> mMappingPaths;
-    PTMutex mMappingPathsLock;
-    bool mMappingPathsChanged;
-    bool mHaveMappingPathConfig;
 
-    volatile bool mEnvFlag;
+    // SpinLock mAliuidSetLock;
+    // std::set<std::string> mAliuidSet;
 
-    SpinLock mAliuidSetLock;
-    std::set<std::string> mAliuidSet;
+    // SpinLock mProjectSetLock;
+    // std::set<std::string> mProjectSet;
 
-    SpinLock mProjectSetLock;
-    std::set<std::string> mProjectSet;
+    // mutable SpinLock mRegionSetLock;
+    // std::set<std::string> mRegionSet;
 
-    mutable SpinLock mRegionSetLock;
-    std::set<std::string> mRegionSet;
+    // SpinLock mUserDefinedIdSetLock;
+    // std::set<std::string> mUserDefinedIdSet;
+    // std::string mUserDefinedId;
 
-    SpinLock mUserDefinedIdSetLock;
-    std::set<std::string> mUserDefinedIdSet;
-    std::string mUserDefinedId;
+    // std::string mDefaultProfileProjectName;
+    // std::string mDefaultProfileRegion;
+    // std::unordered_map<std::string, std::string> mAllProfileProjectNames;
 
-    std::string mDefaultProfileProjectName;
-    std::string mDefaultProfileRegion;
-    // Mapping from region name to related profile project name.
-    std::unordered_map<std::string, std::string> mAllProfileProjectNames;
+    // int32_t mLogtailSysConfUpdateTime;
+    // std::string mUUID;
+    // std::string mInstanceId;
 
-    int32_t mRapidUpdateConfigTryCount = 0;
-    int32_t mLogtailSysConfUpdateTime;
-    std::string mUUID;
-    std::string mInstanceId;
-    int32_t mProcessStartTime;
-    std::atomic_int mConfigUpdateTotal{0};
-    std::atomic_int mConfigUpdateItemTotal{0};
-    std::atomic_int mLastConfigUpdateTime{0};
-    std::atomic_int mLastConfigGetTime{0};
+    // std::atomic_int mConfigUpdateTotal{0};
+    // std::atomic_int mConfigUpdateItemTotal{0};
+    // std::atomic_int mLastConfigUpdateTime{0};
+    // std::atomic_int mLastConfigGetTime{0};
 
     SpinLock mCacheFileConfigMapLock;
     // value : best config, multi config last alarmTime, and if alarmTime is 0, it means no multi config
@@ -168,40 +178,30 @@ protected:
      */
     std::unordered_map<std::string, std::shared_ptr<std::vector<DockerContainerPath>>> mAllDockerContainerPathMap;
 
-    PTMutex mDockerMountPathsLock;
-    DockerMountPaths mDockerMountPaths;
 
-    bool mCollectionMarkFileExistFlag = false;
-    mutable PTMutex mCollectionMarkLock;
 
-    bool mHaveFuseConfigFlag = false;
+    // PTMutex mRegionAliuidMapLock;
+    // std::map<std::string, std::set<std::string>> mRegionAliuidMap;
 
-    PTMutex mRegionAliuidMapLock;
-    std::map<std::string, std::set<std::string>> mRegionAliuidMap;
 
-    /**
-     * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map
-     * @return
-     */
-    virtual void CreateCustomizedFuseConfig() = 0;
 
     ConfigManagerBase();
     virtual ~ConfigManagerBase();
 
-    bool GetUUIDThread();
+    // bool GetUUIDThread();
 
-    void SetUUID(std::string uuid) {
-        mProfileLock.lock();
-        mUUID = uuid;
-        mProfileLock.unlock();
-        return;
-    }
+    // void SetUUID(std::string uuid) {
+    //     mProfileLock.lock();
+    //     mUUID = uuid;
+    //     mProfileLock.unlock();
+    //     return;
+    // }
 
-    bool LoadGlobalConfig(const Json::Value& jsonRoot);
-    bool DumpConfigToLocal(std::string fileName, const Json::Value& configJson);
 
-    void SetDefaultProfileProjectName(const std::string& profileProjectName);
-    void SetProfileProjectName(const std::string& region, const std::string& profileProject);
+    // bool DumpConfigToLocal(std::string fileName, const Json::Value& configJson);
+
+    // void SetDefaultProfileProjectName(const std::string& profileProjectName);
+    // void SetProfileProjectName(const std::string& region, const std::string& profileProject);
 
     /**
      * delete mHandlersToDelete and mReaderToDelete
@@ -209,20 +209,50 @@ protected:
     void DeleteHandlers();
 
 public:
-    // @configExistFlag indicates if there are loaded configs before calling.
-    virtual void InitUpdateConfig(bool configExistFlag);
+    // 废弃
+    // virtual void InitUpdateConfig(bool configExistFlag);
+    // void SetConfigRemoveFlag(bool flag) {
+    //     ReadWriteBarrier();
+    //     mRemoveConfigFlag = flag;
+    // }
+    // bool GetConfigRemoveFlag() {
+    //     ReadWriteBarrier();
+    //     return mRemoveConfigFlag;
+    // }
+    // bool IsEnvConfig() { return mEnvFlag; }
+    // void RestLastConfigTime();
+    // void CorrectionLogtailSysConfDir();
+    // 蚂蚁废弃
+    // bool HaveFuseConfig() { return mHaveFuseConfigFlag; }
+    // int32_t UpdateConfigJson(const std::string& configJson);
+    // bool NeedReloadMappingConfig() { return mHaveMappingPathConfig && mMappingPathsChanged; }
+    // void SetMappingPathsChanged() { mMappingPathsChanged = true; }
+    // void ReloadMappingConfig();
+    // std::string GetMappingPath(const std::string& id);
+    // bool LoadMountPaths();
+    // DockerMountPaths GetMountPaths();
+    // void SetCollectionMarkFileExistFlag(bool flag) {
+    //     PTScopedLock lock(mCollectionMarkLock);
+    //     mCollectionMarkFileExistFlag = flag;
+    // }
+    // bool GetCollectionMarkFileExistFlag() const {
+    //     PTScopedLock lock(mCollectionMarkLock);
+    //     return mCollectionMarkFileExistFlag;
+    // }
+    // virtual void SetStartWorkerStatus(const std::string& result, const std::string& message) = 0;
+
     bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond);
 
-    bool TryGetUUID();
+    // bool TryGetUUID();
 
     int32_t GetStartTime() { return mStartTime; }
 
-    int32_t GetConfigUpdateTotalCount();
-    int32_t GetConfigUpdateItemTotalCount();
-    int32_t GetLastConfigUpdateTime();
-    int32_t GetLastConfigGetTime();
+    // int32_t GetConfigUpdateTotalCount();
+    // int32_t GetConfigUpdateItemTotalCount();
+    // int32_t GetLastConfigUpdateTime();
+    // int32_t GetLastConfigGetTime();
 
-    void RestLastConfigTime();
+    
 
     /** Read configuration, detect any format errors.
      *
@@ -251,68 +281,65 @@ public:
     bool RegisterHandlers(const std::string& basePath, Config* config);
     bool RegisterHandlers();
     bool RegisterHandlersRecursively(const std::string& dir, Config* config, bool checkTimeout);
-    /**
-     * @brief HasFuseConfig
-     * @return true if global fuse flag is true and there is
-     */
-    bool HaveFuseConfig() { return mHaveFuseConfigFlag; }
 
-    virtual bool UpdateAccessKey(const std::string& aliuid,
-                                 std::string& accessKeyId,
-                                 std::string& accessKey,
-                                 int32_t& lastUpdateTime)
-        = 0;
+    
 
-    int32_t GetUserAK(const std::string& aliuid, std::string& accessKeyId, std::string& accessKey);
-    void SetUserAK(const std::string& aliuid, const std::string& accessKeyId, const std::string& accessKey);
-    virtual void CleanUnusedUserAK() = 0;
+    // virtual bool UpdateAccessKey(const std::string& aliuid,
+    //                              std::string& accessKeyId,
+    //                              std::string& accessKey,
+    //                              int32_t& lastUpdateTime)
+    //     = 0;
 
-    std::string GetDefaultPubAliuid();
-    void SetDefaultPubAliuid(const std::string& aliuid);
+    // int32_t GetUserAK(const std::string& aliuid, std::string& accessKeyId, std::string& accessKey);
+    // void SetUserAK(const std::string& aliuid, const std::string& accessKeyId, const std::string& accessKey);
+    // virtual void CleanUnusedUserAK() = 0;
 
-    std::string GetDefaultPubAccessKeyId();
-    void SetDefaultPubAccessKeyId(const std::string& accessKeyId);
+    // std::string GetDefaultPubAliuid();
+    // void SetDefaultPubAliuid(const std::string& aliuid);
 
-    std::string GetDefaultPubAccessKey();
-    void SetDefaultPubAccessKey(const std::string& accessKey);
+    // std::string GetDefaultPubAccessKeyId();
+    // void SetDefaultPubAccessKeyId(const std::string& accessKeyId);
 
-    std::string GetProfileProjectName(const std::string& region, bool* existFlag = NULL);
+    // std::string GetDefaultPubAccessKey();
+    // void SetDefaultPubAccessKey(const std::string& accessKey);
 
-    std::string GetUUID() {
-        mProfileLock.lock();
-        std::string uuid(mUUID);
-        mProfileLock.unlock();
-        return uuid;
-    }
+    // std::string GetProfileProjectName(const std::string& region, bool* existFlag = NULL);
 
-    std::string GetInstanceId() { return mInstanceId; }
+    // std::string GetUUID() {
+    //     mProfileLock.lock();
+    //     std::string uuid(mUUID);
+    //     mProfileLock.unlock();
+    //     return uuid;
+    // }
 
-    void InsertAliuidSet(const std::string& aliuid);
-    void SetAliuidSet(const std::vector<std::string>& aliuidList);
-    void GetAliuidSet(Json::Value& aliuidArray);
-    std::string GetAliuidSet();
+    // std::string GetInstanceId() { return mInstanceId; }
 
-    void SetUserDefinedIdSet(const std::vector<std::string>& userDefinedIdList);
-    void GetUserDefinedIdSet(Json::Value& userDefinedIdArray);
-    std::string GetUserDefinedIdSet();
+    // void InsertAliuidSet(const std::string& aliuid);
+    // void SetAliuidSet(const std::vector<std::string>& aliuidList);
+    // void GetAliuidSet(Json::Value& aliuidArray);
+    // std::string GetAliuidSet();
 
-    RegionType GetRegionType() { return mRegionType; }
+    // void SetUserDefinedIdSet(const std::vector<std::string>& userDefinedIdList);
+    // void GetUserDefinedIdSet(Json::Value& userDefinedIdArray);
+    // std::string GetUserDefinedIdSet();
 
-    bool CheckRegion(const std::string& region) const;
+    // RegionType GetRegionType() { return mRegionType; }
 
-    void GetAllProfileRegion(std::vector<std::string>& allRegion);
-    std::string GetDefaultProfileProjectName();
-    void SetDefaultProfileRegion(const std::string& profileRegion);
-    std::string GetDefaultProfileRegion();
+    // bool CheckRegion(const std::string& region) const;
+
+    // void GetAllProfileRegion(std::vector<std::string>& allRegion);
+    // std::string GetDefaultProfileProjectName();
+    // void SetDefaultProfileRegion(const std::string& profileRegion);
+    // std::string GetDefaultProfileRegion();
 
     /**
      * @brief Reload aliuid/user_defined_id from disk&env
      *
      */
-    void ReloadLogtailSysConf();
-    void CorrectionAliuidFile(const Json::Value& aliuidArray);
-    void CorrectionAliuidFile();
-    void CorrectionLogtailSysConfDir();
+    // void ReloadLogtailSysConf();
+    // void CorrectionAliuidFile(const Json::Value& aliuidArray);
+    // void CorrectionAliuidFile();
+    
 
     void GetAllPluginConfig(std::vector<Config*>& configVec);
     void GetAllObserverConfig(std::vector<Config*>& configVec);
@@ -356,15 +383,7 @@ public:
     void RemoveHandler(const std::string& dir, bool delete_flag = true);
 
 
-    void SetConfigRemoveFlag(bool flag) {
-        ReadWriteBarrier();
-        mRemoveConfigFlag = flag;
-    }
 
-    bool GetConfigRemoveFlag() {
-        ReadWriteBarrier();
-        return mRemoveConfigFlag;
-    }
 
     void StartUpdateConfig() {
         ReadWriteBarrier();
@@ -385,33 +404,18 @@ public:
 
     void AddHandlerToDelete(EventHandler*);
 
-    Json::Value& GetConfigJson() { return mConfigJson; }
-
-    Json::Value& GetLocalConfigJson() { return mLocalConfigJson; }
-
-    /**
-     * @brief Load configs from file and dir in SysConfDir
-     *
-     * @return true config changed
-     * @return false no update
-     */
-    bool GetLocalConfigUpdate();
-
-    int32_t UpdateConfigJson(const std::string& configJson);
+    // Json::Value& GetConfigJson() { return mConfigJson; }
+    // Json::Value& GetLocalConfigJson() { return mLocalConfigJson; }
+    // bool GetLocalConfigUpdate();
 
     void RemoveAllConfigs();
+    void ClearFilePipelineMatchCache();
 
     void ClearConfigMatchCache();
 
-    bool NeedReloadMappingConfig() { return mHaveMappingPathConfig && mMappingPathsChanged; }
+    // virtual bool GetRegionStatus(const std::string& region) = 0;
 
-    void SetMappingPathsChanged() { mMappingPathsChanged = true; }
 
-    virtual bool GetRegionStatus(const std::string& region) = 0;
-
-    void ReloadMappingConfig();
-
-    std::string GetMappingPath(const std::string& id);
 
     // TODO: Move it to Config.
     bool MatchDirPattern(const Config* config, const std::string& dir);
@@ -421,7 +425,7 @@ public:
 
     bool RegisterDirectory(const std::string& source, const std::string& object);
 
-    std::string GetAllProjectsSet();
+    // std::string GetAllProjects();
 
     bool UpdateContainerPath(DockerContainerPathCmd* cmd);
     bool IsUpdateContainerPaths();
@@ -434,32 +438,6 @@ public:
 
     void LoadDockerConfig();
 
-    bool IsEnvConfig() { return mEnvFlag; }
-
-    /**
-     * @brief LoadMountPaths
-     * @return true if logtail is in container mode and mount paths is changed
-     */
-    bool LoadMountPaths();
-
-    /**
-     * @brief GetMountPaths
-     * @return
-     */
-    DockerMountPaths GetMountPaths();
-
-    void SetCollectionMarkFileExistFlag(bool flag) {
-        PTScopedLock lock(mCollectionMarkLock);
-        mCollectionMarkFileExistFlag = flag;
-    }
-
-    bool GetCollectionMarkFileExistFlag() const {
-        PTScopedLock lock(mCollectionMarkLock);
-        return mCollectionMarkFileExistFlag;
-    }
-
-    virtual void SetStartWorkerStatus(const std::string& result, const std::string& message) = 0;
-
     virtual std::string CheckPluginFlusher(Json::Value& configJson) = 0;
 
     virtual Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson) = 0;
@@ -470,18 +448,18 @@ public:
 
     void UpdateFileTags();
 
-    const std::set<std::string>& GetRegionAliuids(const std::string& region);
-    void InsertRegionAliuidMap(const std::string& region, const std::string& aliuid);
-    void ClearRegionAliuidMap();
+    // const std::set<std::string>& GetRegionAliuids(const std::string& region);
+    // void InsertRegionAliuidMap(const std::string& region, const std::string& aliuid);
+    // void ClearRegionAliuidMap();
 
 private:
     // no copy
     ConfigManagerBase(const ConfigManagerBase&);
     ConfigManagerBase& operator=(const ConfigManagerBase&);
 
-    void InsertRegion(const std::string& region);
+    // void InsertRegion(const std::string& region);
 
-    void ClearRegions();
+    // void ClearRegions();
     /** XXX: path is not registered in this method
      * @param path is the current dir that being registered
      * @depth is the num of sub dir layers that should be registered
@@ -494,32 +472,14 @@ private:
     void GetRegexAndKeys(const Json::Value& value, Config* configPtr);
     void GetSensitiveKeys(const Json::Value& value, Config* pConfig);
     bool IsMeaningfulFlusher(const Json::Value& flusherConfig);
-    /**
-     * @brief Load user_local_config.json from sys_conf_dir
-     *
-     * @return true config changed
-     * @return false no update
-     */
-    bool GetLocalConfigFileUpdate();
-    /**
-     * @brief Load *.json from user_config.d
-     *
-     * @return true config changed
-     * @return false no update
-     */
-    bool GetLocalConfigDirUpdate();
-    /**
-     * @brief Load *.yaml from user_yaml_config.d
-     *
-     * @return true config changed
-     * @return false no update
-     */
-    bool GetYamlConfigDirUpdate();
-    bool CheckYamlDirConfigUpdate(const std::string& configDirPath,
-                                  bool isRemote,
-                                  std::vector<std::string>& filepathes,
-                                  std::unordered_map<std::string, int64_t>& yamlConfigMTimeMap,
-                                  bool createIfNotExist);
+    // bool GetLocalConfigFileUpdate();
+    // bool GetLocalConfigDirUpdate();
+    // bool GetYamlConfigDirUpdate();
+    // bool CheckYamlDirConfigUpdate(const std::string& configDirPath,
+    //                               bool isRemote,
+    //                               std::vector<std::string>& filepathes,
+    //                               std::unordered_map<std::string, int64_t>& yamlConfigMTimeMap,
+    //                               bool createIfNotExist);
 
     /**
      * @brief Load a single data collection config and insert it into mNameConfigMap with name @name.
@@ -537,9 +497,9 @@ private:
 
     void MappingPluginConfig(const Json::Value& configValue, Config* config, Json::Value& pluginJson);
 
-    void InsertProject(const std::string& project);
+    // void InsertProject(const std::string& project);
 
-    void ClearProjects();
+    // void ClearProjects();
 
     class DoubleBuffer <std::vector<sls_logs::LogTag>>mFileTags;
 

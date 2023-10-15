@@ -65,10 +65,10 @@ public:
         srand(time(NULL));
     }
 
-    void* RunningDispatcher() {
-        EventDispatcher::GetInstance()->Dispatch();
-        return NULL;
-    }
+    // void* RunningDispatcher() {
+    //     EventDispatcher::GetInstance()->Dispatch();
+    //     return NULL;
+    // }
 
     Config* GetCastSensWordConfig(string key = string("cast1"),
                                   string regex = string("(pwd=)[^,]+"),
@@ -546,125 +546,125 @@ public:
         logGroup.Clear();
         LOG_INFO(sLogger, ("TestFilter() end", time(NULL)));
     }
-    void TestCategoryFilter() {
-        LOG_INFO(sLogger, ("TestCategoryFilter() begin", time(NULL)));
-        Json::Value rootJson;
-        //"slb_aliyun"
-        Json::Value slb_aliyun;
-        string gRootDir = GetProcessExecutionDir();
-        if (PATH_SEPARATOR[0] == gRootDir.at(gRootDir.size() - 1))
-            gRootDir.resize(gRootDir.size() - 1);
-        gRootDir += PATH_SEPARATOR + "ilogtailLogFilterUnittest";
-        bfs::remove_all(gRootDir);
-        bfs::remove_all("log_file_out");
-        bfs::remove_all("ilogtail_config.json");
-        bfs::create_directories(gRootDir);
-        string subDir = gRootDir + logtail::PATH_SEPARATOR + "Job";
-        bfs::create_directories(subDir);
-        subDir = gRootDir + logtail::PATH_SEPARATOR + "Service";
-        bfs::create_directories(subDir);
+//     void TestCategoryFilter() {
+//         LOG_INFO(sLogger, ("TestCategoryFilter() begin", time(NULL)));
+//         Json::Value rootJson;
+//         //"slb_aliyun"
+//         Json::Value slb_aliyun;
+//         string gRootDir = GetProcessExecutionDir();
+//         if (PATH_SEPARATOR[0] == gRootDir.at(gRootDir.size() - 1))
+//             gRootDir.resize(gRootDir.size() - 1);
+//         gRootDir += PATH_SEPARATOR + "ilogtailLogFilterUnittest";
+//         bfs::remove_all(gRootDir);
+//         bfs::remove_all("log_file_out");
+//         bfs::remove_all("ilogtail_config.json");
+//         bfs::create_directories(gRootDir);
+//         string subDir = gRootDir + logtail::PATH_SEPARATOR + "Job";
+//         bfs::create_directories(subDir);
+//         subDir = gRootDir + logtail::PATH_SEPARATOR + "Service";
+//         bfs::create_directories(subDir);
 
-        Json::Value regs;
-        regs.append(Json::Value("(\\S+) (\\S+) (\\S+)"));
-        Json::Value keys;
-        keys.append(Json::Value("time,key1,key2"));
+//         Json::Value regs;
+//         regs.append(Json::Value("(\\S+) (\\S+) (\\S+)"));
+//         Json::Value keys;
+//         keys.append(Json::Value("time,key1,key2"));
 
-        slb_aliyun["project_name"] = Json::Value("40000010_proj");
-        slb_aliyun["category"] = Json::Value("40000010_category");
-        slb_aliyun["log_type"] = Json::Value("common_reg_log");
-        slb_aliyun["log_path"] = Json::Value(gRootDir + PATH_SEPARATOR + "Job");
-        SetConfigFilePattern(slb_aliyun);
-        slb_aliyun["timeformat"] = Json::Value("%d/%b/%Y:%H:%M:%S");
-        slb_aliyun["enable"] = Json::Value(true);
-        slb_aliyun["preserve"] = Json::Value(false);
-        slb_aliyun["preserve_depth"] = Json::Value(2);
-        slb_aliyun["regex"] = regs;
-        slb_aliyun["keys"] = keys;
-        Json::Value filterRegs;
-        filterRegs.append(Json::Value(".*value1.*"));
-        filterRegs.append(Json::Value(".*value2.*"));
-        Json::Value filterKeys;
-        filterKeys.append(Json::Value("key1"));
-        filterKeys.append(Json::Value("key2"));
-        slb_aliyun["filter_keys"] = filterKeys;
-        slb_aliyun["filter_regs"] = filterRegs;
-        rootJson["slb_aliyun"] = slb_aliyun;
-        Json::Value aliyun_com;
-        aliyun_com["project_name"] = Json::Value("41000000_proj");
-        aliyun_com["category"] = Json::Value("41000000_category");
-        aliyun_com["log_type"] = Json::Value("common_reg_log");
-        aliyun_com["log_path"] = Json::Value(gRootDir + PATH_SEPARATOR + "Service");
-        aliyun_com["timeformat"] = Json::Value("%d/%b/%Y:%H:%M:%S");
-        SetConfigFilePattern(aliyun_com);
-        aliyun_com["enable"] = Json::Value(true);
-        aliyun_com["preserve"] = Json::Value(true);
-        aliyun_com["regex"] = regs;
-        aliyun_com["keys"] = keys;
-        rootJson["aliyun.com"] = aliyun_com;
+//         slb_aliyun["project_name"] = Json::Value("40000010_proj");
+//         slb_aliyun["category"] = Json::Value("40000010_category");
+//         slb_aliyun["log_type"] = Json::Value("common_reg_log");
+//         slb_aliyun["log_path"] = Json::Value(gRootDir + PATH_SEPARATOR + "Job");
+//         SetConfigFilePattern(slb_aliyun);
+//         slb_aliyun["timeformat"] = Json::Value("%d/%b/%Y:%H:%M:%S");
+//         slb_aliyun["enable"] = Json::Value(true);
+//         slb_aliyun["preserve"] = Json::Value(false);
+//         slb_aliyun["preserve_depth"] = Json::Value(2);
+//         slb_aliyun["regex"] = regs;
+//         slb_aliyun["keys"] = keys;
+//         Json::Value filterRegs;
+//         filterRegs.append(Json::Value(".*value1.*"));
+//         filterRegs.append(Json::Value(".*value2.*"));
+//         Json::Value filterKeys;
+//         filterKeys.append(Json::Value("key1"));
+//         filterKeys.append(Json::Value("key2"));
+//         slb_aliyun["filter_keys"] = filterKeys;
+//         slb_aliyun["filter_regs"] = filterRegs;
+//         rootJson["slb_aliyun"] = slb_aliyun;
+//         Json::Value aliyun_com;
+//         aliyun_com["project_name"] = Json::Value("41000000_proj");
+//         aliyun_com["category"] = Json::Value("41000000_category");
+//         aliyun_com["log_type"] = Json::Value("common_reg_log");
+//         aliyun_com["log_path"] = Json::Value(gRootDir + PATH_SEPARATOR + "Service");
+//         aliyun_com["timeformat"] = Json::Value("%d/%b/%Y:%H:%M:%S");
+//         SetConfigFilePattern(aliyun_com);
+//         aliyun_com["enable"] = Json::Value(true);
+//         aliyun_com["preserve"] = Json::Value(true);
+//         aliyun_com["regex"] = regs;
+//         aliyun_com["keys"] = keys;
+//         rootJson["aliyun.com"] = aliyun_com;
 
-        // set the logtail dump data to local file
-        STRING_FLAG(logtail_send_address) = "file";
+//         // set the logtail dump data to local file
+//         STRING_FLAG(logtail_send_address) = "file";
 
-        Json::Value metrics;
-        metrics["metrics"] = rootJson;
-        ofstream fout("user_log_config.json");
-        fout << metrics << endl;
-        fout.close();
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
-        ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
-        ThreadPtr threadPtr = CreateThread(bind(&LogFilterUnittest::RunningDispatcher, this));
-        Sender::Instance()->InitSender();
-        sleep(3);
-        string path[] = {gRootDir + PATH_SEPARATOR + "Job" + PATH_SEPARATOR,
-                         gRootDir + PATH_SEPARATOR + "Service" + PATH_SEPARATOR};
-        rmdir("log_file_out");
-        string logs[]
-            = {" xvalue1y xvalue2y\n", " xvalue1y xvalue2y\n", " xvalue3y xvalue3y\n", " xvalue4y xvalue4y\n"};
-        for (int i = 0; i < 2; ++i) {
-            char timeBuffer[50];
-            struct tm timeInfo;
-            time_t cur = time(NULL);
-#if defined(__linux__)
-            localtime_r(&cur, &timeInfo);
-#elif defined(_MSC_VER)
-            localtime_s(&timeInfo, &cur);
-#endif
-            strftime(timeBuffer, sizeof(timeBuffer), "%d/%b/%Y:%R:%S", &timeInfo);
+//         Json::Value metrics;
+//         metrics["metrics"] = rootJson;
+//         ofstream fout("user_log_config.json");
+//         fout << metrics << endl;
+//         fout.close();
+//         AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
+//         ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
+//         ThreadPtr threadPtr = CreateThread(bind(&LogFilterUnittest::RunningDispatcher, this));
+//         Sender::Instance()->InitSender();
+//         sleep(3);
+//         string path[] = {gRootDir + PATH_SEPARATOR + "Job" + PATH_SEPARATOR,
+//                          gRootDir + PATH_SEPARATOR + "Service" + PATH_SEPARATOR};
+//         rmdir("log_file_out");
+//         string logs[]
+//             = {" xvalue1y xvalue2y\n", " xvalue1y xvalue2y\n", " xvalue3y xvalue3y\n", " xvalue4y xvalue4y\n"};
+//         for (int i = 0; i < 2; ++i) {
+//             char timeBuffer[50];
+//             struct tm timeInfo;
+//             time_t cur = time(NULL);
+// #if defined(__linux__)
+//             localtime_r(&cur, &timeInfo);
+// #elif defined(_MSC_VER)
+//             localtime_s(&timeInfo, &cur);
+// #endif
+//             strftime(timeBuffer, sizeof(timeBuffer), "%d/%b/%Y:%R:%S", &timeInfo);
 
-            ofstream fout((path[i] + "a.log").c_str());
-            for (int j = 0; j < 4; ++j) {
-                string log = timeBuffer + logs[j];
-                fout << log;
-            }
-            fout.flush();
-            fout.close();
-            sleep(1);
-        }
-        sleep(10);
-        ifstream fin("log_file_out");
-        char result[1025];
-        vector<string> lines;
-        while (fin.getline(result, 1024)) {
-            string log = result;
-            if (log.find("key") != string::npos)
-                lines.push_back(log);
-        }
-        APSARA_TEST_EQUAL(lines.size(), 6);
-        if (lines.size() == 6) {
-            for (int i = 0; i < 2; ++i) {
-                APSARA_TEST_TRUE_DESC(lines[i].find("value1") != string::npos, lines[i]);
-                APSARA_TEST_TRUE_DESC(lines[i].find("value2") != string::npos, lines[i]);
-            }
-            for (int i = 2; i < 6; ++i) {
-                APSARA_TEST_TRUE(lines[i].find("value" + ToString(i - 1)) != string::npos);
-            }
-        }
-        threadPtr->GetValue(1000);
-        sleep(2);
-        // clean the config file produced by this case
-        bfs::remove_all("ilogtail_config.json");
-        LOG_INFO(sLogger, ("TestCategoryFilter() end", time(NULL)));
-    }
+//             ofstream fout((path[i] + "a.log").c_str());
+//             for (int j = 0; j < 4; ++j) {
+//                 string log = timeBuffer + logs[j];
+//                 fout << log;
+//             }
+//             fout.flush();
+//             fout.close();
+//             sleep(1);
+//         }
+//         sleep(10);
+//         ifstream fin("log_file_out");
+//         char result[1025];
+//         vector<string> lines;
+//         while (fin.getline(result, 1024)) {
+//             string log = result;
+//             if (log.find("key") != string::npos)
+//                 lines.push_back(log);
+//         }
+//         APSARA_TEST_EQUAL(lines.size(), 6);
+//         if (lines.size() == 6) {
+//             for (int i = 0; i < 2; ++i) {
+//                 APSARA_TEST_TRUE_DESC(lines[i].find("value1") != string::npos, lines[i]);
+//                 APSARA_TEST_TRUE_DESC(lines[i].find("value2") != string::npos, lines[i]);
+//             }
+//             for (int i = 2; i < 6; ++i) {
+//                 APSARA_TEST_TRUE(lines[i].find("value" + ToString(i - 1)) != string::npos);
+//             }
+//         }
+//         threadPtr->GetValue(1000);
+//         sleep(2);
+//         // clean the config file produced by this case
+//         bfs::remove_all("ilogtail_config.json");
+//         LOG_INFO(sLogger, ("TestCategoryFilter() end", time(NULL)));
+//     }
     // APSARA_UNIT_TEST_CASE(TestCategoryFilter,0);
 
     static const char UTF8_BYTE_PREFIX = 0x80;

@@ -41,7 +41,7 @@
 #include "app_config/AppConfig.h"
 #include "config_manager/ConfigManager.h"
 #include "common/LogFileCollectOffsetIndicator.h"
-#include "fuse/UlogfsHandler.h"
+// #include "fuse/UlogfsHandler.h"
 #include "sender/Sender.h"
 #include "GloablFileDescriptorManager.h"
 #include "event/BlockEventManager.h"
@@ -49,13 +49,13 @@
 using namespace sls_logs;
 using namespace std;
 
-DEFINE_FLAG_INT32(delay_bytes_upperlimit,
-                  "if (total_file_size - current_readed_size) exceed uppperlimit, send READ_LOG_DELAY_ALARM, bytes",
-                  200 * 1024 * 1024);
+// DEFINE_FLAG_INT32(delay_bytes_upperlimit,
+//                   "if (total_file_size - current_readed_size) exceed uppperlimit, send READ_LOG_DELAY_ALARM, bytes",
+//                   200 * 1024 * 1024);
 DEFINE_FLAG_INT32(read_delay_alarm_duration,
                   "if read delay elapsed this duration, send READ_LOG_DELAY_ALARM, seconds",
                   60);
-DEFINE_FLAG_INT32(reader_close_unused_file_time, "second ", 60);
+// DEFINE_FLAG_INT32(reader_close_unused_file_time, "second ", 60);
 DEFINE_FLAG_INT32(skip_first_modify_time, "second ", 5 * 60);
 DEFINE_FLAG_INT32(max_reader_open_files, "max fd count that reader can open max", 100000);
 DEFINE_FLAG_INT32(truncate_pos_skip_bytes, "skip more xx bytes when truncate", 0);
@@ -1796,8 +1796,8 @@ bool LogFileReader::GetRawData(LogBuffer& logBuffer, int64_t fileSize, bool allo
         fileInfo->fileSize = fileSize;
     }
 
-    if (mIsFuseMode && logBuffer.rawBuffer.size() > 0)
-        UlogfsHandler::GetInstance()->Sparse(logBuffer.fileInfo.get());
+    // if (mIsFuseMode && logBuffer.rawBuffer.size() > 0)
+    //     UlogfsHandler::GetInstance()->Sparse(logBuffer.fileInfo.get());
 
     if (mContainerStopped) {
         int32_t curTime = time(NULL);
@@ -2094,29 +2094,29 @@ LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& of
     }
 
     int nbytes = 0;
-    if (mIsFuseMode) {
-        int64_t oriOffset = offset;
-        nbytes = op.SkipHoleRead(buf, 1, size, &offset);
-        if (nbytes < 0) {
-            LOG_ERROR(sLogger,
-                      ("SkipHoleRead fail to read log file",
-                       mHostLogPath)("mLastFilePos", mLastFilePos)("size", size)("offset", offset));
-            return 0;
-        }
-        if (oriOffset != offset && truncateInfo != NULL) {
-            *truncateInfo = new TruncateInfo(oriOffset, offset);
-            LOG_INFO(sLogger,
-                     ("read fuse file with a hole, size",
-                      offset - oriOffset)("filename", mHostLogPath)("dev", mDevInode.dev)("inode", mDevInode.inode));
-            LogtailAlarm::GetInstance()->SendAlarm(
-                FUSE_FILE_TRUNCATE_ALARM,
-                string("read fuse file with a hole, size: ") + ToString(offset - oriOffset) + " filename: "
-                    + mHostLogPath + " dev: " + ToString(mDevInode.dev) + " inode: " + ToString(mDevInode.inode),
-                mProjectName,
-                mCategory,
-                mRegion);
-        }
-    } else {
+    // if (mIsFuseMode) {
+    //     int64_t oriOffset = offset;
+    //     nbytes = op.SkipHoleRead(buf, 1, size, &offset);
+    //     if (nbytes < 0) {
+    //         LOG_ERROR(sLogger,
+    //                   ("SkipHoleRead fail to read log file",
+    //                    mHostLogPath)("mLastFilePos", mLastFilePos)("size", size)("offset", offset));
+    //         return 0;
+    //     }
+    //     if (oriOffset != offset && truncateInfo != NULL) {
+    //         *truncateInfo = new TruncateInfo(oriOffset, offset);
+    //         LOG_INFO(sLogger,
+    //                  ("read fuse file with a hole, size",
+    //                   offset - oriOffset)("filename", mHostLogPath)("dev", mDevInode.dev)("inode", mDevInode.inode));
+    //         LogtailAlarm::GetInstance()->SendAlarm(
+    //             FUSE_FILE_TRUNCATE_ALARM,
+    //             string("read fuse file with a hole, size: ") + ToString(offset - oriOffset) + " filename: "
+    //                 + mHostLogPath + " dev: " + ToString(mDevInode.dev) + " inode: " + ToString(mDevInode.inode),
+    //             mProjectName,
+    //             mCategory,
+    //             mRegion);
+    //     }
+    // } else {
         nbytes = op.Pread(buf, 1, size, offset);
         if (nbytes < 0) {
             LOG_ERROR(sLogger,
@@ -2124,7 +2124,7 @@ LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& of
                                                                     mLastFilePos)("size", size)("offset", offset));
             return 0;
         }
-    }
+    // }
 
     *((char*)buf + nbytes) = '\0';
     return nbytes;

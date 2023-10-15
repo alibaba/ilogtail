@@ -20,6 +20,7 @@
 #include <future>
 #include <utility>
 #include <functional>
+#include "boost/thread.hpp"
 
 namespace logtail {
 

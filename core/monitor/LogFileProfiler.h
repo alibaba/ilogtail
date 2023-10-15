@@ -21,7 +21,6 @@
 #include <unordered_map>
 #include <map>
 #include <json/json.h>
-#include "profile_sender/ProfileSender.h"
 #include "log_pb/sls_logs.pb.h"
 
 namespace sls_logs {
@@ -217,7 +216,6 @@ private:
     // key : region, value :unordered_map<std::string, LogStoreStatistic*>
     std::map<std::string, LogstoreSenderStatisticsMap*> mAllStatisticsMap;
     std::mutex mStatisticLock;
-    ProfileSender mProfileSender;
 
     LogFileProfiler();
     ~LogFileProfiler() {}

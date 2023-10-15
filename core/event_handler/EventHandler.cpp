@@ -28,7 +28,7 @@
 #include "monitor/LogtailAlarm.h"
 #include "processor/LogProcess.h"
 #include "logger/Logger.h"
-#include "fuse/FuseFileBlacklist.h"
+// #include "fuse/FuseFileBlacklist.h"
 #include "common/LogFileCollectOffsetIndicator.h"
 #include "LogInput.h"
 
@@ -130,14 +130,14 @@ void NormalEventHandler::Handle(const Event& event) {
             // from now on, it's ret who is responsible for this directory
             // And when it's timeout configmanager will delete it
 
-            if (ConfigManager::GetInstance()->HaveFuseConfig()) {
-                FuseFileBlacklist::GetInstance()->RemoveFromBlackList(PathJoin(path, name));
-            }
+            // if (ConfigManager::GetInstance()->HaveFuseConfig()) {
+            //     FuseFileBlacklist::GetInstance()->RemoveFromBlackList(PathJoin(path, name));
+            // }
         } else {
             // cannot find config, add to black list
-            if (ConfigManager::GetInstance()->HaveFuseConfig()) {
-                FuseFileBlacklist::GetInstance()->AddToBlacklist(PathJoin(path, name));
-            }
+            // if (ConfigManager::GetInstance()->HaveFuseConfig()) {
+            //     FuseFileBlacklist::GetInstance()->AddToBlacklist(PathJoin(path, name));
+            // }
         }
     }
 }
@@ -218,7 +218,7 @@ CreateModifyHandler::~CreateModifyHandler() {
 void CreateModifyHandler::Handle(const Event& event) {
     bool isDir = false;
     auto path = std::string(event.GetSource()).append(PATH_SEPARATOR).append(event.GetObject());
-    bool fuseFlag = ConfigManager::GetInstance()->HaveFuseConfig();
+    // bool fuseFlag = ConfigManager::GetInstance()->HaveFuseConfig();
 
     if (event.IsDir()) {
         isDir = true;
@@ -265,10 +265,10 @@ void CreateModifyHandler::Handle(const Event& event) {
                 ConfigManager::GetInstance()->FindMatchWithForceFlag(pConfigVec, event.GetSource(), event.GetObject());
             }
 
-            if (pConfigVec.empty() && fuseFlag) {
-                FuseFileBlacklist::GetInstance()->AddToBlacklist(path);
-                return;
-            }
+            // if (pConfigVec.empty() && fuseFlag) {
+            //     FuseFileBlacklist::GetInstance()->AddToBlacklist(path);
+            //     return;
+            // }
 
             for (vector<Config*>::iterator configIter = pConfigVec.begin(); configIter != pConfigVec.end();
                  ++configIter) {
@@ -277,9 +277,9 @@ void CreateModifyHandler::Handle(const Event& event) {
                           ("Process event with multi config", pConfigVec.size())(event.GetSource(), event.GetObject()));
                 GetOrCreateModifyHandler(pConfig->mConfigName, pConfig)->Handle(event);
 
-                if (pConfig->mIsFuseMode) {
-                    FuseFileBlacklist::GetInstance()->RemoveFromBlackList(path);
-                }
+                // if (pConfig->mIsFuseMode) {
+                //     FuseFileBlacklist::GetInstance()->RemoveFromBlackList(path);
+                // }
 
                 // if file is deleted or moved, inode may be wrong
                 if ((event.IsMoveFrom() || event.IsDeleted()) && pConfig->mMarkOffsetFlag) {

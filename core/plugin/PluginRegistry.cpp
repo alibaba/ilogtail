@@ -25,11 +25,11 @@
 #include <dirent.h>
 #include "logger/Logger.h"
 #include "app_config/AppConfig.h"
-#include "plugin/PluginCreator.h"
-#include "plugin/StaticProcessorCreator.h"
-#include "plugin/DynamicCProcessorCreator.h"
+#include "plugin/creator/PluginCreator.h"
+#include "plugin/creator/StaticProcessorCreator.h"
+#include "plugin/creator/DynamicCProcessorCreator.h"
 
-#include "plugin/CProcessor.h"
+#include "plugin/creator/CProcessor.h"
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
@@ -67,6 +67,10 @@ void PluginRegistry::UnloadPlugins() {
     //     UnregisterCreator(kv.second.get());
     // }
     mPluginDict.clear();
+}
+
+bool PluginRegistry::IsValidGoPlugin(const std::string& name) {
+    return mGoPlugins.find(name) != mGoPlugins.end();
 }
 
 std::unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const std::string& name,

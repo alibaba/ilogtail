@@ -49,7 +49,7 @@ public:
     int Pread(void* ptr, size_t size, size_t count, int64_t offset);
 
     // For FUSE only.
-    size_t SkipHoleRead(void* ptr, size_t size, size_t count, int64_t* offset);
+    // size_t SkipHoleRead(void* ptr, size_t size, size_t count, int64_t* offset);
 
     // GetFileSize gets the size of current file.
     int64_t GetFileSize() const;

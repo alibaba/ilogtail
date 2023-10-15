@@ -18,7 +18,6 @@
 #include "MetricStore.h"
 #include <string>
 #include "common/Thread.h"
-#include "profile_sender/ProfileSender.h"
 #if defined(_MSC_VER)
 #include <Windows.h>
 #endif
@@ -119,7 +118,6 @@ private:
     int32_t mCpuArrayForScaleIdx;
     float mScaledCpuUsageStep;
 #endif
-    ProfileSender mProfileSender;
 
 private:
     // GetCpuStat gets current CPU statistics of Logtail process and save it to @cpuStat.

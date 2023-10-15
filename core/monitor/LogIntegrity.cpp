@@ -27,6 +27,8 @@
 #include "Sender.h"
 #include "LogtailAlarm.h"
 #include "LogFileProfiler.h"
+#include "profile_sender/ProfileSender.h"
+#include "app_config/AppConfig.h"
 
 using namespace sls_logs;
 using namespace std;
@@ -351,7 +353,7 @@ void LogIntegrity::SendLogIntegrityInfo() {
 
                 logGroup.set_source(LogFileProfiler::mIpAddr);
                 logGroup.set_category(dst.mLogstore);
-                logGroup.set_machineuuid(ConfigManager::GetInstance()->GetUUID());
+                logGroup.set_machineuuid(AppConfig::GetInstance()->GetUUID());
 
                 LogTag* logTagPtr = logGroup.add_logtags();
                 logTagPtr->set_key(LOG_RESERVED_KEY_HOSTNAME);
@@ -359,7 +361,7 @@ void LogIntegrity::SendLogIntegrityInfo() {
 
                 // send integrity log group
                 bool sendSucceeded
-                    = mProfileSender.SendInstantly(logGroup, dst.mAliuid, dst.mRegion, dst.mProjectName, dst.mLogstore);
+                    = ProfileSender::GetInstance()->SendInstantly(logGroup, dst.mAliuid, dst.mRegion, dst.mProjectName, dst.mLogstore);
                 if (!sendSucceeded) {
                     LogtailAlarm::GetInstance()->SendAlarm(DISCARD_DATA_ALARM,
                                                            "push data integrity data into batch map fail",
@@ -934,7 +936,7 @@ void LogIntegrity::SendOutDatedFileIntegrityInfo() {
 
             logGroup.set_source(LogFileProfiler::mIpAddr);
             logGroup.set_category(dst.mLogstore);
-            logGroup.set_machineuuid(ConfigManager::GetInstance()->GetUUID());
+            logGroup.set_machineuuid(AppConfig::GetInstance()->GetUUID());
 
             LogTag* logTagPtr = logGroup.add_logtags();
             logTagPtr->set_key(LOG_RESERVED_KEY_HOSTNAME);
@@ -942,7 +944,7 @@ void LogIntegrity::SendOutDatedFileIntegrityInfo() {
 
             // send integrity log group
             bool sendSucceeded
-                = mProfileSender.SendInstantly(logGroup, dst.mAliuid, dst.mRegion, dst.mProjectName, dst.mLogstore);
+                = ProfileSender::GetInstance()->SendInstantly(logGroup, dst.mAliuid, dst.mRegion, dst.mProjectName, dst.mLogstore);
             if (!sendSucceeded) {
                 LogtailAlarm::GetInstance()->SendAlarm(DISCARD_DATA_ALARM,
                                                        "push data integrity data into batch map fail",

@@ -15,17 +15,17 @@
  */
 
 #pragma once
-#include <cstdint>
+// #include <cstdint>
 #include <string>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
-#include <functional>
-#include <atomic>
+// #include <vector>
+// #include <unordered_map>
+// #include <unordered_set>
+// #include <functional>
+// #include <atomic>
 #include <json/json.h>
-#include "app_config/AppConfig.h"
+// #include "app_config/AppConfig.h"
 #include "config_manager/ConfigManagerBase.h"
-#include "config_server_pb/agent.pb.h"
+// #include "config_server_pb/agent.pb.h"
 
 namespace logtail {
 
@@ -37,7 +37,7 @@ public:
     }
 
     // @configExistFlag indicates if there are loaded configs before calling.
-    void InitUpdateConfig(bool configExistFlag) override;
+    // void InitUpdateConfig(bool configExistFlag) override;
 
     /** Read configuration, detect any format errors.
      *
@@ -47,54 +47,50 @@ public:
      */
     bool LoadConfig(const std::string& configFile) override;
 
-    bool UpdateAccessKey(const std::string& aliuid,
-                         std::string& accessKeyId,
-                         std::string& accessKey,
-                         int32_t& lastUpdateTime) override;
+    // bool UpdateAccessKey(const std::string& aliuid,
+    //                      std::string& accessKeyId,
+    //                      std::string& accessKey,
+    //                      int32_t& lastUpdateTime) override;
 
-    void CleanUnusedUserAK() override;
+    // void CleanUnusedUserAK() override;
 
-    bool GetRegionStatus(const std::string& region) override;
+    // bool GetRegionStatus(const std::string& region) override;
 
-    void SetStartWorkerStatus(const std::string& result, const std::string& message) override;
+    // void SetStartWorkerStatus(const std::string& result, const std::string& message) override;
 
     std::string CheckPluginFlusher(Json::Value& configJson);
 
     Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson);
 
 private:
-    ThreadPtr mCheckUpdateThreadPtr;
+    // ThreadPtr mCheckUpdateThreadPtr;
 
     ConfigManager();
     virtual ~ConfigManager(); // no copy
-    ConfigManager(const ConfigManager&);
-    ConfigManager& operator=(const ConfigManager&);
+    // ConfigManager(const ConfigManager&);
+    // ConfigManager& operator=(const ConfigManager&);
 
     // See ConfigManager::InitUpdateConfig.
-    bool CheckUpdateThread(bool configExistFlag);
+    // bool CheckUpdateThread(bool configExistFlag);
 
-    void GetRemoteConfigUpdate();
+    // void GetRemoteConfigUpdate();
 
     // ConfigServer
-    google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> SendHeartbeat(
-        const AppConfig::ConfigServerAddress& configServerAddress
-    );
+    // google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> SendHeartbeat(
+    //     const AppConfig::ConfigServerAddress& configServerAddress
+    // );
 
-    google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> FetchPipelineConfig(
-        const AppConfig::ConfigServerAddress& configServerAddress, 
-        const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs
-    );
+    // google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> FetchPipelineConfig(
+    //     const AppConfig::ConfigServerAddress& configServerAddress, 
+    //     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs
+    // );
     
-    void UpdateRemoteConfig(
-        const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& checkResults,
-        const google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail>& configDetails
-    );
+    // void UpdateRemoteConfig(
+    //     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& checkResults,
+    //     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail>& configDetails
+    // );
 
-    /**
-     * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map
-     * @return
-     */
-    void CreateCustomizedFuseConfig() override;
+    // void CreateCustomizedFuseConfig() override;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class SenderUnittest;

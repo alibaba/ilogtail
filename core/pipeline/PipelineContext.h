@@ -15,12 +15,19 @@
  */
 
 #pragma once
-#include "models/PipelineEventGroup.h"
+
+#include <memory>
+#include <string>
+
 #include "logger/Logger.h"
+#include "models/PipelineEventGroup.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/LogFileProfiler.h"
+#include "pipeline/Global.h"
+#include "table/Table.h"
 
 namespace logtail {
+class Pipeline;
 
 // for compatiblity with shennong profile
 struct ProcessProfile {
@@ -40,6 +47,7 @@ struct ProcessProfile {
 class PipelineContext {
 public:
     PipelineContext() {}
+    ~PipelineContext();
     PipelineContext(const PipelineContext&) = delete;
     PipelineContext(PipelineContext&&) = delete;
     PipelineContext operator=(const PipelineContext&) = delete;
@@ -53,6 +61,10 @@ public:
     void SetConfigName(const std::string& configName) { mConfigName = configName; }
     const std::string& GetRegion() const { return mRegion; }
     void SetRegion(const std::string& region) { mRegion = region; }
+    std::weak_ptr<Pipeline> GetPipeline() const { return mPipeline; }
+    void SetPipeline(const std::shared_ptr<Pipeline>& p) { mPipeline = p; }
+    const Global& GetGlobal() const { return mGlobal; }
+    bool InitGlobal(const Table& config) { return mGlobal.Init(config); }
 
     ProcessProfile& GetProcessProfile() { return mProcessProfile; }
     // LogFileProfiler& GetProfiler() { return *mProfiler; }
@@ -60,10 +72,12 @@ public:
     LogtailAlarm& GetAlarm() { return *mAlarm; };
 
 private:
+    Global mGlobal;
     std::string mProjectName, mLogstoreName, mConfigName, mRegion;
     ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
     Logger::logger mLogger = sLogger;
     LogtailAlarm* mAlarm = LogtailAlarm::GetInstance();
+    std::weak_ptr<Pipeline> mPipeline;
 };
 } // namespace logtail

@@ -17,7 +17,7 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include "parser/LogParser.h"

@@ -26,6 +26,7 @@
 #include "sender/Sender.h"
 #include "config_manager/ConfigManager.h"
 #include "app_config/AppConfig.h"
+#include "profile_sender/ProfileSender.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -254,7 +255,7 @@ void LogFileProfiler::SendProfileData(bool forceSend) {
             }
         }
         UpdateDumpData(logGroup, detail, logstore);
-        mProfileSender.SendToProfileProject(region, logGroup);
+        ProfileSender::GetInstance()->SendToProfileProject(region, logGroup);
     } while (true);
     DumpToLocal(curTime, forceSend, detail, logstore);
     mLastSendTime = curTime;

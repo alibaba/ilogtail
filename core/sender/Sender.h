@@ -270,6 +270,21 @@ private:
     PTMutex mRegionRealIpLock;
     bool mStopRealIpThread = false;
 
+    // move from config manager
+    mutable SpinLock mProjectRefCntMapLock;
+    std::unordered_map<std::string, int32_t> mProjectRefCntMap;
+
+    mutable SpinLock mRegionRefCntMapLock;
+    std::unordered_map<std::string, int32_t> mRegionRefCntMap;
+
+    mutable PTMutex mRegionAliuidRefCntMapLock;
+    std::map<std::string, std::unordered_map<std::string, int32_t>> mRegionAliuidRefCntMap;
+
+    std::vector<std::string> GetRegionAliuids(const std::string& region);
+
+    SpinLock mRegionStatusLock;
+    std::unordered_map<std::string, bool> mAllRegionStatus;
+
     const static std::string BUFFER_FILE_NAME_PREFIX;
     const static int32_t BUFFER_META_BASE_SIZE;
 
@@ -468,6 +483,17 @@ public:
 
     void SendCompressed(std::vector<MergeItem*>& sendDataVec);
     void SendLogPackageList(std::vector<MergeItem*>& sendDataVec);
+
+    std::string GetAllProjects();
+    void IncreaseProjectReferenceCnt(const std::string& project);
+    void DecreaseProjectReferenceCnt(const std::string& project);
+    bool IsRegionContainingConfig(const std::string& region) const;
+    void IncreaseRegionReferenceCnt(const std::string& region);
+    void DecreaseRegionReferenceCnt(const std::string& region);
+    void IncreaseAliuidReferenceCntForRegion(const std::string& region, const std::string& aliuid);
+    void DecreaseAliuidReferenceCntForRegion(const std::string& region, const std::string& aliuid);
+    bool GetRegionStatus(const std::string& region);
+    void UpdateRegionStatus(const std::string& region, bool status);
 
     friend class SendClosure;
 

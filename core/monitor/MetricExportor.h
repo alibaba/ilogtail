@@ -1,7 +1,6 @@
 #pragma once
 
-#include "profile_sender/ProfileSender.h"
-
+#include <cstdint>
 
 namespace logtail {
 
@@ -15,7 +14,6 @@ public:
 
 private:
     MetricExportor();
-    ProfileSender mProfileSender;
     int32_t mSendInterval;
     int32_t mLastSendTime;
 };

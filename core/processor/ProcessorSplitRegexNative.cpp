@@ -21,8 +21,8 @@
 #include "reader/LogFileReader.h" //SplitState
 #include "models/LogEvent.h"
 #include "logger/Logger.h"
-#include "plugin/ProcessorInstance.h"
-
+#include "plugin/instance/ProcessorInstance.h"
+#include "app_config/AppConfig.h"
 
 namespace logtail {
 

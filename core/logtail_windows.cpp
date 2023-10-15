@@ -28,10 +28,10 @@
 #include "common/ErrorUtil.h"
 #include "common/GlobalPara.h"
 #include "logger/Logger.h"
-#ifdef LOGTAIL_RUNTIME_PLUGIN
-#include "plugin/LogtailRuntimePlugin.h"
-#endif
-#include "plugin/LogtailPlugin.h"
+// #ifdef LOGTAIL_RUNTIME_PLUGIN
+// #include "plugin/LogtailRuntimePlugin.h"
+// #endif
+#include "Go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
 #include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
@@ -46,6 +46,12 @@
 #include "monitor/LogIntegrity.h"
 #include "monitor/LogLineCount.h"
 #include "app_config/AppConfig.h"
+#ifdef __ENTERPRISE__
+    #include "config/provider/EnterpriseConfigProvider.h";
+#else
+    #include "config/provider/CommonConfigProvider.h";
+#endif
+
 using namespace logtail;
 
 DEFINE_FLAG_STRING(ilogtail_daemon_startup_hints, "hints passed from daemon during startup", "");
@@ -134,14 +140,14 @@ void do_worker_process() {
     LogtailMonitor::Instance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
 
     // use a thread to get uuid
-    if (!ConfigManager::GetInstance()->TryGetUUID()) {
+    if (!AppConfig::GetInstance()->TryGetUUID()) {
         APSARA_LOG_INFO(sLogger, ("get none dmi uuid", "maybe this is a docker runtime"));
     }
 
-    PluginRegistry::GetInstance()->LoadPlugins();
-#ifdef LOGTAIL_RUNTIME_PLUGIN
-    LogtailRuntimePlugin::GetInstance()->LoadPluginBase();
-#endif
+//     PluginRegistry::GetInstance()->LoadPlugins();
+// #ifdef LOGTAIL_RUNTIME_PLUGIN
+//     LogtailRuntimePlugin::GetInstance()->LoadPluginBase();
+// #endif
 
     // load local config first
     ConfigManager::GetInstance()->GetLocalConfigUpdate();
@@ -193,8 +199,8 @@ void do_worker_process() {
     Json::Value appInfoJson;
     appInfoJson["ip"] = Json::Value(LogFileProfiler::mIpAddr);
     appInfoJson["hostname"] = Json::Value(LogFileProfiler::mHostname);
-    appInfoJson["UUID"] = Json::Value(ConfigManager::GetInstance()->GetUUID());
-    appInfoJson["instance_id"] = Json::Value(ConfigManager::GetInstance()->GetInstanceId());
+    appInfoJson["UUID"] = Json::Value(AppConfig::GetInstance()->GetUUID());
+    appInfoJson["instance_id"] = Json::Value(AppConfig::GetInstance()->GetInstanceId());
     appInfoJson["logtail_version"] = Json::Value(ILOGTAIL_VERSION);
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
 #define STRINGIFY(x) #x
@@ -208,7 +214,11 @@ void do_worker_process() {
     OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
     APSARA_LOG_INFO(sLogger, ("appInfo", appInfo));
 
-    ConfigManager::GetInstance()->InitUpdateConfig(configExistFlag);
+#ifdef __ENTERPRISE__
+    EnterpriseConfigProvider::GetInstance()->Init();
+#else
+    CommonConfigProvider::GetInstance()->Init();
+#endif
     ConfigManager::GetInstance()->RegisterHandlers();
     EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
     APSARA_LOG_INFO(sLogger, ("Logtail started", "initialization completed"));

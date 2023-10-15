@@ -25,6 +25,9 @@
 #include <app_config/AppConfig.h>
 #include <numeric>
 #include <vector>
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
 
 using namespace std;
 using namespace sls_logs;
@@ -312,7 +315,7 @@ bool Aggregator::Add(const std::string& projectName,
                     (value->mLogGroup).mutable_logs()->Reserve(INT32_FLAG(merge_log_count_limit));
                     (value->mLogGroup).set_category(category);
                     (value->mLogGroup).set_topic(topic);
-                    (value->mLogGroup).set_machineuuid(ConfigManager::GetInstance()->GetUUID());
+                    (value->mLogGroup).set_machineuuid(AppConfig::GetInstance()->GetUUID());
                     (value->mLogGroup).set_source(logGroup.has_source() ? logGroup.source() : LogFileProfiler::mIpAddr);
 
                     for (int32_t logTagIdx = 0; logTagIdx < logGroup.logtags_size(); ++logTagIdx) {
@@ -439,10 +442,12 @@ Aggregator::CalPostRequestShardHashKey(const std::string& source, const std::str
             input.append(source);
         else if (key == LOG_RESERVED_KEY_TOPIC)
             input.append(topic);
+#ifdef __ENTERPRISE__
         else if (key == LOG_RESERVED_KEY_USER_DEFINED_ID)
-            input.append(ConfigManager::GetInstance()->GetUserDefinedIdSet());
+            input.append(EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet());
+#endif
         else if (key == LOG_RESERVED_KEY_MACHINE_UUID)
-            input.append(ConfigManager::GetInstance()->GetUUID());
+            input.append(AppConfig::GetInstance()->GetUUID());
         else if (key == LOG_RESERVED_KEY_HOSTNAME)
             input.append(LogFileProfiler::mHostname);
 

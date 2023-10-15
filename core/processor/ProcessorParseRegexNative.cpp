@@ -22,7 +22,8 @@
 #include "monitor/LogtailMetric.h"
 #include "monitor/MetricConstants.h"
 #include "common/TimeUtil.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
+#include "app_config/AppConfig.h"
 
 namespace logtail {
 

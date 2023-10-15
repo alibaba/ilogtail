@@ -18,7 +18,7 @@
 #include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "parser/LogParser.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 
 
 namespace logtail {

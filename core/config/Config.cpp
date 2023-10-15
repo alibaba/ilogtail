@@ -26,7 +26,7 @@
 #include "logger/Logger.h"
 #include "processor/LogFilter.h"
 
-DEFINE_FLAG_INT32(logreader_max_rotate_queue_size, "", 20);
+// DEFINE_FLAG_INT32(logreader_max_rotate_queue_size, "", 20);
 DECLARE_FLAG_STRING(raw_log_tag);
 DECLARE_FLAG_INT32(batch_send_interval);
 DECLARE_FLAG_INT32(reader_close_unused_file_time);
@@ -125,7 +125,7 @@ Config::Config(const std::string& basePath,
     mFilePattern = EncodingConverter::GetInstance()->FromUTF8ToACP(mFilePattern);
 #endif
 
-    ParseWildcardPath();
+    // ParseWildcardPath();
     mTailLimit = 0;
     mTailExisted = false;
     mLogstoreKey = GenerateLogstoreFeedBackKey(GetProjectName(), GetCategory());
@@ -260,73 +260,6 @@ bool Config::IsMatch(const std::string& path, const std::string& name) {
         return _IsPathMatched(mBasePath, path, mMaxDepth) && !IsObjectInBlacklist(path, name);
     } else
         return IsWildcardPathMatch(path, name);
-}
-
-void Config::ParseWildcardPath() {
-    mWildcardPaths.clear();
-    mConstWildcardPaths.clear();
-    mWildcardDepth = 0;
-    if (mBasePath.size() == 0)
-        return;
-    size_t posA = mBasePath.find('*', 0);
-    size_t posB = mBasePath.find('?', 0);
-    size_t pos;
-    if (posA == std::string::npos) {
-        if (posB == std::string::npos)
-            return;
-        else
-            pos = posB;
-    } else {
-        if (posB == std::string::npos)
-            pos = posA;
-        else
-            pos = std::min(posA, posB);
-    }
-    if (pos == 0)
-        return;
-    pos = mBasePath.rfind(PATH_SEPARATOR[0], pos);
-    if (pos == std::string::npos)
-        return;
-
-        // Check if there is only one path separator, for Windows, the first path
-        // separator is next to the first ':'.
-#if defined(__linux__)
-    if (pos == 0)
-#elif defined(_MSC_VER)
-    if (pos - 1 == mBasePath.find(':'))
-#endif
-    {
-        mWildcardPaths.push_back(mBasePath.substr(0, pos + 1));
-    } else
-        mWildcardPaths.push_back(mBasePath.substr(0, pos));
-    while (true) {
-        size_t nextPos = mBasePath.find(PATH_SEPARATOR[0], pos + 1);
-        if (nextPos == std::string::npos)
-            break;
-        mWildcardPaths.push_back(mBasePath.substr(0, nextPos));
-        std::string dirName = mBasePath.substr(pos + 1, nextPos - pos - 1);
-        LOG_DEBUG(sLogger, ("wildcard paths", mWildcardPaths[mWildcardPaths.size() - 1])("dir name", dirName));
-        if (dirName.find('?') == std::string::npos && dirName.find('*') == std::string::npos) {
-            mConstWildcardPaths.push_back(dirName);
-        } else {
-            mConstWildcardPaths.push_back("");
-        }
-        pos = nextPos;
-    }
-    mWildcardPaths.push_back(mBasePath);
-    if (pos < mBasePath.size()) {
-        std::string dirName = mBasePath.substr(pos + 1);
-        if (dirName.find('?') == std::string::npos && dirName.find('*') == std::string::npos) {
-            mConstWildcardPaths.push_back(dirName);
-        } else {
-            mConstWildcardPaths.push_back("");
-        }
-    }
-
-    for (size_t i = 0; i < mBasePath.size(); ++i) {
-        if (PATH_SEPARATOR[0] == mBasePath[i])
-            ++mWildcardDepth;
-    }
 }
 
 bool Config::IsWildcardPathMatch(const std::string& path, const std::string& name) {
@@ -654,12 +587,6 @@ bool Config::SetDockerFileFlag(bool supportWildcardPath) {
     }
     mDockerFileFlag = true;
     return true;
-}
-
-void Config::SetTailLimit(int32_t size) {
-    mTailLimit = (size >= 0 && size <= 100 * 1024 * 1024) // 0~100GB
-        ? size
-        : INT32_FLAG(default_tail_limit_kb);
 }
 
 DockerContainerPath* Config::GetContainerPathByLogPath(const std::string& logPath) {

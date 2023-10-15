@@ -19,8 +19,11 @@
 #include <string>
 #include <set>
 #include <unordered_map>
-#include "plugin/PluginInstance.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/creator/PluginCreator.h"
+#include "plugin/instance/FlusherInstance.h"
+#include "plugin/instance/InputInstance.h"
+#include "plugin/instance/PluginInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include "common/DynamicLibHelper.h"
 
 struct processor_interface_t;
@@ -36,21 +39,14 @@ public:
     // 卸载所有插件
     void UnloadPlugins();
 
-    // std::unique_ptr<InputInstance> CreateInput(const std::string& name, const std::string& pluginId);
+    bool IsValidGoPlugin(const std::string& name);
+
+    std::unique_ptr<InputInstance> CreateInput(const std::string& name, const std::string& pluginId);
     std::unique_ptr<ProcessorInstance> CreateProcessor(const std::string& name, const std::string& pluginId);
-    // std::unique_ptr<FlusherInstance> CreateFlusher(const std::string& name, const std::string& pluginId);
+    std::unique_ptr<FlusherInstance> CreateFlusher(const std::string& name, const std::string& pluginId);
 
 private:
     enum PluginCat { INPUT_PLUGIN, PROCESSOR_PLUGIN, FLUSHER_PLUGIN };
-
-    void LoadStaticPlugins();
-    void LoadDynamicPlugins(const std::set<std::string>& plugins);
-    // void RegisterInputCreator(PluginCreator* creator);
-    void RegisterProcessorCreator(PluginCreator* creator);
-    // void RegisterFlusherCreator(PluginCreator* creator);
-    PluginCreator* LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName);
-    void RegisterCreator(PluginCat cat, PluginCreator* creator);
-    std::unique_ptr<PluginInstance> Create(PluginCat cat, const std::string& name, const std::string& pluginId);
 
     struct PluginKey {
         PluginCat cat;
@@ -64,7 +60,18 @@ private:
             return std::hash<int>()(obj.cat) ^ std::hash<std::string>()(obj.name);
         }
     };
+
+    void LoadStaticPlugins();
+    void LoadDynamicPlugins(const std::set<std::string>& plugins);
+    PluginCreator* LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName);
+    void RegisterInputCreator(PluginCreator* creator);
+    void RegisterProcessorCreator(PluginCreator* creator);
+    void RegisterFlusherCreator(PluginCreator* creator);
+    void RegisterCreator(PluginCat cat, PluginCreator* creator);
+    std::unique_ptr<PluginInstance> Create(PluginCat cat, const std::string& name, const std::string& pluginId);
+
     std::unordered_map<PluginKey, std::shared_ptr<PluginCreator>, PluginKeyHash> mPluginDict;
+    std::unordered_set<std::string> mGoPlugins;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PluginRegistryUnittest;

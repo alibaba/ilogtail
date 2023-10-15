@@ -64,7 +64,7 @@ private:
     void* ProcessLoop();
     void ProcessEvent(EventDispatcher* dispatcher, Event* ev);
     Event* PopEventQueue();
-    void CheckAndUpdateCriticalMetric(int32_t curTime);
+    void UpdateCriticalMetric(int32_t curTime);
 
     std::queue<Event*> mInotifyEventQueue;
     std::unordered_set<int64_t> mModifyEventSet;

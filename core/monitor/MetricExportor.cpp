@@ -5,6 +5,7 @@
 #include "config_manager/ConfigManager.h"
 #include "LogFileProfiler.h"
 #include "MetricConstants.h"
+#include "profile_sender/ProfileSender.h"
 
 using namespace sls_logs;
 using namespace std;
@@ -30,9 +31,9 @@ void MetricExportor::PushMetrics(bool forceSend) {
         logGroup->set_source(LogFileProfiler::mIpAddr);
         logGroup->set_topic(METRIC_TOPIC_TYPE);
         if (METRIC_REGION_DEFAULT == iter->first) {
-            mProfileSender.SendToProfileProject(ConfigManager::GetInstance()->GetDefaultProfileRegion(), *logGroup);
+            ProfileSender::GetInstance()->SendToProfileProject(ProfileSender::GetInstance()->GetDefaultProfileRegion(), *logGroup);
         } else {
-            mProfileSender.SendToProfileProject(iter->first, *logGroup);
+            ProfileSender::GetInstance()->SendToProfileProject(iter->first, *logGroup);
         }
         delete logGroup;
     }

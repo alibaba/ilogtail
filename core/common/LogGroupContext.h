@@ -19,6 +19,7 @@
 #include "monitor/LogtailAlarm.h"
 #include "FileInfo.h"
 #include "RangeCheckpoint.h"
+#include "log_pb/sls_logs.pb.h"
 
 namespace logtail {
 

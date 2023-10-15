@@ -18,7 +18,7 @@
 #include <fcntl.h>
 #endif
 #include "FileSystemUtil.h"
-#include "fuse/ulogfslib_file.h"
+// #include "fuse/ulogfslib_file.h"
 
 namespace logtail {
 
@@ -26,11 +26,11 @@ int LogFileOperator::Open(const char* path, bool fuseMode) {
     if (!path || IsOpen()) {
         return -1;
     }
-    mFuseMode = fuseMode;
+    // mFuseMode = fuseMode;
 
-    if (mFuseMode) {
-        mFd = ulogfs_open(path);
-    } else {
+    // if (mFuseMode) {
+    //     mFd = ulogfs_open(path);
+    // } else {
 #if defined(_MSC_VER)
         auto hFile = CreateFile(path,
                                 GENERIC_READ,
@@ -48,7 +48,7 @@ int LogFileOperator::Open(const char* path, bool fuseMode) {
 #else
         mFd = open(path, O_RDONLY);
 #endif
-    }
+    // }
     return mFd;
 }
 
@@ -56,9 +56,9 @@ int64_t LogFileOperator::Seek(int64_t offset, int whence) {
     if (!IsOpen()) {
         return -1;
     }
-    if (mFuseMode) {
-        return ulogfs_seek(mFd, offset, whence);
-    } else {
+    // if (mFuseMode) {
+    //     return ulogfs_seek(mFd, offset, whence);
+    // } else {
 #if defined(_MSC_VER)
         switch (whence) {
             case SEEK_CUR:
@@ -83,7 +83,7 @@ int64_t LogFileOperator::Seek(int64_t offset, int whence) {
 #else
         return lseek(mFd, offset, whence);
 #endif
-    }
+    // }
 }
 
 int LogFileOperator::Stat(fsutil::PathStat& ps) const {
@@ -91,15 +91,15 @@ int LogFileOperator::Stat(fsutil::PathStat& ps) const {
         return -1;
     }
 
-    if (mFuseMode) {
-        return ulogfs_stat(mFd, ps.GetRawStat());
-    } else {
+    // if (mFuseMode) {
+    //     return ulogfs_stat(mFd, ps.GetRawStat());
+    // } else {
 #if defined(_MSC_VER)
         return fsutil::PathStat::fstat(mFile, ps) ? 0 : -1;
 #else
         return fsutil::PathStat::fstat(mFd, ps) ? 0 : -1;
 #endif
-    }
+    // }
 }
 
 int LogFileOperator::Pread(void* ptr, size_t size, size_t count, int64_t offset) {
@@ -107,10 +107,10 @@ int LogFileOperator::Pread(void* ptr, size_t size, size_t count, int64_t offset)
         return 0;
     }
 
-    if (mFuseMode) {
-        // datadir is NULL, ulogfs will get real datadir from env
-        return ulogfs_pread2(mFd, NULL, ptr, size * count, (off_t*)&offset);
-    } else {
+    // if (mFuseMode) {
+    //     // datadir is NULL, ulogfs will get real datadir from env
+    //     return ulogfs_pread2(mFd, NULL, ptr, size * count, (off_t*)&offset);
+    // } else {
 #if defined(_MSC_VER)
         LARGE_INTEGER liPos;
         liPos.QuadPart = offset;
@@ -125,36 +125,7 @@ int LogFileOperator::Pread(void* ptr, size_t size, size_t count, int64_t offset)
 #else
         return pread(mFd, ptr, size * count, offset);
 #endif
-    }
-}
-
-size_t LogFileOperator::SkipHoleRead(void* ptr, size_t size, size_t count, int64_t* offset) {
-    if (!mFuseMode || !ptr || !size || !count || !IsOpen()) {
-        return 0;
-    }
-
-    int64_t off = *offset;
-    int nBytes = ulogfs_pread2(mFd, NULL, ptr, (int)(size * count), (off_t*)&off);
-    if (nBytes <= 0) {
-        return nBytes;
-    }
-
-    auto readBytes = (size_t)nBytes;
-
-    // if off == *offset, no hole no extra handle
-    // if off > *offset, there is a hole
-    if (off > *offset) {
-        if (off > *offset + nBytes) {
-            readBytes = 0;
-        } else {
-            readBytes = *offset + nBytes - off;
-            memmove(ptr, ((char*)ptr + (off - *offset)), readBytes);
-        }
-
-        *offset = off;
-    }
-
-    return readBytes;
+    // }
 }
 
 int64_t LogFileOperator::GetFileSize() const {
@@ -162,9 +133,9 @@ int64_t LogFileOperator::GetFileSize() const {
         return -1;
     }
 
-    if (mFuseMode) {
-        return static_cast<int64_t>(ulogfs_tell(mFd));
-    } else {
+    // if (mFuseMode) {
+    //     return static_cast<int64_t>(ulogfs_tell(mFd));
+    // } else {
 #if defined(_MSC_VER)
         LARGE_INTEGER liSize{0};
         if (FALSE == GetFileSizeEx(mFile, &liSize)) {
@@ -174,7 +145,7 @@ int64_t LogFileOperator::GetFileSize() const {
 #else
         return static_cast<int64_t>(lseek(mFd, 0, SEEK_END));
 #endif
-    }
+    // }
 }
 
 bool LogFileOperator::IsOpen() const {
@@ -187,16 +158,16 @@ int LogFileOperator::Close() {
     }
 
     int ret = 0;
-    if (mFuseMode) {
-        ret = ulogfs_close(mFd);
-    } else {
+    // if (mFuseMode) {
+    //     ret = ulogfs_close(mFd);
+    // } else {
 #if defined(_MSC_VER)
         ret = (TRUE == CloseHandle(mFile)) ? 0 : -1;
         mFile = INVALID_HANDLE_VALUE;
 #else
         ret = close(mFd);
 #endif
-    }
+    // }
     mFd = -1;
     return ret;
 }

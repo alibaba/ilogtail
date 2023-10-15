@@ -113,7 +113,7 @@ TEST_F(SDKClientUnittest, PostLogstoreLogsSuccessOpenSource) {
                        INT32_FLAG(sls_client_send_timeout),
                        "192.168.1.1",
                        "");
-    SLSControl::Instance()->SetSlsSendClientCommonParam(&client);
+    SLSControl::GetInstance()->SetSlsSendClientCommonParam(&client);
     client.SetKeyProvider("");
     sls_logs::LogGroup logGroup;
 
@@ -204,7 +204,7 @@ TEST_F(SDKClientUnittest, PostLogstoreLogsSuccessClosedSource) {
                        INT32_FLAG(sls_client_send_timeout),
                        "192.168.1.1",
                        "");
-    SLSControl::Instance()->SetSlsSendClientCommonParam(&client);
+    SLSControl::GetInstance()->SetSlsSendClientCommonParam(&client);
     client.SetKeyProvider(sdk::MD5_SHA1_SALT_KEYPROVIDER);
     sls_logs::LogGroup logGroup;
 
