@@ -9,7 +9,6 @@ target_link_libraries(${PROJECT_NAME} logger)
 target_link_libraries(${PROJECT_NAME} config)
 target_link_libraries(${PROJECT_NAME} config_manager)
 target_link_libraries(${PROJECT_NAME} monitor)
-target_link_libraries(${PROJECT_NAME} monitor)
 target_link_libraries(${PROJECT_NAME} event)
 target_link_libraries(${PROJECT_NAME} log_pb)
 
