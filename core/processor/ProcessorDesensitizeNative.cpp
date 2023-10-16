@@ -29,7 +29,6 @@ bool ProcessorDesensitizeNative::Init(const ComponentConfig& componentConfig) {
 
     mSensitiveWordCastOptions = mConfig.mSensitiveWordCastOptions;
 
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
     mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
 
     return true;

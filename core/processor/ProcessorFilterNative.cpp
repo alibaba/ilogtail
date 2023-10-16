@@ -49,7 +49,6 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
 
     mDiscardNoneUtf8 = config.mDiscardNoneUtf8;
 
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
     mProcFilterInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_IN_SIZE_BYTES);
     mProcFilterOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_OUT_SIZE_BYTES);
     mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);

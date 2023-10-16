@@ -38,7 +38,6 @@ bool ProcessorSplitRegexNative::Init(const ComponentConfig& componentConfig) {
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
     return true;
 }
 

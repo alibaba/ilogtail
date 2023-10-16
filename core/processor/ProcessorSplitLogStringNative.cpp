@@ -33,7 +33,6 @@ bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig)
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
 
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
     return true;
 }
 
