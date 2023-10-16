@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
@@ -140,16 +141,30 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	p.logGroupPoolMap[source] = logGroupList
 	if p.logGroupPoolSize > MaxLogGroupPoolSize {
 		logGroups := p.Flush()
-		for _, logGroup := range logGroups {
-			if len(logGroup.Logs) == 0 {
-				continue
+		var err error
+		for tryCount := 1; true; tryCount++ {
+			errorLogGroups := make([]*protocol.LogGroup, 0, len(logGroups))
+			for i, logGroup := range logGroups {
+				if len(logGroup.Logs) == 0 {
+					continue
+				}
+				// Quick flush to avoid becoming bottleneck when large logs come.
+				if err = p.queue.Add(logGroup); err == nil {
+				} else {
+					errorLogGroups = append(errorLogGroups, logGroups[i])
+				}
 			}
-			// Quick flush to avoid becoming bottleneck when large logs come.
-			if err := p.queue.Add(logGroup); err == nil {
-			} else {
-				continue
+			if len(errorLogGroups) == 0 {
+				break
 			}
+			// wait until shutdown is active
+			if tryCount%100 == 0 {
+				logger.Warning(p.context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
+			}
+			time.Sleep(time.Millisecond * 10)
+			logGroups = errorLogGroups
 		}
+
 	}
 	return nil
 }
