@@ -22,6 +22,7 @@ public:
         mContext.SetRegion("cn-shanghai");
     }
     PipelineContext mContext;
+    void TestInit();
     void TestWhere();
     void TestExtend();
     void TestJsonParse();
@@ -33,6 +34,7 @@ public:
     void TestMultiParse();
 };
 
+APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestInit, 8);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestWhere, 0);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestExtend, 1);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestJsonParse, 2);
@@ -42,6 +44,31 @@ APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexKV, 5);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestTag, 6);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestMultiParse, 7);
 
+
+void SlsSplUnittest::TestInit() {
+    std::ifstream input("spl.txt");
+    std::string line;
+
+    while( std::getline( input, line ) ) {
+        
+        Config config;
+        config.mDiscardUnmatch = false;
+        config.mUploadRawLog = false;
+        config.mSpl = line;
+
+        std::string pluginId = "testID";
+        ProcessorSPL& processor = *(new ProcessorSPL);
+        ComponentConfig componentConfig(pluginId, config);
+
+        //std::cout<<line<<'\n';
+        bool init = processor.Init(componentConfig, mContext);
+        if (!init) {
+            std::cout<<"error:" <<line<<'\n';
+        }
+        //APSARA_TEST_TRUE_FATAL(init);
+
+    }
+}
 
 
 void SlsSplUnittest::TestWhere() {

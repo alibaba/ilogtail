@@ -13,6 +13,139 @@
 
 using namespace logtail;
 
+template <int size>
+static void BM_SplNoProcess(benchmark::State& state) {
+    logtail::Logger::Instance().InitGlobalLoggers();
+
+    PipelineContext mContext;
+    mContext.SetConfigName("project##config_0");
+    mContext.SetLogstoreName("logstore");
+    mContext.SetProjectName("project");
+    mContext.SetRegion("cn-shanghai");
+         // make config
+    Config config;
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = false;
+    config.mSpl = R"(* | where true)";
+
+    // make events
+    Json::Value root;
+    Json::Value events;
+    for (int i = 0; i < size; i ++) {
+        Json::Value event;
+        event["type"] = 1;
+        event["timestamp"] = 1234567890;
+        event["timestampNanosecond"] = 0;
+        {
+            Json::Value contents;
+            contents["content"] = "10.0.0.0 GET /index.html 15824 0.043";
+            
+            event["contents"] = std::move(contents);
+        }
+        events.append(event);
+    }
+
+    root["events"] = events;
+
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+    std::ostringstream oss;
+    writer->write(root, &oss);
+    std::string inJson = oss.str();
+    //std::cout << "inJson: " << inJson << std::endl;
+
+    std::string pluginId = "testID";
+    // run function
+    ProcessorSPL& processor = *(new ProcessorSPL);
+    ComponentConfig componentConfig(pluginId, config);
+    bool init = processor.Init(componentConfig, mContext);
+    if (init) {
+        std::cout << "SplNoProcess init: " << init << std::endl;
+        // Perform setup here
+        int count = 0;
+        for (auto _ : state) {
+            count++;
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            // This code gets timed
+            eventGroup.FromJsonString(inJson);
+            std::vector<PipelineEventGroup> logGroupList;
+            processor.Process(eventGroup, logGroupList);
+        }
+        std::cout << "SplNoProcess count: " << count << std::endl;
+    }
+}
+
+template <int size>
+static void BM_RawNoProcess(benchmark::State& state) {
+    logtail::Logger::Instance().InitGlobalLoggers();
+
+    PipelineContext mContext;
+    mContext.SetConfigName("project##config_0");
+    mContext.SetLogstoreName("logstore");
+    mContext.SetProjectName("project");
+    mContext.SetRegion("cn-shanghai");
+
+    // make config
+    Config config;
+    config.mDiscardUnmatch = false;
+    config.mUploadRawLog = false;
+    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    config.mRegs = std::make_shared<std::list<std::string> >();
+    config.mRegs->emplace_back("(.*)");
+    config.mKeys = std::make_shared<std::list<std::string> >();
+    config.mKeys->emplace_back("content");
+
+    // make events
+    Json::Value root;
+    Json::Value events;
+    for (int i = 0; i < size; i ++) {
+        Json::Value event;
+        event["type"] = 1;
+        event["timestamp"] = 1234567890;
+        event["timestampNanosecond"] = 0;
+        {
+            Json::Value contents;
+            contents["content"] = "10.0.0.0 GET /index.html 15824 0.043";
+            
+            event["contents"] = std::move(contents);
+        }
+        events.append(event);
+    }
+
+    root["events"] = events;
+
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+    std::ostringstream oss;
+    writer->write(root, &oss);
+    std::string inJson = oss.str();
+    //std::cout << "inJson: " << inJson << std::endl;
+
+    // run function
+    ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
+    ComponentConfig componentConfig(pluginId, config);
+
+    bool init = processorInstance.Init(componentConfig, mContext);
+    if (init) {
+        std::cout << "RawNoProcess init: " << init << std::endl;
+        int count = 0;
+        // Perform setup here
+        for (auto _ : state) {
+            count ++;
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            // This code gets timed
+            eventGroup.FromJsonString(inJson);
+            processorInstance.Process(eventGroup);
+        }
+        std::cout << "RawNoProcess count: " << count << std::endl;
+    }
+}
 
 
 template <int size>
@@ -263,6 +396,15 @@ static void BM_RawJson(benchmark::State& state) {
 
 
 // Register the function as a benchmark
+
+BENCHMARK_TEMPLATE(BM_SplNoProcess, 10)->MinTime(5)->Threads(1);
+BENCHMARK_TEMPLATE(BM_RawNoProcess, 10)->MinTime(5)->Threads(1);
+
+BENCHMARK_TEMPLATE(BM_SplNoProcess, 100)->MinTime(5);
+BENCHMARK_TEMPLATE(BM_RawNoProcess, 100)->MinTime(5);
+
+BENCHMARK_TEMPLATE(BM_SplNoProcess, 1000)->MinTime(5);
+BENCHMARK_TEMPLATE(BM_RawNoProcess, 1000)->MinTime(5);
 
 
 BENCHMARK_TEMPLATE(BM_SplRegex, 10)->MinTime(5);

@@ -47,7 +47,7 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     Error error;
     mSPLPipelinePtr = std::make_shared<SplPipeline>(spl, error, timeoutMills, maxMemoryBytes, logger);
     if (error.code_ != StatusCode::OK) {
-        LOG_ERROR(sLogger, ("pipeline create error", error.msg_));
+        LOG_ERROR(sLogger, ("pipeline create error", error.msg_)("raw spl", spl));
         return false;
     }
     return true;
