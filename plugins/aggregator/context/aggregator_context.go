@@ -25,11 +25,12 @@ import (
 )
 
 const (
-	MaxLogCount        = 1024
-	MaxLogGroupSize    = 3 * 1024 * 1024
-	SmallPackIDTimeout = time.Duration(24*30) * time.Hour
-	BigPackIDTimeout   = time.Duration(24) * time.Hour
-	PackIDMapLenThresh = 100000
+	MaxLogCount         = 1024
+	MaxLogGroupSize     = 3 * 1024 * 1024
+	SmallPackIDTimeout  = time.Duration(24*30) * time.Hour
+	BigPackIDTimeout    = time.Duration(24) * time.Hour
+	PackIDMapLenThresh  = 100000
+	MaxLogGroupPoolSize = 10 * 1024 * 1024
 )
 
 type LogPackSeqInfo struct {
@@ -47,6 +48,7 @@ type AggregatorContext struct {
 	lock               *sync.Mutex
 	logGroupPoolMap    map[string][]*protocol.LogGroup
 	nowLogGroupSizeMap map[string]int
+	logGroupPoolSize   int
 	packIDMap          map[string]*LogPackSeqInfo
 	defaultPack        string
 	context            pipeline.Context
@@ -133,8 +135,22 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 
 	// add log size
 	p.nowLogGroupSizeMap[source] += logSize
+	p.logGroupPoolSize += logSize
 	nowLogGroup.Logs = append(nowLogGroup.Logs, log)
 	p.logGroupPoolMap[source] = logGroupList
+	if p.logGroupPoolSize > MaxLogGroupPoolSize {
+		logGroups := p.Flush()
+		for _, logGroup := range logGroups {
+			if len(logGroup.Logs) == 0 {
+				continue
+			}
+			// Quick flush to avoid becoming bottleneck when large logs come.
+			if err := p.queue.Add(logGroup); err == nil {
+			} else {
+				continue
+			}
+		}
+	}
 	return nil
 }
 
@@ -155,6 +171,7 @@ func (p *AggregatorContext) Flush() []*protocol.LogGroup {
 		delete(p.logGroupPoolMap, pack)
 		delete(p.nowLogGroupSizeMap, pack)
 	}
+	p.logGroupPoolSize = 0
 
 	curTime := time.Now()
 	if len(p.packIDMap) > p.ContextPreservationToleranceSize && time.Since(p.lastCleanPackIDMapTime) > p.packIDMapCleanInterval {
