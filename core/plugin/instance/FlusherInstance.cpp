@@ -1,7 +1,7 @@
 #include "plugin/instance/FlusherInstance.h"
 
 namespace logtail {
-bool FlusherInstance::Init(const Table& config, PipelineContext& context) {
+bool FlusherInstance::Init(const Json::Value& config, PipelineContext& context) {
     mPlugin->SetContext(context);
     mPlugin->SetMetricsRecordRef(Name(), Id());
     if (mPlugin->Init(config)) {
