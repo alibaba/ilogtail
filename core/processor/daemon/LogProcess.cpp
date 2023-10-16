@@ -434,27 +434,27 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
                      "logstore", logFileReader->GetCategory()));
         return -1;
     }
-    // construct a logGroup, it should be moved into input later
-    PipelineEventGroup eventGroup(logBuffer);
-
-    // TODO: metadata should be set in reader
-    FillEventGroupMetadata(*logBuffer, eventGroup);
-
-    std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
-    time_t logtime = time(NULL);
-    if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
-        logtime += GetTimeDelta();
-    }
-    event->SetTimestamp(logtime);
-    event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
-    auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
-    event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
-    eventGroup.AddEvent(std::move(event));
 
     std::vector<PipelineEventGroup> outputList;
+    {
+        // construct a logGroup, it should be moved into input later
+        PipelineEventGroup eventGroup(logBuffer);
+        // TODO: metadata should be set in reader
+        FillEventGroupMetadata(*logBuffer, eventGroup);
 
-    // process logGroup
-    pipeline->Process(std::move(eventGroup), outputList);
+        std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
+        time_t logtime = time(NULL);
+        if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
+            logtime += GetTimeDelta();
+        }
+        event->SetTimestamp(logtime);
+        event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
+        auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
+        event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+        eventGroup.AddEvent(std::move(event));
+        // process logGroup
+        pipeline->Process(std::move(eventGroup), outputList);
+    }
 
     // record profile
     auto& processProfile = pipeline->GetContext().GetProcessProfile();
