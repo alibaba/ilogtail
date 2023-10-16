@@ -15,17 +15,29 @@
  */
 
 #pragma once
+
 #include <string>
-#include <memory>
-#include "plugin/PluginInstance.h"
+#include <utility>
+#include <vector>
+
+#include "pipeline/PipelineContext.h"
+#include "pipeline/PipelineConfig.h"
+#include "monitor/LogtailMetric.h"
 
 namespace logtail {
 
-class PluginCreator {
+class PluginInstance {
 public:
-    virtual ~PluginCreator() {}
-    virtual const char* Name() = 0;
-    virtual bool IsDynamic() = 0;
-    virtual std::unique_ptr<PluginInstance> Create(const std::string& pluginId) = 0;
+    PluginInstance(const std::string& pluginId) : mId(pluginId) {}
+    virtual ~PluginInstance() = default;
+
+    const std::string& Id() const { return mId; }
+
+    virtual const std::string& Name() const = 0;
+    virtual bool Init(const ComponentConfig& config, PipelineContext& context) = 0;
+
+protected:
+    const std::string mId;
 };
+
 } // namespace logtail

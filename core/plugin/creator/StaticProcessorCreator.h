@@ -16,18 +16,20 @@
 
 #pragma once
 
-#include <string>
+#include "plugin/creator/PluginCreator.h"
+#include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
 
-class PluginInstance {
+template <typename T>
+class StaticProcessorCreator : public PluginCreator {
 public:
-    PluginInstance(const std::string& pluginId) : mId(pluginId) {}
-    virtual ~PluginInstance() {}
-    const std::string& Id() const { return mId; }
-
-protected:
-    const std::string mId;
+    StaticProcessorCreator() {}
+    const char* Name() override { return T::sName.c_str(); }
+    bool IsDynamic() override { return false; }
+    std::unique_ptr<PluginInstance> Create(const std::string& pluginId) override {
+        return std::unique_ptr<ProcessorInstance>(new ProcessorInstance(new T, pluginId));
+    }
 };
 
 } // namespace logtail
