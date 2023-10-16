@@ -23,6 +23,7 @@
 #include <vector>
 
 namespace logtail {
+const std::string ProcessorFilterNative::sName = "processor_filter_native";
 
 ProcessorFilterNative::~ProcessorFilterNative() {
     for (auto& mFilter : mFilters) {
@@ -166,7 +167,7 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
     return res;
 }
 
-bool ProcessorFilterNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorFilterNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

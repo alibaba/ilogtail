@@ -22,6 +22,7 @@
 
 
 namespace logtail {
+const std::string ProcessorDesensitizeNative::sName = "processor_desensitize_native";
 
 bool ProcessorDesensitizeNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& mConfig = componentConfig.GetConfig();
@@ -139,7 +140,7 @@ void ProcessorDesensitizeNative::CastOneSensitiveWord(const std::vector<Sensitiv
     }
 }
 
-bool ProcessorDesensitizeNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorDesensitizeNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

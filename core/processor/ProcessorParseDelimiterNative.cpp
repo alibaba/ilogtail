@@ -23,6 +23,7 @@
 
 
 namespace logtail {
+const std::string ProcessorParseDelimiterNative::sName = "processor_parse_delimiter_native";
 
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
 
@@ -277,7 +278,7 @@ void ProcessorParseDelimiterNative::AddLog(const StringView& key, const StringVi
     mProcParseOutSizeBytes->Add(key.size() + value.size());
 }
 
-bool ProcessorParseDelimiterNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorParseDelimiterNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

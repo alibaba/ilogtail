@@ -25,6 +25,7 @@
 
 
 namespace logtail {
+const std::string ProcessorParseApsaraNative::sName = "processor_parse_apsara_native";
 
 // static const int32_t MAX_BASE_FIELD_NUM = 10;
 
@@ -332,7 +333,7 @@ void ProcessorParseApsaraNative::AddLog(const StringView& key, const StringView&
     mProcParseOutSizeBytes->Add(key.size() + value.size());
 }
 
-bool ProcessorParseApsaraNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorParseApsaraNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

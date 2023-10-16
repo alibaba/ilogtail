@@ -22,6 +22,7 @@
 
 
 namespace logtail {
+const std::string ProcessorSplitLogStringNative::sName = "processor_split_string_native";
 
 bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
@@ -50,7 +51,7 @@ void ProcessorSplitLogStringNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-bool ProcessorSplitLogStringNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorSplitLogStringNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

@@ -24,6 +24,7 @@
 #include "monitor/MetricConstants.h"
 
 namespace logtail {
+const std::string ProcessorParseJsonNative::sName = "processor_parse_json_native";
 
 bool ProcessorParseJsonNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
@@ -199,7 +200,7 @@ void ProcessorParseJsonNative::AddLog(const StringView& key, const StringView& v
     mProcParseOutSizeBytes->Add(keyValueSize);
 }
 
-bool ProcessorParseJsonNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorParseJsonNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

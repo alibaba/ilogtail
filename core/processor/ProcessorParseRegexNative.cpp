@@ -26,6 +26,7 @@
 #include "monitor/MetricConstants.h"
 
 namespace logtail {
+const std::string ProcessorParseRegexNative::sName = "processor_parse_regex_native";
 
 bool ProcessorParseRegexNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
@@ -75,7 +76,7 @@ void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-bool ProcessorParseRegexNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorParseRegexNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

@@ -25,6 +25,8 @@
 
 
 namespace logtail {
+const std::string ProcessorParseTimestampNative::sName = "processor_parse_timestamp_native";
+
 bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
 
@@ -66,7 +68,7 @@ void ProcessorParseTimestampNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-bool ProcessorParseTimestampNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorParseTimestampNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

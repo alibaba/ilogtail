@@ -24,7 +24,6 @@
 namespace logtail {
 
 bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& context) {
-    mContext = &context;
     mPlugin->SetContext(context);
     bool inited = mPlugin->Init(config);
     if (!inited) {
@@ -51,7 +50,7 @@ void ProcessorInstance::Process(PipelineEventGroup& logGroup) {
 
     size_t outSize = logGroup.GetEvents().size();
     mProcOutRecordsTotal->Add(outSize);
-    LOG_DEBUG(mContext->GetLogger(), ("Processor", Id())("InSize", inSize)("OutSize", outSize));
+    LOG_DEBUG(mPlugin->GetContext().GetLogger(), ("Processor", Id())("InSize", inSize)("OutSize", outSize));
 }
 
 } // namespace logtail
