@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #pragma once
-#include "plugin/model/Processor.h"
+#include "plugin/interface/Processor.h"
 #include <string>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>

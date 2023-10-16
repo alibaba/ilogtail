@@ -15,7 +15,7 @@
  */
 
 #pragma once
-#include "plugin/model/Processor.h"
+#include "plugin/interface/Processor.h"
 #include <vector>
 #include "parser/LogParser.h" //UserDefinedFormat
 

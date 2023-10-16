@@ -20,7 +20,7 @@
 
 #include "models/PipelineEventGroup.h"
 #include "plugin/instance/PluginInstance.h"
-#include "plugin/model/Processor.h"
+#include "plugin/interface/Processor.h"
 
 namespace logtail {
 

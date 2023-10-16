@@ -17,7 +17,7 @@
 #pragma once
 
 #include "models/PipelineEventGroup.h"
-#include "plugin/model/Plugin.h"
+#include "plugin/interface/Plugin.h"
 #include "pipeline/PipelineConfig.h"
 
 namespace logtail {

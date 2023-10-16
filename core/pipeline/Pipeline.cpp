@@ -49,7 +49,7 @@ bool Pipeline::Init(const PipelineConfig& config) {
     }
 
     std::unique_ptr<ProcessorInstance> pluginGroupInfo = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorTagNative::sName, "/" + std::to_string(pluginIndex++));
+        ProcessorTagNative::sName, std::to_string(pluginIndex++));
     if (!InitAndAddProcessor(std::move(pluginGroupInfo), config)) {
         return false;
     }
@@ -61,10 +61,10 @@ bool Pipeline::Init(const PipelineConfig& config) {
     std::unique_ptr<ProcessorInstance> pluginDecoder;
     if (config.mLogType == JSON_LOG || !config.IsMultiline()) {
         pluginDecoder = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
-                                                                       "/" + std::to_string(pluginIndex++));
+                                                                       std::to_string(pluginIndex++));
     } else {
         pluginDecoder = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::sName,
-                                                                       "/" + std::to_string(pluginIndex++));
+                                                                       std::to_string(pluginIndex++));
     }
     if (!InitAndAddProcessor(std::move(pluginDecoder), config)) {
         return false;
@@ -75,19 +75,19 @@ bool Pipeline::Init(const PipelineConfig& config) {
     switch (config.mLogType) {
         case APSARA_LOG:
             pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseApsaraNative::sName,
-                                                                          "/" + std::to_string(pluginIndex++));
+                                                                          std::to_string(pluginIndex++));
             break;
         case REGEX_LOG:
             pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseRegexNative::sName,
-                                                                          "/" + std::to_string(pluginIndex++));
+                                                                          std::to_string(pluginIndex++));
             break;
         case JSON_LOG:
             pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseJsonNative::sName,
-                                                                          "/" + std::to_string(pluginIndex++));
+                                                                          std::to_string(pluginIndex++));
             break;
         case DELIMITER_LOG:
             pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseDelimiterNative::sName,
-                                                                          "/" + std::to_string(pluginIndex++));
+                                                                          std::to_string(pluginIndex++));
             break;
         default:
             return false;
@@ -97,20 +97,20 @@ bool Pipeline::Init(const PipelineConfig& config) {
     }
 
     std::unique_ptr<ProcessorInstance> pluginTime = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorParseTimestampNative::sName, "/" + std::to_string(pluginIndex++));
+        ProcessorParseTimestampNative::sName, std::to_string(pluginIndex++));
     if (!InitAndAddProcessor(std::move(pluginTime), config)) {
         return false;
     }
 
     std::unique_ptr<ProcessorInstance> pluginFilter = PluginRegistry::GetInstance()->CreateProcessor(
-        ProcessorFilterNative::sName, "/" + std::to_string(pluginIndex++));
+        ProcessorFilterNative::sName, std::to_string(pluginIndex++));
     if (!InitAndAddProcessor(std::move(pluginFilter), config)) {
         return false;
     }
 
     if (!config.mSensitiveWordCastOptions.empty()) {
         std::unique_ptr<ProcessorInstance> pluginDesensitize = PluginRegistry::GetInstance()->CreateProcessor(
-            ProcessorDesensitizeNative::sName, "/" + std::to_string(pluginIndex++));
+            ProcessorDesensitizeNative::sName, std::to_string(pluginIndex++));
         if (!InitAndAddProcessor(std::move(pluginDesensitize), config)) {
             return false;
         }

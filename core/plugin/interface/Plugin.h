@@ -18,7 +18,7 @@ public:
     MetricsRecordRef& GetMetricsRecordRef() { return mMetricsRecordRef; }
 
 protected:
-    void SetMetricsRecordRef(std::string name, std::string id) {
+    void SetMetricsRecordRef(const std::string& name, const std::string& id) {
         std::vector<std::pair<std::string, std::string>> labels;
         WriteMetrics::GetInstance()->PreparePluginCommonLabels(GetContext().GetProjectName(),
                                                                GetContext().GetLogstoreName(),

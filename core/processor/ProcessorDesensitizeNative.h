@@ -20,7 +20,7 @@
 #include <unordered_map>
 
 #include "monitor/LogtailMetric.h"
-#include "plugin/model/Processor.h"
+#include "plugin/interface/Processor.h"
 
 namespace logtail {
 

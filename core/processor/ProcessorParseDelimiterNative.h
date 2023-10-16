@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "plugin/model/Processor.h"
+#include "plugin/interface/Processor.h"
 #include <string>
 #include <boost/regex.hpp>
 #include "parser/DelimiterModeFsmParser.h"
