@@ -139,6 +139,7 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	p.logGroupPoolSize += logSize
 	nowLogGroup.Logs = append(nowLogGroup.Logs, log)
 	p.logGroupPoolMap[source] = logGroupList
+	// when logGroupPoolMap is full
 	if p.logGroupPoolSize > MaxLogGroupPoolSize {
 		logGroups := p.Flush()
 		var err error
@@ -164,7 +165,6 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 			time.Sleep(time.Millisecond * 10)
 			logGroups = errorLogGroups
 		}
-
 	}
 	return nil
 }
