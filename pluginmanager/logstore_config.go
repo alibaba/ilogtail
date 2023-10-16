@@ -298,7 +298,7 @@ func (lc *LogstoreConfig) ProcessRawLogV2(rawLog []byte, packID string, topic st
 		extractTags(tags, log)
 		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
 	} else {
-		logTags := make([]*protocol.LogTag, 0, len(tags))
+		logTags := []*protocol.LogTag{}
 		logTags = extractTagsToLogTags(tags, logTags)
 		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logTags}})
 	}
@@ -321,7 +321,7 @@ func (lc *LogstoreConfig) ProcessLog(logByte []byte, packID string, topic string
 		extractTags(tags, log)
 		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
 	} else {
-		logTags := make([]*protocol.LogTag, 0, len(tags))
+		logTags := []*protocol.LogTag{}
 		logTags = extractTagsToLogTags(tags, logTags)
 		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logTags}})
 	}
