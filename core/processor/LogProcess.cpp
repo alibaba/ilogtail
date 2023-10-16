@@ -452,7 +452,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     std::vector<PipelineEventGroup> outputList;
 
     // process logGroup
-    pipeline->Process(eventGroup, outputList);
+    pipeline->Process(std::move(eventGroup), outputList);
 
     // record profile
     auto& processProfile = pipeline->GetContext().GetProcessProfile();

@@ -99,7 +99,7 @@ void PipelineUnittest::TestProcess() {
 
     std::vector<PipelineEventGroup> outputList;
 
-    pipeline.Process(eventGroup, outputList);
+    pipeline.Process(std::move(eventGroup), outputList);
     APSARA_TEST_EQUAL_FATAL(1, outputList.size());
 
     APSARA_TEST_EQUAL_FATAL(2, outputList[0].GetEvents().size());

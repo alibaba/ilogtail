@@ -65,6 +65,8 @@ public:
     PipelineEventGroup(const PipelineEventGroup&) = delete;
     PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
     PipelineEventGroup(PipelineEventGroup&&) = default;
+    PipelineEventGroup& operator=(PipelineEventGroup&&) = default;
+    
 
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& MutableEvents() { return mEvents; }
@@ -78,14 +80,14 @@ public:
     void SetMetadata(EventGroupMetaKey key, const std::string& val);
     void SetMetadataNoCopy(EventGroupMetaKey key, const StringBuffer& val);
     const StringView& GetMetadata(EventGroupMetaKey key) const;
-    const GroupMetadata& GetGroupMetadata() const { return mMetadata; };
+    const GroupMetadata& GetAllMetadata() const { return mMetadata; };
     bool HasMetadata(EventGroupMetaKey key) const;
     void SetMetadataNoCopy(EventGroupMetaKey key, const StringView& val);
     void DelMetadata(EventGroupMetaKey key);
-    GroupMetadata& MutableGroupMetadata() { return mMetadata; };
-    void SwapGroupMetadata(GroupMetadata& other) { mMetadata.swap(other); }
-    void SetGroupMetadata(GroupMetadata& otherMeta) {
-        mMetadata = otherMeta;
+    GroupMetadata& MutableAllMetadata() { return mMetadata; };
+    void SwapAllMetadata(GroupMetadata& other) { mMetadata.swap(other); }
+    void SetAllMetadata(GroupMetadata& other) {
+        mMetadata = other;
     }
 
     void SetTag(const StringView& key, const StringView& val);
