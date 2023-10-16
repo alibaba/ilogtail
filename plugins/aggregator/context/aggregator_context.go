@@ -149,18 +149,15 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 				if len(logGroup.Logs) == 0 {
 					continue
 				}
-				// Quick flush to avoid becoming bottleneck when large logs come.
-				if err = p.queue.Add(logGroup); err == nil {
-				} else {
+				if err = p.queue.Add(logGroup); err != nil {
 					errorLogGroups = append(errorLogGroups, logGroups[i])
+					if tryCount%100 == 0 {
+						logger.Warning(p.context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
+					}
 				}
 			}
 			if len(errorLogGroups) == 0 {
 				break
-			}
-			// wait until shutdown is active
-			if tryCount%100 == 0 {
-				logger.Warning(p.context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
 			}
 			time.Sleep(time.Millisecond * 10)
 			logGroups = errorLogGroups
