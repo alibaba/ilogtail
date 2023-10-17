@@ -34,6 +34,7 @@ public:
     bool Init(const Json::Value& config) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
+    LogstoreFeedBackKey GetLogstoreKey() const { return mLogstoreKey; }
 
     std::string mProject;
     std::string mLogstore;

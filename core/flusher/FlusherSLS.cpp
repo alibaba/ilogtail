@@ -135,7 +135,7 @@ bool FlusherSLS::Init(const Json::Value& config) {
     //     Json::Value detail(Json::objectValue);
     //     for (auto itr = config.begin(); itr != config.end(); ++itr) {
     //         if (sNativeParam.find(itr.name()) != sNativeParam.end()) {
-    //             detail[itr.name()] = (*itr);
+    //             detail[itr.name()] = itr.deref();
     //         }
     //     }
     //     if (!detail.empty()) {

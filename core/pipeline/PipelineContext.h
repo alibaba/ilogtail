@@ -15,12 +15,16 @@
  */
 
 #pragma once
-#include "models/PipelineEventGroup.h"
+
+#include "common/LogstoreFeedbackKey.h"
 #include "logger/Logger.h"
+#include "models/PipelineEventGroup.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/LogFileProfiler.h"
+#include "pipeline/GlobalConfig.h"
 
 namespace logtail {
+class FlusherSLS;
 
 // for compatiblity with shennong profile
 struct ProcessProfile {
@@ -45,13 +49,21 @@ public:
     PipelineContext operator=(const PipelineContext&) = delete;
     PipelineContext operator=(PipelineContext&&) = delete;
 
-    const std::string& GetProjectName() const { return mProjectName; }
-    void SetProjectName(const std::string& projectName) { mProjectName = projectName; }
-    const std::string& GetLogstoreName() const { return mLogstoreName; }
-    void SetLogstoreName(const std::string& logstoreName) { mLogstoreName = logstoreName; }
     const std::string& GetConfigName() const { return mConfigName; }
     void SetConfigName(const std::string& configName) { mConfigName = configName; }
-    const std::string& GetRegion() const { return mRegion; }
+    const GlobalConfig& GetGlobalConfig() const { return mGlobalConfig; }
+    bool InitGlobalConfig(const Json::Value& config) { return mGlobalConfig.Init(config, mConfigName); }
+
+    const std::string& GetProjectName() const;
+    const std::string& GetLogstoreName() const;
+    const std::string& GetRegion() const;
+    LogstoreFeedBackKey GetLogstoreKey() const;
+    const FlusherSLS* GetSLSInfo() const { return mSLSInfo; }
+    void SetSLSInfo(const FlusherSLS* flusherSLS) { mSLSInfo = flusherSLS; }
+
+    // 过渡使用
+    void SetProjectName(const std::string& projectName) { mProjectName = projectName; }
+    void SetLogstoreName(const std::string& logstoreName) { mLogstoreName = logstoreName; }
     void SetRegion(const std::string& region) { mRegion = region; }
 
     ProcessProfile& GetProcessProfile() { return mProcessProfile; }
@@ -60,10 +72,18 @@ public:
     LogtailAlarm& GetAlarm() { return *mAlarm; };
 
 private:
-    std::string mProjectName, mLogstoreName, mConfigName, mRegion;
+    static const std::string sEmptyString;
+
+    std::string mConfigName;
+    GlobalConfig mGlobalConfig;
+
+    const FlusherSLS* mSLSInfo = nullptr;
     ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
     Logger::logger mLogger = sLogger;
     LogtailAlarm* mAlarm = LogtailAlarm::GetInstance();
+
+    // 过渡使用
+    std::string mProjectName, mLogstoreName, mRegion;
 };
 } // namespace logtail

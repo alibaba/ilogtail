@@ -15,27 +15,48 @@
  */
 
 #pragma once
-#include "plugin/instance/ProcessorInstance.h"
-#include "pipeline/PipelineConfig.h"
+
+#include <string>
+#include <vector>
+#include <memory>
+
+// #include "config/NewConfig.h"
+#include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineContext.h"
+#include "plugin/instance/InputInstance.h"
+#include "plugin/instance/FlusherInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
+// #include "table/JSONTable.h"
+#include "json/json.h"
 
 namespace logtail {
 
 class Pipeline {
 public:
-    Pipeline() {}
-    const std::string& Name() const { return mName; }
     bool Init(const PipelineConfig& config);
+    // bool Init(NewConfig&& config);
+    bool Init(const Json::Value& config);
+    void Start();
     void Process(PipelineEventGroup& logGroup);
+    void Stop(bool isRemoving);
+    const std::string& Name() const { return mName; }
+    // const NewConfig& GetConfig() const { return mConfig; }
     PipelineContext& GetContext() { return mContext; }
+    bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
     PipelineConfig& GetPipelineConfig() { return mConfig; }
 
 private:
     bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);
 
     std::string mName;
-    std::vector<std::unique_ptr<ProcessorInstance> > mProcessorLine;
+    std::vector<std::unique_ptr<InputInstance>> mInputs;
+    std::vector<std::unique_ptr<ProcessorInstance>> mProcessorLine;
+    std::vector<std::unique_ptr<FlusherInstance>> mFlushers;
+    Json::Value mGoPipelineWithInput;
+    Json::Value mGoPipelineWithoutInput;
     PipelineContext mContext;
     PipelineConfig mConfig;
+
+    bool mRequiringSpecialStopOrder = false;
 };
 } // namespace logtail
