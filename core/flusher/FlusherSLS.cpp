@@ -3,6 +3,7 @@
 #include "app_config/AppConfig.h"
 #include "config_manager/ConfigManager.h"
 #include "common/ParamExtractor.h"
+#include "pipeline/Pipeline.h"
 #include "sender/Sender.h"
 
 using namespace std;
@@ -11,8 +12,17 @@ DECLARE_FLAG_INT32(batch_send_interval);
 DEFINE_FLAG_BOOL(sls_client_send_compress, "whether compresses the data or not when put data", true);
 
 namespace logtail {
-const string FlusherSLS::sName = "flusher_SLS";
-const unordered_set<string> FlusherSLS::sNativeParam = {"Project", "Logstore", "Region", "Endpoint", "Aliuid", "CompressType", "TelemetryType", "FlowControlExpireTime", "MaxSendRate", "Batch"};
+const string FlusherSLS::sName = "flusher_sls";
+const unordered_set<string> FlusherSLS::sNativeParam = {"Project",
+                                                        "Logstore",
+                                                        "Region",
+                                                        "Endpoint",
+                                                        "Aliuid",
+                                                        "CompressType",
+                                                        "TelemetryType",
+                                                        "FlowControlExpireTime",
+                                                        "MaxSendRate",
+                                                        "Batch"};
 
 FlusherSLS::FlusherSLS() : mRegion(AppConfig::GetInstance()->GetDefaultRegion()) {
 }
@@ -55,12 +65,12 @@ bool FlusherSLS::Init(const Json::Value& config) {
         }
 #ifdef __ENTERPRISE__
     }
-#endif
 
     // Aliuid
     if (!GetOptionalStringParam(config, "Aliuid", mAliuid, errorMsg)) {
         PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
     }
+#endif
 
     // CompressType
     if (BOOL_FLAG(sls_client_send_compress)) {
@@ -131,19 +141,9 @@ bool FlusherSLS::Init(const Json::Value& config) {
     }
 
     // generate Go plugin if necessary
-    // if (GetContext().HasGoPipelines()) {
-    //     Json::Value detail(Json::objectValue);
-    //     for (auto itr = config.begin(); itr != config.end(); ++itr) {
-    //         if (sNativeParam.find(itr.name()) != sNativeParam.end()) {
-    //             detail[itr.name()] = itr.deref();
-    //         }
-    //     }
-    //     if (!detail.empty()) {
-    //         Json::Value flusherSLS(Json::objectValue);
-    //         flusherSLS["type"] = "flusher_sls";
-    //         flusherSLS["detail"] = detail;
-    //     }
-    // }
+    if (mContext->HasGoPipelines()) {
+        AddPluginToGoPipeline(config);
+    }
 
     // 过渡使用
     ConfigManager::GetInstance()->InsertRegionAliuidMap(mRegion, mAliuid);
@@ -165,5 +165,21 @@ bool FlusherSLS::Stop(bool isPipelineRemoving) {
     // Sender::Instance()->DecreaseRegionReferenceCnt(mRegion);
     // Sender::Instance()->DecreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
     return true;
+}
+
+void FlusherSLS::AddPluginToGoPipeline(const Json::Value& config) const {
+    Json::Value detail(Json::objectValue);
+    for (auto itr = config.begin(); itr != config.end(); ++itr) {
+        if (sNativeParam.find(itr.name()) != sNativeParam.end()) {
+            detail[itr.name()] = *itr;
+        }
+    }
+    if (!detail.empty()) {
+        Json::Value flusherSLS(Json::objectValue);
+        flusherSLS["type"] = "flusher_sls";
+        flusherSLS["detail"] = detail;
+        Json::Value& flushers = mContext->GetPipeline().GetGoPipelineWithInput()["flushers"];
+        flushers.append(flusherSLS);
+    }
 }
 } // namespace logtail

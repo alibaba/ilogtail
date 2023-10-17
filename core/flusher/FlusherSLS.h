@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "json/json.h"
+
 #include "common/LogstoreFeedbackKey.h"
 
 namespace logtail {
@@ -48,6 +50,8 @@ public:
     Batch mBatch;
 
 private:
+    void AddPluginToGoPipeline(const Json::Value& config) const;
+
     LogstoreFeedBackKey mLogstoreKey;
 };
 } // namespace logtail

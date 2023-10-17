@@ -477,6 +477,8 @@ public:
     void InsertRegion(const std::string& region);
     void InsertProject(const std::string& project);
 
+    std::unordered_map<std::string, std::shared_ptr<std::vector<DockerContainerPath>>>& GetAllContainerInfo() { return mAllDockerContainerPathMap; }
+
 private:
     // no copy
     ConfigManagerBase(const ConfigManagerBase&);
