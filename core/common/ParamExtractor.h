@@ -50,25 +50,25 @@ bool GetOptionalListParam(const Json::Value& config,
             return false;
         }
         for (auto it = itr->begin(); it != itr->end(); ++it) {
-            if (std::is_same_v<T, bool>) {
+            if constexpr(std::is_same_v<T, bool>) {
                 if (!it->isBool()) {
                     errorMsg = "element in list param" + key + "is not of type bool in plugin ";
                     return false;
                 }
                 param.emplace_back(it->asBool());
-            } else if (std::is_same_v<T, uint32_t>) {
+            } else if constexpr(std::is_same_v<T, uint32_t>) {
                 if (!it->isUInt()) {
                     errorMsg = "element in list param" + key + "is not of type uint in plugin ";
                     return false;
                 }
                 param.emplace_back(it->asUInt());
-            } else if (std::is_same_v<T, int32_t>) {
+            } else if constexpr(std::is_same_v<T, int32_t>) {
                 if (!it->isInt()) {
                     errorMsg = "element in list param" + key + "is not of type int in plugin ";
                     return false;
                 }
                 param.emplace_back(it->asInt());
-            } else if (std::is_same_v<T, std::string>) {
+            } else if constexpr(std::is_same_v<T, std::string>) {
                 if (!it->isString()) {
                     errorMsg = "element in list param" + key + "is not of type string in plugin ";
                     return false;
@@ -96,25 +96,25 @@ bool GetOptionalMapParam(const Json::Value& config,
             return false;
         }
         for (auto it = itr->begin(); it != itr->end(); ++it) {
-            if (std::is_same_v<T, bool>) {
+            if constexpr(std::is_same_v<T, bool>) {
                 if (!it->isBool()) {
                     errorMsg = "value in map param" + key + "is not of type bool in plugin ";
                     return false;
                 }
                 param[it.name()] = it.deref().asBool();
-            } else if (std::is_same_v<T, uint32_t>) {
+            } else if constexpr(std::is_same_v<T, uint32_t>) {
                 if (!it->isUInt()) {
                     errorMsg = "value in map param" + key + "is not of type uint in plugin ";
                     return false;
                 }
                 param[it.name()] = it.deref().asUInt();
-            } else if (std::is_same_v<T, int32_t>) {
+            } else if constexpr(std::is_same_v<T, int32_t>) {
                 if (!it->isInt()) {
                     errorMsg = "value in map param" + key + "is not of type int in plugin ";
                     return false;
                 }
                 param[it.name()] = it.deref().asInt();
-            } else if (std::is_same_v<T, std::string>) {
+            } else if constexpr(std::is_same_v<T, std::string>) {
                 if (!it->isString()) {
                     errorMsg = "value in map param" + key + "is not of type string in plugin ";
                     return false;
