@@ -17,11 +17,13 @@
 #include "processor/ProcessorFilterNative.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include "config_manager/ConfigManager.h"
+#include "monitor/MetricConstants.h"
 #include <vector>
 
 namespace logtail {
+const std::string ProcessorFilterNative::sName = "processor_filter_native";
 
 ProcessorFilterNative::~ProcessorFilterNative() {
     for (auto& mFilter : mFilters) {
@@ -47,7 +49,6 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
 
     mDiscardNoneUtf8 = config.mDiscardNoneUtf8;
 
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
     mProcFilterInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_IN_SIZE_BYTES);
     mProcFilterOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_OUT_SIZE_BYTES);
     mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);
@@ -165,7 +166,7 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
     return res;
 }
 
-bool ProcessorFilterNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorFilterNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

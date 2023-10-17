@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 iLogtail Authors
+ * Copyright 2023 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,21 @@
  */
 
 #pragma once
-#include <string>
-#include "plugin/PluginCreator.h"
-#include "plugin/ProcessorInstance.h"
+
+#include "models/PipelineEventGroup.h"
+#include "plugin/interface/Plugin.h"
+#include "pipeline/PipelineConfig.h"
 
 namespace logtail {
 
-template <typename T>
-class StaticProcessorCreator : public PluginCreator {
+class Processor : public Plugin {
 public:
-    StaticProcessorCreator() {}
-    const char* Name() override { return T::Name(); }
-    bool IsDynamic() override { return false; }
-    std::unique_ptr<PluginInstance> Create(const std::string& pluginId) override {
-        return std::unique_ptr<ProcessorInstance>(new ProcessorInstance(new T, pluginId));
-    }
-};
+    virtual ~Processor() {}
 
+    virtual bool Init(const ComponentConfig& config) = 0;
+    virtual void Process(PipelineEventGroup& logGroup) = 0;
+
+protected:
+    virtual bool IsSupportedEvent(const PipelineEventPtr& e) const = 0;
+};
 } // namespace logtail
