@@ -474,12 +474,13 @@ public:
     void InsertRegionAliuidMap(const std::string& region, const std::string& aliuid);
     void ClearRegionAliuidMap();
 
+    void InsertRegion(const std::string& region);
+    void InsertProject(const std::string& project);
+
 private:
     // no copy
     ConfigManagerBase(const ConfigManagerBase&);
     ConfigManagerBase& operator=(const ConfigManagerBase&);
-
-    void InsertRegion(const std::string& region);
 
     void ClearRegions();
     /** XXX: path is not registered in this method
@@ -536,8 +537,6 @@ private:
                            int32_t maxMultiConfigSize);
 
     void MappingPluginConfig(const Json::Value& configValue, Config* config, Json::Value& pluginJson);
-
-    void InsertProject(const std::string& project);
 
     void ClearProjects();
 

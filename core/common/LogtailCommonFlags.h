@@ -56,7 +56,7 @@ DECLARE_FLAG_STRING(default_aliuid);
 DECLARE_FLAG_STRING(default_access_key_id);
 DECLARE_FLAG_STRING(default_access_key);
 DECLARE_FLAG_INT32(sls_client_send_timeout);
-DECLARE_FLAG_BOOL(sls_client_send_compress);
+// DECLARE_FLAG_BOOL(sls_client_send_compress);
 DECLARE_FLAG_INT32(send_retrytimes);
 DECLARE_FLAG_STRING(user_log_config);
 DECLARE_FLAG_STRING(ilogtail_config);

@@ -13,25 +13,11 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 2.9)
-project(config_manager)
-
-if (MSVC)
-    add_definitions(-DNOMINMAX)
-endif ()
+project(flusher)
 
 file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} common)
-target_link_libraries(${PROJECT_NAME} logger)
 target_link_libraries(${PROJECT_NAME} config)
-target_link_libraries(${PROJECT_NAME} config_server_pb)
-target_link_libraries(${PROJECT_NAME} controller)
-target_link_libraries(${PROJECT_NAME} event_handler)
+target_link_libraries(${PROJECT_NAME} pipeline)
 target_link_libraries(${PROJECT_NAME} sender)
-target_link_libraries(${PROJECT_NAME} monitor)
-target_link_libraries(${PROJECT_NAME} checkpoint)
-target_link_libraries(${PROJECT_NAME} app_config)
-target_link_libraries(${PROJECT_NAME} processor_daemon)
-target_link_libraries(${PROJECT_NAME} flusher)
-link_curl(${PROJECT_NAME})

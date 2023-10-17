@@ -107,6 +107,7 @@ DECLARE_FLAG_BOOL(enable_collection_mark);
 DECLARE_FLAG_BOOL(enable_env_ref_in_config);
 
 DEFINE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS, "default env file key to load tags", "");
+DECLARE_FLAG_BOOL(sls_client_send_compress);
 
 namespace logtail {
 
