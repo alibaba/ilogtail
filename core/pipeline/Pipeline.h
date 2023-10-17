@@ -44,6 +44,8 @@ public:
     PipelineContext& GetContext() { return mContext; }
     bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
     PipelineConfig& GetPipelineConfig() { return mConfig; }
+    Json::Value& GetGoPipelineWithInput() { return mGoPipelineWithInput; }
+    Json::Value& GetGoPipelineWithoutInput() { return mGoPipelineWithoutInput; }
 
 private:
     bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);

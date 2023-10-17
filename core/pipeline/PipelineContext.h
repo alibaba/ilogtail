@@ -24,6 +24,7 @@
 #include "pipeline/GlobalConfig.h"
 
 namespace logtail {
+class Pipeline;
 class FlusherSLS;
 
 // for compatiblity with shennong profile
@@ -53,12 +54,16 @@ public:
     void SetConfigName(const std::string& configName) { mConfigName = configName; }
     const GlobalConfig& GetGlobalConfig() const { return mGlobalConfig; }
     bool InitGlobalConfig(const Json::Value& config) { return mGlobalConfig.Init(config, mConfigName); }
+    Pipeline& GetPipeline() { return *mPipeline; }
+    void SetPipeline(Pipeline& pipeline) { mPipeline = &pipeline; }
+    bool HasGoPipelines() const { return mHasGoPipelines; }
+    void SetGoPipelinesFlag(bool flag) { mHasGoPipelines = flag; }
 
     const std::string& GetProjectName() const;
     const std::string& GetLogstoreName() const;
     const std::string& GetRegion() const;
     LogstoreFeedBackKey GetLogstoreKey() const;
-    const FlusherSLS* GetSLSInfo() const { return mSLSInfo; }
+    const FlusherSLS& GetSLSInfo() const { return *mSLSInfo; }
     void SetSLSInfo(const FlusherSLS* flusherSLS) { mSLSInfo = flusherSLS; }
 
     // 过渡使用
@@ -76,8 +81,11 @@ private:
 
     std::string mConfigName;
     GlobalConfig mGlobalConfig;
-
+    Pipeline* mPipeline = nullptr;
+    bool mHasGoPipelines = false;
+    
     const FlusherSLS* mSLSInfo = nullptr;
+
     ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
     Logger::logger mLogger = sLogger;
