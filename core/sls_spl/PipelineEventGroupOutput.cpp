@@ -61,7 +61,7 @@ void PipelineEventGroupOutput::addRow(
         logGroupKeyIdx = it->second;
     } else {
         mLogGroupList->emplace_back(mLogGroup->GetSourceBuffer());
-        mLogGroupList->back().SetGroupMeta(mLogGroup->MutableGroupMetadata());
+        mLogGroupList->back().SetAllMetadata(mLogGroup->MutableAllMetadata());
         logGroupKeyIdx = mLogGroupList->size() - 1;
         mLogGroupKeyIdxs.emplace(tagStr, logGroupKeyIdx);
     }

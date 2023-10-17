@@ -15,7 +15,7 @@
  */
 
 #pragma once
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include "pipeline/PipelineConfig.h"
 #include "pipeline/PipelineContext.h"
 #include "sls_spl/ProcessorSPL.h"
@@ -27,7 +27,7 @@ public:
     Pipeline() {}
     const std::string& Name() const { return mName; }
     bool Init(const PipelineConfig& config);
-    void Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList);
+    void Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList);
     PipelineContext& GetContext() { return mContext; }
     PipelineConfig& GetPipelineConfig() { return mConfig; }
 

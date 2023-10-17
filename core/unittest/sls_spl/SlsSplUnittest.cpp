@@ -4,7 +4,7 @@
 #include "config/Config.h"
 #include "sls_spl/ProcessorSPL.h"
 #include "models/LogEvent.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include <iostream>
 #include <sstream>
 

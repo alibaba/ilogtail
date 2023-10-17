@@ -135,7 +135,7 @@ bool Pipeline::Init(const PipelineConfig& config) {
     return true;
 }
 
-void Pipeline::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
+void Pipeline::Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
     std::cout << "mProcessorLine size: " << mProcessorLine.size() << std::endl;
     for (auto& p : mProcessorLine) {
         p->Process(logGroup);
@@ -144,10 +144,7 @@ void Pipeline::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGr
         std::cout << "mSplProcessor: " << std::endl;
         mSplProcessor->Process(logGroup, logGroupList);
     } else {
-        logGroupList.emplace_back(logGroup.GetSourceBuffer());
-        logGroupList.back().SwapEvents(logGroup.MutableEvents());
-        logGroupList.back().SwapGroupMetadata(logGroup.MutableGroupMetadata());
-        logGroupList.back().SwapGroupTags(logGroup.MutableTags());
+        logGroupList.emplace_back(std::move(logGroup));
     }
 }
 

@@ -64,7 +64,10 @@ public:
     PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
     PipelineEventGroup(const PipelineEventGroup&) = delete;
     PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
-    PipelineEventGroup(PipelineEventGroup&&) = default;
+    PipelineEventGroup(PipelineEventGroup&&) noexcept = default;
+    PipelineEventGroup& operator=(PipelineEventGroup&&) noexcept = default;
+    
+
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& MutableEvents() { return mEvents; }
     void AddEvent(const PipelineEventPtr& event);
@@ -77,18 +80,14 @@ public:
     void SetMetadata(EventGroupMetaKey key, const std::string& val);
     void SetMetadataNoCopy(EventGroupMetaKey key, const StringBuffer& val);
     const StringView& GetMetadata(EventGroupMetaKey key) const;
-    const GroupMetadata& GetMetadatum() const { return mMetadata; };
-
-    GroupMetadata& MutableGroupMetadata() { return mMetadata; };
-    void SwapGroupMetadata(GroupMetadata& other) { mMetadata.swap(other); }
-    
-
+    const GroupMetadata& GetAllMetadata() const { return mMetadata; };
     bool HasMetadata(EventGroupMetaKey key) const;
     void SetMetadataNoCopy(EventGroupMetaKey key, const StringView& val);
     void DelMetadata(EventGroupMetaKey key);
-
-    void SetGroupMeta(GroupMetadata& otherMeta) {
-        mMetadata = otherMeta;
+    GroupMetadata& MutableAllMetadata() { return mMetadata; };
+    void SwapAllMetadata(GroupMetadata& other) { mMetadata.swap(other); }
+    void SetAllMetadata(GroupMetadata& other) {
+        mMetadata = other;
     }
 
     void SetTag(const StringView& key, const StringView& val);
@@ -100,7 +99,7 @@ public:
     void SetTagNoCopy(const StringView& key, const StringView& val);
     void DelTag(const StringView& key);
     GroupTags& MutableTags() { return mTags; };
-    void SwapGroupTags(GroupTags& other) { mTags.swap(other); }
+    void SwapTags(GroupTags& other) { mTags.swap(other); }
 
     uint64_t EventGroupSizeBytes();
 

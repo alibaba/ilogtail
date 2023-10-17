@@ -24,7 +24,7 @@
 #include "common/TimeUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/LogGroupContext.h"
-#include "plugin/LogtailPlugin.h"
+#include "go_pipeline/LogtailPlugin.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineManager.h"
 #include "monitor/Monitor.h"
@@ -99,9 +99,11 @@ void LogProcess::Start() {
     mThreadCount = AppConfig::GetInstance()->GetProcessThreadCount();
     // mBufferCountLimit = INT32_FLAG(process_buffer_count_upperlimit_perthread) * mThreadCount;
     mProcessThreads = new ThreadPtr[mThreadCount];
-    mThreadFlags = new bool[mThreadCount];
-    for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo)
+    mThreadFlags = new std::atomic_bool[mThreadCount];
+    for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
+        mThreadFlags[threadNo] = false;
         mProcessThreads[threadNo] = CreateThread([this, threadNo]() { ProcessLoop(threadNo); });
+    }
 }
 
 bool LogProcess::PushBuffer(LogBuffer* buffer, int32_t retryTimes) {
@@ -432,32 +434,32 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
                      "logstore", logFileReader->GetCategory()));
         return -1;
     }
-    // construct a logGroup, it should be moved into input later
-    PipelineEventGroup eventGroup(logBuffer);
-
-    // TODO: metadata should be set in reader
-    FillEventGroupMetadata(*logBuffer, eventGroup);
-
-    std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
-    time_t logtime = time(NULL);
-    if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
-        logtime += GetTimeDelta();
-    }
-    event->SetTimestamp(logtime);
-    event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
-    auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
-    event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
-    eventGroup.AddEvent(std::move(event));
 
     std::vector<PipelineEventGroup> outputList;
-    // process logGroup
-    pipeline->Process(eventGroup, outputList);
+    {
+        // construct a logGroup, it should be moved into input later
+        PipelineEventGroup eventGroup(logBuffer);
+        // TODO: metadata should be set in reader
+        FillEventGroupMetadata(*logBuffer, eventGroup);
+
+        std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
+        time_t logtime = time(NULL);
+        if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
+            logtime += GetTimeDelta();
+        }
+        event->SetTimestamp(logtime);
+        event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
+        auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
+        event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+        eventGroup.AddEvent(std::move(event));
+        // process logGroup
+        pipeline->Process(std::move(eventGroup), outputList);
+    }
 
     // record profile
     auto& processProfile = pipeline->GetContext().GetProcessProfile();
     profile = processProfile;
     processProfile.Reset();
-    
     for (auto& eventGroup : outputList) {
         // fill protobuf
         FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
@@ -467,7 +469,8 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
                 logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
             return 1;
         }
-        // record log positions for exactly once.
+        // record log positions for exactly once. TODO: make it correct for each log, current implementation requires
+        // loggroup send in one shot
         if (logBuffer->exactlyOnceCheckpoint) {
             std::pair<size_t, size_t> pos(logBuffer->readOffset, logBuffer->readLength);
             logBuffer->exactlyOnceCheckpoint->positions.assign(eventGroup.GetEvents().size(), pos);

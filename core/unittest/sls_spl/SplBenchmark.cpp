@@ -7,7 +7,7 @@
 #include "processor/ProcessorParseRegexNative.h"
 #include "processor/ProcessorParseJsonNative.h"
 #include "models/LogEvent.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include <iostream>
 #include <sstream>
 

@@ -24,7 +24,7 @@ set -o pipefail
 # e2e: Build plugin dynamic lib with GOC and build the CPP part.
 CATEGORY=$1
 GENERATED_HOME=$2
-VERSION=${3:-1.7.1}
+VERSION=${3:-1.8.0}
 REPOSITORY=${4:-aliyun/ilogtail}
 OUT_DIR=${5:-output}
 EXPORT_GO_ENVS=${6:-${DOCKER_BUILD_EXPORT_GO_ENVS:-true}}
@@ -100,11 +100,11 @@ function generateCopyScript() {
     echo 'docker cp "$id":/src/'${OUT_DIR}'/libPluginBase.so $BINDIR' >>$COPY_SCRIPT_FILE
   elif [ $CATEGORY = "core" ]; then
     echo 'docker cp "$id":/src/core/build/ilogtail $BINDIR' >>$COPY_SCRIPT_FILE
-    echo 'docker cp "$id":/src/core/build/plugin/libPluginAdapter.so $BINDIR' >>$COPY_SCRIPT_FILE
+    echo 'docker cp "$id":/src/core/build/go_pipeline/libPluginAdapter.so $BINDIR' >>$COPY_SCRIPT_FILE
   else
     echo 'docker cp "$id":/src/'${OUT_DIR}'/libPluginBase.so $BINDIR' >>$COPY_SCRIPT_FILE
     echo 'docker cp "$id":/src/core/build/ilogtail $BINDIR' >>$COPY_SCRIPT_FILE
-    echo 'docker cp "$id":/src/core/build/plugin/libPluginAdapter.so $BINDIR' >>$COPY_SCRIPT_FILE
+    echo 'docker cp "$id":/src/core/build/go_pipeline/libPluginAdapter.so $BINDIR' >>$COPY_SCRIPT_FILE
   fi
   echo 'echo -e "{\n}" > $BINDIR/ilogtail_config.json' >>$COPY_SCRIPT_FILE
   echo 'mkdir -p $BINDIR/user_yaml_config.d' >>$COPY_SCRIPT_FILE
