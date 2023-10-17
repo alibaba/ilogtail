@@ -101,25 +101,25 @@ bool GetOptionalMapParam(const Json::Value& config,
                     errorMsg = "value in map param" + key + "is not of type bool in plugin ";
                     return false;
                 }
-                param[it.name()] = it.deref().asBool();
+                param[it.name()] = it->asBool();
             } else if constexpr(std::is_same_v<T, uint32_t>) {
                 if (!it->isUInt()) {
                     errorMsg = "value in map param" + key + "is not of type uint in plugin ";
                     return false;
                 }
-                param[it.name()] = it.deref().asUInt();
+                param[it.name()] = it->asUInt();
             } else if constexpr(std::is_same_v<T, int32_t>) {
                 if (!it->isInt()) {
                     errorMsg = "value in map param" + key + "is not of type int in plugin ";
                     return false;
                 }
-                param[it.name()] = it.deref().asInt();
+                param[it.name()] = it->asInt();
             } else if constexpr(std::is_same_v<T, std::string>) {
                 if (!it->isString()) {
                     errorMsg = "value in map param" + key + "is not of type string in plugin ";
                     return false;
                 }
-                param[it.name()] = it.deref().asString();
+                param[it.name()] = it->asString();
             } else {
                 errorMsg = "value in map param" + key + "is not supported in plugin ";
                 return false;
