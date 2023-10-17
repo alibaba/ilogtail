@@ -157,7 +157,7 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 				}
 			}
 			if len(errorLogGroups) == 0 {
-				break
+				return nil
 			}
 			time.Sleep(time.Millisecond * 10)
 			logGroups = errorLogGroups
