@@ -55,7 +55,7 @@ void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplS
 }
 
 bool PipelineEventGroupInput::isColumnar() {
-    return true;
+    return false;
 }
 
 }  // namespace apsara::sls::spl

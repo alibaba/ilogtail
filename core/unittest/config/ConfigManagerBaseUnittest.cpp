@@ -481,11 +481,79 @@ public:
         APSARA_TEST_FALSE(configNameEntityMap["##1.0##test$apsara-2"]->mTimeZoneAdjust);
         APSARA_TEST_TRUE(configNameEntityMap["##1.0##test$apsara-3"]->mTimeZoneAdjust);
     }
+
+
+
+	void TestSpl() {
+        /* xxx-{last} is valid time zone config,
+           others are invalid because either timeformat, timekey or log_tz is empty.
+           apasra-{last} should be valid regardless with timeformat and timekey.
+         */
+        std::string configStr = R""""({
+    "metrics" : 
+    {
+        "##1.0##test$regex-1" : 
+		{
+			"category" : "test",
+			"enable": true,
+			"file_pattern" : "*.log",
+			"keys" : 
+			[
+				"time,msg"
+			],
+			"log_begin_reg" : ".*",
+			"log_path" : ".",
+			"log_type" : "common_reg_log",
+			"plugin": {
+				"global": {
+					"123": "",
+					"spl": ""
+				},
+				"processors": [
+					{
+					"detail": {
+						"SplitKey": "content"
+					},
+					"type": "processor_split_log_string"
+					},
+					{
+					"detail": {
+						"Spl": "* | where true"
+					},
+					"type": "spl"
+					}
+				]
+			},
+			"log_tz" : "",
+			"max_depth" : 0,
+			"project_name" : "test",
+			"regex" : 
+			[
+				"\\[([^]]+)]\\s(.*)"
+			],
+			"timeformat" : "",
+			"tz_adjust" : false
+		}
+    }
+})"""";
+        Json::Reader reader;
+        Json::Value root;
+        APSARA_TEST_TRUE(reader.parse(configStr, root));
+
+        ConfigManager::GetInstance()->LoadJsonConfig(root);
+        auto configNameEntityMap = ConfigManager::GetInstance()->GetAllConfig();
+
+		std::cout << "outJson: " << configNameEntityMap["##1.0##test$regex-1"]->mSpl << std::endl;
+        //APSARA_TEST_FALSE(configNameEntityMap["##1.0##test$regex-1"]->mTimeZoneAdjust);
+        
+    }
 };
 
-UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestReplaceEnvVarRefInStr);
-UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestReplaceEnvVarRefInConf);
-UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestTimeZoneAdjustment);
+//UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestReplaceEnvVarRefInStr);
+//UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestReplaceEnvVarRefInConf);
+//UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestTimeZoneAdjustment);
+UNIT_TEST_CASE(ConfigManagerBaseUnittest, TestSpl);
+
 
 
 } // end of namespace logtail

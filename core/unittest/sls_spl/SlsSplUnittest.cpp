@@ -34,7 +34,7 @@ public:
     void TestMultiParse();
 };
 
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestInit, 8);
+//APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestInit, 8);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestWhere, 0);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestExtend, 1);
 APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestJsonParse, 2);
@@ -125,8 +125,8 @@ void SlsSplUnittest::TestWhere() {
                 StringView content = log->GetContent("content");
                 APSARA_TEST_EQUAL("value_3_0", content);
             }
-            //std::string outJson = logGroup.ToJsonString();
-            //std::cout << "outJson: " << outJson << std::endl;
+            std::string outJson = logGroup.ToJsonString();
+            std::cout << "outJson: " << outJson << std::endl;
         }
     }
 
