@@ -29,7 +29,6 @@ type CommonContext struct {
 // Context for plugin
 type Context interface {
 	InitContext(project, logstore, configName string)
-
 	GetConfigName() string
 	GetProject() string
 	GetLogstore() string

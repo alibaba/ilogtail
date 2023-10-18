@@ -29,6 +29,7 @@
 #include "processor/BaseFilterNode.h"
 #include "LogType.h"
 #include "IntegrityConfig.h"
+#include "sls_logs.pb.h"
 
 namespace logtail {
 
@@ -107,6 +108,7 @@ public:
     std::string mBasePath; // base path, not terminated by "*" "**"
     std::string mFilePattern; // file name format
     LogType mLogType;
+    sls_logs::SlsTelemetryType mTelemetryType;
     std::string mConfigName; // name of log e.g. aliyun_com "##1.0##sls-zc-test$home-log"
     std::string mLogBeginReg; // the log begin line regex
     std::string mLogContinueReg; // the log continue line regex
@@ -141,6 +143,7 @@ public:
     bool mDiscardNoneUtf8;
     std::string mAliuid;
     std::string mRegion;
+
     std::string mStreamLogTag;
     bool mDiscardUnmatch;
     std::vector<std::string> mColumnKeys;
@@ -220,6 +223,7 @@ public:
         mMaxSendBytesPerSecond = -1;
         mSendRateExpireTime = -1;
         mMergeType = MERGE_BY_TOPIC;
+        mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
         mTimeZoneAdjust = false;
         mLogTimeZoneOffsetSecond = 0;
         mLocalFlag = false;
@@ -234,6 +238,7 @@ public:
     Config(const std::string& basePath,
            const std::string& filePattern,
            LogType logType,
+           sls_logs::SlsTelemetryType telemetryType,
            const std::string& logName,
            const std::string& logBeginReg,
            const std::string& logContinueReg,

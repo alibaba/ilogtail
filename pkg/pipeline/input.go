@@ -14,7 +14,7 @@
 
 package pipeline
 
-// MetricInput ...
+// MetricInput means a fetch interface rather than Metrics data structure, such as prometheus time series model.
 type MetricInput interface {
 	// Init called for init some system resources, like socket, mutex...
 	// return call interval(ms) and error flag, if interval is 0, use default interval

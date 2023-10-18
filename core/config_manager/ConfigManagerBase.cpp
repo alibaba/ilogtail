@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "Config.h"
 #include "ConfigManager.h"
+#include "sls_logs.pb.h"
 #include <curl/curl.h>
 #include <cctype>
+#include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -198,6 +201,17 @@ bool ConfigManagerBase::CheckLogType(const string& logTypeStr, LogType& logType)
         return false;
     }
     return true;
+}
+
+void ConfigManagerBase::ParseTelemetryType(const string& telemetryTypeStr, sls_logs::SlsTelemetryType& telemetryType) {
+    if (telemetryTypeStr == "logs")
+        telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
+    else if (telemetryTypeStr == "metrics")
+        telemetryType = sls_logs::SLS_TELEMETRY_TYPE_METRICS;
+    else {
+        LOG_WARNING(sLogger, ("not supported log type, use default log telemetry type", telemetryType));
+         telemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
+    }
 }
 
 // LoadGlobalConfig reads config from @jsonRoot, and set to LogtailGlobalPara::Instance().
@@ -386,6 +400,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
     static const std::string MIX_PROCESS_MODE = "mix_process_mode";
     Config* config = NULL;
     string projectName, category, errorMessage;
+    sls_logs::SlsTelemetryType telemetryType;
     LOG_DEBUG(sLogger, ("message", "load single user config")("json", rawValue.toStyledString()));
     const Json::Value* valuePtr = &rawValue;
     Json::Value replacedValue = rawValue;
@@ -406,6 +421,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             }
             projectName = GetStringValue(value, "project_name", "");
             category = GetStringValue(value, "category", "");
+            ParseTelemetryType(GetStringValue(value, "telemetry_type", "logs"), telemetryType);
             string logTypeStr = GetStringValue(value, "log_type", "plugin");
             auto region = GetStringValue(value, "region", AppConfig::GetInstance()->GetDefaultRegion());
             LogType logType;
@@ -525,6 +541,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 config = new Config("",
                                     "",
                                     logType,
+                                    telemetryType,
                                     logName,
                                     "",
                                     "",
@@ -569,6 +586,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 config = new Config("",
                                     "",
                                     logType,
+                                    telemetryType,
                                     logName,
                                     "",
                                     "",
@@ -632,6 +650,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 config = new Config(logPath,
                                     filePattern,
                                     logType,
+                                    telemetryType,
                                     logName,
                                     logBeginReg,
                                     logContinueReg,

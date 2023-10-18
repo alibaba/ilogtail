@@ -36,7 +36,7 @@ namespace sdk {
     class Client;
 }
 
-enum OperationOnFail { RETRY_ASYNC_WHEN_FAIL, RECORD_ERROR_WHEN_FAIL, DISCARD_WHEN_FAIL };
+enum OperationOnFail { RETRY_ASYNC_WHEN_FAIL, RECORD_ERROR_WHEN_FAIL, DISCARD_WHEN_FAIL, METRICSTORE_CHANGE_LOGSTORE };
 
 enum SEND_THREAD_TYPE { REALTIME_SEND_THREAD = 0, REPLAY_SEND_THREAD = 1, SEND_THREAD_TYPE_COUNT = 2 };
 
@@ -132,7 +132,16 @@ struct RegionEndpointEntry {
             (iter->second).SetDetail(status, latency);
     }
 };
-
+enum SendResult {
+    SEND_OK,
+    SEND_NETWORK_ERROR,
+    SEND_QUOTA_EXCEED,
+    SEND_UNAUTHORIZED,
+    SEND_SERVER_ERROR,
+    SEND_DISCARD_ERROR,
+    SEND_INVALID_SEQUENCE_ID,
+    SEND_PARAMETER_INVALID
+};
 class SendClosure : public sdk::PostLogStoreLogsClosure {
 public:
     virtual void OnSuccess(sdk::Response* response);
@@ -150,16 +159,7 @@ struct SlsClientInfo {
     SlsClientInfo(sdk::Client* client, int32_t updateTime);
 };
 
-enum SendResult {
-    SEND_OK,
-    SEND_NETWORK_ERROR,
-    SEND_QUOTA_EXCEED,
-    SEND_UNAUTHORIZED,
-    SEND_SERVER_ERROR,
-    SEND_DISCARD_ERROR,
-    SEND_INVALID_SEQUENCE_ID,
-    SEND_PARAMETER_INVALID
-};
+
 SendResult ConvertErrorCode(const std::string& errorCode);
 
 class Sender {

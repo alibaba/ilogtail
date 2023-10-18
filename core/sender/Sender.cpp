@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include "Sender.h"
+#include "Logger.h"
 #include "sls_control/SLSControl.h"
+#include <cstdint>
 #include <fstream>
 #include <string>
 #include <atomic>
@@ -50,6 +52,7 @@
 #include "config_manager/ConfigManager.h"
 #include "common/LogFileCollectOffsetIndicator.h"
 #include "fuse/UlogfsHandler.h"
+#include "log_pb/sls_logs.pb.h"
 
 #ifdef LOGTAIL_RUNTIME_PLUGIN
 #include "LogtailRuntimePlugin.h"
@@ -100,13 +103,18 @@ DEFINE_FLAG_INT32(sending_cost_time_alarm_interval, "sending log group cost too 
 DEFINE_FLAG_INT32(log_group_wait_in_queue_alarm_interval,
                   "log group wait in queue alarm interval, may blocked by concurrency or quota, second",
                   3);
-DEFINE_FLAG_STRING(data_endpoint_policy, "policy for switching between data server endpoints, possible options include 'designated_first'(default) and 'designated_locked'", "designated_first");
+DEFINE_FLAG_STRING(data_endpoint_policy,
+                   "policy for switching between data server endpoints, possible options include "
+                   "'designated_first'(default) and 'designated_locked'",
+                   "designated_first");
 
 namespace logtail {
 const string Sender::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";
 const int32_t Sender::BUFFER_META_BASE_SIZE = 65536;
 
 std::atomic_int gNetworkErrorCount{0};
+std::atomic_int gMetricsStoreSendErrorCount{0};
+std::atomic_int gMetricsFallbackCount{0};
 
 void SendClosure::OnSuccess(sdk::Response* response) {
     BOOL_FLAG(global_network_success) = true;
@@ -123,7 +131,8 @@ void SendClosure::OnSuccess(sdk::Response* response) {
                 "Project", mDataPtr->mProjectName)("Logstore", mDataPtr->mLogstore)("Config", mDataPtr->mConfigName)(
                 "RetryTimes", mDataPtr->mSendRetryTimes)("TotalSendCost", curTime - mDataPtr->mLastUpdateTime)(
                 "LogLines", mDataPtr->mLogLines)("Bytes", mDataPtr->mLogData.size())(
-                "Endpoint", mDataPtr->mCurrentEndpoint)("IsProfileData", isProfileData));
+                "Endpoint", mDataPtr->mCurrentEndpoint)("IsProfileData", isProfileData)(
+                "TelemetryType", sls_logs::SlsTelemetryType_Name(mDataPtr->mTelemetryType)));
     }
 
     if (BOOL_FLAG(e2e_send_throughput_test))
@@ -168,22 +177,29 @@ static const char* GetOperationString(OperationOnFail op) {
 }
 
 void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const string& errorMessage) {
+    static std::string sMetricstoreVersionTooLowFlag = "get WriteClient error: no basic auth or parse error";
     // test
-    LOG_DEBUG(sLogger, ("send failed, error code", errorCode)("error msg", errorMessage));
+    LOG_DEBUG(sLogger, ("send failed, error code", errorCode)("error msg", errorMessage)("retry times", mDataPtr->mSendRetryTimes));
 
     // added by xianzhi(bowen.gbw@antfin.com)
     if (mDataPtr->mLogGroupContext.mIntegrityConfigPtr.get() != NULL
         && mDataPtr->mLogGroupContext.mIntegrityConfigPtr->mIntegritySwitch)
         LogIntegrity::GetInstance()->Notify(mDataPtr, false);
 
-    mDataPtr->mSendRetryTimes++;
+    ++mDataPtr->mSendRetryTimes;
     int32_t curTime = time(NULL);
     OperationOnFail operation;
     LogstoreSenderInfo::SendResult recordRst = LogstoreSenderInfo::SendResult_OtherFail;
     SendResult sendResult = ConvertErrorCode(errorCode);
     std::ostringstream failDetail, suggestion;
     std::string failEndpoint = mDataPtr->mCurrentEndpoint;
-    if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
+    if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+        ++gMetricsStoreSendErrorCount;
+    }
+    if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS
+        && errorMessage.rfind(sMetricstoreVersionTooLowFlag) != std::string::npos) {
+        operation = METRICSTORE_CHANGE_LOGSTORE;
+    } else if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
         if (SEND_NETWORK_ERROR == sendResult) {
             gNetworkErrorCount++;
         }
@@ -204,9 +220,14 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         }
         double serverErrorRatio
             = Sender::Instance()->IncSendServerErrorStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
-        if (serverErrorRatio < DOUBLE_FLAG(send_server_error_retry_ratio)
-            && mDataPtr->mSendRetryTimes < INT32_FLAG(send_retrytimes)) {
-            operation = RETRY_ASYNC_WHEN_FAIL;
+        if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+            LOG_INFO(sLogger, ("errmsg", errorMessage));
+            if (errorMessage.rfind(sMetricstoreVersionTooLowFlag) != std::string::npos) {
+                operation = METRICSTORE_CHANGE_LOGSTORE;
+                ++gMetricsFallbackCount;
+            } else {
+                ++gMetricsStoreSendErrorCount;
+            }
         } else {
             if (sendResult == SEND_NETWORK_ERROR) {
                 // only set network stat when no real ip
@@ -351,6 +372,9 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
 
     // Log warning if retry for too long or will discard data
     switch (operation) {
+        case METRICSTORE_CHANGE_LOGSTORE:
+            // switch to log channel because metricstore version too low
+            mDataPtr->mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
         case RETRY_ASYNC_WHEN_FAIL:
             if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
                 LOG_WARNING(sLogger, LOG_PATTERN);
@@ -1440,6 +1464,9 @@ void Sender::DaemonSender() {
             // Collect at most 15 stats, similar to Linux load 1,5,15.
             static SlidingWindowCounter sNetErrCounter = CreateLoadCounter();
             sMonitor->UpdateMetric("net_err_stat", sNetErrCounter.Add(gNetworkErrorCount.exchange(0)));
+            static SlidingWindowCounter sMetricsErrCounter = CreateLoadCounter();
+            sMonitor->UpdateMetric("metrics_err_stat", sMetricsErrCounter.Add(gMetricsStoreSendErrorCount.exchange(0)));
+            sMonitor->UpdateMetric("metrics_fallback_count", gMetricsFallbackCount.exchange(0));
         }
 
         ///////////////////////////////////////
@@ -1631,6 +1658,7 @@ bool Sender::SendToBufferFile(LoggroupTimeValue* dataPtr) {
     bufferMeta.set_rawsize(dataPtr->mRawSize);
     bufferMeta.set_shardhashkey(dataPtr->mShardHashKey);
     bufferMeta.set_compresstype(dataPtr->mLogGroupContext.mCompressType);
+    bufferMeta.set_telemetrytype(dataPtr->mTelemetryType);
     string encodedInfo;
     bufferMeta.SerializeToString(&encodedInfo);
 
@@ -1716,7 +1744,8 @@ bool Sender::SendPb(Config* pConfig,
                                                      time(NULL),
                                                      shardHash,
                                                      pConfig->mLogstoreKey,
-                                                     logGroupContext);
+                                                     logGroupContext,
+                                                     pConfig->mTelemetryType);
     // apsara::timing::TimeInNsec startT = apsara::timing::GetCurrentTimeInNanoSeconds();
     if (!CompressData(logGroupContext.mCompressType, pbBuffer, pbSize, pData->mLogData)) {
         LOG_ERROR(sLogger,
@@ -2099,7 +2128,6 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         }
         dataPtr->mRealIpFlag = sendClient->GetRawSlsHostFlag();
     }
-
     SendClosure* sendClosure = new SendClosure;
     dataPtr->mLastSendTime = curTime;
     sendClosure->mDataPtr = dataPtr;
@@ -2125,7 +2153,15 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         }
     } else if (dataPtr->mDataType == LOGGROUP_COMPRESSED) {
         const auto& hashKey = exactlyOnceCpt ? exactlyOnceCpt->data.hash_key() : dataPtr->mShardHashKey;
-        if (hashKey.empty()) {
+        if (dataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+            // send to metrics store
+            sendClient->PostMetricstoreLogs(dataPtr->mProjectName,
+                                            dataPtr->mLogstore,
+                                            dataPtr->mLogGroupContext.mCompressType,
+                                            dataPtr->mLogData,
+                                            dataPtr->mRawSize,
+                                            sendClosure);
+        } else if (hashKey.empty()) {
             sendClient->PostLogStoreLogs(dataPtr->mProjectName,
                                          dataPtr->mLogstore,
                                          dataPtr->mLogGroupContext.mCompressType,

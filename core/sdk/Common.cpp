@@ -69,6 +69,7 @@ namespace sdk {
     const char* const LOGE_SHARD_READ_QUOTA_EXCEED = "ShardReadQuotaExceed";
     const char* const LOGE_INVALID_SEQUENCE_ID = "InvalidSequenceId";
 
+    const char* const PROMETHEUS = "/prometheus";
     const char* const LOGSTORES = "/logstores";
     const char* const SHARDS = "/shards";
     const char* const INDEX = "/index";
