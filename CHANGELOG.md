@@ -36,3 +36,4 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+- [public] [both] [fixed] fix profiling wrong type when the different profiling type having same stack. 
