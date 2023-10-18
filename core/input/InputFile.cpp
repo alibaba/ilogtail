@@ -44,7 +44,7 @@ InputFile::InputFile()
       mMaxCheckpointDirSearchDepth(static_cast<uint32_t>(INT32_FLAG(search_checkpoint_default_dir_depth))) {
 }
 
-bool InputFile::Init(const Json::Value& config) {
+bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
 
     // FilePaths + MaxDirSearchDepth
@@ -321,7 +321,7 @@ bool InputFile::Init(const Json::Value& config) {
             PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
         }
 
-        GenerateContainerMetaFetchingGoPipeline();
+        GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline);
 
         // 过渡使用
         auto allContainers = ConfigManager::GetInstance()->GetAllContainerInfo();
@@ -508,7 +508,7 @@ void InputFile::ParseWildcardPath() {
     }
 }
 
-void InputFile::GenerateContainerMetaFetchingGoPipeline() const {
+void InputFile::GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const {
     Json::Value plugin(Json::objectValue), detail(Json::objectValue), object(Json::objectValue);
     auto ConvertMapToJsonObj = [&](const char* key, const unordered_map<string, string>& map) {
         if (!map.empty()) {
@@ -550,13 +550,11 @@ void InputFile::GenerateContainerMetaFetchingGoPipeline() const {
     }
     plugin["type"] = Json::Value("metric_docker_file");
     plugin["detail"] = detail;
-    Json::Value& inputs = mContext->GetPipeline().GetGoPipelineWithInput()["inputs"];
-    inputs.append(plugin);
 
+    res["inputs"].append(plugin);
     // these param will be overriden if the same param appears in the global module of config, which will be parsed later.
-    Json::Value& global = mContext->GetPipeline().GetGoPipelineWithInput()["global"];
-    global["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
-    global["AlwaysOnline"] = Json::Value(true);
+    res["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
+    res["global"]["AlwaysOnline"] = Json::Value(true);
 }
 
 } // namespace logtail

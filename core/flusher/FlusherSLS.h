@@ -32,7 +32,7 @@ public:
     FlusherSLS();
 
     const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config) override;
+    bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) override;
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
     LogstoreFeedBackKey GetLogstoreKey() const { return mLogstoreKey; }
@@ -51,7 +51,7 @@ public:
 private:
     static const std::unordered_set<std::string> sNativeParam;
 
-    void AddPluginToGoPipeline(const Json::Value& config) const;
+    void GenerateGoPlugin(const Json::Value& config, Json::Value& res) const;
 
     LogstoreFeedBackKey mLogstoreKey;
 };

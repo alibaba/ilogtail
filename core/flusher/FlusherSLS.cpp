@@ -30,7 +30,7 @@ FlusherSLS::FlusherSLS() : mRegion(AppConfig::GetInstance()->GetDefaultRegion())
 FlusherSLS::Batch::Batch() : mSendIntervalSecs(INT32_FLAG(batch_send_interval)) {
 }
 
-bool FlusherSLS::Init(const Json::Value& config) {
+bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
 
     // Project
@@ -142,7 +142,7 @@ bool FlusherSLS::Init(const Json::Value& config) {
 
     // generate Go plugin if necessary
     if (mContext->IsFlushingThroughGoPipeline()) {
-        AddPluginToGoPipeline(config);
+        GenerateGoPlugin(config, optionalGoPipeline);
     }
 
     // 过渡使用
@@ -167,7 +167,7 @@ bool FlusherSLS::Stop(bool isPipelineRemoving) {
     return true;
 }
 
-void FlusherSLS::AddPluginToGoPipeline(const Json::Value& config) const {
+void FlusherSLS::GenerateGoPlugin(const Json::Value& config, Json::Value& res) const {
     Json::Value detail(Json::objectValue);
     for (auto itr = config.begin(); itr != config.end(); ++itr) {
         if (sNativeParam.find(itr.name()) != sNativeParam.end()) {
@@ -175,17 +175,10 @@ void FlusherSLS::AddPluginToGoPipeline(const Json::Value& config) const {
         }
     }
     if (!detail.empty()) {
-        Json::Value flusherSLS(Json::objectValue);
-        flusherSLS["type"] = "flusher_sls";
-        flusherSLS["detail"] = detail;
-
-        Json::Value *flushers;
-        if (mContext->GetPipeline().ShouldAddFlusherToGoPipelineWithInput()) {
-            flushers = &mContext->GetPipeline().GetGoPipelineWithInput()["flushers"];
-        } else {
-            flushers = &mContext->GetPipeline().GetGoPipelineWithoutInput()["flushers"];
-        }
-        flushers->append(flusherSLS);
+        Json::Value plugin(Json::objectValue);
+        plugin["type"] = "flusher_sls";
+        plugin["detail"] = detail;
+        res["flushers"].append(plugin);
     }
 }
 } // namespace logtail

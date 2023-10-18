@@ -39,10 +39,8 @@ public:
     void Start();
     void Process(PipelineEventGroup& logGroup);
     void Stop(bool isRemoving);
-    bool ShouldAddFlusherToGoPipelineWithInput() const { return !mGoPipelineWithInput.isNull() && mProcessorLine.empty() && mGoPipelineWithoutInput.isNull(); }
+
     const std::string& Name() const { return mName; }
-    Json::Value& GetGoPipelineWithInput() { return mGoPipelineWithInput; }
-    Json::Value& GetGoPipelineWithoutInput() { return mGoPipelineWithoutInput; }
     PipelineContext& GetContext() { return mContext; }
     PipelineConfig& GetPipelineConfig() { return mConfig; }
 
@@ -50,6 +48,9 @@ public:
 
 private:
     bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);
+    bool ShouldAddFlusherToGoPipelineWithInput() const {
+        return !mGoPipelineWithInput.isNull() && mProcessorLine.empty() && mGoPipelineWithoutInput.isNull();
+    }
 
     std::string mName;
     std::vector<std::unique_ptr<InputInstance>> mInputs;
