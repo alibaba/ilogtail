@@ -77,6 +77,32 @@ func (*AggregatorContext) Description() string {
 
 // Add adds @log with @ctx to aggregator.
 func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) error {
+	// when logGroupPoolMap is full
+	if p.logGroupPoolSize > MaxLogGroupPoolSize {
+		logGroups := p.Flush()
+		var err error
+		for tryCount := 1; true; tryCount++ {
+			errorLogGroups := make([]*protocol.LogGroup, 0, len(logGroups))
+			for i, logGroup := range logGroups {
+				if len(logGroup.Logs) == 0 {
+					continue
+				}
+				if err = p.queue.Add(logGroup); err != nil {
+					errorLogGroups = append(errorLogGroups, logGroups[i])
+					if tryCount%100 == 0 {
+						logger.Warning(p.context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
+					}
+				}
+			}
+			if len(errorLogGroups) == 0 {
+				break
+			} else {
+				time.Sleep(time.Millisecond * 10)
+				logGroups = errorLogGroups
+			}
+
+		}
+	}
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
@@ -139,30 +165,6 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	p.logGroupPoolSize += logSize
 	nowLogGroup.Logs = append(nowLogGroup.Logs, log)
 	p.logGroupPoolMap[source] = logGroupList
-	// when logGroupPoolMap is full
-	if p.logGroupPoolSize > MaxLogGroupPoolSize {
-		logGroups := p.Flush()
-		var err error
-		for tryCount := 1; true; tryCount++ {
-			errorLogGroups := make([]*protocol.LogGroup, 0, len(logGroups))
-			for i, logGroup := range logGroups {
-				if len(logGroup.Logs) == 0 {
-					continue
-				}
-				if err = p.queue.Add(logGroup); err != nil {
-					errorLogGroups = append(errorLogGroups, logGroups[i])
-					if tryCount%100 == 0 {
-						logger.Warning(p.context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
-					}
-				}
-			}
-			if len(errorLogGroups) == 0 {
-				return nil
-			}
-			time.Sleep(time.Millisecond * 10)
-			logGroups = errorLogGroups
-		}
-	}
 	return nil
 }
 

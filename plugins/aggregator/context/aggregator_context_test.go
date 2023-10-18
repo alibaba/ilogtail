@@ -112,7 +112,7 @@ func TestAggregatorDefault(t *testing.T) {
 			logGroups = append(logGroups, agg.Flush()...)
 
 			Convey("Then quick flush happens, and each logGroup should contain logs from the same source with chronological order", func() {
-				So(logGroups, ShouldHaveLength, 12)
+				So(logGroups, ShouldHaveLength, 21)
 				checkResult(logGroups, 9216)
 			})
 		})
