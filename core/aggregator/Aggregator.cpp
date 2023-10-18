@@ -23,6 +23,8 @@
 #include "sender/Sender.h"
 #include "config/Config.h"
 #include <app_config/AppConfig.h>
+#include <numeric>
+#include <vector>
 
 using namespace std;
 using namespace sls_logs;
@@ -30,13 +32,12 @@ using namespace sls_logs;
 DECLARE_FLAG_INT32(merge_log_count_limit);
 DECLARE_FLAG_INT32(same_topic_merge_send_count);
 DECLARE_FLAG_INT32(max_send_log_group_size);
-DECLARE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS);
 
 namespace logtail {
 
 
 bool MergeItem::IsReady() {
-    return (mRawBytes > INT32_FLAG(batch_send_metric_size) || ((time(NULL) - mLastUpdateTime) >= mBatchSendInterval));
+    return mRawBytes > INT32_FLAG(batch_send_metric_size) || ((time(NULL) - mLastUpdateTime) >= mBatchSendInterval);
 }
 
 bool PackageListMergeBuffer::IsReady(int32_t curTime) {
@@ -140,32 +141,37 @@ bool Aggregator::Add(const std::string& projectName,
     int32_t logSize = (int32_t)logGroup.logs_size();
     if (logSize == 0)
         return true;
-    static const vector<sls_logs::LogTag>& sEnvTags = AppConfig::GetInstance()->GetEnvTags();
-    if (!sEnvTags.empty()) {
-        for (size_t i = 0; i < sEnvTags.size(); ++i) {
-            sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
-            logTagPtr->set_key(sEnvTags[i].key());
-            logTagPtr->set_value(sEnvTags[i].value());
-        }
-    }
-
-    if (!STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
-        vector<sls_logs::LogTag>& sFileTags = ConfigManager::GetInstance()->GetFileTags();
-        if (!sFileTags.empty()) {
-            for (size_t i = 0; i < sFileTags.size(); ++i) {
+    vector<int32_t> neededLogs;
+    int32_t neededLogSize = logSize;
+    if (!BOOL_FLAG(enable_new_pipeline)) {
+        static const vector<sls_logs::LogTag>& sEnvTags = AppConfig::GetInstance()->GetEnvTags();
+        if (!sEnvTags.empty()) {
+            for (size_t i = 0; i < sEnvTags.size(); ++i) {
                 sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
-                logTagPtr->set_key(sFileTags[i].key());
-                logTagPtr->set_value(sFileTags[i].value());
+                logTagPtr->set_key(sEnvTags[i].key());
+                logTagPtr->set_value(sEnvTags[i].value());
             }
         }
-    }
 
-    vector<int32_t> neededLogs;
-    int32_t neededLogSize = FilterNoneUtf8Metric(logGroup, config, neededLogs, context);
-    if (neededLogSize == 0)
-        return true;
-    if (config != NULL && config->mSensitiveWordCastOptions.size() > (size_t)0) {
-        LogFilter::CastSensitiveWords(logGroup, config);
+        if (!STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
+            vector<sls_logs::LogTag>& sFileTags = ConfigManager::GetInstance()->GetFileTags();
+            if (!sFileTags.empty()) {
+                for (size_t i = 0; i < sFileTags.size(); ++i) {
+                    sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
+                    logTagPtr->set_key(sFileTags[i].key());
+                    logTagPtr->set_value(sFileTags[i].value());
+                }
+            }
+        }
+        neededLogSize = FilterNoneUtf8Metric(logGroup, config, neededLogs, context);
+        if (neededLogSize == 0)
+            return true;
+        if (config != NULL && config->mSensitiveWordCastOptions.size() > (size_t)0) {
+            LogFilter::CastSensitiveWords(logGroup, config);
+        }
+    } else {
+        neededLogs.resize(logSize);
+        std::iota(std::begin(neededLogs), std::end(neededLogs), 0);
     }
 
     static Sender* sender = Sender::Instance();
@@ -240,9 +246,13 @@ bool Aggregator::Add(const std::string& projectName,
         bool mergeFinishedFlag = false, initFlag = false;
         for (int32_t logIdx = 0; logIdx < logSize; logIdx++) {
             if (neededIdx < neededLogSize && logIdx == neededLogs[neededIdx]) {
-                if (value == NULL || value->mLines > logCountMin || value->mRawBytes > logGroupByteMin
-                    || (curTime - value->mLastUpdateTime) >= INT32_FLAG(batch_send_interval)
-                    || ((value->mLogGroup).logs(0).time() / 60 != (*(mutableLogPtr + logIdx))->time() / 60)) {
+                // TODO: enforce exactly once to send all logs in one shot, because we do not calc offset and length
+                // correctly for each log, especially in GBK encoding mode
+                if (value == NULL
+                    || (!context.mExactlyOnceCheckpoint
+                        && (value->mLines > logCountMin || value->mRawBytes > logGroupByteMin
+                            || (curTime - value->mLastUpdateTime) >= INT32_FLAG(batch_send_interval)
+                            || ((value->mLogGroup).logs(0).time() / 60 != (*(mutableLogPtr + logIdx))->time() / 60)))) {
                     // value is not NULL, log group merging finished
                     if (value != NULL) {
                         if (context.mMarkOffsetFlag) {
@@ -344,10 +354,10 @@ bool Aggregator::Add(const std::string& projectName,
         if (context.mMarkOffsetFlag && !mergeFinishedFlag && !initFlag) {
             value->mLogGroupContext.mFileInfoPtr = context.mFileInfoPtr;
         }
-
+        // AddAllocated above
         for (int32_t logIdx = 0; logIdx < logSize; logIdx++)
             logGroup.mutable_logs()->ReleaseLast();
-        if (value != NULL && (value->IsReady() || sender->IsFlush())) {
+        if (value != NULL && (value->IsReady() || sender->IsFlush() || context.mExactlyOnceCheckpoint)) {
             if (mergeType == MERGE_BY_LOGSTORE)
                 (pIter->second)->AddMergeItem(value);
             else

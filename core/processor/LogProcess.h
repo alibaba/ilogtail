@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#include <atomic>
 #include <boost/regex.hpp>
 #include <map>
 #include <string>
@@ -105,20 +106,20 @@ private:
                             ProcessProfile& profile,
                             Config& config);
     void DoFuseHandling();
-    void FillLogGroupLogs(const PipelineEventGroup& eventGroup, sls_logs::LogGroup& resultGroup, bool enableTimestampNanosecond);
-    void FillLogGroupForPlugin(const PipelineEventGroup& eventGroup,
-                               LogFileReaderPtr& logFileReader,
-                               sls_logs::LogGroup& resultGroup);
-    void FillLogGroupAllNative(const PipelineEventGroup& eventGroup,
-                               LogFileReaderPtr& logFileReader,
-                               sls_logs::LogGroup& resultGroup);
+    void FillEventGroupMetadata(LogBuffer& logBuffer, PipelineEventGroup& eventGroup) const;
+    void FillLogGroupLogs(const PipelineEventGroup& eventGroup,
+                          sls_logs::LogGroup& resultGroup,
+                          bool enableTimestampNanosecond) const;
+    void FillLogGroupTags(const PipelineEventGroup& eventGroup,
+                          LogFileReaderPtr& logFileReader,
+                          sls_logs::LogGroup& resultGroup) const;
 
     bool mInitialized;
     int mLocalTimeZoneOffsetSecond;
     ThreadPtr* mProcessThreads;
     int32_t mThreadCount;
     LogstoreFeedbackQueue<LogBuffer*> mLogFeedbackQueue;
-    volatile bool* mThreadFlags; // whether thread is sending data or wait
+    std::atomic_bool* mThreadFlags; // whether thread is sending data or wait
     // int32_t mBufferCountLimit;
     ReadWriteLock mAccessProcessThreadRWL;
 

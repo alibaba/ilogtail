@@ -69,6 +69,11 @@ private:
 
 public:
     ~MetricsRecordRef();
+    MetricsRecordRef() = default;
+    MetricsRecordRef(const MetricsRecordRef&) = delete;
+    MetricsRecordRef& operator=(const MetricsRecordRef&) = delete;
+    MetricsRecordRef(MetricsRecordRef&&) = delete;
+    MetricsRecordRef& operator=(MetricsRecordRef&&) = delete;
     void SetMetricsRecord(MetricsRecord* metricRecord);
     CounterPtr CreateCounter(const std::string& name);
     GaugePtr CreateGauge(const std::string& name);
