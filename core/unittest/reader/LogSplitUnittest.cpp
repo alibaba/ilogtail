@@ -17,6 +17,8 @@
 #include "reader/SourceBuffer.h"
 #include "common/FileSystemUtil.h"
 
+DECLARE_FLAG_INT32(default_tail_limit_kb);
+
 namespace logtail
 {
 

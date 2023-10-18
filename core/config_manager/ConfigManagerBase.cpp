@@ -94,7 +94,7 @@ DEFINE_FLAG_BOOL(default_fuse_mode, "default fuse mode", false);
 DEFINE_FLAG_BOOL(default_mark_offset_flag, "default mark offset flag", false);
 DEFINE_FLAG_BOOL(default_check_ulogfs_env, "default check ulogfs env", false);
 DEFINE_FLAG_INT32(default_max_depth_from_root, "default max depth from root", 1000);
-DEFINE_FLAG_INT32(default_plugin_log_queue_size, "", 10);
+// DEFINE_FLAG_INT32(default_plugin_log_queue_size, "", 10);
 DEFINE_FLAG_STRING(fuse_customized_config_name,
                    "name of specified config for fuse, should not be used by user",
                    "__FUSE_CUSTOMIZED_CONFIG__");
@@ -107,6 +107,9 @@ DECLARE_FLAG_BOOL(enable_collection_mark);
 DECLARE_FLAG_BOOL(enable_env_ref_in_config);
 
 DEFINE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS, "default env file key to load tags", "");
+DECLARE_FLAG_BOOL(sls_client_send_compress);
+DECLARE_FLAG_INT32(default_tail_limit_kb);
+DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
 namespace logtail {
 

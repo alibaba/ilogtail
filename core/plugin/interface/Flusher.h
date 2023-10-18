@@ -10,7 +10,7 @@ public:
     virtual ~Flusher() = default;
 
     // virtual bool Init(const Table& config) = 0;
-    virtual bool Init(const Json::Value& config) = 0;
+    virtual bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) = 0;
     virtual bool Start() = 0;
     // 单例flusher: 只修改元信息
     // 独立flusher：停止线程

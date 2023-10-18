@@ -15,12 +15,22 @@
  */
 
 #pragma once
-#include "models/PipelineEventGroup.h"
+
+#include <cstdint>
+#include <string>
+
+#include "json/json.h"
+
+#include "common/LogstoreFeedbackKey.h"
 #include "logger/Logger.h"
+#include "models/PipelineEventGroup.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/LogFileProfiler.h"
+#include "pipeline/GlobalConfig.h"
 
 namespace logtail {
+class Pipeline;
+class FlusherSLS;
 
 // for compatiblity with shennong profile
 struct ProcessProfile {
@@ -45,13 +55,28 @@ public:
     PipelineContext operator=(const PipelineContext&) = delete;
     PipelineContext operator=(PipelineContext&&) = delete;
 
-    const std::string& GetProjectName() const { return mProjectName; }
-    void SetProjectName(const std::string& projectName) { mProjectName = projectName; }
-    const std::string& GetLogstoreName() const { return mLogstoreName; }
-    void SetLogstoreName(const std::string& logstoreName) { mLogstoreName = logstoreName; }
     const std::string& GetConfigName() const { return mConfigName; }
     void SetConfigName(const std::string& configName) { mConfigName = configName; }
-    const std::string& GetRegion() const { return mRegion; }
+    uint32_t GetCreateTime() const { return mCreateTime; }
+    void SetCreateTime(uint32_t time) { mCreateTime = time; }
+    const GlobalConfig& GetGlobalConfig() const { return mGlobalConfig; }
+    bool InitGlobalConfig(const Json::Value& config) { return mGlobalConfig.Init(config, mConfigName); }
+    Pipeline& GetPipeline() { return *mPipeline; }
+    void SetPipeline(Pipeline& pipeline) { mPipeline = &pipeline; }
+    bool IsFlushingThroughGoPipeline() const { return mIsFlushingThroughGoPipeline; }
+    // 当processor有Go插件或processor无插件且input只有Go插件时为true
+    void SetIsFlushingThroughGoPipelineFlag(bool flag) { mIsFlushingThroughGoPipeline = flag; }
+
+    const std::string& GetProjectName() const;
+    const std::string& GetLogstoreName() const;
+    const std::string& GetRegion() const;
+    LogstoreFeedBackKey GetLogstoreKey() const;
+    const FlusherSLS& GetSLSInfo() const { return *mSLSInfo; }
+    void SetSLSInfo(const FlusherSLS* flusherSLS) { mSLSInfo = flusherSLS; }
+
+    // 过渡使用
+    void SetProjectName(const std::string& projectName) { mProjectName = projectName; }
+    void SetLogstoreName(const std::string& logstoreName) { mLogstoreName = logstoreName; }
     void SetRegion(const std::string& region) { mRegion = region; }
 
     ProcessProfile& GetProcessProfile() { return mProcessProfile; }
@@ -60,10 +85,22 @@ public:
     LogtailAlarm& GetAlarm() { return *mAlarm; };
 
 private:
-    std::string mProjectName, mLogstoreName, mConfigName, mRegion;
+    static const std::string sEmptyString;
+
+    std::string mConfigName;
+    uint32_t mCreateTime;
+    GlobalConfig mGlobalConfig;
+    Pipeline* mPipeline = nullptr;
+    bool mIsFlushingThroughGoPipeline = false;
+
+    const FlusherSLS* mSLSInfo = nullptr;
+
     ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
     Logger::logger mLogger = sLogger;
     LogtailAlarm* mAlarm = LogtailAlarm::GetInstance();
+
+    // 过渡使用
+    std::string mProjectName, mLogstoreName, mRegion;
 };
 } // namespace logtail

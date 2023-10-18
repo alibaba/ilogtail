@@ -49,13 +49,13 @@
 using namespace sls_logs;
 using namespace std;
 
-DEFINE_FLAG_INT32(delay_bytes_upperlimit,
-                  "if (total_file_size - current_readed_size) exceed uppperlimit, send READ_LOG_DELAY_ALARM, bytes",
-                  200 * 1024 * 1024);
+// DEFINE_FLAG_INT32(delay_bytes_upperlimit,
+//                   "if (total_file_size - current_readed_size) exceed uppperlimit, send READ_LOG_DELAY_ALARM, bytes",
+//                   200 * 1024 * 1024);
 DEFINE_FLAG_INT32(read_delay_alarm_duration,
                   "if read delay elapsed this duration, send READ_LOG_DELAY_ALARM, seconds",
                   60);
-DEFINE_FLAG_INT32(reader_close_unused_file_time, "second ", 60);
+// DEFINE_FLAG_INT32(reader_close_unused_file_time, "second ", 60);
 DEFINE_FLAG_INT32(skip_first_modify_time, "second ", 5 * 60);
 DEFINE_FLAG_INT32(max_reader_open_files, "max fd count that reader can open max", 100000);
 DEFINE_FLAG_INT32(truncate_pos_skip_bytes, "skip more xx bytes when truncate", 0);
@@ -63,6 +63,8 @@ DEFINE_FLAG_INT32(max_fix_pos_bytes, "", 128 * 1024);
 DEFINE_FLAG_INT32(force_release_deleted_file_fd_timeout,
                   "force release fd if file is deleted after specified seconds, no matter read to end or not",
                   -1);
+DECLARE_FLAG_INT32(delay_bytes_upperlimit);
+DECLARE_FLAG_INT32(reader_close_unused_file_time);
 
 namespace logtail {
 

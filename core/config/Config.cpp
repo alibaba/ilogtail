@@ -26,11 +26,13 @@
 #include "logger/Logger.h"
 #include "processor/LogFilter.h"
 
-DEFINE_FLAG_INT32(logreader_max_rotate_queue_size, "", 20);
+// DEFINE_FLAG_INT32(logreader_max_rotate_queue_size, "", 20);
 DECLARE_FLAG_STRING(raw_log_tag);
 DECLARE_FLAG_INT32(batch_send_interval);
 DECLARE_FLAG_INT32(reader_close_unused_file_time);
 DECLARE_FLAG_INT32(search_checkpoint_default_dir_depth);
+DECLARE_FLAG_INT32(default_tail_limit_kb);
+DECLARE_FLAG_INT32(logreader_max_rotate_queue_size);
 
 namespace logtail {
 
