@@ -186,7 +186,10 @@ func generateLogs(agg *AggregatorContext, logNum int, withCtx bool, logNo []int,
 		}
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "no", Value: fmt.Sprintf("%d", logNo[index]+1)})
 		if withCtx {
-			ctx := map[string]interface{}{"source": packIDPrefix[index] + "-", "topic": "file"}
+			ctx := map[string]interface{}{"source": packIDPrefix[index] + "-", "topic": "file", "tags": []*protocol.LogTag{&protocol.LogTag{
+				Key:   "testTag",
+				Value: packIDPrefix[index],
+			}}}
 			agg.Add(log, ctx)
 		} else {
 			agg.Add(log, nil)
@@ -209,9 +212,19 @@ func checkResult(logGroups []*protocol.LogGroup, expectedLogNum int) {
 		}
 		So(packIDTagFound, ShouldBeTrue)
 
+		tagFound, tagTest := false, ""
+		for _, tag := range logGroup.LogTags {
+			if tag.GetKey() == "testTag" {
+				tagTest = tag.GetValue()
+				tagFound = true
+				break
+			}
+		}
+		So(tagFound, ShouldBeTrue)
+
 		packIDComponents := strings.Split(packID, "-")
 		So(packIDComponents, ShouldHaveLength, 2)
-
+		So(packIDComponents[0], ShouldEqual, tagTest)
 		ctxInfo, ok := contextInfoMap[packIDComponents[0]]
 		if !ok {
 			ctxInfo = &contextInfo{
