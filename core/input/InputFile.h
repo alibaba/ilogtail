@@ -47,7 +47,7 @@ public:
     bool Stop(bool isPipelineRemoving) override;
 
     std::vector<std::string> mFilePaths;
-    int32_t mMaxDirSearchDepth = -1;
+    int32_t mMaxDirSearchDepth = 0;
     std::vector<std::string> mExcludeFilePaths;
     std::vector<std::string> mExcludeFiles;
     std::vector<std::string> mExcludeDirs;
