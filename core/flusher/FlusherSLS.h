@@ -28,7 +28,6 @@ public:
     };
 
     static const std::string sName;
-    static const std::unordered_set<std::string> sNativeParam;
 
     FlusherSLS();
 
@@ -50,6 +49,8 @@ public:
     Batch mBatch;
 
 private:
+    static const std::unordered_set<std::string> sNativeParam;
+
     void AddPluginToGoPipeline(const Json::Value& config) const;
 
     LogstoreFeedBackKey mLogstoreKey;

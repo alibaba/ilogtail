@@ -26,7 +26,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 DECLARE_FLAG_INT32(default_max_inotify_watch_num);
-DECLARE_FLAG_INT32(default_tail_limit_kb);
+// DECLARE_FLAG_INT32(default_tail_limit_kb);
 DECLARE_FLAG_STRING(logtail_send_address);
 DECLARE_FLAG_STRING(logtail_config_address);
 DECLARE_FLAG_INT32(cpu_limit_num);

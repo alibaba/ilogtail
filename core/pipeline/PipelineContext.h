@@ -16,6 +16,11 @@
 
 #pragma once
 
+#include <cstdint>
+#include <string>
+
+#include "json/json.h"
+
 #include "common/LogstoreFeedbackKey.h"
 #include "logger/Logger.h"
 #include "models/PipelineEventGroup.h"
@@ -52,12 +57,15 @@ public:
 
     const std::string& GetConfigName() const { return mConfigName; }
     void SetConfigName(const std::string& configName) { mConfigName = configName; }
+    uint32_t GetCreateTime() const { return mCreateTime; }
+    void SetCreateTime(uint32_t time) { mCreateTime = time; }
     const GlobalConfig& GetGlobalConfig() const { return mGlobalConfig; }
     bool InitGlobalConfig(const Json::Value& config) { return mGlobalConfig.Init(config, mConfigName); }
     Pipeline& GetPipeline() { return *mPipeline; }
     void SetPipeline(Pipeline& pipeline) { mPipeline = &pipeline; }
-    bool HasGoPipelines() const { return mHasGoPipelines; }
-    void SetGoPipelinesFlag(bool flag) { mHasGoPipelines = flag; }
+    bool IsFlushingThroughGoPipeline() const { return mIsFlushingThroughGoPipeline; }
+    // 当processor有Go插件或processor无插件且input只有Go插件时为true
+    void SetIsFlushingThroughGoPipelineFlag(bool flag) { mIsFlushingThroughGoPipeline = flag; }
 
     const std::string& GetProjectName() const;
     const std::string& GetLogstoreName() const;
@@ -80,10 +88,11 @@ private:
     static const std::string sEmptyString;
 
     std::string mConfigName;
+    uint32_t mCreateTime;
     GlobalConfig mGlobalConfig;
     Pipeline* mPipeline = nullptr;
-    bool mHasGoPipelines = false;
-    
+    bool mIsFlushingThroughGoPipeline = false;
+
     const FlusherSLS* mSLSInfo = nullptr;
 
     ProcessProfile mProcessProfile;

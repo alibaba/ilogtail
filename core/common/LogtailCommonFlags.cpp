@@ -15,15 +15,15 @@
 #include "LogtailCommonFlags.h"
 
 // Windows only has polling, give a bigger tail limit.
-#if defined(__linux__)
-DEFINE_FLAG_INT32(default_tail_limit_kb,
-                  "when first open file, if offset little than this value, move offset to beginning, KB",
-                  1024);
-#elif defined(_MSC_VER)
-DEFINE_FLAG_INT32(default_tail_limit_kb,
-                  "when first open file, if offset little than this value, move offset to beginning, KB",
-                  1024 * 50);
-#endif
+// #if defined(__linux__)
+// DEFINE_FLAG_INT32(default_tail_limit_kb,
+//                   "when first open file, if offset little than this value, move offset to beginning, KB",
+//                   1024);
+// #elif defined(_MSC_VER)
+// DEFINE_FLAG_INT32(default_tail_limit_kb,
+//                   "when first open file, if offset little than this value, move offset to beginning, KB",
+//                   1024 * 50);
+// #endif
 DEFINE_FLAG_INT32(monitor_interval, "program monitor interval, seconds", 30);
 DEFINE_FLAG_DOUBLE(cpu_usage_up_limit, "cpu usage upper limit, cores", 2.0);
 DEFINE_FLAG_DOUBLE(pub_cpu_usage_up_limit, "cpu usage upper limit, cores", 0.4);

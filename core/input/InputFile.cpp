@@ -49,15 +49,15 @@ bool InputFile::Init(const Json::Value& config) {
 
     // FilePaths + MaxDirSearchDepth
     if (!GetMandatoryListParam<string>(config, "FilePaths", mFilePaths, errorMsg)) {
-        PARAM_ERROR(sLogger, errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (mFilePaths.size() != 1) {
-        PARAM_ERROR(sLogger, "param FilePaths has more than 1 element", sName, mContext->GetConfigName());
+        PARAM_ERROR(mContext->GetLogger(), "param FilePaths has more than 1 element", sName, mContext->GetConfigName());
     }
     auto dirAndFile = GetDirAndFileNameFromPath(mFilePaths[0]);
     mBasePath = dirAndFile.first, mFilePattern = dirAndFile.second;
     if (mBasePath.empty() || mFilePattern.empty()) {
-        PARAM_ERROR(sLogger, "param FilePaths[0] is invalid", sName, mContext->GetConfigName());
+        PARAM_ERROR(mContext->GetLogger(), "param FilePaths[0] is invalid", sName, mContext->GetConfigName());
     }
     size_t len = mBasePath.size();
     if (len > 2 && mBasePath[len - 1] == '*' && mBasePath[len - 2] == '*'
@@ -70,19 +70,21 @@ bool InputFile::Init(const Json::Value& config) {
         }
         // MaxDirSearchDepth is only valid when parent path ends with **
         if (!GetOptionalIntParam(config, "MaxDirSearchDepth", mMaxDirSearchDepth, errorMsg)) {
-            PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, sName, mContext->GetConfigName());
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, 0, sName, mContext->GetConfigName());
         }
     }
     ParseWildcardPath();
 
     // ExcludeFilePaths
     if (!GetOptionalListParam<string>(config, "ExcludeFilePaths", mExcludeFilePaths, errorMsg)) {
-        PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     } else {
         for (size_t i = 0; i < mExcludeFilePaths.size(); ++i) {
             if (!filesystem::path(mExcludeFilePaths[i]).is_absolute()) {
-                PARAM_WARNING_IGNORE(
-                    sLogger, "ExcludeFilePaths[" + ToString(i) + "] is not absolute", sName, mContext->GetConfigName());
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     "ExcludeFilePaths[" + ToString(i) + "] is not absolute",
+                                     sName,
+                                     mContext->GetConfigName());
                 continue;
             }
             bool isMultipleLevelWildcard = mExcludeFilePaths[i].find("**") != std::string::npos;
@@ -96,11 +98,11 @@ bool InputFile::Init(const Json::Value& config) {
 
     // ExcludeFiles
     if (!GetOptionalListParam<string>(config, "ExcludeFiles", mExcludeFiles, errorMsg)) {
-        PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     } else {
         for (size_t i = 0; i < mExcludeFiles.size(); ++i) {
             if (mExcludeFiles[i].find(filesystem::path::preferred_separator) != std::string::npos) {
-                PARAM_WARNING_IGNORE(sLogger,
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
                                      "ExcludeFiles[" + ToString(i) + "] contains path separator",
                                      sName,
                                      mContext->GetConfigName());
@@ -112,12 +114,14 @@ bool InputFile::Init(const Json::Value& config) {
 
     // ExcludeDirs
     if (!GetOptionalListParam<string>(config, "ExcludeDirs", mExcludeDirs, errorMsg)) {
-        PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     } else {
         for (size_t i = 0; i < mExcludeDirs.size(); ++i) {
             if (!filesystem::path(mExcludeDirs[i]).is_absolute()) {
-                PARAM_WARNING_IGNORE(
-                    sLogger, "ExcludeDirs[" + ToString(i) + "] is not absolute", sName, mContext->GetConfigName());
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     "ExcludeDirs[" + ToString(i) + "] is not absolute",
+                                     sName,
+                                     mContext->GetConfigName());
                 continue;
             }
             bool isMultipleLevelWildcard = mExcludeDirs[i].find("**") != std::string::npos;
@@ -141,27 +145,28 @@ bool InputFile::Init(const Json::Value& config) {
 
     // TailingAllMatchedFiles
     if (!GetOptionalBoolParam(config, "TailingAllMatchedFiles", mTailingAllMatchedFiles, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     }
 
     // FileEncoding
     string encoding;
     if (!GetOptionalStringParam(config, "FileEncoding", encoding, errorMsg)) {
-        PARAM_ERROR(sLogger, errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     encoding = ToLowerCaseString(encoding);
     if (encoding == "gbk") {
         mFileEncoding = Encoding::GBK;
     } else if (encoding != "utf8") {
-        PARAM_ERROR(sLogger, "param FileEncoding is not valid", sName, mContext->GetConfigName());
+        PARAM_ERROR(mContext->GetLogger(), "param FileEncoding is not valid", sName, mContext->GetConfigName());
     }
 
     // TailSizeKB
     uint32_t tailSize = 0;
     if (!GetOptionalUIntParam(config, "TailSizeKB", tailSize, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, INT32_FLAG(default_tail_limit_kb), sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, INT32_FLAG(default_tail_limit_kb), sName, mContext->GetConfigName());
     } else if (tailSize > 100 * 1024 * 1024) {
-        PARAM_WARNING_DEFAULT(sLogger,
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               "param TailSizeKB is larger than 104857600",
                               INT32_FLAG(default_tail_limit_kb),
                               sName,
@@ -175,43 +180,44 @@ bool InputFile::Init(const Json::Value& config) {
     const Json::Value* itr = config.find(key, key + strlen(key));
     if (itr) {
         if (!itr->isObject()) {
-            PARAM_WARNING_IGNORE(sLogger, "param Multiline is not of type object", sName, mContext->GetConfigName());
+            PARAM_WARNING_IGNORE(
+                mContext->GetLogger(), "param Multiline is not of type object", sName, mContext->GetConfigName());
         } else {
             // Mode
             string mode;
             if (!GetOptionalStringParam(*itr, "Multiline.Mode", mode, errorMsg)) {
-                PARAM_WARNING_DEFAULT(sLogger, errorMsg, "custom", sName, mContext->GetConfigName());
+                PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "custom", sName, mContext->GetConfigName());
             } else if (mode == "JSON") {
                 mMultiline.mMode = Multiline::Mode::JSON;
             } else if (mode != "custom") {
-                PARAM_WARNING_DEFAULT(sLogger, errorMsg, "custom", sName, mContext->GetConfigName());
+                PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "custom", sName, mContext->GetConfigName());
             }
 
             if (mMultiline.mMode == Multiline::Mode::CUSTOM) {
                 // StartPattern
                 string pattern;
                 if (!GetOptionalStringParam(*itr, "Multiline.StartPattern", pattern, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 } else if (!IsRegexValid(pattern)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 } else {
                     mMultiline.mStartPattern = pattern;
                 }
 
                 // ContinuePattern
                 if (!GetOptionalStringParam(*itr, "Multiline.ContinuePattern", pattern, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 } else if (!IsRegexValid(pattern)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 } else {
                     mMultiline.mContinuePattern = pattern;
                 }
 
                 // EndPattern
                 if (!GetOptionalStringParam(*itr, "Multiline.EndPattern", pattern, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 } else if (!IsRegexValid(pattern)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 } else {
                     mMultiline.mEndPattern = pattern;
                 }
@@ -221,9 +227,9 @@ bool InputFile::Init(const Json::Value& config) {
 
     // EnableContainerDiscovery
     if (!GetOptionalBoolParam(config, "EnableContainerDiscovery", mEnableContainerDiscovery, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     } else if (mEnableContainerDiscovery && !AppConfig::GetInstance()->IsPurageContainerMode()) {
-        PARAM_ERROR(sLogger,
+        PARAM_ERROR(mContext->GetLogger(),
                     "iLogtail is not in container, but container discovery is required",
                     sName,
                     mContext->GetConfigName());
@@ -235,49 +241,51 @@ bool InputFile::Init(const Json::Value& config) {
         const Json::Value* itr = config.find(key, key + strlen(key));
         if (itr) {
             if (!itr->isObject()) {
-                PARAM_WARNING_IGNORE(
-                    sLogger, "param ContainerFilters is not of type object", sName, mContext->GetConfigName());
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     "param ContainerFilters is not of type object",
+                                     sName,
+                                     mContext->GetConfigName());
             } else {
                 // K8sNamespaceRegex
                 if (!GetOptionalStringParam(
                         *itr, "ContainerFilters.K8sNamespaceRegex", mContainerFilters.mK8sNamespaceRegex, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 }
 
                 // K8sPodRegex
                 if (!GetOptionalStringParam(
                         *itr, "ContainerFilters.K8sPodRegex", mContainerFilters.mK8sPodRegex, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 }
 
                 // IncludeK8sLabel
                 if (!GetOptionalMapParam(
                         *itr, "ContainerFilters.IncludeK8sLabel", mContainerFilters.mIncludeK8sLabel, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 }
 
                 // ExcludeK8sLabel
                 if (!GetOptionalMapParam(
                         *itr, "ContainerFilters.ExcludeK8sLabel", mContainerFilters.mExcludeK8sLabel, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 }
 
                 // K8sContainerRegex
                 if (!GetOptionalStringParam(
                         *itr, "ContainerFilters.K8sContainerRegex", mContainerFilters.mK8sContainerRegex, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 }
 
                 // IncludeEnv
                 if (!GetOptionalMapParam(
                         *itr, "ContainerFilters.IncludeEnv", mContainerFilters.mIncludeEnv, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 }
 
                 // ExcludeEnv
                 if (!GetOptionalMapParam(
                         *itr, "ContainerFilters.ExcludeEnv", mContainerFilters.mExcludeEnv, errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 }
 
                 // IncludeContainerLabel
@@ -285,7 +293,7 @@ bool InputFile::Init(const Json::Value& config) {
                                          "ContainerFilters.IncludeContainerLabel",
                                          mContainerFilters.mIncludeContainerLabel,
                                          errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 }
 
                 // ExcludeContainerLabel
@@ -293,24 +301,24 @@ bool InputFile::Init(const Json::Value& config) {
                                          "ContainerFilters.ExcludeContainerLabel",
                                          mContainerFilters.mExcludeContainerLabel,
                                          errorMsg)) {
-                    PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 }
             }
         }
 
         // ExternalK8sLabelTag
         if (!GetOptionalMapParam(config, "ExternalK8sLabelTag", mExternalK8sLabelTag, errorMsg)) {
-            PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+            PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
         }
 
         // ExternalEnvTag
         if (!GetOptionalMapParam(config, "ExternalEnvTag", mExternalEnvTag, errorMsg)) {
-            PARAM_WARNING_IGNORE(sLogger, errorMsg, sName, mContext->GetConfigName());
+            PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
         }
 
         // CollectingContainersMeta
         if (!GetOptionalBoolParam(config, "CollectingContainersMeta", mCollectingContainersMeta, errorMsg)) {
-            PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, sName, mContext->GetConfigName());
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
         }
 
         GenerateContainerMetaFetchingGoPipeline();
@@ -326,67 +334,77 @@ bool InputFile::Init(const Json::Value& config) {
 
     // AppendingLogPositionMeta
     if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     }
 
     // PreservedDirDepth
     if (!GetOptionalIntParam(config, "PreservedDirDepth", mPreservedDirDepth, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, -1, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, -1, sName, mContext->GetConfigName());
     }
 
     // FlushTimeoutSecs
     if (!GetOptionalUIntParam(*itr, "FlushTimeoutSecs", mFlushTimeoutSecs, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            sLogger, errorMsg, INT32_FLAG(default_reader_flush_timeout), sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              errorMsg,
+                              INT32_FLAG(default_reader_flush_timeout),
+                              sName,
+                              mContext->GetConfigName());
     }
 
     // ReadDelaySkipThresholdBytes
     if (!GetOptionalUIntParam(config, "ReadDelaySkipThresholdBytes", mReadDelaySkipThresholdBytes, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, 0, sName, mContext->GetConfigName());
     }
 
     // ReadDelayAlertThresholdBytes
     if (!GetOptionalUIntParam(config, "ReadDelayAlertThresholdBytes", mReadDelayAlertThresholdBytes, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, INT32_FLAG(delay_bytes_upperlimit), sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, INT32_FLAG(delay_bytes_upperlimit), sName, mContext->GetConfigName());
     }
 
     // RotatorQueueSize
     if (!GetOptionalUIntParam(config, "RotatorQueueSize", mRotatorQueueSize, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            sLogger, errorMsg, INT32_FLAG(logreader_max_rotate_queue_size), sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              errorMsg,
+                              INT32_FLAG(logreader_max_rotate_queue_size),
+                              sName,
+                              mContext->GetConfigName());
     }
 
     // CloseUnusedReaderIntervalSec
     if (!GetOptionalUIntParam(config, "CloseUnusedReaderIntervalSec", mCloseUnusedReaderIntervalSec, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            sLogger, errorMsg, INT32_FLAG(reader_close_unused_file_time), sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              errorMsg,
+                              INT32_FLAG(reader_close_unused_file_time),
+                              sName,
+                              mContext->GetConfigName());
     }
 
     // AllowingCollectingFilesInRootDir
     if (!GetOptionalBoolParam(
             config, "AllowingCollectingFilesInRootDir", mAllowingCollectingFilesInRootDir, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     } else if (mAllowingCollectingFilesInRootDir) {
         BOOL_FLAG(enable_root_path_collection) = mAllowingCollectingFilesInRootDir;
     }
 
     // AllowingIncludedByMultiConfigs
     if (!GetOptionalBoolParam(config, "AllowingIncludedByMultiConfigs", mAllowingIncludedByMultiConfigs, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     }
 
     // MaxCheckpointDirSearchDepth
     if (!GetOptionalUIntParam(config, "MaxCheckpointDirSearchDepth", mMaxCheckpointDirSearchDepth, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, 0, sName, mContext->GetConfigName());
     }
 
     // ExactlyOnceConcurrency (param is unintentionally named as EnableExactlyOnce, which should be deprecated in the
     // future)
     uint32_t exactlyOnceConcurrency;
     if (!GetOptionalUIntParam(config, "EnableExactlyOnce", exactlyOnceConcurrency, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, 0, sName, mContext->GetConfigName());
     } else if (exactlyOnceConcurrency > INT32_FLAG(max_exactly_once_concurrency)) {
-        PARAM_WARNING_DEFAULT(sLogger,
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               "param EnableExactlyOnce is larger than 512",
                               INT32_FLAG(max_exactly_once_concurrency),
                               sName,
@@ -465,7 +483,8 @@ void InputFile::ParseWildcardPath() {
             break;
         mWildcardPaths.push_back(mBasePath.substr(0, nextPos));
         std::string dirName = mBasePath.substr(pos + 1, nextPos - pos - 1);
-        LOG_DEBUG(sLogger, ("wildcard paths", mWildcardPaths[mWildcardPaths.size() - 1])("dir name", dirName));
+        LOG_DEBUG(mContext->GetLogger(),
+                  ("wildcard paths", mWildcardPaths[mWildcardPaths.size() - 1])("dir name", dirName));
         if (dirName.find('?') == std::string::npos && dirName.find('*') == std::string::npos) {
             mConstWildcardPaths.push_back(dirName);
         } else {
@@ -534,9 +553,10 @@ void InputFile::GenerateContainerMetaFetchingGoPipeline() const {
     Json::Value& inputs = mContext->GetPipeline().GetGoPipelineWithInput()["inputs"];
     inputs.append(plugin);
 
+    // these param will be overriden if the same param appears in the global module of config, which will be parsed later.
     Json::Value& global = mContext->GetPipeline().GetGoPipelineWithInput()["global"];
-    SetNotFoundJsonMember(global, "DefaultLogQueueSize", INT32_FLAG(default_plugin_log_queue_size));
-    SetNotFoundJsonMember(global, "AlwaysOnline", true);
+    global["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
+    global["AlwaysOnline"] = Json::Value(true);
 }
 
 } // namespace logtail

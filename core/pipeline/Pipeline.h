@@ -39,13 +39,14 @@ public:
     void Start();
     void Process(PipelineEventGroup& logGroup);
     void Stop(bool isRemoving);
+    bool ShouldAddFlusherToGoPipelineWithInput() const { return !mGoPipelineWithInput.isNull() && mProcessorLine.empty() && mGoPipelineWithoutInput.isNull(); }
     const std::string& Name() const { return mName; }
-    // const NewConfig& GetConfig() const { return mConfig; }
-    PipelineContext& GetContext() { return mContext; }
-    bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
-    PipelineConfig& GetPipelineConfig() { return mConfig; }
     Json::Value& GetGoPipelineWithInput() { return mGoPipelineWithInput; }
     Json::Value& GetGoPipelineWithoutInput() { return mGoPipelineWithoutInput; }
+    PipelineContext& GetContext() { return mContext; }
+    PipelineConfig& GetPipelineConfig() { return mConfig; }
+
+    bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
 
 private:
     bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);

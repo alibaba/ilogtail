@@ -73,7 +73,7 @@ bool GlobalConfig::Init(const Json::Value& config, const std::string& configName
     }
 
     // generate Go Global module if necessary
-    // if (mContext->HasGoPipelines()) {
+    // if (mContext->IsFlushingThroughGoPipeline()) {
     //     Json::Value global(Json::objectValue);
     //     for (auto itr = config.begin(); itr != config.end(); ++itr) {
     //         if (sNativeParam.find(itr.name()) != sNativeParam.end()) {
