@@ -366,6 +366,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
                                         projectName,
                                         config->mCategory,
                                         compressType,
+                                        config->mTelemetryType,
                                         logBuffer->fileInfo,
                                         integrityConfigPtr,
                                         lineCountConfigPtr,

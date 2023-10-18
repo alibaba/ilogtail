@@ -132,7 +132,7 @@ void SendClosure::OnSuccess(sdk::Response* response) {
                 "RetryTimes", mDataPtr->mSendRetryTimes)("TotalSendCost", curTime - mDataPtr->mLastUpdateTime)(
                 "LogLines", mDataPtr->mLogLines)("Bytes", mDataPtr->mLogData.size())(
                 "Endpoint", mDataPtr->mCurrentEndpoint)("IsProfileData", isProfileData)(
-                "TelemetryType", sls_logs::SlsTelemetryType_Name(mDataPtr->mTelemetryType)));
+                "TelemetryType", sls_logs::SlsTelemetryType_Name(mDataPtr->mLogGroupContext.mTelemetryType)));
     }
 
     if (BOOL_FLAG(e2e_send_throughput_test))
@@ -193,10 +193,10 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
     SendResult sendResult = ConvertErrorCode(errorCode);
     std::ostringstream failDetail, suggestion;
     std::string failEndpoint = mDataPtr->mCurrentEndpoint;
-    if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+    if (mDataPtr->mLogGroupContext.mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
         ++gMetricsStoreSendErrorCount;
     }
-    if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS
+    if (mDataPtr->mLogGroupContext.mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS
         && errorMessage.rfind(sMetricstoreVersionTooLowFlag) != std::string::npos) {
         operation = METRICSTORE_CHANGE_LOGSTORE;
     } else if (sendResult == SEND_NETWORK_ERROR || sendResult == SEND_SERVER_ERROR) {
@@ -220,7 +220,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
         }
         double serverErrorRatio
             = Sender::Instance()->IncSendServerErrorStatistic(mDataPtr->mProjectName, mDataPtr->mLogstore, curTime);
-        if (mDataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+        if (mDataPtr->mLogGroupContext.mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
             LOG_INFO(sLogger, ("errmsg", errorMessage));
             if (errorMessage.rfind(sMetricstoreVersionTooLowFlag) != std::string::npos) {
                 operation = METRICSTORE_CHANGE_LOGSTORE;
@@ -374,7 +374,7 @@ void SendClosure::OnFail(sdk::Response* response, const string& errorCode, const
     switch (operation) {
         case METRICSTORE_CHANGE_LOGSTORE:
             // switch to log channel because metricstore version too low
-            mDataPtr->mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
+            mDataPtr->mLogGroupContext.mTelemetryType = sls_logs::SLS_TELEMETRY_TYPE_LOGS;
         case RETRY_ASYNC_WHEN_FAIL:
             if (curTime - mDataPtr->mLastUpdateTime > INT32_FLAG(sending_cost_time_alarm_interval)) {
                 LOG_WARNING(sLogger, LOG_PATTERN);
@@ -1658,7 +1658,7 @@ bool Sender::SendToBufferFile(LoggroupTimeValue* dataPtr) {
     bufferMeta.set_rawsize(dataPtr->mRawSize);
     bufferMeta.set_shardhashkey(dataPtr->mShardHashKey);
     bufferMeta.set_compresstype(dataPtr->mLogGroupContext.mCompressType);
-    bufferMeta.set_telemetrytype(dataPtr->mTelemetryType);
+    bufferMeta.set_telemetrytype(dataPtr->mLogGroupContext.mTelemetryType);
     string encodedInfo;
     bufferMeta.SerializeToString(&encodedInfo);
 
@@ -1730,7 +1730,8 @@ bool Sender::SendPb(Config* pConfig,
                     const std::string& shardHash) {
     // if logstore is specific, use this key, otherwise use pConfig->->mCategory
     sls_logs::SlsCompressType compressType = sdk::Client::GetCompressType(pConfig->mCompressType);
-    LogGroupContext logGroupContext(pConfig->mRegion, pConfig->mProjectName, pConfig->mCategory, compressType);
+    LogGroupContext logGroupContext(pConfig->mRegion, pConfig->mProjectName, pConfig->mCategory, compressType,
+                                    pConfig->mTelemetryType);
     LoggroupTimeValue* pData = new LoggroupTimeValue(pConfig->mProjectName,
                                                      logstore.empty() ? pConfig->mCategory : logstore,
                                                      pConfig->mConfigName,
@@ -1744,8 +1745,7 @@ bool Sender::SendPb(Config* pConfig,
                                                      time(NULL),
                                                      shardHash,
                                                      pConfig->mLogstoreKey,
-                                                     logGroupContext,
-                                                     pConfig->mTelemetryType);
+                                                     logGroupContext);
     // apsara::timing::TimeInNsec startT = apsara::timing::GetCurrentTimeInNanoSeconds();
     if (!CompressData(logGroupContext.mCompressType, pbBuffer, pbSize, pData->mLogData)) {
         LOG_ERROR(sLogger,
@@ -2153,7 +2153,7 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
         }
     } else if (dataPtr->mDataType == LOGGROUP_COMPRESSED) {
         const auto& hashKey = exactlyOnceCpt ? exactlyOnceCpt->data.hash_key() : dataPtr->mShardHashKey;
-        if (dataPtr->mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
+        if (dataPtr->mLogGroupContext.mTelemetryType == sls_logs::SLS_TELEMETRY_TYPE_METRICS) {
             // send to metrics store
             sendClient->PostMetricstoreLogs(dataPtr->mProjectName,
                                             dataPtr->mLogstore,
