@@ -26,9 +26,12 @@
 #include <string>
 
 #include "app_config/AppConfig.h"
-#include "flusher/FlusherSLS.h"
-#include "input/InputFile.h"
-#include "input/InputObserverNetwork.h"
+// #include "flusher/FlusherSLS.h"
+// #include "input/InputFile.h"
+// #include "input/InputObserverNetwork.h"
+#ifdef __ENTERPRISE__
+#include "input/InputStream.h"
+#endif
 #include "logger/Logger.h"
 #include "plugin/creator/CProcessor.h"
 #include "plugin/creator/DynamicCProcessorCreator.h"
@@ -92,8 +95,8 @@ bool PluginRegistry::IsValidGoPlugin(const std::string& name) {
 }
 
 void PluginRegistry::LoadStaticPlugins() {
-    RegisterInputCreator(new StaticInputCreator<InputFile>());
-    RegisterInputCreator(new StaticInputCreator<InputObserverNetwork>());
+    // RegisterInputCreator(new StaticInputCreator<InputFile>());
+    // RegisterInputCreator(new StaticInputCreator<InputObserverNetwork>());
 #ifdef __ENTERPRISE__
     RegisterInputCreator(new StaticInputCreator<InputStream>());
 #endif
@@ -109,7 +112,7 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorTagNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFilterNative>());
 
-    RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
+    // RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
 }
 
 void PluginRegistry::LoadDynamicPlugins(const std::set<std::string>& plugins) {
