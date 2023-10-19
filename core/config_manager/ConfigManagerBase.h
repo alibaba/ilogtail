@@ -211,7 +211,7 @@ protected:
 public:
     // @configExistFlag indicates if there are loaded configs before calling.
     virtual void InitUpdateConfig(bool configExistFlag);
-    bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond);
+    static bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond);
 
     bool TryGetUUID();
 

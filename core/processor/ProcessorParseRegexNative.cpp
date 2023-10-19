@@ -24,9 +24,59 @@
 #include "common/TimeUtil.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
+#include "common/ParamExtractor.h"
 
 namespace logtail {
 const std::string ProcessorParseRegexNative::sName = "processor_parse_regex_native";
+
+bool ProcessorParseRegexNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    if (!GetMandatoryStringParam(config, "Regex", mRegex, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalStringParam(config, "RenamedSourceKey", mRenamedSourceKey, errorMsg)) {
+        mRenamedSourceKey = mSourceKey;
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
+    }
+
+    AddUserDefinedFormat();
+
+    if (mKeepingSourceWhenParseSucceed && mRenamedSourceKey == mSourceKey) {
+        mSourceKeyOverwritten = true;
+    }
+    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
+    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
+
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcKeyCountNotMatchErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
+    return true;
+}
 
 bool ProcessorParseRegexNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
@@ -132,6 +182,20 @@ void ProcessorParseRegexNative::AddUserDefinedFormat(const std::string& regStr, 
     boost::regex reg(regStr);
     bool isWholeLineMode = regStr == "(.*)";
     mUserDefinedFormat.push_back(UserDefinedFormat(reg, keyParts, isWholeLineMode));
+}
+
+void ProcessorParseRegexNative::AddUserDefinedFormat() {
+    for (auto& it : mKeys) {
+        if (it == mSourceKey) {
+            mSourceKeyOverwritten = true;
+        }
+        if (it == mRawLogTag) {
+            mRawLogTagOverwritten = true;
+        }
+    }
+    boost::regex reg(mRegex);
+    bool isWholeLineMode = mRegex == "(.*)";
+    mUserDefinedFormat.push_back(UserDefinedFormat(reg, mKeys, isWholeLineMode));
 }
 
 bool ProcessorParseRegexNative::WholeLineModeParser(LogEvent& sourceEvent, const std::string& key) {

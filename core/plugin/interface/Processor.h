@@ -27,6 +27,7 @@ public:
     virtual ~Processor() {}
 
     virtual bool Init(const ComponentConfig& config) = 0;
+    virtual bool Init(const Json::Value& config) = 0;
     virtual void Process(PipelineEventGroup& logGroup) = 0;
 
 protected:

@@ -22,10 +22,82 @@
 #include "plugin/instance/ProcessorInstance.h"
 #include <algorithm>
 #include "monitor/MetricConstants.h"
+#include "common/ParamExtractor.h"
+#include <config_manager/ConfigManagerBase.h>
 
 
 namespace logtail {
 const std::string ProcessorParseTimestampNative::sName = "processor_parse_timestamp_native";
+
+bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    if (!GetMandatoryStringParam(config, "SourceFormat", mSourceFormat, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    if (!GetOptionalStringParam(config, "SourceTimezone", mSourceTimezone, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceTimezone, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalIntParam(config, "SourceYear", mSourceYear, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceYear, sName, mContext->GetConfigName());
+    }
+    std::string preciseTimestampUnit;
+    if (!GetOptionalStringParam(config, "PreciseTimestampUnit", preciseTimestampUnit, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, preciseTimestampUnit, sName, mContext->GetConfigName());
+    }else {
+        if (0 == preciseTimestampUnit.compare("ms")) {
+            mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
+        } else if (0 == preciseTimestampUnit.compare("us")) {
+            mPreciseTimestampUnit = TimeStampUnit::MICROSECOND;
+        } else if (0 == preciseTimestampUnit.compare("ns")) {
+            mPreciseTimestampUnit = TimeStampUnit::NANOSECOND;
+        } else {
+            mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
+        }
+    }
+    if (!GetOptionalStringParam(config, "PreciseTimestampKey", mPreciseTimestampKey, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mPreciseTimestampKey, sName, mContext->GetConfigName());
+    } 
+
+
+    // mTimeFormat = config.mTimeFormat;
+    // mTimeKey = config.mTimeKey;
+    // mSpecifiedYear = config.mAdvancedConfig.mSpecifiedYear;
+
+    // mLegacyPreciseTimestampConfig.enabled = config.mAdvancedConfig.mEnablePreciseTimestamp;
+
+    // mLegacyPreciseTimestampConfig.key = config.mAdvancedConfig.mPreciseTimestampKey;
+
+    // mLegacyPreciseTimestampConfig.unit = config.mAdvancedConfig.mPreciseTimestampUnit;
+    if (mSourceTimezone != "") {
+        int logTZSecond = 0;
+        if (!ConfigManagerBase::ParseTimeZoneOffsetSecond(mSourceTimezone, logTZSecond)) {
+            errorMsg = "invalid log time zone specified, will parse log time without time zone adjusted, time zone: "
+                + mSourceTimezone;
+            PARAM_WARNING_DEFAULT(
+                mContext->GetLogger(), errorMsg, mLogTimeZoneOffsetSecond, sName, mContext->GetConfigName());
+        } else {
+            LOG_INFO(mContext->GetLogger(),
+                     ("set log time zone", mSourceTimezone)("project", mContext->GetProjectName())(
+                         "logstore", mContext->GetLogstoreName())("config", mContext->GetConfigName()));
+            mLogTimeZoneOffsetSecond = logTZSecond - GetLocalTimeZoneOffsetSecond();
+        }
+    }
+
+    mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
+    mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
+
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
+    return true;
+}
 
 bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();

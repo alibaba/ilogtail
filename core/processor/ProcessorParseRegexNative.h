@@ -27,12 +27,22 @@ public:
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
+    bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
+    std::string mSourceKey;
+    std::string mRegex;
+    std::vector<std::string> mKeys;
+    bool mKeepingSourceWhenParseFail = false;
+    bool mKeepingSourceWhenParseSucceed = false;
+    std::string mRenamedSourceKey = "";
+    bool mCopingRawLog = false;
+    void AddUserDefinedFormat();
+
     void AddUserDefinedFormat(const std::string& regStr, const std::string& keys);
     /// @return false if data need to be discarded
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
@@ -42,7 +52,6 @@ private:
                             const std::vector<std::string>& keys,
                             const StringView& logPath);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
-    std::string mSourceKey;
     std::vector<UserDefinedFormat> mUserDefinedFormat;
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;

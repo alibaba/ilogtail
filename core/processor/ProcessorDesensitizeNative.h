@@ -30,6 +30,7 @@ public:
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
+    bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 protected:
@@ -38,6 +39,16 @@ protected:
 private:
     void ProcessEvent(PipelineEventPtr& e);
     void CastOneSensitiveWord(const std::vector<SensitiveWordCastOption>& optionVec, std::string* value);
+
+    static const int32_t MD5_OPTION = 0;
+    static const int32_t CONST_OPTION = 1;
+    std::string mSourceKey;
+    int32_t mMethod;
+    std::string mReplacingString;
+    std::string mContentPatternBeforeReplacedString;
+    std::string mReplacedContentPattern;
+    bool mReplacingAll;
+    std::shared_ptr<re2::RE2> mRegex;
 
     std::unordered_map<std::string, std::vector<SensitiveWordCastOption>> mSensitiveWordCastOptions;
 

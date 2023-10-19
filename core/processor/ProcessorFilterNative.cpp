@@ -21,15 +21,50 @@
 #include "config_manager/ConfigManager.h"
 #include "monitor/MetricConstants.h"
 #include <vector>
+#include "common/ParamExtractor.h"
+#include "config/UserLogConfigParser.h"
 
 namespace logtail {
-const std::string ProcessorFilterNative::sName = "processor_filter_native";
+const std::string ProcessorFilterNative::sName = "processor_filter_regex_native";
 
 ProcessorFilterNative::~ProcessorFilterNative() {
     for (auto& mFilter : mFilters) {
         delete mFilter.second;
     }
     mFilters.clear();
+}
+
+bool ProcessorFilterNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    if (!GetOptionalMapParam(config, "Include", mInclude, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    } else {
+        mFilterMode = RULE_MODE;
+    }
+
+    if (mFilterMode == BYPASS_MODE) {
+        const Json::Value& val = config["ConditionExp"];
+        if (!val.isNull()) {
+            BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(val);
+            if (!root) {
+                errorMsg = "invalid filter expression: " + val.toStyledString();
+                PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+            }
+            mConditionExp.swap(root);
+            LOG_INFO(mContext->GetLogger(), ("parse filter expression", val.toStyledString()));
+            mFilterMode = EXPRESSION_MODE;
+        }
+    }
+
+    if (mFilterMode == BYPASS_MODE) {
+        return false;
+    }
+    if (!GetOptionalBoolParam(config, "DiscardingNonUTF8", mDiscardingNonUTF8, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, true, sName, mContext->GetConfigName());
+        mDiscardingNonUTF8 = false;
+    }
+    return true;
 }
 
 bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {

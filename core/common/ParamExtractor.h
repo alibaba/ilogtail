@@ -159,5 +159,24 @@ bool GetMandatoryListParam(const Json::Value& config,
     }
 }
 
+template <class T>
+bool GetMandatoryMapParam(const Json::Value& config,
+                          const std::string& key,
+                          std::unordered_map<std::string, T>& param,
+                          std::string& errorMsg) {
+    errorMsg.clear();
+    if (!config.isMember(key)) {
+        errorMsg = "madatory param" + key + "is missing in plugin ";
+        return false;
+    }
+    if (!GetOptionalMapParam<T>(config, key, param, errorMsg)) {
+        return false;
+    }
+    if (param.empty()) {
+        errorMsg = "madatory list param" + key + "is empty in plugin ";
+        return false;
+    }
+}
+
 bool IsRegexValid(const std::string& regStr);
 } // namespace logtail

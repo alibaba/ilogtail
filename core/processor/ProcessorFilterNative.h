@@ -26,6 +26,7 @@ public:
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
+    bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
     ~ProcessorFilterNative();
 
@@ -33,13 +34,17 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
+    std::unordered_map<std::string, std::string> mInclude;
+    BaseFilterNodePtr mConditionExp = nullptr;
+    bool mDiscardingNonUTF8 = false;
+
     enum Mode { BYPASS_MODE, EXPRESSION_MODE, RULE_MODE, GLOBAL_MODE };
     std::shared_ptr<LogFilterRule> mFilterRule;
     BaseFilterNodePtr mFilterExpressionRoot = nullptr;
     std::unordered_map<std::string, LogFilterRule*> mFilters;
     LogType mLogType;
     bool mDiscardNoneUtf8;
-    Mode mFilterMode;
+    Mode mFilterMode = BYPASS_MODE;
 
     CounterPtr mProcFilterInSizeBytes;
     CounterPtr mProcFilterOutSizeBytes;

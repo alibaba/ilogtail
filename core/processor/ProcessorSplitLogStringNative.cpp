@@ -24,6 +24,11 @@
 namespace logtail {
 const std::string ProcessorSplitLogStringNative::sName = "processor_split_string_native";
 
+bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
+    
+    return true;
+}
+
 bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
 

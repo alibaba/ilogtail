@@ -24,12 +24,21 @@ public:
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
+    bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
+    std::string mSourceKey;
+    std::string mSourceFormat;
+    std::string mSourceTimezone = "";
+    int mSourceYear = -1;
+    TimeStampUnit mPreciseTimestampUnit;
+    std::string mPreciseTimestampKey;
+    int mLogTimeZoneOffsetSecond = 0;
+
     /// @return false if data need to be discarded
     bool ProcessEvent(StringView logPath, PipelineEventPtr& e, LogtailTime& logTime, StringView& timeStrCache);
     /// @return false if parse time failed
@@ -42,7 +51,6 @@ private:
     bool IsPrefixString(const StringView& all, const StringView& prefix);
     std::string mTimeKey;
     std::string mTimeFormat;
-    int mLogTimeZoneOffsetSecond = 0;
     int mSpecifiedYear = -1;
     PreciseTimestampConfig mLegacyPreciseTimestampConfig;
 

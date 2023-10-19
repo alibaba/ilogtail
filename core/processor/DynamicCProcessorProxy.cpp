@@ -30,6 +30,10 @@ bool DynamicCProcessorProxy::Init(const ComponentConfig& componentConfig) {
     return _c_ins->plugin->init(_c_ins, (void*)(&componentConfig), (void*)(&GetContext())) == 0;
 }
 
+bool DynamicCProcessorProxy::Init(const Json::Value& config) {
+    return true;
+}
+
 void DynamicCProcessorProxy::Process(PipelineEventGroup& logGroup) {
     _c_ins->plugin->process(_c_ins->plugin_state, &logGroup);
 }

@@ -22,9 +22,46 @@
 #include <rapidjson/writer.h>
 #include "parser/LogParser.h"
 #include "monitor/MetricConstants.h"
+#include "common/ParamExtractor.h"
 
 namespace logtail {
 const std::string ProcessorParseJsonNative::sName = "processor_parse_json_native";
+
+bool ProcessorParseJsonNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalStringParam(config, "RenamedSourceKey", mRenamedSourceKey, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
+    }
+    if (mKeepingSourceWhenParseSucceed && mRenamedSourceKey == mSourceKey) {
+        mSourceKeyOverwritten = true;
+    }
+
+    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
+
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+
+    return true;
+}
 
 bool ProcessorParseJsonNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();

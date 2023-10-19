@@ -20,12 +20,75 @@
 #include "parser/LogParser.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
+#include "common/ParamExtractor.h"
 
 
 namespace logtail {
 const std::string ProcessorParseDelimiterNative::sName = "processor_parse_delimiter_native";
 
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
+
+bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    if (!GetMandatoryStringParam(config, "Separator", mSeparator, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    if (!GetOptionalStringParam(config, "Quote", mQuoteString, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mQuoteString, sName, mContext->GetConfigName());
+    }
+    if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    if (!GetOptionalBoolParam(config, "AllowingShortenedFields", mAllowingShortenedFields, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mAllowingShortenedFields, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalStringParam(config, "OverflowedFieldsTreatment", mOverflowedFieldsTreatment, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mOverflowedFieldsTreatment, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalStringParam(config, "RenamedSourceKey", mRenamedSourceKey, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
+    }
+
+
+    // if (!mSeparator.empty())
+    //     mSeparatorChar = mSeparator.data()[0];
+    // else {
+    //     // This should never happened.
+    //     mSeparatorChar = '\t';
+    // }
+    // if (mUploadRawLog && mRawLogTag == mSourceKey) {
+    //     mSourceKeyOverwritten = true;
+    // }
+    // for (auto key : mColumnKeys) {
+    //     if (key.compare(mSourceKey) == 0) {
+    //         mSourceKeyOverwritten = true;
+    //     }
+    //     if (key.compare(mRawLogTag) == 0) {
+    //         mRawLogTagOverwritten = true;
+    //     }
+    // }
+    // mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
+    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
+
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    return true;
+}
 
 bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();

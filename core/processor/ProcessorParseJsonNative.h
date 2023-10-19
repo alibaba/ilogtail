@@ -27,6 +27,7 @@ public:
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
+    bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 protected:
@@ -34,6 +35,10 @@ protected:
 
 private:
     std::string mSourceKey;
+    bool mKeepingSourceWhenParseFail = false;
+    bool mKeepingSourceWhenParseSucceed = false;
+    std::string mRenamedSourceKey = "";
+    bool mCopingRawLog = false;
 
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;

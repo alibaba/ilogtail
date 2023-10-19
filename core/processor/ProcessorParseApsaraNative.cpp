@@ -22,12 +22,81 @@
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
 #include <algorithm>
+#include "common/ParamExtractor.h"
+#include <config_manager/ConfigManagerBase.h>
 
 
 namespace logtail {
 const std::string ProcessorParseApsaraNative::sName = "processor_parse_apsara_native";
 
 // static const int32_t MAX_BASE_FIELD_NUM = 10;
+
+bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        return false;
+    }
+    if (!GetOptionalStringParam(config, "Timezone", mTimezone, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mTimezone, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalStringParam(config, "RenamedSourceKey", mRenamedSourceKey, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
+    }
+
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, sName, mContext->GetConfigName());
+    }
+
+    if (mTimezone != "") {
+        int logTZSecond = 0;
+        if (!ConfigManagerBase::ParseTimeZoneOffsetSecond(mTimezone, logTZSecond)) {
+            errorMsg = "invalid log time zone specified, will parse log time without time zone adjusted, time zone: "
+                + mTimezone;
+            PARAM_WARNING_DEFAULT(
+                mContext->GetLogger(), errorMsg, mLogTimeZoneOffsetSecond, sName, mContext->GetConfigName());
+        } else {
+            LOG_INFO(mContext->GetLogger(),
+                     ("set log time zone", mTimezone)("project", mContext->GetProjectName())(
+                         "logstore", mContext->GetLogstoreName())("config", mContext->GetConfigName()));
+            mLogTimeZoneOffsetSecond = logTZSecond;
+        }
+    } else {
+        mLogTimeZoneOffsetSecond = 0;
+    }
+
+    if (mKeepingSourceWhenParseSucceed && mRenamedSourceKey == mSourceKey) {
+        mSourceKeyOverwritten = true;
+    }
+
+
+    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
+    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
+
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
+    return true;
+}
 
 bool ProcessorParseApsaraNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();

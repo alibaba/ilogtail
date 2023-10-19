@@ -26,12 +26,21 @@ public:
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
+    bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
+    std::string mSourceKey;
+    std::string mTimezone = "";
+    bool mKeepingSourceWhenParseFail = false;
+    bool mKeepingSourceWhenParseSucceed = false;
+    std::string mRenamedSourceKey = "";
+    bool mCopingRawLog = false;
+    int mLogTimeZoneOffsetSecond = 0;
+
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
     time_t ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
@@ -39,13 +48,11 @@ private:
     bool IsPrefixString(const char* all, const StringView& prefix);
     int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
 
-    std::string mSourceKey;
     std::string mRawLogTag;
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;
     bool mAdjustApsaraMicroTimezone = false;
     bool mSourceKeyOverwritten = false;
-    int mLogTimeZoneOffsetSecond = 0;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;

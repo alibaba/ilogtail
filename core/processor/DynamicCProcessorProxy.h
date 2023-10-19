@@ -29,6 +29,7 @@ public:
 
     const std::string& Name() const override { return _name; }
     bool Init(const ComponentConfig& componentConfig) override;
+    bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
     void SetCProcessor(const processor_interface_t* c_ins);
 
