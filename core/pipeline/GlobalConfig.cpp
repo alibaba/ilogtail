@@ -26,13 +26,14 @@ namespace logtail {
 const std::unordered_set<std::string> GlobalConfig::sNativeParam
     = {"TopicType", "TopicFormat", "ProcessPriority", "EnableTimestampNanosecond", "UsingOldContentTag"};
 
-bool GlobalConfig::Init(const Json::Value& config, const std::string& configName) {
+bool GlobalConfig::Init(const Json::Value& config, const std::string& configName, Json::Value& nonNativeParams) {
+    const string moduleName = "global";
     string errorMsg;
 
     // TopicType
     string topicType;
     if (!GetOptionalStringParam(config, "TopicType", topicType, errorMsg)) {
-        PARAM_WARNING_IGNORE(sLogger, errorMsg, "global", configName);
+        PARAM_WARNING_IGNORE(sLogger, errorMsg, moduleName, configName);
     } else if (topicType == "custom") {
         mTopicType = TopicType::CUSTOM;
     } else if (topicType == "machine_group_topic") {
@@ -40,7 +41,7 @@ bool GlobalConfig::Init(const Json::Value& config, const std::string& configName
     } else if (topicType == "file_path") {
         mTopicType = TopicType::FILEPATH;
     } else if (!topicType.empty()) {
-        PARAM_WARNING_IGNORE(sLogger, errorMsg, "global", configName);
+        PARAM_WARNING_IGNORE(sLogger, errorMsg, moduleName, configName);
     }
 
     // TopicFormat
@@ -50,52 +51,45 @@ bool GlobalConfig::Init(const Json::Value& config, const std::string& configName
             mTopicType = TopicType::NONE;
             LOG_WARNING(
                 sLogger,
-                ("problem encountered during pipeline initialization", "param TopicFormat is not valid")(
-                    "action", "ignore param TopicType and TopicFormat")("module", "global")("config", configName));
+                ("problem encountered in config parsing", "param TopicFormat is not valid")(
+                    "action", "ignore param TopicType and TopicFormat")("module", moduleName)("config", configName));
         } else if (mTopicType == TopicType::FILEPATH && !IsRegexValid(mTopicFormat)) {
             mTopicType = TopicType::NONE;
             mTopicFormat.clear();
             LOG_WARNING(
                 sLogger,
-                ("problem encountered during pipeline initialization", "param TopicFormat is not valid")(
-                    "action", "ignore param TopicType and TopicFormat")("module", "global")("config", configName));
+                ("problem encountered in config parsing", "param TopicFormat is not valid")(
+                    "action", "ignore param TopicType and TopicFormat")("module", moduleName)("config", configName));
         }
     }
 
     // ProcessPriority
     uint32_t priority = 0;
     if (!GetOptionalUIntParam(config, "ProcessPriority", priority, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, "global", configName);
+        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, moduleName, configName);
     } else if (priority > MAX_CONFIG_PRIORITY_LEVEL) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, "global", configName);
+        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, moduleName, configName);
     } else {
         mProcessPriority = priority;
     }
-    // if (mProcessPriority > 0) {
-    //     LogProcess::GetInstance()->SetPriorityWithHoldOn(config->mLogstoreKey, mProcessPriority);
-    // } else {
-    //     LogProcess::GetInstance()->DeletePriorityWithHoldOn(config->mLogstoreKey);
-    // }
 
     // EnableTimestampNanosecond
     if (!GetOptionalBoolParam(config, "EnableTimestampNanosecond", mEnableTimestampNanosecond, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, "global", configName);
+        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, moduleName, configName);
     }
 
     // UsingOldContentTag
     if (!GetOptionalBoolParam(config, "UsingOldContentTag", mUsingOldContentTag, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, "global", configName);
+        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, moduleName, configName);
     }
 
-    // generate Go Global module if necessary
-    // if (mContext->IsFlushingThroughGoPipeline()) {
-    //     Json::Value global(Json::objectValue);
-    //     for (auto itr = config.begin(); itr != config.end(); ++itr) {
-    //         if (sNativeParam.find(itr.name()) != sNativeParam.end()) {
-    //             global[itr.name()] = *itr;
-    //         }
-    //     }
-    // }
+    for (auto itr = config.begin(); itr != config.end(); ++itr) {
+        if (sNativeParam.find(itr.name()) != sNativeParam.end()) {
+            nonNativeParams[itr.name()] = *itr;
+        }
+    }
+
+    return true;
 }
 
 } // namespace logtail

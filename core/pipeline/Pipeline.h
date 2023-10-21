@@ -20,7 +20,7 @@
 #include <vector>
 #include <memory>
 
-// #include "config/NewConfig.h"
+#include "config/NewConfig.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineContext.h"
 #include "plugin/instance/InputInstance.h"
@@ -34,8 +34,7 @@ namespace logtail {
 class Pipeline {
 public:
     bool Init(const PipelineConfig& config);
-    // bool Init(NewConfig&& config);
-    bool Init(const Json::Value& config);
+    bool Init(NewConfig&& config);
     void Start();
     void Process(PipelineEventGroup& logGroup);
     void Stop(bool isRemoving);
@@ -48,9 +47,9 @@ public:
 
 private:
     bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);
-    bool ShouldAddFlusherToGoPipelineWithInput() const {
-        return !mGoPipelineWithInput.isNull() && mProcessorLine.empty() && mGoPipelineWithoutInput.isNull();
-    }
+    void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
+    void AddPluginToGoPipeline(const Json::Value& plugin, const std::string& module, Json::Value& dst);
+    bool ShouldAddPluginToGoPipelineWithInput() const { return mInputs.empty() && mProcessorLine.empty(); }
 
     std::string mName;
     std::vector<std::unique_ptr<InputInstance>> mInputs;
@@ -60,7 +59,6 @@ private:
     Json::Value mGoPipelineWithoutInput;
     PipelineContext mContext;
     PipelineConfig mConfig;
-
-    bool mRequiringSpecialStopOrder = false;
 };
+
 } // namespace logtail

@@ -26,12 +26,12 @@
 namespace logtail {
 
 struct GlobalConfig {
-    enum class TopicType {NONE, FILEPATH, MACHINE_GROUP_TOPIC, CUSTOM};
+    enum class TopicType { NONE, FILEPATH, MACHINE_GROUP_TOPIC, CUSTOM };
 
     static const std::unordered_set<std::string> sNativeParam;
 
     // bool Init(const Table& config, const std::string& configName);
-    bool Init(const Json::Value& config, const std::string& configName);
+    bool Init(const Json::Value& config, const std::string& configName, Json::Value& nonNativeParams);
 
     TopicType mTopicType = TopicType::NONE;
     std::string mTopicFormat;

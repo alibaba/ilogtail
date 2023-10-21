@@ -90,8 +90,20 @@ std::unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const std::string
         static_cast<FlusherInstance*>(Create(FLUSHER_PLUGIN, name, pluginId).release()));
 }
 
-bool PluginRegistry::IsValidGoPlugin(const std::string& name) {
+bool PluginRegistry::IsValidGoPlugin(const std::string& name) const {
     return mGoPlugins.find(name) != mGoPlugins.end();
+}
+
+bool PluginRegistry::IsValidNativeInputPlugin(const std::string& name) const {
+    return mPluginDict.find(PluginKey(INPUT_PLUGIN, name)) != mPluginDict.end();
+}
+
+bool PluginRegistry::IsValidNativeProcessorPlugin(const std::string& name) const {
+    return mPluginDict.find(PluginKey(PROCESSOR_PLUGIN, name)) != mPluginDict.end();
+}
+
+bool PluginRegistry::IsValidNativeFlusherPlugin(const std::string& name) const {
+    return mPluginDict.find(PluginKey(FLUSHER_PLUGIN, name)) != mPluginDict.end();
 }
 
 void PluginRegistry::LoadStaticPlugins() {

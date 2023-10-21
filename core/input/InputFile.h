@@ -63,6 +63,8 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
+    bool IsMultiline() const { return mIsMultiline; }
+
     std::vector<std::string> mFilePaths;
     int32_t mMaxDirSearchDepth = 0;
     std::vector<std::string> mExcludeFilePaths;
@@ -123,6 +125,8 @@ private:
     std::vector<std::string> mFileNameBlacklist;
 
     std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos;
+
+    bool mIsMultiline = false;
 };
 
 } // namespace logtail

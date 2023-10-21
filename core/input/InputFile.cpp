@@ -204,6 +204,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
                 PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "custom", sName, mContext->GetConfigName());
             } else if (mode == "JSON") {
                 mMultiline.mMode = Multiline::Mode::JSON;
+                mIsMultiline = true;
             } else if (mode != "custom") {
                 PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "custom", sName, mContext->GetConfigName());
             }
@@ -235,6 +236,19 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
                     PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
                 } else {
                     mMultiline.mEndPattern = pattern;
+                }
+
+                if ((mMultiline.mStartPattern.empty() || mMultiline.mStartPattern == ".*")
+                    && (mMultiline.mEndPattern.empty() || mMultiline.mEndPattern == ".*")
+                    && !mMultiline.mContinuePattern.empty()) {
+                    LOG_WARNING(
+                        mContext->GetLogger(),
+                        ("problem encountered in config parsing",
+                         "param Multiline.StartPattern and EndPattern are empty but ContinuePattern is not")(
+                            "action", "ignore multiline config")("module", sName)("config", mContext->GetConfigName()));
+                } else if ((!mMultiline.mStartPattern.empty() && mMultiline.mStartPattern != ".*")
+                           || (!mMultiline.mEndPattern.empty() && mMultiline.mEndPattern != ".*")) {
+                    mIsMultiline = true;
                 }
             }
         }
@@ -418,7 +432,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     uint32_t exactlyOnceConcurrency;
     if (!GetOptionalUIntParam(config, "EnableExactlyOnce", exactlyOnceConcurrency, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, 0, sName, mContext->GetConfigName());
-    } else if (exactlyOnceConcurrency > INT32_FLAG(max_exactly_once_concurrency)) {
+    } else if (exactlyOnceConcurrency > static_cast<uint32_t>(INT32_FLAG(max_exactly_once_concurrency))) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               "param EnableExactlyOnce is larger than 512",
                               INT32_FLAG(max_exactly_once_concurrency),
@@ -567,7 +581,8 @@ void InputFile::GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const 
     plugin["detail"] = detail;
 
     res["inputs"].append(plugin);
-    // these param will be overriden if the same param appears in the global module of config, which will be parsed later.
+    // these param will be overriden if the same param appears in the global module of config, which will be parsed
+    // later.
     res["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
     res["global"]["AlwaysOnline"] = Json::Value(true);
 }

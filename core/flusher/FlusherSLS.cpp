@@ -66,8 +66,11 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 #endif
         // Region
         if (!GetOptionalStringParam(config, "Region", mRegion, errorMsg)) {
-            PARAM_WARNING_DEFAULT(
-                mContext->GetLogger(), errorMsg, AppConfig::GetInstance()->GetDefaultRegion(), sName, mContext->GetConfigName());
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                  errorMsg,
+                                  AppConfig::GetInstance()->GetDefaultRegion(),
+                                  sName,
+                                  mContext->GetConfigName());
         }
 
         // Endpoint
@@ -97,7 +100,8 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         } else if (compressType == "none") {
             mCompressType = CompressType::NONE;
         } else if (compressType != "lz4") {
-            PARAM_WARNING_DEFAULT(mContext->GetLogger(), "param CompressType is not valid", "lz4", sName, mContext->GetConfigName());
+            PARAM_WARNING_DEFAULT(
+                mContext->GetLogger(), "param CompressType is not valid", "lz4", sName, mContext->GetConfigName());
         }
     } else {
         mCompressType = CompressType::NONE;
@@ -110,7 +114,8 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     } else if (telemetryType == "metrics") {
         mTelemetryType = TelemetryType::METRIC;
     } else if (telemetryType != "logs") {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), "param TelemetryType is not valid", "logs", sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), "param TelemetryType is not valid", "logs", sName, mContext->GetConfigName());
     }
 
     // FlowControlExpireTime
@@ -129,7 +134,8 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     const Json::Value* itr = config.find(key, key + strlen(key));
     if (itr) {
         if (!itr->isObject()) {
-            PARAM_WARNING_IGNORE(mContext->GetLogger(), "param Batch is not of type object", sName, mContext->GetConfigName());
+            PARAM_WARNING_IGNORE(
+                mContext->GetLogger(), "param Batch is not of type object", sName, mContext->GetConfigName());
         } else {
             // MergeType
             string mergeType;
@@ -138,8 +144,11 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
             } else if (mergeType == "logstore") {
                 mBatch.mMergeType = Batch::MergeType::LOGSTORE;
             } else if (mergeType != "topic") {
-                PARAM_WARNING_DEFAULT(
-                    mContext->GetLogger(), "param Batch.MergeType is not valid", "topic", sName, mContext->GetConfigName());
+                PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                      "param Batch.MergeType is not valid",
+                                      "topic",
+                                      sName,
+                                      mContext->GetConfigName());
             }
 
             // SendIntervalSecs
@@ -155,10 +164,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         }
     }
 
-    // generate Go plugin if necessary
-    if (mContext->IsFlushingThroughGoPipeline()) {
-        GenerateGoPlugin(config, optionalGoPipeline);
-    }
+    GenerateGoPlugin(config, optionalGoPipeline);
 
     // 过渡使用
     ConfigManager::GetInstance()->InsertRegionAliuidMap(mRegion, mAliuid);

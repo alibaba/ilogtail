@@ -29,6 +29,7 @@
 #include "pipeline/GlobalConfig.h"
 
 namespace logtail {
+
 class Pipeline;
 class FlusherSLS;
 
@@ -60,19 +61,20 @@ public:
     uint32_t GetCreateTime() const { return mCreateTime; }
     void SetCreateTime(uint32_t time) { mCreateTime = time; }
     const GlobalConfig& GetGlobalConfig() const { return mGlobalConfig; }
-    bool InitGlobalConfig(const Json::Value& config) { return mGlobalConfig.Init(config, mConfigName); }
+    bool InitGlobalConfig(const Json::Value& config, Json::Value& nonNativeParams) {
+        return mGlobalConfig.Init(config, mConfigName, nonNativeParams);
+    }
     Pipeline& GetPipeline() { return *mPipeline; }
     void SetPipeline(Pipeline& pipeline) { mPipeline = &pipeline; }
-    bool IsFlushingThroughGoPipeline() const { return mIsFlushingThroughGoPipeline; }
-    // 当processor有Go插件或processor无插件且input只有Go插件时为true
-    void SetIsFlushingThroughGoPipelineFlag(bool flag) { mIsFlushingThroughGoPipeline = flag; }
 
     const std::string& GetProjectName() const;
     const std::string& GetLogstoreName() const;
     const std::string& GetRegion() const;
     LogstoreFeedBackKey GetLogstoreKey() const;
-    const FlusherSLS& GetSLSInfo() const { return *mSLSInfo; }
+    const FlusherSLS* GetSLSInfo() const { return mSLSInfo; }
     void SetSLSInfo(const FlusherSLS* flusherSLS) { mSLSInfo = flusherSLS; }
+    bool IsFirstProcessorJson() const { return mIsFirstProcessorJson; }
+    void SetIsFirstProcessorJsonFlag(bool flag) { mIsFirstProcessorJson = flag; }
 
     // 过渡使用
     void SetProjectName(const std::string& projectName) { mProjectName = projectName; }
@@ -91,9 +93,9 @@ private:
     uint32_t mCreateTime;
     GlobalConfig mGlobalConfig;
     Pipeline* mPipeline = nullptr;
-    bool mIsFlushingThroughGoPipeline = false;
 
     const FlusherSLS* mSLSInfo = nullptr;
+    bool mIsFirstProcessorJson = false;
 
     ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
@@ -103,4 +105,5 @@ private:
     // 过渡使用
     std::string mProjectName, mLogstoreName, mRegion;
 };
+
 } // namespace logtail
