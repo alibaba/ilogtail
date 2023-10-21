@@ -36,7 +36,7 @@ public:
     bool Init(const PipelineConfig& config);
     bool Init(NewConfig&& config);
     void Start();
-    void Process(PipelineEventGroup& logGroup);
+    void Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList);
     void Stop(bool isRemoving);
 
     const std::string& Name() const { return mName; }
