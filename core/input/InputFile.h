@@ -65,29 +65,34 @@ public:
 
     bool IsMultiline() const { return mIsMultiline; }
 
+    // file discovery
     std::vector<std::string> mFilePaths;
     int32_t mMaxDirSearchDepth = 0;
+    int32_t mPreservedDirDepth = -1;
     std::vector<std::string> mExcludeFilePaths;
     std::vector<std::string> mExcludeFiles;
     std::vector<std::string> mExcludeDirs;
-    bool mTailingAllMatchedFiles = false;
-    Encoding mFileEncoding = Encoding::UTF8;
-    uint32_t mTailSizeKB;
-    Multiline mMultiline;
+    bool mAllowingCollectingFilesInRootDir = false;
+    bool mAllowingIncludedByMultiConfigs = false;
+    // container discovery
     bool mEnableContainerDiscovery = false;
     ContainerFilters mContainerFilters;
     std::unordered_map<std::string, std::string> mExternalK8sLabelTag;
     std::unordered_map<std::string, std::string> mExternalEnvTag;
     bool mCollectingContainersMeta = false;
-    bool mAppendingLogPositionMeta = false;
-    int32_t mPreservedDirDepth = -1;
+    // file reading
+    Encoding mFileEncoding = Encoding::UTF8;
+    bool mTailingAllMatchedFiles = false;
+    uint32_t mTailSizeKB;
     uint32_t mFlushTimeoutSecs;
     uint32_t mReadDelaySkipThresholdBytes = 0;
     uint32_t mReadDelayAlertThresholdBytes;
-    uint32_t mRotatorQueueSize;
     uint32_t mCloseUnusedReaderIntervalSec;
-    bool mAllowingCollectingFilesInRootDir = false;
-    bool mAllowingIncludedByMultiConfigs = false;
+    uint32_t mRotatorQueueSize;
+    // raw log processing
+    Multiline mMultiline;
+    bool mAppendingLogPositionMeta = false;
+    // others
     uint32_t mMaxCheckpointDirSearchDepth = 0;
     uint32_t mExactlyOnceConcurrency = 0;
 

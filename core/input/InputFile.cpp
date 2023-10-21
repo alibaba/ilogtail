@@ -54,8 +54,8 @@ InputFile::InputFile()
     : mTailSizeKB(static_cast<uint32_t>(INT32_FLAG(default_tail_limit_kb))),
       mFlushTimeoutSecs(static_cast<uint32_t>(INT32_FLAG(default_reader_flush_timeout))),
       mReadDelayAlertThresholdBytes(static_cast<uint32_t>(INT32_FLAG(delay_bytes_upperlimit))),
-      mRotatorQueueSize(static_cast<uint32_t>(INT32_FLAG(logreader_max_rotate_queue_size))),
       mCloseUnusedReaderIntervalSec(static_cast<uint32_t>(INT32_FLAG(reader_close_unused_file_time))),
+      mRotatorQueueSize(static_cast<uint32_t>(INT32_FLAG(logreader_max_rotate_queue_size))),
       mMaxCheckpointDirSearchDepth(static_cast<uint32_t>(INT32_FLAG(search_checkpoint_default_dir_depth))) {
 }
 
@@ -89,6 +89,11 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         }
     }
     ParseWildcardPath();
+
+    // PreservedDirDepth
+    if (!GetOptionalIntParam(config, "PreservedDirDepth", mPreservedDirDepth, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, -1, sName, mContext->GetConfigName());
+    }
 
     // ExcludeFilePaths
     if (!GetOptionalListParam<string>(config, "ExcludeFilePaths", mExcludeFilePaths, errorMsg)) {
@@ -158,100 +163,17 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         mHasBlacklist = true;
     }
 
-    // TailingAllMatchedFiles
-    if (!GetOptionalBoolParam(config, "TailingAllMatchedFiles", mTailingAllMatchedFiles, errorMsg)) {
+    // AllowingCollectingFilesInRootDir
+    if (!GetOptionalBoolParam(
+            config, "AllowingCollectingFilesInRootDir", mAllowingCollectingFilesInRootDir, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
+    } else if (mAllowingCollectingFilesInRootDir) {
+        BOOL_FLAG(enable_root_path_collection) = mAllowingCollectingFilesInRootDir;
     }
 
-    // FileEncoding
-    string encoding;
-    if (!GetOptionalStringParam(config, "FileEncoding", encoding, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-    }
-    encoding = ToLowerCaseString(encoding);
-    if (encoding == "gbk") {
-        mFileEncoding = Encoding::GBK;
-    } else if (encoding != "utf8") {
-        PARAM_ERROR(mContext->GetLogger(), "param FileEncoding is not valid", sName, mContext->GetConfigName());
-    }
-
-    // TailSizeKB
-    uint32_t tailSize = 0;
-    if (!GetOptionalUIntParam(config, "TailSizeKB", tailSize, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, INT32_FLAG(default_tail_limit_kb), sName, mContext->GetConfigName());
-    } else if (tailSize > 100 * 1024 * 1024) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              "param TailSizeKB is larger than 104857600",
-                              INT32_FLAG(default_tail_limit_kb),
-                              sName,
-                              mContext->GetConfigName());
-    } else {
-        mTailSizeKB = tailSize;
-    }
-
-    // Multiline
-    const char* key = "Multiline";
-    const Json::Value* itr = config.find(key, key + strlen(key));
-    if (itr) {
-        if (!itr->isObject()) {
-            PARAM_WARNING_IGNORE(
-                mContext->GetLogger(), "param Multiline is not of type object", sName, mContext->GetConfigName());
-        } else {
-            // Mode
-            string mode;
-            if (!GetOptionalStringParam(*itr, "Multiline.Mode", mode, errorMsg)) {
-                PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "custom", sName, mContext->GetConfigName());
-            } else if (mode == "JSON") {
-                mMultiline.mMode = Multiline::Mode::JSON;
-                mIsMultiline = true;
-            } else if (mode != "custom") {
-                PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "custom", sName, mContext->GetConfigName());
-            }
-
-            if (mMultiline.mMode == Multiline::Mode::CUSTOM) {
-                // StartPattern
-                string pattern;
-                if (!GetOptionalStringParam(*itr, "Multiline.StartPattern", pattern, errorMsg)) {
-                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-                } else if (!IsRegexValid(pattern)) {
-                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-                } else {
-                    mMultiline.mStartPattern = pattern;
-                }
-
-                // ContinuePattern
-                if (!GetOptionalStringParam(*itr, "Multiline.ContinuePattern", pattern, errorMsg)) {
-                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-                } else if (!IsRegexValid(pattern)) {
-                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-                } else {
-                    mMultiline.mContinuePattern = pattern;
-                }
-
-                // EndPattern
-                if (!GetOptionalStringParam(*itr, "Multiline.EndPattern", pattern, errorMsg)) {
-                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-                } else if (!IsRegexValid(pattern)) {
-                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-                } else {
-                    mMultiline.mEndPattern = pattern;
-                }
-
-                if ((mMultiline.mStartPattern.empty() || mMultiline.mStartPattern == ".*")
-                    && (mMultiline.mEndPattern.empty() || mMultiline.mEndPattern == ".*")
-                    && !mMultiline.mContinuePattern.empty()) {
-                    LOG_WARNING(
-                        mContext->GetLogger(),
-                        ("problem encountered in config parsing",
-                         "param Multiline.StartPattern and EndPattern are empty but ContinuePattern is not")(
-                            "action", "ignore multiline config")("module", sName)("config", mContext->GetConfigName()));
-                } else if ((!mMultiline.mStartPattern.empty() && mMultiline.mStartPattern != ".*")
-                           || (!mMultiline.mEndPattern.empty() && mMultiline.mEndPattern != ".*")) {
-                    mIsMultiline = true;
-                }
-            }
-        }
+    // AllowingIncludedByMultiConfigs
+    if (!GetOptionalBoolParam(config, "AllowingIncludedByMultiConfigs", mAllowingIncludedByMultiConfigs, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     }
 
     // EnableContainerDiscovery
@@ -361,18 +283,40 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         }
     }
 
-    // AppendingLogPositionMeta
-    if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
+    // FileEncoding
+    string encoding;
+    if (!GetOptionalStringParam(config, "FileEncoding", encoding, errorMsg)) {
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    }
+    encoding = ToLowerCaseString(encoding);
+    if (encoding == "gbk") {
+        mFileEncoding = Encoding::GBK;
+    } else if (encoding != "utf8") {
+        PARAM_ERROR(mContext->GetLogger(), "param FileEncoding is not valid", sName, mContext->GetConfigName());
+    }
+
+    // TailingAllMatchedFiles
+    if (!GetOptionalBoolParam(config, "TailingAllMatchedFiles", mTailingAllMatchedFiles, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     }
 
-    // PreservedDirDepth
-    if (!GetOptionalIntParam(config, "PreservedDirDepth", mPreservedDirDepth, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, -1, sName, mContext->GetConfigName());
+    // TailSizeKB
+    uint32_t tailSize = 0;
+    if (!GetOptionalUIntParam(config, "TailSizeKB", tailSize, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, INT32_FLAG(default_tail_limit_kb), sName, mContext->GetConfigName());
+    } else if (tailSize > 100 * 1024 * 1024) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              "param TailSizeKB is larger than 104857600",
+                              INT32_FLAG(default_tail_limit_kb),
+                              sName,
+                              mContext->GetConfigName());
+    } else {
+        mTailSizeKB = tailSize;
     }
 
     // FlushTimeoutSecs
-    if (!GetOptionalUIntParam(*itr, "FlushTimeoutSecs", mFlushTimeoutSecs, errorMsg)) {
+    if (!GetOptionalUIntParam(config, "FlushTimeoutSecs", mFlushTimeoutSecs, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               errorMsg,
                               INT32_FLAG(default_reader_flush_timeout),
@@ -391,15 +335,6 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
             mContext->GetLogger(), errorMsg, INT32_FLAG(delay_bytes_upperlimit), sName, mContext->GetConfigName());
     }
 
-    // RotatorQueueSize
-    if (!GetOptionalUIntParam(config, "RotatorQueueSize", mRotatorQueueSize, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              errorMsg,
-                              INT32_FLAG(logreader_max_rotate_queue_size),
-                              sName,
-                              mContext->GetConfigName());
-    }
-
     // CloseUnusedReaderIntervalSec
     if (!GetOptionalUIntParam(config, "CloseUnusedReaderIntervalSec", mCloseUnusedReaderIntervalSec, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
@@ -409,16 +344,81 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
                               mContext->GetConfigName());
     }
 
-    // AllowingCollectingFilesInRootDir
-    if (!GetOptionalBoolParam(
-            config, "AllowingCollectingFilesInRootDir", mAllowingCollectingFilesInRootDir, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
-    } else if (mAllowingCollectingFilesInRootDir) {
-        BOOL_FLAG(enable_root_path_collection) = mAllowingCollectingFilesInRootDir;
+    // RotatorQueueSize
+    if (!GetOptionalUIntParam(config, "RotatorQueueSize", mRotatorQueueSize, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              errorMsg,
+                              INT32_FLAG(logreader_max_rotate_queue_size),
+                              sName,
+                              mContext->GetConfigName());
     }
 
-    // AllowingIncludedByMultiConfigs
-    if (!GetOptionalBoolParam(config, "AllowingIncludedByMultiConfigs", mAllowingIncludedByMultiConfigs, errorMsg)) {
+    // Multiline
+    const char* key = "Multiline";
+    const Json::Value* itr = config.find(key, key + strlen(key));
+    if (itr) {
+        if (!itr->isObject()) {
+            PARAM_WARNING_IGNORE(
+                mContext->GetLogger(), "param Multiline is not of type object", sName, mContext->GetConfigName());
+        } else {
+            // Mode
+            string mode;
+            if (!GetOptionalStringParam(*itr, "Multiline.Mode", mode, errorMsg)) {
+                PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "custom", sName, mContext->GetConfigName());
+            } else if (mode == "JSON") {
+                mMultiline.mMode = Multiline::Mode::JSON;
+                mIsMultiline = true;
+            } else if (mode != "custom") {
+                PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "custom", sName, mContext->GetConfigName());
+            }
+
+            if (mMultiline.mMode == Multiline::Mode::CUSTOM) {
+                // StartPattern
+                string pattern;
+                if (!GetOptionalStringParam(*itr, "Multiline.StartPattern", pattern, errorMsg)) {
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+                } else if (!IsRegexValid(pattern)) {
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+                } else {
+                    mMultiline.mStartPattern = pattern;
+                }
+
+                // ContinuePattern
+                if (!GetOptionalStringParam(*itr, "Multiline.ContinuePattern", pattern, errorMsg)) {
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+                } else if (!IsRegexValid(pattern)) {
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+                } else {
+                    mMultiline.mContinuePattern = pattern;
+                }
+
+                // EndPattern
+                if (!GetOptionalStringParam(*itr, "Multiline.EndPattern", pattern, errorMsg)) {
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+                } else if (!IsRegexValid(pattern)) {
+                    PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+                } else {
+                    mMultiline.mEndPattern = pattern;
+                }
+
+                if ((mMultiline.mStartPattern.empty() || mMultiline.mStartPattern == ".*")
+                    && (mMultiline.mEndPattern.empty() || mMultiline.mEndPattern == ".*")
+                    && !mMultiline.mContinuePattern.empty()) {
+                    LOG_WARNING(
+                        mContext->GetLogger(),
+                        ("problem encountered in config parsing",
+                         "param Multiline.StartPattern and EndPattern are empty but ContinuePattern is not")(
+                            "action", "ignore multiline config")("module", sName)("config", mContext->GetConfigName()));
+                } else if ((!mMultiline.mStartPattern.empty() && mMultiline.mStartPattern != ".*")
+                           || (!mMultiline.mEndPattern.empty() && mMultiline.mEndPattern != ".*")) {
+                    mIsMultiline = true;
+                }
+            }
+        }
+    }
+
+    // AppendingLogPositionMeta
+    if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     }
 
