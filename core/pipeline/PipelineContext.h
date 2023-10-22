@@ -83,8 +83,8 @@ public:
 
     ProcessProfile& GetProcessProfile() { return mProcessProfile; }
     // LogFileProfiler& GetProfiler() { return *mProfiler; }
-    Logger::logger& GetLogger() { return mLogger; }
-    LogtailAlarm& GetAlarm() { return *mAlarm; };
+    const Logger::logger& GetLogger() const { return mLogger; }
+    LogtailAlarm& GetAlarm() const { return *mAlarm; };
 
 private:
     static const std::string sEmptyString;

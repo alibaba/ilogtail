@@ -13,12 +13,9 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 2.9)
-project(input)
+project(container_manager)
 
 file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} config)
-target_link_libraries(${PROJECT_NAME} file_server)
-target_link_libraries(${PROJECT_NAME} reader)
-target_link_libraries(${PROJECT_NAME} container_manager)
+target_link_libraries(${PROJECT_NAME} common)

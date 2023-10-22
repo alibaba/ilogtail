@@ -19,40 +19,19 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "config/DockerFileConfig.h"
+#include "container_manager/ContainerDiscoveryOptions.h"
+#include "file_server/FileDiscoveryOptions.h"
+#include "file_server/MultilineOptions.h"
 #include "plugin/interface/Input.h"
+#include "reader/FileReaderOptions.h"
 
 namespace logtail {
 
 class InputFile : public Input {
 public:
-    enum class Encoding { UTF8, GBK };
-
-    struct Multiline {
-        enum class Mode { CUSTOM, JSON };
-
-        Mode mMode = Mode::CUSTOM;
-        std::string mStartPattern;
-        std::string mContinuePattern;
-        std::string mEndPattern;
-    };
-
-    struct ContainerFilters {
-        std::string mK8sNamespaceRegex;
-        std::string mK8sPodRegex;
-        std::unordered_map<std::string, std::string> mIncludeK8sLabel;
-        std::unordered_map<std::string, std::string> mExcludeK8sLabel;
-        std::string mK8sContainerRegex;
-        std::unordered_map<std::string, std::string> mIncludeEnv;
-        std::unordered_map<std::string, std::string> mExcludeEnv;
-        std::unordered_map<std::string, std::string> mIncludeContainerLabel;
-        std::unordered_map<std::string, std::string> mExcludeContainerLabel;
-    };
-
     static const std::string sName;
 
     InputFile();
@@ -63,75 +42,21 @@ public:
     bool Start() override;
     bool Stop(bool isPipelineRemoving) override;
 
-    bool IsMultiline() const { return mIsMultiline; }
-
-    // file discovery
-    std::vector<std::string> mFilePaths;
-    int32_t mMaxDirSearchDepth = 0;
-    int32_t mPreservedDirDepth = -1;
-    std::vector<std::string> mExcludeFilePaths;
-    std::vector<std::string> mExcludeFiles;
-    std::vector<std::string> mExcludeDirs;
-    bool mAllowingCollectingFilesInRootDir = false;
-    bool mAllowingIncludedByMultiConfigs = false;
-    // container discovery
+    FileDiscoveryOptions mFileDiscovery;
     bool mEnableContainerDiscovery = false;
-    ContainerFilters mContainerFilters;
-    std::unordered_map<std::string, std::string> mExternalK8sLabelTag;
-    std::unordered_map<std::string, std::string> mExternalEnvTag;
-    bool mCollectingContainersMeta = false;
-    // file reading
-    Encoding mFileEncoding = Encoding::UTF8;
-    bool mTailingAllMatchedFiles = false;
-    uint32_t mTailSizeKB;
-    uint32_t mFlushTimeoutSecs;
-    uint32_t mReadDelaySkipThresholdBytes = 0;
-    uint32_t mReadDelayAlertThresholdBytes;
-    uint32_t mCloseUnusedReaderIntervalSec;
-    uint32_t mRotatorQueueSize;
+    ContainerDiscoveryOptions mContainerDiscovery;
+    FileReaderOptions mFileReader;
     // raw log processing
-    Multiline mMultiline;
+    MultilineOptions mMultiline;
     bool mAppendingLogPositionMeta = false;
     // others
     uint32_t mMaxCheckpointDirSearchDepth = 0;
     uint32_t mExactlyOnceConcurrency = 0;
 
 private:
-    void ParseWildcardPath();
-    std::pair<std::string, std::string> GetDirAndFileNameFromPath(const std::string& filePath);
     void GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const;
 
-    std::string mBasePath;
-    std::string mFilePattern;
-    std::vector<std::string> mConstWildcardPaths;
-    std::vector<std::string> mWildcardPaths;
-    uint16_t mWildcardDepth;
-
-    // Blacklist control.
-    bool mHasBlacklist = false;
-    // Absolute path of directories to filter, such as /app/log. It will filter
-    // subdirectories as well.
-    std::vector<std::string> mDirPathBlacklist;
-    // Wildcard (*/?) is included, use fnmatch with FNM_PATHNAME to filter, which
-    // will also filter subdirectories. For example, /app/* filters subdirectory
-    // /app/log but keep /app/text.log, because /app does not match /app/*. And
-    // because /app/log is filtered, so any changes under it will be ignored, so
-    // both /app/log/sub and /app/log/text.log will be blacklisted.
-    std::vector<std::string> mWildcardDirPathBlacklist;
-    // Multiple level wildcard (**) is included, use fnmatch with 0 as flags to filter,
-    // which will blacklist /path/a/b with pattern /path/**.
-    std::vector<std::string> mMLWildcardDirPathBlacklist;
-    // Absolute path of files to filter, */? is supported, such as /app/log/100*.log.
-    std::vector<std::string> mFilePathBlacklist;
-    // Multiple level wildcard (**) is included.
-    std::vector<std::string> mMLFilePathBlacklist;
-    // File name only, */? is supported too, such as 100*.log. It is similar to
-    // mFilePattern, but works in reversed way.
-    std::vector<std::string> mFileNameBlacklist;
-
     std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos;
-
-    bool mIsMultiline = false;
 };
 
 } // namespace logtail

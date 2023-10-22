@@ -34,6 +34,9 @@
 
 // for special treatment
 #include "input/InputFile.h"
+#include "file_server/MultilineOptions.h"
+
+DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
 namespace logtail {
 
@@ -162,12 +165,12 @@ bool Pipeline::Init(NewConfig&& config) {
     if (inputFile) {
         std::unique_ptr<ProcessorInstance> processor;
         Json::Value detail;
-        if (config.mIsFirstProcessorJson || inputFile->mMultiline.mMode == InputFile::Multiline::Mode::JSON) {
+        if (config.mIsFirstProcessorJson || inputFile->mMultiline.mMode == MultilineOptions::Mode::JSON) {
             processor = PluginRegistry::GetInstance()->CreateProcessor("processor_split_native_native",
                                                                        std::to_string(++pluginIndex));
             detail["SplitChar"] = Json::Value('\0');
             detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mAppendingLogPositionMeta);
-        } else if (inputFile->IsMultiline()) {
+        } else if (inputFile->mMultiline.IsMultiline()) {
             processor = PluginRegistry::GetInstance()->CreateProcessor("processor_split_regex_native",
                                                                        std::to_string(++pluginIndex));
             detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
@@ -276,7 +279,7 @@ bool Pipeline::Init(NewConfig&& config) {
 
     // mandatory override global.DefaultLogQueueSize in Go pipeline when input_file and Go processing coexist.
     if (inputFile && !mGoPipelineWithoutInput.isNull()) {
-        mGoPipelineWithoutInput["global"]["DefaultLogQueueSize"] = Json::Value(10);
+        mGoPipelineWithoutInput["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
     }
 
     // special treatment
