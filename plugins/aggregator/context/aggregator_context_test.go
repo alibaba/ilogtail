@@ -186,7 +186,7 @@ func generateLogs(agg *AggregatorContext, logNum int, withCtx bool, logNo []int,
 		}
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "no", Value: fmt.Sprintf("%d", logNo[index]+1)})
 		if withCtx {
-			ctx := map[string]interface{}{"source": packIDPrefix[index] + "-", "topic": "file", "tags": []*protocol.LogTag{&protocol.LogTag{
+			ctx := map[string]interface{}{"source": packIDPrefix[index] + "-", "topic": "file", "tags": []*protocol.LogTag{{
 				Key:   "testTag",
 				Value: packIDPrefix[index],
 			}}}
