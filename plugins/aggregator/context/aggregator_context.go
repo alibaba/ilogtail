@@ -15,6 +15,7 @@
 package context
 
 import (
+	"context"
 	"strings"
 	"sync"
 	"time"
@@ -75,32 +76,31 @@ func (*AggregatorContext) Description() string {
 	return "context aggregator for logtail"
 }
 
+// AddToQueueWithRetry add logGroup to queue with retry
+func AddToQueueWithRetry(queue pipeline.LogGroupQueue, context context.Context, logGroup *protocol.LogGroup) {
+	for tryCount := 1; true; tryCount++ {
+		err := queue.Add(logGroup)
+		if err == nil {
+			return
+		}
+		// wait until shutdown is active
+		if tryCount%100 == 0 {
+			logger.Warning(context, "AGGREGATOR_ADD_ALARM", "error", err)
+		}
+		time.Sleep(time.Millisecond * 10)
+	}
+}
+
 // Add adds @log with @ctx to aggregator.
 func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) error {
-	// when logGroupPoolMap is full
+	// when logGroupPoolMap is full flush all logGroup to queue
 	if p.logGroupPoolSize > MaxLogGroupPoolSize {
 		logGroups := p.Flush()
-		var err error
-		for tryCount := 1; true; tryCount++ {
-			errorLogGroups := make([]*protocol.LogGroup, 0, len(logGroups))
-			for i, logGroup := range logGroups {
-				if len(logGroup.Logs) == 0 {
-					continue
-				}
-				if err = p.queue.Add(logGroup); err != nil {
-					errorLogGroups = append(errorLogGroups, logGroups[i])
-					if tryCount%100 == 0 {
-						logger.Warning(p.context.GetRuntimeContext(), "AGGREGATOR_ADD_ALARM", "error", err)
-					}
-				}
+		for _, logGroup := range logGroups {
+			if len(logGroup.Logs) == 0 {
+				continue
 			}
-			if len(errorLogGroups) == 0 {
-				break
-			} else {
-				time.Sleep(time.Millisecond * 10)
-				logGroups = errorLogGroups
-			}
-
+			AddToQueueWithRetry(p.queue, p.context.GetRuntimeContext(), logGroup)
 		}
 	}
 	p.lock.Lock()
@@ -144,6 +144,11 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 			if err := p.queue.Add(logGroupList[0]); err == nil {
 				// add success, remove head log group
 				logGroupList = logGroupList[1:]
+
+				p.logGroupPoolSize -= MaxLogGroupSize
+				if p.logGroupPoolSize < 0 {
+					p.logGroupPoolSize = 0
+				}
 			} else {
 				return err
 			}
@@ -252,6 +257,7 @@ func NewAggregatorContext() *AggregatorContext {
 		packIDMap:                        make(map[string]*LogPackSeqInfo),
 		packIDMapCleanInterval:           time.Duration(600) * time.Second,
 		lock:                             &sync.Mutex{},
+		logGroupPoolSize:                 0,
 	}
 }
 
