@@ -47,14 +47,13 @@ type AggregatorContext struct {
 	ContextPreservationToleranceSize int    // the maximum number of log source per config where logGroupPoolMap will not be cleared periodically
 	PackFlag                         bool   // whether to add __pack_id__ as a tag
 
-	lock               *sync.Mutex
-	logGroupPoolMap    map[string][]LogGroupWithSize
-	nowLogGroupSizeMap map[string]int
-	logGroupPoolSize   int
-	packIDMap          map[string]*LogPackSeqInfo
-	defaultPack        string
-	context            pipeline.Context
-	queue              pipeline.LogGroupQueue
+	lock             *sync.Mutex
+	logGroupPoolMap  map[string][]LogGroupWithSize
+	logGroupPoolSize int
+	packIDMap        map[string]*LogPackSeqInfo
+	defaultPack      string
+	context          pipeline.Context
+	queue            pipeline.LogGroupQueue
 
 	packIDMapCleanInterval time.Duration
 	packIDTimeout          time.Duration
@@ -131,18 +130,18 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	if len(logGroupList) == 0 {
 		if _, ok := ctx["tags"]; ok {
 			newLogGroup := p.newLogGroupWithSize(source, topic)
-			fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
+			newLogGroup = fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
 			logGroupList = append(logGroupList, newLogGroup)
 		} else {
 			logGroupList = append(logGroupList, p.newLogGroupWithSize(source, topic))
 		}
 	}
-	newLogGroup := logGroupList[len(logGroupList)-1]
+	nowLogGroup := logGroupList[len(logGroupList)-1]
 
 	logSize := p.evaluateLogSize(log)
 	// When current log group is full (log count or no more capacity for current log),
 	// allocate a new log group.
-	if len(newLogGroup.LogGroup.Logs) >= p.MaxLogCount || p.nowLogGroupSizeMap[source]+logSize > MaxLogGroupSize {
+	if len(nowLogGroup.LogGroup.Logs) >= p.MaxLogCount || nowLogGroup.LogGroupSize+logSize > MaxLogGroupSize {
 		// The number of log group exceeds limit, make a quick flush.
 		if len(logGroupList) == p.MaxLogGroupCount {
 			// Quick flush to avoid becoming bottleneck when large logs come.
@@ -158,29 +157,28 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 			}
 		}
 		// New log group, reset size.
-		p.nowLogGroupSizeMap[source] = 0
 		if _, ok := ctx["tags"]; ok {
 			newLogGroupTemp := p.newLogGroupWithSize(source, topic)
-			fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroupTemp)
+			newLogGroupTemp = fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroupTemp)
 			logGroupList = append(logGroupList, newLogGroupTemp)
 		} else {
 			logGroupList = append(logGroupList, p.newLogGroupWithSize(source, topic))
 		}
-		newLogGroup = logGroupList[len(logGroupList)-1]
+		nowLogGroup = logGroupList[len(logGroupList)-1]
 	}
 
 	// add log size
-	p.nowLogGroupSizeMap[source] += logSize
 	p.logGroupPoolSize += logSize
-	newLogGroup.LogGroupSize += logSize
-	newLogGroup.LogGroup.Logs = append(newLogGroup.LogGroup.Logs, log)
-	logGroupList[len(logGroupList)-1] = newLogGroup
+	nowLogGroup.LogGroupSize += logSize
+	nowLogGroup.LogGroup.Logs = append(nowLogGroup.LogGroup.Logs, log)
+	logGroupList[len(logGroupList)-1] = nowLogGroup
 	p.logGroupPoolMap[source] = logGroupList
 	return nil
 }
 
-func fillTags(logTags []*protocol.LogTag, logGroupWithSize LogGroupWithSize) {
+func fillTags(logTags []*protocol.LogTag, logGroupWithSize LogGroupWithSize) LogGroupWithSize {
 	logGroupWithSize.LogGroup.LogTags = append(logGroupWithSize.LogGroup.LogTags, logTags...)
+	return logGroupWithSize
 }
 
 // Flush ...
@@ -199,7 +197,6 @@ func (p *AggregatorContext) Flush() []*protocol.LogGroup {
 			ret = append(ret, logGroup.LogGroup)
 		}
 		delete(p.logGroupPoolMap, pack)
-		delete(p.nowLogGroupSizeMap, pack)
 	}
 	p.logGroupPoolSize = 0
 
@@ -267,7 +264,6 @@ func NewAggregatorContext() *AggregatorContext {
 		ContextPreservationToleranceSize: 10,
 		PackFlag:                         true,
 		logGroupPoolMap:                  make(map[string][]LogGroupWithSize),
-		nowLogGroupSizeMap:               make(map[string]int),
 		packIDMap:                        make(map[string]*LogPackSeqInfo),
 		packIDMapCleanInterval:           time.Duration(600) * time.Second,
 		lock:                             &sync.Mutex{},
