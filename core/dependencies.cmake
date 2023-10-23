@@ -349,18 +349,9 @@ macro(link_leveldb target_name)
 endmacro()
 
 
+# spl
 macro(link_slsspl target_name)
     logtail_define(slsspl_${target_name} "" "")
-
-    #target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpipeline.a")
-    #target_link_libraries(${target_name} "/opt/logtail_spl/lib/libtask.a")
-    #target_link_libraries(${target_name} "/opt/logtail_spl/lib/librw.a")
-    #target_link_libraries(${target_name} "/opt/logtail_spl/lib/libutil.a")
-    #target_link_libraries(${target_name} "/opt/logtail_spl/lib/libcmd.a")
-    #target_link_libraries(${target_name} "/opt/logtail_spl/lib/liblogger.a")
-    #target_link_libraries(${target_name} "/opt/logtail_spl/lib/libplan.a")
-    #target_link_libraries(${target_name} "/opt/logtail_spl/lib/libvector.a")
-    #target_link_libraries(${target_name} "/opt/logtail_spl/lib/libthirdparty.a")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libspl.a")
 
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_adapters.a")
