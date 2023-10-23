@@ -52,17 +52,17 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
                     sName,
                     mContext->GetConfigName());
     }
-
+    
     if (mEnableContainerDiscovery) {
+        mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
         mContainerDiscovery.Init(config, *mContext, sName);
-
         GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline);
 
         // 过渡使用
         auto allContainers = ConfigManager::GetInstance()->GetAllContainerInfo();
         auto iter = allContainers.find(mContext->GetConfigName());
         if (iter != allContainers.end()) {
-            mContainerInfos = iter->second;
+            mFileDiscovery.SetContainerInfo(iter->second);
             allContainers.erase(iter);
         }
     }

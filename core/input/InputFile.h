@@ -17,11 +17,7 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
-#include <string>
-#include <vector>
 
-#include "config/DockerFileConfig.h"
 #include "container_manager/ContainerDiscoveryOptions.h"
 #include "file_server/FileDiscoveryOptions.h"
 #include "file_server/MultilineOptions.h"
@@ -55,8 +51,6 @@ public:
 
 private:
     void GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const;
-
-    std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos;
 };
 
 } // namespace logtail

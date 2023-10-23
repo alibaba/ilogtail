@@ -1,11 +1,29 @@
+/*
+ * Copyright 2023 iLogtail Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "json/json.h"
 
+#include "config/DockerFileConfig.h"
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
@@ -16,6 +34,10 @@ public:
     const std::string& GetBasePath() const { return mBasePath; }
     const std::string& GetFilePattern() const { return mFilePattern; }
     const std::vector<std::string>& GetWilecardPaths() const { return mConstWildcardPaths; }
+    void SetEnableContainerDiscoveryFlag(bool flag) { mEnableContainerDiscovery = true; }
+    void SetContainerInfo(const std::shared_ptr<std::vector<DockerContainerPath>>& info) { mContainerInfos = info; }
+    void SetUpdateContainerInfoFunc(bool (*f)(const std::string&, bool)) { mUpdateContainerInfo = f; }
+    void SetDeleteContainerInfoFunc(bool (*f)(const std::string&)) { mDeleteContainerInfo = f; }
 
     std::vector<std::string> mFilePaths;
     int32_t mMaxDirSearchDepth = 0;
@@ -57,11 +79,11 @@ private:
     // File name only, */? is supported too, such as 100*.log. It is similar to
     // mFilePattern, but works in reversed way.
     std::vector<std::string> mFileNameBlacklist;
-};
 
-class FileDiscoveryConfig {
-public:
-private:
+    bool mEnableContainerDiscovery = false;
+    std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos;
+    bool (*mUpdateContainerInfo)(const std::string&, bool) = nullptr;
+    bool (*mDeleteContainerInfo)(const std::string&) = nullptr;
 };
 
 } // namespace logtail
