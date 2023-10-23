@@ -16,19 +16,20 @@
 
 #pragma once
 
-#include <string>
-#include <memory>
-
-#include "plugin/instance/PluginInstance.h"
+#include "models/PipelineEventGroup.h"
+#include "plugin/interface/Plugin.h"
+#include "pipeline/PipelineConfig.h"
 
 namespace logtail {
 
-class PluginCreator {
+class Processor : public Plugin {
 public:
-    virtual ~PluginCreator() {}
-    virtual const char* Name() = 0;
-    virtual bool IsDynamic() = 0;
-    virtual std::unique_ptr<PluginInstance> Create(const std::string& pluginId) = 0;
-};
+    virtual ~Processor() {}
 
+    virtual bool Init(const ComponentConfig& config) = 0;
+    virtual void Process(PipelineEventGroup& logGroup) = 0;
+
+protected:
+    virtual bool IsSupportedEvent(const PipelineEventPtr& e) const = 0;
+};
 } // namespace logtail

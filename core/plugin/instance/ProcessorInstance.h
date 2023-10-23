@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 iLogtail Authors
+ * Copyright 2023 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,24 +19,21 @@
 #include <memory>
 
 #include "models/PipelineEventGroup.h"
-#include "monitor/LogtailMetric.h"
 #include "plugin/instance/PluginInstance.h"
-#include "pipeline/PipelineConfig.h"
-#include "pipeline/PipelineContext.h"
-#include "processor/Processor.h"
+#include "plugin/interface/Processor.h"
 
 namespace logtail {
 
 class ProcessorInstance : public PluginInstance {
 public:
     ProcessorInstance(Processor* plugin, const std::string& pluginId) : PluginInstance(pluginId), mPlugin(plugin) {}
-    PipelineContext& GetContext() { return *mContext; }
-    bool Init(const ComponentConfig& config, PipelineContext& context);
+
+    const std::string& Name() const override { return mPlugin->Name(); };
+    bool Init(const ComponentConfig& config, PipelineContext& context) override;
     void Process(PipelineEventGroup& logGroup);
 
 private:
     std::unique_ptr<Processor> mPlugin;
-    PipelineContext* mContext = nullptr;
 
     CounterPtr mProcInRecordsTotal;
     CounterPtr mProcOutRecordsTotal;
