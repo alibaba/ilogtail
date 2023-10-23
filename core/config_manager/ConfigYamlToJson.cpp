@@ -35,9 +35,6 @@ const std::string PROCESSOR_JSON_ACCELERATE = "processor_json_accelerate";
 const std::string PROCESSOR_DELIMITER_ACCELERATE = "processor_delimiter_accelerate";
 const std::string PROCESSOR_APSARA_ACCELERATE = "processor_apsara_accelerate";
 
-const std::string PROCESSOR_SPL_ACCELERATE = "processor_spl";
-
-
 const std::string PROCESSOR_SPLIT_LINE_LOG_USING_SEP = "processor_split_log_string";
 const std::string PROCESSOR_SPLIT_LINE_LOG_USING_REG = "processor_split_log_regex";
 
