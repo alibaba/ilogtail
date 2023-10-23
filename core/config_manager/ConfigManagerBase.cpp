@@ -193,10 +193,6 @@ bool ConfigManagerBase::CheckLogType(const string& logTypeStr, LogType& logType)
         logType = JSON_LOG;
     else if (logTypeStr == "plugin")
         logType = PLUGIN_LOG;
-
-    // TODO: test for spl
-    else if (logTypeStr == "spl_log")
-        logType = SPL_LOG;
     else {
         LOG_ERROR(sLogger, ("not supported log type", logTypeStr));
         return false;
@@ -525,21 +521,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     ("invalid plugin config, plugin config json parse error", pluginConfig)("project", projectName)(
                         "logstore", category)("config", logName)("error", jsonParseErrs));
             }
-
-            if (!pluginConfigJson.isNull()) {
-                if (pluginConfig.find("\"spl\"") != string::npos) {
-                    if (pluginConfigJson.isMember("processors")
-                            && pluginConfigJson["processors"].isArray()) {
-                        logType = SPL_LOG;
-                    } else {
-                        LOG_WARNING(sLogger,
-                                    ("observer config is not a legal JSON object",
-                                        logName)("project", projectName)("logstore", category));
-                        throw ExceptionBase(std::string("observer config is not a legal JSON object"));
-                    }
-                }
-            }
-
             if (logType == PLUGIN_LOG) {
                 config = new Config("",
                                     "",
@@ -666,40 +647,6 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                     "",
                                     discardUnmatch,
                                     readerFlushTimeout);
-
-                // TODO: test for spl
-                if (!pluginConfigJson.isNull()) {
-                    if (pluginConfig.find("\"spl\"") != string::npos) {
-                        if (pluginConfigJson.isMember("processors")
-                                && pluginConfigJson["processors"].isArray()) {
-                            logType = SPL_LOG;
-                            for (Json::Value::const_iterator iter = pluginConfigJson["processors"].begin(); iter != pluginConfigJson["processors"].end(); ++iter) {
-                                const Json::Value& pluginItem = *iter;
-                                if (pluginItem.isMember("type") && pluginItem["type"].isString()) {
-                                    string type = pluginItem["type"].asString();
-                                    if ("spl" == type) {
-                                        if (pluginItem.isMember("detail") && pluginItem["detail"].isObject() && pluginItem["detail"].isMember("Spl") && pluginItem["detail"]["Spl"].isString()) {
-                                            string splConfig = pluginItem["detail"]["Spl"].asString();
-                                            //string splConfig = value["spl_script"].asString();
-                                            config->mSpl = splConfig;
-                                            GetRegexAndKeys(value, config);
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            LOG_WARNING(sLogger,
-                                        ("observer config is not a legal JSON object",
-                                            logName)("project", projectName)("logstore", category));
-                            throw ExceptionBase(std::string("observer config is not a legal JSON object"));
-                        }
-                    }
-                }
-                if (value.isMember("spl_script") && value["spl_script"].isString()) {
-                    string splConfig = value["spl_script"].asString();
-                    config->mSpl = splConfig;
-                    GetRegexAndKeys(value, config);
-                }
 
                 // normal log file config can have plugin too
                 // Boolean force_enable_pipeline.

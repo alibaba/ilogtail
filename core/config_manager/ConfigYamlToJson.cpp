@@ -96,9 +96,6 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileConfigMap["Region"] = "region";
     mFileConfigMap["ShardHashKey"] = "shard_hash_key";
 
-    // TODO: test for spl
-    mFileConfigMap["Script"] = "spl_script";
-
     mFileAdvancedConfigMap["DirBlackList"] = "dir_blacklist";
     mFileAdvancedConfigMap["FilepathBlackList"] = "filepath_blacklist";
     mFileAdvancedConfigMap["EnableTimestampNanosecond"] = "enable_timestamp_nanosecond";
@@ -128,8 +125,6 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFilePluginToLogTypeMap[PROCESSOR_JSON_ACCELERATE] = "json_log";
     mFilePluginToLogTypeMap[PROCESSOR_DELIMITER_ACCELERATE] = "delimiter_log";
     mFilePluginToLogTypeMap[PROCESSOR_APSARA_ACCELERATE] = "apsara_log";
-    // TODO: test for spl
-    mFilePluginToLogTypeMap[PROCESSOR_SPL_ACCELERATE] = "spl_log";
 }
 
 string ConfigYamlToJson::GetTransforKey(const string yamlKey) {
@@ -552,12 +547,6 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForFileMode(const YAML::Node& yaml
             key = GetTransforKey(it->first.as<std::string>());
             if (0 == key.compare("regex")) {
                 userJsonConfig[key][0] = ChangeYamlToJson(it->second);
-
-            // TODO: test for spl
-            } else if (0 == key.compare("spl_script")) {
-                userJsonConfig[key] = ChangeYamlToJson(it->second);
-                userJsonConfig["regex"][0] = "(.*)";
-                userJsonConfig["keys"][0] = "content";
             } else if (0 == key.compare("keys")) {
                 string keys;
                 for (auto&& node : it->second) {

@@ -526,30 +526,6 @@ public:
         EXPECT_EQ(userLocalJsonConfig["metrics"]["config#" + file]["plugin"]["processors"].size(), 0);
         BOOL_FLAG(enable_new_pipeline) = oldFlag;
     }
-
-    // TODO: test for spl
-    // input: file; processor: accelerate
-    void TestYamlToJsonForSPL() {
-        bool oldFlag = BOOL_FLAG(enable_new_pipeline);
-        BOOL_FLAG(enable_new_pipeline) = true;
-        LOG_INFO(sLogger, ("TestYamlToJsonForFileMultiline() begin", time(NULL)));
-
-        Json::Value inputJsonConfig;
-        const std::string file = "testConfigDir/file_spl.yaml";
-        YAML::Node yamlConfig = YAML::LoadFile(file);
-
-        Json::Value userLocalJsonConfig;
-        ConfigYamlToJson::GetInstance()->GenerateLocalJsonConfig(file, yamlConfig, userLocalJsonConfig);
-
-        ConfigManager::GetInstance()->LoadJsonConfig(userLocalJsonConfig, false);
-
-        EXPECT_EQ(userLocalJsonConfig["metrics"]["config#" + file]["enable"].asBool(), true);
-        EXPECT_EQ(userLocalJsonConfig["metrics"]["config#" + file]["spl_script"].asString(),
-                  R"(* | parse-json content | parse-json extend_field | where cast(k2 as BIGINT) >= 2)");
-        EXPECT_EQ(userLocalJsonConfig["metrics"]["config#" + file]["log_type"].asString(), "spl_log");
-        EXPECT_EQ(userLocalJsonConfig["metrics"]["config#" + file]["plugin"]["processors"].size(), 0);
-        BOOL_FLAG(enable_new_pipeline) = oldFlag;
-    }
 };
 
 UNIT_TEST_CASE(ConfigYamlToJsonUnittest, TestYamlToJsonForCheckConfig);
@@ -565,8 +541,6 @@ UNIT_TEST_CASE(ConfigYamlToJsonUnittest, TestYamlToJsonForFileDelimiterAccelerat
 UNIT_TEST_CASE(ConfigYamlToJsonUnittest, TestYamlToJsonForFileJsonAccelerateMode);
 UNIT_TEST_CASE(ConfigYamlToJsonUnittest, TestYamlToJsonForAggregatorsAndGlobalConfig);
 UNIT_TEST_CASE(ConfigYamlToJsonUnittest, TestYamlToJsonForFileMultiline);
- // TODO: test for spl
-UNIT_TEST_CASE(ConfigYamlToJsonUnittest, TestYamlToJsonForSPL);
 
 } // end of namespace logtail
 

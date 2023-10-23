@@ -513,7 +513,7 @@ LogFileReader* Config::CreateLogFileReader(const std::string& dir,
                                          mFileEncoding,
                                          mDiscardUnmatch,
                                          mDockerFileFlag);
-    } else if (mLogType == REGEX_LOG || mLogType == SPL_LOG) {
+    } else if (mLogType == REGEX_LOG) {
         reader = new CommonRegLogFileReader(mProjectName,
                                             mCategory,
                                             dir,
