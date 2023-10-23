@@ -81,7 +81,7 @@ func (*AggregatorContext) Description() string {
 }
 
 // AddToQueueWithRetry add logGroup to queue with retry
-func AddToQueueWithRetry(queue pipeline.LogGroupQueue, context context.Context, logGroup *protocol.LogGroup) {
+func AddToQueueWithRetry(context context.Context, queue pipeline.LogGroupQueue, logGroup *protocol.LogGroup) {
 	for tryCount := 1; true; tryCount++ {
 		err := queue.Add(logGroup)
 		if err == nil {
@@ -104,7 +104,7 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 			if len(logGroup.Logs) == 0 {
 				continue
 			}
-			AddToQueueWithRetry(p.queue, p.context.GetRuntimeContext(), logGroup)
+			AddToQueueWithRetry(p.context.GetRuntimeContext(), p.queue, logGroup)
 		}
 	}
 	p.lock.Lock()
@@ -158,9 +158,9 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		}
 		// New log group, reset size.
 		if _, ok := ctx["tags"]; ok {
-			newLogGroupTemp := p.newLogGroupWithSize(source, topic)
-			newLogGroupTemp = fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroupTemp)
-			logGroupList = append(logGroupList, newLogGroupTemp)
+			newLogGroup := p.newLogGroupWithSize(source, topic)
+			newLogGroup = fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
+			logGroupList = append(logGroupList, newLogGroup)
 		} else {
 			logGroupList = append(logGroupList, p.newLogGroupWithSize(source, topic))
 		}
