@@ -32,12 +32,10 @@ class PipelineEventGroupOutput : public Output {
         PipelineEventGroup* mLogGroup = nullptr;
         std::vector<PipelineEventGroup>* mLogGroupList;
 
-        //EventsContainer* mNewEvents = nullptr;
         std::string mTaskLabel;
         bool mWithSleep;
 
         std::unordered_map<std::string, int32_t> mLogGroupKeyIdxs;
-
 
         int32_t mTimeIdx = -1;
         int32_t mTimeNSIdx = -1;
