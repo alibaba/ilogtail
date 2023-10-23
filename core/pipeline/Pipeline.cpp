@@ -70,32 +70,9 @@ bool Pipeline::Init(const PipelineConfig& config) {
         return false;
     }
 
-<<<<<<< HEAD
     
     if (config.mLogType == SPL_LOG) {
         if (!InitSplProcessor(config)) {
-=======
-    // APSARA_LOG, REGEX_LOG, STREAM_LOG, JSON_LOG, DELIMITER_LOG, PLUGIN_LOG
-    std::unique_ptr<ProcessorInstance> pluginParser;
-    switch (config.mLogType) {
-        case APSARA_LOG:
-            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseApsaraNative::sName,
-                                                                          std::to_string(pluginIndex++));
-            break;
-        case REGEX_LOG:
-            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseRegexNative::sName,
-                                                                          std::to_string(pluginIndex++));
-            break;
-        case JSON_LOG:
-            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseJsonNative::sName,
-                                                                          std::to_string(pluginIndex++));
-            break;
-        case DELIMITER_LOG:
-            pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseDelimiterNative::sName,
-                                                                          std::to_string(pluginIndex++));
-            break;
-        default:
->>>>>>> 8e9ab4f55573f302fda8afe8e7d7d4e099bf33e0
             return false;
         }
     } else {
