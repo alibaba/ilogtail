@@ -414,6 +414,22 @@ func Test_extractTags(t *testing.T) {
 	assert.Equal(t, l.Contents[0].Value, "k2")
 }
 
+func Test_extractTagsToLogTags(t *testing.T) {
+	logTag := extractTagsToLogTags([]byte("k1~=~v1^^^k2~=~v2"))
+	assert.Equal(t, logTag[0].Key, "k1")
+	assert.Equal(t, logTag[0].Value, "v1")
+	assert.Equal(t, logTag[1].Key, "k2")
+	assert.Equal(t, logTag[1].Value, "v2")
+
+	logTag = extractTagsToLogTags([]byte("^^^k2~=~v2"))
+	assert.Equal(t, logTag[0].Key, "k2")
+	assert.Equal(t, logTag[0].Value, "v2")
+
+	logTag = extractTagsToLogTags([]byte("^^^k2"))
+	assert.Equal(t, logTag[0].Key, "__tag__:__prefix__0")
+	assert.Equal(t, logTag[0].Value, "k2")
+}
+
 func TestLogstoreConfig_ProcessRawLogV2(t *testing.T) {
 	rawLogs := []byte("12345")
 	topic := "topic"

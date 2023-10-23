@@ -251,6 +251,9 @@ func extractTags(rawTags []byte, log *protocol.Log) {
 	}
 }
 
+// extractTagsToLogTags extracts tags from rawTags and append them into []*protocol.LogTag.
+// Rule: k1~=~v1^^^k2~=~v2
+// rawTags
 func extractTagsToLogTags(rawTags []byte) []*protocol.LogTag {
 	logTags := []*protocol.LogTag{}
 	defaultPrefixIndex := 0
