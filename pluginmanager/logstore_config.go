@@ -251,7 +251,8 @@ func extractTags(rawTags []byte, log *protocol.Log) {
 	}
 }
 
-func extractTagsToLogTags(rawTags []byte, logTags []*protocol.LogTag) []*protocol.LogTag {
+func extractTagsToLogTags(rawTags []byte) []*protocol.LogTag {
+	logTags := []*protocol.LogTag{}
 	defaultPrefixIndex := 0
 	for len(rawTags) != 0 {
 		idx := bytes.Index(rawTags, tagDelimiter)
@@ -272,7 +273,7 @@ func extractTagsToLogTags(rawTags []byte, logTags []*protocol.LogTag) []*protoco
 				})
 			} else {
 				logTags = append(logTags, &protocol.LogTag{
-					Key:   strconv.Itoa(defaultPrefixIndex),
+					Key:   defaultTagPrefix + strconv.Itoa(defaultPrefixIndex),
 					Value: string(part),
 				})
 			}
@@ -294,13 +295,13 @@ func (lc *LogstoreConfig) ProcessRawLogV2(rawLog []byte, packID string, topic st
 	if len(topic) > 0 {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
-	if lc.GlobalConfig.UsingOldContentTag {
+	// When UsingOldContentTag is set to false, the tag is now put into the context during cgo.
+	if !lc.GlobalConfig.UsingOldContentTag {
+		logTags := extractTagsToLogTags(tags)
+		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logTags}})
+	} else {
 		extractTags(tags, log)
 		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
-	} else {
-		logTags := []*protocol.LogTag{}
-		logTags = extractTagsToLogTags(tags, logTags)
-		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logTags}})
 	}
 	return 0
 }
@@ -316,14 +317,13 @@ func (lc *LogstoreConfig) ProcessLog(logByte []byte, packID string, topic string
 	if len(topic) > 0 {
 		log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 	}
-	// TODO: When UsingOldContentTag is set to false, the tag is now put into the context during cgo.
-	if lc.GlobalConfig.UsingOldContentTag {
+	// When UsingOldContentTag is set to false, the tag is now put into the context during cgo.
+	if !lc.GlobalConfig.UsingOldContentTag {
+		logTags := extractTagsToLogTags(tags)
+		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logTags}})
+	} else {
 		extractTags(tags, log)
 		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
-	} else {
-		logTags := []*protocol.LogTag{}
-		logTags = extractTagsToLogTags(tags, logTags)
-		lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logTags}})
 	}
 	return 0
 }
@@ -342,7 +342,10 @@ func (lc *LogstoreConfig) ProcessLogGroup(logByte []byte, packID string) int {
 		if len(topic) > 0 {
 			log.Contents = append(log.Contents, &protocol.Log_Content{Key: "__log_topic__", Value: topic})
 		}
-		if lc.GlobalConfig.UsingOldContentTag {
+		// When UsingOldContentTag is set to false, the tag is now put into the context during cgo.
+		if !lc.GlobalConfig.UsingOldContentTag {
+			lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logGroup.LogTags}})
+		} else {
 			for _, tag := range logGroup.LogTags {
 				log.Contents = append(log.Contents, &protocol.Log_Content{
 					Key:   tagPrefix + tag.GetKey(),
@@ -350,8 +353,6 @@ func (lc *LogstoreConfig) ProcessLogGroup(logByte []byte, packID string) int {
 				})
 			}
 			lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic}})
-		} else {
-			lc.PluginRunner.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: map[string]interface{}{"source": packID, "topic": topic, "tags": logGroup.LogTags}})
 		}
 	}
 	return 0
