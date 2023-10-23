@@ -42,8 +42,11 @@ public:
     const std::string& Name() const { return mName; }
     PipelineContext& GetContext() { return mContext; }
     PipelineConfig& GetPipelineConfig() { return mConfig; }
+    const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
+    const std::vector<std::unique_ptr<FlusherInstance>>& GetFlushers() const { return mFlushers; }
 
     bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
+    bool IsFlushingThroughGoPipeline() const { return !mGoPipelineWithoutInput.isNull(); }
 
 private:
     bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);
