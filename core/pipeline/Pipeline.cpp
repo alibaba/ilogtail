@@ -81,23 +81,23 @@ bool Pipeline::Init(const PipelineConfig& config) {
         switch (config.mLogType) {
             case APSARA_LOG:
                 pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
-                    ProcessorParseApsaraNative::Name(),
-                    std::string(ProcessorParseApsaraNative::Name()) + "/" + std::to_string(pluginIndex++));
+                    ProcessorParseApsaraNative::sName,
+                    std::string(ProcessorParseApsaraNative::sName) + "/" + std::to_string(pluginIndex++));
                 break;
             case REGEX_LOG:
-                pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseRegexNative::Name(),
-                                                                            std::string(ProcessorParseRegexNative::Name())
+                pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseRegexNative::sName,
+                                                                            std::string(ProcessorParseRegexNative::sName)
                                                                                 + "/" + std::to_string(pluginIndex++));
                 break;
             case JSON_LOG:
-                pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseJsonNative::Name(),
-                                                                            std::string(ProcessorParseJsonNative::Name())
+                pluginParser = PluginRegistry::GetInstance()->CreateProcessor(ProcessorParseJsonNative::sName,
+                                                                            std::string(ProcessorParseJsonNative::sName)
                                                                                 + "/" + std::to_string(pluginIndex++));
                 break;
             case DELIMITER_LOG:
                 pluginParser = PluginRegistry::GetInstance()->CreateProcessor(
-                    ProcessorParseDelimiterNative::Name(),
-                    std::string(ProcessorParseDelimiterNative::Name()) + "/" + std::to_string(pluginIndex++));
+                    ProcessorParseDelimiterNative::sName,
+                    std::string(ProcessorParseDelimiterNative::sName) + "/" + std::to_string(pluginIndex++));
                 break;
             default:
                 return false;

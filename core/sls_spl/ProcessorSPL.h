@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "processor/Processor.h"
+#include "plugin/interface/Processor.h"
 #include <string>
 
 namespace apsara::sls::spl {
@@ -25,7 +25,7 @@ namespace logtail {
 
 class ProcessorSPL  {
 public:
-    static const char* Name() { return "processor_spl"; }
+    static const std::string sName;
     bool Init(const ComponentConfig& config, PipelineContext& context);
     void Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList);
 
