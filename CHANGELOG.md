@@ -36,4 +36,5 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+
 - [public] [both] [added] add UsingOldContentTag. When UsingOldContentTag is set to false, the tag is now put into the context during cgo.
