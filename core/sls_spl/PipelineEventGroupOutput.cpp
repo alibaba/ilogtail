@@ -17,7 +17,7 @@ void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& er
 
         auto field = header.columnNames[i].ToString();
 
-        //LOG_INFO(sLogger, ("columeName", field));
+        LOG_DEBUG(sLogger, ("columeName", field));
 
         auto length = field.length();
 
@@ -34,7 +34,7 @@ void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& er
     }
     for (auto& constCol : header.constCols) {
         mConstColumns.emplace(constCol.first, constCol.second.ToString());
-        //LOG_INFO(sLogger, ("constCol key", constCol.first)("constCol value", constCol.second.ToString()));
+        LOG_DEBUG(sLogger, ("constCol key", constCol.first)("constCol value", constCol.second.ToString()));
     }
 }
 
@@ -47,12 +47,12 @@ void PipelineEventGroupOutput::addRow(
     
     std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(mLogGroup->GetSourceBuffer());
 
-    //LOG_INFO(sLogger, ("row.size()", row.size()));
+    LOG_INFO(sLogger, ("row.size()", row.size()));
 
     std::string tagStr = "";
     for (const auto& idxTag : mTagsIdxs) { 
         tagStr += StringView(row[idxTag].mPtr, row[idxTag].mLen).to_string();
-        //LOG_INFO(sLogger, ("tag key", StringView(mColumnNames[idxTag].mPtr, mColumnNames[idxTag].mLen))("tag value", StringView(row[idxTag].mPtr, row[idxTag].mLen)));
+        LOG_DEBUG(sLogger, ("tag key", StringView(mColumnNames[idxTag].mPtr, mColumnNames[idxTag].mLen))("tag value", StringView(row[idxTag].mPtr, row[idxTag].mLen)));
     }
 
     int32_t logGroupKeyIdx = -1;
@@ -77,7 +77,7 @@ void PipelineEventGroupOutput::addRow(
         } else {
             targetEvent->SetContent(StringView(mColumnNames[idxContent].mPtr, mColumnNames[idxContent].mLen), StringView(row[idxContent].mPtr, row[idxContent].mLen));
         }
-        //LOG_INFO(sLogger, ("content key", StringView(mColumnNames[idxContent].mPtr, mColumnNames[idxContent].mLen))("content value", StringView(row[idxContent].mPtr, row[idxContent].mLen)));
+        LOG_DEBUG(sLogger, ("content key", StringView(mColumnNames[idxContent].mPtr, mColumnNames[idxContent].mLen))("content value", StringView(row[idxContent].mPtr, row[idxContent].mLen)));
     }
 
     for (const auto& idxTag : mTagsIdxs) { 
@@ -86,7 +86,7 @@ void PipelineEventGroupOutput::addRow(
     
     mLogGroupList->at(logGroupKeyIdx).AddEvent(std::move(targetEvent));
     if (!errorKV.second.empty()) {
-        LOG_INFO(sLogger, ("__error__", errorKV.second));
+        LOG_ERROR(sLogger, ("__error__", errorKV.second));
     }
 }
 

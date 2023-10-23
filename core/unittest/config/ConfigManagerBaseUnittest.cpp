@@ -493,47 +493,73 @@ public:
     "metrics" : 
     {
         "##1.0##test$regex-1" : 
-		{
-			"category" : "test",
-			"enable": true,
-			"file_pattern" : "*.log",
-			"keys" : 
-			[
-				"time,msg"
-			],
-			"log_begin_reg" : ".*",
-			"log_path" : ".",
-			"log_type" : "common_reg_log",
-			"plugin": {
-				"global": {
-					"123": "",
-					"spl": ""
-				},
-				"processors": [
-					{
-					"detail": {
-						"SplitKey": "content"
-					},
-					"type": "processor_split_log_string"
-					},
-					{
-					"detail": {
-						"Spl": "* | where true"
-					},
-					"type": "spl"
-					}
-				]
-			},
-			"log_tz" : "",
-			"max_depth" : 0,
-			"project_name" : "test",
-			"regex" : 
-			[
-				"\\[([^]]+)]\\s(.*)"
-			],
-			"timeformat" : "",
-			"tz_adjust" : false
-		}
+		{   
+            "aliuid" : "1654218965343050",
+            "category" : "spl-test",
+            "create_time" : 1697765906,
+            "defaultEndpoint" : "pub-cn-hangzhou-staging-share.log.aliyuncs.com",
+            "delay_alarm_bytes" : 0,
+            "delay_skip_bytes" : 0,
+            "discard_none_utf8" : false,
+            "discard_unmatch" : true,
+            "docker_file" : false,
+            "enable" : true,
+            "file_encoding" : "utf8",
+            "file_pattern" : "test2.log",
+            "filter_keys" : [], 
+            "filter_regs" : [], 
+            "group_topic" : "", 
+            "keys" : 
+            [   
+                "content"
+            ],  
+            "local_storage" : true,
+            "log_begin_reg" : ".*",
+            "log_path" : "/apsarapangu/disk4/workspace/test_spl/taiye",
+            "log_type" : "common_reg_log",
+            "log_tz" : "", 
+            "max_depth" : 0,
+            "max_send_rate" : -1, 
+            "merge_type" : "topic",
+            "plugin" : 
+            {   
+                "processors" : 
+                [   
+                    {   
+                        "detail" : 
+                        {   
+                            "SplitKey" : "content"
+                        },  
+                        "type" : "processor_split_log_string"
+                    },  
+                    {   
+                        "detail" : 
+                        {   
+                            "Spl" : "* | parse-json content"
+                        },  
+                        "type" : "spl"
+                    }   
+                ]   
+            },  
+            "preserve" : true,
+            "preserve_depth" : 0,
+            "priority" : 0,
+            "project_name" : "taiye-stg-test",
+            "raw_log" : false,
+            "regex" : 
+            [   
+                "(.*)"
+            ],  
+            "region" : "pub-cn-hangzhou-staging",
+            "send_rate_expire" : 0,
+            "sensitive_keys" : [], 
+            "tail_existed" : false,
+            "telemetry_type" : "logs",
+            "timeformat" : "", 
+            "topic_format" : "none",
+            "tz_adjust" : false,
+            "version" : 1 
+        }   
     }
 })"""";
         Json::Reader reader;
@@ -542,7 +568,7 @@ public:
 
         ConfigManager::GetInstance()->LoadJsonConfig(root);
         auto configNameEntityMap = ConfigManager::GetInstance()->GetAllConfig();
-
+		std::cout << "outJson: " << configNameEntityMap["##1.0##test$regex-1"]->mLogType << std::endl;
 		std::cout << "outJson: " << configNameEntityMap["##1.0##test$regex-1"]->mSpl << std::endl;
         //APSARA_TEST_FALSE(configNameEntityMap["##1.0##test$regex-1"]->mTimeZoneAdjust);
         

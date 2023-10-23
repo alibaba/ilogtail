@@ -30,7 +30,7 @@ void PipelineEventGroupInput::getRow(const int32_t rowIndex, std::vector<KV>& pa
 
     for (auto& kv : sourceEvent.GetContents()) {
         pairs.emplace_back(SplStringPiece(kv.first.data(), kv.first.size()), SplStringPiece(kv.second.data(), kv.second.size()));
-        //LOG_INFO(sLogger, ("rowIndex", rowIndex)("input content key", SplStringPiece(kv.first.data(), kv.first.size()))("input content value", SplStringPiece(kv.second.data(), kv.second.size())));
+        LOG_DEBUG(sLogger, ("rowIndex", rowIndex)("input content key", SplStringPiece(kv.first.data(), kv.first.size()))("input content value", SplStringPiece(kv.second.data(), kv.second.size())));
     }
 }
 

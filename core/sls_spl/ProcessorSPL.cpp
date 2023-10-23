@@ -80,11 +80,11 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     PipelineStatsPtr pipelineStatsPtr = std::make_shared<PipelineStats>();
     auto errCode = mSPLPipelinePtr->execute(inputs, outputs, &errorMsg, pipelineStatsPtr);
     if (errCode != StatusCode::OK) {
-        LOG_INFO(sLogger, ("execute error", errorMsg));
+        LOG_ERROR(sLogger, ("execute error", errorMsg));
         return;
     }
 
-    //LOG_INFO(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
+    LOG_DEBUG(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
     return;
 }
 
