@@ -20,32 +20,27 @@ public:
         return &instance;
     }
 
-    std::pair<const FileDiscoveryOptions*, const PipelineContext*>
-    GetFileDiscoveryOptions(const std::string& name) const;
-    std::pair<const FileReaderOptions*, const PipelineContext*> GetFileReaderOptions(const std::string& name) const;
-    void AddFileDiscoveryOptions(const std::string& name,
-                                             const FileDiscoveryOptions* opts,
-                                             const PipelineContext* ctx);
-    void AddFileReaderOptions(const std::string& name,
-                                          const FileReaderOptions* opts,
-                                          const PipelineContext* ctx);
-    void ClearOptions() {
-        mPipelineNameFileDiscoveryOptionsMap.clear();
-        mPipelineNameFileReaderOptionsMap.clear();
+    FileDiscoveryConfig GetFileDiscoveryOptions(const std::string& name) const;
+    FileReaderConfig GetFileReaderOptions(const std::string& name) const;
+    void AddFileDiscoveryOptions(const std::string& name, const FileDiscoveryOptions* opts, const PipelineContext* ctx);
+    void AddFileReaderOptions(const std::string& name, const FileReaderOptions* opts, const PipelineContext* ctx);
+    void ClearFileConfigs() {
+        mPipelineNameFileDiscoveryConfigsMap.clear();
+        mPipelineNameFileReaderConfigsMap.clear();
     }
-    const std::unordered_map<std::string, std::pair<const FileDiscoveryOptions*, const PipelineContext*>>&
-    GetAllFileDiscoveryOptions() const {
-        return mPipelineNameFileDiscoveryOptionsMap;
+    const std::unordered_map<std::string, FileDiscoveryConfig>& GetAllFileDiscoveryConfigs() const {
+        return mPipelineNameFileDiscoveryConfigsMap;
+    }
+    const std::unordered_map<std::string, FileReaderConfig>& GetAllFileReaderConfigs() const {
+        return mPipelineNameFileReaderConfigsMap;
     }
 
 private:
     FileServer() = default;
     ~FileServer();
-    
-    std::unordered_map<std::string, std::pair<const FileDiscoveryOptions*, const PipelineContext*>>
-        mPipelineNameFileDiscoveryOptionsMap;
-    std::unordered_map<std::string, std::pair<const FileReaderOptions*, const PipelineContext*>>
-        mPipelineNameFileReaderOptionsMap;
+
+    std::unordered_map<std::string, FileDiscoveryConfig> mPipelineNameFileDiscoveryConfigsMap;
+    std::unordered_map<std::string, FileReaderConfig> mPipelineNameFileReaderConfigsMap;
 };
 
 } // namespace logtail
