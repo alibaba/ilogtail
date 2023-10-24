@@ -40,12 +40,8 @@ int main(int argc, char** argv) {
     if (argc >= 3) {
         cout << argv[1] << endl;
         cout << argv[2] << endl;
-        string timeValue = argv[1];
-        string timeFormat = argv[2];
-        cout << "timeValue: " << timeValue << endl;
-        cout << "timeFormat: " << timeFormat << endl;
 
-        if (CheckTimeFormat(timeValue, timeFormat)) {
+        if (CheckTimeFormat(argv[1], argv[2])) {
             cout << "TRUE" << endl;
         } else {
             cout << "FALSE" << endl;
