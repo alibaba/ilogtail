@@ -40,7 +40,7 @@ public:
     void Stop(bool isRemoving);
 
     const std::string& Name() const { return mName; }
-    PipelineContext& GetContext() { return mContext; }
+    const PipelineContext& GetContext() const { return mContext; }
     PipelineConfig& GetPipelineConfig() { return mConfig; }
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
     const std::vector<std::unique_ptr<FlusherInstance>>& GetFlushers() const { return mFlushers; }

@@ -20,10 +20,10 @@ public:
         return &instance;
     }
 
-    FileDiscoveryConfig GetFileDiscoveryOptions(const std::string& name) const;
-    FileReaderConfig GetFileReaderOptions(const std::string& name) const;
-    void AddFileDiscoveryOptions(const std::string& name, const FileDiscoveryOptions* opts, const PipelineContext* ctx);
-    void AddFileReaderOptions(const std::string& name, const FileReaderOptions* opts, const PipelineContext* ctx);
+    FileDiscoveryConfig GetFileDiscoveryConfig(const std::string& name) const;
+    FileReaderConfig GetFileReaderConfig(const std::string& name) const;
+    void AddFileDiscoveryConfig(const std::string& name, const FileDiscoveryOptions* opts, const PipelineContext* ctx);
+    void AddFileReaderConfig(const std::string& name, const FileReaderOptions* opts, const PipelineContext* ctx);
     void ClearFileConfigs() {
         mPipelineNameFileDiscoveryConfigsMap.clear();
         mPipelineNameFileReaderConfigsMap.clear();

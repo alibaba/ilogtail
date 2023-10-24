@@ -64,6 +64,7 @@ public:
     bool InitGlobalConfig(const Json::Value& config, Json::Value& nonNativeParams) {
         return mGlobalConfig.Init(config, mConfigName, nonNativeParams);
     }
+    const Pipeline& GetPipeline() const { return *mPipeline; }
     Pipeline& GetPipeline() { return *mPipeline; }
     void SetPipeline(Pipeline& pipeline) { mPipeline = &pipeline; }
 
