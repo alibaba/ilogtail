@@ -37,4 +37,4 @@ your changes, such as:
 
 ## [Unreleased]
 
-- [public] [both] [added] add UsingOldContentTag. When UsingOldContentTag is set to false, the tag is now put into the context during cgo. V1:Context["tags"], V2:PipelineGroupEvents.Group.Tags(Unfinished)
+- [public] [both] [added] add UsingOldContentTag. When UsingOldContentTag is set to false, the tag is now put into the Meta not into logs during cgo.
