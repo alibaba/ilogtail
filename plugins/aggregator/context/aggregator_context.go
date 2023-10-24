@@ -48,7 +48,7 @@ type AggregatorContext struct {
 	PackFlag                         bool   // whether to add __pack_id__ as a tag
 
 	lock             *sync.Mutex
-	logGroupPoolMap  map[string][]LogGroupWithSize
+	logGroupPoolMap  map[string][]*LogGroupWithSize
 	logGroupPoolSize int
 	packIDMap        map[string]*LogPackSeqInfo
 	defaultPack      string
@@ -125,12 +125,12 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 
 	logGroupList := p.logGroupPoolMap[source]
 	if logGroupList == nil {
-		logGroupList = make([]LogGroupWithSize, 0, p.MaxLogGroupCount)
+		logGroupList = make([]*LogGroupWithSize, 0, p.MaxLogGroupCount)
 	}
 	if len(logGroupList) == 0 {
 		if _, ok := ctx["tags"]; ok {
 			newLogGroup := p.newLogGroupWithSize(source, topic)
-			newLogGroup = fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
+			fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
 			logGroupList = append(logGroupList, newLogGroup)
 		} else {
 			logGroupList = append(logGroupList, p.newLogGroupWithSize(source, topic))
@@ -159,7 +159,7 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 		// New log group, reset size.
 		if _, ok := ctx["tags"]; ok {
 			newLogGroup := p.newLogGroupWithSize(source, topic)
-			newLogGroup = fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
+			fillTags(ctx["tags"].([]*protocol.LogTag), newLogGroup)
 			logGroupList = append(logGroupList, newLogGroup)
 		} else {
 			logGroupList = append(logGroupList, p.newLogGroupWithSize(source, topic))
@@ -171,14 +171,12 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 	p.logGroupPoolSize += logSize
 	nowLogGroup.LogGroupSize += logSize
 	nowLogGroup.LogGroup.Logs = append(nowLogGroup.LogGroup.Logs, log)
-	logGroupList[len(logGroupList)-1] = nowLogGroup
 	p.logGroupPoolMap[source] = logGroupList
 	return nil
 }
 
-func fillTags(logTags []*protocol.LogTag, logGroupWithSize LogGroupWithSize) LogGroupWithSize {
+func fillTags(logTags []*protocol.LogTag, logGroupWithSize *LogGroupWithSize) {
 	logGroupWithSize.LogGroup.LogTags = append(logGroupWithSize.LogGroup.LogTags, logTags...)
-	return logGroupWithSize
 }
 
 // Flush ...
@@ -223,10 +221,10 @@ func (p *AggregatorContext) Reset() {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	p.logGroupPoolSize = 0
-	p.logGroupPoolMap = make(map[string][]LogGroupWithSize)
+	p.logGroupPoolMap = make(map[string][]*LogGroupWithSize)
 }
 
-func (p *AggregatorContext) newLogGroupWithSize(pack string, topic string) LogGroupWithSize {
+func (p *AggregatorContext) newLogGroupWithSize(pack string, topic string) *LogGroupWithSize {
 	logGroupWithSize := LogGroupWithSize{
 		LogGroup: &protocol.LogGroup{
 			Logs:  make([]*protocol.Log, 0, p.MaxLogCount),
@@ -246,7 +244,7 @@ func (p *AggregatorContext) newLogGroupWithSize(pack string, topic string) LogGr
 	info.lastUpdateTime = time.Now()
 	p.packIDMap[pack] = info
 
-	return logGroupWithSize
+	return &logGroupWithSize
 }
 
 func (*AggregatorContext) evaluateLogSize(log *protocol.Log) int {
@@ -264,7 +262,7 @@ func NewAggregatorContext() *AggregatorContext {
 		MaxLogCount:                      MaxLogCount,
 		ContextPreservationToleranceSize: 10,
 		PackFlag:                         true,
-		logGroupPoolMap:                  make(map[string][]LogGroupWithSize),
+		logGroupPoolMap:                  make(map[string][]*LogGroupWithSize),
 		packIDMap:                        make(map[string]*LogPackSeqInfo),
 		packIDMapCleanInterval:           time.Duration(600) * time.Second,
 		lock:                             &sync.Mutex{},
