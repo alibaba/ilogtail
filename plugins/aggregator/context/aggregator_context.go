@@ -222,6 +222,7 @@ func (p *AggregatorContext) Flush() []*protocol.LogGroup {
 func (p *AggregatorContext) Reset() {
 	p.lock.Lock()
 	defer p.lock.Unlock()
+	p.logGroupPoolSize = 0
 	p.logGroupPoolMap = make(map[string][]LogGroupWithSize)
 }
 
