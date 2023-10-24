@@ -31,6 +31,8 @@ using namespace apsara::sls::spl;
 
 namespace logtail {
 
+const std::string ProcessorSPL::sName = "spl";
+
 bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext& context) {
     Config config = componentConfig.GetConfig();
    

@@ -14,26 +14,16 @@ void PipelineEventGroupInput::getHeader(IOHeader& header, std::string& err) {
     }
 
     for (auto& kv : mLogGroup->GetTags()) {
-        header.columnNames.emplace_back(SplStringPiece(kv.first.data(), kv.first.size()));
+        std::ostringstream oss;
+        oss << FIELD_PREFIX_TAG << kv.first;
+        std::string fullTag = oss.str();
+        mTmpTags.emplace_back(fullTag);
+        header.columnNames.emplace_back(SplStringPiece(fullTag));
         header.constCols.emplace(header.columnNames.size() - 1, SplStringPiece(kv.second.data(), kv.second.size()));
     }
 }
 
-void PipelineEventGroupInput::getRow(const int32_t rowIndex, std::vector<KV>& pairs, uint32_t& time, uint32_t& timeNsPart,  std::string& err) {
-    auto currentEvent = mLogGroup->GetEvents()[rowIndex];
-    LogEvent& sourceEvent = currentEvent.Cast<LogEvent>();
-
-    time = sourceEvent.GetTimestamp();
-    timeNsPart = sourceEvent.GetTimestampNanosecond();
-
-    for (auto& kv : sourceEvent.GetContents()) {
-        pairs.emplace_back(SplStringPiece(kv.first.data(), kv.first.size()), SplStringPiece(kv.second.data(), kv.second.size()));
-        LOG_DEBUG(sLogger, ("rowIndex", rowIndex)("input content key", SplStringPiece(kv.first.data(), kv.first.size()))("input content value", SplStringPiece(kv.second.data(), kv.second.size())));
-    }
-}
-
 void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplStringPiece>& values, std::string& err) {
-    
     std::string columnName = mColumnNames[colIndex];
     LOG_DEBUG(sLogger, ("colIndex", colIndex)("columnName", columnName));
     for (auto event : mLogGroup->GetEvents()) {

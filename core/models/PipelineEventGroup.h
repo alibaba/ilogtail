@@ -86,7 +86,7 @@ public:
     void DelMetadata(EventGroupMetaKey key);
     GroupMetadata& MutableAllMetadata() { return mMetadata; };
     void SwapAllMetadata(GroupMetadata& other) { mMetadata.swap(other); }
-    void SetAllMetadata(GroupMetadata& other) {
+    void SetAllMetadata(const GroupMetadata& other) {
         mMetadata = other;
     }
 

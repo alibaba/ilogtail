@@ -530,7 +530,7 @@ void SlsSplUnittest::TestTag() {
             }
         ],
         "tags" : {
-            "__tag__:taiye": "123"
+            "taiye": "123"
         }
     })";
     eventGroup.FromJsonString(inJson);
@@ -550,17 +550,23 @@ void SlsSplUnittest::TestTag() {
     if (logGroupList.size() == 2) {
         {
             auto& logGroup = logGroupList[0];
-            StringView tag = logGroup.GetTag("__tag__:taiye2");
+            StringView tag = logGroup.GetTag("taiye2");
             APSARA_TEST_EQUAL("bbbb", tag);
-            tag = logGroup.GetTag("__tag__:taiye");
+            tag = logGroup.GetTag("taiye");
             APSARA_TEST_EQUAL("123", tag);
+
+            std::string outJson = logGroup.ToJsonString();
+            std::cout << "outJson: " << outJson << std::endl;
         }
         {
             auto& logGroup = logGroupList[1];
-            StringView tag = logGroup.GetTag("__tag__:taiye2");
+            StringView tag = logGroup.GetTag("taiye2");
             APSARA_TEST_EQUAL("cccc", tag);
-            tag = logGroup.GetTag("__tag__:taiye");
+            tag = logGroup.GetTag("taiye");
             APSARA_TEST_EQUAL("123", tag);
+
+            std::string outJson = logGroup.ToJsonString();
+            std::cout << "outJson: " << outJson << std::endl;
         }
     }
     
@@ -611,7 +617,7 @@ $ds2;
             }
         ],
         "tags" : {
-            "__tag__:taiye": "123"
+            "taiye": "123"
         }
     })";
     eventGroup.FromJsonString(inJson);
@@ -632,7 +638,7 @@ $ds2;
     if (logGroupList.size() == 2) {
         {
             auto& logGroup = logGroupList[0];
-            StringView tag = logGroup.GetTag("__tag__:taiye");
+            StringView tag = logGroup.GetTag("taiye");
             APSARA_TEST_EQUAL("123", tag);
 
             APSARA_TEST_EQUAL(1, logGroup.GetEvents().size());
@@ -649,7 +655,7 @@ $ds2;
         }
         {
             auto& logGroup = logGroupList[1];
-            StringView tag = logGroup.GetTag("__tag__:taiye");
+            StringView tag = logGroup.GetTag("taiye");
             APSARA_TEST_EQUAL("123", tag);
 
             APSARA_TEST_EQUAL(1, logGroup.GetEvents().size());

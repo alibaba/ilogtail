@@ -72,7 +72,7 @@ bool Pipeline::Init(const PipelineConfig& config) {
 
     
     if (config.mLogType == SPL_LOG) {
-        if (!InitSplProcessor(config)) {
+        if (!InitSplProcessor(config, std::to_string(pluginIndex++))) {
             return false;
         }
     } else {
@@ -141,10 +141,9 @@ void Pipeline::Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventG
     }
 }
 
-bool Pipeline::InitSplProcessor(const PipelineConfig& config) {
+bool Pipeline::InitSplProcessor(const PipelineConfig& config, const std::string& pluginId) {
     mSplProcessor = std::unique_ptr<ProcessorSPL>(new ProcessorSPL());
-    std::string pluginId = "spl";
-    ComponentConfig componentConfig(pluginId, config);
+    ComponentConfig componentConfig(std::string(ProcessorSPL::sName)+ "/" + pluginId, config);
     if (!mSplProcessor->Init(componentConfig, mContext)) {
         LOG_ERROR(GetContext().GetLogger(), ("InitSplProcessor", "spl")("Error", "Init failed"));
         return false;

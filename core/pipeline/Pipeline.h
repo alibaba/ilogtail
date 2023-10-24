@@ -32,7 +32,7 @@ public:
     PipelineConfig& GetPipelineConfig() { return mConfig; }
 
 private:
-    bool InitSplProcessor(const PipelineConfig& config);
+    bool InitSplProcessor(const PipelineConfig& config, const std::string& pluginId);
     bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);
 
     std::string mName;

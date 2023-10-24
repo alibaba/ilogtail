@@ -26,8 +26,9 @@ class PipelineEventGroupOutput : public Output {
 
     private:
         int32_t mRowSize;
-        std::vector<SplStringPiece> mColumnNames;
-        std::unordered_map<int32_t, std::string> mConstColumns;
+        //std::vector<SplStringPiece> mColumnNames;
+        //std::unordered_map<int32_t, std::string> mConstColumns;
+        const IOHeader* mIOHeader;
 
         PipelineEventGroup* mLogGroup = nullptr;
         std::vector<PipelineEventGroup>* mLogGroupList;
@@ -35,7 +36,7 @@ class PipelineEventGroupOutput : public Output {
         std::string mTaskLabel;
         bool mWithSleep;
 
-        std::unordered_map<std::string, int32_t> mLogGroupKeyIdxs;
+        std::unordered_map<int64_t, int32_t> mLogGroupKeyIdxs;
 
         int32_t mTimeIdx = -1;
         int32_t mTimeNSIdx = -1;
