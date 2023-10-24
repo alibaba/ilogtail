@@ -80,8 +80,8 @@ func (*AggregatorContext) Description() string {
 	return "context aggregator for logtail"
 }
 
-// AddToQueueWithRetry add logGroup to queue with retry
-func AddToQueueWithRetry(context context.Context, queue pipeline.LogGroupQueue, logGroup *protocol.LogGroup) {
+// addToQueueWithRetry add logGroup to queue with retry
+func addToQueueWithRetry(context context.Context, queue pipeline.LogGroupQueue, logGroup *protocol.LogGroup) {
 	for tryCount := 1; true; tryCount++ {
 		err := queue.Add(logGroup)
 		if err == nil {
@@ -104,7 +104,7 @@ func (p *AggregatorContext) Add(log *protocol.Log, ctx map[string]interface{}) e
 			if len(logGroup.Logs) == 0 {
 				continue
 			}
-			AddToQueueWithRetry(p.context.GetRuntimeContext(), p.queue, logGroup)
+			addToQueueWithRetry(p.context.GetRuntimeContext(), p.queue, logGroup)
 		}
 	}
 	p.lock.Lock()
