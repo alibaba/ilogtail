@@ -90,6 +90,7 @@ set(SUB_DIRECTORIES_LIST
         controller event event_handler event_listener file_server go_pipeline helper input log_pb logger models monitor
         parser pipeline plugin plugin/creator plugin/instance plugin/interface polling processor processor/daemon profile_sender reader sdk sender shennong sls_control
         fuse
+        tools
         )
 if (UNIX)
     set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} streamlog)
