@@ -65,8 +65,8 @@ func (p *pluginv1Runner) Init(inputQueueSize int, flushQueueSize int) error {
 
 func (p *pluginv1Runner) Initialized() error {
 	if len(p.AggregatorPlugins) == 0 {
-		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add aggregator_context")
-		if err := loadAggregator("aggregator_context", p.LogstoreConfig, nil); err != nil {
+		logger.Debug(p.LogstoreConfig.Context.GetRuntimeContext(), "add default aggregator")
+		if err := loadAggregator("aggregator_default", p.LogstoreConfig, nil); err != nil {
 			return err
 		}
 	}
