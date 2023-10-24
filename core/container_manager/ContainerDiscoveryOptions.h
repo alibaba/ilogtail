@@ -18,6 +18,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "json/json.h"
 
@@ -47,5 +48,7 @@ struct ContainerDiscoveryOptions {
 
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
 };
+
+using ContainerDiscoveryConfig = std::pair<const ContainerDiscoveryOptions*, const PipelineContext*>;
 
 } // namespace logtail

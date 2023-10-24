@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "json/json.h"
@@ -33,8 +34,11 @@ public:
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
     const std::string& GetBasePath() const { return mBasePath; }
     const std::string& GetFilePattern() const { return mFilePattern; }
-    const std::vector<std::string>& GetWilecardPaths() const { return mConstWildcardPaths; }
+    const std::vector<std::string>& GetWildcardPaths() const { return mWildcardPaths; }
+    const std::vector<std::string>& GetConstWildcardPaths() const { return mConstWildcardPaths; }
+    bool IsContainerDiscoveryEnabled() const { return mEnableContainerDiscovery; }
     void SetEnableContainerDiscoveryFlag(bool flag) { mEnableContainerDiscovery = true; }
+    const std::shared_ptr<std::vector<DockerContainerPath>>& GetContainerInfo() const { return mContainerInfos; }
     void SetContainerInfo(const std::shared_ptr<std::vector<DockerContainerPath>>& info) { mContainerInfos = info; }
     void SetUpdateContainerInfoFunc(bool (*f)(const std::string&, bool)) { mUpdateContainerInfo = f; }
     void SetDeleteContainerInfoFunc(bool (*f)(const std::string&)) { mDeleteContainerInfo = f; }
@@ -85,5 +89,7 @@ private:
     bool (*mUpdateContainerInfo)(const std::string&, bool) = nullptr;
     bool (*mDeleteContainerInfo)(const std::string&) = nullptr;
 };
+
+using FileDiscoveryConfig = std::pair<const FileDiscoveryOptions*, const PipelineContext*>;
 
 } // namespace logtail

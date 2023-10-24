@@ -135,9 +135,9 @@ void InputFile::GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const 
         }
     };
 
-    if (!mFileDiscovery.GetWilecardPaths().empty()) {
-        detail["LogPath"] = Json::Value(mFileDiscovery.GetWilecardPaths()[0]);
-        detail["MaxDepth"] = Json::Value(static_cast<int32_t>(mFileDiscovery.GetWilecardPaths().size()) + mFileDiscovery.mMaxDirSearchDepth - 1);
+    if (!mFileDiscovery.GetWildcardPaths().empty()) {
+        detail["LogPath"] = Json::Value(mFileDiscovery.GetWildcardPaths()[0]);
+        detail["MaxDepth"] = Json::Value(static_cast<int32_t>(mFileDiscovery.GetWildcardPaths().size()) + mFileDiscovery.mMaxDirSearchDepth - 1);
     } else {
         detail["LogPath"] = Json::Value(mFileDiscovery.GetBasePath());
         detail["MaxDepth"] = Json::Value(mFileDiscovery.mMaxDirSearchDepth);

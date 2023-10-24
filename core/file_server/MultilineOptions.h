@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 #include "json/json.h"
 
@@ -39,5 +40,7 @@ public:
 private:
     bool mIsMultiline = false;
 };
+
+using MultilineConfig = std::pair<const MultilineOptions*, const PipelineContext*>;
 
 } // namespace logtail

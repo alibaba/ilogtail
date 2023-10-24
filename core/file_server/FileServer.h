@@ -23,10 +23,10 @@ public:
     std::pair<const FileDiscoveryOptions*, const PipelineContext*>
     GetFileDiscoveryOptions(const std::string& name) const;
     std::pair<const FileReaderOptions*, const PipelineContext*> GetFileReaderOptions(const std::string& name) const;
-    void FileServer::AddFileDiscoveryOptions(const std::string& name,
+    void AddFileDiscoveryOptions(const std::string& name,
                                              const FileDiscoveryOptions* opts,
                                              const PipelineContext* ctx);
-    void FileServer::AddFileReaderOptions(const std::string& name,
+    void AddFileReaderOptions(const std::string& name,
                                           const FileReaderOptions* opts,
                                           const PipelineContext* ctx);
     void ClearOptions() {

@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "json/json.h"
 
@@ -40,5 +41,7 @@ struct FileReaderOptions {
 
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
 };
+
+using FileReaderConfig = std::pair<const FileReaderOptions*, const PipelineContext*>;
 
 } // namespace logtail
