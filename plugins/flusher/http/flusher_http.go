@@ -155,7 +155,7 @@ func (f *FlusherHTTP) Export(groupEventsArray []*models.PipelineGroupEvents, ctx
 	for _, groupEvents := range groupEventsArray {
 		if !f.AsyncIntercept && f.interceptor != nil {
 			groupEvents = f.interceptor.Intercept(groupEvents)
-			// skip groupEvents that is nil or emtpy.
+			// skip groupEvents that is nil or empty.
 			if groupEvents == nil || len(groupEvents.Events) == 0 {
 				continue
 			}

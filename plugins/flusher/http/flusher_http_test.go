@@ -797,15 +797,15 @@ func (b *basicAuthRoundTripper) RoundTrip(request *http.Request) (*http.Response
 type mockInterceptor struct {
 }
 
-func (b *mockInterceptor) Description() string {
+func (mi *mockInterceptor) Description() string {
 	return "a filter that discard all events"
 }
 
-func (b *mockInterceptor) Init(context pipeline.Context) error {
+func (mi *mockInterceptor) Init(context pipeline.Context) error {
 	return nil
 }
 
-func (b *mockInterceptor) Stop() error {
+func (mi *mockInterceptor) Stop() error {
 	return nil
 }
 
