@@ -1016,6 +1016,9 @@ bool Sender::ReadNextEncryption(int32_t& pos,
         bufferMeta.set_endpoint(AppConfig::GetInstance()->GetDefaultRegion()); // new mode
         bufferMeta.set_aliuid("");
     }
+    if (!bufferMeta.has_compresstype()) {
+        bufferMeta.set_compresstype(SlsCompressType::SLS_CMP_LZ4);
+    }
 
     buffer = new char[meta.mEncryptionSize + 1];
     nbytes = fread(buffer, sizeof(char), meta.mEncryptionSize, fin);
