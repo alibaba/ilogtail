@@ -140,7 +140,7 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.buildVarKeys()
 	f.fillRequestContentType()
 
-	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized", "async intercept events", f.AsyncIntercept)
+	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized")
 	return nil
 }
 
