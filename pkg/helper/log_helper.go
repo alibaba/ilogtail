@@ -294,7 +294,7 @@ func formatLabelKey(key string) string {
 			continue
 		} else {
 			if newKey == nil {
-				newKey = util.ZeroCopyStringToBytes(key)
+				newKey = []byte(key)
 			}
 			newKey[i] = SlsMetricstoreInvalidReplaceCharacter
 		}
@@ -316,7 +316,7 @@ func formatLabelValue(value string) string {
 			continue
 		} else {
 			if newValue == nil {
-				newValue = util.ZeroCopyStringToBytes(value)
+				newValue = []byte(value)
 			}
 			newValue[i] = SlsMetricstoreInvalidReplaceCharacter
 		}
@@ -331,8 +331,9 @@ func formatNewMetricName(name string) string {
 	if !config.LogtailGlobalConfig.EnableSlsMetricsFormat {
 		return name
 	}
-	newName := util.ZeroCopyStringToBytes(name)
-	for i, b := range newName {
+	var newName []byte
+	for i := 0; i < len(name); i++ {
+		b := name[i]
 		if (b >= 'a' && b <= 'z') ||
 			(b >= 'A' && b <= 'Z') ||
 			(b >= '0' && b <= '9') ||
@@ -340,8 +341,14 @@ func formatNewMetricName(name string) string {
 			b == ':' {
 			continue
 		} else {
+			if newName == nil {
+				newName = []byte(name)
+			}
 			newName[i] = SlsMetricstoreInvalidReplaceCharacter
 		}
+	}
+	if newName == nil {
+		return name
 	}
 	return util.ZeroCopyBytesToString(newName)
 }
