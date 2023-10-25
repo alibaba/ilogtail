@@ -245,6 +245,7 @@ func (hd *HistogramData) ToMetricLogs(name string, timeMs int64, labels *MetricL
 }
 
 // NewMetricLog create a metric log, time support unix milliseconds and unix nanoseconds.
+// Note: must pass safe string
 func NewMetricLog(name string, t int64, value float64, labels *MetricLabels) *protocol.Log {
 	var valStr string
 	if math.Float64bits(value) == StaleNaN {
@@ -256,6 +257,7 @@ func NewMetricLog(name string, t int64, value float64, labels *MetricLabels) *pr
 }
 
 // NewMetricLogStringVal create a metric log with val string, time support unix milliseconds and unix nanoseconds.
+// Note: must pass safe string
 func NewMetricLogStringVal(name string, t int64, value string, labels *MetricLabels) *protocol.Log {
 	strTime := strconv.FormatInt(t, 10)
 	metric := &protocol.Log{}
@@ -292,7 +294,7 @@ func formatLabelKey(key string) string {
 			continue
 		} else {
 			if newKey == nil {
-				newKey = []byte(key)
+				newKey = util.ZeroCopyStringToBytes(key)
 			}
 			newKey[i] = SlsMetricstoreInvalidReplaceCharacter
 		}
@@ -314,7 +316,7 @@ func formatLabelValue(value string) string {
 			continue
 		} else {
 			if newValue == nil {
-				newValue = []byte(value)
+				newValue = util.ZeroCopyStringToBytes(value)
 			}
 			newValue[i] = SlsMetricstoreInvalidReplaceCharacter
 		}
@@ -329,7 +331,7 @@ func formatNewMetricName(name string) string {
 	if !config.LogtailGlobalConfig.EnableSlsMetricsFormat {
 		return name
 	}
-	newName := []byte(name)
+	newName := util.ZeroCopyStringToBytes(name)
 	for i, b := range newName {
 		if (b >= 'a' && b <= 'z') ||
 			(b >= 'A' && b <= 'Z') ||
