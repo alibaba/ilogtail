@@ -17,12 +17,14 @@
 #include "processor/ProcessorParseJsonNative.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include "parser/LogParser.h"
+#include "monitor/MetricConstants.h"
 
 namespace logtail {
+const std::string ProcessorParseJsonNative::sName = "processor_parse_json_native";
 
 bool ProcessorParseJsonNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
@@ -39,7 +41,6 @@ bool ProcessorParseJsonNative::Init(const ComponentConfig& componentConfig) {
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
@@ -198,7 +199,7 @@ void ProcessorParseJsonNative::AddLog(const StringView& key, const StringView& v
     mProcParseOutSizeBytes->Add(keyValueSize);
 }
 
-bool ProcessorParseJsonNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorParseJsonNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

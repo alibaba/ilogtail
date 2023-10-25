@@ -17,17 +17,18 @@
 #include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "sdk/Common.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
+#include "monitor/MetricConstants.h"
 
 
 namespace logtail {
+const std::string ProcessorDesensitizeNative::sName = "processor_desensitize_native";
 
 bool ProcessorDesensitizeNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& mConfig = componentConfig.GetConfig();
 
     mSensitiveWordCastOptions = mConfig.mSensitiveWordCastOptions;
 
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
     mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
 
     return true;
@@ -138,7 +139,7 @@ void ProcessorDesensitizeNative::CastOneSensitiveWord(const std::vector<Sensitiv
     }
 }
 
-bool ProcessorDesensitizeNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorDesensitizeNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 
