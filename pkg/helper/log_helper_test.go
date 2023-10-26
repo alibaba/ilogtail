@@ -2,6 +2,7 @@ package helper
 
 import (
 	"github.com/alibaba/ilogtail/pkg/config"
+
 	"github.com/stretchr/testify/require"
 
 	"testing"
