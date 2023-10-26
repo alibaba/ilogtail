@@ -18,6 +18,12 @@
 #include "config/Config.h"
 #include "processor/ProcessorParseTimestampNative.h"
 #include "plugin/instance/ProcessorInstance.h"
+#include "common/TimeUtil.h"
+#include <string>
+#include <vector>
+
+using namespace std;
+using namespace logtail;
 
 namespace logtail {
 
@@ -36,6 +42,7 @@ public:
     void TestProcessRegularFormatFailed();
     void TestProcessHistoryDiscard();
     void TestProcessEventPreciseTimestampLegacy();
+    void TestCheckTime();
 
     PipelineContext mContext;
 };
@@ -46,6 +53,242 @@ UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessRegularFormat);
 UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessRegularFormatFailed);
 UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessHistoryDiscard);
 UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestProcessEventPreciseTimestampLegacy);
+UNIT_TEST_CASE(ProcessorParseTimestampNativeUnittest, TestCheckTime);
+
+bool CheckTimeFormatV2(const std::string& timeValue, const std::string& timeFormat) {
+    LogtailTime logTime = {0, 0};
+
+    int nanosecondLength = -1;
+    const char* strptimeResult = NULL;
+    strptimeResult = Strptime(timeValue.c_str(), timeFormat.c_str(), &logTime, nanosecondLength, -1);
+    if (NULL == strptimeResult) {
+        return false;
+    }
+    return true;
+}
+
+bool CheckTimeFormatV1(const std::string& timeValue, const std::string& timeFormat) {
+    struct tm tm;
+
+    if (NULL == strptime(timeValue.c_str(), timeFormat.c_str(), &tm)) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+void ProcessorParseTimestampNativeUnittest::TestCheckTime() {
+    string timeValue;
+    string timeFormat;
+    timeValue = "Fri";
+    timeFormat = "%a";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "Friday";
+    timeFormat = "%A";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "Jan";
+    timeFormat = "%b";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "January";
+    timeFormat = "%B";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "19";
+    timeFormat = "%d";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "Jan";
+    timeFormat = "%h";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "22";
+    timeFormat = "%H";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "01";
+    timeFormat = "%I";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "08";
+    timeFormat = "%m";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "01";
+    timeFormat = "%M";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "\n";
+    timeFormat = "%n";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "AM";
+    timeFormat = "%p";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "11:59:59 AM";
+    timeFormat = "%r";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "23:59";
+    timeFormat = "%R";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "59";
+    timeFormat = "%S";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = " ";
+    timeFormat = "%t";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "98";
+    timeFormat = "%y";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "2004";
+    timeFormat = "%Y";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "20";
+    timeFormat = "%C";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "31";
+    timeFormat = "%e";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "365";
+    timeFormat = "%j";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "2";
+    timeFormat = "%u";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "53";
+    timeFormat = "%U";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "24";
+    timeFormat = "%V";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "5";
+    timeFormat = "%w";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "23";
+    timeFormat = "%W";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeValue = "Tue Nov 20 14:12:58 2020";
+    timeFormat = "%c";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeFormat = "%x";
+    timeValue = "10/26/23";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeFormat = "%X";
+    timeValue = "14:12:58";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeFormat = "%s";
+    timeValue = "1605853978";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%f";
+    timeValue = "123456789";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == false
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%Y-%m-%d %H:%M:%S.%f";
+    timeValue = "2021-11-25 14:16:46.123456789";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == false
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%Y-%m-%d %H:%M:%S";
+    timeValue = "2020-11-20 14:12:58";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "[%Y-%m-%d %H:%M:%S";
+    timeValue = "[2017-12-11 15:05:07.012]";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%d %b %y %H:%M";
+    timeValue = "02 Jan 06 15:04 MST";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%d %b %y %H:%M";
+    timeValue = "02 Jan 06 15:04 -0700";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%A, %d-%b-%y %H:%M:%S";
+    timeValue = "Monday, 02-Jan-06 15:04:05 MST";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%A, %d %b %Y %H:%M:%S";
+    timeValue = "Mon, 02 Jan 2006 15:04:05 MST";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%Y-%m-%dT%H:%M:%S";
+    timeValue = "2006-01-02T15:04:05Z07:00";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%Y-%m-%dT%H:%M:%S";
+    timeValue = "2006-01-02T15:04:05.999999999Z07:00";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%s";
+    timeValue = "1637843406";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%s";
+    timeValue = "1637843406123";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%D";
+    timeValue = "11/20/20";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeFormat = "%F";
+    timeValue = "2020-11-20";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+    timeFormat = "%T";
+    timeValue = "14:12:58";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%z";
+    timeValue = "+0800";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%Z";
+    timeValue = "CST";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+
+    timeFormat = "%%";
+    timeValue = "%";
+    APSARA_TEST_TRUE_FATAL(CheckTimeFormatV1(timeValue, timeFormat) == true
+                           && CheckTimeFormatV2(timeValue, timeFormat) == true);
+}
 
 void ProcessorParseTimestampNativeUnittest::TestInit() {
     Config config;
@@ -122,7 +365,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
                 "contents" :
                 {
                     "time" : ")"
-                    << timebuff << R"("
+             << timebuff << R"("
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -132,7 +375,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
                 "contents" :
                 {
                     "time" : ")"
-                    << timebuff << R"("
+             << timebuff << R"("
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -158,7 +401,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
                 "contents" :
                 {
                     "time" : ")"
-                    << timebuff << R"("
+                 << timebuff << R"("
                 },
                 "timestamp" : )"
                  << now - processor.mLogTimeZoneOffsetSecond << R"(,
@@ -169,7 +412,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
                 "contents" :
                 {
                     "time" : ")"
-                    << timebuff << R"("
+                 << timebuff << R"("
                 },
                 "timestamp" : )"
                  << now - processor.mLogTimeZoneOffsetSecond << R"(,
@@ -180,13 +423,13 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
     })";
     APSARA_TEST_EQUAL_FATAL(CompactJson(expectJsonSs.str()), CompactJson(outJson));
     // check observablity
-    APSARA_TEST_EQUAL_FATAL(0, processor.GetContext().GetProcessProfile().historyFailures);    
+    APSARA_TEST_EQUAL_FATAL(0, processor.GetContext().GetProcessProfile().historyFailures);
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(strlen(timebuff)*2, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor.mProcParseInSizeBytes->GetValue());
     // discard history, so output is 0
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcOutRecordsTotal->GetValue());
     // size of one timestamp and one nanosecond equals to 8 byte, respectively
-    APSARA_TEST_EQUAL_FATAL(8*4, processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(8 * 4, processor.mProcParseOutSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
 }
@@ -213,7 +456,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
                 "contents" :
                 {
                     "time" : ")"
-                    << timebuff << R"("
+             << timebuff << R"("
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -223,7 +466,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
                 "contents" :
                 {
                     "time" : ")"
-                    << timebuff << R"("
+             << timebuff << R"("
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -244,9 +487,9 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
     // check observablity
-    APSARA_TEST_EQUAL_FATAL(0, processor.GetContext().GetProcessProfile().historyFailures);    
+    APSARA_TEST_EQUAL_FATAL(0, processor.GetContext().GetProcessProfile().historyFailures);
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(strlen(timebuff)*2, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor.mProcParseInSizeBytes->GetValue());
     // discard history, so output is 0
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcOutRecordsTotal->GetValue());
     // size of one timestamp and one nanosecond equals to 8 byte, respectively
@@ -276,7 +519,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
                 "contents" :
                 {
                     "time" : ")"
-                    << timebuff << R"("
+             << timebuff << R"("
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -285,7 +528,7 @@ void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
                 "contents" :
                 {
                     "time" : ")"
-                    << timebuff << R"("
+             << timebuff << R"("
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -301,9 +544,9 @@ void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
     processorInstance.Process(eventGroup);
     // check observablity
-    APSARA_TEST_EQUAL_FATAL(2, processor.GetContext().GetProcessProfile().historyFailures);    
+    APSARA_TEST_EQUAL_FATAL(2, processor.GetContext().GetProcessProfile().historyFailures);
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(strlen(timebuff)*2, processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor.mProcParseInSizeBytes->GetValue());
     // discard history, so output is 0
     APSARA_TEST_EQUAL_FATAL(0, processorInstance.mProcOutRecordsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
@@ -391,8 +634,8 @@ void ProcessorParseLogTimeUnittest::TestParseLogTime() {
 
     std::vector<Case> inputTimes = {
         {"2017-1-11 15:05:07.012", "%Y-%m-%d %H:%M:%S.%f", 1484147107, 12000000, 1484147107012},
-        {"2017-1-11 15:05:07.012", "%Y-%m-%d %H:%M:%S.%f", 1484147107, 12000000,1484147107012},
-        {"[2017-1-11 15:05:07.0123]", "[%Y-%m-%d %H:%M:%S.%f", 1484147107, 12300000,1484147107012},
+        {"2017-1-11 15:05:07.012", "%Y-%m-%d %H:%M:%S.%f", 1484147107, 12000000, 1484147107012},
+        {"[2017-1-11 15:05:07.0123]", "[%Y-%m-%d %H:%M:%S.%f", 1484147107, 12300000, 1484147107012},
         {"11 Jan 17 15:05 MST", "%d %b %y %H:%M", 1484147100, 0, 1484147100000},
         {"11 Jan 17 15:05 -0700", "%d %b %y %H:%M", 1484147100, 0, 1484147100000},
         {"Tuesday, 11-Jan-17 15:05:07.0123 MST", "%A, %d-%b-%y %H:%M:%S.%f", 1484147107, 12300000, 1484147107012},
@@ -469,14 +712,16 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < 5; ++i) {
             std::string second = "2012-01-01 15:05:" + (i < 10 ? "0" + std::to_string(i) : std::to_string(i));
             for (size_t j = 0; j < 5; ++j) {
-                inputTimes.emplace_back(std::string(second.data()), expectLogTimeBase + i, 0, expectLogTimeNanosecondBase + i * 1000000);
+                inputTimes.emplace_back(
+                    std::string(second.data()), expectLogTimeBase + i, 0, expectLogTimeNanosecondBase + i * 1000000);
             }
         }
 
         StringView timeStrCache = "2012-01-01 15:04:59";
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
-            bool ret = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+            bool ret
+                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -500,13 +745,17 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < 5; ++i) {
             std::string second = "2012-01-01 15:05:" + (i < 10 ? "0" + std::to_string(i) : std::to_string(i));
             for (size_t j = 0; j < 5; ++j) {
-                inputTimes.emplace_back(second + "." + std::to_string(j), expectLogTimeBase + i, j * 100000000, expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
+                inputTimes.emplace_back(second + "." + std::to_string(j),
+                                        expectLogTimeBase + i,
+                                        j * 100000000,
+                                        expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
             }
         }
         StringView timeStrCache = "2012-01-01 15:04:59";
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
-            bool ret = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+            bool ret
+                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -530,13 +779,15 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < 5; ++i) {
             std::string second = std::to_string(expectLogTimeBase + i);
             for (size_t j = 0; j < 5; ++j) {
-                inputTimes.emplace_back(std::string(second.data()), expectLogTimeBase + i, 0, expectLogTimeNanosecondBase + i * 1000000);
+                inputTimes.emplace_back(
+                    std::string(second.data()), expectLogTimeBase + i, 0, expectLogTimeNanosecondBase + i * 1000000);
             }
         }
         StringView timeStrCache = "1484147106";
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
-            bool ret = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+            bool ret
+                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -560,13 +811,17 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < 5; ++i) {
             std::string second = std::to_string(expectLogTimeBase + i);
             for (size_t j = 0; j < 5; ++j) {
-                inputTimes.emplace_back(second + std::to_string(j), expectLogTimeBase + i, j * 100000000, expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
+                inputTimes.emplace_back(second + std::to_string(j),
+                                        expectLogTimeBase + i,
+                                        j * 100000000,
+                                        expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
             }
         }
         StringView timeStrCache = "1484147106";
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
-            bool ret = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+            bool ret
+                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -590,13 +845,17 @@ void ProcessorParseLogTimeUnittest::TestParseLogTimeSecondCache() {
         for (size_t i = 0; i < 5; ++i) {
             std::string second = "15:05:" + (i < 10 ? "0" + std::to_string(i) : std::to_string(i));
             for (size_t j = 0; j < 5; ++j) {
-                inputTimes.emplace_back(second + "." + std::to_string(j) + " 2012-01-01", expectLogTimeBase + i, j * 100000000, expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
+                inputTimes.emplace_back(second + "." + std::to_string(j) + " 2012-01-01",
+                                        expectLogTimeBase + i,
+                                        j * 100000000,
+                                        expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
             }
         }
         StringView timeStrCache = "15:04:59.0 2012-01-01";
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
-            bool ret = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+            bool ret
+                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -643,13 +902,17 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         for (size_t i = 0; i < 5; ++i) {
             std::string second = "2012-01-01 15:05:" + (i < 10 ? "0" + std::to_string(i) : std::to_string(i));
             for (size_t j = 0; j < 5; ++j) {
-                inputTimes.emplace_back(second + "." + std::to_string(j), expectLogTimeBase + i, j * 100000000, expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
+                inputTimes.emplace_back(second + "." + std::to_string(j),
+                                        expectLogTimeBase + i,
+                                        j * 100000000,
+                                        expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
             }
         }
         StringView timeStrCache = "2012-01-01 15:04:59";
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
-            bool ret = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+            bool ret
+                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
@@ -675,13 +938,17 @@ void ProcessorParseLogTimeUnittest::TestAdjustTimeZone() {
         for (size_t i = 0; i < 5; ++i) {
             std::string second = "2012-01-01 15:05:" + (i < 10 ? "0" + std::to_string(i) : std::to_string(i));
             for (size_t j = 0; j < 5; ++j) {
-                inputTimes.emplace_back(second + "." + std::to_string(j), expectLogTimeBase + i, j * 100000000, expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
+                inputTimes.emplace_back(second + "." + std::to_string(j),
+                                        expectLogTimeBase + i,
+                                        j * 100000000,
+                                        expectLogTimeNanosecondBase + i * 1000000 + j * 100000);
             }
         }
         StringView timeStrCache = "2012-01-01 15:04:59";
         for (size_t i = 0; i < inputTimes.size(); ++i) {
             auto c = inputTimes[i];
-            bool ret = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
+            bool ret
+                = processor.ParseLogTime(c.inputTimeStr, "/var/log/message", outTime, preciseTimestamp, timeStrCache);
             APSARA_TEST_EQUAL(ret, true);
             APSARA_TEST_EQUAL(outTime.tv_sec, c.exceptedLogTime);
             APSARA_TEST_EQUAL(outTime.tv_nsec, c.exceptedLogTimeNanosecond);
