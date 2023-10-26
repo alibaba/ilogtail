@@ -36,3 +36,4 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+- [public] [both] [fixed] fix send local buffer failed when upgrade iLogtail from version earlier than 1.3.
