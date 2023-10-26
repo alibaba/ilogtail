@@ -36,3 +36,4 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
+- [public] [both] [fixed] fix prometheus send wrong sls logs when reuse string memory
