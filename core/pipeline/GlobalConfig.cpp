@@ -40,6 +40,8 @@ bool GlobalConfig::Init(const Json::Value& config, const std::string& configName
         mTopicType = TopicType::MACHINE_GROUP_TOPIC;
     } else if (topicType == "file_path") {
         mTopicType = TopicType::FILEPATH;
+    } else if (topicType == "default") {
+        mTopicType = TopicType::DEFAULT;
     } else if (!topicType.empty()) {
         PARAM_WARNING_IGNORE(sLogger, errorMsg, moduleName, configName);
     }
@@ -51,8 +53,8 @@ bool GlobalConfig::Init(const Json::Value& config, const std::string& configName
             mTopicType = TopicType::NONE;
             LOG_WARNING(
                 sLogger,
-                ("problem encountered in config parsing", "param TopicFormat is not valid")(
-                    "action", "ignore param TopicType and TopicFormat")("module", moduleName)("config", configName));
+                ("problem encountered in config parsing", errorMsg)("action", "ignore param TopicType and TopicFormat")(
+                    "module", moduleName)("config", configName));
         } else if (mTopicType == TopicType::FILEPATH && !IsRegexValid(mTopicFormat)) {
             mTopicType = TopicType::NONE;
             mTopicFormat.clear();
@@ -84,7 +86,7 @@ bool GlobalConfig::Init(const Json::Value& config, const std::string& configName
     }
 
     for (auto itr = config.begin(); itr != config.end(); ++itr) {
-        if (sNativeParam.find(itr.name()) != sNativeParam.end()) {
+        if (sNativeParam.find(itr.name()) == sNativeParam.end()) {
             nonNativeParams[itr.name()] = *itr;
         }
     }

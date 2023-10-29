@@ -16,16 +16,15 @@
 
 #pragma once
 
-#include "plugin/interface/Plugin.h"
-// #include "table/Table.h"
 #include "json/json.h"
+
+#include "plugin/interface/Plugin.h"
 
 namespace logtail {
 class Flusher : public Plugin {
 public:
     virtual ~Flusher() = default;
 
-    // virtual bool Init(const Table& config) = 0;
     virtual bool Init(const Json::Value& config, Json::Value& optionalGoPipeline) = 0;
     virtual bool Start() = 0;
     // 单例flusher: 只修改元信息

@@ -70,7 +70,7 @@ private:
 
     void GenerateGoPlugin(const Json::Value& config, Json::Value& res) const;
 
-    LogstoreFeedBackKey mLogstoreKey;
+    LogstoreFeedBackKey mLogstoreKey = 0;
 };
 
 } // namespace logtail

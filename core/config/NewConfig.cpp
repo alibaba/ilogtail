@@ -21,7 +21,7 @@ namespace logtail {
 
 bool NewConfig::Parse() {
     std::string errorMsg;
-    if (GetOptionalUIntParam(mDetail, "createTime", mCreateTime, errorMsg)) {
+    if (!GetOptionalUIntParam(mDetail, "createTime", mCreateTime, errorMsg)) {
         PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, noModule, mName);
     }
 
@@ -158,8 +158,10 @@ bool NewConfig::Parse() {
                 }
             }
             mProcessors.push_back(&plugin);
-            if (pluginName == "processor_parse_json_native" || pluginName == "processor_json") {
-                mIsFirstProcessorJson = true;
+            if (i == 0) {
+                if (pluginName == "processor_parse_json_native" || pluginName == "processor_json") {
+                    mIsFirstProcessorJson = true;
+                }
             }
         }
     }

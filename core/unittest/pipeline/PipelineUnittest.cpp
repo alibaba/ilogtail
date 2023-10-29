@@ -40,7 +40,7 @@ void PipelineUnittest::TestInit() {
     config.mLogType = REGEX_LOG;
     APSARA_TEST_TRUE_FATAL(pipeline.Init(config));
     APSARA_TEST_EQUAL_FATAL(config.mConfigName, pipeline.Name());
-    PipelineContext& context = pipeline.GetContext();
+    const PipelineContext& context = pipeline.GetContext();
     APSARA_TEST_EQUAL_FATAL(config.mProjectName, context.GetProjectName());
     APSARA_TEST_EQUAL_FATAL(config.mCategory, context.GetLogstoreName());
     APSARA_TEST_EQUAL_FATAL(config.mRegion, context.GetRegion());

@@ -25,7 +25,7 @@ string ExtractCurrentKey(const string& key) {
     if (pos == string::npos) {
         return key;
     }
-    return key.substr(0, pos);
+    return key.substr(pos + 1);
 }
 
 bool GetOptionalBoolParam(const Json::Value& config, const string& key, bool& param, string& errorMsg) {

@@ -21,7 +21,7 @@
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
-// #include "file/FileServer.h"
+#include "file_server/FileServer.h"
 #include "pipeline/Pipeline.h"
 
 using namespace std;
@@ -41,7 +41,9 @@ InputFile::InputFile()
 bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     string errorMsg;
 
-    mFileDiscovery.Init(config, *mContext, sName);
+    if (!mFileDiscovery.Init(config, *mContext, sName)) {
+        return false;
+    }
 
     // EnableContainerDiscovery
     if (!GetOptionalBoolParam(config, "EnableContainerDiscovery", mEnableContainerDiscovery, errorMsg)) {
@@ -52,10 +54,12 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
                     sName,
                     mContext->GetConfigName());
     }
-    
+
     if (mEnableContainerDiscovery) {
         mFileDiscovery.SetEnableContainerDiscoveryFlag(true);
-        mContainerDiscovery.Init(config, *mContext, sName);
+        if (!mContainerDiscovery.Init(config, *mContext, sName)) {
+            return false;
+        }
         GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline);
 
         // 过渡使用
@@ -67,7 +71,12 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         }
     }
 
-    mFileReader.Init(config, *mContext, sName);
+    if (!mFileReader.Init(config, *mContext, sName)) {
+        return false;
+    }
+
+    // 过渡使用
+    mFileDiscovery.SetTailingAllMatchedFiles(mFileReader.mTailingAllMatchedFiles);
 
     // Multiline
     const char* key = "Multiline";
@@ -76,14 +85,9 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         if (!itr->isObject()) {
             PARAM_WARNING_IGNORE(
                 mContext->GetLogger(), "param Multiline is not of type object", sName, mContext->GetConfigName());
-        } else {
-            mMultiline.Init(*itr, *mContext, sName);
+        } else if (!mMultiline.Init(*itr, *mContext, sName)) {
+            return false;
         }
-    }
-
-    // AppendingLogPositionMeta
-    if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     }
 
     // MaxCheckpointDirSearchDepth
@@ -93,7 +97,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 
     // ExactlyOnceConcurrency (param is unintentionally named as EnableExactlyOnce, which should be deprecated in the
     // future)
-    uint32_t exactlyOnceConcurrency;
+    uint32_t exactlyOnceConcurrency = 0;
     if (!GetOptionalUIntParam(config, "EnableExactlyOnce", exactlyOnceConcurrency, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, 0, sName, mContext->GetConfigName());
     } else if (exactlyOnceConcurrency > static_cast<uint32_t>(INT32_FLAG(max_exactly_once_concurrency))) {
@@ -105,6 +109,11 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     } else {
         mExactlyOnceConcurrency = exactlyOnceConcurrency;
     }
+
+    FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
+    FileServer::GetInstance()->AddFileReaderConfig(mContext->GetConfigName(), &mFileReader, mContext);
+    FileServer::GetInstance()->AddMultilineConfig(mContext->GetConfigName(), &mMultiline, mContext);
+    FileServer::GetInstance()->AddExactlyOnceConcurrency(mContext->GetConfigName(), mExactlyOnceConcurrency);
 
     return true;
 }
@@ -137,7 +146,8 @@ void InputFile::GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const 
 
     if (!mFileDiscovery.GetWildcardPaths().empty()) {
         detail["LogPath"] = Json::Value(mFileDiscovery.GetWildcardPaths()[0]);
-        detail["MaxDepth"] = Json::Value(static_cast<int32_t>(mFileDiscovery.GetWildcardPaths().size()) + mFileDiscovery.mMaxDirSearchDepth - 1);
+        detail["MaxDepth"] = Json::Value(static_cast<int32_t>(mFileDiscovery.GetWildcardPaths().size())
+                                         + mFileDiscovery.mMaxDirSearchDepth - 1);
     } else {
         detail["LogPath"] = Json::Value(mFileDiscovery.GetBasePath());
         detail["MaxDepth"] = Json::Value(mFileDiscovery.mMaxDirSearchDepth);

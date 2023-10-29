@@ -70,9 +70,7 @@ bool ContainerFilters::Init(const Json::Value& config, const PipelineContext& ct
     return true;
 }
 
-bool ContainerDiscoveryOptions::Init(const Json::Value& config,
-                                     const PipelineContext& ctx,
-                                     const string& pluginName) {
+bool ContainerDiscoveryOptions::Init(const Json::Value& config, const PipelineContext& ctx, const string& pluginName) {
     string errorMsg;
 
     const char* key = "ContainerFilters";

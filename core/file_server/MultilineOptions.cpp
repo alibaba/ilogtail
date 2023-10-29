@@ -28,7 +28,7 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
     } else if (mode == "JSON") {
         mMode = Mode::JSON;
         mIsMultiline = true;
-    } else if (mode != "custom") {
+    } else if (!mode.empty() && mode != "custom") {
         PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, "custom", pluginName, ctx.GetConfigName());
     }
 
@@ -37,43 +37,59 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
         string pattern;
         if (!GetOptionalStringParam(config, "Multiline.StartPattern", pattern, errorMsg)) {
             PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
-        } else if (!IsRegexValid(pattern)) {
-            PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        } else if (!ParseRegex(pattern, mStartPatternRegPtr)) {
+            PARAM_WARNING_IGNORE(
+                ctx.GetLogger(), "Multiline.StartPattern is not a valid regex", pluginName, ctx.GetConfigName());
         } else {
             mStartPattern = pattern;
         }
 
         // ContinuePattern
+        pattern.clear();
         if (!GetOptionalStringParam(config, "Multiline.ContinuePattern", pattern, errorMsg)) {
             PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
-        } else if (!IsRegexValid(pattern)) {
-            PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        } else if (!ParseRegex(pattern, mContinuePatternRegPtr)) {
+            PARAM_WARNING_IGNORE(
+                ctx.GetLogger(), "Multiline.ContinuePattern is not a valid regex", pluginName, ctx.GetConfigName());
         } else {
             mContinuePattern = pattern;
         }
 
         // EndPattern
+        pattern.clear();
         if (!GetOptionalStringParam(config, "Multiline.EndPattern", pattern, errorMsg)) {
             PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
-        } else if (!IsRegexValid(pattern)) {
-            PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        } else if (!ParseRegex(pattern, mEndPatternRegPtr)) {
+            PARAM_WARNING_IGNORE(
+                ctx.GetLogger(), "Multiline.EndPattern is not a valid regex", pluginName, ctx.GetConfigName());
         } else {
             mEndPattern = pattern;
         }
 
-        if ((mStartPattern.empty() || mStartPattern == ".*")
-            && (mEndPattern.empty() || mEndPattern == ".*")
-            && !mContinuePattern.empty()) {
+        if (!mStartPatternRegPtr && !mEndPatternRegPtr && mContinuePatternRegPtr) {
+            mContinuePatternRegPtr.reset();
             LOG_WARNING(ctx.GetLogger(),
                         ("problem encountered in config parsing",
                          "param Multiline.StartPattern and EndPattern are empty but ContinuePattern is not")(
                             "action", "ignore multiline config")("module", pluginName)("config", ctx.GetConfigName()));
-        } else if ((!mStartPattern.empty() && mStartPattern != ".*")
-                   || (!mEndPattern.empty() && mEndPattern != ".*")) {
+        } else if (mStartPatternRegPtr || mEndPatternRegPtr) {
             mIsMultiline = true;
         }
     }
 
     return true;
 }
+
+bool MultilineOptions::ParseRegex(const string& pattern, shared_ptr<boost::regex>& reg) {
+    if (pattern.empty() || pattern == ".*") {
+        return true;
+    }
+    try {
+        reg.reset(new boost::regex(pattern));
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace logtail

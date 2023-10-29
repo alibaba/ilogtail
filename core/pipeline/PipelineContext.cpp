@@ -23,18 +23,15 @@ namespace logtail {
 const string PipelineContext::sEmptyString = "";
 
 const string& PipelineContext::GetProjectName() const {
-    // return mSLSInfo ? mSLSInfo->mProject : sEmptyString;
-    return mProjectName;
+    return mSLSInfo ? mSLSInfo->mProject : sEmptyString;
 }
 
 const string& PipelineContext::GetLogstoreName() const {
-    // return mSLSInfo ? mSLSInfo->mLogstore : sEmptyString;
-    return mLogstoreName;
+    return mSLSInfo ? mSLSInfo->mLogstore : sEmptyString;
 }
 
 const string& PipelineContext::GetRegion() const {
-    // return mSLSInfo ? mSLSInfo->mRegion : sEmptyString;
-    return mRegion;
+    return mSLSInfo ? mSLSInfo->mRegion : sEmptyString;
 }
 
 LogstoreFeedBackKey PipelineContext::GetLogstoreKey() const {

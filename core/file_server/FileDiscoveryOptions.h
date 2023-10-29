@@ -42,6 +42,9 @@ public:
     void SetContainerInfo(const std::shared_ptr<std::vector<DockerContainerPath>>& info) { mContainerInfos = info; }
     void SetUpdateContainerInfoFunc(bool (*f)(const std::string&, bool)) { mUpdateContainerInfo = f; }
     void SetDeleteContainerInfoFunc(bool (*f)(const std::string&)) { mDeleteContainerInfo = f; }
+    // 过渡使用
+    bool IsTailingAllMatchedFiles() const { return mTailingAllMatchedFiles; }
+    void SetTailingAllMatchedFiles(bool flag) { mTailingAllMatchedFiles = flag; }
 
     std::vector<std::string> mFilePaths;
     int32_t mMaxDirSearchDepth = 0;
@@ -88,8 +91,11 @@ private:
     std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos;
     bool (*mUpdateContainerInfo)(const std::string&, bool) = nullptr;
     bool (*mDeleteContainerInfo)(const std::string&) = nullptr;
+
+    // 过渡使用
+    bool mTailingAllMatchedFiles = false;
 };
 
-using FileDiscoveryConfig = std::pair<const FileDiscoveryOptions*, const PipelineContext*>;
+using FileDiscoveryConfig = std::pair<FileDiscoveryOptions*, const PipelineContext*>;
 
 } // namespace logtail
