@@ -16,9 +16,11 @@
 
 #include "pipeline/Pipeline.h"
 
+#include <cstdint>
+#include <utility>
+
 #include "common/ParamExtractor.h"
 #include "flusher/FlusherSLS.h"
-#include "pipeline/PipelineContext.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/daemon/LogProcess.h"
 #include "processor/ProcessorSplitLogStringNative.h"
@@ -334,7 +336,7 @@ void Pipeline::Start() {
     }
 }
 
-void Pipeline::Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
+void Pipeline::Process(PipelineEventGroup&& logGroup, vector<PipelineEventGroup>& logGroupList) {
     for (auto& p : mProcessorLine) {
         p->Process(logGroup);
     }
@@ -374,7 +376,7 @@ void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
     }
 }
 
-void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const std::string& module, Json::Value& dst) {
+void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const string& module, Json::Value& dst) {
     Json::Value res(Json::objectValue), detail = plugin;
     detail.removeMember("Type");
     res["type"] = plugin["Type"];
@@ -382,7 +384,7 @@ void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const std::strin
     dst[module].append(res);
 }
 
-bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config) {
+bool Pipeline::InitAndAddProcessor(unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config) {
     if (!processor) {
         LOG_ERROR(GetContext().GetLogger(),
                   ("CreateProcessor", ProcessorSplitRegexNative::sName)("Error", "Cannot find plugin"));
