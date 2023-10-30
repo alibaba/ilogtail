@@ -50,12 +50,12 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     // Project
     if (!GetMandatoryStringParam(config, "Project", mProject, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
 
     // Logstore
     if (!GetMandatoryStringParam(config, "Logstore", mLogstore, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     mLogstoreKey = GenerateLogstoreFeedBackKey(mProject, mLogstore);
 
@@ -75,7 +75,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
         // Endpoint
         if (!GetMandatoryStringParam(config, "Endpoint", mEndpoint, errorMsg)) {
-            PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+            PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
         }
         mEndpoint = TrimString(mEndpoint);
         if (!mEndpoint.empty()) {

@@ -53,13 +53,13 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
     // FileEncoding
     string encoding;
     if (!GetOptionalStringParam(config, "FileEncoding", encoding, errorMsg)) {
-        PARAM_ERROR(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
     }
     encoding = ToLowerCaseString(encoding);
     if (encoding == "gbk") {
         mFileEncoding = Encoding::GBK;
     } else if (!encoding.empty() && encoding != "utf8") {
-        PARAM_ERROR(ctx.GetLogger(), "param FileEncoding is not valid", pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(), "param FileEncoding is not valid", pluginName, ctx.GetConfigName());
     }
 
     // TailingAllMatchedFiles

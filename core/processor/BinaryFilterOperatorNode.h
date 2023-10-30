@@ -29,7 +29,7 @@ public:
     virtual ~BinaryFilterOperatorNode(){};
 
 public:
-    virtual bool Match(const sls_logs::Log& log, const LogGroupContext& context) {
+    virtual bool Match(const sls_logs::Log& log, const LogGroupContext& context) override {
         if (BOOST_LIKELY(left && right)) {
             if (op == AND_OPERATOR) {
                 return left->Match(log, context) && right->Match(log, context);
@@ -40,7 +40,7 @@ public:
         return false;
     }
 
-    virtual bool Match(const LogContents& contents, PipelineContext& mContext) {
+    virtual bool Match(const LogContents& contents, const PipelineContext& mContext) override {
         if (BOOST_LIKELY(left && right)) {
             if (op == AND_OPERATOR) {
                 return left->Match(contents, mContext) && right->Match(contents, mContext);

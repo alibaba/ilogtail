@@ -27,7 +27,7 @@
 #include "common/StringTools.h"
 #include "logger/Logger.h"
 
-#define PARAM_ERROR(logger, msg, module, config) \
+#define PARAM_ERROR_RETURN(logger, msg, module, config) \
     if (module.empty()) { \
         LOG_ERROR(logger, ("failed to parse config", msg)("config", config)); \
     } else { \

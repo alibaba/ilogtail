@@ -300,11 +300,11 @@ bool Pipeline::Init(NewConfig&& config) {
 
     if (inputFile && inputFile->mExactlyOnceConcurrency > 0) {
         if (!mGoPipelineWithoutInput.isNull()) {
-            PARAM_ERROR(mContext.GetLogger(), "exactly once enabled when not in native mode exist", noModule, mName);
+            PARAM_ERROR_RETURN(mContext.GetLogger(), "exactly once enabled when not in native mode exist", noModule, mName);
         }
         // flusher_sls is guaranteed to exist here.
         if (mContext.GetSLSInfo()->mBatch.mMergeType != FlusherSLS::Batch::MergeType::TOPIC) {
-            PARAM_ERROR(
+            PARAM_ERROR_RETURN(
                 mContext.GetLogger(), "exactly once enabled when flusher_sls.MergeType is not topic", noModule, mName);
         }
     }
