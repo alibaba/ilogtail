@@ -66,6 +66,7 @@ bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     if (mKeepingSourceWhenParseSucceed && mRenamedSourceKey == mSourceKey) {
         mSourceKeyOverwritten = true;
     }
+
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);

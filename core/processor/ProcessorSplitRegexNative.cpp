@@ -29,7 +29,8 @@ namespace logtail {
 const std::string ProcessorSplitRegexNative::sName = "processor_split_regex_native";
 
 bool ProcessorSplitRegexNative::Init(const Json::Value& config) {
-    
+    mFeedLines = &(GetContext().GetProcessProfile().feedLines);
+    mSplitLines = &(GetContext().GetProcessProfile().splitLines);
     return true;
 }
 
@@ -121,7 +122,9 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
     for (auto& content : logIndex) {
         std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-        targetEvent->SetTimestamp(sourceEvent.GetTimestamp(), sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
+        targetEvent->SetTimestamp(
+            sourceEvent.GetTimestamp(),
+            sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
         targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
         if (mEnableLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
@@ -215,7 +218,8 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
 
                 case SPLIT_BEGIN:
                     // mLogContinueRegPtr can be matched 0 or multiple times, if not match continue to try others.
-                    if (mLogContinueRegPtr != nullptr && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                    if (mLogContinueRegPtr != nullptr
+                        && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
                         state = SPLIT_CONTINUE;
                         break;
                     }
@@ -248,7 +252,8 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
 
                 case SPLIT_CONTINUE:
                     // mLogContinueRegPtr can be matched 0 or multiple times, if not match continue to try others.
-                    if (mLogContinueRegPtr != nullptr && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                    if (mLogContinueRegPtr != nullptr
+                        && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
                         break;
                     }
                     if (mLogEndRegPtr != nullptr) {
@@ -308,7 +313,7 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
         if (!mIsMultline) {
             logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
         } else {
-            endIndex = buffer[size-1] == '\n' ? size -1 : size;
+            endIndex = buffer[size - 1] == '\n' ? size - 1 : size;
             if (mLogBeginRegPtr != NULL && mLogEndRegPtr == NULL) {
                 anyMatched = true;
                 // If logs is unmatched, they have been handled immediately. So logs must be matched here.

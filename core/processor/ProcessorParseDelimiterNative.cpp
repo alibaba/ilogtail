@@ -61,25 +61,6 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
     }
 
-
-    // if (!mSeparator.empty())
-    //     mSeparatorChar = mSeparator.data()[0];
-    // else {
-    //     // This should never happened.
-    //     mSeparatorChar = '\t';
-    // }
-    // if (mUploadRawLog && mRawLogTag == mSourceKey) {
-    //     mSourceKeyOverwritten = true;
-    // }
-    // for (auto key : mColumnKeys) {
-    //     if (key.compare(mSourceKey) == 0) {
-    //         mSourceKeyOverwritten = true;
-    //     }
-    //     if (key.compare(mRawLogTag) == 0) {
-    //         mRawLogTagOverwritten = true;
-    //     }
-    // }
-    // mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 

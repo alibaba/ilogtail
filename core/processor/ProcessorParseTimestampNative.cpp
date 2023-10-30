@@ -96,8 +96,7 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig)
     mLegacyPreciseTimestampConfig.enabled = config.mAdvancedConfig.mEnablePreciseTimestamp;
     mLegacyPreciseTimestampConfig.key = config.mAdvancedConfig.mPreciseTimestampKey;
     mLegacyPreciseTimestampConfig.unit = config.mAdvancedConfig.mPreciseTimestampUnit;
-    mLogTimeZoneOffsetSecond
-        = config.mTimeZoneAdjust ? config.mLogTimeZoneOffsetSecond - GetLocalTimeZoneOffsetSecond() : 0;
+    mLogTimeZoneOffsetSecond = config.mTimeZoneAdjust ? config.mLogTimeZoneOffsetSecond  - GetLocalTimeZoneOffsetSecond() : 0;
 
     mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
