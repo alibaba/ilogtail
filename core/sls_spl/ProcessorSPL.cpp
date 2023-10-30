@@ -17,7 +17,6 @@
 #include "sls_spl/ProcessorSPL.h"
 #include <curl/curl.h>
 #include <iostream>
-#include "cmd/MapRowInput.h"
 #include "logger/StdoutLogger.h"
 #include "pipeline/SplPipeline.h"
 #include "sls_spl/PipelineEventGroupInput.h"
@@ -76,17 +75,17 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
         outputs.emplace_back(std::make_shared<PipelineEventGroupOutput>(logGroup, logGroupList, resultTaskLabel));
     }
 
-    // 开始调用pipeline.execute
+    /// 开始调用pipeline.execute
     // 传入inputs, outputs
     // 输出pipelineStats, error
-    PipelineStatsPtr pipelineStatsPtr = std::make_shared<PipelineStats>();
-    auto errCode = mSPLPipelinePtr->execute(inputs, outputs, &errorMsg, pipelineStatsPtr);
+    PipelineStats pipelineStats;
+    auto errCode = mSPLPipelinePtr->execute(inputs, outputs, &errorMsg, &pipelineStats);
     if (errCode != StatusCode::OK) {
         LOG_ERROR(sLogger, ("execute error", errorMsg));
         return;
     }
 
-    LOG_DEBUG(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
+    //LOG_DEBUG(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
     return;
 }
 
