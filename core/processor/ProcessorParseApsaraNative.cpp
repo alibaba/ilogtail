@@ -23,19 +23,35 @@
 #include "monitor/MetricConstants.h"
 #include <algorithm>
 #include "common/ParamExtractor.h"
-#include <config_manager/ConfigManagerBase.h>
+#include <string>
 
+using namespace std;
 
 namespace logtail {
 const std::string ProcessorParseApsaraNative::sName = "processor_parse_apsara_native";
 
 // static const int32_t MAX_BASE_FIELD_NUM = 10;
 
+bool ProcessorParseApsaraNative::ParseTimeZoneOffsetSecond(const string& logTZ, int& logTZSecond) {
+    if (logTZ.size() != strlen("GMT+08:00") || logTZ[6] != ':' || (logTZ[3] != '+' && logTZ[3] != '-')) {
+        return false;
+    }
+    if (logTZ.find("GMT") != (size_t)0) {
+        return false;
+    }
+    string hourStr = logTZ.substr(4, 2);
+    string minitueStr = logTZ.substr(7, 2);
+    logTZSecond = StringTo<int>(hourStr) * 3600 + StringTo<int>(minitueStr) * 60;
+    if (logTZ[3] == '-') {
+        logTZSecond = -logTZSecond;
+    }
+    return true;
+}
+
 bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
     if (!GetOptionalStringParam(config, "Timezone", mTimezone, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mTimezone, sName, mContext->GetConfigName());
@@ -84,7 +100,6 @@ bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
     if (mKeepingSourceWhenParseSucceed && mRenamedSourceKey == mSourceKey) {
         mSourceKeyOverwritten = true;
     }
-
 
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);

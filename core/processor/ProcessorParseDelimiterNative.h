@@ -25,16 +25,7 @@ class ProcessorParseDelimiterNative : public Processor {
 public:
     static const std::string sName;
 
-    const std::string& Name() const override { return sName; }
-    bool Init(const ComponentConfig& componentConfig) override;
-    bool Init(const Json::Value& config) override;
-    void Process(PipelineEventGroup& logGroup) override;
-
-protected:
-    bool IsSupportedEvent(const PipelineEventPtr& e) const override;
-
-private:
-    enum Method { extend, keep, discard};
+    enum Method { extend, keep, discard };
     std::string mSourceKey;
     std::string mSeparator;
     std::string mQuoteString = "\"";
@@ -46,11 +37,22 @@ private:
     std::string mRenamedSourceKey = "";
     bool mCopingRawLog;
 
+    const std::string& Name() const override { return sName; }
+    bool Init(const ComponentConfig& componentConfig) override;
+    bool Init(const Json::Value& config) override;
+    void Process(PipelineEventGroup& logGroup) override;
+
+protected:
+    bool IsSupportedEvent(const PipelineEventPtr& e) const override;
+
+private:
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
-    bool SplitString(const char* buffer, int32_t begIdx, int32_t endIdx, std::vector<size_t>& colBegIdxs, std::vector<size_t>& colLens);
+    bool SplitString(const char* buffer,
+                     int32_t begIdx,
+                     int32_t endIdx,
+                     std::vector<size_t>& colBegIdxs,
+                     std::vector<size_t>& colLens);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
-    // std::string mSourceKey;
-    // std::string mSeparator;
     std::string mRawLogTag;
     std::vector<std::string> mColumnKeys;
     bool mExtractPartialFields = false;

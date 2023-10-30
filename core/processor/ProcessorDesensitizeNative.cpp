@@ -29,13 +29,11 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
 
     std::string method;
     if (!GetMandatoryStringParam(config, "Method", method, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
     if (method == "const") {
         mMethod = CONST_OPTION;
@@ -44,28 +42,25 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
     } else {
         errorMsg = "The Method is invalid";
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
 
     if (mMethod == CONST_OPTION) {
         if (!GetMandatoryStringParam(config, "ReplacingString", mReplacingString, errorMsg)) {
             PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-            return false;
         }
     }
     mReplacingString = std::string("\\1") + mReplacingString;
 
-    if (!GetMandatoryStringParam(config, "ContentPatternBeforeReplacedString", mContentPatternBeforeReplacedString, errorMsg)) {
+    if (!GetMandatoryStringParam(
+            config, "ContentPatternBeforeReplacedString", mContentPatternBeforeReplacedString, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
     if (!GetMandatoryStringParam(config, "ReplacedContentPattern", mReplacedContentPattern, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
     if (!GetOptionalBoolParam(config, "ReplacingAll", mReplacingAll, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, true, sName, mContext->GetConfigName());
         mReplacingAll = true;
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mReplacingAll, sName, mContext->GetConfigName());
     }
     std::string regexStr = std::string("(") + mContentPatternBeforeReplacedString + ")" + mReplacedContentPattern;
     mRegex.reset(new re2::RE2(regexStr));
@@ -73,14 +68,18 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
         std::string errorMsg = mRegex->error();
         errorMsg += std::string(", regex : ") + regexStr;
         // do not throw when parse sensitive key error
-        PARAM_ERROR(mContext->GetLogger(), "The sensitive regex is invalid, error:" + errorMsg, sName, mContext->GetConfigName());
         LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
                                                std::string("The sensitive key regex is invalid, ") + errorMsg,
                                                GetContext().GetProjectName(),
                                                GetContext().GetLogstoreName(),
                                                GetContext().GetRegion());
-        return false;
+        PARAM_ERROR(mContext->GetLogger(),
+                    "The sensitive regex is invalid, error:" + errorMsg,
+                    sName,
+                    mContext->GetConfigName());
     }
+
+    mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
 }
 
 bool ProcessorDesensitizeNative::Init(const ComponentConfig& componentConfig) {

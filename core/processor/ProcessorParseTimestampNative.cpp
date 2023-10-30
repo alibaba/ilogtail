@@ -33,11 +33,9 @@ bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
     if (!GetMandatoryStringParam(config, "SourceFormat", mSourceFormat, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
     if (!GetOptionalStringParam(config, "SourceTimezone", mSourceTimezone, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceTimezone, sName, mContext->GetConfigName());
@@ -48,7 +46,7 @@ bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     std::string preciseTimestampUnit;
     if (!GetOptionalStringParam(config, "PreciseTimestampUnit", preciseTimestampUnit, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, preciseTimestampUnit, sName, mContext->GetConfigName());
-    }else {
+    } else {
         if (0 == preciseTimestampUnit.compare("ms")) {
             mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
         } else if (0 == preciseTimestampUnit.compare("us")) {
@@ -61,18 +59,8 @@ bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     }
     if (!GetOptionalStringParam(config, "PreciseTimestampKey", mPreciseTimestampKey, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mPreciseTimestampKey, sName, mContext->GetConfigName());
-    } 
+    }
 
-
-    // mTimeFormat = config.mTimeFormat;
-    // mTimeKey = config.mTimeKey;
-    // mSpecifiedYear = config.mAdvancedConfig.mSpecifiedYear;
-
-    // mLegacyPreciseTimestampConfig.enabled = config.mAdvancedConfig.mEnablePreciseTimestamp;
-
-    // mLegacyPreciseTimestampConfig.key = config.mAdvancedConfig.mPreciseTimestampKey;
-
-    // mLegacyPreciseTimestampConfig.unit = config.mAdvancedConfig.mPreciseTimestampUnit;
     if (mSourceTimezone != "") {
         int logTZSecond = 0;
         if (!ConfigManagerBase::ParseTimeZoneOffsetSecond(mSourceTimezone, logTZSecond)) {
@@ -108,7 +96,8 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig)
     mLegacyPreciseTimestampConfig.enabled = config.mAdvancedConfig.mEnablePreciseTimestamp;
     mLegacyPreciseTimestampConfig.key = config.mAdvancedConfig.mPreciseTimestampKey;
     mLegacyPreciseTimestampConfig.unit = config.mAdvancedConfig.mPreciseTimestampUnit;
-    mLogTimeZoneOffsetSecond = config.mTimeZoneAdjust ? config.mLogTimeZoneOffsetSecond  - GetLocalTimeZoneOffsetSecond() : 0;
+    mLogTimeZoneOffsetSecond
+        = config.mTimeZoneAdjust ? config.mLogTimeZoneOffsetSecond - GetLocalTimeZoneOffsetSecond() : 0;
 
     mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
@@ -144,7 +133,10 @@ bool ProcessorParseTimestampNative::IsSupportedEvent(const PipelineEventPtr& e) 
     return e.Is<LogEvent>();
 }
 
-bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEventPtr& e, LogtailTime& logTime, StringView& timeStrCache) {
+bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath,
+                                                 PipelineEventPtr& e,
+                                                 LogtailTime& logTime,
+                                                 StringView& timeStrCache) {
     if (!IsSupportedEvent(e)) {
         return true;
     }

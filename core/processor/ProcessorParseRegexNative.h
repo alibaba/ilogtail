@@ -25,6 +25,14 @@ class ProcessorParseRegexNative : public Processor {
 public:
     static const std::string sName;
 
+    std::string mSourceKey;
+    std::string mRegex;
+    std::vector<std::string> mKeys;
+    bool mKeepingSourceWhenParseFail = false;
+    bool mKeepingSourceWhenParseSucceed = false;
+    std::string mRenamedSourceKey = "";
+    bool mCopingRawLog = false;
+
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
     bool Init(const Json::Value& config) override;
@@ -34,13 +42,6 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    std::string mSourceKey;
-    std::string mRegex;
-    std::vector<std::string> mKeys;
-    bool mKeepingSourceWhenParseFail = false;
-    bool mKeepingSourceWhenParseSucceed = false;
-    std::string mRenamedSourceKey = "";
-    bool mCopingRawLog = false;
     void AddUserDefinedFormat();
 
     void AddUserDefinedFormat(const std::string& regStr, const std::string& keys);

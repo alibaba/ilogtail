@@ -24,6 +24,10 @@ class ProcessorFilterNative : public Processor {
 public:
     static const std::string sName;
 
+    std::unordered_map<std::string, std::string> mInclude;
+    BaseFilterNodePtr mConditionExp = nullptr;
+    bool mDiscardingNonUTF8 = false;
+
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
     bool Init(const Json::Value& config) override;
@@ -34,17 +38,13 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    std::unordered_map<std::string, std::string> mInclude;
-    BaseFilterNodePtr mConditionExp = nullptr;
-    bool mDiscardingNonUTF8 = false;
-
-    enum Mode { BYPASS_MODE, EXPRESSION_MODE, RULE_MODE, GLOBAL_MODE };
+    enum class Mode { BYPASS_MODE, EXPRESSION_MODE, RULE_MODE, GLOBAL_MODE };
     std::shared_ptr<LogFilterRule> mFilterRule;
     BaseFilterNodePtr mFilterExpressionRoot = nullptr;
     std::unordered_map<std::string, LogFilterRule*> mFilters;
     LogType mLogType;
     bool mDiscardNoneUtf8;
-    Mode mFilterMode = BYPASS_MODE;
+    Mode mFilterMode = Mode::BYPASS_MODE;
 
     CounterPtr mProcFilterInSizeBytes;
     CounterPtr mProcFilterOutSizeBytes;
@@ -59,8 +59,8 @@ private:
     bool ProcessEvent(PipelineEventPtr& e);
     bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
 
-    bool noneUtf8(StringView & strSrc, bool modify);
-    bool CheckNoneUtf8(const StringView & strSrc);
+    bool noneUtf8(StringView& strSrc, bool modify);
+    bool CheckNoneUtf8(const StringView& strSrc);
     void FilterNoneUtf8(std::string& strSrc);
 
 #ifdef APSARA_UNIT_TEST_MAIN

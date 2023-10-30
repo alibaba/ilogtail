@@ -22,6 +22,16 @@ class ProcessorParseTimestampNative : public Processor {
 public:
     static const std::string sName;
 
+    std::string mSourceKey;
+    std::string mSourceFormat;
+    std::string mSourceTimezone = "";
+    int mSourceYear = -1;
+    TimeStampUnit mPreciseTimestampUnit;
+    std::string mPreciseTimestampKey = "ms";
+    
+    int mLogTimeZoneOffsetSecond = 0;
+
+
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
     bool Init(const Json::Value& config) override;
@@ -31,14 +41,6 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    std::string mSourceKey;
-    std::string mSourceFormat;
-    std::string mSourceTimezone = "";
-    int mSourceYear = -1;
-    TimeStampUnit mPreciseTimestampUnit;
-    std::string mPreciseTimestampKey;
-    int mLogTimeZoneOffsetSecond = 0;
-
     /// @return false if data need to be discarded
     bool ProcessEvent(StringView logPath, PipelineEventPtr& e, LogtailTime& logTime, StringView& timeStrCache);
     /// @return false if parse time failed

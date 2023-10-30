@@ -36,14 +36,11 @@ ProcessorFilterNative::~ProcessorFilterNative() {
 
 bool ProcessorFilterNative::Init(const Json::Value& config) {
     std::string errorMsg;
-    if (!GetOptionalMapParam(config, "Include", mInclude, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
-    } else {
-        mFilterMode = RULE_MODE;
+    if (GetOptionalMapParam(config, "Include", mInclude, errorMsg)) {
+        mFilterMode = Mode::RULE_MODE;
     }
 
-    if (mFilterMode == BYPASS_MODE) {
+    if (mFilterMode == Mode::BYPASS_MODE) {
         const Json::Value& val = config["ConditionExp"];
         if (!val.isNull()) {
             BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(val);
@@ -53,17 +50,24 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
             }
             mConditionExp.swap(root);
             LOG_INFO(mContext->GetLogger(), ("parse filter expression", val.toStyledString()));
-            mFilterMode = EXPRESSION_MODE;
+            mFilterMode = Mode::EXPRESSION_MODE;
         }
     }
 
-    if (mFilterMode == BYPASS_MODE) {
-        return false;
+    if (mFilterMode == Mode::BYPASS_MODE) {
+        errorMsg = "Include and ConditionExp must have one";
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "DiscardingNonUTF8", mDiscardingNonUTF8, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, true, sName, mContext->GetConfigName());
         mDiscardingNonUTF8 = false;
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mDiscardingNonUTF8, sName, mContext->GetConfigName());
     }
+
+    mProcFilterInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_IN_SIZE_BYTES);
+    mProcFilterOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_OUT_SIZE_BYTES);
+    mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);
+    mProcFilterRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_RECORDS_TOTAL);
+
     return true;
 }
 
@@ -72,14 +76,14 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
 
     if (config.mAdvancedConfig.mFilterExpressionRoot.get() != nullptr) {
         mFilterExpressionRoot = config.mAdvancedConfig.mFilterExpressionRoot;
-        mFilterMode = EXPRESSION_MODE;
+        mFilterMode = Mode::EXPRESSION_MODE;
     } else if (config.mFilterRule) {
         mFilterRule = config.mFilterRule;
-        mFilterMode = RULE_MODE;
+        mFilterMode = Mode::RULE_MODE;
     } else if (LoadOldGlobalConfig(config)) {
-        mFilterMode = GLOBAL_MODE;
+        mFilterMode = Mode::GLOBAL_MODE;
     } else {
-        mFilterMode = BYPASS_MODE;
+        mFilterMode = Mode::BYPASS_MODE;
     }
 
     mDiscardNoneUtf8 = config.mDiscardNoneUtf8;
@@ -164,16 +168,16 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
     auto& sourceEvent = e.Cast<LogEvent>();
     bool res = true;
 
-    if (mFilterMode == EXPRESSION_MODE) {
+    if (mFilterMode == Mode::EXPRESSION_MODE) {
         res = FilterExpressionRoot(sourceEvent, mFilterExpressionRoot);
-    } else if (mFilterMode == RULE_MODE) {
+    } else if (mFilterMode == Mode::RULE_MODE) {
         res = FilterFilterRule(sourceEvent, mFilterRule.get());
-    } else if (mFilterMode == GLOBAL_MODE) {
+    } else if (mFilterMode == Mode::GLOBAL_MODE) {
         res = FilterGlobal(sourceEvent);
     }
     if (res && mDiscardNoneUtf8) {
         LogContents& contents = sourceEvent.MutableContents();
-        std::vector<std::pair<StringView,StringView> > newContents;
+        std::vector<std::pair<StringView, StringView> > newContents;
         for (auto content = contents.begin(); content != contents.end();) {
             if (CheckNoneUtf8(content->second)) {
                 auto value = content->second.to_string();

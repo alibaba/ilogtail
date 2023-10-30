@@ -18,11 +18,20 @@
 #include <string>
 #include <boost/regex.hpp>
 
+using namespace std;
+
 namespace logtail {
 
 class ProcessorParseApsaraNative : public Processor {
 public:
     static const std::string sName;
+
+    std::string mSourceKey;
+    std::string mTimezone = "";
+    bool mKeepingSourceWhenParseFail = false;
+    bool mKeepingSourceWhenParseSucceed = false;
+    std::string mRenamedSourceKey = "";
+    bool mCopingRawLog = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
@@ -33,21 +42,14 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    std::string mSourceKey;
-    std::string mTimezone = "";
-    bool mKeepingSourceWhenParseFail = false;
-    bool mKeepingSourceWhenParseSucceed = false;
-    std::string mRenamedSourceKey = "";
-    bool mCopingRawLog = false;
     int mLogTimeZoneOffsetSecond = 0;
-
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
     time_t ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
     int32_t GetApsaraLogMicroTime(StringView& buffer);
     bool IsPrefixString(const char* all, const StringView& prefix);
     int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
-
+    bool ParseTimeZoneOffsetSecond(const string& logTZ, int& logTZSecond);
     std::string mRawLogTag;
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;
