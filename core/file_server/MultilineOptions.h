@@ -16,28 +16,31 @@
 
 #pragma once
 
-#include <cstdint>
 #include <string>
-#include <unordered_set>
+#include <utility>
 
-// #include "table/Table.h"
 #include "json/json.h"
+
+#include "pipeline/PipelineContext.h"
 
 namespace logtail {
 
-struct GlobalConfig {
-    enum class TopicType { NONE, FILEPATH, MACHINE_GROUP_TOPIC, CUSTOM };
+class MultilineOptions {
+public:
+    enum class Mode { CUSTOM, JSON };
 
-    static const std::unordered_set<std::string> sNativeParam;
+    bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
+    bool IsMultiline() const { return mIsMultiline; }
 
-    // bool Init(const Table& config, const std::string& configName);
-    bool Init(const Json::Value& config, const std::string& configName, Json::Value& nonNativeParams);
+    Mode mMode = Mode::CUSTOM;
+    std::string mStartPattern;
+    std::string mContinuePattern;
+    std::string mEndPattern;
 
-    TopicType mTopicType = TopicType::NONE;
-    std::string mTopicFormat;
-    uint32_t mProcessPriority = 0;
-    bool mEnableTimestampNanosecond = false;
-    bool mUsingOldContentTag = false;
+private:
+    bool mIsMultiline = false;
 };
+
+using MultilineConfig = std::pair<const MultilineOptions*, const PipelineContext*>;
 
 } // namespace logtail

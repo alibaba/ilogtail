@@ -28,18 +28,35 @@
 #include "logger/Logger.h"
 
 #define PARAM_ERROR(logger, msg, module, config) \
-    LOG_ERROR(logger, ("failed to init pipeline", msg)("module", module)("config", config)); \
+    if (module.empty()) { \
+        LOG_ERROR(logger, ("failed to parse config", msg)("config", config)); \
+    } else { \
+        LOG_ERROR(logger, ("failed to parse config", msg)("module", module)("config", config)); \
+    } \
     return false
 #define PARAM_WARNING_IGNORE(logger, msg, module, config) \
-    LOG_WARNING(logger, \
-                ("problem encountered during pipeline initialization", \
-                 msg)("action", "ignore param")("module", module)("config", config))
+    if (module.empty()) { \
+        LOG_WARNING(logger, \
+                    ("problem encountered in config parsing", msg)("action", "ignore param")("config", config)); \
+    } else { \
+        LOG_WARNING(logger, \
+                    ("problem encountered in config parsing", \
+                     msg)("action", "ignore param")("module", module)("config", config)); \
+    }
 #define PARAM_WARNING_DEFAULT(logger, msg, val, module, config) \
-    LOG_WARNING(logger, \
-                ("problem encountered during pipeline initialization", msg)("action", "use default value instead")( \
-                    "default value", ToString(val))("module", module)("config", config))
+    if (module.empty()) { \
+        LOG_WARNING(logger, \
+                    ("problem encountered in config parsing", \
+                     msg)("action", "use default value instead")("default value", ToString(val))("config", config)); \
+    } else { \
+        LOG_WARNING(logger, \
+                    ("problem encountered in config parsing", msg)("action", "use default value instead")( \
+                        "default value", ToString(val))("module", module)("config", config)); \
+    }
 
 namespace logtail {
+
+const std::string noModule = "";
 
 std::string ExtractCurrentKey(const std::string& key);
 
@@ -67,25 +84,25 @@ bool GetOptionalListParam(const Json::Value& config,
             return false;
         }
         for (auto it = itr->begin(); it != itr->end(); ++it) {
-            if constexpr(std::is_same_v<T, bool>) {
+            if constexpr (std::is_same_v<T, bool>) {
                 if (!it->isBool()) {
                     errorMsg = "element in list param" + key + "is not of type bool in plugin ";
                     return false;
                 }
                 param.emplace_back(it->asBool());
-            } else if constexpr(std::is_same_v<T, uint32_t>) {
+            } else if constexpr (std::is_same_v<T, uint32_t>) {
                 if (!it->isUInt()) {
                     errorMsg = "element in list param" + key + "is not of type uint in plugin ";
                     return false;
                 }
                 param.emplace_back(it->asUInt());
-            } else if constexpr(std::is_same_v<T, int32_t>) {
+            } else if constexpr (std::is_same_v<T, int32_t>) {
                 if (!it->isInt()) {
                     errorMsg = "element in list param" + key + "is not of type int in plugin ";
                     return false;
                 }
                 param.emplace_back(it->asInt());
-            } else if constexpr(std::is_same_v<T, std::string>) {
+            } else if constexpr (std::is_same_v<T, std::string>) {
                 if (!it->isString()) {
                     errorMsg = "element in list param" + key + "is not of type string in plugin ";
                     return false;
@@ -113,25 +130,25 @@ bool GetOptionalMapParam(const Json::Value& config,
             return false;
         }
         for (auto it = itr->begin(); it != itr->end(); ++it) {
-            if constexpr(std::is_same_v<T, bool>) {
+            if constexpr (std::is_same_v<T, bool>) {
                 if (!it->isBool()) {
                     errorMsg = "value in map param" + key + "is not of type bool in plugin ";
                     return false;
                 }
                 param[it.name()] = it->asBool();
-            } else if constexpr(std::is_same_v<T, uint32_t>) {
+            } else if constexpr (std::is_same_v<T, uint32_t>) {
                 if (!it->isUInt()) {
                     errorMsg = "value in map param" + key + "is not of type uint in plugin ";
                     return false;
                 }
                 param[it.name()] = it->asUInt();
-            } else if constexpr(std::is_same_v<T, int32_t>) {
+            } else if constexpr (std::is_same_v<T, int32_t>) {
                 if (!it->isInt()) {
                     errorMsg = "value in map param" + key + "is not of type int in plugin ";
                     return false;
                 }
                 param[it.name()] = it->asInt();
-            } else if constexpr(std::is_same_v<T, std::string>) {
+            } else if constexpr (std::is_same_v<T, std::string>) {
                 if (!it->isString()) {
                     errorMsg = "value in map param" + key + "is not of type string in plugin ";
                     return false;
@@ -174,6 +191,7 @@ bool GetMandatoryListParam(const Json::Value& config,
         errorMsg = "madatory list param" + key + "is empty in plugin ";
         return false;
     }
+    return true;
 }
 
 template <class T>

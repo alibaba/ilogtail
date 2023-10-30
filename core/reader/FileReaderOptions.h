@@ -18,26 +18,30 @@
 
 #include <cstdint>
 #include <string>
-#include <unordered_set>
+#include <utility>
 
-// #include "table/Table.h"
 #include "json/json.h"
 
+#include "pipeline/PipelineContext.h"
+
 namespace logtail {
+struct FileReaderOptions {
+    enum class Encoding { UTF8, GBK };
 
-struct GlobalConfig {
-    enum class TopicType { NONE, FILEPATH, MACHINE_GROUP_TOPIC, CUSTOM };
+    Encoding mFileEncoding = Encoding::UTF8;
+    bool mTailingAllMatchedFiles = false;
+    uint32_t mTailSizeKB;
+    uint32_t mFlushTimeoutSecs;
+    uint32_t mReadDelaySkipThresholdBytes = 0;
+    uint32_t mReadDelayAlertThresholdBytes;
+    uint32_t mCloseUnusedReaderIntervalSec;
+    uint32_t mRotatorQueueSize;
 
-    static const std::unordered_set<std::string> sNativeParam;
+    FileReaderOptions();
 
-    // bool Init(const Table& config, const std::string& configName);
-    bool Init(const Json::Value& config, const std::string& configName, Json::Value& nonNativeParams);
-
-    TopicType mTopicType = TopicType::NONE;
-    std::string mTopicFormat;
-    uint32_t mProcessPriority = 0;
-    bool mEnableTimestampNanosecond = false;
-    bool mUsingOldContentTag = false;
+    bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
 };
+
+using FileReaderConfig = std::pair<const FileReaderOptions*, const PipelineContext*>;
 
 } // namespace logtail

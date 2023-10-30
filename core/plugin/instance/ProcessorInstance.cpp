@@ -34,7 +34,7 @@ bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& con
     mProcInRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
     mProcOutRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
     mProcTimeMS = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_TIME_MS);
-    
+
     return inited;
 }
 
@@ -46,7 +46,7 @@ void ProcessorInstance::Process(PipelineEventGroup& logGroup) {
     uint64_t startTime = GetCurrentTimeInMicroSeconds();
     mPlugin->Process(logGroup);
     uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
-    
+
     mProcTimeMS->Add(durationTime);
 
     size_t outSize = logGroup.GetEvents().size();

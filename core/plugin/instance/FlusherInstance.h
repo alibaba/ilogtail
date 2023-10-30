@@ -24,13 +24,15 @@
 
 namespace logtail {
 
-class FlusherInstance: public PluginInstance {
+class FlusherInstance : public PluginInstance {
 public:
     FlusherInstance(Flusher* plugin, const std::string& pluginId) : PluginInstance(pluginId), mPlugin(plugin) {}
 
     const std::string& Name() const override { return mPlugin->Name(); };
+    const Flusher* GetPlugin() const { return mPlugin.get(); }
     // bool Init(const Table& config, PipelineContext& context);
-    bool Init(const Json::Value& config, PipelineContext& context, Json::Value &optionalGoPipeline);
+    bool Init(const ComponentConfig& config, PipelineContext& context) override { return true; }
+    bool Init(const Json::Value& config, PipelineContext& context, Json::Value& optionalGoPipeline);
     void Start() { mPlugin->Start(); }
     void Stop(bool isPipelineRemoving) { mPlugin->Stop(isPipelineRemoving); }
 
@@ -38,4 +40,4 @@ private:
     std::unique_ptr<Flusher> mPlugin;
 };
 
-}
+} // namespace logtail
