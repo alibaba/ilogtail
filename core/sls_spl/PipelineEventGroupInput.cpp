@@ -1,6 +1,6 @@
 #include "sls_spl/PipelineEventGroupInput.h"
 #include <iostream>
-#include "rw/SplStringPiece.h"
+#include "util/SplStringPiece.h"
 #include "logger/Logger.h"
 #include "sls_spl/SplConstants.h"
 
@@ -42,7 +42,19 @@ void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplS
     }
 }
 
+void PipelineEventGroupInput::getTimeColumns(std::vector<uint32_t>& times,std::vector<uint32_t>& timeNanos, std::string& err) {
+    for (auto event : mLogGroup->GetEvents()) {
+        LogEvent& sourceEvent = event.Cast<LogEvent>();
+        times.emplace_back(sourceEvent.GetTimestamp());
+        timeNanos.emplace_back(sourceEvent.GetTimestampNanosecond());
+    }
+}
+
 bool PipelineEventGroupInput::isColumnar() {
+    return true;
+}
+
+bool PipelineEventGroupInput::hasTime() {
     return true;
 }
 

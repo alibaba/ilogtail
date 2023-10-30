@@ -17,10 +17,10 @@
 #include "sls_spl/ProcessorSPL.h"
 #include <curl/curl.h>
 #include <iostream>
-#include "logger/StdoutLogger.h"
 #include "pipeline/SplPipeline.h"
 #include "sls_spl/PipelineEventGroupInput.h"
 #include "sls_spl/PipelineEventGroupOutput.h"
+#include "logger/SplLogger.h"
 #include "logger/Logger.h"
 #include "sls_spl/LogtailLogger.h"
 #include "sls_spl/SplConstants.h"
@@ -39,7 +39,9 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
 
     // logger初始化
     // logger由调用方提供
-    auto logger = std::make_shared<LogtailLogger>();
+    // auto logger = std::make_shared<LogtailLogger>();
+    LoggerPtr logger;
+    logger = sLogger;
 
     std::string spl = config.mSpl;
 
