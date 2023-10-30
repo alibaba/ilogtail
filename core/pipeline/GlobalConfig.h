@@ -20,17 +20,15 @@
 #include <string>
 #include <unordered_set>
 
-// #include "table/Table.h"
 #include "json/json.h"
 
 namespace logtail {
 
 struct GlobalConfig {
-    enum class TopicType { NONE, FILEPATH, MACHINE_GROUP_TOPIC, CUSTOM };
+    enum class TopicType { NONE, FILEPATH, MACHINE_GROUP_TOPIC, CUSTOM, DEFAULT };
 
     static const std::unordered_set<std::string> sNativeParam;
 
-    // bool Init(const Table& config, const std::string& configName);
     bool Init(const Json::Value& config, const std::string& configName, Json::Value& nonNativeParams);
 
     TopicType mTopicType = TopicType::NONE;

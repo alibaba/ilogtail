@@ -76,13 +76,15 @@ public:
     void SetSLSInfo(const FlusherSLS* flusherSLS) { mSLSInfo = flusherSLS; }
     bool IsFirstProcessorJson() const { return mIsFirstProcessorJson; }
     void SetIsFirstProcessorJsonFlag(bool flag) { mIsFirstProcessorJson = flag; }
+    bool IsFirstProcessorApsara() const { return mIsFirstProcessorApsara; }
+    void SetIsFirstProcessorApsaraFlag(bool flag) { mIsFirstProcessorApsara = flag; }
 
     // 过渡使用
     void SetProjectName(const std::string& projectName) { mProjectName = projectName; }
     void SetLogstoreName(const std::string& logstoreName) { mLogstoreName = logstoreName; }
     void SetRegion(const std::string& region) { mRegion = region; }
 
-    ProcessProfile& GetProcessProfile() { return mProcessProfile; }
+    ProcessProfile& GetProcessProfile() const { return mProcessProfile; }
     // LogFileProfiler& GetProfiler() { return *mProfiler; }
     const Logger::logger& GetLogger() const { return mLogger; }
     LogtailAlarm& GetAlarm() const { return *mAlarm; };
@@ -97,8 +99,9 @@ private:
 
     const FlusherSLS* mSLSInfo = nullptr;
     bool mIsFirstProcessorJson = false;
+    bool mIsFirstProcessorApsara = false;
 
-    ProcessProfile mProcessProfile;
+    mutable ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
     Logger::logger mLogger = sLogger;
     LogtailAlarm* mAlarm = LogtailAlarm::GetInstance();

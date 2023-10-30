@@ -42,9 +42,7 @@ public:
     bool mEnableContainerDiscovery = false;
     ContainerDiscoveryOptions mContainerDiscovery;
     FileReaderOptions mFileReader;
-    // raw log processing
     MultilineOptions mMultiline;
-    bool mAppendingLogPositionMeta = false;
     // others
     uint32_t mMaxCheckpointDirSearchDepth = 0;
     uint32_t mExactlyOnceConcurrency = 0;

@@ -16,9 +16,11 @@
 
 #include "pipeline/Pipeline.h"
 
+#include <cstdint>
+#include <utility>
+
 #include "common/ParamExtractor.h"
 #include "flusher/FlusherSLS.h"
-#include "pipeline/PipelineContext.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/daemon/LogProcess.h"
 #include "processor/ProcessorSplitLogStringNative.h"
@@ -37,6 +39,8 @@
 #include "file_server/MultilineOptions.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
+
+using namespace std;
 
 namespace logtail {
 
@@ -140,9 +144,8 @@ bool Pipeline::Init(NewConfig&& config) {
 
     int16_t pluginIndex = 0;
     for (auto detail : config.mInputs) {
-        std::string name = (*detail)["Type"].asString();
-        std::unique_ptr<InputInstance> input
-            = PluginRegistry::GetInstance()->CreateInput(name, std::to_string(++pluginIndex));
+        string name = (*detail)["Type"].asString();
+        unique_ptr<InputInstance> input = PluginRegistry::GetInstance()->CreateInput(name, to_string(++pluginIndex));
         if (input) {
             Json::Value optionalGoPipeline;
             if (!input->Init(*detail, mContext, optionalGoPipeline)) {
@@ -163,24 +166,24 @@ bool Pipeline::Init(NewConfig&& config) {
 
     // add log split processor for input_file
     if (inputFile) {
-        std::unique_ptr<ProcessorInstance> processor;
+        unique_ptr<ProcessorInstance> processor;
         Json::Value detail;
         if (config.mIsFirstProcessorJson || inputFile->mMultiline.mMode == MultilineOptions::Mode::JSON) {
-            processor = PluginRegistry::GetInstance()->CreateProcessor("processor_split_native_native",
-                                                                       std::to_string(++pluginIndex));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
+                                                                       to_string(++pluginIndex));
             detail["SplitChar"] = Json::Value('\0');
-            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mAppendingLogPositionMeta);
+            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         } else if (inputFile->mMultiline.IsMultiline()) {
-            processor = PluginRegistry::GetInstance()->CreateProcessor("processor_split_regex_native",
-                                                                       std::to_string(++pluginIndex));
+            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::sName,
+                                                                       to_string(++pluginIndex));
             detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
             detail["EndPattern"] = Json::Value(inputFile->mMultiline.mEndPattern);
-            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mAppendingLogPositionMeta);
+            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         } else {
-            processor = PluginRegistry::GetInstance()->CreateProcessor("processor_split_native_native",
-                                                                       std::to_string(++pluginIndex));
-            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mAppendingLogPositionMeta);
+            processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
+                                                                       to_string(++pluginIndex));
+            detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         }
         if (!processor->Init(detail, mContext)) {
             return false;
@@ -188,20 +191,24 @@ bool Pipeline::Init(NewConfig&& config) {
         mProcessorLine.emplace_back(std::move(processor));
     }
 
-    for (auto detail : config.mProcessors) {
-        std::string name = (*detail)["Type"].asString();
-        std::unique_ptr<ProcessorInstance> processor
-            = PluginRegistry::GetInstance()->CreateProcessor(name, std::to_string(++pluginIndex));
+    for (size_t i = 0; i < config.mProcessors.size(); ++i) {
+        string name = (*config.mProcessors[i])["Type"].asString();
+        unique_ptr<ProcessorInstance> processor
+            = PluginRegistry::GetInstance()->CreateProcessor(name, to_string(++pluginIndex));
         if (processor) {
-            if (!processor->Init(*detail, mContext)) {
+            if (!processor->Init(*config.mProcessors[i], mContext)) {
                 return false;
             }
             mProcessorLine.emplace_back(std::move(processor));
+            // for special treatment of topicformat in apsara mode
+            if (i == 0 && name == ProcessorParseApsaraNative::sName) {
+                mContext.SetIsFirstProcessorApsaraFlag(true);
+            }
         } else {
             if (ShouldAddPluginToGoPipelineWithInput()) {
-                AddPluginToGoPipeline(*detail, "processors", mGoPipelineWithInput);
+                AddPluginToGoPipeline(*config.mProcessors[i], "processors", mGoPipelineWithInput);
             } else {
-                AddPluginToGoPipeline(*detail, "processors", mGoPipelineWithoutInput);
+                AddPluginToGoPipeline(*config.mProcessors[i], "processors", mGoPipelineWithoutInput);
             }
         }
     }
@@ -215,9 +222,9 @@ bool Pipeline::Init(NewConfig&& config) {
     }
 
     for (auto detail : config.mFlushers) {
-        std::string name = (*detail)["Type"].asString();
-        std::unique_ptr<FlusherInstance> flusher
-            = PluginRegistry::GetInstance()->CreateFlusher(name, std::to_string(++pluginIndex));
+        string name = (*detail)["Type"].asString();
+        unique_ptr<FlusherInstance> flusher
+            = PluginRegistry::GetInstance()->CreateFlusher(name, to_string(++pluginIndex));
         if (flusher) {
             Json::Value optionalGoPipeline;
             if (!flusher->Init(*detail, mContext, optionalGoPipeline)) {
@@ -231,8 +238,8 @@ bool Pipeline::Init(NewConfig&& config) {
                     MergeGoPipeline(optionalGoPipeline, mGoPipelineWithoutInput);
                 }
             }
-            if (name == "flusher_sls") {
-                mContext.SetSLSInfo(static_cast<const FlusherSLS*>(flusher.get()->GetPlugin()));
+            if (name == FlusherSLS::sName) {
+                mContext.SetSLSInfo(static_cast<const FlusherSLS*>(mFlushers[0]->GetPlugin()));
             }
         } else {
             if (ShouldAddPluginToGoPipelineWithInput()) {
@@ -256,7 +263,7 @@ bool Pipeline::Init(NewConfig&& config) {
     // pipeline, which should be overriden by explicitly provided global module.
     if (config.mGlobal) {
         Json::Value nonNativeParams;
-        if (mContext.InitGlobalConfig(*config.mGlobal, nonNativeParams)) {
+        if (!mContext.InitGlobalConfig(*config.mGlobal, nonNativeParams)) {
             return false;
         }
         if (!mGoPipelineWithInput.isNull()) {
@@ -279,7 +286,8 @@ bool Pipeline::Init(NewConfig&& config) {
 
     // mandatory override global.DefaultLogQueueSize in Go pipeline when input_file and Go processing coexist.
     if (inputFile && !mGoPipelineWithoutInput.isNull()) {
-        mGoPipelineWithoutInput["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
+        mGoPipelineWithoutInput["global"]["DefaultLogQueueSize"]
+            = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
     }
 
     // special treatment
@@ -311,7 +319,6 @@ bool Pipeline::Init(NewConfig&& config) {
 
     return true;
 }
-
 void Pipeline::Start() {
     // TODO: 应该保证指定时间内返回，如果无法返回，将配置放入startDisabled里
     for (const auto& flusher : mFlushers) {
@@ -329,7 +336,7 @@ void Pipeline::Start() {
     }
 }
 
-void Pipeline::Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
+void Pipeline::Process(PipelineEventGroup&& logGroup, vector<PipelineEventGroup>& logGroupList) {
     for (auto& p : mProcessorLine) {
         p->Process(logGroup);
     }
@@ -369,7 +376,7 @@ void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
     }
 }
 
-void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const std::string& module, Json::Value& dst) {
+void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const string& module, Json::Value& dst) {
     Json::Value res(Json::objectValue), detail = plugin;
     detail.removeMember("Type");
     res["type"] = plugin["Type"];
@@ -377,7 +384,7 @@ void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const std::strin
     dst[module].append(res);
 }
 
-bool Pipeline::InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config) {
+bool Pipeline::InitAndAddProcessor(unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config) {
     if (!processor) {
         LOG_ERROR(GetContext().GetLogger(),
                   ("CreateProcessor", ProcessorSplitRegexNative::sName)("Error", "Cannot find plugin"));

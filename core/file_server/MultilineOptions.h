@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "json/json.h"
+#include "boost/regex.hpp"
 
 #include "pipeline/PipelineContext.h"
 
@@ -30,6 +31,9 @@ public:
     enum class Mode { CUSTOM, JSON };
 
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
+    const std::shared_ptr<boost::regex>& GetStartPatternReg() const { return mStartPatternRegPtr; }
+    const std::shared_ptr<boost::regex>& GetContinuePatternReg() const { return mContinuePatternRegPtr; }
+    const std::shared_ptr<boost::regex>& GetEndPatternReg() const { return mEndPatternRegPtr; }
     bool IsMultiline() const { return mIsMultiline; }
 
     Mode mMode = Mode::CUSTOM;
@@ -38,6 +42,11 @@ public:
     std::string mEndPattern;
 
 private:
+    bool ParseRegex(const std::string& pattern, std::shared_ptr<boost::regex>& reg);
+
+    std::shared_ptr<boost::regex> mStartPatternRegPtr;
+    std::shared_ptr<boost::regex> mContinuePatternRegPtr;
+    std::shared_ptr<boost::regex> mEndPatternRegPtr;
     bool mIsMultiline = false;
 };
 

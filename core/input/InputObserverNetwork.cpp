@@ -13,7 +13,8 @@
 // limitations under the License.
 
 #include "input/InputObserverNetwork.h"
-#include "InputObserverNetwork.h"
+
+#include "observer/network/NetworkConfig.h"
 
 using namespace std;
 
@@ -23,7 +24,6 @@ const std::string InputObserverNetwork::sName = "input_observer_network";
 
 bool logtail::InputObserverNetwork::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     mDetail = config.toStyledString();
-    optionalGoPipeline["mix_process_mode"] = "observer";
     return true;
 }
 

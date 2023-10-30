@@ -15,6 +15,7 @@
 #include "reader/FileReaderOptions.h"
 
 #include "common/Flags.h"
+#include "common/FileSystemUtil.h"
 #include "common/ParamExtractor.h"
 
 using namespace std;
@@ -57,7 +58,7 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
     encoding = ToLowerCaseString(encoding);
     if (encoding == "gbk") {
         mFileEncoding = Encoding::GBK;
-    } else if (encoding != "utf8") {
+    } else if (!encoding.empty() && encoding != "utf8") {
         PARAM_ERROR(ctx.GetLogger(), "param FileEncoding is not valid", pluginName, ctx.GetConfigName());
     }
 
@@ -67,7 +68,7 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
     }
 
     // TailSizeKB
-    uint32_t tailSize = 0;
+    uint32_t tailSize = INT32_FLAG(default_tail_limit_kb);
     if (!GetOptionalUIntParam(config, "TailSizeKB", tailSize, errorMsg)) {
         PARAM_WARNING_DEFAULT(
             ctx.GetLogger(), errorMsg, INT32_FLAG(default_tail_limit_kb), pluginName, ctx.GetConfigName());
@@ -83,11 +84,8 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
 
     // FlushTimeoutSecs
     if (!GetOptionalUIntParam(config, "FlushTimeoutSecs", mFlushTimeoutSecs, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
-                              errorMsg,
-                              INT32_FLAG(default_reader_flush_timeout),
-                              pluginName,
-                              ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            ctx.GetLogger(), errorMsg, INT32_FLAG(default_reader_flush_timeout), pluginName, ctx.GetConfigName());
     }
 
     // ReadDelaySkipThresholdBytes
@@ -103,20 +101,19 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
 
     // CloseUnusedReaderIntervalSec
     if (!GetOptionalUIntParam(config, "CloseUnusedReaderIntervalSec", mCloseUnusedReaderIntervalSec, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
-                              errorMsg,
-                              INT32_FLAG(reader_close_unused_file_time),
-                              pluginName,
-                              ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            ctx.GetLogger(), errorMsg, INT32_FLAG(reader_close_unused_file_time), pluginName, ctx.GetConfigName());
     }
 
     // RotatorQueueSize
     if (!GetOptionalUIntParam(config, "RotatorQueueSize", mRotatorQueueSize, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
-                              errorMsg,
-                              INT32_FLAG(logreader_max_rotate_queue_size),
-                              pluginName,
-                              ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            ctx.GetLogger(), errorMsg, INT32_FLAG(logreader_max_rotate_queue_size), pluginName, ctx.GetConfigName());
+    }
+
+    // AppendingLogPositionMeta
+    if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, false, pluginName, ctx.GetConfigName());
     }
 
     return true;

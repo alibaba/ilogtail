@@ -99,7 +99,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
             mCompressType = CompressType::ZSTD;
         } else if (compressType == "none") {
             mCompressType = CompressType::NONE;
-        } else if (compressType != "lz4") {
+        } else if (!compressType.empty() && compressType != "lz4") {
             PARAM_WARNING_DEFAULT(
                 mContext->GetLogger(), "param CompressType is not valid", "lz4", sName, mContext->GetConfigName());
         }
@@ -113,7 +113,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "logs", sName, mContext->GetConfigName());
     } else if (telemetryType == "metrics") {
         mTelemetryType = TelemetryType::METRIC;
-    } else if (telemetryType != "logs") {
+    } else if (!telemetryType.empty() && telemetryType != "logs") {
         PARAM_WARNING_DEFAULT(
             mContext->GetLogger(), "param TelemetryType is not valid", "logs", sName, mContext->GetConfigName());
     }
@@ -143,7 +143,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
                 PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "topic", sName, mContext->GetConfigName());
             } else if (mergeType == "logstore") {
                 mBatch.mMergeType = Batch::MergeType::LOGSTORE;
-            } else if (mergeType != "topic") {
+            } else if (!mergeType.empty() && mergeType != "topic") {
                 PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                                       "param Batch.MergeType is not valid",
                                       "topic",
@@ -191,7 +191,7 @@ bool FlusherSLS::Stop(bool isPipelineRemoving) {
 void FlusherSLS::GenerateGoPlugin(const Json::Value& config, Json::Value& res) const {
     Json::Value detail(Json::objectValue);
     for (auto itr = config.begin(); itr != config.end(); ++itr) {
-        if (sNativeParam.find(itr.name()) != sNativeParam.end()) {
+        if (sNativeParam.find(itr.name()) == sNativeParam.end() && itr.name() != "Type") {
             detail[itr.name()] = *itr;
         }
     }
