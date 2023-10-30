@@ -25,7 +25,7 @@ class ProcessorParseDelimiterNative : public Processor {
 public:
     static const std::string sName;
 
-    enum Method { extend, keep, discard };
+    enum class Method { extend, keep, discard };
     std::string mSourceKey;
     std::string mSeparator;
     std::string mQuoteString = "\"";
