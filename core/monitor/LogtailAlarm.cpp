@@ -164,7 +164,7 @@ bool LogtailAlarm::SendAlarmLoop() {
                 }
                 // check sender queue status, if invalid jump this region
                 LogstoreFeedBackKey alarmPrjLogstoreKey = GenerateLogstoreFeedBackKey(
-                    ConfigManager::GetInstance()->GetProfileProjectName(region), string("logtail_alarm"));
+                    ProfileSender::GetInstance()->GetProfileProjectName(region), string("logtail_alarm"));
                 if (!Sender::Instance()->GetSenderFeedBackInterface()->IsValidToPush(alarmPrjLogstoreKey)) {
                     // jump this region
                     ++sendRegionIndex;
@@ -231,7 +231,7 @@ bool LogtailAlarm::SendAlarmLoop() {
                 continue;
             }
             // this is an anonymous send and non lock send
-            mProfileSender.SendToProfileProject(region, logGroup);
+            ProfileSender::GetInstance()->SendToProfileProject(region, logGroup);
         } while (true);
 
         sleep(3);
@@ -270,7 +270,7 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
     }
 
     // ignore logtail self alarm
-    string profileProject = ConfigManager::GetInstance()->GetProfileProjectName(region);
+    string profileProject = ProfileSender::GetInstance()->GetProfileProjectName(region);
     if (!profileProject.empty() && profileProject == projectName) {
         return;
     }

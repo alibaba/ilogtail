@@ -20,7 +20,6 @@
 #include "ConfigManager.h"
 #include "sls_logs.pb.h"
 #include "common/Lock.h"
-#include "profile_sender/ProfileSender.h"
 
 namespace logtail {
 // forward declaration
@@ -210,7 +209,6 @@ private:
 
     std::string mIntegrityDumpFileName;
     std::string mBakIntegrityDumpFileName;
-    ProfileSender mProfileSender;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class DataIntegrityUnittest;

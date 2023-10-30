@@ -70,6 +70,7 @@
 #include "plugin/PluginRegistry.h"
 #include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
+#include "application/Application.h"
 #if !defined(_MSC_VER)
 #include "LogtailInsightDispatcher.h"
 #endif
@@ -1201,7 +1202,7 @@ void EventDispatcherBase::UpdateConfig() {
         ConfigManager::GetInstance()->FinishUpdateConfig();
         return;
     }
-    ConfigManager::GetInstance()->CleanUnusedUserAK();
+    // ConfigManager::GetInstance()->CleanUnusedUserAK();
 
     PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
@@ -1567,7 +1568,7 @@ bool EventDispatcherBase::ReadDSPacket(int eventFd) {
                     logGroup.set_source(metricGroup.metrics(0).source());
                     logGroup.set_category(metricGroup.metricname());
                     logGroup.set_topic(metricGroup.key());
-                    logGroup.set_machineuuid(ConfigManager::GetInstance()->GetUUID());
+                    logGroup.set_machineuuid(Application::GetInstance()->GetUUID());
                     Log* logPtr;
                     for (int i = 0; i < metricGroup.metrics_size(); i++) {
                         const oas::Metric& metric = metricGroup.metrics(i);

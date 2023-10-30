@@ -87,7 +87,6 @@ private:
     std::string mProcessExecutionDir;
     std::string mWorkingDir;
 
-    bool mContainerMode;
     std::string mContainerMountConfigPath;
     std::string mConfigIP;
     std::string mConfigHostName;
@@ -331,8 +330,6 @@ public:
     void SetWorkingDir(const std::string& dir) { mWorkingDir = dir; }
 
     const std::string& GetWorkingDir() const { return mWorkingDir; }
-
-    bool IsContainerMode() const { return mContainerMode; }
 
     const std::string& GetContainerMountConfigPath() const { return mContainerMountConfigPath; }
 

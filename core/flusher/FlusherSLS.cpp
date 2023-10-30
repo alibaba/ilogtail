@@ -15,7 +15,6 @@
 #include "flusher/FlusherSLS.h"
 
 #include "app_config/AppConfig.h"
-#include "config_manager/ConfigManager.h"
 #include "common/ParamExtractor.h"
 #include "pipeline/Pipeline.h"
 #include "sender/Sender.h"
@@ -167,9 +166,9 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     GenerateGoPlugin(config, optionalGoPipeline);
 
     // 过渡使用
-    ConfigManager::GetInstance()->InsertRegionAliuidMap(mRegion, mAliuid);
-    ConfigManager::GetInstance()->InsertProject(mProject);
-    ConfigManager::GetInstance()->InsertRegion(mRegion);
+    Sender::Instance()->IncreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
+    Sender::Instance()->IncreaseProjectReferenceCnt(mProject);
+    Sender::Instance()->IncreaseRegionConcurrency(mRegion);
 
     return true;
 }

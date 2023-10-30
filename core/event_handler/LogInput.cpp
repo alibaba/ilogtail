@@ -38,6 +38,10 @@
 #include "logger/Logger.h"
 #include "EventHandler.h"
 #include "HistoryFileImporter.h"
+#include "application/Application.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
 
 using namespace std;
 
@@ -341,8 +345,8 @@ void LogInput::ProcessEvent(EventDispatcher* dispatcher, Event* ev) {
 }
 
 void LogInput::CheckAndUpdateCriticalMetric(int32_t curTime) {
-#ifndef LOGTAIL_RUNTIME_PLUGIN
-    int32_t lastGetConfigTime = ConfigManager::GetInstance()->GetLastConfigGetTime();
+#ifdef __ENTERPRISE__
+    int32_t lastGetConfigTime = EnterpriseConfigProvider::GetInstance()->GetLastConfigGetTime();
     // force to exit if config update thread is block more than 1 hour
     if (lastGetConfigTime > 0 && curTime - lastGetConfigTime > 3600) {
         LOG_ERROR(sLogger, ("last config get time is too old", lastGetConfigTime)("prepare force exit", ""));
@@ -352,14 +356,15 @@ void LogInput::CheckAndUpdateCriticalMetric(int32_t curTime) {
         sleep(10);
         _exit(1);
     }
+#endif
     // if network is fail in 2 hours, force exit (for ant only)
     // work around for no network when docker start
     if (BOOL_FLAG(send_prefer_real_ip) && !BOOL_FLAG(global_network_success)
-        && curTime - ConfigManager::GetInstance()->GetStartTime() > 7200) {
+        && curTime - Application::GetInstance()->GetStartTime() > 7200) {
         LOG_ERROR(sLogger, ("network is fail", "prepare force exit"));
         LogtailAlarm::GetInstance()->SendAlarm(
             LOGTAIL_CRASH_ALARM,
-            "network is fail since " + ToString(ConfigManager::GetInstance()->GetStartTime()) + " force exit");
+            "network is fail since " + ToString(Application::GetInstance()->GetStartTime()) + " force exit");
         LogtailAlarm::GetInstance()->ForceToSend();
         sleep(10);
         _exit(1);
@@ -388,7 +393,6 @@ void LogInput::CheckAndUpdateCriticalMetric(int32_t curTime) {
 
     LogtailMonitor::Instance()->UpdateMetric("last_send_time", GetTimeStamp(lastSendTime, "%Y-%m-%d %H:%M:%S"));
 
-#endif
     LogtailMonitor::Instance()->UpdateMetric("last_read_event_time",
                                              GetTimeStamp(mLastReadEventTime, "%Y-%m-%d %H:%M:%S"));
 

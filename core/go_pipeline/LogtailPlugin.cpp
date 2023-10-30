@@ -232,22 +232,22 @@ int LogtailPlugin::SendPbV2(const char* configName,
     Config* pConfig = NULL;
     if (configNameStr == alarmConfig->mCategory) {
         pConfig = alarmConfig;
-        pConfig->mProjectName = ConfigManager::GetInstance()->GetDefaultProfileProjectName();
-        pConfig->mRegion = ConfigManager::GetInstance()->GetDefaultProfileRegion();
+        pConfig->mProjectName = ProfileSender::GetInstance()->GetDefaultProfileProjectName();
+        pConfig->mRegion = ProfileSender::GetInstance()->GetDefaultProfileRegion();
         if (0 == pConfig->mProjectName.size()) {
             return 0;
         }
     } else if (configNameStr == profileConfig->mCategory) {
         pConfig = profileConfig;
-        pConfig->mProjectName = ConfigManager::GetInstance()->GetDefaultProfileProjectName();
-        pConfig->mRegion = ConfigManager::GetInstance()->GetDefaultProfileRegion();
+        pConfig->mProjectName = ProfileSender::GetInstance()->GetDefaultProfileProjectName();
+        pConfig->mRegion = ProfileSender::GetInstance()->GetDefaultProfileRegion();
         if (0 == pConfig->mProjectName.size()) {
             return 0;
         }
     } else if (configNameStr == containerConfig->mCategory) {
         pConfig = containerConfig;
-        pConfig->mProjectName = ConfigManager::GetInstance()->GetDefaultProfileProjectName();
-        pConfig->mRegion = ConfigManager::GetInstance()->GetDefaultProfileRegion();
+        pConfig->mProjectName = ProfileSender::GetInstance()->GetDefaultProfileProjectName();
+        pConfig->mRegion = ProfileSender::GetInstance()->GetDefaultProfileRegion();
         if (0 == pConfig->mProjectName.size()) {
             return 0;
         }

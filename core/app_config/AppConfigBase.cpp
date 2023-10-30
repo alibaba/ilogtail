@@ -176,7 +176,6 @@ AppConfigBase::AppConfigBase() {
     mUserConfigPath = STRING_FLAG(user_log_config);
     mIgnoreDirInodeChanged = false;
     mLogParseAlarmFlag = true;
-    mContainerMode = false;
     mNoInotify = false;
     mSendDataPort = 80;
     mShennongSocket = true;
@@ -633,10 +632,6 @@ void AppConfigBase::LoadResourceConf(const Json::Value& confJson) {
     LoadBooleanParameter(
         BOOL_FLAG(ilogtail_discard_old_data), confJson, "discard_old_data", "ALIYUN_LOGTAIL_DISCARD_OLD_DATA");
 
-    if (confJson.isMember("container_mode") && confJson["container_mode"].isBool()) {
-        mContainerMode = confJson["container_mode"].asBool();
-    }
-
     if (confJson.isMember("container_mount_path") && confJson["container_mount_path"].isString()) {
         mContainerMountConfigPath = confJson["container_mount_path"].asString();
     } else {
@@ -694,16 +689,6 @@ void AppConfigBase::LoadResourceConf(const Json::Value& confJson) {
                        confJson,
                        "docker_config_update_interval",
                        "ALIYUN_LOGTAIL_DOCKER_CONFIG_UPDATE_INTERVAL");
-
-    if (mContainerMode) {
-        LogtailMonitor::Instance()->UpdateConstMetric("container_mode", true);
-        LogtailMonitor::Instance()->UpdateConstMetric("container_mount_config", mContainerMountConfigPath);
-        LOG_INFO(sLogger,
-                 ("logtail now working on container mode, container mount path",
-                  mContainerMountConfigPath)("working ip", mConfigIP)("working hostname", mConfigHostName));
-        // LoadMountPaths should been called before LoadConfig
-        ConfigManager::GetInstance()->LoadMountPaths();
-    }
 
     if (confJson.isMember("no_inotify") && confJson["no_inotify"].isBool()) {
         mNoInotify = confJson["no_inotify"].asBool();

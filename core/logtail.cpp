@@ -30,9 +30,6 @@
 #include "common/ErrorUtil.h"
 #include "common/GlobalPara.h"
 #include "logger/Logger.h"
-#ifdef LOGTAIL_RUNTIME_PLUGIN
-#include "go_pipeline/LogtailRuntimePlugin.h"
-#endif
 #include "go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
 #include "pipeline/PipelineManager.h"
@@ -49,6 +46,8 @@
 #include "monitor/LogLineCount.h"
 #include "app_config/AppConfig.h"
 #include "ObserverManager.h"
+#include "application/Application.h"
+
 using namespace logtail;
 
 #ifdef ENABLE_COMPATIBLE_MODE
@@ -73,10 +72,6 @@ DECLARE_FLAG_STRING(ilogtail_docker_file_path_config);
 DECLARE_FLAG_INT32(data_server_port);
 DECLARE_FLAG_BOOL(enable_env_ref_in_config);
 
-void HandleSighupSignal(int signum, siginfo_t* info, void* context) {
-    APSARA_LOG_INFO(sLogger, ("received signal", "SIGHUP"));
-    ConfigManager::GetInstance()->SetMappingPathsChanged();
-}
 
 void HandleSigtermSignal(int signum, siginfo_t* info, void* context) {
     APSARA_LOG_INFO(sLogger, ("received signal", "SIGTERM"));
@@ -128,15 +123,6 @@ void do_worker_process() {
     }
     if (sigaction(SIGINT, &sigtermSig, NULL) < 0) {
         APSARA_LOG_ERROR(sLogger, ("install SIGINT", "fail"));
-        exit(5);
-    }
-
-    struct sigaction sighupSig;
-    sigemptyset(&sighupSig.sa_mask);
-    sighupSig.sa_sigaction = HandleSighupSignal;
-    sighupSig.sa_flags = SA_SIGINFO;
-    if (sigaction(SIGHUP, &sighupSig, NULL) < 0) {
-        APSARA_LOG_ERROR(sLogger, ("install SIGHUP", "fail"));
         exit(5);
     }
 
@@ -204,14 +190,11 @@ void do_worker_process() {
     LogtailMonitor::Instance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
 
     // use a thread to get uuid
-    if (!ConfigManager::GetInstance()->TryGetUUID()) {
+    if (!Application::GetInstance()->TryGetUUID()) {
         APSARA_LOG_INFO(sLogger, ("get none dmi uuid", "maybe this is a docker runtime"));
     }
 
     PluginRegistry::GetInstance()->LoadPlugins();
-#ifdef LOGTAIL_RUNTIME_PLUGIN
-    LogtailRuntimePlugin::GetInstance()->LoadPluginBase();
-#endif
 
     // load local config first
     ConfigManager::GetInstance()->GetLocalConfigUpdate();
@@ -278,8 +261,8 @@ void do_worker_process() {
     Json::Value appInfoJson;
     appInfoJson["ip"] = Json::Value(LogFileProfiler::mIpAddr);
     appInfoJson["hostname"] = Json::Value(LogFileProfiler::mHostname);
-    appInfoJson["UUID"] = Json::Value(ConfigManager::GetInstance()->GetUUID());
-    appInfoJson["instance_id"] = Json::Value(ConfigManager::GetInstance()->GetInstanceId());
+    appInfoJson["UUID"] = Json::Value(Application::GetInstance()->GetUUID());
+    appInfoJson["instance_id"] = Json::Value(Application::GetInstance()->GetInstanceId());
     appInfoJson["logtail_version"] = Json::Value(std::string(ILOGTAIL_VERSION) + " Community Edition");
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
 #define STRINGIFY(x) #x
