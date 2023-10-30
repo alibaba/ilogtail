@@ -29,6 +29,7 @@ public:
     bool mAdjustingMicroTimezone = false;
     bool mKeepingSourceWhenParseFail = false;
     bool mKeepingSourceWhenParseSucceed = false;
+    // 当原始字段被保留时，用于存储原始字段的字段名。若不填，默认不改名。
     std::string mRenamedSourceKey = "";
     bool mCopingRawLog = false;
     int mLogTimeZoneOffsetSecond = 0;

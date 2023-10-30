@@ -45,9 +45,9 @@ bool ProcessorParseJsonNative::Init(const Json::Value& config) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
     }
+
     if (mKeepingSourceWhenParseSucceed && mRenamedSourceKey == mSourceKey) {
         mSourceKeyOverwritten = true;
     }

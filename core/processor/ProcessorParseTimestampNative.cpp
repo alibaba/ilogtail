@@ -23,11 +23,26 @@
 #include <algorithm>
 #include "monitor/MetricConstants.h"
 #include "common/ParamExtractor.h"
-#include <config_manager/ConfigManagerBase.h>
 
 
 namespace logtail {
 const std::string ProcessorParseTimestampNative::sName = "processor_parse_timestamp_native";
+
+bool ProcessorParseTimestampNative::ParseTimeZoneOffsetSecond(const string& logTZ, int& logTZSecond) {
+    if (logTZ.size() != strlen("GMT+08:00") || logTZ[6] != ':' || (logTZ[3] != '+' && logTZ[3] != '-')) {
+        return false;
+    }
+    if (logTZ.find("GMT") != (size_t)0) {
+        return false;
+    }
+    string hourStr = logTZ.substr(4, 2);
+    string minitueStr = logTZ.substr(7, 2);
+    logTZSecond = StringTo<int>(hourStr) * 3600 + StringTo<int>(minitueStr) * 60;
+    if (logTZ[3] == '-') {
+        logTZSecond = -logTZSecond;
+    }
+    return true;
+}
 
 bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     std::string errorMsg;
@@ -43,27 +58,27 @@ bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     if (!GetOptionalIntParam(config, "SourceYear", mSourceYear, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceYear, sName, mContext->GetConfigName());
     }
-    std::string preciseTimestampUnit;
-    if (!GetOptionalStringParam(config, "PreciseTimestampUnit", preciseTimestampUnit, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, preciseTimestampUnit, sName, mContext->GetConfigName());
-    } else {
-        if (0 == preciseTimestampUnit.compare("ms")) {
-            mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
-        } else if (0 == preciseTimestampUnit.compare("us")) {
-            mPreciseTimestampUnit = TimeStampUnit::MICROSECOND;
-        } else if (0 == preciseTimestampUnit.compare("ns")) {
-            mPreciseTimestampUnit = TimeStampUnit::NANOSECOND;
+
+    if (GetOptionalStringParam(config, "PreciseTimestampKey", mPreciseTimestampKey, errorMsg)) {
+        std::string preciseTimestampUnit;
+        if (!GetOptionalStringParam(config, "PreciseTimestampUnit", preciseTimestampUnit, errorMsg)) {
+            PreciseTimestampKey = "";
         } else {
-            mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
+            if (0 == preciseTimestampUnit.compare("ms")) {
+                mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
+            } else if (0 == preciseTimestampUnit.compare("us")) {
+                mPreciseTimestampUnit = TimeStampUnit::MICROSECOND;
+            } else if (0 == preciseTimestampUnit.compare("ns")) {
+                mPreciseTimestampUnit = TimeStampUnit::NANOSECOND;
+            } else {
+                mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
+            }
         }
-    }
-    if (!GetOptionalStringParam(config, "PreciseTimestampKey", mPreciseTimestampKey, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mPreciseTimestampKey, sName, mContext->GetConfigName());
     }
 
     if (mSourceTimezone != "") {
         int logTZSecond = 0;
-        if (!ConfigManagerBase::ParseTimeZoneOffsetSecond(mSourceTimezone, logTZSecond)) {
+        if (!ParseTimeZoneOffsetSecond(mSourceTimezone, logTZSecond)) {
             errorMsg = "invalid log time zone specified, will parse log time without time zone adjusted, time zone: "
                 + mSourceTimezone;
             PARAM_WARNING_DEFAULT(
@@ -132,10 +147,7 @@ bool ProcessorParseTimestampNative::IsSupportedEvent(const PipelineEventPtr& e) 
     return e.Is<LogEvent>();
 }
 
-bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath,
-                                                 PipelineEventPtr& e,
-                                                 LogtailTime& logTime,
-                                                 StringView& timeStrCache) {
+bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEventPtr& e, LogtailTime& logTime, StringView& timeStrCache) {
     if (!IsSupportedEvent(e)) {
         return true;
     }

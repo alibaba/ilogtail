@@ -33,15 +33,12 @@ bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
     if (!GetMandatoryStringParam(config, "Regex", mRegex, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
     if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-        return false;
     }
     
     if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {

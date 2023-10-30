@@ -30,8 +30,13 @@ public:
     std::vector<std::string> mKeys;
     bool mKeepingSourceWhenParseFail = false;
     bool mKeepingSourceWhenParseSucceed = false;
+    // 当源字段被保留时，用于存储源字段的字段名。若不填，默认不改名。
     std::string mRenamedSourceKey = "";
     bool mCopingRawLog = false;
+
+    bool mSourceKeyOverwritten = false;
+    bool mRawLogTagOverwritten = false;
+    std::vector<UserDefinedFormat> mUserDefinedFormat;
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
@@ -53,11 +58,8 @@ private:
                             const std::vector<std::string>& keys,
                             const StringView& logPath);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
-    std::vector<UserDefinedFormat> mUserDefinedFormat;
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;
-    bool mSourceKeyOverwritten = false;
-    bool mRawLogTagOverwritten = false;
     std::string mRawLogTag;
 
     int* mParseFailures = nullptr;

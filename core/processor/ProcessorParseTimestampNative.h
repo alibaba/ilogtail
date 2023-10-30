@@ -28,8 +28,9 @@ public:
     int mSourceYear = -1;
     TimeStampUnit mPreciseTimestampUnit;
     std::string mPreciseTimestampKey = "ms";
-    
+
     int mLogTimeZoneOffsetSecond = 0;
+    PreciseTimestampConfig mLegacyPreciseTimestampConfig;
 
 
     const std::string& Name() const override { return sName; }
@@ -41,6 +42,7 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
+    bool ParseTimeZoneOffsetSecond(const string& logTZ, int& logTZSecond);
     /// @return false if data need to be discarded
     bool ProcessEvent(StringView logPath, PipelineEventPtr& e, LogtailTime& logTime, StringView& timeStrCache);
     /// @return false if parse time failed
@@ -54,7 +56,6 @@ private:
     std::string mTimeKey;
     std::string mTimeFormat;
     int mSpecifiedYear = -1;
-    PreciseTimestampConfig mLegacyPreciseTimestampConfig;
 
     int* mParseTimeFailures = nullptr;
     int* mHistoryFailures = nullptr;
