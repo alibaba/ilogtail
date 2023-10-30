@@ -47,17 +47,6 @@ public:
      */
     bool LoadConfig(const std::string& configFile) override;
 
-    bool UpdateAccessKey(const std::string& aliuid,
-                         std::string& accessKeyId,
-                         std::string& accessKey,
-                         int32_t& lastUpdateTime) override;
-
-    void CleanUnusedUserAK() override;
-
-    bool GetRegionStatus(const std::string& region) override;
-
-    void SetStartWorkerStatus(const std::string& result, const std::string& message) override;
-
     std::string CheckPluginFlusher(Json::Value& configJson);
 
     Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson);
@@ -90,11 +79,6 @@ private:
         const google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail>& configDetails
     );
 
-    /**
-     * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map
-     * @return
-     */
-    void CreateCustomizedFuseConfig() override;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class SenderUnittest;

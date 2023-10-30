@@ -60,6 +60,7 @@
 #include "processor/daemon/LogProcess.h"
 #include "processor/LogFilter.h"
 #include <boost/filesystem.hpp>
+#include "application/Application.h"
 
 using namespace std;
 using namespace logtail;
@@ -67,20 +68,18 @@ using namespace logtail;
 DEFINE_FLAG_STRING(logtail_profile_aliuid, "default user's aliuid", "");
 DEFINE_FLAG_STRING(logtail_profile_access_key_id, "default user's accessKeyId", "");
 DEFINE_FLAG_STRING(logtail_profile_access_key, "default user's LogtailAccessKey", "");
-DEFINE_FLAG_STRING(default_access_key_id, "", "");
-DEFINE_FLAG_STRING(default_access_key, "", "");
+// DEFINE_FLAG_STRING(default_access_key_id, "", "");
+// DEFINE_FLAG_STRING(default_access_key, "", "");
 
 DEFINE_FLAG_INT32(config_update_interval, "second", 10);
 
 DEFINE_FLAG_INT32(file_tags_update_interval, "second", 1);
 
 namespace logtail {
-void ConfigManager::CleanUnusedUserAK() {
-}
 
 ConfigManager::ConfigManager() {
-    SetDefaultProfileProjectName(STRING_FLAG(profile_project_name));
-    SetDefaultProfileRegion(STRING_FLAG(default_region_name));
+    // SetDefaultProfileProjectName(STRING_FLAG(profile_project_name));
+    // SetDefaultProfileRegion(STRING_FLAG(default_region_name));
 }
 
 ConfigManager::~ConfigManager() {
@@ -94,7 +93,7 @@ ConfigManager::~ConfigManager() {
 // LoadConfig loads config by @configName.
 bool ConfigManager::LoadConfig(const string& configName) {
     // Load logtail config at first, eg. user-defined-ids.
-    ReloadLogtailSysConf();
+    // ReloadLogtailSysConf();
 
     Json::Value userLogJson; // will contains the root value after parsing.
     ParseConfResult userLogRes = ParseConfig(configName, userLogJson);
@@ -108,26 +107,13 @@ bool ConfigManager::LoadConfig(const string& configName) {
     } else {
         mConfigJson = userLogJson;
         // load global config
-        if (userLogJson.isMember(GLOBAL_CONFIG_NODE)) {
-            LoadGlobalConfig(userLogJson[GLOBAL_CONFIG_NODE]);
-        }
+        // if (userLogJson.isMember(GLOBAL_CONFIG_NODE)) {
+        //     LoadGlobalConfig(userLogJson[GLOBAL_CONFIG_NODE]);
+        // }
     }
 
     // load single config as well as local config.
     return LoadAllConfig();
-}
-
-bool ConfigManager::UpdateAccessKey(const std::string& aliuid,
-                                    std::string& accessKeyId,
-                                    std::string& accessKey,
-                                    int32_t& lastUpdateTime) {
-    lastUpdateTime = GetUserAK(aliuid, accessKeyId, accessKey);
-    if ((time(NULL) - lastUpdateTime) < INT32_FLAG(request_access_key_interval))
-        return false;
-
-    SetUserAK(aliuid, accessKeyId, accessKey);
-    LOG_INFO(sLogger, ("GetAccessKey Success, accessKeyId", accessKeyId));
-    return true;
 }
 
 // CheckUpdateThread is the routine of thread this->mCheckUpdateThreadPtr, created in function InitUpdateConfig.
@@ -203,16 +189,6 @@ void ConfigManager::InitUpdateConfig(bool configExistFlag) {
 void ConfigManager::GetRemoteConfigUpdate() {
 }
 
-bool ConfigManager::GetRegionStatus(const string& region) {
-    return true;
-}
-
-void ConfigManager::SetStartWorkerStatus(const std::string& result, const std::string& message) {
-}
-
-void ConfigManager::CreateCustomizedFuseConfig() {
-}
-
 std::string ConfigManager::CheckPluginFlusher(Json::Value& configJSON) {
     return configJSON.toStyledString();
 }
@@ -274,7 +250,7 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     configserver::proto::AgentAttributes attributes;
     std::string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
     heartBeatReq.set_request_id(requestID);
-    heartBeatReq.set_agent_id(GetInstanceId());
+    heartBeatReq.set_agent_id(Application::GetInstance()->GetInstanceId());
     heartBeatReq.set_agent_type("iLogtail");
     attributes.set_version(ILOGTAIL_VERSION);
     attributes.set_ip(LogFileProfiler::mIpAddr);
@@ -342,9 +318,9 @@ google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> ConfigMana
     const AppConfig::ConfigServerAddress& configServerAddress,
     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs) {
     configserver::proto::FetchPipelineConfigRequest fetchConfigReq;
-    string requestID = sdk::Base64Enconde(GetInstanceId().append("_").append(to_string(time(NULL))));
+    string requestID = sdk::Base64Enconde(Application::GetInstance()->GetInstanceId().append("_").append(to_string(time(NULL))));
     fetchConfigReq.set_request_id(requestID);
-    fetchConfigReq.set_agent_id(GetInstanceId());
+    fetchConfigReq.set_agent_id(Application::GetInstance()->GetInstanceId());
 
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigInfo> configInfos;
     for (int i = 0; i < requestConfigs.size(); i++) {

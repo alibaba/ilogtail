@@ -67,7 +67,7 @@ DEFINE_FLAG_STRING(https_ca_cert, "set CURLOPT_CAINFO for libcurl", "ca-bundle.c
 DEFINE_FLAG_STRING(https_ca_cert, "set CURLOPT_CAINFO for libcurl", "cacert.pem");
 #endif
 DEFINE_FLAG_STRING(default_global_topic, "default is empty string", "");
-DEFINE_FLAG_STRING(profile_project_name, "profile project_name for logtail", "");
+// DEFINE_FLAG_STRING(profile_project_name, "profile project_name for logtail", "");
 DEFINE_FLAG_INT32(request_access_key_interval, "control the frenquency of GetAccessKey, seconds", 60);
 DEFINE_FLAG_INT32(logtail_sys_conf_update_interval, "control the frenquency of load local machine conf, seconds", 60);
 DEFINE_FLAG_INT32(wildcard_max_sub_dir_count, "", 1000);
@@ -112,25 +112,6 @@ DECLARE_FLAG_INT32(default_tail_limit_kb);
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
 namespace logtail {
-
-static bool ReadAliuidsFile(std::vector<std::string>& aliuids) {
-    std::string dirName = AppConfig::GetInstance()->GetLogtailSysConfDir() + STRING_FLAG(logtail_sys_conf_users_dir);
-    fsutil::Dir dir(dirName);
-    if (!dir.Open()) {
-        auto err = GetErrno();
-        if (fsutil::Dir::IsENOENT(err)) {
-            aliuids.clear();
-            return true;
-        }
-        LOG_ERROR(sLogger, ("Open dir failed", dirName)("errno", ErrnoToString(err)));
-        return false;
-    }
-    fsutil::Entry ent;
-    while (ent = dir.ReadNext(false)) {
-        aliuids.push_back(ent.Name());
-    }
-    return true;
-}
 
 const std::string LOG_LOCAL_DEFINED_PATH_PREFIX = "__local_defined_path__";
 
@@ -199,27 +180,6 @@ bool ConfigManagerBase::CheckLogType(const string& logTypeStr, LogType& logType)
     else {
         LOG_ERROR(sLogger, ("not supported log type", logTypeStr));
         return false;
-    }
-    return true;
-}
-
-// LoadGlobalConfig reads config from @jsonRoot, and set to LogtailGlobalPara::Instance().
-bool ConfigManagerBase::LoadGlobalConfig(const Json::Value& jsonRoot) {
-    LOG_INFO(sLogger, ("load global config", jsonRoot.toStyledString()));
-    static LogtailGlobalPara* sGlobalPara = LogtailGlobalPara::Instance();
-    try {
-        if (jsonRoot.isMember("global_topic")) {
-            sGlobalPara->SetTopic(GetStringValue(jsonRoot, "global_topic", ""));
-        } else {
-            sGlobalPara->SetTopic(STRING_FLAG(default_global_topic));
-        }
-    } catch (const ExceptionBase& e) {
-        LOG_ERROR(sLogger, ("The logtail global topic is invalid", e.GetExceptionMessage()));
-        LogtailAlarm::GetInstance()->SendAlarm(GLOBAL_CONFIG_ALARM,
-                                               string("The global_topic value is invalid") + e.GetExceptionMessage());
-    } catch (...) {
-        LOG_ERROR(sLogger, ("The logtail global topic is invalid", "unkown reason"));
-        LogtailAlarm::GetInstance()->SendAlarm(GLOBAL_CONFIG_ALARM, string("The global_topic value is invalid"));
     }
     return true;
 }
@@ -419,71 +379,71 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
 
             // this field is for ant
             // all configuration are included in "customized" field
-            bool dataIntegritySwitch = false;
-            string dataIntegrityProjectName, dataIntegrityLogstore, logTimeReg;
-            int32_t timePos = 0;
-            bool lineCountSwitch = false;
-            string lineCountProjectName, lineCountLogstore;
-            bool isFuseMode = BOOL_FLAG(default_global_fuse_mode);
-            bool markOffsetFlag = BOOL_FLAG(default_global_mark_offset_flag);
-            bool collectBackwardTillBootTime = false;
-            if (value.isMember("customized_fields") && value["customized_fields"].isObject()) {
-                // parse data integrity and line count fields
-                const Json::Value& customizedFieldsValue = value["customized_fields"];
-                if (customizedFieldsValue.isMember("data_integrity")
-                    && customizedFieldsValue["data_integrity"].isObject()) {
-                    const Json::Value& dataIntegrityValue = customizedFieldsValue["data_integrity"];
-                    dataIntegritySwitch = GetBoolValue(dataIntegrityValue, "switch", false);
-                    if (dataIntegritySwitch) {
-                        dataIntegrityProjectName = GetStringValue(
-                            dataIntegrityValue, "project_name", STRING_FLAG(default_data_integrity_project));
-                        dataIntegrityLogstore = GetStringValue(
-                            dataIntegrityValue, "logstore", STRING_FLAG(default_data_integrity_log_store));
-                        logTimeReg
-                            = GetStringValue(dataIntegrityValue, "log_time_reg", STRING_FLAG(default_log_time_reg));
-                        timePos
-                            = GetIntValue(dataIntegrityValue, "time_pos", INT32_FLAG(default_data_integrity_time_pos));
-                    }
-                }
-                if (customizedFieldsValue.isMember("line_count") && customizedFieldsValue["line_count"].isObject()) {
-                    const Json::Value& lineCountValue = customizedFieldsValue["line_count"];
-                    lineCountSwitch = GetBoolValue(lineCountValue, "switch", false);
-                    if (lineCountSwitch) {
-                        lineCountProjectName
-                            = GetStringValue(lineCountValue, "project_name", STRING_FLAG(default_line_count_project));
-                        lineCountLogstore
-                            = GetStringValue(lineCountValue, "logstore", STRING_FLAG(default_line_count_log_store));
-                    }
-                }
+            // bool dataIntegritySwitch = false;
+            // string dataIntegrityProjectName, dataIntegrityLogstore, logTimeReg;
+            // int32_t timePos = 0;
+            // bool lineCountSwitch = false;
+            // string lineCountProjectName, lineCountLogstore;
+            // bool isFuseMode = BOOL_FLAG(default_global_fuse_mode);
+            // bool markOffsetFlag = BOOL_FLAG(default_global_mark_offset_flag);
+            // bool collectBackwardTillBootTime = false;
+            // if (value.isMember("customized_fields") && value["customized_fields"].isObject()) {
+            //     // parse data integrity and line count fields
+            //     const Json::Value& customizedFieldsValue = value["customized_fields"];
+            //     if (customizedFieldsValue.isMember("data_integrity")
+            //         && customizedFieldsValue["data_integrity"].isObject()) {
+            //         const Json::Value& dataIntegrityValue = customizedFieldsValue["data_integrity"];
+            //         dataIntegritySwitch = GetBoolValue(dataIntegrityValue, "switch", false);
+            //         if (dataIntegritySwitch) {
+            //             dataIntegrityProjectName = GetStringValue(
+            //                 dataIntegrityValue, "project_name", STRING_FLAG(default_data_integrity_project));
+            //             dataIntegrityLogstore = GetStringValue(
+            //                 dataIntegrityValue, "logstore", STRING_FLAG(default_data_integrity_log_store));
+            //             logTimeReg
+            //                 = GetStringValue(dataIntegrityValue, "log_time_reg", STRING_FLAG(default_log_time_reg));
+            //             timePos
+            //                 = GetIntValue(dataIntegrityValue, "time_pos", INT32_FLAG(default_data_integrity_time_pos));
+            //         }
+            //     }
+            //     if (customizedFieldsValue.isMember("line_count") && customizedFieldsValue["line_count"].isObject()) {
+            //         const Json::Value& lineCountValue = customizedFieldsValue["line_count"];
+            //         lineCountSwitch = GetBoolValue(lineCountValue, "switch", false);
+            //         if (lineCountSwitch) {
+            //             lineCountProjectName
+            //                 = GetStringValue(lineCountValue, "project_name", STRING_FLAG(default_line_count_project));
+            //             lineCountLogstore
+            //                 = GetStringValue(lineCountValue, "logstore", STRING_FLAG(default_line_count_log_store));
+            //         }
+            //     }
 
-                if (customizedFieldsValue.isMember("check_ulogfs_env")
-                    && customizedFieldsValue["check_ulogfs_env"].isBool()) {
-                    bool checkUlogfsEnv
-                        = GetBoolValue(customizedFieldsValue, "check_ulogfs_env", BOOL_FLAG(default_check_ulogfs_env));
-                    bool hasCollectionMarkFileFlag
-                        = BOOL_FLAG(enable_collection_mark) ? GetCollectionMarkFileExistFlag() : false;
-                    if (checkUlogfsEnv && !hasCollectionMarkFileFlag) {
-                        // only set in pod's app container
-                        const char* ulogfsEnabledEnv = getenv("ULOGFS_ENABLED");
-                        if (ulogfsEnabledEnv) {
-                            if (strcmp(ulogfsEnabledEnv, "true") == 0) {
-                                LOG_WARNING(sLogger,
-                                            ("load conifg", logName)("skip config", category)("project", projectName)(
-                                                "check_ulogfs_env", "true")("env of ULOGFS_ENABLED", "true"));
-                                // if ULOGFS_ENABLED in env is true and check_ulogfs_env in config json is true
-                                // it means this logtail instance should skip this fuse config, we should no load it
-                                return;
-                            }
-                        }
-                    }
-                }
+            //     if (customizedFieldsValue.isMember("check_ulogfs_env")
+            //         && customizedFieldsValue["check_ulogfs_env"].isBool()) {
+            //         bool checkUlogfsEnv
+            //             = GetBoolValue(customizedFieldsValue, "check_ulogfs_env", BOOL_FLAG(default_check_ulogfs_env));
+            //         bool hasCollectionMarkFileFlag
+            //             = BOOL_FLAG(enable_collection_mark) ? GetCollectionMarkFileExistFlag() : false;
+            //         if (checkUlogfsEnv && !hasCollectionMarkFileFlag) {
+            //             // only set in pod's app container
+            //             const char* ulogfsEnabledEnv = getenv("ULOGFS_ENABLED");
+            //             if (ulogfsEnabledEnv) {
+            //                 if (strcmp(ulogfsEnabledEnv, "true") == 0) {
+            //                     LOG_WARNING(sLogger,
+            //                                 ("load conifg", logName)("skip config", category)("project", projectName)(
+            //                                     "check_ulogfs_env", "true")("env of ULOGFS_ENABLED", "true"));
+            //                     // if ULOGFS_ENABLED in env is true and check_ulogfs_env in config json is true
+            //                     // it means this logtail instance should skip this fuse config, we should no load it
+            //                     return;
+            //                 }
+            //             }
+            //         }
+            //     }
 
-                isFuseMode
-                    = isFuseMode && GetBoolValue(customizedFieldsValue, "fuse_mode", BOOL_FLAG(default_fuse_mode));
-                markOffsetFlag = markOffsetFlag && GetBoolValue(customizedFieldsValue, "mark_offset", false);
-                collectBackwardTillBootTime
-                    = GetBoolValue(customizedFieldsValue, "collect_backward_till_boot_time", false);
-            }
+            //     isFuseMode
+            //         = isFuseMode && GetBoolValue(customizedFieldsValue, "fuse_mode", BOOL_FLAG(default_fuse_mode));
+            //     markOffsetFlag = markOffsetFlag && GetBoolValue(customizedFieldsValue, "mark_offset", false);
+            //     collectBackwardTillBootTime
+            //         = GetBoolValue(customizedFieldsValue, "collect_backward_till_boot_time", false);
+            // }
 
             string pluginConfig;
             bool flusher_exists = false;
@@ -594,12 +554,12 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (value.isMember("max_depth"))
                     maxDepth = GetIntValue(value, "max_depth");
                 string logPath = GetStringValue(value, "log_path");
-                if (logPath.find(LOG_LOCAL_DEFINED_PATH_PREFIX) == 0) {
-                    mHaveMappingPathConfig = true;
-                    string tmpLogPath = GetMappingPath(logPath);
-                    if (!tmpLogPath.empty())
-                        logPath = tmpLogPath;
-                }
+                // if (logPath.find(LOG_LOCAL_DEFINED_PATH_PREFIX) == 0) {
+                //     mHaveMappingPathConfig = true;
+                //     string tmpLogPath = GetMappingPath(logPath);
+                //     if (!tmpLogPath.empty())
+                //         logPath = tmpLogPath;
+                // }
                 if (IsRelativePath(logPath)) {
                     logPath = NormalizePath(AbsolutePath(logPath, AppConfig::GetInstance()->GetProcessExecutionDir()));
                 }
@@ -682,10 +642,10 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 if (value.isMember("docker_file") && value["docker_file"].isBool() && value["docker_file"].asBool()) {
                     if (AppConfig::GetInstance()->IsPurageContainerMode()) {
                         // docker file is not supported in Logtail's container mode
-                        if (AppConfig::GetInstance()->IsContainerMode()) {
-                            throw ExceptionBase(
-                                std::string("docker file is not supported in Logtail's container mode "));
-                        }
+                        // if (AppConfig::GetInstance()->IsContainerMode()) {
+                        //     throw ExceptionBase(
+                        //         std::string("docker file is not supported in Logtail's container mode "));
+                        // }
                         // load saved container path
                         auto iter = mAllDockerContainerPathMap.find(logName);
                         if (iter != mAllDockerContainerPathMap.end()) {
@@ -709,28 +669,28 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                                                                region);
                     }
                 }
-                if (AppConfig::GetInstance()->IsContainerMode()) {
-                    // mapping config's path to real filePath
-                    // use docker file flag
-                    if (!config->SetDockerFileFlag(true)) {
-                        // should not happen
-                        throw ExceptionBase(std::string("docker file do not support wildcard path"));
-                    }
-                    string realPath;
-                    string basePath
-                        = config->mWildcardPaths.size() > (size_t)0 ? config->mWildcardPaths[0] : config->mBasePath;
-                    mDockerMountPathsLock.lock();
-                    bool findRst = mDockerMountPaths.FindBestMountPath(basePath, realPath);
-                    mDockerMountPathsLock.unlock();
-                    if (!findRst) {
-                        throw ExceptionBase(std::string("invalid mount path, basePath : ") + basePath);
-                    }
+                // if (AppConfig::GetInstance()->IsContainerMode()) {
+                //     // mapping config's path to real filePath
+                //     // use docker file flag
+                //     if (!config->SetDockerFileFlag(true)) {
+                //         // should not happen
+                //         throw ExceptionBase(std::string("docker file do not support wildcard path"));
+                //     }
+                //     string realPath;
+                //     string basePath
+                //         = config->mWildcardPaths.size() > (size_t)0 ? config->mWildcardPaths[0] : config->mBasePath;
+                //     mDockerMountPathsLock.lock();
+                //     bool findRst = mDockerMountPaths.FindBestMountPath(basePath, realPath);
+                //     mDockerMountPathsLock.unlock();
+                //     if (!findRst) {
+                //         throw ExceptionBase(std::string("invalid mount path, basePath : ") + basePath);
+                //     }
 
-                    // add containerPath
-                    DockerContainerPath containerPath;
-                    containerPath.mContainerPath = realPath;
-                    config->mDockerContainerPaths->push_back(containerPath);
-                }
+                //     // add containerPath
+                //     DockerContainerPath containerPath;
+                //     containerPath.mContainerPath = realPath;
+                //     config->mDockerContainerPaths->push_back(containerPath);
+                // }
 
                 config->mTopicFormat = GetStringValue(value, "topic_format", "default");
                 if (!config->mTopicFormat.empty()) {
@@ -1026,7 +986,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     }
                 }
             }
-            InsertRegionAliuidMap(config->mRegion, config->mAliuid);
+            Sender::Instance()->IncreaseAliuidReferenceCntForRegion(config->mRegion, config->mAliuid);
 
             config->mShardHashKey.clear();
             if (value.isMember("shard_hash_key")) {
@@ -1038,37 +998,37 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             }
             config->mLocalFlag = localFlag;
 
-            config->mIntegrityConfig.reset(new IntegrityConfig(config->mAliuid,
-                                                               dataIntegritySwitch,
-                                                               dataIntegrityProjectName,
-                                                               dataIntegrityLogstore,
-                                                               logTimeReg,
-                                                               config->mTimeFormat,
-                                                               timePos));
-            // if integrity switch is off, erase corresponding item in integrity map
-            if (!dataIntegritySwitch) {
-                LogIntegrity::GetInstance()->EraseItemInMap(config->mRegion, config->mProjectName, config->mCategory);
-            }
+            // config->mIntegrityConfig.reset(new IntegrityConfig(config->mAliuid,
+            //                                                    dataIntegritySwitch,
+            //                                                    dataIntegrityProjectName,
+            //                                                    dataIntegrityLogstore,
+            //                                                    logTimeReg,
+            //                                                    config->mTimeFormat,
+            //                                                    timePos));
+            // // if integrity switch is off, erase corresponding item in integrity map
+            // if (!dataIntegritySwitch) {
+            //     LogIntegrity::GetInstance()->EraseItemInMap(config->mRegion, config->mProjectName, config->mCategory);
+            // }
 
-            config->mLineCountConfig.reset(
-                new LineCountConfig(config->mAliuid, lineCountSwitch, lineCountProjectName, lineCountLogstore));
-            // if line count switch is off, erase corresponding item in line count map
-            if (!lineCountSwitch) {
-                LogLineCount::GetInstance()->EraseItemInMap(config->mRegion, config->mProjectName, config->mCategory);
-            }
+            // config->mLineCountConfig.reset(
+            //     new LineCountConfig(config->mAliuid, lineCountSwitch, lineCountProjectName, lineCountLogstore));
+            // // if line count switch is off, erase corresponding item in line count map
+            // if (!lineCountSwitch) {
+            //     LogLineCount::GetInstance()->EraseItemInMap(config->mRegion, config->mProjectName, config->mCategory);
+            // }
 
-            // set fuse mode
-            config->mIsFuseMode = isFuseMode;
-            // if fuse mode is true, then we should mark offset
-            config->mMarkOffsetFlag = isFuseMode || markOffsetFlag;
-            mHaveFuseConfigFlag = mHaveFuseConfigFlag || isFuseMode;
-            config->mCollectBackwardTillBootTime = collectBackwardTillBootTime;
+            // // set fuse mode
+            // config->mIsFuseMode = isFuseMode;
+            // // if fuse mode is true, then we should mark offset
+            // config->mMarkOffsetFlag = isFuseMode || markOffsetFlag;
+            // mHaveFuseConfigFlag = mHaveFuseConfigFlag || isFuseMode;
+            // config->mCollectBackwardTillBootTime = collectBackwardTillBootTime;
 
-            // time format should not be blank here
-            if ((collectBackwardTillBootTime || dataIntegritySwitch) && config->mTimeFormat.empty()) {
-                LOG_ERROR(sLogger,
-                          ("time format should not be blank if collect backward or open fata integrity function", ""));
-            }
+            // // time format should not be blank here
+            // if ((collectBackwardTillBootTime || dataIntegritySwitch) && config->mTimeFormat.empty()) {
+            //     LOG_ERROR(sLogger,
+            //               ("time format should not be blank if collect backward or open fata integrity function", ""));
+            // }
 
             auto configIter = mNameConfigMap.find(logName);
             if (mNameConfigMap.end() != configIter) {
@@ -1080,8 +1040,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             } else {
                 mNameConfigMap[logName] = config;
             }
-            InsertProject(config->mProjectName);
-            InsertRegion(config->mRegion);
+            Sender::Instance()->IncreaseProjectReferenceCnt(config->mProjectName);
+            Sender::Instance()->IncreaseRegionReferenceCnt(config->mRegion);
             UpdatePluginStats(rawValue);
         }
     } catch (const ExceptionBase& e) {
@@ -1224,7 +1184,7 @@ bool ConfigManagerBase::LoadAllConfig() {
 // LoadSingleUserConfig to deal them.
 bool ConfigManagerBase::LoadJsonConfig(const Json::Value& jsonRoot, bool localFlag) {
     try {
-        mHaveMappingPathConfig = false;
+        // mHaveMappingPathConfig = false;
         // USER_CONFIG_NODE is optional
         if (jsonRoot.isMember(USER_CONFIG_NODE) == false)
             return true;
@@ -1236,9 +1196,9 @@ bool ConfigManagerBase::LoadJsonConfig(const Json::Value& jsonRoot, bool localFl
             LoadSingleUserConfig(logName, metric, localFlag);
         }
         // generate customized config for fuse
-        if (HaveFuseConfig()) {
-            CreateCustomizedFuseConfig();
-        }
+        // if (HaveFuseConfig()) {
+        //     CreateCustomizedFuseConfig();
+        // }
     } catch (...) {
         LOG_ERROR(sLogger, ("config parse error", ""));
         LogtailAlarm::GetInstance()->SendAlarm(USER_CONFIG_ALARM, string("the user config is invalid"));
@@ -1290,33 +1250,33 @@ bool ConfigManagerBase::RegisterHandlersRecursively(const std::string& path, Con
 }
 
 ConfigManagerBase::ConfigManagerBase() {
-    mEnvFlag = false;
-    mStartTime = time(NULL);
+    // mEnvFlag = false;
+    // mStartTime = time(NULL);
     mRemoveConfigFlag = false;
-    mHaveMappingPathConfig = false;
-    mMappingPathsChanged = false;
+    // mHaveMappingPathConfig = false;
+    // mMappingPathsChanged = false;
     mSharedHandler = NULL;
     mThreadIsRunning = true;
     mUpdateStat = NORMAL;
-    mRegionType = REGION_CORP;
+    // mRegionType = REGION_CORP;
 
-    mLogtailSysConfUpdateTime = 0;
-    mUserDefinedId.clear();
-    mUserDefinedIdSet.clear();
-    mAliuidSet.clear();
+    // mLogtailSysConfUpdateTime = 0;
+    // mUserDefinedId.clear();
+    // mUserDefinedIdSet.clear();
+    // mAliuidSet.clear();
 
-    SetDefaultPubAccessKeyId(STRING_FLAG(default_access_key_id));
-    SetDefaultPubAccessKey(STRING_FLAG(default_access_key));
-    SetDefaultPubAliuid("");
-    SetUserAK(STRING_FLAG(logtail_profile_aliuid),
-              STRING_FLAG(logtail_profile_access_key_id),
-              STRING_FLAG(logtail_profile_access_key));
+    // SetDefaultPubAccessKeyId(STRING_FLAG(default_access_key_id));
+    // SetDefaultPubAccessKey(STRING_FLAG(default_access_key));
+    // SetDefaultPubAliuid("");
+    // SetUserAK(STRING_FLAG(logtail_profile_aliuid),
+    //           STRING_FLAG(logtail_profile_access_key_id),
+    //           STRING_FLAG(logtail_profile_access_key));
     srand(time(NULL));
-    CorrectionLogtailSysConfDir(); // first create dir then rewrite system-uuid file in GetSystemUUID
+    // CorrectionLogtailSysConfDir(); // first create dir then rewrite system-uuid file in GetSystemUUID
     // use a thread to get uuid, work around for CalculateDmiUUID hang
     // mUUID = CalculateDmiUUID();
-    mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
-    ReloadMappingConfig();
+    // mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
+    // ReloadMappingConfig();
 }
 
 ConfigManagerBase::~ConfigManagerBase() {
@@ -1333,11 +1293,11 @@ ConfigManagerBase::~ConfigManagerBase() {
     mDirEventHandlerMap.clear();
     delete mSharedHandler;
     mThreadIsRunning = false;
-    try {
-        if (mUUIDthreadPtr.get() != NULL)
-            mUUIDthreadPtr->GetValue(100);
-    } catch (...) {
-    }
+    // try {
+    //     if (mUUIDthreadPtr.get() != NULL)
+    //         mUUIDthreadPtr->GetValue(100);
+    // } catch (...) {
+    // }
 }
 
 void ConfigManagerBase::RemoveHandler(const string& dir, bool delete_flag) {
@@ -1956,355 +1916,9 @@ void ConfigManagerBase::RemoveAllConfigs() {
     mCacheFileConfigMap.clear();
     ScopedSpinLock allLock(mCacheFileAllConfigMapLock);
     mCacheFileAllConfigMap.clear();
-    ClearProjects();
-    ClearRegions();
-    ClearRegionAliuidMap();
-}
-
-std::string ConfigManagerBase::GetDefaultPubAliuid() {
-    ScopedSpinLock lock(mDefaultPubAKLock);
-    return mDefaultPubAliuid;
-}
-
-void ConfigManagerBase::SetDefaultPubAliuid(const std::string& aliuid) {
-    ScopedSpinLock lock(mDefaultPubAKLock);
-    mDefaultPubAliuid = aliuid;
-}
-
-std::string ConfigManagerBase::GetDefaultPubAccessKeyId() {
-    ScopedSpinLock lock(mDefaultPubAKLock);
-    return mDefaultPubAccessKeyId;
-}
-
-void ConfigManagerBase::SetDefaultPubAccessKeyId(const std::string& accessKeyId) {
-    ScopedSpinLock lock(mDefaultPubAKLock);
-    mDefaultPubAccessKeyId = accessKeyId;
-}
-
-std::string ConfigManagerBase::GetDefaultPubAccessKey() {
-    ScopedSpinLock lock(mDefaultPubAKLock);
-    return mDefaultPubAccessKey;
-}
-
-void ConfigManagerBase::SetDefaultPubAccessKey(const std::string& accessKey) {
-    ScopedSpinLock lock(mDefaultPubAKLock);
-    mDefaultPubAccessKey = accessKey;
-}
-
-int32_t ConfigManagerBase::GetUserAK(const string& aliuid, std::string& accessKeyId, std::string& accessKey) {
-    PTScopedLock lock(mUserInfosLock);
-    unordered_map<string, UserInfo*>::iterator iter = mUserInfos.find(aliuid);
-    if (iter == mUserInfos.end()) {
-        UserInfo* ui = new UserInfo(aliuid, STRING_FLAG(default_access_key_id), STRING_FLAG(default_access_key), 0);
-        mUserInfos.insert(pair<string, UserInfo*>(aliuid, ui));
-        accessKeyId = ui->accessKeyId;
-        accessKey = ui->accessKey;
-        return ui->updateTime;
-    } else {
-        accessKeyId = (iter->second)->accessKeyId;
-        accessKey = (iter->second)->accessKey;
-        return (iter->second)->updateTime;
-    }
-}
-
-void ConfigManagerBase::SetUserAK(const string& aliuid, const std::string& accessKeyId, const std::string& accessKey) {
-    PTScopedLock lock(mUserInfosLock);
-    unordered_map<string, UserInfo*>::iterator iter = mUserInfos.find(aliuid);
-    if (iter == mUserInfos.end()) {
-        UserInfo* ui = new UserInfo(aliuid, accessKeyId, accessKey, 0);
-        mUserInfos.insert(pair<string, UserInfo*>(aliuid, ui));
-    } else {
-        (iter->second)->accessKeyId = accessKeyId;
-        (iter->second)->accessKey = accessKey;
-        (iter->second)->updateTime = time(NULL);
-    }
-}
-
-void ConfigManagerBase::GetAliuidSet(Json::Value& aliuidArray) {
-    ScopedSpinLock lock(mAliuidSetLock);
-    for (set<string>::iterator iter = mAliuidSet.begin(); iter != mAliuidSet.end(); ++iter)
-        aliuidArray.append(Json::Value(*iter));
-}
-
-std::string ConfigManagerBase::GetAliuidSet() {
-    ScopedSpinLock lock(mAliuidSetLock);
-    string aliuids = "";
-    for (set<string>::iterator iter = mAliuidSet.begin(); iter != mAliuidSet.end(); ++iter)
-        aliuids.append(*iter).append(" ");
-    return aliuids;
-}
-
-void ConfigManagerBase::InsertAliuidSet(const std::string& aliuid) {
-    ScopedSpinLock lock(mAliuidSetLock);
-    mAliuidSet.insert(aliuid);
-}
-
-void ConfigManagerBase::SetAliuidSet(const std::vector<std::string>& aliuidList) {
-    ScopedSpinLock lock(mAliuidSetLock);
-    mAliuidSet.clear();
-    for (vector<string>::const_iterator iter = aliuidList.begin(); iter != aliuidList.end(); ++iter)
-        mAliuidSet.insert(*iter);
-}
-
-void ConfigManagerBase::GetUserDefinedIdSet(Json::Value& userDefinedIdArray) {
-    ScopedSpinLock lock(mUserDefinedIdSetLock);
-    for (set<string>::iterator iter = mUserDefinedIdSet.begin(); iter != mUserDefinedIdSet.end(); ++iter)
-        userDefinedIdArray.append(Json::Value(*iter));
-}
-
-std::string ConfigManagerBase::GetUserDefinedIdSet() {
-    ScopedSpinLock lock(mUserDefinedIdSetLock);
-    string userDefinedIds = "";
-    int i = 0;
-    for (set<string>::iterator iter = mUserDefinedIdSet.begin(); iter != mUserDefinedIdSet.end(); ++iter, ++i) {
-        if (i > 0)
-            userDefinedIds.append(" ");
-        userDefinedIds.append(*iter);
-    }
-    return userDefinedIds;
-}
-
-void ConfigManagerBase::SetUserDefinedIdSet(const std::vector<std::string>& userDefinedIdList) {
-    ScopedSpinLock lock(mUserDefinedIdSetLock);
-    mUserDefinedIdSet.clear();
-    for (vector<string>::const_iterator iter = userDefinedIdList.begin(); iter != userDefinedIdList.end(); ++iter) {
-        string trimedId = TrimString(TrimString(*iter, ' ', ' '), '\n', '\n');
-        if (trimedId.size() > 0)
-            mUserDefinedIdSet.insert(trimedId);
-    }
-}
-
-void ConfigManagerBase::SetDefaultProfileProjectName(const string& profileProjectName) {
-    ScopedSpinLock lock(mProfileLock);
-    mDefaultProfileProjectName = profileProjectName;
-}
-
-void ConfigManagerBase::SetProfileProjectName(const std::string& region, const std::string& profileProject) {
-    ScopedSpinLock lock(mProfileLock);
-    mAllProfileProjectNames[region] = profileProject;
-}
-
-std::string ConfigManagerBase::GetProfileProjectName(const std::string& region, bool* existFlag) {
-    ScopedSpinLock lock(mProfileLock);
-    if (region.empty()) {
-        if (existFlag != NULL) {
-            *existFlag = false;
-        }
-        return mDefaultProfileProjectName;
-    }
-    std::unordered_map<std::string, std::string>::iterator iter = mAllProfileProjectNames.find(region);
-    if (iter == mAllProfileProjectNames.end()) {
-        if (existFlag != NULL) {
-            *existFlag = false;
-        }
-        return mDefaultProfileProjectName;
-    }
-    if (existFlag != NULL) {
-        *existFlag = true;
-    }
-    return iter->second;
-}
-
-int32_t ConfigManagerBase::GetConfigUpdateTotalCount() {
-    return mConfigUpdateTotal;
-}
-
-int32_t ConfigManagerBase::GetConfigUpdateItemTotalCount() {
-    return mConfigUpdateItemTotal;
-}
-
-int32_t ConfigManagerBase::GetLastConfigUpdateTime() {
-    return mLastConfigUpdateTime;
-}
-
-int32_t ConfigManagerBase::GetLastConfigGetTime() {
-    return mLastConfigGetTime;
-}
-
-void ConfigManagerBase::RestLastConfigTime() {
-    mLastConfigUpdateTime = 0;
-    mLastConfigGetTime = 0;
-}
-
-void ConfigManagerBase::GetAllProfileRegion(std::vector<std::string>& allRegion) {
-    ScopedSpinLock lock(mProfileLock);
-    if (mAllProfileProjectNames.find(mDefaultProfileRegion) == mAllProfileProjectNames.end()) {
-        allRegion.push_back(mDefaultProfileRegion);
-    }
-    for (std::unordered_map<std::string, std::string>::iterator iter = mAllProfileProjectNames.begin();
-         iter != mAllProfileProjectNames.end();
-         ++iter) {
-        allRegion.push_back(iter->first);
-    }
-}
-
-std::string ConfigManagerBase::GetDefaultProfileProjectName() {
-    ScopedSpinLock lock(mProfileLock);
-    return mDefaultProfileProjectName;
-}
-
-void ConfigManagerBase::SetDefaultProfileRegion(const string& profileRegion) {
-    ScopedSpinLock lock(mProfileLock);
-    mDefaultProfileRegion = profileRegion;
-}
-
-std::string ConfigManagerBase::GetDefaultProfileRegion() {
-    ScopedSpinLock lock(mProfileLock);
-    return mDefaultProfileRegion;
-}
-
-void ConfigManagerBase::ReloadLogtailSysConf() {
-    string userDefinedId;
-    std::vector<std::string> userDefinedIdVec;
-    if (ReadFileContent(AppConfig::GetInstance()->GetLogtailSysConfDir() + STRING_FLAG(user_defined_id_file),
-                        userDefinedId)) {
-        mUserDefinedId = TrimString(TrimString(userDefinedId, '\n', '\n'), ' ', ' ');
-
-        userDefinedIdVec = SplitString(userDefinedId, "\n");
-    }
-    const char* userDefinedIdEnv = getenv(STRING_FLAG(ilogtail_user_defined_id_env_name).c_str());
-    if (userDefinedIdEnv != NULL && strlen(userDefinedIdEnv) > 0) {
-        mEnvFlag = true;
-        string userDefinedIdEnvStr(userDefinedIdEnv);
-        userDefinedIdEnvStr = TrimString(TrimString(userDefinedIdEnvStr, ',', ','), ' ', ' ');
-        static string s_userDefinedIdEnv;
-        if (s_userDefinedIdEnv != userDefinedIdEnvStr) {
-            LOG_INFO(sLogger, ("load user defined id from env", userDefinedIdEnvStr));
-            s_userDefinedIdEnv = userDefinedIdEnvStr;
-        }
-        if (mUserDefinedId.empty()) {
-            mUserDefinedId = userDefinedIdEnvStr;
-        }
-
-        std::vector<std::string> idVec = SplitString(userDefinedIdEnvStr, ",");
-        userDefinedIdVec.insert(userDefinedIdVec.end(), idVec.begin(), idVec.end());
-    }
-
-    if (!userDefinedIdVec.empty()) {
-        SetUserDefinedIdSet(userDefinedIdVec);
-    }
-
-    vector<string> aliuidList;
-    ReadAliuidsFile(aliuidList);
-
-    const char* aliuidEnv = getenv(STRING_FLAG(ilogtail_aliuid_env_name).c_str());
-    if (aliuidEnv != NULL && strlen(aliuidEnv) > 0) {
-        mEnvFlag = true;
-        string aliuidEnvStr(aliuidEnv);
-        static string s_lastAliuidEnv;
-        if (s_lastAliuidEnv != aliuidEnvStr) {
-            LOG_INFO(sLogger, ("load aliyun user id from env", aliuidEnv));
-            s_lastAliuidEnv = aliuidEnvStr;
-        }
-        aliuidEnvStr = TrimString(TrimString(aliuidEnvStr, ' ', ' '), ',', ',');
-        vector<string> aliuidEnvList = SplitString(aliuidEnvStr, ",");
-        aliuidList.insert(aliuidList.end(), aliuidEnvList.begin(), aliuidEnvList.end());
-    }
-
-    if (!aliuidList.empty()) {
-        SetAliuidSet(aliuidList);
-    }
-    string defaultPubAliuid = GetDefaultPubAliuid();
-    if (defaultPubAliuid.size() > 0)
-        InsertAliuidSet(defaultPubAliuid);
-}
-
-void ConfigManagerBase::CorrectionAliuidFile(const Json::Value& aliuidArray) {
-    for (int idx = 0; idx < (int)aliuidArray.size(); ++idx) {
-        if (aliuidArray[idx].isString()) {
-            string aliuid = TrimString(aliuidArray[idx].asString());
-            if (aliuid.empty())
-                continue;
-            string fileName = AppConfig::GetInstance()->GetLogtailSysConfDir() + STRING_FLAG(logtail_sys_conf_users_dir)
-                + PATH_SEPARATOR + aliuid;
-            int fd = open(fileName.c_str(), O_CREAT | O_EXCL, 0755);
-            if (fd == -1) {
-                int savedErrno = GetErrno();
-                if (savedErrno != EEXIST)
-                    LOG_ERROR(sLogger, ("correction aliuid file fail", fileName)("errno", ErrnoToString(savedErrno)));
-            } else
-                close(fd);
-        }
-    }
-}
-
-void ConfigManagerBase::CorrectionAliuidFile() {
-    static std::set<string> sLastAliuidSet;
-
-    {
-        ScopedSpinLock lock(mAliuidSetLock);
-        // correct aliuid file when set size change and aliuid count < 10
-        if (sLastAliuidSet.size() < mAliuidSet.size() && mAliuidSet.size() < (size_t)10) {
-            sLastAliuidSet = mAliuidSet;
-        } else {
-            return;
-        }
-    }
-
-    for (auto iter = sLastAliuidSet.begin(); iter != sLastAliuidSet.end(); ++iter) {
-        const std::string& aliuid = *iter;
-        LOG_INFO(sLogger, ("save aliuid file to local file system, aliuid", aliuid));
-        string fileName = AppConfig::GetInstance()->GetLogtailSysConfDir() + STRING_FLAG(logtail_sys_conf_users_dir)
-            + PATH_SEPARATOR + aliuid;
-        int fd = open(fileName.c_str(), O_CREAT | O_EXCL, 0755);
-        if (fd == -1) {
-            int savedErrno = errno;
-            if (savedErrno != EEXIST)
-                LOG_ERROR(sLogger, ("correction aliuid file fail", fileName)("errno", strerror(savedErrno)));
-        } else
-            close(fd);
-    }
-}
-
-// TODO: Move to RuntimeUtil.
-void ConfigManagerBase::CorrectionLogtailSysConfDir() {
-    string rootDir = AppConfig::GetInstance()->GetLogtailSysConfDir();
-    do {
-        fsutil::Dir dir(rootDir);
-        if (dir.Open())
-            break;
-
-        bool changeDir = false;
-        int savedErrno = GetErrno();
-        if (fsutil::Dir::IsEACCES(savedErrno) || fsutil::Dir::IsENOTDIR(savedErrno)) {
-            changeDir = true;
-            LOG_ERROR(sLogger, ("invalid operation on dir", rootDir)("Open dir error", ErrnoToString(savedErrno)));
-        } else if (fsutil::Dir::IsENOENT(savedErrno)) {
-            if (!Mkdir(rootDir)) {
-                savedErrno = GetErrno();
-                if (!IsEEXIST(savedErrno)) {
-                    changeDir = true;
-                    LOG_ERROR(sLogger, ("create user config dir fail", rootDir)("error", ErrnoToString(savedErrno)));
-                }
-            } else
-                LOG_INFO(sLogger, ("create user config dir success", rootDir));
-        }
-        if (changeDir) {
-            rootDir = GetProcessExecutionDir();
-            LOG_WARNING(sLogger, ("use default user config dir instead", rootDir));
-        }
-    } while (0);
-
-    string userDir = rootDir + STRING_FLAG(logtail_sys_conf_users_dir);
-    do {
-        fsutil::Dir dir(userDir);
-        if (dir.Open())
-            break;
-
-        int savedErrno = GetErrno();
-        if (fsutil::Dir::IsEACCES(savedErrno) || fsutil::Dir::IsENOTDIR(savedErrno)
-            || fsutil::Dir::IsENOENT(savedErrno)) {
-            LOG_INFO(sLogger, ("invalid aliuid conf dir", userDir)("error", ErrnoToString(savedErrno)));
-            if (!Mkdir(userDir)) {
-                savedErrno = GetErrno();
-                if (!IsEEXIST(savedErrno)) {
-                    LOG_ERROR(sLogger, ("recreate aliuid conf dir", userDir)("error", ErrnoToString(savedErrno)));
-                }
-            } else {
-                LOG_INFO(sLogger, ("recreate aliuid conf dir success", userDir));
-            }
-        }
-    } while (0);
+    Sender::Instance()->ClearProjects();
+    Sender::Instance()->ClearRegions();
+    Sender::Instance()->ClearRegionAliuid();
 }
 
 void ConfigManagerBase::GetAllPluginConfig(std::vector<Config*>& configVec) {
@@ -2689,45 +2303,6 @@ bool ConfigManagerBase::CheckYamlDirConfigUpdate(const std::string& configDirPat
     return updateFlag;
 }
 
-// UpdateConfigJson deals with config (only user log config, @configJson) from runtime plugin.
-// If @configJson is valid and something changed, update config.
-int32_t ConfigManagerBase::UpdateConfigJson(const std::string& configJson) {
-    if (IsUpdate() == true)
-        return 1;
-
-    if (!IsValidJson(configJson.c_str(), configJson.size())) {
-        LOG_ERROR(sLogger, ("invalid config json", configJson));
-        return 2;
-    }
-
-    Json::Value jsonRoot;
-    Json::CharReaderBuilder builder;
-    builder["collectComments"] = false;
-    std::unique_ptr<Json::CharReader> jsonReader(builder.newCharReader());
-    std::string jsonParseErrs;
-    if (!jsonReader->parse(configJson.data(), configJson.data() + configJson.size(), &jsonRoot, &jsonParseErrs)) {
-        LOG_WARNING(sLogger, ("invalid config json", configJson)("ParseConfig error", jsonParseErrs));
-        return 2;
-    }
-
-    if (BOOL_FLAG(logtail_config_update_enable)) {
-        if (jsonRoot == mConfigJson) {
-            LOG_INFO(sLogger, ("same config", configJson));
-            return 3;
-        }
-        mConfigJson = jsonRoot;
-        DumpConfigToLocal(AppConfig::GetInstance()->GetUserConfigPath(), mConfigJson);
-        SetConfigRemoveFlag(true);
-        LOG_INFO(sLogger, ("Update logtail config", configJson));
-        StartUpdateConfig();
-        mConfigUpdateTotal++;
-        mLastConfigUpdateTime = ((int32_t)time(NULL));
-        return 0;
-    }
-    return 4;
-}
-
-
 // DumpConfigToLocal dumps @configJson to local file named @fileName.
 // In general, Logtail will call this function when mConfigJson was changed.
 bool ConfigManagerBase::DumpConfigToLocal(std::string fileName, const Json::Value& configJson) {
@@ -2746,30 +2321,7 @@ bool ConfigManagerBase::DumpConfigToLocal(std::string fileName, const Json::Valu
 }
 
 void ConfigManagerBase::InitUpdateConfig(bool configExistFlag) {
-    mProcessStartTime = time(NULL);
-}
-
-bool ConfigManagerBase::TryGetUUID() {
-    mUUIDthreadPtr = CreateThread([this]() { GetUUIDThread(); });
-    // wait 1000 ms
-    for (int i = 0; i < 100; ++i) {
-        usleep(10 * 1000);
-        if (!GetUUID().empty()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool ConfigManagerBase::GetUUIDThread() {
-    std::string uuid;
-#if defined(__aarch64__) || defined(__sw_64__)
-    // DMI can not work on such platforms but might crash Logtail, disable.
-#else
-    uuid = CalculateDmiUUID();
-#endif
-    SetUUID(uuid);
-    return true;
+    // mProcessStartTime = time(NULL);
 }
 
 void ConfigManagerBase::AddHandlerToDelete(EventHandler* handler) {
@@ -2796,30 +2348,6 @@ Config* ConfigManagerBase::FindDSConfigByCategory(const std::string& dsCtegory) 
     return NULL;
 }
 
-// ReloadMappingConfig reloads mapping config.
-// **Nobody use this feature now...**
-void ConfigManagerBase::ReloadMappingConfig() {
-    Json::Value confJson;
-    if (ParseConfig(AppConfig::GetInstance()->GetMappingConfigPath(), confJson) != CONFIG_OK)
-        return;
-    PTScopedLock lock(mMappingPathsLock);
-    mMappingPaths.clear();
-    if (confJson.isObject() && confJson.isMember("log_paths")) {
-        const Json::Value& logPathJson = confJson["log_paths"];
-        if (logPathJson.isObject()) {
-            Json::Value::Members ids = logPathJson.getMemberNames();
-            for (size_t i = 0; i < ids.size(); i++)
-                mMappingPaths[ids[i]] = GetStringValue(logPathJson, ids[i], "");
-        }
-    }
-}
-
-std::string ConfigManagerBase::GetMappingPath(const std::string& id) {
-    PTScopedLock lock(mMappingPathsLock);
-    unordered_map<string, string>::iterator iter = mMappingPaths.find(id);
-    return iter == mMappingPaths.end() ? "" : mMappingPaths[id];
-}
-
 // GetRelatedConfigs calculates related configs of @path.
 // Two kind of relations:
 // 1. No wildcard path: the base path of Config is the prefix of @path and within depth.
@@ -2836,40 +2364,6 @@ void ConfigManagerBase::GetRelatedConfigs(const std::string& path, std::vector<C
 }
 
 SensitiveWordCastOption::~SensitiveWordCastOption() {
-}
-
-std::string ConfigManagerBase::GetAllProjectsSet() {
-    string result;
-    ScopedSpinLock lock(mProjectSetLock);
-    for (std::set<string>::iterator iter = mProjectSet.begin(); iter != mProjectSet.end(); ++iter) {
-        result.append(*iter).append(" ");
-    }
-    return result;
-}
-
-void ConfigManagerBase::InsertProject(const std::string& project) {
-    ScopedSpinLock lock(mProjectSetLock);
-    mProjectSet.insert(project);
-}
-
-void ConfigManagerBase::ClearProjects() {
-    ScopedSpinLock lock(mProjectSetLock);
-    mProjectSet.clear();
-}
-
-void ConfigManagerBase::InsertRegion(const std::string& region) {
-    ScopedSpinLock lock(mRegionSetLock);
-    mRegionSet.insert(region);
-}
-
-void ConfigManagerBase::ClearRegions() {
-    ScopedSpinLock lock(mRegionSetLock);
-    mRegionSet.clear();
-}
-
-bool ConfigManagerBase::CheckRegion(const std::string& region) const {
-    ScopedSpinLock lock(mRegionSetLock);
-    return mRegionSet.find(region) != mRegionSet.end();
 }
 
 bool ConfigManagerBase::UpdateContainerPath(DockerContainerPathCmd* cmd) {
@@ -3095,41 +2589,6 @@ void ConfigManagerBase::LoadDockerConfig() {
     DoUpdateContainerPaths();
 }
 
-bool ConfigManagerBase::LoadMountPaths() {
-    if (!AppConfig::GetInstance()->IsContainerMode())
-        return false;
-    std::ifstream is;
-    is.open(AppConfig::GetInstance()->GetContainerMountConfigPath().c_str());
-    if (!is.good()) {
-        LOG_ERROR(sLogger,
-                  ("container mount config path not exist", AppConfig::GetInstance()->GetContainerMountConfigPath()));
-        return false;
-    }
-
-    is.seekg(0, ios::end);
-    int len = is.tellg();
-    is.seekg(0, ios::beg);
-    char* buffer = new char[len + 1];
-    memset(buffer, 0, len + 1);
-    is.read(buffer, len);
-    is.close();
-
-    string jsonStr(buffer);
-    delete[] buffer;
-
-    PTScopedLock lock(mDockerMountPathsLock);
-    if (jsonStr == mDockerMountPaths.mJsonStr) {
-        return false;
-    }
-    bool parseResult = DockerMountPaths::ParseByJsonStr(jsonStr, mDockerMountPaths);
-    return parseResult;
-}
-
-DockerMountPaths ConfigManagerBase::GetMountPaths() {
-    PTScopedLock lock(mDockerMountPathsLock);
-    return mDockerMountPaths;
-}
-
 #ifdef APSARA_UNIT_TEST_MAIN
 void ConfigManagerBase::CleanEnviroments() {
     RemoveAllConfigs();
@@ -3201,21 +2660,6 @@ std::string replaceEnvVarRefInStr(const std::string& inStr) {
     }
     outStr.append(unescapeDollar(lastMatchEnd, inStr.end())); // original part
     return outStr;
-}
-
-const set<string>& ConfigManagerBase::GetRegionAliuids(const std::string& region) {
-    PTScopedLock lock(mRegionAliuidMapLock);
-    return mRegionAliuidMap[region];
-}
-
-void ConfigManagerBase::InsertRegionAliuidMap(const std::string& region, const std::string& aliuid) {
-    PTScopedLock lock(mRegionAliuidMapLock);
-    mRegionAliuidMap[region].insert(aliuid);
-}
-
-void ConfigManagerBase::ClearRegionAliuidMap() {
-    PTScopedLock lock(mRegionAliuidMapLock);
-    mRegionAliuidMap.clear();
 }
 
 } // namespace logtail

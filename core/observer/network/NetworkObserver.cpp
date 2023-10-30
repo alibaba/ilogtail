@@ -29,6 +29,9 @@
 #include "go_pipeline/LogtailPlugin.h"
 #include "Constants.h"
 #include "LogFileProfiler.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
 
 DEFINE_FLAG_INT64(sls_observer_network_ebpf_connection_gc_interval,
                   "SLS Observer NetWork connection gc interval seconds",
@@ -540,12 +543,14 @@ int NetworkObserver::OutputDirectly(std::vector<sls_logs::Log>& logs, Config* co
         sls_logs::LogTag* logTagPtr = logGroup.add_logtags();
         logTagPtr->set_key(LOG_RESERVED_KEY_HOSTNAME);
         logTagPtr->set_value(LogFileProfiler::mHostname.substr(0, 99));
-        std::string userDefinedId = ConfigManager::GetInstance()->GetUserDefinedIdSet();
+#ifdef __ENTERPRISE__
+        std::string userDefinedId = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
         if (!userDefinedId.empty()) {
             logTagPtr = logGroup.add_logtags();
             logTagPtr->set_key(LOG_RESERVED_KEY_USER_DEFINED_ID);
             logTagPtr->set_value(userDefinedId.substr(0, 99));
         }
+#endif
         logGroup.set_category(config->mCategory);
         logGroup.set_source(LogFileProfiler::mIpAddr);
         if (!config->mGroupTopic.empty()) {

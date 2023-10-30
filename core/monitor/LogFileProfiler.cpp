@@ -254,7 +254,7 @@ void LogFileProfiler::SendProfileData(bool forceSend) {
             }
         }
         UpdateDumpData(logGroup, detail, logstore);
-        mProfileSender.SendToProfileProject(region, logGroup);
+        ProfileSender::GetInstance()->SendToProfileProject(region, logGroup);
     } while (true);
     DumpToLocal(curTime, forceSend, detail, logstore);
     mLastSendTime = curTime;

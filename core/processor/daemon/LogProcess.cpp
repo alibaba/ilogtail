@@ -44,6 +44,9 @@
 #include "aggregator/Aggregator.h"
 #include "fuse/FuseFileBlacklist.h"
 #include "common/LogFileCollectOffsetIndicator.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
 
 
 using namespace sls_logs;
@@ -485,10 +488,12 @@ void LogProcess::FillEventGroupMetadata(LogBuffer& logBuffer, PipelineEventGroup
     eventGroup.SetMetadataNoCopy(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED, logBuffer.logFileReader->GetHostLogPath());
     eventGroup.SetMetadata(EventGroupMetaKey::LOG_FILE_INODE,
                            std::to_string(logBuffer.logFileReader->GetDevInode().inode));
-    std::string agentTag = ConfigManager::GetInstance()->GetUserDefinedIdSet();
+#ifdef __ENTERPRISE__
+    std::string agentTag = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
     if (!agentTag.empty()) {
-        eventGroup.SetMetadata(EventGroupMetaKey::AGENT_TAG, ConfigManager::GetInstance()->GetUserDefinedIdSet());
+        eventGroup.SetMetadata(EventGroupMetaKey::AGENT_TAG, EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet());
     }
+#endif
     eventGroup.SetMetadataNoCopy(EventGroupMetaKey::HOST_IP, LogFileProfiler::mIpAddr);
     eventGroup.SetMetadataNoCopy(EventGroupMetaKey::HOST_NAME, LogFileProfiler::mHostname);
     eventGroup.SetMetadata(EventGroupMetaKey::LOG_READ_OFFSET, std::to_string(logBuffer.readOffset));
@@ -571,8 +576,8 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                 .append(LOG_RESERVED_KEY_PATH)
                 .append(TAG_SEPARATOR)
                 .append(logPath.substr(0, 511));
-
-            std::string userDefinedId = ConfigManager::GetInstance()->GetUserDefinedIdSet();
+#ifdef __ENTERPRISE__
+            std::string userDefinedId = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
             if (!userDefinedId.empty()) {
                 passingTags.append(TAG_DELIMITER)
                     .append(TAG_PREFIX)
@@ -580,6 +585,7 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                     .append(TAG_SEPARATOR)
                     .append(userDefinedId.substr(0, 99));
             }
+#endif
             const std::vector<sls_logs::LogTag>& extraTags = logFileReader->GetExtraTags();
             for (size_t i = 0; i < extraTags.size(); ++i) {
                 passingTags.append(TAG_DELIMITER)
@@ -728,13 +734,14 @@ int LogProcess::ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
                 logTagPtr->set_key(LOG_RESERVED_KEY_ALIPAY_ZONE);
                 logTagPtr->set_value(alipayZone);
             }
-
-            string userDefinedId = ConfigManager::GetInstance()->GetUserDefinedIdSet();
+#ifdef __ENTERPRISE__
+            string userDefinedId = EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet();
             if (userDefinedId.size() > 0) {
                 logTagPtr = logGroup.add_logtags();
                 logTagPtr->set_key(LOG_RESERVED_KEY_USER_DEFINED_ID);
                 logTagPtr->set_value(userDefinedId.substr(0, 99));
             }
+#endif
 
             const std::vector<sls_logs::LogTag>& extraTags = logFileReader->GetExtraTags();
             for (size_t i = 0; i < extraTags.size(); ++i) {
@@ -767,10 +774,6 @@ void LogProcess::DoFuseHandling() {
     LogFileCollectOffsetIndicator::GetInstance()->CalcFileOffset();
     LogFileCollectOffsetIndicator::GetInstance()->EliminateOutDatedItem();
     LogFileCollectOffsetIndicator::GetInstance()->ShrinkLogFileOffsetInfoMap();
-
-    if (ConfigManager::GetInstance()->HaveFuseConfig()) {
-        FuseFileBlacklist::GetInstance()->RemoveFile();
-    }
 }
 
 #ifdef APSARA_UNIT_TEST_MAIN
