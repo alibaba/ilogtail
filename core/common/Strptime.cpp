@@ -77,7 +77,7 @@ static const unsigned char* conv_nanosecond(const unsigned char*, long*, int*);
 static const unsigned char* find_string(const unsigned char*, int*, const char* const*, const char* const*, int);
 
 // Parse time string into two part: second and nanosecond
-// Modify from https://github.com/NetBSD/src/blob/trunk/lib/libc/time/strptime.c
+// Modify from https://github.com/tnodir/luasys/blob/master/src/win32/strptime.c
 const char* strptime_ns(const char* buf, const char* fmt, struct tm* tm, long* nanosecond, int* nanosecondLength) {
     // Replenish %s support.
     if (0 == strcmp("%s", fmt)) {
