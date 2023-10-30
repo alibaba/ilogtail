@@ -51,7 +51,7 @@ private:
     CounterPtr mProcFilterErrorTotal;
     CounterPtr mProcFilterRecordsTotal;
 
-    bool LoadOldGlobalConfig(const PipelineConfig& componentConfig);
+    bool LoadOldGlobalConfig();
     bool FilterExpressionRoot(LogEvent& sourceEvent, const BaseFilterNodePtr& node);
     bool FilterFilterRule(LogEvent& sourceEvent, const LogFilterRule* filterRule);
     bool FilterGlobal(LogEvent& sourceEvent);

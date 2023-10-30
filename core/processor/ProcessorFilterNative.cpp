@@ -55,6 +55,12 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
     }
 
     if (mFilterMode == Mode::BYPASS_MODE) {
+        if (LoadOldGlobalConfig()) {
+            mFilterMode = Mode::GLOBAL_MODE;
+        }
+    }
+
+    if (mFilterMode == Mode::BYPASS_MODE) {
         errorMsg = "Include and ConditionExp must have one";
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
@@ -80,7 +86,7 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
     } else if (config.mFilterRule) {
         mFilterRule = config.mFilterRule;
         mFilterMode = Mode::RULE_MODE;
-    } else if (LoadOldGlobalConfig(config)) {
+    } else if (LoadOldGlobalConfig()) {
         mFilterMode = Mode::GLOBAL_MODE;
     } else {
         mFilterMode = Mode::BYPASS_MODE;
@@ -96,16 +102,16 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
     return true;
 }
 
-bool ProcessorFilterNative::LoadOldGlobalConfig(const PipelineConfig& config) {
+bool ProcessorFilterNative::LoadOldGlobalConfig() {
     // old InitFilter
     Json::Value jsonRoot; // will contains the root value after parsing.
     ParseConfResult userLogRes = ParseConfig(STRING_FLAG(user_log_config), jsonRoot);
     if (userLogRes != CONFIG_OK) {
         if (userLogRes == CONFIG_NOT_EXIST)
-            LOG_DEBUG(GetContext().GetLogger(), (config.mConfigName, "not found, uninitialized Filter"));
+            LOG_DEBUG(GetContext().GetLogger(), (mContext->GetConfigName(), "not found, uninitialized Filter"));
         if (userLogRes == CONFIG_INVALID_FORMAT)
             LOG_ERROR(GetContext().GetLogger(),
-                      ("load user config for filter fail, file content is not valid json", config.mConfigName));
+                      ("load user config for filter fail, file content is not valid json", mContext->GetConfigName()));
         return false;
     }
     if (!jsonRoot.isMember("filters")) {

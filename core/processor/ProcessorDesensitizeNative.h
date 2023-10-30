@@ -33,7 +33,7 @@ public:
     std::string mReplacingString;
     std::string mContentPatternBeforeReplacedString;
     std::string mReplacedContentPattern;
-    bool mReplacingAll;
+    bool mReplacingAll = true;
 
     static const int32_t MD5_OPTION = 0;
     static const int32_t CONST_OPTION = 1;

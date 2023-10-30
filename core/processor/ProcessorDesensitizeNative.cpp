@@ -59,9 +59,9 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "ReplacingAll", mReplacingAll, errorMsg)) {
-        mReplacingAll = true;
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mReplacingAll, sName, mContext->GetConfigName());
     }
+    
     std::string regexStr = std::string("(") + mContentPatternBeforeReplacedString + ")" + mReplacedContentPattern;
     mRegex.reset(new re2::RE2(regexStr));
     if (!mRegex->ok()) {
