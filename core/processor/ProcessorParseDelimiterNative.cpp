@@ -36,28 +36,70 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
     if (!GetMandatoryStringParam(config, "Separator", mSeparator, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
-    if (!GetOptionalStringParam(config, "Quote", mQuoteString, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mQuoteString, sName, mContext->GetConfigName());
+
+    if (mSeparator == "\\t")
+        mSeparator = '\t';
+    if (mSeparator.size() == 1) {
+        std::string quoteStr = "\"";
+        if (!GetOptionalStringParam(config, "Quote", quoteStr, errorMsg)) {
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mQuote, sName, mContext->GetConfigName());
+        } else if (quoteStr.size() == 1) {
+            mQuote = quoteStr[0];
+        } else {
+            errorMsg = "quote for Delimiter Log only support single char(like \")";
+            PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        }
+    } else if (mSeparator.size() > 1)
+        config->mSeparator = separatorStr;
+    else {
+        errorMsg = "separator for Delimiter Log should not be empty";
+        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
+
     if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "AllowingShortenedFields", mAllowingShortenedFields, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mAllowingShortenedFields, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mAllowingShortenedFields, sName, mContext->GetConfigName());
     }
     if (!GetOptionalStringParam(config, "OverflowedFieldsTreatment", mOverflowedFieldsTreatment, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mOverflowedFieldsTreatment, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mOverflowedFieldsTreatment, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, sName, mContext->GetConfigName());
     }
     if (!GetOptionalStringParam(config, "RenamedSourceKey", mRenamedSourceKey, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
     }
 
+    if (!mSeparator.empty())
+        mSeparatorChar = mSeparator.data()[0];
+    else {
+        // This should never happened.
+        mSeparatorChar = '\t';
+    }
+
+    if (mKeepingSourceWhenParseSucceed && mRenamedSourceKey == mSourceKey) {
+        mSourceKeyOverwritten = true;
+    }
+
+    for (auto key : mKeys) {
+        if (key.compare(mSourceKey) == 0) {
+            mSourceKeyOverwritten = true;
+        }
+        if (key.compare(mRawLogTag) == 0) {
+            mRawLogTagOverwritten = true;
+        }
+    }
+
+    mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 

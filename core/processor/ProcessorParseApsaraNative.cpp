@@ -56,6 +56,7 @@ bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
     if (!GetOptionalStringParam(config, "Timezone", mTimezone, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mTimezone, sName, mContext->GetConfigName());
     }
+    GetOptionalBoolParam(config, "AdjustingMicroTimezone", mAdjustingMicroTimezone, errorMsg);
     if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
         PARAM_WARNING_DEFAULT(
             mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
@@ -82,19 +83,17 @@ bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
 
     if (mTimezone != "") {
         int logTZSecond = 0;
-        if (!ConfigManagerBase::ParseTimeZoneOffsetSecond(mTimezone, logTZSecond)) {
-            errorMsg = "invalid log time zone specified, will parse log time without time zone adjusted, time zone: "
-                + mTimezone;
+        if (!ParseTimeZoneOffsetSecond(mTimezone, logTZSecond)) {
+            errorMsg = "invalid log time zone set: " + mTimezone;
             PARAM_WARNING_DEFAULT(
                 mContext->GetLogger(), errorMsg, mLogTimeZoneOffsetSecond, sName, mContext->GetConfigName());
         } else {
             LOG_INFO(mContext->GetLogger(),
                      ("set log time zone", mTimezone)("project", mContext->GetProjectName())(
-                         "logstore", mContext->GetLogstoreName())("config", mContext->GetConfigName()));
+                         "logstore", mContext->GetLogstoreName())("config", mContext->GetConfigName())("offset seconds",
+                                                                                                       logTZSecond));
             mLogTimeZoneOffsetSecond = logTZSecond;
         }
-    } else {
-        mLogTimeZoneOffsetSecond = 0;
     }
 
     if (mKeepingSourceWhenParseSucceed && mRenamedSourceKey == mSourceKey) {

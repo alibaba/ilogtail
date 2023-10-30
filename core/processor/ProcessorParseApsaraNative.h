@@ -18,8 +18,6 @@
 #include <string>
 #include <boost/regex.hpp>
 
-using namespace std;
-
 namespace logtail {
 
 class ProcessorParseApsaraNative : public Processor {
@@ -28,10 +26,13 @@ public:
 
     std::string mSourceKey;
     std::string mTimezone = "";
+    bool mAdjustingMicroTimezone = false;
     bool mKeepingSourceWhenParseFail = false;
     bool mKeepingSourceWhenParseSucceed = false;
     std::string mRenamedSourceKey = "";
     bool mCopingRawLog = false;
+    int mLogTimeZoneOffsetSecond = 0;
+    bool mSourceKeyOverwritten = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
@@ -42,7 +43,6 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    int mLogTimeZoneOffsetSecond = 0;
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
     time_t ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
@@ -54,7 +54,6 @@ private:
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;
     bool mAdjustApsaraMicroTimezone = false;
-    bool mSourceKeyOverwritten = false;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;

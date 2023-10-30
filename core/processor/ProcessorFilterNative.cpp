@@ -65,7 +65,6 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "DiscardingNonUTF8", mDiscardingNonUTF8, errorMsg)) {
-        mDiscardingNonUTF8 = false;
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mDiscardingNonUTF8, sName, mContext->GetConfigName());
     }
 

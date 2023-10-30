@@ -28,14 +28,17 @@ public:
     enum class Method { extend, keep, discard };
     std::string mSourceKey;
     std::string mSeparator;
-    std::string mQuoteString = "\"";
+    char mQuote = '"';
     std::vector<std::string> mKeys;
     bool mAllowingShortenedFields = true;
     std::string mOverflowedFieldsTreatment = "extend";
     bool mKeepingSourceWhenParseFail = false;
     bool mKeepingSourceWhenParseSucceed = false;
     std::string mRenamedSourceKey = "";
-    bool mCopingRawLog;
+    bool mCopingRawLog = false;
+    char mSeparatorChar;
+    bool mSourceKeyOverwritten = false;
+    bool mRawLogTagOverwritten = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
@@ -60,10 +63,6 @@ private:
     bool mAcceptNoEnoughKeys = false;
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;
-    bool mSourceKeyOverwritten = false;
-    bool mRawLogTagOverwritten = false;
-    char mQuote;
-    char mSeparatorChar;
     DelimiterModeFsmParser* mDelimiterModeFsmParserPtr;
 
     int* mLogGroupSize = nullptr;

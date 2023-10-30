@@ -40,7 +40,7 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
     } else if (method == "md5") {
         mMethod = MD5_OPTION;
     } else {
-        errorMsg = "The Method is invalid";
+        errorMsg = "The method(" + method + ") is invalid";
         PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
 
@@ -61,18 +61,18 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
     if (!GetOptionalBoolParam(config, "ReplacingAll", mReplacingAll, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mReplacingAll, sName, mContext->GetConfigName());
     }
-    
+
     std::string regexStr = std::string("(") + mContentPatternBeforeReplacedString + ")" + mReplacedContentPattern;
     mRegex.reset(new re2::RE2(regexStr));
     if (!mRegex->ok()) {
-        std::string errorMsg = mRegex->error();
+        errorMsg = mRegex->error();
         errorMsg += std::string(", regex : ") + regexStr;
         // do not throw when parse sensitive key error
-        LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-                                               std::string("The sensitive key regex is invalid, ") + errorMsg,
-                                               GetContext().GetProjectName(),
-                                               GetContext().GetLogstoreName(),
-                                               GetContext().GetRegion());
+        mContext->GetAlarm().SendAlarm(CATEGORY_CONFIG_ALARM,
+                                       std::string("The sensitive key regex is invalid, ") + errorMsg,
+                                       GetContext().GetProjectName(),
+                                       GetContext().GetLogstoreName(),
+                                       GetContext().GetRegion());
         PARAM_ERROR(mContext->GetLogger(),
                     "The sensitive regex is invalid, error:" + errorMsg,
                     sName,
