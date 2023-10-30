@@ -49,7 +49,7 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     if (!GetOptionalBoolParam(config, "EnableContainerDiscovery", mEnableContainerDiscovery, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     } else if (mEnableContainerDiscovery && !AppConfig::GetInstance()->IsPurageContainerMode()) {
-        PARAM_ERROR(mContext->GetLogger(),
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
                     "iLogtail is not in container, but container discovery is required",
                     sName,
                     mContext->GetConfigName());

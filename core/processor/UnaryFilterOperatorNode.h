@@ -30,14 +30,14 @@ public:
     virtual ~UnaryFilterOperatorNode(){};
 
 public:
-    virtual bool Match(const sls_logs::Log& log, const LogGroupContext& context) {
+    virtual bool Match(const sls_logs::Log& log, const LogGroupContext& context) override {
         if (BOOST_LIKELY(child.get() != NULL)) {
             return !child->Match(log, context);
         }
         return false;
     }
 
-    virtual bool Match(const LogContents& contents, PipelineContext& mContext) {
+    virtual bool Match(const LogContents& contents, const PipelineContext& mContext) override {
         if (BOOST_LIKELY(child.get() != NULL)) {
             return !child->Match(contents, mContext);
         }

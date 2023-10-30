@@ -27,15 +27,15 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
     string errorMsg;
     // FilePaths + MaxDirSearchDepth
     if (!GetMandatoryListParam<string>(config, "FilePaths", mFilePaths, errorMsg)) {
-        PARAM_ERROR(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
     }
     if (mFilePaths.size() != 1) {
-        PARAM_ERROR(ctx.GetLogger(), "param FilePaths has more than 1 element", pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(), "param FilePaths has more than 1 element", pluginName, ctx.GetConfigName());
     }
     auto dirAndFile = GetDirAndFileNameFromPath(mFilePaths[0]);
     mBasePath = dirAndFile.first, mFilePattern = dirAndFile.second;
     if (mBasePath.empty() || mFilePattern.empty()) {
-        PARAM_ERROR(ctx.GetLogger(), "param FilePaths[0] is invalid", pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(), "param FilePaths[0] is invalid", pluginName, ctx.GetConfigName());
     }
     size_t len = mBasePath.size();
     if (len > 2 && mBasePath[len - 1] == '*' && mBasePath[len - 2] == '*'

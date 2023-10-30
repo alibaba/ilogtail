@@ -29,7 +29,7 @@ bool NewConfig::Parse() {
     const Json::Value* itr = mDetail.find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!itr->isObject()) {
-            PARAM_ERROR(sLogger, "global module is not of type object", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "global module is not of type object", noModule, mName);
         }
         mGlobal = itr;
     }
@@ -43,23 +43,23 @@ bool NewConfig::Parse() {
     key = "inputs";
     itr = mDetail.find(key.c_str(), key.c_str() + key.size());
     if (!itr) {
-        PARAM_ERROR(sLogger, "mandatory inputs module is missing", noModule, mName);
+        PARAM_ERROR_RETURN(sLogger, "mandatory inputs module is missing", noModule, mName);
     }
     if (!itr->isArray()) {
-        PARAM_ERROR(sLogger, "mandatory inputs module is not of type array", noModule, mName);
+        PARAM_ERROR_RETURN(sLogger, "mandatory inputs module is not of type array", noModule, mName);
     }
     if (itr->empty()) {
-        PARAM_ERROR(sLogger, "mandatory inputs module has no plugin", noModule, mName);
+        PARAM_ERROR_RETURN(sLogger, "mandatory inputs module has no plugin", noModule, mName);
     }
     for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
         const Json::Value& plugin = (*itr)[i];
         if (!plugin.isObject()) {
-            PARAM_ERROR(sLogger, "param inputs[" + ToString(i) + "] is not of type object", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "param inputs[" + ToString(i) + "] is not of type object", noModule, mName);
         }
         key = "Type";
         const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
         if (!it->isString()) {
-            PARAM_ERROR(sLogger, "param inputs[" + ToString(i) + "].Type is not of type string", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "param inputs[" + ToString(i) + "].Type is not of type string", noModule, mName);
         }
         const std::string pluginName = it->asString();
         if (i == 0) {
@@ -68,22 +68,22 @@ bool NewConfig::Parse() {
             } else if (PluginRegistry::GetInstance()->IsValidNativeInputPlugin(pluginName)) {
                 mHasNativeInput = true;
             } else {
-                PARAM_ERROR(sLogger, "unsupported input plugin", pluginName, mName);
+                PARAM_ERROR_RETURN(sLogger, "unsupported input plugin", pluginName, mName);
             }
         } else {
             if (mHasGoInput) {
                 if (PluginRegistry::GetInstance()->IsValidNativeInputPlugin(pluginName)) {
-                    PARAM_ERROR(sLogger, "native and extended input plugins coexist", noModule, mName);
+                    PARAM_ERROR_RETURN(sLogger, "native and extended input plugins coexist", noModule, mName);
                 } else if (!PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
-                    PARAM_ERROR(sLogger, "unsupported input plugin", pluginName, mName);
+                    PARAM_ERROR_RETURN(sLogger, "unsupported input plugin", pluginName, mName);
                 }
             } else {
                 if (PluginRegistry::GetInstance()->IsValidNativeInputPlugin(pluginName)) {
-                    PARAM_ERROR(sLogger, "more than 1 native input plugin is given", noModule, mName);
+                    PARAM_ERROR_RETURN(sLogger, "more than 1 native input plugin is given", noModule, mName);
                 } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
-                    PARAM_ERROR(sLogger, "native and extended input plugins coexist", noModule, mName);
+                    PARAM_ERROR_RETURN(sLogger, "native and extended input plugins coexist", noModule, mName);
                 } else {
-                    PARAM_ERROR(sLogger, "unsupported input plugin", pluginName, mName);
+                    PARAM_ERROR_RETURN(sLogger, "unsupported input plugin", pluginName, mName);
                 }
             }
         }
@@ -101,40 +101,40 @@ bool NewConfig::Parse() {
     itr = mDetail.find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!itr->isArray()) {
-            PARAM_ERROR(sLogger, "processors module is not of type array", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "processors module is not of type array", noModule, mName);
         }
 #ifdef __ENTERPRISE__
         if (hasStreamInput && !itr->empty()) {
-            PARAM_ERROR(sLogger, "processor plugins coexist with input_stream", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "processor plugins coexist with input_stream", noModule, mName);
         }
 #endif
         bool isCurrentPluginNative = true;
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
             if (!plugin.isObject()) {
-                PARAM_ERROR(sLogger, "param processors[" + ToString(i) + "] is not of type object", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger, "param processors[" + ToString(i) + "] is not of type object", noModule, mName);
             }
             key = "Type";
             const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
             if (!it->isString()) {
-                PARAM_ERROR(
+                PARAM_ERROR_RETURN(
                     sLogger, "param processors[" + ToString(i) + "].Type is not of type string", noModule, mName);
             }
             const std::string pluginName = it->asString();
             if (mHasGoInput) {
                 if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
-                    PARAM_ERROR(
+                    PARAM_ERROR_RETURN(
                         sLogger, "native processor plugins coexist with extended input plugins", noModule, mName);
                 } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                     mHasGoProcessor = true;
                 } else {
-                    PARAM_ERROR(sLogger, "unsupported processor plugin", pluginName, mName);
+                    PARAM_ERROR_RETURN(sLogger, "unsupported processor plugin", pluginName, mName);
                 }
             } else {
                 if (isCurrentPluginNative) {
                     if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                         if (hasObserverInput) {
-                            PARAM_ERROR(sLogger,
+                            PARAM_ERROR_RETURN(sLogger,
                                         "native processor plugins coexist with input_observer_network",
                                         noModule,
                                         mName);
@@ -142,18 +142,18 @@ bool NewConfig::Parse() {
                         isCurrentPluginNative = false;
                         mHasGoProcessor = true;
                     } else if (!PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
-                        PARAM_ERROR(sLogger, "unsupported processor plugin", pluginName, mName);
+                        PARAM_ERROR_RETURN(sLogger, "unsupported processor plugin", pluginName, mName);
                     }
                 } else {
                     if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
-                        PARAM_ERROR(sLogger,
+                        PARAM_ERROR_RETURN(sLogger,
                                     "native processor plugin comes after extended processor plugin",
                                     pluginName,
                                     mName);
                     } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                         mHasGoProcessor = true;
                     } else {
-                        PARAM_ERROR(sLogger, "unsupported processor plugin", pluginName, mName);
+                        PARAM_ERROR_RETURN(sLogger, "unsupported processor plugin", pluginName, mName);
                     }
                 }
             }
@@ -169,23 +169,23 @@ bool NewConfig::Parse() {
     key = "flushers";
     itr = mDetail.find(key.c_str(), key.c_str() + key.size());
     if (!itr) {
-        PARAM_ERROR(sLogger, "mandatory flushers module is missing", noModule, mName);
+        PARAM_ERROR_RETURN(sLogger, "mandatory flushers module is missing", noModule, mName);
     }
     if (!itr->isArray()) {
-        PARAM_ERROR(sLogger, "mandatory flushers module is not of type array", noModule, mName);
+        PARAM_ERROR_RETURN(sLogger, "mandatory flushers module is not of type array", noModule, mName);
     }
     if (itr->empty()) {
-        PARAM_ERROR(sLogger, "mandatory flushers module has no plugin", noModule, mName);
+        PARAM_ERROR_RETURN(sLogger, "mandatory flushers module has no plugin", noModule, mName);
     }
     for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
         const Json::Value& plugin = (*itr)[i];
         if (!plugin.isObject()) {
-            PARAM_ERROR(sLogger, "param flushers[" + ToString(i) + "] is not of type object", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "param flushers[" + ToString(i) + "] is not of type object", noModule, mName);
         }
         key = "Type";
         const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
         if (!it->isString()) {
-            PARAM_ERROR(sLogger, "param flushers[" + ToString(i) + "].Type is not of type string", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "param flushers[" + ToString(i) + "].Type is not of type string", noModule, mName);
         }
         const std::string pluginName = it->asString();
         if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
@@ -193,45 +193,45 @@ bool NewConfig::Parse() {
         } else if (PluginRegistry::GetInstance()->IsValidNativeFlusherPlugin(pluginName)) {
             mHasNativeFlusher = true;
         } else {
-            PARAM_ERROR(sLogger, "unsupported flusher plugin", pluginName, mName);
+            PARAM_ERROR_RETURN(sLogger, "unsupported flusher plugin", pluginName, mName);
         }
 #ifdef __ENTERPRISE__
         if (hasStreamInput && pluginName != "flusher_sls") {
-            PARAM_ERROR(sLogger, "flusher plugins other than flusher_sls coexist with input_stream", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "flusher plugins other than flusher_sls coexist with input_stream", noModule, mName);
         }
 #endif
         mFlushers.push_back(&plugin);
     }
     if (mHasNativeFlusher && mHasGoFlusher && !ShouldNativeFlusherConnectedByGoPipeline()) {
-        PARAM_ERROR(sLogger, "native and extended flusher coexist in native processing mode", noModule, mName);
+        PARAM_ERROR_RETURN(sLogger, "native and extended flusher coexist in native processing mode", noModule, mName);
     }
 
     key = "aggregators";
     itr = mDetail.find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!IsFlushingThroughGoPipelineExisted()) {
-            PARAM_ERROR(sLogger, "aggregator plugins exist in native flushing mode", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "aggregator plugins exist in native flushing mode", noModule, mName);
         }
         if (!itr->isArray()) {
-            PARAM_ERROR(sLogger, "aggregators module is not of type array", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "aggregators module is not of type array", noModule, mName);
         }
         if (itr->size() != 1) {
-            PARAM_ERROR(sLogger, "more than 1 aggregator is given", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "more than 1 aggregator is given", noModule, mName);
         }
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
             if (!plugin.isObject()) {
-                PARAM_ERROR(sLogger, "param aggregators[" + ToString(i) + "] is not of type object", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger, "param aggregators[" + ToString(i) + "] is not of type object", noModule, mName);
             }
             key = "Type";
             const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
             if (!it->isString()) {
-                PARAM_ERROR(
+                PARAM_ERROR_RETURN(
                     sLogger, "param aggregators[" + ToString(i) + "].Type is not of type string", noModule, mName);
             }
             const std::string pluginName = it->asString();
             if (!PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
-                PARAM_ERROR(sLogger, "unsupported aggregator plugin", pluginName, mName);
+                PARAM_ERROR_RETURN(sLogger, "unsupported aggregator plugin", pluginName, mName);
             }
             mAggregators.push_back(&plugin);
         }
@@ -241,25 +241,25 @@ bool NewConfig::Parse() {
     itr = mDetail.find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!HasGoPlugin()) {
-            PARAM_ERROR(sLogger, "extension plugins exist when no extended plugin is given", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "extension plugins exist when no extended plugin is given", noModule, mName);
         }
         if (!itr->isArray()) {
-            PARAM_ERROR(sLogger, "extensions module is not of type array", noModule, mName);
+            PARAM_ERROR_RETURN(sLogger, "extensions module is not of type array", noModule, mName);
         }
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
             if (!plugin.isObject()) {
-                PARAM_ERROR(sLogger, "param extensions[" + ToString(i) + "] is not of type object", noModule, mName);
+                PARAM_ERROR_RETURN(sLogger, "param extensions[" + ToString(i) + "] is not of type object", noModule, mName);
             }
             key = "Type";
             const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
             if (!it->isString()) {
-                PARAM_ERROR(
+                PARAM_ERROR_RETURN(
                     sLogger, "param extensions[" + ToString(i) + "].Type is not of type string", noModule, mName);
             }
             const std::string pluginName = it->asString();
             if (!PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
-                PARAM_ERROR(sLogger, "unsupported extension plugin", pluginName, mName);
+                PARAM_ERROR_RETURN(sLogger, "unsupported extension plugin", pluginName, mName);
             }
             mExtensions.push_back(&plugin);
         }
