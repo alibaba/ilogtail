@@ -1486,11 +1486,13 @@ void Sender::DaemonSender() {
             }
 
             mLastSendDataTime = curTime;
+#ifdef __ENTERPRISE__
             if (BOOST_UNLIKELY(AppConfig::GetInstance()->IsDebugMode())) {
                 DumpDebugFile(data);
                 OnSendDone(data, LogstoreSenderInfo::SendResult_OK);
                 DescSendingCount();
             } else {
+#endif
                 if (!IsFlush() && AppConfig::GetInstance()->IsSendFlowControl()) {
                     FlowControl(data->mRawSize, REALTIME_SEND_THREAD);
                 }
@@ -1522,7 +1524,9 @@ void Sender::DaemonSender() {
                 sendLines += data->mLogLines;
                 data->mLastUpdateTime = time(NULL); // set last update time before sending
                 SendToNetAsync(data);
+#ifdef __ENTERPRISE__
             }
+#endif
         }
         logGroupToSend.clear();
 

@@ -402,7 +402,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             //             logTimeReg
             //                 = GetStringValue(dataIntegrityValue, "log_time_reg", STRING_FLAG(default_log_time_reg));
             //             timePos
-            //                 = GetIntValue(dataIntegrityValue, "time_pos", INT32_FLAG(default_data_integrity_time_pos));
+            //                 = GetIntValue(dataIntegrityValue, "time_pos",
+            //                 INT32_FLAG(default_data_integrity_time_pos));
             //         }
             //     }
             //     if (customizedFieldsValue.isMember("line_count") && customizedFieldsValue["line_count"].isObject()) {
@@ -410,7 +411,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             //         lineCountSwitch = GetBoolValue(lineCountValue, "switch", false);
             //         if (lineCountSwitch) {
             //             lineCountProjectName
-            //                 = GetStringValue(lineCountValue, "project_name", STRING_FLAG(default_line_count_project));
+            //                 = GetStringValue(lineCountValue, "project_name",
+            //                 STRING_FLAG(default_line_count_project));
             //             lineCountLogstore
             //                 = GetStringValue(lineCountValue, "logstore", STRING_FLAG(default_line_count_log_store));
             //         }
@@ -419,7 +421,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             //     if (customizedFieldsValue.isMember("check_ulogfs_env")
             //         && customizedFieldsValue["check_ulogfs_env"].isBool()) {
             //         bool checkUlogfsEnv
-            //             = GetBoolValue(customizedFieldsValue, "check_ulogfs_env", BOOL_FLAG(default_check_ulogfs_env));
+            //             = GetBoolValue(customizedFieldsValue, "check_ulogfs_env",
+            //             BOOL_FLAG(default_check_ulogfs_env));
             //         bool hasCollectionMarkFileFlag
             //             = BOOL_FLAG(enable_collection_mark) ? GetCollectionMarkFileExistFlag() : false;
             //         if (checkUlogfsEnv && !hasCollectionMarkFileFlag) {
@@ -428,7 +431,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             //             if (ulogfsEnabledEnv) {
             //                 if (strcmp(ulogfsEnabledEnv, "true") == 0) {
             //                     LOG_WARNING(sLogger,
-            //                                 ("load conifg", logName)("skip config", category)("project", projectName)(
+            //                                 ("load conifg", logName)("skip config", category)("project",
+            //                                 projectName)(
             //                                     "check_ulogfs_env", "true")("env of ULOGFS_ENABLED", "true"));
             //                     // if ULOGFS_ENABLED in env is true and check_ulogfs_env in config json is true
             //                     // it means this logtail instance should skip this fuse config, we should no load it
@@ -835,17 +839,15 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 SetNotFoundJsonMember(pluginConfigJson["global"],
                                       "EnableTimestampNanosecond",
                                       config->mAdvancedConfig.mEnableTimestampNanosecond);
-                SetNotFoundJsonMember(pluginConfigJson["global"],
-                                      "UsingOldContentTag",
-                                      config->mAdvancedConfig.mUsingOldContentTag);
+                SetNotFoundJsonMember(
+                    pluginConfigJson["global"], "UsingOldContentTag", config->mAdvancedConfig.mUsingOldContentTag);
             } else {
                 Json::Value pluginGlobalConfigJson;
                 SetNotFoundJsonMember(pluginGlobalConfigJson,
                                       "EnableTimestampNanosecond",
                                       config->mAdvancedConfig.mEnableTimestampNanosecond);
-                SetNotFoundJsonMember(pluginGlobalConfigJson,
-                                      "UsingOldContentTag",
-                                      config->mAdvancedConfig.mUsingOldContentTag);
+                SetNotFoundJsonMember(
+                    pluginGlobalConfigJson, "UsingOldContentTag", config->mAdvancedConfig.mUsingOldContentTag);
                 pluginConfigJson["global"] = pluginGlobalConfigJson;
             }
             config->mPluginConfig = pluginConfigJson.toStyledString();
@@ -965,9 +967,11 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             config->mDiscardNoneUtf8 = GetBoolValue(value, "discard_none_utf8", false);
 
             config->mAliuid = GetStringValue(value, "aliuid", "");
+#ifdef __ENTERPRISE__
             if (AppConfig::GetInstance()->IsDataServerPrivateCloud())
                 config->mRegion = STRING_FLAG(default_region_name);
             else {
+#endif
                 config->mRegion = region;
                 std::string defaultEndpoint = TrimString(GetStringValue(value, "defaultEndpoint", ""), ' ', ' ');
                 if (defaultEndpoint.size() > 0)
@@ -985,7 +989,9 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                         }
                     }
                 }
+#ifdef __ENTERPRISE__
             }
+#endif
             Sender::Instance()->IncreaseAliuidReferenceCntForRegion(config->mRegion, config->mAliuid);
 
             config->mShardHashKey.clear();
@@ -1007,14 +1013,16 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             //                                                    timePos));
             // // if integrity switch is off, erase corresponding item in integrity map
             // if (!dataIntegritySwitch) {
-            //     LogIntegrity::GetInstance()->EraseItemInMap(config->mRegion, config->mProjectName, config->mCategory);
+            //     LogIntegrity::GetInstance()->EraseItemInMap(config->mRegion, config->mProjectName,
+            //     config->mCategory);
             // }
 
             // config->mLineCountConfig.reset(
             //     new LineCountConfig(config->mAliuid, lineCountSwitch, lineCountProjectName, lineCountLogstore));
             // // if line count switch is off, erase corresponding item in line count map
             // if (!lineCountSwitch) {
-            //     LogLineCount::GetInstance()->EraseItemInMap(config->mRegion, config->mProjectName, config->mCategory);
+            //     LogLineCount::GetInstance()->EraseItemInMap(config->mRegion, config->mProjectName,
+            //     config->mCategory);
             // }
 
             // // set fuse mode
@@ -1027,7 +1035,8 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
             // // time format should not be blank here
             // if ((collectBackwardTillBootTime || dataIntegritySwitch) && config->mTimeFormat.empty()) {
             //     LOG_ERROR(sLogger,
-            //               ("time format should not be blank if collect backward or open fata integrity function", ""));
+            //               ("time format should not be blank if collect backward or open fata integrity function",
+            //               ""));
             // }
 
             auto configIter = mNameConfigMap.find(logName);
