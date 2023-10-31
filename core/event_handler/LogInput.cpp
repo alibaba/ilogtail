@@ -42,6 +42,7 @@
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
+#include "file_server/FileServer.h"
 
 using namespace std;
 
@@ -260,8 +261,11 @@ bool LogInput::ReadLocalEvents() {
             continue;
         }
 
-        Config* pConfig = ConfigManager::GetInstance()->FindConfigByName(configName);
-        if (pConfig == NULL) {
+        FileDiscoveryConfig discoveryConfig = FileServer::GetInstance()->GetFileDiscoveryConfig(configName);
+        FileReaderConfig readerConfig = FileServer::GetInstance()->GetFileReaderConfig(configName);
+        MultilineConfig multilineConfig = FileServer::GetInstance()->GetMultilineConfig(configName);
+        uint32_t concurrency = FileServer::GetInstance()->GetExactlyOnceConcurrency(configName);
+        if (!readerConfig.first) {
             LOG_WARNING(sLogger, ("can not find config", configName));
             continue;
         }
@@ -270,7 +274,10 @@ bool LogInput::ReadLocalEvents() {
         historyFileEvent.mDirName = source;
         historyFileEvent.mFileName = object;
         historyFileEvent.mConfigName = configName;
-        historyFileEvent.mConfig.reset(new Config(*pConfig));
+        historyFileEvent.mDiscoveryconfig = discoveryConfig;
+        historyFileEvent.mReaderConfig = readerConfig;
+        historyFileEvent.mMultilineConfig = multilineConfig;
+        historyFileEvent.mEOConcurrency = concurrency;
 
         vector<string> objList;
         if (!GetAllFiles(source, object, objList)) {
@@ -278,16 +285,17 @@ bool LogInput::ReadLocalEvents() {
             continue;
         }
 
-        LOG_INFO(sLogger,
-                 ("process local event, dir", source)("file name", object)("config", configName)(
-                     "project", pConfig->GetProjectName())("logstore", pConfig->GetCategory()));
+        LOG_INFO(
+            sLogger,
+            ("process local event, dir", source)("file name", object)("config", configName)(
+                "project", readerConfig.second->GetProjectName())("logstore", readerConfig.second->GetLogstoreName()));
         LogtailAlarm::GetInstance()->SendAlarm(LOAD_LOCAL_EVENT_ALARM,
                                                string("process local event, dir:") + source + ", file name:" + object
                                                    + ", config:" + configName
                                                    + ", file count:" + ToString(objList.size()),
-                                               pConfig->GetProjectName(),
-                                               pConfig->GetCategory(),
-                                               pConfig->mRegion);
+                                               readerConfig.second->GetProjectName(),
+                                               readerConfig.second->GetLogstoreName(),
+                                               readerConfig.second->GetRegion());
 
         HistoryFileImporter* importer = HistoryFileImporter::GetInstance();
         importer->PushEvent(historyFileEvent);

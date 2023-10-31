@@ -36,7 +36,6 @@
 #include "config_manager/ConfigManager.h"
 #include "checkpoint/CheckPointManager.h"
 #include "checkpoint/AdhocCheckpointManager.h"
-#include "processor/LogFilter.h"
 #include "controller/EventDispatcher.h"
 #include "monitor/Monitor.h"
 #include "sender/Sender.h"
@@ -199,7 +198,6 @@ void do_worker_process() {
     // load local config first
     ConfigManager::GetInstance()->GetLocalConfigUpdate();
     ConfigManager::GetInstance()->LoadConfig(AppConfig::GetInstance()->GetUserConfigPath());
-    PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
     // mNameConfigMap is empty, configExistFlag is false
     bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();

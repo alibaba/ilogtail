@@ -26,9 +26,7 @@
 namespace logtail {
 const std::string ProcessorTagNative::sName = "processor_tag_native";
 
-bool ProcessorTagNative::Init(const ComponentConfig& componentConfig) {
-    const Config& config = componentConfig.GetConfig();
-    mPluginProcessFlag = config.mPluginProcessFlag;
+bool ProcessorTagNative::Init(const Json::Value& config) {
     return true;
 }
 

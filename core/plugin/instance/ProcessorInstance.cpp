@@ -18,24 +18,25 @@
 
 #include <cstdint>
 
+#include "common/TimeUtil.h"
 #include "logger/Logger.h"
 #include "monitor/MetricConstants.h"
 
 namespace logtail {
 
-bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& context) {
+bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context) {
     mPlugin->SetContext(context);
     mPlugin->SetMetricsRecordRef(Name(), Id());
-    bool inited = mPlugin->Init(config);
-    if (!inited) {
-        return inited;
+    if (!mPlugin->Init(config)) {
+        return false;
     }
+
     // should init plugin first， then could GetMetricsRecordRef from plugin
     mProcInRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
     mProcOutRecordsTotal = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
     mProcTimeMS = mPlugin->GetMetricsRecordRef().CreateCounter(METRIC_PROC_TIME_MS);
 
-    return inited;
+    return true;
 }
 
 void ProcessorInstance::Process(PipelineEventGroup& logGroup) {

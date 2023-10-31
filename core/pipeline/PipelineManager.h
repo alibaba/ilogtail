@@ -15,23 +15,36 @@
  */
 
 #pragma once
+
 #include <memory>
+#include <string>
 #include <unordered_map>
+
 #include "pipeline/Pipeline.h"
 
 namespace logtail {
 
-class Pipeline;
 class PipelineManager {
 public:
-    PipelineManager() {}
-    ~PipelineManager();
-    static PipelineManager* GetInstance();
-    bool LoadAllPipelines();
-    bool RemoveAllPipelines();
+    PipelineManager(const PipelineManager&) = delete;
+    PipelineManager& operator=(const PipelineManager&) = delete;
+
+    static PipelineManager* GetInstance() {
+        static PipelineManager instance;
+        return &instance;
+    }
+
     std::shared_ptr<Pipeline> FindPipelineByName(const std::string& configName);
+    // 临时使用
+    void AddPipeline(const std::shared_ptr<Pipeline>& pipeline) { mPipelineDict[pipeline->Name()] = pipeline; }
+    const std::unordered_map<std::string, std::shared_ptr<Pipeline>>& GetAllPipelines() { return mPipelineDict; }
+    void RemoveAllPipelines() { mPipelineDict.clear(); }
 
 private:
-    std::unordered_map<std::string, std::shared_ptr<Pipeline> > mPipelineDict;
+    PipelineManager() = default;
+    ~PipelineManager() = default;
+
+    std::unordered_map<std::string, std::shared_ptr<Pipeline>> mPipelineDict;
 };
+
 } // namespace logtail

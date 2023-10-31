@@ -17,11 +17,13 @@
 #pragma once
 
 #include <ostream>
+
+#include "boost/regex.hpp"
+
 #include "common/Flags.h"
-#include "config/Config.h"
 #include "interface/type.h"
 #include "bits/stl_numeric.h"
-
+#include "pipeline/Pipeline.h"
 
 DECLARE_FLAG_INT64(sls_observer_network_gc_interval);
 DECLARE_FLAG_INT64(sls_observer_network_probe_disable_process_interval);
@@ -52,10 +54,10 @@ struct NetworkConfig {
         mOldestConfigCreateTime = 0;
         mEnabled = false;
         mLastApplyedConfig = nullptr;
-        mAllNetworkConfigs.clear();
+        // mAllNetworkConfigs.clear();
     }
 
-    void LoadConfig(Config* config);
+    void LoadConfig(const Pipeline* config);
 
     void EndLoadConfig();
 
@@ -110,8 +112,8 @@ struct NetworkConfig {
     int32_t mOldestConfigCreateTime = 0; // used to check which config is best
     volatile bool mEnabled = false;
     std::string mLastApplyedConfigDetail;
-    Config* mLastApplyedConfig = nullptr;
-    std::vector<Config*> mAllNetworkConfigs;
+    const Pipeline* mLastApplyedConfig = nullptr;
+    std::vector<const Pipeline*> mAllNetworkConfigs;
     bool mNeedReload = false;
 
     // enable ebpf

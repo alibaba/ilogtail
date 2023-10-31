@@ -72,10 +72,8 @@
 #if !defined(_MSC_VER)
 #include "LogtailInsightDispatcher.h"
 #endif
-
-#ifdef LOGTAIL_RUNTIME_PLUGIN
-#include "LogtailRuntimePlugin.h"
-#endif
+#include "input/InputFile.h"
+#include "file_server/FileServer.h"
 
 using std::string;
 using std::vector;
@@ -167,16 +165,19 @@ bool EventDispatcher::IsInterupt() {
     return true;
 }
 
-bool EventDispatcher::RegisterEventHandler(const char* path, Config* config, EventHandler*& handler) {
+bool EventDispatcher::RegisterEventHandler(const char* path,
+                                               const FileDiscoveryConfig& config,
+                                               EventHandler*& handler) {
     if (AppConfig::GetInstance()->IsHostPathMatchBlacklist(path)) {
         LOG_INFO(sLogger, ("ignore path matching host path blacklist", path));
         return false;
     }
     // @todo
     // if this path belong to many config, if register one config with max_depth 0, then it will register fail
-    if (!config->WithinMaxDepth(path)) {
+    if (!config.first->WithinMaxDepth(path)) {
         LOG_DEBUG(sLogger,
-                  ("path is out of maxDepth", path)("logstore", config->mCategory)("max depth", config->mMaxDepth));
+                  ("path is out of maxDepth",
+                   path)("logstore", config.second->GetLogstoreName())("max depth", config.first->mMaxDirSearchDepth));
         return false;
     }
     fsutil::PathStat statBuf;
@@ -187,9 +188,9 @@ bool EventDispatcher::RegisterEventHandler(const char* path, Config* config, Eve
             LogtailAlarm::GetInstance()->SendAlarm(REGISTER_INOTIFY_FAIL_ALARM,
                                                    "call stat() on path fail" + string(path)
                                                        + ", errno: " + ToString(errno) + ", will not be monitored",
-                                                   config->GetProjectName(),
-                                                   config->GetCategory(),
-                                                   config->mRegion);
+                                                   config.second->GetProjectName(),
+                                                   config.second->GetLogstoreName(),
+                                                   config.second->GetRegion());
         }
         LOG_DEBUG(sLogger, ("call stat() on path fail", path)("errno", errno));
         return false;
@@ -242,9 +243,9 @@ bool EventDispatcher::RegisterEventHandler(const char* path, Config* config, Eve
                                                string("dir: ") + path
                                                    + " will not monitored, dir count should less than "
                                                    + ToString(INT32_FLAG(max_watch_dir_count)),
-                                               config->GetProjectName(),
-                                               config->GetCategory(),
-                                               config->mRegion);
+                                               config.second->GetProjectName(),
+                                               config.second->GetLogstoreName(),
+                                               config.second->GetRegion());
         return false;
     }
 
@@ -276,11 +277,11 @@ bool EventDispatcher::RegisterEventHandler(const char* path, Config* config, Eve
                     _exit(1);
                 }
 #endif
-                if (config->IsTimeout(path))
+                if (config.first->IsTimeout(path))
                     LogtailAlarm::GetInstance()->SendAlarm(REGISTER_INOTIFY_FAIL_ALARM,
                                                            string("Failed to register dir: ") + path + ", reason: "
-                                                               + str + ", project: " + config->GetProjectName()
-                                                               + ", logstore: " + config->GetCategory());
+                                                               + str + ", project: " + config.second->GetProjectName()
+                                                               + ", logstore: " + config.second->GetLogstoreName());
                 else
                     LogtailAlarm::GetInstance()->SendAlarm(REGISTER_INOTIFY_FAIL_ALARM,
                                                            string("Failed to register dir: ") + path
@@ -299,14 +300,14 @@ bool EventDispatcher::RegisterEventHandler(const char* path, Config* config, Eve
         }
     }
 
-    bool dirTimeOutFlag = config->IsTimeout(path);
+    bool dirTimeOutFlag = config.first->IsTimeout(path);
 
     if (!mEventListener->IsValidID(wd)) {
         if (dirTimeOutFlag) {
-            LOG_DEBUG(sLogger,
-                      ("Drop timeout path, source", path)("config, basepath", config->mBasePath)(
-                          "preserve", config->mIsPreserve)("preseveDepth", config->mPreserveDepth)("maxDepth",
-                                                                                                   config->mMaxDepth));
+            LOG_DEBUG(
+                sLogger,
+                ("Drop timeout path, source", path)("config, basepath", config.first->GetBasePath())(
+                    "preseveDepth", config.first->mPreservedDirDepth)("maxDepth", config.first->mMaxDirSearchDepth));
             return false;
         }
         wd = mNonInotifyWd;
@@ -331,10 +332,9 @@ bool EventDispatcher::RegisterEventHandler(const char* path, Config* config, Eve
     AddExistedFileEvents(path, wd);
     if (dirTimeOutFlag) {
         AddTimeoutWatch(path);
-        LOG_DEBUG(
-            sLogger,
-            ("AddTimeoutWatch, source", path)("config, basepath", config->mBasePath)("preserve", config->mIsPreserve)(
-                "preseveDepth", config->mPreserveDepth)("maxDepth", config->mMaxDepth));
+        LOG_DEBUG(sLogger,
+                  ("AddTimeoutWatch, source", path)("config, basepath", config.first->GetBasePath())(
+                      "preseveDepth", config.first->mPreservedDirDepth)("maxDepth", config.first->mMaxDirSearchDepth));
     }
 
     return true;
@@ -351,10 +351,10 @@ void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
         return;
     }
     int32_t MAX_TAIL_FILE_COUNT = 50;
-    vector<Config*> configs;
+    vector<FileDiscoveryConfig> configs;
     ConfigManager::GetInstance()->GetRelatedConfigs(path, configs);
-    for (vector<Config*>::iterator iter = configs.begin(); iter != configs.end(); ++iter) {
-        if ((*iter)->mMaxDepth == 0) {
+    for (auto iter = configs.begin(); iter != configs.end(); ++iter) {
+        if ((*iter).first->mMaxDirSearchDepth == 0) {
             MAX_TAIL_FILE_COUNT = 1000;
             break;
         }
@@ -394,10 +394,10 @@ void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
         //}
         bool isMatch = false;
         bool tailExisted = false;
-        for (vector<Config*>::iterator iter = configs.begin(); iter != configs.end(); ++iter) {
-            if (fnmatch((*iter)->mFilePattern.c_str(), entName.c_str(), 0) == 0) {
+        for (auto iter = configs.begin(); iter != configs.end(); ++iter) {
+            if (fnmatch((*iter).first->GetFilePattern().c_str(), entName.c_str(), 0) == 0) {
                 isMatch = true;
-                if ((*iter)->mTailExisted) {
+                if ((*iter).first->IsTailingAllMatchedFiles()) {
                     tailExisted = true;
                     break;
                 }
@@ -422,10 +422,9 @@ void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
 
 EventDispatcher::ValidateCheckpointResult
 EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
-                                    std::map<DevInode, SplitedFilePath>& cachePathDevInodeMap,
-                                    std::vector<Event*>& eventVec) {
-    static ConfigManager* pConfigMananger = ConfigManager::GetInstance();
-    Config* config = pConfigMananger->FindConfigByName(checkpoint->mConfigName);
+                                        std::map<DevInode, SplitedFilePath>& cachePathDevInodeMap,
+                                        std::vector<Event*>& eventVec) {
+    std::shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(checkpoint->mConfigName);
     if (config == NULL) {
         LOG_INFO(sLogger,
                  ("delete checkpoint", "the corresponding config is deleted")("config", checkpoint->mConfigName)(
@@ -449,13 +448,13 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     string fileName = filePath.substr(lastSeparator + 1);
 
     // Check if the config in checkpoint still matches the file?
-    std::vector<Config*> matchedConfigs;
+    std::vector<FileDiscoveryConfig> matchedConfigs;
     AppConfig::GetInstance()->IsAcceptMultiConfig()
-        ? pConfigMananger->FindAllMatch(matchedConfigs, path, fileName)
-        : pConfigMananger->FindMatchWithForceFlag(matchedConfigs, path, fileName);
+        ? ConfigManager::GetInstance()->FindAllMatch(matchedConfigs, path, fileName)
+        : ConfigManager::GetInstance()->FindMatchWithForceFlag(matchedConfigs, path, fileName);
     bool stillMatch = false;
     for (size_t idx = 0; idx < matchedConfigs.size(); ++idx) {
-        if (matchedConfigs[idx]->mConfigName == checkpoint->mConfigName) {
+        if (matchedConfigs[idx].second->GetConfigName() == checkpoint->mConfigName) {
             stillMatch = true;
             break;
         }
@@ -468,6 +467,8 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
                 "file device", checkpoint->mDevInode.inode)("file inode", checkpoint->mDevInode.inode));
         return ValidateCheckpointResult::kConfigNotMatched;
     }
+    // now we can be sure that input is file
+    const InputFile* inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
 
     // delete checkpoint if file path is not exist
     MapType<std::string, int>::Type::iterator pathIter = mPathWdMap.find(path);
@@ -482,8 +483,7 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     int wd = pathIter->second;
     DevInode devInode = GetFileDevInode(realFilePath);
     if (devInode.IsValid() && checkpoint->mDevInode.inode == devInode.inode) {
-        if (!CheckFileSignature(
-                realFilePath, checkpoint->mSignatureHash, checkpoint->mSignatureSize, config->mIsFuseMode)) {
+        if (!CheckFileSignature(realFilePath, checkpoint->mSignatureHash, checkpoint->mSignatureSize, false)) {
             LOG_INFO(sLogger,
                      ("delete checkpoint", "file device & inode remains the same but signature has changed")(
                          "config", checkpoint->mConfigName)("log reader queue name", checkpoint->mFileName)(
@@ -536,7 +536,7 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
         if (CheckFileSignature(PathJoin(path, findIter->second.mFileName),
                                checkpoint->mSignatureHash,
                                checkpoint->mSignatureSize,
-                               config->mIsFuseMode)) {
+                               false)) {
             checkpoint->mRealFileName = PathJoin(findIter->second.mFileDir, findIter->second.mFileName);
             LOG_INFO(sLogger,
                      ("generate MODIFY event for file with checkpoint",
@@ -553,7 +553,7 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
             return ValidateCheckpointResult::kRotate;
         }
 
-        if (0 == config->mAdvancedConfig.mExactlyOnceConcurrency) {
+        if (0 == inputFile->mExactlyOnceConcurrency) {
             LOG_INFO(sLogger,
                      ("ignore check point, file signature has changed", filePath)("old real path", realFilePath)(
                          findIter->second.mFileDir, findIter->second.mFileName)("inode", checkpoint->mDevInode.inode));
@@ -580,11 +580,10 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     }
 
     auto const searchResult = SearchFilePathByDevInodeInDirectory(
-        path, config->mAdvancedConfig.mSearchCheckpointDirDepth, checkpoint->mDevInode, &cachePathDevInodeMap);
+        path, inputFile->mExactlyOnceConcurrency, checkpoint->mDevInode, &cachePathDevInodeMap);
     if (searchResult) {
         const auto& newRealPath = searchResult.value();
-        if (CheckFileSignature(
-                newRealPath, checkpoint->mSignatureHash, checkpoint->mSignatureSize, config->mIsFuseMode)) {
+        if (CheckFileSignature(newRealPath, checkpoint->mSignatureHash, checkpoint->mSignatureSize, false)) {
             checkpoint->mRealFileName = newRealPath;
             LOG_INFO(sLogger,
                      ("generate MODIFY event for file with checkpoint",
@@ -641,8 +640,7 @@ void EventDispatcher::AddExistedCheckPointFileEvents() {
 
     // Load exactly once checkpoints and create events from them.
     // Because they are not in v1 checkpoint manager, no need to delete them.
-    auto exactlyOnceConfigs = ConfigManager::GetInstance()->GetMatchedConfigs(
-        [](Config* config) { return config->mAdvancedConfig.mExactlyOnceConcurrency > 0; });
+    auto exactlyOnceConfigs = FileServer::GetInstance()->GetExactlyOnceConfigs();
     if (!exactlyOnceConfigs.empty()) {
         static auto sCptMV2 = CheckpointManagerV2::GetInstance();
         auto exactlyOnceCpts = sCptMV2->ScanCheckpoints(exactlyOnceConfigs);
@@ -975,8 +973,8 @@ void EventDispatcher::CheckSymbolicLink() {
         }
     }
     for (vector<string>::iterator iter = dirToAdd.begin(); iter != dirToAdd.end(); ++iter) {
-        Config* config = ConfigManager::GetInstance()->FindBestMatch(*iter);
-        if (config && IsDirRegistered(*iter) == PATH_INODE_NOT_REGISTERED)
+        FileDiscoveryConfig config = ConfigManager::GetInstance()->FindBestMatch(*iter);
+        if (config.first && IsDirRegistered(*iter) == PATH_INODE_NOT_REGISTERED)
             ConfigManager::GetInstance()->RegisterHandlersRecursively(*iter, config, true);
     }
 }
@@ -1162,7 +1160,7 @@ void EventDispatcher::DumpAllHandlersMeta(bool remove) {
         if (remove) {
             UnregisterEventHandler(path.c_str());
             ConfigManager::GetInstance()->RemoveHandler(path, false);
-            if (ConfigManager::GetInstance()->FindBestMatch(path) == NULL) {
+            if (ConfigManager::GetInstance()->FindBestMatch(path).first == NULL) {
                 continue;
             }
         }
@@ -1186,29 +1184,9 @@ void EventDispatcher::UpdateConfig() {
     mBrokenLinkSet.clear();
 
     PollingDirFile::GetInstance()->ClearCache();
-    PipelineManager::GetInstance()->RemoveAllPipelines();
     ConfigManager::GetInstance()->RemoveAllConfigs();
-    if (ConfigManager::GetInstance()->LoadAllConfig() == false) {
-        LOG_ERROR(sLogger, ("LoadConfig fail", ""));
-        PipelineManager::GetInstance()->LoadAllPipelines();
-        ConfigManager::GetInstance()->LoadDockerConfig();
-        ConfigManager::GetInstance()->DoUpdateContainerPaths();
-        DumpAllHandlersMeta(true);
-        // we should add checkpoint events
-        LogInput::GetInstance()->Resume(true);
-        LogtailPlugin::GetInstance()->Resume();
-#if defined(__linux__)
-        // if (mStreamLogManagerPtr != NULL) {
-        //     ((StreamLogManager*)mStreamLogManagerPtr)->StartupConfigUsage();
-        // }
-        ObserverManager::GetInstance()->Resume();
-#endif
-        ConfigManager::GetInstance()->FinishUpdateConfig();
-        return;
-    }
+    ConfigManager::GetInstance()->LoadAllConfig();
     // ConfigManager::GetInstance()->CleanUnusedUserAK();
-
-    PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
     ConfigManager::GetInstance()->DoUpdateContainerPaths();
     ConfigManager::GetInstance()->SaveDockerConfig();
