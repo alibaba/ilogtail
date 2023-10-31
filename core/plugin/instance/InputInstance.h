@@ -18,9 +18,11 @@
 
 #include <memory>
 
+#include "json/json.h"
+
 #include "plugin/instance/PluginInstance.h"
 #include "plugin/interface/Input.h"
-// #include "table/Table.h"
+#include "pipeline/PipelineContext.h"
 
 namespace logtail {
 
@@ -30,8 +32,6 @@ public:
 
     const std::string& Name() const override { return mPlugin->Name(); }
 
-    // bool Init(const Table& config, PipelineContext& context);
-    bool Init(const ComponentConfig& config, PipelineContext& context) override { return true; }
     bool Init(const Json::Value& config, PipelineContext& context, Json::Value& optionalGoPipeline);
     void Start() { mPlugin->Start(); }
     void Stop(bool isPipelineRemoving) { mPlugin->Stop(isPipelineRemoving); }

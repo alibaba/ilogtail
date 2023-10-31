@@ -27,44 +27,7 @@ const std::string ProcessorParseDelimiterNative::sName = "processor_parse_delimi
 
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
 
-bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-    mSourceKey = DEFAULT_CONTENT_KEY;
-    mSeparator = config.mSeparator;
-    mColumnKeys = config.mColumnKeys;
-    mExtractPartialFields = config.mAdvancedConfig.mExtractPartialFields;
-    mAutoExtend = config.mAutoExtend;
-    mAcceptNoEnoughKeys = config.mAcceptNoEnoughKeys;
-    mDiscardUnmatch = config.mDiscardUnmatch;
-    mUploadRawLog = config.mUploadRawLog;
-    mRawLogTag = config.mAdvancedConfig.mRawLogTag;
-    mQuote = config.mQuote;
-    if (!mSeparator.empty())
-        mSeparatorChar = mSeparator.data()[0];
-    else {
-        // This should never happened.
-        mSeparatorChar = '\t';
-    }
-    if (mUploadRawLog && mRawLogTag == mSourceKey) {
-        mSourceKeyOverwritten = true;
-    }
-    for (auto key : mColumnKeys) {
-        if (key.compare(mSourceKey) == 0) {
-            mSourceKeyOverwritten = true;
-        }
-        if (key.compare(mRawLogTag) == 0) {
-            mRawLogTagOverwritten = true;
-        }
-    }
-
-    mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
-    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
-    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
-
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
     return true;
 }
 

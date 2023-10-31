@@ -24,13 +24,7 @@
 namespace logtail {
 const std::string ProcessorDesensitizeNative::sName = "processor_desensitize_native";
 
-bool ProcessorDesensitizeNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& mConfig = componentConfig.GetConfig();
-
-    mSensitiveWordCastOptions = mConfig.mSensitiveWordCastOptions;
-
-    mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
-
+bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
     return true;
 }
 

@@ -16,44 +16,11 @@
 
 #include "pipeline/PipelineManager.h"
 
-#include "config_manager/ConfigManager.h"
+using namespace std;
 
 namespace logtail {
 
-PipelineManager::~PipelineManager() {
-}
-
-PipelineManager* PipelineManager::GetInstance() {
-    static PipelineManager instance;
-    return &instance;
-}
-
-bool PipelineManager::LoadAllPipelines() {
-    auto& allConfig = ConfigManager::GetInstance()->GetAllConfig();
-    for (auto& kv : allConfig) {
-        auto p = std::make_shared<Pipeline>();
-        if (p->Init(*kv.second)) {
-            mPipelineDict.emplace(kv.first, p);
-        } else {
-            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-                                                   "pipeline " + kv.second->mConfigName + " init failed",
-                                                   kv.second->GetProjectName(),
-                                                   kv.second->GetCategory(),
-                                                   kv.second->mRegion);
-            LOG_WARNING(sLogger,
-                        ("pipeline init failed", kv.second->mConfigName)("project", kv.second->GetProjectName())(
-                            "logstore", kv.second->GetCategory())("region", kv.second->mRegion));
-        }
-    }
-    return true;
-}
-
-bool PipelineManager::RemoveAllPipelines() {
-    mPipelineDict.clear();
-    return true;
-}
-
-std::shared_ptr<Pipeline> PipelineManager::FindPipelineByName(const std::string& configName) {
+shared_ptr<Pipeline> PipelineManager::FindPipelineByName(const string& configName) {
     auto it = mPipelineDict.find(configName);
     if (it != mPipelineDict.end()) {
         return it->second;

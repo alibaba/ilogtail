@@ -58,7 +58,6 @@
 #include "controller/EventDispatcher.h"
 #include "sender/Sender.h"
 #include "processor/daemon/LogProcess.h"
-#include "processor/LogFilter.h"
 #include <boost/filesystem.hpp>
 #include "application/Application.h"
 #include <random>

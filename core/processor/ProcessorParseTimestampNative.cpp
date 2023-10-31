@@ -17,35 +17,18 @@
 #include "processor/ProcessorParseTimestampNative.h"
 
 #include "app_config/AppConfig.h"
+#include "common/StringTools.h"
 #include "common/Constants.h"
 #include "common/LogtailCommonFlags.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include <algorithm>
 #include "monitor/MetricConstants.h"
 
-
 namespace logtail {
+
 const std::string ProcessorParseTimestampNative::sName = "processor_parse_timestamp_native";
 
-bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-
-    mTimeFormat = config.mTimeFormat;
-    mTimeKey = config.mTimeKey;
-    mSpecifiedYear = config.mAdvancedConfig.mSpecifiedYear;
-    mLegacyPreciseTimestampConfig.enabled = config.mAdvancedConfig.mEnablePreciseTimestamp;
-    mLegacyPreciseTimestampConfig.key = config.mAdvancedConfig.mPreciseTimestampKey;
-    mLegacyPreciseTimestampConfig.unit = config.mAdvancedConfig.mPreciseTimestampUnit;
-    mLogTimeZoneOffsetSecond = config.mTimeZoneAdjust ? config.mLogTimeZoneOffsetSecond  - GetLocalTimeZoneOffsetSecond() : 0;
-
-    mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
-    mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
-
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-    mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
+bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     return true;
 }
 

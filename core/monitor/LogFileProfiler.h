@@ -29,7 +29,6 @@ class LogGroup;
 
 namespace logtail {
 // forward declaration
-class Config;
 struct LoggroupTimeValue;
 
 // Collect the log file's profile such as lines processed.

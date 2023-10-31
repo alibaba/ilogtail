@@ -32,6 +32,8 @@
 #include "common/Lock.h"
 #include "common/Thread.h"
 #include "event/Event.h"
+#include "flusher/FlusherSLS.h"
+#include "file_server/FileDiscoveryOptions.h"
 
 DECLARE_FLAG_BOOL(https_verify_peer);
 DECLARE_FLAG_STRING(https_ca_cert);
@@ -55,22 +57,17 @@ class EventDispatcher;
 class EventHandler;
 struct LogFilterRule;
 
-template<class T>
+template <class T>
 class DoubleBuffer {
 public:
     DoubleBuffer() : currentBuffer(0) {}
 
-    T& getWriteBuffer() {
-        return buffers[currentBuffer];
-    }
+    T& getWriteBuffer() { return buffers[currentBuffer]; }
 
-    T& getReadBuffer() {
-        return buffers[1 - currentBuffer];
-    }
+    T& getReadBuffer() { return buffers[1 - currentBuffer]; }
 
-    void swap() {
-        currentBuffer = 1 - currentBuffer;
-    }
+    void swap() { currentBuffer = 1 - currentBuffer; }
+
 private:
     T buffers[2];
     int currentBuffer;
@@ -167,10 +164,10 @@ protected:
 
     SpinLock mCacheFileConfigMapLock;
     // value : best config, multi config last alarmTime, and if alarmTime is 0, it means no multi config
-    std::unordered_map<std::string, std::pair<Config*, int32_t>> mCacheFileConfigMap;
+    std::unordered_map<std::string, std::pair<FileDiscoveryConfig, int32_t>> mCacheFileConfigMap;
 
     SpinLock mCacheFileAllConfigMapLock;
-    std::unordered_map<std::string, std::pair<std::vector<Config*>, int32_t>> mCacheFileAllConfigMap;
+    std::unordered_map<std::string, std::pair<std::vector<FileDiscoveryConfig>, int32_t>> mCacheFileAllConfigMap;
 
     PTMutex mDockerContainerPathCmdLock;
     std::vector<DockerContainerPathCmd*> mDockerContainerPathCmdVec;
@@ -268,11 +265,10 @@ public:
     void ClearPluginStats();
     bool LoadAllConfig();
     const std::unordered_map<std::string, Config*>& GetAllConfig() { return mNameConfigMap; }
-
-    void RegisterWildcardPath(Config* config, const std::string& path, int32_t depth);
-    bool RegisterHandlers(const std::string& basePath, Config* config);
+    void RegisterWildcardPath(const FileDiscoveryConfig& config, const std::string& path, int32_t depth);
+    bool RegisterHandlers(const std::string& basePath, const FileDiscoveryConfig& config);
     bool RegisterHandlers();
-    bool RegisterHandlersRecursively(const std::string& dir, Config* config, bool checkTimeout);
+    bool RegisterHandlersRecursively(const std::string& dir, const FileDiscoveryConfig& config, bool checkTimeout);
     // 废弃，蚂蚁
     // /**
     //  * @brief HasFuseConfig
@@ -341,11 +337,12 @@ public:
     // 废弃，功能重复
     // void CorrectionLogtailSysConfDir();
 
-    void GetAllPluginConfig(std::vector<Config*>& configVec);
-    void GetAllObserverConfig(std::vector<Config*>& configVec);
-
+    // 废弃
+    // void GetAllPluginConfig(std::vector<Config*>& configVec);
+    // 废弃
+    // void GetAllObserverConfig(std::vector<Config*>& configVec);
     // Get all configs that match condition.
-    std::vector<Config*> GetMatchedConfigs(const std::function<bool(Config*)>& condition);
+    // std::vector<Config*> GetMatchedConfigs(const std::function<bool(Config*)>& condition);
 
     /** find che config of DIR path while the name fits the file pattern
      *  @param path for the dir
@@ -355,9 +352,10 @@ public:
      *  @param path for the newly created dir
      *
      */
-    Config* FindBestMatch(const std::string& path, const std::string& name = "");
+    FileDiscoveryConfig FindBestMatch(const std::string& path, const std::string& name = "");
 
-    int32_t FindAllMatch(std::vector<Config*>& allConfig, const std::string& path, const std::string& name = "");
+    int32_t
+    FindAllMatch(std::vector<FileDiscoveryConfig>& allConfig, const std::string& path, const std::string& name = "");
     /**
      * @brief FindMatchWithForceFlag only accept best match and config with ForceMultiConfig
      * @param allConfig
@@ -365,14 +363,16 @@ public:
      * @param name
      * @return
      */
-    int32_t
-    FindMatchWithForceFlag(std::vector<Config*>& allConfig, const std::string& path, const std::string& name = "");
+    int32_t FindMatchWithForceFlag(std::vector<FileDiscoveryConfig>& allConfig,
+                                   const std::string& path,
+                                   const std::string& name = "");
 
     Config* FindStreamLogTagMatch(const std::string& tag);
 
-    Config* FindDSConfigByCategory(const std::string& dsCtegory);
+    const FlusherSLS* FindDSConfigByCategory(const std::string& dsCtegory);
 
-    Config* FindConfigByName(const std::string& configName);
+    // 废弃
+    // Config* FindConfigByName(const std::string& configName);
 
     // handler must be created by new, because when path timeout, we would call delete on it
     void AddNewHandler(const std::string& path, EventHandler* handler) { mDirEventHandlerMap[path] = handler; }
@@ -439,9 +439,10 @@ public:
 
     // virtual bool GetRegionStatus(const std::string& region) = 0;
 
-    // TODO: Move it to Config.
-    bool MatchDirPattern(const Config* config, const std::string& dir);
-    void GetRelatedConfigs(const std::string& path, std::vector<Config*>& configs);
+    // 废弃
+    // bool MatchDirPattern(const Config* config, const std::string& dir);
+
+    void GetRelatedConfigs(const std::string& path, std::vector<FileDiscoveryConfig>& configs);
 
     EventHandler* GetSharedHandler() { return mSharedHandler; }
 
@@ -492,9 +493,7 @@ public:
 
     virtual Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson) = 0;
 
-    std::vector<sls_logs::LogTag>& GetFileTags() {
-        return mFileTags.getReadBuffer();
-    }
+    std::vector<sls_logs::LogTag>& GetFileTags() { return mFileTags.getReadBuffer(); }
 
     void UpdateFileTags();
 
@@ -505,7 +504,9 @@ public:
     // void InsertRegion(const std::string& region);
     // void InsertProject(const std::string& project);
 
-    std::unordered_map<std::string, std::shared_ptr<std::vector<DockerContainerPath>>>& GetAllContainerInfo() { return mAllDockerContainerPathMap; }
+    std::unordered_map<std::string, std::shared_ptr<std::vector<DockerContainerPath>>>& GetAllContainerInfo() {
+        return mAllDockerContainerPathMap;
+    }
 
 private:
     // no copy
@@ -517,8 +518,8 @@ private:
      * @param path is the current dir that being registered
      * @depth is the num of sub dir layers that should be registered
      */
-    bool RegisterHandlersWithinDepth(const std::string& path, Config* config, int depth);
-    bool RegisterDescendants(const std::string& path, Config* config, int withinDepth);
+    bool RegisterHandlersWithinDepth(const std::string& path, const FileDiscoveryConfig& config, int depth);
+    bool RegisterDescendants(const std::string& path, const FileDiscoveryConfig& config, int withinDepth);
     bool CheckLogType(const std::string& logTypeStr, LogType& logType);
     std::vector<std::string> GetStringVector(const Json::Value& value);
     LogFilterRule* GetFilterFule(const Json::Value& filterKeys, const Json::Value& filterRegs);
@@ -563,14 +564,14 @@ private:
     bool CheckRegFormat(const std::string& regStr);
     void SendAllMatchAlarm(const std::string& path,
                            const std::string& name,
-                           std::vector<Config*>& allConfig,
+                           std::vector<FileDiscoveryConfig>& allConfig,
                            int32_t maxMultiConfigSize);
 
-    void MappingPluginConfig(const Json::Value& configValue, Config* config, Json::Value& pluginJson);
+    // void MappingPluginConfig(const Json::Value& configValue, Config* config, Json::Value& pluginJson);
 
     // void ClearProjects();
 
-    class DoubleBuffer <std::vector<sls_logs::LogTag>>mFileTags;
+    class DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     void CleanEnviroments();
