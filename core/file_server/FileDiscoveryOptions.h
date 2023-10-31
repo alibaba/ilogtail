@@ -31,6 +31,11 @@ namespace logtail {
 
 class FileDiscoveryOptions {
 public:
+    static bool CompareByPathLength(std::pair<const FileDiscoveryOptions*, const PipelineContext*> left,
+                                    std::pair<const FileDiscoveryOptions*, const PipelineContext*> right);
+    static bool CompareByDepthAndCreateTime(std::pair<const FileDiscoveryOptions*, const PipelineContext*> left,
+                                            std::pair<const FileDiscoveryOptions*, const PipelineContext*> right);
+
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
     const std::string& GetBasePath() const { return mBasePath; }
     const std::string& GetFilePattern() const { return mFilePattern; }
@@ -42,6 +47,15 @@ public:
     void SetContainerInfo(const std::shared_ptr<std::vector<DockerContainerPath>>& info) { mContainerInfos = info; }
     void SetUpdateContainerInfoFunc(bool (*f)(const std::string&, bool)) { mUpdateContainerInfo = f; }
     void SetDeleteContainerInfoFunc(bool (*f)(const std::string&)) { mDeleteContainerInfo = f; }
+
+    bool IsDirectoryInBlacklist(const std::string& dirPath) const;
+    bool IsMatch(const std::string& path, const std::string& name) const;
+    bool IsTimeout(const std::string& path) const;
+    bool WithinMaxDepth(const std::string& path) const;
+    bool IsSameDockerContainerPath(const std::string& paramsJSONStr, bool allFlag) const;
+    bool UpdateDockerContainerPath(const std::string& paramsJSONStr, bool allFlag);
+    bool DeleteDockerContainerPath(const std::string& paramsJSONStr);
+    DockerContainerPath* GetContainerPathByLogPath(const std::string& logPath) const;
     // 过渡使用
     bool IsTailingAllMatchedFiles() const { return mTailingAllMatchedFiles; }
     void SetTailingAllMatchedFiles(bool flag) { mTailingAllMatchedFiles = flag; }
@@ -58,6 +72,9 @@ public:
 private:
     void ParseWildcardPath();
     std::pair<std::string, std::string> GetDirAndFileNameFromPath(const std::string& filePath);
+    bool IsObjectInBlacklist(const std::string& path, const std::string& name) const;
+    bool IsFileNameInBlacklist(const std::string& fileName) const;
+    bool IsWildcardPathMatch(const std::string& path, const std::string& name = "") const;
 
     std::string mBasePath;
     std::string mFilePattern;

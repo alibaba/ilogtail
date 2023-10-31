@@ -41,7 +41,6 @@
 #include "common/FileSystemUtil.h"
 #include "logger/Logger.h"
 #include "sdk/Common.h"
-#include "processor/LogFilter.h"
 
 using namespace std;
 using namespace logtail::sdk;
@@ -243,12 +242,6 @@ public:
     void TestParseWildcardPath();
     void TestIsWildcardPathMatch();
     void TestLogRotateWhenUpdate();
-    // test for container mode
-    void TestContainerModeNormal();
-    void TestContainerModeWildcardConfig();
-    void TestContainerModeConfigUpdate();
-    void TestLoadGlobalFuseConf();
-    void TestCheckUlogfsEnv();
 };
 
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLogRotateWhenUpdate, -1);
@@ -256,7 +249,7 @@ APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestCheckPointManager, 0);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestConfigUpdate, 1);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLocalConfigUpdate, 2);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdatePath, 3);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdateGlobalConfig, 4);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdateGlobalConfig, 4);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdateProfileProject, 5);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestValidPath, 6);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestBlackDirList, 7);
@@ -272,13 +265,6 @@ APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestCheckPointSaveInterval, 19);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestCheckPointUserDefinedFilePath, 20);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestCheckPointLoadDefaultFile, 21);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestValidWildcardPath2, 25);
-#if defined(__linux__)
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestContainerModeNormal, 26);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestContainerModeWildcardConfig, 27);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestContainerModeConfigUpdate, 28);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLoadGlobalFuseConf, 29);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestCheckUlogfsEnv, 30);
-#endif
 
 std::string ConfigUpdatorUnittest::mRootDir;
 std::unordered_map<std::string, std::string> ConfigUpdatorUnittest::flagMap;
@@ -1680,61 +1666,6 @@ void ConfigUpdatorUnittest::TestValidPath() {
     LOG_INFO(sLogger, ("TestValidPath() end", time(NULL)));
 }
 
-void ConfigUpdatorUnittest::TestUpdateGlobalConfig() {
-    LOG_INFO(sLogger, ("TestUpdateGlobalConfig() begin", time(NULL)));
-    DumpInitConfigToLocal();
-    CaseSetup();
-
-    APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetBytePerSec(), INT32_FLAG(default_send_byte_per_sec));
-    APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetMaxBytePerSec(), INT32_FLAG(default_max_send_byte_per_sec));
-    APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetNumOfBufferFile(), INT32_FLAG(default_buffer_file_num));
-    APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetLocalFileSize(), INT32_FLAG(default_local_file_size));
-    APSARA_TEST_EQUAL(Sender::Instance()->GetBufferFilePath(), GetProcessExecutionDir());
-    APSARA_TEST_EQUAL(LogtailGlobalPara::Instance()->GetTopic(), STRING_FLAG(default_global_topic));
-
-    Json::Value firstJson;
-    firstJson["max_flow_byte_per_sec"] = Json::Value("100000");
-    firstJson["max_net_flow_byte_per_sec"] = Json::Value("200000");
-    firstJson["max_num_of_file"] = Json::Value("10");
-    firstJson["local_file_size"] = Json::Value("1024");
-    firstJson["buffer_file_path"] = Json::Value(PS + "tmp/1");
-    firstJson["global_topic"] = Json::Value("AT-100");
-    Json::Value firstRoot;
-    firstRoot["config"] = firstJson;
-    SetConfigResponse(firstRoot.toStyledString());
-    sleep(WAIT_CONFIG_UPDATE_INTERVAL);
-    // APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetBytePerSec(), 100000);
-    // APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetMaxBytePerSec(), 200000);
-    // APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetNumOfBufferFile(), 10);
-    // APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetLocalFileSize(), 1024);
-    // APSARA_TEST_EQUAL(Sender::Instance()->GetBufferFilePath(), "/tmp/1/");
-    APSARA_TEST_EQUAL(LogtailGlobalPara::Instance()->GetTopic(), "AT-100");
-
-    Json::Value secondJson;
-    secondJson["max_flow_byte_per_sec"] = Json::Value("300000");
-    secondJson["max_net_flow_byte_per_sec"] = Json::Value("600000");
-    secondJson["max_num_of_file"] = Json::Value("30");
-    secondJson["local_file_size"] = Json::Value("512");
-    secondJson["buffer_file_path"] = Json::Value(PS + "tmp/2");
-    secondJson["logtail_access_id"] = Json::Value("3000");
-    secondJson["logtail_project_name"] = Json::Value("3000_proj");
-    secondJson["global_topic"] = Json::Value("AT-300");
-    Json::Value thirdRoot;
-    thirdRoot["config"] = secondJson;
-    SetConfigResponse(thirdRoot.toStyledString());
-    sleep(WAIT_CONFIG_UPDATE_INTERVAL);
-    // APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetBytePerSec(), 300000);
-    // APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetMaxBytePerSec(), 600000);
-    // APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetNumOfBufferFile(), 30);
-    // APSARA_TEST_EQUAL(AppConfig::GetInstance()->GetLocalFileSize(), 512);
-    // APSARA_TEST_EQUAL(Sender::Instance()->GetBufferFilePath(), "/tmp/2/");
-    APSARA_TEST_EQUAL(LogtailGlobalPara::Instance()->GetTopic(), "AT-300");
-
-    CaseCleanup();
-    RemoveConfigFile();
-    LOG_INFO(sLogger, ("TestUpdateGlobalConfig() end", time(NULL)));
-}
-
 void ConfigUpdatorUnittest::TestUpdateProfileProject() {
     LOG_INFO(sLogger, ("TestUpdateProfileProject() begin", time(NULL)));
     DumpInitConfigToLocal();
@@ -2900,198 +2831,6 @@ void ConfigUpdatorUnittest::TestIsWildcardPathMatch() {
     cfg.mMaxDepth = 0;
     APSARA_TEST_EQUAL(cfg.IsWildcardPathMatch(PS + "usr" + PS + "b" + PS + "cef"), false);
 }
-
-#if defined(__linux__)
-void ConfigUpdatorUnittest::TestLoadGlobalFuseConf() {
-    LOG_INFO(sLogger, ("TestLoadGlobalFuseConf() begin", time(NULL)));
-    // CaseSetup();
-
-    // test default fuse mode
-    {
-        system("rm -f ilogtail_config.json");
-
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
-        bool IsFuseModeEnable = BOOL_FLAG(default_global_fuse_mode);
-        APSARA_TEST_EQUAL(IsFuseModeEnable, false);
-    }
-
-    // test enable fuse mode
-    {
-        system("rm -f ilogtail_config.json");
-
-        Json::Value rootJson;
-        rootJson["global_fuse_mode"] = Json::Value(true);
-
-        ofstream fout(STRING_FLAG(ilogtail_config).c_str());
-        fout << rootJson.toStyledString();
-        fout.close();
-
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
-        bool IsFuseModeEnable = BOOL_FLAG(default_global_fuse_mode);
-        APSARA_TEST_EQUAL(IsFuseModeEnable, true);
-    }
-
-    // test disable fuse mode
-    {
-        system("rm -f ilogtail_config.json");
-
-        Json::Value rootJson;
-        rootJson["global_fuse_mode"] = Json::Value(false);
-
-        ofstream fout(STRING_FLAG(ilogtail_config).c_str());
-        fout << rootJson.toStyledString();
-        fout.close();
-
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
-        bool IsFuseModeEnable = BOOL_FLAG(default_global_fuse_mode);
-        APSARA_TEST_EQUAL(IsFuseModeEnable, false);
-    }
-
-    // CaseCleanup();
-    LOG_INFO(sLogger, ("TestLoadGlobalFuseConf() end", time(NULL)));
-}
-
-void ConfigUpdatorUnittest::TestCheckUlogfsEnv() {
-    LOG_INFO(sLogger, ("TestCheckUlogfsEnv() begin", time(NULL)));
-
-    APSARA_TEST_TRUE(getenv("ULOGFS_ENABLED") == NULL);
-
-    setenv("ULOGFS_ENABLED", "true", 1);
-    APSARA_TEST_EQUAL(std::string(getenv("ULOGFS_ENABLED")), std::string("true"));
-
-    unsetenv("ULOGFS_ENABLED");
-    APSARA_TEST_TRUE(getenv("ULOGFS_ENABLED") == NULL);
-
-    bool checkUlogfsEnv;
-    bool globalFuseMode;
-    bool isFuseMode;
-
-    // env ULOGFS_ENABLED not set
-    {
-        system("rm -rf ilogtail_config.json");
-        system("rm -rf user_log_config.json");
-
-        unsetenv("ULOGFS_ENABLED");
-
-        checkUlogfsEnv = false;
-        globalFuseMode = false;
-        isFuseMode = false;
-
-        SetupGlobalFuseMode(globalFuseMode);
-        DumpCustomizedConfigToLocal(checkUlogfsEnv, isFuseMode);
-
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
-        ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
-
-        APSARA_TEST_EQUAL(BOOL_FLAG(default_global_fuse_mode), false);
-
-        auto& nameConfigMap = ConfigManager::GetInstance()->mNameConfigMap;
-        APSARA_TEST_EQUAL(nameConfigMap.size(), 1);
-
-        for (auto it = nameConfigMap.begin(); it != nameConfigMap.end(); it++) {
-            Config* config = it->second;
-            APSARA_TEST_EQUAL(config->mIsFuseMode, false);
-        }
-
-        BOOL_FLAG(default_global_fuse_mode) = false;
-        ConfigManager::GetInstance()->mNameConfigMap.clear();
-    }
-
-    // env ULOGFS_ENABLED not set
-    {
-        system("rm -rf ilogtail_config.json");
-        system("rm -rf user_log_config.json");
-
-        unsetenv("ULOGFS_ENABLED");
-
-        checkUlogfsEnv = false;
-        globalFuseMode = false;
-        isFuseMode = true;
-
-        SetupGlobalFuseMode(globalFuseMode);
-        DumpCustomizedConfigToLocal(checkUlogfsEnv, isFuseMode);
-
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
-        ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
-
-        APSARA_TEST_EQUAL(BOOL_FLAG(default_global_fuse_mode), false);
-
-        auto& nameConfigMap = ConfigManager::GetInstance()->mNameConfigMap;
-        APSARA_TEST_EQUAL(nameConfigMap.size(), 1);
-
-        for (auto it = nameConfigMap.begin(); it != nameConfigMap.end(); it++) {
-            Config* config = it->second;
-            APSARA_TEST_EQUAL(config->mIsFuseMode, false);
-        }
-
-        BOOL_FLAG(default_global_fuse_mode) = false;
-        ConfigManager::GetInstance()->mNameConfigMap.clear();
-    }
-
-    // env ULOGFS_ENABLED set "true"
-    {
-        system("rm -rf ilogtail_config.json");
-        system("rm -rf user_log_config.json");
-
-        setenv("ULOGFS_ENABLED", "true", 1);
-
-        checkUlogfsEnv = true;
-        globalFuseMode = false;
-        isFuseMode = true;
-
-        SetupGlobalFuseMode(globalFuseMode);
-        DumpCustomizedConfigToLocal(checkUlogfsEnv, isFuseMode);
-
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
-        ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
-
-        APSARA_TEST_EQUAL(BOOL_FLAG(default_global_fuse_mode), false);
-
-        auto& nameConfigMap = ConfigManager::GetInstance()->mNameConfigMap;
-        APSARA_TEST_EQUAL(nameConfigMap.size(), 0);
-
-        BOOL_FLAG(default_global_fuse_mode) = false;
-        ConfigManager::GetInstance()->mNameConfigMap.clear();
-    }
-
-    // env ULOGFS_ENABLED not set
-    {
-        system("rm -rf ilogtail_config.json");
-        system("rm -rf user_log_config.json");
-
-        unsetenv("ULOGFS_ENABLED");
-
-        checkUlogfsEnv = true;
-        globalFuseMode = true;
-        isFuseMode = true;
-
-        SetupGlobalFuseMode(globalFuseMode);
-        DumpCustomizedConfigToLocal(checkUlogfsEnv, isFuseMode);
-
-        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
-        ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
-
-        APSARA_TEST_EQUAL(BOOL_FLAG(default_global_fuse_mode), true);
-
-        auto& nameConfigMap = ConfigManager::GetInstance()->mNameConfigMap;
-        APSARA_TEST_EQUAL(nameConfigMap.size(), 2);
-
-        for (auto it = nameConfigMap.begin(); it != nameConfigMap.end(); it++) {
-            Config* config = it->second;
-            if (config->mConfigName == STRING_FLAG(fuse_customized_config_name))
-                continue;
-
-            APSARA_TEST_EQUAL(config->mIsFuseMode, true);
-        }
-
-        BOOL_FLAG(default_global_fuse_mode) = false;
-        ConfigManager::GetInstance()->mNameConfigMap.clear();
-    }
-
-    RemoveConfigFile();
-    LOG_INFO(sLogger, ("TestCheckUlogfsEnv() end", time(NULL)));
-}
-#endif
 
 } // namespace logtail
 

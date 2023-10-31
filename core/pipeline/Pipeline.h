@@ -20,20 +20,20 @@
 #include <vector>
 #include <memory>
 
+#include "json/json.h"
+
 #include "config/NewConfig.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineContext.h"
 #include "plugin/instance/InputInstance.h"
 #include "plugin/instance/FlusherInstance.h"
 #include "plugin/instance/ProcessorInstance.h"
-// #include "table/JSONTable.h"
-#include "json/json.h"
+
 
 namespace logtail {
 
 class Pipeline {
 public:
-    bool Init(const PipelineConfig& config);
     bool Init(NewConfig&& config);
     void Start();
     void Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList);
@@ -41,15 +41,18 @@ public:
 
     const std::string& Name() const { return mName; }
     const PipelineContext& GetContext() const { return mContext; }
-    PipelineConfig& GetPipelineConfig() { return mConfig; }
-    const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
+    const Json::Value& GetConfig() const { return mConfig; }
     const std::vector<std::unique_ptr<FlusherInstance>>& GetFlushers() const { return mFlushers; }
-
-    bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
     bool IsFlushingThroughGoPipeline() const { return !mGoPipelineWithoutInput.isNull(); }
+    bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
+
+    // 临时使用
+    const Json::Value& GetGoPipelineWithInput() const { return mGoPipelineWithInput; }
+    const Json::Value& GetGoPipelineWithoutInput() const { return mGoPipelineWithoutInput; }
+    // only for input_observer_network for compatability
+    const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
 
 private:
-    bool InitAndAddProcessor(std::unique_ptr<ProcessorInstance>&& processor, const PipelineConfig& config);
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
     void AddPluginToGoPipeline(const Json::Value& plugin, const std::string& module, Json::Value& dst);
     bool ShouldAddPluginToGoPipelineWithInput() const { return mInputs.empty() && mProcessorLine.empty(); }
@@ -61,7 +64,7 @@ private:
     Json::Value mGoPipelineWithInput;
     Json::Value mGoPipelineWithoutInput;
     PipelineContext mContext;
-    PipelineConfig mConfig;
+    Json::Value mConfig;
 };
 
 } // namespace logtail

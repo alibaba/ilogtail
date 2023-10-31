@@ -24,15 +24,7 @@
 namespace logtail {
 const std::string ProcessorSplitLogStringNative::sName = "processor_split_string_native";
 
-bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-
-    mSplitKey = DEFAULT_CONTENT_KEY;
-    mSplitChar = config.mLogType == JSON_LOG ? '\0' : '\n';
-    mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
-    mFeedLines = &(GetContext().GetProcessProfile().feedLines);
-    mSplitLines = &(GetContext().GetProcessProfile().splitLines);
-
+bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
     return true;
 }
 

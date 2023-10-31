@@ -16,12 +16,120 @@
 
 #include <filesystem>
 
+#if defined(__linux__)
+#include <fnmatch.h>
+#endif
+
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
+#include "common/StringTools.h"
+#include "common/FileSystemUtil.h"
 
 using namespace std;
 
 namespace logtail {
+
+// basePath must not stop with '/'
+inline bool _IsSubPath(const std::string& basePath, const std::string& subPath) {
+    size_t pathSize = subPath.size();
+    size_t basePathSize = basePath.size();
+    if (pathSize >= basePathSize && memcmp(subPath.c_str(), basePath.c_str(), basePathSize) == 0) {
+        return pathSize == basePathSize || PATH_SEPARATOR[0] == subPath[basePathSize];
+    }
+    return false;
+}
+
+inline bool _IsPathMatched(const std::string& basePath, const std::string& path, int maxDepth) {
+    size_t pathSize = path.size();
+    size_t basePathSize = basePath.size();
+    if (pathSize >= basePathSize && memcmp(path.c_str(), basePath.c_str(), basePathSize) == 0) {
+        // need check max_depth + preserve depth
+        if (pathSize == basePathSize) {
+            return true;
+        }
+        // like /log  --> /log/a/b , maxDepth 2, true
+        // like /log  --> /log1/a/b , maxDepth 2, false
+        // like /log  --> /log/a/b/c , maxDepth 2, false
+        else if (PATH_SEPARATOR[0] == path[basePathSize]) {
+            if (maxDepth < 0) {
+                return true;
+            }
+            int depth = 0;
+            for (size_t i = basePathSize; i < pathSize; ++i) {
+                if (PATH_SEPARATOR[0] == path[i]) {
+                    ++depth;
+                    if (depth > maxDepth) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool isNotSubPath(const std::string& basePath, const std::string& path) {
+    size_t pathSize = path.size();
+    size_t basePathSize = basePath.size();
+    if (pathSize < basePathSize || memcmp(path.c_str(), basePath.c_str(), basePathSize) != 0) {
+        return true;
+    }
+
+    // For wildcard Windows path C:\*, mWildcardPaths[0] will be C:\, will
+    //   fail on following check because of path[basePathSize].
+    // Advaned check for such case if flag enable_root_path_collection is enabled.
+    auto checkPos = basePathSize;
+#if defined(_MSC_VER)
+    if (BOOL_FLAG(enable_root_path_collection)) {
+        if (basePathSize >= 2 && basePath[basePathSize - 1] == PATH_SEPARATOR[0] && basePath[basePathSize - 2] == ':') {
+            --checkPos;
+        }
+    }
+#endif
+    return basePathSize > 1 && pathSize > basePathSize && path[checkPos] != PATH_SEPARATOR[0];
+}
+
+bool FileDiscoveryOptions::CompareByPathLength(pair<const FileDiscoveryOptions*, const PipelineContext*> left,
+                                               pair<const FileDiscoveryOptions*, const PipelineContext*> right) {
+    int32_t leftDepth = 0;
+    int32_t rightDepth = 0;
+    for (size_t i = 0; i < (left.first->mBasePath).size(); ++i) {
+        if (PATH_SEPARATOR[0] == (left.first->mBasePath)[i]) {
+            leftDepth++;
+        }
+    }
+    for (size_t i = 0; i < (right.first->mBasePath).size(); ++i) {
+        if (PATH_SEPARATOR[0] == (right.first->mBasePath)[i]) {
+            rightDepth++;
+        }
+    }
+    return leftDepth > rightDepth;
+}
+
+bool FileDiscoveryOptions::CompareByDepthAndCreateTime(
+    pair<const FileDiscoveryOptions*, const PipelineContext*> left,
+    pair<const FileDiscoveryOptions*, const PipelineContext*> right) {
+    int32_t leftDepth = 0;
+    int32_t rightDepth = 0;
+    for (size_t i = 0; i < (left.first->mBasePath).size(); ++i) {
+        if (PATH_SEPARATOR[0] == (left.first->mBasePath)[i]) {
+            leftDepth++;
+        }
+    }
+    for (size_t i = 0; i < (right.first->mBasePath).size(); ++i) {
+        if (PATH_SEPARATOR[0] == (right.first->mBasePath)[i]) {
+            rightDepth++;
+        }
+    }
+    if (leftDepth > rightDepth) {
+        return true;
+    }
+    if (leftDepth == rightDepth) {
+        return left.second->GetCreateTime() < right.second->GetCreateTime();
+    }
+    return false;
+}
 
 bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext& ctx, const string& pluginName) {
     string errorMsg;
@@ -217,5 +325,345 @@ void FileDiscoveryOptions::ParseWildcardPath() {
             ++mWildcardDepth;
     }
 }
+
+bool FileDiscoveryOptions::IsDirectoryInBlacklist(const std::string& dirPath) const {
+    if (!mHasBlacklist) {
+        return false;
+    }
+
+    for (auto& dp : mDirPathBlacklist) {
+        if (_IsSubPath(dp, dirPath)) {
+            return true;
+        }
+    }
+    for (auto& dp : mWildcardDirPathBlacklist) {
+        if (0 == fnmatch(dp.c_str(), dirPath.c_str(), FNM_PATHNAME)) {
+            return true;
+        }
+    }
+    for (auto& dp : mMLWildcardDirPathBlacklist) {
+        if (0 == fnmatch(dp.c_str(), dirPath.c_str(), 0)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool FileDiscoveryOptions::IsObjectInBlacklist(const std::string& path, const std::string& name) const {
+    if (!mHasBlacklist) {
+        return false;
+    }
+
+    if (IsDirectoryInBlacklist(path)) {
+        return true;
+    }
+    if (name.empty()) {
+        return false;
+    }
+
+    auto const filePath = PathJoin(path, name);
+    for (auto& fp : mFilePathBlacklist) {
+        if (0 == fnmatch(fp.c_str(), filePath.c_str(), FNM_PATHNAME)) {
+            return true;
+        }
+    }
+    for (auto& fp : mMLFilePathBlacklist) {
+        if (0 == fnmatch(fp.c_str(), filePath.c_str(), 0)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool FileDiscoveryOptions::IsFileNameInBlacklist(const std::string& fileName) const {
+    if (!mHasBlacklist) {
+        return false;
+    }
+
+    for (auto& pattern : mFileNameBlacklist) {
+        if (0 == fnmatch(pattern.c_str(), fileName.c_str(), 0)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// IsMatch checks if the object is matched with current config.
+// @path: absolute path of location in where the object stores in.
+// @name: the name of the object. If the object is directory, this parameter will be empty.
+bool FileDiscoveryOptions::IsMatch(const std::string& path, const std::string& name) const {
+    // Check if the file name is matched or blacklisted.
+    if (!name.empty()) {
+        if (fnmatch(mFilePattern.c_str(), name.c_str(), 0) != 0)
+            return false;
+        if (IsFileNameInBlacklist(name)) {
+            return false;
+        }
+    }
+
+    // File in docker.
+    if (mEnableContainerDiscovery) {
+        if (mWildcardPaths.size() > (size_t)0) {
+            DockerContainerPath* containerPath = GetContainerPathByLogPath(path);
+            if (containerPath == NULL) {
+                return false;
+            }
+            // convert Logtail's real path to config path. eg /host_all/var/lib/xxx/home/admin/logs -> /home/admin/logs
+            if (mWildcardPaths[0].size() == (size_t)1) {
+                // if mWildcardPaths[0] is root path, do not add mWildcardPaths[0]
+                return IsWildcardPathMatch(path.substr(containerPath->mContainerPath.size()), name);
+            } else {
+                std::string convertPath = mWildcardPaths[0] + path.substr(containerPath->mContainerPath.size());
+                return IsWildcardPathMatch(convertPath, name);
+            }
+        }
+
+        // Normal base path.
+        for (size_t i = 0; i < mContainerInfos->size(); ++i) {
+            const std::string& containerBasePath = (*mContainerInfos)[i].mContainerPath;
+            if (_IsPathMatched(containerBasePath, path, mMaxDirSearchDepth)) {
+                if (!mHasBlacklist) {
+                    return true;
+                }
+
+                // ContainerBasePath contains base path, remove it.
+                auto pathInContainer = mBasePath + path.substr(containerBasePath.size());
+                if (!IsObjectInBlacklist(pathInContainer, name))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    // File not in docker: wildcard or non-wildcard.
+    if (mWildcardPaths.empty()) {
+        return _IsPathMatched(mBasePath, path, mMaxDirSearchDepth) && !IsObjectInBlacklist(path, name);
+    } else
+        return IsWildcardPathMatch(path, name);
+}
+
+bool FileDiscoveryOptions::IsWildcardPathMatch(const std::string& path, const std::string& name) const {
+    size_t pos = 0;
+    int16_t d = 0;
+    int16_t maxWildcardDepth = mWildcardDepth + 1;
+    while (d < maxWildcardDepth) {
+        pos = path.find(PATH_SEPARATOR[0], pos);
+        if (pos == std::string::npos)
+            break;
+        ++d;
+        ++pos;
+    }
+
+    if (d < mWildcardDepth)
+        return false;
+    else if (d == mWildcardDepth) {
+        return fnmatch(mBasePath.c_str(), path.c_str(), FNM_PATHNAME) == 0 && !IsObjectInBlacklist(path, name);
+    } else if (pos > 0) {
+        if (!(fnmatch(mBasePath.c_str(), path.substr(0, pos - 1).c_str(), FNM_PATHNAME) == 0
+              && !IsObjectInBlacklist(path, name))) {
+            return false;
+        }
+    } else
+        return false;
+
+    // Only pos > 0 will reach here, which means the level of path is deeper than base,
+    // need to check max depth.
+    if (mMaxDirSearchDepth < 0)
+        return true;
+    int depth = 1;
+    while (depth < mMaxDirSearchDepth + 1) {
+        pos = path.find(PATH_SEPARATOR[0], pos);
+        if (pos == std::string::npos)
+            return true;
+        ++depth;
+        ++pos;
+    }
+    return false;
+}
+
+// XXX: assume path is a subdir under mBasePath
+bool FileDiscoveryOptions::IsTimeout(const std::string& path) const {
+    if (mPreservedDirDepth < 0 || mWildcardPaths.size() > 0)
+        return false;
+
+    // we do not check if (path.find(mBasePath) == 0)
+    size_t pos = mBasePath.size();
+    int depthCount = 0;
+    while ((pos = path.find(PATH_SEPARATOR[0], pos)) != std::string::npos) {
+        ++depthCount;
+        ++pos;
+        if (depthCount > mPreservedDirDepth)
+            return true;
+    }
+    return false;
+}
+
+bool FileDiscoveryOptions::WithinMaxDepth(const std::string& path) const {
+    // default -1 to compatible with old version
+    if (mMaxDirSearchDepth < 0)
+        return true;
+    if (mEnableContainerDiscovery) {
+        // docker file, should check is match
+        return IsMatch(path, "");
+    }
+
+    {
+        const auto& base = mWildcardPaths.empty() ? mBasePath : mWildcardPaths[0];
+        if (isNotSubPath(base, path)) {
+            LOG_ERROR(sLogger, ("path is not child of basePath, path", path)("basePath", base));
+            return false;
+        }
+    }
+
+    if (mWildcardPaths.size() == 0) {
+        size_t pos = mBasePath.size();
+        int depthCount = 0;
+        while ((pos = path.find(PATH_SEPARATOR, pos)) != std::string::npos) {
+            ++depthCount;
+            ++pos;
+            if (depthCount > mMaxDirSearchDepth)
+                return false;
+        }
+    } else {
+        int32_t depth = 0 - mWildcardDepth;
+        for (size_t i = 0; i < path.size(); ++i) {
+            if (path[i] == PATH_SEPARATOR[0])
+                ++depth;
+        }
+        if (depth < 0) {
+            LOG_ERROR(sLogger, ("invalid sub dir", path)("basePath", mBasePath));
+            return false;
+        } else if (depth > mMaxDirSearchDepth)
+            return false;
+        else {
+            // Windows doesn't support double *, so we have to check this.
+            auto basePath = mBasePath;
+            if (basePath.empty() || basePath.back() != '*')
+                basePath += '*';
+            if (fnmatch(basePath.c_str(), path.c_str(), 0) != 0) {
+                LOG_ERROR(sLogger, ("invalid sub dir", path)("basePath", mBasePath));
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+DockerContainerPath* FileDiscoveryOptions::GetContainerPathByLogPath(const std::string& logPath) const {
+    if (!mContainerInfos) {
+        return NULL;
+    }
+    for (size_t i = 0; i < mContainerInfos->size(); ++i) {
+        if (_IsSubPath((*mContainerInfos)[i].mContainerPath, logPath)) {
+            return &(*mContainerInfos)[i];
+        }
+    }
+    return NULL;
+}
+
+bool FileDiscoveryOptions::IsSameDockerContainerPath(const std::string& paramsJSONStr, bool allFlag) const {
+    if (!mEnableContainerDiscovery)
+        return true;
+
+    if (!allFlag) {
+        DockerContainerPath dockerContainerPath;
+        if (!DockerContainerPath::ParseByJSONStr(paramsJSONStr, dockerContainerPath)) {
+            LOG_ERROR(sLogger, ("invalid docker container params", "skip this path")("params", paramsJSONStr));
+            return true;
+        }
+        // try update
+        for (size_t i = 0; i < mContainerInfos->size(); ++i) {
+            if ((*mContainerInfos)[i] == dockerContainerPath) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // check all
+    std::unordered_map<std::string, DockerContainerPath> allPathMap;
+    if (!DockerContainerPath::ParseAllByJSONStr(paramsJSONStr, allPathMap)) {
+        LOG_ERROR(sLogger, ("invalid all docker container params", "skip this path")("params", paramsJSONStr));
+        return true;
+    }
+
+    // need add
+    if (mContainerInfos->size() != allPathMap.size()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < mContainerInfos->size(); ++i) {
+        std::unordered_map<std::string, DockerContainerPath>::iterator iter
+            = allPathMap.find((*mContainerInfos)[i].mContainerID);
+        // need delete
+        if (iter == allPathMap.end()) {
+            return false;
+        }
+        // need update
+        if ((*mContainerInfos)[i] != iter->second) {
+            return false;
+        }
+    }
+    // same
+    return true;
+}
+
+bool FileDiscoveryOptions::UpdateDockerContainerPath(const std::string& paramsJSONStr, bool allFlag) {
+    if (!mContainerInfos)
+        return false;
+
+    if (!allFlag) {
+        DockerContainerPath dockerContainerPath;
+        if (!DockerContainerPath::ParseByJSONStr(paramsJSONStr, dockerContainerPath)) {
+            LOG_ERROR(sLogger, ("invalid docker container params", "skip this path")("params", paramsJSONStr));
+            return false;
+        }
+        // try update
+        for (size_t i = 0; i < mContainerInfos->size(); ++i) {
+            if ((*mContainerInfos)[i].mContainerID == dockerContainerPath.mContainerID) {
+                // update
+                (*mContainerInfos)[i] = dockerContainerPath;
+                return true;
+            }
+        }
+        // add
+        mContainerInfos->push_back(dockerContainerPath);
+        return true;
+    }
+
+    std::unordered_map<std::string, DockerContainerPath> allPathMap;
+    if (!DockerContainerPath::ParseAllByJSONStr(paramsJSONStr, allPathMap)) {
+        LOG_ERROR(sLogger, ("invalid all docker container params", "skip this path")("params", paramsJSONStr));
+        return false;
+    }
+    // if update all, clear and reset
+    mContainerInfos->clear();
+    for (std::unordered_map<std::string, DockerContainerPath>::iterator iter = allPathMap.begin();
+         iter != allPathMap.end();
+         ++iter) {
+        mContainerInfos->push_back(iter->second);
+    }
+    return true;
+}
+
+bool FileDiscoveryOptions::DeleteDockerContainerPath(const std::string& paramsJSONStr) {
+    if (!mContainerInfos)
+        return false;
+
+    DockerContainerPath dockerContainerPath;
+    if (!DockerContainerPath::ParseByJSONStr(paramsJSONStr, dockerContainerPath)) {
+        return false;
+    }
+    for (std::vector<DockerContainerPath>::iterator iter = mContainerInfos->begin(); iter != mContainerInfos->end();
+         ++iter) {
+        if (iter->mContainerID == dockerContainerPath.mContainerID) {
+            mContainerInfos->erase(iter);
+            break;
+        }
+    }
+    return true;
+}
+
 
 } // namespace logtail

@@ -34,10 +34,9 @@
 #include "polling/PollingDirFile.h"
 #include "event_listener/EventListener.h"
 #include "checkpoint/CheckPointManager.h"
-
+#include "file_server/FileDiscoveryOptions.h"
 namespace logtail {
 
-class Config;
 class TimeoutHandler;
 class EventHandler;
 class Event;
@@ -100,7 +99,7 @@ public:
      *
      * @return true on success; on error false is returned
      */
-    bool RegisterEventHandler(const char* path, Config* config, EventHandler*& handler);
+    bool RegisterEventHandler(const char* path, const FileDiscoveryConfig&, EventHandler*& handler);
 
     /** Unregister handler for path; If no handler registered for path, do nothing but return.
      * After this call, no event watched on this path any more.
