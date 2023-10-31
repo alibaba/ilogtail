@@ -17,7 +17,6 @@
 #include "plugin/interface/Processor.h"
 #include <string>
 #include <boost/regex.hpp>
-#include "file_server/MultilineOptions.h"
 
 namespace logtail {
 
@@ -26,7 +25,6 @@ public:
     static const std::string sName;
 
     std::string mSplitKey;
-    MultilineOptions::Mode mMode = MultilineOptions::Mode::CUSTOM;
     char mSplitChar = '\n';
     bool mAppendingLogPositionMeta = false;
 
