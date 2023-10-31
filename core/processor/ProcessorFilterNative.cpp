@@ -41,6 +41,7 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
         mFilterMode = EXPRESSION_MODE;
     } else if (config.mFilterRule) {
         mFilterRule = config.mFilterRule;
+        mFilterMode = RULE_MODE;
     } else {
         mFilterMode = BYPASS_MODE;
     }
