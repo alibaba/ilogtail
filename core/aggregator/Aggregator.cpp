@@ -509,8 +509,6 @@ int32_t Aggregator::FilterNoneUtf8Metric(sls_logs::LogGroup& logGroup,
         neededLogs = filterPtr->Filter(logGroup, config->mAdvancedConfig.mFilterExpressionRoot, context);
     } else if (config != NULL && config->mFilterRule) {
         neededLogs = filterPtr->Filter(logGroup, config->mFilterRule.get(), context);
-    } else {
-        neededLogs = filterPtr->Filter(context.mProjectName, context.mRegion, logGroup);
     }
     int32_t neededLogSize = (int32_t)neededLogs.size();
     if (neededLogSize > 0 && config != NULL && (config->mLogType != STREAM_LOG && config->mLogType != PLUGIN_LOG)

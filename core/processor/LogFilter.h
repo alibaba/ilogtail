@@ -54,10 +54,10 @@ public:
         return &sFilter;
     }
 
-    bool InitFilter(const std::string& configName);
+    // bool InitFilter(const std::string& configName);
 
-    std::vector<int32_t>
-    Filter(const std::string& projectName, const std::string& region, const sls_logs::LogGroup& logGroup);
+    // std::vector<int32_t>
+    // Filter(const std::string& projectName, const std::string& region, const sls_logs::LogGroup& logGroup);
 
     std::vector<int32_t>
     Filter(const sls_logs::LogGroup& logGroup, const LogFilterRule* filterRule, const LogGroupContext& context);

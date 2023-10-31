@@ -171,7 +171,7 @@ void do_worker_process() {
     }
 
     LogtailMonitor::Instance()->InitMonitor();
-    LogFilter::Instance()->InitFilter(STRING_FLAG(user_log_config));
+    // LogFilter::Instance()->InitFilter(STRING_FLAG(user_log_config));
 
     Sender::Instance()->InitSender();
 
