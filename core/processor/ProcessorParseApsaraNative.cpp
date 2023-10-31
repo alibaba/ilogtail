@@ -51,7 +51,7 @@ bool ProcessorParseApsaraNative::ParseTimeZoneOffsetSecond(const string& logTZ, 
 bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetOptionalStringParam(config, "Timezone", mTimezone, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mTimezone, sName, mContext->GetConfigName());

@@ -31,10 +31,10 @@ const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
 bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetMandatoryStringParam(config, "Separator", mSeparator, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
 
     if (mSeparator == "\\t")
@@ -47,17 +47,15 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
             mQuote = quoteStr[0];
         } else {
             errorMsg = "quote for Delimiter Log only support single char(like \")";
-            PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+            PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
         }
-    } else if (mSeparator.size() > 1)
-        config->mSeparator = separatorStr;
-    else {
+    } else if (mSeparator.size() == 0) {
         errorMsg = "separator for Delimiter Log should not be empty";
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
 
     if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "AllowingShortenedFields", mAllowingShortenedFields, errorMsg)) {
         PARAM_WARNING_DEFAULT(

@@ -42,7 +42,7 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    bool ParseTimeZoneOffsetSecond(const string& logTZ, int& logTZSecond);
+    bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond);
     /// @return false if data need to be discarded
     bool ProcessEvent(StringView logPath, PipelineEventPtr& e, LogtailTime& logTime, StringView& timeStrCache);
     /// @return false if parse time failed

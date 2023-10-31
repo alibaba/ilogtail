@@ -28,15 +28,15 @@
 namespace logtail {
 const std::string ProcessorParseTimestampNative::sName = "processor_parse_timestamp_native";
 
-bool ProcessorParseTimestampNative::ParseTimeZoneOffsetSecond(const string& logTZ, int& logTZSecond) {
+bool ProcessorParseTimestampNative::ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond) {
     if (logTZ.size() != strlen("GMT+08:00") || logTZ[6] != ':' || (logTZ[3] != '+' && logTZ[3] != '-')) {
         return false;
     }
     if (logTZ.find("GMT") != (size_t)0) {
         return false;
     }
-    string hourStr = logTZ.substr(4, 2);
-    string minitueStr = logTZ.substr(7, 2);
+    std::string hourStr = logTZ.substr(4, 2);
+    std::string minitueStr = logTZ.substr(7, 2);
     logTZSecond = StringTo<int>(hourStr) * 3600 + StringTo<int>(minitueStr) * 60;
     if (logTZ[3] == '-') {
         logTZSecond = -logTZSecond;
@@ -47,10 +47,10 @@ bool ProcessorParseTimestampNative::ParseTimeZoneOffsetSecond(const string& logT
 bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetMandatoryStringParam(config, "SourceFormat", mSourceFormat, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetOptionalStringParam(config, "SourceTimezone", mSourceTimezone, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceTimezone, sName, mContext->GetConfigName());
@@ -62,7 +62,7 @@ bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     if (GetOptionalStringParam(config, "PreciseTimestampKey", mPreciseTimestampKey, errorMsg)) {
         std::string preciseTimestampUnit;
         if (!GetOptionalStringParam(config, "PreciseTimestampUnit", preciseTimestampUnit, errorMsg)) {
-            PreciseTimestampKey = "";
+            mPreciseTimestampKey = "";
         } else {
             if (0 == preciseTimestampUnit.compare("ms")) {
                 mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;

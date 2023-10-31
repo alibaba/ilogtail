@@ -46,7 +46,7 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
             BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(val);
             if (!root) {
                 errorMsg = "invalid filter expression: " + val.toStyledString();
-                PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+                PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
             }
             mConditionExp.swap(root);
             LOG_INFO(mContext->GetLogger(), ("parse filter expression", val.toStyledString()));
@@ -62,7 +62,7 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
 
     if (mFilterMode == Mode::BYPASS_MODE) {
         errorMsg = "Include and ConditionExp must have one";
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "DiscardingNonUTF8", mDiscardingNonUTF8, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mDiscardingNonUTF8, sName, mContext->GetConfigName());

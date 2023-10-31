@@ -28,12 +28,12 @@ const std::string ProcessorDesensitizeNative::sName = "processor_desensitize_nat
 bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
 
     std::string method;
     if (!GetMandatoryStringParam(config, "Method", method, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (method == "const") {
         mMethod = CONST_OPTION;
@@ -41,22 +41,22 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
         mMethod = MD5_OPTION;
     } else {
         errorMsg = "The method(" + method + ") is invalid";
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
 
     if (mMethod == CONST_OPTION) {
         if (!GetMandatoryStringParam(config, "ReplacingString", mReplacingString, errorMsg)) {
-            PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+            PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
         }
     }
     mReplacingString = std::string("\\1") + mReplacingString;
 
     if (!GetMandatoryStringParam(
             config, "ContentPatternBeforeReplacedString", mContentPatternBeforeReplacedString, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetMandatoryStringParam(config, "ReplacedContentPattern", mReplacedContentPattern, errorMsg)) {
-        PARAM_ERROR(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "ReplacingAll", mReplacingAll, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mReplacingAll, sName, mContext->GetConfigName());
@@ -73,7 +73,7 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
                                        GetContext().GetProjectName(),
                                        GetContext().GetLogstoreName(),
                                        GetContext().GetRegion());
-        PARAM_ERROR(mContext->GetLogger(),
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
                     "The sensitive regex is invalid, error:" + errorMsg,
                     sName,
                     mContext->GetConfigName());

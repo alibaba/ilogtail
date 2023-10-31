@@ -50,7 +50,7 @@ private:
     int32_t GetApsaraLogMicroTime(StringView& buffer);
     bool IsPrefixString(const char* all, const StringView& prefix);
     int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
-    bool ParseTimeZoneOffsetSecond(const string& logTZ, int& logTZSecond);
+    bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond);
     std::string mRawLogTag;
     bool mDiscardUnmatch = false;
     bool mUploadRawLog = false;
