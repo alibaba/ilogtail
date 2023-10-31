@@ -59,9 +59,6 @@ DEFINE_FLAG_STRING(ilogtail_config,
                    "set dataserver & configserver address; (optional)set cpu,mem,bufflerfile,buffermap and etc.",
                    "ilogtail_config.json");
 DEFINE_FLAG_INT32(ilogtail_epoll_wait_events, "epoll_wait event number", 100);
-DEFINE_FLAG_INT64(max_logtail_writer_packet_size,
-                  "max packet size thourgh domain socket in shennong agent",
-                  10000000); // 10M
 DEFINE_FLAG_STRING(logtail_profile_snapshot, "reader profile on local disk", "logtail_profile_snapshot");
 DEFINE_FLAG_STRING(logtail_line_count_snapshot, "line count file on local disk", "logtail_line_count_snapshot.json");
 DEFINE_FLAG_STRING(logtail_integrity_snapshot, "integrity file on local disk", "logtail_integrity_snapshot.json");

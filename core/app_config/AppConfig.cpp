@@ -14,10 +14,6 @@
 
 #include "AppConfig.h"
 #include <algorithm>
-#if defined(__linux__)
-#include "streamlog/StreamLogFormat.h"
-#endif
-#include "shennong/MetricSender.h"
 #include "sender/Sender.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
@@ -418,7 +414,7 @@ void AppConfig::LoadSyslogConf(const Json::Value& confJson) {
     else
         mStreamLogRcvLenPerCall = INT32_FLAG(default_StreamLog_recv_size_each_call);
 
-#if defined(__linux__)
+#if defined(__ENTERPRISE__) && defined(__linux__)
     StreamLogLine::ClearFormats();
     StreamLogLine::AddDefaultFormats();
     if (confJson.isMember("streamlog_formats") && confJson["streamlog_formats"].isArray()) {

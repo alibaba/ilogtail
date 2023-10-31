@@ -42,7 +42,6 @@
 #include "common/FileSystemUtil.h"
 #include "common/TimeUtil.h"
 #ifdef __linux__
-#include "streamlog/StreamLogManager.h"
 #include "ObserverManager.h"
 #endif
 #include "app_config/AppConfig.h"
@@ -60,7 +59,6 @@
 #include "log_pb/sls_logs.pb.h"
 #include "checkpoint/CheckPointManager.h"
 #include "checkpoint/CheckpointManagerV2.h"
-#include "shennong/MetricSender.h"
 #include "polling/PollingDirFile.h"
 #include "polling/PollingModify.h"
 #ifdef APSARA_UNIT_TEST_MAIN
@@ -86,7 +84,6 @@ using namespace sls_logs;
 DECLARE_FLAG_INT32(check_point_dump_interval);
 DECLARE_FLAG_INT32(ilogtail_max_epoll_events);
 DECLARE_FLAG_INT32(ilogtail_epoll_wait_events);
-DECLARE_FLAG_INT64(max_logtail_writer_packet_size);
 DEFINE_FLAG_INT32(ilogtail_epoll_time_out, "default time out is 1s", 1);
 DEFINE_FLAG_INT32(main_loop_check_interval, "seconds", 60);
 DEFINE_FLAG_INT32(existed_file_active_timeout,
