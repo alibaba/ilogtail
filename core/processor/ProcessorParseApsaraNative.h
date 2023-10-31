@@ -27,7 +27,7 @@ public:
     std::string mSourceKey;
     std::string mTimezone = "";
     bool mAdjustingMicroTimezone = false;
-    bool mKeepingSourceWhenParseFail = false;
+    bool mKeepingSourceWhenParseFail = true;
     bool mKeepingSourceWhenParseSucceed = false;
     // 当原始字段被保留时，用于存储原始字段的字段名。若不填，默认不改名。
     std::string mRenamedSourceKey = "";

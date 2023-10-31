@@ -19,12 +19,25 @@
 #include "models/LogEvent.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
-
+#include "common/ParamExtractor.h"
+#include <string>
 
 namespace logtail {
 const std::string ProcessorSplitLogStringNative::sName = "processor_split_string_native";
 
 bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    mSplitKey = DEFAULT_CONTENT_KEY;
+    // mode
+    std::string mode = "custom";
+    if (!GetOptionalStringParam(config, "mode", mode, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mode, sName, mContext->GetConfigName());
+    }
+    mSplitChar = mode == "JSON" ? '\0' : '\n';
+    // AppendingLogPositionMeta
+    if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mAppendingLogPositionMeta, sName, mContext->GetConfigName());
+    }
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
     return true;
@@ -33,8 +46,9 @@ bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
 bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
 
-    mSplitKey = DEFAULT_CONTENT_KEY;
+    // mMode
     mSplitChar = config.mLogType == JSON_LOG ? '\0' : '\n';
+    // AppendingLogPositionMeta
     mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);

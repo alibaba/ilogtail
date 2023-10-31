@@ -24,6 +24,17 @@ class ProcessorSplitRegexNative : public Processor {
 public:
     static const std::string sName;
 
+    std::string mSplitKey;
+    std::string mStartPattern;
+    std::string mContinuePattern;
+    std::string mEndPattern;
+    std::shared_ptr<boost::regex> mStartPatternRegPtr;
+    std::shared_ptr<boost::regex> mContinuePatternRegPtr;
+    std::shared_ptr<boost::regex> mEndPatternRegPtr;
+    bool mIsMultline;
+    bool mAppendingLogPositionMeta = false;
+    bool mKeepingSourceWhenParseFail = true;
+
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
     bool Init(const Json::Value& config) override;
@@ -33,6 +44,8 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
+    bool IsMultiline() const;
+    bool ParseRegex(const std::string& pattern, std::shared_ptr<boost::regex>& reg);
     void ProcessEvent(PipelineEventGroup& logGroup,
                       const StringView& logPath,
                       const PipelineEventPtr& e,
@@ -52,8 +65,7 @@ private:
 
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
-    std::string mSplitKey;
-    bool mIsMultline;
+
     std::string mLogBeginReg;
     std::string mLogContinueReg;
     std::string mLogEndReg;

@@ -17,12 +17,18 @@
 #include "plugin/interface/Processor.h"
 #include <string>
 #include <boost/regex.hpp>
+#include "file_server/MultilineOptions.h"
 
 namespace logtail {
 
 class ProcessorSplitLogStringNative : public Processor {
 public:
     static const std::string sName;
+
+    std::string mSplitKey;
+    MultilineOptions::Mode mMode = MultilineOptions::Mode::CUSTOM;
+    char mSplitChar = '\n';
+    bool mAppendingLogPositionMeta = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const ComponentConfig& componentConfig) override;
@@ -37,8 +43,6 @@ private:
     void LogSplit(const char* buffer, int32_t size, int32_t& lineFeed, std::vector<StringView>& logIndex);
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
-    std::string mSplitKey;
-    char mSplitChar = '\n';
     bool mEnableLogPositionMeta = false;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorRegexStringNativeUnittest;

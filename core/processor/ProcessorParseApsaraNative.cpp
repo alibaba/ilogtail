@@ -25,8 +25,6 @@
 #include "common/ParamExtractor.h"
 #include <string>
 
-using namespace std;
-
 namespace logtail {
 const std::string ProcessorParseApsaraNative::sName = "processor_parse_apsara_native";
 

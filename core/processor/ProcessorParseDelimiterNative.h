@@ -32,7 +32,7 @@ public:
     std::vector<std::string> mKeys;
     bool mAllowingShortenedFields = true;
     std::string mOverflowedFieldsTreatment = "extend";
-    bool mKeepingSourceWhenParseFail = false;
+    bool mKeepingSourceWhenParseFail = true;
     bool mKeepingSourceWhenParseSucceed = false;
     std::string mRenamedSourceKey = "";
     bool mCopingRawLog = false;
