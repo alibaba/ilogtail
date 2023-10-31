@@ -30,15 +30,15 @@ const std::string ProcessorParseApsaraNative::sName = "processor_parse_apsara_na
 
 // static const int32_t MAX_BASE_FIELD_NUM = 10;
 
-bool ProcessorParseApsaraNative::ParseTimeZoneOffsetSecond(const string& logTZ, int& logTZSecond) {
+bool ProcessorParseApsaraNative::ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond) {
     if (logTZ.size() != strlen("GMT+08:00") || logTZ[6] != ':' || (logTZ[3] != '+' && logTZ[3] != '-')) {
         return false;
     }
     if (logTZ.find("GMT") != (size_t)0) {
         return false;
     }
-    string hourStr = logTZ.substr(4, 2);
-    string minitueStr = logTZ.substr(7, 2);
+    std::string hourStr = logTZ.substr(4, 2);
+    std::string minitueStr = logTZ.substr(7, 2);
     logTZSecond = StringTo<int>(hourStr) * 3600 + StringTo<int>(minitueStr) * 60;
     if (logTZ[3] == '-') {
         logTZSecond = -logTZSecond;
