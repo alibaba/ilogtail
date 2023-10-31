@@ -1509,6 +1509,8 @@ bool LogFileReader::GetRawData(
     bool moreData = false;
     if (mFileEncoding == ENCODING_GBK)
         ReadGBK(bufferptr, size, fileSize, moreData, truncateInfo);
+    else if (mFileEncoding == ENCODING_UTF16)
+        ReadGBK(bufferptr, size, fileSize, moreData, truncateInfo);
     else
         ReadUTF8(bufferptr, size, fileSize, moreData, truncateInfo);
 
@@ -1598,6 +1600,27 @@ size_t LogFileReader::getNextReadSize(int64_t fileEnd, bool& fromCpt) {
     }
     if (readSize > BUFFER_SIZE && !allowMoreBufferSize) {
         readSize = BUFFER_SIZE;
+    }
+    return readSize;
+}
+
+size_t LogFileReader::getNextReadSizeUTF16(int64_t fileEnd, bool& fromCpt) {
+    size_t readSize = static_cast<size_t>(fileEnd - mLastFilePos);
+    bool allowMoreBufferSize = false;
+    fromCpt = false;
+    if (mEOOption && mEOOption->selectedCheckpoint->IsComplete()) {
+        fromCpt = true;
+        allowMoreBufferSize = true;
+        auto& checkpoint = mEOOption->selectedCheckpoint->data;
+        readSize = checkpoint.read_length();
+        LOG_INFO(sLogger, ("read specified length", readSize)("offset", mLastFilePos));
+    }
+    if (readSize > BUFFER_SIZE && !allowMoreBufferSize) {
+        readSize = BUFFER_SIZE;
+    }
+    // Ensure the read size is even
+    if (readSize % 2 != 0) {
+        readSize--;
     }
     return readSize;
 }
@@ -1718,6 +1741,44 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
               ("read gbk buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }
 
+void LogFileReader::ReadUTF16(char16_t*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo) {
+    bool fromCpt = false;
+    size_t READ_BYTE = getNextReadSizeUTF16(end, fromCpt);
+    bufferptr = new char16_t[READ_BYTE + 1];
+    bufferptr[READ_BYTE] = '\0';
+    size_t nbytes = ReadFile(mLogFileOp, bufferptr, READ_BYTE, mLastFilePos, &truncateInfo);
+    mLastReadPos = mLastFilePos + nbytes;
+    LOG_DEBUG(sLogger, ("read bytes", nbytes)("last read pos", mLastReadPos));
+    moreData = (nbytes == BUFFER_SIZE);
+    bool adjustFlag = false;
+    while (nbytes > 0 && bufferptr[nbytes - 1] != '\n') {
+        nbytes--;
+        adjustFlag = true;
+    }
+    if ((nbytes > 0 && (adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
+        int32_t rollbackLineFeedCount;
+        nbytes = LastMatchedLine(bufferptr, nbytes, rollbackLineFeedCount);
+    }
+
+    if (moreData && nbytes == 0) {
+        nbytes = READ_BYTE;
+    }
+    if (nbytes == 0)
+        bufferptr[0] = '\0';
+    else
+        bufferptr[nbytes - 1] = '\0';
+
+    if (!moreData && fromCpt && mLastReadPos < end) {
+        moreData = true;
+    }
+    *size = nbytes;
+    setExactlyOnceCheckpointAfterRead(*size);
+    mLastFilePos += nbytes;
+
+    LOG_DEBUG(sLogger, ("read size", *size)("last file pos", mLastFilePos));
+}
+
+
 size_t
 LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo) {
     if (buf == NULL || size == 0 || op.IsOpen() == false) {
@@ -1762,6 +1823,50 @@ LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& of
     return nbytes;
 }
 
+size_t
+LogFileReader::ReadFile(LogFileOperator& op, char16_t* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo) {
+    if (buf == NULL || size == 0 || op.IsOpen() == false) {
+        LOG_WARNING(sLogger, ("invalid param", ""));
+        return 0;
+    }
+
+    int nbytes = 0;
+    if (mIsFuseMode) {
+        int64_t oriOffset = offset;
+        nbytes = op.SkipHoleRead(buf, 2, size, &offset);
+        if (nbytes < 0) {
+            LOG_ERROR(sLogger,
+                      ("SkipHoleRead fail to read log file", mLogPath)("mLastFilePos",
+                                                                       mLastFilePos)("size", size)("offset", offset));
+            return 0;
+        }
+        if (oriOffset != offset && truncateInfo != NULL) {
+            *truncateInfo = new TruncateInfo(oriOffset, offset);
+            LOG_INFO(sLogger,
+                     ("read fuse file with a hole, size",
+                      offset - oriOffset)("filename", mLogPath)("dev", mDevInode.dev)("inode", mDevInode.inode));
+            LogtailAlarm::GetInstance()->SendAlarm(
+                FUSE_FILE_TRUNCATE_ALARM,
+                string("read fuse file with a hole, size: ") + ToString(offset - oriOffset) + " filename: " + mLogPath
+                    + " dev: " + ToString(mDevInode.dev) + " inode: " + ToString(mDevInode.inode),
+                mProjectName,
+                mCategory,
+                mRegion);
+        }
+    } else {
+        nbytes = op.Pread(buf, 2, size, offset);
+        if (nbytes < 0) {
+            LOG_ERROR(sLogger,
+                      ("Pread fail to read log file", mLogPath)("mLastFilePos", mLastFilePos)("size", size)("offset",
+                                                                                                            offset));
+            return 0;
+        }
+    }
+
+    *((char16_t*)buf + nbytes) = '\0';
+    return nbytes;
+}
+
 LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& filePath) {
     LogFileOperator logFileOp;
     logFileOp.Open(filePath.c_str(), mIsFuseMode);
@@ -1797,6 +1902,29 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
     }
     logFileOp.Close();
     return FileCompareResult_Error;
+}
+
+int32_t LogFileReader::LastMatchedLine(char16_t* buffer, int32_t size, int32_t& rollbackLineFeedCount) {
+    int endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
+    int begPs = size - 2;
+    string exception;
+    rollbackLineFeedCount = 0;
+    while (begPs >= 0) {
+        if (buffer[begPs] == '\n') {
+            rollbackLineFeedCount++;
+            char16_t temp = buffer[endPs];
+            buffer[endPs] = '\0';
+            // ignore regex match fail, no need log here
+            if (BoostRegexMatch(buffer + begPs + 1, *mLogBeginRegPtr, exception)) {
+                buffer[begPs + 1] = '\0';
+                return begPs + 1;
+            }
+            buffer[endPs] = temp;
+            endPs = begPs;
+        }
+        begPs--;
+    }
+    return 0;
 }
 
 int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount) {

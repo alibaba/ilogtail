@@ -22,7 +22,7 @@
 #include <cstddef>
 
 namespace logtail {
-enum FileEncoding { ENCODING_UTF8, ENCODING_GBK };
+enum FileEncoding { ENCODING_UTF8, ENCODING_GBK, ENCODING_UTF16 };
 
 class EncodingConverter {
 private:
