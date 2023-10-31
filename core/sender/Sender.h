@@ -365,8 +365,9 @@ public:
     bool Send(const std::string& projectName,
               const std::string& sourceId,
               sls_logs::LogGroup& logGroup,
-              const Config* config,
-              DATA_MERGE_TYPE mergeType,
+              int64_t logGroupKey,
+              const FlusherSLS* config,
+              FlusherSLS::Batch::MergeType mergeType,
               const uint32_t logGroupSize,
               const std::string& defaultRegion = "",
               const std::string& filename = "",
@@ -463,7 +464,7 @@ public:
     LogstoreSenderStatistics GetSenderStatistics(const LogstoreFeedBackKey& key);
     void
     SetLogstoreFlowControl(const LogstoreFeedBackKey& logstoreKey, int32_t maxSendBytesPerSecond, int32_t expireTime);
-    bool SendPb(Config* pConfig,
+    bool SendPb(const FlusherSLS* pConfig,
                 char* pbBuffer,
                 int32_t pbSize,
                 int32_t lines,

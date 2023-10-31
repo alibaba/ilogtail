@@ -19,6 +19,7 @@
 #include "json/json.h"
 #include "common/JsonUtil.h"
 #include "ExceptionBase.h"
+#include "input/InputObserverNetwork.h"
 
 DEFINE_FLAG_INT64(sls_observer_network_gc_interval, "SLS Observer NetWork GC interval seconds", 30);
 DEFINE_FLAG_INT64(sls_observer_network_probe_disable_process_interval,
@@ -105,36 +106,37 @@ void NetworkConfig::ReportAlarm() {
     }
     std::stringstream ss;
     ss << "Load multi observer config, only one config is enabled, others not work. Enabled config is, project : "
-       << mLastApplyedConfig->mProjectName << ", store : " << mLastApplyedConfig->mCategory << ".\n";
+       << mLastApplyedConfig->GetContext().GetProjectName()
+       << ", store : " << mLastApplyedConfig->GetContext().GetLogstoreName() << ".\n";
     ss << "Disabled configs : ";
     for (auto& config : mAllNetworkConfigs) {
         if (config == mLastApplyedConfig) {
             continue;
         }
-        ss << "project : " << mLastApplyedConfig->mProjectName << ", store : " << mLastApplyedConfig->mCategory
-           << ".\n";
+        ss << "project : " << mLastApplyedConfig->GetContext().GetProjectName()
+           << ", store : " << mLastApplyedConfig->GetContext().GetLogstoreName() << ".\n";
     }
     std::string alarmStr = ss.str();
     for (auto& config : mAllNetworkConfigs) {
-        LogtailAlarm::GetInstance()->SendAlarm(
-            MULTI_OBSERVER_ALARM, alarmStr, config->mProjectName, config->mCategory, config->mRegion);
+        LogtailAlarm::GetInstance()->SendAlarm(MULTI_OBSERVER_ALARM,
+                                               alarmStr,
+                                               config->GetContext().GetProjectName(),
+                                               config->GetContext().GetLogstoreName(),
+                                               config->GetContext().GetRegion());
     }
     LOG_WARNING(sLogger, (alarmStr, ""));
 }
 
 
-void NetworkConfig::LoadConfig(Config* config) {
-    if (!config->mObserverFlag) {
-        return;
-    }
+void NetworkConfig::LoadConfig(const Pipeline* config) {
     if (mLastApplyedConfig == NULL) {
         mLastApplyedConfig = config;
     }
-    if (mOldestConfigCreateTime > config->mCreateTime) {
-        mOldestConfigCreateTime = config->mCreateTime;
+    if (mOldestConfigCreateTime > config->GetContext().GetCreateTime()) {
+        mOldestConfigCreateTime = config->GetContext().GetCreateTime();
         mLastApplyedConfig = config;
     }
-    mAllNetworkConfigs.push_back(config);
+    // mAllNetworkConfigs.push_back(config);
 }
 
 void NetworkConfig::EndLoadConfig() {
@@ -143,11 +145,11 @@ void NetworkConfig::EndLoadConfig() {
         return;
     }
     ReportAlarm();
-    if (mLastApplyedConfigDetail != mLastApplyedConfig->mObserverConfig) {
-        LOG_INFO(
-            sLogger,
-            ("reload observer config, last", mLastApplyedConfigDetail)("new", mLastApplyedConfig->mObserverConfig));
-        mLastApplyedConfigDetail = mLastApplyedConfig->mObserverConfig;
+    const InputObserverNetwork* plugin
+        = static_cast<const InputObserverNetwork*>(mLastApplyedConfig->GetInputs()[0]->GetPlugin());
+    if (mLastApplyedConfigDetail != plugin->mDetail) {
+        LOG_INFO(sLogger, ("reload observer config, last", mLastApplyedConfigDetail)("new", plugin->mDetail));
+        mLastApplyedConfigDetail = plugin->mDetail;
         std::string parseResult = SetFromJsonString();
         if (parseResult.empty()) {
             LOG_INFO(sLogger, ("new loaded observer config", ToString()));

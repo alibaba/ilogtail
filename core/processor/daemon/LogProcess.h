@@ -33,7 +33,6 @@
 namespace logtail {
 // forward declaration
 struct LogBuffer;
-class Config;
 class PipelineEventGroup;
 
 class LogProcess : public LogRunnable {
@@ -100,11 +99,11 @@ private:
     /**
      * @retval 0 if continue processing by C++, 1 if processed by Go
      */
-    int ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
-                            LogFileReaderPtr& logFileReader,
-                            sls_logs::LogGroup& logGroup,
-                            ProcessProfile& profile,
-                            Config& config);
+    // int ProcessBufferLegacy(std::shared_ptr<LogBuffer>& logBuffer,
+    //                         LogFileReaderPtr& logFileReader,
+    //                         sls_logs::LogGroup& logGroup,
+    //                         ProcessProfile& profile,
+    //                         Config& config);
     void DoFuseHandling();
     void FillEventGroupMetadata(LogBuffer& logBuffer, PipelineEventGroup& eventGroup) const;
     void FillLogGroupLogs(const PipelineEventGroup& eventGroup,

@@ -38,9 +38,7 @@
 #include "common/SlidingWindowCounter.h"
 #include "sdk/Client.h"
 #include "sdk/Exception.h"
-#include "config/Config.h"
 #include "processor/daemon/LogProcess.h"
-#include "processor/LogFilter.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/LogIntegrity.h"
 #include "monitor/LogLineCount.h"
@@ -100,7 +98,10 @@ DEFINE_FLAG_INT32(sending_cost_time_alarm_interval, "sending log group cost too 
 DEFINE_FLAG_INT32(log_group_wait_in_queue_alarm_interval,
                   "log group wait in queue alarm interval, may blocked by concurrency or quota, second",
                   3);
-DEFINE_FLAG_STRING(data_endpoint_policy, "policy for switching between data server endpoints, possible options include 'designated_first'(default) and 'designated_locked'", "designated_first");
+DEFINE_FLAG_STRING(data_endpoint_policy,
+                   "policy for switching between data server endpoints, possible options include "
+                   "'designated_first'(default) and 'designated_locked'",
+                   "designated_first");
 
 namespace logtail {
 const string Sender::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";
@@ -819,7 +820,9 @@ bool Sender::ResetSendClientEndpoint(const std::string aliuid, const std::string
     mSenderQueue.OnRegionRecover(region);
     sendClient->SetSlsHost(endpoint);
     ResetPort(region, sendClient);
-    LOG_INFO(sLogger, ("reset endpoint for sender, region", region)("uid", aliuid)("from", originalEndpoint)("to", endpoint)("use https",ToString(sendClient->IsUsingHTTPS())));
+    LOG_INFO(sLogger,
+             ("reset endpoint for sender, region", region)("uid", aliuid)("from", originalEndpoint)("to", endpoint)(
+                 "use https", ToString(sendClient->IsUsingHTTPS())));
     return true;
 }
 
@@ -1705,19 +1708,25 @@ bool Sender::IsValidToSend(const LogstoreFeedBackKey& logstoreKey) {
     return mSenderQueue.IsValidToPush(logstoreKey);
 }
 
-bool Sender::SendPb(Config* pConfig,
+bool Sender::SendPb(const FlusherSLS* pConfig,
                     char* pbBuffer,
                     int32_t pbSize,
                     int32_t lines,
                     const std::string& logstore,
                     const std::string& shardHash) {
     // if logstore is specific, use this key, otherwise use pConfig->->mCategory
-    sls_logs::SlsCompressType compressType = sdk::Client::GetCompressType(pConfig->mCompressType);
-    LogGroupContext logGroupContext(pConfig->mRegion, pConfig->mProjectName, pConfig->mCategory, compressType);
-    LoggroupTimeValue* pData = new LoggroupTimeValue(pConfig->mProjectName,
-                                                     logstore.empty() ? pConfig->mCategory : logstore,
-                                                     pConfig->mConfigName,
-                                                     pConfig->mFilePattern,
+    string compressStr = "zstd";
+    if (pConfig->mCompressType == FlusherSLS::CompressType::NONE) {
+        compressStr = "none";
+    } else if (pConfig->mCompressType == FlusherSLS::CompressType::LZ4) {
+        compressStr = "lz4";
+    }
+    sls_logs::SlsCompressType compressType = sdk::Client::GetCompressType(compressStr);
+    LogGroupContext logGroupContext(pConfig->mRegion, pConfig->mProject, pConfig->mLogstore, compressType);
+    LoggroupTimeValue* pData = new LoggroupTimeValue(pConfig->mProject,
+                                                     logstore.empty() ? pConfig->mLogstore : logstore,
+                                                     pConfig->GetContext().GetConfigName(),
+                                                     "", // only used for ant, set empty for simplicity
                                                      true,
                                                      pConfig->mAliuid,
                                                      pConfig->mRegion,
@@ -1726,13 +1735,13 @@ bool Sender::SendPb(Config* pConfig,
                                                      pbSize,
                                                      time(NULL),
                                                      shardHash,
-                                                     pConfig->mLogstoreKey,
+                                                     pConfig->GetLogstoreKey(),
                                                      logGroupContext);
     // apsara::timing::TimeInNsec startT = apsara::timing::GetCurrentTimeInNanoSeconds();
     if (!CompressData(logGroupContext.mCompressType, pbBuffer, pbSize, pData->mLogData)) {
-        LOG_ERROR(sLogger,
-                  ("compress data fail", "discard data")("projectName", pConfig->mProjectName)("logstore",
-                                                                                               pConfig->mCategory));
+        LOG_ERROR(
+            sLogger,
+            ("compress data fail", "discard data")("projectName", pConfig->mProject)("logstore", pConfig->mLogstore));
         delete pData;
         return false;
     } else {
@@ -1895,8 +1904,12 @@ bool Sender::TestEndpoint(const std::string& region, const std::string& endpoint
     try {
         if (BOOL_FLAG(enable_mock_send) && MockTestEndpoint) {
             string logData;
-            MockTestEndpoint(
-                "logtail-test-network-project", "logtail-test-network-logstore", logData, LOGGROUP_COMPRESSED, 0, SLS_CMP_LZ4);
+            MockTestEndpoint("logtail-test-network-project",
+                             "logtail-test-network-logstore",
+                             logData,
+                             LOGGROUP_COMPRESSED,
+                             0,
+                             SLS_CMP_LZ4);
         } else
             status = mTestNetworkClient->TestNetwork();
     } catch (sdk::LOGException& ex) {
@@ -2144,15 +2157,16 @@ void Sender::SendToNetAsync(LoggroupTimeValue* dataPtr) {
 bool Sender::Send(const std::string& projectName,
                   const std::string& sourceId,
                   LogGroup& logGroup,
-                  const Config* config,
-                  DATA_MERGE_TYPE mergeType,
+                  int64_t logGroupKey,
+                  const FlusherSLS* config,
+                  FlusherSLS::Batch::MergeType mergeType,
                   const uint32_t logGroupSize,
                   const string& defaultRegion,
                   const string& filename,
                   const LogGroupContext& context) {
     static Aggregator* aggregator = Aggregator::GetInstance();
     return aggregator->Add(
-        projectName, sourceId, logGroup, config, mergeType, logGroupSize, defaultRegion, filename, context);
+        projectName, sourceId, logGroup, logGroupKey, config, mergeType, logGroupSize, defaultRegion, filename, context);
 }
 
 bool Sender::SendInstantly(sls_logs::LogGroup& logGroup,

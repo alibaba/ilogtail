@@ -34,21 +34,21 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
     }
     const auto& advancedVal = originalVal[ADVANCED_CONFIG_KEY];
 
-    auto blacklistException = ParseBlacklist(advancedVal, cfg);
-    if (!blacklistException.empty()) {
-        throw blacklistException;
-    }
+    // auto blacklistException = ParseBlacklist(advancedVal, cfg);
+    // if (!blacklistException.empty()) {
+    //     throw blacklistException;
+    // }
 
-    // Boolean force_multiconfig.
-    {
-        const Json::Value& val = advancedVal["force_multiconfig"];
-        if (val.isBool()) {
-            cfg.mAdvancedConfig.mForceMultiConfig = val.asBool();
-            LOG_INFO(sLogger,
-                     ("set force multi config",
-                      cfg.mAdvancedConfig.mForceMultiConfig)("project", cfg.mProjectName)("config", cfg.mConfigName));
-        }
-    }
+    // // Boolean force_multiconfig.
+    // {
+    //     const Json::Value& val = advancedVal["force_multiconfig"];
+    //     if (val.isBool()) {
+    //         cfg.mAdvancedConfig.mForceMultiConfig = val.asBool();
+    //         LOG_INFO(sLogger,
+    //                  ("set force multi config",
+    //                   cfg.mAdvancedConfig.mForceMultiConfig)("project", cfg.mProjectName)("config", cfg.mConfigName));
+    //     }
+    // }
     // support extract partial fields in DELIMITER_LOG mode
     if (cfg.mLogType == DELIMITER_LOG) {
         if (advancedVal.isMember("extract_partial_fields") && advancedVal["extract_partial_fields"].isBool()) {
@@ -62,33 +62,35 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
             cfg.mAdvancedConfig.mRawLogTag = rawLogTag;
         }
     }
-    // pass_tags_to_plugin.
-    {
-        const Json::Value& val = advancedVal["pass_tags_to_plugin"];
-        if (val.isBool()) {
-            cfg.mAdvancedConfig.mPassTagsToPlugin = val.asBool();
-            LOG_INFO(sLogger,
-                     ("passing tags to plugin",
-                      cfg.mAdvancedConfig.mPassTagsToPlugin)("project", cfg.mProjectName)("logstore", cfg.mCategory));
-        }
-    }
-    // tail_size_kb: this will overwrite tail_limit.
-    {
-        const Json::Value& val = advancedVal["tail_size_kb"];
-        if (val.isInt()) {
-            int32_t tailSize = val.asInt();
-            cfg.SetTailLimit(tailSize);
-            LOG_INFO(sLogger, ("set tail size (KB)", cfg.mTailLimit)("param (KB)", tailSize));
-        }
-    }
+    // 废弃
+    // // pass_tags_to_plugin.
+    // {
+    //     const Json::Value& val = advancedVal["pass_tags_to_plugin"];
+    //     if (val.isBool()) {
+    //         cfg.mAdvancedConfig.mPassTagsToPlugin = val.asBool();
+    //         LOG_INFO(sLogger,
+    //                  ("passing tags to plugin",
+    //                   cfg.mAdvancedConfig.mPassTagsToPlugin)("project", cfg.mProjectName)("logstore", cfg.mCategory));
+    //     }
+    // }
+
+    // // tail_size_kb: this will overwrite tail_limit.
+    // {
+    //     const Json::Value& val = advancedVal["tail_size_kb"];
+    //     if (val.isInt()) {
+    //         int32_t tailSize = val.asInt();
+    //         cfg.SetTailLimit(tailSize);
+    //         LOG_INFO(sLogger, ("set tail size (KB)", cfg.mTailLimit)("param (KB)", tailSize));
+    //     }
+    // }
     // batch_send_interval
-    {
-        const Json::Value& val = advancedVal["batch_send_interval"];
-        if (val.isInt()) {
-            cfg.mAdvancedConfig.mBatchSendInterval = val.asInt();
-            LOG_INFO(sLogger, ("set batch send interval", cfg.mAdvancedConfig.mBatchSendInterval));
-        }
-    }
+    // {
+    //     const Json::Value& val = advancedVal["batch_send_interval"];
+    //     if (val.isInt()) {
+    //         cfg.mAdvancedConfig.mBatchSendInterval = val.asInt();
+    //         LOG_INFO(sLogger, ("set batch send interval", cfg.mAdvancedConfig.mBatchSendInterval));
+    //     }
+    // }
     // log filter: AND/OR/NOT/REGEX.
     {
         const Json::Value& val = advancedVal["filter_expression"];
@@ -101,48 +103,48 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
             LOG_INFO(sLogger, ("parse filter expression", val.toStyledString()));
         }
     }
-    // max_rotate_queue_size
-    {
-        const Json::Value& val = advancedVal["max_rotate_queue_size"];
-        if (val.isInt()) {
-            cfg.mAdvancedConfig.mMaxRotateQueueSize = val.asInt();
-            LOG_INFO(sLogger, ("set max rotate queue size", cfg.mAdvancedConfig.mMaxRotateQueueSize));
-        }
-    }
-    // close_unused_reader_interval
-    {
-        const Json::Value& val = advancedVal["close_unused_reader_interval"];
-        if (val.isInt()) {
-            cfg.mAdvancedConfig.mCloseUnusedReaderInterval = val.asInt();
-            LOG_INFO(sLogger, ("set close unused reader interval", cfg.mAdvancedConfig.mCloseUnusedReaderInterval));
-        }
-    }
+    // // max_rotate_queue_size
+    // {
+    //     const Json::Value& val = advancedVal["max_rotate_queue_size"];
+    //     if (val.isInt()) {
+    //         cfg.mAdvancedConfig.mMaxRotateQueueSize = val.asInt();
+    //         LOG_INFO(sLogger, ("set max rotate queue size", cfg.mAdvancedConfig.mMaxRotateQueueSize));
+    //     }
+    // }
+    // // close_unused_reader_interval
+    // {
+    //     const Json::Value& val = advancedVal["close_unused_reader_interval"];
+    //     if (val.isInt()) {
+    //         cfg.mAdvancedConfig.mCloseUnusedReaderInterval = val.asInt();
+    //         LOG_INFO(sLogger, ("set close unused reader interval", cfg.mAdvancedConfig.mCloseUnusedReaderInterval));
+    //     }
+    // }
     // exactly once
-    {
-        const auto& val = advancedVal["exactly_once_concurrency"];
-        if (val.isUInt()) {
-            auto concurrency = val.asUInt();
-            if (concurrency > Config::kExactlyOnceMaxConcurrency) {
-                throw ExceptionBase(std::string("invalid exactly once concurrency, range: [0, ")
-                                    + std::to_string(Config::kExactlyOnceMaxConcurrency) + "]");
-            }
-            cfg.mAdvancedConfig.mExactlyOnceConcurrency = concurrency;
-            LOG_INFO(sLogger, ("set exactly once concurrency", concurrency));
-        }
-        if (cfg.mAdvancedConfig.mExactlyOnceConcurrency > 0 && cfg.mPluginProcessFlag) {
-            throw ExceptionBase("exactly once can not be enabled while plugin.processors exist");
-        }
-        if (cfg.mAdvancedConfig.mExactlyOnceConcurrency > 0 && cfg.mMergeType != MERGE_BY_TOPIC) {
-            throw ExceptionBase("exactly once must use MERGE_BY_TOPIC");
-        }
-    }
-    // inode tag and offset in each log.
-    {
-        const auto& val = advancedVal["enable_log_position_meta"];
-        if (val.isBool()) {
-            cfg.mAdvancedConfig.mEnableLogPositionMeta = val.asBool();
-        }
-    }
+    // {
+    //     const auto& val = advancedVal["exactly_once_concurrency"];
+    //     if (val.isUInt()) {
+    //         auto concurrency = val.asUInt();
+    //         if (concurrency > Config::kExactlyOnceMaxConcurrency) {
+    //             throw ExceptionBase(std::string("invalid exactly once concurrency, range: [0, ")
+    //                                 + std::to_string(Config::kExactlyOnceMaxConcurrency) + "]");
+    //         }
+    //         cfg.mAdvancedConfig.mExactlyOnceConcurrency = concurrency;
+    //         LOG_INFO(sLogger, ("set exactly once concurrency", concurrency));
+    //     }
+    //     if (cfg.mAdvancedConfig.mExactlyOnceConcurrency > 0 && cfg.mPluginProcessFlag) {
+    //         throw ExceptionBase("exactly once can not be enabled while plugin.processors exist");
+    //     }
+    //     if (cfg.mAdvancedConfig.mExactlyOnceConcurrency > 0 && cfg.mMergeType != MERGE_BY_TOPIC) {
+    //         throw ExceptionBase("exactly once must use MERGE_BY_TOPIC");
+    //     }
+    // }
+    // // inode tag and offset in each log.
+    // {
+    //     const auto& val = advancedVal["enable_log_position_meta"];
+    //     if (val.isBool()) {
+    //         cfg.mAdvancedConfig.mEnableLogPositionMeta = val.asBool();
+    //     }
+    // }
     // specified_year: fill year in time.
     {
         const auto& val = advancedVal["specified_year"];
@@ -158,9 +160,9 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
     }
     // precise_timestamp
     {
-        if (advancedVal.isMember("enable_timestamp_nanosecond") && advancedVal["enable_timestamp_nanosecond"].isBool()) {
-            cfg.mAdvancedConfig.mEnableTimestampNanosecond = GetBoolValue(advancedVal, "enable_timestamp_nanosecond");
-        }
+        // if (advancedVal.isMember("enable_timestamp_nanosecond") && advancedVal["enable_timestamp_nanosecond"].isBool()) {
+        //     cfg.mAdvancedConfig.mEnableTimestampNanosecond = GetBoolValue(advancedVal, "enable_timestamp_nanosecond");
+        // }
         // Deprecated
         if (advancedVal.isMember("enable_precise_timestamp") && advancedVal["enable_precise_timestamp"].isBool()) {
             cfg.mAdvancedConfig.mEnablePreciseTimestamp = GetBoolValue(advancedVal, "enable_precise_timestamp");
@@ -189,21 +191,21 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
             }
         }
     }
-    // search_checkpoint_dir_depth.
-    {
-        const auto& val = advancedVal["search_checkpoint_dir_depth"];
-        if (val.isUInt()) {
-            cfg.mAdvancedConfig.mSearchCheckpointDirDepth = static_cast<uint16_t>(val.asUInt());
-        }
-    }
-    // enable_root_path_collection.
-    if (!BOOL_FLAG(enable_root_path_collection)) {
-        const auto& val = advancedVal["enable_root_path_collection"];
-        if (val.isBool() && val.asBool()) {
-            BOOL_FLAG(enable_root_path_collection) = true;
-            LOG_INFO(sLogger, ("message", "enable root path collection"));
-        }
-    }
+    // // search_checkpoint_dir_depth.
+    // {
+    //     const auto& val = advancedVal["search_checkpoint_dir_depth"];
+    //     if (val.isUInt()) {
+    //         cfg.mAdvancedConfig.mSearchCheckpointDirDepth = static_cast<uint16_t>(val.asUInt());
+    //     }
+    // }
+    // // enable_root_path_collection.
+    // if (!BOOL_FLAG(enable_root_path_collection)) {
+    //     const auto& val = advancedVal["enable_root_path_collection"];
+    //     if (val.isBool() && val.asBool()) {
+    //         BOOL_FLAG(enable_root_path_collection) = true;
+    //         LOG_INFO(sLogger, ("message", "enable root path collection"));
+    //     }
+    // }
 
     // support adjust microtime timezone
     if (cfg.mLogType == APSARA_LOG) {
@@ -211,101 +213,6 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
             cfg.mAdvancedConfig.mAdjustApsaraMicroTimezone = GetBoolValue(advancedVal, "adjust_apsara_micro_timezone");
         }
     }
-}
-
-// Configurations:
-// blacklist: {
-//   Array<String> dir_blacklist;
-//   Array<String> filename_blacklist;
-//   Array<String> filepath_blacklist;
-// }
-std::string UserLogConfigParser::ParseBlacklist(const Json::Value& advancedVal, Config& cfg) {
-    if (!(advancedVal.isMember("blacklist") && advancedVal["blacklist"].isObject())) {
-        return "";
-    }
-
-    std::string exceptionStr;
-    const auto& val = advancedVal["blacklist"];
-    if (val.isMember("dir_blacklist") && val["dir_blacklist"].isArray()) {
-        for (auto const& iter : val["dir_blacklist"]) {
-            if (!iter.isString()) {
-                exceptionStr += "dir_blacklist item must be string\n";
-                continue;
-            }
-            auto const path = iter.asString();
-            if (!boost::filesystem::path(path).is_absolute()) {
-                exceptionStr += "dir_blacklist item must be absolute path: " + path + "\n";
-                continue;
-            }
-            bool isMultipleLevelWildcard = path.find("**") != std::string::npos;
-            if (isMultipleLevelWildcard) {
-                cfg.mMLWildcardDirPathBlacklist.push_back(path);
-                LOG_INFO(sLogger,
-                         ("add dir_blacklist, multiple level", path)("project", cfg.mProjectName)("config",
-                                                                                                  cfg.mConfigName));
-                continue;
-            }
-            bool isWildcardPath = path.find("*") != std::string::npos || path.find("?") != std::string::npos;
-            if (isWildcardPath) {
-                cfg.mWildcardDirPathBlacklist.push_back(path);
-            } else {
-                cfg.mDirPathBlacklist.push_back(path);
-            }
-            LOG_INFO(sLogger,
-                     ("add dir_blacklist",
-                      path)("is wildcard", isWildcardPath)("project", cfg.mProjectName)("config", cfg.mConfigName));
-        }
-    }
-
-    if (val.isMember("filename_blacklist") && val["filename_blacklist"].isArray()) {
-        for (auto const& iter : val["filename_blacklist"]) {
-            if (!iter.isString()) {
-                exceptionStr += "filename_blacklist item must be string\n";
-                continue;
-            }
-            auto const name = iter.asString();
-            if (std::string::npos != name.find(PATH_SEPARATOR)) {
-                exceptionStr += "filename_blacklist item can not contain path separator, "
-                                "file name: "
-                    + name + "\n";
-                continue;
-            }
-            cfg.mFileNameBlacklist.push_back(name);
-            LOG_INFO(sLogger, ("add filename_blacklist", name)("project", cfg.mProjectName)("config", cfg.mConfigName));
-        }
-    }
-
-    if (val.isMember("filepath_blacklist") && val["filepath_blacklist"].isArray()) {
-        for (auto const& iter : val["filepath_blacklist"]) {
-            if (!iter.isString()) {
-                exceptionStr += "filepath_blacklist item must be string\n";
-                continue;
-            }
-            auto const path = iter.asString();
-            if (!boost::filesystem::path(path).is_absolute()) {
-                exceptionStr += "filepath_blacklist item must be absolute path, file path: " + path + "\n";
-                continue;
-            }
-            bool isMultipleLevelWildcard = path.find("**") != std::string::npos;
-            if (isMultipleLevelWildcard) {
-                cfg.mMLFilePathBlacklist.push_back(path);
-            } else {
-                cfg.mFilePathBlacklist.push_back(path);
-            }
-            LOG_INFO(sLogger,
-                     ("add filepath_blacklist", path)("wildcard", isMultipleLevelWildcard)("project", cfg.mProjectName)(
-                         "config", cfg.mConfigName));
-        }
-    }
-
-    if (!cfg.mDirPathBlacklist.empty() || !cfg.mWildcardDirPathBlacklist.empty()
-        || !cfg.mMLWildcardDirPathBlacklist.empty() || !cfg.mMLFilePathBlacklist.empty()
-        || !cfg.mFileNameBlacklist.empty() || !cfg.mFilePathBlacklist.empty()) {
-        cfg.mHasBlacklist = true;
-        LOG_INFO(sLogger, ("set has blacklist", cfg.mProjectName + "#" + cfg.mConfigName));
-    }
-
-    return exceptionStr;
 }
 
 BaseFilterNodePtr UserLogConfigParser::ParseExpressionFromJSON(const Json::Value& value) {

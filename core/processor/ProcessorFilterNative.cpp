@@ -33,26 +33,7 @@ ProcessorFilterNative::~ProcessorFilterNative() {
     mFilters.clear();
 }
 
-bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-
-    if (config.mAdvancedConfig.mFilterExpressionRoot.get() != nullptr) {
-        mFilterExpressionRoot = config.mAdvancedConfig.mFilterExpressionRoot;
-        mFilterMode = EXPRESSION_MODE;
-    } else if (config.mFilterRule) {
-        mFilterRule = config.mFilterRule;
-        mFilterMode = RULE_MODE;
-    } else {
-        mFilterMode = BYPASS_MODE;
-    }
-
-    mDiscardNoneUtf8 = config.mDiscardNoneUtf8;
-
-    mProcFilterInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_IN_SIZE_BYTES);
-    mProcFilterOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_OUT_SIZE_BYTES);
-    mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);
-    mProcFilterRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_RECORDS_TOTAL);
-
+bool ProcessorFilterNative::Init(const Json::Value& config) {
     return true;
 }
 

@@ -19,7 +19,6 @@
 #include "app_config/AppConfig.h"
 #include "reader/LogFileReader.h"
 #include "event_handler/EventHandler.h"
-#include "processor/LogFilter.h"
 #include "monitor/Monitor.h"
 #include "common/util.h"
 #include "event/Event.h"
@@ -2098,59 +2097,6 @@ public:
         }
     }
 
-    void TestFilterUTF8() {
-        LOG_INFO(sLogger, ("TestFilterUTF8() begin", time(NULL)));
-        CaseSetUp();
-        EnableNetWork();
-
-        string category = "app_log";
-        LogGroup srcLog;
-        srcLog.set_category(category);
-        GenerateNoneUTF8Char(srcLog);
-        Config* config = new Config("", "", APSARA_LOG, "", "", "", "", "", "1000000_proj", false, 2, -1, category);
-        config->mFilterRule = NULL;
-        config->mDiscardNoneUtf8 = true;
-        Sender::Instance()->Send("1000000_proj", "", srcLog, config, MERGE_BY_TOPIC, srcLog.ByteSize());
-        sleep(INT32_FLAG(batch_send_interval) * 2 + 1);
-        gRecvLogGroupLock.lock();
-        const LogGroup& mg = gRcvLogGroup;
-        char noneUTF8Char = ' ';
-
-        APSARA_TEST_EQUAL(mg.logs_size(), 10);
-
-        for (int i = 0; i < mg.logs_size(); ++i) {
-            const Log& log = mg.logs(i);
-            APSARA_TEST_EQUAL(log.contents_size(), 10);
-            for (int k = 0; k < log.contents_size() && k < 10; ++k) {
-                int j = k;
-                const Log_Content& content = log.contents(k);
-                string key = content.key();
-                string value = content.value();
-                if (j == i) {
-                    APSARA_TEST_EQUAL(key, "key" + ToString(j));
-                    APSARA_TEST_EQUAL(value, string(i, 'v') + string(i + 1, noneUTF8Char) + string(i, 'v'));
-                } else if (j == (i + 1)) {
-                    APSARA_TEST_EQUAL(key, string(i, 'v') + string(i + 1, noneUTF8Char) + string(i, 'v'));
-                    APSARA_TEST_EQUAL(value, "value" + ToString(j));
-                } else if (j == (i + 2)) {
-                    APSARA_TEST_EQUAL(key, "key" + ToString(j));
-                    APSARA_TEST_EQUAL(value, string(i, 'v') + string(i + 1, noneUTF8Char));
-                } else if (j == (i + 3)) {
-                    APSARA_TEST_EQUAL(key, "key" + ToString(j));
-                    APSARA_TEST_EQUAL(value, string(i + 1, noneUTF8Char) + string(i, 'v'));
-                } else {
-                    APSARA_TEST_EQUAL(key, "key" + ToString(j));
-                    APSARA_TEST_EQUAL(value, "value" + ToString(j));
-                }
-            }
-        }
-        delete config;
-        gRcvLogGroup.Clear();
-        gRecvLogGroupLock.unlock();
-        CaseCleanUp();
-        LOG_INFO(sLogger, ("TestFilterUTF8() end", time(NULL)));
-    }
-
     void TestMergeByCount() {
         LOG_INFO(sLogger, ("TestMergeByCount() begin", time(NULL)));
         int32_t defaultMergeLimit = INT32_FLAG(merge_log_count_limit);
@@ -2810,7 +2756,7 @@ public:
                             std::string("test_aliuid"),
                             std::string("test_region"),
                             123456,
-                            MERGE_BY_LOGSTORE,
+                            FlusherSLS::Batch::MergeType::LOGSTORE,
                             std::string("test_shardhashkey"),
                             123456);
 
@@ -3052,7 +2998,6 @@ public:
 
 APSARA_UNIT_TEST_CASE(SenderUnittest, TestSecondaryStorage, gCaseID);
 APSARA_UNIT_TEST_CASE(SenderUnittest, TestEncryptAndDecrypt, gCaseID);
-APSARA_UNIT_TEST_CASE(SenderUnittest, TestFilterUTF8, gCaseID);
 APSARA_UNIT_TEST_CASE(SenderUnittest, TestDiscardOldData, gCaseID);
 APSARA_UNIT_TEST_CASE(SenderUnittest, TestConnect, gCaseID);
 APSARA_UNIT_TEST_CASE(SenderUnittest, TestDisConnect, gCaseID);
