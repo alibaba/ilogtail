@@ -61,6 +61,7 @@
 #include "processor/LogFilter.h"
 #include <boost/filesystem.hpp>
 #include "application/Application.h"
+#include <random>
 
 using namespace std;
 using namespace logtail;
@@ -80,6 +81,7 @@ namespace logtail {
 ConfigManager::ConfigManager() {
     // SetDefaultProfileProjectName(STRING_FLAG(profile_project_name));
     // SetDefaultProfileRegion(STRING_FLAG(default_region_name));
+    LoadAddrConfig(AppConfig::GetInstance()->GetConfig());
 }
 
 ConfigManager::~ConfigManager() {
@@ -137,9 +139,8 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
         int32_t curTime = time(NULL);
 
         if (curTime - lastCheckTime >= checkInterval) {
-            if (AppConfig::GetInstance()->GetConfigServerAvailable()) {
-                AppConfig::ConfigServerAddress configServerAddress
-                    = AppConfig::GetInstance()->GetOneConfigServerAddress(false);
+            if (GetConfigServerAvailable()) {
+                ConfigServerAddress configServerAddress = GetOneConfigServerAddress(false);
                 google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> checkResults;
                 google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> configDetails;
 
@@ -150,9 +151,9 @@ bool ConfigManager::CheckUpdateThread(bool configExistFlag) {
                     if (checkResults.size() > 0) {
                         UpdateRemoteConfig(checkResults, configDetails);
                     } else
-                        configServerAddress = AppConfig::GetInstance()->GetOneConfigServerAddress(true);
+                        configServerAddress = GetOneConfigServerAddress(true);
                 } else
-                    configServerAddress = AppConfig::GetInstance()->GetOneConfigServerAddress(true);
+                    configServerAddress = GetOneConfigServerAddress(true);
             }
 
             if (!IsUpdate()) {
@@ -245,7 +246,7 @@ Json::Value& ConfigManager::CheckPluginProcessor(Json::Value& pluginConfigJson, 
 
 // ConfigServer
 google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
-ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerAddress) {
+ConfigManager::SendHeartbeat(const ConfigServerAddress& configServerAddress) {
     configserver::proto::HeartBeatRequest heartBeatReq;
     configserver::proto::AgentAttributes attributes;
     std::string requestID = sdk::Base64Enconde(string("heartbeat").append(to_string(time(NULL))));
@@ -255,8 +256,7 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
     attributes.set_version(ILOGTAIL_VERSION);
     attributes.set_ip(LogFileProfiler::mIpAddr);
     heartBeatReq.mutable_attributes()->MergeFrom(attributes);
-    heartBeatReq.mutable_tags()->MergeFrom({AppConfig::GetInstance()->GetConfigServerTags().begin(),
-                                            AppConfig::GetInstance()->GetConfigServerTags().end()});
+    heartBeatReq.mutable_tags()->MergeFrom({GetConfigServerTags().begin(), GetConfigServerTags().end()});
     heartBeatReq.set_running_status("");
     heartBeatReq.set_startup_time(0);
     heartBeatReq.set_interval(INT32_FLAG(config_update_interval));
@@ -307,18 +307,19 @@ ConfigManager::SendHeartbeat(const AppConfig::ConfigServerAddress& configServerA
 
         return heartBeatResp.pipeline_check_results();
     } catch (const sdk::LOGException& e) {
-        LOG_WARNING(
-            sLogger,
-            ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())("errMsg", e.GetMessage())("host", configServerAddress.host)("port", configServerAddress.port));
+        LOG_WARNING(sLogger,
+                    ("SendHeartBeat", "fail")("reqBody", reqBody)("errCode", e.GetErrorCode())(
+                        "errMsg", e.GetMessage())("host", configServerAddress.host)("port", configServerAddress.port));
         return emptyResult;
     }
 }
 
 google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> ConfigManager::FetchPipelineConfig(
-    const AppConfig::ConfigServerAddress& configServerAddress,
+    const ConfigServerAddress& configServerAddress,
     const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs) {
     configserver::proto::FetchPipelineConfigRequest fetchConfigReq;
-    string requestID = sdk::Base64Enconde(Application::GetInstance()->GetInstanceId().append("_").append(to_string(time(NULL))));
+    string requestID
+        = sdk::Base64Enconde(Application::GetInstance()->GetInstanceId().append("_").append(to_string(time(NULL))));
     fetchConfigReq.set_request_id(requestID);
     fetchConfigReq.set_agent_id(Application::GetInstance()->GetInstanceId());
 
@@ -386,7 +387,7 @@ void ConfigManager::UpdateRemoteConfig(
         bool res = boost::filesystem::create_directories(serverConfigDirPath);
         if (!res) {
             LOG_ERROR(sLogger, ("create remote config directory failed", serverConfigDirPath));
-            AppConfig::GetInstance()->StopUsingConfigServer();
+            StopUsingConfigServer();
             return;
         }
     }
@@ -430,5 +431,64 @@ void ConfigManager::UpdateRemoteConfig(
         }
     }
 }
+
+void ConfigManager::LoadAddrConfig(const Json::Value& confJson) {
+    // configserver path
+    mConfigServerAvailable = false;
+    if (confJson.isMember("ilogtail_configserver_address") && confJson["ilogtail_configserver_address"].isArray()) {
+        for (Json::Value::ArrayIndex i = 0; i < confJson["ilogtail_configserver_address"].size(); ++i) {
+            vector<string> configServerAddress
+                = SplitString(TrimString(confJson["ilogtail_configserver_address"][i].asString()), ":");
+
+            if (configServerAddress.size() != 2) {
+                LOG_WARNING(sLogger,
+                            ("ilogtail_configserver_address", "format error")(
+                                "wrong address", TrimString(confJson["ilogtail_configserver_address"][i].asString())));
+                continue;
+            }
+
+            string host = configServerAddress[0];
+            int32_t port = atoi(configServerAddress[1].c_str());
+
+            if (port < 1 || port > 65535)
+                LOG_WARNING(sLogger, ("ilogtail_configserver_address", "illegal port")("port", port));
+            else
+                mConfigServerAddresses.push_back(ConfigServerAddress(host, port));
+        }
+
+        mConfigServerAvailable = true;
+        LOG_INFO(sLogger,
+                 ("ilogtail_configserver_address", confJson["ilogtail_configserver_address"].toStyledString()));
+    }
+
+    // tags for configserver
+    if (confJson.isMember("ilogtail_tags") && confJson["ilogtail_tags"].isObject()) {
+        Json::Value::Members members = confJson["ilogtail_tags"].getMemberNames();
+        for (Json::Value::Members::iterator it = members.begin(); it != members.end(); it++) {
+            mConfigServerTags.push_back(confJson["ilogtail_tags"][*it].asString());
+        }
+
+        LOG_INFO(sLogger, ("ilogtail_configserver_tags", confJson["ilogtail_tags"].toStyledString()));
+    }
+}
+
+ConfigManager::ConfigServerAddress ConfigManager::GetOneConfigServerAddress(bool changeConfigServer) {
+    if (0 == mConfigServerAddresses.size()) {
+        return ConfigServerAddress("", -1); // No address available
+    }
+
+    // Return a random address
+    if (changeConfigServer) {
+        std::random_device rd;
+        int tmpId = rd() % mConfigServerAddresses.size();
+        while (mConfigServerAddresses.size() > 1 && tmpId == mConfigServerAddressId) {
+            tmpId = rd() % mConfigServerAddresses.size();
+        }
+        mConfigServerAddressId = tmpId;
+    }
+    return ConfigServerAddress(mConfigServerAddresses[mConfigServerAddressId].host,
+                               mConfigServerAddresses[mConfigServerAddressId].port);
+}
+
 
 } // namespace logtail
