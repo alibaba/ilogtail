@@ -21,6 +21,7 @@
 #include "config_manager/ConfigManager.h"
 #include "monitor/MetricConstants.h"
 #include <vector>
+#include "logger/Logger.h"
 
 namespace logtail {
 const std::string ProcessorFilterNative::sName = "processor_filter_native";
@@ -40,9 +41,6 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
         mFilterMode = EXPRESSION_MODE;
     } else if (config.mFilterRule) {
         mFilterRule = config.mFilterRule;
-        mFilterMode = RULE_MODE;
-    } else if (LoadOldGlobalConfig(config)) {
-        mFilterMode = GLOBAL_MODE;
     } else {
         mFilterMode = BYPASS_MODE;
     }
@@ -54,53 +52,6 @@ bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
     mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);
     mProcFilterRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_RECORDS_TOTAL);
 
-    return true;
-}
-
-bool ProcessorFilterNative::LoadOldGlobalConfig(const PipelineConfig& config) {
-    // old InitFilter
-    Json::Value jsonRoot; // will contains the root value after parsing.
-    ParseConfResult userLogRes = ParseConfig(STRING_FLAG(user_log_config), jsonRoot);
-    if (userLogRes != CONFIG_OK) {
-        if (userLogRes == CONFIG_NOT_EXIST)
-            LOG_DEBUG(GetContext().GetLogger(), (config.mConfigName, "not found, uninitialized Filter"));
-        if (userLogRes == CONFIG_INVALID_FORMAT)
-            LOG_ERROR(GetContext().GetLogger(),
-                      ("load user config for filter fail, file content is not valid json", config.mConfigName));
-        return false;
-    }
-    if (!jsonRoot.isMember("filters")) {
-        return false;
-    }
-    const Json::Value& filters = jsonRoot["filters"];
-    uint32_t filterSize = filters.size();
-    if (!filterSize) {
-        return false;
-    }
-    try {
-        for (uint32_t index = 0; index < filterSize; index++) {
-            const Json::Value& item = filters[index];
-            std::string projectName = item["project_name"].asString();
-            std::string category = item["category"].asString();
-            const Json::Value& keys = item["keys"];
-            const Json::Value& regs = item["regs"];
-            if (keys.size() != regs.size()) {
-                LOG_ERROR(GetContext().GetLogger(),
-                          ("invalid filter config", "ignore it")("project", projectName)("logstore", category));
-                return false;
-            }
-            // default filter relation is AND
-            LogFilterRule* filterRule = new LogFilterRule();
-            for (uint32_t i = 0; i < keys.size(); i++) {
-                filterRule->FilterKeys.push_back(keys[i].asString());
-                filterRule->FilterRegs.push_back(boost::regex(regs[i].asString()));
-            }
-            mFilters[projectName + "_" + category] = filterRule;
-        }
-    } catch (...) {
-        LOG_ERROR(GetContext().GetLogger(), ("Can't parse the filter config", ""));
-        return false;
-    }
     return true;
 }
 
@@ -133,8 +84,6 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
         res = FilterExpressionRoot(sourceEvent, mFilterExpressionRoot);
     } else if (mFilterMode == RULE_MODE) {
         res = FilterFilterRule(sourceEvent, mFilterRule.get());
-    } else if (mFilterMode == GLOBAL_MODE) {
-        res = FilterGlobal(sourceEvent);
     }
     if (res && mDiscardNoneUtf8) {
         LogContents& contents = sourceEvent.MutableContents();
@@ -203,28 +152,6 @@ bool ProcessorFilterNative::FilterFilterRule(LogEvent& sourceEvent, const LogFil
 
     try {
         return IsMatched(contents, *filterRule);
-    } catch (...) {
-        mProcFilterErrorTotal->Add(1);
-        LOG_ERROR(GetContext().GetLogger(), ("filter error ", ""));
-        return false;
-    }
-}
-
-bool ProcessorFilterNative::FilterGlobal(LogEvent& sourceEvent) {
-    const LogContents& contents = sourceEvent.GetContents();
-    if (contents.empty()) {
-        return false;
-    }
-
-    std::string key(GetContext().GetProjectName() + "_" + GetContext().GetLogstoreName());
-    std::unordered_map<std::string, LogFilterRule*>::iterator it = mFilters.find(key);
-    if (it == mFilters.end()) {
-        return true;
-    }
-
-    const LogFilterRule& rule = *(it->second);
-    try {
-        return IsMatched(contents, rule);
     } catch (...) {
         mProcFilterErrorTotal->Add(1);
         LOG_ERROR(GetContext().GetLogger(), ("filter error ", ""));
