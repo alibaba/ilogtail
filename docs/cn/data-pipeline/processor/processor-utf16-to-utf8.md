@@ -58,9 +58,5 @@ flushers:
 * 输出
 
 ```json
-{
-    "__tag__:__path__": "/home/test_log/utf16.log",
-    "content": "hello world",
-    "__time__": "1657354602"
-}
+{"content":"hello world","__tag__:__path__":"/workspaces/ilogtail_github/bin/log/utf16.log","__time__":"1698839436"}
 ```
