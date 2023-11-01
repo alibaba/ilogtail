@@ -1510,7 +1510,7 @@ bool LogFileReader::GetRawData(
     if (mFileEncoding == ENCODING_GBK)
         ReadGBK(bufferptr, size, fileSize, moreData, truncateInfo);
     else if (mFileEncoding == ENCODING_UTF16)
-        ReadGBK(bufferptr, size, fileSize, moreData, truncateInfo);
+        ReadUTF16(bufferptr, size, fileSize, moreData, truncateInfo);
     else
         ReadUTF8(bufferptr, size, fileSize, moreData, truncateInfo);
 
@@ -1600,27 +1600,6 @@ size_t LogFileReader::getNextReadSize(int64_t fileEnd, bool& fromCpt) {
     }
     if (readSize > BUFFER_SIZE && !allowMoreBufferSize) {
         readSize = BUFFER_SIZE;
-    }
-    return readSize;
-}
-
-size_t LogFileReader::getNextReadSizeUTF16(int64_t fileEnd, bool& fromCpt) {
-    size_t readSize = static_cast<size_t>(fileEnd - mLastFilePos);
-    bool allowMoreBufferSize = false;
-    fromCpt = false;
-    if (mEOOption && mEOOption->selectedCheckpoint->IsComplete()) {
-        fromCpt = true;
-        allowMoreBufferSize = true;
-        auto& checkpoint = mEOOption->selectedCheckpoint->data;
-        readSize = checkpoint.read_length();
-        LOG_INFO(sLogger, ("read specified length", readSize)("offset", mLastFilePos));
-    }
-    if (readSize > BUFFER_SIZE && !allowMoreBufferSize) {
-        readSize = BUFFER_SIZE;
-    }
-    // Ensure the read size is even
-    if (readSize % 2 != 0) {
-        readSize--;
     }
     return readSize;
 }
@@ -1741,46 +1720,90 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
               ("read gbk buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }
 
-void LogFileReader::ReadUTF16(char16_t*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo) {
+void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo) {
     bool fromCpt = false;
-    size_t READ_BYTE = getNextReadSizeUTF16(end, fromCpt);
-    bufferptr = new char16_t[READ_BYTE + 1];
-    bufferptr[READ_BYTE] = '\0';
-    size_t nbytes = ReadFile(mLogFileOp, bufferptr, READ_BYTE, mLastFilePos, &truncateInfo);
-    mLastReadPos = mLastFilePos + nbytes;
-    LOG_DEBUG(sLogger, ("read bytes", nbytes)("last read pos", mLastReadPos));
-    moreData = (nbytes == BUFFER_SIZE);
+    size_t READ_BYTE = getNextReadSize(end, fromCpt);
+    char16_t* utf16Buffer = new char16_t[READ_BYTE/2+1];  // UTF-16 characters may use 2 bytes
+    size_t readCharCount = ReadFileUTF16(mLogFileOp, utf16Buffer, READ_BYTE, mLastFilePos, &truncateInfo);
+    mLastReadPos = mLastFilePos + readCharCount;
+    size_t originReadCount = readCharCount;
+    moreData = (readCharCount == BUFFER_SIZE);
     bool adjustFlag = false;
-    while (nbytes > 0 && bufferptr[nbytes - 1] != '\n') {
-        nbytes--;
+    while (readCharCount > 0 && utf16Buffer[readCharCount - 1] != '\n') {
+        readCharCount--;
         adjustFlag = true;
     }
-    if ((nbytes > 0 && (adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
-        int32_t rollbackLineFeedCount;
-        nbytes = LastMatchedLine(bufferptr, nbytes, rollbackLineFeedCount);
+
+    if (readCharCount == 0) {
+        if (moreData)
+            readCharCount = READ_BYTE;
+        else {
+            delete[] utf16Buffer;
+            *size = 0;
+            return;
+        }
+    }
+    utf16Buffer[readCharCount] = '\0';
+
+    vector<size_t> lineFeedPos;
+    for (size_t idx = 0; idx < readCharCount - 1; ++idx) {
+        if (utf16Buffer[idx] == '\n')
+            lineFeedPos.push_back(idx);
+    }
+    lineFeedPos.push_back(readCharCount - 1);
+
+    size_t srcLength = readCharCount;
+    size_t desLength = 0;
+    bufferptr = NULL;
+    bool BOMFlag = false;
+    // UTF16的BOM 头跳过,不解析
+    char16_t* originUtf16Buffer = utf16Buffer;
+    if (utf16Buffer[0] == 0xfeff || utf16Buffer[0] == 0xfffe) {
+        utf16Buffer++;
+        srcLength -= 1;
+        BOMFlag = true;
+    }
+    EncodingConverter::GetInstance()->ConvertUtf16ToUtf8(utf16Buffer, &srcLength, bufferptr, &desLength, lineFeedPos);
+    size_t resultCharCount = desLength;
+    cout<<"utf16Buffer:"<<utf16Buffer<<"  srcLength:"<<srcLength<<"  bufferptr:"<<bufferptr<<"  desLength:"<<desLength<<endl;
+    delete[] originUtf16Buffer;
+    if (resultCharCount == 0) {
+        *size = 0;
+        mLastFilePos += readCharCount;
+        return;
+    }
+    int32_t rollbackLineFeedCount = 0;
+    if (((adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
+        int32_t bakResultCharCount = resultCharCount;
+        resultCharCount = LastMatchedLine(bufferptr, resultCharCount, rollbackLineFeedCount);
+        if (resultCharCount == 0) {
+            resultCharCount = bakResultCharCount;
+            rollbackLineFeedCount = 0;
+        }
     }
 
-    if (moreData && nbytes == 0) {
-        nbytes = READ_BYTE;
-    }
-    if (nbytes == 0)
-        bufferptr[0] = '\0';
-    else
-        bufferptr[nbytes - 1] = '\0';
+    int32_t lineFeedCount = lineFeedPos.size();
+    if (rollbackLineFeedCount > 0 && lineFeedCount >= (1 + rollbackLineFeedCount))
+        readCharCount -= lineFeedPos[lineFeedCount - 1] - lineFeedPos[lineFeedCount - 1 - rollbackLineFeedCount];
 
+    bufferptr[resultCharCount - 1] = '\0';
     if (!moreData && fromCpt && mLastReadPos < end) {
         moreData = true;
     }
-    *size = nbytes;
+    *size = resultCharCount*2;
+    if (BOMFlag)
+    {
+        *size += 2;
+    }
     setExactlyOnceCheckpointAfterRead(*size);
-    mLastFilePos += nbytes;
-
-    LOG_DEBUG(sLogger, ("read size", *size)("last file pos", mLastFilePos));
+    mLastFilePos += readCharCount*2;
+    LOG_DEBUG(sLogger,
+              ("read utf16 buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }
 
 
 size_t
-LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo) {
+LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo, bool needEven) {
     if (buf == NULL || size == 0 || op.IsOpen() == false) {
         LOG_WARNING(sLogger, ("invalid param", ""));
         return 0;
@@ -1824,7 +1847,7 @@ LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& of
 }
 
 size_t
-LogFileReader::ReadFile(LogFileOperator& op, char16_t* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo) {
+LogFileReader::ReadFileUTF16(LogFileOperator& op, char16_t* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo) {
     if (buf == NULL || size == 0 || op.IsOpen() == false) {
         LOG_WARNING(sLogger, ("invalid param", ""));
         return 0;
@@ -1863,7 +1886,7 @@ LogFileReader::ReadFile(LogFileOperator& op, char16_t* buf, size_t size, int64_t
         }
     }
 
-    *((char16_t*)buf + nbytes) = '\0';
+    *((char*)buf + nbytes) = '\0';
     return nbytes;
 }
 
@@ -1902,29 +1925,6 @@ LogFileReader::FileCompareResult LogFileReader::CompareToFile(const string& file
     }
     logFileOp.Close();
     return FileCompareResult_Error;
-}
-
-int32_t LogFileReader::LastMatchedLine(char16_t* buffer, int32_t size, int32_t& rollbackLineFeedCount) {
-    int endPs = size - 1; // buffer[size] = 0 , buffer[size-1] = '\n'
-    int begPs = size - 2;
-    string exception;
-    rollbackLineFeedCount = 0;
-    while (begPs >= 0) {
-        if (buffer[begPs] == '\n') {
-            rollbackLineFeedCount++;
-            char16_t temp = buffer[endPs];
-            buffer[endPs] = '\0';
-            // ignore regex match fail, no need log here
-            if (BoostRegexMatch(buffer + begPs + 1, *mLogBeginRegPtr, exception)) {
-                buffer[begPs + 1] = '\0';
-                return begPs + 1;
-            }
-            buffer[endPs] = temp;
-            endPs = begPs;
-        }
-        begPs--;
-    }
-    return 0;
 }
 
 int32_t LogFileReader::LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount) {

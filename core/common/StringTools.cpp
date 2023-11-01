@@ -16,8 +16,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/xpressive/xpressive.hpp>
 #include "logger/Logger.h"
-#include <codecvt>  // for std::wstring_convert and std::codecvt_utf8_utf16
-#include <locale>   // for std::locale
 #if defined(_MSC_VER)
 #include <Shlwapi.h>
 #endif
@@ -145,35 +143,6 @@ bool BoostRegexMatch(const char* buffer,
 bool BoostRegexMatch(const char* buffer, const boost::regex& reg, string& exception) {
     try {
         if (boost::regex_match(buffer, reg))
-            return true;
-        else
-            return false;
-    } catch (boost::regex_error& e) {
-        exception.append("regex_error code is ");
-        exception.append(ToString(e.code()));
-        exception.append("; buffer is ");
-        exception.append(buffer);
-        return false;
-    } catch (std::exception& e) {
-        exception.append("exception message is ");
-        exception.append(e.what());
-        exception.append("; buffer is ");
-        exception.append(buffer);
-        return false;
-    } catch (...) {
-        exception.append("unknown exception; buffer is ");
-        exception.append(buffer);
-        return false;
-    }
-}
-
-bool BoostRegexMatch(const char16_t* buffer, const boost::regex& reg, string& exception) {
-    try {
-        // Convert UTF16 to UTF8
-        std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-        std::string utf8Buffer = convert.to_bytes(buffer);
-
-        if (boost::regex_match(utf8Buffer, reg))
             return true;
         else
             return false;

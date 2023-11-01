@@ -49,7 +49,6 @@ protected:
                       uint32_t& logGroupSize);
 
     int32_t LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount);
-    int32_t LastMatchedLine(char16_t* buffer, int32_t size, int32_t& rollbackLineFeedCount);
 
 private:
     bool FindJsonMatch(char* buffer, int32_t beginIdx, int32_t size, int32_t& endIdx, bool& startWithBlock);

@@ -51,6 +51,9 @@ public:
     bool
     ConvertGbk2Utf8(char* src, size_t* srcLength, char*& des, size_t* desLength, const std::vector<size_t>& linePosVec);
 
+    bool ConvertUtf16ToUtf8(
+        char16_t* src, size_t* srcLength, char*& desOut, size_t* desLength, const std::vector<size_t>& linePosVec);
+
     // FromUTF8ToACP converts @s encoded in UTF8 to ACP.
     // @return ACP string if convert successfully, otherwise @s will be returned.
     std::string FromUTF8ToACP(const std::string& s);

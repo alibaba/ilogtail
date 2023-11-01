@@ -102,7 +102,6 @@ public:
     FileCompareResult CompareToFile(const std::string& filePath);
 
     virtual int32_t LastMatchedLine(char* buffer, int32_t size, int32_t& rollbackLineFeedCount);
-    virtual int32_t LastMatchedLine(char16_t* buffer, int32_t size, int32_t& rollbackLineFeedCount);
 
     virtual ~LogFileReader();
 
@@ -313,10 +312,10 @@ protected:
     GetRawData(char*& bufferptr, size_t* size, int64_t fileSize, FileInfo*& fileInfo, TruncateInfo*& trncateInfo);
     void ReadUTF8(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo);
     void ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo);
-    void ReadUTF16(char16_t*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo);
+    void ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo);
     size_t
-    ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL);
-    size_t ReadFile(LogFileOperator& op, char16_t* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo);
+    ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL, bool needEven = false);
+    size_t ReadFileUTF16(LogFileOperator& op, char16_t* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo);
     int32_t ParseTimeInBuffer(LogFileOperator& logFileOp,
                               int64_t begin,
                               int64_t end,
@@ -436,7 +435,6 @@ private:
     // @param fileEnd: file size, ie. tell(seek(end)).
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
-    size_t getNextReadSizeUTF16(int64_t fileEnd, bool& fromCpt);
 
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);
