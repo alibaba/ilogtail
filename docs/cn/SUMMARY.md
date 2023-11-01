@@ -79,6 +79,7 @@
   * [键值对](data-pipeline/processor/processor-split-key-value.md)
   * [多行切分](data-pipeline/processor/processor-split-log-regex.md)
   * [字符串替换](data-pipeline/processor/processor-string-replace.md)
+  * [utf16日志转码成utf8](data-pipeline/processor/processor-utf16-to-utf8.md)
 * [聚合](data-pipeline/aggregator/README.md)
   * [基础](data-pipeline/aggregator/aggregator-base.md)
   * [上下文](data-pipeline/aggregator/aggregator-context.md)
