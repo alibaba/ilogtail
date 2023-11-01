@@ -49,7 +49,7 @@
 | [`processor_split_key_value`](processor/processor-split-key-value.md)<br>键值对                 | SLS官方                                                  | 通过切分键值对的方式提取字段。                  |
 | [`processor_split_log_regex`](processor/processor-split-log-regex.md)<br>多行切分                | SLS官方                                                  | 实现多行日志（例如Java程序日志）的采集。           |
 | [`processor_string_replace`](processor/processor-string-replace.md)<br>字符串替换                 | SLS官方<br>[`pj1987111`](https://github.com/pj1987111)   | 通过全文匹配、正则匹配、去转义字符等方式对文本日志进行内容替换。 |
-| [`processor_utf16_to_utf8`](processor/processor-utf16-to-utf8.md)<br>utf16日志转码成utf8                 | SLS官方   | utf16日志转码成utf8 |
+| [`processor_utf16_to_utf8`](processor/processor-utf16-to-utf8.md)<br>utf16日志转码成utf8          | SLS官方                                                  | utf16日志转码成utf8                   |
 
 ## 聚合
 
