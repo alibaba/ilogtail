@@ -17,7 +17,7 @@
 
 ## 样例
 
-采集`/home/test-log/`路径下的`utf16.log`文件, 文件编码为utf-16LE。
+采集`/workspaces/ilogtail_github/bin/log`路径下的`utf16.log`文件, 文件编码为utf-16LE。
 
 * 输入
 
