@@ -37,3 +37,4 @@ your changes, such as:
 
 ## [Unreleased]
 - [public] [both] [fixed] fix send local buffer failed when upgrade iLogtail from version earlier than 1.3.
+- [public] [both] [fixed] fix jmxfetch status error when exist multi jmxfetch config in the same machine.
