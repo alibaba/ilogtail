@@ -25,16 +25,17 @@
 import os
 import codecs
 
-log_message = "hello world\n"
+for i in range(0, 10000):
+    log_message = str(i) + "                      heAlibaba has adopted a Code of Conduct that we expect project participants to adhere to.llow.\n"
 
-file_name = "/workspaces/ilogtail_github/bin/log/utf16.log"
+    file_name = "/workspaces/ilogtail_github/bin/log/utf16.log"
 
-if os.path.exists(file_name):
-    with open(file_name, 'ab') as f:
-        f.write(log_message.encode('utf-16le'))
-else:
-    with codecs.open(file_name, 'w', 'utf-16-le') as f:
-        f.write(log_message)
+    if os.path.exists(file_name):
+        with open(file_name, 'ab') as f:
+            f.write(log_message.encode('utf-16le'))
+    else:
+        with codecs.open(file_name, 'w', 'utf-16-le') as f:
+            f.write(log_message)
 ```
 
 * 采集配置
