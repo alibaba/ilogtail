@@ -1604,6 +1604,27 @@ size_t LogFileReader::getNextReadSize(int64_t fileEnd, bool& fromCpt) {
     return readSize;
 }
 
+size_t LogFileReader::getNextUtf16ReadSize(int64_t fileEnd, bool& fromCpt) {
+    size_t readSize = static_cast<size_t>(fileEnd - mLastFilePos);
+    bool allowMoreBufferSize = false;
+    fromCpt = false;
+    if (mEOOption && mEOOption->selectedCheckpoint->IsComplete()) {
+        fromCpt = true;
+        allowMoreBufferSize = true;
+        auto& checkpoint = mEOOption->selectedCheckpoint->data;
+        readSize = checkpoint.read_length();
+        LOG_INFO(sLogger, ("read specified length", readSize)("offset", mLastFilePos));
+    }
+    if (readSize > BUFFER_SIZE && !allowMoreBufferSize) {
+        readSize = BUFFER_SIZE;
+    }
+    if (readSize % 2 != 0) {
+        readSize -= 1;
+    }
+    return readSize;
+}
+
+
 void LogFileReader::setExactlyOnceCheckpointAfterRead(size_t readSize) {
     if (!mEOOption || readSize == 0) {
         return;
@@ -1722,15 +1743,15 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
 
 void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo) {
     bool fromCpt = false;
-    size_t READ_BYTE = getNextReadSize(end, fromCpt);
-    char16_t* utf16Buffer = new char16_t[READ_BYTE/2+1];  // UTF-16 characters may use 2 bytes
-    size_t readCharCount = ReadFileUTF16(mLogFileOp, utf16Buffer, READ_BYTE, mLastFilePos, &truncateInfo);
+    size_t READ_BYTE = getNextUtf16ReadSize(end, fromCpt);
+    char16_t* utf16Buffer = new char16_t[READ_BYTE / 2 + 1];
+    size_t readCharCount = ReadFile(mLogFileOp, utf16Buffer, READ_BYTE, mLastFilePos, &truncateInfo);
     mLastReadPos = mLastFilePos + readCharCount;
     size_t originReadCount = readCharCount;
     moreData = (readCharCount == BUFFER_SIZE);
     bool adjustFlag = false;
-    while (readCharCount > 0 && utf16Buffer[readCharCount - 1] != '\n') {
-        readCharCount--;
+    while (readCharCount > 0 && utf16Buffer[readCharCount / 2 - 1] != '\n') {
+        readCharCount -= 2;
         adjustFlag = true;
     }
 
@@ -1743,16 +1764,16 @@ void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool&
             return;
         }
     }
-    utf16Buffer[readCharCount] = '\0';
+    utf16Buffer[readCharCount / 2] = '\0';
 
     vector<size_t> lineFeedPos;
-    for (size_t idx = 0; idx < readCharCount - 1; ++idx) {
+    for (size_t idx = 0; idx < readCharCount / 2; ++idx) {
         if (utf16Buffer[idx] == '\n')
             lineFeedPos.push_back(idx);
     }
-    lineFeedPos.push_back(readCharCount - 1);
+    lineFeedPos.push_back(readCharCount / 2 - 1);
 
-    size_t srcLength = readCharCount;
+    size_t srcLength = readCharCount / 2;
     size_t desLength = 0;
     bufferptr = NULL;
     bool BOMFlag = false;
@@ -1765,7 +1786,8 @@ void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool&
     }
     EncodingConverter::GetInstance()->ConvertUtf16ToUtf8(utf16Buffer, &srcLength, bufferptr, &desLength, lineFeedPos);
     size_t resultCharCount = desLength;
-    cout<<"utf16Buffer:"<<utf16Buffer<<"  srcLength:"<<srcLength<<"  bufferptr:"<<bufferptr<<"  desLength:"<<desLength<<endl;
+    LOG_DEBUG(sLogger,
+              ("utf16Buffer", utf16Buffer)("srcLength", srcLength)("bufferptr", bufferptr)("desLength", desLength));
     delete[] originUtf16Buffer;
     if (resultCharCount == 0) {
         *size = 0;
@@ -1790,20 +1812,16 @@ void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool&
     if (!moreData && fromCpt && mLastReadPos < end) {
         moreData = true;
     }
-    *size = resultCharCount*2;
-    if (BOMFlag)
-    {
-        *size += 2;
-    }
+    *size = resultCharCount;
     setExactlyOnceCheckpointAfterRead(*size);
-    mLastFilePos += readCharCount*2;
+    mLastFilePos += readCharCount;
     LOG_DEBUG(sLogger,
               ("read utf16 buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }
 
 
 size_t
-LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo, bool needEven) {
+LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo) {
     if (buf == NULL || size == 0 || op.IsOpen() == false) {
         LOG_WARNING(sLogger, ("invalid param", ""));
         return 0;
@@ -1834,50 +1852,6 @@ LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& of
         }
     } else {
         nbytes = op.Pread(buf, 1, size, offset);
-        if (nbytes < 0) {
-            LOG_ERROR(sLogger,
-                      ("Pread fail to read log file", mLogPath)("mLastFilePos", mLastFilePos)("size", size)("offset",
-                                                                                                            offset));
-            return 0;
-        }
-    }
-
-    *((char*)buf + nbytes) = '\0';
-    return nbytes;
-}
-
-size_t
-LogFileReader::ReadFileUTF16(LogFileOperator& op, char16_t* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo) {
-    if (buf == NULL || size == 0 || op.IsOpen() == false) {
-        LOG_WARNING(sLogger, ("invalid param", ""));
-        return 0;
-    }
-
-    int nbytes = 0;
-    if (mIsFuseMode) {
-        int64_t oriOffset = offset;
-        nbytes = op.SkipHoleRead(buf, 2, size, &offset);
-        if (nbytes < 0) {
-            LOG_ERROR(sLogger,
-                      ("SkipHoleRead fail to read log file", mLogPath)("mLastFilePos",
-                                                                       mLastFilePos)("size", size)("offset", offset));
-            return 0;
-        }
-        if (oriOffset != offset && truncateInfo != NULL) {
-            *truncateInfo = new TruncateInfo(oriOffset, offset);
-            LOG_INFO(sLogger,
-                     ("read fuse file with a hole, size",
-                      offset - oriOffset)("filename", mLogPath)("dev", mDevInode.dev)("inode", mDevInode.inode));
-            LogtailAlarm::GetInstance()->SendAlarm(
-                FUSE_FILE_TRUNCATE_ALARM,
-                string("read fuse file with a hole, size: ") + ToString(offset - oriOffset) + " filename: " + mLogPath
-                    + " dev: " + ToString(mDevInode.dev) + " inode: " + ToString(mDevInode.inode),
-                mProjectName,
-                mCategory,
-                mRegion);
-        }
-    } else {
-        nbytes = op.Pread(buf, 2, size, offset);
         if (nbytes < 0) {
             LOG_ERROR(sLogger,
                       ("Pread fail to read log file", mLogPath)("mLastFilePos", mLastFilePos)("size", size)("offset",

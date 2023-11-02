@@ -151,9 +151,9 @@ bool EncodingConverter::ConvertUtf16ToUtf8(
         LOG_ERROR(sLogger, ("invalid iconv descriptor fail or invalid buffer pointer, cd", mUtf16ToUtf8Cd));
         return false;
     }
-    *desLength = *srcLength * 3;
-    char* des = new char[*srcLength * 3 + 1];
-    des[*srcLength * 3] = '\0';
+    *desLength = *srcLength * 4;
+    char* des = new char[*srcLength * 4 + 1];
+    des[*srcLength * 4] = '\0';
     desOut = des;
     bool rst = true;
     char16_t* originSrc = src;
