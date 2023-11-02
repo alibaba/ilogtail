@@ -1335,7 +1335,7 @@ bool LogFileReader::CheckFileSignatureAndOffset(bool isOpenOnUpdate) {
     mLogFileOp.Stat(ps);
     time_t lastMTime = mLastMTime;
     mLastMTime = ps.GetMtime();
-    if (!isOpenOnUpdate || endSize < mLastFilePos || endSize == mLastFilePos && lastMTime != mLastMTime) {
+    if (!isOpenOnUpdate || endSize < mLastFilePos ||(endSize == mLastFilePos && lastMTime != mLastMTime)) {
         char firstLine[1025];
         int nbytes = mLogFileOp.Pread(firstLine, 1, 1024, 0);
         if (nbytes < 0) {
