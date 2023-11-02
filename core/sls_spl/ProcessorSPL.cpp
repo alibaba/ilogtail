@@ -22,7 +22,6 @@
 #include "sls_spl/PipelineEventGroupOutput.h"
 #include "logger/SplLogger.h"
 #include "logger/Logger.h"
-#include "sls_spl/LogtailLogger.h"
 #include "sls_spl/SplConstants.h"
 
 

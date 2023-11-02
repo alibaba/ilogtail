@@ -61,7 +61,7 @@ static void BM_SplNoProcess(benchmark::State& state) {
     ComponentConfig componentConfig(pluginId, config);
     bool init = processor.Init(componentConfig, mContext);
     if (init) {
-        std::cout << "SplNoProcess init: " << init << std::endl;
+        //std::cout << "SplNoProcess init: " << init << std::endl;
         // Perform setup here
         int count = 0;
         for (auto _ : state) {
@@ -73,7 +73,7 @@ static void BM_SplNoProcess(benchmark::State& state) {
             std::vector<PipelineEventGroup> logGroupList;
             processor.Process(eventGroup, logGroupList);
         }
-        std::cout << "SplNoProcess count: " << count << std::endl;
+        //std::cout << "SplNoProcess count: " << count << std::endl;
     }
 }
 
@@ -132,7 +132,7 @@ static void BM_RawNoProcess(benchmark::State& state) {
 
     bool init = processorInstance.Init(componentConfig, mContext);
     if (init) {
-        std::cout << "RawNoProcess init: " << init << std::endl;
+        //std::cout << "RawNoProcess init: " << init << std::endl;
         int count = 0;
         // Perform setup here
         for (auto _ : state) {
@@ -143,7 +143,7 @@ static void BM_RawNoProcess(benchmark::State& state) {
             eventGroup.FromJsonString(inJson);
             processorInstance.Process(eventGroup);
         }
-        std::cout << "RawNoProcess count: " << count << std::endl;
+        //std::cout << "RawNoProcess count: " << count << std::endl;
     }
 }
 
