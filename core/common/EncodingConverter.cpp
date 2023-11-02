@@ -151,6 +151,7 @@ bool EncodingConverter::ConvertUtf16ToUtf8(
         LOG_ERROR(sLogger, ("invalid iconv descriptor fail or invalid buffer pointer, cd", mUtf16ToUtf8Cd));
         return false;
     }
+    // utf8 每个字符最大字节数为4
     *desLength = *srcLength * 4;
     char* des = new char[*srcLength * 4 + 1];
     des[*srcLength * 4] = '\0';
