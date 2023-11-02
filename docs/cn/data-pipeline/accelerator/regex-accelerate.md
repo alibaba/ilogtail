@@ -162,7 +162,7 @@ processors:
     - level
     - msg
     Regex: \[(\S+)]\s\[(\S+)]\s(.*)
-    LogBeginRegex: \[\d+-\d+-\w+:\d+:\d+,\d+]\s\[\w+]\s.*
+    LogBeginRegex: \[\d+-\d+-\w+:\d+:\d+.\d+]\s\[\w+]\s.*
 flushers:
   - Type: flusher_sls
     Endpoint: cn-xxx.log.aliyuncs.com
