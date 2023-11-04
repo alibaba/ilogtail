@@ -1741,7 +1741,8 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
               ("read gbk buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }
 
-void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo) {
+void LogFileReader::ReadUTF16(
+    char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo) {
     bool fromCpt = false;
     size_t READ_BYTE = getNextUtf16ReadSize(end, fromCpt);
     char16_t* utf16Buffer = new char16_t[READ_BYTE / 2 + 1];
@@ -1766,12 +1767,6 @@ void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool&
     }
     utf16Buffer[readCharCount / 2] = '\0';
 
-    vector<size_t> lineFeedPos;
-    for (size_t idx = 0; idx < readCharCount / 2; ++idx) {
-        if (utf16Buffer[idx] == '\n')
-            lineFeedPos.push_back(idx);
-    }
-    lineFeedPos.push_back(readCharCount / 2 - 1);
 
     size_t srcLength = readCharCount / 2;
     size_t desLength = 0;
@@ -1784,6 +1779,14 @@ void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool&
         srcLength -= 1;
         BOMFlag = true;
     }
+    vector<size_t> lineFeedPos;
+    for (size_t idx = 0; idx < srcLength - 1; ++idx) {
+        if (utf16Buffer[idx] == '\n') {
+            lineFeedPos.push_back(idx);
+        }
+    }
+    lineFeedPos.push_back(srcLength - 1);
+
     EncodingConverter::GetInstance()->ConvertUtf16ToUtf8(utf16Buffer, &srcLength, bufferptr, &desLength, lineFeedPos);
     size_t resultCharCount = desLength;
     LOG_DEBUG(sLogger,
@@ -1805,8 +1808,9 @@ void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool&
     }
 
     int32_t lineFeedCount = lineFeedPos.size();
-    if (rollbackLineFeedCount > 0 && lineFeedCount >= (1 + rollbackLineFeedCount))
-        readCharCount -= (lineFeedPos[lineFeedCount - 1] - lineFeedPos[lineFeedCount - 1 - rollbackLineFeedCount])*2;
+    if (rollbackLineFeedCount > 0 && lineFeedCount >= (1 + rollbackLineFeedCount)) {
+        readCharCount -= (lineFeedPos[lineFeedCount - 1] - lineFeedPos[lineFeedCount - 1 - rollbackLineFeedCount]) * 2;
+    }
 
     bufferptr[resultCharCount - 1] = '\0';
     if (!moreData && fromCpt && mLastReadPos < end) {
@@ -1815,10 +1819,10 @@ void LogFileReader::ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool&
     *size = resultCharCount;
     setExactlyOnceCheckpointAfterRead(*size);
     mLastFilePos += readCharCount;
-    LOG_DEBUG(sLogger,
-              ("read utf16 buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
+    LOG_DEBUG(
+        sLogger,
+        ("read utf16 buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }
-
 
 size_t
 LogFileReader::ReadFile(LogFileOperator& op, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo) {

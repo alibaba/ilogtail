@@ -39,7 +39,7 @@ EncodingConverter::EncodingConverter() {
         iconv(mGbk2Utf8Cd, NULL, NULL, NULL, NULL);
     mUtf16ToUtf8Cd = iconv_open("UTF-8", "UTF-16LE");
     if (mUtf16ToUtf8Cd == (iconv_t)(-1))
-        LOG_ERROR(sLogger, ("create Utf162Utf8 iconv descriptor fail, errno", strerror(errno)));
+        LOG_ERROR(sLogger, ("create mUtf16ToUtf8 iconv descriptor fail, errno", strerror(errno)));
     else
         iconv(mUtf16ToUtf8Cd, NULL, NULL, NULL, NULL);
 #endif
@@ -168,11 +168,11 @@ bool EncodingConverter::ConvertUtf16ToUtf8(
         src = originSrc + beginIndex;
         des = originDes + destIndex;
         // include '\n'
-        *srcLength = endIndex - beginIndex;
+        *srcLength = endIndex - beginIndex + 1;
         *desLength = maxDestSize - destIndex;
         // UTF16一个Length对应UTF8的2个Length
-        *srcLength = *srcLength*2;
-        size_t ret = iconv(mUtf16ToUtf8Cd, (char **)&src, srcLength, &des, desLength);
+        *srcLength = *srcLength * 2;
+        size_t ret = iconv(mUtf16ToUtf8Cd, (char**)&src, srcLength, &des, desLength);
         if (ret == (size_t)(-1)) {
             LOG_ERROR(sLogger, ("convert UTF16 to UTF8 fail, errno", strerror(errno)));
             iconv(mUtf16ToUtf8Cd, NULL, NULL, NULL, NULL); // Clear status.
@@ -193,14 +193,14 @@ bool EncodingConverter::ConvertUtf16ToUtf8(
     if (wcLen == 0) {
         LOG_ERROR(sLogger,
                   ("convert UTF16 to UTF8 fail, MultiByteToWideChar error", GetLastError())("sample",
-                                                                                          std::string(src, 0, 1024)));
+                                                                                            std::string(src, 0, 1024)));
         return false;
     }
     wchar_t* wszUtf8 = new wchar_t[wcLen + 1];
     if (MultiByteToWideChar(CP_ACP, 0, src, *srcLength, (LPWSTR)wszUtf8, wcLen) == 0) {
         LOG_ERROR(sLogger,
                   ("convert UTF16 to UTF8 fail, MultiByteToWideChar error", GetLastError())("sample",
-                                                                                          std::string(src, 0, 1024)));
+                                                                                            std::string(src, 0, 1024)));
         delete[] wszUtf8;
         return false;
     }
@@ -209,7 +209,7 @@ bool EncodingConverter::ConvertUtf16ToUtf8(
     if (len == 0) {
         LOG_ERROR(sLogger,
                   ("convert UTF16 to UTF8 fail, WideCharToMultiByte error", GetLastError())("sample",
-                                                                                          std::string(src, 0, 1024)));
+                                                                                            std::string(src, 0, 1024)));
         delete[] wszUtf8;
         return false;
     }
@@ -218,7 +218,7 @@ bool EncodingConverter::ConvertUtf16ToUtf8(
     if (WideCharToMultiByte(CP_UTF8, 0, (LPCWSTR)wszUtf8, wcLen, des, len, NULL, NULL) == 0) {
         LOG_ERROR(sLogger,
                   ("convert UTF16 to UTF8 fail, WideCharToMultiByte error", GetLastError())("sample",
-                                                                                          std::string(src, 0, 1024)));
+                                                                                            std::string(src, 0, 1024)));
         delete[] wszUtf8;
         delete[] des;
         return false;
