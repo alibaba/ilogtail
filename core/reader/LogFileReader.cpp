@@ -1743,6 +1743,26 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
 
 void LogFileReader::ReadUTF16(
     char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo) {
+    // 判断utf16的字节序
+    bool isLittleEndian = true;
+    char16_t* utf16BOMBuffer = new char16_t[1];
+    size_t readBOMByte = 4;
+    int64_t filePos = 0;
+    ReadFile(mLogFileOp, utf16BOMBuffer, readBOMByte, filePos, &truncateInfo);
+    if (utf16BOMBuffer[0] == 0xfeff) {
+        isLittleEndian = true;
+    } else if (utf16BOMBuffer[0] == 0xfffe) {
+        isLittleEndian = false;
+    } else {
+        isLittleEndian = true;
+    }
+    char16_t lineFeed = '\n';
+    if (!isLittleEndian)
+    {
+        lineFeed = (lineFeed << 8) | (lineFeed >> 8);
+    }
+    delete[] utf16BOMBuffer;
+
     bool fromCpt = false;
     size_t READ_BYTE = getNextUtf16ReadSize(end, fromCpt);
     char16_t* utf16Buffer = new char16_t[READ_BYTE / 2 + 1];
@@ -1751,7 +1771,7 @@ void LogFileReader::ReadUTF16(
     size_t originReadCount = readCharCount;
     moreData = (readCharCount == BUFFER_SIZE);
     bool adjustFlag = false;
-    while (readCharCount > 0 && utf16Buffer[readCharCount / 2 - 1] != '\n') {
+    while (readCharCount > 0 && utf16Buffer[readCharCount / 2 - 1] != lineFeed) {
         readCharCount -= 2;
         adjustFlag = true;
     }
@@ -1781,13 +1801,13 @@ void LogFileReader::ReadUTF16(
     }
     vector<size_t> lineFeedPos;
     for (size_t idx = 0; idx < srcLength - 1; ++idx) {
-        if (utf16Buffer[idx] == '\n') {
+        if (utf16Buffer[idx] == lineFeed) {
             lineFeedPos.push_back(idx);
         }
     }
     lineFeedPos.push_back(srcLength - 1);
 
-    EncodingConverter::GetInstance()->ConvertUtf16ToUtf8(utf16Buffer, &srcLength, bufferptr, &desLength, lineFeedPos);
+    EncodingConverter::GetInstance()->ConvertUtf16ToUtf8(utf16Buffer, &srcLength, bufferptr, &desLength, lineFeedPos, isLittleEndian);
     size_t resultCharCount = desLength;
     LOG_DEBUG(sLogger,
               ("utf16Buffer", utf16Buffer)("srcLength", srcLength)("bufferptr", bufferptr)("desLength", desLength));
