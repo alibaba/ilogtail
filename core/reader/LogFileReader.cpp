@@ -1831,8 +1831,10 @@ void LogFileReader::ReadUTF16(
     if (rollbackLineFeedCount > 0 && lineFeedCount >= (1 + rollbackLineFeedCount)) {
         readCharCount -= (lineFeedPos[lineFeedCount - 1] - lineFeedPos[lineFeedCount - 1 - rollbackLineFeedCount]) * 2;
     }
-
-    bufferptr[resultCharCount - 1] = '\0';
+    if (bufferptr[resultCharCount - 1] == '\n')
+    {
+        bufferptr[resultCharCount - 1] = '\0';
+    }
     if (!moreData && fromCpt && mLastReadPos < end) {
         moreData = true;
     }

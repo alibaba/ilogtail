@@ -532,6 +532,8 @@ struct LogBuffer {
               const TruncateInfoPtr& truncateInfo = TruncateInfoPtr())
         : buffer(buf), bufferSize(size), fileInfo(fileInfo), truncateInfo(truncateInfo) {}
     void SetDependecy(const LogFileReaderPtr& reader) { logFileReader = reader; }
+    
+    LogBuffer() {}
 };
 
 class CommonRegLogFileReader : public LogFileReader {

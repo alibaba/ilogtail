@@ -92,14 +92,9 @@ namespace bfs = boost::filesystem;
         EXPECT_EQ(_v1_inner, _v2_inner); \
     } while (0)
 
-#define APSARA_TEST_EQUAL_FATAL(val1, val2) \
+#define APSARA_TEST_EQUAL_FATAL(expected, actual) \
     do { \
-        auto _v1_inner = val1; \
-        auto _v2_inner = val2; \
-        auto _rst_inner = ::testing::internal::EqHelper<GTEST_IS_NULL_LITERAL_(_v1_inner)>::Compare( \
-            #val1, #val2, _v1_inner, _v2_inner); \
-        APSARA_LOG_INFO(sLogger, ("APSARA_TEST_EQUAL_FATAL", (bool)_rst_inner)(#val1, _v1_inner)(#val2, _v2_inner)); \
-        ASSERT_EQ(_v1_inner, _v2_inner); \
+        ASSERT_EQ(expected, actual); \
     } while (0)
 
 #define APSARA_TEST_NOT_EQUAL_DESC(val1, val2, desc) \
