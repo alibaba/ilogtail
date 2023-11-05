@@ -1746,7 +1746,7 @@ void LogFileReader::ReadUTF16(
     // 判断utf16的字节序
     bool isLittleEndian = true;
     char16_t* utf16BOMBuffer = new char16_t[1];
-    size_t readBOMByte = 4;
+    size_t readBOMByte = 2;
     int64_t filePos = 0;
     ReadFile(mLogFileOp, utf16BOMBuffer, readBOMByte, filePos, &truncateInfo);
     if (utf16BOMBuffer[0] == 0xfeff) {
