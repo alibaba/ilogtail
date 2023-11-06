@@ -510,6 +510,7 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class LogFileReaderUnittest;
+    friend class JsonFileReaderUnittest;
     friend class ExactlyOnceReaderUnittest;
     friend class SenderUnittest;
     friend class AppConfigUnittest;
@@ -572,6 +573,7 @@ protected:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogFileReaderUnittest;
+    friend class JsonFileReaderUnittest;
 #endif
 };
 
@@ -598,6 +600,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogFileReaderUnittest;
+    friend class JsonFileReaderUnittest;
 #endif
 };
 
