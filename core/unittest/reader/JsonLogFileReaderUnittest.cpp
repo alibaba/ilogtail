@@ -107,8 +107,7 @@ std::string JsonFileReaderUnittest::utf16BEFile;
 std::string JsonFileReaderUnittest::utf8File;
 
 UNIT_TEST_CASE(JsonFileReaderUnittest, TestReadUtf16LE);
-// UNIT_TEST_CASE(JsonFileReaderUnittest, TestReadUtf16BE);
-
+UNIT_TEST_CASE(JsonFileReaderUnittest, TestReadUtf16BE);
 
 void JsonFileReaderUnittest::TestReadUtf16LE() {
     { // buffer size big enough and is json
@@ -167,8 +166,10 @@ void JsonFileReaderUnittest::TestReadUtf16LE() {
         char*& bufferptr = logBuffer.buffer;
         reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
         APSARA_TEST_TRUE_FATAL(moreData);
-        APSARA_TEST_STREQ_FATAL(std::string(expectedContent.get(), BUFFER_SIZE_UTF8).c_str(),
-                                StringView(logBuffer.buffer, size).data());
+        std::string expectedPart(expectedContent.get(), BUFFER_SIZE_UTF8); 
+        std::string recovered(logBuffer.buffer, size);
+        APSARA_TEST_EQUAL_FATAL(expectedPart,
+                                recovered);
     }
     { // buffer size not big enough to hold all json
         // should read until last json
@@ -204,6 +205,138 @@ void JsonFileReaderUnittest::TestReadUtf16LE() {
                                  category,
                                  logPathDir,
                                  utf16LEFile,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_UTF16,
+                                 false,
+                                 false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 10;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        // first read
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind(R"({"first")") - 1); // exclude tailing \n
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+        // second read
+        logBuffer = LogBuffer();
+        truncateInfo = NULL;
+        size = 0;
+        bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        expectedPart = expectedContent.get();
+        expectedPart = expectedPart.substr(expectedPart.rfind(R"({"first")"));
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+    }
+}
+
+void JsonFileReaderUnittest::TestReadUtf16BE() {
+    { // buffer size big enough and is json
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 utf16BEFile,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_UTF16,
+                                 false,
+                                 false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        std::string recovered = StringView(logBuffer.buffer, size).data();
+        std::replace(recovered.begin(), recovered.end(), '\0', '\n');
+
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind(R"({"first")") - 1); // exclude tailing \n
+        APSARA_TEST_STREQ_FATAL(expectedPart, recovered.c_str());
+    }
+    { // buffer size not big enough to hold any json
+      // should read buffer size
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 utf16BEFile,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_UTF16,
+                                 false,
+                                 false);
+        LogFileReader::BUFFER_SIZE = 24;
+        size_t BUFFER_SIZE_UTF8 = 11; // {"first":"
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get(), BUFFER_SIZE_UTF8);
+        std::string recovered(logBuffer.buffer, size);
+        APSARA_TEST_EQUAL_FATAL(expectedPart,
+                                recovered);
+    }
+    { // buffer size not big enough to hold all json
+        // should read until last json
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 utf16BEFile,
+                                 INT32_FLAG(default_tail_limit_kb),
+                                 timeFormat,
+                                 topicFormat,
+                                 groupTopic,
+                                 FileEncoding::ENCODING_UTF16,
+                                 false,
+                                 false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 10;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind(R"({"first")") - 1); // exclude tailing \n
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+    }
+    { // read twice
+        JsonLogFileReader reader(projectName,
+                                 category,
+                                 logPathDir,
+                                 utf16BEFile,
                                  INT32_FLAG(default_tail_limit_kb),
                                  timeFormat,
                                  topicFormat,
