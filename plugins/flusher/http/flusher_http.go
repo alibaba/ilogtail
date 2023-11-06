@@ -58,18 +58,19 @@ type retryConfig struct {
 }
 
 type FlusherHTTP struct {
-	RemoteURL           string                       // RemoteURL to request
-	Headers             map[string]string            // Headers to append to the http request
-	Query               map[string]string            // Query parameters to append to the http request
-	Timeout             time.Duration                // Request timeout, default is 60s
-	Retry               retryConfig                  // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
-	Convert             helper.ConvertConfig         // Convert defines which protocol and format to convert to
-	Concurrency         int                          // How many requests can be performed in concurrent
-	Authenticator       *extensions.ExtensionConfig  // name and options of the extensions.ClientAuthenticator extension to use
-	FlushInterceptor    *extensions.ExtensionConfig  // name and options of the extensions.FlushInterceptor extension to use
-	AsyncIntercept      bool                         // intercept the event asynchronously
-	RequestInterceptors []extensions.ExtensionConfig // custom request interceptor settings
-	QueueCapacity       int                          // capacity of channel
+	RemoteURL              string                       // RemoteURL to request
+	Headers                map[string]string            // Headers to append to the http request
+	Query                  map[string]string            // Query parameters to append to the http request
+	Timeout                time.Duration                // Request timeout, default is 60s
+	Retry                  retryConfig                  // Retry strategy, default is retry 3 times with delay time begin from 1second, max to 30 seconds
+	Convert                helper.ConvertConfig         // Convert defines which protocol and format to convert to
+	Concurrency            int                          // How many requests can be performed in concurrent
+	Authenticator          *extensions.ExtensionConfig  // name and options of the extensions.ClientAuthenticator extension to use
+	FlushInterceptor       *extensions.ExtensionConfig  // name and options of the extensions.FlushInterceptor extension to use
+	AsyncIntercept         bool                         // intercept the event asynchronously
+	RequestInterceptors    []extensions.ExtensionConfig // custom request interceptor settings
+	QueueCapacity          int                          // capacity of channel
+	DropEventWhenQueueFull bool                         // If true, pipeline events will be dropped when the queue is full
 
 	varKeys []string
 
@@ -78,8 +79,9 @@ type FlusherHTTP struct {
 	client      *http.Client
 	interceptor extensions.FlushInterceptor
 
-	queue   chan interface{}
-	counter sync.WaitGroup
+	queue         chan interface{}
+	counter       sync.WaitGroup
+	droppedEvents pipeline.CounterMetric
 }
 
 func (f *FlusherHTTP) Description() string {
@@ -139,7 +141,7 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 
 	f.buildVarKeys()
 	f.fillRequestContentType()
-
+	f.droppedEvents = helper.NewCounterMetricAndRegister("http_flusher_dropped_events", context)
 	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized")
 	return nil
 }
@@ -251,7 +253,17 @@ func (f *FlusherHTTP) getConverter() (*converter.Converter, error) {
 
 func (f *FlusherHTTP) addTask(log interface{}) {
 	f.counter.Add(1)
-	f.queue <- log
+	if f.DropEventWhenQueueFull {
+		select {
+		case f.queue <- log:
+		default:
+			f.counter.Done()
+			f.droppedEvents.Add(1)
+			logger.Warningf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher dropped a event due to the queue if full")
+		}
+	} else {
+		f.queue <- log
+	}
 }
 
 func (f *FlusherHTTP) countDownTask() {
