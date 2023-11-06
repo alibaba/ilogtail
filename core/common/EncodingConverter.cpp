@@ -184,7 +184,7 @@ bool EncodingConverter::ConvertUtf16ToUtf8(char16_t* src,
         // include '\n'
         *srcLength = endIndex - beginIndex + 1;
         *desLength = maxDestSize - destIndex;
-        // UTF16一个Length对应UTF8的2个Length
+        // char16的大小是2个char
         *srcLength = *srcLength * 2;
         if (isLittleEndian) {
             size_t ret = iconv(mUtf16LittleToUtf8Cd, (char**)&src, srcLength, &des, desLength);

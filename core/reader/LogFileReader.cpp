@@ -1067,7 +1067,7 @@ void LogFileReader::OnOpenFileError() {
 // 判断utf16的字节序
 void LogFileReader::checkUtf16Bom() {
     if (mFileEncoding == ENCODING_UTF16) {
-        char16_t* utf16BOMBuffer = new char16_t[1];
+        char16_t utf16BOMBuffer[1];
         size_t readBOMByte = 2;
         int64_t filePos = 0;
         TruncateInfo* truncateInfo = NULL;
@@ -1080,7 +1080,6 @@ void LogFileReader::checkUtf16Bom() {
         } else {
             mIsLittleEndian = true;
         }
-        delete[] utf16BOMBuffer;
     }
 }
 
