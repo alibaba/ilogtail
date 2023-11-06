@@ -793,6 +793,9 @@ func (c mockContext) GetExtension(name string, cfg any) (pipeline.Extension, err
 	return nil, fmt.Errorf("basicAuth not set")
 }
 
+func (c mockContext) RegisterCounterMetric(metric pipeline.CounterMetric) {
+}
+
 func (c mockContext) GetConfigName() string {
 	return "ctx"
 }
