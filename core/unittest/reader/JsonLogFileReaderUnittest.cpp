@@ -95,7 +95,7 @@ public:
             };
         }
     }
-    
+
     void TearDown() override { LogFileReader::BUFFER_SIZE = 1024 * 512; }
 
     void TestReadUtf16LE();
@@ -153,7 +153,7 @@ void JsonFileReaderUnittest::TestReadUtf16LE() {
                                  FileEncoding::ENCODING_UTF16,
                                  false,
                                  false);
-        LogFileReader::BUFFER_SIZE = 24;
+        LogFileReader::BUFFER_SIZE = 22;
         size_t BUFFER_SIZE_UTF8 = 11; // {"first":"
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
@@ -166,10 +166,9 @@ void JsonFileReaderUnittest::TestReadUtf16LE() {
         char*& bufferptr = logBuffer.buffer;
         reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
         APSARA_TEST_TRUE_FATAL(moreData);
-        std::string expectedPart(expectedContent.get(), BUFFER_SIZE_UTF8); 
+        std::string expectedPart(expectedContent.get(), BUFFER_SIZE_UTF8);
         std::string recovered(logBuffer.buffer, size);
-        APSARA_TEST_EQUAL_FATAL(expectedPart,
-                                recovered);
+        APSARA_TEST_EQUAL_FATAL(expectedPart, recovered);
     }
     { // buffer size not big enough to hold all json
         // should read until last json
@@ -285,7 +284,7 @@ void JsonFileReaderUnittest::TestReadUtf16BE() {
                                  FileEncoding::ENCODING_UTF16,
                                  false,
                                  false);
-        LogFileReader::BUFFER_SIZE = 24;
+        LogFileReader::BUFFER_SIZE = 22;
         size_t BUFFER_SIZE_UTF8 = 11; // {"first":"
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
@@ -300,8 +299,7 @@ void JsonFileReaderUnittest::TestReadUtf16BE() {
         APSARA_TEST_TRUE_FATAL(moreData);
         std::string expectedPart(expectedContent.get(), BUFFER_SIZE_UTF8);
         std::string recovered(logBuffer.buffer, size);
-        APSARA_TEST_EQUAL_FATAL(expectedPart,
-                                recovered);
+        APSARA_TEST_EQUAL_FATAL(expectedPart, recovered);
     }
     { // buffer size not big enough to hold all json
         // should read until last json

@@ -1064,25 +1064,6 @@ void LogFileReader::OnOpenFileError() {
     }
 }
 
-// 判断utf16的字节序
-void LogFileReader::checkUtf16Bom() {
-    if (mFileEncoding == ENCODING_UTF16) {
-        char16_t utf16BOMBuffer[1];
-        size_t readBOMByte = 2;
-        int64_t filePos = 0;
-        TruncateInfo* truncateInfo = NULL;
-        ReadFile(mLogFileOp, utf16BOMBuffer, readBOMByte, filePos, &truncateInfo);
-        if (utf16BOMBuffer[0] == 0xfeff) {
-            mIsLittleEndian = true;
-        } else if (utf16BOMBuffer[0] == 0xfffe) {
-            mIsLittleEndian = false;
-            mEnterChar16 = 0x0a00;
-        } else {
-            mIsLittleEndian = true;
-        }
-    }
-}
-
 bool LogFileReader::UpdateFilePtr() {
     // move last update time before check IsValidToPush
     mLastUpdateTime = time(NULL);
@@ -1127,7 +1108,6 @@ bool LogFileReader::UpdateFilePtr() {
                 LOG_WARNING(sLogger, ("LogFileReader open real log file failed", mRealLogPath));
             } else if (CheckDevInode()) {
                 GloablFileDescriptorManager::GetInstance()->OnFileOpen(this);
-                checkUtf16Bom();
                 LOG_INFO(sLogger,
                          ("open file succeeded, project", mProjectName)("logstore", mCategory)("config", mConfigName)(
                              "log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
@@ -1162,7 +1142,6 @@ bool LogFileReader::UpdateFilePtr() {
             // the mLogPath's dev inode equal to mDevInode, so real log path is mLogPath
             mRealLogPath = mLogPath;
             GloablFileDescriptorManager::GetInstance()->OnFileOpen(this);
-            checkUtf16Bom();
             LOG_INFO(sLogger,
                      ("open file succeeded, project", mProjectName)("logstore", mCategory)("config", mConfigName)(
                          "log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
@@ -1627,29 +1606,12 @@ size_t LogFileReader::getNextReadSize(int64_t fileEnd, bool& fromCpt) {
     if (readSize > BUFFER_SIZE && !allowMoreBufferSize) {
         readSize = BUFFER_SIZE;
     }
-    return readSize;
-}
-
-size_t LogFileReader::getNextUtf16ReadSize(int64_t fileEnd, bool& fromCpt) {
-    size_t readSize = static_cast<size_t>(fileEnd - mLastFilePos);
-    bool allowMoreBufferSize = false;
-    fromCpt = false;
-    if (mEOOption && mEOOption->selectedCheckpoint->IsComplete()) {
-        fromCpt = true;
-        allowMoreBufferSize = true;
-        auto& checkpoint = mEOOption->selectedCheckpoint->data;
-        readSize = checkpoint.read_length();
-        LOG_INFO(sLogger, ("read specified length", readSize)("offset", mLastFilePos));
-    }
-    if (readSize > BUFFER_SIZE && !allowMoreBufferSize) {
-        readSize = BUFFER_SIZE;
-    }
-    if (readSize % 2 != 0) {
-        readSize -= 1;
+    if (mFileEncoding == ENCODING_UTF16 && readSize % 2 != 0)
+    {
+        readSize--;
     }
     return readSize;
 }
-
 
 void LogFileReader::setExactlyOnceCheckpointAfterRead(size_t readSize) {
     if (!mEOOption || readSize == 0) {
@@ -1769,8 +1731,39 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
 
 void LogFileReader::ReadUTF16(
     char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo) {
+    if (end < 2)
+    {
+        *size = 0;
+        return;
+    }
+    if (!mHasReadUtf16Bom || mLastFilePos == 0) {
+        // 判断utf16的字节序
+        char16_t utf16BOMBuffer[1] = {0};
+        size_t readBOMByte = 2;
+        int64_t filePos = 0;
+        TruncateInfo* truncateInfo = NULL;
+        ReadFile(mLogFileOp, utf16BOMBuffer, readBOMByte, filePos, &truncateInfo);
+        if (utf16BOMBuffer[0] == 0xfeff) {
+            mIsLittleEndian = true;
+            mEnterChar16 = 0x000a;
+            if (mLastFilePos == 0)
+            {
+                mLastFilePos += 2;
+            }
+        } else if (utf16BOMBuffer[0] == 0xfffe) {
+            mIsLittleEndian = false;
+            mEnterChar16 = 0x0a00;
+            if (mLastFilePos == 0)
+            {
+                mLastFilePos += 2;
+            }
+        } else {
+            mIsLittleEndian = true;
+        }
+        mHasReadUtf16Bom = true;
+    }
     bool fromCpt = false;
-    size_t READ_BYTE = getNextUtf16ReadSize(end, fromCpt);
+    size_t READ_BYTE = getNextReadSize(end, fromCpt);
     char16_t* utf16Buffer = new char16_t[READ_BYTE / 2 + 1];
     size_t readCharCount = ReadFile(mLogFileOp, utf16Buffer, READ_BYTE, mLastFilePos, &truncateInfo);
     mLastReadPos = mLastFilePos + readCharCount;
@@ -1793,18 +1786,11 @@ void LogFileReader::ReadUTF16(
     }
     utf16Buffer[readCharCount / 2] = '\0';
 
-
     size_t srcLength = readCharCount / 2;
     size_t desLength = 0;
     bufferptr = NULL;
-    bool BOMFlag = false;
-    // UTF16的BOM 头跳过,不解析
     char16_t* originUtf16Buffer = utf16Buffer;
-    if (utf16Buffer[0] == 0xfeff || utf16Buffer[0] == 0xfffe) {
-        utf16Buffer++;
-        srcLength -= 1;
-        BOMFlag = true;
-    }
+
     vector<size_t> lineFeedPos;
     for (size_t idx = 0; idx < srcLength - 1; ++idx) {
         if (utf16Buffer[idx] == mEnterChar16) {
@@ -1989,7 +1975,6 @@ void LogFileReader::UpdateReaderManual() {
     }
     mLogFileOp.Open(mLogPath.c_str(), mIsFuseMode);
     mDevInode = GetFileDevInode(mLogPath);
-    checkUtf16Bom();
 }
 #endif
 

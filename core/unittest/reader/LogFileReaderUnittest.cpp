@@ -95,7 +95,7 @@ public:
             };
         }
     }
-    
+
     void TearDown() override { LogFileReader::BUFFER_SIZE = 1024 * 512; }
 
     void TestReadUtf16LE();
@@ -138,7 +138,7 @@ void LogFileReaderUnittest::TestReadUtf16LE() {
         char*& bufferptr = logBuffer.buffer;
         reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
         APSARA_TEST_FALSE_FATAL(moreData);
-        
+
         APSARA_TEST_STREQ_FATAL(expectedContent.get(), StringView(logBuffer.buffer, size).data());
     }
     { // buffer size big enough and match pattern, force read
@@ -182,7 +182,7 @@ void LogFileReaderUnittest::TestReadUtf16LE() {
                                       FileEncoding::ENCODING_UTF16,
                                       false,
                                       false);
-        LogFileReader::BUFFER_SIZE = 24;
+        LogFileReader::BUFFER_SIZE = 22;
         size_t BUFFER_SIZE_UTF8 = 15; // "ilogtail 为可"
         reader.SetLogBeginRegex("no matching pattern");
         reader.UpdateReaderManual();
@@ -196,8 +196,9 @@ void LogFileReaderUnittest::TestReadUtf16LE() {
         char*& bufferptr = logBuffer.buffer;
         reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
         APSARA_TEST_TRUE_FATAL(moreData);
-        APSARA_TEST_STREQ_FATAL(std::string(expectedContent.get(), BUFFER_SIZE_UTF8).c_str(),
-                                StringView(logBuffer.buffer, size).data());
+        std::string expectedPart(expectedContent.get(), BUFFER_SIZE_UTF8);
+        std::string recovered(logBuffer.buffer, size);
+        APSARA_TEST_EQUAL_FATAL(expectedPart, recovered);
     }
     { // buffer size not big enough and match pattern
         CommonRegLogFileReader reader(projectName,
@@ -362,7 +363,7 @@ void LogFileReaderUnittest::TestReadUtf16BE() {
         char*& bufferptr = logBuffer.buffer;
         reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
         APSARA_TEST_FALSE_FATAL(moreData);
-        
+
         APSARA_TEST_STREQ_FATAL(expectedContent.get(), StringView(logBuffer.buffer, size).data());
     }
     { // buffer size big enough and match pattern, force read
@@ -406,7 +407,7 @@ void LogFileReaderUnittest::TestReadUtf16BE() {
                                       FileEncoding::ENCODING_UTF16,
                                       false,
                                       false);
-        LogFileReader::BUFFER_SIZE = 24;
+        LogFileReader::BUFFER_SIZE = 22;
         size_t BUFFER_SIZE_UTF8 = 15; // "ilogtail 为可"
         reader.SetLogBeginRegex("no matching pattern");
         reader.UpdateReaderManual();
@@ -420,8 +421,9 @@ void LogFileReaderUnittest::TestReadUtf16BE() {
         char*& bufferptr = logBuffer.buffer;
         reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
         APSARA_TEST_TRUE_FATAL(moreData);
-        APSARA_TEST_STREQ_FATAL(std::string(expectedContent.get(), BUFFER_SIZE_UTF8).c_str(),
-                                StringView(logBuffer.buffer, size).data());
+        std::string expectedPart(expectedContent.get(), BUFFER_SIZE_UTF8);
+        std::string recovered(logBuffer.buffer, size);
+        APSARA_TEST_EQUAL_FATAL(expectedPart, recovered);
     }
     { // buffer size not big enough and match pattern
         CommonRegLogFileReader reader(projectName,
@@ -717,7 +719,6 @@ void LogFileReaderUnittest::TestLogSplit() {
         APSARA_TEST_EQUAL(2, lineFeed);
         delete[] buffer;
     }
-
 
     // case 3: invalid one + valid one, no discard unmatch
     {

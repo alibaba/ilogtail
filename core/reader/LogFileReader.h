@@ -387,6 +387,7 @@ protected:
 
 private:
     bool mIsLittleEndian = true;
+    bool mHasReadUtf16Bom = false;
     char16_t mEnterChar16 = 0x000a;
     void checkUtf16Bom();
     // Initialized when the exactly once feature is enabled.
@@ -437,7 +438,6 @@ private:
     // @param fileEnd: file size, ie. tell(seek(end)).
     // @param fromCpt: if the read size is recoveried from checkpoint, set it to true.
     size_t getNextReadSize(int64_t fileEnd, bool& fromCpt);
-    size_t getNextUtf16ReadSize(int64_t fileEnd, bool& fromCpt);
 
     // Update current checkpoint's read offset and length after success read.
     void setExactlyOnceCheckpointAfterRead(size_t readSize);
