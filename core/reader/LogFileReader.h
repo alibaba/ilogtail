@@ -386,6 +386,9 @@ protected:
     bool mAdjustApsaraMicroTimezone;
 
 private:
+    bool mIsLittleEndian = true;
+    char16_t mEnterChar16 = 0x000a;
+    void checkUtf16Bom();
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
         std::string primaryCheckpointKey;
