@@ -37,6 +37,7 @@ your changes, such as:
 
 ## [Unreleased]
 - [public] [both] [fixed] fix send local buffer failed when upgrade iLogtail from version earlier than 1.3.
+- [public] [both] [updated] Updated strptime_ns to parse %c format from "%x %X" to "%a %b %d %H:%M:%S %Y" for consistent behavior with striptime.
 - [public] [both] [fixed] fix topic key does not support underscore.
 - [public] [both] [fixed] fix jmxfetch status error when exist multi jmxfetch config in the same machine.
 - [public] [both] [fixed] fix user container wss increase problem.
