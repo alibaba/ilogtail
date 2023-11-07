@@ -19,11 +19,14 @@
 #include "app_config/AppConfig.h"
 #include "common/Constants.h"
 #include "common/LogtailCommonFlags.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
 #include <algorithm>
+#include "monitor/MetricConstants.h"
 
 
 namespace logtail {
+const std::string ProcessorParseTimestampNative::sName = "processor_parse_timestamp_native";
+
 bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig) {
     const PipelineConfig& config = componentConfig.GetConfig();
 
@@ -37,7 +40,7 @@ bool ProcessorParseTimestampNative::Init(const ComponentConfig& componentConfig)
 
     mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
+
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
@@ -65,7 +68,7 @@ void ProcessorParseTimestampNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
-bool ProcessorParseTimestampNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorParseTimestampNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

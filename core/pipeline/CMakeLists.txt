@@ -1,4 +1,4 @@
-# Copyright 2022 iLogtail Authors
+# Copyright 2023 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,4 +19,4 @@ file(GLOB LIB_SOURCE_FILES *.cpp *.h)
 append_source_files(LIB_SOURCE_FILES)
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} models)
-target_link_libraries(${PROJECT_NAME} plugin)
+target_link_libraries(${PROJECT_NAME} plugin_instance)
