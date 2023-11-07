@@ -848,7 +848,6 @@ std::string LogFileReader::GetTopicName(const std::string& topicConfig, const st
 
     {
         string res;
-        // use xpressive
         std::vector<string> keys;
         std::vector<string> values;
         if (ExtractTopics(finalPath, topicConfig, keys, values)) {
