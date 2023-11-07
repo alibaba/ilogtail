@@ -17,8 +17,7 @@
         "redhat.vscode-yaml",
         "bmalehorn.shell-syntax",
         "llvm-vs-code-extensions.vscode-clangd",
-        "vadimcn.vscode-lldb",
-        "ms-vscode.cpptools"
+        "vadimcn.vscode-lldb"
       ]
     }
   }
