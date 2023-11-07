@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include "unittest/Unittest.h"
+#include "common/FileSystemUtil.h"
+#include <boost/utility/string_view.hpp>
 #if defined(__linux__)
 #include <unistd.h>
 #include <iconv.h>
@@ -35,13 +37,14 @@
 
 using namespace std;
 using namespace sls_logs;
+using namespace logtail;
+using StringView = boost::string_view;
 
 DECLARE_FLAG_INT64(first_read_endure_bytes);
 
 namespace logtail {
 
 class LogFileReaderUnittest : public ::testing::Test {
-
     static const string LOG_BEGIN_TIME;
     static const string LOG_BEGIN_REGEX;
     static const string NEXT_LINE;
@@ -50,10 +53,516 @@ class LogFileReaderUnittest : public ::testing::Test {
     static string gRootDir;
 
 public:
+    std::string projectName = "projectName";
+    std::string category = "logstoreName";
+    std::string timeFormat = "";
+    std::string topicFormat = "";
+    std::string groupTopic = "";
+    std::unique_ptr<char[]> expectedContent;
+    static std::string logPathDir;
+    static std::string utf16LEFile;
+    static std::string utf16BEFile;
+    static std::string utf8File;
+
+    static void SetUpTestCase() {
+        logPathDir = GetProcessExecutionDir();
+        if (PATH_SEPARATOR[0] == logPathDir.back()) {
+            logPathDir.resize(logPathDir.size() - 1);
+        }
+        logPathDir += PATH_SEPARATOR + "testDataSet" + PATH_SEPARATOR + "LogFileReaderUnittest";
+        utf16LEFile = "utf16LE.log";
+        utf16BEFile = "utf16BE.log";
+        utf8File = "utf8.log"; // content of utf8.txt is equivalent to utf16LE.log and utf16BE.log
+        cout << "logPathDir: " << logPathDir << endl;
+    }
+
+    void SetUp() override {
+        std::string filepath = logPathDir + PATH_SEPARATOR + utf8File;
+        std::unique_ptr<FILE, decltype(&std::fclose)> fp(std::fopen(filepath.c_str(), "r"), &std::fclose);
+        if (!fp.get()) {
+            return;
+        }
+        std::fseek(fp.get(), 0, SEEK_END);
+        long filesize = std::ftell(fp.get());
+        std::fseek(fp.get(), 0, SEEK_SET);
+        expectedContent.reset(new char[filesize + 1]);
+        fread(expectedContent.get(), filesize, 1, fp.get());
+        expectedContent[filesize] = '\0';
+        for (long i = filesize - 1; i >= 0; --i) {
+            if (expectedContent[i] == '\n') {
+                expectedContent[i] = 0;
+                break;
+            };
+        }
+    }
+
+    void TearDown() override { LogFileReader::BUFFER_SIZE = 1024 * 512; }
+
+    void TestReadUtf16LE();
+    void TestReadUtf16BE();
+
     void TestLogSplit();
     std::string GenerateRawData(
         int32_t lines, vector<int32_t>& index, int32_t size = 100, bool singleLine = false, bool gbk = false);
 };
+std::string LogFileReaderUnittest::logPathDir;
+std::string LogFileReaderUnittest::utf16LEFile;
+std::string LogFileReaderUnittest::utf16BEFile;
+std::string LogFileReaderUnittest::utf8File;
+
+UNIT_TEST_CASE(LogFileReaderUnittest, TestReadUtf16LE);
+UNIT_TEST_CASE(LogFileReaderUnittest, TestReadUtf16BE);
+
+
+void LogFileReaderUnittest::TestReadUtf16LE() {
+    { // buffer size big enough and match pattern
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16LEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+
+        APSARA_TEST_STREQ_FATAL(expectedContent.get(), StringView(logBuffer.buffer, size).data());
+    }
+    { // buffer size big enough and match pattern, force read
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16LEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        char* expectedContentAll = expectedContent.get();
+        size_t tmp = strlen(expectedContentAll);
+        expectedContentAll[tmp + 1] = '\n';
+        APSARA_TEST_STREQ_FATAL(expectedContent.get(), StringView(logBuffer.buffer, size).data());
+        expectedContentAll[tmp + 1] = '\0';
+    }
+    { // buffer size not big enough and not match pattern
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16LEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        LogFileReader::BUFFER_SIZE = 22;
+        size_t BUFFER_SIZE_UTF8 = 15; // "ilogtail 为可"
+        reader.SetLogBeginRegex("no matching pattern");
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get(), BUFFER_SIZE_UTF8);
+        std::string recovered(logBuffer.buffer, size);
+        APSARA_TEST_EQUAL_FATAL(expectedPart, recovered);
+    }
+    { // buffer size not big enough and match pattern
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16LEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.SetLogBeginRegex("iLogtail.*");
+        reader.mDiscardUnmatch = false;
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 10;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind("iLogtail") - 1); // exclude tailing \n
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+    }
+    { // read twice, multiline
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16LEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.SetLogBeginRegex("iLogtail.*");
+        reader.mDiscardUnmatch = false;
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 4;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        // first read, first part should be read
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind("iLogtail") - 1);
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+        auto lastFilePos = reader.mLastFilePos;
+        // second read
+        logBuffer = LogBuffer();
+        truncateInfo = NULL;
+        size = 0;
+        bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        expectedPart = string(expectedContent.get());
+        expectedPart = expectedPart.substr(expectedPart.rfind("iLogtail"));
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+    }
+    { // read twice, single line
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16LEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.mDiscardUnmatch = false;
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 10;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        // first read, first part should be read
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind("iLogtail") - 1); // -1 for \n
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+        // APSARA_TEST_GE_FATAL(reader.mCache.size(), 0UL);
+        // second read, second part should be read
+        truncateInfo = NULL;
+        size = 0;
+        bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        expectedPart = expectedContent.get();
+        expectedPart = expectedPart.substr(expectedPart.rfind("iLogtail"));
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+        // APSARA_TEST_EQUAL_FATAL(0UL, reader.mCache.size());
+    }
+    { // empty file
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16LEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        LogBuffer logBuffer;
+        logBuffer.buffer = nullptr;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, 0, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        APSARA_TEST_EQUAL_FATAL(nullptr, logBuffer.buffer);
+    }
+}
+
+void LogFileReaderUnittest::TestReadUtf16BE() {
+    { // buffer size big enough and match pattern
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16BEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+
+        APSARA_TEST_STREQ_FATAL(expectedContent.get(), StringView(logBuffer.buffer, size).data());
+    }
+    { // buffer size big enough and match pattern, force read
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16BEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        char* expectedContentAll = expectedContent.get();
+        size_t tmp = strlen(expectedContentAll);
+        expectedContentAll[tmp + 1] = '\n';
+        APSARA_TEST_STREQ_FATAL(expectedContent.get(), StringView(logBuffer.buffer, size).data());
+        expectedContentAll[tmp + 1] = '\0';
+    }
+    { // buffer size not big enough and not match pattern
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16BEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        LogFileReader::BUFFER_SIZE = 22;
+        size_t BUFFER_SIZE_UTF8 = 15; // "ilogtail 为可"
+        reader.SetLogBeginRegex("no matching pattern");
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get(), BUFFER_SIZE_UTF8);
+        std::string recovered(logBuffer.buffer, size);
+        APSARA_TEST_EQUAL_FATAL(expectedPart, recovered);
+    }
+    { // buffer size not big enough and match pattern
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16BEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.SetLogBeginRegex("iLogtail.*");
+        reader.mDiscardUnmatch = false;
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 10;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind("iLogtail") - 1); // exclude tailing \n
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+    }
+    { // read twice, multiline
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16BEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.SetLogBeginRegex("iLogtail.*");
+        reader.mDiscardUnmatch = false;
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 4;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        // first read, first part should be read
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind("iLogtail") - 1);
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+        auto lastFilePos = reader.mLastFilePos;
+        // second read
+        logBuffer = LogBuffer();
+        truncateInfo = NULL;
+        size = 0;
+        bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        expectedPart = string(expectedContent.get());
+        expectedPart = expectedPart.substr(expectedPart.rfind("iLogtail"));
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+    }
+    { // read twice, single line
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16BEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.mDiscardUnmatch = false;
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        int64_t fileSize = 0;
+        reader.CheckFileSignatureAndOffset(fileSize);
+        LogFileReader::BUFFER_SIZE = fileSize - 10;
+        LogBuffer logBuffer;
+        bool moreData = false;
+        // first read, first part should be read
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_TRUE_FATAL(moreData);
+        std::string expectedPart(expectedContent.get());
+        expectedPart.resize(expectedPart.rfind("iLogtail") - 1); // -1 for \n
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+        // APSARA_TEST_GE_FATAL(reader.mCache.size(), 0UL);
+        // second read, second part should be read
+        truncateInfo = NULL;
+        size = 0;
+        bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, fileSize, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        expectedPart = expectedContent.get();
+        expectedPart = expectedPart.substr(expectedPart.rfind("iLogtail"));
+        APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), StringView(logBuffer.buffer, size).data());
+        // APSARA_TEST_EQUAL_FATAL(0UL, reader.mCache.size());
+    }
+    { // empty file
+        CommonRegLogFileReader reader(projectName,
+                                      category,
+                                      logPathDir,
+                                      utf16BEFile,
+                                      INT32_FLAG(default_tail_limit_kb),
+                                      timeFormat,
+                                      topicFormat,
+                                      groupTopic,
+                                      FileEncoding::ENCODING_UTF16,
+                                      false,
+                                      false);
+        reader.UpdateReaderManual();
+        reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
+        LogBuffer logBuffer;
+        logBuffer.buffer = nullptr;
+        bool moreData = false;
+        TruncateInfo* truncateInfo = NULL;
+        size_t size = 0;
+        char*& bufferptr = logBuffer.buffer;
+        reader.ReadUTF16(bufferptr, &size, 0, moreData, truncateInfo);
+        APSARA_TEST_FALSE_FATAL(moreData);
+        APSARA_TEST_EQUAL_FATAL(nullptr, logBuffer.buffer);
+    }
+}
 
 APSARA_UNIT_TEST_CASE(LogFileReaderUnittest, TestLogSplit, 1);
 
@@ -211,10 +720,10 @@ void LogFileReaderUnittest::TestLogSplit() {
         delete[] buffer;
     }
 
-
     // case 3: invalid one + valid one, no discard unmatch
     {
-        CommonRegLogFileReader logFileReader("100_proj", "", "", "", INT32_FLAG(default_tail_limit_kb), "", "", "", ENCODING_UTF8, false, false);
+        CommonRegLogFileReader logFileReader(
+            "100_proj", "", "", "", INT32_FLAG(default_tail_limit_kb), "", "", "", ENCODING_UTF8, false, false);
         logFileReader.SetLogBeginRegex(LOG_BEGIN_REGEX);
         string invalidLog = "xx" + LOG_BEGIN_TIME + "invalid log 1\n" + LOG_BEGIN_TIME + "invalid log 2\n";
         int32_t invalidLogSize = invalidLog.size();
@@ -245,7 +754,8 @@ void LogFileReaderUnittest::TestLogSplit() {
 
     // case 5: valid one + invalid one, no discard unmatch
     {
-        CommonRegLogFileReader logFileReader("100_proj", "", "", "", INT32_FLAG(default_tail_limit_kb), "", "", "", ENCODING_UTF8, false, false);
+        CommonRegLogFileReader logFileReader(
+            "100_proj", "", "", "", INT32_FLAG(default_tail_limit_kb), "", "", "", ENCODING_UTF8, false, false);
         logFileReader.SetLogBeginRegex(LOG_BEGIN_REGEX);
         string invalidLog = LOG_BEGIN_TIME + "invalid log 1\nyy" + LOG_BEGIN_TIME + "invalid log 2\n";
         int32_t invalidLogSize = invalidLog.size();

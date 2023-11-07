@@ -760,6 +760,11 @@ bool LogFileReader::CheckForFirstOpen(FileReadPolicy policy) {
 void LogFileReader::SetFilePosBackwardToFixedPos(LogFileOperator& op) {
     int64_t endOffset = op.GetFileSize();
     mLastFilePos = endOffset <= ((int64_t)mTailLimit * 1024) ? 0 : (endOffset - ((int64_t)mTailLimit * 1024));
+    if (mFileEncoding == ENCODING_UTF16) {
+        if (mLastFilePos % 2 > 0) {
+            mLastFilePos--;
+        }
+    }
     mLastReadPos = mLastFilePos;
     FixLastFilePos(op, endOffset);
 }
@@ -1509,6 +1514,8 @@ bool LogFileReader::GetRawData(
     bool moreData = false;
     if (mFileEncoding == ENCODING_GBK)
         ReadGBK(bufferptr, size, fileSize, moreData, truncateInfo);
+    else if (mFileEncoding == ENCODING_UTF16)
+        ReadUTF16(bufferptr, size, fileSize, moreData, truncateInfo);
     else
         ReadUTF8(bufferptr, size, fileSize, moreData, truncateInfo);
 
@@ -1598,6 +1605,10 @@ size_t LogFileReader::getNextReadSize(int64_t fileEnd, bool& fromCpt) {
     }
     if (readSize > BUFFER_SIZE && !allowMoreBufferSize) {
         readSize = BUFFER_SIZE;
+    }
+    if (mFileEncoding == ENCODING_UTF16 && readSize % 2 != 0)
+    {
+        readSize--;
     }
     return readSize;
 }
@@ -1716,6 +1727,115 @@ void LogFileReader::ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& m
     mLastFilePos += readCharCount;
     LOG_DEBUG(sLogger,
               ("read gbk buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
+}
+
+void LogFileReader::ReadUTF16(
+    char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo) {
+    if (end < 2)
+    {
+        *size = 0;
+        return;
+    }
+    if (!mHasReadUtf16Bom || mLastFilePos == 0) {
+        // 判断utf16的字节序
+        char16_t utf16BOMBuffer[1] = {0};
+        size_t readBOMByte = 2;
+        int64_t filePos = 0;
+        TruncateInfo* truncateInfo = NULL;
+        ReadFile(mLogFileOp, utf16BOMBuffer, readBOMByte, filePos, &truncateInfo);
+        if (utf16BOMBuffer[0] == 0xfeff) {
+            mIsLittleEndian = true;
+            mEnterChar16 = 0x000a;
+            if (mLastFilePos == 0)
+            {
+                mLastFilePos += 2;
+            }
+        } else if (utf16BOMBuffer[0] == 0xfffe) {
+            mIsLittleEndian = false;
+            mEnterChar16 = 0x0a00;
+            if (mLastFilePos == 0)
+            {
+                mLastFilePos += 2;
+            }
+        } else {
+            mIsLittleEndian = true;
+        }
+        mHasReadUtf16Bom = true;
+    }
+    bool fromCpt = false;
+    size_t READ_BYTE = getNextReadSize(end, fromCpt);
+    char16_t* utf16Buffer = new char16_t[READ_BYTE / 2 + 1];
+    size_t readCharCount = ReadFile(mLogFileOp, utf16Buffer, READ_BYTE, mLastFilePos, &truncateInfo);
+    mLastReadPos = mLastFilePos + readCharCount;
+    size_t originReadCount = readCharCount;
+    moreData = (readCharCount == BUFFER_SIZE);
+    bool adjustFlag = false;
+    while (readCharCount > 0 && utf16Buffer[readCharCount / 2 - 1] != mEnterChar16) {
+        readCharCount -= 2;
+        adjustFlag = true;
+    }
+
+    if (readCharCount == 0) {
+        if (moreData)
+            readCharCount = READ_BYTE;
+        else {
+            delete[] utf16Buffer;
+            *size = 0;
+            return;
+        }
+    }
+    utf16Buffer[readCharCount / 2] = '\0';
+
+    size_t srcLength = readCharCount / 2;
+    size_t desLength = 0;
+    bufferptr = NULL;
+    char16_t* originUtf16Buffer = utf16Buffer;
+
+    vector<size_t> lineFeedPos;
+    for (size_t idx = 0; idx < srcLength - 1; ++idx) {
+        if (utf16Buffer[idx] == mEnterChar16) {
+            lineFeedPos.push_back(idx);
+        }
+    }
+    lineFeedPos.push_back(srcLength - 1);
+
+    EncodingConverter::GetInstance()->ConvertUtf16ToUtf8(utf16Buffer, &srcLength, bufferptr, &desLength, lineFeedPos, mIsLittleEndian);
+    size_t resultCharCount = desLength;
+    LOG_DEBUG(sLogger,
+              ("utf16Buffer", utf16Buffer)("srcLength", srcLength)("bufferptr", bufferptr)("desLength", desLength));
+    delete[] originUtf16Buffer;
+    if (resultCharCount == 0) {
+        *size = 0;
+        mLastFilePos += readCharCount;
+        return;
+    }
+    int32_t rollbackLineFeedCount = 0;
+    if (((adjustFlag || moreData) && mLogBeginRegPtr) || mLogType == JSON_LOG) {
+        int32_t bakResultCharCount = resultCharCount;
+        resultCharCount = LastMatchedLine(bufferptr, resultCharCount, rollbackLineFeedCount);
+        if (resultCharCount == 0) {
+            resultCharCount = bakResultCharCount;
+            rollbackLineFeedCount = 0;
+        }
+    }
+
+    int32_t lineFeedCount = lineFeedPos.size();
+    if (rollbackLineFeedCount > 0 && lineFeedCount >= (1 + rollbackLineFeedCount)) {
+        readCharCount -= (lineFeedPos[lineFeedCount - 1] - lineFeedPos[lineFeedCount - 1 - rollbackLineFeedCount]) * 2;
+    }
+    if (bufferptr[resultCharCount - 1] == '\n')
+    {
+        bufferptr[resultCharCount - 1] = '\0';
+    }
+    if (!moreData && fromCpt && mLastReadPos < end) {
+        moreData = true;
+    }
+    *size = resultCharCount;
+    setExactlyOnceCheckpointAfterRead(*size);
+    mLastFilePos += readCharCount;
+    LOG_DEBUG(
+        sLogger,
+        ("read utf16 buffer, offset", mLastFilePos)("origin read", originReadCount)("at last read", readCharCount));
 }
 
 size_t

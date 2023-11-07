@@ -20,3 +20,14 @@ target_link_libraries(log_file_reader_deleted_file_unittest unittest_base)
 
 add_executable(log_file_reader_unittest LogFileReaderUnittest.cpp)
 target_link_libraries(log_file_reader_unittest unittest_base)
+
+add_executable(json_file_reader_unittest JsonLogFileReaderUnittest.cpp)
+target_link_libraries(json_file_reader_unittest unittest_base)
+
+if (UNIX)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testDataSet)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/testDataSet/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/testDataSet/)
+elseif (MSVC)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/testDataSet)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/testDataSet/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/testDataSet/)
+endif ()

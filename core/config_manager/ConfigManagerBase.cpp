@@ -668,6 +668,10 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 string fileEncoding = GetStringValue(value, "file_encoding", "");
                 if (ToLowerCaseString(fileEncoding) == "gbk")
                     config->mFileEncoding = ENCODING_GBK;
+                else if (ToLowerCaseString(fileEncoding) == "utf16")
+                {
+                    config->mFileEncoding = ENCODING_UTF16;
+                }
                 else
                     config->mFileEncoding = ENCODING_UTF8;
                 if (value.isMember("filter_keys") && value.isMember("filter_regs")) {

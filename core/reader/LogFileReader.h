@@ -312,7 +312,7 @@ protected:
     GetRawData(char*& bufferptr, size_t* size, int64_t fileSize, FileInfo*& fileInfo, TruncateInfo*& trncateInfo);
     void ReadUTF8(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo);
     void ReadGBK(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo);
-
+    void ReadUTF16(char*& bufferptr, size_t* size, int64_t end, bool& moreData, TruncateInfo*& truncateInfo);
     size_t
     ReadFile(LogFileOperator& logFileOp, void* buf, size_t size, int64_t& offset, TruncateInfo** truncateInfo = NULL);
     int32_t ParseTimeInBuffer(LogFileOperator& logFileOp,
@@ -386,6 +386,10 @@ protected:
     bool mAdjustApsaraMicroTimezone;
 
 private:
+    bool mIsLittleEndian = true;
+    bool mHasReadUtf16Bom = false;
+    char16_t mEnterChar16 = 0x000a;
+    void checkUtf16Bom();
     // Initialized when the exactly once feature is enabled.
     struct ExactlyOnceOption {
         std::string primaryCheckpointKey;
@@ -506,6 +510,7 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class LogFileReaderUnittest;
+    friend class JsonFileReaderUnittest;
     friend class ExactlyOnceReaderUnittest;
     friend class SenderUnittest;
     friend class AppConfigUnittest;
@@ -531,6 +536,8 @@ struct LogBuffer {
               const TruncateInfoPtr& truncateInfo = TruncateInfoPtr())
         : buffer(buf), bufferSize(size), fileInfo(fileInfo), truncateInfo(truncateInfo) {}
     void SetDependecy(const LogFileReaderPtr& reader) { logFileReader = reader; }
+    
+    LogBuffer() {}
 };
 
 class CommonRegLogFileReader : public LogFileReader {
@@ -566,6 +573,7 @@ protected:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogFileReaderUnittest;
+    friend class JsonFileReaderUnittest;
 #endif
 };
 
@@ -592,6 +600,7 @@ private:
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogFileReaderUnittest;
+    friend class JsonFileReaderUnittest;
 #endif
 };
 
