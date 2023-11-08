@@ -737,7 +737,7 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                     if (StartWith(config->mTopicFormat, customizedPrefix)) {
                         config->mCustomizedTopic = config->mTopicFormat.substr(customizedPrefix.length());
                         config->mTopicFormat = "customized";
-                    } else if (CheckTopicRegFormat(config->mTimeFormat) == false) {
+                    } else if (NormalizeTopicRegFormat(config->mTopicFormat) == false) {
                         throw ExceptionBase("The topic format is not valid regex");
                     }
                 }
@@ -872,11 +872,17 @@ void ConfigManagerBase::LoadSingleUserConfig(const std::string& logName, const J
                 SetNotFoundJsonMember(pluginConfigJson["global"],
                                       "EnableTimestampNanosecond",
                                       config->mAdvancedConfig.mEnableTimestampNanosecond);
+                SetNotFoundJsonMember(pluginConfigJson["global"],
+                                      "UsingOldContentTag",
+                                      config->mAdvancedConfig.mUsingOldContentTag);
             } else {
                 Json::Value pluginGlobalConfigJson;
                 SetNotFoundJsonMember(pluginGlobalConfigJson,
                                       "EnableTimestampNanosecond",
                                       config->mAdvancedConfig.mEnableTimestampNanosecond);
+                SetNotFoundJsonMember(pluginGlobalConfigJson,
+                                      "UsingOldContentTag",
+                                      config->mAdvancedConfig.mUsingOldContentTag);
                 pluginConfigJson["global"] = pluginGlobalConfigJson;
             }
             config->mPluginConfig = pluginConfigJson.toStyledString();

@@ -36,7 +36,7 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
 
     auto blacklistException = ParseBlacklist(advancedVal, cfg);
     if (!blacklistException.empty()) {
-        throw blacklistException;
+        throw ExceptionBase(blacklistException);
     }
 
     // Boolean force_multiconfig.
@@ -148,6 +148,12 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
         const auto& val = advancedVal["specified_year"];
         if (val.isUInt()) {
             cfg.mAdvancedConfig.mSpecifiedYear = static_cast<int32_t>(val.asUInt());
+        }
+    }
+    // using_old_content_tag
+    {
+        if (advancedVal.isMember("using_old_content_tag") && advancedVal["using_old_content_tag"].isBool()) {
+            cfg.mAdvancedConfig.mUsingOldContentTag = GetBoolValue(advancedVal, "using_old_content_tag");
         }
     }
     // precise_timestamp
