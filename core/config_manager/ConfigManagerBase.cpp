@@ -1888,87 +1888,6 @@ bool ConfigManagerBase::ParseTimeZoneOffsetSecond(const string& logTZ, int& logT
     return true;
 }
 
-// void ConfigManagerBase::GetSensitiveKeys(const Json::Value& value, Config* pConfig) {
-//     for (Json::Value::const_iterator iter = value.begin(); iter != value.end(); ++iter) {
-//         const Json::Value& sensitiveItem = *iter;
-//         if (sensitiveItem.isMember("key") && sensitiveItem["key"].isString() && sensitiveItem.isMember("type")
-//             && sensitiveItem["type"].isString() && sensitiveItem.isMember("regex_begin")
-//             && sensitiveItem["regex_begin"].isString() && sensitiveItem.isMember("regex_content")
-//             && sensitiveItem["regex_content"].isString() && sensitiveItem.isMember("all")
-//             && sensitiveItem["all"].isBool()) {
-//             string key = sensitiveItem["key"].asString();
-//             string type = sensitiveItem["type"].asString();
-//             string regexBegin = sensitiveItem["regex_begin"].asString();
-//             string regexContent = sensitiveItem["regex_content"].asString();
-//             bool all = sensitiveItem["all"].asBool();
-//             int32_t opt = SensitiveWordCastOption::CONST_OPTION;
-//             if (type != "const" && type != "md5") {
-//                 // do not throw when parse sensitive key error
-//                 LOG_ERROR(sLogger, ("The sensitive key type is invalid, type", type));
-//                 LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-//                                                        "The sensitive key type is invalid",
-//                                                        pConfig->GetProjectName(),
-//                                                        pConfig->GetCategory());
-//                 break;
-//                 // throw ExceptionBase(string("The sensitive key type is invalid : ") + type);
-//             }
-
-
-//             string constVal;
-//             if (type == "const") {
-//                 opt = SensitiveWordCastOption::CONST_OPTION;
-//                 if (sensitiveItem.isMember("const") && sensitiveItem["const"].isString()) {
-//                     constVal = sensitiveItem["const"].asString();
-//                 } else {
-//                     // do not throw when parse sensitive key error
-//                     LOG_ERROR(sLogger, ("The sensitive key config is invalid, key", key));
-//                     LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-//                                                            "The sensitive key config is invalid",
-//                                                            pConfig->GetProjectName(),
-//                                                            pConfig->GetCategory());
-//                     break;
-//                     // throw ExceptionBase(string("The sensitive key config is invalid : ") + key);
-//                 }
-//             } else {
-//                 opt = SensitiveWordCastOption::MD5_OPTION;
-//             }
-//             constVal = string("\\1") + constVal;
-//             string regexStr = string("(") + regexBegin + ")" + regexContent;
-//             std::shared_ptr<re2::RE2> pRegex(new re2::RE2(regexStr));
-//             if (!pRegex->ok()) {
-//                 string errorMsg = pRegex->error();
-//                 errorMsg += string(", regex : ") + regexStr;
-//                 // do not throw when parse sensitive key error
-//                 LOG_ERROR(sLogger, ("The sensitive regex is invalid, error", errorMsg));
-//                 LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-//                                                        string("The sensitive key regex is invalid, ") + errorMsg,
-//                                                        pConfig->GetProjectName(),
-//                                                        pConfig->GetCategory());
-//                 break;
-//                 // throw ExceptionBase(string("The sensitive regex is invalid, ") + errorMsg);
-//             }
-//             SensitiveWordCastOption sensOpt;
-//             sensOpt.key = key;
-//             sensOpt.constValue = constVal;
-//             sensOpt.option = opt;
-//             sensOpt.replaceAll = all;
-//             sensOpt.mRegex = pRegex;
-//             pConfig->mSensitiveWordCastOptions[key].push_back(sensOpt);
-//             LOG_DEBUG(sLogger,
-//                       ("add senstive cast option", pConfig->mConfigName)("key", key)("const val", constVal)(
-//                           "type", type)("regex", regexStr)("all flag", all));
-//         } else {
-//             // do not throw when parse sensitive key error
-//             LOG_ERROR(sLogger, ("The sensitive key config is invalid, config", pConfig->mConfigName));
-//             LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-//                                                    "The sensitive key config is invalid",
-//                                                    pConfig->GetProjectName(),
-//                                                    pConfig->GetCategory());
-//             // throw ExceptionBase(string("The sensitive key config is invalid, config : ") + pConfig->mConfigName);
-//         }
-//     }
-// }
-
 bool ConfigManagerBase::GetLocalConfigUpdate() {
     bool fileUpdateFlag = GetLocalConfigFileUpdate();
     bool dirUpdateFlag = GetLocalConfigDirUpdate();
@@ -2285,9 +2204,6 @@ void ConfigManagerBase::GetRelatedConfigs(const std::string& path, std::vector<F
             configs.push_back(iter->second);
         }
     }
-}
-
-SensitiveWordCastOption::~SensitiveWordCastOption() {
 }
 
 bool ConfigManagerBase::UpdateContainerPath(DockerContainerPathCmd* cmd) {

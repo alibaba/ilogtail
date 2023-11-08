@@ -56,20 +56,6 @@ struct UserInfo {
     }
 };
 
-struct SensitiveWordCastOption {
-    static const int32_t MD5_OPTION = 0;
-    static const int32_t CONST_OPTION = 1;
-    int32_t option;
-    std::string key;
-    std::string constValue;
-    bool replaceAll;
-    std::shared_ptr<re2::RE2> mRegex; // deleted when config is deleted
-
-    SensitiveWordCastOption() : option(CONST_OPTION), replaceAll(false) {}
-
-    ~SensitiveWordCastOption();
-};
-
 class Config {
 public:
     // static const uint32_t kExactlyOnceMaxConcurrency = 512;
@@ -165,7 +151,6 @@ public:
     std::string mTimeKey;
     // std::vector<std::string> mShardHashKey;
     // bool mTailExisted;
-    std::unordered_map<std::string, std::vector<SensitiveWordCastOption>> mSensitiveWordCastOptions;
     bool mUploadRawLog; // true to update raw log to sls
     bool mSimpleLogFlag;
     bool mTimeZoneAdjust;

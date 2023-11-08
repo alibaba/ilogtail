@@ -28,11 +28,19 @@ class ProcessorDesensitizeNative : public Processor {
 public:
     static const std::string sName;
 
+    // 源字段名。
     std::string mSourceKey;
+    // 脱敏方式。可选值包括：
+    // ● const：用常量替换敏感内容。
+    // ● md5：用敏感内容的MD5值替换相应内容。
     int32_t mMethod;
+    // 用于替换敏感内容的常量字符串。
     std::string mReplacingString;
+    // 敏感内容的前缀正则表达式。
     std::string mContentPatternBeforeReplacedString;
+    // 敏感内容的正则表达式
     std::string mReplacedContentPattern;
+    // 是否替换所有的匹配的敏感内容。
     bool mReplacingAll = true;
 
     static const int32_t MD5_OPTION = 0;
@@ -49,9 +57,7 @@ private:
     std::shared_ptr<re2::RE2> mRegex;
 
     void ProcessEvent(PipelineEventPtr& e);
-    void CastOneSensitiveWord(const std::vector<SensitiveWordCastOption>& optionVec, std::string* value);
-
-    std::unordered_map<std::string, std::vector<SensitiveWordCastOption>> mSensitiveWordCastOptions;
+    void CastOneSensitiveWord(std::string* value);
 
     CounterPtr mProcDesensitizeRecodesTotal;
 
