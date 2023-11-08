@@ -1,6 +1,6 @@
 #include "sls_spl/PipelineEventGroupInput.h"
 #include <iostream>
-#include "util/SplStringPiece.h"
+#include "spl/util/SplStringPiece.h"
 #include "logger/Logger.h"
 #include "sls_spl/SplConstants.h"
 

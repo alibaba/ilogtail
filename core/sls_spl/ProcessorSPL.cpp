@@ -17,10 +17,10 @@
 #include "sls_spl/ProcessorSPL.h"
 #include <curl/curl.h>
 #include <iostream>
-#include "pipeline/SplPipeline.h"
+#include "spl/pipeline/SplPipeline.h"
 #include "sls_spl/PipelineEventGroupInput.h"
 #include "sls_spl/PipelineEventGroupOutput.h"
-#include "logger/SplLogger.h"
+#include "spl/logger/Logger.h"
 #include "logger/Logger.h"
 #include "sls_spl/SplConstants.h"
 
@@ -61,19 +61,15 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
 
     std::vector<std::string> colNames{FIELD_CONTENT};
 
-    auto input = std::make_shared<PipelineEventGroupInput>(colNames, logGroup);
-
     // 根据spip->getInputSearches()，设置input数组
-    std::vector<InputPtr> inputs;
+    std::vector<Input*> inputs;
     for (auto search : mSPLPipelinePtr->getInputSearches()) {
-        inputs.push_back(input);
+        inputs.push_back(new PipelineEventGroupInput(colNames, logGroup));
     }
-
     // 根据spip->getOutputLabels()，设置output数组
-    std::vector<OutputPtr> outputs;
-
+    std::vector<Output*> outputs;
     for (auto resultTaskLabel : mSPLPipelinePtr->getOutputLabels()) {
-        outputs.emplace_back(std::make_shared<PipelineEventGroupOutput>(logGroup, logGroupList, resultTaskLabel));
+        outputs.emplace_back(new PipelineEventGroupOutput(logGroup, logGroupList, resultTaskLabel));
     }
 
     /// 开始调用pipeline.execute
@@ -83,9 +79,9 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     auto errCode = mSPLPipelinePtr->execute(inputs, outputs, &errorMsg, &pipelineStats);
     if (errCode != StatusCode::OK) {
         LOG_ERROR(sLogger, ("execute error", errorMsg));
-        return;
     }
-
+    for (auto& input : inputs) delete input;
+    for (auto& output : outputs) delete output;
     //LOG_DEBUG(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
     return;
 }
