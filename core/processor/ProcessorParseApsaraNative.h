@@ -16,9 +16,6 @@
 
 #pragma once
 
-#include <cstdint>
-#include <ctime>
-
 #include "common/TimeUtil.h"
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"

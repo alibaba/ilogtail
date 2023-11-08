@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
 #include "parser/DelimiterModeFsmParser.h"
@@ -29,15 +27,29 @@ public:
     static const std::string sName;
 
     enum class Method { extend, keep, discard };
+    // 源字段名。
     std::string mSourceKey;
+    // 分隔符
     std::string mSeparator;
+    // 引用符
     char mQuote = '"';
+    // 提取的字段列表。
     std::vector<std::string> mKeys;
+    // 是否允许提取的字段数量小于Keys的数量。若不允许，则此情景会被视为解析失败。
     bool mAllowingShortenedFields = true;
+    // 当提取的字段数量大于Keys的数量时的行为。可选值包括：
+    // ●
+    // extend：保留多余的字段，且每个多余的字段都作为单独的一个字段加入日志，多余字段的字段名为__column$i__，其中$i代表额外字段序号，从0开始计数。
+    // ● keep：保留多余的字段，但将多余内容作为一个整体字段加入日志，字段名为__column0__.
+    // ● discard：丢弃多余的字段。
     std::string mOverflowedFieldsTreatment = "extend";
+    // 当解析失败时，是否保留源字段。
     bool mKeepingSourceWhenParseFail = true;
+    // 当解析成功时，是否保留源字段。
     bool mKeepingSourceWhenParseSucceed = false;
+    // 当源字段被保留时，用于存储源字段的字段名。若不填，默认不改名。
     std::string mRenamedSourceKey = "";
+
     bool mCopingRawLog = false;
     char mSeparatorChar;
     bool mSourceKeyOverwritten = false;
@@ -58,19 +70,13 @@ private:
                      std::vector<size_t>& colBegIdxs,
                      std::vector<size_t>& colLens);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
-    std::string mRawLogTag;
-    std::vector<std::string> mColumnKeys;
-    bool mExtractPartialFields = false;
-    bool mAutoExtend = false;
-    bool mAcceptNoEnoughKeys = false;
-    bool mDiscardUnmatch = false;
-    bool mUploadRawLog = false;
+
     DelimiterModeFsmParser* mDelimiterModeFsmParserPtr;
+    static const std::string s_mDiscardedFieldKey;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;
 
-    static const std::string s_mDiscardedFieldKey;
     CounterPtr mProcParseInSizeBytes;
     CounterPtr mProcParseOutSizeBytes;
     CounterPtr mProcDiscardRecordsTotal;
