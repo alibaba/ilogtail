@@ -433,16 +433,14 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
         } else {
             // if first create, we should check and update file signature, because when blocked, new reader will have no
             // chance to update signature
-            int64_t fileSize;
-            if (!readerPtr->CheckFileSignatureAndOffset(fileSize)) {
-                LOG_ERROR(
-                    sLogger,
-                    ("stop creating new reader",
-                     "check file signature failed, possibly because file signature has been changed since the "
-                     "checkpoint was last saved")("project", readerConfig.second->GetProjectName())(
-                        "logstore", readerConfig.second->GetLogstoreName())(
-                        "config", readerConfig.second->GetConfigName())("log reader queue name", PathJoin(path, name))(
-                        "file device", ToString(devInode.dev))("file inode", ToString(devInode.inode)));
+            if (!readerPtr->CheckFileSignatureAndOffset(false)) {
+                LOG_ERROR(sLogger,
+                          ("stop creating new reader",
+                           "check file signature failed, possibly because file signature has been changed since the "
+                           "checkpoint was last saved")("project", pConfig->GetProjectName())("logstore",
+                                                                                              pConfig->GetCategory())(
+                              "config", pConfig->mConfigName)("log reader queue name", PathJoin(path, name))(
+                              "file device", ToString(devInode.dev))("file inode", ToString(devInode.inode)));
                 return LogFileReaderPtr();
             }
         }
@@ -648,6 +646,7 @@ void ModifyHandler::Handle(const Event& event) {
         // reader->SetFileDeleted(false);
 
         // make sure file open success, or we just return
+        bool isFileOpen = reader->IsFileOpened();
         while (!reader->UpdateFilePtr()) {
             if (errno == EMFILE) {
                 LOG_WARNING(sLogger,
@@ -674,11 +673,10 @@ void ModifyHandler::Handle(const Event& event) {
                 return;
             }
             reader = (*readerArrayPtr)[0];
+            isFileOpen = reader->IsFileOpened();
             LOG_DEBUG(sLogger, ("read other file", reader->GetDevInode().inode));
         }
 
-
-        int64_t fileSize = 0;
         bool recreateReaderFlag = false;
         // if dev inode changed, delete this reader and create reader
         if (!reader->CheckDevInode()) {
@@ -695,7 +693,7 @@ void ModifyHandler::Handle(const Event& event) {
                                                        + " ,logstore:" + reader->GetLogstore());
         }
         // if signature is different and logpath is different, delete this reader and create reader
-        else if (!reader->CheckFileSignatureAndOffset(fileSize) && logPath != reader->GetHostLogPath()) {
+        else if (!reader->CheckFileSignatureAndOffset(isFileOpen) && logPath != reader->GetHostLogPath()) {
             LOG_INFO(sLogger,
                      ("file sig and name both changed, create new reader. new path",
                       logPath)("old path", reader->GetHostLogPath())(ToString(readerArrayPtr->size()),

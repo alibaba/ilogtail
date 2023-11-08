@@ -97,8 +97,7 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
             continue;
         }
         readerSharePtr->SetLastFilePos(event.mStartPos);
-        int64_t fileSize = 0;
-        readerSharePtr->CheckFileSignatureAndOffset(fileSize);
+        readerSharePtr->CheckFileSignatureAndOffset(false);
 
         bool doneFlag = false;
         while (true) {
@@ -121,9 +120,9 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
         }
         auto doneTime = GetCurrentTimeInMilliSeconds();
         LOG_INFO(sLogger,
-                 ("[progress]", std::string("[") + ToString(i + 1) + "/" + ToString(fileNames.size()) + "]")(
-                     "process", "done")("file", filePath)("file size", fileSize)(
-                     "offset", readerSharePtr->GetLastFilePos())("time(ms)", doneTime - startTime));
+                 ("[progress]", std::string("[") + ToString(i + 1) + "/" + ToString(fileNames.size()) + "]")("process",
+                                                                                                             "done")(
+                     "file", filePath)("offset", readerSharePtr->GetLastFilePos())("time(ms)", doneTime - startTime));
     }
 }
 } // namespace logtail
