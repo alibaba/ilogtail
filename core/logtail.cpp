@@ -31,9 +31,9 @@
 #include "common/GlobalPara.h"
 #include "logger/Logger.h"
 #ifdef LOGTAIL_RUNTIME_PLUGIN
-#include "plugin/LogtailRuntimePlugin.h"
+#include "go_pipeline/LogtailRuntimePlugin.h"
 #endif
-#include "plugin/LogtailPlugin.h"
+#include "go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
 #include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
@@ -264,9 +264,7 @@ void do_worker_process() {
     LogFilter::Instance()->InitFilter(STRING_FLAG(user_log_config));
     Sender::Instance()->InitSender();
     LogtailPlugin* pPlugin = LogtailPlugin::GetInstance();
-    if (pPlugin->LoadPluginBase()) {
-        pPlugin->Resume();
-    }
+    pPlugin->Resume();
     ObserverManager::GetInstance()->Reload();
     CheckPointManager::Instance()->LoadCheckPoint();
     // AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();

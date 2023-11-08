@@ -846,7 +846,6 @@ std::string LogFileReader::GetTopicName(const std::string& topicConfig, const st
 
     {
         string res;
-        // use xpressive
         std::vector<string> keys;
         std::vector<string> values;
         if (ExtractTopics(finalPath, topicConfig, keys, values)) {
@@ -1010,7 +1009,6 @@ bool LogFileReader::ReadLog(LogBuffer& logBuffer, const Event* event) {
         }
     }
 
-    auto const readOffset = mLastFilePos;
     size_t lastFilePos = mLastFilePos;
     bool allowRollback = true;
     if (event != nullptr && event->IsReaderFlushTimeout()) {
@@ -1297,17 +1295,8 @@ bool LogFileReader::CheckDevInode() {
     }
 }
 
-bool LogFileReader::CheckFileSignatureAndOffset(int64_t& fileSize) {
+bool LogFileReader::CheckFileSignatureAndOffset(bool isOpenOnUpdate) {
     mLastEventTime = time(NULL);
-    char firstLine[1025];
-    int nbytes = mLogFileOp.Pread(firstLine, 1, 1024, 0);
-    if (nbytes < 0) {
-        LOG_ERROR(sLogger,
-                  ("fail to read file", mHostLogPath)("nbytes", nbytes)("project", mProjectName)("logstore", mCategory)(
-                      "config", mConfigName));
-        return false;
-    }
-    firstLine[nbytes] = '\0';
     int64_t endSize = mLogFileOp.GetFileSize();
     if (endSize < 0) {
         int lastErrNo = errno;
@@ -1334,26 +1323,40 @@ bool LogFileReader::CheckFileSignatureAndOffset(int64_t& fileSize) {
             return false;
         }
     }
+    mLastFileSize = endSize;
 
     // If file size is 0 and filename is changed, we cannot judge if the inode is reused by signature,
     // so we just recreate the reader to avoid filename mismatch
     if (mLastFileSignatureSize == 0 && mRealLogPath != mHostLogPath) {
         return false;
     }
-    fileSize = endSize;
-    mLastFileSize = endSize;
-    bool sigCheckRst = CheckAndUpdateSignature(string(firstLine), mLastFileSignatureHash, mLastFileSignatureSize);
-    if (!sigCheckRst) {
-        LOG_INFO(sLogger,
-                 ("Check file truncate by signature, read from begin",
-                  mHostLogPath)("project", mProjectName)("logstore", mCategory)("config", mConfigName));
-        mLastFilePos = 0;
-        if (mEOOption) {
+    fsutil::PathStat ps;
+    mLogFileOp.Stat(ps);
+    time_t lastMTime = mLastMTime;
+    mLastMTime = ps.GetMtime();
+    if (!isOpenOnUpdate || endSize < mLastFilePos ||(endSize == mLastFilePos && lastMTime != mLastMTime)) {
+        char firstLine[1025];
+        int nbytes = mLogFileOp.Pread(firstLine, 1, 1024, 0);
+        if (nbytes < 0) {
+            LOG_ERROR(sLogger,
+                      ("fail to read file", mHostLogPath)("nbytes", nbytes)("project", mProjectName)(
+                          "logstore", mCategory)("config", mConfigName));
+            return false;
+        }
+        firstLine[nbytes] = '\0';
+        bool sigCheckRst = CheckAndUpdateSignature(string(firstLine), mLastFileSignatureHash, mLastFileSignatureSize);
+        if (!sigCheckRst) {
+            LOG_INFO(sLogger,
+                     ("Check file truncate by signature, read from begin",
+                      mHostLogPath)("project", mProjectName)("logstore", mCategory)("config", mConfigName));
+            mLastFilePos = 0;
+            if (mEOOption) {
+                updatePrimaryCheckpointSignature();
+            }
+            return false;
+        } else if (mEOOption && mEOOption->primaryCheckpoint.sig_size() != mLastFileSignatureSize) {
             updatePrimaryCheckpointSignature();
         }
-        return false;
-    } else if (mEOOption && mEOOption->primaryCheckpoint.sig_size() != mLastFileSignatureSize) {
-        updatePrimaryCheckpointSignature();
     }
 
     if (endSize < mLastFilePos) {
@@ -1378,7 +1381,6 @@ bool LogFileReader::CheckFileSignatureAndOffset(int64_t& fileSize) {
             // after adjust mLastFilePos, we should fix last pos to assure that each log is complete
             FixLastFilePos(mLogFileOp, endSize);
         }
-        return true;
     }
     return true;
 }
@@ -1901,6 +1903,10 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     if (nbytes == 0) {
         if (moreData) { // excessively long line without '\n' or multiline begin or valid wchar
             nbytes = alignedBytes ? alignedBytes : BUFFER_SIZE;
+            if (mLogType == JSON_LOG) {
+                int32_t rollbackLineFeedCount;
+                nbytes = LastMatchedLine(stringBuffer, nbytes, rollbackLineFeedCount, false);
+            }
             LOG_WARNING(
                 sLogger,
                 ("Log is too long and forced to be split at offset: ", mLastFilePos + nbytes)("file: ", mHostLogPath)(
@@ -2030,6 +2036,10 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
         if (moreData) {
             resultCharCount = bakResultCharCount;
             rollbackLineFeedCount = 0;
+            if (mLogType == JSON_LOG) {
+                int32_t rollbackLineFeedCount;
+                LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount, false);
+            }
             // Cannot get the split position here, so just mark a flag and send alarm later
             logTooLongSplitFlag = true;
         } else {

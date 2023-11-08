@@ -36,30 +36,13 @@ your changes, such as:
 - [public] [both] [updated] add a new feature
 
 ## [Unreleased]
-
-- [public] [both] [added] refactoried C++ process pipeline
-- [public] [both] [added] support use accelerate processors with go processors
-- [public] [both] [added] add new logtail metric module
-- [public] [both] [added] ddd JSON flatten protocol, data can be flattened and then brushed into storage such as Kafka and ES.
-- [public] [both] [added] use env `LOGTAIL_LOG_LEVEL` to control ilogtail log level
-- [public] [both] [updated] support continue/end regex patterns to split multiline log
-- [public] [both] [updated] support reader flush timeout
-- [public] [both] [updated] Flusher Kafka V2: support send the message with headers to kafka
-- [public] [both] [updated] update gcc version to 9.3.1
-- [public] [both] [updated] add make flag WITHOUTGDB
-- [public] [both] [updated] cache incomplete line in memory to avoid repeated read system call
-- [public] [both] [fixed] Add APSARA\_LOG\_TRACE to solve the problem of not being able to find LOG\_TRACE.
-- [public] [both] [fixed] fix multiline is splitted if not flushed to disk together
-- [public] [both] [fixed] fix line is truncated if \0 is in the middle of line
-- [public] [both] [fixed] container cannot exit for file reopened by checkpoint
-- [public] [both] [fixed] fix filename being mismatched to the deleted file if the deleted file size is 0 and their inode is same
-- [public] [both] [fixed] fix config server panic caused by concurrent read and write shared object
-- [public] [both] [fixed] timezone adjust not working with apsara\_log
-- [public] [both] [added] support plugin ProcessorParseTimestampNative
-- [public] [both] [added] support plugin ProcessorOtelMetric
-- [public] [both] [updated] skywalking plugin support to capture `db.connection_string` tag 
-- [public] [both] [added] support plugin ProcessorParseApsaraNative
-- [public] [both] [added] support plugin ProcessorParseDelimiterNative
-- [public] [both] [added] support plugin ProcessorFilterNative
-- [public] [both] [added] support plugin ProcessorDesensitizeNative
 - [public] [both] [fixed] fix dropping jvm metrics when collecting multiple skywalking instances's data
+- [public] [both] [fixed] fix elasticsearch flusher authentication tls config and http config
+- [public] [both] [fixed] fix profiling wrong type when the different profiling type having same stack. 
+- [public] [both] [added] add UsingOldContentTag. When UsingOldContentTag is set to false, the Tag is now placed in the Meta instead of Logs during cgo.
+- [public] [both] [fixed] fix send local buffer failed when upgrade iLogtail from version earlier than 1.3.
+- [public] [both] [updated] Updated strptime_ns to parse %c format from "%x %X" to "%a %b %d %H:%M:%S %Y" for consistent behavior with striptime.
+- [public] [both] [fixed] fix topic key does not support underscore.
+- [public] [both] [fixed] fix jmxfetch status error when exist multi jmxfetch config in the same machine.
+- [public] [both] [fixed] fix increasing WSS memory issue in collected containers.
+- [public] [both] [fixed] fix cannot log blacklist config error

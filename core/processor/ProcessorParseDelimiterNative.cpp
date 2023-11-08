@@ -18,10 +18,12 @@
 #include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "parser/LogParser.h"
-#include "plugin/ProcessorInstance.h"
+#include "plugin/instance/ProcessorInstance.h"
+#include "monitor/MetricConstants.h"
 
 
 namespace logtail {
+const std::string ProcessorParseDelimiterNative::sName = "processor_parse_delimiter_native";
 
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
 
@@ -58,7 +60,7 @@ bool ProcessorParseDelimiterNative::Init(const ComponentConfig& componentConfig)
     mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
-    SetMetricsRecordRef(Name(), componentConfig.GetId());
+
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
@@ -276,7 +278,7 @@ void ProcessorParseDelimiterNative::AddLog(const StringView& key, const StringVi
     mProcParseOutSizeBytes->Add(key.size() + value.size());
 }
 
-bool ProcessorParseDelimiterNative::IsSupportedEvent(const PipelineEventPtr& e) {
+bool ProcessorParseDelimiterNative::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 

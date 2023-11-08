@@ -23,8 +23,12 @@
 
 namespace logtail {
 
-// referrence: https://opentelemetry.io/docs/specs/otel/logs/data-model-appendix/#elastic-common-schema
-// referrence: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/logs-general.md
+// referrences
+// https://opentelemetry.io/docs/specs/otel/logs/data-model-appendix/#elastic-common-schema
+// https://github.com/open-telemetry/semantic-conventions/blob/main/docs/resource/README.md
+// https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/logs.md
+// https://github.com/open-telemetry/semantic-conventions/blob/main/docs/resource/k8s.md
+// https://github.com/open-telemetry/semantic-conventions/blob/main/docs/resource/container.md
 enum class EventGroupMetaKey {
     UNKNOWN,
     AGENT_TAG,
@@ -35,7 +39,18 @@ enum class EventGroupMetaKey {
     LOG_FILE_PATH_RESOLVED,
     LOG_FILE_INODE,
     LOG_READ_OFFSET,
-    LOG_READ_LENGTH
+    LOG_READ_LENGTH,
+
+    K8S_CLUSTER_ID,
+    K8S_NODE_NAME,
+    K8S_NODE_IP,
+    K8S_NAMESPACE,
+    K8S_POD_UID,
+    K8S_POD_NAME,
+    CONTAINER_NAME,
+    CONTAINER_IP,
+    CONTAINER_IMAGE_NAME,
+    CONTAINER_IMAGE_ID
 };
 
 using GroupMetadata = std::map<EventGroupMetaKey, StringView>;
@@ -49,6 +64,9 @@ public:
     PipelineEventGroup(std::shared_ptr<SourceBuffer> sourceBuffer) : mSourceBuffer(sourceBuffer) {}
     PipelineEventGroup(const PipelineEventGroup&) = delete;
     PipelineEventGroup& operator=(const PipelineEventGroup&) = delete;
+    PipelineEventGroup(PipelineEventGroup&&) noexcept = default;
+    PipelineEventGroup& operator=(PipelineEventGroup&&) noexcept = default;
+    
 
     const EventsContainer& GetEvents() const { return mEvents; }
     EventsContainer& MutableEvents() { return mEvents; }
@@ -62,10 +80,15 @@ public:
     void SetMetadata(EventGroupMetaKey key, const std::string& val);
     void SetMetadataNoCopy(EventGroupMetaKey key, const StringBuffer& val);
     const StringView& GetMetadata(EventGroupMetaKey key) const;
-    const GroupMetadata& GetMetadatum() const { return mMetadata; };
+    const GroupMetadata& GetAllMetadata() const { return mMetadata; };
     bool HasMetadata(EventGroupMetaKey key) const;
     void SetMetadataNoCopy(EventGroupMetaKey key, const StringView& val);
     void DelMetadata(EventGroupMetaKey key);
+    GroupMetadata& MutableAllMetadata() { return mMetadata; };
+    void SwapAllMetadata(GroupMetadata& other) { mMetadata.swap(other); }
+    void SetAllMetadata(GroupMetadata& other) {
+        mMetadata = other;
+    }
 
     void SetTag(const StringView& key, const StringView& val);
     void SetTag(const std::string& key, const std::string& val);
@@ -75,6 +98,8 @@ public:
     bool HasTag(const StringView& key) const;
     void SetTagNoCopy(const StringView& key, const StringView& val);
     void DelTag(const StringView& key);
+    GroupTags& MutableTags() { return mTags; };
+    void SwapTags(GroupTags& other) { mTags.swap(other); }
 
     uint64_t EventGroupSizeBytes();
 

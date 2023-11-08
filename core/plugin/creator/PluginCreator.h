@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 iLogtail Authors
+ * Copyright 2023 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@
  */
 
 #pragma once
+
 #include <string>
 #include <memory>
-#include "plugin/PluginInstance.h"
+
+#include "plugin/instance/PluginInstance.h"
 
 namespace logtail {
 
@@ -28,4 +30,5 @@ public:
     virtual bool IsDynamic() = 0;
     virtual std::unique_ptr<PluginInstance> Create(const std::string& pluginId) = 0;
 };
+
 } // namespace logtail

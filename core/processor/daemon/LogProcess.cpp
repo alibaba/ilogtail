@@ -24,7 +24,7 @@
 #include "common/TimeUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/LogGroupContext.h"
-#include "plugin/LogtailPlugin.h"
+#include "go_pipeline/LogtailPlugin.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineManager.h"
 #include "monitor/Monitor.h"
@@ -60,7 +60,7 @@ DEFINE_FLAG_BOOL(enable_chinese_tag_path, "Enable Chinese __tag__.__path__", tru
 #endif
 DEFINE_FLAG_STRING(raw_log_tag, "", "__raw__");
 DEFINE_FLAG_INT32(default_flush_merged_buffer_interval, "default flush merged buffer, seconds", 1);
-DEFINE_FLAG_BOOL(enable_new_pipeline, "", false);
+DEFINE_FLAG_BOOL(enable_new_pipeline, "use C++ pipline with refactoried plugins", true);
 
 namespace logtail {
 
@@ -99,9 +99,11 @@ void LogProcess::Start() {
     mThreadCount = AppConfig::GetInstance()->GetProcessThreadCount();
     // mBufferCountLimit = INT32_FLAG(process_buffer_count_upperlimit_perthread) * mThreadCount;
     mProcessThreads = new ThreadPtr[mThreadCount];
-    mThreadFlags = new bool[mThreadCount];
-    for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo)
+    mThreadFlags = new std::atomic_bool[mThreadCount];
+    for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
+        mThreadFlags[threadNo] = false;
         mProcessThreads[threadNo] = CreateThread([this, threadNo]() { ProcessLoop(threadNo); });
+    }
 }
 
 bool LogProcess::PushBuffer(LogBuffer* buffer, int32_t retryTimes) {
@@ -432,43 +434,48 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
                      "logstore", logFileReader->GetCategory()));
         return -1;
     }
-    // construct a logGroup, it should be moved into input later
-    PipelineEventGroup eventGroup(logBuffer);
 
-    // TODO: metadata should be set in reader
-    FillEventGroupMetadata(*logBuffer, eventGroup);
+    std::vector<PipelineEventGroup> outputList;
+    {
+        // construct a logGroup, it should be moved into input later
+        PipelineEventGroup eventGroup(logBuffer);
+        // TODO: metadata should be set in reader
+        FillEventGroupMetadata(*logBuffer, eventGroup);
 
-    std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
-    time_t logtime = time(NULL);
-    if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
-        logtime += GetTimeDelta();
+        std::unique_ptr<LogEvent> event = LogEvent::CreateEvent(eventGroup.GetSourceBuffer());
+        time_t logtime = time(NULL);
+        if (AppConfig::GetInstance()->EnableLogTimeAutoAdjust()) {
+            logtime += GetTimeDelta();
+        }
+        event->SetTimestamp(logtime);
+        event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
+        auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
+        event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
+        eventGroup.AddEvent(std::move(event));
+        // process logGroup
+        pipeline->Process(std::move(eventGroup), outputList);
     }
-    event->SetTimestamp(logtime);
-    event->SetContentNoCopy(DEFAULT_CONTENT_KEY, logBuffer->rawBuffer);
-    auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
-    event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
-    eventGroup.AddEvent(std::move(event));
-
-    // process logGroup
-    pipeline->Process(eventGroup);
 
     // record profile
     auto& processProfile = pipeline->GetContext().GetProcessProfile();
     profile = processProfile;
     processProfile.Reset();
 
-    // fill protobuf
-    FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
-    FillLogGroupTags(eventGroup, logFileReader, resultGroup);
-    if (logFileReader->GetPluginFlag()) {
-        LogtailPlugin::GetInstance()->ProcessLogGroup(
-            logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
-        return 1;
-    }
-    // record log positions for exactly once.
-    if (logBuffer->exactlyOnceCheckpoint) {
-        std::pair<size_t, size_t> pos(logBuffer->readOffset, logBuffer->readLength);
-        logBuffer->exactlyOnceCheckpoint->positions.assign(eventGroup.GetEvents().size(), pos);
+    for (auto& eventGroup : outputList) {
+        // fill protobuf
+        FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetPipelineConfig().mAdvancedConfig.mEnableTimestampNanosecond);
+        FillLogGroupTags(eventGroup, logFileReader, resultGroup);
+        if (logFileReader->GetPluginFlag()) {
+            LogtailPlugin::GetInstance()->ProcessLogGroup(
+                logFileReader->GetConfigName(), resultGroup, logFileReader->GetSourceId());
+            return 1;
+        }
+        // record log positions for exactly once. TODO: make it correct for each log, current implementation requires
+        // loggroup send in one shot
+        if (logBuffer->exactlyOnceCheckpoint) {
+            std::pair<size_t, size_t> pos(logBuffer->readOffset, logBuffer->readLength);
+            logBuffer->exactlyOnceCheckpoint->positions.assign(eventGroup.GetEvents().size(), pos);
+        }
     }
     return 0;
 }
@@ -514,11 +521,9 @@ void LogProcess::FillLogGroupLogs(const PipelineEventGroup& eventGroup,
 void LogProcess::FillLogGroupTags(const PipelineEventGroup& eventGroup,
                                   LogFileReaderPtr& logFileReader,
                                   sls_logs::LogGroup& resultGroup) const {
-    sls_logs::LogTag* logTagPtr = resultGroup.add_logtags();
-
     // fill tags from eventGroup
     for (auto& tag : eventGroup.GetTags()) {
-        logTagPtr = resultGroup.add_logtags();
+        auto logTagPtr = resultGroup.add_logtags();
         logTagPtr->set_key(tag.first.to_string());
         logTagPtr->set_value(tag.second.to_string());
     }
@@ -526,7 +531,7 @@ void LogProcess::FillLogGroupTags(const PipelineEventGroup& eventGroup,
     // special tags from reader
     const std::vector<sls_logs::LogTag>& extraTags = logFileReader->GetExtraTags();
     for (size_t i = 0; i < extraTags.size(); ++i) {
-        logTagPtr = resultGroup.add_logtags();
+        auto logTagPtr = resultGroup.add_logtags();
         logTagPtr->set_key(extraTags[i].key());
         logTagPtr->set_value(extraTags[i].value());
     }

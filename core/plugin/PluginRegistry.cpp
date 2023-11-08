@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 iLogtail Authors
+ * Copyright 2023 iLogtail Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,37 +16,43 @@
 
 #include "plugin/PluginRegistry.h"
 
-#include <string>
-#include <stdio.h>
-#include <stdlib.h>
 #include <dlfcn.h>
-#include <string.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "logger/Logger.h"
-#include "app_config/AppConfig.h"
-#include "plugin/PluginCreator.h"
-#include "plugin/StaticProcessorCreator.h"
-#include "plugin/DynamicCProcessorCreator.h"
 
-#include "plugin/CProcessor.h"
-#include "processor/ProcessorSplitLogStringNative.h"
-#include "processor/ProcessorSplitRegexNative.h"
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <string>
+
+#include "app_config/AppConfig.h"
+// #include "flusher/FlusherSLS.h"
+// #include "input/InputFile.h"
+// #include "input/InputObserverNetwork.h"
+#ifdef __ENTERPRISE__
+#include "input/InputStream.h"
+#endif
+#include "logger/Logger.h"
+#include "plugin/creator/CProcessor.h"
+#include "plugin/creator/DynamicCProcessorCreator.h"
+#include "plugin/creator/StaticFlusherCreator.h"
+#include "plugin/creator/StaticInputCreator.h"
+#include "plugin/creator/StaticProcessorCreator.h"
+#include "processor/ProcessorDesensitizeNative.h"
+#include "processor/ProcessorFilterNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseRegexNative.h"
 #include "processor/ProcessorParseTimestampNative.h"
-#include "processor/ProcessorDesensitizeNative.h"
+#include "processor/ProcessorSplitLogStringNative.h"
+#include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorTagNative.h"
-#include "processor/ProcessorFilterNative.h"
 
 namespace logtail {
 
-
-PluginRegistry* PluginRegistry::GetInstance() {
-    static PluginRegistry instance;
-    return &instance;
+PluginRegistry::PluginRegistry() {
+    mGoPlugins = {""};
 }
 
 void PluginRegistry::LoadPlugins() {
@@ -69,23 +75,32 @@ void PluginRegistry::UnloadPlugins() {
     mPluginDict.clear();
 }
 
+std::unique_ptr<InputInstance> PluginRegistry::CreateInput(const std::string& name, const std::string& pluginId) {
+    return std::unique_ptr<InputInstance>(static_cast<InputInstance*>(Create(INPUT_PLUGIN, name, pluginId).release()));
+}
+
 std::unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const std::string& name,
                                                                    const std::string& pluginId) {
     return std::unique_ptr<ProcessorInstance>(
         static_cast<ProcessorInstance*>(Create(PROCESSOR_PLUGIN, name, pluginId).release()));
 }
 
-std::unique_ptr<PluginInstance>
-PluginRegistry::Create(PluginCat cat, const std::string& name, const std::string& pluginId) {
-    std::unique_ptr<PluginInstance> ins;
-    auto creatorEntry = mPluginDict.find(PluginKey(cat, name));
-    if (creatorEntry != mPluginDict.end()) {
-        ins = creatorEntry->second->Create(pluginId);
-    }
-    return ins;
+std::unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const std::string& name, const std::string& pluginId) {
+    return std::unique_ptr<FlusherInstance>(
+        static_cast<FlusherInstance*>(Create(FLUSHER_PLUGIN, name, pluginId).release()));
+}
+
+bool PluginRegistry::IsValidGoPlugin(const std::string& name) {
+    return mGoPlugins.find(name) != mGoPlugins.end();
 }
 
 void PluginRegistry::LoadStaticPlugins() {
+    // RegisterInputCreator(new StaticInputCreator<InputFile>());
+    // RegisterInputCreator(new StaticInputCreator<InputObserverNetwork>());
+#ifdef __ENTERPRISE__
+    RegisterInputCreator(new StaticInputCreator<InputStream>());
+#endif
+
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitLogStringNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSplitRegexNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseApsaraNative>());
@@ -97,7 +112,7 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorTagNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFilterNative>());
 
-    /* more native plugin registers here */
+    // RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
 }
 
 void PluginRegistry::LoadDynamicPlugins(const std::set<std::string>& plugins) {
@@ -118,6 +133,18 @@ void PluginRegistry::LoadDynamicPlugins(const std::set<std::string>& plugins) {
             continue;
         }
     }
+}
+
+void PluginRegistry::RegisterInputCreator(PluginCreator* creator) {
+    RegisterCreator(INPUT_PLUGIN, creator);
+}
+
+void PluginRegistry::RegisterProcessorCreator(PluginCreator* creator) {
+    RegisterCreator(PROCESSOR_PLUGIN, creator);
+}
+
+void PluginRegistry::RegisterFlusherCreator(PluginCreator* creator) {
+    RegisterCreator(FLUSHER_PLUGIN, creator);
 }
 
 PluginCreator* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName) {
@@ -149,8 +176,14 @@ void PluginRegistry::RegisterCreator(PluginCat cat, PluginCreator* creator) {
     mPluginDict.emplace(PluginKey(cat, creator->Name()), std::shared_ptr<PluginCreator>(creator));
 }
 
-void PluginRegistry::RegisterProcessorCreator(PluginCreator* creator) {
-    RegisterCreator(PROCESSOR_PLUGIN, creator);
+std::unique_ptr<PluginInstance>
+PluginRegistry::Create(PluginCat cat, const std::string& name, const std::string& pluginId) {
+    std::unique_ptr<PluginInstance> ins;
+    auto creatorEntry = mPluginDict.find(PluginKey(cat, name));
+    if (creatorEntry != mPluginDict.end()) {
+        ins = creatorEntry->second->Create(pluginId);
+    }
+    return ins;
 }
 
 } // namespace logtail
