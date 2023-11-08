@@ -47,20 +47,26 @@ public:
      */
     bool LoadConfig(const std::string& configFile) override;
 
-    bool UpdateAccessKey(const std::string& aliuid,
-                         std::string& accessKeyId,
-                         std::string& accessKey,
-                         int32_t& lastUpdateTime) override;
-
-    void CleanUnusedUserAK() override;
-
-    bool GetRegionStatus(const std::string& region) override;
-
-    void SetStartWorkerStatus(const std::string& result, const std::string& message) override;
-
     std::string CheckPluginFlusher(Json::Value& configJson);
 
     Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson);
+
+    struct ConfigServerAddress {
+        ConfigServerAddress() {}
+        ConfigServerAddress(const std::string& config_server_host, const std::int32_t& config_server_port)
+            : host(config_server_host), port(config_server_port) {}
+
+        std::string host;
+        std::int32_t port;
+    };
+    bool mConfigServerAvailable;
+    std::vector<ConfigServerAddress> mConfigServerAddresses;
+    int mConfigServerAddressId;
+    std::vector<std::string> mConfigServerTags;
+    bool GetConfigServerAvailable() { return mConfigServerAvailable; }
+    void StopUsingConfigServer() { mConfigServerAvailable = false; }
+    ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
+    const std::vector<std::string>& GetConfigServerTags() const { return mConfigServerTags; }
 
 private:
     ThreadPtr mCheckUpdateThreadPtr;
@@ -76,25 +82,18 @@ private:
     void GetRemoteConfigUpdate();
 
     // ConfigServer
-    google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult> SendHeartbeat(
-        const AppConfig::ConfigServerAddress& configServerAddress
-    );
+    google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>
+    SendHeartbeat(const ConfigServerAddress& configServerAddress);
 
     google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail> FetchPipelineConfig(
-        const AppConfig::ConfigServerAddress& configServerAddress, 
-        const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs
-    );
-    
-    void UpdateRemoteConfig(
-        const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& checkResults,
-        const google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail>& configDetails
-    );
+        const ConfigServerAddress& configServerAddress,
+        const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& requestConfigs);
 
-    /**
-     * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map
-     * @return
-     */
-    void CreateCustomizedFuseConfig() override;
+    void
+    UpdateRemoteConfig(const google::protobuf::RepeatedPtrField<configserver::proto::ConfigCheckResult>& checkResults,
+                       const google::protobuf::RepeatedPtrField<configserver::proto::ConfigDetail>& configDetails);
+    void LoadAddrConfig(const Json::Value& confJson);
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class EventDispatcherTest;
     friend class SenderUnittest;

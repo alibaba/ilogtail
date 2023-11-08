@@ -43,19 +43,6 @@ bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
     return true;
 }
 
-bool ProcessorSplitLogStringNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-
-    // mMode
-    mSplitChar = config.mLogType == JSON_LOG ? '\0' : '\n';
-    // AppendingLogPositionMeta
-    mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
-    mFeedLines = &(GetContext().GetProcessProfile().feedLines);
-    mSplitLines = &(GetContext().GetProcessProfile().splitLines);
-
-    return true;
-}
-
 void ProcessorSplitLogStringNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;

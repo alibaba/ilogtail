@@ -21,6 +21,7 @@
 #include "config_manager/ConfigManager.h"
 #include "monitor/MetricConstants.h"
 #include <vector>
+#include "logger/Logger.h"
 #include "common/ParamExtractor.h"
 #include "config/UserLogConfigParser.h"
 
@@ -67,31 +68,6 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
     if (!GetOptionalBoolParam(config, "DiscardingNonUTF8", mDiscardingNonUTF8, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mDiscardingNonUTF8, sName, mContext->GetConfigName());
     }
-
-    mProcFilterInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_IN_SIZE_BYTES);
-    mProcFilterOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_OUT_SIZE_BYTES);
-    mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);
-    mProcFilterRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_RECORDS_TOTAL);
-
-    return true;
-}
-
-bool ProcessorFilterNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-
-    if (config.mAdvancedConfig.mFilterExpressionRoot.get() != nullptr) {
-        mFilterExpressionRoot = config.mAdvancedConfig.mFilterExpressionRoot;
-        mFilterMode = Mode::EXPRESSION_MODE;
-    } else if (config.mFilterRule) {
-        mFilterRule = config.mFilterRule;
-        mFilterMode = Mode::RULE_MODE;
-    } else if (LoadOldGlobalConfig()) {
-        mFilterMode = Mode::GLOBAL_MODE;
-    } else {
-        mFilterMode = Mode::BYPASS_MODE;
-    }
-
-    mDiscardNoneUtf8 = config.mDiscardNoneUtf8;
 
     mProcFilterInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_IN_SIZE_BYTES);
     mProcFilterOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_OUT_SIZE_BYTES);
@@ -177,8 +153,6 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
         res = FilterExpressionRoot(sourceEvent, mFilterExpressionRoot);
     } else if (mFilterMode == Mode::RULE_MODE) {
         res = FilterFilterRule(sourceEvent, mFilterRule.get());
-    } else if (mFilterMode == Mode::GLOBAL_MODE) {
-        res = FilterGlobal(sourceEvent);
     }
     if (res && mDiscardNoneUtf8) {
         LogContents& contents = sourceEvent.MutableContents();
@@ -247,28 +221,6 @@ bool ProcessorFilterNative::FilterFilterRule(LogEvent& sourceEvent, const LogFil
 
     try {
         return IsMatched(contents, *filterRule);
-    } catch (...) {
-        mProcFilterErrorTotal->Add(1);
-        LOG_ERROR(GetContext().GetLogger(), ("filter error ", ""));
-        return false;
-    }
-}
-
-bool ProcessorFilterNative::FilterGlobal(LogEvent& sourceEvent) {
-    const LogContents& contents = sourceEvent.GetContents();
-    if (contents.empty()) {
-        return false;
-    }
-
-    std::string key(GetContext().GetProjectName() + "_" + GetContext().GetLogstoreName());
-    std::unordered_map<std::string, LogFilterRule*>::iterator it = mFilters.find(key);
-    if (it == mFilters.end()) {
-        return true;
-    }
-
-    const LogFilterRule& rule = *(it->second);
-    try {
-        return IsMatched(contents, rule);
     } catch (...) {
         mProcFilterErrorTotal->Add(1);
         LOG_ERROR(GetContext().GetLogger(), ("filter error ", ""));

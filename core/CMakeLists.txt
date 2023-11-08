@@ -86,13 +86,12 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake)
 
 # Subdirectories (modules).
 set(SUB_DIRECTORIES_LIST
-        aggregator app_config checkpoint common config config_manager config_server_pb container_manager
+        aggregator application app_config checkpoint common config config_manager config_server_pb container_manager
         controller event event_handler event_listener file_server flusher go_pipeline helper input log_pb logger models monitor
-        parser pipeline plugin plugin/creator plugin/instance plugin/interface polling processor processor/daemon profile_sender reader sdk sender shennong sls_control
+        parser pipeline plugin plugin/creator plugin/instance plugin/interface polling processor processor/daemon profile_sender reader sdk sender sls_control
         fuse
         )
 if (UNIX)
-    set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} streamlog)
     set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} observer)
 endif ()
 
@@ -117,6 +116,7 @@ elseif (MSVC)
     add_executable(${LOGTAIL_TARGET} logtail_windows.cpp)
 endif ()
 target_link_libraries(${LOGTAIL_TARGET}
+        application
         common
         logger
         config_manager
@@ -134,7 +134,6 @@ target_link_libraries(${LOGTAIL_TARGET}
         go_pipeline
         )
 if (UNIX)
-    target_link_libraries(${LOGTAIL_TARGET} streamlog)
     target_link_libraries(${LOGTAIL_TARGET} observer)
     target_link_libraries(${LOGTAIL_TARGET} pthread dl uuid)
     if (ENABLE_STATIC_LINK_CRT)

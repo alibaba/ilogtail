@@ -63,29 +63,6 @@ bool ProcessorParseJsonNative::Init(const Json::Value& config) {
     return true;
 }
 
-bool ProcessorParseJsonNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-
-    mSourceKey = DEFAULT_CONTENT_KEY;
-    mDiscardUnmatch = config.mDiscardUnmatch;
-    mUploadRawLog = config.mUploadRawLog;
-    mRawLogTag = config.mAdvancedConfig.mRawLogTag;
-
-    if (mUploadRawLog && mRawLogTag == mSourceKey) {
-        mSourceKeyOverwritten = true;
-    }
-
-    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
-    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
-
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-
-    return true;
-}
-
 void ProcessorParseJsonNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;

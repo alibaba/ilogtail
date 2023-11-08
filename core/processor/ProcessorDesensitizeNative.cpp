@@ -82,16 +82,6 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
     mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
 }
 
-bool ProcessorDesensitizeNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& mConfig = componentConfig.GetConfig();
-
-    mSensitiveWordCastOptions = mConfig.mSensitiveWordCastOptions;
-
-    mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
-
-    return true;
-}
-
 void ProcessorDesensitizeNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;

@@ -44,6 +44,10 @@
 #include "ObserverManager.h"
 #endif
 #include "sdk/Common.h"
+#include "application/Application.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
 
 using namespace std;
 using namespace sls_logs;
@@ -242,12 +246,13 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "mem", mMemStat.mRss);
     // The version, uuid of Logtail.
     AddLogContent(logPtr, "version", ILOGTAIL_VERSION);
-    AddLogContent(logPtr, "uuid", ConfigManager::GetInstance()->GetUUID());
-    // User defined id, aliuids.
-    AddLogContent(logPtr, "user_defined_id", ConfigManager::GetInstance()->GetUserDefinedIdSet());
-    AddLogContent(logPtr, "aliuids", ConfigManager::GetInstance()->GetAliuidSet());
-    AddLogContent(logPtr, "projects", ConfigManager::GetInstance()->GetAllProjectsSet());
-    AddLogContent(logPtr, "instance_id", ConfigManager::GetInstance()->GetInstanceId());
+    AddLogContent(logPtr, "uuid", Application::GetInstance()->GetUUID());
+#ifdef __ENTERPRISE__
+    AddLogContent(logPtr, "user_defined_id", EnterpriseConfigProvider::GetInstance()->GetUserDefinedIdSet());
+    AddLogContent(logPtr, "aliuids", EnterpriseConfigProvider::GetInstance()->GetAliuidSet());
+#endif
+    AddLogContent(logPtr, "projects", Sender::Instance()->GetAllProjects());
+    AddLogContent(logPtr, "instance_id", Application::GetInstance()->GetInstanceId());
     AddLogContent(logPtr, "instance_key", id);
     AddLogContent(logPtr, "syslog_open", AppConfig::GetInstance()->GetOpenStreamLog());
     // Host informations.
@@ -262,20 +267,21 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "plugin_stats", ConfigManager::GetInstance()->GeneratePluginStatString());
     // Metrics.
     vector<string> allProfileRegion;
-    ConfigManager::GetInstance()->GetAllProfileRegion(allProfileRegion);
+    ProfileSender::GetInstance()->GetAllProfileRegion(allProfileRegion);
     UpdateMetric("region", allProfileRegion);
-    UpdateMetric("config_update_count", ConfigManager::GetInstance()->GetConfigUpdateTotalCount());
-    UpdateMetric("config_update_item_count", ConfigManager::GetInstance()->GetConfigUpdateItemTotalCount());
+#ifdef __ENTERPRISE__
+    UpdateMetric("config_update_count", EnterpriseConfigProvider::GetInstance()->GetConfigUpdateTotalCount());
+    UpdateMetric("config_update_item_count", EnterpriseConfigProvider::GetInstance()->GetConfigUpdateItemTotalCount());
     UpdateMetric("config_update_last_time",
-                 GetTimeStamp(ConfigManager::GetInstance()->GetLastConfigUpdateTime(), "%Y-%m-%d %H:%M:%S"));
+                 GetTimeStamp(EnterpriseConfigProvider::GetInstance()->GetLastConfigUpdateTime(), "%Y-%m-%d %H:%M:%S"));
     UpdateMetric("config_get_last_time",
-                 GetTimeStamp(ConfigManager::GetInstance()->GetLastConfigGetTime(), "%Y-%m-%d %H:%M:%S"));
+                 GetTimeStamp(EnterpriseConfigProvider::GetInstance()->GetLastConfigGetTime(), "%Y-%m-%d %H:%M:%S"));
+#endif
     UpdateMetric("config_prefer_real_ip", BOOL_FLAG(send_prefer_real_ip));
     UpdateMetric("plugin_enabled", LogtailPlugin::GetInstance()->IsPluginOpened());
 #if defined(__linux__)
     UpdateMetric("observer_enabled", ObserverManager::GetInstance()->Status());
 #endif
-    UpdateMetric("env_config", ConfigManager::GetInstance()->IsEnvConfig());
     const std::vector<sls_logs::LogTag>& envTags = AppConfig::GetInstance()->GetEnvTags();
     if (!envTags.empty()) {
         UpdateMetric("env_config_count", envTags.size());
@@ -295,22 +301,22 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     // Dump to local and send to enabled regions.
     DumpToLocal(logGroup);
     for (size_t i = 0; i < allProfileRegion.size(); ++i) {
-        if (BOOL_FLAG(check_profile_region) && !ConfigManager::GetInstance()->CheckRegion(allProfileRegion[i])) {
+        if (BOOL_FLAG(check_profile_region) && !Sender::Instance()->IsRegionContainingConfig(allProfileRegion[i])) {
             LOG_DEBUG(sLogger, ("region does not contain config for this instance", allProfileRegion[i]));
             continue;
         }
 
         // Check if the region is disabled.
-        if (!ConfigManager::GetInstance()->GetRegionStatus(allProfileRegion[i])) {
+        if (!Sender::Instance()->GetRegionStatus(allProfileRegion[i])) {
             LOG_DEBUG(sLogger, ("disabled region, do not send status profile to region", allProfileRegion[i]));
             continue;
         }
 
         if (i == allProfileRegion.size() - 1) {
-            mProfileSender.SendToProfileProject(allProfileRegion[i], logGroup);
+            ProfileSender::GetInstance()->SendToProfileProject(allProfileRegion[i], logGroup);
         } else {
             LogGroup copyLogGroup = logGroup;
-            mProfileSender.SendToProfileProject(allProfileRegion[i], copyLogGroup);
+            ProfileSender::GetInstance()->SendToProfileProject(allProfileRegion[i], copyLogGroup);
         }
     }
     return true;

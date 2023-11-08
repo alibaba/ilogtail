@@ -124,7 +124,6 @@ private:
 
     std::atomic_int mLastLowLevelTime{0};
     std::atomic_int mLastLowLevelCount{0};
-    ProfileSender mProfileSender;
 
 public:
     void SendAlarm(const LogtailAlarmType alarmType,

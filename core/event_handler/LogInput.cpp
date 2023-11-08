@@ -38,6 +38,11 @@
 #include "logger/Logger.h"
 #include "EventHandler.h"
 #include "HistoryFileImporter.h"
+#include "application/Application.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
+#include "file_server/FileServer.h"
 
 using namespace std;
 
@@ -256,8 +261,11 @@ bool LogInput::ReadLocalEvents() {
             continue;
         }
 
-        Config* pConfig = ConfigManager::GetInstance()->FindConfigByName(configName);
-        if (pConfig == NULL) {
+        FileDiscoveryConfig discoveryConfig = FileServer::GetInstance()->GetFileDiscoveryConfig(configName);
+        FileReaderConfig readerConfig = FileServer::GetInstance()->GetFileReaderConfig(configName);
+        MultilineConfig multilineConfig = FileServer::GetInstance()->GetMultilineConfig(configName);
+        uint32_t concurrency = FileServer::GetInstance()->GetExactlyOnceConcurrency(configName);
+        if (!readerConfig.first) {
             LOG_WARNING(sLogger, ("can not find config", configName));
             continue;
         }
@@ -266,7 +274,10 @@ bool LogInput::ReadLocalEvents() {
         historyFileEvent.mDirName = source;
         historyFileEvent.mFileName = object;
         historyFileEvent.mConfigName = configName;
-        historyFileEvent.mConfig.reset(new Config(*pConfig));
+        historyFileEvent.mDiscoveryconfig = discoveryConfig;
+        historyFileEvent.mReaderConfig = readerConfig;
+        historyFileEvent.mMultilineConfig = multilineConfig;
+        historyFileEvent.mEOConcurrency = concurrency;
 
         vector<string> objList;
         if (!GetAllFiles(source, object, objList)) {
@@ -274,16 +285,17 @@ bool LogInput::ReadLocalEvents() {
             continue;
         }
 
-        LOG_INFO(sLogger,
-                 ("process local event, dir", source)("file name", object)("config", configName)(
-                     "project", pConfig->GetProjectName())("logstore", pConfig->GetCategory()));
+        LOG_INFO(
+            sLogger,
+            ("process local event, dir", source)("file name", object)("config", configName)(
+                "project", readerConfig.second->GetProjectName())("logstore", readerConfig.second->GetLogstoreName()));
         LogtailAlarm::GetInstance()->SendAlarm(LOAD_LOCAL_EVENT_ALARM,
                                                string("process local event, dir:") + source + ", file name:" + object
                                                    + ", config:" + configName
                                                    + ", file count:" + ToString(objList.size()),
-                                               pConfig->GetProjectName(),
-                                               pConfig->GetCategory(),
-                                               pConfig->mRegion);
+                                               readerConfig.second->GetProjectName(),
+                                               readerConfig.second->GetLogstoreName(),
+                                               readerConfig.second->GetRegion());
 
         HistoryFileImporter* importer = HistoryFileImporter::GetInstance();
         importer->PushEvent(historyFileEvent);
@@ -341,8 +353,8 @@ void LogInput::ProcessEvent(EventDispatcher* dispatcher, Event* ev) {
 }
 
 void LogInput::CheckAndUpdateCriticalMetric(int32_t curTime) {
-#ifndef LOGTAIL_RUNTIME_PLUGIN
-    int32_t lastGetConfigTime = ConfigManager::GetInstance()->GetLastConfigGetTime();
+#ifdef __ENTERPRISE__
+    int32_t lastGetConfigTime = EnterpriseConfigProvider::GetInstance()->GetLastConfigGetTime();
     // force to exit if config update thread is block more than 1 hour
     if (lastGetConfigTime > 0 && curTime - lastGetConfigTime > 3600) {
         LOG_ERROR(sLogger, ("last config get time is too old", lastGetConfigTime)("prepare force exit", ""));
@@ -352,14 +364,15 @@ void LogInput::CheckAndUpdateCriticalMetric(int32_t curTime) {
         sleep(10);
         _exit(1);
     }
+#endif
     // if network is fail in 2 hours, force exit (for ant only)
     // work around for no network when docker start
     if (BOOL_FLAG(send_prefer_real_ip) && !BOOL_FLAG(global_network_success)
-        && curTime - ConfigManager::GetInstance()->GetStartTime() > 7200) {
+        && curTime - Application::GetInstance()->GetStartTime() > 7200) {
         LOG_ERROR(sLogger, ("network is fail", "prepare force exit"));
         LogtailAlarm::GetInstance()->SendAlarm(
             LOGTAIL_CRASH_ALARM,
-            "network is fail since " + ToString(ConfigManager::GetInstance()->GetStartTime()) + " force exit");
+            "network is fail since " + ToString(Application::GetInstance()->GetStartTime()) + " force exit");
         LogtailAlarm::GetInstance()->ForceToSend();
         sleep(10);
         _exit(1);
@@ -388,7 +401,6 @@ void LogInput::CheckAndUpdateCriticalMetric(int32_t curTime) {
 
     LogtailMonitor::Instance()->UpdateMetric("last_send_time", GetTimeStamp(lastSendTime, "%Y-%m-%d %H:%M:%S"));
 
-#endif
     LogtailMonitor::Instance()->UpdateMetric("last_read_event_time",
                                              GetTimeStamp(mLastReadEventTime, "%Y-%m-%d %H:%M:%S"));
 

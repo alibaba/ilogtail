@@ -20,8 +20,9 @@
 #include <ostream>
 #include <numeric>
 #include <json/json.h>
-#include "config/Config.h"
 #include "reader/SourceBuffer.h"
+#include "log_pb/sls_logs.pb.h"
+#include "flusher/FlusherSLS.h"
 #if defined(_MSC_VER)
 #include <stddef.h>
 #endif
@@ -246,9 +247,9 @@ private:
     ProcessRawLogFun mProcessRawLogFun;
     ProcessRawLogV2Fun mProcessRawLogV2Fun;
     volatile bool mPluginValid;
-    logtail::Config mPluginAlarmConfig;
-    logtail::Config mPluginProfileConfig;
-    logtail::Config mPluginContainerConfig;
+    logtail::FlusherSLS mPluginAlarmConfig;
+    logtail::FlusherSLS mPluginProfileConfig;
+    logtail::FlusherSLS mPluginContainerConfig;
     ProcessLogsFun mProcessLogsFun;
     ProcessLogGroupFun mProcessLogGroupFun;
     GetContainerMetaFun mGetContainerMetaFun;

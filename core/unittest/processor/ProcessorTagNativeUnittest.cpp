@@ -23,7 +23,7 @@ namespace logtail {
 
 class ProcessorTagNativeUnittest : public ::testing::Test {
 public:
-    static void SetUpTestCase() { ConfigManager::GetInstance()->SetUserDefinedIdSet({"mg1", "mg2"}); }
+    static void SetUpTestCase() {}
 
     void SetUp() override {
         mContext.SetConfigName("project##config_0");

@@ -32,11 +32,12 @@
 #include "common/Lock.h"
 #include "common/Thread.h"
 #include "event/Event.h"
+#include "flusher/FlusherSLS.h"
+#include "file_server/FileDiscoveryOptions.h"
 
 DECLARE_FLAG_BOOL(https_verify_peer);
 DECLARE_FLAG_STRING(https_ca_cert);
 DECLARE_FLAG_INT32(request_access_key_interval);
-DECLARE_FLAG_STRING(profile_project_name);
 DECLARE_FLAG_INT32(logtail_sys_conf_update_interval);
 DECLARE_FLAG_STRING(fuse_customized_config_name);
 DECLARE_FLAG_INT32(default_max_depth_from_root);
@@ -56,22 +57,17 @@ class EventDispatcher;
 class EventHandler;
 struct LogFilterRule;
 
-template<class T>
+template <class T>
 class DoubleBuffer {
 public:
     DoubleBuffer() : currentBuffer(0) {}
 
-    T& getWriteBuffer() {
-        return buffers[currentBuffer];
-    }
+    T& getWriteBuffer() { return buffers[currentBuffer]; }
 
-    T& getReadBuffer() {
-        return buffers[1 - currentBuffer];
-    }
+    T& getReadBuffer() { return buffers[1 - currentBuffer]; }
 
-    void swap() {
-        currentBuffer = 1 - currentBuffer;
-    }
+    void swap() { currentBuffer = 1 - currentBuffer; }
+
 private:
     T buffers[2];
     int currentBuffer;
@@ -79,7 +75,7 @@ private:
 
 class ConfigManagerBase {
 protected:
-    int32_t mStartTime;
+    // int32_t mStartTime;
 
     Json::Value mConfigJson;
     Json::Value mLocalConfigJson;
@@ -96,65 +92,82 @@ protected:
     EventHandler* mSharedHandler;
     // one modify handler corresponds to one "leaf" directory
     std::unordered_map<std::string, EventHandler*> mDirEventHandlerMap;
-    ThreadPtr mUUIDthreadPtr;
+    // ThreadPtr mUUIDthreadPtr;
+    // 商业版
     volatile bool mThreadIsRunning;
     volatile bool mRemoveConfigFlag;
+
     volatile CheckUpdateStat mUpdateStat;
     std::vector<EventHandler*> mHandlersToDelete;
 
-    SpinLock mProfileLock;
-    RegionType mRegionType;
+    // SpinLock mProfileLock;
+    // 商业版
+    // RegionType mRegionType;
 
-    std::string mDefaultPubAliuid;
-    std::string mDefaultPubAccessKeyId;
-    std::string mDefaultPubAccessKey;
+    // 商业版
+    // SpinLock mDefaultPubAKLock;
+    // std::string mDefaultPubAliuid;
 
-    SpinLock mDefaultPubAKLock;
+    // 废弃，GetLogtailSecurity
+    // std::string mDefaultPubAccessKeyId;
+    // std::string mDefaultPubAccessKey;
 
-    std::unordered_map<std::string, UserInfo*> mUserInfos;
-    PTMutex mUserInfosLock;
+    // 商业版
+    // std::unordered_map<std::string, UserInfo*> mUserInfos;
+    // PTMutex mUserInfosLock;
 
-    std::unordered_map<std::string, std::string> mMappingPaths;
-    PTMutex mMappingPathsLock;
-    bool mMappingPathsChanged;
-    bool mHaveMappingPathConfig;
+    // 废弃，路径映射
+    // std::unordered_map<std::string, std::string> mMappingPaths;
+    // PTMutex mMappingPathsLock;
+    // bool mMappingPathsChanged;
+    // bool mHaveMappingPathConfig;
 
-    volatile bool mEnvFlag;
+    // 废弃
+    // volatile bool mEnvFlag;
 
-    SpinLock mAliuidSetLock;
-    std::set<std::string> mAliuidSet;
+    // 商业版
+    // SpinLock mAliuidSetLock;
+    // std::set<std::string> mAliuidSet;
 
-    SpinLock mProjectSetLock;
-    std::set<std::string> mProjectSet;
+    // SpinLock mProjectSetLock;
+    // std::set<std::string> mProjectSet;
 
-    mutable SpinLock mRegionSetLock;
-    std::set<std::string> mRegionSet;
+    // mutable SpinLock mRegionSetLock;
+    // std::set<std::string> mRegionSet;
 
-    SpinLock mUserDefinedIdSetLock;
-    std::set<std::string> mUserDefinedIdSet;
-    std::string mUserDefinedId;
+    // 商业版
+    // SpinLock mUserDefinedIdSetLock;
+    // std::set<std::string> mUserDefinedIdSet;
+    // std::string mUserDefinedId;
 
-    std::string mDefaultProfileProjectName;
-    std::string mDefaultProfileRegion;
+    // std::string mDefaultProfileProjectName;
+    // std::string mDefaultProfileRegion;
     // Mapping from region name to related profile project name.
-    std::unordered_map<std::string, std::string> mAllProfileProjectNames;
+    // std::unordered_map<std::string, std::string> mAllProfileProjectNames;
 
-    int32_t mRapidUpdateConfigTryCount = 0;
-    int32_t mLogtailSysConfUpdateTime;
-    std::string mUUID;
-    std::string mInstanceId;
-    int32_t mProcessStartTime;
-    std::atomic_int mConfigUpdateTotal{0};
-    std::atomic_int mConfigUpdateItemTotal{0};
-    std::atomic_int mLastConfigUpdateTime{0};
-    std::atomic_int mLastConfigGetTime{0};
+    // 废弃
+    // int32_t mRapidUpdateConfigTryCount = 0;
+
+    // 商业版
+    // int32_t mLogtailSysConfUpdateTime;
+
+    // std::string mUUID;
+    // std::string mInstanceId;
+    // 废弃，无调用点
+    // int32_t mProcessStartTime;
+
+    // 商业版
+    // std::atomic_int mConfigUpdateTotal{0};
+    // std::atomic_int mConfigUpdateItemTotal{0};
+    // std::atomic_int mLastConfigUpdateTime{0};
+    // std::atomic_int mLastConfigGetTime{0};
 
     SpinLock mCacheFileConfigMapLock;
     // value : best config, multi config last alarmTime, and if alarmTime is 0, it means no multi config
-    std::unordered_map<std::string, std::pair<Config*, int32_t>> mCacheFileConfigMap;
+    std::unordered_map<std::string, std::pair<FileDiscoveryConfig, int32_t>> mCacheFileConfigMap;
 
     SpinLock mCacheFileAllConfigMapLock;
-    std::unordered_map<std::string, std::pair<std::vector<Config*>, int32_t>> mCacheFileAllConfigMap;
+    std::unordered_map<std::string, std::pair<std::vector<FileDiscoveryConfig>, int32_t>> mCacheFileAllConfigMap;
 
     PTMutex mDockerContainerPathCmdLock;
     std::vector<DockerContainerPathCmd*> mDockerContainerPathCmdVec;
@@ -168,40 +181,44 @@ protected:
      */
     std::unordered_map<std::string, std::shared_ptr<std::vector<DockerContainerPath>>> mAllDockerContainerPathMap;
 
-    PTMutex mDockerMountPathsLock;
-    DockerMountPaths mDockerMountPaths;
+    // 废弃，容器模式
+    // PTMutex mDockerMountPathsLock;
+    // DockerMountPaths mDockerMountPaths;
 
-    bool mCollectionMarkFileExistFlag = false;
-    mutable PTMutex mCollectionMarkLock;
+    // 废弃，蚂蚁
+    // bool mCollectionMarkFileExistFlag = false;
+    // mutable PTMutex mCollectionMarkLock;
+    // bool mHaveFuseConfigFlag = false;
 
-    bool mHaveFuseConfigFlag = false;
+    // PTMutex mRegionAliuidMapLock;
+    // std::map<std::string, std::set<std::string>> mRegionAliuidMap;
 
-    PTMutex mRegionAliuidMapLock;
-    std::map<std::string, std::set<std::string>> mRegionAliuidMap;
-
-    /**
-     * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map
-     * @return
-     */
-    virtual void CreateCustomizedFuseConfig() = 0;
+    // 废弃，蚂蚁
+    // /**
+    //  * @brief CreateCustomizedFuseConfig, call this after starting, insert it into config map
+    //  * @return
+    //  */
+    // virtual void CreateCustomizedFuseConfig() = 0;
 
     ConfigManagerBase();
     virtual ~ConfigManagerBase();
 
-    bool GetUUIDThread();
+    // bool GetUUIDThread();
 
-    void SetUUID(std::string uuid) {
-        mProfileLock.lock();
-        mUUID = uuid;
-        mProfileLock.unlock();
-        return;
-    }
+    // void SetUUID(std::string uuid) {
+    //     mProfileLock.lock();
+    //     mUUID = uuid;
+    //     mProfileLock.unlock();
+    //     return;
+    // }
 
-    bool LoadGlobalConfig(const Json::Value& jsonRoot);
+    // 废弃，全局配置
+    // bool LoadGlobalConfig(const Json::Value& jsonRoot);
+
     bool DumpConfigToLocal(std::string fileName, const Json::Value& configJson);
 
-    void SetDefaultProfileProjectName(const std::string& profileProjectName);
-    void SetProfileProjectName(const std::string& region, const std::string& profileProject);
+    // void SetDefaultProfileProjectName(const std::string& profileProjectName);
+    // void SetProfileProjectName(const std::string& region, const std::string& profileProject);
 
     /**
      * delete mHandlersToDelete and mReaderToDelete
@@ -213,16 +230,18 @@ public:
     virtual void InitUpdateConfig(bool configExistFlag);
     static bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond);
 
-    bool TryGetUUID();
+    // bool TryGetUUID();
 
-    int32_t GetStartTime() { return mStartTime; }
+    // int32_t GetStartTime() { return mStartTime; }
 
-    int32_t GetConfigUpdateTotalCount();
-    int32_t GetConfigUpdateItemTotalCount();
-    int32_t GetLastConfigUpdateTime();
-    int32_t GetLastConfigGetTime();
+    // 商业版
+    // int32_t GetConfigUpdateTotalCount();
+    // int32_t GetConfigUpdateItemTotalCount();
+    // int32_t GetLastConfigUpdateTime();
+    // int32_t GetLastConfigGetTime();
 
-    void RestLastConfigTime();
+    // 废弃
+    // void RestLastConfigTime();
 
     /** Read configuration, detect any format errors.
      *
@@ -244,81 +263,86 @@ public:
     void UpdatePluginStats(const Json::Value& config);
     std::string GeneratePluginStatString();
     void ClearPluginStats();
-
     bool LoadAllConfig();
     const std::unordered_map<std::string, Config*>& GetAllConfig() { return mNameConfigMap; }
-    void RegisterWildcardPath(Config* config, const std::string& path, int32_t depth);
-    bool RegisterHandlers(const std::string& basePath, Config* config);
+    void RegisterWildcardPath(const FileDiscoveryConfig& config, const std::string& path, int32_t depth);
+    bool RegisterHandlers(const std::string& basePath, const FileDiscoveryConfig& config);
     bool RegisterHandlers();
-    bool RegisterHandlersRecursively(const std::string& dir, Config* config, bool checkTimeout);
-    /**
-     * @brief HasFuseConfig
-     * @return true if global fuse flag is true and there is
-     */
-    bool HaveFuseConfig() { return mHaveFuseConfigFlag; }
+    bool RegisterHandlersRecursively(const std::string& dir, const FileDiscoveryConfig& config, bool checkTimeout);
+    // 废弃，蚂蚁
+    // /**
+    //  * @brief HasFuseConfig
+    //  * @return true if global fuse flag is true and there is
+    //  */
+    // bool HaveFuseConfig() { return mHaveFuseConfigFlag; }
 
-    virtual bool UpdateAccessKey(const std::string& aliuid,
-                                 std::string& accessKeyId,
-                                 std::string& accessKey,
-                                 int32_t& lastUpdateTime)
-        = 0;
+    // 商业版
+    // virtual bool UpdateAccessKey(const std::string& aliuid,
+    //                              std::string& accessKeyId,
+    //                              std::string& accessKey,
+    //                              int32_t& lastUpdateTime)
+    //     = 0;
+    // int32_t GetUserAK(const std::string& aliuid, std::string& accessKeyId, std::string& accessKey);
+    // void SetUserAK(const std::string& aliuid, const std::string& accessKeyId, const std::string& accessKey);
+    // virtual void CleanUnusedUserAK() = 0;
 
-    int32_t GetUserAK(const std::string& aliuid, std::string& accessKeyId, std::string& accessKey);
-    void SetUserAK(const std::string& aliuid, const std::string& accessKeyId, const std::string& accessKey);
-    virtual void CleanUnusedUserAK() = 0;
+    // 商业版
+    // std::string GetDefaultPubAliuid();
+    // void SetDefaultPubAliuid(const std::string& aliuid);
 
-    std::string GetDefaultPubAliuid();
-    void SetDefaultPubAliuid(const std::string& aliuid);
+    // 废弃，GetLogtailSecurity
+    // std::string GetDefaultPubAccessKeyId();
+    // void SetDefaultPubAccessKeyId(const std::string& accessKeyId);
+    // std::string GetDefaultPubAccessKey();
+    // void SetDefaultPubAccessKey(const std::string& accessKey);
 
-    std::string GetDefaultPubAccessKeyId();
-    void SetDefaultPubAccessKeyId(const std::string& accessKeyId);
+    // std::string GetProfileProjectName(const std::string& region, bool* existFlag = NULL);
 
-    std::string GetDefaultPubAccessKey();
-    void SetDefaultPubAccessKey(const std::string& accessKey);
+    // std::string GetUUID() {
+    //     mProfileLock.lock();
+    //     std::string uuid(mUUID);
+    //     mProfileLock.unlock();
+    //     return uuid;
+    // }
 
-    std::string GetProfileProjectName(const std::string& region, bool* existFlag = NULL);
+    // std::string GetInstanceId() { return mInstanceId; }
 
-    std::string GetUUID() {
-        mProfileLock.lock();
-        std::string uuid(mUUID);
-        mProfileLock.unlock();
-        return uuid;
-    }
+    // 商业版
+    // void InsertAliuidSet(const std::string& aliuid);
+    // void SetAliuidSet(const std::vector<std::string>& aliuidList);
+    // void GetAliuidSet(Json::Value& aliuidArray);
+    // std::string GetAliuidSet();
+    // void SetUserDefinedIdSet(const std::vector<std::string>& userDefinedIdList);
+    // void GetUserDefinedIdSet(Json::Value& userDefinedIdArray);
+    // std::string GetUserDefinedIdSet();
 
-    std::string GetInstanceId() { return mInstanceId; }
+    // RegionType GetRegionType() { return mRegionType; }
 
-    void InsertAliuidSet(const std::string& aliuid);
-    void SetAliuidSet(const std::vector<std::string>& aliuidList);
-    void GetAliuidSet(Json::Value& aliuidArray);
-    std::string GetAliuidSet();
+    // bool CheckRegion(const std::string& region) const;
 
-    void SetUserDefinedIdSet(const std::vector<std::string>& userDefinedIdList);
-    void GetUserDefinedIdSet(Json::Value& userDefinedIdArray);
-    std::string GetUserDefinedIdSet();
+    // void GetAllProfileRegion(std::vector<std::string>& allRegion);
+    // std::string GetDefaultProfileProjectName();
+    // void SetDefaultProfileRegion(const std::string& profileRegion);
+    // std::string GetDefaultProfileRegion();
 
-    RegionType GetRegionType() { return mRegionType; }
+    // 商业版
+    // /**
+    //  * @brief Reload aliuid/user_defined_id from disk&env
+    //  *
+    //  */
+    // void ReloadLogtailSysConf();
+    // void CorrectionAliuidFile(const Json::Value& aliuidArray);
+    // void CorrectionAliuidFile();
 
-    bool CheckRegion(const std::string& region) const;
+    // 废弃，功能重复
+    // void CorrectionLogtailSysConfDir();
 
-    void GetAllProfileRegion(std::vector<std::string>& allRegion);
-    std::string GetDefaultProfileProjectName();
-    void SetDefaultProfileRegion(const std::string& profileRegion);
-    std::string GetDefaultProfileRegion();
-
-    /**
-     * @brief Reload aliuid/user_defined_id from disk&env
-     *
-     */
-    void ReloadLogtailSysConf();
-    void CorrectionAliuidFile(const Json::Value& aliuidArray);
-    void CorrectionAliuidFile();
-    void CorrectionLogtailSysConfDir();
-
-    void GetAllPluginConfig(std::vector<Config*>& configVec);
-    void GetAllObserverConfig(std::vector<Config*>& configVec);
-
+    // 废弃
+    // void GetAllPluginConfig(std::vector<Config*>& configVec);
+    // 废弃
+    // void GetAllObserverConfig(std::vector<Config*>& configVec);
     // Get all configs that match condition.
-    std::vector<Config*> GetMatchedConfigs(const std::function<bool(Config*)>& condition);
+    // std::vector<Config*> GetMatchedConfigs(const std::function<bool(Config*)>& condition);
 
     /** find che config of DIR path while the name fits the file pattern
      *  @param path for the dir
@@ -328,9 +352,10 @@ public:
      *  @param path for the newly created dir
      *
      */
-    Config* FindBestMatch(const std::string& path, const std::string& name = "");
+    FileDiscoveryConfig FindBestMatch(const std::string& path, const std::string& name = "");
 
-    int32_t FindAllMatch(std::vector<Config*>& allConfig, const std::string& path, const std::string& name = "");
+    int32_t
+    FindAllMatch(std::vector<FileDiscoveryConfig>& allConfig, const std::string& path, const std::string& name = "");
     /**
      * @brief FindMatchWithForceFlag only accept best match and config with ForceMultiConfig
      * @param allConfig
@@ -338,14 +363,16 @@ public:
      * @param name
      * @return
      */
-    int32_t
-    FindMatchWithForceFlag(std::vector<Config*>& allConfig, const std::string& path, const std::string& name = "");
+    int32_t FindMatchWithForceFlag(std::vector<FileDiscoveryConfig>& allConfig,
+                                   const std::string& path,
+                                   const std::string& name = "");
 
     Config* FindStreamLogTagMatch(const std::string& tag);
 
-    Config* FindDSConfigByCategory(const std::string& dsCtegory);
+    const FlusherSLS* FindDSConfigByCategory(const std::string& dsCtegory);
 
-    Config* FindConfigByName(const std::string& configName);
+    // 废弃
+    // Config* FindConfigByName(const std::string& configName);
 
     // handler must be created by new, because when path timeout, we would call delete on it
     void AddNewHandler(const std::string& path, EventHandler* handler) { mDirEventHandlerMap[path] = handler; }
@@ -397,31 +424,31 @@ public:
      */
     bool GetLocalConfigUpdate();
 
-    int32_t UpdateConfigJson(const std::string& configJson);
+    // 废弃，runtime plugin
+    // int32_t UpdateConfigJson(const std::string& configJson);
 
     void RemoveAllConfigs();
 
     void ClearConfigMatchCache();
 
-    bool NeedReloadMappingConfig() { return mHaveMappingPathConfig && mMappingPathsChanged; }
+    // 废弃，路径映射
+    // bool NeedReloadMappingConfig() { return mHaveMappingPathConfig && mMappingPathsChanged; }
+    // void SetMappingPathsChanged() { mMappingPathsChanged = true; }
+    // void ReloadMappingConfig();
+    // std::string GetMappingPath(const std::string& id);
 
-    void SetMappingPathsChanged() { mMappingPathsChanged = true; }
+    // virtual bool GetRegionStatus(const std::string& region) = 0;
 
-    virtual bool GetRegionStatus(const std::string& region) = 0;
+    // 废弃
+    // bool MatchDirPattern(const Config* config, const std::string& dir);
 
-    void ReloadMappingConfig();
-
-    std::string GetMappingPath(const std::string& id);
-
-    // TODO: Move it to Config.
-    bool MatchDirPattern(const Config* config, const std::string& dir);
-    void GetRelatedConfigs(const std::string& path, std::vector<Config*>& configs);
+    void GetRelatedConfigs(const std::string& path, std::vector<FileDiscoveryConfig>& configs);
 
     EventHandler* GetSharedHandler() { return mSharedHandler; }
 
     bool RegisterDirectory(const std::string& source, const std::string& object);
 
-    std::string GetAllProjectsSet();
+    // std::string GetAllProjectsSet();
 
     bool UpdateContainerPath(DockerContainerPathCmd* cmd);
     bool IsUpdateContainerPaths();
@@ -434,63 +461,65 @@ public:
 
     void LoadDockerConfig();
 
-    bool IsEnvConfig() { return mEnvFlag; }
+    // 废弃
+    // bool IsEnvConfig() { return mEnvFlag; }
 
-    /**
-     * @brief LoadMountPaths
-     * @return true if logtail is in container mode and mount paths is changed
-     */
-    bool LoadMountPaths();
+    // 废弃，容器模式
+    // /**
+    //  * @brief LoadMountPaths
+    //  * @return true if logtail is in container mode and mount paths is changed
+    //  */
+    // bool LoadMountPaths();
+    // /**
+    //  * @brief GetMountPaths
+    //  * @return
+    //  */
+    // DockerMountPaths GetMountPaths();
 
-    /**
-     * @brief GetMountPaths
-     * @return
-     */
-    DockerMountPaths GetMountPaths();
+    // 废弃，蚂蚁
+    // void SetCollectionMarkFileExistFlag(bool flag) {
+    //     PTScopedLock lock(mCollectionMarkLock);
+    //     mCollectionMarkFileExistFlag = flag;
+    // }
+    // bool GetCollectionMarkFileExistFlag() const {
+    //     PTScopedLock lock(mCollectionMarkLock);
+    //     return mCollectionMarkFileExistFlag;
+    // }
 
-    void SetCollectionMarkFileExistFlag(bool flag) {
-        PTScopedLock lock(mCollectionMarkLock);
-        mCollectionMarkFileExistFlag = flag;
-    }
-
-    bool GetCollectionMarkFileExistFlag() const {
-        PTScopedLock lock(mCollectionMarkLock);
-        return mCollectionMarkFileExistFlag;
-    }
-
-    virtual void SetStartWorkerStatus(const std::string& result, const std::string& message) = 0;
+    // 废弃，bin更新
+    // virtual void SetStartWorkerStatus(const std::string& result, const std::string& message) = 0;
 
     virtual std::string CheckPluginFlusher(Json::Value& configJson) = 0;
 
     virtual Json::Value& CheckPluginProcessor(Json::Value& pluginConfigJson, const Json::Value& rootConfigJson) = 0;
 
-    std::vector<sls_logs::LogTag>& GetFileTags() {
-        return mFileTags.getReadBuffer();
-    }
+    std::vector<sls_logs::LogTag>& GetFileTags() { return mFileTags.getReadBuffer(); }
 
     void UpdateFileTags();
 
-    const std::set<std::string>& GetRegionAliuids(const std::string& region);
-    void InsertRegionAliuidMap(const std::string& region, const std::string& aliuid);
-    void ClearRegionAliuidMap();
+    // const std::set<std::string>& GetRegionAliuids(const std::string& region);
+    // void InsertRegionAliuidMap(const std::string& region, const std::string& aliuid);
+    // void ClearRegionAliuidMap();
 
-    void InsertRegion(const std::string& region);
-    void InsertProject(const std::string& project);
+    // void InsertRegion(const std::string& region);
+    // void InsertProject(const std::string& project);
 
-    std::unordered_map<std::string, std::shared_ptr<std::vector<DockerContainerPath>>>& GetAllContainerInfo() { return mAllDockerContainerPathMap; }
+    std::unordered_map<std::string, std::shared_ptr<std::vector<DockerContainerPath>>>& GetAllContainerInfo() {
+        return mAllDockerContainerPathMap;
+    }
 
 private:
     // no copy
     ConfigManagerBase(const ConfigManagerBase&);
     ConfigManagerBase& operator=(const ConfigManagerBase&);
 
-    void ClearRegions();
+    // void ClearRegions();
     /** XXX: path is not registered in this method
      * @param path is the current dir that being registered
      * @depth is the num of sub dir layers that should be registered
      */
-    bool RegisterHandlersWithinDepth(const std::string& path, Config* config, int depth);
-    bool RegisterDescendants(const std::string& path, Config* config, int withinDepth);
+    bool RegisterHandlersWithinDepth(const std::string& path, const FileDiscoveryConfig& config, int depth);
+    bool RegisterDescendants(const std::string& path, const FileDiscoveryConfig& config, int withinDepth);
     bool CheckLogType(const std::string& logTypeStr, LogType& logType);
     std::vector<std::string> GetStringVector(const Json::Value& value);
     LogFilterRule* GetFilterFule(const Json::Value& filterKeys, const Json::Value& filterRegs);
@@ -535,14 +564,14 @@ private:
     bool CheckRegFormat(const std::string& regStr);
     void SendAllMatchAlarm(const std::string& path,
                            const std::string& name,
-                           std::vector<Config*>& allConfig,
+                           std::vector<FileDiscoveryConfig>& allConfig,
                            int32_t maxMultiConfigSize);
 
-    void MappingPluginConfig(const Json::Value& configValue, Config* config, Json::Value& pluginJson);
+    // void MappingPluginConfig(const Json::Value& configValue, Config* config, Json::Value& pluginJson);
 
-    void ClearProjects();
+    // void ClearProjects();
 
-    class DoubleBuffer <std::vector<sls_logs::LogTag>>mFileTags;
+    class DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
 
 #ifdef APSARA_UNIT_TEST_MAIN
     void CleanEnviroments();
@@ -559,6 +588,7 @@ private:
     friend class MultiServerConfigUpdatorUnitest;
     friend class CreateModifyHandlerUnittest;
     friend class ProcessorDesensitizeNativeUnittest;
+    friend class ConfigContainerUnittest;
 #endif
 };
 

@@ -15,8 +15,13 @@
  */
 #pragma once
 
+#include <memory>
+#include <unordered_map>
+
+#include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
-#include "LogFilter.h"
+#include "config/Config.h"
+#include "processor/BaseFilterNode.h"
 
 namespace logtail {
 
@@ -29,7 +34,6 @@ public:
     bool mDiscardingNonUTF8 = false;
 
     const std::string& Name() const override { return sName; }
-    bool Init(const ComponentConfig& componentConfig) override;
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
     ~ProcessorFilterNative();
@@ -38,7 +42,12 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    enum class Mode { BYPASS_MODE, EXPRESSION_MODE, RULE_MODE, GLOBAL_MODE };
+    enum class Mode { BYPASS_MODE, EXPRESSION_MODE, RULE_MODE };
+
+    struct LogFilterRule {
+        std::vector<std::string> FilterKeys;
+        std::vector<boost::regex> FilterRegs;
+    };
     std::shared_ptr<LogFilterRule> mFilterRule;
     BaseFilterNodePtr mFilterExpressionRoot = nullptr;
     std::unordered_map<std::string, LogFilterRule*> mFilters;
@@ -51,10 +60,10 @@ private:
     CounterPtr mProcFilterErrorTotal;
     CounterPtr mProcFilterRecordsTotal;
 
-    bool LoadOldGlobalConfig();
+    // bool LoadOldGlobalConfig(const PipelineConfig& componentConfig);
     bool FilterExpressionRoot(LogEvent& sourceEvent, const BaseFilterNodePtr& node);
     bool FilterFilterRule(LogEvent& sourceEvent, const LogFilterRule* filterRule);
-    bool FilterGlobal(LogEvent& sourceEvent);
+    // bool FilterGlobal(LogEvent& sourceEvent);
 
     bool ProcessEvent(PipelineEventPtr& e);
     bool IsMatched(const LogContents& contents, const LogFilterRule& rule);

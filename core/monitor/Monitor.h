@@ -119,7 +119,6 @@ private:
     int32_t mCpuArrayForScaleIdx;
     float mScaledCpuUsageStep;
 #endif
-    ProfileSender mProfileSender;
 
 private:
     // GetCpuStat gets current CPU statistics of Logtail process and save it to @cpuStat.

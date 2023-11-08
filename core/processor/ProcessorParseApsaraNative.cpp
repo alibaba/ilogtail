@@ -110,28 +110,6 @@ bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
     return true;
 }
 
-bool ProcessorParseApsaraNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-    mSourceKey = DEFAULT_CONTENT_KEY;
-    mDiscardUnmatch = config.mDiscardUnmatch;
-    mUploadRawLog = config.mUploadRawLog;
-    mRawLogTag = config.mAdvancedConfig.mRawLogTag;
-    mLogTimeZoneOffsetSecond = config.mLogTimeZoneOffsetSecond;
-    if (mUploadRawLog && mRawLogTag == mSourceKey) {
-        mSourceKeyOverwritten = true;
-    }
-    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
-    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
-    mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
-
-    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
-    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
-    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
-    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
-    mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
-    return true;
-}
-
 void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;

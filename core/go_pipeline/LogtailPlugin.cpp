@@ -24,6 +24,8 @@
 #include "app_config/AppConfig.h"
 #include "common/DynamicLibHelper.h"
 #include "common/LogtailCommonFlags.h"
+#include "pipeline/PipelineManager.h"
+
 using namespace std;
 using namespace logtail;
 
@@ -38,15 +40,12 @@ LogtailPlugin::LogtailPlugin() {
     mLoadGlobalConfigFun = NULL;
     mProcessRawLogFun = NULL;
     mPluginValid = false;
-    mPluginAlarmConfig.mCategory = "logtail_alarm";
+    mPluginAlarmConfig.mLogstore = "logtail_alarm";
     mPluginAlarmConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
-    mPluginAlarmConfig.mLogstoreKey = 0;
-    mPluginProfileConfig.mCategory = "shennong_log_profile";
+    mPluginProfileConfig.mLogstore = "shennong_log_profile";
     mPluginProfileConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
-    mPluginProfileConfig.mLogstoreKey = 0;
-    mPluginContainerConfig.mCategory = "logtail_containers";
+    mPluginContainerConfig.mLogstore = "logtail_containers";
     mPluginContainerConfig.mAliuid = STRING_FLAG(logtail_profile_aliuid);
-    mPluginContainerConfig.mLogstoreKey = 0;
 
     mPluginCfg["LogtailSysConfDir"] = AppConfig::GetInstance()->GetLogtailSysConfDir();
     mPluginCfg["HostIP"] = LogFileProfiler::mIpAddr;
@@ -65,39 +64,69 @@ void LogtailPlugin::LoadConfig() {
         LOG_WARNING(sLogger, ("load plugin config error", "plugin not inited"));
         return;
     }
-    vector<Config*> pluginConfigs;
-    ConfigManager::GetInstance()->GetAllPluginConfig(pluginConfigs);
-    if (pluginConfigs.size() > 0) {
-        for (size_t i = 0; i < pluginConfigs.size(); ++i) {
-            Config* pConfig = pluginConfigs[i];
+    const auto& allPipelines = PipelineManager::GetInstance()->GetAllPipelines();
+    // 目前一个配置最多只有一个go pipeline，所以名字就用configname，严格需要加上后缀
+    for (const auto& item : allPipelines) {
+        if (!item.second->GetGoPipelineWithInput().isNull()) {
+            string pluginConfig = item.second->GetGoPipelineWithInput().toStyledString();
             GoString goProject;
             GoString goLogstore;
             GoString goConfigName;
             GoString goPluginConfig;
 
-            goProject.n = pConfig->mProjectName.size();
-            goProject.p = pConfig->mProjectName.c_str();
-            goLogstore.n = pConfig->mCategory.size();
-            goLogstore.p = pConfig->mCategory.c_str();
-            goConfigName.n = pConfig->mConfigName.size();
-            goConfigName.p = pConfig->mConfigName.c_str();
-            goPluginConfig.n = pConfig->mPluginConfig.size();
-            goPluginConfig.p = pConfig->mPluginConfig.c_str();
+            goProject.n = item.second->GetContext().GetProjectName().size();
+            goProject.p = item.second->GetContext().GetProjectName().c_str();
+            goLogstore.n = item.second->GetContext().GetLogstoreName().size();
+            goLogstore.p = item.second->GetContext().GetLogstoreName().c_str();
+            goConfigName.n = item.first.size();
+            goConfigName.p = item.first.c_str();
+            goPluginConfig.n = pluginConfig.size();
+            goPluginConfig.p = pluginConfig.c_str();
+            long long logStoreKey = item.second->GetContext().GetLogstoreKey();
 
-            long long logStoreKey = pConfig->mLogstoreKey;
             GoInt loadRst = mLoadConfigFun(goProject, goLogstore, goConfigName, logStoreKey, goPluginConfig);
             if (loadRst != 0) {
-                LOG_WARNING(
-                    sLogger,
-                    ("msg", "load plugin error")("project", pConfig->mProjectName)("logstore", pConfig->mCategory)(
-                        "config", pConfig->mConfigName)("content", pConfig->mPluginConfig)("result", loadRst));
+                LOG_WARNING(sLogger,
+                            ("msg", "load plugin error")("project", item.second->GetContext().GetProjectName())(
+                                "logstore", item.second->GetContext().GetLogstoreName())("config", item.first)(
+                                "content", pluginConfig)("result", loadRst));
                 LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-                                                       "load plugin config error, invalid config: "
-                                                           + pConfig->mConfigName
+                                                       "load plugin config error, invalid config: " + item.first
                                                            + ". please check you config and logtail's plugin log.",
-                                                       pConfig->GetProjectName(),
-                                                       pConfig->GetCategory(),
-                                                       pConfig->mRegion);
+                                                       item.second->GetContext().GetProjectName(),
+                                                       item.second->GetContext().GetLogstoreName(),
+                                                       item.second->GetContext().GetRegion());
+            }
+        }
+        if (!item.second->GetGoPipelineWithoutInput().isNull()) {
+            string pluginConfig = item.second->GetGoPipelineWithoutInput().toStyledString();
+            GoString goProject;
+            GoString goLogstore;
+            GoString goConfigName;
+            GoString goPluginConfig;
+
+            goProject.n = item.second->GetContext().GetProjectName().size();
+            goProject.p = item.second->GetContext().GetProjectName().c_str();
+            goLogstore.n = item.second->GetContext().GetLogstoreName().size();
+            goLogstore.p = item.second->GetContext().GetLogstoreName().c_str();
+            goConfigName.n = item.first.size();
+            goConfigName.p = item.first.c_str();
+            goPluginConfig.n = pluginConfig.size();
+            goPluginConfig.p = pluginConfig.c_str();
+            long long logStoreKey = item.second->GetContext().GetLogstoreKey();
+
+            GoInt loadRst = mLoadConfigFun(goProject, goLogstore, goConfigName, logStoreKey, goPluginConfig);
+            if (loadRst != 0) {
+                LOG_WARNING(sLogger,
+                            ("msg", "load plugin error")("project", item.second->GetContext().GetProjectName())(
+                                "logstore", item.second->GetContext().GetLogstoreName())("config", item.first)(
+                                "content", pluginConfig)("result", loadRst));
+                LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+                                                       "load plugin config error, invalid config: " + item.first
+                                                           + ". please check you config and logtail's plugin log.",
+                                                       item.second->GetContext().GetProjectName(),
+                                                       item.second->GetContext().GetLogstoreName(),
+                                                       item.second->GetContext().GetRegion());
             }
         }
     }
@@ -217,9 +246,9 @@ int LogtailPlugin::SendPbV2(const char* configName,
                             int32_t lines,
                             const char* shardHash,
                             int shardHashSize) {
-    static Config* alarmConfig = &(LogtailPlugin::GetInstance()->mPluginAlarmConfig);
-    static Config* profileConfig = &(LogtailPlugin::GetInstance()->mPluginProfileConfig);
-    static Config* containerConfig = &(LogtailPlugin::GetInstance()->mPluginContainerConfig);
+    static FlusherSLS* alarmConfig = &(LogtailPlugin::GetInstance()->mPluginAlarmConfig);
+    static FlusherSLS* profileConfig = &(LogtailPlugin::GetInstance()->mPluginProfileConfig);
+    static FlusherSLS* containerConfig = &(LogtailPlugin::GetInstance()->mPluginContainerConfig);
 
     string configNameStr = string(configName, configNameSize);
 
@@ -229,43 +258,43 @@ int LogtailPlugin::SendPbV2(const char* configName,
     }
 
     // LOG_DEBUG(sLogger, ("send pb", configNameStr)("pb size", pbSize)("lines", lines));
-    Config* pConfig = NULL;
-    if (configNameStr == alarmConfig->mCategory) {
+    FlusherSLS* pConfig = NULL;
+    if (configNameStr == alarmConfig->mLogstore) {
         pConfig = alarmConfig;
-        pConfig->mProjectName = ConfigManager::GetInstance()->GetDefaultProfileProjectName();
-        pConfig->mRegion = ConfigManager::GetInstance()->GetDefaultProfileRegion();
-        if (0 == pConfig->mProjectName.size()) {
+        pConfig->mProject = ProfileSender::GetInstance()->GetDefaultProfileProjectName();
+        pConfig->mRegion = ProfileSender::GetInstance()->GetDefaultProfileRegion();
+        if (pConfig->mProject.empty()) {
             return 0;
         }
-    } else if (configNameStr == profileConfig->mCategory) {
+    } else if (configNameStr == profileConfig->mLogstore) {
         pConfig = profileConfig;
-        pConfig->mProjectName = ConfigManager::GetInstance()->GetDefaultProfileProjectName();
-        pConfig->mRegion = ConfigManager::GetInstance()->GetDefaultProfileRegion();
-        if (0 == pConfig->mProjectName.size()) {
+        pConfig->mProject = ProfileSender::GetInstance()->GetDefaultProfileProjectName();
+        pConfig->mRegion = ProfileSender::GetInstance()->GetDefaultProfileRegion();
+        if (pConfig->mProject.empty()) {
             return 0;
         }
-    } else if (configNameStr == containerConfig->mCategory) {
+    } else if (configNameStr == containerConfig->mLogstore) {
         pConfig = containerConfig;
-        pConfig->mProjectName = ConfigManager::GetInstance()->GetDefaultProfileProjectName();
-        pConfig->mRegion = ConfigManager::GetInstance()->GetDefaultProfileRegion();
-        if (0 == pConfig->mProjectName.size()) {
+        pConfig->mProject = ProfileSender::GetInstance()->GetDefaultProfileProjectName();
+        pConfig->mRegion = ProfileSender::GetInstance()->GetDefaultProfileRegion();
+        if (pConfig->mProject.empty()) {
             return 0;
         }
     } else {
-        pConfig = ConfigManager::GetInstance()->FindConfigByName(configNameStr);
-    }
-    if (pConfig != NULL) {
-        std::string shardHashStr;
-        if (shardHashSize > 0) {
-            shardHashStr.assign(shardHash, static_cast<size_t>(shardHashSize));
+        shared_ptr<Pipeline> p = PipelineManager::GetInstance()->FindPipelineByName(configNameStr);
+        if (!p) {
+            LOG_INFO(sLogger,
+                     ("error", "SendPbV2 can not find config, maybe config updated")("config", configNameStr)(
+                         "logstore", logstore));
+            return -2;
         }
-        return Sender::Instance()->SendPb(pConfig, pbBuffer, pbSize, lines, logstore, shardHashStr) ? 0 : -1;
-    } else {
-        LOG_INFO(sLogger,
-                 ("error", "SendPbV2 can not find config, maybe config updated")("config", configNameStr)("logstore",
-                                                                                                          logstore));
+        pConfig = const_cast<FlusherSLS*>(static_cast<const FlusherSLS*>(p->GetFlushers()[0]->GetPlugin()));
     }
-    return -2;
+    std::string shardHashStr;
+    if (shardHashSize > 0) {
+        shardHashStr.assign(shardHash, static_cast<size_t>(shardHashSize));
+    }
+    return Sender::Instance()->SendPb(pConfig, pbBuffer, pbSize, lines, logstore, shardHashStr) ? 0 : -1;
 }
 
 int LogtailPlugin::ExecPluginCmd(
@@ -307,22 +336,22 @@ bool LogtailPlugin::LoadPluginBase() {
     if (mPluginValid) {
         return mPluginValid;
     }
-    vector<Config*> pluginConfigs;
-    ConfigManager::GetInstance()->GetAllPluginConfig(pluginConfigs);
-    vector<Config*> observerConfigs;
-    ConfigManager::GetInstance()->GetAllObserverConfig(observerConfigs);
-    const char* dockerEnvConfig = getenv("ALICLOUD_LOG_DOCKER_ENV_CONFIG");
-    bool dockerEnvConfigEnabled = (dockerEnvConfig != NULL && strlen(dockerEnvConfig) > 0
-                                   && (dockerEnvConfig[0] == 't' || dockerEnvConfig[0] == 'T'));
+    // vector<Config*> pluginConfigs;
+    // ConfigManager::GetInstance()->GetAllPluginConfig(pluginConfigs);
+    // vector<Config*> observerConfigs;
+    // ConfigManager::GetInstance()->GetAllObserverConfig(observerConfigs);
+    // const char* dockerEnvConfig = getenv("ALICLOUD_LOG_DOCKER_ENV_CONFIG");
+    // bool dockerEnvConfigEnabled = (dockerEnvConfig != NULL && strlen(dockerEnvConfig) > 0
+    //                                && (dockerEnvConfig[0] == 't' || dockerEnvConfig[0] == 'T'));
 
-    if (observerConfigs.size() == (size_t)0 && pluginConfigs.size() == (size_t)0 && !dockerEnvConfigEnabled
-        && !AppConfig::GetInstance()->IsPurageContainerMode()) {
-        LOG_INFO(sLogger, ("no plugin config and no docker env config, do not load plugin base", ""));
-        return mPluginValid;
-    }
-    LOG_INFO(sLogger,
-             ("load plugin base, config count", pluginConfigs.size())("docker env config", dockerEnvConfigEnabled)(
-                 "dl file", (AppConfig::GetInstance()->GetWorkingDir() + "libPluginAdapter.so")));
+    // if (observerConfigs.size() == (size_t)0 && pluginConfigs.size() == (size_t)0 && !dockerEnvConfigEnabled
+    //     && !AppConfig::GetInstance()->IsPurageContainerMode()) {
+    //     LOG_INFO(sLogger, ("no plugin config and no docker env config, do not load plugin base", ""));
+    //     return mPluginValid;
+    // }
+    // LOG_INFO(sLogger,
+    //          ("load plugin base, config count", pluginConfigs.size())("docker env config", dockerEnvConfigEnabled)(
+    //              "dl file", (AppConfig::GetInstance()->GetWorkingDir() + "libPluginAdapter.so")));
 
     // load plugin adapter
     if (mPluginAdapterPtr == NULL) {

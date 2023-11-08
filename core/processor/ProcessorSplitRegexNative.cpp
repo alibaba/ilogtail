@@ -103,19 +103,6 @@ bool ProcessorSplitRegexNative::ParseRegex(const std::string& pattern, std::shar
     return true;
 }
 
-bool ProcessorSplitRegexNative::Init(const ComponentConfig& componentConfig) {
-    const PipelineConfig& config = componentConfig.GetConfig();
-
-    mSplitKey = DEFAULT_CONTENT_KEY;
-    mIsMultline = config.IsMultiline();
-    SetLogMultilinePolicy(config.mLogBeginReg, config.mLogContinueReg, config.mLogEndReg);
-    mDiscardUnmatch = config.mDiscardUnmatch;
-    mEnableLogPositionMeta = config.mAdvancedConfig.mEnableLogPositionMeta;
-    mFeedLines = &(GetContext().GetProcessProfile().feedLines);
-    mSplitLines = &(GetContext().GetProcessProfile().splitLines);
-    return true;
-}
-
 void ProcessorSplitRegexNative::Process(PipelineEventGroup& logGroup) {
     if (logGroup.GetEvents().empty()) {
         return;

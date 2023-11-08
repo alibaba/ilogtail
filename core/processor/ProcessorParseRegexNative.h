@@ -15,9 +15,12 @@
  */
 
 #pragma once
+
+#include "boost/regex.hpp"
+
+#include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
-#include <vector>
-#include "parser/LogParser.h" //UserDefinedFormat
+#include "parser/LogParser.h"
 
 namespace logtail {
 
@@ -39,7 +42,6 @@ public:
     std::vector<UserDefinedFormat> mUserDefinedFormat;
 
     const std::string& Name() const override { return sName; }
-    bool Init(const ComponentConfig& componentConfig) override;
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
 

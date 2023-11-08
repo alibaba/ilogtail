@@ -34,7 +34,7 @@ public:
 private:
     // ParseBlacklist parses blacklist configuration from @advancedVal, and assign them into @cfg.
     // @return if everything is ok, empty is returned, otherwise, returns exception string.
-    static std::string ParseBlacklist(const Json::Value& advancedVal, Config& cfg);
+    // static std::string ParseBlacklist(const Json::Value& advancedVal, Config& cfg);
 
     static bool GetOperatorType(const std::string& type, FilterOperator& op);
     static bool GetNodeFuncType(const std::string& type, FilterNodeFunctionType& func);
