@@ -15,13 +15,10 @@
  */
 
 #include "processor/ProcessorParseApsaraNative.h"
-#include "common/Constants.h"
 #include "models/LogEvent.h"
-#include "app_config/AppConfig.h"
 #include "parser/LogParser.h" // for UNMATCH_LOG_KEY
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
-#include <algorithm>
 #include "common/ParamExtractor.h"
 #include <string>
 
@@ -68,15 +65,6 @@ bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
     }
     if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
-    }
-
-    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
-    }
-    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, sName, mContext->GetConfigName());
     }
 
     if (mTimezone != "") {
@@ -163,12 +151,12 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
                                                GetContext().GetRegion());
         mProcParseErrorTotal->Add(1);
         ++(*mParseFailures);
-        if (!mDiscardUnmatch) {
+        if (mKeepingSourceWhenParseFail) {
             AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
                    buffer,
                    sourceEvent); // legacy behavior, should use sourceKey
-            if (mUploadRawLog) {
-                AddLog(mRawLogTag, buffer, sourceEvent); // __raw__
+            if (mCopingRawLog) {
+                AddLog(mRenamedSourceKey, buffer, sourceEvent); // __raw__
             }
             return true;
         }
@@ -217,7 +205,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
                     if (key == mSourceKey) {
                         sourceKeyOverwritten = true;
                     }
-                    if (key == mRawLogTag) {
+                    if (key == mRenamedSourceKey) {
                         rawLogTagOverwritten = true;
                     }
                     colon_index = -1;
@@ -229,7 +217,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
         } while (buffer.data()[index]);
     }
     // TODO: deprecated
-    if (mAdjustApsaraMicroTimezone) {
+    if (mAdjustingMicroTimezone) {
         logTime_in_micro = (int64_t)logTime_in_micro - (int64_t)mLogTimeZoneOffsetSecond * (int64_t)1000000;
     }
     StringBuffer sb = sourceEvent.GetSourceBuffer()->AllocateStringBuffer(20);
@@ -239,8 +227,8 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
     sb.size = std::min(20, snprintf(sb.data, sb.capacity, "%lld", logTime_in_micro));
 #endif
     AddLog("microtime", StringView(sb.data, sb.size), sourceEvent);
-    if (mUploadRawLog && !rawLogTagOverwritten) {
-        AddLog(mRawLogTag, buffer, sourceEvent); // __raw__
+    if (mCopingRawLog && !rawLogTagOverwritten) {
+        AddLog(mRenamedSourceKey, buffer, sourceEvent); // __raw__
     }
     if (!sourceKeyOverwritten) {
         sourceEvent.DelContent(mSourceKey);
