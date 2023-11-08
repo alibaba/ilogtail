@@ -40,8 +40,8 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
         for (auto& include : mInclude) {
             std::vector<std::string> keys;
             std::vector<boost::regex> regs;
-            keys.push_back(include.first);
-            regs.push_back(boost::regex(include.second));
+            keys.emplace_back(include.first);
+            regs.emplace_back(boost::regex(include.second));
         }
     }
 
