@@ -15,14 +15,12 @@
  */
 
 #include "processor/ProcessorFilterNative.h"
-#include "common/Constants.h"
 #include "models/LogEvent.h"
-#include "plugin/instance/ProcessorInstance.h"
-#include "config_manager/ConfigManager.h"
 #include "monitor/MetricConstants.h"
 #include <vector>
 #include "logger/Logger.h"
 #include "common/ParamExtractor.h"
+
 #include "processor/UnaryFilterOperatorNode.h"
 #include "processor/RegexFilterValueNode.h"
 #include "processor/BinaryFilterOperatorNode.h"
