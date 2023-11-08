@@ -47,7 +47,7 @@
 | Compression                           | String   | 否    | 压缩算法，可选值：`none`, `snappy`，`lz4`和`gzip`，默认值`none`                                                           |
 | CompressionLevel                      | Int      | 否    | 压缩级别，可选值：`1~9`，默认值：`4`,设置为`0`则禁用`Compression`                                                              |
 | MaxMessageBytes                       | Int      | 否    | 一个批次提交的大小限制，配置和`message.max.bytes`对应，默认值：`1000000`                                                         |
-| MaxOpenRequests                       | Int      | 否    | 一个连接允许的最大打开的请求数                                                                                            |
+| MaxOpenRequests                       | Int      | 否    | 一个连接允许的最大打开的请求数，默认值:`5`                                                                                    |
 | MaxRetries                            | Int      | 否    | 提交失败重试次数，最大`3`次，默认值：`3`                                                                                    |
 | BulkMaxSize                           | Int      | 否    | 单次请求提交事件数，默认`2048`                                                                                         |
 | BulkFlushFrequency                    | Int      | 否    | 发送批量 Kafka 请求之前等待的时间,0标识没有时延，默认值:`0`                                                                       |
