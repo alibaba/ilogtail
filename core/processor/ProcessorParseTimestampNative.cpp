@@ -17,23 +17,98 @@
 #include "processor/ProcessorParseTimestampNative.h"
 
 #include "app_config/AppConfig.h"
-#include "common/StringTools.h"
-#include "common/Constants.h"
 #include "common/LogtailCommonFlags.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include <algorithm>
 #include "monitor/MetricConstants.h"
+#include "common/ParamExtractor.h"
 
 namespace logtail {
-
 const std::string ProcessorParseTimestampNative::sName = "processor_parse_timestamp_native";
+const std::string ProcessorParseTimestampNative::PRECISE_TIMESTAMP_DEFAULT_KEY = "precise_timestamp";
+
+bool ProcessorParseTimestampNative::ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond) {
+    if (logTZ.size() != strlen("GMT+08:00") || logTZ[6] != ':' || (logTZ[3] != '+' && logTZ[3] != '-')) {
+        return false;
+    }
+    if (logTZ.find("GMT") != (size_t)0) {
+        return false;
+    }
+    std::string hourStr = logTZ.substr(4, 2);
+    std::string minitueStr = logTZ.substr(7, 2);
+    logTZSecond = StringTo<int>(hourStr) * 3600 + StringTo<int>(minitueStr) * 60;
+    if (logTZ[3] == '-') {
+        logTZSecond = -logTZSecond;
+    }
+    return true;
+}
 
 bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    }
+    if (!GetMandatoryStringParam(config, "SourceFormat", mSourceFormat, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalStringParam(config, "SourceTimezone", mSourceTimezone, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceTimezone, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalIntParam(config, "SourceYear", mSourceYear, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceYear, sName, mContext->GetConfigName());
+    }
+    mLegacyPreciseTimestampConfig.enabled = false;
+    if (IsExist(config, "PreciseTimestampKey")) {
+        mLegacyPreciseTimestampConfig.enabled = true;
+
+        std::string preciseTimestampKey = PRECISE_TIMESTAMP_DEFAULT_KEY;
+        if (!GetOptionalStringParam(config, "PreciseTimestampKey", preciseTimestampKey, errorMsg)) {
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, preciseTimestampKey, sName, mContext->GetConfigName());
+        }
+        mLegacyPreciseTimestampConfig.key = preciseTimestampKey;
+
+        std::string preciseTimestampUnit = "";
+        if (!GetOptionalStringParam(config, "PreciseTimestampUnit", preciseTimestampUnit, errorMsg)) {
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, preciseTimestampUnit, sName, mContext->GetConfigName());
+        }
+        if (0 == preciseTimestampUnit.compare("ms")) {
+            mLegacyPreciseTimestampConfig.unit = TimeStampUnit::MILLISECOND;
+        } else if (0 == preciseTimestampUnit.compare("us")) {
+            mLegacyPreciseTimestampConfig.unit = TimeStampUnit::MICROSECOND;
+        } else if (0 == preciseTimestampUnit.compare("ns")) {
+            mLegacyPreciseTimestampConfig.unit = TimeStampUnit::NANOSECOND;
+        } else {
+            mLegacyPreciseTimestampConfig.unit = TimeStampUnit::MILLISECOND;
+        }        
+    }
+
+    if (mSourceTimezone != "") {
+        int logTZSecond = 0;
+        if (!ParseTimeZoneOffsetSecond(mSourceTimezone, logTZSecond)) {
+            errorMsg = "invalid log time zone specified, will parse log time without time zone adjusted, time zone: "
+                + mSourceTimezone;
+            PARAM_WARNING_DEFAULT(
+                mContext->GetLogger(), errorMsg, mLogTimeZoneOffsetSecond, sName, mContext->GetConfigName());
+        } else {
+            LOG_INFO(mContext->GetLogger(),
+                     ("set log time zone", mSourceTimezone)("project", mContext->GetProjectName())(
+                         "logstore", mContext->GetLogstoreName())("config", mContext->GetConfigName()));
+            mLogTimeZoneOffsetSecond = logTZSecond - GetLocalTimeZoneOffsetSecond();
+        }
+    }
+
+    mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
+    mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
+
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
     return true;
 }
 
 void ProcessorParseTimestampNative::Process(PipelineEventGroup& logGroup) {
-    if (logGroup.GetEvents().empty() || mTimeFormat.empty() || mTimeKey.empty()) {
+    if (logGroup.GetEvents().empty() || mSourceFormat.empty() || mSourceKey.empty()) {
         return;
     }
     const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
@@ -60,10 +135,10 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
         return true;
     }
     LogEvent& sourceEvent = e.Cast<LogEvent>();
-    if (!sourceEvent.HasContent(mTimeKey)) {
+    if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
-    const StringView& timeStr = sourceEvent.GetContent(mTimeKey);
+    const StringView& timeStr = sourceEvent.GetContent(mSourceKey);
     mProcParseInSizeBytes->Add(timeStr.size());
     uint64_t preciseTimestamp = 0;
     bool parseSuccess = ParseLogTime(timeStr, logPath, logTime, preciseTimestamp, timeStrCache);
@@ -113,13 +188,13 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
     // Second-level cache only work when:
     // 1. No %f in the time format
     // 2. The %f is at the end of the time format
-    const char* compareResult = strstr(mTimeFormat.c_str(), "%f");
+    const char* compareResult = strstr(mSourceFormat.c_str(), "%f");
     bool haveNanosecond = compareResult != nullptr;
-    bool endWithNanosecond = compareResult == (mTimeFormat.c_str() + mTimeFormat.size() - 2);
+    bool endWithNanosecond = compareResult == (mSourceFormat.c_str() + mSourceFormat.size() - 2);
     int nanosecondLength = -1;
     const char* strptimeResult = NULL;
     if ((!haveNanosecond || endWithNanosecond) && IsPrefixString(curTimeStr, timeStrCache)) {
-        bool isTimestampNanosecond = (mTimeFormat == "%s") && (curTimeStr.length() > timeStrCache.length());
+        bool isTimestampNanosecond = (mSourceFormat == "%s") && (curTimeStr.length() > timeStrCache.length());
         if (endWithNanosecond || isTimestampNanosecond) {
             strptimeResult = Strptime(curTimeStr.data() + timeStrCache.length(), "%f", &logTime, nanosecondLength);
         } else {
@@ -127,7 +202,7 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
             logTime.tv_nsec = 0;
         }
     } else {
-        strptimeResult = Strptime(curTimeStr.data(), mTimeFormat.c_str(), &logTime, nanosecondLength, mSpecifiedYear);
+        strptimeResult = Strptime(curTimeStr.data(), mSourceFormat.c_str(), &logTime, nanosecondLength, mSourceYear);
         if (NULL != strptimeResult) {
             timeStrCache = curTimeStr.substr(0, curTimeStr.length() - nanosecondLength);
             logTime.tv_sec = logTime.tv_sec - mLogTimeZoneOffsetSecond;
@@ -141,7 +216,7 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
                                 "logstore", GetContext().GetLogstoreName())("file", logPath));
             }
             LogtailAlarm::GetInstance()->SendAlarm(PARSE_TIME_FAIL_ALARM,
-                                                   curTimeStr.to_string() + " " + mTimeFormat,
+                                                   curTimeStr.to_string() + " " + mSourceFormat,
                                                    GetContext().GetProjectName(),
                                                    GetContext().GetLogstoreName(),
                                                    GetContext().GetRegion());

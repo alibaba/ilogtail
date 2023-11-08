@@ -33,31 +33,6 @@ public:
         mContext.SetProjectName("project");
         mContext.SetRegion("cn-shanghai");
     }
-    // GetFilterFule constructs LogFilterRule according to @filterKeys and @filterRegs.
-    // **Will throw exception if @filterKeys.size() != @filterRegs.size() or failed**.
-    LogFilterRule* GetFilterFule(const Json::Value& filterKeys, const Json::Value& filterRegs) {
-        if (filterKeys.size() != filterRegs.size()) {
-            throw ExceptionBase(std::string("The filterKey size is ") + ToString(filterKeys.size())
-                                + std::string(", while the filterRegs size is ") + ToString(filterRegs.size()));
-        }
-
-        LogFilterRule* rulePtr = new LogFilterRule();
-        for (uint32_t i = 0; i < filterKeys.size(); i++) {
-            try {
-                rulePtr->FilterKeys.push_back(filterKeys[i].asString());
-                rulePtr->FilterRegs.push_back(boost::regex(filterRegs[i].asString()));
-            } catch (const exception& e) {
-                LOG_WARNING(sLogger, ("The filter is invalid", e.what()));
-                delete rulePtr;
-                throw;
-            } catch (...) {
-                LOG_WARNING(sLogger, ("The filter is invalid reason unknow", ""));
-                delete rulePtr;
-                throw;
-            }
-        }
-        return rulePtr;
-    }
 
     void TestLogFilterRule();
     void TestBaseFilter();
@@ -72,27 +47,17 @@ UNIT_TEST_CASE(ProcessorFilterNativeUnittest, TestFilterNoneUtf8);
 
 // To test bool ProcessorFilterNative::Filter(LogEvent& sourceEvent, const LogFilterRule* filterRule)
 void ProcessorFilterNativeUnittest::TestLogFilterRule() {
-    Config mConfig;
-    Json::Value filterKeys;
-    filterKeys.append(Json::Value("key1"));
-    filterKeys.append(Json::Value("key2"));
-
-    Json::Value filterRegs;
-    filterRegs.append(Json::Value(".*value1"));
-    filterRegs.append(Json::Value("value2.*"));
-
-    mConfig.mFilterRule.reset(GetFilterFule(filterKeys, filterRegs));
-
-    mConfig.mLogType = JSON_LOG;
-    mConfig.mDiscardNoneUtf8 = true;
-
+    Json::Value config;
+    config["Include"] = Json::Value(Json::objectValue);
+    config["Include"]["key1"] = ".*value1";
+    config["Include"]["key2"] = "value2.*";
+    config["DiscardingNonUTF8"] = true;
 
     // run function
     ProcessorFilterNative& processor = *(new ProcessorFilterNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, mConfig);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     // case 1 : the field are all provided,  only one matched
     auto sourceBuffer1 = std::make_shared<SourceBuffer>();
@@ -147,7 +112,6 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     })";
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
 
-
     // case 2 : NOT all fields exist, it
     auto sourceBuffer2 = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup2(sourceBuffer2);
@@ -194,18 +158,15 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         root["operands"].append(operands1);
         root["operands"].append(operands2);
 
-        Config mConfig;
-        mConfig.mLogType = JSON_LOG;
-        mConfig.mDiscardNoneUtf8 = true;
-
-        mConfig.mAdvancedConfig.mFilterExpressionRoot = UserLogConfigParser::ParseExpressionFromJSON(root);
+        Json::Value config;
+        config["ConditionExp"] = root;
+        config["DiscardingNonUTF8"] = true;
 
         // run function
         ProcessorFilterNative& processor = *(new ProcessorFilterNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
-        ComponentConfig componentConfig(pluginId, mConfig);
-        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         // case 1 : the field are all provided,  only one matched
         auto sourceBuffer1 = std::make_shared<SourceBuffer>();
@@ -259,7 +220,6 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
             ]
         })";
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
-
 
         // case 2 : NOT all fields exist, it
         auto sourceBuffer2 = std::make_shared<SourceBuffer>();
@@ -337,19 +297,14 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
 
         // init
-        Config mConfig;
-        mConfig.mLogType = JSON_LOG;
-        mConfig.mDiscardNoneUtf8 = true;
-        mConfig.mAdvancedConfig.mFilterExpressionRoot = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
+        Json::Value config;
+        // (a and not d) and (b or c)
+        config["ConditionExp"] = rootNode;
+        config["DiscardingNonUTF8"] = true;
         ProcessorFilterNative& processor = *(new ProcessorFilterNative);
         std::string pluginId = "testID";
         ProcessorInstance processorInstance(&processor, pluginId);
-        ComponentConfig componentConfig(pluginId, mConfig);
-        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
-
-        // (a and not d) and (b or c)
-        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
-        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
         auto sourceBuffer1 = std::make_shared<SourceBuffer>();
         PipelineEventGroup eventGroup1(sourceBuffer1);
@@ -445,8 +400,14 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value rootNode;
         APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
 
-        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
-        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+        // init
+        Json::Value config;
+        config["ConditionExp"] = rootNode;
+        config["DiscardingNonUTF8"] = true;
+        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     }
 
     {
@@ -459,8 +420,14 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value rootNode;
         APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
 
-        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
-        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+        // init
+        Json::Value config;
+        config["ConditionExp"] = rootNode;
+        config["DiscardingNonUTF8"] = true;
+        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     }
 
     {
@@ -479,8 +446,14 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value rootNode;
         APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
 
-        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
-        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
+        // init
+        Json::Value config;
+        config["ConditionExp"] = rootNode;
+        config["DiscardingNonUTF8"] = true;
+        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     }
 
     {
@@ -513,8 +486,14 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value rootNode;
         APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
 
-        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
-        APSARA_TEST_TRUE_FATAL(root.get() == NULL);
+        // init
+        Json::Value config;
+        config["ConditionExp"] = rootNode;
+        config["DiscardingNonUTF8"] = true;
+        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
     }
 
     {
@@ -543,8 +522,14 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value rootNode;
         APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
 
-        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
-        APSARA_TEST_TRUE_FATAL(root.get() == NULL);
+        // init
+        Json::Value config;
+        config["ConditionExp"] = rootNode;
+        config["DiscardingNonUTF8"] = true;
+        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
     }
 
     {
@@ -577,8 +562,14 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value rootNode;
         APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
 
-        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
-        APSARA_TEST_TRUE_FATAL(root.get() == NULL);
+        // init
+        Json::Value config;
+        config["ConditionExp"] = rootNode;
+        config["DiscardingNonUTF8"] = true;
+        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(!processorInstance.Init(config, mContext));
     }
 
     // redundant fields
@@ -605,9 +596,15 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         Json::Value rootNode;
         APSARA_TEST_TRUE_FATAL(reader.parse(jsonStr, rootNode));
 
-        BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(rootNode);
-        APSARA_TEST_TRUE_FATAL(root.get() != NULL);
-        APSARA_TEST_TRUE(root->GetNodeType() == OPERATOR_NODE);
+        // init
+        Json::Value config;
+        config["ConditionExp"] = rootNode;
+        config["DiscardingNonUTF8"] = true;
+        ProcessorFilterNative& processor = *(new ProcessorFilterNative);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        APSARA_TEST_TRUE(processor.mConditionExp->GetNodeType() == OPERATOR_NODE);
     }
 }
 
@@ -699,7 +696,6 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
         isBlunk[index][0] = true;
         isBlunk[index][1] = true;
     }
-
 
     // generate three bytes utf8
 
@@ -900,7 +896,6 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
         isBlunk[i][3] = true;
     }
 
-
     // greater than range
     for (int i = 78; i < 80; ++i) {
         randArr1[i - 70] |= 0x04;
@@ -961,7 +956,7 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
         processor.FilterNoneUtf8(testStr);
         for (uint32_t indexOfString = 0; indexOfString < testStr.size(); ++indexOfString) {
             if (flow[indexOfString] == true) {
-                APSARA_TEST_EQUAL_FATAL(testStr[indexOfString], ' ');  
+                APSARA_TEST_EQUAL_FATAL(testStr[indexOfString], ' ');
             } else {
                 APSARA_TEST_NOT_EQUAL_FATAL(testStr[indexOfString], ' ');
             }

@@ -55,27 +55,31 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventKeepUnmatch);
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventDiscardUnmatch);
 
 void ProcessorParseApsaraNativeUnittest::TestInit() {
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mLogTimeZoneOffsetSecond = 0;
+    // make config
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "__raw__";
+    config["Timezone"] = "";
 
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);    
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
 void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mLogTimeZoneOffsetSecond = -GetLocalTimeZoneOffsetSecond();
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "__raw__";
+    config["Timezone"] = "";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -117,8 +121,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
     processor.SetContext(mContext);    
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     std::string expectJson = R"({
         "events" :
@@ -171,11 +174,13 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
 
 void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = true;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mLogTimeZoneOffsetSecond = -GetLocalTimeZoneOffsetSecond();
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = false;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "__raw__";
+    config["Timezone"] = "";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -217,8 +222,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
     processor.SetContext(mContext);    
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string outJson = eventGroup.ToJsonString();
@@ -236,11 +240,13 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
 
 void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = true;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mLogTimeZoneOffsetSecond = -GetLocalTimeZoneOffsetSecond();
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = true;
+    config["CopingRawLog"] = true;
+    config["RenamedSourceKey"] = "__raw__";
+    config["Timezone"] = "";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -273,8 +279,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
     processor.SetContext(mContext);    
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     std::string expectJson = R"({
         "events" :
@@ -314,11 +319,13 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
 
 void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = true;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mLogTimeZoneOffsetSecond = -GetLocalTimeZoneOffsetSecond();
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = true;
+    config["CopingRawLog"] = true;
+    config["RenamedSourceKey"] = "__raw__";
+    config["Timezone"] = "";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -351,8 +358,7 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
     processor.SetContext(mContext);    
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     std::string expectJson = R"({
         "events" :
@@ -391,13 +397,19 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
 }
 
 void ProcessorParseApsaraNativeUnittest::TestAddLog() {
-    Config config;
+    // make config
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "__raw__";
+
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     processor.SetContext(mContext);    
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     auto logEvent = LogEvent::CreateEvent(sourceBuffer);
@@ -410,13 +422,12 @@ void ProcessorParseApsaraNativeUnittest::TestAddLog() {
 
 void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
     // make config
-    Config config;
-    config.mSeparator = ",";
-    config.mQuote = '\'';
-    config.mColumnKeys = {"time", "method", "url", "request_time"};
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "__raw__";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -475,8 +486,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string expectJson = R"({
@@ -558,13 +568,12 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
 
 void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
     // make config
-    Config config;
-    config.mSeparator = ",";
-    config.mQuote = '\'';
-    config.mColumnKeys = {"time", "method", "url", "request_time"};
-    config.mDiscardUnmatch = true;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = false;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "__raw__";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -623,8 +632,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
     ProcessorParseApsaraNative& processor = *(new ProcessorParseApsaraNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string outJson = eventGroup.ToJsonString();

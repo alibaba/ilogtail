@@ -15,20 +15,60 @@
  */
 
 #include "processor/ProcessorParseRegexNative.h"
-
-#include "common/StringTools.h"
 #include "app_config/AppConfig.h"
-#include "common/Constants.h"
-#include "monitor/LogtailMetric.h"
 #include "monitor/MetricConstants.h"
-#include "common/TimeUtil.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include "monitor/MetricConstants.h"
+#include "common/ParamExtractor.h"
+
+using namespace std;
 
 namespace logtail {
 const std::string ProcessorParseRegexNative::sName = "processor_parse_regex_native";
+const std::string ProcessorParseRegexNative::UNMATCH_LOG_KEY = "__raw_log__";
 
 bool ProcessorParseRegexNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    }
+    if (!GetMandatoryStringParam(config, "Regex", mRegex, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    }
+    if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    }
+
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalStringParam(config, "RenamedSourceKey", mRenamedSourceKey, errorMsg)) {
+        mRenamedSourceKey = mSourceKey;
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
+    }
+    if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
+    }
+
+    AddUserDefinedFormat();
+
+    if (mKeepingSourceWhenParseSucceed && mRenamedSourceKey == mSourceKey) {
+        mSourceKeyOverwritten = true;
+    }
+
+    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
+    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
+
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcKeyCountNotMatchErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
     return true;
 }
 
@@ -62,28 +102,29 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
         return true;
     }
     auto rawContent = sourceEvent.GetContent(mSourceKey);
-    bool res = true;
+    bool parseSuccess = true;
     for (uint32_t i = 0; i < mUserDefinedFormat.size(); ++i) { // support multiple patterns
         const UserDefinedFormat& format = mUserDefinedFormat[i];
         if (format.mIsWholeLineMode) {
-            res = WholeLineModeParser(sourceEvent, format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0]);
+            parseSuccess
+                = WholeLineModeParser(sourceEvent, format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0]);
         } else {
-            res = RegexLogLineParser(sourceEvent, format.mReg, format.mKeys, logPath);
+            parseSuccess = RegexLogLineParser(sourceEvent, format.mReg, format.mKeys, logPath);
         }
-        if (res) {
+        if (parseSuccess) {
             break;
         }
     }
-    if (!res && !mDiscardUnmatch) {
-        AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
+    if (!parseSuccess && (mKeepingSourceWhenParseFail || mCopingRawLog)) {
+        AddLog(UNMATCH_LOG_KEY, // __raw_log__
                rawContent,
                sourceEvent); // legacy behavior, should use sourceKey
     }
-    if (res || !mDiscardUnmatch) {
-        if (mUploadRawLog && (!res || !mRawLogTagOverwritten)) {
-            AddLog(mRawLogTag, rawContent, sourceEvent); // __raw__
+    if (parseSuccess || mKeepingSourceWhenParseFail) {
+        if (mKeepingSourceWhenParseSucceed && (!parseSuccess || !mRawLogTagOverwritten)) {
+            AddLog(mRenamedSourceKey, rawContent, sourceEvent); // __raw__
         }
-        if (res && !mSourceKeyOverwritten) {
+        if (parseSuccess && !mSourceKeyOverwritten) {
             sourceEvent.DelContent(mSourceKey);
         }
         return true;
@@ -92,19 +133,18 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
     return false;
 }
 
-void ProcessorParseRegexNative::AddUserDefinedFormat(const std::string& regStr, const std::string& keys) {
-    std::vector<std::string> keyParts = StringSpliter(keys, ",");
-    for (auto& it : keyParts) {
+void ProcessorParseRegexNative::AddUserDefinedFormat() {
+    for (auto& it : mKeys) {
         if (it == mSourceKey) {
             mSourceKeyOverwritten = true;
         }
-        if (it == mRawLogTag) {
+        if (it == mRenamedSourceKey) {
             mRawLogTagOverwritten = true;
         }
     }
-    boost::regex reg(regStr);
-    bool isWholeLineMode = regStr == "(.*)";
-    mUserDefinedFormat.push_back(UserDefinedFormat(reg, keyParts, isWholeLineMode));
+    boost::regex reg(mRegex);
+    bool isWholeLineMode = mRegex == "(.*)";
+    mUserDefinedFormat.push_back(UserDefinedFormat(reg, mKeys, isWholeLineMode));
 }
 
 bool ProcessorParseRegexNative::WholeLineModeParser(LogEvent& sourceEvent, const std::string& key) {

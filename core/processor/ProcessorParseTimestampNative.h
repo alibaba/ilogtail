@@ -16,20 +16,26 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include "common/TimeUtil.h"
 #include "plugin/interface/Processor.h"
 
 namespace logtail {
-    
 class ProcessorParseTimestampNative : public Processor {
 public:
     static const std::string sName;
+    static const std::string PRECISE_TIMESTAMP_DEFAULT_KEY;
+    // 源字段名。
+    std::string mSourceKey;
+    // 日志时间格式。 %Y/%m/%d %H:%M:%S
+    std::string mSourceFormat;
+    // 日志时间所属时区。格式为GMT+HH:MM（东区）或GMT-HH:MM（西区）。
+    std::string mSourceTimezone = "";
+    int mSourceYear = -1;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
+    static bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond);
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
@@ -45,10 +51,8 @@ private:
                       StringView& timeStr // cache
     );
     bool IsPrefixString(const StringView& all, const StringView& prefix);
-    std::string mTimeKey;
-    std::string mTimeFormat;
+
     int mLogTimeZoneOffsetSecond = 0;
-    int mSpecifiedYear = -1;
     PreciseTimestampConfig mLegacyPreciseTimestampConfig;
 
     int* mParseTimeFailures = nullptr;
@@ -63,5 +67,4 @@ private:
     friend class ProcessorParseLogTimeUnittest;
 #endif
 };
-
 } // namespace logtail

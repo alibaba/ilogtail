@@ -28,6 +28,17 @@ class ProcessorSplitRegexNative : public Processor {
 public:
     static const std::string sName;
 
+    std::string mSplitKey;
+    std::string mStartPattern;
+    std::string mContinuePattern;
+    std::string mEndPattern;
+    std::shared_ptr<boost::regex> mStartPatternRegPtr;
+    std::shared_ptr<boost::regex> mContinuePatternRegPtr;
+    std::shared_ptr<boost::regex> mEndPatternRegPtr;
+    bool mIsMultline;
+    bool mAppendingLogPositionMeta = false;
+    bool mKeepingSourceWhenParseFail = false;
+
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
@@ -36,6 +47,8 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
+    bool IsMultiline() const;
+    bool ParseRegex(const std::string& pattern, std::shared_ptr<boost::regex>& reg);
     void ProcessEvent(PipelineEventGroup& logGroup,
                       const StringView& logPath,
                       const PipelineEventPtr& e,
@@ -55,16 +68,13 @@ private:
 
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
-    std::string mSplitKey;
-    bool mIsMultline;
+
     std::string mLogBeginReg;
     std::string mLogContinueReg;
     std::string mLogEndReg;
     std::unique_ptr<boost::regex> mLogBeginRegPtr;
     std::unique_ptr<boost::regex> mLogContinueRegPtr;
     std::unique_ptr<boost::regex> mLogEndRegPtr;
-    bool mDiscardUnmatch = false;
-    bool mEnableLogPositionMeta = false;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorSplitRegexNativeUnittest;
     friend class ProcessorSplitRegexDisacardUnmatchUnittest;

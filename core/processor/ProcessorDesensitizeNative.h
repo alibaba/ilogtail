@@ -16,10 +16,8 @@
 
 #pragma once
 
-#include <unordered_map>
-
 #include "plugin/interface/Processor.h"
-#include "config/Config.h"
+#include <re2/re2.h>
 
 namespace logtail {
 

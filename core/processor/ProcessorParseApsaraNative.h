@@ -16,9 +16,6 @@
 
 #pragma once
 
-#include <cstdint>
-#include <ctime>
-
 #include "common/TimeUtil.h"
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
@@ -28,6 +25,25 @@ namespace logtail {
 class ProcessorParseApsaraNative : public Processor {
 public:
     static const std::string sName;
+    static const std::string UNMATCH_LOG_KEY;
+    static const std::string SLS_KEY_LEVEL;
+    static const std::string SLS_KEY_THREAD;
+    static const std::string SLS_KEY_FILE;
+    static const std::string SLS_KEY_LINE;
+    static const int32_t MAX_BASE_FIELD_NUM;
+
+    // 源字段名。
+    std::string mSourceKey;
+    // 日志时间所属时区。格式为GMT+HH:MM（东区）或GMT-HH:MM（西区）。
+    std::string mTimezone = "";
+    // 当解析失败时，是否保留源字段。
+    bool mKeepingSourceWhenParseFail = false;
+    // 当解析成功时，是否保留源字段。
+    bool mKeepingSourceWhenParseSucceed = false;
+    // 当原始字段被保留时，用于存储原始字段的字段名。若不填，默认不改名。
+    std::string mRenamedSourceKey = "";
+    bool mCopingRawLog = false;
+    bool mAdjustingMicroTimezone = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -37,20 +53,16 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
+    bool
+    ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
-    time_t ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
-    int32_t GetApsaraLogMicroTime(StringView& buffer);
+    time_t
+    ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
     bool IsPrefixString(const char* all, const StringView& prefix);
     int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
 
-    std::string mSourceKey;
-    std::string mRawLogTag;
-    bool mDiscardUnmatch = false;
-    bool mUploadRawLog = false;
-    bool mAdjustApsaraMicroTimezone = false;
-    bool mSourceKeyOverwritten = false;
     int mLogTimeZoneOffsetSecond = 0;
+    bool mSourceKeyOverwritten = false;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;

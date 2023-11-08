@@ -26,6 +26,10 @@ class ProcessorSplitLogStringNative : public Processor {
 public:
     static const std::string sName;
 
+    std::string mSplitKey;
+    char mSplitChar = '\n';
+    bool mAppendingLogPositionMeta = false;
+
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
@@ -38,8 +42,6 @@ private:
     void LogSplit(const char* buffer, int32_t size, int32_t& lineFeed, std::vector<StringView>& logIndex);
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
-    std::string mSplitKey;
-    char mSplitChar = '\n';
     bool mEnableLogPositionMeta = false;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorRegexStringNativeUnittest;

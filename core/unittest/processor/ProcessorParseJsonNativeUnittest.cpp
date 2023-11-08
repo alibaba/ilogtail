@@ -57,26 +57,29 @@ UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJsonContent);
 UNIT_TEST_CASE(ProcessorParseJsonNativeUnittest, TestProcessJsonRaw);
 
 void ProcessorParseJsonNativeUnittest::TestInit() {
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    // make config
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "__raw__";
 
     // run function
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
 void ProcessorParseJsonNativeUnittest::TestAddLog() {
-    Config config;
+    // make config
+    Json::Value config;
+    config["SourceKey"] = "content";
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     auto logEvent = LogEvent::CreateEvent(sourceBuffer);
@@ -89,10 +92,12 @@ void ProcessorParseJsonNativeUnittest::TestAddLog() {
 
 void ProcessorParseJsonNativeUnittest::TestProcessJson() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = true;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = true;
+    config["CopingRawLog"] = true;
+    config["RenamedSourceKey"] = "__raw__";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -127,8 +132,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string expectJson = R"({
@@ -171,10 +175,12 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
 
 void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = true;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = true;
+    config["CopingRawLog"] = true;
+    config["RenamedSourceKey"] = "__raw__";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -199,8 +205,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string expectJson = R"({
@@ -232,10 +237,12 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
 
 void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = true;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = true;
+    config["CopingRawLog"] = true;
+    config["RenamedSourceKey"] = "__raw__";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -260,8 +267,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string expectJson = R"({
@@ -292,10 +298,13 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
 
 void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    // make config
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "__raw__";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -320,8 +329,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
 
     int count = 1;
@@ -366,10 +374,12 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
 
 void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = true;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["KeepingSourceWhenParseFail"] = false;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "__raw__";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -394,8 +404,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
     ProcessorParseJsonNative& processor = *(new ProcessorParseJsonNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
 
     int count = 1;
