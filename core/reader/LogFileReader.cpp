@@ -1316,8 +1316,8 @@ bool LogFileReader::CheckFileSignatureAndOffset(bool isOpenOnUpdate) {
         int nbytes = mLogFileOp.Pread(firstLine, 1, 1024, 0);
         if (nbytes < 0) {
             LOG_ERROR(sLogger,
-                      ("fail to read file", mHostLogPath)("nbytes", nbytes)("project", mProjectName)(
-                          "logstore", mCategory)("config", mConfigName));
+                      ("fail to read file", mHostLogPath)("nbytes", nbytes)("project", GetProject())(
+                          "logstore", GetLogstore())("config", GetConfigName()));
             return false;
         }
         firstLine[nbytes] = '\0';
@@ -1325,7 +1325,7 @@ bool LogFileReader::CheckFileSignatureAndOffset(bool isOpenOnUpdate) {
         if (!sigCheckRst) {
             LOG_INFO(sLogger,
                      ("Check file truncate by signature, read from begin",
-                      mHostLogPath)("project", mProjectName)("logstore", mCategory)("config", mConfigName));
+                      mHostLogPath)("project", GetProject())("logstore", GetLogstore())("config", GetConfigName()));
             mLastFilePos = 0;
             if (mEOOption) {
                 updatePrimaryCheckpointSignature();

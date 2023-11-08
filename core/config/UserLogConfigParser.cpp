@@ -19,9 +19,6 @@
 #include "common/JsonUtil.h"
 #include "common/ExceptionBase.h"
 #include "common/LogtailCommonFlags.h"
-#include "processor/UnaryFilterOperatorNode.h"
-#include "processor/RegexFilterValueNode.h"
-#include "processor/BinaryFilterOperatorNode.h"
 #include "logger/Logger.h"
 #include "Config.h"
 
@@ -92,17 +89,6 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
     //     }
     // }
     // log filter: AND/OR/NOT/REGEX.
-    {
-        const Json::Value& val = advancedVal["filter_expression"];
-        if (!val.isNull()) {
-            BaseFilterNodePtr root = ParseExpressionFromJSON(val);
-            if (!root) {
-                throw ExceptionBase("invalid filter expression: " + val.toStyledString());
-            }
-            cfg.mAdvancedConfig.mFilterExpressionRoot.swap(root);
-            LOG_INFO(sLogger, ("parse filter expression", val.toStyledString()));
-        }
-    }
     // // max_rotate_queue_size
     // {
     //     const Json::Value& val = advancedVal["max_rotate_queue_size"];
@@ -213,76 +199,6 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
             cfg.mAdvancedConfig.mAdjustApsaraMicroTimezone = GetBoolValue(advancedVal, "adjust_apsara_micro_timezone");
         }
     }
-}
-
-BaseFilterNodePtr UserLogConfigParser::ParseExpressionFromJSON(const Json::Value& value) {
-    BaseFilterNodePtr node;
-    if (!value.isObject()) {
-        return node;
-    }
-
-    if (value["operator"].isString() && value["operands"].isArray()) {
-        std::string op = ToLowerCaseString(value["operator"].asString());
-        FilterOperator filterOperator;
-        // check operator
-        if (!GetOperatorType(op, filterOperator)) {
-            return node;
-        }
-
-        // check operands
-        // if "op" element occurs, "operands" element must exist its type must be array, otherwise we consider it as
-        // invalid json
-        const Json::Value& operandsValue = value["operands"];
-        if (filterOperator == NOT_OPERATOR && operandsValue.size() == 1) {
-            BaseFilterNodePtr childNode = ParseExpressionFromJSON(operandsValue[0]);
-            if (childNode) {
-                node.reset(new UnaryFilterOperatorNode(filterOperator, childNode));
-            }
-        } else if ((filterOperator == AND_OPERATOR || filterOperator == OR_OPERATOR) && operandsValue.size() == 2) {
-            BaseFilterNodePtr leftNode = ParseExpressionFromJSON(operandsValue[0]);
-            BaseFilterNodePtr rightNode = ParseExpressionFromJSON(operandsValue[1]);
-            if (leftNode && rightNode) {
-                node.reset(new BinaryFilterOperatorNode(filterOperator, leftNode, rightNode));
-            }
-        }
-    } else if ((value["key"].isString() && value["exp"].isString()) || !value["type"].isString()) {
-        std::string key = value["key"].asString();
-        std::string exp = value["exp"].asString();
-        std::string type = ToLowerCaseString(value["type"].asString());
-
-        FilterNodeFunctionType func;
-        if (!GetNodeFuncType(type, func)) {
-            return node;
-        }
-        if (func == REGEX_FUNCTION) {
-            node.reset(new RegexFilterValueNode(key, exp));
-        }
-    }
-    return node;
-}
-
-bool UserLogConfigParser::GetOperatorType(const std::string& type, FilterOperator& op) {
-    if (type == "not") {
-        op = NOT_OPERATOR;
-    } else if (type == "and") {
-        op = AND_OPERATOR;
-    } else if (type == "or") {
-        op = OR_OPERATOR;
-    } else {
-        LOG_ERROR(sLogger, ("invalid operator", type));
-        return false;
-    }
-    return true;
-}
-
-bool UserLogConfigParser::GetNodeFuncType(const std::string& type, FilterNodeFunctionType& func) {
-    if (type == "regex") {
-        func = REGEX_FUNCTION;
-    } else {
-        LOG_ERROR(sLogger, ("invalid func type", type));
-        return false;
-    }
-    return true;
 }
 
 } // namespace logtail

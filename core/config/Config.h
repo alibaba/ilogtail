@@ -69,7 +69,6 @@ public:
         // bool mPassTagsToPlugin = true; // pass file tags to plugin system.
         std::string mRawLogTag; // if mUploadRawLog is true, use this string as raw log tag
         // int32_t mBatchSendInterval;
-        BaseFilterNodePtr mFilterExpressionRoot;
         // uint32_t mExactlyOnceConcurrency = 0;
         // bool mEnableLogPositionMeta = false; // Add inode/offset to log.
         // size_t mMaxRotateQueueSize;

@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
-#include <memory>
-#include <unordered_map>
+#pragma once
 
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
-#include "config/Config.h"
 #include "processor/BaseFilterNode.h"
 
 namespace logtail {
@@ -29,8 +26,11 @@ class ProcessorFilterNative : public Processor {
 public:
     static const std::string sName;
 
+    // 日志字段白名单。多个条件之间为“且”的关系，仅当所有条件均满足时，该条日志才会被采集。
     std::unordered_map<std::string, std::string> mInclude;
+    // ConditionExp
     BaseFilterNodePtr mConditionExp = nullptr;
+    // 忽略非UTF8编码的日志
     bool mDiscardingNonUTF8 = false;
 
     const std::string& Name() const override { return sName; }
@@ -43,35 +43,30 @@ protected:
 
 private:
     enum class Mode { BYPASS_MODE, EXPRESSION_MODE, RULE_MODE };
-
+    Mode mFilterMode = Mode::BYPASS_MODE;
     struct LogFilterRule {
         std::vector<std::string> FilterKeys;
         std::vector<boost::regex> FilterRegs;
     };
     std::shared_ptr<LogFilterRule> mFilterRule;
-    BaseFilterNodePtr mFilterExpressionRoot = nullptr;
-    std::unordered_map<std::string, LogFilterRule*> mFilters;
-    LogType mLogType;
-    bool mDiscardNoneUtf8;
-    Mode mFilterMode = Mode::BYPASS_MODE;
 
-    CounterPtr mProcFilterInSizeBytes;
-    CounterPtr mProcFilterOutSizeBytes;
     CounterPtr mProcFilterErrorTotal;
     CounterPtr mProcFilterRecordsTotal;
 
-    // bool LoadOldGlobalConfig(const PipelineConfig& componentConfig);
     bool FilterExpressionRoot(LogEvent& sourceEvent, const BaseFilterNodePtr& node);
+
     bool FilterFilterRule(LogEvent& sourceEvent, const LogFilterRule* filterRule);
-    // bool FilterGlobal(LogEvent& sourceEvent);
+    bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
 
     bool ProcessEvent(PipelineEventPtr& e);
-    bool IsMatched(const LogContents& contents, const LogFilterRule& rule);
 
     bool noneUtf8(StringView& strSrc, bool modify);
     bool CheckNoneUtf8(const StringView& strSrc);
     void FilterNoneUtf8(std::string& strSrc);
 
+    BaseFilterNodePtr ParseExpressionFromJSON(const Json::Value& value);
+    static bool GetOperatorType(const std::string& type, FilterOperator& op);
+    static bool GetNodeFuncType(const std::string& type, FilterNodeFunctionType& func);
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorFilterNativeUnittest;
 #endif

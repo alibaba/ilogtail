@@ -23,28 +23,32 @@
 #include <vector>
 #include "logger/Logger.h"
 #include "common/ParamExtractor.h"
-#include "config/UserLogConfigParser.h"
+#include "processor/UnaryFilterOperatorNode.h"
+#include "processor/RegexFilterValueNode.h"
+#include "processor/BinaryFilterOperatorNode.h"
 
 namespace logtail {
 const std::string ProcessorFilterNative::sName = "processor_filter_regex_native";
 
 ProcessorFilterNative::~ProcessorFilterNative() {
-    for (auto& mFilter : mFilters) {
-        delete mFilter.second;
-    }
-    mFilters.clear();
 }
 
 bool ProcessorFilterNative::Init(const Json::Value& config) {
     std::string errorMsg;
     if (GetOptionalMapParam(config, "Include", mInclude, errorMsg)) {
         mFilterMode = Mode::RULE_MODE;
+        for (auto& include : mInclude) {
+            std::vector<std::string> keys;
+            std::vector<boost::regex> regs;
+            keys.push_back(include.first);
+            regs.push_back(boost::regex(include.second));
+        }
     }
 
     if (mFilterMode == Mode::BYPASS_MODE) {
         const Json::Value& val = config["ConditionExp"];
         if (!val.isNull()) {
-            BaseFilterNodePtr root = UserLogConfigParser::ParseExpressionFromJSON(val);
+            BaseFilterNodePtr root = ParseExpressionFromJSON(val);
             if (!root) {
                 errorMsg = "invalid filter expression: " + val.toStyledString();
                 PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
@@ -56,12 +60,6 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
     }
 
     if (mFilterMode == Mode::BYPASS_MODE) {
-        if (LoadOldGlobalConfig()) {
-            mFilterMode = Mode::GLOBAL_MODE;
-        }
-    }
-
-    if (mFilterMode == Mode::BYPASS_MODE) {
         errorMsg = "Include and ConditionExp must have one";
         PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
@@ -69,58 +67,9 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mDiscardingNonUTF8, sName, mContext->GetConfigName());
     }
 
-    mProcFilterInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_IN_SIZE_BYTES);
-    mProcFilterOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_OUT_SIZE_BYTES);
     mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);
     mProcFilterRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_RECORDS_TOTAL);
 
-    return true;
-}
-
-bool ProcessorFilterNative::LoadOldGlobalConfig() {
-    // old InitFilter
-    Json::Value jsonRoot; // will contains the root value after parsing.
-    ParseConfResult userLogRes = ParseConfig(STRING_FLAG(user_log_config), jsonRoot);
-    if (userLogRes != CONFIG_OK) {
-        if (userLogRes == CONFIG_NOT_EXIST)
-            LOG_DEBUG(GetContext().GetLogger(), (mContext->GetConfigName(), "not found, uninitialized Filter"));
-        if (userLogRes == CONFIG_INVALID_FORMAT)
-            LOG_ERROR(GetContext().GetLogger(),
-                      ("load user config for filter fail, file content is not valid json", mContext->GetConfigName()));
-        return false;
-    }
-    if (!jsonRoot.isMember("filters")) {
-        return false;
-    }
-    const Json::Value& filters = jsonRoot["filters"];
-    uint32_t filterSize = filters.size();
-    if (!filterSize) {
-        return false;
-    }
-    try {
-        for (uint32_t index = 0; index < filterSize; index++) {
-            const Json::Value& item = filters[index];
-            std::string projectName = item["project_name"].asString();
-            std::string category = item["category"].asString();
-            const Json::Value& keys = item["keys"];
-            const Json::Value& regs = item["regs"];
-            if (keys.size() != regs.size()) {
-                LOG_ERROR(GetContext().GetLogger(),
-                          ("invalid filter config", "ignore it")("project", projectName)("logstore", category));
-                return false;
-            }
-            // default filter relation is AND
-            LogFilterRule* filterRule = new LogFilterRule();
-            for (uint32_t i = 0; i < keys.size(); i++) {
-                filterRule->FilterKeys.push_back(keys[i].asString());
-                filterRule->FilterRegs.push_back(boost::regex(regs[i].asString()));
-            }
-            mFilters[projectName + "_" + category] = filterRule;
-        }
-    } catch (...) {
-        LOG_ERROR(GetContext().GetLogger(), ("Can't parse the filter config", ""));
-        return false;
-    }
     return true;
 }
 
@@ -150,11 +99,11 @@ bool ProcessorFilterNative::ProcessEvent(PipelineEventPtr& e) {
     bool res = true;
 
     if (mFilterMode == Mode::EXPRESSION_MODE) {
-        res = FilterExpressionRoot(sourceEvent, mFilterExpressionRoot);
+        res = FilterExpressionRoot(sourceEvent, mConditionExp);
     } else if (mFilterMode == Mode::RULE_MODE) {
         res = FilterFilterRule(sourceEvent, mFilterRule.get());
     }
-    if (res && mDiscardNoneUtf8) {
+    if (res && mDiscardingNonUTF8) {
         LogContents& contents = sourceEvent.MutableContents();
         std::vector<std::pair<StringView, StringView> > newContents;
         for (auto content = contents.begin(); content != contents.end();) {
@@ -257,7 +206,6 @@ bool ProcessorFilterNative::IsMatched(const LogContents& contents, const LogFilt
 static const char UTF8_BYTE_PREFIX = 0x80;
 static const char UTF8_BYTE_MASK = 0xc0;
 
-
 bool ProcessorFilterNative::CheckNoneUtf8(const StringView& strSrc) {
     return noneUtf8(const_cast<StringView&>(strSrc), false);
 }
@@ -346,6 +294,76 @@ bool ProcessorFilterNative::noneUtf8(StringView& str, bool modify) {
     }
 #undef FILL_BLUNK_AND_CONTINUE_IF_TRUE
     return false;
+}
+
+BaseFilterNodePtr ProcessorFilterNative::ParseExpressionFromJSON(const Json::Value& value) {
+    BaseFilterNodePtr node;
+    if (!value.isObject()) {
+        return node;
+    }
+
+    if (value["operator"].isString() && value["operands"].isArray()) {
+        std::string op = ToLowerCaseString(value["operator"].asString());
+        FilterOperator filterOperator;
+        // check operator
+        if (!GetOperatorType(op, filterOperator)) {
+            return node;
+        }
+
+        // check operands
+        // if "op" element occurs, "operands" element must exist its type must be array, otherwise we consider it as
+        // invalid json
+        const Json::Value& operandsValue = value["operands"];
+        if (filterOperator == NOT_OPERATOR && operandsValue.size() == 1) {
+            BaseFilterNodePtr childNode = ParseExpressionFromJSON(operandsValue[0]);
+            if (childNode) {
+                node.reset(new UnaryFilterOperatorNode(filterOperator, childNode));
+            }
+        } else if ((filterOperator == AND_OPERATOR || filterOperator == OR_OPERATOR) && operandsValue.size() == 2) {
+            BaseFilterNodePtr leftNode = ParseExpressionFromJSON(operandsValue[0]);
+            BaseFilterNodePtr rightNode = ParseExpressionFromJSON(operandsValue[1]);
+            if (leftNode && rightNode) {
+                node.reset(new BinaryFilterOperatorNode(filterOperator, leftNode, rightNode));
+            }
+        }
+    } else if ((value["key"].isString() && value["exp"].isString()) || !value["type"].isString()) {
+        std::string key = value["key"].asString();
+        std::string exp = value["exp"].asString();
+        std::string type = ToLowerCaseString(value["type"].asString());
+
+        FilterNodeFunctionType func;
+        if (!GetNodeFuncType(type, func)) {
+            return node;
+        }
+        if (func == REGEX_FUNCTION) {
+            node.reset(new RegexFilterValueNode(key, exp));
+        }
+    }
+    return node;
+}
+
+bool ProcessorFilterNative::GetOperatorType(const std::string& type, FilterOperator& op) {
+    if (type == "not") {
+        op = NOT_OPERATOR;
+    } else if (type == "and") {
+        op = AND_OPERATOR;
+    } else if (type == "or") {
+        op = OR_OPERATOR;
+    } else {
+        LOG_ERROR(sLogger, ("invalid operator", type));
+        return false;
+    }
+    return true;
+}
+
+bool ProcessorFilterNative::GetNodeFuncType(const std::string& type, FilterNodeFunctionType& func) {
+    if (type == "regex") {
+        func = REGEX_FUNCTION;
+    } else {
+        LOG_ERROR(sLogger, ("invalid func type", type));
+        return false;
+    }
+    return true;
 }
 
 } // namespace logtail

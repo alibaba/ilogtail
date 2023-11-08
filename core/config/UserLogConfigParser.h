@@ -29,16 +29,11 @@ public:
     // ParseAdvancedConfig parses all advanced configs.
     // @throw If parse failed.
     static void ParseAdvancedConfig(const Json::Value& val, Config& cfg);
-    static BaseFilterNodePtr ParseExpressionFromJSON(const Json::Value& value);
 
 private:
     // ParseBlacklist parses blacklist configuration from @advancedVal, and assign them into @cfg.
     // @return if everything is ok, empty is returned, otherwise, returns exception string.
     // static std::string ParseBlacklist(const Json::Value& advancedVal, Config& cfg);
-
-    static bool GetOperatorType(const std::string& type, FilterOperator& op);
-    static bool GetNodeFuncType(const std::string& type, FilterNodeFunctionType& func);
-
 #if defined(APSARA_UNIT_TEST_MAIN)
     friend class LogFilterUnittest;
     friend class ProcessorFilterNativeUnittest;

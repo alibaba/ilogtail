@@ -16,9 +16,6 @@
 
 #pragma once
 
-#include <vector>
-#include <unordered_map>
-
 #include "plugin/interface/Processor.h"
 #include "config/Config.h"
 

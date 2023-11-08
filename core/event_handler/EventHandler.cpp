@@ -437,9 +437,9 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(const string& path,
                 LOG_ERROR(sLogger,
                           ("stop creating new reader",
                            "check file signature failed, possibly because file signature has been changed since the "
-                           "checkpoint was last saved")("project", pConfig->GetProjectName())("logstore",
-                                                                                              pConfig->GetCategory())(
-                              "config", pConfig->mConfigName)("log reader queue name", PathJoin(path, name))(
+                           "checkpoint was last saved")("project", readerConfig.second->GetProjectName())("logstore",
+                                                                                              readerConfig.second->GetLogstoreName())(
+                              "config", readerConfig.second->GetConfigName())("log reader queue name", PathJoin(path, name))(
                               "file device", ToString(devInode.dev))("file inode", ToString(devInode.inode)));
                 return LogFileReaderPtr();
             }
