@@ -259,7 +259,7 @@ func (f *FlusherHTTP) addTask(log interface{}) {
 		default:
 			f.counter.Done()
 			f.droppedEvents.Add(1)
-			logger.Warningf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher dropped a event due to the queue if full")
+			logger.Warningf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher dropped a event due to the queue is full")
 		}
 	} else {
 		f.queue <- log
