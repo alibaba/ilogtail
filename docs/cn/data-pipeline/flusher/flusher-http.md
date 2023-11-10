@@ -31,7 +31,6 @@
 | Concurrency                  | Int                | 否       | 向url发起请求的并发数，默认为`1`                                                                                                                               |
 | QueueCapacity                  | Int                | 否       | 内部channel的缓存大小，默认为1024 |
 | AsyncIntercept                  | Boolean                | 否       | 异步过滤数据，默认为否  |
-| DropEventWhenQueueFull                  | Boolean                | 否       | 当Channel满时是否丢弃数据，默认为是，防止影响整个流水线  |
 
 ## 样例
 
