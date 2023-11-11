@@ -81,6 +81,7 @@ type FlusherHTTP struct {
 
 	queue         chan interface{}
 	counter       sync.WaitGroup
+	droppedGroups pipeline.CounterMetric
 	droppedEvents pipeline.CounterMetric
 	retryCounts   pipeline.CounterMetric
 	flushLatency  pipeline.LatencyMetric
@@ -143,6 +144,7 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 
 	f.buildVarKeys()
 	f.fillRequestContentType()
+	f.droppedGroups = helper.NewCounterMetricAndRegister("http_flusher_dropped_groups", context)
 	f.droppedEvents = helper.NewCounterMetricAndRegister("http_flusher_dropped_events", context)
 	f.retryCounts = helper.NewCounterMetricAndRegister("http_flusher_retry_counts", context)
 	f.flushLatency = helper.NewLatencyMetricAndRegister("http_flusher_flush_latency", context)
@@ -261,13 +263,30 @@ func (f *FlusherHTTP) addTask(log interface{}) {
 		select {
 		case f.queue <- log:
 		default:
-			f.counter.Done()
-			f.droppedEvents.Add(1)
-			logger.Warningf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher dropped a event due to the queue is full")
+			f.handleDroppedEvent(log)
 		}
 	} else {
 		f.queue <- log
 	}
+}
+
+// handleDroppedEvent handles a dropped event and reports metrics.
+func (f *FlusherHTTP) handleDroppedEvent(log interface{}) {
+	f.counter.Done()
+	f.droppedGroups.Add(1)
+
+	// Update the dropped events counter based on the type of the log.
+	switch v := log.(type) {
+	case *protocol.LogGroup:
+		if v != nil {
+			f.droppedEvents.Add(int64(len(v.Logs)))
+		}
+	case *models.PipelineGroupEvents:
+		if v != nil {
+			f.droppedEvents.Add(int64(len(v.Events)))
+		}
+	}
+	logger.Warningf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher dropped a group event since the queue is full")
 }
 
 func (f *FlusherHTTP) countDownTask() {
