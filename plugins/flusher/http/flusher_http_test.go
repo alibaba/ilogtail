@@ -796,6 +796,9 @@ func (c mockContext) GetExtension(name string, cfg any) (pipeline.Extension, err
 func (c mockContext) RegisterCounterMetric(metric pipeline.CounterMetric) {
 }
 
+func (c mockContext) RegisterLatencyMetric(metric pipeline.LatencyMetric) {
+}
+
 func (c mockContext) GetConfigName() string {
 	return "ctx"
 }

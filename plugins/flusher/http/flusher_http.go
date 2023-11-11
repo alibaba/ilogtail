@@ -82,6 +82,8 @@ type FlusherHTTP struct {
 	queue         chan interface{}
 	counter       sync.WaitGroup
 	droppedEvents pipeline.CounterMetric
+	retryCounts   pipeline.CounterMetric
+	flushLatency  pipeline.LatencyMetric
 }
 
 func (f *FlusherHTTP) Description() string {
@@ -142,6 +144,8 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.buildVarKeys()
 	f.fillRequestContentType()
 	f.droppedEvents = helper.NewCounterMetricAndRegister("http_flusher_dropped_events", context)
+	f.retryCounts = helper.NewCounterMetricAndRegister("http_flusher_retry_counts", context)
+	f.flushLatency = helper.NewLatencyMetricAndRegister("http_flusher_flush_latency", context)
 	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized")
 	return nil
 }
@@ -328,6 +332,8 @@ func (f *FlusherHTTP) convertAndFlush(data interface{}) error {
 
 func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) error {
 	var err error
+	f.flushLatency.Begin()
+	defer f.flushLatency.End()
 	for i := 0; i <= f.Retry.MaxRetryTimes; i++ {
 		ok, retryable, e := f.flush(data, varValues)
 		if ok || !retryable || !f.Retry.Enable {
@@ -336,6 +342,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 		}
 		err = e
 		<-time.After(f.getNextRetryDelay(i))
+		f.retryCounts.Add(1)
 	}
 	converter.PutPooledByteBuf(&data)
 	return err
