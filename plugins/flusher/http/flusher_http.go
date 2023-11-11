@@ -517,7 +517,7 @@ func init() {
 				InitialDelay:  time.Second,
 				MaxDelay:      30 * time.Second,
 			},
-			DropEventWhenQueueFull: false,
+			DropEventWhenQueueFull: true,
 		}
 	}
 }
