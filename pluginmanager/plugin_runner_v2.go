@@ -22,6 +22,7 @@ import (
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
+	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/pkg/util"
 )
 
@@ -422,7 +423,16 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 	md := models.NewMetadata()
 	if in.Context != nil {
 		for k, v := range in.Context {
-			md.Add(k, v.(string))
+			switch value := v.(type) {
+			case string:
+				md.Add(k, value)
+			case []*protocol.LogTag:
+				for _, tag := range value {
+					md.Add(tag.GetKey(), tag.GetValue())
+				}
+			default:
+				logger.Warningf(p.LogstoreConfig.Context.GetRuntimeContext(), "RECEIVE_RAW_LOG_ALARM", "unknown values found in context, type is %T", v)
+			}
 		}
 	}
 	log := &models.Log{}
