@@ -55,7 +55,7 @@ var (
 	droppedGroups      = helper.NewCounterMetric("http_flusher_dropped_groups")
 	droppedEvents      = helper.NewCounterMetric("http_flusher_dropped_events")
 	retryCounts        = helper.NewCounterMetric("http_flusher_retry_counts")
-	flushLatency       = helper.NewAverageMetric("http_flusher_flush_latency") // cannot use latency metric
+	flushLatency       = helper.NewAverageMetric("http_flusher_flush_latency_ns") // cannot use latency metric
 )
 
 type retryConfig struct {
@@ -360,7 +360,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 	var err error
 	start := time.Now()
 	defer func() {
-		flushLatency.Add(time.Since(start).Milliseconds())
+		flushLatency.Add(time.Since(start).Nanoseconds())
 	}()
 
 	for i := 0; i <= f.Retry.MaxRetryTimes; i++ {
