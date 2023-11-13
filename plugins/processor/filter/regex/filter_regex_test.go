@@ -19,11 +19,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/pingcap/check"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/alibaba/ilogtail/pkg/logger"
+	"github.com/alibaba/ilogtail/pkg/models"
 	"github.com/alibaba/ilogtail/pkg/pipeline"
 	"github.com/alibaba/ilogtail/pkg/protocol"
 	"github.com/alibaba/ilogtail/plugins/test"
