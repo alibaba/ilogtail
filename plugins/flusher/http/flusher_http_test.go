@@ -753,6 +753,7 @@ func TestHttpFlusherDropEvents(t *testing.T) {
 		}
 		flusher.droppedEvents = helper.NewCounterMetricAndRegister("http_flusher_dropped_events", flusher.context)
 		flusher.droppedGroups = helper.NewCounterMetricAndRegister("http_flusher_dropped_groups", flusher.context)
+		flusher.flushLatency = helper.NewAverageMetricAndRegister("http_flusher_dropped_groups", flusher.context)
 
 		Convey("should discard events when queue is full", func() {
 			groupEvents := models.PipelineGroupEvents{

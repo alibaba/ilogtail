@@ -50,6 +50,14 @@ var contentTypeMaps = map[string]string{
 	converter.EncodingCustom:   defaultContentType,
 }
 
+var (
+	metricRegisterOnce sync.Once
+	droppedGroups      pipeline.CounterMetric
+	droppedEvents      pipeline.CounterMetric
+	retryCounts        pipeline.CounterMetric
+	flushLatency       pipeline.CounterMetric // cannot use latency metric
+)
+
 type retryConfig struct {
 	Enable        bool          // If enable retry, default is true
 	MaxRetryTimes int           // Max retry times, default is 3
@@ -84,7 +92,7 @@ type FlusherHTTP struct {
 	droppedGroups pipeline.CounterMetric
 	droppedEvents pipeline.CounterMetric
 	retryCounts   pipeline.CounterMetric
-	flushLatency  pipeline.LatencyMetric
+	flushLatency  pipeline.CounterMetric
 }
 
 func (f *FlusherHTTP) Description() string {
@@ -144,10 +152,17 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 
 	f.buildVarKeys()
 	f.fillRequestContentType()
-	f.droppedGroups = helper.NewCounterMetricAndRegister("http_flusher_dropped_groups", context)
-	f.droppedEvents = helper.NewCounterMetricAndRegister("http_flusher_dropped_events", context)
-	f.retryCounts = helper.NewCounterMetricAndRegister("http_flusher_retry_counts", context)
-	f.flushLatency = helper.NewLatencyMetricAndRegister("http_flusher_flush_latency", context)
+	metricRegisterOnce.Do(func() {
+		droppedGroups = helper.NewCounterMetricAndRegister("http_flusher_dropped_groups", context)
+		droppedEvents = helper.NewCounterMetricAndRegister("http_flusher_dropped_events", context)
+		retryCounts = helper.NewCounterMetricAndRegister("http_flusher_retry_counts", context)
+		flushLatency = helper.NewAverageMetricAndRegister("http_flusher_flush_latency", context)
+	})
+	f.droppedGroups = droppedGroups
+	f.droppedEvents = droppedEvents
+	f.retryCounts = retryCounts
+	f.flushLatency = flushLatency
+
 	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized")
 	return nil
 }
@@ -351,8 +366,11 @@ func (f *FlusherHTTP) convertAndFlush(data interface{}) error {
 
 func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) error {
 	var err error
-	f.flushLatency.Begin()
-	defer f.flushLatency.End()
+	start := time.Now()
+	defer func() {
+		f.flushLatency.Add(int64(time.Since(start).Milliseconds()))
+	}()
+
 	for i := 0; i <= f.Retry.MaxRetryTimes; i++ {
 		ok, retryable, e := f.flush(data, varValues)
 		if ok || !retryable || !f.Retry.Enable {
