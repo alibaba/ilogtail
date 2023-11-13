@@ -421,6 +421,7 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 // TODO: Design the ReceiveRawLogV2, which is passed in a PipelineGroupEvents not pipeline.LogWithContext, and tags should be added in the PipelineGroupEvents.
 func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 	md := models.NewMetadata()
+	tags := models.NewTags()
 	if in.Context != nil {
 		for k, v := range in.Context {
 			switch value := v.(type) {
@@ -428,7 +429,7 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 				md.Add(k, value)
 			case []*protocol.LogTag:
 				for _, tag := range value {
-					md.Add(tag.GetKey(), tag.GetValue())
+					tags.Add(tag.GetKey(), tag.GetValue())
 				}
 			default:
 				logger.Warningf(p.LogstoreConfig.Context.GetRuntimeContext(), "RECEIVE_RAW_LOG_ALARM", "unknown values found in context, type is %T", v)
@@ -459,7 +460,7 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 	} else {
 		log.Timestamp = uint64(time.Now().UnixNano())
 	}
-	group := models.NewGroup(md, models.NewTags())
+	group := models.NewGroup(md, tags)
 	p.InputPipeContext.Collector().Collect(group, log)
 }
 
