@@ -52,10 +52,10 @@ var contentTypeMaps = map[string]string{
 
 var (
 	metricRegisterOnce sync.Once
-	droppedGroups      pipeline.CounterMetric
-	droppedEvents      pipeline.CounterMetric
-	retryCounts        pipeline.CounterMetric
-	flushLatency       pipeline.CounterMetric // cannot use latency metric
+	droppedGroups      = helper.NewCounterMetric("http_flusher_dropped_groups")
+	droppedEvents      = helper.NewCounterMetric("http_flusher_dropped_events")
+	retryCounts        = helper.NewCounterMetric("http_flusher_retry_counts")
+	flushLatency       = helper.NewAverageMetric("http_flusher_flush_latency") // cannot use latency metric
 )
 
 type retryConfig struct {
@@ -87,12 +87,8 @@ type FlusherHTTP struct {
 	client      *http.Client
 	interceptor extensions.FlushInterceptor
 
-	queue         chan interface{}
-	counter       sync.WaitGroup
-	droppedGroups pipeline.CounterMetric
-	droppedEvents pipeline.CounterMetric
-	retryCounts   pipeline.CounterMetric
-	flushLatency  pipeline.CounterMetric
+	queue   chan interface{}
+	counter sync.WaitGroup
 }
 
 func (f *FlusherHTTP) Description() string {
@@ -153,15 +149,11 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 	f.buildVarKeys()
 	f.fillRequestContentType()
 	metricRegisterOnce.Do(func() {
-		droppedGroups = helper.NewCounterMetricAndRegister("http_flusher_dropped_groups", context)
-		droppedEvents = helper.NewCounterMetricAndRegister("http_flusher_dropped_events", context)
-		retryCounts = helper.NewCounterMetricAndRegister("http_flusher_retry_counts", context)
-		flushLatency = helper.NewAverageMetricAndRegister("http_flusher_flush_latency", context)
+		context.RegisterCounterMetric(droppedGroups)
+		context.RegisterCounterMetric(droppedEvents)
+		context.RegisterCounterMetric(retryCounts)
+		context.RegisterCounterMetric(flushLatency)
 	})
-	f.droppedGroups = droppedGroups
-	f.droppedEvents = droppedEvents
-	f.retryCounts = retryCounts
-	f.flushLatency = flushLatency
 
 	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized")
 	return nil
@@ -288,17 +280,17 @@ func (f *FlusherHTTP) addTask(log interface{}) {
 // handleDroppedEvent handles a dropped event and reports metrics.
 func (f *FlusherHTTP) handleDroppedEvent(log interface{}) {
 	f.counter.Done()
-	f.droppedGroups.Add(1)
+	droppedGroups.Add(1)
 
 	// Update the dropped events counter based on the type of the log.
 	switch v := log.(type) {
 	case *protocol.LogGroup:
 		if v != nil {
-			f.droppedEvents.Add(int64(len(v.Logs)))
+			droppedEvents.Add(int64(len(v.Logs)))
 		}
 	case *models.PipelineGroupEvents:
 		if v != nil {
-			f.droppedEvents.Add(int64(len(v.Events)))
+			droppedEvents.Add(int64(len(v.Events)))
 		}
 	}
 	logger.Warningf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher dropped a group event since the queue is full")
@@ -368,7 +360,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 	var err error
 	start := time.Now()
 	defer func() {
-		f.flushLatency.Add(int64(time.Since(start).Milliseconds()))
+		flushLatency.Add(int64(time.Since(start).Milliseconds()))
 	}()
 
 	for i := 0; i <= f.Retry.MaxRetryTimes; i++ {
@@ -379,7 +371,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 		}
 		err = e
 		<-time.After(f.getNextRetryDelay(i))
-		f.retryCounts.Add(1)
+		retryCounts.Add(1)
 	}
 	converter.PutPooledByteBuf(&data)
 	return err
