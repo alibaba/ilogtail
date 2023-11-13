@@ -360,7 +360,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 	var err error
 	start := time.Now()
 	defer func() {
-		flushLatency.Add(int64(time.Since(start).Milliseconds()))
+		flushLatency.Add(time.Since(start).Milliseconds())
 	}()
 
 	for i := 0; i <= f.Retry.MaxRetryTimes; i++ {
