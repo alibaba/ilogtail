@@ -16,7 +16,6 @@
 #include "log_pb/sls_logs.pb.h"
 #include "logger/Logger.h"
 #include "common/StringTools.h"
-#include "parser/LogParser.h"
 #include "reader/LogFileReader.h"
 #include <iostream>
 #include "common/util.h"

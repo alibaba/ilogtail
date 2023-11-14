@@ -15,17 +15,16 @@
  */
 
 #include "processor/ProcessorParseJsonNative.h"
-#include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include "parser/LogParser.h"
 #include "monitor/MetricConstants.h"
 #include "common/ParamExtractor.h"
 
 namespace logtail {
 const std::string ProcessorParseJsonNative::sName = "processor_parse_json_native";
+const std::string ProcessorParseJsonNative::UNMATCH_LOG_KEY = "__raw_log__";
 
 bool ProcessorParseJsonNative::Init(const Json::Value& config) {
     std::string errorMsg;
@@ -91,19 +90,19 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
 
     auto rawContent = sourceEvent.GetContent(mSourceKey);
 
-    bool res = true;
-    res = JsonLogLineParser(sourceEvent, logPath, e);
+    bool parseSuccess = true;
+    parseSuccess = JsonLogLineParser(sourceEvent, logPath, e);
 
-    if (!res && !mDiscardUnmatch) {
-        AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
+    if (!parseSuccess && (mKeepingSourceWhenParseFail || mCopingRawLog)) {
+        AddLog(UNMATCH_LOG_KEY, // __raw_log__
                rawContent,
                sourceEvent); // legacy behavior, should use sourceKey
     }
-    if (res || !mDiscardUnmatch) {
-        if (mUploadRawLog && (!res || !mRawLogTagOverwritten)) {
-            AddLog(mRawLogTag, rawContent, sourceEvent); // __raw__
+    if (parseSuccess || mKeepingSourceWhenParseFail) {
+        if (mKeepingSourceWhenParseSucceed && (!parseSuccess || !mRawLogTagOverwritten)) {
+            AddLog(mRenamedSourceKey, rawContent, sourceEvent); // __raw__
         }
-        if (res && !mSourceKeyOverwritten) {
+        if (parseSuccess && !mSourceKeyOverwritten) {
             sourceEvent.DelContent(mSourceKey);
         }
         return true;
@@ -169,7 +168,7 @@ bool ProcessorParseJsonNative::JsonLogLineParser(LogEvent& sourceEvent,
         if (contentKey.c_str() == mSourceKey) {
             mSourceKeyOverwritten = true;
         }
-        if (contentKey.c_str() == mRawLogTag) {
+        if (contentKey.c_str() == mRenamedSourceKey) {
             mRawLogTagOverwritten = true;
         }
 

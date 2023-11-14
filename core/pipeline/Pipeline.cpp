@@ -27,6 +27,8 @@
 #include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
 
+#include "common/LogtailCommonFlags.h"
+
 // for special treatment
 #include "input/InputFile.h"
 #include "file_server/MultilineOptions.h"

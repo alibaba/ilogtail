@@ -25,6 +25,12 @@ namespace logtail {
 class ProcessorParseApsaraNative : public Processor {
 public:
     static const std::string sName;
+    static const std::string UNMATCH_LOG_KEY;
+    static const std::string SLS_KEY_LEVEL;
+    static const std::string SLS_KEY_THREAD;
+    static const std::string SLS_KEY_FILE;
+    static const std::string SLS_KEY_LINE;
+    static const int32_t MAX_BASE_FIELD_NUM;
 
     // 源字段名。
     std::string mSourceKey;
@@ -39,9 +45,6 @@ public:
     bool mCopingRawLog = false;
     bool mAdjustingMicroTimezone = false;
 
-    int mLogTimeZoneOffsetSecond = 0;
-    bool mSourceKeyOverwritten = false;
-
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
@@ -55,10 +58,11 @@ private:
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
     time_t
     ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
-    int32_t GetApsaraLogMicroTime(StringView& buffer);
     bool IsPrefixString(const char* all, const StringView& prefix);
     int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
-    bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond);
+
+    int mLogTimeZoneOffsetSecond = 0;
+    bool mSourceKeyOverwritten = false;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;

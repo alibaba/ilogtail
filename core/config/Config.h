@@ -26,7 +26,6 @@
 // #include "common/Flags.h"
 #include "common/TimeUtil.h"
 // #include "aggregator/Aggregator.h"
-#include "processor/BaseFilterNode.h"
 #include "LogType.h"
 // #include "IntegrityConfig.h"
 

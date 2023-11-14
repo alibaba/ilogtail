@@ -21,7 +21,6 @@
 #include <unordered_set>
 #include <deque>
 #include <atomic>
-#include "parser/LogParser.h"
 #include "common/TimeUtil.h"
 #include "common/GlobalPara.h"
 #include "common/StringTools.h"
@@ -36,6 +35,8 @@
 #include "reader/SourceBuffer.h"
 #include "reader/FileReaderOptions.h"
 #include "file_server/MultilineOptions.h"
+#include "file_server/FileDiscoveryOptions.h"
+#include "event/Event.h"
 
 namespace logtail {
 

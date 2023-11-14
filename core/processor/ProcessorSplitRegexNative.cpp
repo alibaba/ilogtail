@@ -81,7 +81,6 @@ bool ProcessorSplitRegexNative::Init(const Json::Value& config) {
     mIsMultline = IsMultiline();
     SetLogMultilinePolicy(mStartPattern, mContinuePattern, mEndPattern);
 
-
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
     return true;
@@ -180,7 +179,7 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
         targetEvent->SetTimestamp(sourceEvent.GetTimestamp(), sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
         targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
-        if (mEnableLogPositionMeta) {
+        if (mAppendingLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
             targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
@@ -372,7 +371,7 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
                 logIndex.emplace_back(buffer + multiBeginIndex, endIndex - multiBeginIndex);
             } else if (mLogBeginRegPtr == NULL && mLogContinueRegPtr == NULL && mLogEndRegPtr != NULL) {
                 // If there is still logs in cache, it means that there is no end line. We can handle them as unmatched.
-                if (mDiscardUnmatch) {
+                if (!mKeepingSourceWhenParseFail) {
                     for (int i = multiBeginIndex; i <= endIndex; i++) {
                         if (i == endIndex || buffer[i] == '\n') {
                             discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
@@ -404,7 +403,7 @@ void ProcessorSplitRegexNative::HandleUnmatchLogs(const char* buffer,
     if (mLogBeginRegPtr == nullptr && mLogContinueRegPtr == nullptr && mLogEndRegPtr != nullptr) {
         return;
     }
-    if (mDiscardUnmatch) {
+    if (!mKeepingSourceWhenParseFail) {
         for (int i = multiBeginIndex; i <= endIndex; i++) {
             if (i == endIndex || buffer[i] == '\n') {
                 discardIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);

@@ -21,33 +21,30 @@
 #include "logger/Logger.h"
 #include "common/ParamExtractor.h"
 
-#include "processor/UnaryFilterOperatorNode.h"
-#include "processor/RegexFilterValueNode.h"
-#include "processor/BinaryFilterOperatorNode.h"
-
 namespace logtail {
 const std::string ProcessorFilterNative::sName = "processor_filter_regex_native";
 
-ProcessorFilterNative::~ProcessorFilterNative() {
-}
-
 bool ProcessorFilterNative::Init(const Json::Value& config) {
     std::string errorMsg;
-    if (GetOptionalMapParam(config, "Include", mInclude, errorMsg)) {
+
+    if (GetOptionalMapParam(config, "Include", mInclude, errorMsg) && !mInclude.empty()) {
         mFilterMode = Mode::RULE_MODE;
+        std::vector<std::string> keys;
+        std::vector<boost::regex> regs;
         for (auto& include : mInclude) {
-            std::vector<std::string> keys;
-            std::vector<boost::regex> regs;
             keys.emplace_back(include.first);
             regs.emplace_back(boost::regex(include.second));
         }
+        mFilterRule = std::make_shared<LogFilterRule>();
+        mFilterRule.get()->FilterKeys = keys;
+        mFilterRule.get()->FilterRegs = regs;
     }
 
     if (mFilterMode == Mode::BYPASS_MODE) {
         const Json::Value& val = config["ConditionExp"];
         if (!val.isNull()) {
             BaseFilterNodePtr root = ParseExpressionFromJSON(val);
-            if (!root) {
+            if (!root || root.get() == NULL) {
                 errorMsg = "invalid filter expression: " + val.toStyledString();
                 PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
             }
@@ -294,7 +291,7 @@ bool ProcessorFilterNative::noneUtf8(StringView& str, bool modify) {
     return false;
 }
 
-BaseFilterNodePtr ProcessorFilterNative::ParseExpressionFromJSON(const Json::Value& value) {
+BaseFilterNodePtr ParseExpressionFromJSON(const Json::Value& value) {
     BaseFilterNodePtr node;
     if (!value.isObject()) {
         return node;
@@ -340,7 +337,7 @@ BaseFilterNodePtr ProcessorFilterNative::ParseExpressionFromJSON(const Json::Val
     return node;
 }
 
-bool ProcessorFilterNative::GetOperatorType(const std::string& type, FilterOperator& op) {
+bool GetOperatorType(const std::string& type, FilterOperator& op) {
     if (type == "not") {
         op = NOT_OPERATOR;
     } else if (type == "and") {
@@ -354,7 +351,7 @@ bool ProcessorFilterNative::GetOperatorType(const std::string& type, FilterOpera
     return true;
 }
 
-bool ProcessorFilterNative::GetNodeFuncType(const std::string& type, FilterNodeFunctionType& func) {
+bool GetNodeFuncType(const std::string& type, FilterNodeFunctionType& func) {
     if (type == "regex") {
         func = REGEX_FUNCTION;
     } else {

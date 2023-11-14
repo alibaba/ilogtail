@@ -22,6 +22,7 @@
 #include "reader/LogFileReader.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
+#include "config_manager/ConfigManager.h"
 
 namespace logtail {
 const std::string ProcessorTagNative::sName = "processor_tag_native";

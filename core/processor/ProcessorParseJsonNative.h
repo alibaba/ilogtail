@@ -16,7 +16,6 @@
 #pragma once
 
 #include "rapidjson/document.h"
-
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
 
@@ -25,14 +24,17 @@ namespace logtail {
 class ProcessorParseJsonNative : public Processor {
 public:
     static const std::string sName;
+    static const std::string UNMATCH_LOG_KEY;
 
+    // 源字段名。
     std::string mSourceKey;
-    bool mKeepingSourceWhenParseFail = true;
+    // 当解析失败时，是否保留源字段。
+    bool mKeepingSourceWhenParseFail = false;
+    // 当解析成功时，是否保留源字段。
     bool mKeepingSourceWhenParseSucceed = false;
     // 当原始字段被保留时，用于存储原始字段的字段名。若不填，默认不改名。
     std::string mRenamedSourceKey = "";
     bool mCopingRawLog = false;
-
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -42,10 +44,7 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    bool mDiscardUnmatch = false;
-    bool mUploadRawLog = false;
     bool mSourceKeyOverwritten = false;
-    std::string mRawLogTag;
     bool mRawLogTagOverwritten = false;
 
     int* mParseFailures = nullptr;

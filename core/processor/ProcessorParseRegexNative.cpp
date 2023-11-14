@@ -15,18 +15,16 @@
  */
 
 #include "processor/ProcessorParseRegexNative.h"
-
 #include "app_config/AppConfig.h"
-#include "common/Constants.h"
-#include "monitor/LogtailMetric.h"
 #include "monitor/MetricConstants.h"
-#include "common/TimeUtil.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include "monitor/MetricConstants.h"
 #include "common/ParamExtractor.h"
+
+using namespace std;
 
 namespace logtail {
 const std::string ProcessorParseRegexNative::sName = "processor_parse_regex_native";
+const std::string ProcessorParseRegexNative::UNMATCH_LOG_KEY = "__raw_log__";
 
 bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     std::string errorMsg;
@@ -53,8 +51,7 @@ bool ProcessorParseRegexNative::Init(const Json::Value& config) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
     }
     if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
     }
 
     AddUserDefinedFormat();
@@ -105,28 +102,29 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
         return true;
     }
     auto rawContent = sourceEvent.GetContent(mSourceKey);
-    bool res = true;
+    bool parseSuccess = true;
     for (uint32_t i = 0; i < mUserDefinedFormat.size(); ++i) { // support multiple patterns
         const UserDefinedFormat& format = mUserDefinedFormat[i];
         if (format.mIsWholeLineMode) {
-            res = WholeLineModeParser(sourceEvent, format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0]);
+            parseSuccess
+                = WholeLineModeParser(sourceEvent, format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0]);
         } else {
-            res = RegexLogLineParser(sourceEvent, format.mReg, format.mKeys, logPath);
+            parseSuccess = RegexLogLineParser(sourceEvent, format.mReg, format.mKeys, logPath);
         }
-        if (res) {
+        if (parseSuccess) {
             break;
         }
     }
-    if (!res && !mDiscardUnmatch) {
-        AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
+    if (!parseSuccess && (mKeepingSourceWhenParseFail || mCopingRawLog)) {
+        AddLog(UNMATCH_LOG_KEY, // __raw_log__
                rawContent,
                sourceEvent); // legacy behavior, should use sourceKey
     }
-    if (res || !mDiscardUnmatch) {
-        if (mUploadRawLog && (!res || !mRawLogTagOverwritten)) {
-            AddLog(mRawLogTag, rawContent, sourceEvent); // __raw__
+    if (parseSuccess || mKeepingSourceWhenParseFail) {
+        if (mKeepingSourceWhenParseSucceed && (!parseSuccess || !mRawLogTagOverwritten)) {
+            AddLog(mRenamedSourceKey, rawContent, sourceEvent); // __raw__
         }
-        if (res && !mSourceKeyOverwritten) {
+        if (parseSuccess && !mSourceKeyOverwritten) {
             sourceEvent.DelContent(mSourceKey);
         }
         return true;
@@ -135,27 +133,12 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
     return false;
 }
 
-void ProcessorParseRegexNative::AddUserDefinedFormat(const std::string& regStr, const std::string& keys) {
-    std::vector<std::string> keyParts = StringSpliter(keys, ",");
-    for (auto& it : keyParts) {
-        if (it == mSourceKey) {
-            mSourceKeyOverwritten = true;
-        }
-        if (it == mRawLogTag) {
-            mRawLogTagOverwritten = true;
-        }
-    }
-    boost::regex reg(regStr);
-    bool isWholeLineMode = regStr == "(.*)";
-    mUserDefinedFormat.push_back(UserDefinedFormat(reg, keyParts, isWholeLineMode));
-}
-
 void ProcessorParseRegexNative::AddUserDefinedFormat() {
     for (auto& it : mKeys) {
         if (it == mSourceKey) {
             mSourceKeyOverwritten = true;
         }
-        if (it == mRawLogTag) {
+        if (it == mRenamedSourceKey) {
             mRawLogTagOverwritten = true;
         }
     }

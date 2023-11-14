@@ -17,11 +17,8 @@
 #include "processor/ProcessorParseTimestampNative.h"
 
 #include "app_config/AppConfig.h"
-#include "common/StringTools.h"
-#include "common/Constants.h"
 #include "common/LogtailCommonFlags.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include <algorithm>
 #include "monitor/MetricConstants.h"
 #include "common/ParamExtractor.h"
 
@@ -103,7 +100,7 @@ bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
 }
 
 void ProcessorParseTimestampNative::Process(PipelineEventGroup& logGroup) {
-    if (logGroup.GetEvents().empty() || mTimeFormat.empty() || mTimeKey.empty()) {
+    if (logGroup.GetEvents().empty() || mSourceFormat.empty() || mSourceKey.empty()) {
         return;
     }
     const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
@@ -130,10 +127,10 @@ bool ProcessorParseTimestampNative::ProcessEvent(StringView logPath, PipelineEve
         return true;
     }
     LogEvent& sourceEvent = e.Cast<LogEvent>();
-    if (!sourceEvent.HasContent(mTimeKey)) {
+    if (!sourceEvent.HasContent(mSourceKey)) {
         return true;
     }
-    const StringView& timeStr = sourceEvent.GetContent(mTimeKey);
+    const StringView& timeStr = sourceEvent.GetContent(mSourceKey);
     mProcParseInSizeBytes->Add(timeStr.size());
     uint64_t preciseTimestamp = 0;
     bool parseSuccess = ParseLogTime(timeStr, logPath, logTime, preciseTimestamp, timeStrCache);
@@ -183,13 +180,13 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
     // Second-level cache only work when:
     // 1. No %f in the time format
     // 2. The %f is at the end of the time format
-    const char* compareResult = strstr(mTimeFormat.c_str(), "%f");
+    const char* compareResult = strstr(mSourceFormat.c_str(), "%f");
     bool haveNanosecond = compareResult != nullptr;
-    bool endWithNanosecond = compareResult == (mTimeFormat.c_str() + mTimeFormat.size() - 2);
+    bool endWithNanosecond = compareResult == (mSourceFormat.c_str() + mSourceFormat.size() - 2);
     int nanosecondLength = -1;
     const char* strptimeResult = NULL;
     if ((!haveNanosecond || endWithNanosecond) && IsPrefixString(curTimeStr, timeStrCache)) {
-        bool isTimestampNanosecond = (mTimeFormat == "%s") && (curTimeStr.length() > timeStrCache.length());
+        bool isTimestampNanosecond = (mSourceFormat == "%s") && (curTimeStr.length() > timeStrCache.length());
         if (endWithNanosecond || isTimestampNanosecond) {
             strptimeResult = Strptime(curTimeStr.data() + timeStrCache.length(), "%f", &logTime, nanosecondLength);
         } else {
@@ -197,7 +194,7 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
             logTime.tv_nsec = 0;
         }
     } else {
-        strptimeResult = Strptime(curTimeStr.data(), mTimeFormat.c_str(), &logTime, nanosecondLength, mSpecifiedYear);
+        strptimeResult = Strptime(curTimeStr.data(), mSourceFormat.c_str(), &logTime, nanosecondLength, mSourceYear);
         if (NULL != strptimeResult) {
             timeStrCache = curTimeStr.substr(0, curTimeStr.length() - nanosecondLength);
             logTime.tv_sec = logTime.tv_sec - mLogTimeZoneOffsetSecond;
@@ -211,7 +208,7 @@ bool ProcessorParseTimestampNative::ParseLogTime(const StringView& curTimeStr, /
                                 "logstore", GetContext().GetLogstoreName())("file", logPath));
             }
             LogtailAlarm::GetInstance()->SendAlarm(PARSE_TIME_FAIL_ALARM,
-                                                   curTimeStr.to_string() + " " + mTimeFormat,
+                                                   curTimeStr.to_string() + " " + mSourceFormat,
                                                    GetContext().GetProjectName(),
                                                    GetContext().GetLogstoreName(),
                                                    GetContext().GetRegion());

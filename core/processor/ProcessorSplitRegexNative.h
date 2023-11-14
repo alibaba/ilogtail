@@ -37,7 +37,7 @@ public:
     std::shared_ptr<boost::regex> mEndPatternRegPtr;
     bool mIsMultline;
     bool mAppendingLogPositionMeta = false;
-    bool mKeepingSourceWhenParseFail = true;
+    bool mKeepingSourceWhenParseFail = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -75,8 +75,6 @@ private:
     std::unique_ptr<boost::regex> mLogBeginRegPtr;
     std::unique_ptr<boost::regex> mLogContinueRegPtr;
     std::unique_ptr<boost::regex> mLogEndRegPtr;
-    bool mDiscardUnmatch = false;
-    bool mEnableLogPositionMeta = false;
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorSplitRegexNativeUnittest;
     friend class ProcessorSplitRegexDisacardUnmatchUnittest;

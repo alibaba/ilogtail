@@ -17,7 +17,7 @@
 #pragma once
 
 #include "plugin/interface/Processor.h"
-#include "config/Config.h"
+#include <re2/re2.h>
 
 namespace logtail {
 

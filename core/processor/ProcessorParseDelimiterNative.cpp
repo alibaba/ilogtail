@@ -15,18 +15,17 @@
  */
 
 #include "processor/ProcessorParseDelimiterNative.h"
-#include "common/Constants.h"
+// #include "common/Constants.h"
 #include "models/LogEvent.h"
-#include "parser/LogParser.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
 #include "common/ParamExtractor.h"
-
 
 namespace logtail {
 const std::string ProcessorParseDelimiterNative::sName = "processor_parse_delimiter_native";
 
 const std::string ProcessorParseDelimiterNative::s_mDiscardedFieldKey = "_";
+const std::string ProcessorParseDelimiterNative::UNMATCH_LOG_KEY = "__raw_log__";
 
 bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
     std::string errorMsg;
@@ -42,6 +41,7 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
     if (mSeparator.size() == 1) {
         std::string quoteStr = "\"";
         if (!GetOptionalStringParam(config, "Quote", quoteStr, errorMsg)) {
+            mQuote = quoteStr[0];
             PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mQuote, sName, mContext->GetConfigName());
         } else if (quoteStr.size() == 1) {
             mQuote = quoteStr[0];
@@ -76,6 +76,9 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
     if (!GetOptionalStringParam(config, "RenamedSourceKey", mRenamedSourceKey, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRenamedSourceKey, sName, mContext->GetConfigName());
     }
+    if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mCopingRawLog, sName, mContext->GetConfigName());
+    }
 
     if (!mSeparator.empty())
         mSeparatorChar = mSeparator.data()[0];
@@ -96,6 +99,9 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
             mRawLogTagOverwritten = true;
         }
     }
+
+    mAutoExtend = mOverflowedFieldsTreatment == "extend" || mOverflowedFieldsTreatment == "";
+    mExtractPartialFields = mOverflowedFieldsTreatment == "discard";
 
     mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
@@ -154,7 +160,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
     }
     if (begIdx >= endIdx)
         return true;
-    size_t reserveSize = (mOverflowedFieldsTreatment == "extend") ? (mKeys.size() + 10) : (mKeys.size() + 1);
+    size_t reserveSize = mAutoExtend ? (mKeys.size() + 10) : (mKeys.size() + 1);
     std::vector<StringView> columnValues;
     std::vector<size_t> colBegIdxs;
     std::vector<size_t> colLens;
@@ -166,7 +172,7 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
             columnValues.reserve(reserveSize);
             parseSuccess = mDelimiterModeFsmParserPtr->ParseDelimiterLine(buffer, begIdx, endIdx, columnValues);
             // handle auto extend
-            if (!(mOverflowedFieldsTreatment == "extend") && columnValues.size() > mKeys.size()) {
+            if (!mAutoExtend && columnValues.size() > mKeys.size()) {
                 int requiredLen = 0;
                 for (size_t i = mKeys.size(); i < columnValues.size(); ++i) {
                     requiredLen += 1 + columnValues[i].size();
@@ -238,14 +244,14 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
     if (parseSuccess) {
         for (uint32_t idx = 0; idx < parsedColCount; idx++) {
             if (mKeys.size() > idx) {
-                if ((mOverflowedFieldsTreatment == "discard") && mKeys[idx] == s_mDiscardedFieldKey) {
+                if (mExtractPartialFields && mKeys[idx] == s_mDiscardedFieldKey) {
                     continue;
                 }
                 AddLog(mKeys[idx],
                        useQuote ? columnValues[idx] : StringView(buffer.data() + colBegIdxs[idx], colLens[idx]),
                        sourceEvent);
             } else {
-                if ((mOverflowedFieldsTreatment == "discard")) {
+                if (mExtractPartialFields) {
                     continue;
                 }
                 std::string key = "__column" + ToString(idx) + "__";
@@ -255,13 +261,13 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
                        sourceEvent);
             }
         }
-    } else if (mKeepingSourceWhenParseFail) {
-        AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
+    } else if (mKeepingSourceWhenParseFail || mCopingRawLog) {
+        AddLog(UNMATCH_LOG_KEY, // __raw_log__
                buffer,
                sourceEvent); // legacy behavior, should use sourceKey
     }
     if (parseSuccess || mKeepingSourceWhenParseFail) {
-        if (mCopingRawLog && (!parseSuccess || !mRawLogTagOverwritten)) {
+        if (mKeepingSourceWhenParseSucceed && (!parseSuccess || !mRawLogTagOverwritten)) {
             AddLog(mRenamedSourceKey, buffer, sourceEvent); // __raw__
         }
         if (parseSuccess && !mSourceKeyOverwritten) {
@@ -299,7 +305,7 @@ bool ProcessorParseDelimiterNative::SplitString(
         if (pos2 == (size_t)endIdx)
             return true;
         pos = pos2 + d_size;
-        if (colLens.size() >= mKeys.size() && !(mOverflowedFieldsTreatment == "extend")) {
+        if (colLens.size() >= mKeys.size() && !mAutoExtend) {
             colBegIdxs.push_back(pos2);
             colLens.push_back(endIdx - pos2);
             return true;

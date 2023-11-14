@@ -17,29 +17,43 @@
 #pragma once
 
 #include "boost/regex.hpp"
-
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
-#include "parser/LogParser.h"
 
 namespace logtail {
+enum ParseLogError {
+    PARSE_LOG_REGEX_ERROR,
+    PARSE_LOG_FORMAT_ERROR,
+    PARSE_LOG_TIMEFORMAT_ERROR,
+    PARSE_LOG_HISTORY_ERROR
+};
+struct UserDefinedFormat {
+    boost::regex mReg;
+    std::vector<std::string> mKeys;
+    bool mIsWholeLineMode;
+    UserDefinedFormat(const boost::regex& reg, const std::vector<std::string>& keys, bool isWholeLineMode)
+        : mReg(reg), mKeys(keys), mIsWholeLineMode(isWholeLineMode) {}
+};
 
 class ProcessorParseRegexNative : public Processor {
 public:
     static const std::string sName;
+    static const std::string UNMATCH_LOG_KEY;
 
+    // 源字段名。
     std::string mSourceKey;
+    // 正则表达式。
     std::string mRegex;
+    // 提取的字段列表。
     std::vector<std::string> mKeys;
-    bool mKeepingSourceWhenParseFail = true;
+    // 当解析失败时，是否保留源字段。
+    bool mKeepingSourceWhenParseFail = false;
+    // 当解析成功时，是否保留源字段。
     bool mKeepingSourceWhenParseSucceed = false;
     // 当源字段被保留时，用于存储源字段的字段名。若不填，默认不改名。
     std::string mRenamedSourceKey = "";
     bool mCopingRawLog = false;
 
-    bool mSourceKeyOverwritten = false;
-    bool mRawLogTagOverwritten = false;
-    std::vector<UserDefinedFormat> mUserDefinedFormat;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -50,8 +64,6 @@ protected:
 
 private:
     void AddUserDefinedFormat();
-
-    void AddUserDefinedFormat(const std::string& regStr, const std::string& keys);
     /// @return false if data need to be discarded
     bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
     bool WholeLineModeParser(LogEvent& sourceEvent, const std::string& key);
@@ -60,17 +72,15 @@ private:
                             const std::vector<std::string>& keys,
                             const StringView& logPath);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
-    bool mDiscardUnmatch = false;
-    bool mUploadRawLog = false;
-    std::string mRawLogTag;
+    bool mSourceKeyOverwritten = false;
+    bool mRawLogTagOverwritten = false;
+    std::vector<UserDefinedFormat> mUserDefinedFormat;
 
     int* mParseFailures = nullptr;
     int* mRegexMatchFailures = nullptr;
     int* mLogGroupSize = nullptr;
-
     CounterPtr mProcParseInSizeBytes;
     CounterPtr mProcParseOutSizeBytes;
-
     CounterPtr mProcDiscardRecordsTotal;
     CounterPtr mProcParseErrorTotal;
     CounterPtr mProcKeyCountNotMatchErrorTotal;

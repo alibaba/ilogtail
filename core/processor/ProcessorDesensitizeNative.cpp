@@ -21,7 +21,6 @@
 #include "monitor/MetricConstants.h"
 #include "common/ParamExtractor.h"
 
-
 namespace logtail {
 const std::string ProcessorDesensitizeNative::sName = "processor_desensitize_native";
 
@@ -84,6 +83,7 @@ bool ProcessorDesensitizeNative::Init(const Json::Value& config) {
     }
 
     mProcDesensitizeRecodesTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DESENSITIZE_RECORDS_TOTAL);
+    return true;
 }
 
 void ProcessorDesensitizeNative::Process(PipelineEventGroup& logGroup) {
@@ -108,10 +108,13 @@ void ProcessorDesensitizeNative::ProcessEvent(PipelineEventPtr& e) {
 
     const LogContents& contents = sourceEvent.GetContents();
 
+    // 遍历所有字段，对敏感字段进行脱敏处理
     for (auto it = contents.begin(); it != contents.end(); ++it) {
+        // 只对指定的字段进行脱敏处理
         if (it->first != mSourceKey) {
             continue;
         }
+        // 只对非空字段进行脱敏处理
         if (it->second.empty()) {
             continue;
         }

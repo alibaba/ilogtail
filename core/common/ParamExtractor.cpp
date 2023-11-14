@@ -127,6 +127,10 @@ bool GetMandatoryStringParam(const Json::Value& config, const string& key, strin
     return true;
 }
 
+bool IsExist(const Json::Value& config, const string& key) {
+    return config.isMember(ExtractCurrentKey(key));
+}
+
 bool IsRegexValid(const string& regStr) {
     if (regStr.empty()) {
         return true;

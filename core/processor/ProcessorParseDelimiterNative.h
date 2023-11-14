@@ -25,15 +25,16 @@ namespace logtail {
 class ProcessorParseDelimiterNative : public Processor {
 public:
     static const std::string sName;
+    static const std::string UNMATCH_LOG_KEY;
 
     enum class Method { extend, keep, discard };
-    // 源字段名。
+    // 必填 源字段名。
     std::string mSourceKey;
-    // 分隔符
+    // 必填 分隔符
     std::string mSeparator;
     // 引用符
     char mQuote = '"';
-    // 提取的字段列表。
+    // 必填 提取的字段列表。
     std::vector<std::string> mKeys;
     // 是否允许提取的字段数量小于Keys的数量。若不允许，则此情景会被视为解析失败。
     bool mAllowingShortenedFields = true;
@@ -44,16 +45,12 @@ public:
     // ● discard：丢弃多余的字段。
     std::string mOverflowedFieldsTreatment = "extend";
     // 当解析失败时，是否保留源字段。
-    bool mKeepingSourceWhenParseFail = true;
+    bool mKeepingSourceWhenParseFail = false;
     // 当解析成功时，是否保留源字段。
     bool mKeepingSourceWhenParseSucceed = false;
     // 当源字段被保留时，用于存储源字段的字段名。若不填，默认不改名。
     std::string mRenamedSourceKey = "";
 
-    bool mCopingRawLog = false;
-    char mSeparatorChar;
-    bool mSourceKeyOverwritten = false;
-    bool mRawLogTagOverwritten = false;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -70,13 +67,18 @@ private:
                      std::vector<size_t>& colBegIdxs,
                      std::vector<size_t>& colLens);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
+    bool mExtractPartialFields = false;
+    bool mAutoExtend = false;
 
+    bool mCopingRawLog = false;
+    char mSeparatorChar;
+    bool mSourceKeyOverwritten = false;
+    bool mRawLogTagOverwritten = false;
     DelimiterModeFsmParser* mDelimiterModeFsmParserPtr;
     static const std::string s_mDiscardedFieldKey;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;
-
     CounterPtr mProcParseInSizeBytes;
     CounterPtr mProcParseOutSizeBytes;
     CounterPtr mProcDiscardRecordsTotal;

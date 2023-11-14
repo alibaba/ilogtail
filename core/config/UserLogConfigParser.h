@@ -17,7 +17,6 @@
 #pragma once
 #include <string>
 #include <json/json.h>
-#include "processor/BaseFilterNode.h"
 
 namespace logtail {
 
