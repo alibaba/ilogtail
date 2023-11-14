@@ -36,7 +36,6 @@ void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplS
             values.emplace_back(SplStringPiece(timestampNanosecondValue));
         } else {
             StringView content = sourceEvent.GetContent(columnName);
-            LOG_DEBUG(sLogger, ("colIndex", colIndex)("columnName", columnName)("columnValue", content));
             values.emplace_back(SplStringPiece(content.data(), content.size()));
         }
     }

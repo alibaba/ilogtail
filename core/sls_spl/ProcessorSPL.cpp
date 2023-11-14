@@ -87,7 +87,6 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
 }
 
 bool ProcessorSPL::IsSupportedEvent(const PipelineEventPtr& /*e*/) {
-    return true;
-}
+    return e.Is<LogEvent>();
 
 } // namespace logtail
