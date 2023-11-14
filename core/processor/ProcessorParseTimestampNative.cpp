@@ -24,6 +24,7 @@
 
 namespace logtail {
 const std::string ProcessorParseTimestampNative::sName = "processor_parse_timestamp_native";
+const std::string ProcessorParseTimestampNative::PRECISE_TIMESTAMP_DEFAULT_KEY = "precise_timestamp";
 
 bool ProcessorParseTimestampNative::ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond) {
     if (logTZ.size() != strlen("GMT+08:00") || logTZ[6] != ':' || (logTZ[3] != '+' && logTZ[3] != '-')) {
@@ -55,22 +56,29 @@ bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     if (!GetOptionalIntParam(config, "SourceYear", mSourceYear, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceYear, sName, mContext->GetConfigName());
     }
+    mLegacyPreciseTimestampConfig.enabled = false;
+    if (IsExist(config, "PreciseTimestampKey")) {
+        mLegacyPreciseTimestampConfig.enabled = true;
 
-    if (GetOptionalStringParam(config, "PreciseTimestampKey", mPreciseTimestampKey, errorMsg)) {
-        std::string preciseTimestampUnit;
-        if (!GetOptionalStringParam(config, "PreciseTimestampUnit", preciseTimestampUnit, errorMsg)) {
-            mPreciseTimestampKey = "";
-        } else {
-            if (0 == preciseTimestampUnit.compare("ms")) {
-                mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
-            } else if (0 == preciseTimestampUnit.compare("us")) {
-                mPreciseTimestampUnit = TimeStampUnit::MICROSECOND;
-            } else if (0 == preciseTimestampUnit.compare("ns")) {
-                mPreciseTimestampUnit = TimeStampUnit::NANOSECOND;
-            } else {
-                mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
-            }
+        std::string preciseTimestampKey = PRECISE_TIMESTAMP_DEFAULT_KEY;
+        if (!GetOptionalStringParam(config, "PreciseTimestampKey", preciseTimestampKey, errorMsg)) {
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, preciseTimestampKey, sName, mContext->GetConfigName());
         }
+        mLegacyPreciseTimestampConfig.key = preciseTimestampKey;
+
+        std::string preciseTimestampUnit = "";
+        if (!GetOptionalStringParam(config, "PreciseTimestampUnit", preciseTimestampUnit, errorMsg)) {
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, preciseTimestampUnit, sName, mContext->GetConfigName());
+        }
+        if (0 == preciseTimestampUnit.compare("ms")) {
+            mLegacyPreciseTimestampConfig.unit = TimeStampUnit::MILLISECOND;
+        } else if (0 == preciseTimestampUnit.compare("us")) {
+            mLegacyPreciseTimestampConfig.unit = TimeStampUnit::MICROSECOND;
+        } else if (0 == preciseTimestampUnit.compare("ns")) {
+            mLegacyPreciseTimestampConfig.unit = TimeStampUnit::NANOSECOND;
+        } else {
+            mLegacyPreciseTimestampConfig.unit = TimeStampUnit::MILLISECOND;
+        }        
     }
 
     if (mSourceTimezone != "") {
