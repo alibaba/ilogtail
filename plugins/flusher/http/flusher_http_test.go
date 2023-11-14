@@ -781,6 +781,31 @@ func TestHttpFlusherDropEvents(t *testing.T) {
 	})
 }
 
+func TestBuildLabels(t *testing.T) {
+	flusher := &FlusherHTTP{
+		RemoteURL: "http://example.com",
+		Query: map[string]string{
+			"u":        "user",
+			"password": "secret",
+			"status":   "active",
+		},
+	}
+
+	expectedLabels := []*protocol.Log_Content{
+		{Key: "RemoteURL", Value: "http://example.com"},
+		{Key: "status", Value: "active"},
+	}
+
+	labels := flusher.buildLabels()
+
+	assert.Equal(t, len(expectedLabels), len(labels))
+
+	for i, expected := range expectedLabels {
+		assert.Equal(t, expected.Key, labels[i].Key)
+		assert.Equal(t, expected.Value, labels[i].Value)
+	}
+}
+
 type mockContext struct {
 	pipeline.Context
 	basicAuth   *basicAuth

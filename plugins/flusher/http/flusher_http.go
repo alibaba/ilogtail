@@ -52,7 +52,7 @@ var contentTypeMaps = map[string]string{
 }
 
 var (
-	sensitiveLabels = []string{"u", "user", "username", "p", "password", "passwd", "pwd", "password"}
+	sensitiveLabels = []string{"u", "user", "username", "p", "password", "passwd", "pwd"}
 )
 
 type retryConfig struct {
