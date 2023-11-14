@@ -45,9 +45,14 @@ func TestStrMetric_Name(t *testing.T) {
 		{
 			name: "test_name",
 			fields: fields{
-				name:   "field",
-				value:  "v",
-				labels: []*protocol.Log_Content{&protocol.Log_Content{Key: "key", Value: "value"}},
+				name:  "field",
+				value: "v",
+				labels: []*protocol.Log_Content{
+					{
+						Key:   "key",
+						Value: "value",
+					},
+				},
 			},
 			want: "field#key=value",
 		},
