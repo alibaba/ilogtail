@@ -16,6 +16,7 @@
 
 #include "plugin/interface/Processor.h"
 #include <string>
+#include "monitor/LogtailMetric.h"
 
 namespace apsara::sls::spl {
     class SplPipeline;
@@ -34,5 +35,19 @@ protected:
 
 private:
     std::shared_ptr<apsara::sls::spl::SplPipeline> mSPLPipelinePtr;
+    MetricsRecordRef mMetricsRecordRef;
+    
+    CounterPtr mProcInRecordsTotal;
+    CounterPtr mProcOutRecordsTotal;
+    CounterPtr mProcTimeMS;
+
+
+    CounterPtr mProcessMicros;
+    CounterPtr mInputMicros;
+    CounterPtr mOutputMicros;
+    CounterPtr mMemPeakBytes;
+    CounterPtr mTotalTaskCount;
+    CounterPtr mSuccTaskCount;
+    CounterPtr mFailTaskCount;
 };
 } // namespace logtail

@@ -23,6 +23,7 @@
 #include "spl/logger/Logger.h"
 #include "logger/Logger.h"
 #include "sls_spl/SplConstants.h"
+#include "monitor/MetricConstants.h"
 
 
 using namespace apsara::sls::spl;
@@ -33,6 +34,30 @@ const std::string ProcessorSPL::sName = "spl";
 
 bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext& context) {
     Config config = componentConfig.GetConfig();
+    std::vector<std::pair<std::string, std::string>> labels;
+    WriteMetrics::GetInstance()->PreparePluginCommonLabels(context.GetProjectName(),
+                                                            context.GetLogstoreName(),
+                                                            context.GetRegion(),
+                                                            context.GetConfigName(),
+                                                            sName,
+                                                            componentConfig.GetId(),
+                                                            labels);
+
+    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
+    
+    // should init plugin first， then could GetMetricsRecordRef from plugin
+    mProcInRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
+    mProcOutRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
+    mProcTimeMS = mMetricsRecordRef.CreateCounter(METRIC_PROC_TIME_MS);
+
+
+    mProcessMicros = mMetricsRecordRef.CreateCounter("proc_spl_process_micros");
+    mInputMicros = mMetricsRecordRef.CreateCounter("proc_spl_input_micros");
+    mOutputMicros = mMetricsRecordRef.CreateCounter("proc_spl_output_micros");
+    mMemPeakBytes = mMetricsRecordRef.CreateCounter("proc_spl_mem_peak_bytes");
+    mTotalTaskCount = mMetricsRecordRef.CreateCounter("proc_spl_total_task_count");
+    mSuccTaskCount = mMetricsRecordRef.CreateCounter("proc_spl_succ_task_count");
+    mFailTaskCount = mMetricsRecordRef.CreateCounter("proc_spl_fail_task_count");
    
     initSPL();
 
@@ -48,7 +73,12 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
     Error error;
     mSPLPipelinePtr = std::make_shared<SplPipeline>(spl, error, timeoutMills, maxMemoryBytes, logger);
-    if (error.code_ != StatusCode::OK) {
+    if (error.code_ == StatusCode::OK) {
+        return true;
+    } else if (error.code_ == StatusCode::MEM_EXCEEDED) {
+        LOG_ERROR(sLogger, ("pipeline create error", error.msg_)("raw spl", spl));
+        return false;
+    } else {
         LOG_ERROR(sLogger, ("pipeline create error", error.msg_)("raw spl", spl));
         return false;
     }
@@ -56,8 +86,14 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
 }
 
 
+
+
 void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
     std::string errorMsg;
+    size_t inSize = logGroup.GetEvents().size();
+    mProcInRecordsTotal->Add(inSize);
+
+    uint64_t startTime = GetCurrentTimeInMicroSeconds();
 
     std::vector<std::string> colNames{FIELD_CONTENT};
 
@@ -79,14 +115,35 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     auto errCode = mSPLPipelinePtr->execute(inputs, outputs, &errorMsg, &pipelineStats);
     if (errCode != StatusCode::OK) {
         LOG_ERROR(sLogger, ("execute error", errorMsg));
+        if (errCode == StatusCode::TIMEOUT_ERROR || errCode == StatusCode::MEM_EXCEEDED) {
+            // todo:: 
+        }
     }
+
+    mProcessMicros->Add(pipelineStats.processMicros_);
+    mInputMicros->Add(pipelineStats.inputMicros_);
+    mOutputMicros->Add(pipelineStats.outputMicros_);
+    mMemPeakBytes->Add(pipelineStats.memPeakBytes_);
+    mTotalTaskCount->Add(pipelineStats.totalTaskCount_);
+    mSuccTaskCount->Add(pipelineStats.succTaskCount_);
+    mFailTaskCount->Add(pipelineStats.failTaskCount_);
+
     for (auto& input : inputs) delete input;
     for (auto& output : outputs) delete output;
     //LOG_DEBUG(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
+
+
+    size_t outSize = 0;
+    for (auto& logGroup : logGroupList) {
+        outSize += logGroup.GetEvents().size();
+    }
+    mProcOutRecordsTotal->Add(outSize);
+    uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
+    mProcTimeMS->Add(durationTime);
     return;
 }
 
-bool ProcessorSPL::IsSupportedEvent(const PipelineEventPtr& /*e*/) {
+bool ProcessorSPL::IsSupportedEvent(const PipelineEventPtr& e) {
     return e.Is<LogEvent>();
-
+}
 } // namespace logtail
