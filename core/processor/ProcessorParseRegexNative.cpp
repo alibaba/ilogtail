@@ -16,6 +16,7 @@
 
 #include "processor/ProcessorParseRegexNative.h"
 
+#include "common/StringTools.h"
 #include "app_config/AppConfig.h"
 #include "common/Constants.h"
 #include "monitor/LogtailMetric.h"

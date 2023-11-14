@@ -37,7 +37,6 @@
 #include <json/json.h>
 #include "common/Flags.h"
 #include "common/FileSystemUtil.h"
-#include "common/util.h"
 #include "event_handler/EventHandler.h"
 #include "polling/PollingEventQueue.h"
 #include "controller/EventDispatcher.h"

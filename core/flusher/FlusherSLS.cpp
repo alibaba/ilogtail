@@ -15,6 +15,10 @@
 #include "flusher/FlusherSLS.h"
 
 #include "app_config/AppConfig.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
+#include "common/EndpointUtil.h"
 #include "common/ParamExtractor.h"
 #include "pipeline/Pipeline.h"
 #include "sender/Sender.h"
@@ -41,7 +45,7 @@ const unordered_set<string> FlusherSLS::sNativeParam = {"Project",
 FlusherSLS::FlusherSLS() : mRegion(AppConfig::GetInstance()->GetDefaultRegion()) {
 }
 
-FlusherSLS::Batch::Batch() : mSendIntervalSecs(INT32_FLAG(batch_send_interval)) {
+FlusherSLS::Batch::Batch() : mSendIntervalSecs(static_cast<uint32_t>(INT32_FLAG(batch_send_interval))) {
 }
 
 bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
@@ -59,7 +63,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     mLogstoreKey = GenerateLogstoreFeedBackKey(mProject, mLogstore);
 
 #ifdef __ENTERPRISE__
-    if (AppConfig::GetInstance()->IsDataServerPrivateCloud()) {
+    if (EnterpriseConfigProvider::GetInstance()->IsDataServerPrivateCloud()) {
         mRegion = STRING_FLAG(default_region_name);
     } else {
 #endif
@@ -78,7 +82,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         }
         mEndpoint = TrimString(mEndpoint);
         if (!mEndpoint.empty()) {
-            Sender::Instance()->AddEndpointEntry(mRegion, CheckAddress(mEndpoint, mEndpoint));
+            Sender::Instance()->AddEndpointEntry(mRegion, StandardizeEndpoint(mEndpoint, mEndpoint));
         }
 #ifdef __ENTERPRISE__
     }
@@ -165,25 +169,20 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     GenerateGoPlugin(config, optionalGoPipeline);
 
-    // 过渡使用
-    Sender::Instance()->IncreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
-    Sender::Instance()->IncreaseProjectReferenceCnt(mProject);
-    Sender::Instance()->IncreaseRegionConcurrency(mRegion);
-
     return true;
 }
 
 bool FlusherSLS::Start() {
-    // Sender::Instance()->IncreaseProjectReferenceCnt(mProject);
-    // Sender::Instance()->IncreaseRegionReferenceCnt(mRegion);
-    // Sender::Instance()->IncreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
+    Sender::Instance()->IncreaseProjectReferenceCnt(mProject);
+    Sender::Instance()->IncreaseRegionReferenceCnt(mRegion);
+    Sender::Instance()->IncreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
     return true;
 }
 
 bool FlusherSLS::Stop(bool isPipelineRemoving) {
-    // Sender::Instance()->DecreaseProjectReferenceCnt(mProject);
-    // Sender::Instance()->DecreaseRegionReferenceCnt(mRegion);
-    // Sender::Instance()->DecreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
+    Sender::Instance()->DecreaseProjectReferenceCnt(mProject);
+    Sender::Instance()->DecreaseRegionReferenceCnt(mRegion);
+    Sender::Instance()->DecreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
     return true;
 }
 

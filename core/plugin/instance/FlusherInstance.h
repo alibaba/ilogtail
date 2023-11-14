@@ -34,8 +34,8 @@ public:
     const Flusher* GetPlugin() const { return mPlugin.get(); }
 
     bool Init(const Json::Value& config, PipelineContext& context, Json::Value& optionalGoPipeline);
-    void Start() { mPlugin->Start(); }
-    void Stop(bool isPipelineRemoving) { mPlugin->Stop(isPipelineRemoving); }
+    bool Start() { return mPlugin->Start(); }
+    bool Stop(bool isPipelineRemoving) { return mPlugin->Stop(isPipelineRemoving); }
 
 private:
     std::unique_ptr<Flusher> mPlugin;

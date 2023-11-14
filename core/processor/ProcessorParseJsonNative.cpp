@@ -15,6 +15,8 @@
  */
 
 #include "processor/ProcessorParseJsonNative.h"
+
+#include "common/StringTools.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "plugin/instance/ProcessorInstance.h"

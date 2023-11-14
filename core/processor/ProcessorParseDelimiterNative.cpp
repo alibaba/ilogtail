@@ -15,6 +15,8 @@
  */
 
 #include "processor/ProcessorParseDelimiterNative.h"
+
+#include "common/StringTools.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "parser/LogParser.h"

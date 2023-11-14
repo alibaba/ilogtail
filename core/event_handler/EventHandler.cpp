@@ -16,7 +16,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "common/util.h"
 #include "common/TimeUtil.h"
 #include "common/RuntimeUtil.h"
 #include "common/FileSystemUtil.h"

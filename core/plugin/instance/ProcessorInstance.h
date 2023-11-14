@@ -47,6 +47,7 @@ private:
     CounterPtr mProcTimeMS;
 
 #ifdef APSARA_UNIT_TEST_MAIN
+    friend class ProcessorInstanceUnittest;
     friend class ProcessorParseRegexNativeUnittest;
     friend class ProcessorParseTimestampNativeUnittest;
     friend class ProcessorParseJsonNativeUnittest;

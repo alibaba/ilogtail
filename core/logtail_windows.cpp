@@ -18,7 +18,6 @@
 #include <fstream>
 #include <errno.h>
 #include "common/version.h"
-#include "common/util.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/RuntimeUtil.h"
 #include "common/TimeUtil.h"
@@ -26,7 +25,6 @@
 #include "common/CrashBackTraceUtil.h"
 #include "common/MachineInfoUtil.h"
 #include "common/ErrorUtil.h"
-#include "common/GlobalPara.h"
 #include "logger/Logger.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
@@ -136,15 +134,6 @@ void do_worker_process() {
         APSARA_LOG_INFO(sLogger, ("get none dmi uuid", "maybe this is a docker runtime"));
     }
 
-    PluginRegistry::GetInstance()->LoadPlugins();
-
-    // load local config first
-    ConfigManager::GetInstance()->GetLocalConfigUpdate();
-    ConfigManager::GetInstance()->LoadConfig(AppConfig::GetInstance()->GetUserConfigPath());
-    ConfigManager::GetInstance()->LoadDockerConfig();
-    // mNameConfigMap is empty, configExistFlag is false
-    bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();
-
     std::string backTraceStr = GetCrashBackTrace();
     if (backTraceStr.size() > 0) {
         APSARA_LOG_ERROR(sLogger, ("last logtail crash stack", backTraceStr)("stack size", backTraceStr.length()));
@@ -168,22 +157,6 @@ void do_worker_process() {
         }
     }
 
-    LogtailMonitor::Instance()->InitMonitor();
-    // LogFilter::Instance()->InitFilter(STRING_FLAG(user_log_config));
-
-    Sender::Instance()->InitSender();
-
-    LogtailPlugin* pPlugin = LogtailPlugin::GetInstance();
-    pPlugin->Resume();
-
-    CheckPointManager::Instance()->LoadCheckPoint();
-    // AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();
-
-    // added by xianzhi(bowen.gbw@antfin.com)
-    // read local data_integrity json file and line count file
-    LogIntegrity::GetInstance()->ReloadIntegrityDataFromLocalFile();
-    LogLineCount::GetInstance()->ReloadLineCountDataFromLocalFile();
-
     Json::Value appInfoJson;
     appInfoJson["ip"] = Json::Value(LogFileProfiler::mIpAddr);
     appInfoJson["hostname"] = Json::Value(LogFileProfiler::mHostname);
@@ -202,12 +175,7 @@ void do_worker_process() {
     OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
     APSARA_LOG_INFO(sLogger, ("appInfo", appInfo));
 
-    ConfigManager::GetInstance()->InitUpdateConfig(configExistFlag);
-    ConfigManager::GetInstance()->RegisterHandlers();
-    EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
-    APSARA_LOG_INFO(sLogger, ("Logtail started", "initialization completed"));
-
-    EventDispatcher::GetInstance()->Dispatch();
+    Application::GetInstance()->Start();
 }
 
 int main(int argc, char** argv) {

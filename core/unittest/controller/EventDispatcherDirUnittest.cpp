@@ -19,7 +19,6 @@
 #include <string>
 #include <memory>
 #include "common/Flags.h"
-#include "common/util.h"
 #include "controller/EventDispatcher.h"
 #include "event/Event.h"
 #include "event_handler/EventHandler.h"

@@ -33,8 +33,8 @@ public:
     const std::string& Name() const override { return mPlugin->Name(); }
 
     bool Init(const Json::Value& config, PipelineContext& context, Json::Value& optionalGoPipeline);
-    void Start() { mPlugin->Start(); }
-    void Stop(bool isPipelineRemoving) { mPlugin->Stop(isPipelineRemoving); }
+    bool Start() { return mPlugin->Start(); }
+    bool Stop(bool isPipelineRemoving) { return mPlugin->Stop(isPipelineRemoving); }
 
     // just for special treatment of exactly once of input_file, should not be used otherwise!
     const Input* GetPlugin() const { return mPlugin.get(); }

@@ -29,7 +29,7 @@ struct GlobalConfig {
 
     static const std::unordered_set<std::string> sNativeParam;
 
-    bool Init(const Json::Value& config, const std::string& configName, Json::Value& nonNativeParams);
+    bool Init(const Json::Value& config, const std::string& configName, Json::Value& extendedParams);
 
     TopicType mTopicType = TopicType::NONE;
     std::string mTopicFormat;

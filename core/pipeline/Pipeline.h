@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 #include "json/json.h"
 
@@ -28,7 +29,6 @@
 #include "plugin/instance/InputInstance.h"
 #include "plugin/instance/FlusherInstance.h"
 #include "plugin/instance/ProcessorInstance.h"
-
 
 namespace logtail {
 
@@ -40,21 +40,22 @@ public:
     void Stop(bool isRemoving);
 
     const std::string& Name() const { return mName; }
-    const PipelineContext& GetContext() const { return mContext; }
+    PipelineContext& GetContext() const { return mContext; }
     const Json::Value& GetConfig() const { return mConfig; }
     const std::vector<std::unique_ptr<FlusherInstance>>& GetFlushers() const { return mFlushers; }
     bool IsFlushingThroughGoPipeline() const { return !mGoPipelineWithoutInput.isNull(); }
+    const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& GetPluginStatistics() const {
+        return mPluginCntMap;
+    }
     bool LoadGoPipelines() const; // 应当放在private，过渡期间放在public
 
-    // 临时使用
-    const Json::Value& GetGoPipelineWithInput() const { return mGoPipelineWithInput; }
-    const Json::Value& GetGoPipelineWithoutInput() const { return mGoPipelineWithoutInput; }
     // only for input_observer_network for compatability
     const std::vector<std::unique_ptr<InputInstance>>& GetInputs() const { return mInputs; }
 
 private:
     void MergeGoPipeline(const Json::Value& src, Json::Value& dst);
     void AddPluginToGoPipeline(const Json::Value& plugin, const std::string& module, Json::Value& dst);
+    void CopyNativeGlobalParamToGoPipeline(Json::Value& root);
     bool ShouldAddPluginToGoPipelineWithInput() const { return mInputs.empty() && mProcessorLine.empty(); }
 
     std::string mName;
@@ -63,8 +64,14 @@ private:
     std::vector<std::unique_ptr<FlusherInstance>> mFlushers;
     Json::Value mGoPipelineWithInput;
     Json::Value mGoPipelineWithoutInput;
-    PipelineContext mContext;
+    mutable PipelineContext mContext;
+    std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
     Json::Value mConfig;
+    
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class PipelineMock;
+    friend class PipelineUnittest;
+#endif
 };
 
 } // namespace logtail

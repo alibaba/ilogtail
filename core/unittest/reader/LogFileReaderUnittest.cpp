@@ -16,12 +16,11 @@
 #include <stdio.h>
 #include <fstream>
 #include "checkpoint/CheckPointManager.h"
-#include "reader/CommonRegLogFileReader.h"
+#include "reader/LogFileReader.h"
 #include "reader/SourceBuffer.h"
 #include "common/RuntimeUtil.h"
 #include "common/FileSystemUtil.h"
 #include "log_pb/sls_logs.pb.h"
-#include "util.h"
 
 DECLARE_FLAG_INT32(force_release_deleted_file_fd_timeout);
 DECLARE_FLAG_INT32(default_tail_limit_kb);
@@ -65,15 +64,11 @@ public:
     void TestReadGBK();
     void TestReadUTF8();
 
-    std::string projectName = "projectName";
-    std::string category = "logstoreName";
-    std::string timeFormat = "";
-    std::string topicFormat = "";
-    std::string groupTopic = "";
     std::unique_ptr<char[]> expectedContent;
     static std::string logPathDir;
     static std::string gbkFile;
     static std::string utf8File;
+    PipelineContext ctx;
 };
 
 UNIT_TEST_CASE(LogFileReaderUnittest, TestReadGBK);
@@ -85,17 +80,7 @@ std::string LogFileReaderUnittest::utf8File;
 
 void LogFileReaderUnittest::TestReadGBK() {
     { // buffer size big enough and match pattern
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      gbkFile,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_GBK,
-                                      false,
-                                      false);
+        LogFileReader reader(logPathDir, gbkFile, DevInode(), FileReaderConfig(), MultilineConfig());
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -107,17 +92,7 @@ void LogFileReaderUnittest::TestReadGBK() {
         APSARA_TEST_STREQ_FATAL(expectedContent.get(), logBuffer.rawBuffer.data());
     }
     { // buffer size big enough and match pattern, force read
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      gbkFile,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_GBK,
-                                      false,
-                                      false);
+        LogFileReader reader(logPathDir, gbkFile, DevInode(), FileReaderConfig(), MultilineConfig());
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -133,17 +108,7 @@ void LogFileReaderUnittest::TestReadGBK() {
         expectedContentAll[tmp + 1] = '\0';
     }
     { // buffer size not big enough and not match pattern
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      gbkFile,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_GBK,
-                                      false,
-                                      false);
+        LogFileReader reader(logPathDir, gbkFile, DevInode(), FileReaderConfig(), MultilineConfig());
         LogFileReader::BUFFER_SIZE = 14;
         size_t BUFFER_SIZE_UTF8 = 15; // "ilogtail 为可"
         reader.SetLogMultilinePolicy("no matching pattern", ".*", ".*");
@@ -159,17 +124,7 @@ void LogFileReaderUnittest::TestReadGBK() {
                                 logBuffer.rawBuffer.data());
     }
     { // buffer size not big enough and match pattern
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      gbkFile,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_GBK,
-                                      false,
-                                      false);
+        LogFileReader reader(logPathDir, gbkFile, DevInode(), FileReaderConfig(), MultilineConfig());
         reader.SetLogMultilinePolicy("iLogtail.*", ".*", ".*");
         reader.mDiscardUnmatch = false;
         reader.UpdateReaderManual();
@@ -186,17 +141,17 @@ void LogFileReaderUnittest::TestReadGBK() {
         APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), logBuffer.rawBuffer.data());
     }
     { // read twice, multiline
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      gbkFile,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_GBK,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             gbkFile,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_GBK,
+                             false,
+                             false);
         reader.SetLogMultilinePolicy("iLogtail.*", ".*", ".*");
         reader.mDiscardUnmatch = false;
         reader.UpdateReaderManual();
@@ -221,17 +176,17 @@ void LogFileReaderUnittest::TestReadGBK() {
         APSARA_TEST_EQUAL_FATAL(lastFilePos, reader.mLastFilePos);
     }
     { // read twice, single line
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      gbkFile,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_GBK,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             gbkFile,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_GBK,
+                             false,
+                             false);
         reader.mDiscardUnmatch = false;
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
@@ -256,17 +211,17 @@ void LogFileReaderUnittest::TestReadGBK() {
         APSARA_TEST_EQUAL_FATAL(0UL, reader.mCache.size());
     }
     { // empty file
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      gbkFile,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_GBK,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             gbkFile,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_GBK,
+                             false,
+                             false);
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         LogBuffer logBuffer;
@@ -279,17 +234,17 @@ void LogFileReaderUnittest::TestReadGBK() {
 
 void LogFileReaderUnittest::TestReadUTF8() {
     { // buffer size big enough and match pattern
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      utf8File,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_UTF8,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             utf8File,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_UTF8,
+                             false,
+                             false);
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -301,17 +256,17 @@ void LogFileReaderUnittest::TestReadUTF8() {
         APSARA_TEST_STREQ_FATAL(expectedContent.get(), logBuffer.rawBuffer.data());
     }
     { // buffer size big enough and match pattern
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      utf8File,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_UTF8,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             utf8File,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_UTF8,
+                             false,
+                             false);
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -328,17 +283,17 @@ void LogFileReaderUnittest::TestReadUTF8() {
     }
     { // buffer size not big enough and not match pattern
         // should read buffer size
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      utf8File,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_UTF8,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             utf8File,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_UTF8,
+                             false,
+                             false);
         LogFileReader::BUFFER_SIZE = 15;
         reader.SetLogMultilinePolicy("no matching pattern", ".*", ".*");
         reader.UpdateReaderManual();
@@ -354,17 +309,17 @@ void LogFileReaderUnittest::TestReadUTF8() {
     }
     { // buffer size not big enough and match pattern
         // should read to match pattern
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      utf8File,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_UTF8,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             utf8File,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_UTF8,
+                             false,
+                             false);
         reader.SetLogMultilinePolicy("iLogtail.*", ".*", ".*");
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
@@ -380,17 +335,17 @@ void LogFileReaderUnittest::TestReadUTF8() {
         APSARA_TEST_STREQ_FATAL(expectedPart.c_str(), logBuffer.rawBuffer.data());
     }
     { // read twice, multiline
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      utf8File,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_UTF8,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             utf8File,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_UTF8,
+                             false,
+                             false);
         reader.SetLogMultilinePolicy("iLogtail.*", ".*", ".*");
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
@@ -414,17 +369,17 @@ void LogFileReaderUnittest::TestReadUTF8() {
         APSARA_TEST_EQUAL_FATAL(lastFilePos, reader.mLastFilePos);
     }
     { // read twice, singleline
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      utf8File,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_UTF8,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             utf8File,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_UTF8,
+                             false,
+                             false);
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -448,17 +403,17 @@ void LogFileReaderUnittest::TestReadUTF8() {
         APSARA_TEST_EQUAL_FATAL(0UL, reader.mCache.size());
     }
     { // empty
-        CommonRegLogFileReader reader(projectName,
-                                      category,
-                                      logPathDir,
-                                      utf8File,
-                                      INT32_FLAG(default_tail_limit_kb),
-                                      timeFormat,
-                                      topicFormat,
-                                      groupTopic,
-                                      FileEncoding::ENCODING_UTF8,
-                                      false,
-                                      false);
+        LogFileReader reader(projectName,
+                             category,
+                             logPathDir,
+                             utf8File,
+                             INT32_FLAG(default_tail_limit_kb),
+                             timeFormat,
+                             topicFormat,
+                             groupTopic,
+                             FileEncoding::ENCODING_UTF8,
+                             false,
+                             false);
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         LogBuffer logBuffer;
@@ -531,34 +486,34 @@ std::string LogMultiBytesUnittest::utf8File;
 
 void LogMultiBytesUnittest::TestAlignLastCharacterUTF8() {
     { // case: no align
-        CommonRegLogFileReader logFileReader(projectName,
-                                             category,
-                                             "",
-                                             "",
-                                             INT32_FLAG(default_tail_limit_kb),
-                                             timeFormat,
-                                             topicFormat,
-                                             groupTopic,
-                                             FileEncoding::ENCODING_UTF8,
-                                             false,
-                                             false);
+        LogFileReader logFileReader(projectName,
+                                    category,
+                                    "",
+                                    "",
+                                    INT32_FLAG(default_tail_limit_kb),
+                                    timeFormat,
+                                    topicFormat,
+                                    groupTopic,
+                                    FileEncoding::ENCODING_UTF8,
+                                    false,
+                                    false);
         std::string expectedLog = "为可观测场景而";
         std::string testLog = expectedLog + "生";
         size_t result = logFileReader.AlignLastCharacter(const_cast<char*>(testLog.data()), expectedLog.size());
         APSARA_TEST_EQUAL_FATAL(expectedLog.size(), result);
     }
     { // case: cut off
-        CommonRegLogFileReader logFileReader(projectName,
-                                             category,
-                                             "",
-                                             "",
-                                             INT32_FLAG(default_tail_limit_kb),
-                                             timeFormat,
-                                             topicFormat,
-                                             groupTopic,
-                                             FileEncoding::ENCODING_UTF8,
-                                             false,
-                                             false);
+        LogFileReader logFileReader(projectName,
+                                    category,
+                                    "",
+                                    "",
+                                    INT32_FLAG(default_tail_limit_kb),
+                                    timeFormat,
+                                    topicFormat,
+                                    groupTopic,
+                                    FileEncoding::ENCODING_UTF8,
+                                    false,
+                                    false);
         std::string expectedLog = "为可观测场景而";
         std::string testLog = expectedLog + "生";
         size_t result = logFileReader.AlignLastCharacter(const_cast<char*>(testLog.data()), expectedLog.size() + 1);
@@ -567,17 +522,17 @@ void LogMultiBytesUnittest::TestAlignLastCharacterUTF8() {
 }
 
 void LogMultiBytesUnittest::TestAlignLastCharacterGBK() {
-    CommonRegLogFileReader logFileReader(projectName,
-                                         category,
-                                         "",
-                                         "",
-                                         INT32_FLAG(default_tail_limit_kb),
-                                         timeFormat,
-                                         topicFormat,
-                                         groupTopic,
-                                         FileEncoding::ENCODING_GBK,
-                                         false,
-                                         false);
+    LogFileReader logFileReader(projectName,
+                                category,
+                                "",
+                                "",
+                                INT32_FLAG(default_tail_limit_kb),
+                                timeFormat,
+                                topicFormat,
+                                groupTopic,
+                                FileEncoding::ENCODING_GBK,
+                                false,
+                                false);
     { // case: no align
         std::string expectedLog
             = "\xce\xaa\xbf\xc9\xb9\xdb\xb2\xe2\xb3\xa1\xbe\xb0\xb6\xf8"; // equal to "为可观测场景而"
@@ -595,17 +550,17 @@ void LogMultiBytesUnittest::TestAlignLastCharacterGBK() {
 }
 
 void LogMultiBytesUnittest::TestReadUTF8() {
-    CommonRegLogFileReader reader(projectName,
-                                  category,
-                                  logPathDir,
-                                  utf8File,
-                                  INT32_FLAG(default_tail_limit_kb),
-                                  timeFormat,
-                                  topicFormat,
-                                  groupTopic,
-                                  FileEncoding::ENCODING_UTF8,
-                                  false,
-                                  false);
+    LogFileReader reader(projectName,
+                         category,
+                         logPathDir,
+                         utf8File,
+                         INT32_FLAG(default_tail_limit_kb),
+                         timeFormat,
+                         topicFormat,
+                         groupTopic,
+                         FileEncoding::ENCODING_UTF8,
+                         false,
+                         false);
     LogFileReader::BUFFER_SIZE = 13; // equal to "iLogtail 为" plus one illegal byte
     reader.UpdateReaderManual();
     reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
@@ -620,17 +575,17 @@ void LogMultiBytesUnittest::TestReadUTF8() {
 }
 
 void LogMultiBytesUnittest::TestReadGBK() {
-    CommonRegLogFileReader reader(projectName,
-                                  category,
-                                  logPathDir,
-                                  gbkFile,
-                                  INT32_FLAG(default_tail_limit_kb),
-                                  timeFormat,
-                                  topicFormat,
-                                  groupTopic,
-                                  FileEncoding::ENCODING_GBK,
-                                  false,
-                                  false);
+    LogFileReader reader(projectName,
+                         category,
+                         logPathDir,
+                         gbkFile,
+                         INT32_FLAG(default_tail_limit_kb),
+                         timeFormat,
+                         topicFormat,
+                         groupTopic,
+                         FileEncoding::ENCODING_GBK,
+                         false,
+                         false);
     LogFileReader::BUFFER_SIZE = 12; // equal to "iLogtail 为" plus one illegal byte
     size_t BUFFER_SIZE_UTF8 = 12; // "ilogtail 为可"
     reader.UpdateReaderManual();
@@ -680,17 +635,17 @@ std::string LogFileReaderCheckpointUnittest::utf8File;
 
 void LogFileReaderCheckpointUnittest::TestDumpMetaToMem() {
     { // read twice with checkpoint, singleline
-        CommonRegLogFileReader reader1(projectName,
-                                       category,
-                                       logPathDir,
-                                       utf8File,
-                                       INT32_FLAG(default_tail_limit_kb),
-                                       timeFormat,
-                                       topicFormat,
-                                       groupTopic,
-                                       FileEncoding::ENCODING_UTF8,
-                                       false,
-                                       false);
+        LogFileReader reader1(projectName,
+                              category,
+                              logPathDir,
+                              utf8File,
+                              INT32_FLAG(default_tail_limit_kb),
+                              timeFormat,
+                              topicFormat,
+                              groupTopic,
+                              FileEncoding::ENCODING_UTF8,
+                              false,
+                              false);
         reader1.UpdateReaderManual();
         reader1.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
         int64_t fileSize = 0;
@@ -704,17 +659,17 @@ void LogFileReaderCheckpointUnittest::TestDumpMetaToMem() {
         APSARA_TEST_GE_FATAL(reader1.mCache.size(), 0UL);
         reader1.DumpMetaToMem(false);
         // second read
-        CommonRegLogFileReader reader2(projectName,
-                                       category,
-                                       logPathDir,
-                                       utf8File,
-                                       INT32_FLAG(default_tail_limit_kb),
-                                       timeFormat,
-                                       topicFormat,
-                                       groupTopic,
-                                       FileEncoding::ENCODING_UTF8,
-                                       false,
-                                       false);
+        LogFileReader reader2(projectName,
+                              category,
+                              logPathDir,
+                              utf8File,
+                              INT32_FLAG(default_tail_limit_kb),
+                              timeFormat,
+                              topicFormat,
+                              groupTopic,
+                              FileEncoding::ENCODING_UTF8,
+                              false,
+                              false);
         reader2.UpdateReaderManual();
         reader2.InitReader(false, LogFileReader::BACKWARD_TO_BEGINNING);
         reader2.CheckFileSignatureAndOffset(fileSize);

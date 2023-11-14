@@ -109,7 +109,7 @@ struct NetworkConfig {
     }
 
 
-    int32_t mOldestConfigCreateTime = 0; // used to check which config is best
+    uint32_t mOldestConfigCreateTime = 0; // used to check which config is best
     volatile bool mEnabled = false;
     std::string mLastApplyedConfigDetail;
     const Pipeline* mLastApplyedConfig = nullptr;

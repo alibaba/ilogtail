@@ -23,7 +23,7 @@
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <cityhash/city.h>
-#include "common/util.h"
+#include "common/UUIDUtil.h"
 #include "common/Flags.h"
 #include "common/HashUtil.h"
 #include "common/ErrorUtil.h"
@@ -86,7 +86,7 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                                                   uint32_t exactlyonceConcurrency,
                                                   bool forceFromBeginning) {
     LogFileReader* reader = nullptr;
-    if (readerConfig.second->IsFirstProcessorJson()) {
+    if (readerConfig.second->RequiringJsonReader()) {
         reader = new JsonLogFileReader(hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig);
     } else {
         reader = new LogFileReader(hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig);
@@ -1647,7 +1647,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     if (allowRollback) {
         alignedBytes = AlignLastCharacter(stringBuffer, nbytes);
     }
-    if (allowRollback || mReaderConfig.second->IsFirstProcessorJson()) {
+    if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
         int32_t rollbackLineFeedCount;
         nbytes = LastMatchedLine(stringBuffer, alignedBytes, rollbackLineFeedCount, allowRollback);
     }
@@ -1655,7 +1655,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     if (nbytes == 0) {
         if (moreData) { // excessively long line without '\n' or multiline begin or valid wchar
             nbytes = alignedBytes ? alignedBytes : BUFFER_SIZE;
-            if (mReaderConfig.second->IsFirstProcessorJson()) {
+            if (mReaderConfig.second->RequiringJsonReader()) {
                 int32_t rollbackLineFeedCount;
                 nbytes = LastMatchedLine(stringBuffer, nbytes, rollbackLineFeedCount, false);
             }
@@ -1782,14 +1782,14 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     }
     int32_t rollbackLineFeedCount = 0;
     int32_t bakResultCharCount = resultCharCount;
-    if (allowRollback || mReaderConfig.second->IsFirstProcessorJson()) {
+    if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
         resultCharCount = LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount, allowRollback);
     }
     if (resultCharCount == 0) {
         if (moreData) {
             resultCharCount = bakResultCharCount;
             rollbackLineFeedCount = 0;
-            if (mReaderConfig.second->IsFirstProcessorJson()) {
+            if (mReaderConfig.second->RequiringJsonReader()) {
                 int32_t rollbackLineFeedCount;
                 LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount, false);
             }

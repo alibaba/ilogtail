@@ -15,14 +15,17 @@
  */
 
 #include "processor/ProcessorParseApsaraNative.h"
+
+#include <algorithm>
+
+#include "common/LogtailCommonFlags.h"
+#include "common/StringTools.h"
 #include "common/Constants.h"
 #include "models/LogEvent.h"
 #include "app_config/AppConfig.h"
 #include "parser/LogParser.h" // for UNMATCH_LOG_KEY
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
-#include <algorithm>
-
 
 namespace logtail {
 const std::string ProcessorParseApsaraNative::sName = "processor_parse_apsara_native";

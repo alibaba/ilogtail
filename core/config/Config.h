@@ -20,14 +20,13 @@
 #include <list>
 #include <boost/regex.hpp>
 #include <re2/re2.h>
-#include "DockerFileConfig.h"
+// #include "DockerFileConfig.h"
 // #include "common/EncodingConverter.h"
 // #include "common/LogstoreFeedbackQueue.h"
 // #include "common/Flags.h"
 #include "common/TimeUtil.h"
 // #include "aggregator/Aggregator.h"
 #include "processor/BaseFilterNode.h"
-#include "LogType.h"
 // #include "IntegrityConfig.h"
 
 namespace logtail {
@@ -67,7 +66,7 @@ struct SensitiveWordCastOption {
 
     SensitiveWordCastOption() : option(CONST_OPTION), replaceAll(false) {}
 
-    ~SensitiveWordCastOption();
+    ~SensitiveWordCastOption() {}
 };
 
 class Config {
@@ -120,7 +119,7 @@ public:
     // int16_t mWildcardDepth;
     // std::string mBasePath; // base path, not terminated by "*" "**"
     // std::string mFilePattern; // file name format
-    LogType mLogType;
+    // LogType mLogType;
     std::string mConfigName; // name of log e.g. aliyun_com "##1.0##sls-zc-test$home-log"
     // std::string mLogBeginReg; // the log begin line regex
     // std::string mLogContinueReg; // the log continue line regex
@@ -192,7 +191,7 @@ public:
     // bool mDockerFileFlag; // docker file flag
     // bool mPluginProcessFlag; // file config with plugin process
     // DATA_MERGE_TYPE mMergeType; // config's merge type, default merge by topic
-    bool mForceEnablePipeline = false;
+    // bool mForceEnablePipeline = false;
     AdvancedConfig mAdvancedConfig;
 
     // // Blacklist control.
@@ -238,7 +237,7 @@ public:
 
     Config(const std::string& basePath,
            const std::string& filePattern,
-           LogType logType,
+        //    LogType logType,
            const std::string& logName,
            const std::string& logBeginReg,
            const std::string& logContinueReg,

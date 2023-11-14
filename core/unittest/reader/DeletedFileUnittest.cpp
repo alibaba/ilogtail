@@ -13,10 +13,9 @@
 // limitations under the License.
 
 #include "unittest/Unittest.h"
+#include "reader/LogFileReader.h"
 #include <fstream>
 #include <json/json.h>
-#include "reader/CommonRegLogFileReader.h"
-#include "util.h"
 
 DECLARE_FLAG_INT32(force_release_deleted_file_fd_timeout);
 
@@ -27,8 +26,8 @@ public:
     void SetUp() override {
         hostLogPathDir = ".";
         hostLogPathFile = "DeletedFileUnittest.txt";
-        reader.reset(new CommonRegLogFileReader(
-            "testProject", "testLogstore", hostLogPathDir, hostLogPathFile, 0, "%Y-%m-%d %H:%M:%S", ""));
+        reader.reset(new LogFileReader(
+            hostLogPathDir, hostLogPathFile, DevInode(), FileReaderConfig(), MultilineConfig()));
     }
     void TearDown() override { INT32_FLAG(force_release_deleted_file_fd_timeout) = -1; }
     void TestShouldForceReleaseDeletedFileFdDeleted();

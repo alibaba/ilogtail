@@ -32,7 +32,7 @@
 #include "common/RuntimeUtil.h"
 #include "common/HashUtil.h"
 #include "common/FileSystemUtil.h"
-#include "common/util.h"
+#include "common/EndpointUtil.h"
 #include "common/ErrorUtil.h"
 #include "common/RandomUtil.h"
 #include "common/SlidingWindowCounter.h"

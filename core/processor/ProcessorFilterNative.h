@@ -49,7 +49,6 @@ private:
     std::shared_ptr<LogFilterRule> mFilterRule;
     BaseFilterNodePtr mFilterExpressionRoot = nullptr;
     std::unordered_map<std::string, LogFilterRule*> mFilters;
-    LogType mLogType;
     bool mDiscardNoneUtf8;
     Mode mFilterMode;
 

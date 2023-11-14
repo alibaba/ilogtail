@@ -345,8 +345,6 @@ void NetworkObserver::Reload() {
         LOG_ERROR(sLogger, ("observer depends on glibc1.14", "load glibc func fail"));
         return;
     }
-    // std::vector<Pipeline*> allObserverConfigs;
-    // ConfigManager::GetInstance()->GetAllObserverConfig(allObserverConfigs);
     mConfig->BeginLoadConfig();
     for (auto config : mConfig->mAllNetworkConfigs) {
         mConfig->LoadConfig(config);

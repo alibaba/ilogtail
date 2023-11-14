@@ -27,193 +27,193 @@
 
 namespace logtail {
 
-void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Config& cfg) {
-    const std::string ADVANCED_CONFIG_KEY = "advanced";
-    if (!originalVal.isMember(ADVANCED_CONFIG_KEY) || !originalVal[ADVANCED_CONFIG_KEY].isObject()) {
-        return;
-    }
-    const auto& advancedVal = originalVal[ADVANCED_CONFIG_KEY];
+// void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Config& cfg) {
+//     const std::string ADVANCED_CONFIG_KEY = "advanced";
+//     if (!originalVal.isMember(ADVANCED_CONFIG_KEY) || !originalVal[ADVANCED_CONFIG_KEY].isObject()) {
+//         return;
+//     }
+//     const auto& advancedVal = originalVal[ADVANCED_CONFIG_KEY];
 
-    // auto blacklistException = ParseBlacklist(advancedVal, cfg);
-    // if (!blacklistException.empty()) {
-    //     throw blacklistException;
-    // }
+//     // auto blacklistException = ParseBlacklist(advancedVal, cfg);
+//     // if (!blacklistException.empty()) {
+//     //     throw blacklistException;
+//     // }
 
-    // // Boolean force_multiconfig.
-    // {
-    //     const Json::Value& val = advancedVal["force_multiconfig"];
-    //     if (val.isBool()) {
-    //         cfg.mAdvancedConfig.mForceMultiConfig = val.asBool();
-    //         LOG_INFO(sLogger,
-    //                  ("set force multi config",
-    //                   cfg.mAdvancedConfig.mForceMultiConfig)("project", cfg.mProjectName)("config", cfg.mConfigName));
-    //     }
-    // }
-    // support extract partial fields in DELIMITER_LOG mode
-    if (cfg.mLogType == DELIMITER_LOG) {
-        if (advancedVal.isMember("extract_partial_fields") && advancedVal["extract_partial_fields"].isBool()) {
-            cfg.mAdvancedConfig.mExtractPartialFields = GetBoolValue(advancedVal, "extract_partial_fields");
-        }
-    }
-    // raw log tag
-    if (advancedVal.isMember("raw_log_tag") && advancedVal["raw_log_tag"].isString()) {
-        std::string rawLogTag = GetStringValue(advancedVal, "raw_log_tag");
-        if (!rawLogTag.empty()) {
-            cfg.mAdvancedConfig.mRawLogTag = rawLogTag;
-        }
-    }
-    // 废弃
-    // // pass_tags_to_plugin.
-    // {
-    //     const Json::Value& val = advancedVal["pass_tags_to_plugin"];
-    //     if (val.isBool()) {
-    //         cfg.mAdvancedConfig.mPassTagsToPlugin = val.asBool();
-    //         LOG_INFO(sLogger,
-    //                  ("passing tags to plugin",
-    //                   cfg.mAdvancedConfig.mPassTagsToPlugin)("project", cfg.mProjectName)("logstore", cfg.mCategory));
-    //     }
-    // }
+//     // // Boolean force_multiconfig.
+//     // {
+//     //     const Json::Value& val = advancedVal["force_multiconfig"];
+//     //     if (val.isBool()) {
+//     //         cfg.mAdvancedConfig.mForceMultiConfig = val.asBool();
+//     //         LOG_INFO(sLogger,
+//     //                  ("set force multi config",
+//     //                   cfg.mAdvancedConfig.mForceMultiConfig)("project", cfg.mProjectName)("config", cfg.mConfigName));
+//     //     }
+//     // }
+//     // support extract partial fields in DELIMITER_LOG mode
+//     if (cfg.mLogType == DELIMITER_LOG) {
+//         if (advancedVal.isMember("extract_partial_fields") && advancedVal["extract_partial_fields"].isBool()) {
+//             cfg.mAdvancedConfig.mExtractPartialFields = GetBoolValue(advancedVal, "extract_partial_fields");
+//         }
+//     }
+//     // raw log tag
+//     if (advancedVal.isMember("raw_log_tag") && advancedVal["raw_log_tag"].isString()) {
+//         std::string rawLogTag = GetStringValue(advancedVal, "raw_log_tag");
+//         if (!rawLogTag.empty()) {
+//             cfg.mAdvancedConfig.mRawLogTag = rawLogTag;
+//         }
+//     }
+//     // 废弃
+//     // // pass_tags_to_plugin.
+//     // {
+//     //     const Json::Value& val = advancedVal["pass_tags_to_plugin"];
+//     //     if (val.isBool()) {
+//     //         cfg.mAdvancedConfig.mPassTagsToPlugin = val.asBool();
+//     //         LOG_INFO(sLogger,
+//     //                  ("passing tags to plugin",
+//     //                   cfg.mAdvancedConfig.mPassTagsToPlugin)("project", cfg.mProjectName)("logstore", cfg.mCategory));
+//     //     }
+//     // }
 
-    // // tail_size_kb: this will overwrite tail_limit.
-    // {
-    //     const Json::Value& val = advancedVal["tail_size_kb"];
-    //     if (val.isInt()) {
-    //         int32_t tailSize = val.asInt();
-    //         cfg.SetTailLimit(tailSize);
-    //         LOG_INFO(sLogger, ("set tail size (KB)", cfg.mTailLimit)("param (KB)", tailSize));
-    //     }
-    // }
-    // batch_send_interval
-    // {
-    //     const Json::Value& val = advancedVal["batch_send_interval"];
-    //     if (val.isInt()) {
-    //         cfg.mAdvancedConfig.mBatchSendInterval = val.asInt();
-    //         LOG_INFO(sLogger, ("set batch send interval", cfg.mAdvancedConfig.mBatchSendInterval));
-    //     }
-    // }
-    // log filter: AND/OR/NOT/REGEX.
-    {
-        const Json::Value& val = advancedVal["filter_expression"];
-        if (!val.isNull()) {
-            BaseFilterNodePtr root = ParseExpressionFromJSON(val);
-            if (!root) {
-                throw ExceptionBase("invalid filter expression: " + val.toStyledString());
-            }
-            cfg.mAdvancedConfig.mFilterExpressionRoot.swap(root);
-            LOG_INFO(sLogger, ("parse filter expression", val.toStyledString()));
-        }
-    }
-    // // max_rotate_queue_size
-    // {
-    //     const Json::Value& val = advancedVal["max_rotate_queue_size"];
-    //     if (val.isInt()) {
-    //         cfg.mAdvancedConfig.mMaxRotateQueueSize = val.asInt();
-    //         LOG_INFO(sLogger, ("set max rotate queue size", cfg.mAdvancedConfig.mMaxRotateQueueSize));
-    //     }
-    // }
-    // // close_unused_reader_interval
-    // {
-    //     const Json::Value& val = advancedVal["close_unused_reader_interval"];
-    //     if (val.isInt()) {
-    //         cfg.mAdvancedConfig.mCloseUnusedReaderInterval = val.asInt();
-    //         LOG_INFO(sLogger, ("set close unused reader interval", cfg.mAdvancedConfig.mCloseUnusedReaderInterval));
-    //     }
-    // }
-    // exactly once
-    // {
-    //     const auto& val = advancedVal["exactly_once_concurrency"];
-    //     if (val.isUInt()) {
-    //         auto concurrency = val.asUInt();
-    //         if (concurrency > Config::kExactlyOnceMaxConcurrency) {
-    //             throw ExceptionBase(std::string("invalid exactly once concurrency, range: [0, ")
-    //                                 + std::to_string(Config::kExactlyOnceMaxConcurrency) + "]");
-    //         }
-    //         cfg.mAdvancedConfig.mExactlyOnceConcurrency = concurrency;
-    //         LOG_INFO(sLogger, ("set exactly once concurrency", concurrency));
-    //     }
-    //     if (cfg.mAdvancedConfig.mExactlyOnceConcurrency > 0 && cfg.mPluginProcessFlag) {
-    //         throw ExceptionBase("exactly once can not be enabled while plugin.processors exist");
-    //     }
-    //     if (cfg.mAdvancedConfig.mExactlyOnceConcurrency > 0 && cfg.mMergeType != MERGE_BY_TOPIC) {
-    //         throw ExceptionBase("exactly once must use MERGE_BY_TOPIC");
-    //     }
-    // }
-    // // inode tag and offset in each log.
-    // {
-    //     const auto& val = advancedVal["enable_log_position_meta"];
-    //     if (val.isBool()) {
-    //         cfg.mAdvancedConfig.mEnableLogPositionMeta = val.asBool();
-    //     }
-    // }
-    // specified_year: fill year in time.
-    {
-        const auto& val = advancedVal["specified_year"];
-        if (val.isUInt()) {
-            cfg.mAdvancedConfig.mSpecifiedYear = static_cast<int32_t>(val.asUInt());
-        }
-    }
-    // using_old_content_tag
-    {
-        if (advancedVal.isMember("using_old_content_tag") && advancedVal["using_old_content_tag"].isBool()) {
-            cfg.mAdvancedConfig.mUsingOldContentTag = GetBoolValue(advancedVal, "using_old_content_tag");
-        }
-    }
-    // precise_timestamp
-    {
-        // if (advancedVal.isMember("enable_timestamp_nanosecond") && advancedVal["enable_timestamp_nanosecond"].isBool()) {
-        //     cfg.mAdvancedConfig.mEnableTimestampNanosecond = GetBoolValue(advancedVal, "enable_timestamp_nanosecond");
-        // }
-        // Deprecated
-        if (advancedVal.isMember("enable_precise_timestamp") && advancedVal["enable_precise_timestamp"].isBool()) {
-            cfg.mAdvancedConfig.mEnablePreciseTimestamp = GetBoolValue(advancedVal, "enable_precise_timestamp");
-        }
-        if (cfg.mAdvancedConfig.mEnablePreciseTimestamp) {
-            if (advancedVal.isMember("precise_timestamp_key") && advancedVal["precise_timestamp_key"].isString()) {
-                cfg.mAdvancedConfig.mPreciseTimestampKey = GetStringValue(advancedVal, "precise_timestamp_key");
-            }
-            if (cfg.mAdvancedConfig.mPreciseTimestampKey.empty()) {
-                cfg.mAdvancedConfig.mPreciseTimestampKey = PRECISE_TIMESTAMP_DEFAULT_KEY;
-            }
+//     // // tail_size_kb: this will overwrite tail_limit.
+//     // {
+//     //     const Json::Value& val = advancedVal["tail_size_kb"];
+//     //     if (val.isInt()) {
+//     //         int32_t tailSize = val.asInt();
+//     //         cfg.SetTailLimit(tailSize);
+//     //         LOG_INFO(sLogger, ("set tail size (KB)", cfg.mTailLimit)("param (KB)", tailSize));
+//     //     }
+//     // }
+//     // batch_send_interval
+//     // {
+//     //     const Json::Value& val = advancedVal["batch_send_interval"];
+//     //     if (val.isInt()) {
+//     //         cfg.mAdvancedConfig.mBatchSendInterval = val.asInt();
+//     //         LOG_INFO(sLogger, ("set batch send interval", cfg.mAdvancedConfig.mBatchSendInterval));
+//     //     }
+//     // }
+//     // log filter: AND/OR/NOT/REGEX.
+//     {
+//         const Json::Value& val = advancedVal["filter_expression"];
+//         if (!val.isNull()) {
+//             BaseFilterNodePtr root = ParseExpressionFromJSON(val);
+//             if (!root) {
+//                 throw ExceptionBase("invalid filter expression: " + val.toStyledString());
+//             }
+//             cfg.mAdvancedConfig.mFilterExpressionRoot.swap(root);
+//             LOG_INFO(sLogger, ("parse filter expression", val.toStyledString()));
+//         }
+//     }
+//     // // max_rotate_queue_size
+//     // {
+//     //     const Json::Value& val = advancedVal["max_rotate_queue_size"];
+//     //     if (val.isInt()) {
+//     //         cfg.mAdvancedConfig.mMaxRotateQueueSize = val.asInt();
+//     //         LOG_INFO(sLogger, ("set max rotate queue size", cfg.mAdvancedConfig.mMaxRotateQueueSize));
+//     //     }
+//     // }
+//     // // close_unused_reader_interval
+//     // {
+//     //     const Json::Value& val = advancedVal["close_unused_reader_interval"];
+//     //     if (val.isInt()) {
+//     //         cfg.mAdvancedConfig.mCloseUnusedReaderInterval = val.asInt();
+//     //         LOG_INFO(sLogger, ("set close unused reader interval", cfg.mAdvancedConfig.mCloseUnusedReaderInterval));
+//     //     }
+//     // }
+//     // exactly once
+//     // {
+//     //     const auto& val = advancedVal["exactly_once_concurrency"];
+//     //     if (val.isUInt()) {
+//     //         auto concurrency = val.asUInt();
+//     //         if (concurrency > Config::kExactlyOnceMaxConcurrency) {
+//     //             throw ExceptionBase(std::string("invalid exactly once concurrency, range: [0, ")
+//     //                                 + std::to_string(Config::kExactlyOnceMaxConcurrency) + "]");
+//     //         }
+//     //         cfg.mAdvancedConfig.mExactlyOnceConcurrency = concurrency;
+//     //         LOG_INFO(sLogger, ("set exactly once concurrency", concurrency));
+//     //     }
+//     //     if (cfg.mAdvancedConfig.mExactlyOnceConcurrency > 0 && cfg.mPluginProcessFlag) {
+//     //         throw ExceptionBase("exactly once can not be enabled while plugin.processors exist");
+//     //     }
+//     //     if (cfg.mAdvancedConfig.mExactlyOnceConcurrency > 0 && cfg.mMergeType != MERGE_BY_TOPIC) {
+//     //         throw ExceptionBase("exactly once must use MERGE_BY_TOPIC");
+//     //     }
+//     // }
+//     // // inode tag and offset in each log.
+//     // {
+//     //     const auto& val = advancedVal["enable_log_position_meta"];
+//     //     if (val.isBool()) {
+//     //         cfg.mAdvancedConfig.mEnableLogPositionMeta = val.asBool();
+//     //     }
+//     // }
+//     // specified_year: fill year in time.
+//     {
+//         const auto& val = advancedVal["specified_year"];
+//         if (val.isUInt()) {
+//             cfg.mAdvancedConfig.mSpecifiedYear = static_cast<int32_t>(val.asUInt());
+//         }
+//     }
+//     // using_old_content_tag
+//     {
+//         if (advancedVal.isMember("using_old_content_tag") && advancedVal["using_old_content_tag"].isBool()) {
+//             cfg.mAdvancedConfig.mUsingOldContentTag = GetBoolValue(advancedVal, "using_old_content_tag");
+//         }
+//     }
+//     // precise_timestamp
+//     {
+//         // if (advancedVal.isMember("enable_timestamp_nanosecond") && advancedVal["enable_timestamp_nanosecond"].isBool()) {
+//         //     cfg.mAdvancedConfig.mEnableTimestampNanosecond = GetBoolValue(advancedVal, "enable_timestamp_nanosecond");
+//         // }
+//         // Deprecated
+//         if (advancedVal.isMember("enable_precise_timestamp") && advancedVal["enable_precise_timestamp"].isBool()) {
+//             cfg.mAdvancedConfig.mEnablePreciseTimestamp = GetBoolValue(advancedVal, "enable_precise_timestamp");
+//         }
+//         if (cfg.mAdvancedConfig.mEnablePreciseTimestamp) {
+//             if (advancedVal.isMember("precise_timestamp_key") && advancedVal["precise_timestamp_key"].isString()) {
+//                 cfg.mAdvancedConfig.mPreciseTimestampKey = GetStringValue(advancedVal, "precise_timestamp_key");
+//             }
+//             if (cfg.mAdvancedConfig.mPreciseTimestampKey.empty()) {
+//                 cfg.mAdvancedConfig.mPreciseTimestampKey = PRECISE_TIMESTAMP_DEFAULT_KEY;
+//             }
 
-            if (advancedVal.isMember("precise_timestamp_unit") && advancedVal["precise_timestamp_unit"].isString()) {
-                std::string key = GetStringValue(advancedVal, "precise_timestamp_unit");
-                if (0 == key.compare("ms")) {
-                    cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
-                } else if (0 == key.compare("us")) {
-                    cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::MICROSECOND;
-                } else if (0 == key.compare("ns")) {
-                    cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::NANOSECOND;
-                } else {
-                    cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
-                }
-            } else {
-                cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
-            }
-        }
-    }
-    // // search_checkpoint_dir_depth.
-    // {
-    //     const auto& val = advancedVal["search_checkpoint_dir_depth"];
-    //     if (val.isUInt()) {
-    //         cfg.mAdvancedConfig.mSearchCheckpointDirDepth = static_cast<uint16_t>(val.asUInt());
-    //     }
-    // }
-    // // enable_root_path_collection.
-    // if (!BOOL_FLAG(enable_root_path_collection)) {
-    //     const auto& val = advancedVal["enable_root_path_collection"];
-    //     if (val.isBool() && val.asBool()) {
-    //         BOOL_FLAG(enable_root_path_collection) = true;
-    //         LOG_INFO(sLogger, ("message", "enable root path collection"));
-    //     }
-    // }
+//             if (advancedVal.isMember("precise_timestamp_unit") && advancedVal["precise_timestamp_unit"].isString()) {
+//                 std::string key = GetStringValue(advancedVal, "precise_timestamp_unit");
+//                 if (0 == key.compare("ms")) {
+//                     cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
+//                 } else if (0 == key.compare("us")) {
+//                     cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::MICROSECOND;
+//                 } else if (0 == key.compare("ns")) {
+//                     cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::NANOSECOND;
+//                 } else {
+//                     cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
+//                 }
+//             } else {
+//                 cfg.mAdvancedConfig.mPreciseTimestampUnit = TimeStampUnit::MILLISECOND;
+//             }
+//         }
+//     }
+//     // // search_checkpoint_dir_depth.
+//     // {
+//     //     const auto& val = advancedVal["search_checkpoint_dir_depth"];
+//     //     if (val.isUInt()) {
+//     //         cfg.mAdvancedConfig.mSearchCheckpointDirDepth = static_cast<uint16_t>(val.asUInt());
+//     //     }
+//     // }
+//     // // enable_root_path_collection.
+//     // if (!BOOL_FLAG(enable_root_path_collection)) {
+//     //     const auto& val = advancedVal["enable_root_path_collection"];
+//     //     if (val.isBool() && val.asBool()) {
+//     //         BOOL_FLAG(enable_root_path_collection) = true;
+//     //         LOG_INFO(sLogger, ("message", "enable root path collection"));
+//     //     }
+//     // }
 
-    // support adjust microtime timezone
-    if (cfg.mLogType == APSARA_LOG) {
-        if (advancedVal.isMember("adjust_apsara_micro_timezone") && advancedVal["adjust_apsara_micro_timezone"].isBool()) {
-            cfg.mAdvancedConfig.mAdjustApsaraMicroTimezone = GetBoolValue(advancedVal, "adjust_apsara_micro_timezone");
-        }
-    }
-}
+//     // support adjust microtime timezone
+//     if (cfg.mLogType == APSARA_LOG) {
+//         if (advancedVal.isMember("adjust_apsara_micro_timezone") && advancedVal["adjust_apsara_micro_timezone"].isBool()) {
+//             cfg.mAdvancedConfig.mAdjustApsaraMicroTimezone = GetBoolValue(advancedVal, "adjust_apsara_micro_timezone");
+//         }
+//     }
+// }
 
 BaseFilterNodePtr UserLogConfigParser::ParseExpressionFromJSON(const Json::Value& value) {
     BaseFilterNodePtr node;
