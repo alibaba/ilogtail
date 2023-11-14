@@ -14,9 +14,8 @@ void PipelineEventGroupInput::getHeader(IOHeader& header, std::string& err) {
     }
 
     for (auto& kv : mLogGroup->GetTags()) {
-        std::ostringstream oss;
-        oss << FIELD_PREFIX_TAG << kv.first;
-        std::string fullTag = oss.str();
+        std::string fullTag = FIELD_PREFIX_TAG;
+        fullTag += kv.first;
         mTmpTags.emplace_back(fullTag);
         header.columnNames.emplace_back(SplStringPiece(fullTag));
         header.constCols.emplace(header.columnNames.size() - 1, SplStringPiece(kv.second.data(), kv.second.size()));

@@ -25,9 +25,8 @@ class PipelineEventGroupOutput : public Output {
         virtual void finish(std::string& error);
 
     private:
-        int32_t mRowSize;
-        //std::vector<SplStringPiece> mColumnNames;
-        //std::unordered_map<int32_t, std::string> mConstColumns;
+        int32_t mRowCount;
+
         const IOHeader* mIOHeader;
 
         PipelineEventGroup* mLogGroup = nullptr;
@@ -42,6 +41,7 @@ class PipelineEventGroupOutput : public Output {
         int32_t mTimeNSIdx = -1;
         std::vector<int32_t> mTagsIdxs;
         std::vector<int32_t> mContentsIdxs;
+
 
 };
 

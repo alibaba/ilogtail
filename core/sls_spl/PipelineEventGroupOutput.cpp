@@ -24,6 +24,7 @@ void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& er
             mContentsIdxs.push_back(i);
         }
     }
+
 }
 
 void PipelineEventGroupOutput::addRow(
@@ -72,6 +73,7 @@ void PipelineEventGroupOutput::addRow(
     if (!errorKV.second.empty()) {
         LOG_ERROR(sLogger, ("__error__", errorKV.second));
     }
+    mRowCount ++;
 }
 
 

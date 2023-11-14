@@ -45,12 +45,15 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
 
     WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
     
-    // should init plugin first， then could GetMetricsRecordRef from plugin
     mProcInRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
     mProcOutRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
     mProcTimeMS = mMetricsRecordRef.CreateCounter(METRIC_PROC_TIME_MS);
 
+    mSplExcuteErrorCount = mMetricsRecordRef.CreateCounter("proc_spl_excute_error_count");
+    mSplExcuteTimeoutErrorCount = mMetricsRecordRef.CreateCounter("proc_spl_excute_timeout_error_count");
+    mSplExcuteMemoryExceedErrorCount = mMetricsRecordRef.CreateCounter("proc_spl_excute_memory_exceed_error_count");
 
+    // spl raw statistic
     mProcessMicros = mMetricsRecordRef.CreateCounter("proc_spl_process_micros");
     mInputMicros = mMetricsRecordRef.CreateCounter("proc_spl_input_micros");
     mOutputMicros = mMetricsRecordRef.CreateCounter("proc_spl_output_micros");
@@ -73,13 +76,13 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
     Error error;
     mSPLPipelinePtr = std::make_shared<SplPipeline>(spl, error, timeoutMills, maxMemoryBytes, logger);
-    if (error.code_ == StatusCode::OK) {
-        return true;
-    } else if (error.code_ == StatusCode::MEM_EXCEEDED) {
+    if (error.code_ != StatusCode::OK) {
         LOG_ERROR(sLogger, ("pipeline create error", error.msg_)("raw spl", spl));
-        return false;
-    } else {
-        LOG_ERROR(sLogger, ("pipeline create error", error.msg_)("raw spl", spl));
+        LogtailAlarm::GetInstance()->SendAlarm(USER_CONFIG_ALARM,
+                                                   std::string("invalid spl config: ") + context.GetConfigName() +  std::string("  spl: " + spl),
+                                                   context.GetProjectName(),
+                                                   context.GetLogstoreName(),
+                                                   context.GetRegion());
         return false;
     }
     return true;
@@ -115,8 +118,12 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     auto errCode = mSPLPipelinePtr->execute(inputs, outputs, &errorMsg, &pipelineStats);
     if (errCode != StatusCode::OK) {
         LOG_ERROR(sLogger, ("execute error", errorMsg));
-        if (errCode == StatusCode::TIMEOUT_ERROR || errCode == StatusCode::MEM_EXCEEDED) {
+        mSplExcuteErrorCount->Add(1);
+        if (errCode == StatusCode::TIMEOUT_ERROR) {
             // todo:: 
+            mSplExcuteTimeoutErrorCount->Add(1);
+        } else if (errCode == StatusCode::MEM_EXCEEDED) {
+            mSplExcuteMemoryExceedErrorCount->Add(1);
         }
     }
 

@@ -41,6 +41,9 @@ private:
     CounterPtr mProcOutRecordsTotal;
     CounterPtr mProcTimeMS;
 
+    CounterPtr mSplExcuteErrorCount;
+    CounterPtr mSplExcuteTimeoutErrorCount;
+    CounterPtr mSplExcuteMemoryExceedErrorCount;
 
     CounterPtr mProcessMicros;
     CounterPtr mInputMicros;
