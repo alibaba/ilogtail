@@ -23,6 +23,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -51,11 +52,7 @@ var contentTypeMaps = map[string]string{
 }
 
 var (
-	metricRegisterOnce sync.Once
-	droppedGroups      = helper.NewCounterMetric("http_flusher_dropped_groups")
-	droppedEvents      = helper.NewCounterMetric("http_flusher_dropped_events")
-	retryCounts        = helper.NewCounterMetric("http_flusher_retry_counts")
-	flushLatency       = helper.NewAverageMetric("http_flusher_flush_latency_ns") // cannot use latency metric
+	sensitiveLabels = []string{"u", "user", "username", "p", "password", "passwd", "pwd", "password"}
 )
 
 type retryConfig struct {
@@ -87,8 +84,12 @@ type FlusherHTTP struct {
 	client      *http.Client
 	interceptor extensions.FlushInterceptor
 
-	queue   chan interface{}
-	counter sync.WaitGroup
+	queue         chan interface{}
+	counter       sync.WaitGroup
+	droppedGroups pipeline.CounterMetric
+	droppedEvents pipeline.CounterMetric
+	retryCounts   pipeline.CounterMetric
+	flushLatency  pipeline.CounterMetric
 }
 
 func (f *FlusherHTTP) Description() string {
@@ -148,12 +149,17 @@ func (f *FlusherHTTP) Init(context pipeline.Context) error {
 
 	f.buildVarKeys()
 	f.fillRequestContentType()
-	metricRegisterOnce.Do(func() {
-		context.RegisterCounterMetric(droppedGroups)
-		context.RegisterCounterMetric(droppedEvents)
-		context.RegisterCounterMetric(retryCounts)
-		context.RegisterCounterMetric(flushLatency)
-	})
+
+	metricLabels := f.buildLabels()
+	f.droppedGroups = helper.NewCounterMetric("http_flusher_dropped_groups", metricLabels...)
+	f.droppedEvents = helper.NewCounterMetric("http_flusher_dropped_events", metricLabels...)
+	f.retryCounts = helper.NewCounterMetric("http_flusher_retry_counts", metricLabels...)
+	f.flushLatency = helper.NewAverageMetric("http_flusher_flush_latency_ns", metricLabels...) // cannot use latency metric
+
+	context.RegisterCounterMetric(f.droppedGroups)
+	context.RegisterCounterMetric(f.droppedEvents)
+	context.RegisterCounterMetric(f.retryCounts)
+	context.RegisterCounterMetric(f.flushLatency)
 
 	logger.Info(f.context.GetRuntimeContext(), "http flusher init", "initialized")
 	return nil
@@ -280,17 +286,17 @@ func (f *FlusherHTTP) addTask(log interface{}) {
 // handleDroppedEvent handles a dropped event and reports metrics.
 func (f *FlusherHTTP) handleDroppedEvent(log interface{}) {
 	f.counter.Done()
-	droppedGroups.Add(1)
+	f.droppedGroups.Add(1)
 
 	// Update the dropped events counter based on the type of the log.
 	switch v := log.(type) {
 	case *protocol.LogGroup:
 		if v != nil {
-			droppedEvents.Add(int64(len(v.Logs)))
+			f.droppedEvents.Add(int64(len(v.Logs)))
 		}
 	case *models.PipelineGroupEvents:
 		if v != nil {
-			droppedEvents.Add(int64(len(v.Events)))
+			f.droppedEvents.Add(int64(len(v.Events)))
 		}
 	}
 	logger.Warningf(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher dropped a group event since the queue is full")
@@ -360,7 +366,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 	var err error
 	start := time.Now()
 	defer func() {
-		flushLatency.Add(time.Since(start).Nanoseconds())
+		f.flushLatency.Add(time.Since(start).Nanoseconds())
 	}()
 
 	for i := 0; i <= f.Retry.MaxRetryTimes; i++ {
@@ -371,7 +377,7 @@ func (f *FlusherHTTP) flushWithRetry(data []byte, varValues map[string]string) e
 		}
 		err = e
 		<-time.After(f.getNextRetryDelay(i))
-		retryCounts.Add(1)
+		f.retryCounts.Add(1)
 	}
 	converter.PutPooledByteBuf(&data)
 	return err
@@ -468,6 +474,26 @@ func (f *FlusherHTTP) flush(data []byte, varValues map[string]string) (ok, retry
 		logger.Error(f.context.GetRuntimeContext(), "FLUSHER_FLUSH_ALARM", "http flusher write data returned error, url", req.URL.String(), "status", response.Status, "body", string(body))
 		return false, false, fmt.Errorf("unexpected status returned: %v", response.Status)
 	}
+}
+
+func (f *FlusherHTTP) buildLabels() []*protocol.Log_Content {
+	labels := make([]*protocol.Log_Content, 0, len(f.Headers)+1)
+	labels = append(labels, &protocol.Log_Content{Key: "RemoteURL", Value: f.RemoteURL})
+	for k, v := range f.Query {
+		if !isSensitiveKey(k) {
+			labels = append(labels, &protocol.Log_Content{Key: k, Value: v})
+		}
+	}
+	return labels
+}
+
+func isSensitiveKey(label string) bool {
+	for _, sensitiveKey := range sensitiveLabels {
+		if strings.ToLower(label) == sensitiveKey {
+			return true
+		}
+	}
+	return false
 }
 
 func (f *FlusherHTTP) buildVarKeys() {
