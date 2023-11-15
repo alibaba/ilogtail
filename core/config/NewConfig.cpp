@@ -15,6 +15,7 @@
 #include "config/NewConfig.h"
 
 #include "common/Flags.h"
+#include "common/JsonUtil.h"
 #include "common/ParamExtractor.h"
 #include "plugin/PluginRegistry.h"
 
@@ -217,6 +218,9 @@ bool NewConfig::Parse() {
                         mHasGoProcessor = true;
                     } else if (!PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
                         PARAM_ERROR_RETURN(sLogger, "unsupported processor plugin", pluginName, mName);
+                    } else if (pluginName == "processor_spl" && (i != 0 || itr->size() != 1)) {
+                        PARAM_ERROR_RETURN(
+                            sLogger, "native processor plugins coexist with spl processor", noModule, mName);
                     }
                 } else {
                     if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
@@ -359,9 +363,7 @@ void NewConfig::ReplaceEnvVar() {
 // TODO: @quzard
 bool ParseConfigDetail(const string& content, const string& extension, Json::Value& detail, string& errorMsg) {
     if (extension == ".json") {
-        Json::CharReaderBuilder builder;
-        const unique_ptr<Json::CharReader> reader(builder.newCharReader());
-        return reader->parse(content.c_str(), content.c_str() + content.size(), &detail, &errorMsg);
+        return ParseConfig(content, detail, errorMsg);
     } else if (extension == ".yaml" || extension == ".yml") {
     }
     return false;

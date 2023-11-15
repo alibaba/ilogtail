@@ -71,6 +71,7 @@ private:
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class PipelineMock;
     friend class PipelineUnittest;
+    friend class InputFileUnittest;
 #endif
 };
 

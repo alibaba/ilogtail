@@ -17,10 +17,12 @@
 
 #include "json/json.h"
 
-#include "sender/Sender.h"
+#include "common/JsonUtil.h"
 #include "common/LogstoreFeedbackKey.h"
 #include "common/LogtailCommonFlags.h"
 #include "flusher/FlusherSLS.h"
+#include "pipeline/PipelineContext.h"
+#include "sender/Sender.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -29,18 +31,21 @@ namespace logtail {
 
 class FlusherSLSUnittest : public testing::Test {
 public:
-    void OnSuccessfulInit() const;
-    void OnFailedInit() const;
-    void OnPipelineUpdate() const;
+    void OnSuccessfulInit();
+    void OnFailedInit();
+    void OnPipelineUpdate();
+
+protected:
+    void SetUp() override { ctx.SetConfigName("test_config"); }
 
 private:
-    bool ParseConfig(const string& config, Json::Value& res) const;
+    PipelineContext ctx;
 };
 
-void FlusherSLSUnittest::OnSuccessfulInit() const {
+void FlusherSLSUnittest::OnSuccessfulInit() {
     unique_ptr<FlusherSLS> flusher;
     Json::Value configJson, optionalGoPipelineJson, optionalGoPipeline;
-    string configStr, optionalGoPipelineStr;
+    string configStr, optionalGoPipelineStr, errorMsg;
 
     // only mandatory param
     configStr = R"(
@@ -51,8 +56,9 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(optionalGoPipeline.isNull());
     APSARA_TEST_EQUAL("test_project", flusher->mProject);
@@ -79,9 +85,9 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "Aliuid": "123456789",
             "CompressType": "zstd",
-            "TelemetryType": "metrics"
+            "TelemetryType": "metrics",
             "FlowControlExpireTime": 123456789,
-            "MaxSendRate": 5
+            "MaxSendRate": 5,
             "Batch": {
                 "MergeType": "logstore",
                 "SendIntervalSecs": 1,
@@ -91,8 +97,9 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             }
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL("cn-hangzhou", flusher->mRegion);
 #ifdef __ENTERPRISE__
@@ -118,9 +125,9 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "Aliuid": true,
             "CompressType": true,
-            "TelemetryType": true
+            "TelemetryType": true,
             "FlowControlExpireTime": true,
-            "MaxSendRate": true
+            "MaxSendRate": true,
             "Batch": {
                 "MergeType": true,
                 "SendIntervalSecs": true,
@@ -128,8 +135,9 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             }
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(STRING_FLAG(default_region_name), flusher->mRegion);
     APSARA_TEST_EQUAL("", flusher->mAliuid);
@@ -153,7 +161,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(STRING_FLAG(default_region_name), flusher->mRegion);
@@ -170,8 +178,9 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Endpoint": "  cn-hangzhou.log.aliyuncs.com   "
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL("cn-hangzhou.log.aliyuncs.com", flusher->mEndpoint);
     auto iter = Sender::Instance()->mRegionEndpointEntryMap.find("cn-hangzhou");
@@ -185,13 +194,14 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Type": "flusher_sls",
             "Project": "test_project",
             "Logstore": "test_logstore",
-            "Region": "cn-hangzhou"
+            "Region": "cn-hangzhou",
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "CompressType": "none"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(FlusherSLS::CompressType::NONE, flusher->mCompressType);
 
@@ -200,13 +210,14 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Type": "flusher_sls",
             "Project": "test_project",
             "Logstore": "test_logstore",
-            "Region": "cn-hangzhou"
+            "Region": "cn-hangzhou",
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "CompressType": "lz4"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(FlusherSLS::CompressType::LZ4, flusher->mCompressType);
 
@@ -215,13 +226,14 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Type": "flusher_sls",
             "Project": "test_project",
             "Logstore": "test_logstore",
-            "Region": "cn-hangzhou"
+            "Region": "cn-hangzhou",
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "CompressType": "unknown"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(FlusherSLS::CompressType::LZ4, flusher->mCompressType);
 
@@ -231,13 +243,14 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Type": "flusher_sls",
             "Project": "test_project",
             "Logstore": "test_logstore",
-            "Region": "cn-hangzhou"
+            "Region": "cn-hangzhou",
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "TelemetryType": "logs"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(FlusherSLS::TelemetryType::LOG, flusher->mTelemetryType);
 
@@ -246,13 +259,14 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Type": "flusher_sls",
             "Project": "test_project",
             "Logstore": "test_logstore",
-            "Region": "cn-hangzhou"
+            "Region": "cn-hangzhou",
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "TelemetryType": "unknown"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(FlusherSLS::TelemetryType::LOG, flusher->mTelemetryType);
 
@@ -262,15 +276,16 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Type": "flusher_sls",
             "Project": "test_project",
             "Logstore": "test_logstore",
-            "Region": "cn-hangzhou"
+            "Region": "cn-hangzhou",
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "Batch": {
                 "MergeType": "topic"
             }
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(FlusherSLS::Batch::MergeType::TOPIC, flusher->mBatch.mMergeType);
 
@@ -279,15 +294,16 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Type": "flusher_sls",
             "Project": "test_project",
             "Logstore": "test_logstore",
-            "Region": "cn-hangzhou"
+            "Region": "cn-hangzhou",
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "Batch": {
                 "MergeType": "unknown"
             }
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(FlusherSLS::Batch::MergeType::TOPIC, flusher->mBatch.mMergeType);
 
@@ -297,30 +313,35 @@ void FlusherSLSUnittest::OnSuccessfulInit() const {
             "Type": "flusher_sls",
             "Project": "test_project",
             "Logstore": "test_logstore",
-            "Region": "cn-hangzhou"
+            "Region": "cn-hangzhou",
             "Endpoint": "cn-hangzhou.log.aliyuncs.com",
             "EnableShardHash": false
         }
     )";
     optionalGoPipelineStr = R"(
         {
-            "type": "flusher_sls",
-            "detail": {
-                "EnableShardHash": false
-            }
+            "flushers": [
+                {
+                    "type": "flusher_sls",
+                    "detail": {
+                        "EnableShardHash": false
+                    }
+                }
+            ]
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
-    APSARA_TEST_TRUE(ParseConfig(optionalGoPipelineStr, optionalGoPipelineJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseConfig(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_TRUE(optionalGoPipelineJson == optionalGoPipeline);
 }
 
-void FlusherSLSUnittest::OnFailedInit() const {
+void FlusherSLSUnittest::OnFailedInit() {
     unique_ptr<FlusherSLS> flusher;
     Json::Value configJson, optionalGoPipeline;
-    string configStr;
+    string configStr, errorMsg;
 
     // invalid Project
     configStr = R"(
@@ -330,20 +351,22 @@ void FlusherSLSUnittest::OnFailedInit() const {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
 
     configStr = R"(
         {
             "Type": "flusher_sls",
-            "Project": true
+            "Project": true,
             "Logstore": "test_logstore",
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
 
     // invalid Logstore
@@ -354,8 +377,9 @@ void FlusherSLSUnittest::OnFailedInit() const {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
 
     configStr = R"(
@@ -366,8 +390,9 @@ void FlusherSLSUnittest::OnFailedInit() const {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
 
     // invalid Endpoint
@@ -378,8 +403,9 @@ void FlusherSLSUnittest::OnFailedInit() const {
             "Logstore": "test_logstore"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
 
     configStr = R"(
@@ -390,15 +416,21 @@ void FlusherSLSUnittest::OnFailedInit() const {
             "Endpoint": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
+    flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
 }
 
-void FlusherSLSUnittest::OnPipelineUpdate() const {
+void FlusherSLSUnittest::OnPipelineUpdate() {
+    PipelineContext ctx1, ctx2;
+    ctx1.SetConfigName("test_config_1");
+    ctx2.SetConfigName("test_config_2");
+
     Json::Value configJson, optionalGoPipeline;
     FlusherSLS flusher1, flusher2;
-    string configStr;
+    string configStr, errorMsg;
+
     configStr = R"(
         {
             "Type": "flusher_sls",
@@ -408,8 +440,10 @@ void FlusherSLSUnittest::OnPipelineUpdate() const {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     APSARA_TEST_TRUE(flusher1.Init(configJson, optionalGoPipeline));
+    flusher1.SetContext(ctx1);
+
     configStr = R"(
         {
             "Type": "flusher_sls",
@@ -420,35 +454,33 @@ void FlusherSLSUnittest::OnPipelineUpdate() const {
             "Aliuid": "123456789"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     APSARA_TEST_TRUE(flusher2.Init(configJson, optionalGoPipeline));
+    flusher2.SetContext(ctx2);
 
     APSARA_TEST_TRUE(flusher1.Start());
-    APSARA_TEST_EQUAL(1, Sender::Instance()->GetAllProjects().size());
+    APSARA_TEST_EQUAL(1, Sender::Instance()->mProjectRefCntMap.size());
     APSARA_TEST_TRUE(Sender::Instance()->IsRegionContainingConfig("cn-hangzhou"));
     APSARA_TEST_EQUAL(1, Sender::Instance()->GetRegionAliuids("cn-hangzhou").size());
 
     APSARA_TEST_TRUE(flusher2.Start());
-    APSARA_TEST_EQUAL(2, Sender::Instance()->GetAllProjects().size());
+    APSARA_TEST_EQUAL(2, Sender::Instance()->mProjectRefCntMap.size());
     APSARA_TEST_TRUE(Sender::Instance()->IsRegionContainingConfig("cn-hangzhou"));
+#ifdef __ENTERPRISE__
     APSARA_TEST_EQUAL(2, Sender::Instance()->GetRegionAliuids("cn-hangzhou").size());
+#else
+    APSARA_TEST_EQUAL(1, Sender::Instance()->GetRegionAliuids("cn-hangzhou").size());
+#endif
 
     APSARA_TEST_TRUE(flusher2.Stop(true));
-    APSARA_TEST_EQUAL(1, Sender::Instance()->GetAllProjects().size());
+    APSARA_TEST_EQUAL(1, Sender::Instance()->mProjectRefCntMap.size());
     APSARA_TEST_TRUE(Sender::Instance()->IsRegionContainingConfig("cn-hangzhou"));
     APSARA_TEST_EQUAL(1, Sender::Instance()->GetRegionAliuids("cn-hangzhou").size());
 
     APSARA_TEST_TRUE(flusher1.Stop(true));
-    APSARA_TEST_TRUE(Sender::Instance()->GetAllProjects().empty());
+    APSARA_TEST_TRUE(Sender::Instance()->mProjectRefCntMap.empty());
     APSARA_TEST_FALSE(Sender::Instance()->IsRegionContainingConfig("cn-hangzhou"));
     APSARA_TEST_TRUE(Sender::Instance()->GetRegionAliuids("cn-hangzhou").empty());
-}
-
-bool FlusherSLSUnittest::ParseConfig(const string& config, Json::Value& res) const {
-    Json::CharReaderBuilder builder;
-    const unique_ptr<Json::CharReader> reader(builder.newCharReader());
-    string errorMsg;
-    return reader->parse(config.c_str(), config.c_str() + config.size(), &res, &errorMsg);
 }
 
 UNIT_TEST_CASE(FlusherSLSUnittest, OnSuccessfulInit)

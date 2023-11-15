@@ -17,6 +17,7 @@
 
 #include "json/json.h"
 
+#include "common/JsonUtil.h"
 #include "pipeline/GlobalConfig.h"
 #include "unittest/Unittest.h"
 
@@ -29,15 +30,13 @@ public:
     void OnSuccessfulInit() const;
 
 private:
-    bool ParseConfig(const string& config, Json::Value& res) const;
-
     const string configName = "test_config";
 };
 
 void GlobalConfigUnittest::OnSuccessfulInit() const {
     unique_ptr<GlobalConfig> config;
     Json::Value configJson, extendedParamJson, extendedParams;
-    string configStr, extendedParamStr;
+    string configStr, extendedParamStr, errorMsg;
 
     // only mandatory param
     config.reset(new GlobalConfig());
@@ -57,7 +56,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "UsingOldContentTag": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_TRUE(extendedParams.isNull());
@@ -77,7 +76,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "UsingOldContentTag": "true"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_TRUE(extendedParams.isNull());
@@ -93,7 +92,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicType": "custom"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -105,7 +104,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "test_topic"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::MACHINE_GROUP_TOPIC, config->mTopicType);
@@ -116,7 +115,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicType": "machine_group_topic"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -128,7 +127,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "/home/(.*)"
         }
     )""";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::FILEPATH, config->mTopicType);
@@ -139,7 +138,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicType": "file_path"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -151,7 +150,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "\\d+[s"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -163,7 +162,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "test_topic"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::DEFAULT, config->mTopicType);
@@ -175,7 +174,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "test_topic"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -187,7 +186,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "ProcessPriority": 5
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(0, config->mProcessPriority);
@@ -203,18 +202,11 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "StructureType": "v2"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
-    APSARA_TEST_TRUE(ParseConfig(extendedParamStr, extendedParamJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseConfig(extendedParamStr, extendedParamJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_TRUE(extendedParamJson == extendedParams);
-}
-
-bool GlobalConfigUnittest::ParseConfig(const string& config, Json::Value& res) const {
-    Json::CharReaderBuilder builder;
-    const unique_ptr<Json::CharReader> reader(builder.newCharReader());
-    string errorMsg;
-    return reader->parse(config.c_str(), config.c_str() + config.size(), &res, &errorMsg);
 }
 
 UNIT_TEST_CASE(GlobalConfigUnittest, OnSuccessfulInit)

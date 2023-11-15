@@ -412,6 +412,7 @@ public:
     friend class UtilUnittest;
     friend class AppConfigUnittest;
     friend class PipelineUnittest;
+    friend class InputFileUnittest;
 #endif
 };
 } // namespace logtail

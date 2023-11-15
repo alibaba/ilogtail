@@ -17,7 +17,9 @@
 
 #include "json/json.h"
 
+#include "common/JsonUtil.h"
 #include "container_manager/ContainerDiscoveryOptions.h"
+#include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -29,16 +31,14 @@ public:
     void OnSuccessfulInit() const;
 
 private:
-    bool ParseConfig(const string& config, Json::Value& res) const;
-
     const string pluginName = "test";
+    PipelineContext ctx;
 };
 
 void ContainerDiscoveryOptionsUnittest::OnSuccessfulInit() const {
     unique_ptr<ContainerDiscoveryOptions> config;
     Json::Value configJson;
-    string configStr;
-    PipelineContext ctx;
+    string configStr, errorMsg;
 
     // only mandatory param
     config.reset(new ContainerDiscoveryOptions());
@@ -90,7 +90,7 @@ void ContainerDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "CollectingContainersMeta": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new ContainerDiscoveryOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL("default", config->mContainerFilters.mK8sNamespaceRegex);
@@ -125,7 +125,7 @@ void ContainerDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "CollectingContainersMeta": "true"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new ContainerDiscoveryOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL("", config->mContainerFilters.mK8sNamespaceRegex);
@@ -140,13 +140,6 @@ void ContainerDiscoveryOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(0, config->mExternalK8sLabelTag.size());
     APSARA_TEST_EQUAL(0, config->mExternalEnvTag.size());
     APSARA_TEST_FALSE(config->mCollectingContainersMeta);
-}
-
-bool ContainerDiscoveryOptionsUnittest::ParseConfig(const string& config, Json::Value& res) const {
-    Json::CharReaderBuilder builder;
-    const unique_ptr<Json::CharReader> reader(builder.newCharReader());
-    string errorMsg;
-    return reader->parse(config.c_str(), config.c_str() + config.size(), &res, &errorMsg);
 }
 
 UNIT_TEST_CASE(ContainerDiscoveryOptionsUnittest, OnSuccessfulInit)

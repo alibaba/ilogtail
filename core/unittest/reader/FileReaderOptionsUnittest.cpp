@@ -18,6 +18,8 @@
 #include "json/json.h"
 
 #include "common/Flags.h"
+#include "common/JsonUtil.h"
+#include "pipeline/PipelineContext.h"
 #include "reader/FileReaderOptions.h"
 #include "unittest/Unittest.h"
 
@@ -37,16 +39,14 @@ public:
     void OnFailedInit() const;
 
 private:
-    bool ParseConfig(const string& config, Json::Value& res) const;
-
     const string pluginName = "test";
+    PipelineContext ctx;
 };
 
 void FileReaderOptionsUnittest::OnSuccessfulInit() const {
     unique_ptr<FileReaderOptions> config;
     Json::Value configJson;
-    string configStr;
-    PipelineContext ctx;
+    string configStr, errorMsg;
 
     // only mandatory param
     config.reset(new FileReaderOptions());
@@ -74,7 +74,7 @@ void FileReaderOptionsUnittest::OnSuccessfulInit() const {
             "AppendingLogPositionMeta": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(FileReaderOptions::Encoding::UTF8, config->mFileEncoding);
@@ -101,7 +101,7 @@ void FileReaderOptionsUnittest::OnSuccessfulInit() const {
             "AppendingLogPositionMeta": "true"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(FileReaderOptions::Encoding::GBK, config->mFileEncoding);
@@ -121,7 +121,7 @@ void FileReaderOptionsUnittest::OnSuccessfulInit() const {
             "TailSizeKB": "200000000"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(FileReaderOptions::Encoding::GBK, config->mFileEncoding);
@@ -131,8 +131,7 @@ void FileReaderOptionsUnittest::OnSuccessfulInit() const {
 void FileReaderOptionsUnittest::OnFailedInit() const {
     unique_ptr<FileReaderOptions> config;
     Json::Value configJson, extendedParamJson, extendedParams;
-    string configStr, extendedParamStr;
-    PipelineContext ctx;
+    string configStr, extendedParamStr, errorMsg;
 
     // FileEncoding
     configStr = R"(
@@ -140,7 +139,7 @@ void FileReaderOptionsUnittest::OnFailedInit() const {
             "FileEncoding": "unknown"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginName));
 
@@ -149,16 +148,9 @@ void FileReaderOptionsUnittest::OnFailedInit() const {
             "FileEncoding": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginName));
-}
-
-bool FileReaderOptionsUnittest::ParseConfig(const string& config, Json::Value& res) const {
-    Json::CharReaderBuilder builder;
-    const unique_ptr<Json::CharReader> reader(builder.newCharReader());
-    string errorMsg;
-    return reader->parse(config.c_str(), config.c_str() + config.size(), &res, &errorMsg);
 }
 
 UNIT_TEST_CASE(FileReaderOptionsUnittest, OnSuccessfulInit)

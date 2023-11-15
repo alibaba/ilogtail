@@ -17,7 +17,9 @@
 
 #include "json/json.h"
 
+#include "common/JsonUtil.h"
 #include "file_server/MultilineOptions.h"
+#include "pipeline/PipelineContext.h"
 #include "unittest/Unittest.h"
 
 using namespace std;
@@ -29,16 +31,14 @@ public:
     void OnSuccessfulInit() const;
 
 private:
-    bool ParseConfig(const string& config, Json::Value& res) const;
-
     const string pluginName = "test";
+    PipelineContext ctx;
 };
 
 void MultilineOptionsUnittest::OnSuccessfulInit() const {
     unique_ptr<MultilineOptions> config;
     Json::Value configJson;
-    string configStr;
-    PipelineContext ctx;
+    string configStr, errorMsg; 
 
     // only mandatory param
     config.reset(new MultilineOptions());
@@ -60,7 +60,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "EndPattern": "\\S+"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new MultilineOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(MultilineOptions::Mode::CUSTOM, config->mMode);
@@ -81,7 +81,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "EndPattern": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new MultilineOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(MultilineOptions::Mode::CUSTOM, config->mMode);
@@ -102,7 +102,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "EndPattern": "\\S+"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new MultilineOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(MultilineOptions::Mode::JSON, config->mMode);
@@ -119,7 +119,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "EndPattern": "\\S+"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new MultilineOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(MultilineOptions::Mode::CUSTOM, config->mMode);
@@ -136,7 +136,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "EndPattern": ".*"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new MultilineOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(MultilineOptions::Mode::CUSTOM, config->mMode);
@@ -155,7 +155,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "EndPattern": ""
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new MultilineOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(MultilineOptions::Mode::CUSTOM, config->mMode);
@@ -174,7 +174,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "EndPattern": ""
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson));
+    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
     config.reset(new MultilineOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(MultilineOptions::Mode::CUSTOM, config->mMode);
@@ -185,13 +185,6 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(nullptr, config->GetContinuePatternReg());
     APSARA_TEST_EQUAL(nullptr, config->GetEndPatternReg());
     APSARA_TEST_FALSE(config->IsMultiline());
-}
-
-bool MultilineOptionsUnittest::ParseConfig(const string& config, Json::Value& res) const {
-    Json::CharReaderBuilder builder;
-    const unique_ptr<Json::CharReader> reader(builder.newCharReader());
-    string errorMsg;
-    return reader->parse(config.c_str(), config.c_str() + config.size(), &res, &errorMsg);
 }
 
 UNIT_TEST_CASE(MultilineOptionsUnittest, OnSuccessfulInit)
