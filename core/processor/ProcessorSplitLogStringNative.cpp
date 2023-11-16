@@ -90,7 +90,7 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
             sourceEvent.GetTimestamp(),
             sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
         targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
-        if (mEnableLogPositionMeta) {
+        if (mAppendingLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
             targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));

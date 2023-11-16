@@ -104,8 +104,4 @@ Config::Config(const std::string& basePath,
     mAcceptNoEnoughKeys = false;
 }
 
-// bool Config::IsMultiline() const {
-//     return (!mLogBeginReg.empty() && mLogBeginReg != ".*") || (!mLogEndReg.empty() && mLogEndReg != ".*");
-// }
-
 } // namespace logtail
