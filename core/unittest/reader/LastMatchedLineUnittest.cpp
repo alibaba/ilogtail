@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "unittest/Unittest.h"
-#include "reader/CommonRegLogFileReader.h"
+#include "reader/LogFileReader.h"
 #include "reader/SourceBuffer.h"
 #include "common/FileSystemUtil.h"
 
@@ -69,12 +69,9 @@ public:
     void TestSingleline();
     void TestMultiline();
 
-    std::string projectName = "projectName";
-    std::string category = "logstoreName";
-    std::string timeFormat = "";
-    std::string topicFormat = "";
-    std::string groupTopic = "";
     std::unique_ptr<char[]> expectedContent;
+    FileReaderOptions readerOpts;
+    PipelineContext ctx;
     static std::string logPathDir;
     static std::string gbkFile;
     static std::string utf8File;
@@ -88,14 +85,9 @@ std::string LastMatchedLineUnittest::gbkFile;
 std::string LastMatchedLineUnittest::utf8File;
 
 void LastMatchedLineUnittest::TestSingleline() {
-    CommonRegLogFileReader logFileReader(projectName,
-                                         category,
-                                         logPathDir,
-                                         utf8File,
-                                         INT32_FLAG(default_tail_limit_kb),
-                                         timeFormat,
-                                         topicFormat,
-                                         groupTopic);
+    MultilineOptions multilineOpts;
+    LogFileReader logFileReader(
+        logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     { // case single line
         std::string line1 = "first.";
         std::string line2 = "second.";
@@ -134,16 +126,13 @@ void LastMatchedLineUnittest::TestSingleline() {
 }
 
 void LastMatchedLineUnittest::TestMultiline() {
-    CommonRegLogFileReader logFileReader(projectName,
-                                         category,
-                                         logPathDir,
-                                         utf8File,
-                                         INT32_FLAG(default_tail_limit_kb),
-                                         timeFormat,
-                                         topicFormat,
-                                         groupTopic);
+    Json::Value config;
+    config["StartPattern"] = LOG_BEGIN_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     int32_t rollbackLineFeedCount = 0;
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
     { // case multi line
         std::vector<int32_t> index;
         std::string firstLog = LOG_BEGIN_STRING + "first.\nmultiline1\nmultiline2";
@@ -191,6 +180,10 @@ public:
     void TestLastMatchedLineWithBegin();
     void TestLastMatchedLineWithContinueEnd();
     void TestLastMatchedLineWithEnd();
+
+private:
+    FileReaderOptions readerOpts;
+    PipelineContext ctx;
 };
 
 UNIT_TEST_CASE(LastMatchedLineDiscardUnmatchUnittest, TestLastMatchedLineWithBeginContinue);
@@ -200,15 +193,20 @@ UNIT_TEST_CASE(LastMatchedLineDiscardUnmatchUnittest, TestLastMatchedLineWithCon
 UNIT_TEST_CASE(LastMatchedLineDiscardUnmatchUnittest, TestLastMatchedLineWithEnd);
 
 void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBeginContinue() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, LOG_CONTINUE_REGEX, "");
-    logFileReader.mDiscardUnmatch = true;
+    Json::Value config;
+    config["StartPattern"] = LOG_BEGIN_REGEX;
+    config["ContinuePattern"] = LOG_CONTINUE_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    // logFileReader.mDiscardUnmatch = true;
     { // case: end with begin continue
-        std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING+ '\n' ;
+        std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + '\n';
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(2, rollbackLineFeedCount);
@@ -217,16 +215,19 @@ void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBeginContinue
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + '\n';
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
     }
     { // case: end with unmatch
-        std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_UNMATCH + "\n";
+        std::string expectMatch
+            = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_UNMATCH + "\n";
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
@@ -234,15 +235,20 @@ void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBeginContinue
 }
 
 void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBeginEnd() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", LOG_END_REGEX);
-    logFileReader.mDiscardUnmatch = true;
+    Json::Value config;
+    config["StartPattern"] = LOG_BEGIN_REGEX;
+    config["EndPattern"] = LOG_END_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    // logFileReader.mDiscardUnmatch = true;
     { // case: end with begin end
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + '\n';
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
@@ -251,7 +257,8 @@ void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBeginEnd() {
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_UNMATCH + '\n';
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
@@ -260,7 +267,8 @@ void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBeginEnd() {
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + "\n";
         std::string testLog = expectMatch + LOG_UNMATCH + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
@@ -268,15 +276,19 @@ void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBeginEnd() {
 }
 
 void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBegin() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
-    logFileReader.mDiscardUnmatch = true;
+    Json::Value config;
+    config["StartPattern"] = LOG_BEGIN_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    // logFileReader.mDiscardUnmatch = true;
     { // case: end with begin
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_UNMATCH + '\n';
         std::string testLog = expectMatch + LOG_BEGIN_STRING;
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
@@ -285,7 +297,8 @@ void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBegin() {
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_UNMATCH + "\n";
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(2, rollbackLineFeedCount);
@@ -293,15 +306,20 @@ void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithBegin() {
 }
 
 void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithContinueEnd() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy("", LOG_CONTINUE_REGEX, LOG_END_REGEX);
-    logFileReader.mDiscardUnmatch = true;
+    Json::Value config;
+    config["ContinuePattern"] = LOG_CONTINUE_REGEX;
+    config["EndPattern"] = LOG_END_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    // logFileReader.mDiscardUnmatch = true;
     { // case: end with continue end
         std::string expectMatch = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING + '\n';
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
@@ -310,16 +328,19 @@ void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithContinueEnd()
         std::string expectMatch = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING + '\n';
         std::string testLog = expectMatch + LOG_CONTINUE_STRING + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
     }
     { // case: end with unmatch
-        std::string expectMatch = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING + "\n" + LOG_UNMATCH + "\n";
+        std::string expectMatch
+            = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING + "\n" + LOG_UNMATCH + "\n";
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
@@ -327,24 +348,29 @@ void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithContinueEnd()
 }
 
 void LastMatchedLineDiscardUnmatchUnittest::TestLastMatchedLineWithEnd() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy("", "", LOG_END_REGEX);
-    logFileReader.mDiscardUnmatch = true;
+    Json::Value config;
+    config["EndPattern"] = LOG_END_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
+    // logFileReader.mDiscardUnmatch = true;
     { // case: end with end
         std::string expectMatch = LOG_UNMATCH + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + '\n';
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
     }
     { // case: end with unmatch
-        std::string expectMatch =  LOG_UNMATCH + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + '\n';
+        std::string expectMatch = LOG_UNMATCH + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + '\n';
         std::string testLog = expectMatch + LOG_UNMATCH + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
@@ -358,6 +384,10 @@ public:
     void TestLastMatchedLineWithBegin();
     void TestLastMatchedLineWithContinueEnd();
     void TestLastMatchedLineWithEnd();
+
+private:
+    FileReaderOptions readerOpts;
+    PipelineContext ctx;
 };
 
 UNIT_TEST_CASE(LastMatchedLineNoDiscardUnmatchUnittest, TestLastMatchedLineWithBeginContinue);
@@ -367,15 +397,19 @@ UNIT_TEST_CASE(LastMatchedLineNoDiscardUnmatchUnittest, TestLastMatchedLineWithC
 UNIT_TEST_CASE(LastMatchedLineNoDiscardUnmatchUnittest, TestLastMatchedLineWithEnd);
 
 void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBeginContinue() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, LOG_CONTINUE_REGEX, "");
-    logFileReader.mDiscardUnmatch = false;
+    Json::Value config;
+    config["StartPattern"] = LOG_BEGIN_REGEX;
+    config["ContinuePattern"] = LOG_CONTINUE_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     { // case: end with begin continue
-        std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING+ '\n' ;
+        std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + '\n';
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(2, rollbackLineFeedCount);
@@ -384,16 +418,19 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBeginContin
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + '\n';
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
     }
     { // case: end with unmatch
-        std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_UNMATCH + "\n";
+        std::string expectMatch
+            = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_UNMATCH + "\n";
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
@@ -401,15 +438,19 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBeginContin
 }
 
 void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBeginEnd() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", LOG_END_REGEX);
-    logFileReader.mDiscardUnmatch = false;
+    Json::Value config;
+    config["StartPattern"] = LOG_BEGIN_REGEX;
+    config["EndPattern"] = LOG_END_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     { // case: end with begin end
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + '\n';
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
@@ -418,7 +459,8 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBeginEnd() 
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + '\n';
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
@@ -427,7 +469,8 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBeginEnd() 
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + "\n";
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(2, rollbackLineFeedCount);
@@ -435,15 +478,18 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBeginEnd() 
 }
 
 void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBegin() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy(LOG_BEGIN_REGEX, "", "");
-    logFileReader.mDiscardUnmatch = false;
+    Json::Value config;
+    config["StartPattern"] = LOG_BEGIN_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     { // case: end with begin
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_UNMATCH + '\n';
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
@@ -452,7 +498,8 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBegin() {
         std::string expectMatch = LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n" + LOG_UNMATCH + "\n";
         std::string testLog = expectMatch + LOG_BEGIN_STRING + "\n" + LOG_UNMATCH + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(2, rollbackLineFeedCount);
@@ -460,15 +507,19 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithBegin() {
 }
 
 void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithContinueEnd() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy("", LOG_CONTINUE_REGEX, LOG_END_REGEX);
-    logFileReader.mDiscardUnmatch = false;
+    Json::Value config;
+    config["ContinuePattern"] = LOG_CONTINUE_REGEX;
+    config["EndPattern"] = LOG_END_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     { // case: end with continue end
         std::string expectMatch = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING + '\n';
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
@@ -477,16 +528,19 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithContinueEnd
         std::string expectMatch = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING + '\n';
         std::string testLog = expectMatch + LOG_CONTINUE_STRING + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
     }
     { // case: end with unmatch
-        std::string expectMatch = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING + "\n" + LOG_UNMATCH + "\n";
+        std::string expectMatch
+            = LOG_CONTINUE_STRING + "\n" + LOG_CONTINUE_STRING + "\n" + LOG_END_STRING + "\n" + LOG_UNMATCH + "\n";
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
@@ -494,24 +548,28 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithContinueEnd
 }
 
 void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithEnd() {
-    CommonRegLogFileReader logFileReader(
-        "project", "logstore", "dir", "file", INT32_FLAG(default_tail_limit_kb), "", "", "");
-    logFileReader.SetLogMultilinePolicy("", "", LOG_END_REGEX);
-    logFileReader.mDiscardUnmatch = false;
+    Json::Value config;
+    config["EndPattern"] = LOG_END_REGEX;
+    MultilineOptions multilineOpts;
+    multilineOpts.Init(config, ctx, "");
+    LogFileReader logFileReader(
+        "dir", "file", DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
     { // case: end with end
         std::string expectMatch = LOG_UNMATCH + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + "\n";
         std::string testLog = std::string(expectMatch.data());
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(0, rollbackLineFeedCount);
     }
     { // case: end with unmatch
-        std::string expectMatch =  LOG_UNMATCH + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + "\n";
+        std::string expectMatch = LOG_UNMATCH + "\n" + LOG_UNMATCH + "\n" + LOG_END_STRING + "\n";
         std::string testLog = expectMatch + LOG_UNMATCH + "\n";
         int32_t rollbackLineFeedCount = 0;
-        int32_t matchSize = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
+        int32_t matchSize
+            = logFileReader.LastMatchedLine(const_cast<char*>(testLog.data()), testLog.size(), rollbackLineFeedCount);
         APSARA_TEST_EQUAL_FATAL(static_cast<int32_t>(expectMatch.size()), matchSize);
         APSARA_TEST_EQUAL_FATAL(std::string(testLog.data(), matchSize), expectMatch);
         APSARA_TEST_EQUAL_FATAL(1, rollbackLineFeedCount);
@@ -520,8 +578,4 @@ void LastMatchedLineNoDiscardUnmatchUnittest::TestLastMatchedLineWithEnd() {
 
 } // namespace logtail
 
-int main(int argc, char** argv) {
-    logtail::Logger::Instance().InitGlobalLoggers();
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+UNIT_TEST_MAIN

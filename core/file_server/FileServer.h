@@ -37,31 +37,40 @@ public:
         return &instance;
     }
 
+    void Start();
+    void Pause();
+
     FileDiscoveryConfig GetFileDiscoveryConfig(const std::string& name) const;
-    FileReaderConfig GetFileReaderConfig(const std::string& name) const;
-    MultilineConfig GetMultilineConfig(const std::string& name) const;
-    void AddFileDiscoveryConfig(const std::string& name, FileDiscoveryOptions* opts, const PipelineContext* ctx);
-    void AddFileReaderConfig(const std::string& name, const FileReaderOptions* opts, const PipelineContext* ctx);
-    void AddMultilineConfig(const std::string& name, const MultilineOptions* opts, const PipelineContext* ctx);
-    void ClearFileConfigs() {
-        mPipelineNameFileDiscoveryConfigsMap.clear();
-        mPipelineNameFileReaderConfigsMap.clear();
-        mPipelineNameMultilineConfigsMap.clear();
-        mPipelineNameEOConcurrencyMap.clear();
-    }
     const std::unordered_map<std::string, FileDiscoveryConfig>& GetAllFileDiscoveryConfigs() const {
         return mPipelineNameFileDiscoveryConfigsMap;
     }
+    void AddFileDiscoveryConfig(const std::string& name, FileDiscoveryOptions* opts, const PipelineContext* ctx);
+    void RemoveFileDiscoveryConfig(const std::string& name);
+
+    FileReaderConfig GetFileReaderConfig(const std::string& name) const;
     const std::unordered_map<std::string, FileReaderConfig>& GetAllFileReaderConfigs() const {
         return mPipelineNameFileReaderConfigsMap;
     }
+    void AddFileReaderConfig(const std::string& name, const FileReaderOptions* opts, const PipelineContext* ctx);
+    void RemoveFileReaderConfig(const std::string& name);
+
+    MultilineConfig GetMultilineConfig(const std::string& name) const;
     const std::unordered_map<std::string, MultilineConfig>& GetAllMultilineConfigs() const {
         return mPipelineNameMultilineConfigsMap;
     }
+    void AddMultilineConfig(const std::string& name, const MultilineOptions* opts, const PipelineContext* ctx);
+    void RemoveMultilineConfig(const std::string& name);
+
+    void SaveContainerInfo(const std::string& pipeline, const std::shared_ptr<std::vector<DockerContainerPath>>& info);
+    std::shared_ptr<std::vector<DockerContainerPath>> GetAndRemoveContainerInfo(const std::string& pipeline);
+    void ClearContainerInfo();
     // 过渡使用
+    void Resume();
+    void Stop();
     uint32_t GetExactlyOnceConcurrency(const std::string& name) const;
-    void AddExactlyOnceConcurrency(const std::string& name, uint32_t concurrency);
     std::vector<std::string> GetExactlyOnceConfigs() const;
+    void AddExactlyOnceConcurrency(const std::string& name, uint32_t concurrency);
+    void RemoveExactlyOnceConcurrency(const std::string& name);
 
 private:
     FileServer() = default;
@@ -70,6 +79,7 @@ private:
     std::unordered_map<std::string, FileDiscoveryConfig> mPipelineNameFileDiscoveryConfigsMap;
     std::unordered_map<std::string, FileReaderConfig> mPipelineNameFileReaderConfigsMap;
     std::unordered_map<std::string, MultilineConfig> mPipelineNameMultilineConfigsMap;
+    std::unordered_map<std::string, std::shared_ptr<std::vector<DockerContainerPath>>> mAllDockerContainerPathMap;
     // 过渡使用
     std::unordered_map<std::string, uint32_t> mPipelineNameEOConcurrencyMap;
 };

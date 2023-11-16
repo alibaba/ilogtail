@@ -28,6 +28,7 @@
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineManager.h"
 #include "monitor/Monitor.h"
+#include "parser/LogParser.h"
 #include "sdk/Client.h"
 #include "sender/Sender.h"
 #include "log_pb/sls_logs.pb.h"
@@ -46,6 +47,7 @@
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
+
 
 using namespace sls_logs;
 using namespace std;
@@ -135,6 +137,7 @@ bool LogProcess::IsValidToReadLog(const LogstoreFeedBackKey& logstoreKey) {
     return mLogFeedbackQueue.IsValidToPush(logstoreKey);
 }
 
+
 void LogProcess::SetFeedBack(LogstoreFeedBackInterface* pInterface) {
     mLogFeedbackQueue.SetFeedBackObject(pInterface);
 }
@@ -169,6 +172,7 @@ void LogProcess::HoldOn() {
         usleep(10 * 1000);
     }
 }
+
 
 void LogProcess::Resume() {
     mLogFeedbackQueue.Unlock();

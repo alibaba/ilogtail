@@ -31,7 +31,7 @@ public:
 
     virtual const std::string& Name() const = 0;
     
-    const PipelineContext& GetContext() const { return *mContext; }
+    PipelineContext& GetContext() const { return *mContext; }
     void SetContext(PipelineContext& context) { mContext = &context; }
     MetricsRecordRef& GetMetricsRecordRef() { return mMetricsRecordRef; }
     void SetMetricsRecordRef(const std::string& name, const std::string& id) {

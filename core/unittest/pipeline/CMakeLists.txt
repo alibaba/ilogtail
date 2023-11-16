@@ -15,6 +15,9 @@
 cmake_minimum_required(VERSION 2.9)
 project(pipeline_unittest)
 
+add_executable(global_config_unittest GlobalConfigUnittest.cpp)
+target_link_libraries(global_config_unittest unittest_base)
+
 add_executable(pipeline_unittest PipelineUnittest.cpp)
 target_link_libraries(pipeline_unittest unittest_base)
 

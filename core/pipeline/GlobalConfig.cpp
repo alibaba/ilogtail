@@ -26,7 +26,7 @@ namespace logtail {
 const std::unordered_set<std::string> GlobalConfig::sNativeParam
     = {"TopicType", "TopicFormat", "ProcessPriority", "EnableTimestampNanosecond", "UsingOldContentTag"};
 
-bool GlobalConfig::Init(const Json::Value& config, const std::string& configName, Json::Value& nonNativeParams) {
+bool GlobalConfig::Init(const Json::Value& config, const std::string& configName, Json::Value& extendedParams) {
     const string moduleName = "global";
     string errorMsg;
 
@@ -87,7 +87,7 @@ bool GlobalConfig::Init(const Json::Value& config, const std::string& configName
 
     for (auto itr = config.begin(); itr != config.end(); ++itr) {
         if (sNativeParam.find(itr.name()) == sNativeParam.end()) {
-            nonNativeParams[itr.name()] = *itr;
+            extendedParams[itr.name()] = *itr;
         }
     }
 

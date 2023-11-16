@@ -20,7 +20,6 @@
 #include <vector>
 #include <errno.h>
 #include "common/version.h"
-#include "common/util.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/RuntimeUtil.h"
 #include "common/TimeUtil.h"
@@ -28,7 +27,6 @@
 #include "common/CrashBackTraceUtil.h"
 #include "common/MachineInfoUtil.h"
 #include "common/ErrorUtil.h"
-#include "common/GlobalPara.h"
 #include "logger/Logger.h"
 #include "go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
@@ -74,7 +72,7 @@ DECLARE_FLAG_BOOL(enable_env_ref_in_config);
 
 void HandleSigtermSignal(int signum, siginfo_t* info, void* context) {
     APSARA_LOG_INFO(sLogger, ("received signal", "SIGTERM"));
-    LogtailGlobalPara::Instance()->SetSigtermFlag(true);
+    Application::GetInstance()->SetSigTermSignalFlag(true);
 }
 
 void disable_core(void) {
@@ -193,15 +191,6 @@ void do_worker_process() {
         APSARA_LOG_INFO(sLogger, ("get none dmi uuid", "maybe this is a docker runtime"));
     }
 
-    PluginRegistry::GetInstance()->LoadPlugins();
-
-    // load local config first
-    ConfigManager::GetInstance()->GetLocalConfigUpdate();
-    ConfigManager::GetInstance()->LoadConfig(AppConfig::GetInstance()->GetUserConfigPath());
-    ConfigManager::GetInstance()->LoadDockerConfig();
-    // mNameConfigMap is empty, configExistFlag is false
-    bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();
-
     // set max open file limit
     struct rlimit rlimMaxOpenFiles;
     rlimMaxOpenFiles.rlim_cur = rlimMaxOpenFiles.rlim_max = INT32_FLAG(max_open_files_limit);
@@ -241,20 +230,6 @@ void do_worker_process() {
         InitCrashBackTrace();
     }
 
-    LogtailMonitor::Instance()->InitMonitor();
-    // LogFilter::Instance()->InitFilter(STRING_FLAG(user_log_config));
-    Sender::Instance()->InitSender();
-    LogtailPlugin* pPlugin = LogtailPlugin::GetInstance();
-    pPlugin->Resume();
-    ObserverManager::GetInstance()->Reload();
-    CheckPointManager::Instance()->LoadCheckPoint();
-    // AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();
-
-    // added by xianzhi(bowen.gbw@antfin.com)
-    // read local data_integrity json file and line count file
-    LogIntegrity::GetInstance()->ReloadIntegrityDataFromLocalFile();
-    LogLineCount::GetInstance()->ReloadLineCountDataFromLocalFile();
-
     // Collect application information and write them to app_info.json.
     Json::Value appInfoJson;
     appInfoJson["ip"] = Json::Value(LogFileProfiler::mIpAddr);
@@ -273,14 +248,8 @@ void do_worker_process() {
     std::string appInfo = appInfoJson.toStyledString();
     OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
     APSARA_LOG_INFO(sLogger, ("appInfo", appInfo));
-
-    ConfigManager::GetInstance()->InitUpdateConfig(configExistFlag);
-    ConfigManager::GetInstance()->RegisterHandlers();
-    EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
-    APSARA_LOG_INFO(sLogger, ("Logtail started", "initialization completed"));
-
-    // [Main thread] Run the Dispatch routine.
-    EventDispatcher::GetInstance()->Dispatch();
+    
+    Application::GetInstance()->Start();
 }
 
 int main(int argc, char** argv) {

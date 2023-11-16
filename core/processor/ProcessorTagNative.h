@@ -33,8 +33,10 @@ protected:
 
 private:
     bool mPluginProcessFlag = false;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorTagNativeUnittest;
 #endif
 };
+
 } // namespace logtail

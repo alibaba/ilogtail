@@ -23,10 +23,25 @@
 #include <unordered_set>
 #include <json/json.h>
 #include "common/Lock.h"
-#include "common/util.h"
 #include "log_pb/sls_logs.pb.h"
 
 namespace logtail {
+
+template <class T>
+class DoubleBuffer {
+public:
+    DoubleBuffer() : currentBuffer(0) {}
+
+    T& getWriteBuffer() { return buffers[currentBuffer]; }
+
+    T& getReadBuffer() { return buffers[1 - currentBuffer]; }
+
+    void swap() { currentBuffer = 1 - currentBuffer; }
+
+private:
+    T buffers[2];
+    int currentBuffer;
+};
 
 class AppConfig {
 private:
@@ -140,6 +155,9 @@ private:
     std::set<std::string> mDynamicPlugins;
     std::vector<std::string> mHostPathBlacklist;
 
+    Json::Value mFileTagsJson;
+    DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
+
     // /**
     //  * @brief Load ConfigServer, DataServer and network interface
     //  *
@@ -233,7 +251,7 @@ protected:
     // data_server_address/config_server_address
     bool mIsOldPubRegion;
 
-    EndpointAddressType mConfigServerAddressNetType = EndpointAddressType::INNER;
+    // EndpointAddressType mConfigServerAddressNetType = EndpointAddressType::INNER;
 
 public:
     AppConfig();
@@ -370,7 +388,7 @@ public:
 
     inline bool IsResponseVerificationEnabled() const { return mEnableResponseVerification; }
 
-    EndpointAddressType GetConfigServerAddressNetType() const { return mConfigServerAddressNetType; }
+    // EndpointAddressType GetConfigServerAddressNetType() const { return mConfigServerAddressNetType; }
 
     inline bool EnableCheckpointSyncWrite() const { return mEnableCheckpointSyncWrite; }
 
@@ -383,12 +401,18 @@ public:
 
     const std::string& GetBindInterface() const { return mBindInterface; }
 
+    std::vector<sls_logs::LogTag>& GetFileTags() { return mFileTags.getReadBuffer(); }
+
+    void UpdateFileTags();
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class SenderUnittest;
     friend class ConfigUpdatorUnittest;
     friend class MultiServerConfigUpdatorUnitest;
     friend class UtilUnittest;
     friend class AppConfigUnittest;
+    friend class PipelineUnittest;
+    friend class InputFileUnittest;
 #endif
 };
 } // namespace logtail

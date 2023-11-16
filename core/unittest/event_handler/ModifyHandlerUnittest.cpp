@@ -19,11 +19,10 @@
 #include <string>
 #include <memory>
 #include "common/Flags.h"
-#include "common/util.h"
 #include "common/FileSystemUtil.h"
 #include "event/Event.h"
 #include "event_handler/EventHandler.h"
-#include "reader/CommonRegLogFileReader.h"
+#include "reader/LogFileReader.h"
 
 using namespace std;
 

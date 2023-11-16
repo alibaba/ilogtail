@@ -25,6 +25,7 @@
 #include "Sender.h"
 #include "LogtailAlarm.h"
 #include "application/Application.h"
+#include "common/TimeUtil.h"
 
 using namespace sls_logs;
 using namespace std;

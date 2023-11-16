@@ -20,7 +20,6 @@
 #include <json/json.h>
 #include "sls_logs.pb.h"
 #include "common/Lock.h"
-#include "util.h"
 
 namespace logtail {
 

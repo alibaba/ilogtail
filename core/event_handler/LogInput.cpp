@@ -100,7 +100,7 @@ void LogInput::Resume(bool addCheckPointEventFlag) {
         EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
     }
     LOG_INFO(sLogger, ("LogInput Resume", "start"));
-    LogProcess::GetInstance()->Resume();
+    // LogProcess::GetInstance()->Resume();
     mInteruptFlag = false;
     mAccessMainThreadRWL.unlock();
     PollingModify::GetInstance()->Resume();
@@ -117,7 +117,7 @@ void LogInput::HoldOn() {
     PollingModify::GetInstance()->HoldOn();
     mInteruptFlag = true;
     mAccessMainThreadRWL.lock();
-    LogProcess::GetInstance()->HoldOn();
+    // LogProcess::GetInstance()->HoldOn();
 
     auto holdOnCost = GetCurrentTimeInMilliSeconds() - holdOnStart;
     LOG_INFO(sLogger, ("LogInput HoldOn", "success")("cost", holdOnCost));
@@ -352,55 +352,7 @@ void LogInput::ProcessEvent(EventDispatcher* dispatcher, Event* ev) {
     delete ev;
 }
 
-void LogInput::CheckAndUpdateCriticalMetric(int32_t curTime) {
-#ifdef __ENTERPRISE__
-    int32_t lastGetConfigTime = EnterpriseConfigProvider::GetInstance()->GetLastConfigGetTime();
-    // force to exit if config update thread is block more than 1 hour
-    if (lastGetConfigTime > 0 && curTime - lastGetConfigTime > 3600) {
-        LOG_ERROR(sLogger, ("last config get time is too old", lastGetConfigTime)("prepare force exit", ""));
-        LogtailAlarm::GetInstance()->SendAlarm(
-            LOGTAIL_CRASH_ALARM, "last config get time is too old: " + ToString(lastGetConfigTime) + " force exit");
-        LogtailAlarm::GetInstance()->ForceToSend();
-        sleep(10);
-        _exit(1);
-    }
-#endif
-    // if network is fail in 2 hours, force exit (for ant only)
-    // work around for no network when docker start
-    if (BOOL_FLAG(send_prefer_real_ip) && !BOOL_FLAG(global_network_success)
-        && curTime - Application::GetInstance()->GetStartTime() > 7200) {
-        LOG_ERROR(sLogger, ("network is fail", "prepare force exit"));
-        LogtailAlarm::GetInstance()->SendAlarm(
-            LOGTAIL_CRASH_ALARM,
-            "network is fail since " + ToString(Application::GetInstance()->GetStartTime()) + " force exit");
-        LogtailAlarm::GetInstance()->ForceToSend();
-        sleep(10);
-        _exit(1);
-    }
-
-    int32_t lastDaemonRunTime = Sender::Instance()->GetLastDeamonRunTime();
-    if (lastDaemonRunTime > 0 && curTime - lastDaemonRunTime > 3600) {
-        LOG_ERROR(sLogger, ("last sender daemon run time is too old", lastDaemonRunTime)("prepare force exit", ""));
-        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_ALARM,
-                                               "last sender daemon run time is too old: " + ToString(lastDaemonRunTime)
-                                                   + " force exit");
-        LogtailAlarm::GetInstance()->ForceToSend();
-        sleep(10);
-        _exit(1);
-    }
-
-    int32_t lastSendTime = Sender::Instance()->GetLastSendTime();
-    if (lastSendTime > 0 && curTime - lastSendTime > 3600 * 12) {
-        LOG_ERROR(sLogger, ("last send time is too old", lastSendTime)("prepare force exit", ""));
-        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_ALARM,
-                                               "last send time is too old: " + ToString(lastSendTime) + " force exit");
-        LogtailAlarm::GetInstance()->ForceToSend();
-        sleep(10);
-        _exit(1);
-    }
-
-    LogtailMonitor::Instance()->UpdateMetric("last_send_time", GetTimeStamp(lastSendTime, "%Y-%m-%d %H:%M:%S"));
-
+void LogInput::UpdateCriticalMetric(int32_t curTime) {
     LogtailMonitor::Instance()->UpdateMetric("last_read_event_time",
                                              GetTimeStamp(mLastReadEventTime, "%Y-%m-%d %H:%M:%S"));
 
@@ -467,7 +419,7 @@ void* LogInput::ProcessLoop() {
             lastReadLocalEventTime = curTime;
         }
         if (curTime - mLastUpdateMetricTime >= 40) {
-            CheckAndUpdateCriticalMetric(curTime);
+            UpdateCriticalMetric(curTime);
             mLastUpdateMetricTime = curTime;
         }
         if (curTime - lastForceClearFlag > 600 && GetForceClearFlag()) {

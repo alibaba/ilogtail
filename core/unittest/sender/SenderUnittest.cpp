@@ -20,7 +20,6 @@
 #include "reader/LogFileReader.h"
 #include "event_handler/EventHandler.h"
 #include "monitor/Monitor.h"
-#include "common/util.h"
 #include "event/Event.h"
 #include "sender/Sender.h"
 #include <assert.h>

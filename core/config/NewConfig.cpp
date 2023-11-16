@@ -14,18 +14,85 @@
 
 #include "config/NewConfig.h"
 
+#include "common/Flags.h"
+#include "common/JsonUtil.h"
 #include "common/ParamExtractor.h"
 #include "plugin/PluginRegistry.h"
 
+DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration", false);
+
+using namespace std;
+
 namespace logtail {
 
+static string UnescapeDollar(string::const_iterator beginIt, string::const_iterator endIt) {
+    string outStr;
+    string::const_iterator lastMatchEnd = beginIt;
+    static boost::regex reg(R"(\$\$|\$})");
+    boost::regex_iterator<string::const_iterator> it{beginIt, endIt, reg};
+    boost::regex_iterator<string::const_iterator> end;
+    for (; it != end; ++it) {
+        outStr.append(lastMatchEnd, (*it)[0].first); // original part
+        outStr.append((*it)[0].first + 1, (*it)[0].second); // skip $ char
+        lastMatchEnd = (*it)[0].second;
+    }
+    outStr.append(lastMatchEnd, endIt); // original part
+    return outStr;
+}
+
+static string ReplaceEnvVarRefInStr(const string& inStr) {
+    string outStr;
+    string::const_iterator lastMatchEnd = inStr.begin();
+    static boost::regex reg(R"((?<!\$)\${([\w]+)(:(.*?))?(?<!\$)})");
+    boost::regex_iterator<string::const_iterator> it{inStr.begin(), inStr.end(), reg};
+    boost::regex_iterator<string::const_iterator> end;
+    for (; it != end; ++it) {
+        outStr.append(UnescapeDollar(lastMatchEnd, (*it)[0].first)); // original part
+        char* env = getenv((*it)[1].str().c_str());
+        if (env != NULL) // replace to enviroment variable
+        {
+            outStr.append(env);
+        } else if ((*it).size() == 4) // replace to default value
+        {
+            outStr.append((*it)[3].first, (*it)[3].second);
+        }
+        // else replace to empty string (do nothing)
+        lastMatchEnd = (*it)[0].second;
+    }
+    outStr.append(UnescapeDollar(lastMatchEnd, inStr.end())); // original part
+    return outStr;
+}
+
+static void ReplaceEnvVarRef(Json::Value& value) {
+    if (value.isString()) {
+        Json::Value tempValue{ReplaceEnvVarRefInStr(value.asString())};
+        value.swapPayload(tempValue);
+    } else if (value.isArray()) {
+        Json::ValueIterator it = value.begin();
+        Json::ValueIterator end = value.end();
+        for (; it != end; ++it) {
+            ReplaceEnvVarRef(*it);
+        }
+    } else if (value.isObject()) {
+        Json::ValueIterator it = value.begin();
+        Json::ValueIterator end = value.end();
+        for (; it != end; ++it) {
+            ReplaceEnvVarRef(*it);
+        }
+    }
+}
+
 bool NewConfig::Parse() {
-    std::string errorMsg;
+    if (BOOL_FLAG(enable_env_ref_in_config)) {
+        ReplaceEnvVar();
+    }
+
+    string errorMsg;
     if (!GetOptionalUIntParam(mDetail, "createTime", mCreateTime, errorMsg)) {
         PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, noModule, mName);
     }
 
-    std::string key = "global";
+    string key = "global";
     const Json::Value* itr = mDetail.find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!itr->isObject()) {
@@ -35,7 +102,7 @@ bool NewConfig::Parse() {
     }
 
     // inputs, processors and flushers module must be parsed first and parsed by order, since aggregators and
-    // extenstions module parsing will rely on their results.
+    // extensions module parsing will rely on their results.
     bool hasObserverInput = false;
 #ifdef __ENTERPRISE__
     bool hasStreamInput = false;
@@ -58,10 +125,14 @@ bool NewConfig::Parse() {
         }
         key = "Type";
         const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
-        if (!it->isString()) {
-            PARAM_ERROR_RETURN(sLogger, "param inputs[" + ToString(i) + "].Type is not of type string", noModule, mName);
+        if (it == nullptr) {
+            PARAM_ERROR_RETURN(sLogger, "param inputs[" + ToString(i) + "].Type is missing", noModule, mName);
         }
-        const std::string pluginName = it->asString();
+        if (!it->isString()) {
+            PARAM_ERROR_RETURN(
+                sLogger, "param inputs[" + ToString(i) + "].Type is not of type string", noModule, mName);
+        }
+        const string pluginName = it->asString();
         if (i == 0) {
             if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                 mHasGoInput = true;
@@ -112,15 +183,19 @@ bool NewConfig::Parse() {
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
             if (!plugin.isObject()) {
-                PARAM_ERROR_RETURN(sLogger, "param processors[" + ToString(i) + "] is not of type object", noModule, mName);
+                PARAM_ERROR_RETURN(
+                    sLogger, "param processors[" + ToString(i) + "] is not of type object", noModule, mName);
             }
             key = "Type";
             const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
+            if (it == nullptr) {
+                PARAM_ERROR_RETURN(sLogger, "param processors[" + ToString(i) + "].Type is missing", noModule, mName);
+            }
             if (!it->isString()) {
                 PARAM_ERROR_RETURN(
                     sLogger, "param processors[" + ToString(i) + "].Type is not of type string", noModule, mName);
             }
-            const std::string pluginName = it->asString();
+            const string pluginName = it->asString();
             if (mHasGoInput) {
                 if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
                     PARAM_ERROR_RETURN(
@@ -135,21 +210,24 @@ bool NewConfig::Parse() {
                     if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                         if (hasObserverInput) {
                             PARAM_ERROR_RETURN(sLogger,
-                                        "native processor plugins coexist with input_observer_network",
-                                        noModule,
-                                        mName);
+                                               "native processor plugins coexist with input_observer_network",
+                                               noModule,
+                                               mName);
                         }
                         isCurrentPluginNative = false;
                         mHasGoProcessor = true;
                     } else if (!PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
                         PARAM_ERROR_RETURN(sLogger, "unsupported processor plugin", pluginName, mName);
+                    } else if (pluginName == "processor_spl" && (i != 0 || itr->size() != 1)) {
+                        PARAM_ERROR_RETURN(
+                            sLogger, "native processor plugins coexist with spl processor", noModule, mName);
                     }
                 } else {
                     if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
                         PARAM_ERROR_RETURN(sLogger,
-                                    "native processor plugin comes after extended processor plugin",
-                                    pluginName,
-                                    mName);
+                                           "native processor plugin comes after extended processor plugin",
+                                           pluginName,
+                                           mName);
                     } else if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                         mHasGoProcessor = true;
                     } else {
@@ -184,10 +262,14 @@ bool NewConfig::Parse() {
         }
         key = "Type";
         const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
-        if (!it->isString()) {
-            PARAM_ERROR_RETURN(sLogger, "param flushers[" + ToString(i) + "].Type is not of type string", noModule, mName);
+        if (it == nullptr) {
+            PARAM_ERROR_RETURN(sLogger, "param flushers[" + ToString(i) + "].Type is missing", noModule, mName);
         }
-        const std::string pluginName = it->asString();
+        if (!it->isString()) {
+            PARAM_ERROR_RETURN(
+                sLogger, "param flushers[" + ToString(i) + "].Type is not of type string", noModule, mName);
+        }
+        const string pluginName = it->asString();
         if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
             mHasGoFlusher = true;
         } else if (PluginRegistry::GetInstance()->IsValidNativeFlusherPlugin(pluginName)) {
@@ -197,13 +279,11 @@ bool NewConfig::Parse() {
         }
 #ifdef __ENTERPRISE__
         if (hasStreamInput && pluginName != "flusher_sls") {
-            PARAM_ERROR_RETURN(sLogger, "flusher plugins other than flusher_sls coexist with input_stream", noModule, mName);
+            PARAM_ERROR_RETURN(
+                sLogger, "flusher plugins other than flusher_sls coexist with input_stream", noModule, mName);
         }
 #endif
         mFlushers.push_back(&plugin);
-    }
-    if (mHasNativeFlusher && mHasGoFlusher && !ShouldNativeFlusherConnectedByGoPipeline()) {
-        PARAM_ERROR_RETURN(sLogger, "native and extended flusher coexist in native processing mode", noModule, mName);
     }
 
     key = "aggregators";
@@ -221,15 +301,19 @@ bool NewConfig::Parse() {
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
             if (!plugin.isObject()) {
-                PARAM_ERROR_RETURN(sLogger, "param aggregators[" + ToString(i) + "] is not of type object", noModule, mName);
+                PARAM_ERROR_RETURN(
+                    sLogger, "param aggregators[" + ToString(i) + "] is not of type object", noModule, mName);
             }
             key = "Type";
             const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
+            if (it == nullptr) {
+                PARAM_ERROR_RETURN(sLogger, "param aggregators[" + ToString(i) + "].Type is missing", noModule, mName);
+            }
             if (!it->isString()) {
                 PARAM_ERROR_RETURN(
                     sLogger, "param aggregators[" + ToString(i) + "].Type is not of type string", noModule, mName);
             }
-            const std::string pluginName = it->asString();
+            const string pluginName = it->asString();
             if (!PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                 PARAM_ERROR_RETURN(sLogger, "unsupported aggregator plugin", pluginName, mName);
             }
@@ -249,15 +333,19 @@ bool NewConfig::Parse() {
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
             if (!plugin.isObject()) {
-                PARAM_ERROR_RETURN(sLogger, "param extensions[" + ToString(i) + "] is not of type object", noModule, mName);
+                PARAM_ERROR_RETURN(
+                    sLogger, "param extensions[" + ToString(i) + "] is not of type object", noModule, mName);
             }
             key = "Type";
             const Json::Value* it = plugin.find(key.c_str(), key.c_str() + key.size());
+            if (it == nullptr) {
+                PARAM_ERROR_RETURN(sLogger, "param extensions[" + ToString(i) + "].Type is missing", noModule, mName);
+            }
             if (!it->isString()) {
                 PARAM_ERROR_RETURN(
                     sLogger, "param extensions[" + ToString(i) + "].Type is not of type string", noModule, mName);
             }
-            const std::string pluginName = it->asString();
+            const string pluginName = it->asString();
             if (!PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
                 PARAM_ERROR_RETURN(sLogger, "unsupported extension plugin", pluginName, mName);
             }
@@ -268,5 +356,17 @@ bool NewConfig::Parse() {
     return true;
 }
 
+void NewConfig::ReplaceEnvVar() {
+    ReplaceEnvVarRef(mDetail);
+}
+
+// TODO: @quzard
+bool ParseConfigDetail(const string& content, const string& extension, Json::Value& detail, string& errorMsg) {
+    if (extension == ".json") {
+        return ParseConfig(content, detail, errorMsg);
+    } else if (extension == ".yaml" || extension == ".yml") {
+    }
+    return false;
+}
 
 } // namespace logtail

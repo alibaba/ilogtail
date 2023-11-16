@@ -52,7 +52,7 @@
 namespace logtail {
 
 PluginRegistry::PluginRegistry() {
-    mGoPlugins = {""};
+    mGoPlugins = {"service_docker_stdout", "processor_regex", "processor_json", "aggregator_context", "flusher_kafka_v2", "ext_basicauth"};
 }
 
 void PluginRegistry::LoadPlugins() {

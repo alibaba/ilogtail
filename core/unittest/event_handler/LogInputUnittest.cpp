@@ -19,7 +19,6 @@
 #include <string>
 #include <memory>
 #include "common/Flags.h"
-#include "common/util.h"
 #include "common/FileSystemUtil.h"
 #include "polling/PollingEventQueue.h"
 #include "event/Event.h"

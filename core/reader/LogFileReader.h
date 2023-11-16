@@ -21,22 +21,19 @@
 #include <unordered_set>
 #include <deque>
 #include <atomic>
+#include "parser/LogParser.h"
 #include "common/TimeUtil.h"
-#include "common/GlobalPara.h"
 #include "common/StringTools.h"
 #include "common/EncodingConverter.h"
 #include "common/DevInode.h"
 #include "common/LogFileOperator.h"
 #include "logger/Logger.h"
 #include "log_pb/sls_logs.pb.h"
-#include "config/LogType.h"
 #include "common/FileInfo.h"
 #include "checkpoint/RangeCheckpoint.h"
 #include "reader/SourceBuffer.h"
 #include "reader/FileReaderOptions.h"
 #include "file_server/MultilineOptions.h"
-#include "file_server/FileDiscoveryOptions.h"
-#include "event/Event.h"
 
 namespace logtail {
 
@@ -216,7 +213,7 @@ public:
 
     bool CheckDevInode();
 
-    bool CheckFileSignatureAndOffset(bool isOpenOnUpdate);
+    bool CheckFileSignatureAndOffset(int64_t& fileSize);
 
     void UpdateLogPath(const std::string& filePath) {
         if (mHostLogPath == filePath) {
@@ -396,7 +393,6 @@ protected:
     uint32_t mLastFileSignatureSize = 0;
     int64_t mLastFilePos = 0; // pos read and consumed, used for next read begin
     int64_t mLastFileSize = 0;
-    time_t mLastMTime = 0;
     std::string mCache;
     // std::string mProjectName;
     std::string mTopicName;
@@ -584,6 +580,7 @@ private:
     friend class LogSplitNoDiscardUnmatchUnittest;
     friend class LastMatchedLineDiscardUnmatchUnittest;
     friend class LastMatchedLineNoDiscardUnmatchUnittest;
+    friend class LogFileReaderCheckpointUnittest;
 
 protected:
     void UpdateReaderManual();

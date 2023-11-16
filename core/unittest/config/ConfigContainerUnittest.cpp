@@ -19,7 +19,6 @@
 #include <string>
 #include <memory>
 #include "common/Flags.h"
-#include "common/util.h"
 #include "app_config/AppConfig.h"
 #include "config_manager/ConfigManager.h"
 #include "event/Event.h"

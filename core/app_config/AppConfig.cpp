@@ -18,7 +18,6 @@
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
-#include "common/util.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/RuntimeUtil.h"
 #include "common/FileSystemUtil.h"
@@ -95,7 +94,7 @@ DEFINE_FLAG_BOOL(check_profile_region, "", false);
 DEFINE_FLAG_BOOL(enable_collection_mark,
                  "enable collection mark function to override check_ulogfs_env in user config",
                  false);
-DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration", false);
+// DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration", false);
 DEFINE_FLAG_INT32(data_server_port, "", 80);
 
 DEFINE_FLAG_STRING(alipay_app_zone, "", "ALIPAY_APP_ZONE");
@@ -248,6 +247,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     if (!ilogtailConfigFile.empty()) {
         ParseConfResult res = ParseConfig(ilogtailConfigFile, confJson);
 
+#ifdef __ENTERPRISE__
         if (res == CONFIG_NOT_EXIST) {
             LOG_INFO(sLogger, ("config file not exist, try generate config by path", ilogtailConfigFile));
             if (GenerateAPPConfigByConfigPath(ilogtailConfigFile, confJson)) {
@@ -257,6 +257,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
                 LOG_WARNING(sLogger, ("generate config failed", ilogtailConfigFile));
             }
         }
+#endif
 
         if (res == CONFIG_OK) {
             // Should be loaded here because other parameters depend on it.
@@ -1249,4 +1250,41 @@ bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {
     }
     return false;
 }
+
+void AppConfig::UpdateFileTags() {
+    if (STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
+        return;
+    }
+    // read local config
+    Json::Value localFileTagsJson;
+    const char* file_tags_dir = STRING_FLAG(ALIYUN_LOG_FILE_TAGS).c_str();
+    ParseConfResult userLogRes = ParseConfig(file_tags_dir, localFileTagsJson);
+    if (userLogRes != CONFIG_OK) {
+        if (userLogRes == CONFIG_NOT_EXIST)
+            LOG_ERROR(sLogger, ("load file tags fail, file not exist", file_tags_dir));
+        else if (userLogRes == CONFIG_INVALID_FORMAT) {
+            LOG_ERROR(sLogger, ("load file tags fail, file content is not valid json", file_tags_dir));
+        }
+    } else {
+        if (localFileTagsJson != mFileTagsJson) {
+            int32_t i = 0;
+            vector<sls_logs::LogTag>& sFileTags = mFileTags.getWriteBuffer();
+            sFileTags.clear();
+            sFileTags.resize(localFileTagsJson.size());
+            for (auto it = localFileTagsJson.begin(); it != localFileTagsJson.end(); ++it) {
+                if (it->isString()) {
+                    sFileTags[i].set_key(it.key().asString());
+                    sFileTags[i].set_value(it->asString());
+                    ++i;
+                }
+            }
+            mFileTags.swap();
+            LOG_INFO(sLogger, ("local file tags update, old config", mFileTagsJson.toStyledString()));
+            mFileTagsJson = localFileTagsJson;
+            LOG_INFO(sLogger, ("local file tags update, new config", mFileTagsJson.toStyledString()));
+        }
+    }
+    return;
+}
+
 } // namespace logtail

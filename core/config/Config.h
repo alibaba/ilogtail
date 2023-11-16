@@ -20,13 +20,13 @@
 #include <list>
 #include <boost/regex.hpp>
 #include <re2/re2.h>
-#include "DockerFileConfig.h"
+// #include "DockerFileConfig.h"
 // #include "common/EncodingConverter.h"
 // #include "common/LogstoreFeedbackQueue.h"
 // #include "common/Flags.h"
 #include "common/TimeUtil.h"
 // #include "aggregator/Aggregator.h"
-#include "LogType.h"
+#include "processor/BaseFilterNode.h"
 // #include "IntegrityConfig.h"
 
 namespace logtail {
@@ -55,6 +55,20 @@ struct UserInfo {
     }
 };
 
+struct SensitiveWordCastOption {
+    static const int32_t MD5_OPTION = 0;
+    static const int32_t CONST_OPTION = 1;
+    int32_t option;
+    std::string key;
+    std::string constValue;
+    bool replaceAll;
+    std::shared_ptr<re2::RE2> mRegex; // deleted when config is deleted
+
+    SensitiveWordCastOption() : option(CONST_OPTION), replaceAll(false) {}
+
+    ~SensitiveWordCastOption() {}
+};
+
 class Config {
 public:
     // static const uint32_t kExactlyOnceMaxConcurrency = 512;
@@ -68,6 +82,7 @@ public:
         // bool mPassTagsToPlugin = true; // pass file tags to plugin system.
         std::string mRawLogTag; // if mUploadRawLog is true, use this string as raw log tag
         // int32_t mBatchSendInterval;
+        BaseFilterNodePtr mFilterExpressionRoot;
         // uint32_t mExactlyOnceConcurrency = 0;
         // bool mEnableLogPositionMeta = false; // Add inode/offset to log.
         // size_t mMaxRotateQueueSize;
@@ -104,7 +119,7 @@ public:
     // int16_t mWildcardDepth;
     // std::string mBasePath; // base path, not terminated by "*" "**"
     // std::string mFilePattern; // file name format
-    LogType mLogType;
+    // LogType mLogType;
     std::string mConfigName; // name of log e.g. aliyun_com "##1.0##sls-zc-test$home-log"
     // std::string mLogBeginReg; // the log begin line regex
     // std::string mLogContinueReg; // the log continue line regex
@@ -149,6 +164,7 @@ public:
     std::string mTimeKey;
     // std::vector<std::string> mShardHashKey;
     // bool mTailExisted;
+    std::unordered_map<std::string, std::vector<SensitiveWordCastOption>> mSensitiveWordCastOptions;
     bool mUploadRawLog; // true to update raw log to sls
     bool mSimpleLogFlag;
     bool mTimeZoneAdjust;
@@ -175,7 +191,7 @@ public:
     // bool mDockerFileFlag; // docker file flag
     // bool mPluginProcessFlag; // file config with plugin process
     // DATA_MERGE_TYPE mMergeType; // config's merge type, default merge by topic
-    bool mForceEnablePipeline = false;
+    // bool mForceEnablePipeline = false;
     AdvancedConfig mAdvancedConfig;
 
     // // Blacklist control.
@@ -221,7 +237,7 @@ public:
 
     Config(const std::string& basePath,
            const std::string& filePattern,
-           LogType logType,
+        //    LogType logType,
            const std::string& logName,
            const std::string& logBeginReg,
            const std::string& logContinueReg,
@@ -282,6 +298,8 @@ public:
     // bool IsDirectoryInBlacklist(const std::string& dirPath) const;
 
     // void SetTailLimit(int32_t size);
+
+    bool IsMultiline() const;
 
 private:
     // bool IsWildcardPathMatch(const std::string& path, const std::string& name = "");

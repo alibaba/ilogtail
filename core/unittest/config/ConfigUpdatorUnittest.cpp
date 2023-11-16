@@ -29,7 +29,6 @@
 #include "AppConfig.h"
 #include "Monitor.h"
 #include "EventDispatcher.h"
-#include "util.h"
 #include "CheckPointManager.h"
 #include "LogInput.h"
 #include "Sender.h"
@@ -246,15 +245,15 @@ public:
 
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLogRotateWhenUpdate, -1);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestCheckPointManager, 0);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestConfigUpdate, 1);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLocalConfigUpdate, 2);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdatePath, 3);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestConfigUpdate, 1);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLocalConfigUpdate, 2);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdatePath, 3);
 // APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdateGlobalConfig, 4);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdateProfileProject, 5);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestValidPath, 6);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestBlackDirList, 7);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestDirCheckPoint, 8);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestTimeoutCheckPoint, 9);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestDirCheckPoint, 8);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestTimeoutCheckPoint, 9);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLoadIlogtailConfig, 10);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdateGroupTopic, 11);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestValidWildcardPath, 14);

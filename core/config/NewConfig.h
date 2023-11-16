@@ -27,7 +27,8 @@ namespace logtail {
 
 struct NewConfig {
     std::string mName;
-    uint32_t mCreateTime;
+    Json::Value mDetail;
+    uint32_t mCreateTime = 0;
     const Json::Value* mGlobal = nullptr;
     std::vector<const Json::Value*> mInputs;
     std::vector<const Json::Value*> mProcessors;
@@ -40,17 +41,26 @@ struct NewConfig {
     bool mHasNativeFlusher = false;
     bool mHasGoFlusher = false;
     bool mIsFirstProcessorJson = false;
-    Json::Value mDetail;
+
+    NewConfig(const std::string& name, Json::Value&& detail) : mName(name), mDetail(std::move(detail)) {}
 
     bool Parse();
 
     bool ShouldNativeFlusherConnectedByGoPipeline() const {
-        return mHasGoProcessor || (mHasGoInput && !mHasNativeInput && mProcessors.empty());
+        // 过渡使用，待c++支持分叉后删除
+        return mHasGoProcessor || (mHasGoInput && !mHasNativeInput && mProcessors.empty()) || (mHasGoFlusher && mHasNativeFlusher);
+        // return mHasGoProcessor || (mHasGoInput && !mHasNativeInput && mProcessors.empty());
     }
+
     bool IsFlushingThroughGoPipelineExisted() const {
         return mHasGoFlusher || ShouldNativeFlusherConnectedByGoPipeline();
     }
+    
     bool HasGoPlugin() const { return mHasGoFlusher || mHasGoProcessor || mHasGoInput; }
+
+    void ReplaceEnvVar();
 };
+
+bool ParseConfigDetail(const std::string& content, const std::string& extenstion, Json::Value& detail, std::string& errorMsg);
 
 } // namespace logtail

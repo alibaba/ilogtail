@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <string>
 
@@ -19,8 +20,8 @@ public:
     }
 
     void Start();
+    void SetSigTermSignalFlag(bool flag) { mSigTermSignalFlag = flag; }
 
-    int32_t GetStartTime() { return mStartTime; }
     std::string GetInstanceId() { return mInstanceId; }
     bool TryGetUUID();
     std::string GetUUID() {
@@ -47,6 +48,7 @@ private:
 
     std::string mInstanceId;
     int32_t mStartTime;
+    std::atomic_bool mSigTermSignalFlag = false;
     ThreadPtr mUUIDthreadPtr;
     SpinLock mUUIDLock;
     std::string mUUID;

@@ -24,7 +24,7 @@
 
 #include "json/json.h"
 
-#include "config/DockerFileConfig.h"
+#include "file_server/DockerContainerPath.h"
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
@@ -111,6 +111,10 @@ private:
 
     // 过渡使用
     bool mTailingAllMatchedFiles = false;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class FileDiscoveryOptionsUnittest;
+#endif
 };
 
 using FileDiscoveryConfig = std::pair<FileDiscoveryOptions*, const PipelineContext*>;

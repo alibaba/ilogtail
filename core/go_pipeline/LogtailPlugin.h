@@ -15,17 +15,21 @@
  */
 
 #pragma once
-#include <cstdint>
-#include <cstdlib>
-#include <ostream>
-#include <numeric>
-#include <json/json.h>
-#include "reader/SourceBuffer.h"
-#include "log_pb/sls_logs.pb.h"
-#include "flusher/FlusherSLS.h"
+
 #if defined(_MSC_VER)
 #include <stddef.h>
 #endif
+
+#include <cstdint>
+#include <numeric>
+#include <sstream>
+#include <unordered_map>
+#include <utility>
+
+#include "json/json.h"
+
+#include "flusher/FlusherSLS.h"
+#include "log_pb/sls_logs.pb.h"
 
 extern "C" {
 // The definition of Golang type is copied from PluginAdaptor.h that
@@ -186,7 +190,13 @@ public:
     }
 
     bool LoadPluginBase();
-    void LoadConfig();
+    // void LoadConfig();
+    bool LoadPipeline(const std::string& pipelineName,
+                      const std::string& pipeline,
+                      const std::string& project = "",
+                      const std::string& logstore = "",
+                      const std::string& region = "",
+                      logtail::LogstoreFeedBackKey logstoreKey = 0);
     void HoldOn(bool exitFlag);
     void Resume();
 
