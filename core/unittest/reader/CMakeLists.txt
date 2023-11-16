@@ -21,20 +21,17 @@ target_link_libraries(log_file_reader_deleted_file_unittest unittest_base)
 add_executable(file_reader_options_unittest FileReaderOptionsUnittest.cpp)
 target_link_libraries(file_reader_options_unittest unittest_base)
 
+add_executable(json_log_file_reader_unittest JsonLogFileReaderUnittest.cpp)
+target_link_libraries(json_log_file_reader_unittest unittest_base)
+
+add_executable(last_matched_line_unittest LastMatchedLineUnittest.cpp)
+target_link_libraries(last_matched_line_unittest unittest_base)
+
+add_executable(log_file_reader_unittest LogFileReaderUnittest.cpp)
+target_link_libraries(log_file_reader_unittest unittest_base)
+
 add_executable(source_buffer_unittest SourceBufferUnittest.cpp)
 target_link_libraries(source_buffer_unittest unittest_base)
-
-# add_executable(log_file_reader_unittest LogFileReaderUnittest.cpp)
-# target_link_libraries(log_file_reader_unittest unittest_base)
-
-# add_executable(last_matched_line_unittest LastMatchedLineUnittest.cpp)
-# target_link_libraries(last_matched_line_unittest unittest_base)
-
-# add_executable(log_split_unittest LogSplitUnittest.cpp)
-# target_link_libraries(log_split_unittest unittest_base)
-
-# add_executable(json_log_file_reader_unittest JsonLogFileReaderUnittest.cpp)
-# target_link_libraries(json_log_file_reader_unittest unittest_base)
 
 if (UNIX)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/testDataSet)

@@ -580,6 +580,7 @@ private:
     friend class LogSplitNoDiscardUnmatchUnittest;
     friend class LastMatchedLineDiscardUnmatchUnittest;
     friend class LastMatchedLineNoDiscardUnmatchUnittest;
+    friend class LogFileReaderCheckpointUnittest;
 
 protected:
     void UpdateReaderManual();
