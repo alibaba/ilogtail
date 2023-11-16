@@ -32,38 +32,23 @@ const std::string ProcessorSplitRegexNative::sName = "processor_split_regex_nati
 bool ProcessorSplitRegexNative::Init(const Json::Value& config) {
     std::string errorMsg;
     mSplitKey = DEFAULT_CONTENT_KEY;
+
     // StartPattern
-    std::string pattern;
-    if (!GetOptionalStringParam(config, "StartPattern", pattern, errorMsg)) {
+    if (!GetOptionalStringParam(config, "StartPattern", mStartPattern, errorMsg)) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-    } else if (!ParseRegex(pattern, mStartPatternRegPtr)) {
-        PARAM_WARNING_IGNORE(
-            mContext->GetLogger(), "Multiline.StartPattern is not a valid regex", sName, mContext->GetConfigName());
-    } else {
-        mStartPattern = pattern;
     }
-
     // ContinuePattern
-    pattern.clear();
-    if (!GetOptionalStringParam(config, "ContinuePattern", pattern, errorMsg)) {
+    if (!GetOptionalStringParam(config, "ContinuePattern", mContinuePattern, errorMsg)) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-    } else if (!ParseRegex(pattern, mContinuePatternRegPtr)) {
-        PARAM_WARNING_IGNORE(
-            mContext->GetLogger(), "Multiline.ContinuePattern is not a valid regex", sName, mContext->GetConfigName());
-    } else {
-        mContinuePattern = pattern;
     }
-
     // EndPattern
-    pattern.clear();
-    if (!GetOptionalStringParam(config, "EndPattern", pattern, errorMsg)) {
+    std::string endPattern;
+    if (!GetOptionalStringParam(config, "EndPattern", mEndPattern, errorMsg)) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-    } else if (!ParseRegex(pattern, mEndPatternRegPtr)) {
-        PARAM_WARNING_IGNORE(
-            mContext->GetLogger(), "Multiline.EndPattern is not a valid regex", sName, mContext->GetConfigName());
-    } else {
-        mEndPattern = pattern;
     }
+    SetLogMultilinePolicy();
+
+    mIsMultline = IsMultiline();
 
     if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
         PARAM_WARNING_DEFAULT(
@@ -73,13 +58,6 @@ bool ProcessorSplitRegexNative::Init(const Json::Value& config) {
         PARAM_WARNING_DEFAULT(
             mContext->GetLogger(), errorMsg, mAppendingLogPositionMeta, sName, mContext->GetConfigName());
     }
-    if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mKeepingSourceWhenParseFail, sName, mContext->GetConfigName());
-    }
-
-    mIsMultline = IsMultiline();
-    SetLogMultilinePolicy(mStartPattern, mContinuePattern, mEndPattern);
 
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
@@ -177,7 +155,9 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
     for (auto& content : logIndex) {
         std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-        targetEvent->SetTimestamp(sourceEvent.GetTimestamp(), sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
+        targetEvent->SetTimestamp(
+            sourceEvent.GetTimestamp(),
+            sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
         targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
         if (mAppendingLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
@@ -271,7 +251,8 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
 
                 case SPLIT_BEGIN:
                     // mLogContinueRegPtr can be matched 0 or multiple times, if not match continue to try others.
-                    if (mLogContinueRegPtr != nullptr && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                    if (mLogContinueRegPtr != nullptr
+                        && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
                         state = SPLIT_CONTINUE;
                         break;
                     }
@@ -304,7 +285,8 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
 
                 case SPLIT_CONTINUE:
                     // mLogContinueRegPtr can be matched 0 or multiple times, if not match continue to try others.
-                    if (mLogContinueRegPtr != nullptr && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
+                    if (mLogContinueRegPtr != nullptr
+                        && BoostRegexMatch(buffer + begIndex, endIndex - begIndex, *mLogContinueRegPtr, exception)) {
                         break;
                     }
                     if (mLogEndRegPtr != nullptr) {
@@ -364,7 +346,7 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
         if (!mIsMultline) {
             logIndex.emplace_back(buffer + multiBeginIndex, size - multiBeginIndex);
         } else {
-            endIndex = buffer[size-1] == '\n' ? size -1 : size;
+            endIndex = buffer[size - 1] == '\n' ? size - 1 : size;
             if (mLogBeginRegPtr != NULL && mLogEndRegPtr == NULL) {
                 anyMatched = true;
                 // If logs is unmatched, they have been handled immediately. So logs must be matched here.
@@ -420,29 +402,26 @@ void ProcessorSplitRegexNative::HandleUnmatchLogs(const char* buffer,
     }
 }
 
-void ProcessorSplitRegexNative::SetLogMultilinePolicy(const std::string& begReg,
-                                                      const std::string& conReg,
-                                                      const std::string& endReg) {
-    mLogBeginReg = begReg;
+void ProcessorSplitRegexNative::SetLogMultilinePolicy() {
     if (mLogBeginRegPtr != nullptr) {
         mLogBeginRegPtr.reset();
     }
-    if (begReg.empty() == false && begReg != ".*") {
-        mLogBeginRegPtr.reset(new boost::regex(begReg));
+    if (mStartPattern.empty() == false && mStartPattern != ".*") {
+        mLogBeginRegPtr.reset(new boost::regex(mStartPattern));
     }
-    mLogContinueReg = conReg;
+
     if (mLogContinueRegPtr != nullptr) {
         mLogContinueRegPtr.reset();
     }
-    if (conReg.empty() == false && conReg != ".*") {
-        mLogContinueRegPtr.reset(new boost::regex(conReg));
+    if (mContinuePattern.empty() == false && mContinuePattern != ".*") {
+        mLogContinueRegPtr.reset(new boost::regex(mContinuePattern));
     }
-    mLogEndReg = endReg;
+
     if (mLogEndRegPtr != nullptr) {
         mLogEndRegPtr.reset();
     }
-    if (endReg.empty() == false && endReg != ".*") {
-        mLogEndRegPtr.reset(new boost::regex(endReg));
+    if (mEndPattern.empty() == false && mEndPattern != ".*") {
+        mLogEndRegPtr.reset(new boost::regex(mEndPattern));
     }
 }
 

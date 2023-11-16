@@ -27,9 +27,6 @@ class ProcessorSplitLogStringNativeUnittest : public ::testing::Test {
 public:
     void SetUp() override {
         mContext.SetConfigName("project##config_0");
-        mContext.SetLogstoreName("logstore");
-        mContext.SetProjectName("project");
-        mContext.SetRegion("cn-shanghai");
     }
 
     void TestInit();
@@ -46,7 +43,6 @@ UNIT_TEST_CASE(ProcessorSplitLogStringNativeUnittest, TestProcessCommon);
 void ProcessorSplitLogStringNativeUnittest::TestInit() {
     // make config
     Json::Value config;
-    config["mode"] = "custom";
     config["AppendingLogPositionMeta"] = false;
 
     std::string pluginId = "testID";
@@ -58,7 +54,7 @@ void ProcessorSplitLogStringNativeUnittest::TestInit() {
 void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
     // make config
     Json::Value config;
-    config["mode"] = "JSON";
+    config["SplitChar"] = '\0';
     config["AppendingLogPositionMeta"] = true;
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -124,7 +120,6 @@ void ProcessorSplitLogStringNativeUnittest::TestProcessJson() {
 void ProcessorSplitLogStringNativeUnittest::TestProcessCommon() {
     // make config
     Json::Value config;
-    config["mode"] = "custom";
     config["AppendingLogPositionMeta"] = false;
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();

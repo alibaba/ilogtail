@@ -27,9 +27,6 @@ class ProcessorParseDelimiterNativeUnittest : public ::testing::Test {
 public:
     void SetUp() override {
         mContext.SetConfigName("project##config_0");
-        mContext.SetLogstoreName("logstore");
-        mContext.SetProjectName("project");
-        mContext.SetRegion("cn-shanghai");
         BOOL_FLAG(ilogtail_discard_old_data) = false;
     }
 

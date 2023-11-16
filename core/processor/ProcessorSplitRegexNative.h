@@ -32,9 +32,6 @@ public:
     std::string mStartPattern;
     std::string mContinuePattern;
     std::string mEndPattern;
-    std::shared_ptr<boost::regex> mStartPatternRegPtr;
-    std::shared_ptr<boost::regex> mContinuePatternRegPtr;
-    std::shared_ptr<boost::regex> mEndPatternRegPtr;
     bool mIsMultline;
     bool mAppendingLogPositionMeta = false;
     bool mKeepingSourceWhenParseFail = false;
@@ -59,7 +56,7 @@ private:
                   std::vector<StringView>& logIndex,
                   std::vector<StringView>& discardIndex,
                   const StringView& logPath);
-    void SetLogMultilinePolicy(const std::string& begReg, const std::string& conReg, const std::string& endReg);
+    void SetLogMultilinePolicy();
     void HandleUnmatchLogs(const char* buffer,
                            int& multiBeginIndex,
                            int endIndex,
@@ -69,9 +66,6 @@ private:
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
 
-    std::string mLogBeginReg;
-    std::string mLogContinueReg;
-    std::string mLogEndReg;
     std::unique_ptr<boost::regex> mLogBeginRegPtr;
     std::unique_ptr<boost::regex> mLogContinueRegPtr;
     std::unique_ptr<boost::regex> mLogEndRegPtr;

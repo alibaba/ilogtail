@@ -25,9 +25,6 @@ class ProcessorDesensitizeNativeUnittest : public ::testing::Test {
 public:
     void SetUp() override {
         mContext.SetConfigName("project##config_0");
-        mContext.SetLogstoreName("logstore");
-        mContext.SetProjectName("project");
-        mContext.SetRegion("cn-shanghai");
     }
     Json::Value GetCastSensWordConfig(string, string, string, string, string, bool);
     void TestInit();

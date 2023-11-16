@@ -139,4 +139,7 @@ bool IsRegexValid(const string& regStr) {
     return true;
 }
 
+bool IsExist(const Json::Value& config, const string& key) {
+    return config.isMember(ExtractCurrentKey(key));
+}
 } // namespace logtail

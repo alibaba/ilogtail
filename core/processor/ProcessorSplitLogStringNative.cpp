@@ -28,15 +28,20 @@ const std::string ProcessorSplitLogStringNative::sName = "processor_split_string
 bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
     std::string errorMsg;
     mSplitKey = DEFAULT_CONTENT_KEY;
-    // mode
-    std::string mode = "custom";
-    if (!GetOptionalStringParam(config, "mode", mode, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mode, sName, mContext->GetConfigName());
+    mSplitChar = '\n';
+    if (IsExist(config, "SplitChar")) {
+        std::string splitChar;
+        GetOptionalStringParam(config, "SplitChar", splitChar, errorMsg);
+        mSplitChar = splitChar[0];
     }
-    mSplitChar = mode == "JSON" ? '\0' : '\n';
+    if (mSplitChar == '\0')
+    {
+        std::cout<<"0"<<std::endl;
+    }
     // AppendingLogPositionMeta
     if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mAppendingLogPositionMeta, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mAppendingLogPositionMeta, sName, mContext->GetConfigName());
     }
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);

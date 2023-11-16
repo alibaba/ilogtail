@@ -18,6 +18,7 @@
 #include "config/Config.h"
 #include "config_manager/ConfigManager.h"
 #include "processor/ProcessorTagNative.h"
+#include "pipeline/Pipeline.h"
 
 namespace logtail {
 
@@ -25,12 +26,7 @@ class ProcessorTagNativeUnittest : public ::testing::Test {
 public:
     static void SetUpTestCase() {}
 
-    void SetUp() override {
-        mContext.SetConfigName("project##config_0");
-        mContext.SetLogstoreName("logstore");
-        mContext.SetProjectName("project");
-        mContext.SetRegion("cn-shanghai");
-    }
+    void SetUp() override { mContext.SetConfigName("project##config_0"); }
 
     void TestInit();
     void TestProcess();
@@ -42,21 +38,22 @@ UNIT_TEST_CASE(ProcessorTagNativeUnittest, TestInit);
 UNIT_TEST_CASE(ProcessorTagNativeUnittest, TestProcess);
 
 void ProcessorTagNativeUnittest::TestInit() {
-    Config config;
-    config.mPluginProcessFlag = true;
+    // make config
+    Json::Value config;
+    mContext.GetPipeline().mGoPipelineWithoutInput = Json::Value();
 
     {
         ProcessorTagNative processor;
         processor.SetContext(mContext);
         std::string pluginId = "testID";
-        ComponentConfig componentConfig(pluginId, config);
-        APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
         APSARA_TEST_EQUAL_FATAL(true, processor.mPluginProcessFlag);
     }
 }
 
 void ProcessorTagNativeUnittest::TestProcess() {
-    Config config;
+    // make config
+    Json::Value config;
     auto sourceBuffer = std::make_shared<logtail::SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
     std::string filePath = "/var/log/message";
@@ -72,30 +69,12 @@ void ProcessorTagNativeUnittest::TestProcess() {
     std::string hostname = "my-machine";
     eventGroup.SetMetadataNoCopy(EventGroupMetaKey::HOST_NAME, hostname);
 
-    { // test plugin branch
-        config.mPluginProcessFlag = true;
-        ProcessorTagNative processor;
-        processor.SetContext(mContext);
-        std::string pluginId = "testID";
-        ComponentConfig componentConfig(pluginId, config);
-        APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
-        processor.Process(eventGroup);
-        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_PATH));
-        APSARA_TEST_EQUAL_FATAL(eventGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH),
-                                eventGroup.GetTag(LOG_RESERVED_KEY_PATH));
-        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_USER_DEFINED_ID));
-        APSARA_TEST_EQUAL_FATAL(eventGroup.GetMetadata(EventGroupMetaKey::AGENT_TAG),
-                                eventGroup.GetTag(LOG_RESERVED_KEY_USER_DEFINED_ID));
-        APSARA_TEST_FALSE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_HOSTNAME));
-    }
 
     { // test native branch
-        config.mPluginProcessFlag = false;
         ProcessorTagNative processor;
         processor.SetContext(mContext);
         std::string pluginId = "testID";
-        ComponentConfig componentConfig(pluginId, config);
-        APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig));
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
         processor.Process(eventGroup);
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_PATH));
         APSARA_TEST_EQUAL_FATAL(eventGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH),
@@ -106,6 +85,22 @@ void ProcessorTagNativeUnittest::TestProcess() {
         APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_HOSTNAME));
         APSARA_TEST_EQUAL_FATAL(eventGroup.GetMetadata(EventGroupMetaKey::HOST_NAME),
                                 eventGroup.GetTag(LOG_RESERVED_KEY_HOSTNAME));
+    }
+
+    { // test plugin branch
+        mContext.GetPipeline().mGoPipelineWithoutInput = Json::Value();
+        ProcessorTagNative processor;
+        processor.SetContext(mContext);
+        std::string pluginId = "testID";
+        APSARA_TEST_TRUE_FATAL(processor.Init(config));
+        processor.Process(eventGroup);
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_PATH));
+        APSARA_TEST_EQUAL_FATAL(eventGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH),
+                                eventGroup.GetTag(LOG_RESERVED_KEY_PATH));
+        APSARA_TEST_TRUE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_USER_DEFINED_ID));
+        APSARA_TEST_EQUAL_FATAL(eventGroup.GetMetadata(EventGroupMetaKey::AGENT_TAG),
+                                eventGroup.GetTag(LOG_RESERVED_KEY_USER_DEFINED_ID));
+        APSARA_TEST_FALSE_FATAL(eventGroup.HasTag(LOG_RESERVED_KEY_HOSTNAME));
     }
 }
 

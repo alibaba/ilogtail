@@ -26,9 +26,6 @@ class ProcessorParseJsonNativeUnittest : public ::testing::Test {
 public:
     void SetUp() override {
         mContext.SetConfigName("project##config_0");
-        mContext.SetLogstoreName("logstore");
-        mContext.SetProjectName("project");
-        mContext.SetRegion("cn-shanghai");
     }
 
     void TestInit();

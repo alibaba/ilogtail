@@ -22,20 +22,19 @@
 #include "reader/LogFileReader.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
-#include "config_manager/ConfigManager.h"
+#include "pipeline/Pipeline.h"
 
 namespace logtail {
 const std::string ProcessorTagNative::sName = "processor_tag_native";
 
 bool ProcessorTagNative::Init(const Json::Value& config) {
-
     return true;
 }
 
 void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
     // add file tags (like env tags but support reload)
     if (!STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
-        std::vector<sls_logs::LogTag>& fileTags = ConfigManager::GetInstance()->GetFileTags();
+        std::vector<sls_logs::LogTag>& fileTags = AppConfig::GetInstance()->GetFileTags();
         if (!fileTags.empty()) { // reloadable, so we must get it every time and copy value
             for (size_t i = 0; i < fileTags.size(); ++i) {
                 logGroup.SetTag(fileTags[i].key(), fileTags[i].value());
@@ -55,7 +54,7 @@ void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
         logGroup.SetTagNoCopy(LOG_RESERVED_KEY_USER_DEFINED_ID, agent_tag.substr(0, 99));
     }
 
-    if (mPluginProcessFlag) {
+    if (mContext->GetPipeline().IsFlushingThroughGoPipeline()) {
         return;
     }
 
