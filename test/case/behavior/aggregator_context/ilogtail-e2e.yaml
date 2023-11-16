@@ -21,10 +21,11 @@ ilogtail:
         - global:
             DefaultLogQueueSize: 10
           inputs:
-            - Type: file_log
-              LogPath: /root/test/
-              FilePattern: example.log
-              ContainerInfo:
+            - Type: input_file
+              FilePaths: 
+                - /root/test/example.log
+              EnableContainerDiscovery: true
+              ContainerFilters:
                 IncludeEnv:
                   STDOUT_SWITCH: "true"
           processors:

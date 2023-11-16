@@ -22,8 +22,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
 )
@@ -49,7 +47,8 @@ func (l *LogtailController) Init(parent *CancelChain, fullCfg *config.Case) erro
 				return err
 			}
 			for idx, detail := range cfg.Detail {
-				name := cfg.Name + "_" + strconv.Itoa(idx) + ".yaml"
+				name := cfg.Name + "_" + strconv.Itoa(idx) + ".json"
+				// name := cfg.Name + "_" + strconv.Itoa(idx) + ".yaml"
 				if _, ok := detail["inputs"]; !ok {
 					return fmt.Errorf("lack of input plugin in the %d config detail under name %s", idx, cfg.Name)
 				}
@@ -68,7 +67,8 @@ func (l *LogtailController) Init(parent *CancelChain, fullCfg *config.Case) erro
 					detail["flushers"] = flushers
 				}
 				detail["enable"] = true
-				bytes, _ := yaml.Marshal(detail)
+				bytes, _ := json.Marshal(detail)
+				// bytes, _ := yaml.Marshal(detail)
 				if err := os.WriteFile(filepath.Join(config.ConfigYamlFileDir, name), bytes, 0600); err != nil {
 					return err
 				}

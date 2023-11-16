@@ -62,7 +62,7 @@ services:
     volumes:
       - %s:/ilogtail/default_flusher.json
       - %s:/ilogtail/user_config.d
-      - %s:/ilogtail/user_yaml_config.d
+      - %s:/ilogtail/config/local
       - /:/logtail_host
       - /var/run/docker.sock:/var/run/docker.sock
       - /sys/:/sys/
