@@ -418,7 +418,35 @@ func (p *pluginv2Runner) Stop(exit bool) error {
 	return nil
 }
 
-// TODO: Design the ReceiveRawLogV2, which is passed in a PipelineGroupEvents not pipeline.LogWithContext, and tags should be added in the PipelineGroupEvents.
+func (p *pluginv2Runner) ReceiveLogGroup(in pipeline.LogGroupWithContext) {
+	topic := in.LogGroup.GetTopic()
+
+	meta := models.NewMetadata()
+	if in.Context != nil {
+		for k, v := range in.Context {
+			meta.Add(k, v)
+		}
+	}
+	meta.Add(ctxKeyTopic, topic)
+
+	tags := models.NewTags()
+	for _, tag := range in.LogGroup.GetLogTags() {
+		tags.Add(tag.GetKey(), tag.GetValue())
+	}
+	if len(topic) > 0 {
+		tags.Add(tagKeyLogTopic, topic)
+	}
+
+	group := models.NewGroup(meta, tags)
+
+	events := make([]models.PipelineEvent, 0, len(in.LogGroup.GetLogs()))
+	for _, log := range in.LogGroup.GetLogs() {
+		events = append(events, p.convertToPipelineEvent(log))
+	}
+
+	p.InputPipeContext.Collector().Collect(group, events...)
+}
+
 func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 	md := models.NewMetadata()
 	tags := models.NewTags()
@@ -436,9 +464,21 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 			}
 		}
 	}
+	log := p.convertToPipelineEvent(in.Log)
+	group := models.NewGroup(md, tags)
+	p.InputPipeContext.Collector().Collect(group, log)
+}
+
+func (p *pluginv2Runner) Merge(r PluginRunner) {
+	if other, ok := r.(*pluginv2Runner); ok {
+		p.FlushOutStore.Merge(other.FlushOutStore)
+	}
+}
+
+func (p *pluginv2Runner) convertToPipelineEvent(in *protocol.Log) models.PipelineEvent {
 	log := &models.Log{}
 	log.Tags = models.NewTags()
-	for i, content := range in.Log.Contents {
+	for i, content := range in.Contents {
 		switch {
 		case content.Key == contentKey || i == 0:
 			log.SetBody(util.ZeroCopyStringToBytes(content.Value))
@@ -452,20 +492,13 @@ func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 			log.Tags.Add(content.Key, content.Value)
 		}
 	}
-	if in.Log.Time != 0 {
-		log.Timestamp = uint64(time.Second * time.Duration(in.Log.Time))
-		if in.Log.TimeNs != nil {
-			log.Timestamp += uint64(*in.Log.TimeNs)
+	if in.Time != 0 {
+		log.Timestamp = uint64(time.Second * time.Duration(in.Time))
+		if in.TimeNs != nil {
+			log.Timestamp += uint64(*in.TimeNs)
 		}
 	} else {
 		log.Timestamp = uint64(time.Now().UnixNano())
 	}
-	group := models.NewGroup(md, tags)
-	p.InputPipeContext.Collector().Collect(group, log)
-}
-
-func (p *pluginv2Runner) Merge(r PluginRunner) {
-	if other, ok := r.(*pluginv2Runner); ok {
-		p.FlushOutStore.Merge(other.FlushOutStore)
-	}
+	return log
 }
