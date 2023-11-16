@@ -424,7 +424,12 @@ func (p *pluginv2Runner) ReceiveLogGroup(in pipeline.LogGroupWithContext) {
 	meta := models.NewMetadata()
 	if in.Context != nil {
 		for k, v := range in.Context {
-			meta.Add(k, v)
+			value, ok := v.(string)
+			if !ok {
+				logger.Warningf(p.LogstoreConfig.Context.GetRuntimeContext(), "RECEIVE_LOG_GROUP_ALARM", "unknown values found in context, type is %T", v)
+				continue
+			}
+			meta.Add(k, value)
 		}
 	}
 	meta.Add(ctxKeyTopic, topic)
