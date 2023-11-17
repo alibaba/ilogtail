@@ -246,6 +246,8 @@ public:
     K8sContainerMeta GetContainerMeta(const std::string& containerID);
 
 private:
+    static bool GetRealConfigName(std::string& name);
+
     void* mPluginBasePtr;
     void* mPluginAdapterPtr;
 

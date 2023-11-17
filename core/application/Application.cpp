@@ -68,7 +68,7 @@ void Application::Start() {
 
     LogtailMonitor::Instance()->InitMonitor();
 
-    ConfigWatcher::GetInstance()->AddSource("local");
+    ConfigWatcher::GetInstance()->AddSource(AppConfig::GetInstance()->GetLogtailSysConfDir() + "/config/local");
 #ifdef __ENTERPRISE__
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
@@ -127,7 +127,7 @@ void Application::Start() {
             CheckCriticalCondition(curTime);
             lastUpdateMetricTime = curTime;
         }
-        if (mSigTermSignalFlag) {
+        if (mSigTermSignalFlag.load()) {
             LOG_INFO(sLogger, ("received SIGTERM signal", "exit process"));
             Exit();
         }
@@ -136,7 +136,7 @@ void Application::Start() {
 #endif
         // 过渡使用
         EventDispatcher::GetInstance()->DumpCheckPointPeriod(curTime);
-        
+
         if (ConfigManager::GetInstance()->IsUpdateContainerPaths()) {
             FileServer::GetInstance()->Pause();
             FileServer::GetInstance()->Resume();

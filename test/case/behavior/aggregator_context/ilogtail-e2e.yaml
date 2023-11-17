@@ -16,7 +16,7 @@ boot:
   category: docker-compose
 ilogtail:
   config:
-    - name: aggregator-default-case
+    - name: aggregator-context-case
       detail:
         - global:
             DefaultLogQueueSize: 10

@@ -134,8 +134,26 @@ PluginRegistry::PluginRegistry() {
                   "aggregator_metadata_group",
                   "aggregator_opentelemetry",
                   "aggregator_shardhash",
-                  "aggregator_skywalking"};
-#ifdef __MSC_VC_
+                  "aggregator_skywalking",
+                  "flusher_checker",
+                  "flusher_clickhouse",
+                  "flusher_elasticsearch",
+                  "flusher_grpc",
+                  "flusher_http",
+                  "flusher_kafka",
+                  "flusher_kafka_v2",
+                  "flusher_loki",
+                  "flusher_otlp",
+                  "flusher_pulsar",
+                  "flusher_sleep",
+                  "flusher_sls",
+                  "flusher_statistics",
+                  "flusher_stdout",
+                  "ext_basicauth",
+                  "ext_default_decoder",
+                  "ext_groupinfo_filter",
+                  "ext_request_breaker"};
+#ifdef _MSC_VER
     mGoPlugins.insert("service_wineventlog");
 #else
     mGoPlugins.insert("input_command");

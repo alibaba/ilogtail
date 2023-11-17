@@ -310,7 +310,7 @@ bool Pipeline::LoadGoPipelines() const {
     // 目前按照从后往前顺序加载，即便without成功with失败导致without残留在插件系统中，也不会有太大的问题，但最好改成原子的。
     if (!mGoPipelineWithoutInput.isNull()) {
         if (!LogtailPlugin::GetInstance()->LoadPipeline(mName + "/2",
-                                                        mGoPipelineWithInput.toStyledString(),
+                                                        mGoPipelineWithoutInput.toStyledString(),
                                                         mContext.GetProjectName(),
                                                         mContext.GetLogstoreName(),
                                                         mContext.GetRegion(),

@@ -132,13 +132,14 @@ void LogtailPlugin::ProcessRawLog(const std::string& configName,
         return;
     }
     if (mPluginValid && mProcessRawLogFun != NULL) {
+        std::string realConfigName = configName + "/2";
         GoString goConfigName;
         GoSlice goRawLog;
         GoString goPackId;
         GoString goTopic;
 
-        goConfigName.n = configName.size();
-        goConfigName.p = configName.c_str();
+        goConfigName.n = realConfigName.size();
+        goConfigName.p = realConfigName.c_str();
         goRawLog.len = rawLog.size();
         goRawLog.cap = rawLog.size();
         goRawLog.data = (void*)rawLog.data();
@@ -165,6 +166,7 @@ void LogtailPlugin::ProcessRawLogV2(const std::string& configName,
     if (rawLog.empty() || !(mPluginValid && mProcessRawLogV2Fun != NULL)) {
         return;
     }
+    std::string realConfigName = configName + "/2";
 
     GoString goConfigName;
     GoSlice goRawLog;
@@ -172,8 +174,8 @@ void LogtailPlugin::ProcessRawLogV2(const std::string& configName,
     GoString goTopic;
     GoSlice goTags;
 
-    goConfigName.n = configName.size();
-    goConfigName.p = configName.c_str();
+    goConfigName.n = realConfigName.size();
+    goConfigName.p = realConfigName.c_str();
     goRawLog.data = (void*)rawLog.data();
     goRawLog.len = rawLog.size();
     goRawLog.cap = rawLog.size();
@@ -248,13 +250,9 @@ int LogtailPlugin::SendPbV2(const char* configName,
             return 0;
         }
     } else {
-        // all Go pipeline name should end with "/1" or "/2"
-        size_t len = configNameStr.size();
-        if (len <= 2) {
-            LOG_ERROR(sLogger, ("invalid Go pipeline name","something wrong happend")("config", configNameStr));
+        if (!GetRealConfigName(configNameStr)) {
             return -2;
         }
-        configNameStr = configNameStr.substr(0, len - 2);
         shared_ptr<Pipeline> p = PipelineManager::GetInstance()->FindPipelineByName(configNameStr);
         if (!p) {
             LOG_INFO(sLogger,
@@ -278,6 +276,9 @@ int LogtailPlugin::ExecPluginCmd(
         return -2;
     }
     string configNameStr(configName, configNameSize);
+    if (!GetRealConfigName(configNameStr)) {
+        return -2;
+    }
     string paramsStr(params, paramsLen);
     PluginCmdType cmdType = (PluginCmdType)cmdId;
     LOG_DEBUG(sLogger, ("exec cmd", cmdType)("config", configNameStr)("detail", paramsStr));
@@ -460,13 +461,14 @@ void LogtailPlugin::ProcessLog(const std::string& configName,
     if (!log.has_time() || !(mPluginValid && mProcessLogsFun != NULL)) {
         return;
     }
+    std::string realConfigName = configName + "/2";
     GoString goConfigName;
     GoSlice goLog;
     GoString goPackId;
     GoString goTopic;
     GoSlice goTags;
-    goConfigName.n = configName.size();
-    goConfigName.p = configName.c_str();
+    goConfigName.n = realConfigName.size();
+    goConfigName.p = realConfigName.c_str();
     goPackId.n = packId.size();
     goPackId.p = packId.c_str();
     goTopic.n = topic.size();
@@ -488,11 +490,12 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
     if (!logGroup.logs_size() || !(mPluginValid && mProcessLogsFun != NULL)) {
         return;
     }
+    std::string realConfigName = configName + "/2";
     GoString goConfigName;
     GoSlice goLog;
     GoString goPackId;
-    goConfigName.n = configName.size();
-    goConfigName.p = configName.c_str();
+    goConfigName.n = realConfigName.size();
+    goConfigName.p = realConfigName.c_str();
     goPackId.n = packId.size();
     goPackId.p = packId.c_str();
     std::string sLog = logGroup.SerializeAsString();
@@ -567,4 +570,15 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
         }
     }
     return K8sContainerMeta();
+}
+
+bool LogtailPlugin::GetRealConfigName(std::string& name) {
+    // all Go pipeline name should end with "/1" or "/2"
+    size_t len = name.size();
+    if (len <= 2) {
+        LOG_ERROR(sLogger, ("invalid Go pipeline name", "something wrong happend")("config", name));
+        return false;
+    }
+    name = name.substr(0, len - 2);
+    return true;
 }
