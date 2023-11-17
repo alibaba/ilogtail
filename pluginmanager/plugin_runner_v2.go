@@ -452,6 +452,7 @@ func (p *pluginv2Runner) ReceiveLogGroup(in pipeline.LogGroupWithContext) {
 	p.InputPipeContext.Collector().Collect(group, events...)
 }
 
+// TODO: Design the ReceiveRawLogV2, which is passed in a PipelineGroupEvents not pipeline.LogWithContext, and tags should be added in the PipelineGroupEvents.
 func (p *pluginv2Runner) ReceiveRawLog(in *pipeline.LogWithContext) {
 	md := models.NewMetadata()
 	tags := models.NewTags()
