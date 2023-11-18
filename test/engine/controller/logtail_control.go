@@ -67,7 +67,7 @@ func (l *LogtailController) Init(parent *CancelChain, fullCfg *config.Case) erro
 					detail["flushers"] = flushers
 				}
 				detail["enable"] = true
-				bytes, _ := json.Marshal(detail)
+				bytes, _ := json.Marshal(convertOuter(detail))
 				// bytes, _ := yaml.Marshal(detail)
 				if err := os.WriteFile(filepath.Join(config.ConfigYamlFileDir, name), bytes, 0600); err != nil {
 					return err
@@ -123,4 +123,52 @@ func (l *LogtailController) Clean() {
 
 func (l *LogtailController) CancelChain() *CancelChain {
 	return l.chain
+}
+
+func convertOuter(m map[string]interface{}) map[string]interface{} {
+	res := map[string]interface{}{}
+	for k, v := range m {
+		switch v2 := v.(type) {
+		case map[interface{}]interface{}:
+			res[fmt.Sprint(k)] = convert(v2)
+		case []interface{}:
+			tmp := make([]interface{}, 0, 3)
+			for _, x := range v2 {
+				switch x.(type) {
+				case map[interface{}]interface{}:
+					tmp = append(tmp, convert(x.(map[interface{}]interface{})))
+				default:
+					tmp = append(tmp, x)
+				}
+			}
+			res[fmt.Sprint(k)] = tmp
+		default:
+			res[fmt.Sprint(k)] = v
+		}
+	}
+	return res
+}
+
+func convert(m map[interface{}]interface{}) map[string]interface{} {
+	res := map[string]interface{}{}
+	for k, v := range m {
+		switch v2 := v.(type) {
+		case map[interface{}]interface{}:
+			res[fmt.Sprint(k)] = convert(v2)
+		case []interface{}:
+			tmp := make([]interface{}, 0, 3)
+			for _, x := range v2 {
+				switch x.(type) {
+				case map[interface{}]interface{}:
+					tmp = append(tmp, convert(x.(map[interface{}]interface{})))
+				default:
+					tmp = append(tmp, x)
+				}
+			}
+			res[fmt.Sprint(k)] = tmp
+		default:
+			res[fmt.Sprint(k)] = v
+		}
+	}
+	return res
 }

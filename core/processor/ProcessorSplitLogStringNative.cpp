@@ -25,6 +25,10 @@ namespace logtail {
 const std::string ProcessorSplitLogStringNative::sName = "processor_split_string_native";
 
 bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    mSplitKey = DEFAULT_CONTENT_KEY;
+    mFeedLines = &(GetContext().GetProcessProfile().feedLines);
+    mSplitLines = &(GetContext().GetProcessProfile().splitLines);
     return true;
 }
 
@@ -71,7 +75,9 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
     for (auto& content : logIndex) {
         std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-        targetEvent->SetTimestamp(sourceEvent.GetTimestamp(), sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
+        targetEvent->SetTimestamp(
+            sourceEvent.GetTimestamp(),
+            sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
         targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
         if (mEnableLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
