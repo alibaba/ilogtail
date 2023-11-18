@@ -24,11 +24,16 @@
 #include "common/TimeUtil.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "monitor/MetricConstants.h"
+#include "common/ParamExtractor.h"
 
 namespace logtail {
 const std::string ProcessorParseRegexNative::sName = "processor_parse_regex_native";
 
 bool ProcessorParseRegexNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    if (!GetMandatoryStringParam(config, "Regex", mSourceKey, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    }
     return true;
 }
 
