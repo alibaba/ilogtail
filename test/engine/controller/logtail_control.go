@@ -129,14 +129,12 @@ func convertOuter(m map[string]interface{}) map[string]interface{} {
 	res := map[string]interface{}{}
 	for k, v := range m {
 		switch v2 := v.(type) {
-		case map[interface{}]interface{}:
-			res[fmt.Sprint(k)] = convert(v2)
 		case []interface{}:
 			tmp := make([]interface{}, 0, 3)
 			for _, x := range v2 {
-				switch x.(type) {
+				switch y := x.(type) {
 				case map[interface{}]interface{}:
-					tmp = append(tmp, convert(x.(map[interface{}]interface{})))
+					tmp = append(tmp, convert(y))
 				default:
 					tmp = append(tmp, x)
 				}
@@ -158,9 +156,9 @@ func convert(m map[interface{}]interface{}) map[string]interface{} {
 		case []interface{}:
 			tmp := make([]interface{}, 0, 3)
 			for _, x := range v2 {
-				switch x.(type) {
+				switch y := x.(type) {
 				case map[interface{}]interface{}:
-					tmp = append(tmp, convert(x.(map[interface{}]interface{})))
+					tmp = append(tmp, convert(y))
 				default:
 					tmp = append(tmp, x)
 				}
