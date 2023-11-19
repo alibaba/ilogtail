@@ -130,6 +130,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_FALSE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_FALSE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_FALSE(config->HasGoPlugin());
 
     // topology 2: extended -> native -> native
@@ -211,6 +212,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 5: extended -> extended -> native
@@ -241,6 +243,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_FALSE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 6: (native, extended) -> extended -> native
@@ -306,6 +309,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 8: extended -> (native -> extended) -> native
@@ -398,6 +402,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_FALSE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_FALSE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_FALSE(config->HasGoPlugin());
 
     // topology 11: extended -> none -> native (future changes maybe applied)
@@ -423,6 +428,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_FALSE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 12: (native, extended) -> none -> native
@@ -480,6 +486,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_FALSE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 14: extended -> native -> extended
@@ -571,6 +578,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 17: extended -> extended -> extended
@@ -601,6 +609,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_FALSE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 18: (native, extended) -> extended -> extended
@@ -666,6 +675,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 20: extended -> (native -> extended) -> extended
@@ -758,6 +768,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_FALSE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 23: extended -> none -> extended
@@ -783,6 +794,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(1, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_FALSE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 24: (native, extended) -> none -> extended
@@ -843,6 +855,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(2, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 26: extended -> native -> (native, extended)
@@ -943,6 +956,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(2, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 29: extended -> extended -> (native, extended)
@@ -976,6 +990,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(2, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_FALSE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 30: (native, extended) -> extended -> (native, extended)
@@ -1047,6 +1062,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(2, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 32: extended -> (native -> extended) -> (native, extended)
@@ -1148,6 +1164,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(2, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_TRUE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 35: extended -> none -> (native, extended) (future changes maybe applied)
@@ -1176,6 +1193,7 @@ void ConfigUnittest::HandleValidConfig() const {
     APSARA_TEST_EQUAL(2, config->mFlushers.size());
     APSARA_TEST_TRUE(config->ShouldNativeFlusherConnectedByGoPipeline());
     APSARA_TEST_TRUE(config->IsFlushingThroughGoPipelineExisted());
+    APSARA_TEST_FALSE(config->IsProcessRunnerInvolved());
     APSARA_TEST_TRUE(config->HasGoPlugin());
 
     // topology 36: (native, extended) -> none -> (native, extended)

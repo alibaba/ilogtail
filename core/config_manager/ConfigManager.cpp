@@ -103,8 +103,6 @@ DECLARE_FLAG_BOOL(default_global_fuse_mode);
 DECLARE_FLAG_BOOL(default_global_mark_offset_flag);
 DECLARE_FLAG_BOOL(enable_collection_mark);
 DECLARE_FLAG_BOOL(enable_env_ref_in_config);
-
-DEFINE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS, "default env file key to load tags", "");
 DECLARE_FLAG_BOOL(sls_client_send_compress);
 DECLARE_FLAG_INT32(default_tail_limit_kb);
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);

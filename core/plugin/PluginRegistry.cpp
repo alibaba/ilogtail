@@ -146,7 +146,6 @@ PluginRegistry::PluginRegistry() {
                   "flusher_otlp",
                   "flusher_pulsar",
                   "flusher_sleep",
-                  "flusher_sls",
                   "flusher_statistics",
                   "flusher_stdout",
                   "ext_basicauth",

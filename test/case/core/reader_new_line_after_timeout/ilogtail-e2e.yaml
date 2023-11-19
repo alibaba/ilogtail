@@ -24,7 +24,7 @@ ilogtail:
               LogPath: /root/test
               FilePattern: a.log
               ReaderFlushTimeout: 1
-          outputs:
+          flushers:
             - Type: flusher_stdout
               OnlyStdout: false
               FileName: ./ilogtail.log

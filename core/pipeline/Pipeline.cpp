@@ -28,6 +28,7 @@
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
+#include "processor/ProcessorTagNative.h"
 
 // for special treatment
 #include "input/InputFile.h"
@@ -81,6 +82,17 @@ bool Pipeline::Init(NewConfig&& config) {
         ++mPluginCntMap["inputs"][name];
     }
 
+    if (config.IsProcessRunnerInvolved()) {
+        Json::Value detail;
+        unique_ptr<ProcessorInstance> processor = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorTagNative::sName, to_string(++pluginIndex));
+        if (!processor->Init(detail, mContext)) {
+            // should not happen
+            return false;
+        }
+        mProcessorLine.emplace_back(std::move(processor));
+    }
+
     // add log split processor for input_file
     if (inputFile) {
         unique_ptr<ProcessorInstance> processor;
@@ -104,6 +116,7 @@ bool Pipeline::Init(NewConfig&& config) {
             detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         }
         if (!processor->Init(detail, mContext)) {
+            // should not happen
             return false;
         }
         mProcessorLine.emplace_back(std::move(processor));

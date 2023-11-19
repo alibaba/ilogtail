@@ -16,12 +16,14 @@
 
 #include "processor/ProcessorTagNative.h"
 
+#include <vector>
+
 #include "app_config/AppConfig.h"
-#include "common/Constants.h"
-#include "common/FileSystemUtil.h"
-#include "reader/LogFileReader.h"
-#include "plugin/instance/ProcessorInstance.h"
-#include "monitor/MetricConstants.h"
+#include "common/Flags.h"
+#include "log_pb/sls_logs.pb.h"
+#include "pipeline/Pipeline.h"
+
+DECLARE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS);
 
 namespace logtail {
 const std::string ProcessorTagNative::sName = "processor_tag_native";
@@ -53,18 +55,12 @@ void ProcessorTagNative::Process(PipelineEventGroup& logGroup) {
         logGroup.SetTagNoCopy(LOG_RESERVED_KEY_USER_DEFINED_ID, agent_tag.substr(0, 99));
     }
 
-    if (mPluginProcessFlag) {
+    if (mContext->GetPipeline().IsFlushingThroughGoPipeline()) {
         return;
     }
 
     // __hostname__
     logGroup.SetTagNoCopy(LOG_RESERVED_KEY_HOSTNAME, logGroup.GetMetadata(EventGroupMetaKey::HOST_NAME).substr(0, 99));
-
-    // zone info for ant
-    const std::string& alipayZone = AppConfig::GetInstance()->GetAlipayZone();
-    if (!alipayZone.empty()) {
-        logGroup.SetTagNoCopy(LOG_RESERVED_KEY_ALIPAY_ZONE, alipayZone);
-    }
 
     // add env tags
     static const std::vector<sls_logs::LogTag>& sEnvTags = AppConfig::GetInstance()->GetEnvTags();

@@ -145,6 +145,7 @@ DECLARE_FLAG_INT32(polling_file_first_watch_timeout);
 DECLARE_FLAG_INT32(modify_check_interval);
 DECLARE_FLAG_INT32(ignore_file_modify_timeout);
 DEFINE_FLAG_STRING(host_path_blacklist, "host path matches substring in blacklist will be ignored", "");
+DEFINE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS, "default env file key to load tags", "");
 
 
 namespace logtail {

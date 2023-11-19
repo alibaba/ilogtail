@@ -221,6 +221,8 @@ bool NewConfig::Parse() {
                     } else if (pluginName == "processor_spl" && (i != 0 || itr->size() != 1)) {
                         PARAM_ERROR_RETURN(
                             sLogger, "native processor plugins coexist with spl processor", noModule, mName);
+                    } else {
+                        mHasNativeProcessor = true;
                     }
                 } else {
                     if (PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {

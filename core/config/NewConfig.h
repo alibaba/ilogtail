@@ -37,6 +37,7 @@ struct NewConfig {
     std::vector<const Json::Value*> mExtensions;
     bool mHasNativeInput = false;
     bool mHasGoInput = false;
+    bool mHasNativeProcessor = false;
     bool mHasGoProcessor = false;
     bool mHasNativeFlusher = false;
     bool mHasGoFlusher = false;
@@ -47,13 +48,19 @@ struct NewConfig {
     bool Parse();
 
     bool ShouldNativeFlusherConnectedByGoPipeline() const {
-        // 过渡使用，待c++支持分叉后删除
+        // 过渡使用，待c++支持分叉后恢复下面的正式版
         return mHasGoProcessor || (mHasGoInput && !mHasNativeInput && mProcessors.empty()) || (mHasGoFlusher && mHasNativeFlusher);
         // return mHasGoProcessor || (mHasGoInput && !mHasNativeInput && mProcessors.empty());
     }
 
     bool IsFlushingThroughGoPipelineExisted() const {
         return mHasGoFlusher || ShouldNativeFlusherConnectedByGoPipeline();
+    }
+
+    bool IsProcessRunnerInvolved() const {
+        // 长期过渡使用，待C++部分的时序聚合能力与Go持平后恢复下面的正式版
+        return !(mHasGoInput && !mHasNativeProcessor);
+        // return !(mHasGoInput && !mHasNativeProcessor && (mHasGoProcessor || (mHasGoFlusher && !mHasNativeFlusher)));
     }
     
     bool HasGoPlugin() const { return mHasGoFlusher || mHasGoProcessor || mHasGoInput; }
