@@ -764,9 +764,119 @@ void LogFileReader::SetFilePosBackwardToFixedPos(LogFileOperator& op) {
         if (mLastFilePos % 2 > 0) {
             mLastFilePos--;
         }
+        mLastReadPos = mLastFilePos;
+        FixUtf16LastFilePos(op, endOffset);
+    } else {
+        mLastReadPos = mLastFilePos;
+        FixLastFilePos(op, endOffset);
     }
-    mLastReadPos = mLastFilePos;
-    FixLastFilePos(op, endOffset);
+}
+
+void LogFileReader::FixUtf16LastFilePos(LogFileOperator& op, int64_t endOffset) {
+    if (mLastFilePos == 0 || op.IsOpen() == false) {
+        return;
+    }
+    // read utf16 bom
+    if (!mHasReadUtf16Bom || mLastFilePos == 0) {
+        // 判断utf16的字节序
+        char16_t utf16BOMBuffer[1] = {0};
+        size_t readBOMByte = 2;
+        int64_t filePos = 0;
+        TruncateInfo* truncateInfo = NULL;
+        ReadFile(mLogFileOp, utf16BOMBuffer, readBOMByte, filePos, &truncateInfo);
+        if (utf16BOMBuffer[0] == 0xfeff) {
+            mIsLittleEndian = true;
+            mEnterChar16 = 0x000a;
+            if (mLastFilePos == 0) {
+                mLastFilePos += 2;
+            }
+        } else if (utf16BOMBuffer[0] == 0xfffe) {
+            mIsLittleEndian = false;
+            mEnterChar16 = 0x0a00;
+            if (mLastFilePos == 0) {
+                mLastFilePos += 2;
+            }
+        } else {
+            mIsLittleEndian = true;
+        }
+        mHasReadUtf16Bom = true;
+    }
+    
+    int32_t readSize = endOffset - mLastFilePos < INT32_FLAG(max_fix_pos_bytes) ? endOffset - mLastFilePos
+                                                                                : INT32_FLAG(max_fix_pos_bytes);
+    if (readSize % 2 != 0) {
+        readSize--;
+    }
+    // read utf16
+    char16_t* utf16Buffer = new char16_t[readSize / 2 + 1];
+    size_t readCharCount = ReadFile(op, utf16Buffer, readSize, mLastFilePos);
+    if (readCharCount == (size_t)0) {
+        delete[] utf16Buffer;
+        return;
+    }
+
+    if (mLogBeginRegPtr == NULL) {
+        for (size_t i = 0; i < readCharCount - 2; i += 2) {
+            // skip content before first '\n'
+            if (utf16Buffer[i / 2] == mEnterChar16) {
+                mLastFilePos += i + 2;
+                mLastReadPos = mLastFilePos;
+                delete[] utf16Buffer;
+                return;
+            }
+        }
+    }
+
+    if (mLogBeginRegPtr != NULL) {
+        size_t srcLength = readCharCount / 2;
+        size_t desLength = 0;
+        char* bufferptr = NULL;
+        char16_t* originUtf16Buffer = utf16Buffer;
+        // find '\n' position
+        vector<size_t> lineFeedPos;
+        for (size_t idx = 0; idx < srcLength - 1; ++idx) {
+            if (utf16Buffer[idx] == mEnterChar16) {
+                lineFeedPos.push_back(idx);
+            }
+        }
+        lineFeedPos.push_back(srcLength - 1);
+        // convert utf16 to utf8
+        EncodingConverter::GetInstance()->ConvertUtf16ToUtf8(
+            utf16Buffer, &srcLength, bufferptr, &desLength, lineFeedPos, mIsLittleEndian);
+        size_t resultCharCount = desLength;
+        LOG_DEBUG(sLogger,
+                  ("utf16Buffer", utf16Buffer)("srcLength", srcLength)("bufferptr", bufferptr)("desLength", desLength));
+        if (resultCharCount == 0) {
+            delete[] originUtf16Buffer;
+            delete[] bufferptr;
+            return;
+        }
+
+        string exception;
+        int32_t skipLineFeedCount = 0;
+        for (size_t i = 0; i < resultCharCount; ++i) {
+            if (bufferptr[i] == '\n') {
+                if (BoostRegexMatch(bufferptr + i + 1, *mLogBeginRegPtr, exception)) {
+                    mLastFilePos += (lineFeedPos[skipLineFeedCount] + 1) * 2;
+                    mLastReadPos = mLastFilePos;
+                    delete[] originUtf16Buffer;
+                    delete[] bufferptr;
+                    return;
+                }
+                skipLineFeedCount++;
+            }
+        }
+        delete[] bufferptr;
+    }
+    delete[] bufferptr;
+    LOG_WARNING(sLogger,
+                ("no begin line found", "most likely to have parse error when reading begins")(
+                    "project", mProjectName)("logstore", mCategory)("config", mConfigName)(
+                    "log reader queue name", mLogPath)("file device", ToString(mDevInode.dev))(
+                    "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                    "search start position", mLastFilePos)("search end position", mLastFilePos + readCharCount));
+
+    return;
 }
 
 void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
@@ -1302,12 +1412,24 @@ bool LogFileReader::CheckFileSignatureAndOffset(int64_t& fileSize) {
                                                mRegion);
 
         mLastFilePos = endSize;
+        if (mFileEncoding == ENCODING_UTF16) {
+            if (mLastFilePos % 2 > 0) {
+                mLastFilePos--;
+            }
+        }
         // when we use truncate_pos_skip_bytes, if truncate stop and log start to append, logtail will drop less data or
         // collect more data this just work around for ant's demand
         if (INT32_FLAG(truncate_pos_skip_bytes) > 0 && mLastFilePos > (INT32_FLAG(truncate_pos_skip_bytes) + 1024)) {
             mLastFilePos -= INT32_FLAG(truncate_pos_skip_bytes);
             // after adjust mLastFilePos, we should fix last pos to assure that each log is complete
-            FixLastFilePos(mLogFileOp, endSize);
+            if (mFileEncoding == ENCODING_UTF16) {
+                if (mLastFilePos % 2 > 0) {
+                    mLastFilePos--;
+                }
+                FixUtf16LastFilePos(mLogFileOp, endSize);
+            } else {
+                FixLastFilePos(mLogFileOp, endSize);
+            }
         }
         return true;
     }
