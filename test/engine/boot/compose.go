@@ -61,7 +61,6 @@ services:
     pid: host
     volumes:
       - %s:/ilogtail/default_flusher.json
-      - %s:/ilogtail/user_config.d
       - %s:/ilogtail/config/local
       - /:/logtail_host
       - /var/run/docker.sock:/var/run/docker.sock
@@ -262,7 +261,7 @@ func (c *ComposeBooter) getLogtailpluginConfig() map[string]interface{} {
 	cfg := make(map[string]interface{})
 	f, _ := os.Create(config.CoverageFile)
 	_ = f.Close()
-	str := fmt.Sprintf(template, config.CoverageFile, config.FlusherFile, config.ConfigJSONFileDir, config.ConfigYamlFileDir)
+	str := fmt.Sprintf(template, config.CoverageFile, config.FlusherFile, config.ConfigDir)
 	if err := yaml.Unmarshal([]byte(str), &cfg); err != nil {
 		panic(err)
 	}

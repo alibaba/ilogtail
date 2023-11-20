@@ -20,10 +20,10 @@ ilogtail:
     - name: reader-log-rotate
       detail:
         - inputs:
-            - Type: file_log
-              LogPath: /root/test
-              FilePattern: simple.log
-              ReaderFlushTimeout: 10000
+            - Type: input_file
+              FilePaths: 
+                - /root/test/simple.log
+              FlushTimeoutSecs: 10000
           flushers:
             - Type: flusher_stdout
               OnlyStdout: false

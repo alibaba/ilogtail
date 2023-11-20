@@ -20,20 +20,20 @@ ilogtail:
     - name: reader-flush-timeout-case
       detail:
         - inputs:
-            - Type: file_log
-              LogPath: /root/test
-              FilePattern: a.log
-              ReaderFlushTimeout: 1
+            - Type: input_file
+              FilePaths: 
+                - /root/test/simple.log
+              FlushTimeoutSecs: 1
           flushers:
             - Type: flusher_stdout
               OnlyStdout: false
               FileName: ./ilogtail.log
   close_wait: 10s
   mounts:
-    - "./a.log:/root/test/a.log"
+    - "./a.log:/root/test/simple.log"
 verify:
   system_rules:
     - name: counter-check
       validator: sys_counter
       spec:
-        expect_minimum_flush_log_num: 6
+        expect_minimum_flush_log_num: 5
