@@ -329,6 +329,7 @@ protected:
 
     bool CheckForFirstOpen(FileReadPolicy policy = BACKWARD_TO_FIXED_POS);
     void FixLastFilePos(LogFileOperator& logFileOp, int64_t endOffset);
+    void FixUtf16LastFilePos(LogFileOperator& logFileOp, int64_t endOffset);
 
     static size_t BUFFER_SIZE;
     std::string mRegion;
