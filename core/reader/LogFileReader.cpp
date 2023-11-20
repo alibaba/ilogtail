@@ -837,6 +837,7 @@ void LogFileReader::FixUtf16LastFilePos(LogFileOperator& op, int64_t endOffset) 
         for (size_t idx = 0; idx < srcLength - 1; ++idx) {
             if (utf16Buffer[idx] == mEnterChar16) {
                 lineFeedPos.push_back(idx);
+                utf16Buffer[idx] = '\0';
             }
         }
         lineFeedPos.push_back(srcLength - 1);
@@ -855,7 +856,7 @@ void LogFileReader::FixUtf16LastFilePos(LogFileOperator& op, int64_t endOffset) 
         string exception;
         int32_t skipLineFeedCount = 0;
         for (size_t i = 0; i < resultCharCount; ++i) {
-            if (bufferptr[i] == '\n') {
+            if (bufferptr[i] == '\0') {
                 if (BoostRegexMatch(bufferptr + i + 1, *mLogBeginRegPtr, exception)) {
                     mLastFilePos += (lineFeedPos[skipLineFeedCount] + 1) * 2;
                     mLastReadPos = mLastFilePos;
