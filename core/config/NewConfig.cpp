@@ -14,9 +14,12 @@
 
 #include "config/NewConfig.h"
 
+#include <string>
+
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
 #include "common/ParamExtractor.h"
+#include "common/YamlUtil.h"
 #include "plugin/PluginRegistry.h"
 
 DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration", false);
@@ -367,6 +370,12 @@ bool ParseConfigDetail(const string& content, const string& extension, Json::Val
     if (extension == ".json") {
         return ParseConfig(content, detail, errorMsg);
     } else if (extension == ".yaml" || extension == ".yml") {
+        YAML::Node yamlRoot;
+        if (!ParseYamlConfig(content, yamlRoot, errorMsg)){
+            return false;
+        }
+        detail = CovertYamlToJson(yamlRoot);
+        return true;
     }
     return false;
 }
