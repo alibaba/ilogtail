@@ -56,7 +56,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -97,7 +97,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             }
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -135,7 +135,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             }
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -161,7 +161,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(STRING_FLAG(default_region_name), flusher->mRegion);
@@ -178,7 +178,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             "Endpoint": "  cn-hangzhou.log.aliyuncs.com   "
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -199,7 +199,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             "CompressType": "none"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -215,7 +215,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             "CompressType": "lz4"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -231,7 +231,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             "CompressType": "unknown"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -248,7 +248,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             "TelemetryType": "logs"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -264,7 +264,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             "TelemetryType": "unknown"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -283,7 +283,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             }
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -301,7 +301,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             }
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -330,8 +330,8 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
-    APSARA_TEST_TRUE(ParseConfig(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
@@ -351,7 +351,7 @@ void FlusherSLSUnittest::OnFailedInit() {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
@@ -364,7 +364,7 @@ void FlusherSLSUnittest::OnFailedInit() {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
@@ -377,7 +377,7 @@ void FlusherSLSUnittest::OnFailedInit() {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
@@ -390,7 +390,7 @@ void FlusherSLSUnittest::OnFailedInit() {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
@@ -403,7 +403,7 @@ void FlusherSLSUnittest::OnFailedInit() {
             "Logstore": "test_logstore"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
@@ -416,7 +416,7 @@ void FlusherSLSUnittest::OnFailedInit() {
             "Endpoint": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     flusher.reset(new FlusherSLS());
     flusher->SetContext(ctx);
     APSARA_TEST_FALSE(flusher->Init(configJson, optionalGoPipeline));
@@ -440,7 +440,7 @@ void FlusherSLSUnittest::OnPipelineUpdate() {
             "Endpoint": "cn-hangzhou.log.aliyuncs.com"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     APSARA_TEST_TRUE(flusher1.Init(configJson, optionalGoPipeline));
     flusher1.SetContext(ctx1);
 
@@ -454,7 +454,7 @@ void FlusherSLSUnittest::OnPipelineUpdate() {
             "Aliuid": "123456789"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     APSARA_TEST_TRUE(flusher2.Init(configJson, optionalGoPipeline));
     flusher2.SetContext(ctx2);
 

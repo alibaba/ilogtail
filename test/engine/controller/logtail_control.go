@@ -16,7 +16,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,6 +23,7 @@ import (
 
 	"github.com/alibaba/ilogtail/pkg/logger"
 	"github.com/alibaba/ilogtail/test/config"
+	"gopkg.in/yaml.v2"
 )
 
 type LogtailController struct {
@@ -45,8 +45,8 @@ func (l *LogtailController) Init(parent *CancelChain, fullCfg *config.Case) erro
 			return err
 		}
 		for idx, detail := range cfg.Detail {
-			name := cfg.Name + "_" + strconv.Itoa(idx) + ".json"
-			// name := cfg.Name + "_" + strconv.Itoa(idx) + ".yaml"
+			// name := cfg.Name + "_" + strconv.Itoa(idx) + ".json"
+			name := cfg.Name + "_" + strconv.Itoa(idx) + ".yaml"
 			if _, ok := detail["inputs"]; !ok {
 				return fmt.Errorf("lack of input plugin in the %d config detail under name %s", idx, cfg.Name)
 			}
@@ -58,8 +58,8 @@ func (l *LogtailController) Init(parent *CancelChain, fullCfg *config.Case) erro
 					},
 				}
 			}
-			bytes, _ := json.Marshal(convertOuter(detail))
-			// bytes, _ := yaml.Marshal(detail)
+			// bytes, _ := json.Marshal(convertOuter(detail))
+			bytes, _ := yaml.Marshal(detail)
 			if err := os.WriteFile(filepath.Join(config.ConfigDir, name), bytes, 0600); err != nil {
 				return err
 			}
@@ -87,50 +87,50 @@ func (l *LogtailController) CancelChain() *CancelChain {
 	return l.chain
 }
 
-func convertOuter(m map[string]interface{}) map[string]interface{} {
-	res := map[string]interface{}{}
-	for k, v := range m {
-		switch v2 := v.(type) {
-		case map[interface{}]interface{}:
-			res[fmt.Sprint(k)] = convert(v2)
-		case []interface{}:
-			tmp := make([]interface{}, 0, 3)
-			for _, x := range v2 {
-				switch y := x.(type) {
-				case map[interface{}]interface{}:
-					tmp = append(tmp, convert(y))
-				default:
-					tmp = append(tmp, x)
-				}
-			}
-			res[fmt.Sprint(k)] = tmp
-		default:
-			res[fmt.Sprint(k)] = v
-		}
-	}
-	return res
-}
+// func convertOuter(m map[string]interface{}) map[string]interface{} {
+// 	res := map[string]interface{}{}
+// 	for k, v := range m {
+// 		switch v2 := v.(type) {
+// 		case map[interface{}]interface{}:
+// 			res[fmt.Sprint(k)] = convert(v2)
+// 		case []interface{}:
+// 			tmp := make([]interface{}, 0, 3)
+// 			for _, x := range v2 {
+// 				switch y := x.(type) {
+// 				case map[interface{}]interface{}:
+// 					tmp = append(tmp, convert(y))
+// 				default:
+// 					tmp = append(tmp, x)
+// 				}
+// 			}
+// 			res[fmt.Sprint(k)] = tmp
+// 		default:
+// 			res[fmt.Sprint(k)] = v
+// 		}
+// 	}
+// 	return res
+// }
 
-func convert(m map[interface{}]interface{}) map[string]interface{} {
-	res := map[string]interface{}{}
-	for k, v := range m {
-		switch v2 := v.(type) {
-		case map[interface{}]interface{}:
-			res[fmt.Sprint(k)] = convert(v2)
-		case []interface{}:
-			tmp := make([]interface{}, 0, 3)
-			for _, x := range v2 {
-				switch y := x.(type) {
-				case map[interface{}]interface{}:
-					tmp = append(tmp, convert(y))
-				default:
-					tmp = append(tmp, x)
-				}
-			}
-			res[fmt.Sprint(k)] = tmp
-		default:
-			res[fmt.Sprint(k)] = v
-		}
-	}
-	return res
-}
+// func convert(m map[interface{}]interface{}) map[string]interface{} {
+// 	res := map[string]interface{}{}
+// 	for k, v := range m {
+// 		switch v2 := v.(type) {
+// 		case map[interface{}]interface{}:
+// 			res[fmt.Sprint(k)] = convert(v2)
+// 		case []interface{}:
+// 			tmp := make([]interface{}, 0, 3)
+// 			for _, x := range v2 {
+// 				switch y := x.(type) {
+// 				case map[interface{}]interface{}:
+// 					tmp = append(tmp, convert(y))
+// 				default:
+// 					tmp = append(tmp, x)
+// 				}
+// 			}
+// 			res[fmt.Sprint(k)] = tmp
+// 		default:
+// 			res[fmt.Sprint(k)] = v
+// 		}
+// 	}
+// 	return res
+// }

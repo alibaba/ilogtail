@@ -365,16 +365,15 @@ void NewConfig::ReplaceEnvVar() {
     ReplaceEnvVarRef(mDetail);
 }
 
-// TODO: @quzard
 bool ParseConfigDetail(const string& content, const string& extension, Json::Value& detail, string& errorMsg) {
     if (extension == ".json") {
-        return ParseConfig(content, detail, errorMsg);
+        return ParseJsonTable(content, detail, errorMsg);
     } else if (extension == ".yaml" || extension == ".yml") {
         YAML::Node yamlRoot;
-        if (!ParseYamlConfig(content, yamlRoot, errorMsg)){
+        if (!ParseYamlTable(content, yamlRoot, errorMsg)){
             return false;
         }
-        detail = CovertYamlToJson(yamlRoot);
+        detail = ConvertYamlToJson(yamlRoot);
         return true;
     }
     return false;

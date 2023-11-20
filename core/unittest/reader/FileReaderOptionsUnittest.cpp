@@ -74,7 +74,7 @@ void FileReaderOptionsUnittest::OnSuccessfulInit() const {
             "AppendingLogPositionMeta": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(FileReaderOptions::Encoding::UTF8, config->mFileEncoding);
@@ -101,7 +101,7 @@ void FileReaderOptionsUnittest::OnSuccessfulInit() const {
             "AppendingLogPositionMeta": "true"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(FileReaderOptions::Encoding::GBK, config->mFileEncoding);
@@ -121,7 +121,7 @@ void FileReaderOptionsUnittest::OnSuccessfulInit() const {
             "TailSizeKB": "200000000"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(FileReaderOptions::Encoding::GBK, config->mFileEncoding);
@@ -139,7 +139,7 @@ void FileReaderOptionsUnittest::OnFailedInit() const {
             "FileEncoding": "unknown"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginName));
 
@@ -148,7 +148,7 @@ void FileReaderOptionsUnittest::OnFailedInit() const {
             "FileEncoding": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new FileReaderOptions());
     APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginName));
 }

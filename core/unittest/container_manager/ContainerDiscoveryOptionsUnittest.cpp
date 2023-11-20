@@ -90,7 +90,7 @@ void ContainerDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "CollectingContainersMeta": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new ContainerDiscoveryOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL("default", config->mContainerFilters.mK8sNamespaceRegex);
@@ -125,7 +125,7 @@ void ContainerDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "CollectingContainersMeta": "true"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new ContainerDiscoveryOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL("", config->mContainerFilters.mK8sNamespaceRegex);

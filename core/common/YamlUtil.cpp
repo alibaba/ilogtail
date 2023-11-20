@@ -18,16 +18,18 @@
 
 #include "common/ExceptionBase.h"
 
+using namespace std;
+
 namespace logtail {
 
-bool ParseYamlConfig(const std::string& config, YAML::Node& yamlRoot, std::string& errorMsg) {
+bool ParseYamlTable(const string& config, YAML::Node& yamlRoot, string& errorMsg) {
     try {
         yamlRoot = YAML::Load(config);
     } catch (const YAML::ParserException& e) {
-        errorMsg = "parse yaml failed: " + std::string(e.what());
+        errorMsg = "parse yaml failed: " + string(e.what());
         return false;
-    } catch (const std::exception& e) {
-        errorMsg = "unknown std::exception: " + std::string(e.what());
+    } catch (const exception& e) {
+        errorMsg = "unknown exception: " + string(e.what());
         return false;
     } catch (...) {
         errorMsg = "unknown error";
@@ -41,7 +43,7 @@ Json::Value ParseScalar(const YAML::Node& node) {
     // so to differentiate strings and integer for purely-digits value,
     // we can tell from node.Tag(), which will return "!" for quoted values and "?" for others
     if (node.Tag() == "!") {
-        return node.as<std::string>();
+        return node.as<string>();
     }
 
     int i;
@@ -56,41 +58,36 @@ Json::Value ParseScalar(const YAML::Node& node) {
     if (YAML::convert<bool>::decode(node, b))
         return Json::Value(b);
 
-    std::string s;
-    if (YAML::convert<std::string>::decode(node, s))
+    string s;
+    if (YAML::convert<string>::decode(node, s))
         return Json::Value(s);
 
     return Json::Value();
 }
 
-Json::Value CovertYamlToJson(const YAML::Node& rootNode) {
-    Json::Value resultJson;
-
+Json::Value ConvertYamlToJson(const YAML::Node& rootNode) {
+    Json::Value result;
     switch (rootNode.Type()) {
         case YAML::NodeType::Scalar:
             return ParseScalar(rootNode);
-
         case YAML::NodeType::Sequence: {
-            resultJson = Json::Value(Json::arrayValue); // create an empty array
+            result = Json::Value(Json::arrayValue); // create an empty array
             for (const auto& node : rootNode) {
-                resultJson.append(CovertYamlToJson(node));
+                result.append(ConvertYamlToJson(node));
             }
             break;
         }
-
         case YAML::NodeType::Map: {
-            resultJson = Json::Value(Json::objectValue); // create an empty object
+            result = Json::Value(Json::objectValue); // create an empty object
             for (const auto& node : rootNode) {
-                resultJson[node.first.as<std::string>()] = CovertYamlToJson(node.second);
+                result[node.first.as<string>()] = ConvertYamlToJson(node.second);
             }
             break;
         }
-
-        case YAML::NodeType::Null:
         default:
-            return resultJson;
+            break;
     }
-
-    return resultJson;
+    return result;
 }
+
 } // namespace logtail

@@ -65,7 +65,7 @@ void InputFileUnittest::OnSuccessfulInit() {
             "FilePaths": []
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
@@ -85,7 +85,7 @@ void InputFileUnittest::OnSuccessfulInit() {
             "EnableExactlyOnce": 1
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
@@ -104,7 +104,7 @@ void InputFileUnittest::OnSuccessfulInit() {
             "EnableExactlyOnce": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
@@ -121,7 +121,7 @@ void InputFileUnittest::OnSuccessfulInit() {
             "TailingAllMatchedFiles": true,
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
@@ -137,7 +137,7 @@ void InputFileUnittest::OnSuccessfulInit() {
             "EnableExactlyConcurrency": 600,
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
@@ -188,8 +188,8 @@ void InputFileUnittest::OnEnableContainerDiscovery() {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
-    APSARA_TEST_TRUE(ParseConfig(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(optionalGoPipelineStr, optionalGoPipelineJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     optionalGoPipelineJson["global"]["DefaultLogQueueSize"] = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
     optionalGoPipelineJson["inputs"][0]["detail"]["LogPath"] = Json::Value(filePath.parent_path().string());
@@ -214,7 +214,7 @@ void InputFileUnittest::OnPipelineUpdate() {
             "EnableExactlyOnce": 2
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     APSARA_TEST_TRUE(input.Init(configJson, optionalGoPipeline));
     input.SetContext(ctx);
