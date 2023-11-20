@@ -33,7 +33,7 @@ public:
 
 private:
     Application();
-    ~Application();
+    ~Application() = default;
 
     void Exit();
     void CheckCriticalCondition(int32_t curTime);
@@ -49,7 +49,7 @@ private:
     std::string mInstanceId;
     int32_t mStartTime;
     std::atomic_bool mSigTermSignalFlag = false;
-    ThreadPtr mUUIDthreadPtr;
+    JThread mUUIDThread;
     SpinLock mUUIDLock;
     std::string mUUID;
 };

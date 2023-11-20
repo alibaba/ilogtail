@@ -51,14 +51,6 @@ Application::Application() : mStartTime(time(nullptr)) {
     mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
 }
 
-Application::~Application() {
-    try {
-        if (mUUIDthreadPtr.get() != NULL)
-            mUUIDthreadPtr->GetValue(100);
-    } catch (...) {
-    }
-}
-
 void Application::Start() {
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
     InitWindowsSignalObject();
@@ -145,7 +137,7 @@ void Application::Start() {
 }
 
 bool Application::TryGetUUID() {
-    mUUIDthreadPtr = CreateThread([this]() { GetUUIDThread(); });
+    mUUIDThread = thread([this] { GetUUID(); });
     // wait 1000 ms
     for (int i = 0; i < 100; ++i) {
         this_thread::sleep_for(chrono::milliseconds(10));
@@ -159,6 +151,12 @@ bool Application::TryGetUUID() {
 void Application::Exit() {
     PipelineManager::GetInstance()->StopAllPipelines();
     PluginRegistry::GetInstance()->UnloadPlugins();
+#ifdef __ENTERPRISE__
+    EnterpriseConfigProvider::GetInstance()->Stop();
+    LegacyConfigProvider::GetInstance()->Stop();
+#else
+    CommonConfigProvider::GetInstance()->Stop();
+#endif
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
 #endif
