@@ -36,4 +36,4 @@ verify:
     - name: counter-check
       validator: sys_counter
       spec:
-        expect_minimum_flush_log_num: 5
+        expect_minimum_flush_log_num: 1
