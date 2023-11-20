@@ -866,9 +866,11 @@ void LogFileReader::FixUtf16LastFilePos(LogFileOperator& op, int64_t endOffset) 
                 skipLineFeedCount++;
             }
         }
+        delete[] originUtf16Buffer;
         delete[] bufferptr;
+    } else {
+        delete[] utf16Buffer;
     }
-    delete[] bufferptr;
     LOG_WARNING(sLogger,
                 ("no begin line found", "most likely to have parse error when reading begins")(
                     "project", mProjectName)("logstore", mCategory)("config", mConfigName)(
