@@ -547,14 +547,14 @@ private:
     //                               std::unordered_map<std::string, int64_t>& yamlConfigMTimeMap,
     //                               bool createIfNotExist);
 
-    /**
-     * @brief Load a single data collection config and insert it into mNameConfigMap with name @name.
-     *
-     * @param name config name
-     * @param value config json value
-     * @param localFlag
-     */
-    void LoadSingleUserConfig(const std::string& name, const Json::Value& value, bool localFlag = false);
+    // /**
+    //  * @brief Load a single data collection config and insert it into mNameConfigMap with name @name.
+    //  *
+    //  * @param name config name
+    //  * @param value config json value
+    //  * @param localFlag
+    //  */
+    // void LoadSingleUserConfig(const std::string& name, const Json::Value& value, bool localFlag = false);
     // bool CheckRegFormat(const std::string& regStr);
     void SendAllMatchAlarm(const std::string& path,
                            const std::string& name,

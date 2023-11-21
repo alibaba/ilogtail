@@ -76,7 +76,7 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                 if (!IsConfigEnabled(configName, detail)) {
                     continue;
                 }
-                NewConfig config(configName, std::move(detail));
+                Config config(configName, std::move(detail));
                 if (!config.Parse()) {
                     continue;
                 }
@@ -99,13 +99,13 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                 }
                 shared_ptr<Pipeline> p = mPipelineManager->FindPipelineByName(configName);
                 if (!p) {
-                    NewConfig config(configName, std::move(detail));
+                    Config config(configName, std::move(detail));
                     if (!config.Parse()) {
                         continue;
                     }
                     diff.mAdded.push_back(std::move(config));
                 } else if (detail != p->GetConfig()) {
-                    NewConfig config(configName, std::move(detail));
+                    Config config(configName, std::move(detail));
                     if (!config.Parse()) {
                         diff.mUnchanged.push_back(configName);
                         continue;

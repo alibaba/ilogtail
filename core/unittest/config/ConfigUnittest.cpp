@@ -18,7 +18,7 @@
 #include "json/json.h"
 
 #include "common/JsonUtil.h"
-#include "config/NewConfig.h"
+#include "config/Config.h"
 #include "plugin/PluginRegistry.h"
 #include "unittest/Unittest.h"
 
@@ -49,7 +49,7 @@ private:
 void ConfigUnittest::HandleValidConfig() const {
     Json::Value configJson;
     string configStr, errorMsg;
-    unique_ptr<NewConfig> config;
+    unique_ptr<Config> config;
 
     configStr = R"(
         {
@@ -91,7 +91,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(configName, config->mName);
     APSARA_TEST_EQUAL(123456789, config->mCreateTime);
@@ -123,7 +123,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(1, config->mProcessors.size());
@@ -154,7 +154,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 3: (native, extended) -> native -> native
@@ -181,7 +181,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 4: native -> extended -> native
@@ -205,7 +205,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(1, config->mProcessors.size());
@@ -236,7 +236,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(1, config->mProcessors.size());
@@ -275,7 +275,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 7: native -> (native -> extended) -> native
@@ -302,7 +302,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(2, config->mProcessors.size());
@@ -341,7 +341,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 9: (native, extended) -> (native -> extended) -> native
@@ -376,7 +376,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 10: native -> none -> native
@@ -395,7 +395,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(0, config->mProcessors.size());
@@ -421,7 +421,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(0, config->mProcessors.size());
@@ -455,7 +455,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 13: native -> native -> extended
@@ -479,7 +479,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(1, config->mProcessors.size());
@@ -515,7 +515,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 15: (native, extended) -> native -> extended
@@ -547,7 +547,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 16: native -> extended -> extended
@@ -571,7 +571,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(1, config->mProcessors.size());
@@ -602,7 +602,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(1, config->mProcessors.size());
@@ -641,7 +641,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 19: native -> (native -> extended) -> extended
@@ -668,7 +668,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(2, config->mProcessors.size());
@@ -707,7 +707,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 21: (native, extended) -> (native -> extended) -> extended
@@ -742,7 +742,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 22: native -> none -> extended
@@ -761,7 +761,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(0, config->mProcessors.size());
@@ -787,7 +787,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(0, config->mProcessors.size());
@@ -821,7 +821,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 25: native -> native -> (native, extended) (future changes maybe applied)
@@ -848,7 +848,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(1, config->mProcessors.size());
@@ -887,7 +887,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 27: (native, extended) -> native -> (native, extended)
@@ -922,7 +922,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 28: native -> extended -> (native, extended)
@@ -949,7 +949,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(1, config->mProcessors.size());
@@ -983,7 +983,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(1, config->mProcessors.size());
@@ -1025,7 +1025,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 31: native -> (naive -> extended) -> (native, extended)
@@ -1055,7 +1055,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(2, config->mProcessors.size());
@@ -1097,7 +1097,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 33: (native, extended) -> (native -> extended) -> (native, extended)
@@ -1135,7 +1135,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // topology 34: native -> none -> (native, extended) (future changes maybe applied)
@@ -1157,7 +1157,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(0, config->mProcessors.size());
@@ -1186,7 +1186,7 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(1, config->mInputs.size());
     APSARA_TEST_EQUAL(0, config->mProcessors.size());
@@ -1223,14 +1223,14 @@ void ConfigUnittest::HandleValidConfig() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidCreateTime() const {
     Json::Value configJson;
     string configStr, errorMsg;
-    unique_ptr<NewConfig> config;
+    unique_ptr<Config> config;
 
     configStr = R"(
         {
@@ -1248,7 +1248,7 @@ void ConfigUnittest::HandleInvalidCreateTime() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     APSARA_TEST_EQUAL(0, config->mCreateTime);
 }
@@ -1256,7 +1256,7 @@ void ConfigUnittest::HandleInvalidCreateTime() const {
 void ConfigUnittest::HandleInvalidGlobal() const {
     Json::Value configJson;
     string configStr, errorMsg;
-    unique_ptr<NewConfig> config;
+    unique_ptr<Config> config;
 
     // global is not of type object
     configStr = R"(
@@ -1265,14 +1265,14 @@ void ConfigUnittest::HandleInvalidGlobal() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidInputs() const {
     Json::Value configJson;
     string configStr, errorMsg;
-    unique_ptr<NewConfig> config;
+    unique_ptr<Config> config;
 
     // no inputs
     configStr = R"(
@@ -1285,7 +1285,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // inputs is not of type array
@@ -1300,7 +1300,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // inputs is empty
@@ -1315,7 +1315,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // inputs element is not of type object
@@ -1332,7 +1332,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // no Type
@@ -1351,7 +1351,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // Type is not of type string
@@ -1370,7 +1370,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // unsupported input
@@ -1389,7 +1389,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     configStr = R"(
@@ -1410,7 +1410,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     configStr = R"(
@@ -1431,7 +1431,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // more than 1 native input
@@ -1453,7 +1453,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // native and extended inputs coexist
@@ -1475,7 +1475,7 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     configStr = R"(
@@ -1496,14 +1496,14 @@ void ConfigUnittest::HandleInvalidInputs() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidProcessors() const {
     Json::Value configJson;
     string configStr, errorMsg;
-    unique_ptr<NewConfig> config;
+    unique_ptr<Config> config;
 
     // processors is not of type array
     configStr = R"(
@@ -1517,7 +1517,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // processors element is not of type object
@@ -1534,7 +1534,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // no Type
@@ -1553,7 +1553,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // Type is not of type string
@@ -1572,7 +1572,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // unsupported processors
@@ -1591,7 +1591,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     configStr = R"(
@@ -1609,7 +1609,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     configStr = R"(
@@ -1630,7 +1630,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // native processor plugin comes after extended processor plugin
@@ -1652,7 +1652,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // native processor plugins coexist with extended input plugins
@@ -1671,7 +1671,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // native processor plugins coexist with input_observer_network
@@ -1690,7 +1690,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // native processor plugins coexist with processor_spl
@@ -1712,7 +1712,7 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     configStr = R"(
@@ -1733,14 +1733,14 @@ void ConfigUnittest::HandleInvalidProcessors() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidAggregators() const {
     Json::Value configJson;
     string configStr, errorMsg;
-    unique_ptr<NewConfig> config;
+    unique_ptr<Config> config;
 
     // aggregators is not of type array
     configStr = R"(
@@ -1759,7 +1759,7 @@ void ConfigUnittest::HandleInvalidAggregators() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // aggregators element is not of type object
@@ -1781,7 +1781,7 @@ void ConfigUnittest::HandleInvalidAggregators() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // no Type
@@ -1805,7 +1805,7 @@ void ConfigUnittest::HandleInvalidAggregators() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // Type is not of type string
@@ -1829,7 +1829,7 @@ void ConfigUnittest::HandleInvalidAggregators() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // unsupported aggregator
@@ -1853,7 +1853,7 @@ void ConfigUnittest::HandleInvalidAggregators() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // more than 1 aggregator
@@ -1880,7 +1880,7 @@ void ConfigUnittest::HandleInvalidAggregators() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // aggregator plugins exist in native flushing mode
@@ -1904,14 +1904,14 @@ void ConfigUnittest::HandleInvalidAggregators() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidFlushers() const {
     Json::Value configJson;
     string configStr, errorMsg;
-    unique_ptr<NewConfig> config;
+    unique_ptr<Config> config;
 
     // no flushers
     configStr = R"(
@@ -1924,7 +1924,7 @@ void ConfigUnittest::HandleInvalidFlushers() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // flushers is not of type array
@@ -1939,7 +1939,7 @@ void ConfigUnittest::HandleInvalidFlushers() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // flushers is empty
@@ -1954,7 +1954,7 @@ void ConfigUnittest::HandleInvalidFlushers() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // flushers element is not of type object
@@ -1971,7 +1971,7 @@ void ConfigUnittest::HandleInvalidFlushers() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // no Type
@@ -1990,7 +1990,7 @@ void ConfigUnittest::HandleInvalidFlushers() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // Type is not of type string
@@ -2009,7 +2009,7 @@ void ConfigUnittest::HandleInvalidFlushers() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // unsupported flusher
@@ -2028,14 +2028,14 @@ void ConfigUnittest::HandleInvalidFlushers() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void ConfigUnittest::HandleInvalidExtensions() const {
     Json::Value configJson;
     string configStr, errorMsg;
-    unique_ptr<NewConfig> config;
+    unique_ptr<Config> config;
 
     // extensions is not of type array
     configStr = R"(
@@ -2054,7 +2054,7 @@ void ConfigUnittest::HandleInvalidExtensions() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // extensions element is not of type object
@@ -2076,7 +2076,7 @@ void ConfigUnittest::HandleInvalidExtensions() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // no Type
@@ -2100,7 +2100,7 @@ void ConfigUnittest::HandleInvalidExtensions() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // Type is not of type string
@@ -2124,7 +2124,7 @@ void ConfigUnittest::HandleInvalidExtensions() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // unsupported extension
@@ -2148,7 +2148,7 @@ void ConfigUnittest::HandleInvalidExtensions() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
     // extension plugins exist when no extended plugin is given
@@ -2172,7 +2172,7 @@ void ConfigUnittest::HandleInvalidExtensions() const {
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
@@ -2187,7 +2187,7 @@ void ConfigUnittest::TestReplaceEnvVarRef() const {
 
     Json::Value configJson, resJson;
     string configStr, resStr, errorMsg;
-    unique_ptr<NewConfig> config;
+    unique_ptr<Config> config;
 
     configStr = R"(
         {
@@ -2216,7 +2216,7 @@ void ConfigUnittest::TestReplaceEnvVarRef() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(resStr, resJson, errorMsg));
-    config.reset(new NewConfig(configName, std::move(configJson)));
+    config.reset(new Config(configName, std::move(configJson)));
     config->ReplaceEnvVar();
     APSARA_TEST_TRUE(config->mDetail == resJson);
 }

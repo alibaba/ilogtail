@@ -48,7 +48,7 @@ private:
     PipelineManager() = default;
     ~PipelineManager() = default;
 
-    virtual std::shared_ptr<Pipeline> BuildPipeline(NewConfig&& config); // virtual for ut
+    virtual std::shared_ptr<Pipeline> BuildPipeline(Config&& config); // virtual for ut
     void IncreasePluginUsageCnt(
         const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& statistics);
     void DecreasePluginUsageCnt(

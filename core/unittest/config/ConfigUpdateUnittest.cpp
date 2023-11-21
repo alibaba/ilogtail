@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "config/NewConfig.h"
+#include "config/Config.h"
 #include "config/watcher/ConfigWatcher.h"
 #include "pipeline/Pipeline.h"
 #include "pipeline/PipelineManager.h"
@@ -31,7 +31,7 @@ namespace logtail {
 
 class PipelineMock : public Pipeline {
 public:
-    bool Init(NewConfig&& config) {
+    bool Init(Config&& config) {
         mConfig = std::move(config.mDetail);
         return mConfig["valid"].asBool();
     }
@@ -50,7 +50,7 @@ public:
     }
 
 private:
-    shared_ptr<Pipeline> BuildPipeline(NewConfig&& config) override {
+    shared_ptr<Pipeline> BuildPipeline(Config&& config) override {
         // this should be synchronized with PipelineManager::BuildPipeline, except for the pointer type.
         shared_ptr<PipelineMock> p = make_shared<PipelineMock>();
         if (!p->Init(std::move(config))) {

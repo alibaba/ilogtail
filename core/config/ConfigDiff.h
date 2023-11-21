@@ -19,13 +19,13 @@
 #include <string>
 #include <vector>
 
-#include "config/NewConfig.h"
+#include "config/Config.h"
 
 namespace logtail {
 
 struct ConfigDiff {
-    std::vector<NewConfig> mAdded;
-    std::vector<NewConfig> mModified;
+    std::vector<Config> mAdded;
+    std::vector<Config> mModified;
     std::vector<std::string> mRemoved;
     std::vector<std::string> mUnchanged; // 过渡使用，仅供插件系统用
 

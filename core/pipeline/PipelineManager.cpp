@@ -193,7 +193,7 @@ void PipelineManager::StopAllPipelines() {
     }
 }
 
-shared_ptr<Pipeline> PipelineManager::BuildPipeline(NewConfig&& config) {
+shared_ptr<Pipeline> PipelineManager::BuildPipeline(Config&& config) {
     shared_ptr<Pipeline> p = make_shared<Pipeline>();
     // only config.mDetail is removed, other members can be safely used later
     if (!p->Init(std::move(config))) {

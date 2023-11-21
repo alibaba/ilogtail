@@ -23,7 +23,7 @@
 
 #include "json/json.h"
 
-#include "config/NewConfig.h"
+#include "config/Config.h"
 #include "models/PipelineEventGroup.h"
 #include "pipeline/PipelineContext.h"
 #include "plugin/instance/InputInstance.h"
@@ -34,7 +34,7 @@ namespace logtail {
 
 class Pipeline {
 public:
-    bool Init(NewConfig&& config);
+    bool Init(Config&& config);
     void Start();
     void Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList);
     void Stop(bool isRemoving);
