@@ -252,7 +252,8 @@ void LogFileReader::InitReader(bool tailExisted, FileReadPolicy policy, uint32_t
     string buffer = LogFileProfiler::mIpAddr + "_" + mHostLogPath + "_" + CalculateRandomUUID();
     uint64_t cityHash = CityHash64(buffer.c_str(), buffer.size());
     mSourceId = ToHexString(cityHash);
-    FileDiscoveryConfig config = FileServer::GetInstance()->GetFileDiscoveryConfig(mReaderConfig.second->GetConfigName());
+    FileDiscoveryConfig config
+        = FileServer::GetInstance()->GetFileDiscoveryConfig(mReaderConfig.second->GetConfigName());
     mLogGroupKey = HashString(mReaderConfig.second->GetProjectName() + "_" + mReaderConfig.second->GetLogstoreName()
                               + "_" + mTopicName + "_" + LogFileProfiler::mIpAddr + "_"
                               + (config.first->GetBasePath() + config.first->GetFilePattern()) + "_" + mSourceId);
@@ -548,11 +549,12 @@ void LogFileReader::SetDockerPath(const std::string& dockerBasePath, size_t dock
 void LogFileReader::SetReadFromBeginning() {
     mLastFilePos = 0;
     mCache.clear();
-    LOG_INFO(sLogger,
-             ("force reading file from the beginning, project", GetProject())("logstore", GetLogstore())(
-                 "config", GetConfigName())("log reader queue name", mHostLogPath)(
-                 "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("file size", mLastFileSize));
+    LOG_INFO(
+        sLogger,
+        ("force reading file from the beginning, project", GetProject())("logstore", GetLogstore())(
+            "config", GetConfigName())("log reader queue name", mHostLogPath)("file device", ToString(mDevInode.dev))(
+            "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+            "file signature size", mLastFileSignatureSize)("file size", mLastFileSize));
     mFirstWatched = false;
 }
 
@@ -745,11 +747,12 @@ bool LogFileReader::CheckForFirstOpen(FileReadPolicy policy) {
         LOG_ERROR(sLogger, ("invalid file read policy for file", mHostLogPath));
         return false;
     }
-    LOG_INFO(sLogger,
-             ("set the starting position for reading, project", GetProject())("logstore", GetLogstore())(
-                 "config", GetConfigName())("log reader queue name", mHostLogPath)(
-                 "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("start position", mLastFilePos));
+    LOG_INFO(
+        sLogger,
+        ("set the starting position for reading, project", GetProject())("logstore", GetLogstore())(
+            "config", GetConfigName())("log reader queue name", mHostLogPath)("file device", ToString(mDevInode.dev))(
+            "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+            "file signature size", mLastFileSignatureSize)("start position", mLastFilePos));
     return true;
 }
 
@@ -804,9 +807,9 @@ void LogFileReader::FixLastFilePos(LogFileOperator& op, int64_t endOffset) {
     LOG_WARNING(sLogger,
                 ("no begin line found", "most likely to have parse error when reading begins")("project", GetProject())(
                     "logstore", GetLogstore())("config", GetConfigName())("log reader queue name", mHostLogPath)(
-                    "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("search start position", mLastFilePos)(
-                    "search end position", mLastFilePos + readSizeReal));
+                    "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                    "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                    "search start position", mLastFilePos)("search end position", mLastFilePos + readSizeReal));
 
     free(readBuf);
     return;
@@ -1023,17 +1026,17 @@ void LogFileReader::OnOpenFileError() {
             LOG_INFO(sLogger,
                      ("open file failed", " log file not exist, probably caused by rollback")("project", GetProject())(
                          "logstore", GetLogstore())("config", GetConfigName())("log reader queue name", mHostLogPath)(
-                         "log path", mRealLogPath)("file device", ToString(mDevInode.dev))("file inode",
-                                                                                           ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("last file position", mLastFilePos));
+                         "log path", mRealLogPath)("file device", ToString(mDevInode.dev))(
+                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                         "file signature size", mLastFileSignatureSize)("last file position", mLastFilePos));
             break;
         case EACCES:
             LOG_ERROR(sLogger,
                       ("open file failed", "open log file fail because of permission")("project", GetProject())(
                           "logstore", GetLogstore())("config", GetConfigName())("log reader queue name", mHostLogPath)(
-                          "log path", mRealLogPath)("file device", ToString(mDevInode.dev))("file inode",
-                                                                                            ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("last file position", mLastFilePos));
+                          "log path", mRealLogPath)("file device", ToString(mDevInode.dev))(
+                          "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                          "file signature size", mLastFileSignatureSize)("last file position", mLastFilePos));
             LogtailAlarm::GetInstance()->SendAlarm(LOGFILE_PERMINSSION_ALARM,
                                                    string("Failed to open log file because of permission: ")
                                                        + mHostLogPath,
@@ -1091,8 +1094,9 @@ bool LogFileReader::UpdateFilePtr() {
                        GloablFileDescriptorManager::GetInstance()->GetOpenedFilePtrSize())(
                           "limit", INT32_FLAG(max_reader_open_files))("project", GetProject())(
                           "logstore", GetLogstore())("config", GetConfigName())("log reader queue name", mHostLogPath)(
-                          "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("last file position", mLastFilePos));
+                          "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                          "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                          "last file position", mLastFilePos));
             LogtailAlarm::GetInstance()->SendAlarm(OPEN_FILE_LIMIT_ALARM,
                                                    string("Failed to open log file: ") + mHostLogPath
                                                        + " limit:" + ToString(INT32_FLAG(max_reader_open_files)),
@@ -1123,8 +1127,8 @@ bool LogFileReader::UpdateFilePtr() {
                              "config", GetConfigName())("log reader queue name", mHostLogPath)(
                              "real file path", mRealLogPath)("file device", ToString(mDevInode.dev))(
                              "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)(
-                             "last file position", mLastFilePos)("reader id", long(this)));
+                             "file signature size", mLastFileSignatureSize)("last file position",
+                                                                            mLastFilePos)("reader id", long(this)));
                 return true;
             } else {
                 mLogFileOp.Close();
@@ -1135,9 +1139,9 @@ bool LogFileReader::UpdateFilePtr() {
                      ("open file failed, log file dev inode changed or file deleted ",
                       "prepare to delete reader or put reader into rotated map")("project", GetProject())(
                          "logstore", GetLogstore())("config", GetConfigName())("log reader queue name", mHostLogPath)(
-                         "log path", mRealLogPath)("file device", ToString(mDevInode.dev))("file inode",
-                                                                                           ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("last file position", mLastFilePos));
+                         "log path", mRealLogPath)("file device", ToString(mDevInode.dev))(
+                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
+                         "file signature size", mLastFileSignatureSize)("last file position", mLastFilePos));
             return false;
         }
         tryTime = 0;
@@ -1156,13 +1160,13 @@ bool LogFileReader::UpdateFilePtr() {
             // the mHostLogPath's dev inode equal to mDevInode, so real log path is mHostLogPath
             mRealLogPath = mHostLogPath;
             GloablFileDescriptorManager::GetInstance()->OnFileOpen(this);
-            LOG_INFO(sLogger,
-                     ("open file succeeded, project", GetProject())("logstore", GetLogstore())(
-                         "config", GetConfigName())("log reader queue name", mHostLogPath)(
-                         "real file path", mRealLogPath)("file device", ToString(mDevInode.dev))(
-                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)(
-                         "last file position", mLastFilePos)("reader id", long(this)));
+            LOG_INFO(
+                sLogger,
+                ("open file succeeded, project", GetProject())("logstore", GetLogstore())("config", GetConfigName())(
+                    "log reader queue name", mHostLogPath)("real file path", mRealLogPath)(
+                    "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                    "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                    "last file position", mLastFilePos)("reader id", long(this)));
             return true;
         } else {
             mLogFileOp.Close();
@@ -1171,8 +1175,9 @@ bool LogFileReader::UpdateFilePtr() {
                  ("open file failed, log file dev inode changed or file deleted ",
                   "prepare to delete reader")("project", GetProject())("logstore", GetLogstore())(
                      "config", GetConfigName())("log reader queue name", mHostLogPath)("log path", mRealLogPath)(
-                     "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("last file position", mLastFilePos));
+                     "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                     "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                     "last file position", mLastFilePos));
         return false;
     }
     return true;
@@ -1187,11 +1192,11 @@ bool LogFileReader::CloseTimeoutFilePtr(int32_t curTime) {
         }
         if ((int64_t)buf.GetFileSize() == mLastFilePos) {
             LOG_INFO(sLogger,
-                     ("close the file", "current log file has not been updated for some time and has been read")(
-                         "project", GetProject())("logstore", GetLogstore())("config", GetConfigName())(
-                         "log reader queue name", mHostLogPath)("file device", ToString(mDevInode.dev))(
-                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)(
+                     ("close the file",
+                      "current log file has not been updated for some time and has been read")("project", GetProject())(
+                         "logstore", GetLogstore())("config", GetConfigName())("log reader queue name", mHostLogPath)(
+                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                         "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
                          "file size", mLastFileSize)("last file position", mLastFilePos));
             CloseFilePtr();
             // delete item in LogFileCollectOffsetIndicator map
@@ -1215,10 +1220,10 @@ void LogFileReader::CloseFilePtr() {
             if (!curRealLogPath.empty()) {
                 LOG_INFO(sLogger,
                          ("update the real file path of the log reader during closing, project",
-                          GetProject())("logstore", GetLogstore())("config", GetConfigName())(
-                             "log reader queue name", mHostLogPath)("file device", ToString(mDevInode.dev))(
-                             "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)(
+                          GetProject())("logstore", GetLogstore())("config", GetConfigName())("log reader queue name",
+                                                                                              mHostLogPath)(
+                             "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                             "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
                              "original file path", mRealLogPath)("new file path", curRealLogPath));
                 mRealLogPath = curRealLogPath;
                 if (mEOOption && mRealLogPath != mEOOption->primaryCheckpoint.real_path()) {
@@ -1235,9 +1240,9 @@ void LogFileReader::CloseFilePtr() {
                 sLogger,
                 ("close file error", strerror(errno))("fd", fd)("project", GetProject())("logstore", GetLogstore())(
                     "config", GetConfigName())("log reader queue name", mHostLogPath)("real file path", mRealLogPath)(
-                    "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("file size", mLastFileSize)(
-                    "last file position", mLastFilePos)("reader id", long(this)));
+                    "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                    "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                    "file size", mLastFileSize)("last file position", mLastFilePos)("reader id", long(this)));
             LogtailAlarm::GetInstance()->SendAlarm(OPEN_LOGFILE_FAIL_ALARM,
                                                    string("close file error because of ") + strerror(errno)
                                                        + ", file path: " + mHostLogPath + ", inode: "
@@ -1246,13 +1251,13 @@ void LogFileReader::CloseFilePtr() {
                                                    GetLogstore(),
                                                    GetRegion());
         } else {
-            LOG_INFO(sLogger,
-                     ("close file succeeded, project", GetProject())("logstore", GetLogstore())(
-                         "config", GetConfigName())("log reader queue name", mHostLogPath)(
-                         "real file path", mRealLogPath)("file device", ToString(mDevInode.dev))(
-                         "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)(
-                         "file size", mLastFileSize)("last file position", mLastFilePos)("reader id", long(this)));
+            LOG_INFO(
+                sLogger,
+                ("close file succeeded, project", GetProject())("logstore", GetLogstore())("config", GetConfigName())(
+                    "log reader queue name", mHostLogPath)("real file path", mRealLogPath)(
+                    "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                    "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                    "file size", mLastFileSize)("last file position", mLastFilePos)("reader id", long(this)));
         }
         // always call OnFileClose
         GloablFileDescriptorManager::GetInstance()->OnFileClose(this);
@@ -1285,13 +1290,12 @@ bool LogFileReader::CheckFileSignatureAndOffset(bool isOpenOnUpdate) {
     if (endSize < 0) {
         int lastErrNo = errno;
         if (mLogFileOp.Close() == 0) {
-            LOG_INFO(
-                sLogger,
-                ("close file succeeded, project", GetProject())("logstore", GetLogstore())("config", GetConfigName())(
-                    "log reader queue name", mHostLogPath)("file device", ToString(mDevInode.dev))(
-                    "file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)(
-                    "file size", mLastFileSize)("last file position", mLastFilePos));
+            LOG_INFO(sLogger,
+                     ("close file succeeded, project", GetProject())("logstore", GetLogstore())(
+                         "config", GetConfigName())("log reader queue name", mHostLogPath)(
+                         "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                         "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                         "file size", mLastFileSize)("last file position", mLastFilePos));
         }
         GloablFileDescriptorManager::GetInstance()->OnFileClose(this);
         bool reopenFlag = UpdateFilePtr();
@@ -1321,7 +1325,8 @@ bool LogFileReader::CheckFileSignatureAndOffset(bool isOpenOnUpdate) {
     mLogFileOp.Stat(ps);
     time_t lastMTime = mLastMTime;
     mLastMTime = ps.GetMtime();
-    if (!isOpenOnUpdate || mLastFileSignatureSize == 0 || endSize < mLastFilePos || (endSize == mLastFilePos && lastMTime != mLastMTime)) {
+    if (!isOpenOnUpdate || mLastFileSignatureSize == 0 || endSize < mLastFilePos
+        || (endSize == mLastFilePos && lastMTime != mLastMTime)) {
         char firstLine[1025];
         int nbytes = mLogFileOp.Pread(firstLine, 1, 1024, 0);
         if (nbytes < 0) {
@@ -2126,12 +2131,12 @@ LogFileReader::~LogFileReader() {
     //     delete mLogEndRegPtr;
     //     mLogEndRegPtr = NULL;
     // }
-    LOG_INFO(
-        sLogger,
-        ("destruct the corresponding log reader, project",
-         GetProject())("logstore", GetLogstore())("config", GetConfigName())("log reader queue name", mHostLogPath)(
-            "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))("file signature", mLastFileSignatureHash)(
-                 "file signature size", mLastFileSignatureSize)("file size", mLastFileSize)("last file position", mLastFilePos));
+    LOG_INFO(sLogger,
+             ("destruct the corresponding log reader, project", GetProject())("logstore", GetLogstore())(
+                 "config", GetConfigName())("log reader queue name", mHostLogPath)(
+                 "file device", ToString(mDevInode.dev))("file inode", ToString(mDevInode.inode))(
+                 "file signature", mLastFileSignatureHash)("file signature size", mLastFileSignatureSize)(
+                 "file size", mLastFileSize)("last file position", mLastFilePos));
     CloseFilePtr();
 
     // Mark GC so that corresponding resources can be released.
