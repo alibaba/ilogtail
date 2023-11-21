@@ -635,7 +635,7 @@ void ConfigManagerBase::ClearPluginStats() {
 //                 //     if (StartWith(config->mTopicFormat, customizedPrefix)) {
 //                 //         config->mCustomizedTopic = config->mTopicFormat.substr(customizedPrefix.length());
 //                 //         config->mTopicFormat = "customized";
-//                 //     } else if (CheckTopicRegFormat(config->mTimeFormat) == false) {
+//                 //     } else if (NormalizeTopicRegFormat(config->mTopicFormat) == false) {
 //                 //         throw ExceptionBase("The topic format is not valid regex");
 //                 //     }
 //                 // }
