@@ -93,11 +93,10 @@ void LogFileReaderUnittest::TestReadGBK() {
             logPathDir, gbkFile, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        reader.CheckFileSignatureAndOffset(true);
         LogBuffer logBuffer;
         bool moreData = false;
-        reader.ReadGBK(logBuffer, fileSize, moreData);
+        reader.ReadGBK(logBuffer, reader.mLogFileOp.GetFileSize(), moreData);
         APSARA_TEST_FALSE_FATAL(moreData);
         APSARA_TEST_STREQ_FATAL(expectedContent.get(), logBuffer.rawBuffer.data());
     }
@@ -109,11 +108,10 @@ void LogFileReaderUnittest::TestReadGBK() {
             logPathDir, gbkFile, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        reader.CheckFileSignatureAndOffset(true);
         LogBuffer logBuffer;
         bool moreData = false;
-        reader.ReadGBK(logBuffer, fileSize, moreData, false);
+        reader.ReadGBK(logBuffer, reader.mLogFileOp.GetFileSize(), moreData, false);
         APSARA_TEST_FALSE_FATAL(moreData);
         char* expectedContentAll = expectedContent.get();
         size_t tmp = strlen(expectedContentAll);
@@ -134,11 +132,10 @@ void LogFileReaderUnittest::TestReadGBK() {
         size_t BUFFER_SIZE_UTF8 = 15; // "ilogtail 为可"
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        reader.CheckFileSignatureAndOffset(true);
         LogBuffer logBuffer;
         bool moreData = false;
-        reader.ReadGBK(logBuffer, fileSize, moreData);
+        reader.ReadGBK(logBuffer, reader.mLogFileOp.GetFileSize(), moreData);
         APSARA_TEST_TRUE_FATAL(moreData);
         APSARA_TEST_STREQ_FATAL(std::string(expectedContent.get(), BUFFER_SIZE_UTF8).c_str(),
                                 logBuffer.rawBuffer.data());
@@ -155,8 +152,8 @@ void LogFileReaderUnittest::TestReadGBK() {
         // reader.mDiscardUnmatch = false;
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        int64_t fileSize = reader.mLogFileOp.GetFileSize();
+        reader.CheckFileSignatureAndOffset(true);
         LogFileReader::BUFFER_SIZE = fileSize - 11;
         LogBuffer logBuffer;
         bool moreData = false;
@@ -178,8 +175,8 @@ void LogFileReaderUnittest::TestReadGBK() {
         // reader.mDiscardUnmatch = false;
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        int64_t fileSize = reader.mLogFileOp.GetFileSize();
+        reader.CheckFileSignatureAndOffset(true);
         LogFileReader::BUFFER_SIZE = fileSize - 11;
         LogBuffer logBuffer;
         bool moreData = false;
@@ -206,8 +203,8 @@ void LogFileReaderUnittest::TestReadGBK() {
         // reader.mDiscardUnmatch = false;
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        int64_t fileSize = reader.mLogFileOp.GetFileSize();
+        reader.CheckFileSignatureAndOffset(true);
         LogFileReader::BUFFER_SIZE = fileSize - 11;
         LogBuffer logBuffer;
         bool moreData = false;
@@ -250,11 +247,10 @@ void LogFileReaderUnittest::TestReadUTF8() {
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        reader.CheckFileSignatureAndOffset(true);
         LogBuffer logBuffer;
         bool moreData = false;
-        reader.ReadUTF8(logBuffer, fileSize, moreData);
+        reader.ReadUTF8(logBuffer, reader.mLogFileOp.GetFileSize(), moreData);
         APSARA_TEST_FALSE_FATAL(moreData);
         APSARA_TEST_STREQ_FATAL(expectedContent.get(), logBuffer.rawBuffer.data());
     }
@@ -265,11 +261,10 @@ void LogFileReaderUnittest::TestReadUTF8() {
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        reader.CheckFileSignatureAndOffset(true);
         LogBuffer logBuffer;
         bool moreData = false;
-        reader.ReadUTF8(logBuffer, fileSize, moreData, false);
+        reader.ReadUTF8(logBuffer, reader.mLogFileOp.GetFileSize(), moreData, false);
         APSARA_TEST_FALSE_FATAL(moreData);
         char* expectedContentAll = expectedContent.get();
         size_t tmp = strlen(expectedContentAll);
@@ -289,11 +284,10 @@ void LogFileReaderUnittest::TestReadUTF8() {
         LogFileReader::BUFFER_SIZE = 15;
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        reader.CheckFileSignatureAndOffset(true);
         LogBuffer logBuffer;
         bool moreData = false;
-        reader.ReadUTF8(logBuffer, fileSize, moreData);
+        reader.ReadUTF8(logBuffer, reader.mLogFileOp.GetFileSize(), moreData);
         APSARA_TEST_TRUE_FATAL(moreData);
         APSARA_TEST_STREQ_FATAL(std::string(expectedContent.get(), LogFileReader::BUFFER_SIZE).c_str(),
                                 logBuffer.rawBuffer.data());
@@ -309,8 +303,8 @@ void LogFileReaderUnittest::TestReadUTF8() {
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        int64_t fileSize = reader.mLogFileOp.GetFileSize();
+        reader.CheckFileSignatureAndOffset(true);
         LogFileReader::BUFFER_SIZE = fileSize - 13;
         LogBuffer logBuffer;
         bool moreData = false;
@@ -330,8 +324,8 @@ void LogFileReaderUnittest::TestReadUTF8() {
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        int64_t fileSize = reader.mLogFileOp.GetFileSize();
+        reader.CheckFileSignatureAndOffset(true);
         LogFileReader::BUFFER_SIZE = fileSize - 13;
         LogBuffer logBuffer;
         bool moreData = false;
@@ -356,8 +350,8 @@ void LogFileReaderUnittest::TestReadUTF8() {
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         reader.UpdateReaderManual();
         reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader.CheckFileSignatureAndOffset(fileSize);
+        int64_t fileSize = reader.mLogFileOp.GetFileSize();
+        reader.CheckFileSignatureAndOffset(true);
         LogFileReader::BUFFER_SIZE = fileSize - 13;
         LogBuffer logBuffer;
         bool moreData = false;
@@ -505,8 +499,8 @@ void LogMultiBytesUnittest::TestReadUTF8() {
     LogFileReader::BUFFER_SIZE = 13; // equal to "iLogtail 为" plus one illegal byte
     reader.UpdateReaderManual();
     reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-    int64_t fileSize = 0;
-    reader.CheckFileSignatureAndOffset(fileSize);
+    int64_t fileSize = reader.mLogFileOp.GetFileSize();
+    reader.CheckFileSignatureAndOffset(true);
     LogBuffer logBuffer;
     bool moreData = false;
     reader.ReadUTF8(logBuffer, fileSize, moreData);
@@ -525,8 +519,8 @@ void LogMultiBytesUnittest::TestReadGBK() {
     size_t BUFFER_SIZE_UTF8 = 12; // "ilogtail 为可"
     reader.UpdateReaderManual();
     reader.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-    int64_t fileSize = 0;
-    reader.CheckFileSignatureAndOffset(fileSize);
+    int64_t fileSize = reader.mLogFileOp.GetFileSize();
+    reader.CheckFileSignatureAndOffset(true);
     LogBuffer logBuffer;
     bool moreData = false;
     reader.ReadGBK(logBuffer, fileSize, moreData);
@@ -576,8 +570,8 @@ void LogFileReaderCheckpointUnittest::TestDumpMetaToMem() {
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         reader1.UpdateReaderManual();
         reader1.InitReader(true, LogFileReader::BACKWARD_TO_BEGINNING);
-        int64_t fileSize = 0;
-        reader1.CheckFileSignatureAndOffset(fileSize);
+        int64_t fileSize = reader1.mLogFileOp.GetFileSize();
+        reader1.CheckFileSignatureAndOffset(true);
         LogFileReader::BUFFER_SIZE = fileSize - 13;
         LogBuffer logBuffer;
         bool moreData = false;
@@ -591,7 +585,7 @@ void LogFileReaderCheckpointUnittest::TestDumpMetaToMem() {
             logPathDir, utf8File, DevInode(), std::make_pair(&readerOpts, &ctx), std::make_pair(&multilineOpts, &ctx));
         reader2.UpdateReaderManual();
         reader2.InitReader(false, LogFileReader::BACKWARD_TO_BEGINNING);
-        reader2.CheckFileSignatureAndOffset(fileSize);
+        reader2.CheckFileSignatureAndOffset(true);
         APSARA_TEST_EQUAL_FATAL(reader1.mLastFilePos, reader2.mLastFilePos);
         APSARA_TEST_EQUAL_FATAL(reader1.mCache, reader2.mCache); // cache should recoverd from checkpoint
         reader2.ReadUTF8(logBuffer, fileSize, moreData);
