@@ -60,9 +60,7 @@ DEFINE_FLAG_BOOL(force_close_file_on_container_stopped,
                  "whether close file handler immediately when associate container stopped",
                  false);
 
-DECLARE_FLAG_BOOL(global_network_success);
 DECLARE_FLAG_BOOL(send_prefer_real_ip);
-DECLARE_FLAG_BOOL(ilogtail_discard_old_data);
 
 
 namespace logtail {

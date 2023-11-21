@@ -31,6 +31,9 @@
 using namespace std;
 using namespace sls_logs;
 
+DEFINE_FLAG_BOOL(default_secondary_storage, "default strategy whether enable secondary storage", false);
+DEFINE_FLAG_INT32(batch_send_metric_size, "batch send metric size limit(bytes)(default 256KB)", 256 * 1024);
+
 DECLARE_FLAG_INT32(merge_log_count_limit);
 DECLARE_FLAG_INT32(same_topic_merge_send_count);
 DECLARE_FLAG_INT32(max_send_log_group_size);

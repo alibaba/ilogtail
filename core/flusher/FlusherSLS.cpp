@@ -19,14 +19,14 @@
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
 #include "common/EndpointUtil.h"
+#include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "pipeline/Pipeline.h"
 #include "sender/Sender.h"
 
 using namespace std;
 
-DECLARE_FLAG_INT32(batch_send_interval);
-DEFINE_FLAG_BOOL(sls_client_send_compress, "whether compresses the data or not when put data", true);
+DEFINE_FLAG_INT32(batch_send_interval, "batch sender interval (second)(default 3)", 3);
 
 namespace logtail {
 

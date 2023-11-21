@@ -65,8 +65,8 @@ DEFINE_FLAG_INT32(max_fix_pos_bytes, "", 128 * 1024);
 DEFINE_FLAG_INT32(force_release_deleted_file_fd_timeout,
                   "force release fd if file is deleted after specified seconds, no matter read to end or not",
                   -1);
-DECLARE_FLAG_INT32(delay_bytes_upperlimit);
 DECLARE_FLAG_INT32(reader_close_unused_file_time);
+DECLARE_FLAG_INT32(logtail_alarm_interval);
 
 namespace logtail {
 

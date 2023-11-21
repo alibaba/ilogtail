@@ -85,7 +85,7 @@ private:
     std::string mCheckPointFilePath;
 
     // local config
-    std::string mMappingConfigPath;
+    // std::string mMappingConfigPath;
 
     bool mSendRandomSleep;
     bool mSendFlowControl;
@@ -94,23 +94,23 @@ private:
     bool mAcceptMultiConfigFlag;
     bool mIgnoreDirInodeChanged;
 
-    std::string mUserConfigPath;
-    std::string mUserLocalConfigPath;
-    std::string mUserLocalConfigDirPath;
-    std::string mUserLocalYamlConfigDirPath;
-    std::string mUserRemoteYamlConfigDirPath;
+    // std::string mUserConfigPath;
+    // std::string mUserLocalConfigPath;
+    // std::string mUserLocalConfigDirPath;
+    // std::string mUserLocalYamlConfigDirPath;
+    // std::string mUserRemoteYamlConfigDirPath;
     bool mLogParseAlarmFlag;
     std::string mProcessExecutionDir;
     std::string mWorkingDir;
 
-    std::string mContainerMountConfigPath;
+    // std::string mContainerMountConfigPath;
     std::string mConfigIP;
     std::string mConfigHostName;
-    std::string mAlipayZone;
+    // std::string mAlipayZone;
     int32_t mSystemBootTime = -1;
 
     // used to get log config instead of mConfigIp if set, eg: "127.0.0.1.fuse",
-    std::string mCustomizedConfigIP;
+    // std::string mCustomizedConfigIP;
 
     // config file path to save docker file cmd info
     std::string mDockerFilePathConfig;
@@ -188,7 +188,7 @@ private:
      * @param confJson json value to append to
      */
     void LoadIncludeConfig(Json::Value& confJson);
-    void LoadSyslogConf(const Json::Value& confJson);
+    // void LoadSyslogConf(const Json::Value& confJson);
 
     void DumpAllFlagsToMap(std::unordered_map<std::string, std::string>& flagMap);
     void ReadFlagsFromMap(const std::unordered_map<std::string, std::string>& flagMap);
@@ -211,7 +211,7 @@ private:
      */
     void LoadResourceConf(const Json::Value& confJson);
     void LoadOtherConf(const Json::Value& confJson);
-    void LoadGlobalFuseConf(const Json::Value& confJson);
+    // void LoadGlobalFuseConf(const Json::Value& confJson);
     void SetIlogtailConfigJson(const std::string& configJson) {
         ScopedSpinLock lock(mAppConfigLock);
         mIlogtailConfigJson = configJson;
@@ -333,17 +333,17 @@ public:
 
     int32_t GetProcessThreadCount() const { return mProcessThreadCount; }
 
-    const std::string& GetMappingConfigPath() const { return mMappingConfigPath; }
+    // const std::string& GetMappingConfigPath() const { return mMappingConfigPath; }
 
-    const std::string& GetUserConfigPath() const { return mUserConfigPath; }
+    // const std::string& GetUserConfigPath() const { return mUserConfigPath; }
 
-    const std::string& GetLocalUserConfigPath() const { return mUserLocalConfigPath; }
+    // const std::string& GetLocalUserConfigPath() const { return mUserLocalConfigPath; }
 
-    const std::string& GetLocalUserConfigDirPath() const { return mUserLocalConfigDirPath; }
+    // const std::string& GetLocalUserConfigDirPath() const { return mUserLocalConfigDirPath; }
 
-    const std::string& GetLocalUserYamlConfigDirPath() const { return mUserLocalYamlConfigDirPath; }
+    // const std::string& GetLocalUserYamlConfigDirPath() const { return mUserLocalYamlConfigDirPath; }
 
-    const std::string& GetRemoteUserYamlConfigDirPath() const { return mUserRemoteYamlConfigDirPath; }
+    // const std::string& GetRemoteUserYamlConfigDirPath() const { return mUserRemoteYamlConfigDirPath; }
 
     bool IgnoreDirInodeChanged() const { return mIgnoreDirInodeChanged; }
 
@@ -355,11 +355,11 @@ public:
 
     const std::string& GetWorkingDir() const { return mWorkingDir; }
 
-    const std::string& GetContainerMountConfigPath() const { return mContainerMountConfigPath; }
+    // const std::string& GetContainerMountConfigPath() const { return mContainerMountConfigPath; }
 
     const std::string& GetConfigIP() const { return mConfigIP; }
 
-    const std::string& GetCustomizedConfigIp() const { return mCustomizedConfigIP; }
+    // const std::string& GetCustomizedConfigIp() const { return mCustomizedConfigIP; }
 
     const std::string& GetConfigHostName() const { return mConfigHostName; }
 
@@ -377,7 +377,7 @@ public:
 
     int32_t GetForceQuitReadTimeout() const { return mForceQuitReadTimeout; }
 
-    const std::string& GetAlipayZone() const { return mAlipayZone; }
+    // const std::string& GetAlipayZone() const { return mAlipayZone; }
 
     // If @dirPath is not accessible, GetProcessExecutionDir will be set.
     void SetLogtailSysConfDir(const std::string& dirPath);

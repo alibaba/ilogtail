@@ -55,56 +55,49 @@
 #include "pipeline/PipelineManager.h"
 
 using namespace std;
-using namespace logtail;
 
-DEFINE_FLAG_BOOL(https_verify_peer, "set CURLOPT_SSL_VERIFYPEER, CURLOPT_SSL_VERIFYHOST option for libcurl", true);
-#if defined(__linux__) || defined(__APPLE__)
-DEFINE_FLAG_STRING(https_ca_cert, "set CURLOPT_CAINFO for libcurl", "ca-bundle.crt");
-#elif defined(_MSC_VER)
-DEFINE_FLAG_STRING(https_ca_cert, "set CURLOPT_CAINFO for libcurl", "cacert.pem");
-#endif
-DEFINE_FLAG_STRING(default_global_topic, "default is empty string", "");
+// 商业版
+// DEFINE_FLAG_BOOL(https_verify_peer, "set CURLOPT_SSL_VERIFYPEER, CURLOPT_SSL_VERIFYHOST option for libcurl", true);
+// #if defined(__linux__) || defined(__APPLE__)
+// DEFINE_FLAG_STRING(https_ca_cert, "set CURLOPT_CAINFO for libcurl", "ca-bundle.crt");
+// #elif defined(_MSC_VER)
+// DEFINE_FLAG_STRING(https_ca_cert, "set CURLOPT_CAINFO for libcurl", "cacert.pem");
+// #endif
+// DEFINE_FLAG_INT32(request_access_key_interval, "control the frenquency of GetAccessKey, seconds", 60);
+// DEFINE_FLAG_INT32(logtail_sys_conf_update_interval, "control the frenquency of load local machine conf, seconds", 60);
+// DEFINE_FLAG_BOOL(logtail_config_update_enable, "", true);
+
+// 废弃
+// DEFINE_FLAG_STRING(default_global_topic, "default is empty string", "");
+// DEFINE_FLAG_STRING(default_data_integrity_project, "default data integrity project", "data_integrity");
+// DEFINE_FLAG_STRING(default_data_integrity_log_store, "default data integrity log store", "data_integrity");
+// DEFINE_FLAG_INT32(default_data_integrity_time_pos, "default data integrity time pos", 0);
+// DEFINE_FLAG_STRING(default_log_time_reg,
+//                    "default log time reg",
+//                    "([0-9]{4})-(0[0-9]{1}|1[0-2])-(0[0-9]{1}|[12][0-9]{1}|3[01]) "
+//                    "(0[0-9]{1}|1[0-9]{1}|2[0-3]):[0-5][0-9]{1}:([0-5][0-9]{1})");
+// DEFINE_FLAG_STRING(default_line_count_project, "default line count project", "line_count");
+// DEFINE_FLAG_STRING(default_line_count_log_store, "default line count log store", "line_count");
+// DEFINE_FLAG_BOOL(default_fuse_mode, "default fuse mode", false);
+// DEFINE_FLAG_BOOL(default_mark_offset_flag, "default mark offset flag", false);
+// DEFINE_FLAG_BOOL(default_check_ulogfs_env, "default check ulogfs env", false);
+// DEFINE_FLAG_INT32(default_max_depth_from_root, "default max depth from root", 1000);
+// DEFINE_FLAG_STRING(fuse_customized_config_name,
+//                    "name of specified config for fuse, should not be used by user",
+//                    "__FUSE_CUSTOMIZED_CONFIG__");
+
+// 移动
 // DEFINE_FLAG_STRING(profile_project_name, "profile project_name for logtail", "");
-DEFINE_FLAG_INT32(request_access_key_interval, "control the frenquency of GetAccessKey, seconds", 60);
-DEFINE_FLAG_INT32(logtail_sys_conf_update_interval, "control the frenquency of load local machine conf, seconds", 60);
+// DEFINE_FLAG_STRING(ilogtail_docker_file_path_config, "ilogtail docker path config file", "docker_path_config.json");
+// DEFINE_FLAG_INT32(default_plugin_log_queue_size, "", 10);
+
 DEFINE_FLAG_INT32(wildcard_max_sub_dir_count, "", 1000);
 DEFINE_FLAG_INT32(config_match_max_cache_size, "", 1000000);
 DEFINE_FLAG_INT32(multi_config_alarm_interval, "second", 600);
-DECLARE_FLAG_INT32(delay_bytes_upperlimit);
-DECLARE_FLAG_BOOL(global_network_success);
-DECLARE_FLAG_STRING(ilogtail_user_defined_id_env_name);
-DECLARE_FLAG_STRING(ilogtail_aliuid_env_name);
-DEFINE_FLAG_STRING(ilogtail_docker_file_path_config, "ilogtail docker path config file", "docker_path_config.json");
+
 DEFINE_FLAG_STRING(ilogtail_docker_path_version, "ilogtail docker path config file", "0.1.0");
 DEFINE_FLAG_INT32(max_docker_config_update_times, "max times docker config update in 3 minutes", 10);
 DEFINE_FLAG_INT32(docker_config_update_interval, "interval between docker config updates, seconds", 3);
-DEFINE_FLAG_STRING(default_data_integrity_project, "default data integrity project", "data_integrity");
-DEFINE_FLAG_STRING(default_data_integrity_log_store, "default data integrity log store", "data_integrity");
-DEFINE_FLAG_INT32(default_data_integrity_time_pos, "default data integrity time pos", 0);
-DEFINE_FLAG_STRING(default_log_time_reg,
-                   "default log time reg",
-                   "([0-9]{4})-(0[0-9]{1}|1[0-2])-(0[0-9]{1}|[12][0-9]{1}|3[01]) "
-                   "(0[0-9]{1}|1[0-9]{1}|2[0-3]):[0-5][0-9]{1}:([0-5][0-9]{1})");
-DEFINE_FLAG_STRING(default_line_count_project, "default line count project", "line_count");
-DEFINE_FLAG_STRING(default_line_count_log_store, "default line count log store", "line_count");
-DEFINE_FLAG_BOOL(default_fuse_mode, "default fuse mode", false);
-DEFINE_FLAG_BOOL(default_mark_offset_flag, "default mark offset flag", false);
-DEFINE_FLAG_BOOL(default_check_ulogfs_env, "default check ulogfs env", false);
-DEFINE_FLAG_INT32(default_max_depth_from_root, "default max depth from root", 1000);
-// DEFINE_FLAG_INT32(default_plugin_log_queue_size, "", 10);
-DEFINE_FLAG_STRING(fuse_customized_config_name,
-                   "name of specified config for fuse, should not be used by user",
-                   "__FUSE_CUSTOMIZED_CONFIG__");
-DEFINE_FLAG_BOOL(logtail_config_update_enable, "", true);
-
-DECLARE_FLAG_BOOL(rapid_retry_update_config);
-DECLARE_FLAG_BOOL(default_global_fuse_mode);
-DECLARE_FLAG_BOOL(default_global_mark_offset_flag);
-DECLARE_FLAG_BOOL(enable_collection_mark);
-DECLARE_FLAG_BOOL(enable_env_ref_in_config);
-DECLARE_FLAG_BOOL(sls_client_send_compress);
-DECLARE_FLAG_INT32(default_tail_limit_kb);
-DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
 namespace logtail {
 
@@ -579,10 +572,10 @@ FileDiscoveryConfig ConfigManager::FindBestMatch(const string& path, const strin
     vector<FileDiscoveryConfig> multiConfigs;
     for (; itr != nameConfigMap.end(); ++itr) {
         const FileDiscoveryOptions* config = itr->second.first;
-        // exclude __FUSE_CONFIG__
-        if (itr->first == STRING_FLAG(fuse_customized_config_name)) {
-            continue;
-        }
+        // // exclude __FUSE_CONFIG__
+        // if (itr->first == STRING_FLAG(fuse_customized_config_name)) {
+        //     continue;
+        // }
 
         bool match = config->IsMatch(path, name);
         if (match) {
@@ -662,10 +655,10 @@ int32_t ConfigManager::FindAllMatch(vector<FileDiscoveryConfig>& allConfig,
     auto itr = nameConfigMap.begin();
     for (; itr != nameConfigMap.end(); ++itr) {
         const FileDiscoveryOptions* config = itr->second.first;
-        // exclude __FUSE_CONFIG__
-        if (itr->first == STRING_FLAG(fuse_customized_config_name)) {
-            continue;
-        }
+        // // exclude __FUSE_CONFIG__
+        // if (itr->first == STRING_FLAG(fuse_customized_config_name)) {
+        //     continue;
+        // }
 
         bool match = config->IsMatch(path, name);
         if (match) {
@@ -716,10 +709,10 @@ int32_t ConfigManager::FindMatchWithForceFlag(std::vector<FileDiscoveryConfig>& 
     vector<FileDiscoveryConfig> multiConfigs;
     for (; itr != nameConfigMap.end(); ++itr) {
         FileDiscoveryConfig config = itr->second;
-        // exclude __FUSE_CONFIG__
-        if (itr->first == STRING_FLAG(fuse_customized_config_name)) {
-            continue;
-        }
+        // // exclude __FUSE_CONFIG__
+        // if (itr->first == STRING_FLAG(fuse_customized_config_name)) {
+        //     continue;
+        // }
 
         bool match = config.first->IsMatch(path, name);
         if (match) {

@@ -8,7 +8,7 @@
 
 #include "app_config/AppConfig.h"
 #include "application/Application.h"
-#include "common/Flags.h"
+#include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
 #include "common/version.h"
 #include "logger/Logger.h"
@@ -18,8 +18,6 @@
 #include "sdk/CurlImp.h"
 
 using namespace std;
-
-DECLARE_FLAG_INT32(sls_client_send_timeout);
 
 DEFINE_FLAG_INT32(config_update_interval, "second", 10);
 

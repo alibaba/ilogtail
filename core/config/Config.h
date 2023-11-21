@@ -22,8 +22,23 @@
 #include <vector>
 
 #include "json/json.h"
+#include <re2/re2.h>
 
 namespace logtail {
+
+struct SensitiveWordCastOption {
+    static const int32_t MD5_OPTION = 0;
+    static const int32_t CONST_OPTION = 1;
+    int32_t option;
+    std::string key;
+    std::string constValue;
+    bool replaceAll;
+    std::shared_ptr<re2::RE2> mRegex; // deleted when config is deleted
+
+    SensitiveWordCastOption() : option(CONST_OPTION), replaceAll(false) {}
+
+    ~SensitiveWordCastOption() {}
+};
 
 struct Config {
     std::string mName;

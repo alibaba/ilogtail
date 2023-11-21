@@ -56,7 +56,7 @@
 using namespace std;
 using namespace sls_logs;
 
-DECLARE_FLAG_INT32(buffer_check_period);
+DEFINE_FLAG_INT32(buffer_check_period, "check logtail local storage buffer period", 60);
 DEFINE_FLAG_INT32(quota_exceed_wait_interval, "when daemon buffer thread get quotaExceed error, sleep 5 seconds", 5);
 DEFINE_FLAG_INT32(secondary_buffer_count_limit, "data ready for write buffer file", 20);
 DEFINE_FLAG_BOOL(enable_mock_send, "if enable mock send in ut", false);
@@ -102,6 +102,10 @@ DEFINE_FLAG_STRING(data_endpoint_policy,
                    "policy for switching between data server endpoints, possible options include "
                    "'designated_first'(default) and 'designated_locked'",
                    "designated_first");
+DEFINE_FLAG_INT32(log_expire_time, "log expire time", 24 * 3600);
+
+DECLARE_FLAG_STRING(default_access_key_id);
+DECLARE_FLAG_STRING(default_access_key);
 
 namespace logtail {
 const string Sender::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";

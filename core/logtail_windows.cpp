@@ -45,13 +45,14 @@
 using namespace logtail;
 
 DEFINE_FLAG_STRING(ilogtail_daemon_startup_hints, "hints passed from daemon during startup", "");
-DECLARE_FLAG_STRING(ilogtail_config_env_name);
 DECLARE_FLAG_STRING(logtail_sys_conf_dir);
 DECLARE_FLAG_STRING(check_point_filename);
 DECLARE_FLAG_STRING(default_buffer_file_path);
 DECLARE_FLAG_STRING(ilogtail_docker_file_path_config);
 DECLARE_FLAG_INT32(data_server_port);
 DECLARE_FLAG_BOOL(enable_env_ref_in_config);
+DECLARE_FLAG_BOOL(enable_sls_metrics_format);
+DECLARE_FLAG_BOOL(enable_containerd_upper_dir_detect);
 
 static void overwrite_community_edition_flags() {
     // support run in installation dir on default

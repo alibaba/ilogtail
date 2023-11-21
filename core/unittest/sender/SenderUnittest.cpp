@@ -70,8 +70,6 @@ DECLARE_FLAG_INT32(buffer_file_alive_interval);
 DECLARE_FLAG_STRING(profile_project_name);
 DECLARE_FLAG_BOOL(enable_mock_send);
 DECLARE_FLAG_INT32(max_holded_data_size);
-DECLARE_FLAG_INT32(ilogtail_discard_interval);
-DECLARE_FLAG_BOOL(ilogtail_discard_old_data);
 DECLARE_FLAG_INT32(merge_log_count_limit);
 DECLARE_FLAG_INT32(first_read_endure_bytes);
 DECLARE_FLAG_STRING(ilogtail_config);
@@ -81,7 +79,6 @@ DECLARE_FLAG_INT32(buffer_check_period);
 DECLARE_FLAG_INT32(monitor_interval);
 DECLARE_FLAG_INT32(max_buffer_num);
 DECLARE_FLAG_INT32(sls_host_update_interval);
-DECLARE_FLAG_STRING(default_region_name);
 DECLARE_FLAG_INT32(logtail_alarm_interval);
 
 DECLARE_FLAG_INT32(max_client_send_error_count);
@@ -103,7 +100,8 @@ DECLARE_FLAG_INT32(dirfile_check_interval_ms);
 DECLARE_FLAG_INT32(send_request_concurrency);
 DECLARE_FLAG_INT32(test_unavailable_endpoint_interval);
 
-DECLARE_FLAG_STRING(alipay_zone);
+DECLARE_FLAG_STRING(logtail_send_address);
+DECLARE_FLAG_INT32(batch_send_interval);
 
 
 namespace logtail {
@@ -2945,47 +2943,6 @@ public:
         LOG_INFO(sLogger, ("TestGlobalMarkOffset() end", time(NULL)));
     }
 
-    void TestLogGroupAlipayZoneInfo() {
-        LOG_INFO(sLogger, ("TestLogGroupAlipayZoneInfo() begin", time(NULL)));
-
-        EnableNetWork();
-        // set env
-#if defined(_MSC_VER)
-        _putenv_s(STRING_FLAG(alipay_zone).c_str(), "GZ00C");
-#else
-        setenv(STRING_FLAG(alipay_zone).c_str(), "GZ00C", 1);
-#endif
-        CaseSetUp(false, true, true, 1, false, -1, 0, 900);
-
-        // write file, a.log
-        for (int round = 0; round < 10; ++round) {
-            OneJob(5, gRootDir, "a", true, time(NULL));
-            usleep(200 * 1000);
-        }
-        sleep(5);
-
-        bool hasZoneInfoFlag = false;
-        int logTagSize = gRcvLogGroup.logtags_size();
-        for (int i = 0; i < logTagSize; ++i) {
-            const ::sls_logs::LogTag logTag = gRcvLogGroup.logtags(i);
-            if (logTag.key() == LOG_RESERVED_KEY_ALIPAY_ZONE) {
-                APSARA_TEST_EQUAL(logTag.value(), "GZ00C");
-                hasZoneInfoFlag = true;
-            }
-        }
-        APSARA_TEST_TRUE(hasZoneInfoFlag);
-
-        // unset env
-#if defined(_MSC_VER)
-        _putenv((STRING_FLAG(alipay_zone) + "=").c_str());
-#else
-        unsetenv(STRING_FLAG(alipay_zone).c_str());
-#endif
-
-        CaseCleanUp();
-        LOG_INFO(sLogger, ("TestLogGroupAlipayZoneInfo() end", time(NULL)));
-    }
-
     static void MockExactlyOnceSend(LoggroupTimeValue* data);
 
     void TestExactlyOnceDataSendSequence();
@@ -3022,7 +2979,6 @@ APSARA_UNIT_TEST_CASE(SenderUnittest, TestRealIpSend, gCaseID);
 APSARA_UNIT_TEST_CASE(SenderUnittest, TestEmptyRealIp, gCaseID);
 APSARA_UNIT_TEST_CASE(SenderUnittest, TestRealIpSendFailAndRecover, gCaseID);
 APSARA_UNIT_TEST_CASE(SenderUnittest, TestRegionConcurreny, gCaseID);
-APSARA_UNIT_TEST_CASE(SenderUnittest, TestLogGroupAlipayZoneInfo, gCaseID);
 UNIT_TEST_CASE(SenderUnittest, TestExactlyOnceDataSendSequence);
 UNIT_TEST_CASE(SenderUnittest, TestExactlyOncePartialBlockConcurrentSend);
 UNIT_TEST_CASE(SenderUnittest, TestExactlyOnceCompleteBlockConcurrentSend);
