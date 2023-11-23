@@ -27,7 +27,6 @@ public:
     ConfigProvider& operator=(const ConfigProvider&) = delete;
 
     virtual void Init(const std::string& dir);
-    virtual void Stop() = 0;
 
 protected:
     ConfigProvider() = default;

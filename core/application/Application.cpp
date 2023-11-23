@@ -151,12 +151,6 @@ bool Application::TryGetUUID() {
 void Application::Exit() {
     PipelineManager::GetInstance()->StopAllPipelines();
     PluginRegistry::GetInstance()->UnloadPlugins();
-#ifdef __ENTERPRISE__
-    EnterpriseConfigProvider::GetInstance()->Stop();
-    LegacyConfigProvider::GetInstance()->Stop();
-#else
-    CommonConfigProvider::GetInstance()->Stop();
-#endif
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
 #endif

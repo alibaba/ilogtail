@@ -36,7 +36,6 @@ public:
     static CommonConfigProvider* GetInstance();
 
     void Init(const std::string& dir) override;
-    void Stop() override { mThreadIsRunning = false; }
 
 private:
     struct ConfigServerAddress {
@@ -49,7 +48,7 @@ private:
     };
 
     CommonConfigProvider() = default;
-    ~CommonConfigProvider() = default;
+    ~CommonConfigProvider();
 
     ConfigServerAddress GetOneConfigServerAddress(bool changeConfigServer);
     const std::vector<std::string>& GetConfigServerTags() const { return mConfigServerTags; }

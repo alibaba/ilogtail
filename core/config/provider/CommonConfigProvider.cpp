@@ -37,6 +37,10 @@ DEFINE_FLAG_INT32(config_update_interval, "second", 10);
 
 namespace logtail {
 
+CommonConfigProvider::~CommonConfigProvider() {
+    mThreadIsRunning = false;
+}
+
 CommonConfigProvider* CommonConfigProvider::GetInstance() {
     static CommonConfigProvider instance;
     return &instance;
