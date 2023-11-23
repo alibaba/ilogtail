@@ -479,8 +479,9 @@ SendClosure::RecompressData(sdk::Response* response, const string& errorCode, co
     return RETRY_ASYNC_WHEN_FAIL;
 }
 
-Sender::Sender() {
+Sender::Sender(): mDefaultRegion(STRING_FLAG(default_region_name)) {
     setupServerSwitchPolicy();
+    
     srand(time(NULL));
     mFlushLog = false;
     SetBufferFilePath(AppConfig::GetInstance()->GetBufferFilePath());
@@ -1024,7 +1025,7 @@ bool Sender::ReadNextEncryption(int32_t& pos,
         }
     } else {
         bufferMeta.set_project(encodedInfo);
-        bufferMeta.set_endpoint(AppConfig::GetInstance()->GetDefaultRegion()); // new mode
+        bufferMeta.set_endpoint(GetDefaultRegion()); // new mode
         bufferMeta.set_aliuid("");
     }
     if (!bufferMeta.has_compresstype()) {
@@ -2902,6 +2903,16 @@ bool Sender::GetRegionStatus(const string& region) {
     } else {
         return rst->second;
     }
+}
+
+const string& Sender::GetDefaultRegion() const {
+    ScopedSpinLock lock(mDefaultRegionLock);
+    return mDefaultRegion;
+}
+
+void Sender::SetDefaultRegion(const string& region) {
+    ScopedSpinLock lock(mDefaultRegionLock);
+    mDefaultRegion = region;
 }
 
 } // namespace logtail

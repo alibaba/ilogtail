@@ -13,19 +13,25 @@
 // limitations under the License.
 
 #include "AppConfig.h"
+
 #include <algorithm>
-#include "sender/Sender.h"
+
+#include "common/EnvUtil.h"
+#include "common/FileSystemUtil.h"
+#include "common/JsonUtil.h"
+#include "common/LogtailCommonFlags.h"
+#include "common/RuntimeUtil.h"
+#include "config_manager/ConfigManager.h"
+#include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
-#include "common/LogtailCommonFlags.h"
-#include "common/RuntimeUtil.h"
-#include "common/FileSystemUtil.h"
-#include "common/JsonUtil.h"
-#include "common/EnvUtil.h"
-#include "config_manager/ConfigManager.h"
-#include "logger/Logger.h"
 #include "reader/LogFileReader.h"
+#include "sender/Sender.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
+
 using namespace std;
 
 DEFINE_FLAG_INT32(max_buffer_num, "max size", 40);
@@ -157,7 +163,7 @@ AppConfig::AppConfig() {
     mSendFlowControl = BOOL_FLAG(enable_flow_control);
     SetIlogtailConfigJson("");
     // mStreamLogAddress = "0.0.0.0";
-    mIsOldPubRegion = false;
+    // mIsOldPubRegion = false;
     // mOpenStreamLog = false;
     mSendRequestConcurrency = INT32_FLAG(send_request_concurrency);
     mProcessThreadCount = INT32_FLAG(process_thread_count);
@@ -168,7 +174,7 @@ AppConfig::AppConfig() {
     mMemUsageUpLimit = INT64_FLAG(memory_usage_up_limit);
     mResourceAutoScale = BOOL_FLAG(default_resource_auto_scale);
     mInputFlowControl = BOOL_FLAG(default_input_flow_control);
-    mDefaultRegion = STRING_FLAG(default_region_name);
+    // mDefaultRegion = STRING_FLAG(default_region_name);
     mAcceptMultiConfigFlag = BOOL_FLAG(default_accept_multi_config);
     mMaxMultiConfigSize = INT32_FLAG(max_multi_config_size);
     // mUserConfigPath = STRING_FLAG(user_log_config);
@@ -253,7 +259,7 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
 #ifdef __ENTERPRISE__
         if (res == CONFIG_NOT_EXIST) {
             LOG_INFO(sLogger, ("config file not exist, try generate config by path", ilogtailConfigFile));
-            if (GenerateAPPConfigByConfigPath(ilogtailConfigFile, confJson)) {
+            if (EnterpriseConfigProvider::GetInstance()->GenerateAPPConfigByConfigPath(ilogtailConfigFile, confJson)) {
                 res = CONFIG_OK;
                 LOG_INFO(sLogger, ("generate config success", ilogtailConfigFile));
             } else {
@@ -298,17 +304,6 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
 
     CheckAndResetProxyEnv();
     mConfJson = confJson;
-}
-
-std::string AppConfig::GetDefaultRegion() const {
-    ScopedSpinLock lock(mAppConfigLock);
-    return mDefaultRegion;
-}
-
-void AppConfig::SetDefaultRegion(const string& region) {
-    LOG_DEBUG(sLogger, ("SetDefaultRegion before", mDefaultRegion)("after", region));
-    ScopedSpinLock lock(mAppConfigLock);
-    mDefaultRegion = region;
 }
 
 void AppConfig::LoadEnvTags() {
@@ -399,43 +394,55 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
 
     if (confJson.isMember("max_bytes_per_sec") && confJson["max_bytes_per_sec"].isInt())
         mMaxBytePerSec = confJson["max_bytes_per_sec"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mMaxBytePerSec = INT32_FLAG(pub_max_send_byte_per_sec);
+#endif
     else
         mMaxBytePerSec = INT32_FLAG(default_max_send_byte_per_sec);
 
     if (confJson.isMember("bytes_per_sec") && confJson["bytes_per_sec"].isInt())
         mBytePerSec = confJson["bytes_per_sec"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mBytePerSec = INT32_FLAG(pub_send_byte_per_sec);
+#endif
     else
         mBytePerSec = INT32_FLAG(default_send_byte_per_sec);
 
     if (confJson.isMember("buffer_file_num") && confJson["buffer_file_num"].isInt())
         mNumOfBufferFile = confJson["buffer_file_num"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mNumOfBufferFile = INT32_FLAG(pub_buffer_file_num);
+#endif
     else
         mNumOfBufferFile = INT32_FLAG(default_buffer_file_num);
 
     if (confJson.isMember("buffer_file_size") && confJson["buffer_file_size"].isInt())
         mLocalFileSize = confJson["buffer_file_size"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mLocalFileSize = INT32_FLAG(pub_local_file_size);
+#endif
     else
         mLocalFileSize = INT32_FLAG(default_local_file_size);
 
     if (confJson.isMember("buffer_map_size") && confJson["buffer_map_size"].isInt())
         mMaxHoldedDataSize = confJson["buffer_map_size"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mMaxHoldedDataSize = INT32_FLAG(pub_max_holded_data_size);
+#endif
     else
         mMaxHoldedDataSize = INT32_FLAG(max_holded_data_size);
 
     if (confJson.isMember("buffer_map_num") && confJson["buffer_map_num"].isInt())
         mMaxBufferNum = confJson["buffer_map_num"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mMaxBufferNum = INT32_FLAG(pub_max_buffer_num);
+#endif
     else
         mMaxBufferNum = INT32_FLAG(max_buffer_num);
 
@@ -485,19 +492,25 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
             mCpuUsageUpLimit = confJson["cpu_usage_limit"].asDouble();
         else if (confJson["cpu_usage_limit"].isIntegral())
             mCpuUsageUpLimit = double(confJson["cpu_usage_limit"].asInt64());
-        else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+        else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
             mCpuUsageUpLimit = DOUBLE_FLAG(pub_cpu_usage_up_limit);
+#endif
         else
             mCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
-    } else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    } else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion()) {
         mCpuUsageUpLimit = DOUBLE_FLAG(pub_cpu_usage_up_limit);
-    else
+#endif
+    } else
         mCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
 
     if (confJson.isMember("mem_usage_limit") && confJson["mem_usage_limit"].isIntegral())
         mMemUsageUpLimit = confJson["mem_usage_limit"].asInt64();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mMemUsageUpLimit = INT64_FLAG(pub_memory_usage_up_limit);
+#endif
     else
         mMemUsageUpLimit = INT64_FLAG(memory_usage_up_limit);
 

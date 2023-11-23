@@ -14,7 +14,6 @@
 
 #include "flusher/FlusherSLS.h"
 
-#include "app_config/AppConfig.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
@@ -42,7 +41,7 @@ const unordered_set<string> FlusherSLS::sNativeParam = {"Project",
                                                         "MaxSendRate",
                                                         "Batch"};
 
-FlusherSLS::FlusherSLS() : mRegion(AppConfig::GetInstance()->GetDefaultRegion()) {
+FlusherSLS::FlusherSLS() : mRegion(Sender::Instance()->GetDefaultRegion()) {
 }
 
 FlusherSLS::Batch::Batch() : mSendIntervalSecs(static_cast<uint32_t>(INT32_FLAG(batch_send_interval))) {
@@ -71,7 +70,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         if (!GetOptionalStringParam(config, "Region", mRegion, errorMsg)) {
             PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                                   errorMsg,
-                                  AppConfig::GetInstance()->GetDefaultRegion(),
+                                  Sender::Instance()->GetDefaultRegion(),
                                   sName,
                                   mContext->GetConfigName());
         }

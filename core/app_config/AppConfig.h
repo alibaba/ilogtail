@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _APSARA_LOGTAIL_APP_CONFIG_H
-#define _APSARA_LOGTAIL_APP_CONFIG_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -158,6 +157,8 @@ private:
     Json::Value mFileTagsJson;
     DoubleBuffer<std::vector<sls_logs::LogTag>> mFileTags;
 
+    std::string mBindInterface;
+
     // /**
     //  * @brief Load ConfigServer, DataServer and network interface
     //  *
@@ -244,15 +245,6 @@ private:
     static void InitEnvMapping(const std::string& envStr, std::map<std::string, std::string>& envMapping);
     static void SetConfigFlag(const std::string& flagName, const std::string& value);
 
-protected:
-    std::string mDefaultRegion;
-    std::string mBindInterface;
-    // compatible mode, old ilogtail_config.json have no resource usage settings but
-    // data_server_address/config_server_address
-    bool mIsOldPubRegion;
-
-    // EndpointAddressType mConfigServerAddressNetType = EndpointAddressType::INNER;
-
 public:
     AppConfig();
     ~AppConfig(){};
@@ -274,9 +266,9 @@ public:
 
     bool IsSendFlowControl() const { return mSendFlowControl; }
 
-    std::string GetDefaultRegion() const;
+    // std::string GetDefaultRegion() const;
 
-    void SetDefaultRegion(const std::string& region);
+    // void SetDefaultRegion(const std::string& region);
 
     // uint32_t GetStreamLogTcpPort() const { return mStreamLogTcpPort; }
 
@@ -415,5 +407,5 @@ public:
     friend class InputFileUnittest;
 #endif
 };
+
 } // namespace logtail
-#endif

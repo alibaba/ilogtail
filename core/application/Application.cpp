@@ -209,8 +209,6 @@ bool Application::GetUUIDThread() {
     string uuid;
 #if defined(__aarch64__) || defined(__sw_64__)
     // DMI can not work on such platforms but might crash Logtail, disable.
-#elif defined(__ENTERPRISE__)
-    uuid = CalculateDmiUUID();
 #else
     uuid = CalculateRandomUUID();
 #endif
