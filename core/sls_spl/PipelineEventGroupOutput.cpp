@@ -39,17 +39,15 @@ void PipelineEventGroupOutput::addRow(
         oss << mIOHeader->columnNames[idxTag] << row[idxTag];
         //LOG_DEBUG(sLogger, ("tag key", StringView(mIOHeader->columnNames[idxTag].mPtr, mIOHeader->columnNames[idxTag].mLen))("tag value", StringView(row[idxTag].mPtr, row[idxTag].mLen)));
     }
-    int64_t tagStrHash = HashString(oss.str());
+    int64_t tagStrHash = HashString(oss.str());    
     int32_t logGroupKeyIdx = -1;
-    auto it = mLogGroupKeyIdxs.find(tagStrHash);
-    if (it != mLogGroupKeyIdxs.end()) {
-        logGroupKeyIdx = it->second;
-    } else {
+
+    if (tagStrHash != lastTagStrHash) {
         mLogGroupList->emplace_back(mLogGroup->GetSourceBuffer());
         mLogGroupList->back().SetAllMetadata(mLogGroup->GetAllMetadata());
-        logGroupKeyIdx = mLogGroupList->size() - 1;
-        mLogGroupKeyIdxs.emplace(tagStrHash, logGroupKeyIdx);
     }
+    logGroupKeyIdx = mLogGroupList->size() - 1;
+    lastTagStrHash = tagStrHash;
 
     targetEvent->SetTimestamp(time, timeNsPart);
 

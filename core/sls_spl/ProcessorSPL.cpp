@@ -64,14 +64,12 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
    
 
     PipelineOptions splOptions;
+    splOptions.parserMode = parser::ParserMode::LOGTAIL;
     splOptions.errorSampling = false;
     splOptions.useFunctionWhitelist = false;
 
     initSPL(&splOptions);
 
-    // logger初始化
-    // logger由调用方提供
-    // auto logger = std::make_shared<LogtailLogger>();
     LoggerPtr logger;
     logger = sLogger;
 
@@ -81,8 +79,6 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
     Error error;
     
-    //mSPLPipelinePtr = PipelineFactory::create(spl, error, 1000, 1024 * 1024 * 1024, logger);
-
     mSPLPipelinePtr = std::make_shared<apsara::sls::spl::SplPipeline>(spl, error, timeoutMills, maxMemoryBytes, logger);
     if (error.code_ != StatusCode::OK) {
         LOG_ERROR(sLogger, ("pipeline create error", error.msg_)("raw spl", spl));
@@ -101,8 +97,8 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
 
 void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
     std::string errorMsg;
-    //size_t inSize = logGroup.GetEvents().size();
-    //mProcInRecordsTotal->Add(inSize);
+    size_t inSize = logGroup.GetEvents().size();
+    mProcInRecordsTotal->Add(inSize);
 
     uint64_t startTime = GetCurrentTimeInMicroSeconds();
 
@@ -119,7 +115,7 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
         outputs.emplace_back(new PipelineEventGroupOutput(logGroup, logGroupList, resultTaskLabel));
     }
 
-    /// 开始调用pipeline.execute
+    // 开始调用pipeline.execute
     // 传入inputs, outputs
     // 输出pipelineStats, error
     PipelineStats pipelineStats;
@@ -131,35 +127,34 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     uint64_t stage2Time = GetCurrentTimeInMicroSeconds();
     if (errCode != StatusCode::OK) {
         LOG_ERROR(sLogger, ("execute error", errorMsg));
-        //mSplExcuteErrorCount->Add(1);
-        //if (errCode == StatusCode::TIMEOUT_ERROR) {
-        //    // todo:: 
-        //    mSplExcuteTimeoutErrorCount->Add(1);
-        //} else if (errCode == StatusCode::MEM_EXCEEDED) {
-        //    mSplExcuteMemoryExceedErrorCount->Add(1);
-        //}
+        mSplExcuteErrorCount->Add(1);
+        // 出现错误，把原数据放回来
+        logGroupList.emplace_back(std::move(logGroup));
+        if (errCode == StatusCode::TIMEOUT_ERROR) {
+            mSplExcuteTimeoutErrorCount->Add(1);
+        } else if (errCode == StatusCode::MEM_EXCEEDED) {
+            mSplExcuteMemoryExceedErrorCount->Add(1);
+        }
+    } else {
+        mProcessMicros->Add(pipelineStats.processMicros_);
+        mInputMicros->Add(pipelineStats.inputMicros_);
+        mOutputMicros->Add(pipelineStats.outputMicros_);
+        mMemPeakBytes->Add(pipelineStats.memPeakBytes_);
+        mTotalTaskCount->Add(pipelineStats.totalTaskCount_);
+        mSuccTaskCount->Add(pipelineStats.succTaskCount_);
+        mFailTaskCount->Add(pipelineStats.failTaskCount_);
     }
-
-    //mProcessMicros->Add(pipelineStats.processMicros_);
-    //mInputMicros->Add(pipelineStats.inputMicros_);
-    //mOutputMicros->Add(pipelineStats.outputMicros_);
-    //mMemPeakBytes->Add(pipelineStats.memPeakBytes_);
-    //mTotalTaskCount->Add(pipelineStats.totalTaskCount_);
-    //mSuccTaskCount->Add(pipelineStats.succTaskCount_);
-    //mFailTaskCount->Add(pipelineStats.failTaskCount_);
 
     for (auto& input : inputs) delete input;
     for (auto& output : outputs) delete output;
-    //LOG_DEBUG(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
 
-
-    //size_t outSize = 0;
-    //for (auto& logGroup : logGroupList) {
-    //    outSize += logGroup.GetEvents().size();
-    //}
-    //mProcOutRecordsTotal->Add(outSize);
-    //uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
-    //mProcTimeMS->Add(durationTime);
+    size_t outSize = 0;
+    for (auto& logGroup : logGroupList) {
+        outSize += logGroup.GetEvents().size();
+    }
+    mProcOutRecordsTotal->Add(outSize);
+    uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
+    mProcTimeMS->Add(durationTime);
 
     uint64_t stage3Time = GetCurrentTimeInMicroSeconds();
     stage1TimeTotal += (stage1Time - startTime);

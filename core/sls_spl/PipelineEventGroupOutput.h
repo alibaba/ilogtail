@@ -35,12 +35,15 @@ class PipelineEventGroupOutput : public Output {
         std::string mTaskLabel;
         bool mWithSleep;
 
-        std::unordered_map<int64_t, int32_t> mLogGroupKeyIdxs;
+        //std::unordered_map<int64_t, int32_t> mLogGroupKeyIdxs;
 
         int32_t mTimeIdx = -1;
         int32_t mTimeNSIdx = -1;
         std::vector<int32_t> mTagsIdxs;
         std::vector<int32_t> mContentsIdxs;
+
+        int64_t lastTagStrHash = 0;
+
 
 
 };
