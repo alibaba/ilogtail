@@ -16,6 +16,7 @@
 
 #include <string>
 
+#include "app_config/AppConfig.h"
 #include "common/Flags.h"
 #include "common/JsonUtil.h"
 #include "common/ParamExtractor.h"
@@ -166,6 +167,9 @@ bool Config::Parse() {
             hasObserverInput = true;
 #ifdef __ENTERPRISE__
         } else if (pluginName == "input_stream") {
+            if (!AppConfig::GetInstance()->GetOpenStreamLog()) {
+                PARAM_ERROR_RETURN(sLogger, "stream log is not enabled", noModule, mName);
+            }
             hasStreamInput = true;
 #endif
         }
@@ -370,7 +374,7 @@ bool ParseConfigDetail(const string& content, const string& extension, Json::Val
         return ParseJsonTable(content, detail, errorMsg);
     } else if (extension == ".yaml" || extension == ".yml") {
         YAML::Node yamlRoot;
-        if (!ParseYamlTable(content, yamlRoot, errorMsg)){
+        if (!ParseYamlTable(content, yamlRoot, errorMsg)) {
             return false;
         }
         detail = ConvertYamlToJson(yamlRoot);

@@ -156,9 +156,9 @@ AppConfig::AppConfig() {
     mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);
     mSendFlowControl = BOOL_FLAG(enable_flow_control);
     SetIlogtailConfigJson("");
-    mStreamLogAddress = "0.0.0.0";
+    // mStreamLogAddress = "0.0.0.0";
     mIsOldPubRegion = false;
-    mOpenStreamLog = false;
+    // mOpenStreamLog = false;
     mSendRequestConcurrency = INT32_FLAG(send_request_concurrency);
     mProcessThreadCount = INT32_FLAG(process_thread_count);
     // mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
@@ -841,6 +841,10 @@ void AppConfig::LoadOtherConf(const Json::Value& confJson) {
     //     mMappingConfigPath = confJson["mapping_conf_path"].asString();
     // else
     //     mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
+
+    if (confJson.isMember("streamlog_open") && confJson["streamlog_open"].isBool()) {
+        mOpenStreamLog = confJson["streamlog_open"].asBool();
+    }
 
     {
         int32_t oasConnectTimeout = 0;

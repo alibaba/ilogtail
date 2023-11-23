@@ -815,21 +815,6 @@ void ConfigManager::DeleteHandlers() {
     mHandlersToDelete.clear();
 }
 
-// find config domain socket data, find postfix like "_category"
-const FlusherSLS* ConfigManager::FindDSConfigByCategory(const std::string& dsCtegory) {
-    auto nameConfigMap = FileServer::GetInstance()->GetAllFileDiscoveryConfigs();
-    for (auto iter = nameConfigMap.begin(); iter != nameConfigMap.end(); ++iter) {
-        const Flusher* plugin = iter->second.second->GetPipeline().GetFlushers()[0]->GetPlugin();
-        if (plugin->Name() == "flusher_sls") {
-            const FlusherSLS* flusherSLS = static_cast<const FlusherSLS*>(plugin);
-            if (dsCtegory == flusherSLS->mLogstore) {
-                return flusherSLS;
-            }
-        }
-    }
-    return nullptr;
-}
-
 // GetRelatedConfigs calculates related configs of @path.
 // Two kind of relations:
 // 1. No wildcard path: the base path of Config is the prefix of @path and within depth.

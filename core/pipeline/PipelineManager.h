@@ -38,9 +38,13 @@ public:
     }
 
     void UpdatePipelines(ConfigDiff& diff);
-    std::shared_ptr<Pipeline> FindPipelineByName(const std::string& configName) const ;
+    std::shared_ptr<Pipeline> FindPipelineByName(const std::string& configName) const;
     std::vector<std::string> GetAllPipelineNames() const;
     std::string GetPluginStatistics() const;
+    // for shennong only
+    const std::unordered_map<std::string, std::shared_ptr<Pipeline>>& GetAllPipelines() const {
+        return mPipelineNameEntityMap;
+    }
     // 过渡使用
     void StopAllPipelines();
 

@@ -52,10 +52,10 @@ private:
     std::string mIlogtailConfigJson;
 
     // syslog
-    std::string mStreamLogAddress;
-    uint32_t mStreamLogTcpPort;
-    uint32_t mStreamLogPoolSizeInMb;
-    uint32_t mStreamLogRcvLenPerCall;
+    // std::string mStreamLogAddress;
+    // uint32_t mStreamLogTcpPort;
+    // uint32_t mStreamLogPoolSizeInMb;
+    // uint32_t mStreamLogRcvLenPerCall;
     bool mOpenStreamLog;
 
     // performance
@@ -278,13 +278,13 @@ public:
 
     void SetDefaultRegion(const std::string& region);
 
-    uint32_t GetStreamLogTcpPort() const { return mStreamLogTcpPort; }
+    // uint32_t GetStreamLogTcpPort() const { return mStreamLogTcpPort; }
 
-    const std::string& GetStreamLogAddress() const { return mStreamLogAddress; }
+    // const std::string& GetStreamLogAddress() const { return mStreamLogAddress; }
 
-    uint32_t GetStreamLogPoolSizeInMb() const { return mStreamLogPoolSizeInMb; }
+    // uint32_t GetStreamLogPoolSizeInMb() const { return mStreamLogPoolSizeInMb; }
 
-    uint32_t GetStreamLogRcvLenPerCall() const { return mStreamLogRcvLenPerCall; }
+    // uint32_t GetStreamLogRcvLenPerCall() const { return mStreamLogRcvLenPerCall; }
 
     bool GetOpenStreamLog() const { return mOpenStreamLog; }
 

@@ -359,7 +359,7 @@ public:
 
     // Config* FindStreamLogTagMatch(const std::string& tag);
 
-    const FlusherSLS* FindDSConfigByCategory(const std::string& dsCtegory);
+    // const FlusherSLS* FindDSConfigByCategory(const std::string& dsCtegory);
 
     // 废弃
     // Config* FindConfigByName(const std::string& configName);
