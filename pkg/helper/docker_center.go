@@ -637,7 +637,7 @@ func getDockerCenterInstance() *DockerCenter {
 				}
 				time.Sleep(time.Second * 1)
 				if i == 9 {
-					logger.Errorf(context.Background(), "DOCKER_CENTER_ALARM", "[CRIRuntime] create cri-runtime client failed")
+					logger.Error(context.Background(), "DOCKER_CENTER_ALARM", "[CRIRuntime] create cri-runtime client failed")
 				}
 			}
 
