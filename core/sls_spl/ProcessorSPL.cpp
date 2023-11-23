@@ -62,7 +62,12 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     mSuccTaskCount = mMetricsRecordRef.CreateCounter("proc_spl_succ_task_count");
     mFailTaskCount = mMetricsRecordRef.CreateCounter("proc_spl_fail_task_count");
    
-    initSPL();
+
+    PipelineOptions splOptions;
+    splOptions.errorSampling = false;
+    splOptions.useFunctionWhitelist = false;
+
+    initSPL(&splOptions);
 
     // logger初始化
     // logger由调用方提供
@@ -75,7 +80,10 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     const uint64_t timeoutMills = 100;
     const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
     Error error;
-    mSPLPipelinePtr = std::make_shared<SplPipeline>(spl, error, timeoutMills, maxMemoryBytes, logger);
+    
+    //mSPLPipelinePtr = PipelineFactory::create(spl, error, 1000, 1024 * 1024 * 1024, logger);
+
+    mSPLPipelinePtr = std::make_shared<apsara::sls::spl::SplPipeline>(spl, error, timeoutMills, maxMemoryBytes, logger);
     if (error.code_ != StatusCode::OK) {
         LOG_ERROR(sLogger, ("pipeline create error", error.msg_)("raw spl", spl));
         LogtailAlarm::GetInstance()->SendAlarm(USER_CONFIG_ALARM,
@@ -93,8 +101,8 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
 
 void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
     std::string errorMsg;
-    size_t inSize = logGroup.GetEvents().size();
-    mProcInRecordsTotal->Add(inSize);
+    //size_t inSize = logGroup.GetEvents().size();
+    //mProcInRecordsTotal->Add(inSize);
 
     uint64_t startTime = GetCurrentTimeInMicroSeconds();
 
@@ -102,12 +110,12 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
 
     // 根据spip->getInputSearches()，设置input数组
     std::vector<Input*> inputs;
-    for (auto search : mSPLPipelinePtr->getInputSearches()) {
+    for (const auto& search : mSPLPipelinePtr->getInputSearches()) {
         inputs.push_back(new PipelineEventGroupInput(colNames, logGroup));
     }
     // 根据spip->getOutputLabels()，设置output数组
     std::vector<Output*> outputs;
-    for (auto resultTaskLabel : mSPLPipelinePtr->getOutputLabels()) {
+    for (const auto& resultTaskLabel : mSPLPipelinePtr->getOutputLabels()) {
         outputs.emplace_back(new PipelineEventGroupOutput(logGroup, logGroupList, resultTaskLabel));
     }
 
@@ -115,38 +123,48 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     // 传入inputs, outputs
     // 输出pipelineStats, error
     PipelineStats pipelineStats;
+
+    uint64_t stage1Time = GetCurrentTimeInMicroSeconds();
+
     auto errCode = mSPLPipelinePtr->execute(inputs, outputs, &errorMsg, &pipelineStats);
+
+    uint64_t stage2Time = GetCurrentTimeInMicroSeconds();
     if (errCode != StatusCode::OK) {
         LOG_ERROR(sLogger, ("execute error", errorMsg));
-        mSplExcuteErrorCount->Add(1);
-        if (errCode == StatusCode::TIMEOUT_ERROR) {
-            // todo:: 
-            mSplExcuteTimeoutErrorCount->Add(1);
-        } else if (errCode == StatusCode::MEM_EXCEEDED) {
-            mSplExcuteMemoryExceedErrorCount->Add(1);
-        }
+        //mSplExcuteErrorCount->Add(1);
+        //if (errCode == StatusCode::TIMEOUT_ERROR) {
+        //    // todo:: 
+        //    mSplExcuteTimeoutErrorCount->Add(1);
+        //} else if (errCode == StatusCode::MEM_EXCEEDED) {
+        //    mSplExcuteMemoryExceedErrorCount->Add(1);
+        //}
     }
 
-    mProcessMicros->Add(pipelineStats.processMicros_);
-    mInputMicros->Add(pipelineStats.inputMicros_);
-    mOutputMicros->Add(pipelineStats.outputMicros_);
-    mMemPeakBytes->Add(pipelineStats.memPeakBytes_);
-    mTotalTaskCount->Add(pipelineStats.totalTaskCount_);
-    mSuccTaskCount->Add(pipelineStats.succTaskCount_);
-    mFailTaskCount->Add(pipelineStats.failTaskCount_);
+    //mProcessMicros->Add(pipelineStats.processMicros_);
+    //mInputMicros->Add(pipelineStats.inputMicros_);
+    //mOutputMicros->Add(pipelineStats.outputMicros_);
+    //mMemPeakBytes->Add(pipelineStats.memPeakBytes_);
+    //mTotalTaskCount->Add(pipelineStats.totalTaskCount_);
+    //mSuccTaskCount->Add(pipelineStats.succTaskCount_);
+    //mFailTaskCount->Add(pipelineStats.failTaskCount_);
 
     for (auto& input : inputs) delete input;
     for (auto& output : outputs) delete output;
     //LOG_DEBUG(sLogger, ("pipelineStats", *pipelineStatsPtr.get()));
 
 
-    size_t outSize = 0;
-    for (auto& logGroup : logGroupList) {
-        outSize += logGroup.GetEvents().size();
-    }
-    mProcOutRecordsTotal->Add(outSize);
-    uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
-    mProcTimeMS->Add(durationTime);
+    //size_t outSize = 0;
+    //for (auto& logGroup : logGroupList) {
+    //    outSize += logGroup.GetEvents().size();
+    //}
+    //mProcOutRecordsTotal->Add(outSize);
+    //uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
+    //mProcTimeMS->Add(durationTime);
+
+    uint64_t stage3Time = GetCurrentTimeInMicroSeconds();
+    stage1TimeTotal += (stage1Time - startTime);
+    stage2TimeTotal += (stage2Time - stage1Time);
+    stage3TimeTotal += (stage3Time - stage2Time);
     return;
 }
 

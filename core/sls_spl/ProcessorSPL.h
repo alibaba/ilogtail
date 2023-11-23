@@ -30,6 +30,10 @@ public:
     bool Init(const ComponentConfig& config, PipelineContext& context);
     void Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList);
 
+    uint64_t stage1TimeTotal = 0;
+    uint64_t stage2TimeTotal = 0;
+    uint64_t stage3TimeTotal = 0;
+
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e);
 

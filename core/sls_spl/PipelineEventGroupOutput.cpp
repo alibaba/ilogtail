@@ -37,7 +37,7 @@ void PipelineEventGroupOutput::addRow(
     std::ostringstream oss;
     for (const auto& idxTag : mTagsIdxs) { 
         oss << mIOHeader->columnNames[idxTag] << row[idxTag];
-        LOG_DEBUG(sLogger, ("tag key", StringView(mIOHeader->columnNames[idxTag].mPtr, mIOHeader->columnNames[idxTag].mLen))("tag value", StringView(row[idxTag].mPtr, row[idxTag].mLen)));
+        //LOG_DEBUG(sLogger, ("tag key", StringView(mIOHeader->columnNames[idxTag].mPtr, mIOHeader->columnNames[idxTag].mLen))("tag value", StringView(row[idxTag].mPtr, row[idxTag].mLen)));
     }
     int64_t tagStrHash = HashString(oss.str());
     int32_t logGroupKeyIdx = -1;
@@ -62,7 +62,7 @@ void PipelineEventGroupOutput::addRow(
         } else {
             targetEvent->SetContent(StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen), StringView(row[idxContent].mPtr, row[idxContent].mLen));
         }
-        LOG_DEBUG(sLogger, ("content key", StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen))("content value", StringView(row[idxContent].mPtr, row[idxContent].mLen)));
+        //LOG_DEBUG(sLogger, ("content key", StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen))("content value", StringView(row[idxContent].mPtr, row[idxContent].mLen)));
     }
 
     for (const auto& idxTag : mTagsIdxs) {
@@ -71,7 +71,7 @@ void PipelineEventGroupOutput::addRow(
     
     mLogGroupList->at(logGroupKeyIdx).AddEvent(std::move(targetEvent));
     if (!errorKV.second.empty()) {
-        LOG_ERROR(sLogger, ("__error__", errorKV.second));
+        //LOG_ERROR(sLogger, ("__error__", errorKV.second));
     }
     mRowCount ++;
 }

@@ -14,8 +14,9 @@ void PipelineEventGroupInput::getHeader(IOHeader& header, std::string& err) {
     }
 
     for (auto& kv : mLogGroup->GetTags()) {
-        std::string fullTag = FIELD_PREFIX_TAG;
-        fullTag += kv.first;
+        std::ostringstream oss;
+        oss << FIELD_PREFIX_TAG << kv.first;
+        std::string fullTag = oss.str();
         mTmpTags.emplace_back(fullTag);
         header.columnNames.emplace_back(SplStringPiece(fullTag));
         header.constCols.emplace(header.columnNames.size() - 1, SplStringPiece(kv.second.data(), kv.second.size()));
@@ -24,7 +25,7 @@ void PipelineEventGroupInput::getHeader(IOHeader& header, std::string& err) {
 
 void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplStringPiece>& values, std::string& err) {
     std::string columnName = mColumnNames[colIndex];
-    LOG_DEBUG(sLogger, ("colIndex", colIndex)("columnName", columnName));
+    //LOG_DEBUG(sLogger, ("colIndex", colIndex)("columnName", columnName));
     for (auto event : mLogGroup->GetEvents()) {
         LogEvent& sourceEvent = event.Cast<LogEvent>();
         if (FIELD_TIMESTAMP == columnName) {
