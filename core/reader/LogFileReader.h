@@ -213,7 +213,7 @@ public:
 
     bool CheckDevInode();
 
-    bool CheckFileSignatureAndOffset(int64_t& fileSize);
+    bool CheckFileSignatureAndOffset(bool isOpenOnUpdate);
 
     void UpdateLogPath(const std::string& filePath) {
         if (mHostLogPath == filePath) {
