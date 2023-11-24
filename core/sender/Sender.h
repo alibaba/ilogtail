@@ -498,8 +498,8 @@ public:
     bool GetRegionStatus(const std::string& region);
     void UpdateRegionStatus(const std::string& region, bool status);
 
-    const string& GetDefaultRegion() const;
-    void SetDefaultRegion(const string& region);
+    const std::string& GetDefaultRegion() const;
+    void SetDefaultRegion(const std::string& region);
 
     friend class SendClosure;
 
