@@ -1,3 +1,17 @@
+// Copyright 2023 iLogtail Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "config/provider/CommonConfigProvider.h"
 
 #include <filesystem>
@@ -8,7 +22,7 @@
 
 #include "app_config/AppConfig.h"
 #include "application/Application.h"
-#include "common/Flags.h"
+#include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
 #include "common/version.h"
 #include "logger/Logger.h"
@@ -19,17 +33,12 @@
 
 using namespace std;
 
-DECLARE_FLAG_INT32(sls_client_send_timeout);
-
 DEFINE_FLAG_INT32(config_update_interval, "second", 10);
 
 namespace logtail {
+
 CommonConfigProvider::~CommonConfigProvider() {
-    try {
-        if (mCheckUpdateThreadPtr.get() != NULL)
-            mCheckUpdateThreadPtr->GetValue(100);
-    } catch (...) {
-    }
+    mThreadIsRunning = false;
 }
 
 CommonConfigProvider* CommonConfigProvider::GetInstance() {
@@ -78,19 +87,19 @@ void CommonConfigProvider::Init(const string& dir) {
         LOG_INFO(sLogger, ("ilogtail_configserver_tags", confJson["ilogtail_tags"].toStyledString()));
     }
 
-    mCheckUpdateThreadPtr = CreateThread([this]() { CheckUpdateThread(); });
+    mCheckUpdateThread = thread([this] { CheckUpdateThread(); });
 }
 
 void CommonConfigProvider::CheckUpdateThread() {
     usleep((rand() % 10) * 100 * 1000);
     int32_t lastCheckTime = 0;
-    while (mThreadIsRunning) {
+    while (mThreadIsRunning.load()) {
         int32_t curTime = time(NULL);
         if (curTime - lastCheckTime >= INT32_FLAG(config_update_interval)) {
             GetConfigUpdate();
             lastCheckTime = curTime;
         }
-        if (mThreadIsRunning)
+        if (mThreadIsRunning.load())
             sleep(1);
         else
             break;

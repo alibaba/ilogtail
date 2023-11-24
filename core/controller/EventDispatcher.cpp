@@ -73,29 +73,30 @@
 #include "input/InputFile.h"
 #include "file_server/FileServer.h"
 
-using std::string;
-using std::vector;
+using namespace std;
 using namespace sls_logs;
 
-DECLARE_FLAG_INT32(check_point_dump_interval);
-DECLARE_FLAG_INT32(ilogtail_max_epoll_events);
-DECLARE_FLAG_INT32(ilogtail_epoll_wait_events);
-DEFINE_FLAG_INT32(ilogtail_epoll_time_out, "default time out is 1s", 1);
-DEFINE_FLAG_INT32(main_loop_check_interval, "seconds", 60);
-DEFINE_FLAG_INT32(existed_file_active_timeout,
-                  "when first monitor directory, file modified in 120 seconds will be collected",
-                  120);
+// 商业版
+// DEFINE_FLAG_BOOL(merge_shennong_metric, "merge LogGroup into LogPackageList if true", true);
+
+// 废弃
+// DEFINE_FLAG_INT32(main_loop_check_interval, "seconds", 60);
+
+// 移动
+// DEFINE_FLAG_INT32(ilogtail_epoll_time_out, "default time out is 1s", 1);
 // DEFINE_FLAG_INT32(tcmalloc_release_memory_interval, "force release memory held by tcmalloc, seconds", 300);
-DEFINE_FLAG_BOOL(merge_shennong_metric, "merge LogGroup into LogPackageList if true", true);
-DEFINE_FLAG_BOOL(fs_events_inotify_enable, "", true);
-DEFINE_FLAG_INT32(checkpoint_find_max_cache_size, "", 100000);
-DEFINE_FLAG_INT32(max_watch_dir_count, "", 100 * 1000);
-DEFINE_FLAG_STRING(inotify_watcher_dirs_dump_filename, "", "inotify_watcher_dirs");
+// DEFINE_FLAG_BOOL(fs_events_inotify_enable, "", true);
 // DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
 // DEFINE_FLAG_INT32(search_checkpoint_default_dir_depth, "0 means only search current directory", 0);
 // DEFINE_FLAG_BOOL(enable_polling_discovery, "", true);
 
-#define PBMSG 0
+DEFINE_FLAG_INT32(existed_file_active_timeout,
+                  "when first monitor directory, file modified in 120 seconds will be collected",
+                  120);
+DEFINE_FLAG_INT32(checkpoint_find_max_cache_size, "", 100000);
+DEFINE_FLAG_INT32(max_watch_dir_count, "", 100 * 1000);
+DEFINE_FLAG_STRING(inotify_watcher_dirs_dump_filename, "", "inotify_watcher_dirs");
+DEFINE_FLAG_INT32(default_max_inotify_watch_num, "the max allowed inotify watch dir number", 3000);
 
 namespace logtail {
 
@@ -188,7 +189,7 @@ bool EventDispatcher::RegisterEventHandler(const char* path,
     }
     uint64_t inode = statBuf.GetDevInode().inode;
     int wd;
-    MapType<std::string, int>::Type::iterator pathIter = mPathWdMap.find(path);
+    MapType<string, int>::Type::iterator pathIter = mPathWdMap.find(path);
     if (pathIter != mPathWdMap.end()) {
         wd = pathIter->second;
 
@@ -349,7 +350,7 @@ void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
 
     fsutil::Entry ent;
     int32_t curTime = time(NULL);
-    std::vector<Event*> eventVec;
+    vector<Event*> eventVec;
     int32_t tailFileCount = 0;
     while (ent = dir.ReadNext(false)) {
         ++tailFileCount;
@@ -409,9 +410,9 @@ void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
 
 EventDispatcher::ValidateCheckpointResult
 EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
-                                        std::map<DevInode, SplitedFilePath>& cachePathDevInodeMap,
-                                        std::vector<Event*>& eventVec) {
-    std::shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(checkpoint->mConfigName);
+                                        map<DevInode, SplitedFilePath>& cachePathDevInodeMap,
+                                        vector<Event*>& eventVec) {
+    shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(checkpoint->mConfigName);
     if (config == NULL) {
         LOG_INFO(sLogger,
                  ("delete checkpoint", "the corresponding config is deleted")("config", checkpoint->mConfigName)(
@@ -421,10 +422,10 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     }
 
     // Use FileName (logical absolute path) to do config matching.
-    const std::string& filePath = checkpoint->mFileName;
-    const std::string realFilePath = checkpoint->mRealFileName.empty() ? filePath : checkpoint->mRealFileName;
+    const string& filePath = checkpoint->mFileName;
+    const string realFilePath = checkpoint->mRealFileName.empty() ? filePath : checkpoint->mRealFileName;
     size_t lastSeparator = filePath.find_last_of(PATH_SEPARATOR);
-    if (lastSeparator == std::string::npos || lastSeparator == (size_t)0 || lastSeparator >= filePath.size()) {
+    if (lastSeparator == string::npos || lastSeparator == (size_t)0 || lastSeparator >= filePath.size()) {
         LOG_INFO(sLogger,
                  ("delete checkpoint", "invalid log reader queue name")("config", checkpoint->mConfigName)(
                      "log reader queue name", checkpoint->mFileName)("real file path", checkpoint->mRealFileName)(
@@ -435,7 +436,7 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     string fileName = filePath.substr(lastSeparator + 1);
 
     // Check if the config in checkpoint still matches the file?
-    std::vector<FileDiscoveryConfig> matchedConfigs;
+    vector<FileDiscoveryConfig> matchedConfigs;
     AppConfig::GetInstance()->IsAcceptMultiConfig()
         ? ConfigManager::GetInstance()->FindAllMatch(matchedConfigs, path, fileName)
         : ConfigManager::GetInstance()->FindMatchWithForceFlag(matchedConfigs, path, fileName);
@@ -458,7 +459,7 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     const InputFile* inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
 
     // delete checkpoint if file path is not exist
-    MapType<std::string, int>::Type::iterator pathIter = mPathWdMap.find(path);
+    MapType<string, int>::Type::iterator pathIter = mPathWdMap.find(path);
     if (pathIter == mPathWdMap.end()) {
         LOG_INFO(sLogger,
                  ("delete checkpoint", "file path no longer exists")("config", checkpoint->mConfigName)(
@@ -509,7 +510,7 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     }
 
     // Try to find the real file with dev inode, check cache at first.
-    std::map<DevInode, SplitedFilePath>::iterator findIter = cachePathDevInodeMap.find(checkpoint->mDevInode);
+    map<DevInode, SplitedFilePath>::iterator findIter = cachePathDevInodeMap.find(checkpoint->mDevInode);
     if (findIter != cachePathDevInodeMap.end()) {
         if (findIter->second.mFileDir != path) {
             LOG_INFO(sLogger,
@@ -606,11 +607,11 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
 void EventDispatcher::AddExistedCheckPointFileEvents() {
     // All checkpoint will be add into event queue or be deleted
     // This operation will delete not existed file's check point
-    std::map<DevInode, SplitedFilePath> cachePathDevInodeMap;
+    map<DevInode, SplitedFilePath> cachePathDevInodeMap;
     auto& checkPointMap = CheckPointManager::Instance()->GetAllFileCheckPoint();
     LOG_INFO(sLogger, ("start to verify existed checkpoints, total checkpoint count", checkPointMap.size()));
-    std::vector<CheckPointManager::CheckPointKey> deleteKeyVec;
-    std::vector<Event*> eventVec;
+    vector<CheckPointManager::CheckPointKey> deleteKeyVec;
+    vector<Event*> eventVec;
     for (auto iter = checkPointMap.begin(); iter != checkPointMap.end(); ++iter) {
         auto const result = validateCheckpoint(iter->second, cachePathDevInodeMap, eventVec);
         if (!(result == ValidateCheckpointResult::kNormal || result == ValidateCheckpointResult::kRotate)) {
@@ -634,12 +635,12 @@ void EventDispatcher::AddExistedCheckPointFileEvents() {
         LOG_INFO(sLogger,
                  ("start add exactly once checkpoint events",
                   "")("config size", exactlyOnceConfigs.size())("scanned checkpoint size", exactlyOnceCpts.size()));
-        std::vector<std::pair<std::string, PrimaryCheckpointPB>*> batchUpdateCpts;
-        std::vector<std::pair<std::string, PrimaryCheckpointPB>*> batchDeleteCpts;
+        vector<pair<string, PrimaryCheckpointPB>*> batchUpdateCpts;
+        vector<pair<string, PrimaryCheckpointPB>*> batchDeleteCpts;
         for (size_t idx = 0; idx < exactlyOnceCpts.size(); ++idx) {
             auto& cptPair = exactlyOnceCpts[idx];
             auto& cpt = cptPair.second;
-            auto v1Cpt = std::make_shared<CheckPoint>(cpt.log_path(),
+            auto v1Cpt = make_shared<CheckPoint>(cpt.log_path(),
                                                       0,
                                                       cpt.sig_size(),
                                                       cpt.sig_hash(),
@@ -693,7 +694,7 @@ void EventDispatcher::AddExistedCheckPointFileEvents() {
     if (eventVec.size() > 0) {
         // Sort by Source/Object (length+alphabet) in event to adjust the order of rotating files.
         // eg. /log/a.log.10 -> /log/a.log.9 -> /log/a.log.8 -> ...
-        std::sort(eventVec.begin(), eventVec.end(), Event::CompareByFullPath);
+        sort(eventVec.begin(), eventVec.end(), Event::CompareByFullPath);
         LogInput::GetInstance()->PushEventQueue(eventVec);
     }
 }
@@ -795,16 +796,16 @@ void EventDispatcher::CheckSymbolicLink() {
     }
 }
 
-void EventDispatcher::ReadInotifyEvents(std::vector<Event*>& eventVec) {
+void EventDispatcher::ReadInotifyEvents(vector<Event*>& eventVec) {
     mEventListener->ReadEvents(eventVec);
 }
 
-std::vector<std::pair<std::string, EventHandler*>>
-EventDispatcher::FindAllSubDirAndHandler(const std::string& baseDir) {
+vector<pair<string, EventHandler*>>
+EventDispatcher::FindAllSubDirAndHandler(const string& baseDir) {
     LOG_DEBUG(sLogger, ("Find all sub dir", baseDir));
-    std::vector<std::pair<std::string, EventHandler*>> dirAndHandlers;
+    vector<pair<string, EventHandler*>> dirAndHandlers;
     size_t baseDirSize = baseDir.size();
-    MapType<std::string, int>::Type::iterator it = mPathWdMap.begin();
+    MapType<string, int>::Type::iterator it = mPathWdMap.begin();
     for (; it != mPathWdMap.end(); ++it) {
         const string& pathName = it->first;
         size_t pathNameSize = pathName.size();
@@ -813,7 +814,7 @@ EventDispatcher::FindAllSubDirAndHandler(const std::string& baseDir) {
         }
         if (memcmp(baseDir.c_str(), pathName.c_str(), baseDirSize) == 0
             && (pathNameSize == baseDirSize || pathName[baseDirSize] == PATH_SEPARATOR[0])) {
-            dirAndHandlers.push_back(std::make_pair(it->first, mWdDirInfoMap[it->second]->mHandler));
+            dirAndHandlers.push_back(make_pair(it->first, mWdDirInfoMap[it->second]->mHandler));
         }
     }
     return dirAndHandlers;
@@ -828,7 +829,7 @@ void EventDispatcher::UnregisterAllDir(const string& baseDir) {
 }
 
 void EventDispatcher::UnregisterEventHandler(const char* path) {
-    MapType<std::string, int>::Type::iterator pos = mPathWdMap.find(path);
+    MapType<string, int>::Type::iterator pos = mPathWdMap.find(path);
     if (pos == mPathWdMap.end())
         return;
     int wd = pos->second;
@@ -850,7 +851,7 @@ void EventDispatcher::UnregisterEventHandler(const char* path) {
     LOG_INFO(sLogger, ("remove the watcher for dir", path)("wd", wd));
 }
 
-void EventDispatcher::StopAllDir(const std::string& baseDir) {
+void EventDispatcher::StopAllDir(const string& baseDir) {
     LOG_DEBUG(sLogger, ("Stop all sub dir", baseDir));
     auto subDirAndHandlers = FindAllSubDirAndHandler(baseDir);
     for (auto& subDirAndHandler : subDirAndHandlers) {
@@ -882,7 +883,7 @@ bool EventDispatcher::IsRegistered(const char* path) {
     return true;
 }
 
-bool EventDispatcher::IsRegistered(int wd, std::string& path) {
+bool EventDispatcher::IsRegistered(int wd, string& path) {
     MapType<int, DirInfo*>::Type::iterator itr = mWdDirInfoMap.find(wd);
     if (itr == mWdDirInfoMap.end())
         return false;
@@ -1019,7 +1020,7 @@ void EventDispatcher::CleanEnviroments() {
     mWdDirInfoMap.clear();
     mBrokenLinkSet.clear();
     mWdUpdateTimeMap.clear();
-    // for (std::unordered_map<int64_t, SingleDSPacket*>::iterator iter = mPacketBuffer.begin();
+    // for (unordered_map<int64_t, SingleDSPacket*>::iterator iter = mPacketBuffer.begin();
     //      iter != mPacketBuffer.end();
     //      ++iter)
     //     delete iter->second;

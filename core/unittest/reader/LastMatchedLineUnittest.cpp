@@ -17,8 +17,6 @@
 #include "reader/SourceBuffer.h"
 #include "common/FileSystemUtil.h"
 
-DECLARE_FLAG_INT32(default_tail_limit_kb);
-
 namespace logtail {
 
 const std::string LOG_BEGIN_STRING = "Exception in thread \"main\" java.lang.NullPointerException";

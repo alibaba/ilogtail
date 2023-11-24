@@ -145,6 +145,10 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
     if (mBasePath.empty() || mFilePattern.empty()) {
         PARAM_ERROR_RETURN(ctx.GetLogger(), "param FilePaths[0] is invalid", pluginName, ctx.GetConfigName());
     }
+#if defined(_MSC_VER)
+    mBasePath = EncodingConverter::GetInstance()->FromUTF8ToACP(mBasePath);
+    mFilePattern = EncodingConverter::GetInstance()->FromUTF8ToACP(mFilePattern);
+#endif
     size_t len = mBasePath.size();
     if (len > 2 && mBasePath[len - 1] == '*' && mBasePath[len - 2] == '*'
         && mBasePath[len - 3] == filesystem::path::preferred_separator) {

@@ -27,8 +27,6 @@
 using namespace std;
 
 DECLARE_FLAG_STRING(ilogtail_config);
-DECLARE_FLAG_STRING(user_log_config);
-DECLARE_FLAG_INT32(batch_send_interval);
 DECLARE_FLAG_INT32(default_tail_limit_kb);
 
 namespace logtail {

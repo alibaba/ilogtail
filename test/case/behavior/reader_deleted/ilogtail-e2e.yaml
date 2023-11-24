@@ -1,4 +1,4 @@
-# Copyright 2021 iLogtail Authors
+# Copyright 2023 iLogtail Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,30 +14,26 @@
 
 boot:
   category: docker-compose
+testing_interval: 10s
 ilogtail:
   config:
-    - name: observer-http-case
+    - name: reader-deleted
       detail:
         - inputs:
-            - Type: observer_ilogtail_network_v1
-              Common:
-                FlushOutL7Interval: 1
-                FlushOutL4Interval: 100
-                IncludeCmdRegex: "^.*simulatorclient.*$"
-                IncludeProtocols: [ "HTTP" ]
-              EBPF:
-                Enabled: true
-          processors:
-            - Type: processor_default
-  close_wait: 5s
+            - Type: input_file
+              FilePaths: 
+                - /root/test/simple.log
+              FlushTimeoutSecs: 10000
+          flushers:
+            - Type: flusher_stdout
+              OnlyStdout: false
+              FileName: ./ilogtail.log
+  close_wait: 10s
+  mounts:
+    - "./volume:/root/test"
 verify:
   system_rules:
     - name: counter-check
-      validator: sys_sum_checker
+      validator: sys_counter
       spec:
-        expect_received_minimum_num: 100
-        field: count
-testing_interval: 10s
-retry:
-  times: 0
-  interval: 10s
+        expect_minimum_flush_log_num: 1

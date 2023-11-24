@@ -56,7 +56,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "UsingOldContentTag": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_TRUE(extendedParams.isNull());
@@ -76,7 +76,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "UsingOldContentTag": "true"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_TRUE(extendedParams.isNull());
@@ -92,7 +92,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicType": "custom"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -104,7 +104,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "test_topic"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::MACHINE_GROUP_TOPIC, config->mTopicType);
@@ -115,7 +115,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicType": "machine_group_topic"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -127,7 +127,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "/home/(.*)"
         }
     )""";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::FILEPATH, config->mTopicType);
@@ -138,7 +138,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicType": "file_path"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -150,7 +150,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "\\d+[s"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -162,7 +162,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "test_topic"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::DEFAULT, config->mTopicType);
@@ -174,7 +174,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "TopicFormat": "test_topic"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
@@ -186,7 +186,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "ProcessPriority": 5
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_EQUAL(0, config->mProcessPriority);
@@ -202,8 +202,8 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
             "StructureType": "v2"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
-    APSARA_TEST_TRUE(ParseConfig(extendedParamStr, extendedParamJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(extendedParamStr, extendedParamJson, errorMsg));
     config.reset(new GlobalConfig());
     APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
     APSARA_TEST_TRUE(extendedParamJson == extendedParams);

@@ -51,14 +51,6 @@ Application::Application() : mStartTime(time(nullptr)) {
     mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
 }
 
-Application::~Application() {
-    try {
-        if (mUUIDthreadPtr.get() != NULL)
-            mUUIDthreadPtr->GetValue(100);
-    } catch (...) {
-    }
-}
-
 void Application::Start() {
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
     InitWindowsSignalObject();
@@ -68,7 +60,7 @@ void Application::Start() {
 
     LogtailMonitor::Instance()->InitMonitor();
 
-    ConfigWatcher::GetInstance()->AddSource("local");
+    ConfigWatcher::GetInstance()->AddSource(AppConfig::GetInstance()->GetLogtailSysConfDir() + "/config/local");
 #ifdef __ENTERPRISE__
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");
@@ -127,7 +119,7 @@ void Application::Start() {
             CheckCriticalCondition(curTime);
             lastUpdateMetricTime = curTime;
         }
-        if (mSigTermSignalFlag) {
+        if (mSigTermSignalFlag.load()) {
             LOG_INFO(sLogger, ("received SIGTERM signal", "exit process"));
             Exit();
         }
@@ -136,7 +128,7 @@ void Application::Start() {
 #endif
         // 过渡使用
         EventDispatcher::GetInstance()->DumpCheckPointPeriod(curTime);
-        
+
         if (ConfigManager::GetInstance()->IsUpdateContainerPaths()) {
             FileServer::GetInstance()->Pause();
             FileServer::GetInstance()->Resume();
@@ -145,7 +137,7 @@ void Application::Start() {
 }
 
 bool Application::TryGetUUID() {
-    mUUIDthreadPtr = CreateThread([this]() { GetUUIDThread(); });
+    mUUIDThread = thread([this] { GetUUID(); });
     // wait 1000 ms
     for (int i = 0; i < 100; ++i) {
         this_thread::sleep_for(chrono::milliseconds(10));
@@ -217,8 +209,6 @@ bool Application::GetUUIDThread() {
     string uuid;
 #if defined(__aarch64__) || defined(__sw_64__)
     // DMI can not work on such platforms but might crash Logtail, disable.
-#elif defined(__ENTERPRISE__)
-    uuid = CalculateDmiUUID();
 #else
     uuid = CalculateRandomUUID();
 #endif

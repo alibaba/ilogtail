@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-#include "config/NewConfig.h"
+#include "config/Config.h"
 #include "config/ConfigDiff.h"
 
 namespace logtail {

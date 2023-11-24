@@ -64,14 +64,11 @@ DECLARE_FLAG_INT32(default_max_inotify_watch_num);
 DECLARE_FLAG_STRING(profile_project_name);
 DECLARE_FLAG_INT32(check_base_dir_interval);
 DECLARE_FLAG_INT32(batch_send_interval);
-DECLARE_FLAG_STRING(local_machine_uuid);
 DECLARE_FLAG_INT32(check_point_version);
 DECLARE_FLAG_INT32(check_point_dump_interval);
 DECLARE_FLAG_INT32(global_pub_config_retry_interval);
 DECLARE_FLAG_INT32(dirfile_check_interval_ms);
 DECLARE_FLAG_INT32(polling_modify_repush_interval);
-DECLARE_FLAG_STRING(fuse_customized_config_name);
-DECLARE_FLAG_BOOL(rapid_retry_update_config);
 DECLARE_FLAG_BOOL(default_global_fuse_mode);
 
 namespace logtail {
@@ -811,7 +808,6 @@ void ConfigUpdatorUnittest::CaseSetup(bool replaceConfigAllowed) {
 
     ConfigManager::GetInstance()->mThreadIsRunning = true;
     ConfigManager::GetInstance()->InitUpdateConfig(true);
-    STRING_FLAG(local_machine_uuid) = LOCAL_UUID;
     SetConfigResponse("{}");
     sProjectNameCountMap.clear();
     sProjectCategoryTopicCountMap.clear();

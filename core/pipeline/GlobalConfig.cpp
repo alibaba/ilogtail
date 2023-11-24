@@ -55,7 +55,7 @@ bool GlobalConfig::Init(const Json::Value& config, const std::string& configName
                 sLogger,
                 ("problem encountered in config parsing", errorMsg)("action", "ignore param TopicType and TopicFormat")(
                     "module", moduleName)("config", configName));
-        } else if (mTopicType == TopicType::FILEPATH && !IsRegexValid(mTopicFormat)) {
+        } else if (mTopicType == TopicType::FILEPATH && !NormalizeTopicRegFormat(mTopicFormat)) {
             mTopicType = TopicType::NONE;
             mTopicFormat.clear();
             LOG_WARNING(

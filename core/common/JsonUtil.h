@@ -23,7 +23,7 @@
 
 namespace logtail {
 
-bool ParseConfig(const std::string& config, Json::Value& res, std::string& errorMsg);
+bool ParseJsonTable(const std::string& config, Json::Value& res, std::string& errorMsg);
 bool IsValidJson(const char* buffer, int32_t size);
 std::string CompactJson(const std::string& inJson);
 void CheckNameExist(const Json::Value& value, const std::string& name);

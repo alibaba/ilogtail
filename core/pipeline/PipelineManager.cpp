@@ -34,7 +34,7 @@ using namespace std;
 namespace logtail {
 
 void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
-# ifndef APSARA_UNIT_TEST_MAIN
+#ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false;
     if (!mIsFirstUpdate) {
@@ -92,8 +92,8 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         mPipelineNameEntityMap[config.mName] = p;
         p->Start();
     }
-    
-# ifndef APSARA_UNIT_TEST_MAIN
+
+#ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
     for (auto& name : diff.mUnchanged) {
         mPipelineNameEntityMap[name]->LoadGoPipelines();
@@ -193,7 +193,7 @@ void PipelineManager::StopAllPipelines() {
     }
 }
 
-shared_ptr<Pipeline> PipelineManager::BuildPipeline(NewConfig&& config) {
+shared_ptr<Pipeline> PipelineManager::BuildPipeline(Config&& config) {
     shared_ptr<Pipeline> p = make_shared<Pipeline>();
     // only config.mDetail is removed, other members can be safely used later
     if (!p->Init(std::move(config))) {

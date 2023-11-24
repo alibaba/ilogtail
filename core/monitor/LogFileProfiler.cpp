@@ -27,6 +27,9 @@
 #include "config_manager/ConfigManager.h"
 #include "app_config/AppConfig.h"
 
+DEFINE_FLAG_INT32(profile_data_send_interval, "interval of send LogFile/DomainSocket profile data, seconds", 600);
+DEFINE_FLAG_STRING(logtail_profile_snapshot, "reader profile on local disk", "logtail_profile_snapshot");
+
 using namespace std;
 using namespace sls_logs;
 

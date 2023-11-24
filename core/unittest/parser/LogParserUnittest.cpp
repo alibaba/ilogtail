@@ -27,7 +27,6 @@
 using namespace std;
 using namespace sls_logs;
 
-DECLARE_FLAG_BOOL(ilogtail_discard_old_data);
 DECLARE_FLAG_INT32(gmt_align_deviation);
 
 namespace logtail {

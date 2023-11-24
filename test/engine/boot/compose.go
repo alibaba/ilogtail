@@ -55,14 +55,13 @@ services:
       interval: 1s
       retries: 10
   ilogtailC:
-    image: aliyun/ilogtail:1.8.0
+    image: aliyun/ilogtail:1.8.1
     hostname: ilogtail
     privileged: true
     pid: host
     volumes:
       - %s:/ilogtail/default_flusher.json
-      - %s:/ilogtail/user_config.d
-      - %s:/ilogtail/user_yaml_config.d
+      - %s:/ilogtail/config/local
       - /:/logtail_host
       - /var/run/docker.sock:/var/run/docker.sock
       - /sys/:/sys/
@@ -262,7 +261,7 @@ func (c *ComposeBooter) getLogtailpluginConfig() map[string]interface{} {
 	cfg := make(map[string]interface{})
 	f, _ := os.Create(config.CoverageFile)
 	_ = f.Close()
-	str := fmt.Sprintf(template, config.CoverageFile, config.FlusherFile, config.ConfigJSONFileDir, config.ConfigYamlFileDir)
+	str := fmt.Sprintf(template, config.CoverageFile, config.FlusherFile, config.ConfigDir)
 	if err := yaml.Unmarshal([]byte(str), &cfg); err != nil {
 		panic(err)
 	}

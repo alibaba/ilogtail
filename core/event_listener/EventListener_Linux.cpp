@@ -23,7 +23,7 @@
 #include "controller/EventDispatcher.h"
 #include "event_handler/LogInput.h"
 
-DECLARE_FLAG_BOOL(fs_events_inotify_enable);
+DEFINE_FLAG_BOOL(fs_events_inotify_enable, "", true);
 
 namespace logtail {
 

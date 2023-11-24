@@ -25,7 +25,7 @@ using namespace std;
 
 namespace logtail {
 
-bool ParseConfig(const string& config, Json::Value& res, string& errorMsg) {
+bool ParseJsonTable(const string& config, Json::Value& res, string& errorMsg) {
     Json::CharReaderBuilder builder;
     const unique_ptr<Json::CharReader> reader(builder.newCharReader());
     return reader->parse(config.c_str(), config.c_str() + config.size(), &res, &errorMsg);

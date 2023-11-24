@@ -28,6 +28,7 @@
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorParseApsaraNative.h"
+#include "processor/ProcessorTagNative.h"
 
 // for special treatment
 #include "input/InputFile.h"
@@ -48,7 +49,7 @@ void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json:
     }
 }
 
-bool Pipeline::Init(NewConfig&& config) {
+bool Pipeline::Init(Config&& config) {
     mName = config.mName;
     mConfig = std::move(config.mDetail);
     mContext.SetConfigName(mName);
@@ -81,6 +82,17 @@ bool Pipeline::Init(NewConfig&& config) {
         ++mPluginCntMap["inputs"][name];
     }
 
+    if (config.IsProcessRunnerInvolved()) {
+        Json::Value detail;
+        unique_ptr<ProcessorInstance> processor = PluginRegistry::GetInstance()->CreateProcessor(
+            ProcessorTagNative::sName, to_string(++pluginIndex));
+        if (!processor->Init(detail, mContext)) {
+            // should not happen
+            return false;
+        }
+        mProcessorLine.emplace_back(std::move(processor));
+    }
+
     // add log split processor for input_file
     if (inputFile) {
         unique_ptr<ProcessorInstance> processor;
@@ -104,6 +116,7 @@ bool Pipeline::Init(NewConfig&& config) {
             detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         }
         if (!processor->Init(detail, mContext)) {
+            // should not happen
             return false;
         }
         mProcessorLine.emplace_back(std::move(processor));
@@ -310,7 +323,7 @@ bool Pipeline::LoadGoPipelines() const {
     // 目前按照从后往前顺序加载，即便without成功with失败导致without残留在插件系统中，也不会有太大的问题，但最好改成原子的。
     if (!mGoPipelineWithoutInput.isNull()) {
         if (!LogtailPlugin::GetInstance()->LoadPipeline(mName + "/2",
-                                                        mGoPipelineWithInput.toStyledString(),
+                                                        mGoPipelineWithoutInput.toStyledString(),
                                                         mContext.GetProjectName(),
                                                         mContext.GetLogstoreName(),
                                                         mContext.GetRegion(),

@@ -51,7 +51,7 @@ void FileDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "FilePaths": []
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     config.reset(new FileDiscoveryOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
@@ -77,7 +77,7 @@ void FileDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "AllowingIncludedByMultiConfigs": true
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     config.reset(new FileDiscoveryOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
@@ -103,7 +103,7 @@ void FileDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "AllowingIncludedByMultiConfigs": "true"
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     config.reset(new FileDiscoveryOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
@@ -126,7 +126,7 @@ void FileDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "ExcludeFilePaths": [],
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     configJson["ExcludeFilePaths"].append(Json::Value(ex1.string()));
     configJson["ExcludeFilePaths"].append(Json::Value(ex2.string()));
@@ -147,7 +147,7 @@ void FileDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "ExcludeFiles": [],
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     configJson["ExcludeFiles"].append(Json::Value(ex1.string()));
     configJson["ExcludeFiles"].append(Json::Value(ex2.string()));
@@ -169,7 +169,7 @@ void FileDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "ExcludeDirs": [],
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     configJson["ExcludeDirs"].append(Json::Value(ex1.string()));
     configJson["ExcludeDirs"].append(Json::Value(ex2.string()));
@@ -191,7 +191,7 @@ void FileDiscoveryOptionsUnittest::OnSuccessfulInit() const {
             "AllowingCollectingFilesInRootDir": true,
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     config.reset(new FileDiscoveryOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
@@ -215,7 +215,7 @@ void FileDiscoveryOptionsUnittest::OnFailedInit() const {
             "FilePaths": []
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     config.reset(new FileDiscoveryOptions());
@@ -228,7 +228,7 @@ void FileDiscoveryOptionsUnittest::OnFailedInit() const {
             "FilePaths": []
         }
     )";
-    APSARA_TEST_TRUE(ParseConfig(configStr, configJson, errorMsg));
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     configJson["FilePaths"].append(Json::Value(filePath.string() + filesystem::path::preferred_separator));
     config.reset(new FileDiscoveryOptions());
     APSARA_TEST_FALSE(config->Init(configJson, ctx, pluginName));
