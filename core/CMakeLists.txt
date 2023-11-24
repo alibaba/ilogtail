@@ -119,22 +119,8 @@ target_link_libraries(${LOGTAIL_TARGET}
         application
         common
         logger
-        config_manager
-        checkpoint
-        processor_daemon
-        controller
-        pipeline
-        plugin
-        models
-        monitor
-        sender
-        profile_sender
-        app_config
-        sls_control
-        go_pipeline
         )
 if (UNIX)
-    target_link_libraries(${LOGTAIL_TARGET} observer)
     target_link_libraries(${LOGTAIL_TARGET} pthread dl uuid)
     if (ENABLE_STATIC_LINK_CRT)
         target_link_libraries(${LOGTAIL_TARGET} -static-libstdc++ -static-libgcc)

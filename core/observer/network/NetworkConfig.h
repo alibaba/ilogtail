@@ -113,7 +113,7 @@ struct NetworkConfig {
     volatile bool mEnabled = false;
     std::string mLastApplyedConfigDetail;
     const Pipeline* mLastApplyedConfig = nullptr;
-    std::vector<const Pipeline*> mAllNetworkConfigs;
+    std::unordered_map<std::string, const Pipeline*> mAllNetworkConfigs;
     bool mNeedReload = false;
 
     // enable ebpf

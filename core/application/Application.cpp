@@ -2,27 +2,30 @@
 
 #include <thread>
 
-#include "gperftools/malloc_extension.h"
-
 #include "app_config/AppConfig.h"
 #include "checkpoint/CheckPointManager.h"
+#include "common/CrashBackTraceUtil.h"
 #include "common/Flags.h"
+#include "common/MachineInfoUtil.h"
+#include "common/RuntimeUtil.h"
 #include "common/StringTools.h"
 #include "common/TimeUtil.h"
 #include "common/UUIDUtil.h"
-#include "config_manager/ConfigManager.h"
-#include "controller/EventDispatcher.h"
+#include "common/version.h"
 #include "config/ConfigDiff.h"
 #include "config/watcher/ConfigWatcher.h"
+#include "config_manager/ConfigManager.h"
+#include "controller/EventDispatcher.h"
 #include "event_handler/LogInput.h"
 #include "file_server/FileServer.h"
+#include "go_pipeline/LogtailPlugin.h"
+#include "gperftools/malloc_extension.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
-#include "monitor/Monitor.h"
 #include "monitor/MetricExportor.h"
-#include "go_pipeline/LogtailPlugin.h"
-#include "plugin/PluginRegistry.h"
+#include "monitor/Monitor.h"
 #include "pipeline/PipelineManager.h"
+#include "plugin/PluginRegistry.h"
 #include "sender/Sender.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
@@ -35,6 +38,9 @@
 #include "config/provider/CommonConfigProvider.h"
 #endif
 
+DEFINE_FLAG_BOOL(ilogtail_disable_core, "disable core in worker process", true);
+DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
+DEFINE_FLAG_STRING(app_info_file, "", "app_info.json");
 DEFINE_FLAG_INT32(file_tags_update_interval, "second", 1);
 DEFINE_FLAG_INT32(config_scan_interval, "seconds", 10);
 DEFINE_FLAG_INT32(profiling_check_interval, "seconds", 60);
@@ -51,7 +57,100 @@ Application::Application() : mStartTime(time(nullptr)) {
     mInstanceId = CalculateRandomUUID() + "_" + LogFileProfiler::mIpAddr + "_" + ToString(time(NULL));
 }
 
+void Application::Init() {
+    // get last crash info
+    string backTraceStr = GetCrashBackTrace();
+    if (!backTraceStr.empty()) {
+        LOG_ERROR(sLogger, ("last logtail crash stack", backTraceStr));
+        LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_STACK_ALARM, backTraceStr);
+    }
+    if (BOOL_FLAG(ilogtail_disable_core)) {
+        InitCrashBackTrace();
+    }
+
+    // change working dir to ./${ILOGTAIL_VERSION}/
+    string processExecutionDir = GetProcessExecutionDir();
+    AppConfig::GetInstance()->SetProcessExecutionDir(processExecutionDir);
+    string newWorkingDir = processExecutionDir + ILOGTAIL_VERSION;
+    int chdirRst = chdir(newWorkingDir.c_str());
+    if (chdirRst == 0) {
+        LOG_INFO(sLogger, ("working dir", newWorkingDir));
+        AppConfig::GetInstance()->SetWorkingDir(newWorkingDir + "/");
+    } else {
+        // if change error, try change working dir to ./
+        chdir(GetProcessExecutionDir().c_str());
+        LOG_INFO(sLogger, ("working dir", GetProcessExecutionDir()));
+        AppConfig::GetInstance()->SetWorkingDir(GetProcessExecutionDir());
+    }
+
+    // load ilogtail_config.json
+    char* configEnv = getenv(STRING_FLAG(ilogtail_config_env_name).c_str());
+    if (configEnv == NULL || strlen(configEnv) == 0) {
+        AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
+    } else {
+        AppConfig::GetInstance()->LoadAppConfig(configEnv);
+    }
+
+    // Initialize basic information: IP, hostname, etc.
+    LogFileProfiler::GetInstance();
+
+    // override process related params if designated by user explicitly
+    const string& interface = AppConfig::GetInstance()->GetBindInterface();
+    const string& configIP = AppConfig::GetInstance()->GetConfigIP();
+    if (!configIP.empty()) {
+        LogFileProfiler::mIpAddr = configIP;
+        LogtailMonitor::Instance()->UpdateConstMetric("logtail_ip", GetHostIp());
+    } else if (!interface.empty()) {
+        LogFileProfiler::mIpAddr = GetHostIp(interface);
+        if (LogFileProfiler::mIpAddr.empty()) {
+            LOG_WARNING(sLogger,
+                        ("failed to get ip from interface", "try to get any available ip")("interface", interface));
+        }
+    } else if (LogFileProfiler::mIpAddr.empty()) {
+        LOG_WARNING(sLogger, ("failed to get ip from hostname or eth0 or bond0", "try to get any available ip"));
+    }
+    if (LogFileProfiler::mIpAddr.empty()) {
+        LogFileProfiler::mIpAddr = GetAnyAvailableIP();
+        LOG_INFO(sLogger, ("get available ip succeeded", LogFileProfiler::mIpAddr));
+    }
+
+    const string& configHostName = AppConfig::GetInstance()->GetConfigHostName();
+    if (!configHostName.empty()) {
+        LogFileProfiler::mHostname = configHostName;
+        LogtailMonitor::Instance()->UpdateConstMetric("logtail_hostname", GetHostName());
+    }
+
+    int32_t systemBootTime = AppConfig::GetInstance()->GetSystemBootTime();
+    LogFileProfiler::mSystemBootTime = systemBootTime > 0 ? systemBootTime : GetSystemBootTime();
+
+    // generate app_info.json
+    Json::Value appInfoJson;
+    appInfoJson["ip"] = Json::Value(LogFileProfiler::mIpAddr);
+    appInfoJson["hostname"] = Json::Value(LogFileProfiler::mHostname);
+    appInfoJson["UUID"] = Json::Value(Application::GetInstance()->GetUUID());
+    appInfoJson["instance_id"] = Json::Value(Application::GetInstance()->GetInstanceId());
+    appInfoJson["logtail_version"] = Json::Value(std::string(ILOGTAIL_VERSION) + " Community Edition");
+    appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
+#define STRINGIFY(x) #x
+#ifdef _MSC_VER
+#define VERSION_STR(A) "MSVC " STRINGIFY(A)
+#define ILOGTAIL_COMPILER VERSION_STR(_MSC_FULL_VER)
+#else
+#define VERSION_STR(A, B, C) "GCC " STRINGIFY(A) "." STRINGIFY(B) "." STRINGIFY(C)
+#define ILOGTAIL_COMPILER VERSION_STR(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
+#endif
+    appInfoJson["compiler"] = Json::Value(ILOGTAIL_COMPILER);
+    appInfoJson["build_date"] = Json::Value(ILOGTAIL_BUILD_DATE);
+    appInfoJson["os"] = Json::Value(LogFileProfiler::mOsDetail);
+    appInfoJson["update_time"] = GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
+    std::string appInfo = appInfoJson.toStyledString();
+    OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
+    LOG_INFO(sLogger, ("app info", appInfo));
+}
+
 void Application::Start() {
+    LogtailMonitor::Instance()->UpdateConstMetric("start_time", GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S"));
+
 #if defined(__ENTERPRISE__) && defined(_MSC_VER)
     InitWindowsSignalObject();
 #endif

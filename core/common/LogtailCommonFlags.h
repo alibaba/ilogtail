@@ -23,9 +23,7 @@ DECLARE_FLAG_STRING(logtail_line_count_snapshot);
 DECLARE_FLAG_STRING(logtail_integrity_snapshot);
 
 // app config
-DECLARE_FLAG_STRING(ilogtail_config_env_name);
 DECLARE_FLAG_STRING(ilogtail_config);
-DECLARE_FLAG_STRING(app_info_file);
 DECLARE_FLAG_INT32(cpu_limit_num);
 DECLARE_FLAG_INT32(mem_limit_num);
 DECLARE_FLAG_DOUBLE(cpu_usage_up_limit);

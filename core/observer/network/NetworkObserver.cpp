@@ -58,7 +58,6 @@ void NetworkObserver::HoldOn(bool exitFlag) {
     }
     mEventLoopThreadRWL.lock();
     LOG_INFO(sLogger, ("hold on", "observer"));
-    mConfig->mAllNetworkConfigs.clear();
 }
 
 void NetworkObserver::Resume() {
@@ -347,7 +346,7 @@ void NetworkObserver::Reload() {
     }
     mConfig->BeginLoadConfig();
     for (auto config : mConfig->mAllNetworkConfigs) {
-        mConfig->LoadConfig(config);
+        mConfig->LoadConfig(config.second);
     }
     mConfig->EndLoadConfig();
     if (!mConfig->NeedReload()) {

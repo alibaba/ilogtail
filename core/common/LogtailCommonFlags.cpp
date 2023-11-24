@@ -61,6 +61,9 @@
 // DEFINE_FLAG_INT32(batch_send_metric_size, "batch send metric size limit(bytes)(default 256KB)", 256 * 1024);
 // DEFINE_FLAG_INT32(batch_send_interval, "batch sender interval (second)(default 3)", 3);
 // DEFINE_FLAG_INT32(default_max_inotify_watch_num, "the max allowed inotify watch dir number", 3000);
+// DEFINE_FLAG_STRING(app_info_file, "", "app_info.json");
+// DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
+// DEFINE_FLAG_STRING(app_info_file, "", "app_info.json");
 
 // 废弃
 // DEFINE_FLAG_STRING(fuse_root_dir, "root dir for fuse file polling", "/home/admin/logs");
@@ -77,11 +80,9 @@ DEFINE_FLAG_STRING(logtail_line_count_snapshot, "line count file on local disk",
 DEFINE_FLAG_STRING(logtail_integrity_snapshot, "integrity file on local disk", "logtail_integrity_snapshot.json");
 
 // app config
-DEFINE_FLAG_STRING(ilogtail_config_env_name, "config file path", "ALIYUN_LOGTAIL_CONFIG");
 DEFINE_FLAG_STRING(ilogtail_config,
                    "set dataserver & configserver address; (optional)set cpu,mem,bufflerfile,buffermap and etc.",
                    "ilogtail_config.json");
-DEFINE_FLAG_STRING(app_info_file, "", "app_info.json");
 DEFINE_FLAG_INT32(cpu_limit_num, "cpu violate limit num before shutdown", 10);
 DEFINE_FLAG_INT32(mem_limit_num, "memory violate limit num before shutdown", 10);
 DEFINE_FLAG_DOUBLE(cpu_usage_up_limit, "cpu usage upper limit, cores", 2.0);

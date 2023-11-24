@@ -19,6 +19,7 @@ public:
         return &instance;
     }
 
+    void Init();
     void Start();
     void SetSigTermSignalFlag(bool flag) { mSigTermSignalFlag = flag; }
 

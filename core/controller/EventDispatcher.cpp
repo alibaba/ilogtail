@@ -39,9 +39,6 @@
 #include "common/ErrorUtil.h"
 #include "common/FileSystemUtil.h"
 #include "common/TimeUtil.h"
-#ifdef __linux__
-#include "ObserverManager.h"
-#endif
 #include "app_config/AppConfig.h"
 #include "event_handler/EventHandler.h"
 #include "event_handler/LogInput.h"

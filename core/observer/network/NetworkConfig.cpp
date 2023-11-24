@@ -110,7 +110,7 @@ void NetworkConfig::ReportAlarm() {
        << ", store : " << mLastApplyedConfig->GetContext().GetLogstoreName() << ".\n";
     ss << "Disabled configs : ";
     for (auto& config : mAllNetworkConfigs) {
-        if (config == mLastApplyedConfig) {
+        if (config.second == mLastApplyedConfig) {
             continue;
         }
         ss << "project : " << mLastApplyedConfig->GetContext().GetProjectName()
@@ -120,9 +120,9 @@ void NetworkConfig::ReportAlarm() {
     for (auto& config : mAllNetworkConfigs) {
         LogtailAlarm::GetInstance()->SendAlarm(MULTI_OBSERVER_ALARM,
                                                alarmStr,
-                                               config->GetContext().GetProjectName(),
-                                               config->GetContext().GetLogstoreName(),
-                                               config->GetContext().GetRegion());
+                                               config.second->GetContext().GetProjectName(),
+                                               config.second->GetContext().GetLogstoreName(),
+                                               config.second->GetContext().GetRegion());
     }
     LOG_WARNING(sLogger, (alarmStr, ""));
 }
