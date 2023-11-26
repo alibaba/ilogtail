@@ -20,6 +20,9 @@
 #include "common/JsonUtil.h"
 #include "common/LogstoreFeedbackKey.h"
 #include "common/LogtailCommonFlags.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
 #include "flusher/FlusherSLS.h"
 #include "pipeline/PipelineContext.h"
 #include "sender/Sender.h"
@@ -151,7 +154,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
 
 #ifdef __ENTERPRISE__
     // region
-    EnterpriseConfigProvider::GetInstance()->mDataServerMode == DATA_SERVER_MODE_LOCAL;
+    EnterpriseConfigProvider::GetInstance()->mIsPrivateCloud = true;
     configStr = R"(
         {
             "Type": "flusher_sls",
@@ -165,7 +168,7 @@ void FlusherSLSUnittest::OnSuccessfulInit() {
     flusher.reset(new FlusherSLS());
     APSARA_TEST_TRUE(flusher->Init(configJson, optionalGoPipeline));
     APSARA_TEST_EQUAL(STRING_FLAG(default_region_name), flusher->mRegion);
-    EnterpriseConfigProvider::GetInstance()->mDataServerMode == DATA_SERVER_MODE_NORMAL;
+    EnterpriseConfigProvider::GetInstance()->mIsPrivateCloud = false;
 #endif
 
     // endpoint
