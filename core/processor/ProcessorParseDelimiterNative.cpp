@@ -249,7 +249,13 @@ bool ProcessorParseDelimiterNative::SplitString(
     size_t top = endIdx - d_size;
     while (pos <= top) {
         const char* pch = std::search(buffer + pos, buffer + endIdx, mSeparator.begin(), mSeparator.end());
-        size_t pos2 = pch == buffer + endIdx ? endIdx : (pch - buffer);
+        size_t pos2;
+        // if not found, pos2 = endIdx
+        if (pch == buffer + endIdx) {
+            pos2 = endIdx;
+        } else {
+            pos2 = pch - buffer;
+        }
         if (pos2 != pos) {
             colBegIdxs.push_back(pos);
             colLens.push_back(pos2 - pos);
