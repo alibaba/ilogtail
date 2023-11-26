@@ -1495,7 +1495,7 @@ void Sender::DaemonSender() {
 
             mLastSendDataTime = curTime;
 #ifdef __ENTERPRISE__
-            if (BOOST_UNLIKELY(AppConfig::GetInstance()->IsDebugMode())) {
+            if (BOOST_UNLIKELY(EnterpriseConfigProvider::GetInstance()->IsDebugMode())) {
                 DumpDebugFile(data);
                 OnSendDone(data, LogstoreSenderInfo::SendResult_OK);
                 DescSendingCount();

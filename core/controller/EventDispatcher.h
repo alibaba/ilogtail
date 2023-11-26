@@ -41,7 +41,7 @@ class TimeoutHandler;
 class EventHandler;
 class Event;
 
-const int MSG_HDR_LEN = 8;
+// const int MSG_HDR_LEN = 8;
 
 // typedef struct SingleDSPacket {
 // public:

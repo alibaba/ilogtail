@@ -24,6 +24,7 @@
 #include "processor/daemon/LogProcess.h"
 #include "sender/Sender.h"
 #if defined(__ENTERPRISE__) && defined(__linux__)
+#include "app_config/AppConfig.h"
 #include "streamlog/StreamLogManager.h"
 #endif
 
