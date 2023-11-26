@@ -17,15 +17,11 @@
 #include <direct.h>
 
 #include "application/Application.h"
-#include "common/ErrorUtil.h"
 #include "common/Flags.h"
-#include "common/version.h"
 #include "logger/Logger.h"
 #include "monitor/LogtailAlarm.h"
 
 using namespace logtail;
-
-DEFINE_FLAG_STRING(ilogtail_daemon_startup_hints, "hints passed from daemon during startup", "");
 
 DECLARE_FLAG_STRING(logtail_sys_conf_dir);
 DECLARE_FLAG_STRING(check_point_filename);
@@ -61,20 +57,6 @@ void do_worker_process() {
     }
 
     overwrite_community_edition_flags();
-
-    auto& startupHints = STRING_FLAG(ilogtail_daemon_startup_hints);
-    if (!startupHints.empty()) {
-        if (startupHints != "Update") {
-            LOG_ERROR(sLogger, ("Non-empty startup hints", startupHints));
-            LogtailAlarm::GetInstance()->SendAlarm(WINDOWS_WORKER_START_HINTS_ALARM,
-                                                   "Non-empty startup hints: " + startupHints);
-        } else {
-            LOG_INFO(sLogger,
-                     ("Logtail restarted because of self-update, "
-                      "current version",
-                      ILOGTAIL_VERSION));
-        }
-    }
 
     Application::GetInstance()->Init();
     Application::GetInstance()->Start();

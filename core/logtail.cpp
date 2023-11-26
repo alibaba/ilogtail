@@ -34,8 +34,6 @@ void* __wrap_memcpy(void* dest, const void* src, size_t n) {
 }
 #endif
 
-DEFINE_FLAG_INT32(fork_interval, "fork dispatcher process interval", 10);
-
 DECLARE_FLAG_BOOL(ilogtail_disable_core);
 DECLARE_FLAG_INT32(max_open_files_limit);
 DECLARE_FLAG_INT32(max_reader_open_files);
@@ -49,7 +47,7 @@ DECLARE_FLAG_BOOL(enable_sls_metrics_format);
 DECLARE_FLAG_BOOL(enable_containerd_upper_dir_detect);
 
 void HandleSigtermSignal(int signum, siginfo_t* info, void* context) {
-    APSARA_LOG_INFO(sLogger, ("received signal", "SIGTERM"));
+    LOG_INFO(sLogger, ("received signal", "SIGTERM"));
     Application::GetInstance()->SetSigTermSignalFlag(true);
 }
 
@@ -93,11 +91,11 @@ void do_worker_process() {
     sigtermSig.sa_sigaction = HandleSigtermSignal;
     sigtermSig.sa_flags = SA_SIGINFO;
     if (sigaction(SIGTERM, &sigtermSig, NULL) < 0) {
-        APSARA_LOG_ERROR(sLogger, ("install SIGTERM", "fail"));
+        LOG_ERROR(sLogger, ("install SIGTERM", "fail"));
         exit(5);
     }
     if (sigaction(SIGINT, &sigtermSig, NULL) < 0) {
-        APSARA_LOG_ERROR(sLogger, ("install SIGINT", "fail"));
+        LOG_ERROR(sLogger, ("install SIGINT", "fail"));
         exit(5);
     }
 

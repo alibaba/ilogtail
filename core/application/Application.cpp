@@ -72,13 +72,21 @@ void Application::Init() {
     string processExecutionDir = GetProcessExecutionDir();
     AppConfig::GetInstance()->SetProcessExecutionDir(processExecutionDir);
     string newWorkingDir = processExecutionDir + ILOGTAIL_VERSION;
+#ifdef _MSC_VER
+    int chdirRst = _chdir(newWorkingDir.c_str());
+#else
     int chdirRst = chdir(newWorkingDir.c_str());
+#endif
     if (chdirRst == 0) {
         LOG_INFO(sLogger, ("working dir", newWorkingDir));
         AppConfig::GetInstance()->SetWorkingDir(newWorkingDir + "/");
     } else {
         // if change error, try change working dir to ./
+#ifdef _MSC_VER
+        _chdir(GetProcessExecutionDir().c_str());
+#else
         chdir(GetProcessExecutionDir().c_str());
+#endif
         LOG_INFO(sLogger, ("working dir", GetProcessExecutionDir()));
         AppConfig::GetInstance()->SetWorkingDir(GetProcessExecutionDir());
     }
@@ -129,8 +137,13 @@ void Application::Init() {
     appInfoJson["hostname"] = Json::Value(LogFileProfiler::mHostname);
     appInfoJson["UUID"] = Json::Value(Application::GetInstance()->GetUUID());
     appInfoJson["instance_id"] = Json::Value(Application::GetInstance()->GetInstanceId());
-    appInfoJson["logtail_version"] = Json::Value(std::string(ILOGTAIL_VERSION) + " Community Edition");
+#ifdef __ENTERPRISE__
+    appInfoJson["logtail_version"] = Json::Value(ILOGTAIL_VERSION);
+#else
+    appInfoJson["logtail_version"] = Json::Value(string(ILOGTAIL_VERSION) + " Community Edition");
     appInfoJson["git_hash"] = Json::Value(ILOGTAIL_GIT_HASH);
+    appInfoJson["build_date"] = Json::Value(ILOGTAIL_BUILD_DATE);
+#endif
 #define STRINGIFY(x) #x
 #ifdef _MSC_VER
 #define VERSION_STR(A) "MSVC " STRINGIFY(A)
@@ -140,10 +153,9 @@ void Application::Init() {
 #define ILOGTAIL_COMPILER VERSION_STR(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
 #endif
     appInfoJson["compiler"] = Json::Value(ILOGTAIL_COMPILER);
-    appInfoJson["build_date"] = Json::Value(ILOGTAIL_BUILD_DATE);
     appInfoJson["os"] = Json::Value(LogFileProfiler::mOsDetail);
     appInfoJson["update_time"] = GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
-    std::string appInfo = appInfoJson.toStyledString();
+    string appInfo = appInfoJson.toStyledString();
     OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
     LOG_INFO(sLogger, ("app info", appInfo));
 }
