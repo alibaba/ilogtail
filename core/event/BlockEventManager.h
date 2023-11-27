@@ -50,6 +50,9 @@ protected:
         BlockedEvent() : mLogstoreKey(0), mEvent(NULL), mInvalidTime(time(NULL)), mTimeout(1) {}
         void Update(const LogstoreFeedBackKey& logstoreKey, Event* pEvent, int32_t curTime) {
             if (mEvent != NULL) {
+                // There are only two situations where event coverage is possible
+                // 1. the new event is not timeout event
+                // 2. old event is timeout event
                 if (!pEvent->IsReaderFlushTimeout() || mEvent->IsReaderFlushTimeout()) {
                     delete mEvent;
                 } else {
