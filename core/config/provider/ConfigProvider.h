@@ -17,6 +17,7 @@
 #pragma once
 
 #include <filesystem>
+#include <mutex>
 #include <string>
 
 namespace logtail {
