@@ -99,11 +99,8 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     std::string errorMsg;
     size_t inSize = logGroup.GetEvents().size();
     mProcInRecordsTotal->Add(inSize);
-
-    uint64_t startTime = GetCurrentTimeInMicroSeconds();
-
     std::vector<std::string> colNames{FIELD_CONTENT};
-
+    uint64_t startTime = GetCurrentTimeInMicroSeconds();
     // 根据spip->getInputSearches()，设置input数组
     std::vector<Input*> inputs;
     for (const auto& search : mSPLPipelinePtr->getInputSearches()) {
@@ -119,12 +116,8 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     // 传入inputs, outputs
     // 输出pipelineStats, error
     PipelineStats pipelineStats;
-
-    uint64_t stage1Time = GetCurrentTimeInMicroSeconds();
-
     auto errCode = mSPLPipelinePtr->execute(inputs, outputs, &errorMsg, &pipelineStats);
 
-    uint64_t stage2Time = GetCurrentTimeInMicroSeconds();
     if (errCode != StatusCode::OK) {
         LOG_ERROR(sLogger, ("execute error", errorMsg));
         mSplExcuteErrorCount->Add(1);
@@ -155,11 +148,6 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
     mProcOutRecordsTotal->Add(outSize);
     uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
     mProcTimeMS->Add(durationTime);
-
-    uint64_t stage3Time = GetCurrentTimeInMicroSeconds();
-    stage1TimeTotal += (stage1Time - startTime);
-    stage2TimeTotal += (stage2Time - stage1Time);
-    stage3TimeTotal += (stage3Time - stage2Time);
     return;
 }
 
