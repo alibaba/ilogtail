@@ -406,11 +406,11 @@ func (cw *CRIRuntimeWrapper) fetchAll() error {
 
 		dockerContainer, _, _, err := cw.createContainerInfo(c.GetId())
 		if err != nil {
-			logger.Errorf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "Create container info from cri-runtime error, err:%v", err)
+			logger.Errorf(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "Create container info from cri-runtime error, Container Info: %+v, err: %v", c, err)
 			continue
 		}
 		if dockerContainer == nil || dockerContainer.ContainerInfo.ContainerJSONBase == nil {
-			logger.Error(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "Create container info from cri-runtime error")
+			logger.Error(context.Background(), "CREATE_CONTAINERD_INFO_ALARM", "Create container info from cri-runtime error, Container:%+v", c)
 			continue
 		}
 		if dockerContainer.Status() != ContainerStatusRunning {
