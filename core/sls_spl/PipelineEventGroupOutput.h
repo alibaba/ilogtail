@@ -22,7 +22,7 @@ class PipelineEventGroupOutput : public Output {
             const uint32_t timeNsPart,
             const ErrorKV& errorKV, 
             std::string& error);
-        virtual void finish(std::string& error);
+        //virtual bool isColumnar();
 
     private:
         int32_t mRowCount;
@@ -35,17 +35,11 @@ class PipelineEventGroupOutput : public Output {
         std::string mTaskLabel;
         bool mWithSleep;
 
-        //std::unordered_map<int64_t, int32_t> mLogGroupKeyIdxs;
-
         int32_t mTimeIdx = -1;
         int32_t mTimeNSIdx = -1;
         std::vector<int32_t> mTagsIdxs;
         std::vector<int32_t> mContentsIdxs;
-
-        int64_t lastTagStrHash = 0;
-
-
-
+        size_t lastTagStrHash = -1;
 };
 
 using PipelineEventGroupOutputPtr = std::shared_ptr<PipelineEventGroupOutput>;

@@ -76,7 +76,7 @@ void SlsSplUnittest::TestWhere() {
     Config config;
     config.mDiscardUnmatch = false;
     config.mUploadRawLog = false;
-    config.mSpl = "* | where content = 'value_3_0'";
+    config.mSpl = "* | where content='value_3_0'";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -110,8 +110,6 @@ void SlsSplUnittest::TestWhere() {
     std::vector<PipelineEventGroup> logGroupList;
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-
-    
     ComponentConfig componentConfig(pluginId, config);
 
     APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));

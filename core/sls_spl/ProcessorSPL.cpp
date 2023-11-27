@@ -74,9 +74,8 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     logger = sLogger;
 
     std::string spl = config.mSpl;
-
-    const uint64_t timeoutMills = 100;
-    const int64_t maxMemoryBytes = 2 * 1024L * 1024L * 1024L;
+    const uint64_t timeoutMills = config.mSplTimeoutMills;
+    const int64_t maxMemoryBytes =config.mSplMaxMemoryBytes;
     Error error;
     
     mSPLPipelinePtr = std::make_shared<apsara::sls::spl::SplPipeline>(spl, error, timeoutMills, maxMemoryBytes, logger);

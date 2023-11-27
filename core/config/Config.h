@@ -121,6 +121,8 @@ public:
     std::shared_ptr<std::list<std::string>> mKeys; // description of each part of regex
 
     std::string mSpl;
+    uint64_t mSplTimeoutMills = 1000;
+    int64_t mSplMaxMemoryBytes = 2 * 1024L * 1024L * 1024L;
 
     std::string mTimeFormat; // for common_reg_log
     std::string mCategory;

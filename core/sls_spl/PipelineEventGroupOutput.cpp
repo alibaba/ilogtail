@@ -6,6 +6,7 @@
 #include "logger/Logger.h"
 #include "common/HashUtil.h"
 #include "sls_spl/SplConstants.h"
+#include <boost/container_hash/hash.hpp>
 
 
 
@@ -34,14 +35,14 @@ void PipelineEventGroupOutput::addRow(
     const ErrorKV& errorKV,
     std::string& error) {
     std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(mLogGroup->GetSourceBuffer());
-    std::ostringstream oss;
-    for (const auto& idxTag : mTagsIdxs) { 
-        oss << mIOHeader->columnNames[idxTag] << row[idxTag];
-        //LOG_DEBUG(sLogger, ("tag key", StringView(mIOHeader->columnNames[idxTag].mPtr, mIOHeader->columnNames[idxTag].mLen))("tag value", StringView(row[idxTag].mPtr, row[idxTag].mLen)));
-    }
-    int64_t tagStrHash = HashString(oss.str());    
-    int32_t logGroupKeyIdx = -1;
 
+    size_t tagStrHash = 0;
+    for (const auto& idxTag : mTagsIdxs) { 
+        boost::hash_combine(tagStrHash, mIOHeader->columnNames[idxTag].hash());
+        boost::hash_combine(tagStrHash, row[idxTag].hash());
+    }
+
+    int32_t logGroupKeyIdx = -1;
     if (tagStrHash != lastTagStrHash) {
         mLogGroupList->emplace_back(mLogGroup->GetSourceBuffer());
         mLogGroupList->back().SetAllMetadata(mLogGroup->GetAllMetadata());
@@ -60,7 +61,7 @@ void PipelineEventGroupOutput::addRow(
         } else {
             targetEvent->SetContent(StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen), StringView(row[idxContent].mPtr, row[idxContent].mLen));
         }
-        //LOG_DEBUG(sLogger, ("content key", StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen))("content value", StringView(row[idxContent].mPtr, row[idxContent].mLen)));
+        LOG_DEBUG(sLogger, ("content key", StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen))("content value", StringView(row[idxContent].mPtr, row[idxContent].mLen)));
     }
 
     for (const auto& idxTag : mTagsIdxs) {
@@ -69,13 +70,13 @@ void PipelineEventGroupOutput::addRow(
     
     mLogGroupList->at(logGroupKeyIdx).AddEvent(std::move(targetEvent));
     if (!errorKV.second.empty()) {
-        //LOG_ERROR(sLogger, ("__error__", errorKV.second));
+        LOG_ERROR(sLogger, ("__error__", errorKV.second));
     }
     mRowCount ++;
 }
 
-
-void PipelineEventGroupOutput::finish(std::string& error) {
-}
+//bool PipelineEventGroupOutput::isColumnar() {
+//    return false;
+//}
 
 }  // namespace apsara::sls::spl
