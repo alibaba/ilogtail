@@ -33,6 +33,7 @@ protected:
     virtual ~ConfigProvider() = default;
 
     std::filesystem::path mSourceDir;
+    std::mutex mMux;
 };
 
 } // namespace logtail

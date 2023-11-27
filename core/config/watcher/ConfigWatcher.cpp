@@ -51,6 +51,14 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
             continue;
         }
         for (auto const& entry : filesystem::directory_iterator(dir, ec)) {
+            // lock the dir if it is provided by config provider
+            unique_lock<mutex> lock;
+            auto itr = mDirMutexMap.find(dir.string());
+            if (itr != mDirMutexMap.end()) {
+                lock = std::move(unique_lock<mutex>(*itr->second, defer_lock));
+                lock.lock();
+            }
+
             const filesystem::path &path = entry.path();
             const string& configName = path.stem().string();
             const string& filepath = path.string();
@@ -136,8 +144,9 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
     return diff;
 }
 
-void ConfigWatcher::AddSource(const string& dir) {
+void ConfigWatcher::AddSource(const string& dir, std::mutex* mux) {
     mSourceDir.emplace_back(dir);
+    mDirMutexMap[dir] = mux;
 }
 
 bool ConfigWatcher::LoadConfigDetailFromFile(const filesystem::path& filepath, Json::Value& detail) const {

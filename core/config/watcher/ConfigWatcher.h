@@ -41,7 +41,7 @@ public:
     }
 
     ConfigDiff CheckConfigDiff();
-    void AddSource(const std::string& dir);
+    void AddSource(const std::string& dir, std::mutex* mux = nullptr);
     // for ut
     void SetPipelineManager(const PipelineManager* pm) { mPipelineManager = pm; }
     void ClearEnvironment();
@@ -54,6 +54,7 @@ private:
     bool IsConfigEnabled(const std::string& name, const Json::Value& detail) const;
 
     std::vector<std::filesystem::path> mSourceDir;
+    std::unordered_map<std::string, std::mutex*> mDirMutexMap;
     std::map<std::string, std::pair<uintmax_t, std::filesystem::file_time_type>> mFileInfoMap;
     const PipelineManager* mPipelineManager = nullptr;
 };

@@ -288,12 +288,14 @@ void CommonConfigProvider::UpdateRemoteConfig(
         return;
     }
 
+    lock_guard<mutex> lock(mMux);
     for (const auto& checkResult : checkResults) {
         filesystem::path filePath = mSourceDir / (checkResult.name() + ".yaml");
+        filesystem::path tmpFilePath = mSourceDir / (checkResult.name() + ".yaml.new");
         switch (checkResult.check_status()) {
             case configserver::proto::DELETED:
                 mConfigNameVersionMap.erase(checkResult.name());
-                remove(filePath, ec);
+                filesystem::remove(filePath, ec);
                 break;
             case configserver::proto::NEW:
             case configserver::proto::MODIFIED: {
@@ -305,12 +307,21 @@ void CommonConfigProvider::UpdateRemoteConfig(
                     }
                 }
                 mConfigNameVersionMap[checkResult.name()] = checkResult.new_version();
-                ofstream fout(filePath, ios::trunc);
+                ofstream fout(tmpFilePath);
                 if (!fout) {
                     LOG_WARNING(sLogger, ("failed to open config file", filePath.string()));
                     continue;
                 }
                 fout << configDetail;
+
+                error_code ec;
+                filesystem::rename(tmpFilePath, filePath, ec);
+                if (ec) {
+                    LOG_WARNING(
+                        sLogger,
+                        ("failed to dump config file", filePath.string())("error code", ec.value())("error msg", ec.message()));
+                    filesystem::remove(tmpFilePath, ec);
+                }
                 break;
             }
             default:

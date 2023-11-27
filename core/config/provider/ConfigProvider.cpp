@@ -29,7 +29,7 @@ void ConfigProvider::Init(const string& dir) {
 
     error_code ec;
     filesystem::create_directories(mSourceDir, ec);
-    ConfigWatcher::GetInstance()->AddSource(mSourceDir);
+    ConfigWatcher::GetInstance()->AddSource(mSourceDir, &mMux);
 }
 
 } // namespace logtail
