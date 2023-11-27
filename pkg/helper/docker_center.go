@@ -625,7 +625,8 @@ func getDockerCenterInstance() *DockerCenter {
 		dockerCenterInstance.imageCache = make(map[string]string)
 		dockerCenterInstance.containerMap = make(map[string]*DockerInfoDetail)
 		if IsCRIRuntimeValid(containerdUnixSocket) {
-			for i := 0; i < 10; i++ {
+			retryTimes := 10
+			for i := 0; i < retryTimes; i++ {
 				var err error
 				criRuntimeWrapper, err = NewCRIRuntimeWrapper(dockerCenterInstance)
 				if err != nil {
@@ -636,11 +637,10 @@ func getDockerCenterInstance() *DockerCenter {
 					break
 				}
 				time.Sleep(time.Second * 1)
-				if i == 9 {
+				if i == retryTimes-1 {
 					logger.Error(context.Background(), "DOCKER_CENTER_ALARM", "[CRIRuntime] create cri-runtime client failed")
 				}
 			}
-
 		}
 		if ok, err := util.PathExists(DefaultLogtailMountPath); err == nil {
 			if !ok {
