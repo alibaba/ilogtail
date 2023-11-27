@@ -50,7 +50,11 @@ protected:
         BlockedEvent() : mLogstoreKey(0), mEvent(NULL), mInvalidTime(time(NULL)), mTimeout(1) {}
         void Update(const LogstoreFeedBackKey& logstoreKey, Event* pEvent, int32_t curTime) {
             if (mEvent != NULL) {
-                delete mEvent;
+                if (!pEvent->IsReaderFlushTimeout() || mEvent->IsReaderFlushTimeout()) {
+                    delete mEvent;
+                } else {
+                    return;
+                }
             }
             mEvent = pEvent;
             mLogstoreKey = logstoreKey;
