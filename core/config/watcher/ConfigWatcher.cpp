@@ -146,7 +146,9 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
 
 void ConfigWatcher::AddSource(const string& dir, std::mutex* mux) {
     mSourceDir.emplace_back(dir);
-    mDirMutexMap[dir] = mux;
+    if (mux != nullptr) {
+        mDirMutexMap[dir] = mux;
+    }
 }
 
 bool ConfigWatcher::LoadConfigDetailFromFile(const filesystem::path& filepath, Json::Value& detail) const {
