@@ -16,13 +16,14 @@
 
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <memory>
-#include <vector>
-
-#include "json/json.h"
+#include <json/json.h>
 #include <re2/re2.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace logtail {
 
@@ -64,7 +65,8 @@ struct Config {
 
     bool ShouldNativeFlusherConnectedByGoPipeline() const {
         // 过渡使用，待c++支持分叉后恢复下面的正式版
-        return mHasGoProcessor || (mHasGoInput && !mHasNativeInput && mProcessors.empty()) || (mHasGoFlusher && mHasNativeFlusher);
+        return mHasGoProcessor || (mHasGoInput && !mHasNativeInput && mProcessors.empty())
+            || (mHasGoFlusher && mHasNativeFlusher);
         // return mHasGoProcessor || (mHasGoInput && !mHasNativeInput && mProcessors.empty());
     }
 
@@ -77,12 +79,17 @@ struct Config {
         return !(mHasGoInput && !mHasNativeProcessor);
         // return !(mHasGoInput && !mHasNativeProcessor && (mHasGoProcessor || (mHasGoFlusher && !mHasNativeFlusher)));
     }
-    
+
     bool HasGoPlugin() const { return mHasGoFlusher || mHasGoProcessor || mHasGoInput; }
 
     void ReplaceEnvVar();
 };
 
-bool ParseConfigDetail(const std::string& content, const std::string& extenstion, Json::Value& detail, std::string& errorMsg);
+bool LoadConfigDetailFromFile(const std::filesystem::path& filepath, Json::Value& detail);
+bool ParseConfigDetail(const std::string& content,
+                       const std::string& extenstion,
+                       Json::Value& detail,
+                       std::string& errorMsg);
+bool IsConfigEnabled(const std::string& name, const Json::Value& detail);
 
 } // namespace logtail

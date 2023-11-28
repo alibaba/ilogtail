@@ -151,61 +151,9 @@ void ConfigWatcher::AddSource(const string& dir, std::mutex* mux) {
     }
 }
 
-bool ConfigWatcher::LoadConfigDetailFromFile(const filesystem::path& filepath, Json::Value& detail) const {
-    const string& ext = filepath.extension().string();
-    if (ext != ".yaml" && ext != ".yml" && ext != ".json") {
-        LOG_WARNING(sLogger, ("unsupported config file format", "skip current object")("filepath", filepath));
-        return false;
-    }
-    string content;
-    if (!ReadFile(filepath.string(), content)) {
-        LOG_WARNING(sLogger, ("failed to open config file", "skip current object")("filepath", filepath));
-        return false;
-    }
-    if (content.empty()) {
-        LOG_WARNING(sLogger, ("empty config file", "skip current object")("filepath", filepath));
-        return false;
-    }
-    string errorMsg;
-    if (!ParseConfigDetail(content, ext, detail, errorMsg)) {
-        LOG_WARNING(sLogger, ("config file format error", "skip current object")("error msg", errorMsg)("filepath", filepath));
-        return false;
-    }
-    return true;
-}
-
-bool ConfigWatcher::IsConfigEnabled(const string& name, const Json::Value& detail) const {
-    const char* key = "enable";
-    const Json::Value* itr = detail.find(key, key + strlen(key));
-    if (itr != nullptr) {
-        if (!itr->isBool()) {
-            LOG_WARNING(sLogger,
-                        ("problem encountered in config parsing",
-                         "param enable is not of type bool")("action", "ignore the config")("config", name));
-            return false;
-        }
-        return itr->asBool();
-    }
-    return true;
-}
-
 void ConfigWatcher::ClearEnvironment() {
     mSourceDir.clear();
     mFileInfoMap.clear();
-}
-
-bool ReadFile(const string& filepath, string& content) {
-    constexpr size_t read_size = size_t(4096);
-    ifstream fin(filepath);
-    if (!fin) {
-        return false;
-    }
-    string buf = string(read_size, '\0');
-    while (fin.read(&buf[0], read_size)) {
-        content.append(buf, 0, fin.gcount());
-    }
-    content.append(buf, 0, fin.gcount());
-    return true;
 }
 
 } // namespace logtail
