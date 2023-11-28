@@ -21,10 +21,10 @@ function run() {
   echo "========================================="
   echo "$name testing case"
   echo "========================================="
-  # currently, latest github runner cannot run ebpf program, skip it.
-  if echo "$name" | grep 'observer'; then
-   exit 0
-  fi
+  # # currently, latest github runner cannot run ebpf program, skip it.
+  # if echo "$name" | grep 'observer'; then
+  #  exit 0
+  # fi
   
   eval "$command"
   if [ $? = 1 ]; then
@@ -48,7 +48,7 @@ rm -rf "$TEST_HOME"
 mkdir "$TEST_HOME"
 
 cd "$TESTDIR"
-go build -v -o "$TEST_HOME"/ilogtail-test-tool "$TESTDIR"
+go build -buildvcs=false -v -o "$TEST_HOME"/ilogtail-test-tool "$TESTDIR"
 
 if [ $? != 0 ]; then
   echo "build ilogtail e2e engine failed"
