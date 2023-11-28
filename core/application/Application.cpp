@@ -171,7 +171,18 @@ void Application::Start() {
 
     LogtailMonitor::Instance()->InitMonitor();
 
-    ConfigWatcher::GetInstance()->AddSource(AppConfig::GetInstance()->GetLogtailSysConfDir() + "/config/local");
+    // add local config dir
+    filesystem::path localConfigPath
+        = filesystem::path(AppConfig::GetInstance()->GetLogtailSysConfDir()) / "config" / "local";
+    error_code ec;
+    filesystem::create_directories(localConfigPath, ec);
+    if (ec) {
+        LOG_WARNING(sLogger,
+                    ("failed to create dir for local config",
+                     "manual creation may be required")("error code", ec.value())("error msg", ec.message()));
+    }
+    ConfigWatcher::GetInstance()->AddSource(localConfigPath.string());
+
 #ifdef __ENTERPRISE__
     EnterpriseConfigProvider::GetInstance()->Init("enterprise");
     LegacyConfigProvider::GetInstance()->Init("legacy");

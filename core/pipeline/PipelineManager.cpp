@@ -164,7 +164,9 @@ string PipelineManager::GetPluginStatistics() const {
 
 void PipelineManager::StopAllPipelines() {
 #if defined(__ENTERPRISE__) && defined(__linux__)
-    StreamLogManager::GetInstance()->Shutdown();
+    if (AppConfig::GetInstance()->GetOpenStreamLog()) {
+        StreamLogManager::GetInstance()->Shutdown();
+    }
 #endif
 #ifdef __linux__
     ObserverManager::GetInstance()->HoldOn(true);

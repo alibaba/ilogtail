@@ -74,7 +74,7 @@ private:
     std::vector<std::string> mConfigServerTags;
 
     JThread mCheckUpdateThread;
-    std::atomic_bool mThreadIsRunning = true;
+    std::atomic_bool mThreadIsRunning = false;
     std::unordered_map<std::string, int64_t> mConfigNameVersionMap;
     bool mConfigServerAvailable = false;
 };

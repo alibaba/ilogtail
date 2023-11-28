@@ -88,6 +88,7 @@ void CommonConfigProvider::Init(const string& dir) {
 void CommonConfigProvider::CheckUpdateThread() {
     usleep((rand() % 10) * 100 * 1000);
     int32_t lastCheckTime = 0;
+    mThreadIsRunning = true;
     while (mThreadIsRunning.load()) {
         int32_t curTime = time(NULL);
         if (curTime - lastCheckTime >= INT32_FLAG(config_update_interval)) {
