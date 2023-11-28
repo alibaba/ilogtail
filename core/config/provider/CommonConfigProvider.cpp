@@ -41,11 +41,6 @@ CommonConfigProvider::~CommonConfigProvider() {
     mThreadIsRunning = false;
 }
 
-CommonConfigProvider* CommonConfigProvider::GetInstance() {
-    static CommonConfigProvider instance;
-    return &instance;
-}
-
 void CommonConfigProvider::Init(const string& dir) {
     ConfigProvider::Init(dir);
 

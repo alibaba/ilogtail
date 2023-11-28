@@ -33,7 +33,10 @@ public:
     CommonConfigProvider(const CommonConfigProvider&) = delete;
     CommonConfigProvider& operator=(const CommonConfigProvider&) = delete;
 
-    static CommonConfigProvider* GetInstance();
+    static CommonConfigProvider* GetInstance() {
+        static CommonConfigProvider instance;
+        return &instance;
+    }
 
     void Init(const std::string& dir) override;
 
