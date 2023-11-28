@@ -16,12 +16,12 @@
 
 #include "processor/ProcessorParseDelimiterNative.h"
 
-#include "common/StringTools.h"
 #include "common/Constants.h"
+#include "common/StringTools.h"
 #include "models/LogEvent.h"
+#include "monitor/MetricConstants.h"
 #include "parser/LogParser.h"
 #include "plugin/instance/ProcessorInstance.h"
-#include "monitor/MetricConstants.h"
 
 
 namespace logtail {
@@ -212,8 +212,14 @@ bool ProcessorParseDelimiterNative::SplitString(
     size_t pos = begIdx;
     size_t top = endIdx - d_size;
     while (pos <= top) {
-        const char* pch = strstr(buffer + pos, mSeparator.c_str());
-        size_t pos2 = pch == NULL ? endIdx : (pch - buffer);
+        const char* pch = std::search(buffer + pos, buffer + endIdx, mSeparator.begin(), mSeparator.end());
+        size_t pos2;
+        // if not found, pos2 = endIdx
+        if (pch == buffer + endIdx) {
+            pos2 = endIdx;
+        } else {
+            pos2 = pch - buffer;
+        }
         if (pos2 != pos) {
             colBegIdxs.push_back(pos);
             colLens.push_back(pos2 - pos);
