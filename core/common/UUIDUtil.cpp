@@ -36,7 +36,7 @@ string CalculateRandomUUID() {
     UuidCreate(&uuid);
     unsigned char* str;
     UuidToString(&uuid, &str);
-    std::string s((char*)str);
+    string s((char*)str);
     RpcStringFree(&str);
     return s;
 #endif

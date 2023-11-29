@@ -30,7 +30,7 @@ using namespace std;
 namespace logtail {
 
 // basePath must not stop with '/'
-inline bool _IsSubPath(const std::string& basePath, const std::string& subPath) {
+inline bool _IsSubPath(const string& basePath, const string& subPath) {
     size_t pathSize = subPath.size();
     size_t basePathSize = basePath.size();
     if (pathSize >= basePathSize && memcmp(subPath.c_str(), basePath.c_str(), basePathSize) == 0) {
@@ -39,7 +39,7 @@ inline bool _IsSubPath(const std::string& basePath, const std::string& subPath) 
     return false;
 }
 
-inline bool _IsPathMatched(const std::string& basePath, const std::string& path, int maxDepth) {
+inline bool _IsPathMatched(const string& basePath, const string& path, int maxDepth) {
     size_t pathSize = path.size();
     size_t basePathSize = basePath.size();
     if (pathSize >= basePathSize && memcmp(path.c_str(), basePath.c_str(), basePathSize) == 0) {
@@ -69,7 +69,7 @@ inline bool _IsPathMatched(const std::string& basePath, const std::string& path,
     return false;
 }
 
-static bool isNotSubPath(const std::string& basePath, const std::string& path) {
+static bool isNotSubPath(const string& basePath, const string& path) {
     size_t pathSize = path.size();
     size_t basePathSize = basePath.size();
     if (pathSize < basePathSize || memcmp(path.c_str(), basePath.c_str(), basePathSize) != 0) {
@@ -182,7 +182,7 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
                                      ctx.GetConfigName());
                 continue;
             }
-            bool isMultipleLevelWildcard = mExcludeFilePaths[i].find("**") != std::string::npos;
+            bool isMultipleLevelWildcard = mExcludeFilePaths[i].find("**") != string::npos;
             if (isMultipleLevelWildcard) {
                 mMLFilePathBlacklist.push_back(mExcludeFilePaths[i]);
             } else {
@@ -196,7 +196,7 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
         PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
     } else {
         for (size_t i = 0; i < mExcludeFiles.size(); ++i) {
-            if (mExcludeFiles[i].find(filesystem::path::preferred_separator) != std::string::npos) {
+            if (mExcludeFiles[i].find(filesystem::path::preferred_separator) != string::npos) {
                 PARAM_WARNING_IGNORE(ctx.GetLogger(),
                                      "ExcludeFiles[" + ToString(i) + "] contains path separator",
                                      pluginName,
@@ -219,13 +219,13 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
                                      ctx.GetConfigName());
                 continue;
             }
-            bool isMultipleLevelWildcard = mExcludeDirs[i].find("**") != std::string::npos;
+            bool isMultipleLevelWildcard = mExcludeDirs[i].find("**") != string::npos;
             if (isMultipleLevelWildcard) {
                 mMLWildcardDirPathBlacklist.push_back(mExcludeDirs[i]);
                 continue;
             }
             bool isWildcardPath
-                = mExcludeDirs[i].find("*") != std::string::npos || mExcludeDirs[i].find("?") != std::string::npos;
+                = mExcludeDirs[i].find("*") != string::npos || mExcludeDirs[i].find("?") != string::npos;
             if (isWildcardPath) {
                 mWildcardDirPathBlacklist.push_back(mExcludeDirs[i]);
             } else {
@@ -273,21 +273,21 @@ void FileDiscoveryOptions::ParseWildcardPath() {
     size_t posA = mBasePath.find('*', 0);
     size_t posB = mBasePath.find('?', 0);
     size_t pos;
-    if (posA == std::string::npos) {
-        if (posB == std::string::npos)
+    if (posA == string::npos) {
+        if (posB == string::npos)
             return;
         else
             pos = posB;
     } else {
-        if (posB == std::string::npos)
+        if (posB == string::npos)
             pos = posA;
         else
-            pos = std::min(posA, posB);
+            pos = min(posA, posB);
     }
     if (pos == 0)
         return;
     pos = mBasePath.rfind(filesystem::path::preferred_separator, pos);
-    if (pos == std::string::npos)
+    if (pos == string::npos)
         return;
 
         // Check if there is only one path separator, for Windows, the first path
@@ -303,11 +303,11 @@ void FileDiscoveryOptions::ParseWildcardPath() {
         mWildcardPaths.push_back(mBasePath.substr(0, pos));
     while (true) {
         size_t nextPos = mBasePath.find(filesystem::path::preferred_separator, pos + 1);
-        if (nextPos == std::string::npos)
+        if (nextPos == string::npos)
             break;
         mWildcardPaths.push_back(mBasePath.substr(0, nextPos));
-        std::string dirName = mBasePath.substr(pos + 1, nextPos - pos - 1);
-        if (dirName.find('?') == std::string::npos && dirName.find('*') == std::string::npos) {
+        string dirName = mBasePath.substr(pos + 1, nextPos - pos - 1);
+        if (dirName.find('?') == string::npos && dirName.find('*') == string::npos) {
             mConstWildcardPaths.push_back(dirName);
         } else {
             mConstWildcardPaths.push_back("");
@@ -316,8 +316,8 @@ void FileDiscoveryOptions::ParseWildcardPath() {
     }
     mWildcardPaths.push_back(mBasePath);
     if (pos < mBasePath.size()) {
-        std::string dirName = mBasePath.substr(pos + 1);
-        if (dirName.find('?') == std::string::npos && dirName.find('*') == std::string::npos) {
+        string dirName = mBasePath.substr(pos + 1);
+        if (dirName.find('?') == string::npos && dirName.find('*') == string::npos) {
             mConstWildcardPaths.push_back(dirName);
         } else {
             mConstWildcardPaths.push_back("");
@@ -330,7 +330,7 @@ void FileDiscoveryOptions::ParseWildcardPath() {
     }
 }
 
-bool FileDiscoveryOptions::IsDirectoryInBlacklist(const std::string& dirPath) const {
+bool FileDiscoveryOptions::IsDirectoryInBlacklist(const string& dirPath) const {
     if (!mHasBlacklist) {
         return false;
     }
@@ -353,7 +353,7 @@ bool FileDiscoveryOptions::IsDirectoryInBlacklist(const std::string& dirPath) co
     return false;
 }
 
-bool FileDiscoveryOptions::IsObjectInBlacklist(const std::string& path, const std::string& name) const {
+bool FileDiscoveryOptions::IsObjectInBlacklist(const string& path, const string& name) const {
     if (!mHasBlacklist) {
         return false;
     }
@@ -380,7 +380,7 @@ bool FileDiscoveryOptions::IsObjectInBlacklist(const std::string& path, const st
     return false;
 }
 
-bool FileDiscoveryOptions::IsFileNameInBlacklist(const std::string& fileName) const {
+bool FileDiscoveryOptions::IsFileNameInBlacklist(const string& fileName) const {
     if (!mHasBlacklist) {
         return false;
     }
@@ -396,7 +396,7 @@ bool FileDiscoveryOptions::IsFileNameInBlacklist(const std::string& fileName) co
 // IsMatch checks if the object is matched with current config.
 // @path: absolute path of location in where the object stores in.
 // @name: the name of the object. If the object is directory, this parameter will be empty.
-bool FileDiscoveryOptions::IsMatch(const std::string& path, const std::string& name) const {
+bool FileDiscoveryOptions::IsMatch(const string& path, const string& name) const {
     // Check if the file name is matched or blacklisted.
     if (!name.empty()) {
         if (fnmatch(mFilePattern.c_str(), name.c_str(), 0) != 0)
@@ -418,14 +418,14 @@ bool FileDiscoveryOptions::IsMatch(const std::string& path, const std::string& n
                 // if mWildcardPaths[0] is root path, do not add mWildcardPaths[0]
                 return IsWildcardPathMatch(path.substr(containerPath->mContainerPath.size()), name);
             } else {
-                std::string convertPath = mWildcardPaths[0] + path.substr(containerPath->mContainerPath.size());
+                string convertPath = mWildcardPaths[0] + path.substr(containerPath->mContainerPath.size());
                 return IsWildcardPathMatch(convertPath, name);
             }
         }
 
         // Normal base path.
         for (size_t i = 0; i < mContainerInfos->size(); ++i) {
-            const std::string& containerBasePath = (*mContainerInfos)[i].mContainerPath;
+            const string& containerBasePath = (*mContainerInfos)[i].mContainerPath;
             if (_IsPathMatched(containerBasePath, path, mMaxDirSearchDepth)) {
                 if (!mHasBlacklist) {
                     return true;
@@ -447,13 +447,13 @@ bool FileDiscoveryOptions::IsMatch(const std::string& path, const std::string& n
         return IsWildcardPathMatch(path, name);
 }
 
-bool FileDiscoveryOptions::IsWildcardPathMatch(const std::string& path, const std::string& name) const {
+bool FileDiscoveryOptions::IsWildcardPathMatch(const string& path, const string& name) const {
     size_t pos = 0;
     int16_t d = 0;
     int16_t maxWildcardDepth = mWildcardDepth + 1;
     while (d < maxWildcardDepth) {
         pos = path.find(PATH_SEPARATOR[0], pos);
-        if (pos == std::string::npos)
+        if (pos == string::npos)
             break;
         ++d;
         ++pos;
@@ -478,7 +478,7 @@ bool FileDiscoveryOptions::IsWildcardPathMatch(const std::string& path, const st
     int depth = 1;
     while (depth < mMaxDirSearchDepth + 1) {
         pos = path.find(PATH_SEPARATOR[0], pos);
-        if (pos == std::string::npos)
+        if (pos == string::npos)
             return true;
         ++depth;
         ++pos;
@@ -487,14 +487,14 @@ bool FileDiscoveryOptions::IsWildcardPathMatch(const std::string& path, const st
 }
 
 // XXX: assume path is a subdir under mBasePath
-bool FileDiscoveryOptions::IsTimeout(const std::string& path) const {
+bool FileDiscoveryOptions::IsTimeout(const string& path) const {
     if (mPreservedDirDepth < 0 || mWildcardPaths.size() > 0)
         return false;
 
     // we do not check if (path.find(mBasePath) == 0)
     size_t pos = mBasePath.size();
     int depthCount = 0;
-    while ((pos = path.find(PATH_SEPARATOR[0], pos)) != std::string::npos) {
+    while ((pos = path.find(PATH_SEPARATOR[0], pos)) != string::npos) {
         ++depthCount;
         ++pos;
         if (depthCount > mPreservedDirDepth)
@@ -503,7 +503,7 @@ bool FileDiscoveryOptions::IsTimeout(const std::string& path) const {
     return false;
 }
 
-bool FileDiscoveryOptions::WithinMaxDepth(const std::string& path) const {
+bool FileDiscoveryOptions::WithinMaxDepth(const string& path) const {
     // default -1 to compatible with old version
     if (mMaxDirSearchDepth < 0)
         return true;
@@ -523,7 +523,7 @@ bool FileDiscoveryOptions::WithinMaxDepth(const std::string& path) const {
     if (mWildcardPaths.size() == 0) {
         size_t pos = mBasePath.size();
         int depthCount = 0;
-        while ((pos = path.find(PATH_SEPARATOR, pos)) != std::string::npos) {
+        while ((pos = path.find(PATH_SEPARATOR, pos)) != string::npos) {
             ++depthCount;
             ++pos;
             if (depthCount > mMaxDirSearchDepth)
@@ -554,7 +554,7 @@ bool FileDiscoveryOptions::WithinMaxDepth(const std::string& path) const {
     return true;
 }
 
-DockerContainerPath* FileDiscoveryOptions::GetContainerPathByLogPath(const std::string& logPath) const {
+DockerContainerPath* FileDiscoveryOptions::GetContainerPathByLogPath(const string& logPath) const {
     if (!mContainerInfos) {
         return NULL;
     }
@@ -566,7 +566,7 @@ DockerContainerPath* FileDiscoveryOptions::GetContainerPathByLogPath(const std::
     return NULL;
 }
 
-bool FileDiscoveryOptions::IsSameDockerContainerPath(const std::string& paramsJSONStr, bool allFlag) const {
+bool FileDiscoveryOptions::IsSameDockerContainerPath(const string& paramsJSONStr, bool allFlag) const {
     if (!mEnableContainerDiscovery)
         return true;
 
@@ -586,7 +586,7 @@ bool FileDiscoveryOptions::IsSameDockerContainerPath(const std::string& paramsJS
     }
 
     // check all
-    std::unordered_map<std::string, DockerContainerPath> allPathMap;
+    unordered_map<string, DockerContainerPath> allPathMap;
     if (!DockerContainerPath::ParseAllByJSONStr(paramsJSONStr, allPathMap)) {
         LOG_ERROR(sLogger, ("invalid all docker container params", "skip this path")("params", paramsJSONStr));
         return true;
@@ -598,7 +598,7 @@ bool FileDiscoveryOptions::IsSameDockerContainerPath(const std::string& paramsJS
     }
 
     for (size_t i = 0; i < mContainerInfos->size(); ++i) {
-        std::unordered_map<std::string, DockerContainerPath>::iterator iter
+        unordered_map<string, DockerContainerPath>::iterator iter
             = allPathMap.find((*mContainerInfos)[i].mContainerID);
         // need delete
         if (iter == allPathMap.end()) {
@@ -613,7 +613,7 @@ bool FileDiscoveryOptions::IsSameDockerContainerPath(const std::string& paramsJS
     return true;
 }
 
-bool FileDiscoveryOptions::UpdateDockerContainerPath(const std::string& paramsJSONStr, bool allFlag) {
+bool FileDiscoveryOptions::UpdateDockerContainerPath(const string& paramsJSONStr, bool allFlag) {
     if (!mContainerInfos)
         return false;
 
@@ -636,14 +636,14 @@ bool FileDiscoveryOptions::UpdateDockerContainerPath(const std::string& paramsJS
         return true;
     }
 
-    std::unordered_map<std::string, DockerContainerPath> allPathMap;
+    unordered_map<string, DockerContainerPath> allPathMap;
     if (!DockerContainerPath::ParseAllByJSONStr(paramsJSONStr, allPathMap)) {
         LOG_ERROR(sLogger, ("invalid all docker container params", "skip this path")("params", paramsJSONStr));
         return false;
     }
     // if update all, clear and reset
     mContainerInfos->clear();
-    for (std::unordered_map<std::string, DockerContainerPath>::iterator iter = allPathMap.begin();
+    for (unordered_map<string, DockerContainerPath>::iterator iter = allPathMap.begin();
          iter != allPathMap.end();
          ++iter) {
         mContainerInfos->push_back(iter->second);
@@ -651,7 +651,7 @@ bool FileDiscoveryOptions::UpdateDockerContainerPath(const std::string& paramsJS
     return true;
 }
 
-bool FileDiscoveryOptions::DeleteDockerContainerPath(const std::string& paramsJSONStr) {
+bool FileDiscoveryOptions::DeleteDockerContainerPath(const string& paramsJSONStr) {
     if (!mContainerInfos)
         return false;
 
@@ -659,7 +659,7 @@ bool FileDiscoveryOptions::DeleteDockerContainerPath(const std::string& paramsJS
     if (!DockerContainerPath::ParseByJSONStr(paramsJSONStr, dockerContainerPath)) {
         return false;
     }
-    for (std::vector<DockerContainerPath>::iterator iter = mContainerInfos->begin(); iter != mContainerInfos->end();
+    for (vector<DockerContainerPath>::iterator iter = mContainerInfos->begin(); iter != mContainerInfos->end();
          ++iter) {
         if (iter->mContainerID == dockerContainerPath.mContainerID) {
             mContainerInfos->erase(iter);

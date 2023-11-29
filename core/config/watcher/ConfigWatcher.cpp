@@ -144,7 +144,7 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
     return diff;
 }
 
-void ConfigWatcher::AddSource(const string& dir, std::mutex* mux) {
+void ConfigWatcher::AddSource(const string& dir, mutex* mux) {
     mSourceDir.emplace_back(dir);
     if (mux != nullptr) {
         mDirMutexMap[dir] = mux;

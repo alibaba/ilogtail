@@ -16,12 +16,12 @@
 
 #include "plugin/PluginRegistry.h"
 
+#include <dirent.h>
 #include <dlfcn.h>
 #include <unistd.h>
-#include <dirent.h>
 
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 
@@ -48,6 +48,8 @@
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorTagNative.h"
+
+using namespace std;
 
 namespace logtail {
 
@@ -184,34 +186,32 @@ void PluginRegistry::UnloadPlugins() {
     mPluginDict.clear();
 }
 
-std::unique_ptr<InputInstance> PluginRegistry::CreateInput(const std::string& name, const std::string& pluginId) {
-    return std::unique_ptr<InputInstance>(static_cast<InputInstance*>(Create(INPUT_PLUGIN, name, pluginId).release()));
+unique_ptr<InputInstance> PluginRegistry::CreateInput(const string& name, const string& pluginId) {
+    return unique_ptr<InputInstance>(static_cast<InputInstance*>(Create(INPUT_PLUGIN, name, pluginId).release()));
 }
 
-std::unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const std::string& name,
-                                                                   const std::string& pluginId) {
-    return std::unique_ptr<ProcessorInstance>(
+unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const string& name, const string& pluginId) {
+    return unique_ptr<ProcessorInstance>(
         static_cast<ProcessorInstance*>(Create(PROCESSOR_PLUGIN, name, pluginId).release()));
 }
 
-std::unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const std::string& name, const std::string& pluginId) {
-    return std::unique_ptr<FlusherInstance>(
-        static_cast<FlusherInstance*>(Create(FLUSHER_PLUGIN, name, pluginId).release()));
+unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const string& name, const string& pluginId) {
+    return unique_ptr<FlusherInstance>(static_cast<FlusherInstance*>(Create(FLUSHER_PLUGIN, name, pluginId).release()));
 }
 
-bool PluginRegistry::IsValidGoPlugin(const std::string& name) const {
+bool PluginRegistry::IsValidGoPlugin(const string& name) const {
     return mGoPlugins.find(name) != mGoPlugins.end();
 }
 
-bool PluginRegistry::IsValidNativeInputPlugin(const std::string& name) const {
+bool PluginRegistry::IsValidNativeInputPlugin(const string& name) const {
     return mPluginDict.find(PluginKey(INPUT_PLUGIN, name)) != mPluginDict.end();
 }
 
-bool PluginRegistry::IsValidNativeProcessorPlugin(const std::string& name) const {
+bool PluginRegistry::IsValidNativeProcessorPlugin(const string& name) const {
     return mPluginDict.find(PluginKey(PROCESSOR_PLUGIN, name)) != mPluginDict.end();
 }
 
-bool PluginRegistry::IsValidNativeFlusherPlugin(const std::string& name) const {
+bool PluginRegistry::IsValidNativeFlusherPlugin(const string& name) const {
     return mPluginDict.find(PluginKey(FLUSHER_PLUGIN, name)) != mPluginDict.end();
 }
 
@@ -236,11 +236,11 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
 }
 
-void PluginRegistry::LoadDynamicPlugins(const std::set<std::string>& plugins) {
+void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {
     if (plugins.empty()) {
         return;
     }
-    std::string error;
+    string error;
     auto pluginDir = AppConfig::GetInstance()->GetProcessExecutionDir() + "/plugins";
     for (auto& pluginName : plugins) {
         DynamicLibLoader loader;
@@ -268,8 +268,8 @@ void PluginRegistry::RegisterFlusherCreator(PluginCreator* creator) {
     RegisterCreator(FLUSHER_PLUGIN, creator);
 }
 
-PluginCreator* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName) {
-    std::string error;
+PluginCreator* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& loader, const string pluginName) {
+    string error;
     processor_interface_t* plugin = (processor_interface_t*)loader.LoadMethod("processor_interface", error);
     // if (!error.empty()) {
     //     loader.LoadMethod("x_cgo_init", error)
@@ -294,12 +294,11 @@ void PluginRegistry::RegisterCreator(PluginCat cat, PluginCreator* creator) {
     if (!creator) {
         return;
     }
-    mPluginDict.emplace(PluginKey(cat, creator->Name()), std::shared_ptr<PluginCreator>(creator));
+    mPluginDict.emplace(PluginKey(cat, creator->Name()), shared_ptr<PluginCreator>(creator));
 }
 
-std::unique_ptr<PluginInstance>
-PluginRegistry::Create(PluginCat cat, const std::string& name, const std::string& pluginId) {
-    std::unique_ptr<PluginInstance> ins;
+unique_ptr<PluginInstance> PluginRegistry::Create(PluginCat cat, const string& name, const string& pluginId) {
+    unique_ptr<PluginInstance> ins;
     auto creatorEntry = mPluginDict.find(PluginKey(cat, name));
     if (creatorEntry != mPluginDict.end()) {
         ins = creatorEntry->second->Create(pluginId);

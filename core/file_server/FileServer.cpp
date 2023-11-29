@@ -97,7 +97,7 @@ void FileServer::RemoveFileReaderConfig(const string& name) {
     mPipelineNameFileReaderConfigsMap.erase(name);
 }
 
-MultilineConfig FileServer::GetMultilineConfig(const std::string& name) const {
+MultilineConfig FileServer::GetMultilineConfig(const string& name) const {
     auto itr = mPipelineNameMultilineConfigsMap.find(name);
     if (itr != mPipelineNameMultilineConfigsMap.end()) {
         return itr->second;
@@ -113,25 +113,26 @@ void FileServer::RemoveMultilineConfig(const string& name) {
     mPipelineNameMultilineConfigsMap.erase(name);
 }
 
-void FileServer::SaveContainerInfo(const std::string& pipeline,
-                                   const std::shared_ptr<std::vector<DockerContainerPath>>& info) {
+void FileServer::SaveContainerInfo(const string& pipeline,
+                                   const shared_ptr<vector<DockerContainerPath>>& info) {
     mAllDockerContainerPathMap[pipeline] = info;
 }
 
-std::shared_ptr<std::vector<DockerContainerPath>> FileServer::GetAndRemoveContainerInfo(const std::string& pipeline) {
+shared_ptr<vector<DockerContainerPath>> FileServer::GetAndRemoveContainerInfo(const string& pipeline) {
     auto iter = mAllDockerContainerPathMap.find(pipeline);
     if (iter == mAllDockerContainerPathMap.end()) {
-        return std::make_shared<std::vector<DockerContainerPath>>();
+        return make_shared<vector<DockerContainerPath>>();
     }
+    auto res = iter->second;
     mAllDockerContainerPathMap.erase(iter);
-    return iter->second;
+    return res;
 }
 
 void FileServer::ClearContainerInfo() {
     mAllDockerContainerPathMap.clear();
 }
 
-uint32_t FileServer::GetExactlyOnceConcurrency(const std::string& name) const {
+uint32_t FileServer::GetExactlyOnceConcurrency(const string& name) const {
     auto itr = mPipelineNameEOConcurrencyMap.find(name);
     if (itr != mPipelineNameEOConcurrencyMap.end()) {
         return itr->second;
@@ -149,7 +150,7 @@ vector<string> FileServer::GetExactlyOnceConfigs() const {
     return res;
 }
 
-void FileServer::AddExactlyOnceConcurrency(const std::string& name, uint32_t concurrency) {
+void FileServer::AddExactlyOnceConcurrency(const string& name, uint32_t concurrency) {
     mPipelineNameEOConcurrencyMap[name] = concurrency;
 }
 

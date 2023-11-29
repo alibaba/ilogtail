@@ -14,7 +14,7 @@
 
 #include "pipeline/GlobalConfig.h"
 
-#include "json/json.h"
+#include <json/json.h>
 
 #include "common/LogstoreFeedbackQueue.h"
 #include "common/ParamExtractor.h"
@@ -23,10 +23,10 @@ using namespace std;
 
 namespace logtail {
 
-const std::unordered_set<std::string> GlobalConfig::sNativeParam
+const unordered_set<string> GlobalConfig::sNativeParam
     = {"TopicType", "TopicFormat", "ProcessPriority", "EnableTimestampNanosecond", "UsingOldContentTag"};
 
-bool GlobalConfig::Init(const Json::Value& config, const std::string& configName, Json::Value& extendedParams) {
+bool GlobalConfig::Init(const Json::Value& config, const string& configName, Json::Value& extendedParams) {
     const string moduleName = "global";
     string errorMsg;
 
