@@ -97,7 +97,6 @@ func (r *InputSystem) CommonInit(context pipeline.Context) (int, error) {
 		}
 		r.excludeDiskPathRegex = reg
 	}
-	r.context = context
 	r.commonLabels.Append("hostname", util.GetHostName())
 	r.commonLabels.Append("ip", util.GetIPAddress())
 	for key, val := range r.Labels {
