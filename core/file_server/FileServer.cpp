@@ -121,7 +121,7 @@ void FileServer::SaveContainerInfo(const string& pipeline,
 shared_ptr<vector<DockerContainerPath>> FileServer::GetAndRemoveContainerInfo(const string& pipeline) {
     auto iter = mAllDockerContainerPathMap.find(pipeline);
     if (iter == mAllDockerContainerPathMap.end()) {
-        return make_shared<vector<DockerContainerPath>>();
+        return nullptr;
     }
     auto res = iter->second;
     mAllDockerContainerPathMap.erase(iter);

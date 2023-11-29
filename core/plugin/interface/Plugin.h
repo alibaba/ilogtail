@@ -37,10 +37,10 @@ public:
     MetricsRecordRef& GetMetricsRecordRef() const { return mMetricsRecordRef; }
     void SetMetricsRecordRef(const std::string& name, const std::string& id) {
         std::vector<std::pair<std::string, std::string>> labels;
-        WriteMetrics::GetInstance()->PreparePluginCommonLabels(GetContext().GetProjectName(),
-                                                               GetContext().GetLogstoreName(),
-                                                               GetContext().GetRegion(),
-                                                               GetContext().GetConfigName(),
+        WriteMetrics::GetInstance()->PreparePluginCommonLabels(mContext->GetProjectName(),
+                                                               mContext->GetLogstoreName(),
+                                                               mContext->GetRegion(),
+                                                               mContext->GetConfigName(),
                                                                name,
                                                                id,
                                                                labels);
