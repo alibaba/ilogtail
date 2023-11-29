@@ -216,12 +216,6 @@ bool Config::Parse() {
             } else {
                 if (isCurrentPluginNative) {
                     if (PluginRegistry::GetInstance()->IsValidGoPlugin(pluginName)) {
-                        if (hasObserverInput) {
-                            PARAM_ERROR_RETURN(sLogger,
-                                               "native processor plugins coexist with input_observer_network",
-                                               noModule,
-                                               mName);
-                        }
                         isCurrentPluginNative = false;
                         mHasGoProcessor = true;
                     } else if (!PluginRegistry::GetInstance()->IsValidNativeProcessorPlugin(pluginName)) {
@@ -230,6 +224,12 @@ bool Config::Parse() {
                         PARAM_ERROR_RETURN(
                             sLogger, "native processor plugins coexist with spl processor", noModule, mName);
                     } else {
+                        if (hasObserverInput) {
+                            PARAM_ERROR_RETURN(sLogger,
+                                               "native processor plugins coexist with input_observer_network",
+                                               noModule,
+                                               mName);
+                        }
                         mHasNativeProcessor = true;
                     }
                 } else {

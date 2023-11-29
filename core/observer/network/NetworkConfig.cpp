@@ -193,19 +193,13 @@ std::string NetworkConfig::SetFromJsonString() {
     }
 
     try {
-        if (!(jsonRoot.isMember("type") && jsonRoot["type"].asString() == "observer_ilogtail_network_v1")
-            || !(jsonRoot.isMember("detail") && jsonRoot["detail"].isObject())) {
-            return "invalid format, observer_ilogtail_network_v1 is not exist or error type";
-        }
-        Json::Value& obserValue = jsonRoot["detail"];
-
-        if (obserValue.isMember("EBPF") && obserValue["EBPF"].isObject()) {
-            Json::Value& ebpfValue = obserValue["EBPF"];
+        if (jsonRoot.isMember("EBPF") && jsonRoot["EBPF"].isObject()) {
+            Json::Value& ebpfValue = jsonRoot["EBPF"];
             OBSERVER_CONFIG_EXTRACT_BOOL(ebpfValue, Enabled, false, EBPF);
             OBSERVER_CONFIG_EXTRACT_INT(ebpfValue, Pid, -1, EBPF);
         }
-        if (obserValue.isMember("PCAP") && obserValue["PCAP"].isObject()) {
-            Json::Value& pcapValue = obserValue["PCAP"];
+        if (jsonRoot.isMember("PCAP") && jsonRoot["PCAP"].isObject()) {
+            Json::Value& pcapValue = jsonRoot["PCAP"];
             OBSERVER_CONFIG_EXTRACT_BOOL(pcapValue, Enabled, false, PCAP);
             OBSERVER_CONFIG_EXTRACT_BOOL(pcapValue, Promiscuous, true, PCAP);
             OBSERVER_CONFIG_EXTRACT_INT(pcapValue, TimeoutMs, 0, PCAP);
@@ -213,8 +207,8 @@ std::string NetworkConfig::SetFromJsonString() {
             OBSERVER_CONFIG_EXTRACT_STRING(pcapValue, Interface, "", PCAP);
         }
 
-        if (obserValue.isMember("Common") && obserValue["Common"].isObject()) {
-            Json::Value& commonValue = obserValue["Common"];
+        if (jsonRoot.isMember("Common") && jsonRoot["Common"].isObject()) {
+            Json::Value& commonValue = jsonRoot["Common"];
             OBSERVER_CONFIG_EXTRACT_INT(commonValue, FlushOutL4Interval, 60, );
             OBSERVER_CONFIG_EXTRACT_INT(commonValue, FlushOutL7Interval, 15, );
             OBSERVER_CONFIG_EXTRACT_INT(commonValue, FlushMetaInterval, 30, );
