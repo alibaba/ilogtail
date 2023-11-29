@@ -42,13 +42,14 @@ void FileServer::Start() {
 }
 
 void FileServer::Pause() {
+    // cache must be cleared at last, since logFileReader dump still requires the cache
     LogInput::GetInstance()->HoldOn();
-    EventDispatcher::GetInstance()->ClearBrokenLinkSet();
-    PollingDirFile::GetInstance()->ClearCache();
-    ConfigManager::GetInstance()->ClearFilePipelineMatchCache();
     EventDispatcher::GetInstance()->DumpAllHandlersMeta(true);
     CheckPointManager::Instance()->DumpCheckPointToLocal();
     CheckPointManager::Instance()->ResetLastDumpTime();
+    EventDispatcher::GetInstance()->ClearBrokenLinkSet();
+    PollingDirFile::GetInstance()->ClearCache();
+    ConfigManager::GetInstance()->ClearFilePipelineMatchCache();
 }
 
 void FileServer::Resume() {

@@ -187,7 +187,7 @@ bool Aggregator::Add(const std::string& projectName,
     static Sender* sender = Sender::Instance();
     const string& region = (config == NULL ? defaultRegion : config->mRegion);
     const string& aliuid = (config == NULL ? STRING_FLAG(logtail_profile_aliuid) : config->mAliuid);
-    const string& configName = (config == NULL ? "" : config->GetContext().GetConfigName());
+    const string& configName = ((config == NULL || !config->HasContext()) ? "" : config->GetContext().GetConfigName());
     const string& category = logGroup.category();
     const string& topic = logGroup.topic();
     const string& source = logGroup.has_source() ? logGroup.source() : LogFileProfiler::mIpAddr;

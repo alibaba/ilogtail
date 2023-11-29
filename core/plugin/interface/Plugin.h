@@ -20,8 +20,8 @@
 #include <utility>
 #include <vector>
 
-#include "pipeline/PipelineContext.h"
 #include "monitor/LogtailMetric.h"
+#include "pipeline/PipelineContext.h"
 
 namespace logtail {
 
@@ -30,10 +30,11 @@ public:
     virtual ~Plugin() = default;
 
     virtual const std::string& Name() const = 0;
-    
+
     PipelineContext& GetContext() const { return *mContext; }
+    bool HasContext() const { return mContext != nullptr; }
     void SetContext(PipelineContext& context) { mContext = &context; }
-    MetricsRecordRef& GetMetricsRecordRef() { return mMetricsRecordRef; }
+    MetricsRecordRef& GetMetricsRecordRef() const { return mMetricsRecordRef; }
     void SetMetricsRecordRef(const std::string& name, const std::string& id) {
         std::vector<std::pair<std::string, std::string>> labels;
         WriteMetrics::GetInstance()->PreparePluginCommonLabels(GetContext().GetProjectName(),
@@ -49,7 +50,7 @@ public:
 
 protected:
     PipelineContext* mContext = nullptr;
-    MetricsRecordRef mMetricsRecordRef;
+    mutable MetricsRecordRef mMetricsRecordRef;
 };
 
 } // namespace logtail

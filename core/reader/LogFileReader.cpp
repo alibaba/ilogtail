@@ -179,6 +179,10 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
     mLastUpdateTime = time(NULL);
     mLastEventTime = mLastUpdateTime;
+    mProject = readerConfig.second->GetProjectName();
+    mLogstore = readerConfig.second->GetLogstoreName();
+    mConfigName = readerConfig.second->GetConfigName();
+    mRegion = readerConfig.second->GetRegion();
 }
 
 void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {

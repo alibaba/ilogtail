@@ -1730,7 +1730,7 @@ bool Sender::SendPb(const FlusherSLS* pConfig,
     LogGroupContext logGroupContext(pConfig->mRegion, pConfig->mProject, pConfig->mLogstore, compressType);
     LoggroupTimeValue* pData = new LoggroupTimeValue(pConfig->mProject,
                                                      logstore.empty() ? pConfig->mLogstore : logstore,
-                                                     pConfig->GetContext().GetConfigName(),
+                                                     pConfig->HasContext() ? pConfig->GetContext().GetConfigName() : "",
                                                      "", // only used for ant, set empty for simplicity
                                                      true,
                                                      pConfig->mAliuid,
