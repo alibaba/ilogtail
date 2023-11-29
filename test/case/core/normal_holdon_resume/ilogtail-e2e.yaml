@@ -50,9 +50,10 @@ verify:
           '[Start] [logtail_alarm,logtail_alarm]	config start:success': 1
           '[Start] [mock-metric-case_0/1]	config start:success': 1
           # Holdon
+          '[HoldOn] Hold on:start	flag:0': 1
           '[HoldOn] Hold on:start	flag:1': 1
           '[HoldOn] checkpoint:HoldOn': 1
-          '[HoldOn] Hold on:success': 1
+          '[HoldOn] Hold on:success': 2
           '[Stop] [shennong_log_profile,logtail_plugin_profile]	config stop:begin	exit:true': 1
           '[Stop] [shennong_log_profile,logtail_plugin_profile]	config stop:success': 1
           '[Stop] [logtail_alarm,logtail_alarm]	config stop:begin	exit:true': 1
