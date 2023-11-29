@@ -25,6 +25,7 @@
 #include "sender/Sender.h"
 #if defined(__ENTERPRISE__) && defined(__linux__)
 #include "app_config/AppConfig.h"
+#include "shennong/ShennongManager.h"
 #include "streamlog/StreamLogManager.h"
 #endif
 
@@ -37,37 +38,39 @@ namespace logtail {
 void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
 #ifndef APSARA_UNIT_TEST_MAIN
     // 过渡使用
+    static bool isInputFileStarted = false, isInputObserverStarted = false, isInputStreamStarted = false;
     bool isInputObserverChanged = false, isInputFileChanged = false, isInputStreamChanged = false;
-    if (!mIsFirstUpdate) {
-        for (const auto& name : diff.mRemoved) {
-            CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
-                                isInputObserverChanged,
-                                isInputFileChanged,
-                                isInputStreamChanged);
-        }
-        for (const auto& config : diff.mModified) {
-            CheckIfInputUpdated(*config.mInputs[0], isInputObserverChanged, isInputFileChanged, isInputStreamChanged);
-        }
-        for (const auto& config : diff.mAdded) {
-            CheckIfInputUpdated(*config.mInputs[0], isInputObserverChanged, isInputFileChanged, isInputStreamChanged);
-        }
+    for (const auto& name : diff.mRemoved) {
+        CheckIfInputUpdated(mPipelineNameEntityMap[name]->GetConfig()["inputs"][0],
+                            isInputObserverChanged,
+                            isInputFileChanged,
+                            isInputStreamChanged);
+    }
+    for (const auto& config : diff.mModified) {
+        CheckIfInputUpdated(*config.mInputs[0], isInputObserverChanged, isInputFileChanged, isInputStreamChanged);
+    }
+    for (const auto& config : diff.mAdded) {
+        CheckIfInputUpdated(*config.mInputs[0], isInputObserverChanged, isInputFileChanged, isInputStreamChanged);
+    }
 
 #if defined(__ENTERPRISE__) && defined(__linux__)
-        if (isInputStreamChanged) {
-            StreamLogManager::GetInstance()->ShutdownConfigUsage();
-        }
+    if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
+        ShennongManager::GetInstance()->Pause();
+    }
+    if (isInputStreamStarted && isInputStreamChanged) {
+        StreamLogManager::GetInstance()->ShutdownConfigUsage();
+    }
 #endif
 #ifdef __linux__
-        if (isInputObserverChanged) {
-            ObserverManager::GetInstance()->HoldOn(false);
-        }
-#endif
-        if (isInputFileChanged) {
-            FileServer::GetInstance()->Pause();
-        }
-        LogProcess::GetInstance()->HoldOn();
-        LogtailPlugin::GetInstance()->HoldOn(false);
+    if (isInputObserverStarted && isInputObserverChanged) {
+        ObserverManager::GetInstance()->HoldOn(false);
     }
+#endif
+    if (isInputFileStarted && isInputFileChanged) {
+        FileServer::GetInstance()->Pause();
+    }
+    LogProcess::GetInstance()->HoldOn();
+    LogtailPlugin::GetInstance()->HoldOn(false);
 #endif
 
     for (const auto& name : diff.mRemoved) {
@@ -104,32 +107,44 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
 
     // 过渡使用
     LogtailPlugin::GetInstance()->Resume();
-    if (mIsFirstUpdate) {
-        LogProcess::GetInstance()->Start();
-        FileServer::GetInstance()->Start();
-#ifdef __linux__
-        ObserverManager::GetInstance()->Reload();
-#endif
-#if defined(__ENTERPRISE__) && defined(__linux__)
-        if (AppConfig::GetInstance()->GetOpenStreamLog()) {
-            StreamLogManager::GetInstance()->Init();
-        }
-#endif
-    } else {
-        LogProcess::GetInstance()->Resume();
-        if (isInputFileChanged) {
+    LogProcess::GetInstance()->Resume();
+    if (isInputFileChanged) {
+        if (isInputFileStarted) {
             FileServer::GetInstance()->Resume();
+        } else {
+            FileServer::GetInstance()->Start();
+            isInputFileStarted = true;
         }
+    }
 #ifdef __linux__
-        if (isInputObserverChanged) {
+    if (isInputObserverChanged) {
+        if (isInputObserverStarted) {
             ObserverManager::GetInstance()->Resume();
+        } else {
+            // input_observer_network always relies on PluginBase
+            LogtailPlugin::GetInstance()->LoadPluginBase();
+            ObserverManager::GetInstance()->Reload();
+            isInputObserverStarted = true;
         }
+    }
 #endif
 #if defined(__ENTERPRISE__) && defined(__linux__)
-        if (isInputStreamChanged) {
+    if (isInputStreamChanged) {
+        if (isInputStreamStarted) {
             StreamLogManager::GetInstance()->StartupConfigUsage();
+        } else {
+            if (AppConfig::GetInstance()->GetOpenStreamLog()) {
+                StreamLogManager::GetInstance()->Init();
+                isInputStreamStarted = true;
+            }
         }
+    }
+    if (AppConfig::GetInstance()->ShennongSocketEnabled()) {
+        ShennongManager::GetInstance()->Resume();
+    }
 #endif
+    // destruct event handlers here so that it will not block file reading task
+    if (isInputFileChanged) {
         ConfigManager::GetInstance()->DeleteHandlers();
     }
 #endif

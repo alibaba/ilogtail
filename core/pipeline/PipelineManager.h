@@ -63,7 +63,6 @@ private:
                              bool& isInputFileChanged,
                              bool& isInputStreamChanged);
 
-    bool mIsFirstUpdate = true;
     std::unordered_map<std::string, std::shared_ptr<Pipeline>> mPipelineNameEntityMap;
     mutable SpinLock mPluginCntMapLock;
     std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
