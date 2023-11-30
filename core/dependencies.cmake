@@ -46,7 +46,6 @@ set(DEP_NAME_LIST
         gtest
         protobuf
         re2
-        tcmalloc                # (gperftools)
         cityhash
         gflags
         jsoncpp
@@ -62,6 +61,10 @@ set(DEP_NAME_LIST
         dmiuuid
         leveldb
         )
+
+if (NOT CMAKE_BUILD_TYPE MATCHES Debug)
+    list(APPEND DEP_NAME_LIST "tcmalloc") # (gperftools)
+endif()
 
 if (MSVC)
     if (NOT DEFINED unwind_${INCLUDE_DIR_SUFFIX})
@@ -348,3 +351,10 @@ macro(link_leveldb target_name)
     endif ()
 endmacro()
 
+# asan for debug
+macro(link_asan target_name)
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        target_compile_options(${target_name} PUBLIC -fsanitize=address)
+        target_link_options(${target_name} PUBLIC -fsanitize=address -static-libasan)
+    endif()
+endmacro()
