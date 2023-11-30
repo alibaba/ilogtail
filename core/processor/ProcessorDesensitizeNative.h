@@ -16,16 +16,33 @@
 
 #pragma once
 
-#include <unordered_map>
+#include <re2/re2.h>
 
 #include "plugin/interface/Processor.h"
-#include "config/Config.h"
 
 namespace logtail {
 
 class ProcessorDesensitizeNative : public Processor {
 public:
     static const std::string sName;
+
+    enum class DesensitizeMethod { MD5_OPTION, CONST_OPTION };
+
+    // Source field name.
+    std::string mSourceKey;
+    // Desensitization method. Optional values include:
+    // ● const: Replace sensitive content with constants.
+    // ● md5: Replace the corresponding content with the MD5 value of the sensitive content.
+    DesensitizeMethod mMethod;
+    // A constant string used to replace sensitive content.
+    std::string mReplacingString;
+    // Prefix regular expression for sensitive content.
+    std::string mContentPatternBeforeReplacedString;
+    // Regular expression for sensitive content.
+    std::string mReplacedContentPattern;
+    // Whether to replace all matching sensitive content.
+    bool mReplacingAll = true;
+
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -35,10 +52,10 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    void ProcessEvent(PipelineEventPtr& e);
-    void CastOneSensitiveWord(const std::vector<SensitiveWordCastOption>& optionVec, std::string* value);
+    std::shared_ptr<re2::RE2> mRegex;
 
-    std::unordered_map<std::string, std::vector<SensitiveWordCastOption>> mSensitiveWordCastOptions;
+    void ProcessEvent(PipelineEventPtr& e);
+    void CastOneSensitiveWord(std::string* value);
 
     CounterPtr mProcDesensitizeRecodesTotal;
 

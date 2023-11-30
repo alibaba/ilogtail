@@ -16,36 +16,63 @@
 
 #include "processor/ProcessorParseRegexNative.h"
 
-#include "common/StringTools.h"
 #include "app_config/AppConfig.h"
-#include "common/Constants.h"
-#include "monitor/LogtailMetric.h"
-#include "monitor/MetricConstants.h"
-#include "common/TimeUtil.h"
-#include "plugin/instance/ProcessorInstance.h"
-#include "monitor/MetricConstants.h"
 #include "common/ParamExtractor.h"
+#include "monitor/MetricConstants.h"
+#include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
 const std::string ProcessorParseRegexNative::sName = "processor_parse_regex_native";
 
 bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     std::string errorMsg;
-    if (!GetMandatoryStringParam(config, "Regex", mSourceKey, errorMsg)) {
+    if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
+    if (!GetMandatoryStringParam(config, "Regex", mRegex, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    } else if (!IsRegexValid(mRegex)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(), "param Regex is not valid regex", sName, mContext->GetConfigName());
+    }
+    if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    }
+
+    mCommonParserOptions.Init(config, *mContext, sName);
+    if (mCommonParserOptions.mRenamedSourceKey.empty()) {
+        mCommonParserOptions.mRenamedSourceKey = mSourceKey;
+    }
+
+    for (auto& it : mKeys) {
+        if (it == mSourceKey) {
+            mSourceKeyOverwritten = true;
+            break;
+        }
+    }
+    mReg = boost::regex(mRegex);
+    mIsWholeLineMode = mRegex == "(.*)";
+
+    mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
+    mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
+    mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
+
+    mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
+    mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
+    mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
+    mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
+    mProcKeyCountNotMatchErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
     return true;
 }
 
 void ProcessorParseRegexNative::Process(PipelineEventGroup& logGroup) {
-    if (logGroup.GetEvents().empty() || mUserDefinedFormat.empty()) {
+    if (logGroup.GetEvents().empty()) {
         return;
     }
     const StringView& logPath = logGroup.GetMetadata(EventGroupMetaKey::LOG_FILE_PATH_RESOLVED);
     EventsContainer& events = logGroup.MutableEvents();
     // works good normally. poor performance if most data need to be discarded.
     for (auto it = events.begin(); it != events.end();) {
-        if (ProcessorParseRegexNative::ProcessEvent(logPath, *it)) {
+        if (ProcessEvent(logPath, *it)) {
             ++it;
         } else {
             it = events.erase(it);
@@ -67,49 +94,28 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
         return true;
     }
     auto rawContent = sourceEvent.GetContent(mSourceKey);
-    bool res = true;
-    for (uint32_t i = 0; i < mUserDefinedFormat.size(); ++i) { // support multiple patterns
-        const UserDefinedFormat& format = mUserDefinedFormat[i];
-        if (format.mIsWholeLineMode) {
-            res = WholeLineModeParser(sourceEvent, format.mKeys.empty() ? DEFAULT_CONTENT_KEY : format.mKeys[0]);
-        } else {
-            res = RegexLogLineParser(sourceEvent, format.mReg, format.mKeys, logPath);
-        }
-        if (res) {
-            break;
-        }
-    }
-    if (!res && !mDiscardUnmatch) {
-        AddLog(LogParser::UNMATCH_LOG_KEY, // __raw_log__
-               rawContent,
-               sourceEvent); // legacy behavior, should use sourceKey
-    }
-    if (res || !mDiscardUnmatch) {
-        if (mUploadRawLog && (!res || !mRawLogTagOverwritten)) {
-            AddLog(mRawLogTag, rawContent, sourceEvent); // __raw__
-        }
-        if (res && !mSourceKeyOverwritten) {
-            sourceEvent.DelContent(mSourceKey);
-        }
-        return true;
-    }
-    mProcDiscardRecordsTotal->Add(1);
-    return false;
-}
+    bool parseSuccess = true;
 
-void ProcessorParseRegexNative::AddUserDefinedFormat(const std::string& regStr, const std::string& keys) {
-    std::vector<std::string> keyParts = StringSpliter(keys, ",");
-    for (auto& it : keyParts) {
-        if (it == mSourceKey) {
-            mSourceKeyOverwritten = true;
-        }
-        if (it == mRawLogTag) {
-            mRawLogTagOverwritten = true;
-        }
+    if (mIsWholeLineMode) {
+        parseSuccess = WholeLineModeParser(sourceEvent, mKeys.empty() ? DEFAULT_CONTENT_KEY : mKeys[0]);
+    } else {
+        parseSuccess = RegexLogLineParser(sourceEvent, mReg, mKeys, logPath);
     }
-    boost::regex reg(regStr);
-    bool isWholeLineMode = regStr == "(.*)";
-    mUserDefinedFormat.push_back(UserDefinedFormat(reg, keyParts, isWholeLineMode));
+
+    if (!parseSuccess || !mSourceKeyOverwritten) {
+        sourceEvent.DelContent(mSourceKey);
+    }
+    if (mCommonParserOptions.ShouldAddRenamedSourceLog(parseSuccess)) {
+        AddLog(mCommonParserOptions.mRenamedSourceKey, rawContent, sourceEvent, false);
+    }
+    if (mCommonParserOptions.ShouldAddUnmatchLog(parseSuccess)) {
+        AddLog(mCommonParserOptions.UNMATCH_LOG_KEY, rawContent, sourceEvent, false);
+    }
+    if (mCommonParserOptions.ShouldEraseEvent(parseSuccess, sourceEvent)) {
+        mProcDiscardRecordsTotal->Add(1);
+        return false;
+    }
+    return true;
 }
 
 bool ProcessorParseRegexNative::WholeLineModeParser(LogEvent& sourceEvent, const std::string& key) {
@@ -119,11 +125,16 @@ bool ProcessorParseRegexNative::WholeLineModeParser(LogEvent& sourceEvent, const
     return true;
 }
 
-void ProcessorParseRegexNative::AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent) {
+void ProcessorParseRegexNative::AddLog(const StringView& key,
+                                       const StringView& value,
+                                       LogEvent& targetEvent,
+                                       bool overwritten) {
+    if (!overwritten && targetEvent.HasContent(key)) {
+        return;
+    }
     targetEvent.SetContentNoCopy(key, value);
-    size_t keyValueSize = key.size() + value.size();
-    *mLogGroupSize += keyValueSize + 5;
-    mProcParseOutSizeBytes->Add(keyValueSize);
+    *mLogGroupSize += key.size() + value.size() + 5;
+    mProcParseOutSizeBytes->Add(key.size() + value.size());
 }
 
 bool ProcessorParseRegexNative::RegexLogLineParser(LogEvent& sourceEvent,

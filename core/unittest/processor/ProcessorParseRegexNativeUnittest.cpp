@@ -13,24 +13,19 @@
 // limitations under the License.
 
 #include <cstdlib>
-#include "unittest/Unittest.h"
 
 #include "common/JsonUtil.h"
 #include "config/Config.h"
-#include "processor/ProcessorParseRegexNative.h"
 #include "models/LogEvent.h"
 #include "plugin/instance/ProcessorInstance.h"
+#include "processor/ProcessorParseRegexNative.h"
+#include "unittest/Unittest.h"
 
 namespace logtail {
 
 class ProcessorParseRegexNativeUnittest : public ::testing::Test {
 public:
-    void SetUp() override {
-        mContext.SetConfigName("project##config_0");
-        mContext.SetLogstoreName("logstore");
-        mContext.SetProjectName("project");
-        mContext.SetRegion("cn-shanghai");
-    }
+    void SetUp() override { mContext.SetConfigName("project##config_0"); }
 
     void TestInit();
     void TestProcessWholeLine();
@@ -64,34 +59,36 @@ UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessRegexRaw);
 UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessRegexContent);
 
 void ProcessorParseRegexNativeUnittest::TestInit() {
-    Config config;
-    config.mLogBeginReg = ".*";
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back("(.*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("content");
+    // make config
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["Regex"] = "(.*)";
+    config["Keys"] = Json::arrayValue;
+    config["Keys"].append("content");
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "rawLog";
 
     // run function
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back("(.*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("content");
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["Regex"] = "(.*)";
+    config["Keys"] = Json::arrayValue;
+    config["Keys"].append("content");
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "rawLog";
+
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -101,8 +98,8 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "line1\nline2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0",
+                    "content" : "line1\nline2"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -111,8 +108,8 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "line3\nline4",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0",
+                    "content" : "line3\nline4"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -125,8 +122,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string outJson = eventGroup.ToJsonString();
@@ -146,14 +142,16 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = true;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back(R"((\w+)\t(\w+).*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("key1,key2");
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["Regex"] = R"((\w+)\t(\w+).*)";
+    config["Keys"] = Json::arrayValue;
+    config["Keys"].append("key1");
+    config["Keys"].append("key2");
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = true;
+    config["CopingRawLog"] = true;
+    config["RenamedSourceKey"] = "rawLog";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -164,7 +162,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
                 "contents" :
                 {
                     "content" : "value1\tvalue2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -173,7 +171,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
                 "contents" :
                 {
                     "content" : "value3\tvalue4",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -185,8 +183,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string expectJson = R"({
@@ -195,10 +192,10 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "__raw__" : "value1\tvalue2",
+                    "__file_offset__": "0",
                     "key1" : "value1",
                     "key2" : "value2",
-                    "log.file.offset": "0"
+                    "rawLog" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -207,10 +204,10 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "__raw__" : "value3\tvalue4",
+                    "__file_offset__": "0",
                     "key1" : "value3",
                     "key2" : "value4",
-                    "log.file.offset": "0"
+                    "rawLog" : "value3\tvalue4"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -225,14 +222,16 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = true;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back(R"((\w+)\t(\w+).*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("__raw__,key2");
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["Regex"] = R"((\w+)\t(\w+).*)";
+    config["Keys"] = Json::arrayValue;
+    config["Keys"].append("rawLog");
+    config["Keys"].append("key2");
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = true;
+    config["CopingRawLog"] = true;
+    config["RenamedSourceKey"] = "rawLog";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -243,7 +242,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
                 "contents" :
                 {
                     "content" : "value1\tvalue2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -252,7 +251,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
                 "contents" :
                 {
                     "content" : "value3\tvalue4",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -264,8 +263,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string expectJson = R"({
@@ -274,9 +272,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "__raw__" : "value1",
+                    "__file_offset__": "0",
                     "key2" : "value2",
-                    "log.file.offset": "0"
+                    "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -285,9 +283,9 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "__raw__" : "value3",
+                    "__file_offset__": "0",
                     "key2" : "value4",
-                    "log.file.offset": "0"
+                    "rawLog" : "value3"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -302,14 +300,16 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
 
 void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = true;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back(R"((\w+)\t(\w+).*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("content,key2");
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["Regex"] = R"((\w+)\t(\w+).*)";
+    config["Keys"] = Json::arrayValue;
+    config["Keys"].append("content");
+    config["Keys"].append("key2");
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = true;
+    config["CopingRawLog"] = true;
+    config["RenamedSourceKey"] = "rawLog";
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     PipelineEventGroup eventGroup(sourceBuffer);
@@ -320,7 +320,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
                 "contents" :
                 {
                     "content" : "value1\tvalue2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -329,7 +329,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
                 "contents" :
                 {
                     "content" : "value3\tvalue4",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -341,8 +341,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
     // judge result
     std::string expectJson = R"({
@@ -351,10 +350,10 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "__raw__" : "value1\tvalue2",
+                    "__file_offset__": "0",
                     "content" : "value1",
                     "key2" : "value2",
-                    "log.file.offset": "0"
+                    "rawLog" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -363,10 +362,10 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "__raw__" : "value3\tvalue4",
+                    "__file_offset__": "0",
                     "content" : "value3",
                     "key2" : "value4",
-                    "log.file.offset": "0"
+                    "rawLog" : "value3\tvalue4"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -380,12 +379,21 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
 }
 
 void ProcessorParseRegexNativeUnittest::TestAddLog() {
-    Config config;
+    // make config
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["Regex"] = R"((\w+)\t(\w+).*)";
+    config["Keys"] = Json::arrayValue;
+    config["Keys"].append("content");
+    config["Keys"].append("key2");
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = true;
+    config["CopingRawLog"] = true;
+    config["RenamedSourceKey"] = "rawLog";
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     auto logEvent = LogEvent::CreateEvent(sourceBuffer);
@@ -398,14 +406,16 @@ void ProcessorParseRegexNativeUnittest::TestAddLog() {
 
 void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = false;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back(R"((\w+)\t(\w+).*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("key1,key2");
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["Regex"] = R"((\w+)\t(\w+).*)";
+    config["Keys"] = Json::arrayValue;
+    config["Keys"].append("key1");
+    config["Keys"].append("key2");
+    config["KeepingSourceWhenParseFail"] = true;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "rawLog";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -417,7 +427,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -426,7 +436,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -435,7 +445,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -444,7 +454,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -453,7 +463,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -465,8 +475,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
 
     int count = 5;
@@ -479,7 +488,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     std::string expectValue = "value1";
     APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcOutRecordsTotal->GetValue());
-    expectValue = "__raw_log__value1";
+    expectValue = "rawLogvalue1";
     APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseOutSizeBytes->GetValue());
 
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
@@ -490,14 +499,16 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
 
 void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = true;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back(R"((\w+)\t(\w+).*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("key1,key2");
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["Regex"] = R"((\w+)\t(\w+).*)";
+    config["Keys"] = Json::arrayValue;
+    config["Keys"].append("key1");
+    config["Keys"].append("key2");
+    config["KeepingSourceWhenParseFail"] = false;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "rawLog";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -509,7 +520,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -518,7 +529,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -527,7 +538,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -536,7 +547,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -545,7 +556,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
                 "contents" :
                 {
                     "content" : "value1",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -557,8 +568,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
 
     int count = 5;
@@ -581,14 +591,17 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
 
 void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     // make config
-    Config config;
-    config.mDiscardUnmatch = true;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    config.mRegs = std::make_shared<std::list<std::string> >();
-    config.mRegs->emplace_back(R"((\w+)\t(\w+).*)");
-    config.mKeys = std::make_shared<std::list<std::string> >();
-    config.mKeys->emplace_back("key1,key2,key3");
+    Json::Value config;
+    config["SourceKey"] = "content";
+    config["Regex"] = R"((\w+)\t(\w+).*)";
+    config["Keys"] = Json::arrayValue;
+    config["Keys"].append("key1");
+    config["Keys"].append("key2");
+    config["Keys"].append("key3");
+    config["KeepingSourceWhenParseFail"] = false;
+    config["KeepingSourceWhenParseSucceed"] = false;
+    config["CopingRawLog"] = false;
+    config["RenamedSourceKey"] = "rawLog";
 
     // make events
     auto sourceBuffer = std::make_shared<SourceBuffer>();
@@ -600,7 +613,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
                 "contents" :
                 {
                     "content" : "value1\tvalue2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -609,7 +622,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
                 "contents" :
                 {
                     "content" : "value1\tvalue2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -618,7 +631,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
                 "contents" :
                 {
                     "content" : "value1\tvalue2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -627,7 +640,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
                 "contents" :
                 {
                     "content" : "value1\tvalue2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -636,7 +649,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
                 "contents" :
                 {
                     "content" : "value1\tvalue2",
-                    "log.file.offset": "0"
+                    "__file_offset__": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -649,8 +662,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
     processorInstance.Process(eventGroup);
 
     int count = 5;

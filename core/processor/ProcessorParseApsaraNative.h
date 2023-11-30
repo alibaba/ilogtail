@@ -16,18 +16,22 @@
 
 #pragma once
 
-#include <cstdint>
-#include <ctime>
-
 #include "common/TimeUtil.h"
 #include "models/LogEvent.h"
 #include "plugin/interface/Processor.h"
-
+#include "processor/CommonParserOptions.h"
 namespace logtail {
 
 class ProcessorParseApsaraNative : public Processor {
 public:
     static const std::string sName;
+
+    // Source field name.
+    std::string mSourceKey;
+    // The time zone to which the log time belongs. The format is GMT+HH:MM (Eastern Zone) or GMT-HH:MM (Western Zone).
+    std::string mTimezone = "";
+
+    CommonParserOptions mCommonParserOptions;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -37,20 +41,16 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
-    void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
-    time_t ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
-    int32_t GetApsaraLogMicroTime(StringView& buffer);
+    bool
+    ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
+    void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent, bool overwritten = true);
+    time_t
+    ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
     bool IsPrefixString(const char* all, const StringView& prefix);
     int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
 
-    std::string mSourceKey;
-    std::string mRawLogTag;
-    bool mDiscardUnmatch = false;
-    bool mUploadRawLog = false;
-    bool mAdjustApsaraMicroTimezone = false;
-    bool mSourceKeyOverwritten = false;
     int mLogTimeZoneOffsetSecond = 0;
+    bool mSourceKeyOverwritten = false;
 
     int* mLogGroupSize = nullptr;
     int* mParseFailures = nullptr;

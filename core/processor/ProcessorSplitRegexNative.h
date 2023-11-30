@@ -16,17 +16,21 @@
 
 #pragma once
 
-#include <cstdint>
 
-#include "boost/regex.hpp"
-
+#include "file_server/MultilineOptions.h"
 #include "plugin/interface/Processor.h"
+#include "processor/CommonParserOptions.h"
 
 namespace logtail {
 
 class ProcessorSplitRegexNative : public Processor {
 public:
     static const std::string sName;
+
+    std::string mSplitKey = DEFAULT_CONTENT_KEY;
+    MultilineOptions mMultiline;
+    bool mAppendingLogPositionMeta = false;
+    CommonParserOptions mCommonParserOptions;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
@@ -46,7 +50,6 @@ private:
                   std::vector<StringView>& logIndex,
                   std::vector<StringView>& discardIndex,
                   const StringView& logPath);
-    void SetLogMultilinePolicy(const std::string& begReg, const std::string& conReg, const std::string& endReg);
     void HandleUnmatchLogs(const char* buffer,
                            int& multiBeginIndex,
                            int endIndex,
@@ -55,16 +58,7 @@ private:
 
     int* mFeedLines = nullptr;
     int* mSplitLines = nullptr;
-    std::string mSplitKey;
-    bool mIsMultline;
-    std::string mLogBeginReg;
-    std::string mLogContinueReg;
-    std::string mLogEndReg;
-    std::unique_ptr<boost::regex> mLogBeginRegPtr;
-    std::unique_ptr<boost::regex> mLogContinueRegPtr;
-    std::unique_ptr<boost::regex> mLogEndRegPtr;
-    bool mDiscardUnmatch = false;
-    bool mEnableLogPositionMeta = false;
+
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorSplitRegexNativeUnittest;
     friend class ProcessorSplitRegexDisacardUnmatchUnittest;

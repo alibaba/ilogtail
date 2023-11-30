@@ -15,14 +15,13 @@
 #include <memory>
 #include <string>
 
-#include "json/json.h"
-
 #include "app_config/AppConfig.h"
-#include "config/Config.h"
-#include "common/LogstoreFeedbackKey.h"
 #include "common/JsonUtil.h"
-#include "plugin/PluginRegistry.h"
+#include "common/LogstoreFeedbackKey.h"
+#include "config/Config.h"
+#include "json/json.h"
 #include "pipeline/Pipeline.h"
+#include "plugin/PluginRegistry.h"
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
 #include "unittest/Unittest.h"
@@ -328,7 +327,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 }
             ],
             "flushers": [
@@ -366,7 +365,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 }
             ],
             "flushers": [
@@ -403,7 +402,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 }
             ],
             "flushers": [
@@ -629,7 +628,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 },
                 {
                     "Type": "processor_regex"
@@ -707,7 +706,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 },
                 {
                     "Type": "processor_regex"
@@ -753,7 +752,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 },
                 {
                     "Type": "processor_regex"
@@ -930,7 +929,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 }
             ],
             "aggregators": [
@@ -992,7 +991,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 }
             ],
             "aggregators": [
@@ -1030,7 +1029,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 }
             ],
             "aggregators": [
@@ -1238,7 +1237,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 },
                 {
                     "Type": "processor_regex"
@@ -1309,7 +1308,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 },
                 {
                     "Type": "processor_regex"
@@ -1350,7 +1349,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 },
                 {
                     "Type": "processor_regex"
@@ -1534,7 +1533,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 }
             ],
             "aggregators": [
@@ -1610,7 +1609,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 }
             ],
             "aggregators": [
@@ -1656,7 +1655,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 }
             ],
             "aggregators": [
@@ -1908,7 +1907,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 },
                 {
                     "Type": "processor_regex"
@@ -1993,7 +1992,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 },
                 {
                     "Type": "processor_regex"
@@ -2042,7 +2041,7 @@ void PipelineUnittest::OnInitVariousTopology() const {
                     "Type": "processor_parse_regex_native",
                     "SourceKey": "content",
                     "Regex": ".*",
-                    "Keys": "key"
+                    "Keys": ["key"]
                 },
                 {
                     "Type": "processor_regex"
@@ -2308,7 +2307,8 @@ void PipelineUnittest::OnInputFileWithMultiline() const {
             ],
             "processors": [
                 {
-                    "Type": "processor_parse_json_native"
+                    "Type": "processor_parse_json_native",
+                    "SourceKey": "content"
                 }
             ],
             "flushers": [
