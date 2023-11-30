@@ -105,7 +105,7 @@ private:
     std::vector<std::string> mFileNameBlacklist;
 
     bool mEnableContainerDiscovery = false;
-    std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos;
+    std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos; // must not be null if container discovery is enabled
     bool (*mUpdateContainerInfo)(const std::string&, bool) = nullptr;
     bool (*mDeleteContainerInfo)(const std::string&) = nullptr;
 

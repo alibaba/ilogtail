@@ -106,7 +106,9 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 }
 
 bool InputFile::Start() {
-    mFileDiscovery.SetContainerInfo(FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
+    if (mEnableContainerDiscovery) {
+        mFileDiscovery.SetContainerInfo(FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
+    }
     FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
     FileServer::GetInstance()->AddFileReaderConfig(mContext->GetConfigName(), &mFileReader, mContext);
     FileServer::GetInstance()->AddMultilineConfig(mContext->GetConfigName(), &mMultiline, mContext);
@@ -115,7 +117,7 @@ bool InputFile::Start() {
 }
 
 bool InputFile::Stop(bool isPipelineRemoving) {
-    if (!isPipelineRemoving) {
+    if (!isPipelineRemoving && mEnableContainerDiscovery) {
         FileServer::GetInstance()->SaveContainerInfo(mContext->GetPipeline().Name(), mFileDiscovery.GetContainerInfo());
     }
     FileServer::GetInstance()->RemoveFileDiscoveryConfig(mContext->GetConfigName());
