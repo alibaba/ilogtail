@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.10)
 project(log_file_reader_unittest)
 
 add_executable(log_file_reader_deleted_file_unittest DeletedFileUnittest.cpp)
@@ -40,3 +40,11 @@ elseif (MSVC)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/testDataSet)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/testDataSet/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/testDataSet/)
 endif ()
+
+include(GoogleTest)
+gtest_discover_tests(log_file_reader_deleted_file_unittest)
+gtest_discover_tests(file_reader_options_unittest)
+gtest_discover_tests(json_log_file_reader_unittest)
+gtest_discover_tests(last_matched_line_unittest)
+gtest_discover_tests(log_file_reader_unittest)
+gtest_discover_tests(source_buffer_unittest)

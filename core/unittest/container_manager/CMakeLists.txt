@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.10)
 project(container_manager_unittest)
 
 add_executable(container_discovery_options_unittest ContainerDiscoveryOptionsUnittest.cpp)
 target_link_libraries(container_discovery_options_unittest unittest_base)
+
+include(GoogleTest)
+gtest_discover_tests(container_discovery_options_unittest)

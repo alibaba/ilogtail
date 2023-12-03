@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.10)
 project(config_unittest)
 
 # add_executable(config_match_unittest ConfigMatchUnittest.cpp)
@@ -29,3 +29,8 @@ target_link_libraries(config_watcher_unittest unittest_base)
 
 add_executable(config_update_unittest ConfigUpdateUnittest.cpp)
 target_link_libraries(config_update_unittest unittest_base)
+
+include(GoogleTest)
+gtest_discover_tests(config_unittest)
+gtest_discover_tests(config_watcher_unittest)
+gtest_discover_tests(config_update_unittest)

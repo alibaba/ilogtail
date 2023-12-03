@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.10)
 project(flusher_unittest)
 
 add_executable(flusher_sls_unittest FlusherSLSUnittest.cpp)
 target_link_libraries(flusher_sls_unittest unittest_base)
+
+include(GoogleTest)
+gtest_discover_tests(flusher_sls_unittest)

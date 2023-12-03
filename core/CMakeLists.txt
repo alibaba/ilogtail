@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.10)
 project(logtail)
 
 # Options.
@@ -112,5 +112,7 @@ endif ()
 # Logtail UT.
 if (BUILD_LOGTAIL_UT)
     message(STATUS "Build unittest.")
+    include(CTest)
+    enable_testing()
     add_subdirectory(unittest)
 endif ()

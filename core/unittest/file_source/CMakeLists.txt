@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.10)
 project(file_source_unittest)
 
 add_executable(file_discovery_options_unittest FileDiscoveryOptionsUnittest.cpp)
@@ -20,3 +20,7 @@ target_link_libraries(file_discovery_options_unittest unittest_base)
 
 add_executable(multiline_options_unittest MultilineOptionsUnittest.cpp)
 target_link_libraries(multiline_options_unittest unittest_base)
+
+include(GoogleTest)
+gtest_discover_tests(file_discovery_options_unittest)
+gtest_discover_tests(multiline_options_unittest)

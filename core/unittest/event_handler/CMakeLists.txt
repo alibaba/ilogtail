@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.10)
 project(event_handler_unittest)
 
 # add_executable(create_modify_handler_unittest CreateModifyHandlerUnittest.cpp)
@@ -23,3 +23,6 @@ project(event_handler_unittest)
 
 add_executable(log_input_unittest LogInputUnittest.cpp)
 target_link_libraries(log_input_unittest unittest_base)
+
+include(GoogleTest)
+gtest_discover_tests(log_input_unittest)
