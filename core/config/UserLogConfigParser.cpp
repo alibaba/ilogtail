@@ -36,7 +36,7 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
 
     auto blacklistException = ParseBlacklist(advancedVal, cfg);
     if (!blacklistException.empty()) {
-        throw blacklistException;
+        throw ExceptionBase(blacklistException);
     }
 
     // Boolean force_multiconfig.
@@ -150,8 +150,18 @@ void UserLogConfigParser::ParseAdvancedConfig(const Json::Value& originalVal, Co
             cfg.mAdvancedConfig.mSpecifiedYear = static_cast<int32_t>(val.asUInt());
         }
     }
+    // using_old_content_tag
+    {
+        if (advancedVal.isMember("using_old_content_tag") && advancedVal["using_old_content_tag"].isBool()) {
+            cfg.mAdvancedConfig.mUsingOldContentTag = GetBoolValue(advancedVal, "using_old_content_tag");
+        }
+    }
     // precise_timestamp
     {
+        if (advancedVal.isMember("enable_timestamp_nanosecond") && advancedVal["enable_timestamp_nanosecond"].isBool()) {
+            cfg.mAdvancedConfig.mEnableTimestampNanosecond = GetBoolValue(advancedVal, "enable_timestamp_nanosecond");
+        }
+        // Deprecated
         if (advancedVal.isMember("enable_precise_timestamp") && advancedVal["enable_precise_timestamp"].isBool()) {
             cfg.mAdvancedConfig.mEnablePreciseTimestamp = GetBoolValue(advancedVal, "enable_precise_timestamp");
         }

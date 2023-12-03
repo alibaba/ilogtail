@@ -493,7 +493,7 @@ private:
     LogFilterRule* GetFilterFule(const Json::Value& filterKeys, const Json::Value& filterRegs);
     void GetRegexAndKeys(const Json::Value& value, Config* configPtr);
     void GetSensitiveKeys(const Json::Value& value, Config* pConfig);
-
+    bool IsMeaningfulFlusher(const Json::Value& flusherConfig);
     /**
      * @brief Load user_local_config.json from sys_conf_dir
      *
@@ -557,6 +557,7 @@ private:
     friend class FuseFileUnittest;
     friend class MultiServerConfigUpdatorUnitest;
     friend class CreateModifyHandlerUnittest;
+    friend class ProcessorDesensitizeNativeUnittest;
 #endif
 };
 

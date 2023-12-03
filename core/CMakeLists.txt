@@ -19,10 +19,11 @@ project(logtail)
 option(BUILD_LOGTAIL_UT "Build unit test for Logtail" OFF)
 option(ENABLE_COMPATIBLE_MODE "Build Logtail in compatible mode (for low version Linux)" OFF)
 option(ENABLE_STATIC_LINK_CRT "Build Logtail by linking CRT statically" OFF)
+option(WITHOUTGDB "Build Logtail without gdb" OFF)
 
 # Name/Version information.
 if (NOT DEFINED LOGTAIL_VERSION)
-    set(LOGTAIL_VERSION "1.7.0")
+    set(LOGTAIL_VERSION "1.8.1")
 endif ()
 message(STATUS "Version: ${LOGTAIL_VERSION}")
 
@@ -46,8 +47,13 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/common/Version.cpp.in ${VERSION_CPP_F
 
 # Default C/CXX flags.
 if (UNIX)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -ggdb -fpic -fPIC -D_LARGEFILE64_SOURCE")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -g -ggdb -fpic -fPIC -D_LARGEFILE64_SOURCE")
+    if (WITHOUTGDB)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fpic -fPIC -D_LARGEFILE64_SOURCE")
+    else ()
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -ggdb -fpic -fPIC -D_LARGEFILE64_SOURCE")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -g -ggdb -fpic -fPIC -D_LARGEFILE64_SOURCE")
+    endif ()
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
@@ -81,9 +87,9 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/dependencies.cmake)
 # Subdirectories (modules).
 set(SUB_DIRECTORIES_LIST
         aggregator app_config checkpoint common config config_manager config_server_pb
-        controller event event_handler event_listener helper log_pb logger monitor
-        parser plugin polling processor profiler reader profile_sender sender shennong sdk
-        fuse sls_control
+        controller event event_handler event_listener file_server go_pipeline helper input log_pb logger models monitor
+        parser pipeline plugin plugin/creator plugin/instance plugin/interface polling processor processor/daemon profile_sender reader sdk sender shennong sls_control
+        fuse
         )
 if (UNIX)
     set(SUB_DIRECTORIES_LIST ${SUB_DIRECTORIES_LIST} streamlog)
@@ -115,15 +121,17 @@ target_link_libraries(${LOGTAIL_TARGET}
         logger
         config_manager
         checkpoint
-        processor
+        processor_daemon
         controller
+        pipeline
         plugin
+        models
         monitor
         sender
-        profiler
         profile_sender
         app_config
         sls_control
+        go_pipeline
         )
 if (UNIX)
     target_link_libraries(${LOGTAIL_TARGET} streamlog)

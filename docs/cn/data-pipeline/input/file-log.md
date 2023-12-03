@@ -18,11 +18,13 @@
 | LogPath | String | 是 | <p>采集文本日志所在的目录，支持完整目录和通配符两种模式。</p><p>日志文件查找模式为多层目录匹配，即指定目录（包含所有层级的目录）下所有符合条件的文件都会被查找到。 |
 | FilePattern | String | 是 | 采集文本日志的文件名，支持完整文件名和通配符两种模式。 |
 | MaxDepth | Integer | 否 | 日志目录被监控的最大深度，范围：0~1000。如果未添加该参数，则默认使用0，代表只监控本层目录。 |
+| FileEncoding | String | 否 | 日志文件编码格式，取值为utf8、gbk。 默认值为utf8。|
 | EnableLogPositionMeta | Boolean | 否 | 是否在日志中添加该日志所属原始文件的元数据信息，即新增__tag__:__inode__字段和__file_offset__字段，默认值为false。 |
 | DirBlackList | Array | 否 | 目录（绝对路径）黑名单。支持使用通配符星号（*）匹配多个目录。 |
 | FilepathBlackList | Array | 否 | 文件路径（绝对路径）黑名单。支持使用通配符星号（*）匹配多个文件。 |
 | ContainerFile | Boolean | 是 | iLogtail与待采集日志是否处于不同环境中。若待采集的日志和iLogtail在不同的容器中，请将参数值置为true，其余情况请置为false。 |
 | ContainerInfo | Map<String, Object> | 否 | 容器相关参数，仅当ContainerFile参数为true时有效：<br><ul><li>若您的容器部署于K8s环境中，则可配置表1和表2所示参数来选择待采集容器；<br><li>其它情况下，可配置表2所示参数来选择待采集容器。<p></ul>除此以外，您还可以使用表3所示参数对日志标签进行富化。</p> |
+| ReaderFlushTimeout | Boolean | 否 | 发送超时时间（秒），超时会强制读取剩余日志。默认为5秒。|
 
 表1：K8s容器发现相关参数
 

@@ -29,19 +29,22 @@
 #include "common/GlobalPara.h"
 #include "logger/Logger.h"
 #ifdef LOGTAIL_RUNTIME_PLUGIN
-#include "plugin/LogtailRuntimePlugin.h"
+#include "go_pipeline/LogtailRuntimePlugin.h"
 #endif
-#include "plugin/LogtailPlugin.h"
+#include "go_pipeline/LogtailPlugin.h"
+#include "plugin/PluginRegistry.h"
+#include "pipeline/PipelineManager.h"
 #include "config_manager/ConfigManager.h"
 #include "checkpoint/CheckPointManager.h"
+#include "checkpoint/AdhocCheckpointManager.h"
 #include "processor/LogFilter.h"
 #include "controller/EventDispatcher.h"
 #include "monitor/Monitor.h"
 #include "sender/Sender.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogFileProfiler.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
 #include "app_config/AppConfig.h"
 using namespace logtail;
 
@@ -63,6 +66,7 @@ static void overwrite_community_edition_flags() {
     INT32_FLAG(data_server_port) = 443;
     BOOL_FLAG(enable_env_ref_in_config) = true;
     BOOL_FLAG(enable_containerd_upper_dir_detect) = true;
+    BOOL_FLAG(enable_sls_metrics_format) = false;
 }
 
 void do_worker_process() {
@@ -134,6 +138,7 @@ void do_worker_process() {
         APSARA_LOG_INFO(sLogger, ("get none dmi uuid", "maybe this is a docker runtime"));
     }
 
+    PluginRegistry::GetInstance()->LoadPlugins();
 #ifdef LOGTAIL_RUNTIME_PLUGIN
     LogtailRuntimePlugin::GetInstance()->LoadPluginBase();
 #endif
@@ -141,9 +146,9 @@ void do_worker_process() {
     // load local config first
     ConfigManager::GetInstance()->GetLocalConfigUpdate();
     ConfigManager::GetInstance()->LoadConfig(AppConfig::GetInstance()->GetUserConfigPath());
+    PipelineManager::GetInstance()->LoadAllPipelines();
     ConfigManager::GetInstance()->LoadDockerConfig();
-
-    // mNameCoonfigMap is empty, configExistFlag is false
+    // mNameConfigMap is empty, configExistFlag is false
     bool configExistFlag = !ConfigManager::GetInstance()->GetAllConfig().empty();
 
     std::string backTraceStr = GetCrashBackTrace();
@@ -151,7 +156,9 @@ void do_worker_process() {
         APSARA_LOG_ERROR(sLogger, ("last logtail crash stack", backTraceStr)("stack size", backTraceStr.length()));
         LogtailAlarm::GetInstance()->SendAlarm(LOGTAIL_CRASH_STACK_ALARM, backTraceStr);
     }
-    InitCrashBackTrace();
+    if (BOOL_FLAG(ilogtail_disable_core)) {
+        InitCrashBackTrace();
+    }
 
     auto& startupHints = STRING_FLAG(ilogtail_daemon_startup_hints);
     if (!startupHints.empty()) {
@@ -173,11 +180,10 @@ void do_worker_process() {
     Sender::Instance()->InitSender();
 
     LogtailPlugin* pPlugin = LogtailPlugin::GetInstance();
-    if (pPlugin->LoadPluginBase()) {
-        pPlugin->Resume();
-    }
+    pPlugin->Resume();
 
     CheckPointManager::Instance()->LoadCheckPoint();
+    // AdhocCheckpointManager::GetInstance()->LoadAdhocCheckpoint();
 
     // added by xianzhi(bowen.gbw@antfin.com)
     // read local data_integrity json file and line count file
@@ -200,11 +206,12 @@ void do_worker_process() {
     appInfoJson["update_time"] = GetTimeStamp(time(NULL), "%Y-%m-%d %H:%M:%S");
     std::string appInfo = appInfoJson.toStyledString();
     OverwriteFile(GetProcessExecutionDir() + STRING_FLAG(app_info_file), appInfo);
-    APSARA_LOG_INFO(sLogger, ("Logtail started, appInfo", appInfo));
+    APSARA_LOG_INFO(sLogger, ("appInfo", appInfo));
 
     ConfigManager::GetInstance()->InitUpdateConfig(configExistFlag);
     ConfigManager::GetInstance()->RegisterHandlers();
     EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
+    APSARA_LOG_INFO(sLogger, ("Logtail started", "initialization completed"));
 
     EventDispatcher::GetInstance()->Dispatch();
 }

@@ -295,10 +295,6 @@ func (r *RawProfile) extractProfileV1(meta *profile.Meta, tags map[string]string
 				Value: meta.SpyName,
 			},
 			&protocol.Log_Content{
-				Key:   "type",
-				Value: profile.DetectProfileType(types[0]).Kind,
-			},
-			&protocol.Log_Content{
 				Key:   "dataType",
 				Value: "CallStack",
 			},
@@ -337,6 +333,10 @@ func (r *RawProfile) extractProfileV1(meta *profile.Meta, tags map[string]string
 					Value: aggs[i],
 				},
 				&protocol.Log_Content{
+					Key:   "type",
+					Value: profile.DetectProfileType(types[i]).Kind,
+				},
+				&protocol.Log_Content{
 					Key:   "val",
 					Value: strconv.FormatFloat(float64(v), 'f', 2, 64),
 				},
@@ -344,7 +344,7 @@ func (r *RawProfile) extractProfileV1(meta *profile.Meta, tags map[string]string
 			log := &protocol.Log{
 				Contents: res,
 			}
-			protocol.SetLogTime(log, uint32(startTime/1e9), uint32(startTime%1e9))
+			protocol.SetLogTimeWithNano(log, uint32(startTime/1e9), uint32(startTime%1e9))
 			r.logs = append(r.logs, log)
 		}
 	}

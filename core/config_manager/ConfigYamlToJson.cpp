@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include "ConfigYamlToJson.h"
+#include "common/LogtailCommonFlags.h"
+#include "common/StringTools.h"
 #include "logger/Logger.h"
 #include <iostream>
 
@@ -31,6 +33,7 @@ const std::string INPUT_FILE_LOG = "file_log";
 const std::string PROCESSOR_REGEX_ACCELERATE = "processor_regex_accelerate";
 const std::string PROCESSOR_JSON_ACCELERATE = "processor_json_accelerate";
 const std::string PROCESSOR_DELIMITER_ACCELERATE = "processor_delimiter_accelerate";
+const std::string PROCESSOR_APSARA_ACCELERATE = "processor_apsara_accelerate";
 
 const std::string PROCESSOR_SPLIT_LINE_LOG_USING_SEP = "processor_split_log_string";
 const std::string PROCESSOR_SPLIT_LINE_LOG_USING_REG = "processor_split_log_regex";
@@ -72,6 +75,9 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFileConfigMap["Keys"] = "keys";
     mFileConfigMap["Regex"] = "regex";
     mFileConfigMap["LogBeginRegex"] = "log_begin_reg";
+    mFileConfigMap["LogContinueRegex"] = "log_continue_reg";
+    mFileConfigMap["LogEndRegex"] = "log_end_reg";
+    mFileConfigMap["ReaderFlushTimeout"] = "reader_flush_timeout";
     // params specific to delimiter accelerate processor
     mFileConfigMap["Separator"] = "delimiter_separator";
     mFileConfigMap["Quote"] = "delimiter_quote";
@@ -89,11 +95,14 @@ ConfigYamlToJson::ConfigYamlToJson() {
 
     mFileAdvancedConfigMap["DirBlackList"] = "dir_blacklist";
     mFileAdvancedConfigMap["FilepathBlackList"] = "filepath_blacklist";
+    mFileAdvancedConfigMap["EnableTimestampNanosecond"] = "enable_timestamp_nanosecond";
+    mFileAdvancedConfigMap["UsingOldContentTag"] = "using_old_content_tag";
     mFileAdvancedConfigMap["EnablePreciseTimestamp"] = "enable_precise_timestamp";
     mFileAdvancedConfigMap["PreciseTimestampKey"] = "precise_timestamp_key";
     mFileAdvancedConfigMap["PreciseTimestampUnit"] = "precise_timestamp_unit";
     mFileAdvancedConfigMap["ForceMultiConfig"] = "force_multiconfig";
     mFileAdvancedConfigMap["TailSizeKB"] = "tail_size_kb";
+    mFileAdvancedConfigMap["ExactlyOnceConcurrency"] = "exactly_once_concurrency";
     mFileAdvancedConfigMap["EnableLogPositionMeta"] = "enable_log_position_meta";
     mFileAdvancedConfigMap["RawLogTag"] = "raw_log_tag";
 
@@ -113,6 +122,7 @@ ConfigYamlToJson::ConfigYamlToJson() {
     mFilePluginToLogTypeMap[PROCESSOR_REGEX_ACCELERATE] = "common_reg_log";
     mFilePluginToLogTypeMap[PROCESSOR_JSON_ACCELERATE] = "json_log";
     mFilePluginToLogTypeMap[PROCESSOR_DELIMITER_ACCELERATE] = "delimiter_log";
+    mFilePluginToLogTypeMap[PROCESSOR_APSARA_ACCELERATE] = "apsara_log";
 }
 
 string ConfigYamlToJson::GetTransforKey(const string yamlKey) {
@@ -144,7 +154,7 @@ Json::Value ConfigYamlToJson::ParseScalar(const YAML::Node& node) {
         return node.as<std::string>();
     }
 
-    int i;
+    int i = 0;
     if (YAML::convert<int>::decode(node, i))
         return i;
 
@@ -231,7 +241,6 @@ bool ConfigYamlToJson::GenerateLocalJsonConfig(const string configName,
             return false;
         }
 
-        FillupDefaultUserJsonConfig(workMode, userJsonConfig);
         if (!pluginJsonConfig.empty()) {
             if (yamlConfig["version"])
                 pluginJsonConfig["version"] = yamlConfig["version"].as<std::string>();
@@ -240,6 +249,8 @@ bool ConfigYamlToJson::GenerateLocalJsonConfig(const string configName,
             userJsonConfig["plugin"] = pluginJsonConfig;
         }
         userJsonConfig["log_type"] = workMode.mLogType;
+        FillupDefaultUserJsonConfig(workMode, userJsonConfig);
+
         if (yamlConfig["enable"])
             userJsonConfig["enable"] = yamlConfig["enable"].as<bool>();
         else
@@ -315,21 +326,24 @@ bool ConfigYamlToJson::CheckPluginConfig(const string configName, const YAML::No
                               "accelerate_processor", workMode.mAccelerateProcessorPluginType));
                 return false;
             }
-            if (flusherPluginsInfo.size() > 1) {
-                LOG_ERROR(
-                    sLogger,
-                    ("CheckPluginConfig failed", "accelerateProcessor must only be used with flusher_sls plugin.")(
-                        "config_name", configName)("flusher_plugin_size", flusherPluginsInfo.size())(
-                        "accelerate_processor", workMode.mAccelerateProcessorPluginType));
-                return false;
-            }
-            if (flusherPluginsInfo.size() != 0 && flusherPluginsInfo.find("flusher_sls") == flusherPluginsInfo.end()) {
-                unordered_map<string, PluginInfo>::iterator it = flusherPluginsInfo.begin();
-                LOG_ERROR(sLogger,
-                          ("CheckPluginConfig failed", "accelerateProcessor must be used with flusher_sls plugin.")(
-                              "config_name", configName)("flusher_plugin_type", it->first)(
-                              "accelerate_processor", workMode.mAccelerateProcessorPluginType));
-                return false;
+            if (!BOOL_FLAG(enable_new_pipeline)) {
+                if (flusherPluginsInfo.size() > 1) {
+                    LOG_ERROR(
+                        sLogger,
+                        ("CheckPluginConfig failed", "accelerateProcessor must only be used with flusher_sls plugin.")(
+                            "config_name", configName)("flusher_plugin_size", flusherPluginsInfo.size())(
+                            "accelerate_processor", workMode.mAccelerateProcessorPluginType));
+                    return false;
+                }
+                if (flusherPluginsInfo.size() != 0
+                    && flusherPluginsInfo.find("flusher_sls") == flusherPluginsInfo.end()) {
+                    unordered_map<string, PluginInfo>::iterator it = flusherPluginsInfo.begin();
+                    LOG_ERROR(sLogger,
+                              ("CheckPluginConfig failed", "accelerateProcessor must be used with flusher_sls plugin.")(
+                                  "config_name", configName)("flusher_plugin_type", it->first)(
+                                  "accelerate_processor", workMode.mAccelerateProcessorPluginType));
+                    return false;
+                }
             }
             break;
         } else {
@@ -337,13 +351,15 @@ bool ConfigYamlToJson::CheckPluginConfig(const string configName, const YAML::No
                 && (0 == processorPluginType.compare(PROCESSOR_SPLIT_LINE_LOG_USING_SEP)
                     || 0 == processorPluginType.compare(PROCESSOR_SPLIT_LINE_LOG_USING_REG))) {
                 workMode.mLogSplitProcessorPluginType = processorPluginType;
-                if (iter->second.mFirstPos != 0) {
-                    LOG_ERROR(sLogger,
-                              ("CheckPluginConfig failed",
-                               "processor_split_log_string and processor_split_log_regex must be first processor.")(
-                                  "config_name", configName)("processor_plugin_type", processorPluginType)(
-                                  "first_postion", iter->second.mFirstPos)("times", iter->second.mTimes));
-                    return false;
+                if (!BOOL_FLAG(enable_new_pipeline)) {
+                    if (iter->second.mFirstPos != 0) {
+                        LOG_ERROR(sLogger,
+                                  ("CheckPluginConfig failed",
+                                   "processor_split_log_string and processor_split_log_regex must be first processor.")(
+                                      "config_name", configName)("processor_plugin_type", processorPluginType)(
+                                      "first_postion", iter->second.mFirstPos)("times", iter->second.mTimes));
+                        return false;
+                    }
                 }
             }
         }
@@ -367,11 +383,13 @@ bool ConfigYamlToJson::CheckPluginConfig(const string configName, const YAML::No
             ("CheckPluginConfig failed", "not file mode but has accelerate processor.")("config_name", configName));
         return false;
     }
-    if (workMode.mIsFileMode && workMode.mHasAccelerateProcessor && processorPluginsInfo.size() != 1) {
-        LOG_ERROR(sLogger,
-                  ("CheckPluginConfig failed",
-                   "when use accelerate processor, can not use other processors.")("config_name", configName));
-        return false;
+    if (!BOOL_FLAG(enable_new_pipeline)) {
+        if (workMode.mIsFileMode && workMode.mHasAccelerateProcessor && processorPluginsInfo.size() != 1) {
+            LOG_ERROR(sLogger,
+                      ("CheckPluginConfig failed",
+                       "when use accelerate processor, can not use other processors.")("config_name", configName));
+            return false;
+        }
     }
 
     if (flusherPluginsInfo.size() == 0) {
@@ -464,7 +482,7 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForPluginCategory(const string con
                                                                 Json::Value& userJsonConfig) {
     Json::Value plugins;
 
-    if (0 == pluginCategory.compare(PLUGIN_CATEGORY_PROCESSORS)) {
+    if (!BOOL_FLAG(enable_new_pipeline) && 0 == pluginCategory.compare(PLUGIN_CATEGORY_PROCESSORS)) {
         Json::Value splitProcessor;
         if (FillupMustMultiLinesSplitProcessor(workMode, splitProcessor))
             plugins.append(splitProcessor);
@@ -477,7 +495,7 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForPluginCategory(const string con
                 const YAML::Node& pluginYamlNode = *it;
                 Json::Value pluginJsonConfig;
                 if (GenerateLocalJsonConfigForFileMode(pluginYamlNode, userJsonConfig)) {
-                } else if (GenerateLocalJsonConfigForSLSFulsher(pluginYamlNode, pluginJsonConfig, userJsonConfig)) {
+                } else if (GenerateLocalJsonConfigForSLSFlusher(pluginYamlNode, pluginJsonConfig, userJsonConfig)) {
                     plugins.append(pluginJsonConfig);
                 } else if (GenerateLocalJsonConfigForCommonPluginMode(pluginYamlNode, pluginJsonConfig)) {
                     plugins.append(pluginJsonConfig);
@@ -491,9 +509,7 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForPluginCategory(const string con
     }
 
     if (!plugins.isNull()) {
-        if (!(0 == pluginCategory.compare(PLUGIN_CATEGORY_FLUSHERS) && workMode.mHasAccelerateProcessor)) {
-            pluginsJsonConfig[pluginCategory] = plugins;
-        }
+        pluginsJsonConfig[pluginCategory] = plugins;
     }
     return true;
 }
@@ -514,7 +530,9 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForFileMode(const YAML::Node& yaml
         return false;
     }
 
-    Json::Value advancedConfig, k8sConfig, blackListConfig;
+    Json::Value localAdvancedConfig, k8sConfig, blackListConfig;
+    Json::Value& advancedConfig
+        = userJsonConfig.isMember("advanced") ? userJsonConfig["advanced"] : localAdvancedConfig;
     for (YAML::const_iterator it = yamlConfig.begin(); it != yamlConfig.end(); ++it) {
         string key = GetTransforAdvancedKey(it->first.as<std::string>());
         if (0 == key.compare("dir_blacklist")) {
@@ -552,6 +570,7 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForFileMode(const YAML::Node& yaml
             userJsonConfig["docker_file"] = true;
         }
     }
+    userJsonConfig["force_enable_pipeline"] = true;
     if (0 != k8sConfig.size()) {
         advancedConfig["k8s"] = k8sConfig;
     }
@@ -565,7 +584,7 @@ bool ConfigYamlToJson::GenerateLocalJsonConfigForFileMode(const YAML::Node& yaml
     return true;
 }
 
-bool ConfigYamlToJson::GenerateLocalJsonConfigForSLSFulsher(const YAML::Node& yamlConfig,
+bool ConfigYamlToJson::GenerateLocalJsonConfigForSLSFlusher(const YAML::Node& yamlConfig,
                                                             Json::Value& pluginJsonConfig,
                                                             Json::Value& userJsonConfig) {
     string pluginType = yamlConfig["Type"].as<std::string>();
@@ -603,6 +622,28 @@ bool ConfigYamlToJson::FillupDefaultUserJsonConfig(const WorkMode& workMode, Jso
             }
             if (!userJsonConfig.isMember("keys")) {
                 userJsonConfig["keys"][0] = "content";
+            }
+        }
+
+        // Copy SplitRegex to log_begin_reg. If enable_new_pipeline, the first split plugin should be removed.
+        if (!workMode.mLogSplitProcessorPluginType.empty()) {
+            auto& processors = userJsonConfig["plugin"][PLUGIN_CATEGORY_PROCESSORS];
+            auto& splitProcessor = processors[0];
+            if (splitProcessor["type"].asString() == PROCESSOR_SPLIT_LINE_LOG_USING_SEP) {
+                if (BOOL_FLAG(enable_new_pipeline)) {
+                    Json::Value removed;
+                    processors.removeIndex(0, &removed);
+                }
+            } else if (splitProcessor["type"].asString() == PROCESSOR_SPLIT_LINE_LOG_USING_REG) {
+                for (const auto& name : splitProcessor["detail"].getMemberNames()) {
+                    if (0 == StringCaseInsensitiveCmp(name.c_str(), "SplitRegex")) {
+                        userJsonConfig["log_begin_reg"] = splitProcessor["detail"][name];
+                    }
+                }
+                if (BOOL_FLAG(enable_new_pipeline)) {
+                    Json::Value removed;
+                    processors.removeIndex(0, &removed);
+                }
             }
         }
     }

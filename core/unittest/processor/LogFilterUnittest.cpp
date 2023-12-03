@@ -131,6 +131,7 @@ public:
         APSARA_TEST_EQUAL(param2Vec[0].mRegex->ok(), true);
 
         LOG_INFO(sLogger, ("TestParseCastSensWordConfig() end", time(NULL)));
+        delete pConfig;
     }
 
     void TestCastSensWordConst() {
@@ -1345,8 +1346,4 @@ APSARA_UNIT_TEST_CASE(LogFilterUnittest, TestFilterNode, 0);
 
 } // namespace logtail
 
-int main(int argc, char** argv) {
-    logtail::Logger::Instance().InitGlobalLoggers();
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+UNIT_TEST_MAIN

@@ -16,7 +16,7 @@ package jmxfetch
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -32,7 +32,7 @@ func (m *Manager) installScripts(javaPath string) error {
 		yamls = append(yamls, key+".yaml")
 	}
 	scripts := fmt.Sprintf(scriptsTemplate, javaPath, strings.Join(yamls, ","), "0.0.0.0", m.port)
-	err := ioutil.WriteFile(m.jmxfetchdPath, []byte(scripts), 0755) //nolint: gosec
+	err := os.WriteFile(m.jmxfetchdPath, []byte(scripts), 0755) //nolint: gosec
 	if err != nil {
 		return fmt.Errorf("cannot crate jmxfetchd scripts: %v", err)
 	}
@@ -105,7 +105,7 @@ do_start() {
 }
 
 start() {
-    c=$(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"  | wc -l)
+    c=$(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"|grep "$REPORTER"  | wc -l)
     trace_log "start $c"
     if [ $c -eq 0 ]; then
         do_start
@@ -117,7 +117,7 @@ start() {
 
 stop() {
     sig=$1
-    ppids=($(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"  | awk '{print $2}'))
+    ppids=($(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"|grep "$REPORTER"  | awk '{print $2}'))
     trace_log "stop with $sig, ppids: $ppids"
     for ppid in ${ppids[*]}; do
         kill $sig $ppid
@@ -130,7 +130,7 @@ force_stop() {
 }
 
 status() {
-    c=$(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"  | wc -l)
+    c=$(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"|grep "$REPORTER"  | wc -l)
     if [ $c -eq 1 ]; then
         val="running"
     elif [ $c -eq 0 ]; then
@@ -144,7 +144,7 @@ status() {
 }
 
 reload() {
-    c=$(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR" | wc -l)
+    c=$(ps -ef |grep $JAR |grep -v grep|grep "$CURRENT_DIR"|grep "$REPORTER" | wc -l)
     trace_log "reload $c"
     if [ $c -eq 0 ]; then
         do_start

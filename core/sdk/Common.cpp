@@ -180,13 +180,14 @@ namespace sdk {
             return 0;
         }
         // Date sample: Thu, 18 Feb 2021 03:09:29 GMT
-        struct tm tm = {0};
-        if (Strptime(iter->second.c_str(), "%a, %d %b %Y %H:%M:%S", &tm) == NULL) {
+        LogtailTime ts;
+        int nanosecondLength;
+        if (Strptime(iter->second.c_str(), "%a, %d %b %Y %H:%M:%S", &ts, nanosecondLength) == NULL) {
             LOG_ERROR(sLogger,
                       METHOD_LOG_PATTERN("parse Date error", ErrnoToString(GetErrno()))("value", iter->second));
             return 0;
         }
-        time_t serverTime = mktime(&tm);
+        time_t serverTime = ts.tv_sec;
         static auto sOffset = GetLocalTimeZoneOffsetSecond();
         return serverTime + sOffset;
 #undef METHOD_LOG_PATTERN
@@ -503,7 +504,7 @@ namespace sdk {
      */
     void CopyBytesToBlock(const uint8_t* poolIn, struct Md5Block& block) {
         uint32_t j = 0;
-        for (uint32_t i = 0; i < 32; ++i, j += 4) {
+        for (uint32_t i = 0; i < 16; ++i, j += 4) {
             block.word[i] = ((uint32_t)poolIn[j]) | (((uint32_t)poolIn[j + 1]) << 8) | (((uint32_t)poolIn[j + 2]) << 16)
                 | (((uint32_t)poolIn[j + 3]) << 24);
         }
@@ -864,10 +865,10 @@ namespace sdk {
         unsigned mlen = (unsigned)((bits >> 3) % SHA1_INPUT_BYTES), padding = SHA1_INPUT_BYTES - mlen;
         M[mlen++] = 0x80;
         if (padding > BIT_COUNT_BYTES) {
-            memset(M + mlen, 0x00, padding - BIT_COUNT_BYTES);
+                        memset(M + mlen, 0x00, padding - BIT_COUNT_BYTES);
             make_big_endian32((uint32_t*)M, SHA1_INPUT_WORDS - BIT_COUNT_WORDS);
         } else {
-            memset(M + mlen, 0x00, SHA1_INPUT_BYTES - mlen);
+                        memset(M + mlen, 0x00, SHA1_INPUT_BYTES - mlen);
             make_big_endian32((uint32_t*)M, SHA1_INPUT_WORDS);
             transform();
             memset(M, 0x00, SHA1_INPUT_BYTES - BIT_COUNT_BYTES);

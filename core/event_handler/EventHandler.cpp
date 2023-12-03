@@ -25,8 +25,8 @@
 #include "event/BlockEventManager.h"
 #include "controller/EventDispatcher.h"
 #include "config_manager/ConfigManager.h"
-#include "profiler/LogtailAlarm.h"
-#include "processor/LogProcess.h"
+#include "monitor/LogtailAlarm.h"
+#include "processor/daemon/LogProcess.h"
 #include "logger/Logger.h"
 #include "fuse/FuseFileBlacklist.h"
 #include "common/LogFileCollectOffsetIndicator.h"
@@ -428,8 +428,7 @@ LogFileReaderPtr ModifyHandler::CreateLogFileReaderPtr(
         } else {
             // if first create, we should check and update file signature, because when blocked, new reader will have no
             // chance to update signature
-            int64_t fileSize;
-            if (!readerPtr->CheckFileSignatureAndOffset(fileSize)) {
+            if (!readerPtr->CheckFileSignatureAndOffset(false)) {
                 LOG_ERROR(sLogger,
                           ("stop creating new reader",
                            "check file signature failed, possibly because file signature has been changed since the "
@@ -499,6 +498,9 @@ void ModifyHandler::Handle(const Event& event) {
                                 "file device", readerArray[0]->GetDevInode().dev)(
                                 "file inode", readerArray[0]->GetDevInode().inode)("file size",
                                                                                    readerArray[0]->GetFileSize()));
+                        if (!readerArray[0]->ShouldForceReleaseDeletedFileFd() && readerArray[0]->HasDataInCache()) {
+                            ForceReadLogAndPush(readerArray[0]);
+                        }
                         // release fd as quick as possible
                         readerArray[0]->CloseFilePtr();
                     }
@@ -520,6 +522,9 @@ void ModifyHandler::Handle(const Event& event) {
                                 "config", mConfigName)("log reader queue name",
                                                        reader->GetHostLogPath())("file device", reader->GetDevInode().dev)(
                                 "file inode", reader->GetDevInode().inode)("file size", reader->GetFileSize()));
+                        if (!readerArray[0]->ShouldForceReleaseDeletedFileFd() && reader->HasDataInCache()) {
+                            ForceReadLogAndPush(readerArray[0]);
+                        }
                         // release fd as quick as possible
                         reader->CloseFilePtr();
                     }
@@ -632,6 +637,7 @@ void ModifyHandler::Handle(const Event& event) {
         // reader->SetFileDeleted(false);
 
         // make sure file open success, or we just return
+        bool isFileOpen = reader->IsFileOpened();
         while (!reader->UpdateFilePtr()) {
             if (errno == EMFILE) {
                 LOG_WARNING(sLogger,
@@ -644,13 +650,13 @@ void ModifyHandler::Handle(const Event& event) {
             //     -> cannot find reader, treat as new file -> read log tail(1MB)
             // so when open file ptr faild, put this reader into rotator map, when process a.log1 modify event, we can
             // find it in rotator map
-            LOG_INFO(
-                sLogger,
-                ("open file failed", "move the corresponding reader to the rotator reader pool")(
-                    "project", reader->GetProjectName())("logstore", reader->GetCategory())("config", mConfigName)(
-                    "log reader queue name", reader->GetHostLogPath())("log reader queue size", readerArrayPtr->size() - 1)(
-                    "file device", reader->GetDevInode().dev)("file inode", reader->GetDevInode().inode)(
-                    "file size", reader->GetFileSize())("rotator reader pool size", mRotatorReaderMap.size() + 1));
+            LOG_INFO(sLogger,
+                     ("open the file failed", "move the corresponding reader to the rotator reader pool")(
+                         "project", reader->GetProjectName())("logstore", reader->GetCategory())("config", mConfigName)(
+                         "log reader queue name", reader->GetHostLogPath())("log reader queue size",
+                                                                            readerArrayPtr->size() - 1)(
+                         "file device", reader->GetDevInode().dev)("file inode", reader->GetDevInode().inode)(
+                         "file size", reader->GetFileSize())("rotator reader pool size", mRotatorReaderMap.size() + 1));
             readerArrayPtr->pop_front();
             mDevInodeReaderMap.erase(reader->GetDevInode());
             mRotatorReaderMap[reader->GetDevInode()] = reader;
@@ -658,11 +664,10 @@ void ModifyHandler::Handle(const Event& event) {
                 return;
             }
             reader = (*readerArrayPtr)[0];
+            isFileOpen = reader->IsFileOpened();
             LOG_DEBUG(sLogger, ("read other file", reader->GetDevInode().inode));
         }
 
-
-        int64_t fileSize = 0;
         bool recreateReaderFlag = false;
         // if dev inode changed, delete this reader and create reader
         if (!reader->CheckDevInode()) {
@@ -678,7 +683,7 @@ void ModifyHandler::Handle(const Event& event) {
                                                        + " ,logstore:" + reader->GetCategory());
         }
         // if signature is different and logpath is different, delete this reader and create reader
-        else if (!reader->CheckFileSignatureAndOffset(fileSize) && logPath != reader->GetHostLogPath()) {
+        else if (!reader->CheckFileSignatureAndOffset(isFileOpen) && logPath != reader->GetHostLogPath()) {
             LOG_INFO(sLogger,
                      ("file sig and name both changed, create new reader. new path", logPath)(
                          "old path", reader->GetHostLogPath())(ToString(readerArrayPtr->size()), mRotatorReaderMap.size())(
@@ -732,31 +737,9 @@ void ModifyHandler::Handle(const Event& event) {
                     reader->GetLogstoreKey(), mConfigName, event, reader->GetDevInode(), curTime);
                 return;
             }
-            LogBuffer* logBuffer = NULL;
-            hasMoreData = reader->ReadLog(logBuffer);
-            int32_t pushRetry = 0;
-            if (logBuffer != NULL) {
-                LogFileProfiler::GetInstance()->AddProfilingReadBytes(reader->GetConfigName(),
-                                                                      reader->GetRegion(),
-                                                                      reader->GetProjectName(),
-                                                                      reader->GetCategory(),
-                                                                      reader->GetConvertedPath(),
-                                                                      reader->GetHostLogPath(),
-                                                                      reader->GetExtraTags(),
-                                                                      reader->GetDevInode().dev,
-                                                                      reader->GetDevInode().inode,
-                                                                      reader->GetFileSize(),
-                                                                      reader->GetLastFilePos(),
-                                                                      time(NULL));
-                logBuffer->SetDependecy(reader);
-                while (!LogProcess::GetInstance()->PushBuffer(logBuffer)) // 10ms
-                {
-                    ++pushRetry;
-                    if (pushRetry % 10 == 0)
-                        LogInput::GetInstance()->TryReadEvents(false);
-                }
-            }
-
+            LogBuffer* logBuffer = new LogBuffer;
+            hasMoreData = reader->ReadLog(*logBuffer, &event);
+            int32_t pushRetry = PushLogToProcessor(reader, logBuffer);
             if (!hasMoreData) {
                 if (reader->IsFileDeleted() || reader->IsContainerStopped()) {
                     // release fd as quick as possible
@@ -767,6 +750,7 @@ void ModifyHandler::Handle(const Event& event) {
                                  "config", mConfigName)("log reader queue name",
                                                         reader->GetHostLogPath())("file device", reader->GetDevInode().dev)(
                                  "file inode", reader->GetDevInode().inode)("file size", reader->GetFileSize()));
+                    ForceReadLogAndPush(reader);
                     reader->CloseFilePtr();
                 }
                 break;
@@ -818,6 +802,7 @@ void ModifyHandler::Handle(const Event& event) {
                     "log reader queue name", reader->GetHostLogPath())("log reader queue size", readerArrayPtr->size() - 1)(
                     "file device", reader->GetDevInode().dev)("file inode", reader->GetDevInode().inode)(
                     "file size", reader->GetFileSize())("rotator reader pool size", mRotatorReaderMap.size() + 1));
+            ForceReadLogAndPush(reader);
             reader->CloseFilePtr();
             readerArrayPtr->pop_front();
             mDevInodeReaderMap.erase(reader->GetDevInode());
@@ -1009,6 +994,41 @@ void ModifyHandler::DeleteRollbackReader() {
     vector<DevInode>::iterator keyIter = deletedReaderKeys.begin();
     for (; keyIter != deletedReaderKeys.end(); ++keyIter)
         mRotatorReaderMap.erase(*keyIter);
+}
+
+void ModifyHandler::ForceReadLogAndPush(LogFileReaderPtr reader) {
+    LogBuffer* logBuffer = new LogBuffer;
+    auto pEvent = reader->CreateFlushTimeoutEvent();
+    reader->ReadLog(*logBuffer, pEvent.get());
+    PushLogToProcessor(reader, logBuffer);
+}
+
+int32_t ModifyHandler::PushLogToProcessor(LogFileReaderPtr reader, LogBuffer* logBuffer) {
+    int32_t pushRetry = 0;
+    if (!logBuffer->rawBuffer.empty()) {
+        LogFileProfiler::GetInstance()->AddProfilingReadBytes(reader->GetConfigName(),
+                                                              reader->GetRegion(),
+                                                              reader->GetProjectName(),
+                                                              reader->GetCategory(),
+                                                              reader->GetConvertedPath(),
+                                                              reader->GetHostLogPath(),
+                                                              reader->GetExtraTags(),
+                                                              reader->GetDevInode().dev,
+                                                              reader->GetDevInode().inode,
+                                                              reader->GetFileSize(),
+                                                              reader->GetLastFilePos(),
+                                                              time(NULL));
+        logBuffer->SetDependecy(reader);
+        while (!LogProcess::GetInstance()->PushBuffer(logBuffer)) // 10ms
+        {
+            ++pushRetry;
+            if (pushRetry % 10 == 0)
+                LogInput::GetInstance()->TryReadEvents(false);
+        }
+    } else {
+        delete logBuffer;
+    }
+    return pushRetry;
 }
 
 } // namespace logtail

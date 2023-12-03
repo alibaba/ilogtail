@@ -255,7 +255,10 @@ func (p *pluginv1Runner) runProcessorInternal(cc *pipeline.AsyncControl) {
 							continue
 						}
 						if l.Time == uint32(0) {
-							protocol.SetLogTime(l, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
+							protocol.SetLogTimeWithNano(l, uint32(nowTime.Unix()), uint32(nowTime.Nanosecond()))
+						}
+						if !p.LogstoreConfig.GlobalConfig.EnableTimestampNanosecond {
+							l.TimeNs = nil
 						}
 						for tryCount := 1; true; tryCount++ {
 							err := aggregator.Aggregator.Add(l, logCtx.Context)
@@ -426,6 +429,30 @@ func (p *pluginv1Runner) Stop(exit bool) error {
 
 func (p *pluginv1Runner) ReceiveRawLog(log *pipeline.LogWithContext) {
 	p.LogsChan <- log
+}
+
+func (p *pluginv1Runner) ReceiveLogGroup(logGroup pipeline.LogGroupWithContext) {
+	context := logGroup.Context
+	topic := logGroup.LogGroup.GetTopic()
+	context[ctxKeyTopic] = topic
+	for _, log := range logGroup.LogGroup.Logs {
+		if len(topic) > 0 {
+			log.Contents = append(log.Contents, &protocol.Log_Content{Key: tagKeyLogTopic, Value: topic})
+		}
+		// When UsingOldContentTag is set to false, the tag is now put into the context during cgo.
+		if !p.LogstoreConfig.GlobalConfig.UsingOldContentTag {
+			context[ctxKeyTags] = logGroup.LogGroup.LogTags
+			p.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: context})
+		} else {
+			for _, tag := range logGroup.LogGroup.LogTags {
+				log.Contents = append(log.Contents, &protocol.Log_Content{
+					Key:   tagPrefix + tag.GetKey(),
+					Value: tag.GetValue(),
+				})
+			}
+			p.ReceiveRawLog(&pipeline.LogWithContext{Log: log, Context: context})
+		}
+	}
 }
 
 func (p *pluginv1Runner) Merge(r PluginRunner) {

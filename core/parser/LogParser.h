@@ -20,6 +20,7 @@
 #include <vector>
 #include "common/TimeUtil.h"
 #include "config_manager/ConfigManager.h"
+#include "reader/SourceBuffer.h"
 
 namespace sls_logs {
 class LogGroup;
@@ -46,10 +47,14 @@ enum ParseLogError {
 class LogParser {
 public:
     static const char* UNMATCH_LOG_KEY;
-
+    static const char* SLS_KEY_LEVEL;
+    static const char* SLS_KEY_THREAD;
+    static const char* SLS_KEY_FILE;
+    static const char* SLS_KEY_LINE;
+    static const int32_t MAX_BASE_FIELD_NUM;
     static time_t
     ApsaraEasyReadLogTimeParser(const char* buffer, std::string& timeStr, time_t& lastLogTime, int64_t& microTime);
-    static bool ApsaraEasyReadLogLineParser(const char* buffer,
+    static bool ApsaraEasyReadLogLineParser(StringView buffer,
                                             sls_logs::LogGroup& logGroup,
                                             bool discardUnmatch,
                                             std::string& timeStr,
@@ -59,23 +64,22 @@ public:
                                             const std::string& region,
                                             const std::string& logPath,
                                             ParseLogError& error,
-                                            uint32_t& logGroupSize, 
-                                            int32_t tzOffsetSecond, 
+                                            uint32_t& logGroupSize,
+                                            int32_t tzOffsetSecond,
                                             bool adjustApsaraMicroTimezone);
     static time_t ApsaraEasyParseLogTimeParser(const char* buffer);
 
-    static bool WholeLineModeParser(const char* buffer,
+    static bool WholeLineModeParser(StringView buffer,
                                     sls_logs::LogGroup& logGroup,
                                     const std::string& key,
-                                    time_t logTime,
-                                    long timeNs,
+                                    LogtailTime& logTime,
                                     uint32_t& logGroupSize);
 
     // RegexLogLineParser parses @buffer according to @reg.
     // Log time parsing: use @timeIndex to decide which field should be considered
     // as log time, and @timeFormat is used to parse it (strptime). @timeStr and
     // @logTime is the parsed result in string and time_t format.
-    static bool RegexLogLineParser(const char* buffer,
+    static bool RegexLogLineParser(StringView buffer,
                                    const boost::regex& reg,
                                    sls_logs::LogGroup& logGroup,
                                    bool discardUnmatch,
@@ -85,7 +89,7 @@ public:
                                    const PreciseTimestampConfig& preciseTimestampConfig,
                                    const uint32_t timeIndex,
                                    std::string& timeStr,
-                                   time_t& logTime,
+                                   LogtailTime& logTime,
                                    int32_t specifiedYear,
                                    const std::string& projectName,
                                    const std::string& region,
@@ -94,14 +98,13 @@ public:
                                    uint32_t& logGroupSize,
                                    int32_t mTzOffsetSecond);
     // RegexLogLineParser with specified log time.
-    static bool RegexLogLineParser(const char* buffer,
+    static bool RegexLogLineParser(StringView buffer,
                                    const boost::regex& reg,
                                    sls_logs::LogGroup& logGroup,
                                    bool discardUnmatch,
                                    const std::vector<std::string>& keys,
                                    const std::string& category,
-                                   time_t logTime,
-                                   long timeNs,
+                                   LogtailTime logTime,
                                    const std::string& projectName,
                                    const std::string& region,
                                    const std::string& logPath,
@@ -116,11 +119,11 @@ public:
 
     static bool IsPrefixString(const char* all, const std::string& prefix);
 
-    static void AddUnmatchLog(const char* buffer, sls_logs::LogGroup& logGroup, uint32_t& logGroupSize);
+    static void AddUnmatchLog(StringView buffer, sls_logs::LogGroup& logGroup, uint32_t& logGroupSize);
 
     static bool ParseLogTime(const char* buffer,
                              std::string& timeStr,
-                             time_t& logTime,
+                             LogtailTime& logTime,
                              uint64_t& preciseTimestamp,
                              const std::string& curTimeStr,
                              const char* timeFormat,
@@ -133,7 +136,7 @@ public:
                              ParseLogError& error,
                              int32_t tzOffsetSecond);
 
-    static void AdjustLogTime(sls_logs::Log* logPtr, int logTimeZoneOffsetSecond, int localTimeZoneOffsetSecond);
+    static void AdjustLogTime(LogtailTime& logTime, int timeZoneOffsetSecond);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class LogParserUnittest;

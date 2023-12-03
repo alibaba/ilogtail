@@ -4,6 +4,8 @@
 
 `processor_json processor`插件可以实现对`Json`格式日志的解析。
 
+备注：当作为第一个日志解析插件时，建议使用[Json加速](../accelerator/json-accelerate.md)插件替代。
+
 ## 支持的Event类型
 
 | LogGroup(v1) | EventTypeLogging | EventTypeMetric | EventTypeSpan |
@@ -27,6 +29,8 @@
 | KeepSource             | Boolean | 否    | 是否保留原始字段。如果未添加该参数，则默认使用true，表示保留。                 |
 | UseSourceKeyAsPrefix   | Boolean | 否    | 是否将原始字段名作为所有JSON展开字段名的前缀。如果未添加该参数，则默认使用false，表示否。 |
 | KeepSourceIfParseError | Boolean | 否    | 解析失败时，是否保留原始日志。如果未添加该参数，则默认使用true，表示保留原始日志。       |
+| IgnoreFirstConnector   | Boolean | 否    | 是否忽略第一个连接符。如果未添加该参数，则默认使用false，表示忽略第一个连接符。       |
+| ExpandArray            | Boolean | 否    | 是否展开JSON数组。如果未添加该参数，则默认使用false，表示不展开数组。       |
 
 ## 样例
 

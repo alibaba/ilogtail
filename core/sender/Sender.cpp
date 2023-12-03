@@ -39,12 +39,12 @@
 #include "sdk/Client.h"
 #include "sdk/Exception.h"
 #include "config/Config.h"
-#include "processor/LogProcess.h"
+#include "processor/daemon/LogProcess.h"
 #include "processor/LogFilter.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
-#include "profiler/LogFileProfiler.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
+#include "monitor/LogFileProfiler.h"
 #include "app_config/AppConfig.h"
 #include "monitor/Monitor.h"
 #include "config_manager/ConfigManager.h"
@@ -80,7 +80,7 @@ DEFINE_FLAG_DOUBLE(send_server_error_retry_ratio, "", 0.3);
 DEFINE_FLAG_DOUBLE(send_server_error_ratio_smoothing_factor, "", 5.0);
 DEFINE_FLAG_INT32(send_statistic_entry_timeout, "seconds", 7200);
 DEFINE_FLAG_INT32(sls_host_update_interval, "seconds", 5);
-DEFINE_FLAG_INT32(max_send_log_group_size, "bytes", 5 * 1024 * 1024);
+DEFINE_FLAG_INT32(max_send_log_group_size, "bytes", 10 * 1024 * 1024);
 DEFINE_FLAG_BOOL(dump_reduced_send_result, "for performance test", false);
 DEFINE_FLAG_INT32(test_network_normal_interval, "if last check is normal, test network again after seconds ", 30);
 DEFINE_FLAG_INT32(same_topic_merge_send_count,
@@ -475,21 +475,21 @@ Sender::Sender() {
     srand(time(NULL));
     mFlushLog = false;
     SetBufferFilePath(AppConfig::GetInstance()->GetBufferFilePath());
-    mTestNetworkClient = new sdk::Client("",
+    mTestNetworkClient.reset(new sdk::Client("",
                                          STRING_FLAG(default_access_key_id),
                                          STRING_FLAG(default_access_key),
                                          INT32_FLAG(sls_client_send_timeout),
                                          LogFileProfiler::mIpAddr,
-                                         AppConfig::GetInstance()->GetBindInterface());
-    SLSControl::Instance()->SetSlsSendClientCommonParam(mTestNetworkClient);
+                                         AppConfig::GetInstance()->GetBindInterface()));
+    SLSControl::Instance()->SetSlsSendClientCommonParam(mTestNetworkClient.get());
 
-    mUpdateRealIpClient = new sdk::Client("",
+    mUpdateRealIpClient.reset(new sdk::Client("",
                                           STRING_FLAG(default_access_key_id),
                                           STRING_FLAG(default_access_key),
                                           INT32_FLAG(sls_client_send_timeout),
                                           LogFileProfiler::mIpAddr,
-                                          AppConfig::GetInstance()->GetBindInterface());
-    SLSControl::Instance()->SetSlsSendClientCommonParam(mUpdateRealIpClient);
+                                          AppConfig::GetInstance()->GetBindInterface()));
+    SLSControl::Instance()->SetSlsSendClientCommonParam(mUpdateRealIpClient.get());
     SetSendingBufferCount(0);
     size_t concurrencyCount = (size_t)AppConfig::GetInstance()->GetSendRequestConcurrency();
     if (concurrencyCount < 10) {
@@ -1015,6 +1015,9 @@ bool Sender::ReadNextEncryption(int32_t& pos,
         bufferMeta.set_project(encodedInfo);
         bufferMeta.set_endpoint(AppConfig::GetInstance()->GetDefaultRegion()); // new mode
         bufferMeta.set_aliuid("");
+    }
+    if (!bufferMeta.has_compresstype()) {
+        bufferMeta.set_compresstype(SlsCompressType::SLS_CMP_LZ4);
     }
 
     buffer = new char[meta.mEncryptionSize + 1];
@@ -1881,7 +1884,7 @@ bool Sender::TestEndpoint(const std::string& region, const std::string& endpoint
         return false;
     static LogGroup logGroup;
     mTestNetworkClient->SetSlsHost(endpoint);
-    ResetPort(region, mTestNetworkClient);
+    ResetPort(region, mTestNetworkClient.get());
     bool status = true;
     int64_t beginTime = GetCurrentTimeInMicroSeconds();
     try {
@@ -2184,8 +2187,11 @@ bool Sender::SendInstantly(sls_logs::LogGroup& logGroup,
     if (logSize == 0)
         return true;
 
-    if ((int32_t)logGroup.ByteSize() > INT32_FLAG(max_send_log_group_size)) {
-        LOG_ERROR(sLogger, ("invalid log group size", logGroup.ByteSize()));
+    auto logGroupSize = logGroup.ByteSize();
+    if ((int32_t)logGroupSize > INT32_FLAG(max_send_log_group_size)) {
+        LOG_ERROR(sLogger,
+                  ("log group size exceed limit. actual size", logGroupSize)("size limit",
+                                                                                  INT32_FLAG(max_send_log_group_size)));
         return false;
     }
 
@@ -2553,7 +2559,6 @@ Sender::~Sender() {
     }
     RemoveSender();
     if (mTestNetworkClient) {
-        delete mTestNetworkClient;
         mTestNetworkClient = NULL;
     }
 }

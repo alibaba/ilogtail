@@ -22,9 +22,9 @@
 #include "common/FileSystemUtil.h"
 #include "polling/PollingCache.h"
 #include "monitor/Monitor.h"
-#include "processor/LogProcess.h"
+#include "processor/daemon/LogProcess.h"
 #include "controller/EventDispatcher.h"
-#include "profiler/LogtailAlarm.h"
+#include "monitor/LogtailAlarm.h"
 #include "checkpoint/CheckPointManager.h"
 #include "polling/PollingDirFile.h"
 #include "polling/PollingModify.h"
@@ -94,15 +94,17 @@ void LogInput::Resume(bool addCheckPointEventFlag) {
     if (addCheckPointEventFlag) {
         EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
     }
+    LOG_INFO(sLogger, ("LogInput Resume", "start"));
     LogProcess::GetInstance()->Resume();
     mInteruptFlag = false;
     mAccessMainThreadRWL.unlock();
-    LOG_INFO(sLogger, ("LogInput", "resume"));
     PollingModify::GetInstance()->Resume();
     PollingDirFile::GetInstance()->Resume();
+    LOG_INFO(sLogger, ("LogInput Resume", "success"));
 }
 
 void LogInput::HoldOn() {
+    LOG_INFO(sLogger, ("LogInput HoldOn", "start"));
     auto holdOnStart = GetCurrentTimeInMilliSeconds();
 
     // Hold on sequence: polling (PollingDirFile -> PollingModify) -> LogInput -> LogProcess
@@ -110,10 +112,10 @@ void LogInput::HoldOn() {
     PollingModify::GetInstance()->HoldOn();
     mInteruptFlag = true;
     mAccessMainThreadRWL.lock();
-    LOG_INFO(sLogger, ("LogInput", "hold on"));
     LogProcess::GetInstance()->HoldOn();
 
     auto holdOnCost = GetCurrentTimeInMilliSeconds() - holdOnStart;
+    LOG_INFO(sLogger, ("LogInput HoldOn", "success")("cost", holdOnCost));
     if (holdOnCost >= 60 * 1000) {
         LogtailAlarm::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
                                                "Input HoldOn is too slow: " + std::to_string(holdOnCost));

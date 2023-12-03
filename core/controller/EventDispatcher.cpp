@@ -48,12 +48,12 @@
 #include "event_handler/EventHandler.h"
 #include "event_handler/LogInput.h"
 #include "event/Event.h"
-#include "processor/LogProcess.h"
+#include "processor/daemon/LogProcess.h"
 #include "sender/Sender.h"
-#include "profiler/LogFileProfiler.h"
-#include "profiler/LogtailAlarm.h"
-#include "profiler/LogIntegrity.h"
-#include "profiler/LogLineCount.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogtailAlarm.h"
+#include "monitor/LogIntegrity.h"
+#include "monitor/LogLineCount.h"
 #include "log_pb/metric.pb.h"
 #include "log_pb/sls_logs.pb.h"
 #include "checkpoint/CheckPointManager.h"
@@ -64,7 +64,7 @@
 #ifdef APSARA_UNIT_TEST_MAIN
 #include "polling/PollingEventQueue.h"
 #endif
-#include "plugin/LogtailPlugin.h"
+#include "go_pipeline/LogtailPlugin.h"
 #include "config_manager/ConfigManager.h"
 #if !defined(_MSC_VER)
 #include "LogtailInsightDispatcher.h"

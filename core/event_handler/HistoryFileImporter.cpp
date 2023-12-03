@@ -18,7 +18,7 @@
 #include "common/RuntimeUtil.h"
 #include "common/FileSystemUtil.h"
 #include "config_manager/ConfigManager.h"
-#include "processor/LogProcess.h"
+#include "processor/daemon/LogProcess.h"
 #include "logger/Logger.h"
 #include "reader/LogFileReader.h"
 
@@ -91,20 +91,20 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
             continue;
         }
         readerSharePtr->SetLastFilePos(event.mStartPos);
-        int64_t fileSize = 0;
-        readerSharePtr->CheckFileSignatureAndOffset(fileSize);
+        readerSharePtr->CheckFileSignatureAndOffset(false);
 
         bool doneFlag = false;
         while (true) {
             while (!logProcess->IsValidToReadLog(readerSharePtr->GetLogstoreKey())) {
                 usleep(1000 * 10);
             }
-            LogBuffer* logBuffer = NULL;
-            readerSharePtr->ReadLog(logBuffer);
-            if (logBuffer != NULL) {
+            LogBuffer* logBuffer = new LogBuffer;
+            readerSharePtr->ReadLog(*logBuffer, nullptr);
+            if (!logBuffer->rawBuffer.empty()) {
                 logBuffer->logFileReader = readerSharePtr;
                 logProcess->PushBuffer(logBuffer, 100000000);
             } else {
+                delete logBuffer;
                 // when ReadLog return false, retry once
                 if (doneFlag) {
                     break;
@@ -114,9 +114,9 @@ void HistoryFileImporter::ProcessEvent(const HistoryFileEvent& event, const std:
         }
         auto doneTime = GetCurrentTimeInMilliSeconds();
         LOG_INFO(sLogger,
-                 ("[progress]", std::string("[") + ToString(i + 1) + "/" + ToString(fileNames.size()) + "]")(
-                     "process", "done")("file", filePath)("file size", fileSize)(
-                     "offset", readerSharePtr->GetLastFilePos())("time(ms)", doneTime - startTime));
+                 ("[progress]", std::string("[") + ToString(i + 1) + "/" + ToString(fileNames.size()) + "]")("process",
+                                                                                                             "done")(
+                     "file", filePath)("offset", readerSharePtr->GetLastFilePos())("time(ms)", doneTime - startTime));
     }
 }
 } // namespace logtail

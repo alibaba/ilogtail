@@ -91,6 +91,9 @@ public:
         int32_t mSpecifiedYear = -1; // Year deduction.
         uint16_t mSearchCheckpointDirDepth = 0; // Max directory depth when search checkpoint.
 
+        bool mEnableTimestampNanosecond = false;
+        bool mUsingOldContentTag = false;
+        // Deprecated
         bool mEnablePreciseTimestamp = false;
         std::string mPreciseTimestampKey;
         TimeStampUnit mPreciseTimestampUnit;
@@ -107,6 +110,9 @@ public:
     LogType mLogType;
     std::string mConfigName; // name of log e.g. aliyun_com "##1.0##sls-zc-test$home-log"
     std::string mLogBeginReg; // the log begin line regex
+    std::string mLogContinueReg; // the log continue line regex
+    std::string mLogEndReg; // the log end line regex
+    int mReaderFlushTimeout; // timeout in seconds to flush a non-terminated log buffer.
     std::string mProjectName; // project name
     bool mIsPreserve; // true is service dir, false is job dir
     int mPreserveDepth; // for job dir, the depth that will not be watch timeout
@@ -182,6 +188,7 @@ public:
     bool mIsFuseMode = false;
     bool mMarkOffsetFlag = false;
     bool mCollectBackwardTillBootTime = false;
+    bool mForceEnablePipeline = false;
     AdvancedConfig mAdvancedConfig;
 
     // Blacklist control.
@@ -230,6 +237,8 @@ public:
            LogType logType,
            const std::string& logName,
            const std::string& logBeginReg,
+           const std::string& logContinueReg,
+           const std::string& logEndReg,
            const std::string& projectName,
            bool isPreserve,
            int preserveDepth,
@@ -238,6 +247,7 @@ public:
            bool uploadRawLog = false,
            const std::string& StreamLogTag = "",
            bool discardUnmatch = true,
+           int readerFlushTimeout = 5,
            std::list<std::string>* regs = NULL,
            std::list<std::string>* keys = NULL,
            std::string timeFormat = "");
@@ -285,6 +295,8 @@ public:
     bool IsDirectoryInBlacklist(const std::string& dirPath) const;
 
     void SetTailLimit(int32_t size);
+
+    bool IsMultiline() const;
 
 private:
     bool IsWildcardPathMatch(const std::string& path, const std::string& name = "");

@@ -36,7 +36,9 @@ type GlobalConfig struct {
 	DelayStopSec int
 
 	EnableTimestampNanosecond      bool
+	UsingOldContentTag             bool
 	EnableContainerdUpperDirDetect bool
+	EnableSlsMetricsFormat         bool
 }
 
 // LogtailGlobalConfig is the singleton instance of GlobalConfig.

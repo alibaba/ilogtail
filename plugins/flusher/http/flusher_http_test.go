@@ -17,7 +17,7 @@ package http
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sort"
 	"testing"
@@ -134,7 +134,7 @@ func TestHttpFlusherFlush(t *testing.T) {
 
 		httpmock.RegisterResponder("POST", "http://test.com/write?db=mydb", func(req *http.Request) (*http.Response, error) {
 			assert.Equal(t, "mydb", req.Header.Get("db"))
-			body, _ := ioutil.ReadAll(req.Body)
+			body, _ := io.ReadAll(req.Body)
 			actualRequests = append(actualRequests, string(body))
 			return httpmock.NewStringResponse(200, "ok"), nil
 		})
@@ -236,7 +236,7 @@ func TestHttpFlusherFlush(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 
 		httpmock.RegisterResponder("POST", "http://test.com/write?db=mydb", func(req *http.Request) (*http.Response, error) {
-			body, _ := ioutil.ReadAll(req.Body)
+			body, _ := io.ReadAll(req.Body)
 			actualRequests = append(actualRequests, string(body))
 			return httpmock.NewStringResponse(200, "ok"), nil
 		})
@@ -339,7 +339,7 @@ func TestHttpFlusherFlushWithAuthenticator(t *testing.T) {
 
 		httpmock.RegisterResponder("POST", "http://test.com/write?db=mydb", func(req *http.Request) (*http.Response, error) {
 			assert.Equal(t, req.Header.Get("Authorization"), "Basic dXNlcjE6cHdkMQ==")
-			body, _ := ioutil.ReadAll(req.Body)
+			body, _ := io.ReadAll(req.Body)
 			actualRequests = append(actualRequests, string(body))
 			return httpmock.NewStringResponse(200, "ok"), nil
 		})
@@ -444,7 +444,7 @@ func TestHttpFlusherExport(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 
 		httpmock.RegisterResponder("POST", "http://test.com/write?db=mydb", func(req *http.Request) (*http.Response, error) {
-			body, _ := ioutil.ReadAll(req.Body)
+			body, _ := io.ReadAll(req.Body)
 			actualRequests = append(actualRequests, string(body))
 			return httpmock.NewStringResponse(200, "ok"), nil
 		})
@@ -525,7 +525,7 @@ func TestHttpFlusherExport(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 
 		httpmock.RegisterResponder("POST", "http://test.com/write?db=mydb", func(req *http.Request) (*http.Response, error) {
-			body, _ := ioutil.ReadAll(req.Body)
+			body, _ := io.ReadAll(req.Body)
 			actualRequests = append(actualRequests, string(body))
 			return httpmock.NewStringResponse(200, "ok"), nil
 		})
@@ -669,16 +669,86 @@ func TestGetNextRetryDelay(t *testing.T) {
 	}
 }
 
+func TestHttpFlusherFlushWithInterceptor(t *testing.T) {
+	Convey("Given a http flusher with sync intercepter", t, func() {
+		mockIntercepter := &mockInterceptor{}
+		flusher := &FlusherHTTP{
+			RemoteURL: "http://test.com/write",
+			Convert: helper.ConvertConfig{
+				Protocol: converter.ProtocolInfluxdb,
+				Encoding: converter.EncodingCustom,
+			},
+			interceptor:    mockIntercepter,
+			AsyncIntercept: false,
+			Timeout:        defaultTimeout,
+			Concurrency:    1,
+			queue:          make(chan interface{}, 10),
+		}
+
+		Convey("should discard all events", func() {
+			groupEvents := models.PipelineGroupEvents{
+				Events: []models.PipelineEvent{&models.Metric{
+					Name:      "cpu.load.short",
+					Timestamp: 1672321328000000000,
+					Tags:      models.NewTagsWithKeyValues("host", "server01", "region", "cn"),
+					Value:     &models.MetricSingleValue{Value: 0.64},
+				}},
+			}
+			err := flusher.Export([]*models.PipelineGroupEvents{&groupEvents}, nil)
+			So(err, ShouldBeNil)
+			So(flusher.queue, ShouldBeEmpty)
+		})
+	})
+
+	Convey("Given a http flusher with async intercepter", t, func() {
+		mockIntercepter := &mockInterceptor{}
+		flusher := &FlusherHTTP{
+			RemoteURL: "http://test.com/write",
+			Convert: helper.ConvertConfig{
+				Protocol: converter.ProtocolInfluxdb,
+				Encoding: converter.EncodingCustom,
+			},
+			interceptor:    mockIntercepter,
+			AsyncIntercept: true,
+			Timeout:        defaultTimeout,
+			Concurrency:    1,
+			queue:          make(chan interface{}, 10),
+		}
+
+		Convey("should discard all events", func() {
+			groupEvents := models.PipelineGroupEvents{
+				Events: []models.PipelineEvent{&models.Metric{
+					Name:      "cpu.load.short",
+					Timestamp: 1672321328000000000,
+					Tags:      models.NewTagsWithKeyValues("host", "server01", "region", "cn"),
+					Value:     &models.MetricSingleValue{Value: 0.64},
+				}},
+			}
+			err := flusher.Export([]*models.PipelineGroupEvents{&groupEvents}, nil)
+			So(err, ShouldBeNil)
+			So(len(flusher.queue), ShouldEqual, 1)
+			err = flusher.convertAndFlush(<-flusher.queue)
+			So(err, ShouldBeNil)
+		})
+
+	})
+}
+
 type mockContext struct {
 	pipeline.Context
-	basicAuth *basicAuth
+	basicAuth   *basicAuth
+	interceptor *mockInterceptor
 }
 
 func (c mockContext) GetExtension(name string, cfg any) (pipeline.Extension, error) {
-	if c.basicAuth == nil {
-		return nil, fmt.Errorf("basicAuth not set")
+	if c.basicAuth != nil {
+		return c.basicAuth, nil
 	}
-	return c.basicAuth, nil
+
+	if c.interceptor != nil {
+		return c.interceptor, nil
+	}
+	return nil, fmt.Errorf("basicAuth not set")
 }
 
 func (c mockContext) GetConfigName() string {
@@ -722,4 +792,27 @@ type basicAuthRoundTripper struct {
 func (b *basicAuthRoundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
 	request.SetBasicAuth(b.auth.Username, b.auth.Password)
 	return b.base.RoundTrip(request)
+}
+
+type mockInterceptor struct {
+}
+
+func (mi *mockInterceptor) Description() string {
+	return "a filter that discard all events"
+}
+
+func (mi *mockInterceptor) Init(context pipeline.Context) error {
+	return nil
+}
+
+func (mi *mockInterceptor) Stop() error {
+	return nil
+}
+
+func (mi *mockInterceptor) Intercept(group *models.PipelineGroupEvents) *models.PipelineGroupEvents {
+	if group == nil {
+		return nil
+	}
+	group.Events = group.Events[:0]
+	return group
 }

@@ -19,8 +19,8 @@
 #endif
 #include "shennong/MetricSender.h"
 #include "sender/Sender.h"
-#include "profiler/LogFileProfiler.h"
-#include "profiler/LogtailAlarm.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
 #include "common/util.h"
 #include "common/LogtailCommonFlags.h"
@@ -149,6 +149,7 @@ DECLARE_FLAG_INT32(polling_dir_first_watch_timeout);
 DECLARE_FLAG_INT32(polling_file_first_watch_timeout);
 DECLARE_FLAG_INT32(modify_check_interval);
 DECLARE_FLAG_INT32(ignore_file_modify_timeout);
+DEFINE_FLAG_STRING(host_path_blacklist, "host path matches substring in blacklist will be ignored", "");
 
 
 namespace logtail {
@@ -720,6 +721,21 @@ void AppConfigBase::LoadResourceConf(const Json::Value& confJson) {
         }
     }
 
+    if (!STRING_FLAG(host_path_blacklist).empty()) {
+#ifdef _MSC_VER
+        static const std::string delim = ";";
+#else
+        static const std::string delim = ":";
+#endif
+        auto blacklist = SplitString(TrimString(STRING_FLAG(host_path_blacklist)), delim);
+        for (const auto& s : blacklist) {
+            auto s1 = TrimString(s);
+            if (!s1.empty()) {
+                mHostPathBlacklist.emplace_back(std::move(s1));
+            }
+        }
+    }
+
     if (!LoadInt32Parameter(mSendDataPort, confJson, "data_server_port", "ALIYUN_LOGTAIL_DATA_SERVER_PORT")) {
         mSendDataPort = INT32_FLAG(data_server_port);
     }
@@ -912,6 +928,16 @@ void AppConfigBase::LoadOtherConf(const Json::Value& confJson) {
         }
     }
 
+    // dynamic plugins
+    if (confJson.isMember("dynamic_plugins")) {
+        auto& dynamic_plugins = confJson["dynamic_plugins"];
+        if (dynamic_plugins.isArray()) {
+            for (Json::Value::ArrayIndex i = 0; i < dynamic_plugins.size(); ++i) {
+                mDynamicPlugins.insert(TrimString(dynamic_plugins[i].asString()));
+            }
+        }
+    }
+
     LoadBooleanParameter(mEnableCheckpointSyncWrite,
                          confJson,
                          "enable_checkpoint_sync_write",
@@ -975,9 +1001,9 @@ void AppConfigBase::SetConfigFlag(const std::string& flagName, const std::string
         string beforeValue = info.current_value;
         string setrst = GFLAGS_NAMESPACE::SetCommandLineOption(flagName.c_str(), value.c_str());
         GetCommandLineFlagInfo(flagName.c_str(), &info);
-        APSARA_LOG_DEBUG(sLogger,
-                         ("Set config flag", flagName)("before value", beforeValue)("after value", info.current_value)(
-                             "result", setrst.size() == 0 ? ("error with value " + value) : setrst));
+        APSARA_LOG_INFO(sLogger,
+                        ("Set config flag", flagName)("before value", beforeValue)("after value", info.current_value)(
+                            "result", setrst.size() == 0 ? ("error with value " + value) : setrst));
     } else {
         APSARA_LOG_DEBUG(sLogger, ("Flag not define", flagName));
     }
@@ -1224,4 +1250,12 @@ void AppConfigBase::SetLogtailSysConfDir(const std::string& dirPath) {
                                                                                  mUserRemoteYamlConfigDirPath));
 }
 
+bool AppConfigBase::IsHostPathMatchBlacklist(const string& dirPath) const {
+    for (auto& dp : mHostPathBlacklist) {
+        if (dirPath.find(dp) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+}
 } // namespace logtail

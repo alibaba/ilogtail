@@ -4,7 +4,7 @@
 
 `processor_regex_accelerate processor`插件通过正则匹配以加速模式实现文本日志的字段提取。
 
-备注：该插件目前仅支持与输入插件file_log和输出插件flusher_sls配套使用，且不得与其它加速插件混用。
+备注：该插件目前仅支持与输入插件file_log配套使用，且不得与其它加速插件混用。
 
 ## 版本
 
@@ -15,17 +15,21 @@
 | 参数 | 类型 | 是否必选 | 说明 |
 | --- | --- | --- | --- |
 | Type | String | 是 | 插件类型，指定为`processor_regex_accelerate`。 |
-| Keys | Array | 是 | 提取的字段名列表。 |
-| Regex | String | 是 | 提取字段的正则表达式，使用()标注待提取的字段。 |
-| LogBeginRegex | String | 否 | 行首正则表达式，仅当待采集日志为多行日志时使用。 |
+| Keys | Array | 否 | 提取的字段名列表。默认值：`["content"]`。 |
+| Regex | String | 否 | 提取字段的正则表达式，使用()标注待提取的字段。默认值：`(.*)`。 |
+| LogBeginRegex | String | 否 | 起始行正则表达式，仅当待采集日志为多行日志时使用。支持组合参见表3。 |
+| LogContinueRegex | String | 否 | 中间行正则表达式，仅当待采集日志为多行日志时使用。支持组合参见表3。 |
+| LogEndRegex | String | 否 | 结尾行正则表达式，仅当待采集日志为多行日志时使用。支持组合参见表3。 |
 | FilterKey | Array | 否 | 用于过滤日志的字段。仅当该字段的值与FilterRegex参数中对应设置的正则表达式匹配时，对应的日志才会被采集。 |
 | FilterRegex | Array | 否，当FilterKey参数不为空时必选 | 日志字段过滤的正则表达式。该参数元素个数必须与FilterKey参数的元素个数相同。 |
-| TimeFormat | String | 否 | 日志时间格式，仅当Keys参数中有“time”字段时有效，用于对“time”字段的值进行解析。未配置该字段时，默认使用系统时间作为日志时间。具体信息参见表1。 |
-| EnablePreciseTimestamp | Boolean | 否 | 是否提取高精度时间。如果未添加该参数，则默认使用false，表示不提取高精度时间。 |
-| PreciseTimestampKey | String | 否 | 保存高精度时间戳的字段。如果未添加该参数，则默认使用precise_timestamp字段。 |
-| PreciseTimestampUnit | String | 否 | 高精度时间戳的单位，取值包括ms（毫秒）、us（微秒）、ns（纳秒）。如果未添加该参数，则默认为ms。 |
+| TimeKey | String | 否 | 用于解析日志时间格式的字段名称。未配置该字段时，默认使用系统时间作为日志时间。 |
+| TimeFormat | String | 否 | 日志时间格式，具体信息参见表1。 |
+| EnableTimestampNanosecond | Boolean | 否 | 是否提取纳秒级时间。如果未添加该参数，则默认使用false，表示不提取纳秒级时间。 |
+| EnablePreciseTimestamp | Boolean | 否 | （废弃）是否提取高精度时间。如果未添加该参数，则默认使用false，表示不提取高精度时间。 |
+| PreciseTimestampKey | String | 否 | （废弃）保存高精度时间戳的字段。如果未添加该参数，则默认使用precise_timestamp字段。 |
+| PreciseTimestampUnit | String | 否 | （废弃）高精度时间戳的单位，取值包括ms（毫秒）、us（微秒）、ns（纳秒）。如果未添加该参数，则默认为ms。 |
 | AdjustTimezone | Boolean | 否 | 是否调整日志时区。仅当TimeFormat参数有效时有效。如果未添加该参数，则默认使用false，表示使用机器时区。 |
-| LogTimezone | String | 否 | 时区偏移量，格式为GMT+HH:MM（东区）、GMT-HH:MM（西区）。仅当AdjustTimezone参数值为false时有效。 |
+| LogTimezone | String | 否 | 时区偏移量，格式为GMT+HH:MM（东区）、GMT-HH:MM（西区）。仅当AdjustTimezone参数值为true时有效。 |
 | EnableRawLog | Boolean | 否 | 是否上传原始日志。如果未添加该参数，则默认使用false，表示不上传原始日志。|
 | RawLogTag | String | 否 | 上传原始日志时，用于存放原始日志的字段，默认值：`__raw__`。 |
 | DiscardUnmatch | Boolean | 否 | 是否丢弃匹配失败的日志。如果未添加该参数，则默认使用true，表示丢弃匹配失败的日志。|
@@ -77,6 +81,16 @@
 | regex_content | String | 是 | [^']* | 敏感内容的正则表达式，使用RE2语法。 |
 | all | Boolean | 是 | true | 是否替换该字段中所有的敏感内容。可选值如下：<br>- true（推荐）：替换。<br>- false：只替换字段中匹配正则表达式的第一部分内容。 |
 | const | String | 否 | "********" | 当type设置为const时，必须配置。 |
+
+- 表3:多行切分正则模式组合
+
+| 正则 | 含义 |
+| --- | --- |
+| LogBeginRegex | 多行日志有明确的开头模式。开头模式之后的其他日志，跟随开头模式组成多行日志。
+| LogBeginRegex，LogContinueRegex | 多行日志有明确的开头模式，中间行模式。不符合模式的其他日志，根据 DiscardUnmatch 进行处理。
+| LogBeginRegex，LogEndRegex | 多行日志有明确的开头模式，结尾模式。两者之间的日志会被当做多行日志进行处理，两者之外的日志会根据 DiscardUnmatch 进行处理。
+| LogContinueRegex，LogEndRegex | 多行日志有明确的中间行模式，结尾模式。不符合模式的其他日志，根据 DiscardUnmatch 进行处理。
+| LogEndRegex | 多行日志有明确的结尾模式。结尾模式之前的其他日志，跟随结尾模式组成多行日志。
 
 ## 样例
 
@@ -182,5 +196,65 @@ flushers:
     at com.aliyun.sls.devops.logGenerator.type.RegexMultiLog.f2(RegexMultiLog.java:108)
     at java.base/java.lang.Thread.run(Thread.java:833)",
     "__time__": "1657161807"
+}
+```
+
+### 配置多种正则的多行日志采集
+
+采集`/home/test-log/`路径下的`regMulti.log`文件，日志内容按照提取字段。
+
+- 输入
+
+```plain
+[2022-07-07T10:43:27.360266763] [ERROR] java.lang.Exception: exception happened
+[2022-07-07T10:43:27.360266763]    at com.aliyun.sls.devops.logGenerator.type.RegexMultiLog.f2(RegexMultiLog.java:108)
+[2022-07-07T10:43:27.360266763]    at java.base/java.lang.Thread.run(Thread.java:833)
+[2022-07-07T10:43:27.360266763]    ... 23 more
+[2022-07-07T10:43:27.360266763] Some user custom log
+[2022-07-07T10:43:27.360266763] Some user custom log
+[2022-07-07T10:43:27.360266763] [ERROR] java.lang.Exception: exception happened
+```
+
+- 采集配置
+
+```yaml
+enable: true
+inputs:
+  - Type: file_log
+    LogPath: /home/test-log/
+    FilePattern: regMulti.log
+processors:
+  - Type: processor_regex_accelerate
+    Keys:
+    - msg
+    - time
+    Regex: (\[(\S+)].*)
+    DiscardUnmatch: false
+    LogBeginRegex: \[\d+-\d+-\w+:\d+:\d+.\d+].*Exception.*
+    LogEndRegex: .*\.\.\. \d+ more
+flushers:
+  - Type: flusher_sls
+    Endpoint: cn-xxx.log.aliyuncs.com
+    ProjectName: test_project
+    LogstoreName: test_logstore
+```
+
+- 输出
+
+```json
+{
+    "__tag__:__path__": "/home/test-log/regMulti.log",
+    "time": "2022-07-07T10:43:27.360266763",
+    "msg": "[2022-07-07T10:43:27.360266763] [ERROR] java.lang.Exception: exception happened\n[2022-07-07T10:43:27.360266763]    at com.aliyun.sls.devops.logGenerator.type.RegexMultiLog.f2(RegexMultiLog.java:108)\n[2022-07-07T10:43:27.360266763]    at java.base/java.lang.Thread.run(Thread.java:833)\n[2022-07-07T10:43:27.360266763]    ... 23 more"
+}
+{
+    "__tag__:__path__": "/home/test-log/regMulti.log",
+    "time": "2022-07-07T10:43:27.360266763",
+    "msg": "[2022-07-07T10:43:27.360266763] Some user custom log"
+}
+{
+    "__tag__:__path__": "/home/test-log/regMulti.log",
+    "time": "2022-07-07T10:43:27.360266763",
+    "msg": "[2022-07-07T10:43:27.360266763] Some user custom log"
 }
 ```

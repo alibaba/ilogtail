@@ -18,7 +18,9 @@
 #include <spdlog/async.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
+#include "common/ExceptionBase.h"
 #include "common/RuntimeUtil.h"
+#include "common/StringTools.h"
 #include "common/FileSystemUtil.h"
 #include "common/Flags.h"
 #include "common/ErrorUtil.h"
@@ -202,10 +204,13 @@ void Logger::LoadConfig(const std::string& filePath) {
         in.close();
 
         Json::Value jsonRoot;
-        Json::Reader jsonReader;
-        bool parseRet = jsonReader.parse(buffer.data(), jsonRoot);
-        if (!parseRet)
+        Json::CharReaderBuilder builder;
+        builder["collectComments"] = false;
+        std::unique_ptr<Json::CharReader> jsonReader(builder.newCharReader());
+        std::string jsonParseErrs;
+        if (!jsonReader->parse(buffer.data(), buffer.data() + buffer.size(), &jsonRoot, &jsonParseErrs)) {
             break;
+        }
 
         // Parse Sinks at first, so that we can find them when parsing Loggers.
         if (!jsonRoot.isMember("Sinks") || !jsonRoot["Sinks"].isObject() || jsonRoot["Sinks"].empty()) {
@@ -267,6 +272,20 @@ void Logger::LoadConfig(const std::string& filePath) {
         logConfigInfo = "Load log config from " + filePath;
     } while (0);
 
+    // parse env log level
+    level::level_enum envLogLevel = level::info;
+    std::string aliyun_logtail_log_level;
+    const char* envLogLevelVal = std::getenv("LOGTAIL_LOG_LEVEL");
+    if (envLogLevelVal) {
+        aliyun_logtail_log_level = envLogLevelVal;
+    }
+    if (MapStringToLevel(ToUpperCaseString(aliyun_logtail_log_level), envLogLevel)) {
+        LogMsg(std::string("Load log level from the env success, level: ") + aliyun_logtail_log_level);
+    } else {
+        LogMsg(std::string("Load log level from the env error, level: ") + aliyun_logtail_log_level);
+        aliyun_logtail_log_level = "";
+    }
+
     // Add or supply default config(s).
     bool needSave = true;
     if (loggerConfigs.empty()) {
@@ -305,7 +324,11 @@ void Logger::LoadConfig(const std::string& filePath) {
         spdlog::register_logger(logger);
         logger->set_level(loggerCfg.level);
         logger->set_pattern(DEFAULT_PATTERN);
-        logger->flush_on(loggerCfg.level);
+        if (name == "/apsara/sls/ilogtail" && !aliyun_logtail_log_level.empty()) {
+            logger->flush_on(envLogLevel);
+        } else {
+            logger->flush_on(loggerCfg.level);
+        }
         LogMsg(std::string("logger named ") + name + " created.");
     }
     if (failedLoggers.empty()) {
@@ -321,7 +344,7 @@ void Logger::LoadConfig(const std::string& filePath) {
             spdlog::stdout_logger_mt(DEFAULT_LOGGER_NAME);
         } catch (...) {
             LogMsg("Create console logger for default logger failed, we have no idea now.");
-            throw "Initialize logger failed......";
+            throw ExceptionBase("Initialize logger failed......");
         }
 
         failedLoggers.erase(DEFAULT_LOGGER_NAME);
@@ -372,6 +395,7 @@ void Logger::SaveConfig(const std::string& filePath,
     builder["indentation"] = "\t";
     out << Json::writeString(builder, rootVal);
 }
+
 
 void Logger::LoadDefaultConfig(std::map<std::string, LoggerConfig>& loggerCfgs,
                                std::map<std::string, SinkConfig>& sinkCfgs) {
