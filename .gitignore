@@ -61,6 +61,7 @@ core/common/Version.cpp
 # Enterprise
 core/installer/public/
 core/unittest/ut.output/
+core/test/**/report/
 
 ### Go
 # Test binary, built with `go test -c`
