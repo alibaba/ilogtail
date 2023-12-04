@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.19.10 ]
-        runner: [ self-hosted ]
+        runner: [ ubuntu-latest ]
       fail-fast: true
     steps:
       # Clean up space to prevent action from running out of disk space.
@@ -78,13 +78,13 @@ jobs:
         run: make e2e
 
       - name: UnitTest E2e Engine
-        if: matrix.runner == 'self-hosted'
+        if: matrix.runner == 'ubuntu-latest'
         run: |
           go version
           make unittest_e2e_engine
 
   result:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: [ CI ]
     steps:
