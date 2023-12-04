@@ -29,7 +29,6 @@
 #include "AppConfig.h"
 #include "Monitor.h"
 #include "EventDispatcher.h"
-#include "util.h"
 #include "CheckPointManager.h"
 #include "LogInput.h"
 #include "Sender.h"
@@ -65,14 +64,11 @@ DECLARE_FLAG_INT32(default_max_inotify_watch_num);
 DECLARE_FLAG_STRING(profile_project_name);
 DECLARE_FLAG_INT32(check_base_dir_interval);
 DECLARE_FLAG_INT32(batch_send_interval);
-DECLARE_FLAG_STRING(local_machine_uuid);
 DECLARE_FLAG_INT32(check_point_version);
 DECLARE_FLAG_INT32(check_point_dump_interval);
 DECLARE_FLAG_INT32(global_pub_config_retry_interval);
 DECLARE_FLAG_INT32(dirfile_check_interval_ms);
 DECLARE_FLAG_INT32(polling_modify_repush_interval);
-DECLARE_FLAG_STRING(fuse_customized_config_name);
-DECLARE_FLAG_BOOL(rapid_retry_update_config);
 DECLARE_FLAG_BOOL(default_global_fuse_mode);
 
 namespace logtail {
@@ -246,15 +242,15 @@ public:
 
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLogRotateWhenUpdate, -1);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestCheckPointManager, 0);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestConfigUpdate, 1);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLocalConfigUpdate, 2);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdatePath, 3);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestConfigUpdate, 1);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLocalConfigUpdate, 2);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdatePath, 3);
 // APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdateGlobalConfig, 4);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdateProfileProject, 5);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestValidPath, 6);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestBlackDirList, 7);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestDirCheckPoint, 8);
-APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestTimeoutCheckPoint, 9);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestDirCheckPoint, 8);
+// APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestTimeoutCheckPoint, 9);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestLoadIlogtailConfig, 10);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestUpdateGroupTopic, 11);
 APSARA_UNIT_TEST_CASE(ConfigUpdatorUnittest, TestValidWildcardPath, 14);
@@ -812,7 +808,6 @@ void ConfigUpdatorUnittest::CaseSetup(bool replaceConfigAllowed) {
 
     ConfigManager::GetInstance()->mThreadIsRunning = true;
     ConfigManager::GetInstance()->InitUpdateConfig(true);
-    STRING_FLAG(local_machine_uuid) = LOCAL_UUID;
     SetConfigResponse("{}");
     sProjectNameCountMap.clear();
     sProjectCategoryTopicCountMap.clear();

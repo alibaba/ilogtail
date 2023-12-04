@@ -16,12 +16,12 @@
 
 #include "plugin/PluginRegistry.h"
 
+#include <dirent.h>
 #include <dlfcn.h>
 #include <unistd.h>
-#include <dirent.h>
 
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 
@@ -49,10 +49,121 @@
 #include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorTagNative.h"
 
+using namespace std;
+
 namespace logtail {
 
 PluginRegistry::PluginRegistry() {
-    mGoPlugins = {""};
+    mGoPlugins = {"service_canal",
+                  "service_docker_event",
+                  "service_docker_stdout_raw",
+                  "service_docker_stdout",
+                  "service_input_example",
+                  "service_go_profile",
+                  "service_http_server",
+                  "service_jmx",
+                  "service_kafka",
+                  "service_lumberjack",
+                  "service_mock",
+                  "service_mqtt",
+                  "service_mysql",
+                  "service_otlp",
+                  "service_mssql",
+                  "service_pgsql",
+                  "service_skywalking_agent_v2",
+                  "service_skywalking_agent_v3_http",
+                  "service_skywalking_agent_v3",
+                  "service_syslog",
+                  "service_udp_server",
+                  "metric_alarm",
+                  "metric_container",
+                  "metric_statistics",
+                  "metric_debug_file",
+                  "metric_docker_file",
+                  "metric_checkpoint_example",
+                  "metric_input_example",
+                  "metric_meta_host",
+                  "metric_http",
+                  "metric_meta_kubernetes",
+                  "metric_mock",
+                  "metric_binlog",
+                  "metric_input_netping",
+                  "metric_nginx_status",
+                  "metric_process_v2",
+                  "metric_redis",
+                  "metric_system",
+                  "metric_system_v2",
+                  "processor_add_fields",
+                  "processor_anchor",
+                  "processor_appender",
+                  "processor_base64_decoding",
+                  "processor_base64_encoding",
+                  "processor_cloud_meta",
+                  "processor_csv",
+                  "processor_default",
+                  "processor_desensitize",
+                  "processor_dict_map",
+                  "processor_drop",
+                  "processor_drop_last_key",
+                  "processor_encrypt",
+                  "processor_fields_with_condition",
+                  "processor_filter_key_regex",
+                  "processor_filter_regex",
+                  "processor_geoip",
+                  "processor_gotime",
+                  "processor_grok",
+                  "processor_json",
+                  "processor_log_to_sls_metric",
+                  "processor_md5",
+                  "processor_otel_metric",
+                  "processor_otel_trace",
+                  "processor_packjson",
+                  "processor_pick_key",
+                  "processor_regex",
+                  "processor_rename",
+                  "processor_split_char",
+                  "processor_split_key_value",
+                  "processor_split_log_regex",
+                  "processor_split_log_string",
+                  "processor_split_string",
+                  "processor_string_replace",
+                  "processor_strptime",
+                  "aggregator_default",
+                  "aggregator_base",
+                  "aggregator_content_value_group",
+                  "aggregator_context",
+                  "aggregator_logstore_router",
+                  "aggregator_metadata_group",
+                  "aggregator_opentelemetry",
+                  "aggregator_shardhash",
+                  "aggregator_skywalking",
+                  "flusher_checker",
+                  "flusher_clickhouse",
+                  "flusher_elasticsearch",
+                  "flusher_grpc",
+                  "flusher_http",
+                  "flusher_kafka",
+                  "flusher_kafka_v2",
+                  "flusher_loki",
+                  "flusher_otlp",
+                  "flusher_pulsar",
+                  "flusher_sleep",
+                  "flusher_statistics",
+                  "flusher_stdout",
+                  "ext_basicauth",
+                  "ext_default_decoder",
+                  "ext_groupinfo_filter",
+                  "ext_request_breaker"};
+#ifdef _MSC_VER
+    mGoPlugins.insert("service_wineventlog");
+#else
+    mGoPlugins.insert("input_command");
+    mGoPlugins.insert("service_gpu_metric");
+    mGoPlugins.insert("service_journal");
+    mGoPlugins.insert("service_snmp");
+    mGoPlugins.insert("service_telegraf");
+    mGoPlugins.insert("service_prometheus");
+#endif
 }
 
 void PluginRegistry::LoadPlugins() {
@@ -75,34 +186,32 @@ void PluginRegistry::UnloadPlugins() {
     mPluginDict.clear();
 }
 
-std::unique_ptr<InputInstance> PluginRegistry::CreateInput(const std::string& name, const std::string& pluginId) {
-    return std::unique_ptr<InputInstance>(static_cast<InputInstance*>(Create(INPUT_PLUGIN, name, pluginId).release()));
+unique_ptr<InputInstance> PluginRegistry::CreateInput(const string& name, const string& pluginId) {
+    return unique_ptr<InputInstance>(static_cast<InputInstance*>(Create(INPUT_PLUGIN, name, pluginId).release()));
 }
 
-std::unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const std::string& name,
-                                                                   const std::string& pluginId) {
-    return std::unique_ptr<ProcessorInstance>(
+unique_ptr<ProcessorInstance> PluginRegistry::CreateProcessor(const string& name, const string& pluginId) {
+    return unique_ptr<ProcessorInstance>(
         static_cast<ProcessorInstance*>(Create(PROCESSOR_PLUGIN, name, pluginId).release()));
 }
 
-std::unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const std::string& name, const std::string& pluginId) {
-    return std::unique_ptr<FlusherInstance>(
-        static_cast<FlusherInstance*>(Create(FLUSHER_PLUGIN, name, pluginId).release()));
+unique_ptr<FlusherInstance> PluginRegistry::CreateFlusher(const string& name, const string& pluginId) {
+    return unique_ptr<FlusherInstance>(static_cast<FlusherInstance*>(Create(FLUSHER_PLUGIN, name, pluginId).release()));
 }
 
-bool PluginRegistry::IsValidGoPlugin(const std::string& name) const {
+bool PluginRegistry::IsValidGoPlugin(const string& name) const {
     return mGoPlugins.find(name) != mGoPlugins.end();
 }
 
-bool PluginRegistry::IsValidNativeInputPlugin(const std::string& name) const {
+bool PluginRegistry::IsValidNativeInputPlugin(const string& name) const {
     return mPluginDict.find(PluginKey(INPUT_PLUGIN, name)) != mPluginDict.end();
 }
 
-bool PluginRegistry::IsValidNativeProcessorPlugin(const std::string& name) const {
+bool PluginRegistry::IsValidNativeProcessorPlugin(const string& name) const {
     return mPluginDict.find(PluginKey(PROCESSOR_PLUGIN, name)) != mPluginDict.end();
 }
 
-bool PluginRegistry::IsValidNativeFlusherPlugin(const std::string& name) const {
+bool PluginRegistry::IsValidNativeFlusherPlugin(const string& name) const {
     return mPluginDict.find(PluginKey(FLUSHER_PLUGIN, name)) != mPluginDict.end();
 }
 
@@ -127,11 +236,11 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
 }
 
-void PluginRegistry::LoadDynamicPlugins(const std::set<std::string>& plugins) {
+void PluginRegistry::LoadDynamicPlugins(const set<string>& plugins) {
     if (plugins.empty()) {
         return;
     }
-    std::string error;
+    string error;
     auto pluginDir = AppConfig::GetInstance()->GetProcessExecutionDir() + "/plugins";
     for (auto& pluginName : plugins) {
         DynamicLibLoader loader;
@@ -159,8 +268,8 @@ void PluginRegistry::RegisterFlusherCreator(PluginCreator* creator) {
     RegisterCreator(FLUSHER_PLUGIN, creator);
 }
 
-PluginCreator* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& loader, const std::string pluginName) {
-    std::string error;
+PluginCreator* PluginRegistry::LoadProcessorPlugin(DynamicLibLoader& loader, const string pluginName) {
+    string error;
     processor_interface_t* plugin = (processor_interface_t*)loader.LoadMethod("processor_interface", error);
     // if (!error.empty()) {
     //     loader.LoadMethod("x_cgo_init", error)
@@ -185,12 +294,11 @@ void PluginRegistry::RegisterCreator(PluginCat cat, PluginCreator* creator) {
     if (!creator) {
         return;
     }
-    mPluginDict.emplace(PluginKey(cat, creator->Name()), std::shared_ptr<PluginCreator>(creator));
+    mPluginDict.emplace(PluginKey(cat, creator->Name()), shared_ptr<PluginCreator>(creator));
 }
 
-std::unique_ptr<PluginInstance>
-PluginRegistry::Create(PluginCat cat, const std::string& name, const std::string& pluginId) {
-    std::unique_ptr<PluginInstance> ins;
+unique_ptr<PluginInstance> PluginRegistry::Create(PluginCat cat, const string& name, const string& pluginId) {
+    unique_ptr<PluginInstance> ins;
     auto creatorEntry = mPluginDict.find(PluginKey(cat, name));
     if (creatorEntry != mPluginDict.end()) {
         ins = creatorEntry->second->Create(pluginId);

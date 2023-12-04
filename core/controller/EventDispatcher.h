@@ -41,7 +41,7 @@ class TimeoutHandler;
 class EventHandler;
 class Event;
 
-const int MSG_HDR_LEN = 8;
+// const int MSG_HDR_LEN = 8;
 
 // typedef struct SingleDSPacket {
 // public:
@@ -178,17 +178,17 @@ public:
     // bool ReadDSPacketHdr(int eventFd);
     // bool ReadDSPacket(int eventFd);
 
-    /** Enter the event loop, dispatch to the approiate handler when an event occurs.
-     * Propagate timeout.
-     *
-     * @return true on success; false on failure
-     */
-    bool Dispatch();
-#if defined(_MSC_VER)
-    virtual void InitWindowsSignalObject() {}
-    virtual void SyncWindowsSignalObject() {}
-    virtual void ReleaseWindowsSignalObject() {}
-#endif
+    // /** Enter the event loop, dispatch to the approiate handler when an event occurs.
+    //  * Propagate timeout.
+    //  *
+    //  * @return true on success; false on failure
+    //  */
+    // bool Dispatch();
+// #if defined(_MSC_VER)
+//     virtual void InitWindowsSignalObject() {}
+//     virtual void SyncWindowsSignalObject() {}
+//     virtual void ReleaseWindowsSignalObject() {}
+// #endif
     // #if defined(__linux__)
     //     virtual void InitShennong() = 0;
     //     virtual void CheckShennong() = 0;
@@ -214,7 +214,8 @@ public:
     void AddExistedCheckPointFileEvents();
 
     void DumpInotifyWatcherDirs();
-    virtual bool IsInterupt();
+
+    void ClearBrokenLinkSet() { mBrokenLinkSet.clear(); }
 
 protected:
     EventDispatcher();
@@ -222,8 +223,8 @@ protected:
     // bool AddStreamLogTcpSocketToEpoll();
     void AddOneToOneMapEntry(DirInfo* dirInfo, int wd);
     void RemoveOneToOneMapEntry(int wd);
-    void UpdateConfig();
-    void ExitProcess();
+    // void UpdateConfig();
+    // void ExitProcess();
     /**
      * @return true on success; false if path isn't registered by RegisterEventHandler.
      */
@@ -268,7 +269,7 @@ protected:
     MapType<int, time_t>::Type mWdUpdateTimeMap;
     // std::unordered_map<int64_t, SingleDSPacket*> mPacketBuffer;
     // void* mStreamLogManagerPtr;
-    volatile bool mMainThreadRunning;
+    // volatile bool mMainThreadRunning;
     EventListener* mEventListener;
 
 #ifdef APSARA_UNIT_TEST_MAIN

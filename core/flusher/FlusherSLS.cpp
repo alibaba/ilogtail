@@ -14,15 +14,18 @@
 
 #include "flusher/FlusherSLS.h"
 
-#include "app_config/AppConfig.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
+#include "common/EndpointUtil.h"
+#include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "pipeline/Pipeline.h"
 #include "sender/Sender.h"
 
 using namespace std;
 
-DECLARE_FLAG_INT32(batch_send_interval);
-DEFINE_FLAG_BOOL(sls_client_send_compress, "whether compresses the data or not when put data", true);
+DEFINE_FLAG_INT32(batch_send_interval, "batch sender interval (second)(default 3)", 3);
 
 namespace logtail {
 
@@ -38,10 +41,10 @@ const unordered_set<string> FlusherSLS::sNativeParam = {"Project",
                                                         "MaxSendRate",
                                                         "Batch"};
 
-FlusherSLS::FlusherSLS() : mRegion(AppConfig::GetInstance()->GetDefaultRegion()) {
+FlusherSLS::FlusherSLS() : mRegion(Sender::Instance()->GetDefaultRegion()) {
 }
 
-FlusherSLS::Batch::Batch() : mSendIntervalSecs(INT32_FLAG(batch_send_interval)) {
+FlusherSLS::Batch::Batch() : mSendIntervalSecs(static_cast<uint32_t>(INT32_FLAG(batch_send_interval))) {
 }
 
 bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
@@ -59,7 +62,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     mLogstoreKey = GenerateLogstoreFeedBackKey(mProject, mLogstore);
 
 #ifdef __ENTERPRISE__
-    if (AppConfig::GetInstance()->IsDataServerPrivateCloud()) {
+    if (EnterpriseConfigProvider::GetInstance()->IsDataServerPrivateCloud()) {
         mRegion = STRING_FLAG(default_region_name);
     } else {
 #endif
@@ -67,7 +70,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         if (!GetOptionalStringParam(config, "Region", mRegion, errorMsg)) {
             PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                                   errorMsg,
-                                  AppConfig::GetInstance()->GetDefaultRegion(),
+                                  Sender::Instance()->GetDefaultRegion(),
                                   sName,
                                   mContext->GetConfigName());
         }
@@ -78,7 +81,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         }
         mEndpoint = TrimString(mEndpoint);
         if (!mEndpoint.empty()) {
-            Sender::Instance()->AddEndpointEntry(mRegion, CheckAddress(mEndpoint, mEndpoint));
+            Sender::Instance()->AddEndpointEntry(mRegion, StandardizeEndpoint(mEndpoint, mEndpoint));
         }
 #ifdef __ENTERPRISE__
     }
@@ -165,25 +168,20 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     GenerateGoPlugin(config, optionalGoPipeline);
 
-    // 过渡使用
-    Sender::Instance()->IncreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
-    Sender::Instance()->IncreaseProjectReferenceCnt(mProject);
-    Sender::Instance()->IncreaseRegionConcurrency(mRegion);
-
     return true;
 }
 
 bool FlusherSLS::Start() {
-    // Sender::Instance()->IncreaseProjectReferenceCnt(mProject);
-    // Sender::Instance()->IncreaseRegionReferenceCnt(mRegion);
-    // Sender::Instance()->IncreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
+    Sender::Instance()->IncreaseProjectReferenceCnt(mProject);
+    Sender::Instance()->IncreaseRegionReferenceCnt(mRegion);
+    Sender::Instance()->IncreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
     return true;
 }
 
 bool FlusherSLS::Stop(bool isPipelineRemoving) {
-    // Sender::Instance()->DecreaseProjectReferenceCnt(mProject);
-    // Sender::Instance()->DecreaseRegionReferenceCnt(mRegion);
-    // Sender::Instance()->DecreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
+    Sender::Instance()->DecreaseProjectReferenceCnt(mProject);
+    Sender::Instance()->DecreaseRegionReferenceCnt(mRegion);
+    Sender::Instance()->DecreaseAliuidReferenceCntForRegion(mRegion, mAliuid);
     return true;
 }
 

@@ -19,7 +19,6 @@
 #include <string>
 #include <memory>
 #include "common/Flags.h"
-#include "common/util.h"
 #include "app_config/AppConfig.h"
 #include "config_manager/ConfigManager.h"
 #include "event/Event.h"
@@ -27,9 +26,6 @@
 using namespace std;
 
 DECLARE_FLAG_STRING(ilogtail_config);
-DECLARE_FLAG_STRING(user_log_config);
-DECLARE_FLAG_INT32(batch_send_interval);
-
 namespace logtail {
 class ConfigContainerUnittest : public ::testing::Test {
 public:

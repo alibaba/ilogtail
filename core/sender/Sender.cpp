@@ -32,7 +32,7 @@
 #include "common/RuntimeUtil.h"
 #include "common/HashUtil.h"
 #include "common/FileSystemUtil.h"
-#include "common/util.h"
+#include "common/EndpointUtil.h"
 #include "common/ErrorUtil.h"
 #include "common/RandomUtil.h"
 #include "common/SlidingWindowCounter.h"
@@ -56,7 +56,7 @@
 using namespace std;
 using namespace sls_logs;
 
-DECLARE_FLAG_INT32(buffer_check_period);
+DEFINE_FLAG_INT32(buffer_check_period, "check logtail local storage buffer period", 60);
 DEFINE_FLAG_INT32(quota_exceed_wait_interval, "when daemon buffer thread get quotaExceed error, sleep 5 seconds", 5);
 DEFINE_FLAG_INT32(secondary_buffer_count_limit, "data ready for write buffer file", 20);
 DEFINE_FLAG_BOOL(enable_mock_send, "if enable mock send in ut", false);
@@ -102,6 +102,10 @@ DEFINE_FLAG_STRING(data_endpoint_policy,
                    "policy for switching between data server endpoints, possible options include "
                    "'designated_first'(default) and 'designated_locked'",
                    "designated_first");
+DEFINE_FLAG_INT32(log_expire_time, "log expire time", 24 * 3600);
+
+DECLARE_FLAG_STRING(default_access_key_id);
+DECLARE_FLAG_STRING(default_access_key);
 
 namespace logtail {
 const string Sender::BUFFER_FILE_NAME_PREFIX = "logtail_buffer_file_";
@@ -475,8 +479,9 @@ SendClosure::RecompressData(sdk::Response* response, const string& errorCode, co
     return RETRY_ASYNC_WHEN_FAIL;
 }
 
-Sender::Sender() {
+Sender::Sender(): mDefaultRegion(STRING_FLAG(default_region_name)) {
     setupServerSwitchPolicy();
+    
     srand(time(NULL));
     mFlushLog = false;
     SetBufferFilePath(AppConfig::GetInstance()->GetBufferFilePath());
@@ -1020,7 +1025,7 @@ bool Sender::ReadNextEncryption(int32_t& pos,
         }
     } else {
         bufferMeta.set_project(encodedInfo);
-        bufferMeta.set_endpoint(AppConfig::GetInstance()->GetDefaultRegion()); // new mode
+        bufferMeta.set_endpoint(GetDefaultRegion()); // new mode
         bufferMeta.set_aliuid("");
     }
     if (!bufferMeta.has_compresstype()) {
@@ -1490,7 +1495,7 @@ void Sender::DaemonSender() {
 
             mLastSendDataTime = curTime;
 #ifdef __ENTERPRISE__
-            if (BOOST_UNLIKELY(AppConfig::GetInstance()->IsDebugMode())) {
+            if (BOOST_UNLIKELY(EnterpriseConfigProvider::GetInstance()->IsDebugMode())) {
                 DumpDebugFile(data);
                 OnSendDone(data, LogstoreSenderInfo::SendResult_OK);
                 DescSendingCount();
@@ -1725,7 +1730,7 @@ bool Sender::SendPb(const FlusherSLS* pConfig,
     LogGroupContext logGroupContext(pConfig->mRegion, pConfig->mProject, pConfig->mLogstore, compressType);
     LoggroupTimeValue* pData = new LoggroupTimeValue(pConfig->mProject,
                                                      logstore.empty() ? pConfig->mLogstore : logstore,
-                                                     pConfig->GetContext().GetConfigName(),
+                                                     pConfig->HasContext() ? pConfig->GetContext().GetConfigName() : "",
                                                      "", // only used for ant, set empty for simplicity
                                                      true,
                                                      pConfig->mAliuid,
@@ -2898,6 +2903,16 @@ bool Sender::GetRegionStatus(const string& region) {
     } else {
         return rst->second;
     }
+}
+
+const string& Sender::GetDefaultRegion() const {
+    ScopedSpinLock lock(mDefaultRegionLock);
+    return mDefaultRegion;
+}
+
+void Sender::SetDefaultRegion(const string& region) {
+    ScopedSpinLock lock(mDefaultRegionLock);
+    mDefaultRegion = region;
 }
 
 } // namespace logtail

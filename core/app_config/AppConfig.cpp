@@ -13,20 +13,25 @@
 // limitations under the License.
 
 #include "AppConfig.h"
+
 #include <algorithm>
-#include "sender/Sender.h"
+
+#include "common/EnvUtil.h"
+#include "common/FileSystemUtil.h"
+#include "common/JsonUtil.h"
+#include "common/LogtailCommonFlags.h"
+#include "common/RuntimeUtil.h"
+#include "config_manager/ConfigManager.h"
+#include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/LogtailAlarm.h"
 #include "monitor/Monitor.h"
-#include "common/util.h"
-#include "common/LogtailCommonFlags.h"
-#include "common/RuntimeUtil.h"
-#include "common/FileSystemUtil.h"
-#include "common/JsonUtil.h"
-#include "common/EnvUtil.h"
-#include "config_manager/ConfigManager.h"
-#include "logger/Logger.h"
 #include "reader/LogFileReader.h"
+#include "sender/Sender.h"
+#ifdef __ENTERPRISE__
+#include "config/provider/EnterpriseConfigProvider.h"
+#endif
+
 using namespace std;
 
 DEFINE_FLAG_INT32(max_buffer_num, "max size", 40);
@@ -41,10 +46,6 @@ DEFINE_FLAG_INT32(default_local_file_size, "default size of one buffer file", 20
 DEFINE_FLAG_INT32(pub_local_file_size, "default size of one buffer file", 20 * 1024 * 1024);
 DEFINE_FLAG_INT32(process_thread_count, "", 1);
 DEFINE_FLAG_INT32(send_request_concurrency, "max count keep in mem when async send", 10);
-DECLARE_FLAG_INT32(default_StreamLog_tcp_port);
-DECLARE_FLAG_INT32(default_StreamLog_poll_size_in_mb);
-DECLARE_FLAG_INT32(default_StreamLog_recv_size_each_call);
-DECLARE_FLAG_BOOL(ilogtail_discard_old_data);
 DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true);
 DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
@@ -80,7 +81,7 @@ DEFINE_FLAG_STRING(ilogtail_remote_yaml_config_dir,
 DEFINE_FLAG_BOOL(default_global_fuse_mode, "default global fuse mode", false);
 DEFINE_FLAG_BOOL(default_global_mark_offset_flag, "default global mark offset flag", false);
 
-DEFINE_FLAG_STRING(default_container_mount_path, "", "container_mount.json");
+// DEFINE_FLAG_STRING(default_container_mount_path, "", "container_mount.json");
 DEFINE_FLAG_STRING(default_include_config_path, "", "config.d");
 #if defined(_MSC_VER)
 DEFINE_FLAG_STRING(default_container_host_path, "", "C:\\logtail_host");
@@ -90,17 +91,18 @@ DEFINE_FLAG_STRING(default_container_host_path, "", "/logtail_host");
 
 DEFINE_FLAG_INT32(default_oas_connect_timeout, "default (minimum) connect timeout for OSARequest", 5);
 DEFINE_FLAG_INT32(default_oas_request_timeout, "default (minimum) request timeout for OSARequest", 10);
-DEFINE_FLAG_BOOL(rapid_retry_update_config, "", false);
+// DEFINE_FLAG_BOOL(rapid_retry_update_config, "", false);
 DEFINE_FLAG_BOOL(check_profile_region, "", false);
 DEFINE_FLAG_BOOL(enable_collection_mark,
                  "enable collection mark function to override check_ulogfs_env in user config",
                  false);
-DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration", false);
+// DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration",
+// false);
 DEFINE_FLAG_INT32(data_server_port, "", 80);
 
-DEFINE_FLAG_STRING(alipay_app_zone, "", "ALIPAY_APP_ZONE");
-DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
-DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
+// DEFINE_FLAG_STRING(alipay_app_zone, "", "ALIPAY_APP_ZONE");
+// DEFINE_FLAG_STRING(alipay_zone, "", "ALIPAY_ZONE");
+// DEFINE_FLAG_STRING(alipay_zone_env_name, "", "");
 
 DECLARE_FLAG_STRING(check_point_filename);
 
@@ -115,7 +117,6 @@ DECLARE_FLAG_INT32(max_reader_open_files);
 DECLARE_FLAG_INT32(logreader_filedeleted_remove_interval);
 DECLARE_FLAG_INT32(check_handler_timeout_interval);
 DECLARE_FLAG_INT32(reader_close_unused_file_time);
-DECLARE_FLAG_INT32(main_loop_check_interval);
 
 DECLARE_FLAG_INT32(batch_send_interval);
 DECLARE_FLAG_INT32(batch_send_metric_size);
@@ -125,8 +126,7 @@ DECLARE_FLAG_INT32(send_switch_real_ip_interval);
 DECLARE_FLAG_INT32(truncate_pos_skip_bytes);
 DECLARE_FLAG_INT32(default_tail_limit_kb);
 
-DECLARE_FLAG_STRING(user_log_config);
-DECLARE_FLAG_STRING(ilogtail_docker_file_path_config);
+DEFINE_FLAG_STRING(ilogtail_docker_file_path_config, "ilogtail docker path config file", "docker_path_config.json");
 
 DECLARE_FLAG_INT32(max_docker_config_update_times);
 DECLARE_FLAG_INT32(docker_config_update_interval);
@@ -134,7 +134,9 @@ DECLARE_FLAG_INT32(docker_config_update_interval);
 DECLARE_FLAG_INT32(read_local_event_interval);
 
 DECLARE_FLAG_INT32(check_point_dump_interval);
+#ifdef __ENTERPRISE__
 DECLARE_FLAG_STRING(ilogtail_user_defined_id_env_name);
+#endif
 
 DECLARE_FLAG_INT32(logreader_max_rotate_queue_size);
 DECLARE_FLAG_INT32(search_checkpoint_default_dir_depth);
@@ -146,7 +148,13 @@ DECLARE_FLAG_INT32(polling_file_first_watch_timeout);
 DECLARE_FLAG_INT32(modify_check_interval);
 DECLARE_FLAG_INT32(ignore_file_modify_timeout);
 DEFINE_FLAG_STRING(host_path_blacklist, "host path matches substring in blacklist will be ignored", "");
-
+DEFINE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS, "default env file key to load tags", "");
+DEFINE_FLAG_INT32(max_holded_data_size,
+                  "for every id and metric name, the max data size can be holded in memory (default 512KB)",
+                  512 * 1024);
+DEFINE_FLAG_INT32(pub_max_holded_data_size,
+                  "for every id and metric name, the max data size can be holded in memory (default 512KB)",
+                  512 * 1024);
 
 namespace logtail {
 AppConfig::AppConfig() {
@@ -154,22 +162,22 @@ AppConfig::AppConfig() {
     mSendRandomSleep = BOOL_FLAG(enable_send_tps_smoothing);
     mSendFlowControl = BOOL_FLAG(enable_flow_control);
     SetIlogtailConfigJson("");
-    mStreamLogAddress = "0.0.0.0";
-    mIsOldPubRegion = false;
-    mOpenStreamLog = false;
+    // mStreamLogAddress = "0.0.0.0";
+    // mIsOldPubRegion = false;
+    // mOpenStreamLog = false;
     mSendRequestConcurrency = INT32_FLAG(send_request_concurrency);
     mProcessThreadCount = INT32_FLAG(process_thread_count);
-    mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
+    // mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
     mMachineCpuUsageThreshold = DOUBLE_FLAG(default_machine_cpu_usage_threshold);
     mCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
     mScaledCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
     mMemUsageUpLimit = INT64_FLAG(memory_usage_up_limit);
     mResourceAutoScale = BOOL_FLAG(default_resource_auto_scale);
     mInputFlowControl = BOOL_FLAG(default_input_flow_control);
-    mDefaultRegion = STRING_FLAG(default_region_name);
+    // mDefaultRegion = STRING_FLAG(default_region_name);
     mAcceptMultiConfigFlag = BOOL_FLAG(default_accept_multi_config);
     mMaxMultiConfigSize = INT32_FLAG(max_multi_config_size);
-    mUserConfigPath = STRING_FLAG(user_log_config);
+    // mUserConfigPath = STRING_FLAG(user_log_config);
     mIgnoreDirInodeChanged = false;
     mLogParseAlarmFlag = true;
     mNoInotify = false;
@@ -248,15 +256,17 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     if (!ilogtailConfigFile.empty()) {
         ParseConfResult res = ParseConfig(ilogtailConfigFile, confJson);
 
+#ifdef __ENTERPRISE__
         if (res == CONFIG_NOT_EXIST) {
             LOG_INFO(sLogger, ("config file not exist, try generate config by path", ilogtailConfigFile));
-            if (GenerateAPPConfigByConfigPath(ilogtailConfigFile, confJson)) {
+            if (EnterpriseConfigProvider::GetInstance()->GenerateAPPConfigByConfigPath(ilogtailConfigFile, confJson)) {
                 res = CONFIG_OK;
                 LOG_INFO(sLogger, ("generate config success", ilogtailConfigFile));
             } else {
                 LOG_WARNING(sLogger, ("generate config failed", ilogtailConfigFile));
             }
         }
+#endif
 
         if (res == CONFIG_OK) {
             // Should be loaded here because other parameters depend on it.
@@ -287,28 +297,13 @@ void AppConfig::LoadAppConfig(const std::string& ilogtailConfigFile) {
     ParseJsonToFlags(confJson);
     ParseEnvToFlags();
 
-#ifdef __ENTERPRISE__
-    LoadSyslogConf(confJson);
-#endif
     LoadResourceConf(confJson);
     // load addr will init sender, sender param depend on LoadResourceConf
     // LoadAddrConfig(confJson);
     LoadOtherConf(confJson);
 
-    // LoadGlobalFuseConf(confJson);
     CheckAndResetProxyEnv();
     mConfJson = confJson;
-}
-
-std::string AppConfig::GetDefaultRegion() const {
-    ScopedSpinLock lock(mAppConfigLock);
-    return mDefaultRegion;
-}
-
-void AppConfig::SetDefaultRegion(const string& region) {
-    LOG_DEBUG(sLogger, ("SetDefaultRegion before", mDefaultRegion)("after", region));
-    ScopedSpinLock lock(mAppConfigLock);
-    mDefaultRegion = region;
 }
 
 void AppConfig::LoadEnvTags() {
@@ -375,60 +370,17 @@ void AppConfig::LoadEnvResourceLimit() {
 }
 
 void AppConfig::CheckPurageContainerMode() {
-    if (getenv(STRING_FLAG(ilogtail_user_defined_id_env_name).c_str()) != NULL) {
-        fsutil::PathStat buf;
-        if (fsutil::PathStat::stat(STRING_FLAG(default_container_host_path).c_str(), buf)) {
-            mPurageContainerMode = true;
-        }
-    }
-    LOG_INFO(sLogger, ("purage container mode", mPurageContainerMode));
-}
-
-void AppConfig::LoadSyslogConf(const Json::Value& confJson) {
-    if (confJson.isMember("streamlog_tcp_addr") && confJson["streamlog_tcp_addr"].isString())
-        mStreamLogAddress = confJson["streamlog_tcp_addr"].asString();
-    if (mStreamLogAddress.empty()) {
-        mStreamLogAddress = "0.0.0.0";
-    }
-    if (confJson.isMember("streamlog_tcp_port") && confJson["streamlog_tcp_port"].isInt())
-        mStreamLogTcpPort = confJson["streamlog_tcp_port"].asInt();
-    else
-        mStreamLogTcpPort = INT32_FLAG(default_StreamLog_tcp_port);
-
-    if (confJson.isMember("streamlog_pool_size_in_mb") && confJson["streamlog_pool_size_in_mb"].isInt())
-        mStreamLogPoolSizeInMb = confJson["streamlog_pool_size_in_mb"].asInt();
-    else
-        mStreamLogPoolSizeInMb = INT32_FLAG(default_StreamLog_poll_size_in_mb);
-
-    if (confJson.isMember("streamlog_open") && confJson["streamlog_open"].isBool())
-        mOpenStreamLog = confJson["streamlog_open"].asBool();
-    else
-        mOpenStreamLog = false;
-
-    LoadBooleanParameter(mAcceptMultiConfigFlag, confJson, "accept_multi_config", "ALIYUN_LOGTAIL_ACCEPT_MULTI_CONFIG");
-
-    LoadInt32Parameter(mMaxMultiConfigSize, confJson, "max_multi_config", "ALIYUN_LOGTAIL_MAX_MULTI_CONFIG");
-
-    if (confJson.isMember("streamlog_rcv_size_each_call") && confJson["streamlog_rcv_size_each_call"].isInt())
-        mStreamLogRcvLenPerCall = confJson["streamlog_rcv_size_each_call"].asInt();
-    else
-        mStreamLogRcvLenPerCall = INT32_FLAG(default_StreamLog_recv_size_each_call);
-
-#if defined(__ENTERPRISE__) && defined(__linux__)
-    StreamLogLine::ClearFormats();
-    StreamLogLine::AddDefaultFormats();
-    if (confJson.isMember("streamlog_formats") && confJson["streamlog_formats"].isArray()) {
-        StreamLogLine::InitFormats(confJson["streamlog_formats"]);
-    } else if (confJson.isMember("streamlog_formats") && !confJson["streamlog_formats"].isArray()) {
-        LOG_ERROR(sLogger,
-                  ("message", "StreamLog_format must be of json array format")(
-                      "json", confJson["streamlog_formats"].toStyledString()));
+#ifdef __ENTERPRISE__
+    if (getenv(STRING_FLAG(ilogtail_user_defined_id_env_name).c_str()) == NULL) {
+        LOG_INFO(sLogger, ("purage container mode", false));
+        return;
     }
 #endif
-
-    if (confJson.isMember("log_parse_error") && confJson["log_parse_error"].isBool()) {
-        mLogParseAlarmFlag = confJson["log_parse_error"].asBool();
+    fsutil::PathStat buf;
+    if (fsutil::PathStat::stat(STRING_FLAG(default_container_host_path).c_str(), buf)) {
+        mPurageContainerMode = true;
     }
+    LOG_INFO(sLogger, ("purage container mode", mPurageContainerMode));
 }
 
 void AppConfig::LoadResourceConf(const Json::Value& confJson) {
@@ -442,43 +394,55 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
 
     if (confJson.isMember("max_bytes_per_sec") && confJson["max_bytes_per_sec"].isInt())
         mMaxBytePerSec = confJson["max_bytes_per_sec"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mMaxBytePerSec = INT32_FLAG(pub_max_send_byte_per_sec);
+#endif
     else
         mMaxBytePerSec = INT32_FLAG(default_max_send_byte_per_sec);
 
     if (confJson.isMember("bytes_per_sec") && confJson["bytes_per_sec"].isInt())
         mBytePerSec = confJson["bytes_per_sec"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mBytePerSec = INT32_FLAG(pub_send_byte_per_sec);
+#endif
     else
         mBytePerSec = INT32_FLAG(default_send_byte_per_sec);
 
     if (confJson.isMember("buffer_file_num") && confJson["buffer_file_num"].isInt())
         mNumOfBufferFile = confJson["buffer_file_num"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mNumOfBufferFile = INT32_FLAG(pub_buffer_file_num);
+#endif
     else
         mNumOfBufferFile = INT32_FLAG(default_buffer_file_num);
 
     if (confJson.isMember("buffer_file_size") && confJson["buffer_file_size"].isInt())
         mLocalFileSize = confJson["buffer_file_size"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mLocalFileSize = INT32_FLAG(pub_local_file_size);
+#endif
     else
         mLocalFileSize = INT32_FLAG(default_local_file_size);
 
     if (confJson.isMember("buffer_map_size") && confJson["buffer_map_size"].isInt())
         mMaxHoldedDataSize = confJson["buffer_map_size"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mMaxHoldedDataSize = INT32_FLAG(pub_max_holded_data_size);
+#endif
     else
         mMaxHoldedDataSize = INT32_FLAG(max_holded_data_size);
 
     if (confJson.isMember("buffer_map_num") && confJson["buffer_map_num"].isInt())
         mMaxBufferNum = confJson["buffer_map_num"].asInt();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mMaxBufferNum = INT32_FLAG(pub_max_buffer_num);
+#endif
     else
         mMaxBufferNum = INT32_FLAG(max_buffer_num);
 
@@ -513,10 +477,6 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
                        "reader_close_unused_file_time",
                        "ALIYUN_LOGTAIL_READER_CLOSE_UNUSED_FILE_TIME");
 
-    if (confJson.isMember("main_loop_check_interval") && confJson["main_loop_check_interval"].isInt())
-        INT32_FLAG(main_loop_check_interval) = confJson["main_loop_check_interval"].asInt();
-
-
     if (confJson.isMember("log_profile_save_interval") && confJson["log_profile_save_interval"].isInt())
         LogFileProfiler::GetInstance()->SetProfileInterval(confJson["log_profile_save_interval"].asInt());
 
@@ -524,7 +484,6 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
               ("logreader delete interval", INT32_FLAG(logreader_filedeleted_remove_interval))(
                   "check handler interval", INT32_FLAG(check_handler_timeout_interval))(
                   "reader close interval", INT32_FLAG(reader_close_unused_file_time))(
-                  "main loop interval", INT32_FLAG(main_loop_check_interval))(
                   "profile interval", LogFileProfiler::GetInstance()->GetProfileInterval()));
 
 
@@ -533,19 +492,25 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
             mCpuUsageUpLimit = confJson["cpu_usage_limit"].asDouble();
         else if (confJson["cpu_usage_limit"].isIntegral())
             mCpuUsageUpLimit = double(confJson["cpu_usage_limit"].asInt64());
-        else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+        else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
             mCpuUsageUpLimit = DOUBLE_FLAG(pub_cpu_usage_up_limit);
+#endif
         else
             mCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
-    } else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    } else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion()) {
         mCpuUsageUpLimit = DOUBLE_FLAG(pub_cpu_usage_up_limit);
-    else
+#endif
+    } else
         mCpuUsageUpLimit = DOUBLE_FLAG(cpu_usage_up_limit);
 
     if (confJson.isMember("mem_usage_limit") && confJson["mem_usage_limit"].isIntegral())
         mMemUsageUpLimit = confJson["mem_usage_limit"].asInt64();
-    else if (mIsOldPubRegion)
+#ifdef __ENTERPRISE__
+    else if (EnterpriseConfigProvider::GetInstance()->IsOldPubRegion())
         mMemUsageUpLimit = INT64_FLAG(pub_memory_usage_up_limit);
+#endif
     else
         mMemUsageUpLimit = INT64_FLAG(memory_usage_up_limit);
 
@@ -623,54 +588,55 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
         mIgnoreDirInodeChanged = confJson["ignore_dir_inode_changed"].asBool();
     }
 
-    LoadStringParameter(mUserConfigPath, confJson, "user_config_file_path", "ALIYUN_LOGTAIL_USER_CONIFG_PATH");
+    // LoadStringParameter(mUserConfigPath, confJson, "user_config_file_path", "ALIYUN_LOGTAIL_USER_CONIFG_PATH");
 
-    LoadStringParameter(
-        mUserLocalConfigPath, confJson, "user_local_config_filename", "ALIYUN_LOGTAIL_USER_LOCAL_CONFIG_FILENAME");
+    // LoadStringParameter(
+    //     mUserLocalConfigPath, confJson, "user_local_config_filename", "ALIYUN_LOGTAIL_USER_LOCAL_CONFIG_FILENAME");
 
     LoadBooleanParameter(
         BOOL_FLAG(ilogtail_discard_old_data), confJson, "discard_old_data", "ALIYUN_LOGTAIL_DISCARD_OLD_DATA");
 
-    if (confJson.isMember("container_mount_path") && confJson["container_mount_path"].isString()) {
-        mContainerMountConfigPath = confJson["container_mount_path"].asString();
-    } else {
-        mContainerMountConfigPath = GetProcessExecutionDir() + STRING_FLAG(default_container_mount_path);
-    }
+    // if (confJson.isMember("container_mount_path") && confJson["container_mount_path"].isString()) {
+    //     mContainerMountConfigPath = confJson["container_mount_path"].asString();
+    // } else {
+    //     mContainerMountConfigPath = GetProcessExecutionDir() + STRING_FLAG(default_container_mount_path);
+    // }
 
     LoadStringParameter(mConfigIP, confJson, "working_ip", "ALIYUN_LOGTAIL_WORKING_IP");
 
-    LoadStringParameter(mCustomizedConfigIP, confJson, "customized_config_ip", "ALIYUN_LOGTAIL_CUSTOMIZED_CONFIG_IP");
+    // LoadStringParameter(mCustomizedConfigIP, confJson, "customized_config_ip",
+    // "ALIYUN_LOGTAIL_CUSTOMIZED_CONFIG_IP");
 
     LoadStringParameter(mConfigHostName, confJson, "working_hostname", "ALIYUN_LOGTAIL_WORKING_HOSTNAME");
 
-    // try to get zone env name from conf json
-    if (confJson.isMember("alipay_zone_env_name") && confJson["alipay_zone_env_name"].isString()) {
-        STRING_FLAG(alipay_zone_env_name) = confJson["alipay_zone_env_name"].asString();
-    }
-    // get zone info from env, for ant
-    do {
-        if (!STRING_FLAG(alipay_zone_env_name).empty()) {
-            const char* alipayZone = getenv(STRING_FLAG(alipay_zone_env_name).c_str());
-            if (alipayZone != NULL) {
-                mAlipayZone = alipayZone;
-                break;
-            }
-        }
-        const char* alipayZone = getenv(STRING_FLAG(alipay_app_zone).c_str());
-        if (alipayZone != NULL) {
-            mAlipayZone = alipayZone;
-            break;
-        }
-        alipayZone = getenv(STRING_FLAG(alipay_zone).c_str());
-        if (alipayZone != NULL) {
-            mAlipayZone = alipayZone;
-            break;
-        }
-    } while (false);
+    // // try to get zone env name from conf json
+    // if (confJson.isMember("alipay_zone_env_name") && confJson["alipay_zone_env_name"].isString()) {
+    //     STRING_FLAG(alipay_zone_env_name) = confJson["alipay_zone_env_name"].asString();
+    // }
+    // // get zone info from env, for ant
+    // do {
+    //     if (!STRING_FLAG(alipay_zone_env_name).empty()) {
+    //         const char* alipayZone = getenv(STRING_FLAG(alipay_zone_env_name).c_str());
+    //         if (alipayZone != NULL) {
+    //             mAlipayZone = alipayZone;
+    //             break;
+    //         }
+    //     }
+    //     const char* alipayZone = getenv(STRING_FLAG(alipay_app_zone).c_str());
+    //     if (alipayZone != NULL) {
+    //         mAlipayZone = alipayZone;
+    //         break;
+    //     }
+    //     alipayZone = getenv(STRING_FLAG(alipay_zone).c_str());
+    //     if (alipayZone != NULL) {
+    //         mAlipayZone = alipayZone;
+    //         break;
+    //     }
+    // } while (false);
 
-    if (confJson.isMember("alipay_zone") && confJson["alipay_zone"].isString()) {
-        mAlipayZone = confJson["alipay_zone"].asString();
-    }
+    // if (confJson.isMember("alipay_zone") && confJson["alipay_zone"].isString()) {
+    //     mAlipayZone = confJson["alipay_zone"].asString();
+    // }
 
     if (confJson.isMember("system_boot_time") && confJson["system_boot_time"].isInt()) {
         mSystemBootTime = confJson["system_boot_time"].asInt();
@@ -749,10 +715,10 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
                        "check_point_dump_interval",
                        "ALIYUN_LOGTAIL_CHECKPOINT_DUMP_INTERVAL");
 
-    if (confJson.isMember("rapid_retry_update_config") && confJson["rapid_retry_update_config"].isBool()) {
-        BOOL_FLAG(rapid_retry_update_config) = confJson["rapid_retry_update_config"].asBool();
-        LOG_INFO(sLogger, ("set rapid_retry_update_config", BOOL_FLAG(rapid_retry_update_config)));
-    }
+    // if (confJson.isMember("rapid_retry_update_config") && confJson["rapid_retry_update_config"].isBool()) {
+    //     BOOL_FLAG(rapid_retry_update_config) = confJson["rapid_retry_update_config"].asBool();
+    //     LOG_INFO(sLogger, ("set rapid_retry_update_config", BOOL_FLAG(rapid_retry_update_config)));
+    // }
 
     if (confJson.isMember("check_profile_region") && confJson["check_profile_region"].isBool()) {
         BOOL_FLAG(check_profile_region) = confJson["check_profile_region"].asBool();
@@ -884,10 +850,14 @@ bool AppConfig::CheckAndResetProxyAddress(const char* envKey, string& address) {
 }
 
 void AppConfig::LoadOtherConf(const Json::Value& confJson) {
-    if (confJson.isMember("mapping_conf_path") && confJson["mapping_conf_path"].isString())
-        mMappingConfigPath = confJson["mapping_conf_path"].asString();
-    else
-        mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
+    // if (confJson.isMember("mapping_conf_path") && confJson["mapping_conf_path"].isString())
+    //     mMappingConfigPath = confJson["mapping_conf_path"].asString();
+    // else
+    //     mMappingConfigPath = STRING_FLAG(default_mapping_config_path);
+
+    if (confJson.isMember("streamlog_open") && confJson["streamlog_open"].isBool()) {
+        mOpenStreamLog = confJson["streamlog_open"].asBool();
+    }
 
     {
         int32_t oasConnectTimeout = 0;
@@ -973,6 +943,14 @@ void AppConfig::LoadOtherConf(const Json::Value& confJson) {
                        confJson,
                        "polling_ignore_file_modify_timeout",
                        "ALIYUN_LOGTAIL_POLLING_IGNORE_FILE_MODIFY_TIMEOUT");
+
+    LoadBooleanParameter(mAcceptMultiConfigFlag, confJson, "accept_multi_config", "ALIYUN_LOGTAIL_ACCEPT_MULTI_CONFIG");
+
+    LoadInt32Parameter(mMaxMultiConfigSize, confJson, "max_multi_config", "ALIYUN_LOGTAIL_MAX_MULTI_CONFIG");
+
+    if (confJson.isMember("log_parse_error") && confJson["log_parse_error"].isBool()) {
+        mLogParseAlarmFlag = confJson["log_parse_error"].asBool();
+    }
 }
 
 void AppConfig::InitEnvMapping(const std::string& envStr, std::map<std::string, std::string>& envMapping) {
@@ -1072,13 +1050,6 @@ void AppConfig::ParseJsonToFlags(const Json::Value& confJson) {
                             ("Set config flag failed", "can not convert json value to flag")("flag name", name)(
                                 "jsonvalue", jsonvalue.toStyledString()));
         }
-    }
-}
-
-void AppConfig::LoadGlobalFuseConf(const Json::Value& confJson) {
-    if (confJson.isMember("global_fuse_mode") && confJson["global_fuse_mode"].isBool()) {
-        BOOL_FLAG(default_global_fuse_mode) = confJson["global_fuse_mode"].asBool();
-        LOG_INFO(sLogger, ("set global_fuse_mode", BOOL_FLAG(default_global_fuse_mode)));
     }
 }
 
@@ -1228,17 +1199,13 @@ void AppConfig::SetLogtailSysConfDir(const std::string& dirPath) {
         LOG_WARNING(sLogger, ("flag error", "ilogtail_local_config_dir must be non-empty"));
         STRING_FLAG(ilogtail_local_config_dir) = DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE;
     }
-    mUserLocalConfigPath = AbsolutePath(STRING_FLAG(ilogtail_local_config), mLogtailSysConfDir);
-    mUserLocalConfigDirPath = AbsolutePath(STRING_FLAG(ilogtail_local_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
-    mUserLocalYamlConfigDirPath
-        = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
-    mUserRemoteYamlConfigDirPath
-        = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
-    LOG_INFO(sLogger,
-             ("set logtail sys conf dir", mLogtailSysConfDir)("user local config path", mUserLocalConfigPath)(
-                 "user local config dir path", mUserLocalConfigDirPath)(
-                 "user local yaml config dir path", mUserLocalYamlConfigDirPath)("user remote yaml config dir path",
-                                                                                 mUserRemoteYamlConfigDirPath));
+    // mUserLocalConfigPath = AbsolutePath(STRING_FLAG(ilogtail_local_config), mLogtailSysConfDir);
+    // mUserLocalConfigDirPath = AbsolutePath(STRING_FLAG(ilogtail_local_config_dir), mLogtailSysConfDir) +
+    // PATH_SEPARATOR; mUserLocalYamlConfigDirPath
+    //     = AbsolutePath(STRING_FLAG(ilogtail_local_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
+    // mUserRemoteYamlConfigDirPath
+    //     = AbsolutePath(STRING_FLAG(ilogtail_remote_yaml_config_dir), mLogtailSysConfDir) + PATH_SEPARATOR;
+    LOG_INFO(sLogger, ("set logtail sys conf dir", mLogtailSysConfDir));
 }
 
 bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {
@@ -1249,4 +1216,41 @@ bool AppConfig::IsHostPathMatchBlacklist(const string& dirPath) const {
     }
     return false;
 }
+
+void AppConfig::UpdateFileTags() {
+    if (STRING_FLAG(ALIYUN_LOG_FILE_TAGS).empty()) {
+        return;
+    }
+    // read local config
+    Json::Value localFileTagsJson;
+    const char* file_tags_dir = STRING_FLAG(ALIYUN_LOG_FILE_TAGS).c_str();
+    ParseConfResult userLogRes = ParseConfig(file_tags_dir, localFileTagsJson);
+    if (userLogRes != CONFIG_OK) {
+        if (userLogRes == CONFIG_NOT_EXIST)
+            LOG_ERROR(sLogger, ("load file tags fail, file not exist", file_tags_dir));
+        else if (userLogRes == CONFIG_INVALID_FORMAT) {
+            LOG_ERROR(sLogger, ("load file tags fail, file content is not valid json", file_tags_dir));
+        }
+    } else {
+        if (localFileTagsJson != mFileTagsJson) {
+            int32_t i = 0;
+            vector<sls_logs::LogTag>& sFileTags = mFileTags.getWriteBuffer();
+            sFileTags.clear();
+            sFileTags.resize(localFileTagsJson.size());
+            for (auto it = localFileTagsJson.begin(); it != localFileTagsJson.end(); ++it) {
+                if (it->isString()) {
+                    sFileTags[i].set_key(it.key().asString());
+                    sFileTags[i].set_value(it->asString());
+                    ++i;
+                }
+            }
+            mFileTags.swap();
+            LOG_INFO(sLogger, ("local file tags update, old config", mFileTagsJson.toStyledString()));
+            mFileTagsJson = localFileTagsJson;
+            LOG_INFO(sLogger, ("local file tags update, new config", mFileTagsJson.toStyledString()));
+        }
+    }
+    return;
+}
+
 } // namespace logtail

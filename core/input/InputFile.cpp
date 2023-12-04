@@ -61,14 +61,6 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
             return false;
         }
         GenerateContainerMetaFetchingGoPipeline(optionalGoPipeline);
-
-        // 过渡使用
-        auto allContainers = ConfigManager::GetInstance()->GetAllContainerInfo();
-        auto iter = allContainers.find(mContext->GetConfigName());
-        if (iter != allContainers.end()) {
-            mFileDiscovery.SetContainerInfo(iter->second);
-            allContainers.erase(iter);
-        }
     }
 
     if (!mFileReader.Init(config, *mContext, sName)) {
@@ -110,25 +102,28 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         mExactlyOnceConcurrency = exactlyOnceConcurrency;
     }
 
-    FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
-    FileServer::GetInstance()->AddFileReaderConfig(mContext->GetConfigName(), &mFileReader, mContext);
-    FileServer::GetInstance()->AddMultilineConfig(mContext->GetConfigName(), &mMultiline, mContext);
-    FileServer::GetInstance()->AddExactlyOnceConcurrency(mContext->GetConfigName(), mExactlyOnceConcurrency);
-
     return true;
 }
 
 bool InputFile::Start() {
-    // mContainerInfos = FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().lock()->Name());
-    // FileServer::GetInstance()->AddPipeline(mContext->GetPipeline().lock());
+    if (mEnableContainerDiscovery) {
+        mFileDiscovery.SetContainerInfo(FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
+    }
+    FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
+    FileServer::GetInstance()->AddFileReaderConfig(mContext->GetConfigName(), &mFileReader, mContext);
+    FileServer::GetInstance()->AddMultilineConfig(mContext->GetConfigName(), &mMultiline, mContext);
+    FileServer::GetInstance()->AddExactlyOnceConcurrency(mContext->GetConfigName(), mExactlyOnceConcurrency);
     return true;
 }
 
 bool InputFile::Stop(bool isPipelineRemoving) {
-    // if (!isPipelineRemoving) {
-    //     FileServer::GetInstance()->SaveContainerInfo(mContext->GetPipeline().lock()->Name(), mContainerInfos);
-    // }
-    // FileServer::GetInstance()->RemovePipeline(mContext->GetPipeline().lock());
+    if (!isPipelineRemoving && mEnableContainerDiscovery) {
+        FileServer::GetInstance()->SaveContainerInfo(mContext->GetPipeline().Name(), mFileDiscovery.GetContainerInfo());
+    }
+    FileServer::GetInstance()->RemoveFileDiscoveryConfig(mContext->GetConfigName());
+    FileServer::GetInstance()->RemoveFileReaderConfig(mContext->GetConfigName());
+    FileServer::GetInstance()->RemoveMultilineConfig(mContext->GetConfigName());
+    FileServer::GetInstance()->RemoveExactlyOnceConcurrency(mContext->GetConfigName());
     return true;
 }
 
@@ -152,7 +147,7 @@ void InputFile::GenerateContainerMetaFetchingGoPipeline(Json::Value& res) const 
         detail["LogPath"] = Json::Value(mFileDiscovery.GetBasePath());
         detail["MaxDepth"] = Json::Value(mFileDiscovery.mMaxDirSearchDepth);
     }
-    detail["FileParttern"] = Json::Value(mFileDiscovery.GetFilePattern());
+    detail["FilePattern"] = Json::Value(mFileDiscovery.GetFilePattern());
     if (!mContainerDiscovery.mContainerFilters.mK8sNamespaceRegex.empty()) {
         detail["K8sNamespaceRegex"] = Json::Value(mContainerDiscovery.mContainerFilters.mK8sNamespaceRegex);
     }

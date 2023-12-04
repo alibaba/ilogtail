@@ -20,6 +20,9 @@
 #include <string>
 #include <unordered_map>
 
+#include "common/Lock.h"
+#include "config/ConfigDiff.h"
+
 #include "pipeline/Pipeline.h"
 
 namespace logtail {
@@ -34,17 +37,40 @@ public:
         return &instance;
     }
 
-    std::shared_ptr<Pipeline> FindPipelineByName(const std::string& configName);
-    // 临时使用
-    void AddPipeline(const std::shared_ptr<Pipeline>& pipeline) { mPipelineDict[pipeline->Name()] = pipeline; }
-    const std::unordered_map<std::string, std::shared_ptr<Pipeline>>& GetAllPipelines() { return mPipelineDict; }
-    void RemoveAllPipelines() { mPipelineDict.clear(); }
+    void UpdatePipelines(ConfigDiff& diff);
+    std::shared_ptr<Pipeline> FindPipelineByName(const std::string& configName) const;
+    std::vector<std::string> GetAllPipelineNames() const;
+    std::string GetPluginStatistics() const;
+    // for shennong only
+    const std::unordered_map<std::string, std::shared_ptr<Pipeline>>& GetAllPipelines() const {
+        return mPipelineNameEntityMap;
+    }
+    // 过渡使用
+    void StopAllPipelines();
 
 private:
     PipelineManager() = default;
     ~PipelineManager() = default;
 
-    std::unordered_map<std::string, std::shared_ptr<Pipeline>> mPipelineDict;
+    virtual std::shared_ptr<Pipeline> BuildPipeline(Config&& config); // virtual for ut
+    void IncreasePluginUsageCnt(
+        const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& statistics);
+    void DecreasePluginUsageCnt(
+        const std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>>& statistics);
+    // 过渡使用
+    void CheckIfInputUpdated(const Json::Value& config,
+                             bool& isInputObserverChanged,
+                             bool& isInputFileChanged,
+                             bool& isInputStreamChanged);
+
+    std::unordered_map<std::string, std::shared_ptr<Pipeline>> mPipelineNameEntityMap;
+    mutable SpinLock mPluginCntMapLock;
+    std::unordered_map<std::string, std::unordered_map<std::string, uint32_t>> mPluginCntMap;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class PipelineManagerMock;
+    friend class PipelineManagerUnittest;
+#endif
 };
 
 } // namespace logtail

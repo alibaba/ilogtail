@@ -19,17 +19,20 @@
 #include <cstdint>
 #include <utility>
 
+#include "common/Flags.h"
 #include "common/ParamExtractor.h"
 #include "flusher/FlusherSLS.h"
+#include "go_pipeline/LogtailPlugin.h"
 #include "plugin/PluginRegistry.h"
-#include "processor/daemon/LogProcess.h"
+#include "processor/ProcessorParseApsaraNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
-#include "processor/ProcessorParseApsaraNative.h"
+#include "processor/ProcessorTagNative.h"
+#include "processor/daemon/LogProcess.h"
 
 // for special treatment
-#include "input/InputFile.h"
 #include "file_server/MultilineOptions.h"
+#include "input/InputFile.h"
 
 DECLARE_FLAG_INT32(default_plugin_log_queue_size);
 
@@ -37,13 +40,21 @@ using namespace std;
 
 namespace logtail {
 
-bool Pipeline::Init(NewConfig&& config) {
+void AddExtendedGlobalParamToGoPipeline(const Json::Value& extendedParams, Json::Value& pipeline) {
+    if (!pipeline.isNull()) {
+        Json::Value& global = pipeline["global"];
+        for (auto itr = extendedParams.begin(); itr != extendedParams.end(); itr++) {
+            global[itr.name()] = *itr;
+        }
+    }
+}
+
+bool Pipeline::Init(Config&& config) {
     mName = config.mName;
     mConfig = std::move(config.mDetail);
     mContext.SetConfigName(mName);
     mContext.SetCreateTime(config.mCreateTime);
     mContext.SetPipeline(*this);
-    mContext.SetIsFirstProcessorJsonFlag(config.mIsFirstProcessorJson);
 
     // for special treatment below
     const InputFile* inputFile = nullptr;
@@ -62,12 +73,24 @@ bool Pipeline::Init(NewConfig&& config) {
                 MergeGoPipeline(optionalGoPipeline, mGoPipelineWithInput);
             }
             // for special treatment below
-            if (name == "input_file") {
+            if (name == InputFile::sName) {
                 inputFile = static_cast<const InputFile*>(mInputs[0]->GetPlugin());
             }
         } else {
             AddPluginToGoPipeline(*detail, "inputs", mGoPipelineWithInput);
         }
+        ++mPluginCntMap["inputs"][name];
+    }
+
+    if (config.IsProcessRunnerInvolved()) {
+        Json::Value detail;
+        unique_ptr<ProcessorInstance> processor
+            = PluginRegistry::GetInstance()->CreateProcessor(ProcessorTagNative::sName, to_string(++pluginIndex));
+        if (!processor->Init(detail, mContext)) {
+            // should not happen
+            return false;
+        }
+        mProcessorLine.emplace_back(std::move(processor));
     }
 
     // add log split processor for input_file
@@ -75,6 +98,7 @@ bool Pipeline::Init(NewConfig&& config) {
         unique_ptr<ProcessorInstance> processor;
         Json::Value detail;
         if (config.mIsFirstProcessorJson || inputFile->mMultiline.mMode == MultilineOptions::Mode::JSON) {
+            mContext.SetRequiringJsonReaderFlag(true);
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
                                                                        to_string(++pluginIndex));
             detail["SplitChar"] = Json::Value('\0');
@@ -82,6 +106,7 @@ bool Pipeline::Init(NewConfig&& config) {
         } else if (inputFile->mMultiline.IsMultiline()) {
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitRegexNative::sName,
                                                                        to_string(++pluginIndex));
+            detail["Mode"] = Json::Value("custom");
             detail["StartPattern"] = Json::Value(inputFile->mMultiline.mStartPattern);
             detail["ContinuePattern"] = Json::Value(inputFile->mMultiline.mContinuePattern);
             detail["EndPattern"] = Json::Value(inputFile->mMultiline.mEndPattern);
@@ -92,6 +117,7 @@ bool Pipeline::Init(NewConfig&& config) {
             detail["AppendingLogPositionMeta"] = Json::Value(inputFile->mFileReader.mAppendingLogPositionMeta);
         }
         if (!processor->Init(detail, mContext)) {
+            // should not happen
             return false;
         }
         mProcessorLine.emplace_back(std::move(processor));
@@ -117,6 +143,7 @@ bool Pipeline::Init(NewConfig&& config) {
                 AddPluginToGoPipeline(*config.mProcessors[i], "processors", mGoPipelineWithoutInput);
             }
         }
+        ++mPluginCntMap["processors"][name];
     }
 
     for (auto detail : config.mAggregators) {
@@ -125,6 +152,7 @@ bool Pipeline::Init(NewConfig&& config) {
         } else {
             AddPluginToGoPipeline(*detail, "aggregators", mGoPipelineWithoutInput);
         }
+        ++mPluginCntMap["aggregators"][(*detail)["Type"].asString()];
     }
 
     for (auto detail : config.mFlushers) {
@@ -154,6 +182,7 @@ bool Pipeline::Init(NewConfig&& config) {
                 AddPluginToGoPipeline(*detail, "flushers", mGoPipelineWithoutInput);
             }
         }
+        ++mPluginCntMap["flushers"][name];
     }
 
     for (auto detail : config.mExtensions) {
@@ -163,35 +192,24 @@ bool Pipeline::Init(NewConfig&& config) {
         if (!mGoPipelineWithoutInput.isNull()) {
             AddPluginToGoPipeline(*detail, "extensions", mGoPipelineWithoutInput);
         }
+        ++mPluginCntMap["extensions"][(*detail)["Type"].asString()];
     }
 
     // global module must be initialized at last, since native input or flusher plugin may generate global param in Go
     // pipeline, which should be overriden by explicitly provided global module.
     if (config.mGlobal) {
-        Json::Value nonNativeParams;
-        if (!mContext.InitGlobalConfig(*config.mGlobal, nonNativeParams)) {
+        Json::Value extendedParams;
+        if (!mContext.InitGlobalConfig(*config.mGlobal, extendedParams)) {
             return false;
         }
-        if (!mGoPipelineWithInput.isNull()) {
-            Json::Value& global = mGoPipelineWithInput["global"];
-            for (auto itr = nonNativeParams.begin(); itr != nonNativeParams.end(); itr++) {
-                global[itr.name()] = *itr;
-            }
-            global["EnableTimestampNanosecond"] = mContext.GetGlobalConfig().mEnableTimestampNanosecond;
-            global["UsingOldContentTag"] = mContext.GetGlobalConfig().mUsingOldContentTag;
-        }
-        if (!mGoPipelineWithoutInput.isNull()) {
-            Json::Value& global = mGoPipelineWithoutInput["global"];
-            for (auto itr = nonNativeParams.begin(); itr != nonNativeParams.end(); itr++) {
-                global[itr.name()] = *itr;
-            }
-            global["EnableTimestampNanosecond"] = mContext.GetGlobalConfig().mEnableTimestampNanosecond;
-            global["UsingOldContentTag"] = mContext.GetGlobalConfig().mUsingOldContentTag;
-        }
+        AddExtendedGlobalParamToGoPipeline(extendedParams, mGoPipelineWithInput);
+        AddExtendedGlobalParamToGoPipeline(extendedParams, mGoPipelineWithoutInput);
     }
+    CopyNativeGlobalParamToGoPipeline(mGoPipelineWithInput);
+    CopyNativeGlobalParamToGoPipeline(mGoPipelineWithoutInput);
 
     // mandatory override global.DefaultLogQueueSize in Go pipeline when input_file and Go processing coexist.
-    if (inputFile && !mGoPipelineWithoutInput.isNull()) {
+    if (inputFile != nullptr && IsFlushingThroughGoPipeline()) {
         mGoPipelineWithoutInput["global"]["DefaultLogQueueSize"]
             = Json::Value(INT32_FLAG(default_plugin_log_queue_size));
     }
@@ -205,8 +223,9 @@ bool Pipeline::Init(NewConfig&& config) {
     }
 
     if (inputFile && inputFile->mExactlyOnceConcurrency > 0) {
-        if (!mGoPipelineWithoutInput.isNull()) {
-            PARAM_ERROR_RETURN(mContext.GetLogger(), "exactly once enabled when not in native mode exist", noModule, mName);
+        if (IsFlushingThroughGoPipeline()) {
+            PARAM_ERROR_RETURN(
+                mContext.GetLogger(), "exactly once enabled when not in native mode exist", noModule, mName);
         }
         // flusher_sls is guaranteed to exist here.
         if (mContext.GetSLSInfo()->mBatch.mMergeType != FlusherSLS::Batch::MergeType::TOPIC) {
@@ -215,13 +234,14 @@ bool Pipeline::Init(NewConfig&& config) {
         }
     }
 
-    // if (!LoadGoPipelines()) {
-    //     LOG_ERROR(
-    //         sLogger,
-    //         ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")("config",
-    //         Name()));
-    //     return false;
-    // }
+#ifndef APSARA_UNIT_TEST_MAIN
+    if (!LoadGoPipelines()) {
+        LOG_ERROR(
+            mContext.GetLogger(),
+            ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")("config", mName));
+        return false;
+    }
+#endif
 
     return true;
 }
@@ -288,6 +308,41 @@ void Pipeline::AddPluginToGoPipeline(const Json::Value& plugin, const string& mo
     res["type"] = plugin["Type"];
     res["detail"] = detail;
     dst[module].append(res);
+}
+
+void Pipeline::CopyNativeGlobalParamToGoPipeline(Json::Value& pipeline) {
+    if (!pipeline.isNull()) {
+        Json::Value& global = pipeline["global"];
+        global["EnableTimestampNanosecond"] = mContext.GetGlobalConfig().mEnableTimestampNanosecond;
+        global["UsingOldContentTag"] = mContext.GetGlobalConfig().mUsingOldContentTag;
+    }
+}
+
+bool Pipeline::LoadGoPipelines() const {
+    // TODO：将下面的代码替换成批量原子Load。
+    // note:
+    // 目前按照从后往前顺序加载，即便without成功with失败导致without残留在插件系统中，也不会有太大的问题，但最好改成原子的。
+    if (!mGoPipelineWithoutInput.isNull()) {
+        if (!LogtailPlugin::GetInstance()->LoadPipeline(mName + "/2",
+                                                        mGoPipelineWithoutInput.toStyledString(),
+                                                        mContext.GetProjectName(),
+                                                        mContext.GetLogstoreName(),
+                                                        mContext.GetRegion(),
+                                                        mContext.GetLogstoreKey())) {
+            return false;
+        }
+    }
+    if (!mGoPipelineWithInput.isNull()) {
+        if (!LogtailPlugin::GetInstance()->LoadPipeline(mName + "/1",
+                                                        mGoPipelineWithInput.toStyledString(),
+                                                        mContext.GetProjectName(),
+                                                        mContext.GetLogstoreName(),
+                                                        mContext.GetRegion(),
+                                                        mContext.GetLogstoreKey())) {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace logtail

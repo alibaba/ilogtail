@@ -32,18 +32,13 @@
 #include <gperftools/tcmalloc.h>
 #endif
 #include "common/version.h"
-#include "common/util.h"
 #include "common/StringTools.h"
 #include "common/HashUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/RuntimeUtil.h"
 #include "common/ErrorUtil.h"
-#include "common/GlobalPara.h"
 #include "common/FileSystemUtil.h"
 #include "common/TimeUtil.h"
-#ifdef __linux__
-#include "ObserverManager.h"
-#endif
 #include "app_config/AppConfig.h"
 #include "event_handler/EventHandler.h"
 #include "event_handler/LogInput.h"
@@ -75,29 +70,30 @@
 #include "input/InputFile.h"
 #include "file_server/FileServer.h"
 
-using std::string;
-using std::vector;
+using namespace std;
 using namespace sls_logs;
 
-DECLARE_FLAG_INT32(check_point_dump_interval);
-DECLARE_FLAG_INT32(ilogtail_max_epoll_events);
-DECLARE_FLAG_INT32(ilogtail_epoll_wait_events);
-DEFINE_FLAG_INT32(ilogtail_epoll_time_out, "default time out is 1s", 1);
-DEFINE_FLAG_INT32(main_loop_check_interval, "seconds", 60);
+// 商业版
+// DEFINE_FLAG_BOOL(merge_shennong_metric, "merge LogGroup into LogPackageList if true", true);
+
+// 废弃
+// DEFINE_FLAG_INT32(main_loop_check_interval, "seconds", 60);
+
+// 移动
+// DEFINE_FLAG_INT32(ilogtail_epoll_time_out, "default time out is 1s", 1);
+// DEFINE_FLAG_INT32(tcmalloc_release_memory_interval, "force release memory held by tcmalloc, seconds", 300);
+// DEFINE_FLAG_BOOL(fs_events_inotify_enable, "", true);
+// DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
+// DEFINE_FLAG_INT32(search_checkpoint_default_dir_depth, "0 means only search current directory", 0);
+// DEFINE_FLAG_BOOL(enable_polling_discovery, "", true);
+
 DEFINE_FLAG_INT32(existed_file_active_timeout,
                   "when first monitor directory, file modified in 120 seconds will be collected",
                   120);
-DEFINE_FLAG_INT32(tcmalloc_release_memory_interval, "force release memory held by tcmalloc, seconds", 300);
-DEFINE_FLAG_BOOL(merge_shennong_metric, "merge LogGroup into LogPackageList if true", true);
-DEFINE_FLAG_BOOL(fs_events_inotify_enable, "", true);
 DEFINE_FLAG_INT32(checkpoint_find_max_cache_size, "", 100000);
 DEFINE_FLAG_INT32(max_watch_dir_count, "", 100 * 1000);
 DEFINE_FLAG_STRING(inotify_watcher_dirs_dump_filename, "", "inotify_watcher_dirs");
-DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
-// DEFINE_FLAG_INT32(search_checkpoint_default_dir_depth, "0 means only search current directory", 0);
-DEFINE_FLAG_BOOL(enable_polling_discovery, "", true);
-
-#define PBMSG 0
+DEFINE_FLAG_INT32(default_max_inotify_watch_num, "the max allowed inotify watch dir number", 3000);
 
 namespace logtail {
 
@@ -138,31 +134,20 @@ EventDispatcher::EventDispatcher() : mWatchNum(0), mInotifyWatchNum(0) {
 }
 
 EventDispatcher::~EventDispatcher() {
-#if defined(__linux__)
-    // if (mStreamLogManagerPtr != NULL) {
-    //     delete (StreamLogManager*)mStreamLogManagerPtr;
-    // }
-    // if (mEpollFd >= 0)
-    //     close(mEpollFd);
-    // if (mStreamLogTcpFd >= 0)
-    //     close(mStreamLogTcpFd);
-    // if (mListenFd >= 0)
-    //     close(mListenFd);
-#endif
+// #if defined(__linux__)
+//     if (mStreamLogManagerPtr != NULL) {
+//         delete (StreamLogManager*)mStreamLogManagerPtr;
+//     }
+//     if (mEpollFd >= 0)
+//         close(mEpollFd);
+//     if (mStreamLogTcpFd >= 0)
+//         close(mStreamLogTcpFd);
+//     if (mListenFd >= 0)
+//         close(mListenFd);
+// #endif
     mEventListener->Destroy();
     if (mTimeoutHandler)
         delete mTimeoutHandler;
-}
-
-bool EventDispatcher::IsInterupt() {
-    if (LogtailGlobalPara::Instance()->GetSigtermFlag()) {
-        // LOG_DEBUG(sLogger, ("logtail received SIGTERM signal", "break process loop"));
-    } else if (ConfigManager::GetInstance()->IsUpdateConfig()) {
-        // LOG_DEBUG(sLogger, ("logtail prepare update config", "break process loop"));
-    } else
-        return false;
-
-    return true;
 }
 
 bool EventDispatcher::RegisterEventHandler(const char* path,
@@ -201,7 +186,7 @@ bool EventDispatcher::RegisterEventHandler(const char* path,
     }
     uint64_t inode = statBuf.GetDevInode().inode;
     int wd;
-    MapType<std::string, int>::Type::iterator pathIter = mPathWdMap.find(path);
+    MapType<string, int>::Type::iterator pathIter = mPathWdMap.find(path);
     if (pathIter != mPathWdMap.end()) {
         wd = pathIter->second;
 
@@ -362,7 +347,7 @@ void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
 
     fsutil::Entry ent;
     int32_t curTime = time(NULL);
-    std::vector<Event*> eventVec;
+    vector<Event*> eventVec;
     int32_t tailFileCount = 0;
     while (ent = dir.ReadNext(false)) {
         ++tailFileCount;
@@ -422,9 +407,9 @@ void EventDispatcher::AddExistedFileEvents(const char* path, int wd) {
 
 EventDispatcher::ValidateCheckpointResult
 EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
-                                        std::map<DevInode, SplitedFilePath>& cachePathDevInodeMap,
-                                        std::vector<Event*>& eventVec) {
-    std::shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(checkpoint->mConfigName);
+                                        map<DevInode, SplitedFilePath>& cachePathDevInodeMap,
+                                        vector<Event*>& eventVec) {
+    shared_ptr<Pipeline> config = PipelineManager::GetInstance()->FindPipelineByName(checkpoint->mConfigName);
     if (config == NULL) {
         LOG_INFO(sLogger,
                  ("delete checkpoint", "the corresponding config is deleted")("config", checkpoint->mConfigName)(
@@ -434,10 +419,10 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     }
 
     // Use FileName (logical absolute path) to do config matching.
-    const std::string& filePath = checkpoint->mFileName;
-    const std::string realFilePath = checkpoint->mRealFileName.empty() ? filePath : checkpoint->mRealFileName;
+    const string& filePath = checkpoint->mFileName;
+    const string realFilePath = checkpoint->mRealFileName.empty() ? filePath : checkpoint->mRealFileName;
     size_t lastSeparator = filePath.find_last_of(PATH_SEPARATOR);
-    if (lastSeparator == std::string::npos || lastSeparator == (size_t)0 || lastSeparator >= filePath.size()) {
+    if (lastSeparator == string::npos || lastSeparator == (size_t)0 || lastSeparator >= filePath.size()) {
         LOG_INFO(sLogger,
                  ("delete checkpoint", "invalid log reader queue name")("config", checkpoint->mConfigName)(
                      "log reader queue name", checkpoint->mFileName)("real file path", checkpoint->mRealFileName)(
@@ -448,7 +433,7 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     string fileName = filePath.substr(lastSeparator + 1);
 
     // Check if the config in checkpoint still matches the file?
-    std::vector<FileDiscoveryConfig> matchedConfigs;
+    vector<FileDiscoveryConfig> matchedConfigs;
     AppConfig::GetInstance()->IsAcceptMultiConfig()
         ? ConfigManager::GetInstance()->FindAllMatch(matchedConfigs, path, fileName)
         : ConfigManager::GetInstance()->FindMatchWithForceFlag(matchedConfigs, path, fileName);
@@ -471,7 +456,7 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     const InputFile* inputFile = static_cast<const InputFile*>(config->GetInputs()[0]->GetPlugin());
 
     // delete checkpoint if file path is not exist
-    MapType<std::string, int>::Type::iterator pathIter = mPathWdMap.find(path);
+    MapType<string, int>::Type::iterator pathIter = mPathWdMap.find(path);
     if (pathIter == mPathWdMap.end()) {
         LOG_INFO(sLogger,
                  ("delete checkpoint", "file path no longer exists")("config", checkpoint->mConfigName)(
@@ -522,7 +507,7 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
     }
 
     // Try to find the real file with dev inode, check cache at first.
-    std::map<DevInode, SplitedFilePath>::iterator findIter = cachePathDevInodeMap.find(checkpoint->mDevInode);
+    map<DevInode, SplitedFilePath>::iterator findIter = cachePathDevInodeMap.find(checkpoint->mDevInode);
     if (findIter != cachePathDevInodeMap.end()) {
         if (findIter->second.mFileDir != path) {
             LOG_INFO(sLogger,
@@ -619,11 +604,11 @@ EventDispatcher::validateCheckpoint(CheckPointPtr& checkpoint,
 void EventDispatcher::AddExistedCheckPointFileEvents() {
     // All checkpoint will be add into event queue or be deleted
     // This operation will delete not existed file's check point
-    std::map<DevInode, SplitedFilePath> cachePathDevInodeMap;
+    map<DevInode, SplitedFilePath> cachePathDevInodeMap;
     auto& checkPointMap = CheckPointManager::Instance()->GetAllFileCheckPoint();
     LOG_INFO(sLogger, ("start to verify existed checkpoints, total checkpoint count", checkPointMap.size()));
-    std::vector<CheckPointManager::CheckPointKey> deleteKeyVec;
-    std::vector<Event*> eventVec;
+    vector<CheckPointManager::CheckPointKey> deleteKeyVec;
+    vector<Event*> eventVec;
     for (auto iter = checkPointMap.begin(); iter != checkPointMap.end(); ++iter) {
         auto const result = validateCheckpoint(iter->second, cachePathDevInodeMap, eventVec);
         if (!(result == ValidateCheckpointResult::kNormal || result == ValidateCheckpointResult::kRotate)) {
@@ -647,12 +632,12 @@ void EventDispatcher::AddExistedCheckPointFileEvents() {
         LOG_INFO(sLogger,
                  ("start add exactly once checkpoint events",
                   "")("config size", exactlyOnceConfigs.size())("scanned checkpoint size", exactlyOnceCpts.size()));
-        std::vector<std::pair<std::string, PrimaryCheckpointPB>*> batchUpdateCpts;
-        std::vector<std::pair<std::string, PrimaryCheckpointPB>*> batchDeleteCpts;
+        vector<pair<string, PrimaryCheckpointPB>*> batchUpdateCpts;
+        vector<pair<string, PrimaryCheckpointPB>*> batchDeleteCpts;
         for (size_t idx = 0; idx < exactlyOnceCpts.size(); ++idx) {
             auto& cptPair = exactlyOnceCpts[idx];
             auto& cpt = cptPair.second;
-            auto v1Cpt = std::make_shared<CheckPoint>(cpt.log_path(),
+            auto v1Cpt = make_shared<CheckPoint>(cpt.log_path(),
                                                       0,
                                                       cpt.sig_size(),
                                                       cpt.sig_hash(),
@@ -706,7 +691,7 @@ void EventDispatcher::AddExistedCheckPointFileEvents() {
     if (eventVec.size() > 0) {
         // Sort by Source/Object (length+alphabet) in event to adjust the order of rotating files.
         // eg. /log/a.log.10 -> /log/a.log.9 -> /log/a.log.8 -> ...
-        std::sort(eventVec.begin(), eventVec.end(), Event::CompareByFullPath);
+        sort(eventVec.begin(), eventVec.end(), Event::CompareByFullPath);
         LogInput::GetInstance()->PushEventQueue(eventVec);
     }
 }
@@ -733,177 +718,6 @@ void EventDispatcher::RemoveOneToOneMapEntry(int wd) {
     mPathWdMap.erase((itr->second)->mPath);
     delete itr->second;
     mWdDirInfoMap.erase(itr);
-}
-
-// add timeout propagation and process logic
-bool EventDispatcher::Dispatch() {
-    mMainThreadRunning = true;
-#if defined(_MSC_VER)
-    InitWindowsSignalObject();
-#endif
-    // #if defined(__linux__)
-    //     if (mEpollFd == -1) {
-    //         LogtailAlarm::GetInstance()->SendAlarm(EPOLL_ERROR_ALARM,
-    //                                                string("Failed to create epoll fd, errno:") + ToString(errno));
-    //         LOG_ERROR(sLogger, ("failed to create epoll fd, errno", errno));
-    //         return false;
-    //     }
-    // #endif
-
-    // Add Domain Socket Listen fd to epoll list
-    // #if defined(__linux__)
-    //     InitShennong();
-    //     if (AppConfig::GetInstance()->GetOpenStreamLog() && AddStreamLogTcpSocketToEpoll()) {
-    //         mStreamLogManagerPtr = new StreamLogManager(AppConfig::GetInstance()->GetStreamLogPoolSizeInMb(),
-    //                                                     AppConfig::GetInstance()->GetStreamLogRcvLenPerCall(),
-    //                                                     mEpollFd);
-    //     }
-    // #endif
-    {
-        auto pollingModify = PollingModify::GetInstance();
-        auto pollingDirFile = PollingDirFile::GetInstance();
-        if (BOOL_FLAG(enable_polling_discovery)) {
-            pollingModify->Start();
-            pollingDirFile->Start();
-        } else {
-            LOG_INFO(sLogger, ("polling discovery is disabled", ""));
-        }
-    }
-
-    LogInput::GetInstance()->Start();
-    LogProcess::GetInstance()->Start();
-
-    time_t prevTime = time(NULL);
-    time_t curTime;
-    // time_t StreamLogPrevTime = time(NULL);
-
-// #if defined(__linux__)
-//     struct epoll_event event[INT32_FLAG(ilogtail_max_epoll_events)];
-// #endif
-    srand(prevTime);
-    time_t lastCheckDir = prevTime - rand() % 60;
-    time_t lastTcmallocReleaseMemTime = prevTime - rand() % 60;
-    while (mMainThreadRunning) {
-#if defined(__linux__)
-        // if (time(NULL) - StreamLogPrevTime > 10) {
-        //     if (mStreamLogManagerPtr != NULL) {
-        //         ((StreamLogManager*)mStreamLogManagerPtr)->AwakenTimeoutFds();
-        //     }
-        //     StreamLogPrevTime = time(NULL);
-        // }
-#endif
-
-#if defined(_MSC_VER)
-        SyncWindowsSignalObject();
-#endif
-
-        if (LogtailGlobalPara::Instance()->GetSigtermFlag()) {
-            LOG_INFO(sLogger, ("received SIGTERM signal", "exit process"));
-            ExitProcess();
-        }
-
-#if defined(__linux__)
-        // int nfd = epoll_wait(
-        //     mEpollFd, event, INT32_FLAG(ilogtail_epoll_wait_events), INT32_FLAG(ilogtail_epoll_time_out) * 1000);
-        // int savedErrno = GetErrno();
-#elif defined(_MSC_VER)
-        sleep(INT32_FLAG(ilogtail_epoll_time_out));
-#endif
-        UpdateConfig();
-        // #if defined(__linux__)
-        //         if (nfd == -1) {
-        //             if (savedErrno != EINTR) {
-        //                 LOG_FATAL(sLogger, ("epoll loop", "exit")(ToString(savedErrno), ErrnoToString(savedErrno)));
-        //                 LogtailAlarm::GetInstance()->SendAlarm(EPOLL_ERROR_ALARM, string("epoll loop exit
-        //                 abnormally")); return false;
-        //             }
-        //         } else if (nfd > 0) {
-        //             for (int n = 0; n < nfd; ++n) {
-        //                 if (IsInterupt())
-        //                     break;
-
-        // #if defined(__linux__)
-        //                 bool isStreamLogTcpFd = mStreamLogManagerPtr == NULL
-        //                     ? false
-        //                     : ((StreamLogManager*)mStreamLogManagerPtr)->AcceptedFdsContains(event[n].data.fd);
-        // #endif
-        //                 // handle ERROR (exclude inotify fd to defense)
-        //                 if ((event[n].events & EPOLLERR) || (event[n].events & EPOLLHUP)) {
-        //                     int closeFd = event[n].data.fd;
-        // #if defined(__linux__)
-        //                     if (isStreamLogTcpFd) {
-        //                         LOG_INFO(sLogger, ("message", "StreamLog fd error")("fd",
-        //                         ToString(event[n].data.fd)));
-        //                         ((StreamLogManager*)mStreamLogManagerPtr)->DeleteFd(event[n].data.fd);
-        //                     } else
-        // #endif
-        //                     {
-        //                         // clear buffer
-        //                         ErasePacketBuffer(closeFd);
-
-        //                         // client exception
-        //                         close(closeFd);
-        //                     }
-        //                     // delete fd from epoll
-        //                     struct epoll_event ee;
-        //                     ee.events = 0;
-        //                     ee.data.fd = event[n].data.fd;
-        //                     epoll_ctl(mEpollFd, EPOLL_CTL_DEL, closeFd, &ee);
-
-        //                     continue;
-        //                 }
-
-        //                 if (int32_t(event[n].data.fd) >= 0) {
-        //                     if (event[n].data.fd == mListenFd) {
-        //                         AcceptConnection(mListenFd, mEpollFd);
-        //                     }
-        // #if defined(__linux__)
-        //                     else if (event[n].data.fd == mStreamLogTcpFd) {
-        //                         int StreamLogFd = AcceptTcpConnection(mStreamLogTcpFd, mEpollFd);
-        //                         if (StreamLogFd != -1) {
-        //                             ((StreamLogManager*)mStreamLogManagerPtr)->InsertToAcceptedFds(StreamLogFd);
-        //                         }
-        //                     }
-        // #endif
-        //                     else if (event[n].events & EPOLLIN) {
-        // #if defined(__linux__)
-        //                         if (isStreamLogTcpFd) {
-        //                             struct epoll_event ee;
-        //                             ee.events = 0;
-        //                             ee.data.fd = event[n].data.fd;
-        //                             epoll_ctl(mEpollFd, EPOLL_CTL_DEL, event[n].data.fd, &ee);
-        //                             ((StreamLogManager*)mStreamLogManagerPtr)->AddRcvTask(event[n].data.fd);
-        //                         } else
-        // #endif
-        //                         {
-        //                             ReadMessages(event[n].data.fd);
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
-        // #endif
-
-        // ExtraWork();
-        curTime = time(NULL);
-        DumpCheckPointPeriod(curTime);
-        if (curTime - lastCheckDir >= INT32_FLAG(main_loop_check_interval)) {
-            LogFileProfiler::GetInstance()->SendProfileData();
-            MetricExportor::GetInstance()->PushMetrics(false);
-            // #if defined(__linux__)
-            //             CheckShennong();
-            // #endif
-            lastCheckDir = curTime;
-        }
-        if (curTime - lastTcmallocReleaseMemTime >= INT32_FLAG(tcmalloc_release_memory_interval)) {
-#ifndef LOGTAIL_NO_TC_MALLOC
-            MallocExtension::instance()->ReleaseFreeMemory();
-            // tc_malloc_stats();
-#endif
-            lastTcmallocReleaseMemTime = curTime;
-        }
-    }
-    return true;
 }
 
 void EventDispatcher::DumpInotifyWatcherDirs() {
@@ -979,16 +793,16 @@ void EventDispatcher::CheckSymbolicLink() {
     }
 }
 
-void EventDispatcher::ReadInotifyEvents(std::vector<Event*>& eventVec) {
+void EventDispatcher::ReadInotifyEvents(vector<Event*>& eventVec) {
     mEventListener->ReadEvents(eventVec);
 }
 
-std::vector<std::pair<std::string, EventHandler*>>
-EventDispatcher::FindAllSubDirAndHandler(const std::string& baseDir) {
+vector<pair<string, EventHandler*>>
+EventDispatcher::FindAllSubDirAndHandler(const string& baseDir) {
     LOG_DEBUG(sLogger, ("Find all sub dir", baseDir));
-    std::vector<std::pair<std::string, EventHandler*>> dirAndHandlers;
+    vector<pair<string, EventHandler*>> dirAndHandlers;
     size_t baseDirSize = baseDir.size();
-    MapType<std::string, int>::Type::iterator it = mPathWdMap.begin();
+    MapType<string, int>::Type::iterator it = mPathWdMap.begin();
     for (; it != mPathWdMap.end(); ++it) {
         const string& pathName = it->first;
         size_t pathNameSize = pathName.size();
@@ -997,7 +811,7 @@ EventDispatcher::FindAllSubDirAndHandler(const std::string& baseDir) {
         }
         if (memcmp(baseDir.c_str(), pathName.c_str(), baseDirSize) == 0
             && (pathNameSize == baseDirSize || pathName[baseDirSize] == PATH_SEPARATOR[0])) {
-            dirAndHandlers.push_back(std::make_pair(it->first, mWdDirInfoMap[it->second]->mHandler));
+            dirAndHandlers.push_back(make_pair(it->first, mWdDirInfoMap[it->second]->mHandler));
         }
     }
     return dirAndHandlers;
@@ -1012,7 +826,7 @@ void EventDispatcher::UnregisterAllDir(const string& baseDir) {
 }
 
 void EventDispatcher::UnregisterEventHandler(const char* path) {
-    MapType<std::string, int>::Type::iterator pos = mPathWdMap.find(path);
+    MapType<string, int>::Type::iterator pos = mPathWdMap.find(path);
     if (pos == mPathWdMap.end())
         return;
     int wd = pos->second;
@@ -1034,7 +848,7 @@ void EventDispatcher::UnregisterEventHandler(const char* path) {
     LOG_INFO(sLogger, ("remove the watcher for dir", path)("wd", wd));
 }
 
-void EventDispatcher::StopAllDir(const std::string& baseDir) {
+void EventDispatcher::StopAllDir(const string& baseDir) {
     LOG_DEBUG(sLogger, ("Stop all sub dir", baseDir));
     auto subDirAndHandlers = FindAllSubDirAndHandler(baseDir);
     for (auto& subDirAndHandler : subDirAndHandlers) {
@@ -1066,7 +880,7 @@ bool EventDispatcher::IsRegistered(const char* path) {
     return true;
 }
 
-bool EventDispatcher::IsRegistered(int wd, std::string& path) {
+bool EventDispatcher::IsRegistered(int wd, string& path) {
     MapType<int, DirInfo*>::Type::iterator itr = mWdDirInfoMap.find(wd);
     if (itr == mWdDirInfoMap.end())
         return false;
@@ -1167,135 +981,6 @@ void EventDispatcher::DumpAllHandlersMeta(bool remove) {
         CheckPointManager::Instance()->AddDirCheckPoint(path);
     }
 }
-void EventDispatcher::UpdateConfig() {
-    if (ConfigManager::GetInstance()->IsUpdateContainerPaths())
-        ConfigManager::GetInstance()->StartUpdateConfig();
-    if (ConfigManager::GetInstance()->IsUpdateConfig() == false)
-        return;
-#if defined(__linux__)
-    // if (mStreamLogManagerPtr != NULL) {
-    //     ((StreamLogManager*)mStreamLogManagerPtr)->ShutdownConfigUsage();
-    // }
-    ObserverManager::GetInstance()->HoldOn(false);
-#endif
-    LOG_INFO(sLogger, ("main thread", "start update config"));
-    LogInput::GetInstance()->HoldOn();
-    LogtailPlugin::GetInstance()->HoldOn(false);
-    mBrokenLinkSet.clear();
-
-    PollingDirFile::GetInstance()->ClearCache();
-    ConfigManager::GetInstance()->RemoveAllConfigs();
-    ConfigManager::GetInstance()->LoadAllConfig();
-    // ConfigManager::GetInstance()->CleanUnusedUserAK();
-    ConfigManager::GetInstance()->LoadDockerConfig();
-    ConfigManager::GetInstance()->DoUpdateContainerPaths();
-    ConfigManager::GetInstance()->SaveDockerConfig();
-    // do not delete check point, when config update too short and we can't create all readers
-    // if we remove checkpoint here, logtail will lost checkpoint
-    // CheckPointManager::Instance()->RemoveAllCheckPoint();
-    LOG_INFO(sLogger, ("collect checkpoint", "start"));
-    DumpAllHandlersMeta(true);
-    LOG_INFO(sLogger, ("collect checkpoint", "done"));
-    // CheckPointManager::Instance()->PrintStatus();
-    if (ConfigManager::GetInstance()->GetConfigRemoveFlag()) {
-        LOG_INFO(sLogger, ("dump checkpoint to local", "start"));
-        if (!(CheckPointManager::Instance()->DumpCheckPointToLocal())) {
-            LOG_WARNING(sLogger, ("dump checkpoint to local", "fail"));
-        } else {
-            LOG_INFO(sLogger, ("dump checkpoint to local", "success"));
-        }
-        ConfigManager::GetInstance()->SetConfigRemoveFlag(false);
-    }
-    // reset last dump time to prevent check point manager to dump check point and delete check point.
-    // because this may mix check point when init reader and dump check point happen in same time
-    CheckPointManager::Instance()->ResetLastDumpTime();
-    // we should add checkpoint events
-
-    LogtailPlugin::GetInstance()->Resume();
-    LogInput::GetInstance()->Resume(true);
-
-#if defined(__linux__)
-    // if (mStreamLogManagerPtr != NULL) {
-    //     ((StreamLogManager*)mStreamLogManagerPtr)->StartupConfigUsage();
-    // }
-    ObserverManager::GetInstance()->Resume();
-#endif
-
-    ConfigManager::GetInstance()->FinishUpdateConfig();
-}
-
-void EventDispatcher::ExitProcess() {
-#if defined(__linux__)
-    // if (mStreamLogManagerPtr != NULL) {
-    //     LOG_INFO(sLogger, ("StreamLogManager", "shutdown"));
-    //     ((StreamLogManager*)mStreamLogManagerPtr)->Shutdown();
-    // }
-    ObserverManager::GetInstance()->HoldOn(true);
-#endif
-
-    LOG_INFO(sLogger, ("LogInput", "hold on"));
-    LogInput::GetInstance()->HoldOn();
-
-    LOG_INFO(sLogger, ("collect checkpoint", "start"));
-    DumpAllHandlersMeta(false);
-    LOG_INFO(sLogger, ("collect checkpoint", "done"));
-    LOG_INFO(sLogger, ("dump checkpoint to local", "start"));
-    if (!(CheckPointManager::Instance()->DumpCheckPointToLocal())) {
-        LOG_WARNING(sLogger, ("dump checkpoint to local", "fail"));
-    } else {
-        LOG_INFO(sLogger, ("dump checkpoint to local", "success"));
-    }
-    // added by xianzhi(bowen.gbw@antfin.com)
-    // should dump line count and integrity data to local file
-    LOG_INFO(sLogger, ("dump line count data to local file", "start"));
-    LogLineCount::GetInstance()->DumpLineCountDataToLocal();
-
-    LOG_INFO(sLogger, ("dump integrity data to local file", "start"));
-    LogIntegrity::GetInstance()->DumpIntegrityDataToLocal();
-
-
-    LOG_INFO(sLogger, ("flush log process buffer", "start"));
-
-    // resume log process thread to process last buffer
-    // previously hold on by LogInput
-    LogProcess::GetInstance()->Resume();
-    Sender::Instance()->SetQueueUrgent();
-    // exit logtail plugin
-    LogtailPlugin::GetInstance()->HoldOn(true);
-
-    bool logProcessFlushFlag = false;
-
-    for (int i = 0; !logProcessFlushFlag && i < 500; ++i) {
-        // deamon send thread may reset flush, so we should set flush every time
-        Sender::Instance()->SetFlush();
-        logProcessFlushFlag = LogProcess::GetInstance()->FlushOut(10);
-    }
-
-    if (!logProcessFlushFlag) {
-        LOG_WARNING(sLogger, ("flush log process buffer", "fail"));
-    } else {
-        LOG_INFO(sLogger, ("flush log process buffer", "success"));
-    }
-    // hode on again
-    LogProcess::GetInstance()->HoldOn();
-
-    LOG_INFO(sLogger, ("flush out sender data", "start"));
-    if (!(Sender::Instance()->FlushOut(INT32_FLAG(exit_flushout_duration))))
-        LOG_WARNING(sLogger, ("flush out sender data", "fail"));
-    else
-        LOG_INFO(sLogger, ("flush out sender data", "success"));
-
-#ifdef LOGTAIL_RUNTIME_PLUGIN
-    LogtailRuntimePlugin::GetInstance()->UnLoadPluginBase();
-#endif
-    PluginRegistry::GetInstance()->UnloadPlugins();
-
-#if defined(_MSC_VER)
-    ReleaseWindowsSignalObject();
-#endif
-
-    exit(0);
-}
 
 void EventDispatcher::ProcessHandlerTimeOut() {
     MapType<int, DirInfo*>::Type::iterator mapIter = mWdDirInfoMap.begin();
@@ -1324,7 +1009,7 @@ void EventDispatcher::DumpCheckPointPeriod(int32_t curTime) {
 
 #ifdef APSARA_UNIT_TEST_MAIN
 void EventDispatcher::CleanEnviroments() {
-    mMainThreadRunning = false;
+    // mMainThreadRunning = false;
     sleep(2); // INT32_FLAG(ilogtail_epoll_time_out) + 1
     mPathWdMap.clear();
     for (MapType<int, DirInfo*>::Type::iterator iter = mWdDirInfoMap.begin(); iter != mWdDirInfoMap.end(); ++iter)
@@ -1332,7 +1017,7 @@ void EventDispatcher::CleanEnviroments() {
     mWdDirInfoMap.clear();
     mBrokenLinkSet.clear();
     mWdUpdateTimeMap.clear();
-    // for (std::unordered_map<int64_t, SingleDSPacket*>::iterator iter = mPacketBuffer.begin();
+    // for (unordered_map<int64_t, SingleDSPacket*>::iterator iter = mPacketBuffer.begin();
     //      iter != mPacketBuffer.end();
     //      ++iter)
     //     delete iter->second;

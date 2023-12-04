@@ -15,16 +15,38 @@
  */
 
 #include "processor/ProcessorSplitLogStringNative.h"
-#include "common/Constants.h"
-#include "models/LogEvent.h"
-#include "plugin/instance/ProcessorInstance.h"
-#include "monitor/MetricConstants.h"
 
+#include <string>
+
+#include "common/Constants.h"
+#include "common/ParamExtractor.h"
+#include "models/LogEvent.h"
+#include "monitor/MetricConstants.h"
+#include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
 const std::string ProcessorSplitLogStringNative::sName = "processor_split_string_native";
 
 bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
+    std::string errorMsg;
+    // SplitKey
+    if (!GetOptionalStringParam(config, "SplitKey", mSplitKey, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSplitKey, sName, mContext->GetConfigName());
+    }
+    // Compatible with old logic.
+    int32_t splitter = '\n';
+    if (!GetOptionalIntParam(config, "SplitChar", splitter, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "\\n", sName, mContext->GetConfigName());
+    } else {
+        mSplitChar = static_cast<char>(splitter);
+    }
+    // AppendingLogPositionMeta
+    if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mAppendingLogPositionMeta, sName, mContext->GetConfigName());
+    }
+    mFeedLines = &(GetContext().GetProcessProfile().feedLines);
+    mSplitLines = &(GetContext().GetProcessProfile().splitLines);
     return true;
 }
 
@@ -71,9 +93,11 @@ void ProcessorSplitLogStringNative::ProcessEvent(PipelineEventGroup& logGroup,
     StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
     for (auto& content : logIndex) {
         std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
-        targetEvent->SetTimestamp(sourceEvent.GetTimestamp(), sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
+        targetEvent->SetTimestamp(
+            sourceEvent.GetTimestamp(),
+            sourceEvent.GetTimestampNanosecond()); // it is easy to forget other fields, better solution?
         targetEvent->SetContentNoCopy(StringView(splitKey.data, splitKey.size), content);
-        if (mEnableLogPositionMeta) {
+        if (mAppendingLogPositionMeta) {
             auto const offset = sourceoffset + (content.data() - sourceVal.data());
             StringBuffer offsetStr = logGroup.GetSourceBuffer()->CopyString(std::to_string(offset));
             targetEvent->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));

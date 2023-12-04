@@ -28,7 +28,6 @@
 #include "common/TimeUtil.h"
 #include "common/RuntimeUtil.h"
 #include "common/DevInode.h"
-#include "common/GlobalPara.h"
 #include "common/version.h"
 #include "common/MachineInfoUtil.h"
 #include "log_pb/sls_logs.pb.h"
@@ -48,6 +47,7 @@
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
+#include "pipeline/PipelineManager.h"
 
 using namespace std;
 using namespace sls_logs;
@@ -264,7 +264,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
 #if defined(__linux__)
     AddLogContent(logPtr, "load", GetLoadAvg());
 #endif
-    AddLogContent(logPtr, "plugin_stats", ConfigManager::GetInstance()->GeneratePluginStatString());
+    AddLogContent(logPtr, "plugin_stats", PipelineManager::GetInstance()->GetPluginStatistics());
     // Metrics.
     vector<string> allProfileRegion;
     ProfileSender::GetInstance()->GetAllProfileRegion(allProfileRegion);
@@ -490,7 +490,7 @@ bool LogtailMonitor::IsHostIpChanged() {
 void LogtailMonitor::Suicide() {
     SendStatusProfile(true);
     mMonitorRunning = false;
-    LogtailGlobalPara::Instance()->SetSigtermFlag(true);
+    Application::GetInstance()->SetSigTermSignalFlag(true);
     sleep(15);
     _exit(1);
 }

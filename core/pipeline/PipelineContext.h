@@ -16,16 +16,16 @@
 
 #pragma once
 
+#include <json/json.h>
+
 #include <cstdint>
 #include <string>
-
-#include "json/json.h"
 
 #include "common/LogstoreFeedbackKey.h"
 #include "logger/Logger.h"
 #include "models/PipelineEventGroup.h"
-#include "monitor/LogtailAlarm.h"
 #include "monitor/LogFileProfiler.h"
+#include "monitor/LogtailAlarm.h"
 #include "pipeline/GlobalConfig.h"
 
 namespace logtail {
@@ -61,8 +61,8 @@ public:
     uint32_t GetCreateTime() const { return mCreateTime; }
     void SetCreateTime(uint32_t time) { mCreateTime = time; }
     const GlobalConfig& GetGlobalConfig() const { return mGlobalConfig; }
-    bool InitGlobalConfig(const Json::Value& config, Json::Value& nonNativeParams) {
-        return mGlobalConfig.Init(config, mConfigName, nonNativeParams);
+    bool InitGlobalConfig(const Json::Value& config, Json::Value& extendedParams) {
+        return mGlobalConfig.Init(config, mConfigName, extendedParams);
     }
     const Pipeline& GetPipeline() const { return *mPipeline; }
     Pipeline& GetPipeline() { return *mPipeline; }
@@ -74,15 +74,10 @@ public:
     LogstoreFeedBackKey GetLogstoreKey() const;
     const FlusherSLS* GetSLSInfo() const { return mSLSInfo; }
     void SetSLSInfo(const FlusherSLS* flusherSLS) { mSLSInfo = flusherSLS; }
-    bool IsFirstProcessorJson() const { return mIsFirstProcessorJson; }
-    void SetIsFirstProcessorJsonFlag(bool flag) { mIsFirstProcessorJson = flag; }
+    bool RequiringJsonReader() const { return mRequiringJsonReader; }
+    void SetRequiringJsonReaderFlag(bool flag) { mRequiringJsonReader = flag; }
     bool IsFirstProcessorApsara() const { return mIsFirstProcessorApsara; }
     void SetIsFirstProcessorApsaraFlag(bool flag) { mIsFirstProcessorApsara = flag; }
-
-    // 过渡使用
-    void SetProjectName(const std::string& projectName) { mProjectName = projectName; }
-    void SetLogstoreName(const std::string& logstoreName) { mLogstoreName = logstoreName; }
-    void SetRegion(const std::string& region) { mRegion = region; }
 
     ProcessProfile& GetProcessProfile() const { return mProcessProfile; }
     // LogFileProfiler& GetProfiler() { return *mProfiler; }
@@ -98,16 +93,13 @@ private:
     Pipeline* mPipeline = nullptr;
 
     const FlusherSLS* mSLSInfo = nullptr;
-    bool mIsFirstProcessorJson = false;
+    bool mRequiringJsonReader = false;
     bool mIsFirstProcessorApsara = false;
 
     mutable ProcessProfile mProcessProfile;
     // LogFileProfiler* mProfiler = LogFileProfiler::GetInstance();
     Logger::logger mLogger = sLogger;
     LogtailAlarm* mAlarm = LogtailAlarm::GetInstance();
-
-    // 过渡使用
-    std::string mProjectName, mLogstoreName, mRegion;
 };
 
 } // namespace logtail

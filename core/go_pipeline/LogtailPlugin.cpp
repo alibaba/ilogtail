@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "go_pipeline/LogtailPlugin.h"
-// #include "LogtailPluginAdapter.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/TimeUtil.h"
 #include "logger/Logger.h"
@@ -25,6 +24,12 @@
 #include "common/DynamicLibHelper.h"
 #include "common/LogtailCommonFlags.h"
 #include "pipeline/PipelineManager.h"
+#include "container_manager/DockerContainerPathCmd.h"
+
+DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
+DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
+                 "if enable containerd upper dir detect when locating rootfs",
+                 false);
 
 using namespace std;
 using namespace logtail;
@@ -59,77 +64,47 @@ LogtailPlugin::~LogtailPlugin() {
     DynamicLibLoader::CloseLib(mPluginAdapterPtr);
 }
 
-void LogtailPlugin::LoadConfig() {
-    if (!mPluginValid || !mLoadConfigFun) {
-        LOG_WARNING(sLogger, ("load plugin config error", "plugin not inited"));
-        return;
+bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
+                                 const std::string& pipeline,
+                                 const std::string& project,
+                                 const std::string& logstore,
+                                 const std::string& region,
+                                 logtail::LogstoreFeedBackKey logstoreKey) {
+    if (!mPluginValid) {
+        LoadPluginBase();
     }
-    const auto& allPipelines = PipelineManager::GetInstance()->GetAllPipelines();
-    // 目前一个配置最多只有一个go pipeline，所以名字就用configname，严格需要加上后缀
-    for (const auto& item : allPipelines) {
-        if (!item.second->GetGoPipelineWithInput().isNull()) {
-            string pluginConfig = item.second->GetGoPipelineWithInput().toStyledString();
-            GoString goProject;
-            GoString goLogstore;
-            GoString goConfigName;
-            GoString goPluginConfig;
 
-            goProject.n = item.second->GetContext().GetProjectName().size();
-            goProject.p = item.second->GetContext().GetProjectName().c_str();
-            goLogstore.n = item.second->GetContext().GetLogstoreName().size();
-            goLogstore.p = item.second->GetContext().GetLogstoreName().c_str();
-            goConfigName.n = item.first.size();
-            goConfigName.p = item.first.c_str();
-            goPluginConfig.n = pluginConfig.size();
-            goPluginConfig.p = pluginConfig.c_str();
-            long long logStoreKey = item.second->GetContext().GetLogstoreKey();
+    if (mPluginValid && mLoadConfigFun != NULL) {
+        GoString goProject;
+        GoString goLogstore;
+        GoString goConfigName;
+        GoString goPluginConfig;
 
-            GoInt loadRst = mLoadConfigFun(goProject, goLogstore, goConfigName, logStoreKey, goPluginConfig);
-            if (loadRst != 0) {
-                LOG_WARNING(sLogger,
-                            ("msg", "load plugin error")("project", item.second->GetContext().GetProjectName())(
-                                "logstore", item.second->GetContext().GetLogstoreName())("config", item.first)(
-                                "content", pluginConfig)("result", loadRst));
-                LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-                                                       "load plugin config error, invalid config: " + item.first
-                                                           + ". please check you config and logtail's plugin log.",
-                                                       item.second->GetContext().GetProjectName(),
-                                                       item.second->GetContext().GetLogstoreName(),
-                                                       item.second->GetContext().GetRegion());
-            }
+        goConfigName.n = pipelineName.size();
+        goConfigName.p = pipelineName.c_str();
+        goPluginConfig.n = pipeline.size();
+        goPluginConfig.p = pipeline.c_str();
+        goProject.n = project.size();
+        goProject.p = project.c_str();
+        goLogstore.n = logstore.size();
+        goLogstore.p = logstore.c_str();
+        long long goLogStoreKey = static_cast<long long>(logstoreKey);
+
+        GoInt loadRst = mLoadConfigFun(goProject, goLogstore, goConfigName, goLogStoreKey, goPluginConfig);
+        if (loadRst != 0) {
+            LOG_WARNING(sLogger,
+                        ("msg", "load plugin error")("project", project)("logstore", logstore)("config", pipelineName)(
+                            "content", pipeline)("result", loadRst));
+            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+                                                   "load plugin config error, invalid config: " + pipelineName
+                                                       + ". please check you config and logtail's plugin log.",
+                                                   project,
+                                                   logstore,
+                                                   region);
         }
-        if (!item.second->GetGoPipelineWithoutInput().isNull()) {
-            string pluginConfig = item.second->GetGoPipelineWithoutInput().toStyledString();
-            GoString goProject;
-            GoString goLogstore;
-            GoString goConfigName;
-            GoString goPluginConfig;
-
-            goProject.n = item.second->GetContext().GetProjectName().size();
-            goProject.p = item.second->GetContext().GetProjectName().c_str();
-            goLogstore.n = item.second->GetContext().GetLogstoreName().size();
-            goLogstore.p = item.second->GetContext().GetLogstoreName().c_str();
-            goConfigName.n = item.first.size();
-            goConfigName.p = item.first.c_str();
-            goPluginConfig.n = pluginConfig.size();
-            goPluginConfig.p = pluginConfig.c_str();
-            long long logStoreKey = item.second->GetContext().GetLogstoreKey();
-
-            GoInt loadRst = mLoadConfigFun(goProject, goLogstore, goConfigName, logStoreKey, goPluginConfig);
-            if (loadRst != 0) {
-                LOG_WARNING(sLogger,
-                            ("msg", "load plugin error")("project", item.second->GetContext().GetProjectName())(
-                                "logstore", item.second->GetContext().GetLogstoreName())("config", item.first)(
-                                "content", pluginConfig)("result", loadRst));
-                LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-                                                       "load plugin config error, invalid config: " + item.first
-                                                           + ". please check you config and logtail's plugin log.",
-                                                       item.second->GetContext().GetProjectName(),
-                                                       item.second->GetContext().GetLogstoreName(),
-                                                       item.second->GetContext().GetRegion());
-            }
-        }
+        return loadRst == 0;
     }
+    return false;
 }
 
 void LogtailPlugin::HoldOn(bool exitFlag) {
@@ -147,13 +122,10 @@ void LogtailPlugin::HoldOn(bool exitFlag) {
 }
 
 void LogtailPlugin::Resume() {
-    if (LoadPluginBase()) { // LoadPluginBase is required as plugin config may come after ilogtail start
-        LoadConfig();
-        if (mResumeFun != NULL) {
-            LOG_INFO(sLogger, ("logtail plugin Resume", "start"));
-            mResumeFun();
-            LOG_INFO(sLogger, ("logtail plugin Resume", "success"));
-        }
+    if (mPluginValid && mResumeFun != NULL) {
+        LOG_INFO(sLogger, ("logtail plugin Resume", "start"));
+        mResumeFun();
+        LOG_INFO(sLogger, ("logtail plugin Resume", "success"));
     }
 }
 
@@ -165,13 +137,14 @@ void LogtailPlugin::ProcessRawLog(const std::string& configName,
         return;
     }
     if (mPluginValid && mProcessRawLogFun != NULL) {
+        std::string realConfigName = configName + "/2";
         GoString goConfigName;
         GoSlice goRawLog;
         GoString goPackId;
         GoString goTopic;
 
-        goConfigName.n = configName.size();
-        goConfigName.p = configName.c_str();
+        goConfigName.n = realConfigName.size();
+        goConfigName.p = realConfigName.c_str();
         goRawLog.len = rawLog.size();
         goRawLog.cap = rawLog.size();
         goRawLog.data = (void*)rawLog.data();
@@ -198,6 +171,7 @@ void LogtailPlugin::ProcessRawLogV2(const std::string& configName,
     if (rawLog.empty() || !(mPluginValid && mProcessRawLogV2Fun != NULL)) {
         return;
     }
+    std::string realConfigName = configName + "/2";
 
     GoString goConfigName;
     GoSlice goRawLog;
@@ -205,8 +179,8 @@ void LogtailPlugin::ProcessRawLogV2(const std::string& configName,
     GoString goTopic;
     GoSlice goTags;
 
-    goConfigName.n = configName.size();
-    goConfigName.p = configName.c_str();
+    goConfigName.n = realConfigName.size();
+    goConfigName.p = realConfigName.c_str();
     goRawLog.data = (void*)rawLog.data();
     goRawLog.len = rawLog.size();
     goRawLog.cap = rawLog.size();
@@ -281,6 +255,9 @@ int LogtailPlugin::SendPbV2(const char* configName,
             return 0;
         }
     } else {
+        if (!GetRealConfigName(configNameStr)) {
+            return -2;
+        }
         shared_ptr<Pipeline> p = PipelineManager::GetInstance()->FindPipelineByName(configNameStr);
         if (!p) {
             LOG_INFO(sLogger,
@@ -304,6 +281,9 @@ int LogtailPlugin::ExecPluginCmd(
         return -2;
     }
     string configNameStr(configName, configNameSize);
+    if (!GetRealConfigName(configNameStr)) {
+        return -2;
+    }
     string paramsStr(params, paramsLen);
     PluginCmdType cmdType = (PluginCmdType)cmdId;
     LOG_DEBUG(sLogger, ("exec cmd", cmdType)("config", configNameStr)("detail", paramsStr));
@@ -334,24 +314,8 @@ int LogtailPlugin::ExecPluginCmd(
 
 bool LogtailPlugin::LoadPluginBase() {
     if (mPluginValid) {
-        return mPluginValid;
+        return true;
     }
-    // vector<Config*> pluginConfigs;
-    // ConfigManager::GetInstance()->GetAllPluginConfig(pluginConfigs);
-    // vector<Config*> observerConfigs;
-    // ConfigManager::GetInstance()->GetAllObserverConfig(observerConfigs);
-    // const char* dockerEnvConfig = getenv("ALICLOUD_LOG_DOCKER_ENV_CONFIG");
-    // bool dockerEnvConfigEnabled = (dockerEnvConfig != NULL && strlen(dockerEnvConfig) > 0
-    //                                && (dockerEnvConfig[0] == 't' || dockerEnvConfig[0] == 'T'));
-
-    // if (observerConfigs.size() == (size_t)0 && pluginConfigs.size() == (size_t)0 && !dockerEnvConfigEnabled
-    //     && !AppConfig::GetInstance()->IsPurageContainerMode()) {
-    //     LOG_INFO(sLogger, ("no plugin config and no docker env config, do not load plugin base", ""));
-    //     return mPluginValid;
-    // }
-    // LOG_INFO(sLogger,
-    //          ("load plugin base, config count", pluginConfigs.size())("docker env config", dockerEnvConfigEnabled)(
-    //              "dl file", (AppConfig::GetInstance()->GetWorkingDir() + "libPluginAdapter.so")));
 
     // load plugin adapter
     if (mPluginAdapterPtr == NULL) {
@@ -502,13 +466,14 @@ void LogtailPlugin::ProcessLog(const std::string& configName,
     if (!log.has_time() || !(mPluginValid && mProcessLogsFun != NULL)) {
         return;
     }
+    std::string realConfigName = configName + "/2";
     GoString goConfigName;
     GoSlice goLog;
     GoString goPackId;
     GoString goTopic;
     GoSlice goTags;
-    goConfigName.n = configName.size();
-    goConfigName.p = configName.c_str();
+    goConfigName.n = realConfigName.size();
+    goConfigName.p = realConfigName.c_str();
     goPackId.n = packId.size();
     goPackId.p = packId.c_str();
     goTopic.n = topic.size();
@@ -530,11 +495,12 @@ void LogtailPlugin::ProcessLogGroup(const std::string& configName,
     if (!logGroup.logs_size() || !(mPluginValid && mProcessLogsFun != NULL)) {
         return;
     }
+    std::string realConfigName = configName + "/2";
     GoString goConfigName;
     GoSlice goLog;
     GoString goPackId;
-    goConfigName.n = configName.size();
-    goConfigName.p = configName.c_str();
+    goConfigName.n = realConfigName.size();
+    goConfigName.p = realConfigName.c_str();
     goPackId.n = packId.size();
     goPackId.p = packId.c_str();
     std::string sLog = logGroup.SerializeAsString();
@@ -609,4 +575,15 @@ K8sContainerMeta LogtailPlugin::GetContainerMeta(const string& containerID) {
         }
     }
     return K8sContainerMeta();
+}
+
+bool LogtailPlugin::GetRealConfigName(std::string& name) {
+    // all Go pipeline name should end with "/1" or "/2"
+    size_t len = name.size();
+    if (len <= 2) {
+        LOG_ERROR(sLogger, ("invalid Go pipeline name", "something wrong happend")("config", name));
+        return false;
+    }
+    name = name.substr(0, len - 2);
+    return true;
 }

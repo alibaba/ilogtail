@@ -12,23 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstdlib>
+#include "pipeline/Pipeline.h"
+#include "pipeline/PipelineManager.h"
 #include "unittest/Unittest.h"
-#include "plugin/PluginRegistry.h"
 
-DECLARE_FLAG_STRING(user_log_config);
 using namespace std;
 
 namespace logtail {
 
-class PipelineManagerUnittest : public ::testing::Test {
+class PipelineManagerUnittest : public testing::Test {
 public:
-    static void SetUpTestCase() { PluginRegistry::GetInstance()->LoadPlugins(); }
-
-    void SetUp() override {}
-
-    void TearDown() override {}
+    void TestPipelineManagement() const;
 };
+
+void PipelineManagerUnittest::TestPipelineManagement() const {
+    PipelineManager::GetInstance()->mPipelineNameEntityMap["test1"] = make_shared<Pipeline>();
+    PipelineManager::GetInstance()->mPipelineNameEntityMap["test2"] = make_shared<Pipeline>();
+
+    APSARA_TEST_EQUAL(2, PipelineManager::GetInstance()->GetAllPipelineNames().size());
+    APSARA_TEST_NOT_EQUAL(nullptr, PipelineManager::GetInstance()->FindPipelineByName("test1"));
+    APSARA_TEST_EQUAL(nullptr, PipelineManager::GetInstance()->FindPipelineByName("test3"));
+}
+
+UNIT_TEST_CASE(PipelineManagerUnittest, TestPipelineManagement)
 
 } // namespace logtail
 

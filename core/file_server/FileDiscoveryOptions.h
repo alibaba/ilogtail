@@ -24,7 +24,7 @@
 
 #include "json/json.h"
 
-#include "config/DockerFileConfig.h"
+#include "file_server/DockerContainerPath.h"
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
@@ -105,12 +105,16 @@ private:
     std::vector<std::string> mFileNameBlacklist;
 
     bool mEnableContainerDiscovery = false;
-    std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos;
+    std::shared_ptr<std::vector<DockerContainerPath>> mContainerInfos; // must not be null if container discovery is enabled
     bool (*mUpdateContainerInfo)(const std::string&, bool) = nullptr;
     bool (*mDeleteContainerInfo)(const std::string&) = nullptr;
 
     // 过渡使用
     bool mTailingAllMatchedFiles = false;
+
+#ifdef APSARA_UNIT_TEST_MAIN
+    friend class FileDiscoveryOptionsUnittest;
+#endif
 };
 
 using FileDiscoveryConfig = std::pair<FileDiscoveryOptions*, const PipelineContext*>;

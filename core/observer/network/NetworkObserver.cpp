@@ -58,7 +58,6 @@ void NetworkObserver::HoldOn(bool exitFlag) {
     }
     mEventLoopThreadRWL.lock();
     LOG_INFO(sLogger, ("hold on", "observer"));
-    mConfig->mAllNetworkConfigs.clear();
 }
 
 void NetworkObserver::Resume() {
@@ -345,11 +344,9 @@ void NetworkObserver::Reload() {
         LOG_ERROR(sLogger, ("observer depends on glibc1.14", "load glibc func fail"));
         return;
     }
-    // std::vector<Pipeline*> allObserverConfigs;
-    // ConfigManager::GetInstance()->GetAllObserverConfig(allObserverConfigs);
     mConfig->BeginLoadConfig();
     for (auto config : mConfig->mAllNetworkConfigs) {
-        mConfig->LoadConfig(config);
+        mConfig->LoadConfig(config.second);
     }
     mConfig->EndLoadConfig();
     if (!mConfig->NeedReload()) {

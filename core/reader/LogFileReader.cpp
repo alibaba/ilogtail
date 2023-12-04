@@ -23,7 +23,7 @@
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <cityhash/city.h>
-#include "common/util.h"
+#include "common/UUIDUtil.h"
 #include "common/Flags.h"
 #include "common/HashUtil.h"
 #include "common/ErrorUtil.h"
@@ -65,8 +65,8 @@ DEFINE_FLAG_INT32(max_fix_pos_bytes, "", 128 * 1024);
 DEFINE_FLAG_INT32(force_release_deleted_file_fd_timeout,
                   "force release fd if file is deleted after specified seconds, no matter read to end or not",
                   -1);
-DECLARE_FLAG_INT32(delay_bytes_upperlimit);
 DECLARE_FLAG_INT32(reader_close_unused_file_time);
+DECLARE_FLAG_INT32(logtail_alarm_interval);
 
 namespace logtail {
 
@@ -86,7 +86,7 @@ LogFileReader* LogFileReader::CreateLogFileReader(const string& hostLogPathDir,
                                                   uint32_t exactlyonceConcurrency,
                                                   bool forceFromBeginning) {
     LogFileReader* reader = nullptr;
-    if (readerConfig.second->IsFirstProcessorJson()) {
+    if (readerConfig.second->RequiringJsonReader()) {
         reader = new JsonLogFileReader(hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig);
     } else {
         reader = new LogFileReader(hostLogPathDir, hostLogPathFile, devInode, readerConfig, multilineConfig);
@@ -179,6 +179,10 @@ LogFileReader::LogFileReader(const std::string& hostLogPathDir,
     mHostLogPath = PathJoin(hostLogPathDir, hostLogPathFile);
     mLastUpdateTime = time(NULL);
     mLastEventTime = mLastUpdateTime;
+    mProject = readerConfig.second->GetProjectName();
+    mLogstore = readerConfig.second->GetLogstoreName();
+    mConfigName = readerConfig.second->GetConfigName();
+    mRegion = readerConfig.second->GetRegion();
 }
 
 void LogFileReader::DumpMetaToMem(bool checkConfigFlag) {
@@ -1665,7 +1669,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     if (allowRollback) {
         alignedBytes = AlignLastCharacter(stringBuffer, nbytes);
     }
-    if (allowRollback || mReaderConfig.second->IsFirstProcessorJson()) {
+    if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
         int32_t rollbackLineFeedCount;
         nbytes = LastMatchedLine(stringBuffer, alignedBytes, rollbackLineFeedCount, allowRollback);
     }
@@ -1673,7 +1677,7 @@ void LogFileReader::ReadUTF8(LogBuffer& logBuffer, int64_t end, bool& moreData, 
     if (nbytes == 0) {
         if (moreData) { // excessively long line without '\n' or multiline begin or valid wchar
             nbytes = alignedBytes ? alignedBytes : BUFFER_SIZE;
-            if (mReaderConfig.second->IsFirstProcessorJson()) {
+            if (mReaderConfig.second->RequiringJsonReader()) {
                 int32_t rollbackLineFeedCount;
                 nbytes = LastMatchedLine(stringBuffer, nbytes, rollbackLineFeedCount, false);
             }
@@ -1800,14 +1804,14 @@ void LogFileReader::ReadGBK(LogBuffer& logBuffer, int64_t end, bool& moreData, b
     }
     int32_t rollbackLineFeedCount = 0;
     int32_t bakResultCharCount = resultCharCount;
-    if (allowRollback || mReaderConfig.second->IsFirstProcessorJson()) {
+    if (allowRollback || mReaderConfig.second->RequiringJsonReader()) {
         resultCharCount = LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount, allowRollback);
     }
     if (resultCharCount == 0) {
         if (moreData) {
             resultCharCount = bakResultCharCount;
             rollbackLineFeedCount = 0;
-            if (mReaderConfig.second->IsFirstProcessorJson()) {
+            if (mReaderConfig.second->RequiringJsonReader()) {
                 int32_t rollbackLineFeedCount;
                 LastMatchedLine(stringBuffer, resultCharCount, rollbackLineFeedCount, false);
             }

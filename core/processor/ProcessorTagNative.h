@@ -31,9 +31,6 @@ public:
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
-private:
-    bool mPluginProcessFlag = false;
-
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorTagNativeUnittest;
 #endif

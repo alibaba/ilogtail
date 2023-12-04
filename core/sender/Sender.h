@@ -284,6 +284,9 @@ private:
     SpinLock mRegionStatusLock;
     std::unordered_map<std::string, bool> mAllRegionStatus;
 
+    mutable SpinLock mDefaultRegionLock;
+    std::string mDefaultRegion;
+
     const static std::string BUFFER_FILE_NAME_PREFIX;
     const static int32_t BUFFER_META_BASE_SIZE;
 
@@ -494,19 +497,9 @@ public:
     void DecreaseAliuidReferenceCntForRegion(const std::string& region, const std::string& aliuid);
     bool GetRegionStatus(const std::string& region);
     void UpdateRegionStatus(const std::string& region, bool status);
-    // 临时使用
-    void ClearProjects() {
-        ScopedSpinLock lock(mProjectRefCntMapLock);
-        mProjectRefCntMap.clear();
-    }
-    void ClearRegions() {
-        ScopedSpinLock lock(mRegionRefCntMapLock);
-        mRegionRefCntMap.clear();
-    }
-    void ClearRegionAliuid() {
-        PTScopedLock lock(mRegionAliuidRefCntMapLock);
-        mRegionAliuidRefCntMap.clear();
-    }
+
+    const std::string& GetDefaultRegion() const;
+    void SetDefaultRegion(const std::string& region);
 
     friend class SendClosure;
 
@@ -514,6 +507,7 @@ public:
     friend class SenderUnittest;
     friend class ConfigUpdatorUnittest;
     friend class FuxiSceneUnittest;
+    friend class FlusherSLSUnittest;
 #endif
 };
 

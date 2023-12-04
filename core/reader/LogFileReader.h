@@ -23,14 +23,12 @@
 #include <atomic>
 #include "parser/LogParser.h"
 #include "common/TimeUtil.h"
-#include "common/GlobalPara.h"
 #include "common/StringTools.h"
 #include "common/EncodingConverter.h"
 #include "common/DevInode.h"
 #include "common/LogFileOperator.h"
 #include "logger/Logger.h"
 #include "log_pb/sls_logs.pb.h"
-#include "config/LogType.h"
 #include "common/FileInfo.h"
 #include "checkpoint/RangeCheckpoint.h"
 #include "reader/SourceBuffer.h"
@@ -348,10 +346,10 @@ public:
 
     std::unique_ptr<Event> CreateFlushTimeoutEvent();
 
-    const std::string& GetProject() const { return mReaderConfig.second->GetProjectName(); }
-    const std::string& GetLogstore() const { return mReaderConfig.second->GetLogstoreName(); }
-    const std::string& GetRegion() const { return mReaderConfig.second->GetRegion(); }
-    const std::string& GetConfigName() const { return mReaderConfig.second->GetConfigName(); }
+    const std::string& GetProject() const { return mProject; }
+    const std::string& GetLogstore() const { return mLogstore; }
+    const std::string& GetRegion() const { return mRegion; }
+    const std::string& GetConfigName() const { return mConfigName; }
 
     int64_t GetLogGroupKey() const { return mLogGroupKey; }
 
@@ -445,6 +443,13 @@ protected:
     FileReaderConfig mReaderConfig;
     MultilineConfig mMultilineConfig;
     int64_t mLogGroupKey = 0;
+
+    // since reader is destructed after the corresponding pipeline is removed, pipeline context used in destructor
+    // should be copied explicitly from context.
+    std::string mProject;
+    std::string mLogstore;
+    std::string mConfigName;
+    std::string mRegion;
 
 private:
     // Initialized when the exactly once feature is enabled.
@@ -583,6 +588,7 @@ private:
     friend class LogSplitNoDiscardUnmatchUnittest;
     friend class LastMatchedLineDiscardUnmatchUnittest;
     friend class LastMatchedLineNoDiscardUnmatchUnittest;
+    friend class LogFileReaderCheckpointUnittest;
 
 protected:
     void UpdateReaderManual();

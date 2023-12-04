@@ -16,13 +16,13 @@
 
 #pragma once
 
+#include <json/json.h>
+
 #include <cstdint>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-
-#include "json/json.h"
 
 #include "common/StringTools.h"
 #include "logger/Logger.h"
@@ -77,39 +77,40 @@ bool GetOptionalListParam(const Json::Value& config,
                           std::vector<T>& param,
                           std::string& errorMsg) {
     errorMsg.clear();
-    const Json::Value* itr = config.find(key.c_str(), key.c_str() + key.length());
+    std::string currentKey = ExtractCurrentKey(key);
+    const Json::Value* itr = config.find(currentKey.c_str(), currentKey.c_str() + currentKey.length());
     if (itr) {
         if (!itr->isArray()) {
-            errorMsg = "param" + key + "is not of type list in plugin ";
+            errorMsg = "param " + key + " is not of type list";
             return false;
         }
         for (auto it = itr->begin(); it != itr->end(); ++it) {
             if constexpr (std::is_same_v<T, bool>) {
                 if (!it->isBool()) {
-                    errorMsg = "element in list param" + key + "is not of type bool in plugin ";
+                    errorMsg = "element in list param " + key + " is not of type bool";
                     return false;
                 }
                 param.emplace_back(it->asBool());
             } else if constexpr (std::is_same_v<T, uint32_t>) {
                 if (!it->isUInt()) {
-                    errorMsg = "element in list param" + key + "is not of type uint in plugin ";
+                    errorMsg = "element in list param " + key + " is not of type uint";
                     return false;
                 }
                 param.emplace_back(it->asUInt());
             } else if constexpr (std::is_same_v<T, int32_t>) {
                 if (!it->isInt()) {
-                    errorMsg = "element in list param" + key + "is not of type int in plugin ";
+                    errorMsg = "element in list param " + key + " is not of type int";
                     return false;
                 }
                 param.emplace_back(it->asInt());
             } else if constexpr (std::is_same_v<T, std::string>) {
                 if (!it->isString()) {
-                    errorMsg = "element in list param" + key + "is not of type string in plugin ";
+                    errorMsg = "element in list param " + key + " is not of type string";
                     return false;
                 }
                 param.emplace_back(it->asString());
             } else {
-                errorMsg = "element in list param" + key + "is not supported in plugin ";
+                errorMsg = "element in list param " + key + " is not supported";
                 return false;
             }
         }
@@ -123,39 +124,40 @@ bool GetOptionalMapParam(const Json::Value& config,
                          std::unordered_map<std::string, T>& param,
                          std::string& errorMsg) {
     errorMsg.clear();
-    const Json::Value* itr = config.find(key.c_str(), key.c_str() + key.length());
+    std::string currentKey = ExtractCurrentKey(key);
+    const Json::Value* itr = config.find(currentKey.c_str(), currentKey.c_str() + currentKey.length());
     if (itr) {
         if (!itr->isObject()) {
-            errorMsg = "param" + key + "is not of type map in plugin ";
+            errorMsg = "param " + key + " is not of type map";
             return false;
         }
         for (auto it = itr->begin(); it != itr->end(); ++it) {
             if constexpr (std::is_same_v<T, bool>) {
                 if (!it->isBool()) {
-                    errorMsg = "value in map param" + key + "is not of type bool in plugin ";
+                    errorMsg = "value in map param " + key + " is not of type bool";
                     return false;
                 }
                 param[it.name()] = it->asBool();
             } else if constexpr (std::is_same_v<T, uint32_t>) {
                 if (!it->isUInt()) {
-                    errorMsg = "value in map param" + key + "is not of type uint in plugin ";
+                    errorMsg = "value in map param " + key + " is not of type uint";
                     return false;
                 }
                 param[it.name()] = it->asUInt();
             } else if constexpr (std::is_same_v<T, int32_t>) {
                 if (!it->isInt()) {
-                    errorMsg = "value in map param" + key + "is not of type int in plugin ";
+                    errorMsg = "value in map param " + key + " is not of type int";
                     return false;
                 }
                 param[it.name()] = it->asInt();
             } else if constexpr (std::is_same_v<T, std::string>) {
                 if (!it->isString()) {
-                    errorMsg = "value in map param" + key + "is not of type string in plugin ";
+                    errorMsg = "value in map param " + key + " is not of type string";
                     return false;
                 }
                 param[it.name()] = it->asString();
             } else {
-                errorMsg = "value in map param" + key + "is not supported in plugin ";
+                errorMsg = "value in map param " + key + " is not supported";
                 return false;
             }
         }
@@ -180,15 +182,15 @@ bool GetMandatoryListParam(const Json::Value& config,
                            std::vector<T>& param,
                            std::string& errorMsg) {
     errorMsg.clear();
-    if (!config.isMember(key)) {
-        errorMsg = "madatory param" + key + "is missing in plugin ";
+    if (!config.isMember(ExtractCurrentKey(key))) {
+        errorMsg = "madatory param " + key + " is missing";
         return false;
     }
     if (!GetOptionalListParam<T>(config, key, param, errorMsg)) {
         return false;
     }
     if (param.empty()) {
-        errorMsg = "madatory list param" + key + "is empty in plugin ";
+        errorMsg = "madatory list param " + key + " is empty";
         return false;
     }
     return true;

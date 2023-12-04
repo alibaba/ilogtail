@@ -22,16 +22,18 @@ namespace logtail {
 
 const std::string InputObserverNetwork::sName = "input_observer_network";
 
-bool logtail::InputObserverNetwork::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
+bool InputObserverNetwork::Init(const Json::Value& config, Json::Value& optionalGoPipeline) {
     mDetail = config.toStyledString();
     return true;
 }
 
-bool logtail::InputObserverNetwork::Start() {
+bool InputObserverNetwork::Start() {
+    NetworkConfig::GetInstance()->mAllNetworkConfigs[mContext->GetConfigName()] = &mContext->GetPipeline();
     return true;
 }
 
-bool logtail::InputObserverNetwork::Stop(bool isPipelineRemoving) {
+bool InputObserverNetwork::Stop(bool isPipelineRemoving) {
+    NetworkConfig::GetInstance()->mAllNetworkConfigs.erase(mContext->GetConfigName());
     return true;
 }
 
