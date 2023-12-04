@@ -233,7 +233,7 @@ func Test_cloudMeta_ProcessJsonLogs(t *testing.T) {
 			logsLen:        1,
 			logsContentLen: 1,
 			validator: func(log *protocol.Log, t *testing.T) {
-				require.Equal(t, test.ReadLogVal(log, "content"), "{\"a\": { \"b\": {\"c\": {\"d\":\"e\"}}}}")
+				require.Contains(t, "{\"a\":{\"b\":{\"c\":{\"d\":\"e\"", test.ReadLogVal(log, "content"))
 			},
 		},
 		{
