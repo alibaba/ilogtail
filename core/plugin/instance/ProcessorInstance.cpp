@@ -40,6 +40,9 @@ bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context
 }
 
 void ProcessorInstance::Process(std::vector<PipelineEventGroup>& logGroupList) {
+    if (logGroupList.size() <= 0) {
+        return;
+    } 
     PipelineEventGroup& logGroup = logGroupList[0];
 
     size_t inSize = logGroup.GetEvents().size();
