@@ -154,8 +154,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
     bool sourceKeyOverwritten = mSourceKeyOverwritten;
     bool rawLogTagOverwritten = false;
     if (buffer.data()[index] != 0) {
-        do {
-            ++index;
+        for (index = index + 1; index <= buffer.size(); index++) {
             if (buffer.data()[index] == '\t' || buffer.data()[index] == '\0' || index == buffer.size()) {
                 if (colon_index >= 0) {
                     StringView key(buffer.data() + beg_index, colon_index - beg_index);
@@ -173,7 +172,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
             } else if (buffer.data()[index] == ':' && colon_index == -1) {
                 colon_index = index;
             }
-        } while (index <= buffer.size());
+        }
     }
     // TODO: deprecated
     if (mAdjustApsaraMicroTimezone) {
