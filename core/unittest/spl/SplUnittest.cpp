@@ -13,7 +13,7 @@ namespace logtail {
 static std::atomic_bool running(true);
 
 
-class SlsSplUnittest : public ::testing::Test {
+class SplUnittest : public ::testing::Test {
 public:
     void SetUp() override {
         mContext.SetConfigName("project##config_0");
@@ -34,18 +34,18 @@ public:
     void TestMultiParse();
 };
 
-//APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestInit, 8);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestWhere, 0);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestExtend, 1);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestJsonParse, 2);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexParse, 3);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexCSV, 4);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestRegexKV, 5);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestTag, 6);
-APSARA_UNIT_TEST_CASE(SlsSplUnittest, TestMultiParse, 7);
+//APSARA_UNIT_TEST_CASE(SplUnittest, TestInit, 8);
+APSARA_UNIT_TEST_CASE(SplUnittest, TestWhere, 0);
+APSARA_UNIT_TEST_CASE(SplUnittest, TestExtend, 1);
+APSARA_UNIT_TEST_CASE(SplUnittest, TestJsonParse, 2);
+APSARA_UNIT_TEST_CASE(SplUnittest, TestRegexParse, 3);
+APSARA_UNIT_TEST_CASE(SplUnittest, TestRegexCSV, 4);
+APSARA_UNIT_TEST_CASE(SplUnittest, TestRegexKV, 5);
+APSARA_UNIT_TEST_CASE(SplUnittest, TestTag, 6);
+APSARA_UNIT_TEST_CASE(SplUnittest, TestMultiParse, 7);
 
 
-void SlsSplUnittest::TestInit() {
+void SplUnittest::TestInit() {
     std::ifstream input("spl.txt");
     std::string line;
 
@@ -71,7 +71,7 @@ void SlsSplUnittest::TestInit() {
 }
 
 
-void SlsSplUnittest::TestWhere() {
+void SplUnittest::TestWhere() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;
@@ -132,7 +132,7 @@ void SlsSplUnittest::TestWhere() {
 }
 
 
-void SlsSplUnittest::TestExtend() {
+void SplUnittest::TestExtend() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;
@@ -181,7 +181,7 @@ void SlsSplUnittest::TestExtend() {
 }
 
 
-void SlsSplUnittest::TestJsonParse() {
+void SplUnittest::TestJsonParse() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;
@@ -256,7 +256,7 @@ void SlsSplUnittest::TestJsonParse() {
 }
 
 
-void SlsSplUnittest::TestRegexParse() {
+void SplUnittest::TestRegexParse() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;
@@ -332,7 +332,7 @@ void SlsSplUnittest::TestRegexParse() {
     return;
 }
 
-void SlsSplUnittest::TestRegexCSV() {
+void SplUnittest::TestRegexCSV() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;
@@ -414,7 +414,7 @@ void SlsSplUnittest::TestRegexCSV() {
 
 
 
-void SlsSplUnittest::TestRegexKV() {
+void SplUnittest::TestRegexKV() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;
@@ -495,7 +495,7 @@ void SlsSplUnittest::TestRegexKV() {
 
 
 
-void SlsSplUnittest::TestTag() {
+void SplUnittest::TestTag() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;
@@ -572,7 +572,7 @@ void SlsSplUnittest::TestTag() {
 }
 
 
-void SlsSplUnittest::TestMultiParse() {
+void SplUnittest::TestMultiParse() {
     // make config
     Config config;
     config.mDiscardUnmatch = false;

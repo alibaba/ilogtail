@@ -350,8 +350,8 @@ endmacro()
 
 
 # spl
-macro(link_slsspl target_name)
-    logtail_define(slsspl_${target_name} "" "")
+macro(link_spl target_name)
+    logtail_define(spl_${target_name} "" "")
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libspl.a")
 
     target_link_libraries(${target_name} "/opt/logtail_spl/lib/libpresto_adapters.a")

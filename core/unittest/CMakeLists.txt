@@ -35,7 +35,7 @@ link_re2(${PROJECT_NAME})
 link_protobuf(${PROJECT_NAME})
 link_cityhash(${PROJECT_NAME})
 link_leveldb(${PROJECT_NAME})
-link_slsspl(${PROJECT_NAME})
+link_spl(${PROJECT_NAME})
 link_tcmalloc(${PROJECT_NAME})
 
 if (UNIX)
