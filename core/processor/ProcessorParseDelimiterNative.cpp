@@ -89,9 +89,6 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
            mContext->GetLogger(), errorMsg, overflowedFieldsTreatment, sName, mContext->GetConfigName());
    }
    mCommonParserOptions.Init(config, *mContext, sName);
-   if (mCommonParserOptions.mRenamedSourceKey.empty()) {
-       mCommonParserOptions.mRenamedSourceKey = mSourceKey;
-   }
 
    mExtractPartialFields = mOverflowedFieldsTreatment == OverflowedFieldsTreatment::DISCARD;
 
@@ -259,11 +256,11 @@ bool ProcessorParseDelimiterNative::ProcessEvent(const StringView& logPath, Pipe
    if (!parseSuccess || !mSourceKeyOverwritten) {
        sourceEvent.DelContent(mSourceKey);
    }
-   if (mCommonParserOptions.ShouldAddRenamedSourceLog(parseSuccess)) {
+   if (mCommonParserOptions.ShouldAddSourceContent(parseSuccess)) {
        AddLog(mCommonParserOptions.mRenamedSourceKey, buffer, sourceEvent, false);
    }
-   if (mCommonParserOptions.ShouldAddUnmatchLog(parseSuccess)) {
-       AddLog(mCommonParserOptions.UNMATCH_LOG_KEY, buffer, sourceEvent, false);
+   if (mCommonParserOptions.ShouldAddLegacyUnmatchedRawLog(parseSuccess)) {
+       AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, buffer, sourceEvent, false);
    }
    if (mCommonParserOptions.ShouldEraseEvent(parseSuccess, sourceEvent)) {
        mProcDiscardRecordsTotal->Add(1);

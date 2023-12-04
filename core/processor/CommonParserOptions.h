@@ -13,27 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
 #include <json/json.h>
 
 #include <string>
 
-#include "common/Constants.h"
+#include "models/LogEvent.h"
 #include "pipeline/PipelineContext.h"
 
 namespace logtail {
 struct CommonParserOptions {
+    static const std::string legacyUnmatchedRawLogKey;
+
     bool mKeepingSourceWhenParseFail = false;
     bool mKeepingSourceWhenParseSucceed = false;
     std::string mRenamedSourceKey;
     bool mCopingRawLog = false;
-    const std::string UNMATCH_LOG_KEY = "__raw_log__";
 
     bool Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName);
-    bool ShouldAddUnmatchLog(bool parseSuccess);
-    // Parsing successful and original logs are retained or parsing failed and original logs are retained.
-    bool ShouldAddRenamedSourceLog(bool parseSuccess);
+    bool ShouldAddSourceContent(bool parseSuccess);
+    bool ShouldAddLegacyUnmatchedRawLog(bool parseSuccess);
     bool ShouldEraseEvent(bool parseSuccess, const LogEvent& sourceEvent);
 };
 

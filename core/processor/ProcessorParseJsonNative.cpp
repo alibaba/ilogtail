@@ -33,9 +33,7 @@ bool ProcessorParseJsonNative::Init(const Json::Value& config) {
         PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
     mCommonParserOptions.Init(config, *mContext, sName);
-    if (mCommonParserOptions.mRenamedSourceKey.empty()) {
-        mCommonParserOptions.mRenamedSourceKey = mSourceKey;
-    }
+
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
 
@@ -81,11 +79,11 @@ bool ProcessorParseJsonNative::ProcessEvent(const StringView& logPath, PipelineE
     if (!parseSuccess || !mSourceKeyOverwritten) {
         sourceEvent.DelContent(mSourceKey);
     }
-    if (mCommonParserOptions.ShouldAddRenamedSourceLog(parseSuccess)) {
+    if (mCommonParserOptions.ShouldAddSourceContent(parseSuccess)) {
         AddLog(mCommonParserOptions.mRenamedSourceKey, rawContent, sourceEvent, false);
     }
-    if (mCommonParserOptions.ShouldAddUnmatchLog(parseSuccess)) {
-        AddLog(mCommonParserOptions.UNMATCH_LOG_KEY, rawContent, sourceEvent, false);
+    if (mCommonParserOptions.ShouldAddLegacyUnmatchedRawLog(parseSuccess)) {
+        AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, rawContent, sourceEvent, false);
     }
     if (mCommonParserOptions.ShouldEraseEvent(parseSuccess, sourceEvent)) {
         mProcDiscardRecordsTotal->Add(1);

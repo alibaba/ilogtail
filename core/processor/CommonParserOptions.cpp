@@ -16,35 +16,54 @@
 
 #include "processor/CommonParserOptions.h"
 
+#include "common/Constants.h"
 #include "common/ParamExtractor.h"
+
+using namespace std;
 
 namespace logtail {
 
+const string CommonParserOptions::legacyUnmatchedRawLogKey = "__raw_log__";
+
 bool CommonParserOptions::Init(const Json::Value& config, const PipelineContext& ctx, const std::string& pluginName) {
     std::string errorMsg;
+
+    // KeepingSourceWhenParseFail
     if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseFail", mKeepingSourceWhenParseFail, errorMsg)) {
         PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mKeepingSourceWhenParseFail, pluginName, ctx.GetConfigName());
     }
+
+    // KeepingSourceWhenParseSucceed
     if (!GetOptionalBoolParam(config, "KeepingSourceWhenParseSucceed", mKeepingSourceWhenParseSucceed, errorMsg)) {
         PARAM_WARNING_DEFAULT(
             ctx.GetLogger(), errorMsg, mKeepingSourceWhenParseSucceed, pluginName, ctx.GetConfigName());
     }
+
+    // RenamedSourceKey
     if (!GetOptionalStringParam(config, "RenamedSourceKey", mRenamedSourceKey, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mRenamedSourceKey, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
     }
+    if (mRenamedSourceKey.empty()) {
+        // SourceKey is guranteed to exist in config
+        mRenamedSourceKey = config["SourceKey"].asString();
+    }
+
+    // CopingRawLog
     if (!GetOptionalBoolParam(config, "CopingRawLog", mCopingRawLog, errorMsg)) {
         PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mCopingRawLog, pluginName, ctx.GetConfigName());
     }
+
     return true;
 }
-bool CommonParserOptions::ShouldAddUnmatchLog(bool parseSuccess) {
+
+bool CommonParserOptions::ShouldAddLegacyUnmatchedRawLog(bool parseSuccess) {
     return !parseSuccess && mKeepingSourceWhenParseFail && mCopingRawLog;
 }
 
-// Parsing successful and original logs are retained or parsing failed and original logs are retained.
-bool CommonParserOptions::ShouldAddRenamedSourceLog(bool parseSuccess) {
+bool CommonParserOptions::ShouldAddSourceContent(bool parseSuccess) {
     return (((parseSuccess && mKeepingSourceWhenParseSucceed) || (!parseSuccess && mKeepingSourceWhenParseFail)));
 }
+
 bool CommonParserOptions::ShouldEraseEvent(bool parseSuccess, const LogEvent& sourceEvent) {
     if (!parseSuccess && !mKeepingSourceWhenParseFail) {
         const auto& contents = sourceEvent.GetContents();
@@ -58,4 +77,5 @@ bool CommonParserOptions::ShouldEraseEvent(bool parseSuccess, const LogEvent& so
     }
     return false;
 }
+
 } // namespace logtail

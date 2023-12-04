@@ -39,9 +39,6 @@ bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     }
 
     mCommonParserOptions.Init(config, *mContext, sName);
-    if (mCommonParserOptions.mRenamedSourceKey.empty()) {
-        mCommonParserOptions.mRenamedSourceKey = mSourceKey;
-    }
 
     for (auto& it : mKeys) {
         if (it == mSourceKey) {
@@ -105,11 +102,11 @@ bool ProcessorParseRegexNative::ProcessEvent(const StringView& logPath, Pipeline
     if (!parseSuccess || !mSourceKeyOverwritten) {
         sourceEvent.DelContent(mSourceKey);
     }
-    if (mCommonParserOptions.ShouldAddRenamedSourceLog(parseSuccess)) {
+    if (mCommonParserOptions.ShouldAddSourceContent(parseSuccess)) {
         AddLog(mCommonParserOptions.mRenamedSourceKey, rawContent, sourceEvent, false);
     }
-    if (mCommonParserOptions.ShouldAddUnmatchLog(parseSuccess)) {
-        AddLog(mCommonParserOptions.UNMATCH_LOG_KEY, rawContent, sourceEvent, false);
+    if (mCommonParserOptions.ShouldAddLegacyUnmatchedRawLog(parseSuccess)) {
+        AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, rawContent, sourceEvent, false);
     }
     if (mCommonParserOptions.ShouldEraseEvent(parseSuccess, sourceEvent)) {
         mProcDiscardRecordsTotal->Add(1);

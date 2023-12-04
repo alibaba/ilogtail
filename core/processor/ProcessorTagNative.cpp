@@ -26,6 +26,7 @@
 DECLARE_FLAG_STRING(ALIYUN_LOG_FILE_TAGS);
 
 namespace logtail {
+
 const std::string ProcessorTagNative::sName = "processor_tag_native";
 
 bool ProcessorTagNative::Init(const Json::Value& config) {

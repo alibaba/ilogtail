@@ -49,9 +49,6 @@ bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
     }
 
     mCommonParserOptions.Init(config, *mContext, sName);
-    if (mCommonParserOptions.mRenamedSourceKey.empty()) {
-        mCommonParserOptions.mRenamedSourceKey = mSourceKey;
-    }
 
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
@@ -122,11 +119,11 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
         mProcParseErrorTotal->Add(1);
         ++(*mParseFailures);
         sourceEvent.DelContent(mSourceKey);
-        if (mCommonParserOptions.ShouldAddRenamedSourceLog(false)) {
+        if (mCommonParserOptions.ShouldAddSourceContent(false)) {
             AddLog(mCommonParserOptions.mRenamedSourceKey, buffer, sourceEvent, false);
         }
-        if (mCommonParserOptions.ShouldAddUnmatchLog(false)) {
-            AddLog(mCommonParserOptions.UNMATCH_LOG_KEY, buffer, sourceEvent, false);
+        if (mCommonParserOptions.ShouldAddLegacyUnmatchedRawLog(false)) {
+            AddLog(mCommonParserOptions.legacyUnmatchedRawLogKey, buffer, sourceEvent, false);
         }
         if (mCommonParserOptions.ShouldEraseEvent(false, sourceEvent)) {
             mProcDiscardRecordsTotal->Add(1);
@@ -194,7 +191,7 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
     if (!mSourceKeyOverwritten) {
         sourceEvent.DelContent(mSourceKey);
     }
-    if (mCommonParserOptions.ShouldAddRenamedSourceLog(true)) {
+    if (mCommonParserOptions.ShouldAddSourceContent(true)) {
         AddLog(mCommonParserOptions.mRenamedSourceKey, buffer, sourceEvent, false);
     }
     return true;
