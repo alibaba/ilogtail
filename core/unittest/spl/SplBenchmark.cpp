@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
 #include "common/JsonUtil.h"
 #include "config/Config.h"
-#include "sls_spl/ProcessorSPL.h"
+#include "spl/ProcessorSPL.h"
 #include "processor/ProcessorParseRegexNative.h"
 #include "processor/ProcessorParseJsonNative.h"
 #include "processor/ProcessorParseDelimiterNative.h"

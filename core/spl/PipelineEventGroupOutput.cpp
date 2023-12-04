@@ -1,11 +1,11 @@
-#include "sls_spl/PipelineEventGroupOutput.h"
+#include "spl/PipelineEventGroupOutput.h"
 #include <unistd.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include "logger/Logger.h"
 #include "common/HashUtil.h"
-#include "sls_spl/SplConstants.h"
+#include "spl/SplConstants.h"
 #include <boost/container_hash/hash.hpp>
 
 
@@ -16,7 +16,6 @@ void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& er
     mIOHeader = &header;
     for (int32_t i=0; i<header.columnNames.size(); i++) {
         auto field = header.columnNames[i].ToString();
-        LOG_DEBUG(sLogger, ("columeName", field));
         auto length = field.length();
         if (length >= LENGTH_FIELD_PREFIX_TAG && 
                 field.compare(0, LENGTH_FIELD_PREFIX_TAG, FIELD_PREFIX_TAG) == 0) { // __tag__:*
@@ -61,7 +60,6 @@ void PipelineEventGroupOutput::addRow(
         } else {
             targetEvent->SetContent(StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen), StringView(row[idxContent].mPtr, row[idxContent].mLen));
         }
-        LOG_DEBUG(sLogger, ("content key", StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen))("content value", StringView(row[idxContent].mPtr, row[idxContent].mLen)));
     }
 
     for (const auto& idxTag : mTagsIdxs) {
@@ -75,8 +73,8 @@ void PipelineEventGroupOutput::addRow(
     mRowCount ++;
 }
 
-//bool PipelineEventGroupOutput::isColumnar() {
-//    return false;
-//}
+bool PipelineEventGroupOutput::isColumnar() {
+    return false;
+}
 
 }  // namespace apsara::sls::spl

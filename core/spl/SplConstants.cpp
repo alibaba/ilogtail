@@ -1,4 +1,4 @@
-#include "sls_spl/SplConstants.h"
+#include "spl/SplConstants.h"
 
 namespace apsara::sls::spl {
     const std::string FIELD_TIMESTAMP = "__timestamp__";

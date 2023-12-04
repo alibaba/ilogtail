@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#include "sls_spl/ProcessorSPL.h"
+#include "spl/ProcessorSPL.h"
 #include <curl/curl.h>
 #include <iostream>
 #include "spl/pipeline/SplPipeline.h"
-#include "sls_spl/PipelineEventGroupInput.h"
-#include "sls_spl/PipelineEventGroupOutput.h"
+#include "spl/PipelineEventGroupInput.h"
+#include "spl/PipelineEventGroupOutput.h"
 #include "spl/logger/Logger.h"
 #include "logger/Logger.h"
-#include "sls_spl/SplConstants.h"
+#include "spl/SplConstants.h"
 #include "monitor/MetricConstants.h"
 
 
@@ -64,7 +64,9 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
    
 
     PipelineOptions splOptions;
+    // different parse mode support different spl operators
     splOptions.parserMode = parser::ParserMode::LOGTAIL;
+    
     splOptions.errorSampling = false;
     splOptions.useFunctionWhitelist = false;
 
@@ -73,7 +75,7 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     LoggerPtr logger;
     logger = sLogger;
 
-    std::string spl = config.mSpl;
+    const std::string spl = config.mSpl;
     const uint64_t timeoutMills = config.mSplTimeoutMills;
     const int64_t maxMemoryBytes =config.mSplMaxMemoryBytes;
     Error error;

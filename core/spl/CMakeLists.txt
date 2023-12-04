@@ -1,5 +1,3 @@
-# Copyright 2022 iLogtail Authors
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,12 +11,14 @@
 # limitations under the License.
 
 cmake_minimum_required(VERSION 2.9)
-project(sls_spl_unittest)
+project (spl)
+
+file(GLOB LIB_SOURCE_FILES *.cpp *.h .c)
+append_source_files(LIB_SOURCE_FILES)
+add_library(${PROJECT_NAME} STATIC ${LIB_SOURCE_FILES})
 
 
-add_executable(sls_spl_unittest SlsSplUnittest.cpp)
-add_executable(spl_benchmark_test SplBenchmark.cpp)
-target_link_libraries(sls_spl_unittest unittest_base)
+include_directories("/opt/logtail_spl/include")
+link_directories("/opt/logtail_spl/lib")
 
-target_link_libraries(spl_benchmark_test "/opt/logtail/deps/lib64/libbenchmark.a")
-target_link_libraries(spl_benchmark_test unittest_base)
+link_slsspl(${PROJECT_NAME})

@@ -1,8 +1,8 @@
-#include "sls_spl/PipelineEventGroupInput.h"
+#include "spl/PipelineEventGroupInput.h"
 #include <iostream>
 #include "spl/util/SplStringPiece.h"
 #include "logger/Logger.h"
-#include "sls_spl/SplConstants.h"
+#include "spl/SplConstants.h"
 
 
 namespace apsara::sls::spl {
@@ -24,19 +24,10 @@ void PipelineEventGroupInput::getHeader(IOHeader& header, std::string& err) {
 
 void PipelineEventGroupInput::getColumn(const int32_t colIndex, std::vector<SplStringPiece>& values, std::string& err) {
     std::string columnName = mColumnNames[colIndex];
-    //LOG_DEBUG(sLogger, ("colIndex", colIndex)("columnName", columnName));
     for (auto event : mLogGroup->GetEvents()) {
         LogEvent& sourceEvent = event.Cast<LogEvent>();
-        if (FIELD_TIMESTAMP == columnName) {
-            std::string timestampValue = std::to_string(sourceEvent.GetTimestamp());
-            values.emplace_back(SplStringPiece(timestampValue));
-        } else if (FIELD_TIMESTAMP_NANOSECOND == columnName) { 
-            std::string timestampNanosecondValue = std::to_string(sourceEvent.GetTimestampNanosecond());
-            values.emplace_back(SplStringPiece(timestampNanosecondValue));
-        } else {
-            StringView content = sourceEvent.GetContent(columnName);
-            values.emplace_back(SplStringPiece(content.data(), content.size()));
-        }
+        StringView content = sourceEvent.GetContent(columnName);
+        values.emplace_back(SplStringPiece(content.data(), content.size()));
     }
 }
 

@@ -18,7 +18,7 @@
 #include "plugin/instance/ProcessorInstance.h"
 #include "pipeline/PipelineConfig.h"
 #include "pipeline/PipelineContext.h"
-#include "sls_spl/ProcessorSPL.h"
+#include "spl/ProcessorSPL.h"
 
 namespace logtail {
 

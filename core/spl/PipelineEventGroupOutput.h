@@ -22,7 +22,7 @@ class PipelineEventGroupOutput : public Output {
             const uint32_t timeNsPart,
             const ErrorKV& errorKV, 
             std::string& error);
-        //virtual bool isColumnar();
+        virtual bool isColumnar();
 
     private:
         int32_t mRowCount;
