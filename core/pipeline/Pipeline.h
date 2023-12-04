@@ -36,7 +36,7 @@ class Pipeline {
 public:
     bool Init(Config&& config);
     void Start();
-    void Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList);
+    void Process(std::vector<PipelineEventGroup>& logGroupList);
     void Stop(bool isRemoving);
 
     const std::string& Name() const { return mName; }

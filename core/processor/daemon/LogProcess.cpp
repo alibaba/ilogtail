@@ -447,7 +447,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         return -1;
     }
 
-    std::vector<PipelineEventGroup> outputList;
+    std::vector<PipelineEventGroup> eventGroupList;
     {
         // construct a logGroup, it should be moved into input later
         PipelineEventGroup eventGroup(logBuffer);
@@ -464,8 +464,9 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
         event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
         eventGroup.AddEvent(std::move(event));
+        eventGroupList.emplace_back(std::move(eventGroup));
         // process logGroup
-        pipeline->Process(std::move(eventGroup), outputList);
+        pipeline->Process(eventGroupList);
     }
 
     // record profile
@@ -473,7 +474,7 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
     profile = processProfile;
     processProfile.Reset();
 
-    for (auto& eventGroup : outputList) {
+    for (auto& eventGroup : eventGroupList) {
         // fill protobuf
         FillLogGroupLogs(eventGroup, resultGroup, pipeline->GetContext().GetGlobalConfig().mEnableTimestampNanosecond);
         FillLogGroupTags(eventGroup, logFileReader, resultGroup);

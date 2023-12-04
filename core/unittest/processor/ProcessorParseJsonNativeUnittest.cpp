@@ -128,7 +128,10 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processorInstance.Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -201,7 +204,10 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processorInstance.Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -263,7 +269,10 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processorInstance.Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -325,7 +334,10 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processorInstance.Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);
 
     int count = 1;
 
@@ -399,7 +411,10 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processorInstance.Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);
 
     int count = 1;
 
