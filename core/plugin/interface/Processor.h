@@ -16,8 +16,10 @@
 
 #pragma once
 
-#include "json/json.h"
+#include <json/json.h>
 
+#include "models/PipelineEventGroup.h"
+#include "models/PipelineEventPtr.h"
 #include "plugin/interface/Plugin.h"
 
 namespace logtail {

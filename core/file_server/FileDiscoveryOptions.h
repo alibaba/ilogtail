@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "json/json.h"
+#include <json/json.h>
 
 #include "file_server/DockerContainerPath.h"
 #include "pipeline/PipelineContext.h"

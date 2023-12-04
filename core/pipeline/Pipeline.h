@@ -21,7 +21,7 @@
 #include <memory>
 #include <unordered_map>
 
-#include "json/json.h"
+#include <json/json.h>
 
 #include "config/Config.h"
 #include "models/PipelineEventGroup.h"

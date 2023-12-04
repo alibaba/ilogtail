@@ -33,25 +33,30 @@ const std::string ProcessorSplitRegexNative::sName = "processor_split_regex_nati
 
 bool ProcessorSplitRegexNative::Init(const Json::Value& config) {
     std::string errorMsg;
-    // SplitKey
-    if (!GetOptionalStringParam(config, "SplitKey", mSplitKey, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSplitKey, sName, mContext->GetConfigName());
+
+    // SourceKey
+    if (!GetOptionalStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceKey, sName, mContext->GetConfigName());
     }
 
-    mMultiline.Init(config, *mContext, sName);
-
-    mCommonParserOptions.Init(config, *mContext, sName);
-    if (mCommonParserOptions.mRenamedSourceKey.empty()) {
-        mCommonParserOptions.mRenamedSourceKey = mSplitKey;
+    if (!mMultiline.Init(config, *mContext, sName)) {
+        return false;
     }
 
+    // AppendingLogPositionMeta
     if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
         PARAM_WARNING_DEFAULT(
             mContext->GetLogger(), errorMsg, mAppendingLogPositionMeta, sName, mContext->GetConfigName());
     }
 
+    mCommonParserOptions.Init(config, *mContext, sName);
+    if (mCommonParserOptions.mRenamedSourceKey.empty()) {
+        mCommonParserOptions.mRenamedSourceKey = mSourceKey;
+    }
+
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
+    
     return true;
 }
 
@@ -83,11 +88,11 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         return;
     }
     const LogEvent& sourceEvent = e.Cast<LogEvent>();
-    if (!sourceEvent.HasContent(mSplitKey)) {
+    if (!sourceEvent.HasContent(mSourceKey)) {
         newEvents.emplace_back(e);
         return;
     }
-    StringView sourceVal = sourceEvent.GetContent(mSplitKey);
+    StringView sourceVal = sourceEvent.GetContent(mSourceKey);
     std::vector<StringView> logIndex; // all splitted logs
     std::vector<StringView> discardIndex; // used to send warning
     int feedLines = 0;
@@ -127,7 +132,7 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
     if (sourceEvent.HasContent(LOG_RESERVED_KEY_FILE_OFFSET)) {
         sourceoffset = atol(sourceEvent.GetContent(LOG_RESERVED_KEY_FILE_OFFSET).data()); // use safer method
     }
-    StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSplitKey);
+    StringBuffer splitKey = logGroup.GetSourceBuffer()->CopyString(mSourceKey);
     for (auto& content : logIndex) {
         std::unique_ptr<LogEvent> targetEvent = LogEvent::CreateEvent(logGroup.GetSourceBuffer());
         targetEvent->SetTimestamp(
@@ -141,7 +146,7 @@ void ProcessorSplitRegexNative::ProcessEvent(PipelineEventGroup& logGroup,
         }
         if (sourceEvent.GetContents().size() > 1) { // copy other fields
             for (auto& kv : sourceEvent.GetContents()) {
-                if (kv.first != mSplitKey && kv.first != LOG_RESERVED_KEY_FILE_OFFSET) {
+                if (kv.first != mSourceKey && kv.first != LOG_RESERVED_KEY_FILE_OFFSET) {
                     targetEvent->SetContentNoCopy(kv.first, kv.second);
                 }
             }

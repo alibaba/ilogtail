@@ -16,7 +16,7 @@
 #include <sstream>
 #include "LogtailAlarm.h"
 #include "logger/Logger.h"
-#include "json/json.h"
+#include <json/json.h>
 #include "common/JsonUtil.h"
 #include "ExceptionBase.h"
 #include "input/InputObserverNetwork.h"

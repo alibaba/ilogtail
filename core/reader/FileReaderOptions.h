@@ -20,7 +20,7 @@
 #include <string>
 #include <utility>
 
-#include "json/json.h"
+#include <json/json.h>
 
 #include "pipeline/PipelineContext.h"
 

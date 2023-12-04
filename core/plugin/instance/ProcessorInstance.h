@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "json/json.h"
+#include <json/json.h>
 
 #include "models/PipelineEventGroup.h"
 #include "monitor/LogtailMetric.h"

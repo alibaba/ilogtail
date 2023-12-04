@@ -19,7 +19,7 @@
 #include <string>
 #include <utility>
 
-#include "json/json.h"
+#include <json/json.h>
 #include "boost/regex.hpp"
 
 #include "pipeline/PipelineContext.h"

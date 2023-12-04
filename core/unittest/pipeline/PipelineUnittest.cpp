@@ -19,7 +19,7 @@
 #include "common/JsonUtil.h"
 #include "common/LogstoreFeedbackKey.h"
 #include "config/Config.h"
-#include "json/json.h"
+#include <json/json.h>
 #include "pipeline/Pipeline.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/ProcessorSplitLogStringNative.h"

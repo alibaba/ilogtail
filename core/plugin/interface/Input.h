@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "json/json.h"
+#include <json/json.h>
 
 #include "plugin/interface/Plugin.h"
 

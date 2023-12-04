@@ -16,7 +16,10 @@
 
 #pragma once
 
+#include <cstdint>
+#include <vector>
 
+#include "common/Constants.h"
 #include "file_server/MultilineOptions.h"
 #include "plugin/interface/Processor.h"
 #include "processor/CommonParserOptions.h"
@@ -27,7 +30,7 @@ class ProcessorSplitRegexNative : public Processor {
 public:
     static const std::string sName;
 
-    std::string mSplitKey = DEFAULT_CONTENT_KEY;
+    std::string mSourceKey = DEFAULT_CONTENT_KEY;
     MultilineOptions mMultiline;
     bool mAppendingLogPositionMeta = false;
     CommonParserOptions mCommonParserOptions;

@@ -20,7 +20,7 @@
 #include <string>
 #include <unordered_set>
 
-#include "json/json.h"
+#include <json/json.h>
 
 namespace logtail {
 
