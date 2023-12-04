@@ -85,8 +85,8 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     std::vector<PipelineEventGroup> eventGroupList1;
     eventGroupList1.emplace_back(std::move(eventGroup1));
     processorInstance.Process(eventGroupList1);
-    eventGroup1 = std::move(eventGroupList1[0]);
-    std::string outJson = eventGroup1.ToJsonString();
+    
+    std::string outJson = eventGroupList1[0].ToJsonString();
     // judge result
     std::string expectJson = R"({
         "events" : 
@@ -129,8 +129,8 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     std::vector<PipelineEventGroup> eventGroupList2;
     eventGroupList2.emplace_back(std::move(eventGroup2));
     processorInstance.Process(eventGroupList2);
-    eventGroup2 = std::move(eventGroupList2[0]);
-    outJson = eventGroup2.ToJsonString();
+    
+    outJson = eventGroupList2[0].ToJsonString();
     // judge result
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
 }
@@ -200,8 +200,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         std::vector<PipelineEventGroup> eventGroupList1;
         eventGroupList1.emplace_back(std::move(eventGroup1));
         processorInstance.Process(eventGroupList1);
-        eventGroup1 = std::move(eventGroupList1[0]);
-        std::string outJson = eventGroup1.ToJsonString();
+        
+        std::string outJson = eventGroupList1[0].ToJsonString();
         // judge result
         std::string expectJson = R"({
             "events" : 
@@ -244,8 +244,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         std::vector<PipelineEventGroup> eventGroupList2;
         eventGroupList2.emplace_back(std::move(eventGroup2));
         processorInstance.Process(eventGroupList2);
-        eventGroup2 = std::move(eventGroupList2[0]);
-        outJson = eventGroup2.ToJsonString();
+        
+        outJson = eventGroupList2[0].ToJsonString();
         // judge result
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
     }
@@ -360,8 +360,8 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         std::vector<PipelineEventGroup> eventGroupList1;
         eventGroupList1.emplace_back(std::move(eventGroup1));
         processorInstance.Process(eventGroupList1);
-        eventGroup1 = std::move(eventGroupList1[0]);
-        std::string outJson = eventGroup1.ToJsonString();
+        
+        std::string outJson = eventGroupList1[0].ToJsonString();
         // judge result
         // judge result
         std::string expectJson = R"({

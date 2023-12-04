@@ -103,7 +103,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -120,7 +120,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case2
@@ -153,7 +153,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -170,7 +170,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case3
@@ -203,7 +203,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -220,7 +220,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case4
@@ -254,7 +254,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -271,7 +271,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case5
@@ -305,7 +305,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -322,7 +322,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }
@@ -360,7 +360,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -377,7 +377,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case2
@@ -412,7 +412,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -429,7 +429,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 3
@@ -464,7 +464,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -481,7 +481,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 4
@@ -516,7 +516,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -533,7 +533,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 5
@@ -569,7 +569,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -586,7 +586,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 6
@@ -622,7 +622,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -639,7 +639,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 7
@@ -675,7 +675,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -692,7 +692,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 8
@@ -728,7 +728,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -745,7 +745,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 9
@@ -781,7 +781,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -798,7 +798,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }
@@ -835,7 +835,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -852,7 +852,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 2
@@ -886,7 +886,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -903,7 +903,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 3
@@ -938,7 +938,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -955,7 +955,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 4
@@ -990,7 +990,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1007,7 +1007,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }
@@ -1047,6 +1047,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         ]
     })";
     eventGroup.FromJsonString(inJson);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
 
     {
         Json::Value config = GetCastSensWordConfig();
@@ -1056,10 +1058,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         ProcessorInstance processorInstance(&processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
-        std::vector<PipelineEventGroup> eventGroupList;
-        eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
     }
     {
         Json::Value config = GetCastSensWordConfig("id", "const", "********", "\\d{6}", "\\d{8}", true);
@@ -1069,10 +1069,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         ProcessorInstance processorInstance(&processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
-        std::vector<PipelineEventGroup> eventGroupList;
-        eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
     }
     {
         Json::Value config = GetCastSensWordConfig("content", "const", "********", "'password':'", "[^']*", true);
@@ -1082,10 +1080,8 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         ProcessorInstance processorInstance(&processor, pluginId);
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
-        std::vector<PipelineEventGroup> eventGroupList;
-        eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
     }
 
     // judge result
@@ -1119,7 +1115,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
             }
         ]
     })";
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
 }
 
@@ -1155,7 +1151,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1172,7 +1168,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 2
@@ -1206,7 +1202,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1223,7 +1219,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 3
@@ -1257,7 +1253,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1274,7 +1270,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 4
@@ -1309,7 +1305,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1326,7 +1322,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
     // case 5
@@ -1361,7 +1357,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        eventGroup = std::move(eventGroupList[0]);
+        
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1378,7 +1374,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 }
             ]
         })";
-        std::string outJson = eventGroup.ToJsonString();
+        std::string outJson = eventGroupList[0].ToJsonString();
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }

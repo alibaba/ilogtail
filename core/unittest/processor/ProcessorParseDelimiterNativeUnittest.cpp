@@ -688,7 +688,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -745,7 +744,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             }
         ]
     })";
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     // check observablity
     int count = 5;
@@ -839,9 +838,8 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
     // judge result
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
     // check observablity
     int count = 5;

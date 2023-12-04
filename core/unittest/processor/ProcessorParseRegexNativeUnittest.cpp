@@ -126,7 +126,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
     // judge result
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
@@ -190,7 +190,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -273,7 +273,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -354,7 +354,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -491,7 +491,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
 
     int count = 5;
 
@@ -587,7 +587,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
 
     int count = 5;
 
@@ -684,7 +684,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
 
     int count = 5;
     // check observablity

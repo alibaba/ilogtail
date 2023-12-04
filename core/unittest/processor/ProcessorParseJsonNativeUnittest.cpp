@@ -131,7 +131,6 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -166,7 +165,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
             }
         ]
     })";
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
@@ -207,7 +206,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -231,7 +230,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
             }
         ]
     })";
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
@@ -272,7 +271,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -295,7 +294,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
             }
         ]
     })";
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
@@ -337,7 +336,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
 
     int count = 1;
 
@@ -373,7 +372,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
             }
         ]
     })";
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }
@@ -414,7 +413,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
 
     int count = 1;
 
@@ -432,7 +431,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
 
     APSARA_TEST_EQUAL_FATAL(count, processor.mProcParseErrorTotal->GetValue());
 
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
     APSARA_TEST_GT_FATAL(processorInstance.mProcTimeMS->GetValue(), 0);
 }

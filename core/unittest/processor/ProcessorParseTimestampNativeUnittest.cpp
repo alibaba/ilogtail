@@ -360,9 +360,9 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
     // judge result
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     std::stringstream expectJsonSs;
     expectJsonSs << R"({
         "events":
@@ -454,9 +454,9 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
     // judge result
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
     // check observablity
     APSARA_TEST_EQUAL_FATAL(0, processor.GetContext().GetProcessProfile().historyFailures);
@@ -516,9 +516,9 @@ void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    eventGroup = std::move(eventGroupList[0]);
+    
     // check observablity
-    std::string outJson = eventGroup.ToJsonString();
+    std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_EQUAL_FATAL(2, processor.GetContext().GetProcessProfile().historyFailures);
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(strlen(timebuff) * 2, processor.mProcParseInSizeBytes->GetValue());
