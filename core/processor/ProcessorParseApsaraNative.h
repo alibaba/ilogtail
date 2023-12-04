@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include "plugin/interface/Processor.h"
-#include <string>
 #include <boost/regex.hpp>
+#include <string>
+
+#include "plugin/interface/Processor.h"
 
 namespace logtail {
 
@@ -32,12 +33,14 @@ protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
+    bool
+    ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache);
     void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent);
-    time_t ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
+    time_t
+    ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime);
     int32_t GetApsaraLogMicroTime(StringView& buffer);
     bool IsPrefixString(const char* all, const StringView& prefix);
-    int32_t ParseApsaraBaseFields(StringView& buffer, LogEvent& sourceEvent);
+    int32_t ParseApsaraBaseFields(const StringView& buffer, LogEvent& sourceEvent);
 
     std::string mSourceKey;
     std::string mRawLogTag;

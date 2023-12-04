@@ -20,6 +20,7 @@
 #include "plugin/instance/ProcessorInstance.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
+#include "processor/ProcessorSplitRegexNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -74,20 +75,6 @@ void ProcessorParseDelimiterNativeUnittest::TestInit() {
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
-    // make config
-    Config config;
-    config.mLogType = DELIMITER_LOG;
-    config.mLogBeginReg = "";
-    config.mAdvancedConfig.mEnableLogPositionMeta = false;
-    config.mSeparator = "@@";
-    config.mQuote = '\000';
-    config.mColumnKeys = {"a", "b", "c"};
-    config.mDiscardUnmatch = true;
-    config.mUploadRawLog = false;
-    config.mAdvancedConfig.mRawLogTag = "__raw__";
-    // make events
-    auto sourceBuffer = std::make_shared<SourceBuffer>();
-    PipelineEventGroup eventGroup(sourceBuffer);
     std::string inJson = R"({
         "events" :
         [
@@ -95,60 +82,109 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                 "contents" :
                 {
                     "content" : "123@@456@@789
-012@@345@@678
-",
+012@@345@@678",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
             }
         ]
-    })";
-    eventGroup.FromJsonString(inJson);
-    // run function ProcessorSplitLogStringNative
-    ProcessorSplitLogStringNative processorSplitLogStringNative;
-    processorSplitLogStringNative.SetContext(mContext);
-    std::string pluginId = "testID";
-    ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(componentConfig));
-    processorSplitLogStringNative.Process(eventGroup);
-    // run function ProcessorParseDelimiterNative
-    ProcessorParseDelimiterNative& processorDelimiterNative = *(new ProcessorParseDelimiterNative);
-    ProcessorInstance processorInstance(&processorDelimiterNative, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
-    processorDelimiterNative.Process(eventGroup);
+        })";
+
+
     std::string expectJson = R"({
-        "events" :
-        [
-            {
-                "contents" :
+            "events" :
+            [
                 {
-                    "a": "123",
-                    "b": "456",
-                    "c": "789",
-                    "log.file.offset": "0"
+                    "contents" :
+                    {
+                        "a": "123",
+                        "b": "456",
+                        "c": "789",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
+                    "type" : 1
                 },
-                "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
-                "type" : 1
-            },
-            {
-                "contents" :
                 {
-                    "a": "012",
-                    "b": "345",
-                    "c": "678",
-                    "log.file.offset": "0"
-                },
-                "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
-                "type" : 1
-            }
-        ]
-    })";
-    // judge result
-    std::string outJson = eventGroup.ToJsonString();
-    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+                    "contents" :
+                    {
+                        "a": "012",
+                        "b": "345",
+                        "c": "678",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
+                    "type" : 1
+                }
+            ]
+        })";
+
+    // ProcessorSplitLogStringNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Config config;
+        config.mSeparator = "@@";
+        config.mColumnKeys = {"a", "b", "c"};
+        config.mDiscardUnmatch = true;
+        config.mUploadRawLog = false;
+        config.mAdvancedConfig.mRawLogTag = "__raw__";
+
+        std::string pluginId = "testID";
+        ComponentConfig componentConfig(pluginId, config);
+        // run function ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processorSplitLogStringNative;
+        processorSplitLogStringNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(componentConfig));
+        processorSplitLogStringNative.Process(eventGroup);
+        // run function ProcessorParseDelimiterNative
+        ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+        processor.Process(eventGroup);
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
+    // ProcessorSplitRegexNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Config config;
+        config.mLogBeginReg = ".*";
+        config.mSeparator = "@@";
+        config.mColumnKeys = {"a", "b", "c"};
+        config.mDiscardUnmatch = true;
+        config.mUploadRawLog = false;
+        config.mAdvancedConfig.mRawLogTag = "__raw__";
+
+        std::string pluginId = "testID";
+        ComponentConfig componentConfig(pluginId, config);
+        // run function processorSplitRegexNative
+        ProcessorSplitRegexNative processorSplitRegexNative;
+        processorSplitRegexNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(componentConfig));
+        processorSplitRegexNative.Process(eventGroup);
+        // run function ProcessorParseDelimiterNative
+        ProcessorParseDelimiterNative& processor = *(new ProcessorParseDelimiterNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+        processor.Process(eventGroup);
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
