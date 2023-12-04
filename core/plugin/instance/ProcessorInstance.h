@@ -30,7 +30,7 @@ public:
 
     const std::string& Name() const override { return mPlugin->Name(); };
     bool Init(const ComponentConfig& config, PipelineContext& context) override;
-    void Process(PipelineEventGroup& logGroup);
+    void Process(std::vector<PipelineEventGroup>& logGroupList);
 
 private:
     std::unique_ptr<Processor> mPlugin;

@@ -24,22 +24,20 @@ namespace apsara::sls::spl {
 
 namespace logtail {
 
-class ProcessorSPL  {
+class ProcessorSPL : public Processor {
 public:
     static const std::string sName;
-    bool Init(const ComponentConfig& config, PipelineContext& context);
-    void Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList);
+    const std::string& Name() const override { return sName; }
+
+    bool Init(const ComponentConfig& componentConfig) override;
+    void Process(std::vector<PipelineEventGroup>& logGroupList) override;
+    void Process(PipelineEventGroup& logGroup) override;
 
 protected:
-    bool IsSupportedEvent(const PipelineEventPtr& e);
+    bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
     std::shared_ptr<apsara::sls::spl::SplPipeline> mSPLPipelinePtr;
-    MetricsRecordRef mMetricsRecordRef;
-    
-    CounterPtr mProcInRecordsTotal;
-    CounterPtr mProcOutRecordsTotal;
-    CounterPtr mProcTimeMS;
 
     CounterPtr mSplExcuteErrorCount;
     CounterPtr mSplExcuteTimeoutErrorCount;

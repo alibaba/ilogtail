@@ -390,7 +390,11 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormat() {
     ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
-    processorInstance.Process(eventGroup);
+
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);
     // judge result
     std::string outJson = eventGroup.ToJsonString();
     std::stringstream expectJsonSs;
@@ -482,7 +486,10 @@ void ProcessorParseTimestampNativeUnittest::TestProcessRegularFormatFailed() {
     ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
-    processorInstance.Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);
     // judge result
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
@@ -542,8 +549,10 @@ void ProcessorParseTimestampNativeUnittest::TestProcessHistoryDiscard() {
     ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
-    processorInstance.Process(eventGroup);
-    // check observablity
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);    // check observablity
     APSARA_TEST_EQUAL_FATAL(2, processor.GetContext().GetProcessProfile().historyFailures);    
     APSARA_TEST_EQUAL_FATAL(2, processorInstance.mProcInRecordsTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(strlen(timebuff)*2, processor.mProcParseInSizeBytes->GetValue());

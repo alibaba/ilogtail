@@ -130,19 +130,19 @@ bool Pipeline::Init(const PipelineConfig& config) {
     return true;
 }
 
-void Pipeline::Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
+void Pipeline::Process(std::vector<PipelineEventGroup>& logGroupList) {
     for (auto& p : mProcessorLine) {
-        p->Process(logGroup);
+        p->Process(logGroupList);
     }
     if (mSplProcessor) {
-        mSplProcessor->Process(logGroup, logGroupList);
-    } else {
-        logGroupList.emplace_back(std::move(logGroup));
+        mSplProcessor->Process(logGroupList);
     }
 }
 
 bool Pipeline::InitSplProcessor(const PipelineConfig& config, const std::string& pluginId) {
-    mSplProcessor = std::unique_ptr<ProcessorSPL>(new ProcessorSPL());
+    std::unique_ptr<ProcessorInstance> mSplProcessor = PluginRegistry::GetInstance()->CreateProcessor(
+        ProcessorSPL::sName, pluginId);
+
     ComponentConfig componentConfig(std::string(ProcessorSPL::sName)+ "/" + pluginId, config);
     if (!mSplProcessor->Init(componentConfig, mContext)) {
         LOG_ERROR(GetContext().GetLogger(), ("InitSplProcessor", "spl")("Error", "Init failed"));

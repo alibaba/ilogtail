@@ -56,17 +56,15 @@ void SplUnittest::TestInit() {
         config.mUploadRawLog = false;
         config.mSpl = line;
 
-        std::string pluginId = "testID";
         ProcessorSPL& processor = *(new ProcessorSPL);
+        std::string pluginId = "testID";
+        ProcessorInstance processorInstance(&processor, pluginId);
         ComponentConfig componentConfig(pluginId, config);
-
-        //std::cout<<line<<'\n';
-        bool init = processor.Init(componentConfig, mContext);
+        bool init = processorInstance.Init(componentConfig, mContext);
         if (!init) {
             std::cout<<"error:" <<line<<'\n';
         }
-        //APSARA_TEST_TRUE_FATAL(init);
-
+        APSARA_TEST_TRUE(init);
     }
 }
 
@@ -106,14 +104,15 @@ void SplUnittest::TestWhere() {
     })";
     eventGroup.FromJsonString(inJson);
     
-    std::string pluginId = "testID";
     std::vector<PipelineEventGroup> logGroupList;
+    logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
-
-    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
-    processor.Process(eventGroup, logGroupList);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(logGroupList);
 
     APSARA_TEST_EQUAL((u_int)1, logGroupList.size());
     if (logGroupList.size() > 0) {
@@ -158,13 +157,15 @@ void SplUnittest::TestExtend() {
     })";
     eventGroup.FromJsonString(inJson);
     
-    std::string pluginId = "testID";
     std::vector<PipelineEventGroup> logGroupList;
+    logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
-    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
-    processor.Process(eventGroup, logGroupList);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(logGroupList);
 
     APSARA_TEST_EQUAL((u_int)1, logGroupList.size());
     if (logGroupList.size() == 1) {
@@ -219,16 +220,15 @@ void SplUnittest::TestJsonParse() {
     })";
     eventGroup.FromJsonString(inJson);
     
-    std::string pluginId = "testID";
     std::vector<PipelineEventGroup> logGroupList;
+    logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-
-    
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
-
-    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
-    processor.Process(eventGroup, logGroupList);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(logGroupList);
     APSARA_TEST_EQUAL(logGroupList.size(), 1);
 
     if (logGroupList.size() > 0) {
@@ -294,16 +294,15 @@ void SplUnittest::TestRegexParse() {
     })";
     eventGroup.FromJsonString(inJson);
     
-    std::string pluginId = "testID";
     std::vector<PipelineEventGroup> logGroupList;
+    logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-
-    
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
-
-    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
-    processor.Process(eventGroup, logGroupList);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 1);
 
@@ -370,16 +369,15 @@ void SplUnittest::TestRegexCSV() {
     })";
     eventGroup.FromJsonString(inJson);
     
-    std::string pluginId = "testID";
     std::vector<PipelineEventGroup> logGroupList;
+    logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-
-    
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
-
-    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
-    processor.Process(eventGroup, logGroupList);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 1);
 
@@ -452,16 +450,15 @@ void SplUnittest::TestRegexKV() {
     })";
     eventGroup.FromJsonString(inJson);
     
-    std::string pluginId = "testID";
     std::vector<PipelineEventGroup> logGroupList;
+    logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-
-    
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
-
-    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
-    processor.Process(eventGroup, logGroupList);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 1);
 
@@ -533,16 +530,15 @@ void SplUnittest::TestTag() {
     })";
     eventGroup.FromJsonString(inJson);
     
-    std::string pluginId = "testID";
     std::vector<PipelineEventGroup> logGroupList;
+    logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-
-    
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
-
-    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
-    processor.Process(eventGroup, logGroupList);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 2);
     if (logGroupList.size() == 2) {
@@ -620,16 +616,15 @@ $ds2;
     })";
     eventGroup.FromJsonString(inJson);
     
-    std::string pluginId = "testID";
     std::vector<PipelineEventGroup> logGroupList;
+    logGroupList.emplace_back(std::move(eventGroup));
     // run function
     ProcessorSPL& processor = *(new ProcessorSPL);
-
-    
+    std::string pluginId = "testID";
+    ProcessorInstance processorInstance(&processor, pluginId);
     ComponentConfig componentConfig(pluginId, config);
-
-    APSARA_TEST_TRUE_FATAL(processor.Init(componentConfig, mContext));
-    processor.Process(eventGroup, logGroupList);
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(componentConfig, mContext));
+    processor.Process(logGroupList);
 
     APSARA_TEST_EQUAL(logGroupList.size(), 2);
 

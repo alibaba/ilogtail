@@ -452,8 +452,10 @@ int LogProcess::ProcessBuffer(std::shared_ptr<LogBuffer>& logBuffer,
         auto offsetStr = event->GetSourceBuffer()->CopyString(std::to_string(logBuffer->readOffset));
         event->SetContentNoCopy(LOG_RESERVED_KEY_FILE_OFFSET, StringView(offsetStr.data, offsetStr.size));
         eventGroup.AddEvent(std::move(event));
+        
+        outputList.emplace_back(std::move(eventGroup));
         // process logGroup
-        pipeline->Process(std::move(eventGroup), outputList);
+        pipeline->Process(outputList);
     }
 
     // record profile

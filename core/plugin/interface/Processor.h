@@ -27,9 +27,10 @@ public:
     virtual ~Processor() {}
 
     virtual bool Init(const ComponentConfig& config) = 0;
-    virtual void Process(PipelineEventGroup& logGroup) = 0;
+    virtual void Process(std::vector<PipelineEventGroup>& logGroupList);
 
 protected:
     virtual bool IsSupportedEvent(const PipelineEventPtr& e) const = 0;
+    virtual void Process(PipelineEventGroup& logGroup) = 0;
 };
 } // namespace logtail

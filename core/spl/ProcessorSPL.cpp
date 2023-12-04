@@ -32,43 +32,29 @@ namespace logtail {
 
 const std::string ProcessorSPL::sName = "spl";
 
-bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext& context) {
+bool ProcessorSPL::Init(const ComponentConfig& componentConfig) {
     Config config = componentConfig.GetConfig();
     std::vector<std::pair<std::string, std::string>> labels;
-    WriteMetrics::GetInstance()->PreparePluginCommonLabels(context.GetProjectName(),
-                                                            context.GetLogstoreName(),
-                                                            context.GetRegion(),
-                                                            context.GetConfigName(),
-                                                            sName,
-                                                            componentConfig.GetId(),
-                                                            labels);
 
-    WriteMetrics::GetInstance()->PrepareMetricsRecordRef(mMetricsRecordRef, std::move(labels));
-    
-    mProcInRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_IN_RECORDS_TOTAL);
-    mProcOutRecordsTotal = mMetricsRecordRef.CreateCounter(METRIC_PROC_OUT_RECORDS_TOTAL);
-    mProcTimeMS = mMetricsRecordRef.CreateCounter(METRIC_PROC_TIME_MS);
-
-    mSplExcuteErrorCount = mMetricsRecordRef.CreateCounter("proc_spl_excute_error_count");
-    mSplExcuteTimeoutErrorCount = mMetricsRecordRef.CreateCounter("proc_spl_excute_timeout_error_count");
-    mSplExcuteMemoryExceedErrorCount = mMetricsRecordRef.CreateCounter("proc_spl_excute_memory_exceed_error_count");
+    mSplExcuteErrorCount = GetMetricsRecordRef().CreateCounter("proc_spl_excute_error_count");
+    mSplExcuteTimeoutErrorCount = GetMetricsRecordRef().CreateCounter("proc_spl_excute_timeout_error_count");
+    mSplExcuteMemoryExceedErrorCount = GetMetricsRecordRef().CreateCounter("proc_spl_excute_memory_exceed_error_count");
 
     // spl raw statistic
-    mProcessMicros = mMetricsRecordRef.CreateCounter("proc_spl_process_micros");
-    mInputMicros = mMetricsRecordRef.CreateCounter("proc_spl_input_micros");
-    mOutputMicros = mMetricsRecordRef.CreateCounter("proc_spl_output_micros");
-    mMemPeakBytes = mMetricsRecordRef.CreateCounter("proc_spl_mem_peak_bytes");
-    mTotalTaskCount = mMetricsRecordRef.CreateCounter("proc_spl_total_task_count");
-    mSuccTaskCount = mMetricsRecordRef.CreateCounter("proc_spl_succ_task_count");
-    mFailTaskCount = mMetricsRecordRef.CreateCounter("proc_spl_fail_task_count");
+    mProcessMicros = GetMetricsRecordRef().CreateCounter("proc_spl_process_micros");
+    mInputMicros = GetMetricsRecordRef().CreateCounter("proc_spl_input_micros");
+    mOutputMicros = GetMetricsRecordRef().CreateCounter("proc_spl_output_micros");
+    mMemPeakBytes = GetMetricsRecordRef().CreateCounter("proc_spl_mem_peak_bytes");
+    mTotalTaskCount = GetMetricsRecordRef().CreateCounter("proc_spl_total_task_count");
+    mSuccTaskCount = GetMetricsRecordRef().CreateCounter("proc_spl_succ_task_count");
+    mFailTaskCount = GetMetricsRecordRef().CreateCounter("proc_spl_fail_task_count");
    
 
     PipelineOptions splOptions;
     // different parse mode support different spl operators
     splOptions.parserMode = parser::ParserMode::LOGTAIL;
-    
+    // sampling for error
     splOptions.errorSampling = false;
-    splOptions.useFunctionWhitelist = false;
 
     initSPL(&splOptions);
 
@@ -82,26 +68,29 @@ bool ProcessorSPL::Init(const ComponentConfig& componentConfig, PipelineContext&
     
     mSPLPipelinePtr = std::make_shared<apsara::sls::spl::SplPipeline>(spl, error, timeoutMills, maxMemoryBytes, logger);
     if (error.code_ != StatusCode::OK) {
-        LOG_ERROR(sLogger, ("pipeline create error", error.msg_)("raw spl", spl));
+        LOG_ERROR(sLogger, ("pipeline create error", error.msg_)("project", GetContext().GetProjectName())("logstore", GetContext().GetLogstoreName())("configName", GetContext().GetConfigName())("raw spl", spl));
         LogtailAlarm::GetInstance()->SendAlarm(USER_CONFIG_ALARM,
-                                                   std::string("invalid spl config: ") + context.GetConfigName() +  std::string("  spl: " + spl),
-                                                   context.GetProjectName(),
-                                                   context.GetLogstoreName(),
-                                                   context.GetRegion());
+                                                   std::string("invalid spl config: ") + GetContext().GetConfigName() +  std::string("  spl: " + spl),
+                                                   GetContext().GetProjectName(),
+                                                   GetContext().GetLogstoreName(),
+                                                   GetContext().GetRegion());
         return false;
     }
     return true;
 }
 
 
+void ProcessorSPL::Process(PipelineEventGroup& logGroup) {
+}
 
 
-void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEventGroup>& logGroupList) {
+void ProcessorSPL::Process(std::vector<PipelineEventGroup>& logGroupList) {
     std::string errorMsg;
+    PipelineEventGroup logGroup = std::move(logGroupList[0]);
+    std::vector<PipelineEventGroup>().swap(logGroupList);
+
     size_t inSize = logGroup.GetEvents().size();
-    mProcInRecordsTotal->Add(inSize);
     std::vector<std::string> colNames{FIELD_CONTENT};
-    uint64_t startTime = GetCurrentTimeInMicroSeconds();
     // 根据spip->getInputSearches()，设置input数组
     std::vector<Input*> inputs;
     for (const auto& search : mSPLPipelinePtr->getInputSearches()) {
@@ -141,18 +130,11 @@ void ProcessorSPL::Process(PipelineEventGroup& logGroup, std::vector<PipelineEve
 
     for (auto& input : inputs) delete input;
     for (auto& output : outputs) delete output;
-
-    size_t outSize = 0;
-    for (auto& logGroup : logGroupList) {
-        outSize += logGroup.GetEvents().size();
-    }
-    mProcOutRecordsTotal->Add(outSize);
-    uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
-    mProcTimeMS->Add(durationTime);
     return;
 }
 
-bool ProcessorSPL::IsSupportedEvent(const PipelineEventPtr& e) {
+
+bool ProcessorSPL::IsSupportedEvent(const PipelineEventPtr& e) const {
     return e.Is<LogEvent>();
 }
 } // namespace logtail

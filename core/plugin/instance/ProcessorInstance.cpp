@@ -38,18 +38,22 @@ bool ProcessorInstance::Init(const ComponentConfig& config, PipelineContext& con
     return inited;
 }
 
-void ProcessorInstance::Process(PipelineEventGroup& logGroup) {
+void ProcessorInstance::Process(std::vector<PipelineEventGroup>& logGroupList) {
+    PipelineEventGroup& logGroup = logGroupList[0];
+
     size_t inSize = logGroup.GetEvents().size();
 
     mProcInRecordsTotal->Add(inSize);
 
     uint64_t startTime = GetCurrentTimeInMicroSeconds();
-    mPlugin->Process(logGroup);
+    mPlugin->Process(logGroupList);
     uint64_t durationTime = GetCurrentTimeInMicroSeconds() - startTime;
     
     mProcTimeMS->Add(durationTime);
-
-    size_t outSize = logGroup.GetEvents().size();
+    size_t outSize = 0;
+    for (auto& logGroup : logGroupList) {
+        outSize += logGroup.GetEvents().size();
+    } 
     mProcOutRecordsTotal->Add(outSize);
     LOG_DEBUG(mPlugin->GetContext().GetLogger(), ("Processor", Id())("InSize", inSize)("OutSize", outSize));
 }

@@ -27,7 +27,7 @@ public:
     Pipeline() {}
     const std::string& Name() const { return mName; }
     bool Init(const PipelineConfig& config);
-    void Process(PipelineEventGroup&& logGroup, std::vector<PipelineEventGroup>& logGroupList);
+    void Process(std::vector<PipelineEventGroup>& logGroupList);
     PipelineContext& GetContext() { return mContext; }
     PipelineConfig& GetPipelineConfig() { return mConfig; }
 
@@ -37,7 +37,7 @@ private:
 
     std::string mName;
     std::vector<std::unique_ptr<ProcessorInstance> > mProcessorLine;
-    std::unique_ptr<ProcessorSPL> mSplProcessor;
+    std::unique_ptr<ProcessorInstance> mSplProcessor;
     PipelineContext mContext;
     PipelineConfig mConfig;
 };

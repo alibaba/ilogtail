@@ -193,7 +193,10 @@ void ProcessorFilterNativeUnittest::TestFilter() {
     eventGroup1.FromJsonString(inJson);
     std::cout<<inJson<<std::endl;
     // run function
-    processorInstance.Process(eventGroup1);
+    std::vector<PipelineEventGroup> eventGroupList1;
+    eventGroupList1.emplace_back(std::move(eventGroup1));
+    processorInstance.Process(eventGroupList1);
+    eventGroup1 = std::move(eventGroupList1[0]);
     std::string outJson = eventGroup1.ToJsonString();
     // judge result
     std::string expectJson = R"({
@@ -236,7 +239,10 @@ void ProcessorFilterNativeUnittest::TestFilter() {
     })";
     eventGroup2.FromJsonString(inJson);
     // run function
-    processorInstance.Process(eventGroup2);
+    std::vector<PipelineEventGroup> eventGroupList2;
+    eventGroupList2.emplace_back(std::move(eventGroup2));
+    processorInstance.Process(eventGroupList2);
+    eventGroup2 = std::move(eventGroupList2[0]);
     outJson = eventGroup2.ToJsonString();
     // judge result
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
@@ -301,7 +307,10 @@ void ProcessorFilterNativeUnittest::TestFilter() {
         ]
     })";
     mContext.SetProjectName("project123123");
-    processorInstance.Process(eventGroup3);
+    std::vector<PipelineEventGroup> eventGroupList3;
+    eventGroupList3.emplace_back(std::move(eventGroup3));
+    processorInstance.Process(eventGroupList3);
+    eventGroup3 = std::move(eventGroupList3[0]);
     outJson = eventGroup3.ToJsonString();
     // judge result
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
@@ -365,7 +374,10 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     })";
     eventGroup1.FromJsonString(inJson);
     // run function
-    processorInstance.Process(eventGroup1);
+    std::vector<PipelineEventGroup> eventGroupList1;
+    eventGroupList1.emplace_back(std::move(eventGroup1));
+    processorInstance.Process(eventGroupList1);
+    eventGroup1 = std::move(eventGroupList1[0]);
     std::string outJson = eventGroup1.ToJsonString();
     // judge result
     std::string expectJson = R"({
@@ -407,7 +419,10 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     })";
     eventGroup2.FromJsonString(inJson);
     // run function
-    processorInstance.Process(eventGroup2);
+    std::vector<PipelineEventGroup> eventGroupList2;
+    eventGroupList2.emplace_back(std::move(eventGroup2));
+    processorInstance.Process(eventGroupList2);
+    eventGroup2 = std::move(eventGroupList2[0]);
     outJson = eventGroup2.ToJsonString();
     // judge result
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
@@ -483,7 +498,10 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         })";
         eventGroup1.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup1);
+        std::vector<PipelineEventGroup> eventGroupList1;
+        eventGroupList1.emplace_back(std::move(eventGroup1));
+        processorInstance.Process(eventGroupList1);
+        eventGroup1 = std::move(eventGroupList1[0]);
         std::string outJson = eventGroup1.ToJsonString();
         // judge result
         std::string expectJson = R"({
@@ -525,7 +543,10 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         })";
         eventGroup2.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup2);
+        std::vector<PipelineEventGroup> eventGroupList2;
+        eventGroupList2.emplace_back(std::move(eventGroup2));
+        processorInstance.Process(eventGroupList2);
+        eventGroup2 = std::move(eventGroupList2[0]);
         outJson = eventGroup2.ToJsonString();
         // judge result
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
@@ -643,7 +664,10 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         })";
         eventGroup1.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup1);
+        std::vector<PipelineEventGroup> eventGroupList1;
+        eventGroupList1.emplace_back(std::move(eventGroup1));
+        processorInstance.Process(eventGroupList1);
+        eventGroup1 = std::move(eventGroupList1[0]);
         std::string outJson = eventGroup1.ToJsonString();
         // judge result
         // judge result

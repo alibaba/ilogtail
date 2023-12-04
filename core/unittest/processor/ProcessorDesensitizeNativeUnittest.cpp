@@ -61,10 +61,10 @@ UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordMulti);
 UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastWholeKey);
 
 Config* ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(string key = string("cast1"),
-                                                                   string regex = string("(pwd=)[^,]+"),
-                                                                   int type = SensitiveWordCastOption::CONST_OPTION,
-                                                                   bool replaceAll = false,
-                                                                   string constVal = string("\\1********")) {
+                                                                  string regex = string("(pwd=)[^,]+"),
+                                                                  int type = SensitiveWordCastOption::CONST_OPTION,
+                                                                  bool replaceAll = false,
+                                                                  string constVal = string("\\1********")) {
     Config* oneConfig = new Config;
     vector<SensitiveWordCastOption>& optVec = oneConfig->mSensitiveWordCastOptions[key];
     optVec.resize(1);
@@ -150,7 +150,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -200,7 +203,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -250,7 +256,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -301,7 +310,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -352,7 +364,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -407,7 +422,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -459,7 +477,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -511,7 +532,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -563,7 +587,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -615,7 +642,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -667,7 +697,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -719,7 +752,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -771,7 +807,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -823,7 +862,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -876,7 +918,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -926,7 +971,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -977,7 +1025,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1029,7 +1080,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1082,7 +1136,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1136,7 +1193,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1217,7 +1277,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    processorInstance.Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -1285,7 +1348,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1336,7 +1402,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1387,7 +1456,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1439,7 +1511,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1492,7 +1567,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         })";
         eventGroup.FromJsonString(inJson);
         // run function
-        processorInstance.Process(eventGroup);
+        std::vector<PipelineEventGroup> eventGroupList;
+        eventGroupList.emplace_back(std::move(eventGroup));
+        processorInstance.Process(eventGroupList);
+        eventGroup = std::move(eventGroupList[0]);
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1544,7 +1622,10 @@ void ProcessorDesensitizeNativeUnittest::TestCastWholeKey() {
     })";
     eventGroup.FromJsonString(inJson);
     // run function
-    processorInstance.Process(eventGroup);
+    std::vector<PipelineEventGroup> eventGroupList;
+    eventGroupList.emplace_back(std::move(eventGroup));
+    processorInstance.Process(eventGroupList);
+    eventGroup = std::move(eventGroupList[0]);
     // judge result
     std::string expectJson = R"({
         "events" :

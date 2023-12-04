@@ -98,8 +98,9 @@ void PipelineUnittest::TestProcess() {
     eventGroup.FromJsonString(inJson);
 
     std::vector<PipelineEventGroup> outputList;
+    outputList.emplace_back(std::move(eventGroup));
 
-    pipeline.Process(std::move(eventGroup), outputList);
+    pipeline.Process(outputList);
     APSARA_TEST_EQUAL_FATAL(1, outputList.size());
 
     APSARA_TEST_EQUAL_FATAL(2, outputList[0].GetEvents().size());
