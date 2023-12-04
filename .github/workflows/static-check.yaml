@@ -40,7 +40,6 @@ jobs:
         runner: [ self-hosted ]
       fail-fast: true
     steps:
-
       # prepare ubuntu environment
       - name: prepare ubuntu environment
         if: matrix.runner == 'self-hosted'
@@ -67,7 +66,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: true
-
       - name: Copy Lib
         if: matrix.runner == 'self-hosted'
         run: sudo cp ./pkg/logtail/libPluginAdapter.so /usr/lib/
