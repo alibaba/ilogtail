@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "common/ExceptionBase.h"
-#include "common/JsonUtil.h"
-#include "config/UserLogConfigParser.h"
-#include "plugin/instance/ProcessorInstance.h"
-#include "processor/ProcessorFilterNative.h"
 #include "unittest/Unittest.h"
+#include "common/JsonUtil.h"
+#include "processor/ProcessorFilterNative.h"
+#include "plugin/instance/ProcessorInstance.h"
+#include "common/ExceptionBase.h"
+#include "config/UserLogConfigParser.h"
 
 using namespace std;
 using boost::regex;
@@ -181,8 +181,7 @@ void ProcessorFilterNativeUnittest::TestFilter() {
                 {
                     "key1" : "abcdeavalue1",
                     "key2" : "value2xxxxx",
-                    "key3)"
-        + std::string(illegalUtf8) + R"(": "abcdea)" + std::string(illegalUtf8) + R"(value1",
+                    "key3)" + std::string(illegalUtf8) + R"(": "abcdea)" + std::string(illegalUtf8) + R"(value1",
                     "log.file.offset": "0"
                 },
                 "timestampNanosecond" : 0,
@@ -192,6 +191,7 @@ void ProcessorFilterNativeUnittest::TestFilter() {
         ]
     })";
     eventGroup1.FromJsonString(inJson);
+    std::cout<<inJson<<std::endl;
     // run function
     processorInstance.Process(eventGroup1);
     std::string outJson = eventGroup1.ToJsonString();
@@ -1205,7 +1205,7 @@ void ProcessorFilterNativeUnittest::TestFilterNoneUtf8() {
         processor.FilterNoneUtf8(testStr);
         for (uint32_t indexOfString = 0; indexOfString < testStr.size(); ++indexOfString) {
             if (flow[indexOfString] == true) {
-                APSARA_TEST_EQUAL_FATAL(testStr[indexOfString], ' ');
+                APSARA_TEST_EQUAL_FATAL(testStr[indexOfString], ' ');  
             } else {
                 APSARA_TEST_NOT_EQUAL_FATAL(testStr[indexOfString], ' ');
             }
