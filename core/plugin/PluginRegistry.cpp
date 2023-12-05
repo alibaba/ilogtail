@@ -48,6 +48,7 @@
 #include "processor/ProcessorSplitLogStringNative.h"
 #include "processor/ProcessorSplitRegexNative.h"
 #include "processor/ProcessorTagNative.h"
+#include "spl/ProcessorSPL.h"
 
 using namespace std;
 
@@ -232,7 +233,7 @@ void PluginRegistry::LoadStaticPlugins() {
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorParseTimestampNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorTagNative>());
     RegisterProcessorCreator(new StaticProcessorCreator<ProcessorFilterNative>());
-
+    RegisterProcessorCreator(new StaticProcessorCreator<ProcessorSPL>());
     RegisterFlusherCreator(new StaticFlusherCreator<FlusherSLS>());
 }
 
