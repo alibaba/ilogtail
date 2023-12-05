@@ -37,16 +37,14 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.19 ]
-        runner: [ self-hosted ]
+        runner: [ arc-runner-set ]
       fail-fast: true
     steps:
       # prepare ubuntu environment
       - name: prepare ubuntu environment
-        if: matrix.runner == 'self-hosted'
         run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev
       # Clean up space to prevent action from running out of disk space.
       - name: clean
-        if: matrix.runner == 'self-hosted'
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -67,15 +65,12 @@ jobs:
         with:
           submodules: true
       - name: Copy Lib
-        if: matrix.runner == 'self-hosted'
         run: sudo cp ./pkg/logtail/libPluginAdapter.so /usr/lib/
 
       - name: Check License Header
-        if: matrix.runner == 'self-hosted'
         run: make check-license
 
       - name: Check Dependencies Licences
-        if: matrix.runner == 'self-hosted'
         run: make check-dependency-licenses
 
       - name: Lint
@@ -89,7 +84,7 @@ jobs:
 
 
   result:
-    runs-on: self-hosted
+    runs-on: arc-runner-set
     timeout-minutes: 60
     needs: [ CI ]
     steps:
