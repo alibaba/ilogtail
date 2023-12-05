@@ -19,35 +19,45 @@
 #include "app_config/AppConfig.h"
 #include "common/ParamExtractor.h"
 #include "monitor/MetricConstants.h"
-#include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
+
 const std::string ProcessorParseRegexNative::sName = "processor_parse_regex_native";
 
 bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     std::string errorMsg;
+
+    // SourceKey
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
+
+    // Regex
     if (!GetMandatoryStringParam(config, "Regex", mRegex, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     } else if (!IsRegexValid(mRegex)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), "param Regex is not valid regex", sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           "mandatory string param Regex is not a valid regex",
+                           sName,
+                           mContext->GetConfigName());
     }
+    mReg = boost::regex(mRegex);
+    mIsWholeLineMode = mRegex == "(.*)";
+
+    // Keys
     if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
-
-    mCommonParserOptions.Init(config, *mContext, sName);
-
-    for (auto& it : mKeys) {
+    for (const auto& it : mKeys) {
         if (it == mSourceKey) {
             mSourceKeyOverwritten = true;
             break;
         }
     }
-    mReg = boost::regex(mRegex);
-    mIsWholeLineMode = mRegex == "(.*)";
+
+    if (!mCommonParserOptions.Init(config, *mContext, sName)) {
+        return false;
+    }
 
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
@@ -58,6 +68,7 @@ bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     mProcKeyCountNotMatchErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
+
     return true;
 }
 

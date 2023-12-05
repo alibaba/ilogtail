@@ -27,18 +27,23 @@ class ProcessorParseJsonNative : public Processor {
 public:
     static const std::string sName;
 
-    // Source field name.
-    std::string mSourceKey;
-    CommonParserOptions mCommonParserOptions;
-
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;
     void Process(PipelineEventGroup& logGroup) override;
+
+    // Source field name.
+    std::string mSourceKey;
+    CommonParserOptions mCommonParserOptions;
 
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
+    bool JsonLogLineParser(LogEvent& sourceEvent, const StringView& logPath, PipelineEventPtr& e);
+    void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent, bool overwritten = true);
+    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
+    static std::string RapidjsonValueToString(const rapidjson::Value& value);
+
     bool mSourceKeyOverwritten = false;
 
     int* mParseFailures = nullptr;
@@ -48,11 +53,6 @@ private:
     CounterPtr mProcParseOutSizeBytes;
     CounterPtr mProcDiscardRecordsTotal;
     CounterPtr mProcParseErrorTotal;
-
-    bool JsonLogLineParser(LogEvent& sourceEvent, const StringView& logPath, PipelineEventPtr& e);
-    void AddLog(const StringView& key, const StringView& value, LogEvent& targetEvent, bool overwritten = true);
-    bool ProcessEvent(const StringView& logPath, PipelineEventPtr& e);
-    static std::string RapidjsonValueToString(const rapidjson::Value& value);
 
 #ifdef APSARA_UNIT_TEST_MAIN
     friend class ProcessorParseJsonNativeUnittest;

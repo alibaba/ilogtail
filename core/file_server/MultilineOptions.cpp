@@ -21,6 +21,7 @@ using namespace std;
 namespace logtail {
 bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ctx, const string& pluginName) {
     string errorMsg;
+
     // Mode
     string mode;
     if (!GetOptionalStringParam(config, "Multiline.Mode", mode, errorMsg)) {
@@ -75,6 +76,16 @@ bool MultilineOptions::Init(const Json::Value& config, const PipelineContext& ct
         } else if (mStartPatternRegPtr || mEndPatternRegPtr) {
             mIsMultiline = true;
         }
+    }
+
+    // UnmatchedContentTreatment
+    string treatment;
+    if (!GetOptionalStringParam(config, "Multiline.UnmatchedContentTreatment", treatment, errorMsg)) {
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, "split", pluginName, ctx.GetConfigName());
+    } else if (treatment == "discard") {
+        mUnmatchedContentTreatment = UnmatchedContentTreatment::DISCARD;
+    } else if (!treatment.empty() && treatment != "split") {
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, "split", pluginName, ctx.GetConfigName());
     }
 
     return true;

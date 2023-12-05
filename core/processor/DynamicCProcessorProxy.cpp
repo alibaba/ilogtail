@@ -21,6 +21,7 @@ namespace logtail {
 DynamicCProcessorProxy::DynamicCProcessorProxy(const char* name) : _name(name) {
     _c_ins = new processor_instance_t;
 }
+
 DynamicCProcessorProxy::~DynamicCProcessorProxy() {
     _c_ins->plugin->finalize(_c_ins->plugin_state);
     delete _c_ins;

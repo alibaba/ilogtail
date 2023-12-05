@@ -24,50 +24,70 @@
 #include "monitor/MetricConstants.h"
 
 namespace logtail {
+
 const std::string ProcessorFilterNative::sName = "processor_filter_regex_native";
 
 bool ProcessorFilterNative::Init(const Json::Value& config) {
     std::string errorMsg;
 
-    if (GetOptionalMapParam(config, "Include", mInclude, errorMsg)) {
-        if (!mInclude.empty()) {
-            mFilterMode = Mode::RULE_MODE;
-            std::vector<std::string> keys;
-            std::vector<boost::regex> regs;
-            for (auto& include : mInclude) {
-                keys.emplace_back(include.first);
-                if (!IsRegexValid(include.second)) {
-                    errorMsg = "invalid regex format: " + include.second;
-                    PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-                }
-                regs.emplace_back(boost::regex(include.second));
+    // Include
+    if (!GetOptionalMapParam(config, "Include", mInclude, errorMsg)) {
+        PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    } else if (!mInclude.empty()) {
+        std::vector<std::string> keys;
+        std::vector<boost::regex> regs;
+        bool hasError = false;
+        for (auto& include : mInclude) {
+            if (!IsRegexValid(include.second)) {
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     "value in map param Include is not a valid regex",
+                                     sName,
+                                     mContext->GetConfigName());
+                hasError = true;
+                break;
             }
+            keys.emplace_back(include.first);
+            regs.emplace_back(boost::regex(include.second));
+        }
+        if (!hasError) {
             mFilterRule = std::make_shared<LogFilterRule>();
-            mFilterRule.get()->FilterKeys = keys;
-            mFilterRule.get()->FilterRegs = regs;
-        }
-    } else {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-    }
-
-    if (mFilterMode == Mode::BYPASS_MODE) {
-        const Json::Value& val = config["ConditionExp"];
-        if (!val.isNull()) {
-            BaseFilterNodePtr root = ParseExpressionFromJSON(val);
-            if (!root || root.get() == NULL) {
-                errorMsg = "invalid filter expression: " + val.toStyledString();
-                PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
-            }
-            mConditionExp.swap(root);
-            LOG_INFO(mContext->GetLogger(), ("parse filter expression", val.toStyledString()));
-            mFilterMode = Mode::EXPRESSION_MODE;
+            mFilterRule->FilterKeys = keys;
+            mFilterRule->FilterRegs = regs;
+            mFilterMode = Mode::RULE_MODE;
         }
     }
 
+    // ConditionExp
     if (mFilterMode == Mode::BYPASS_MODE) {
-        errorMsg = "Include and ConditionExp must have one";
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        const char* key = "ConditionExp";
+        const Json::Value* itr = config.find(key, key + strlen(key));
+        if (itr == nullptr) {
+            PARAM_ERROR_RETURN(
+                mContext->GetLogger(), "param ConditionExp is missing", sName, mContext->GetConfigName());
+        }
+        if (!itr->isObject()) {
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               "object param ConditionExp is not of type object",
+                               sName,
+                               mContext->GetConfigName());
+        }
+        BaseFilterNodePtr root = ParseExpressionFromJSON(*itr);
+        if (!root) {
+            PARAM_ERROR_RETURN(
+                mContext->GetLogger(), "object param ConditionExp is not valid", sName, mContext->GetConfigName());
+        }
+        mConditionExp.swap(root);
+        mFilterMode = Mode::EXPRESSION_MODE;
     }
+
+    if (mFilterMode == Mode::BYPASS_MODE) {
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           "neither param Include nor param ConditionExp is valid",
+                           sName,
+                           mContext->GetConfigName());
+    }
+
+    // DiscardingNonUTF8
     if (!GetOptionalBoolParam(config, "DiscardingNonUTF8", mDiscardingNonUTF8, errorMsg)) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mDiscardingNonUTF8, sName, mContext->GetConfigName());
     }
@@ -452,4 +472,5 @@ bool UnaryFilterOperatorNode::Match(const LogContents& contents, const PipelineC
     }
     return false;
 }
+
 } // namespace logtail

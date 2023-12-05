@@ -16,8 +16,6 @@
 
 #include "processor/ProcessorParseApsaraNative.h"
 
-#include <string>
-
 #include "app_config/AppConfig.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
@@ -27,7 +25,9 @@
 #include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
+
 const std::string ProcessorParseApsaraNative::sName = "processor_parse_apsara_native";
+
 const std::string SLS_KEY_LEVEL = "__LEVEL__";
 const std::string SLS_KEY_THREAD = "__THREAD__";
 const std::string SLS_KEY_FILE = "__FILE__";
@@ -36,28 +36,34 @@ const int32_t MAX_BASE_FIELD_NUM = 10;
 
 bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
     std::string errorMsg;
+
+    // SourceKey
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
+
+    // Timezone
     if (!GetOptionalStringParam(config, "Timezone", mTimezone, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mTimezone, sName, mContext->GetConfigName());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+    } else if (!ParseLogTimeZoneOffsetSecond(mTimezone, false, mLogTimeZoneOffsetSecond)) {
+        PARAM_WARNING_IGNORE(
+            mContext->GetLogger(), "string param Timezone is not valid", sName, mContext->GetConfigName());
     }
 
-    if (mTimezone != "" && !ParseLogTimeZoneOffsetSecond(mLogTimeZoneOffsetSecond, mTimezone, errorMsg, false)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mLogTimeZoneOffsetSecond, sName, mContext->GetConfigName());
+    if (!mCommonParserOptions.Init(config, *mContext, sName)) {
+        return false;
     }
-
-    mCommonParserOptions.Init(config, *mContext, sName);
 
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
+
     mProcParseInSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_IN_SIZE_BYTES);
     mProcParseOutSizeBytes = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_OUT_SIZE_BYTES);
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
+
     return true;
 }
 

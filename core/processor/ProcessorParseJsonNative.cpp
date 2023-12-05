@@ -25,14 +25,20 @@
 #include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
+
 const std::string ProcessorParseJsonNative::sName = "processor_parse_json_native";
 
 bool ProcessorParseJsonNative::Init(const Json::Value& config) {
     std::string errorMsg;
+
+    // SourceKey
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
-    mCommonParserOptions.Init(config, *mContext, sName);
+
+    if (!mCommonParserOptions.Init(config, *mContext, sName)) {
+        return false;
+    }
 
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mLogGroupSize = &(GetContext().GetProcessProfile().logGroupSize);
