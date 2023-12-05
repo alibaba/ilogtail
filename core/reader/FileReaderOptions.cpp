@@ -58,24 +58,26 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
     encoding = ToLowerCaseString(encoding);
     if (encoding == "gbk") {
         mFileEncoding = Encoding::GBK;
+    } else if (encoding == "utf16") {
+        mFileEncoding = Encoding::UTF16;
     } else if (!encoding.empty() && encoding != "utf8") {
-        PARAM_ERROR_RETURN(ctx.GetLogger(), "param FileEncoding is not valid", pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(), "string param FileEncoding is not valid", pluginName, ctx.GetConfigName());
     }
 
     // TailingAllMatchedFiles
     if (!GetOptionalBoolParam(config, "TailingAllMatchedFiles", mTailingAllMatchedFiles, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, false, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mTailingAllMatchedFiles, pluginName, ctx.GetConfigName());
     }
 
     // TailSizeKB
     uint32_t tailSize = INT32_FLAG(default_tail_limit_kb);
     if (!GetOptionalUIntParam(config, "TailSizeKB", tailSize, errorMsg)) {
         PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, INT32_FLAG(default_tail_limit_kb), pluginName, ctx.GetConfigName());
+            ctx.GetLogger(), errorMsg, mTailSizeKB, pluginName, ctx.GetConfigName());
     } else if (tailSize > 100 * 1024 * 1024) {
         PARAM_WARNING_DEFAULT(ctx.GetLogger(),
-                              "param TailSizeKB is larger than 104857600",
-                              INT32_FLAG(default_tail_limit_kb),
+                              "uint param TailSizeKB is larger than 104857600",
+                              mTailSizeKB,
                               pluginName,
                               ctx.GetConfigName());
     } else {
@@ -85,35 +87,35 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
     // FlushTimeoutSecs
     if (!GetOptionalUIntParam(config, "FlushTimeoutSecs", mFlushTimeoutSecs, errorMsg)) {
         PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, INT32_FLAG(default_reader_flush_timeout), pluginName, ctx.GetConfigName());
+            ctx.GetLogger(), errorMsg, mFlushTimeoutSecs, pluginName, ctx.GetConfigName());
     }
 
     // ReadDelaySkipThresholdBytes
     if (!GetOptionalUIntParam(config, "ReadDelaySkipThresholdBytes", mReadDelaySkipThresholdBytes, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, 0, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mReadDelaySkipThresholdBytes, pluginName, ctx.GetConfigName());
     }
 
     // ReadDelayAlertThresholdBytes
     if (!GetOptionalUIntParam(config, "ReadDelayAlertThresholdBytes", mReadDelayAlertThresholdBytes, errorMsg)) {
         PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, INT32_FLAG(delay_bytes_upperlimit), pluginName, ctx.GetConfigName());
+            ctx.GetLogger(), errorMsg, mReadDelayAlertThresholdBytes, pluginName, ctx.GetConfigName());
     }
 
     // CloseUnusedReaderIntervalSec
     if (!GetOptionalUIntParam(config, "CloseUnusedReaderIntervalSec", mCloseUnusedReaderIntervalSec, errorMsg)) {
         PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, INT32_FLAG(reader_close_unused_file_time), pluginName, ctx.GetConfigName());
+            ctx.GetLogger(), errorMsg, mCloseUnusedReaderIntervalSec, pluginName, ctx.GetConfigName());
     }
 
     // RotatorQueueSize
     if (!GetOptionalUIntParam(config, "RotatorQueueSize", mRotatorQueueSize, errorMsg)) {
         PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, INT32_FLAG(logreader_max_rotate_queue_size), pluginName, ctx.GetConfigName());
+            ctx.GetLogger(), errorMsg, mRotatorQueueSize, pluginName, ctx.GetConfigName());
     }
 
     // AppendingLogPositionMeta
     if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, false, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mAppendingLogPositionMeta, pluginName, ctx.GetConfigName());
     }
 
     return true;

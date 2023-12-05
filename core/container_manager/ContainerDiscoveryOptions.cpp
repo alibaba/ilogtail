@@ -22,6 +22,7 @@ namespace logtail {
 
 bool ContainerFilters::Init(const Json::Value& config, const PipelineContext& ctx, const string& pluginName) {
     string errorMsg;
+    
     // K8pluginNamespaceRegex
     if (!GetOptionalStringParam(config, "ContainerFilters.K8sNamespaceRegex", mK8sNamespaceRegex, errorMsg)) {
         PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
@@ -96,7 +97,7 @@ bool ContainerDiscoveryOptions::Init(const Json::Value& config, const PipelineCo
 
     // CollectingContainersMeta
     if (!GetOptionalBoolParam(config, "CollectingContainersMeta", mCollectingContainersMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, false, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mCollectingContainersMeta, pluginName, ctx.GetConfigName());
     }
 
     return true;

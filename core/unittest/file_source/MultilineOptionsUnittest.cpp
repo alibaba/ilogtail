@@ -68,7 +68,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("\\d+:\\d+:\\d", config->mStartPattern);
     APSARA_TEST_EQUAL("aaa", config->mContinuePattern);
     APSARA_TEST_EQUAL("\\S+", config->mEndPattern);
-    APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::SPLIT, config->mUnmatchedContentTreatment);
+    APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE, config->mUnmatchedContentTreatment);
     APSARA_TEST_NOT_EQUAL(nullptr, config->GetStartPatternReg());
     APSARA_TEST_NOT_EQUAL(nullptr, config->GetContinuePatternReg());
     APSARA_TEST_NOT_EQUAL(nullptr, config->GetEndPatternReg());
@@ -91,7 +91,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("", config->mStartPattern);
     APSARA_TEST_EQUAL("", config->mContinuePattern);
     APSARA_TEST_EQUAL("", config->mEndPattern);
-    APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::SPLIT, config->mUnmatchedContentTreatment);
+    APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE, config->mUnmatchedContentTreatment);
     APSARA_TEST_EQUAL(nullptr, config->GetStartPatternReg());
     APSARA_TEST_EQUAL(nullptr, config->GetContinuePatternReg());
     APSARA_TEST_EQUAL(nullptr, config->GetEndPatternReg());

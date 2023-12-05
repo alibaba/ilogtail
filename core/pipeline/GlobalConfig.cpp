@@ -42,8 +42,8 @@ bool GlobalConfig::Init(const Json::Value& config, const string& configName, Jso
         mTopicType = TopicType::FILEPATH;
     } else if (topicType == "default") {
         mTopicType = TopicType::DEFAULT;
-    } else if (!topicType.empty()) {
-        PARAM_WARNING_IGNORE(sLogger, errorMsg, moduleName, configName);
+    } else if (!topicType.empty() && topicType != "none") {
+        PARAM_WARNING_IGNORE(sLogger, "string param TopicType is not valid", moduleName, configName);
     }
 
     // TopicFormat
@@ -60,7 +60,7 @@ bool GlobalConfig::Init(const Json::Value& config, const string& configName, Jso
             mTopicFormat.clear();
             LOG_WARNING(
                 sLogger,
-                ("problem encountered in config parsing", "param TopicFormat is not valid")(
+                ("problem encountered in config parsing", "string param TopicFormat is not valid")(
                     "action", "ignore param TopicType and TopicFormat")("module", moduleName)("config", configName));
         }
     }
@@ -68,21 +68,21 @@ bool GlobalConfig::Init(const Json::Value& config, const string& configName, Jso
     // ProcessPriority
     uint32_t priority = 0;
     if (!GetOptionalUIntParam(config, "ProcessPriority", priority, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, moduleName, configName);
+        PARAM_WARNING_DEFAULT(sLogger, errorMsg, mProcessPriority, moduleName, configName);
     } else if (priority > MAX_CONFIG_PRIORITY_LEVEL) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, moduleName, configName);
+        PARAM_WARNING_DEFAULT(sLogger, errorMsg, mProcessPriority, moduleName, configName);
     } else {
         mProcessPriority = priority;
     }
 
     // EnableTimestampNanosecond
     if (!GetOptionalBoolParam(config, "EnableTimestampNanosecond", mEnableTimestampNanosecond, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, moduleName, configName);
+        PARAM_WARNING_DEFAULT(sLogger, errorMsg, mEnableTimestampNanosecond, moduleName, configName);
     }
 
     // UsingOldContentTag
     if (!GetOptionalBoolParam(config, "UsingOldContentTag", mUsingOldContentTag, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, moduleName, configName);
+        PARAM_WARNING_DEFAULT(sLogger, errorMsg, mUsingOldContentTag, moduleName, configName);
     }
 
     for (auto itr = config.begin(); itr != config.end(); ++itr) {

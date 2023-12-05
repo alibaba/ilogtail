@@ -115,7 +115,7 @@ bool Pipeline::Init(Config&& config) {
                 == MultilineOptions::UnmatchedContentTreatment::DISCARD) {
                 detail["UnmatchedContentTreatment"] = Json::Value("discard");
             } else if (inputFile->mMultiline.mUnmatchedContentTreatment
-                       == MultilineOptions::UnmatchedContentTreatment::SPLIT) {
+                       == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
                 detail["UnmatchedContentTreatment"] = Json::Value("split");
             }
         } else {

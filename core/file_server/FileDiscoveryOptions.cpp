@@ -133,17 +133,18 @@ bool FileDiscoveryOptions::CompareByDepthAndCreateTime(
 
 bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext& ctx, const string& pluginName) {
     string errorMsg;
+
     // FilePaths + MaxDirSearchDepth
     if (!GetMandatoryListParam<string>(config, "FilePaths", mFilePaths, errorMsg)) {
         PARAM_ERROR_RETURN(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
     }
     if (mFilePaths.size() != 1) {
-        PARAM_ERROR_RETURN(ctx.GetLogger(), "param FilePaths has more than 1 element", pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(), "list param FilePaths has more than 1 element", pluginName, ctx.GetConfigName());
     }
     auto dirAndFile = GetDirAndFileNameFromPath(mFilePaths[0]);
     mBasePath = dirAndFile.first, mFilePattern = dirAndFile.second;
     if (mBasePath.empty() || mFilePattern.empty()) {
-        PARAM_ERROR_RETURN(ctx.GetLogger(), "param FilePaths[0] is invalid", pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(), "string param FilePaths[0] is invalid", pluginName, ctx.GetConfigName());
     }
 #if defined(_MSC_VER)
     mBasePath = EncodingConverter::GetInstance()->FromUTF8ToACP(mBasePath);
@@ -160,14 +161,14 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
         }
         // MaxDirSearchDepth is only valid when parent path ends with **
         if (!GetOptionalIntParam(config, "MaxDirSearchDepth", mMaxDirSearchDepth, errorMsg)) {
-            PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, 0, pluginName, ctx.GetConfigName());
+            PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mMaxDirSearchDepth, pluginName, ctx.GetConfigName());
         }
     }
     ParseWildcardPath();
 
     // PreservedDirDepth
     if (!GetOptionalIntParam(config, "PreservedDirDepth", mPreservedDirDepth, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, -1, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mPreservedDirDepth, pluginName, ctx.GetConfigName());
     }
 
     // ExcludeFilePaths
@@ -177,7 +178,7 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
         for (size_t i = 0; i < mExcludeFilePaths.size(); ++i) {
             if (!filesystem::path(mExcludeFilePaths[i]).is_absolute()) {
                 PARAM_WARNING_IGNORE(ctx.GetLogger(),
-                                     "ExcludeFilePaths[" + ToString(i) + "] is not absolute",
+                                     "string param ExcludeFilePaths[" + ToString(i) + "] is not absolute",
                                      pluginName,
                                      ctx.GetConfigName());
                 continue;
@@ -198,7 +199,7 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
         for (size_t i = 0; i < mExcludeFiles.size(); ++i) {
             if (mExcludeFiles[i].find(filesystem::path::preferred_separator) != string::npos) {
                 PARAM_WARNING_IGNORE(ctx.GetLogger(),
-                                     "ExcludeFiles[" + ToString(i) + "] contains path separator",
+                                     "string param ExcludeFiles[" + ToString(i) + "] contains path separator",
                                      pluginName,
                                      ctx.GetConfigName());
                 continue;
@@ -214,7 +215,7 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
         for (size_t i = 0; i < mExcludeDirs.size(); ++i) {
             if (!filesystem::path(mExcludeDirs[i]).is_absolute()) {
                 PARAM_WARNING_IGNORE(ctx.GetLogger(),
-                                     "ExcludeDirs[" + ToString(i) + "] is not absolute",
+                                     "string param ExcludeDirs[" + ToString(i) + "] is not absolute",
                                      pluginName,
                                      ctx.GetConfigName());
                 continue;
@@ -241,14 +242,14 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
     // AllowingCollectingFilesInRootDir
     if (!GetOptionalBoolParam(
             config, "AllowingCollectingFilesInRootDir", mAllowingCollectingFilesInRootDir, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, false, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mAllowingCollectingFilesInRootDir, pluginName, ctx.GetConfigName());
     } else if (mAllowingCollectingFilesInRootDir) {
         BOOL_FLAG(enable_root_path_collection) = mAllowingCollectingFilesInRootDir;
     }
 
     // AllowingIncludedByMultiConfigs
     if (!GetOptionalBoolParam(config, "AllowingIncludedByMultiConfigs", mAllowingIncludedByMultiConfigs, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, false, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mAllowingIncludedByMultiConfigs, pluginName, ctx.GetConfigName());
     }
 
     return true;

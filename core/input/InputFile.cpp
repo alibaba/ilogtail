@@ -17,10 +17,10 @@
 #include <filesystem>
 
 #include "app_config/AppConfig.h"
-#include "config_manager/ConfigManager.h"
 #include "common/JsonUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
+#include "config_manager/ConfigManager.h"
 #include "file_server/FileServer.h"
 #include "pipeline/Pipeline.h"
 
@@ -50,9 +50,9 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
         PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
     } else if (mEnableContainerDiscovery && !AppConfig::GetInstance()->IsPurageContainerMode()) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
-                    "iLogtail is not in container, but container discovery is required",
-                    sName,
-                    mContext->GetConfigName());
+                           "iLogtail is not in container, but container discovery is required",
+                           sName,
+                           mContext->GetConfigName());
     }
 
     if (mEnableContainerDiscovery) {
@@ -84,18 +84,21 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 
     // MaxCheckpointDirSearchDepth
     if (!GetOptionalUIntParam(config, "MaxCheckpointDirSearchDepth", mMaxCheckpointDirSearchDepth, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, 0, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mMaxCheckpointDirSearchDepth, sName, mContext->GetConfigName());
     }
 
     // ExactlyOnceConcurrency (param is unintentionally named as EnableExactlyOnce, which should be deprecated in the
     // future)
     uint32_t exactlyOnceConcurrency = 0;
     if (!GetOptionalUIntParam(config, "EnableExactlyOnce", exactlyOnceConcurrency, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, 0, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(
+            mContext->GetLogger(), errorMsg, mExactlyOnceConcurrency, sName, mContext->GetConfigName());
     } else if (exactlyOnceConcurrency > static_cast<uint32_t>(INT32_FLAG(max_exactly_once_concurrency))) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                              "param EnableExactlyOnce is larger than 512",
-                              INT32_FLAG(max_exactly_once_concurrency),
+                              "uint param EnableExactlyOnce is larger than "
+                                  + ToString(INT32_FLAG(max_exactly_once_concurrency)),
+                              mExactlyOnceConcurrency,
                               sName,
                               mContext->GetConfigName());
     } else {
@@ -107,7 +110,8 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 
 bool InputFile::Start() {
     if (mEnableContainerDiscovery) {
-        mFileDiscovery.SetContainerInfo(FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
+        mFileDiscovery.SetContainerInfo(
+            FileServer::GetInstance()->GetAndRemoveContainerInfo(mContext->GetPipeline().Name()));
     }
     FileServer::GetInstance()->AddFileDiscoveryConfig(mContext->GetConfigName(), &mFileDiscovery, mContext);
     FileServer::GetInstance()->AddFileReaderConfig(mContext->GetConfigName(), &mFileReader, mContext);

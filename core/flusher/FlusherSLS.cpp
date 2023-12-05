@@ -68,11 +68,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 #endif
         // Region
         if (!GetOptionalStringParam(config, "Region", mRegion, errorMsg)) {
-            PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                                  errorMsg,
-                                  Sender::Instance()->GetDefaultRegion(),
-                                  sName,
-                                  mContext->GetConfigName());
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRegion, sName, mContext->GetConfigName());
         }
 
         // Endpoint
@@ -103,7 +99,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
             mCompressType = CompressType::NONE;
         } else if (!compressType.empty() && compressType != "lz4") {
             PARAM_WARNING_DEFAULT(
-                mContext->GetLogger(), "param CompressType is not valid", "lz4", sName, mContext->GetConfigName());
+                mContext->GetLogger(), "string param CompressType is not valid", "lz4", sName, mContext->GetConfigName());
         }
     } else {
         mCompressType = CompressType::NONE;
@@ -117,17 +113,17 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
         mTelemetryType = TelemetryType::METRIC;
     } else if (!telemetryType.empty() && telemetryType != "logs") {
         PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), "param TelemetryType is not valid", "logs", sName, mContext->GetConfigName());
+            mContext->GetLogger(), "string param TelemetryType is not valid", "logs", sName, mContext->GetConfigName());
     }
 
     // FlowControlExpireTime
     if (!GetOptionalUIntParam(config, "FlowControlExpireTime", mFlowControlExpireTime, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, 0, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mFlowControlExpireTime, sName, mContext->GetConfigName());
     }
 
     // MaxSendRate
     if (!GetOptionalIntParam(config, "MaxSendRate", mMaxSendRate, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, -1, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mMaxSendRate, sName, mContext->GetConfigName());
     }
     Sender::Instance()->SetLogstoreFlowControl(mLogstoreKey, mMaxSendRate, mFlowControlExpireTime);
 
@@ -147,7 +143,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
                 mBatch.mMergeType = Batch::MergeType::LOGSTORE;
             } else if (!mergeType.empty() && mergeType != "topic") {
                 PARAM_WARNING_DEFAULT(mContext->GetLogger(),
-                                      "param Batch.MergeType is not valid",
+                                      "string param Batch.MergeType is not valid",
                                       "topic",
                                       sName,
                                       mContext->GetConfigName());
@@ -156,7 +152,7 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
             // SendIntervalSecs
             if (!GetOptionalUIntParam(*itr, "Batch.SendIntervalSecs", mBatch.mSendIntervalSecs, errorMsg)) {
                 PARAM_WARNING_DEFAULT(
-                    mContext->GetLogger(), errorMsg, INT32_FLAG(batch_send_interval), sName, mContext->GetConfigName());
+                    mContext->GetLogger(), errorMsg, mBatch.mSendIntervalSecs, sName, mContext->GetConfigName());
             }
 
             // ShardHashKeys

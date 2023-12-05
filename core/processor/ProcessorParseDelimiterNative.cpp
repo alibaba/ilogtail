@@ -94,7 +94,7 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
         mOverflowedFieldsTreatment = OverflowedFieldsTreatment::KEEP;
     } else if (overflowedFieldsTreatment == "discard") {
         mOverflowedFieldsTreatment = OverflowedFieldsTreatment::DISCARD;
-    } else if (overflowedFieldsTreatment != "extend") {
+    } else if (!overflowedFieldsTreatment.empty() && overflowedFieldsTreatment != "extend") {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
                               "string param OverflowedFieldsTreatment is not valid",
                               "extend",

@@ -349,7 +349,7 @@ bool ProcessorSplitRegexNative::LogSplit(const char* buffer,
                         }
                     }
                 } else if (mMultiline.mUnmatchedContentTreatment
-                           == MultilineOptions::UnmatchedContentTreatment::SPLIT) {
+                           == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
                     for (int i = multiBeginIndex; i <= endIndex; i++) {
                         if (i == endIndex || buffer[i] == '\n') {
                             logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
@@ -382,7 +382,7 @@ void ProcessorSplitRegexNative::HandleUnmatchLogs(const char* buffer,
                 multiBeginIndex = i + 1;
             }
         }
-    } else if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SPLIT) {
+    } else if (mMultiline.mUnmatchedContentTreatment == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
         for (int i = multiBeginIndex; i <= endIndex; i++) {
             if (i == endIndex || buffer[i] == '\n') {
                 logIndex.emplace_back(buffer + multiBeginIndex, i - multiBeginIndex);
