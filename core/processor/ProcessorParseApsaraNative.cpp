@@ -154,8 +154,8 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath,
     bool sourceKeyOverwritten = mSourceKeyOverwritten;
     bool rawLogTagOverwritten = false;
     if (buffer.data()[index] != 0) {
-        for (index = index + 1; index <= buffer.size(); index++) {
-            if (buffer.data()[index] == '\t' || buffer.data()[index] == '\0' || index == buffer.size()) {
+        for (index = index + 1; index <= buffer.size(); ++index) {
+            if (index == buffer.size() || buffer.data()[index] == '\t' || buffer.data()[index] == '\0') {
                 if (colon_index >= 0) {
                     StringView key(buffer.data() + beg_index, colon_index - beg_index);
                     StringView data(buffer.data() + colon_index + 1, index - colon_index - 1);
