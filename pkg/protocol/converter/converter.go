@@ -288,7 +288,8 @@ func findTargetValues(targetFields []string, contents, tags, tagKeyRenameMap map
 			if value, ok := tags[field[len(targetTagPrefix):]]; ok {
 				desiredValue[field] = value
 			} else if value, ok := tagKeyRenameMap[field[len(targetTagPrefix):]]; ok {
-				desiredValue[field] = tags[value]
+				// write a new key instead of the old one
+				desiredValue[tagKeyRenameMap[field[len(targetTagPrefix):]]] = tags[value]
 			}
 		default:
 			return nil, fmt.Errorf("unsupported field: %s", field)
