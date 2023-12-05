@@ -87,7 +87,7 @@ public:
     void DelMetadata(EventGroupMetaKey key);
     GroupMetadata& MutableAllMetadata() { return mMetadata; };
     void SwapAllMetadata(GroupMetadata& other) { mMetadata.swap(other); }
-    void SetAllMetadata(GroupMetadata& other) { mMetadata = other; }
+    void SetAllMetadata(const GroupMetadata& other) { mMetadata = other; }
 
     void SetTag(const StringView& key, const StringView& val);
     void SetTag(const std::string& key, const std::string& val);
