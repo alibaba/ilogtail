@@ -262,11 +262,10 @@ void Pipeline::Start() {
     }
 }
 
-void Pipeline::Process(PipelineEventGroup&& logGroup, vector<PipelineEventGroup>& logGroupList) {
+void Pipeline::Process(vector<PipelineEventGroup>& logGroupList) {
     for (auto& p : mProcessorLine) {
-        p->Process(logGroup);
+        p->Process(logGroupList);
     }
-    logGroupList.emplace_back(std::move(logGroup));
 }
 
 void Pipeline::Stop(bool isRemoving) {
