@@ -50,7 +50,7 @@ DEFINE_FLAG_BOOL(enable_send_tps_smoothing, "avoid web server load burst", true)
 DEFINE_FLAG_BOOL(enable_flow_control, "if enable flow control", true);
 DEFINE_FLAG_STRING(default_buffer_file_path, "set current execution dir in default", "");
 DEFINE_FLAG_STRING(buffer_file_path, "set buffer dir", "");
-DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
+// DEFINE_FLAG_STRING(default_mapping_config_path, "", "mapping_config.json");
 DEFINE_FLAG_DOUBLE(default_machine_cpu_usage_threshold, "machine level", 0.4);
 DEFINE_FLAG_BOOL(default_resource_auto_scale, "", false);
 DEFINE_FLAG_BOOL(default_input_flow_control, "", false);
@@ -69,17 +69,17 @@ const char* DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE = "user_config.d";
 DEFINE_FLAG_STRING(ilogtail_local_config_dir,
                    "local ilogtail config file dir",
                    DEFAULT_ILOGTAIL_LOCAL_CONFIG_DIR_FLAG_VALUE);
-const char* DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE = "user_yaml_config.d";
-DEFINE_FLAG_STRING(ilogtail_local_yaml_config_dir,
-                   "local ilogtail yaml config file dir",
-                   DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE);
-const char* DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE = "remote_yaml_config.d";
-DEFINE_FLAG_STRING(ilogtail_remote_yaml_config_dir,
-                   "remote ilogtail yaml config file dir",
-                   DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE);
+// const char* DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE = "user_yaml_config.d";
+// DEFINE_FLAG_STRING(ilogtail_local_yaml_config_dir,
+//                    "local ilogtail yaml config file dir",
+//                    DEFAULT_ILOGTAIL_LOCAL_YAML_CONFIG_DIR_FLAG_VALUE);
+// const char* DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE = "remote_yaml_config.d";
+// DEFINE_FLAG_STRING(ilogtail_remote_yaml_config_dir,
+//                    "remote ilogtail yaml config file dir",
+//                    DEFAULT_ILOGTAIL_REMOTE_YAML_CONFIG_DIR_FLAG_VALUE);
 
-DEFINE_FLAG_BOOL(default_global_fuse_mode, "default global fuse mode", false);
-DEFINE_FLAG_BOOL(default_global_mark_offset_flag, "default global mark offset flag", false);
+// DEFINE_FLAG_BOOL(default_global_fuse_mode, "default global fuse mode", false);
+// DEFINE_FLAG_BOOL(default_global_mark_offset_flag, "default global mark offset flag", false);
 
 // DEFINE_FLAG_STRING(default_container_mount_path, "", "container_mount.json");
 DEFINE_FLAG_STRING(default_include_config_path, "", "config.d");
@@ -93,9 +93,9 @@ DEFINE_FLAG_INT32(default_oas_connect_timeout, "default (minimum) connect timeou
 DEFINE_FLAG_INT32(default_oas_request_timeout, "default (minimum) request timeout for OSARequest", 10);
 // DEFINE_FLAG_BOOL(rapid_retry_update_config, "", false);
 DEFINE_FLAG_BOOL(check_profile_region, "", false);
-DEFINE_FLAG_BOOL(enable_collection_mark,
-                 "enable collection mark function to override check_ulogfs_env in user config",
-                 false);
+// DEFINE_FLAG_BOOL(enable_collection_mark,
+//                  "enable collection mark function to override check_ulogfs_env in user config",
+//                  false);
 // DEFINE_FLAG_BOOL(enable_env_ref_in_config, "enable environment variable reference replacement in configuration",
 // false);
 DEFINE_FLAG_INT32(data_server_port, "", 80);
