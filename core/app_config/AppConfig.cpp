@@ -725,15 +725,15 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
         LOG_INFO(sLogger, ("set check_profile_region", BOOL_FLAG(check_profile_region)));
     }
 
-    if (confJson.isMember("enable_collection_mark") && confJson["enable_collection_mark"].isBool()) {
-        BOOL_FLAG(enable_collection_mark) = confJson["enable_collection_mark"].asBool();
-        LOG_INFO(sLogger, ("set enable_collection_mark", BOOL_FLAG(enable_collection_mark)));
-    }
+    // if (confJson.isMember("enable_collection_mark") && confJson["enable_collection_mark"].isBool()) {
+    //     BOOL_FLAG(enable_collection_mark) = confJson["enable_collection_mark"].asBool();
+    //     LOG_INFO(sLogger, ("set enable_collection_mark", BOOL_FLAG(enable_collection_mark)));
+    // }
 
-    LoadBooleanParameter(BOOL_FLAG(enable_collection_mark),
-                         confJson,
-                         "enable_env_ref_in_config",
-                         "ALIYUN_LOGTAIL_ENABLE_ENV_REF_IN_CONFIG");
+    // LoadBooleanParameter(BOOL_FLAG(enable_collection_mark),
+    //                      confJson,
+    //                      "enable_env_ref_in_config",
+    //                      "ALIYUN_LOGTAIL_ENABLE_ENV_REF_IN_CONFIG");
 
     LoadBooleanParameter(
         mEnableHostIPReplace, confJson, "enable_host_ip_replace", "ALIYUN_LOGTAIL_ENABLE_HOST_IP_REPLACE");
