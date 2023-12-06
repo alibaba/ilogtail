@@ -116,7 +116,7 @@ bool Pipeline::Init(Config&& config) {
                 detail["UnmatchedContentTreatment"] = Json::Value("discard");
             } else if (inputFile->mMultiline.mUnmatchedContentTreatment
                        == MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE) {
-                detail["UnmatchedContentTreatment"] = Json::Value("split");
+                detail["UnmatchedContentTreatment"] = Json::Value("single_line");
             }
         } else {
             processor = PluginRegistry::GetInstance()->CreateProcessor(ProcessorSplitLogStringNative::sName,
