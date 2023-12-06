@@ -70,6 +70,14 @@ void ProcessorParseApsaraNative::Process(PipelineEventGroup& logGroup) {
     return;
 }
 
+/*
+ * 处理单个日志事件。
+ * @param logPath - 日志文件的路径。
+ * @param e - 指向待处理日志事件的智能指针。
+ * @param lastLogTime - 上一条日志的时间戳（秒）。
+ * @param timeStrCache - 缓存时间字符串，用于比较和更新。
+ * @return 如果事件被处理且保留，则返回true，如果事件被丢弃，则返回false。
+ */
 bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, PipelineEventPtr& e, LogtailTime& lastLogTime, StringView& timeStrCache) {
     if (!IsSupportedEvent(e)) {
         return true;
@@ -190,6 +198,14 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
     return true;
 }
 
+/*
+ * 解析Apsara格式日志的时间。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param timeStr - 解析后的时间字符串。
+ * @param lastLogTime - 上一条日志的时间戳（秒）。
+ * @param microTime - 解析出的微秒时间戳。
+ * @return 解析出的时间戳（秒），如果解析失败，则返回0。
+ */
 time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffer, StringView& timeStr, LogtailTime& lastLogTime, int64_t& microTime) {
     if (buffer[0] != '[') {
         return 0;
@@ -230,6 +246,12 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
     }
 }
 
+/*
+ * 检查字符串是否包含指定的前缀。
+ * @param all - 完整的字符串。
+ * @param prefix - 要检查的前缀。
+ * @return 如果字符串以指定前缀开头，则返回true；否则返回false。
+ */
 bool ProcessorParseApsaraNative::IsPrefixString(const char* all, const StringView& prefix) {
     if (prefix.size() == 0)
         return false;
@@ -242,6 +264,13 @@ bool ProcessorParseApsaraNative::IsPrefixString(const char* all, const StringVie
     return true;
 }
 
+/*
+ * 查找Apsara格式日志的基础字段。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndexArray - 字段开始索引的数组。
+ * @param endIndexArray - 字段结束索引的数组。
+ * @return 解析到的基础字段数量。
+ */
 static int32_t FindBaseFields(const StringView& buffer, int32_t beginIndexArray[], int32_t endIndexArray[]) {
     int32_t baseFieldNum = 0;
     for (size_t i = 0; i < buffer.size(); i++) {
@@ -263,6 +292,13 @@ static int32_t FindBaseFields(const StringView& buffer, int32_t beginIndexArray[
     return baseFieldNum;
 }
 
+/*
+ * 检查是否为日志级别字段。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndex - 字段开始的索引。
+ * @param endIndex - 字段结束的索引。
+ * @return 如果字段是日志级别，则返回true；否则返回false。
+ */
 static bool IsFieldLevel(const StringView& buffer, int32_t beginIndex, int32_t endIndex) {
     for (int32_t i = beginIndex; i < endIndex; i++) {
         if (buffer[i] > 'Z' || buffer[i] < 'A') {
@@ -272,6 +308,13 @@ static bool IsFieldLevel(const StringView& buffer, int32_t beginIndex, int32_t e
     return true;
 }
 
+/*
+ * 检查是否为线程ID字段。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndex - 字段开始的索引。
+ * @param endIndex - 字段结束的索引。
+ * @return 如果字段是线程ID，则返回true；否则返回false。
+ */
 static bool IsFieldThread(const StringView& buffer, int32_t beginIndex, int32_t endIndex) {
     for (int32_t i = beginIndex; i < endIndex; i++) {
         if (buffer[i] > '9' || buffer[i] < '0') {
@@ -281,6 +324,13 @@ static bool IsFieldThread(const StringView& buffer, int32_t beginIndex, int32_t 
     return true;
 }
 
+/*
+ * 检查是否为文件和行号字段。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndex - 字段开始的索引。
+ * @param endIndex - 字段结束的索引。
+ * @return 如果字段是文件和行号，则返回true；否则返回false。
+ */
 static bool IsFieldFileLine(const StringView& buffer, int32_t beginIndex, int32_t endIndex) {
     for (int32_t i = beginIndex; i < endIndex; i++) {
         if (buffer[i] == '/' || buffer[i] == '.') {
@@ -290,6 +340,13 @@ static bool IsFieldFileLine(const StringView& buffer, int32_t beginIndex, int32_
     return false;
 }
 
+/*
+ * 查找冒号字符的索引。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param beginIndex - 字段开始的索引。
+ * @param endIndex - 字段结束的索引。
+ * @return 冒号字符的索引，如果未找到，则返回endIndex。
+ */
 static int32_t FindColonIndex(const StringView& buffer, int32_t beginIndex, int32_t endIndex) {
     for (int32_t i = beginIndex; i < endIndex; i++) {
         if (buffer[i] == ':') {
@@ -299,6 +356,12 @@ static int32_t FindColonIndex(const StringView& buffer, int32_t beginIndex, int3
     return endIndex;
 }
 
+/*
+ * 解析Apsara日志的基础字段并添加到日志事件中。
+ * @param buffer - 包含日志数据的字符串视图。
+ * @param sourceEvent - 引用到日志事件对象，用于添加解析出的字段。
+ * @return 返回处理完基础字段后的索引位置。
+ */
 int32_t ProcessorParseApsaraNative::ParseApsaraBaseFields(const StringView& buffer, LogEvent& sourceEvent) {
     int32_t beginIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
     int32_t endIndexArray[LogParser::MAX_BASE_FIELD_NUM] = {0};
