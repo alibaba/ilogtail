@@ -55,6 +55,11 @@ jobs:
         run: |
           df -hT $PWD
 
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
       - name: Check out code
         uses: actions/checkout@v2
         with:
