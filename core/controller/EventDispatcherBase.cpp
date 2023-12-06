@@ -1306,7 +1306,7 @@ void EventDispatcherBase::ExitProcess() {
     LogtailRuntimePlugin::GetInstance()->UnLoadPluginBase();
 #endif
     PluginRegistry::GetInstance()->UnloadPlugins();
-
+    LogtailAlarm::GetInstance()->Stop();
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
 #endif
