@@ -141,15 +141,17 @@ endmacro()
 
 # tcmalloc (gperftools)
 macro(link_tcmalloc target_name)
-    if (tcmalloc_${LINK_OPTION_SUFFIX})
-        target_link_libraries(${target_name} "${tcmalloc_${LINK_OPTION_SUFFIX}}")
-    elseif (UNIX)
-        target_link_libraries(${target_name} "${tcmalloc_${LIBRARY_DIR_SUFFIX}}/libtcmalloc.a")
-    elseif (MSVC)
-        add_definitions(-DPERFTOOLS_DLL_DECL=)
-        target_link_libraries(${target_name}
-                debug "libtcmalloc_minimald"
-                optimized "libtcmalloc_minimal")
+    if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
+        if (tcmalloc_${LINK_OPTION_SUFFIX})
+            target_link_libraries(${target_name} "${tcmalloc_${LINK_OPTION_SUFFIX}}")
+        elseif (UNIX)
+            target_link_libraries(${target_name} "${tcmalloc_${LIBRARY_DIR_SUFFIX}}/libtcmalloc.a")
+        elseif (MSVC)
+            add_definitions(-DPERFTOOLS_DLL_DECL=)
+            target_link_libraries(${target_name}
+                    debug "libtcmalloc_minimald"
+                    optimized "libtcmalloc_minimal")
+        endif ()
     endif ()
 endmacro()
 
