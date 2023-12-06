@@ -59,15 +59,16 @@ UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestProcessEventDiscardUnmatc
 UNIT_TEST_CASE(ProcessorParseApsaraNativeUnittest, TestMultipleLines);
 
 void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
+    // 第一个contents 测试多行下的解析，第二个contents测试多行下time的解析
     std::string inJson = R"({
         "events" :
         [
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:50.1]	[ERROR]	[1]	/ilogtail/AppConfigBase.cpp:1		AppConfigBase AppConfigBase:1
-[2023-09-04 13:15:33.2]	[INFO]	[2]	/ilogtail/AppConfigBase.cpp:2		AppConfigBase AppConfigBase:2
-[2023-09-04 13:15:22.3]	[WARNING]	[3]	/ilogtail/AppConfigBase.cpp:3		AppConfigBase AppConfigBase:3",
+                    "content" : "[2023-09-04 13:15:50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1
+[2023-09-04 13:15:33.2]\t[INFO]\t[2]\t/ilogtail/AppConfigBase.cpp:2\t\tAppConfigBase AppConfigBase:2
+[2023-09-04 13:15:22.3]\t[WARNING]\t[3]\t/ilogtail/AppConfigBase.cpp:3\t\tAppConfigBase AppConfigBase:3",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -76,8 +77,9 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:50.1] [ERROR] [1[2023-09-04 13:15:33.2]	[INFO]	[2]	/ilogtail/AppConfigBase.cpp:2		AppConfigBase AppConfigBase:2
-[2023-09-04 13:15:22.3]	[WARNING]	[3]	/ilogtail/AppConfigBase.cpp:3		AppConfigBase AppConfigBase:3",
+                    "content" : "[2023-09-04 13:15
+:50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1
+[2023-09-04 13:15:22.3]\t[WARNING]\t[3]\t/ilogtail/AppConfigBase.cpp:3\t\tAppConfigBase AppConfigBase:3",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -130,15 +132,22 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
             },
             {
                 "contents": {
-                    "/ilogtail/AppConfigBase.cpp": "2",
-                    "AppConfigBase AppConfigBase": "2",
-                    "__LEVEL__": "INFO",
-                    "__THREAD__": "2",
-                    "log.file.offset": "0",
-                    "microtime": "1693833350100000"
+                    "__raw_log__": "[2023-09-04 13:15",
+                    "content": "[2023-09-04 13:15",
+                    "log.file.offset": "0"
                 },
-                "timestamp": 1693833350,
-                "timestampNanosecond": 100000000,
+                "timestamp": 12345678901,
+                "timestampNanosecond": 0,
+                "type": 1
+            },
+            {
+                "contents": {
+                    "__raw_log__": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1",
+                    "content": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1",
+                    "log.file.offset": "0"
+                },
+                "timestamp": 12345678901,
+                "timestampNanosecond": 0,
                 "type": 1
             },
             {
@@ -219,6 +228,8 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
         processor.Process(eventGroup);
         // judge result
         std::string outJson = eventGroup.ToJsonString();
+        std::string outJson2 = CompactJson(outJson);
+        
         APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
     }
 }
@@ -254,7 +265,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:04.862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
+                    "content" : "[2023-09-04 13:15:04.862181]\t[INFO]\t[385658]\t/ilogtail/AppConfigBase.cpp:100\t\tAppConfigBase AppConfigBase:success",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -263,7 +274,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:16:04.862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
+                    "content" : "[2023-09-04 13:16:04.862181]\t[INFO]\t[385658]\t/ilogtail/AppConfigBase.cpp:100\t\tAppConfigBase AppConfigBase:success",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -272,7 +283,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "[1693833364862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
+                    "content" : "[1693833364862181]\t[INFO]\t[385658]\t/ilogtail/AppConfigBase.cpp:100\t\tAppConfigBase AppConfigBase:success",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -353,7 +364,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:0]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
+                    "content" : "[2023-09-04 13:15:0]\t[INFO]\t[385658]\t/ilogtail/AppConfigBase.cpp:100\t\tAppConfigBase AppConfigBase:success",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -362,7 +373,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:16:0[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
+                    "content" : "[2023-09-04 13:16:0[INFO]\t[385658]\t/ilogtail/AppConfigBase.cpp:100\t\tAppConfigBase AppConfigBase:success",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -371,7 +382,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
             {
                 "contents" :
                 {
-                    "content" : "[1234560	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
+                    "content" : "[1234560\t[INFO]\t[385658]\t/ilogtail/AppConfigBase.cpp:100\t\tAppConfigBase AppConfigBase:success",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -418,7 +429,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:04.862181]	[INFO]	[385658]	content:100		__raw__:success		__raw_log__:success",
+                    "content" : "[2023-09-04 13:15:04.862181]\t[INFO]\t[385658]\tcontent:100\t\t__raw__:success\t\t__raw_log__:success",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -494,7 +505,7 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:04.862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
+                    "content" : "[2023-09-04 13:15:04.862181]\t[INFO]\t[385658]\t/ilogtail/AppConfigBase.cpp:100\t\tAppConfigBase AppConfigBase:success",
                     "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
@@ -528,7 +539,7 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
                     "AppConfigBase AppConfigBase": "success",
                     "__LEVEL__": "INFO",
                     "__THREAD__": "385658",
-                    "__raw__": "[2023-09-04 13:15:04.862181]t[INFO]t[385658]t/ilogtail/AppConfigBase.cpp:100ttAppConfigBase AppConfigBase:success",
+                    "__raw__": "[2023-09-04 13:15:04.862181]\t[INFO]\t[385658]\t/ilogtail/AppConfigBase.cpp:100\t\tAppConfigBase AppConfigBase:success",
                     "log.file.offset": "0",
                     "microtime": "1693833304862181"
                 },

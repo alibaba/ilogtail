@@ -216,8 +216,13 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
     if (buffer[1] == '1') // for normal time, e.g 1378882630, starts with '1'
     {
         int nanosecondLength = 0;
-        std::string strTime = buffer.to_string();
-        auto strptimeResult = Strptime(strTime.c_str() + 1, "%s", &lastLogTime, nanosecondLength);
+        size_t pos = buffer.find(']', 1);
+        if (pos == std::string::npos) {
+            LOG_WARNING(sLogger, ("parse apsara log time", "fail")("string", buffer));
+            return 0;
+        }
+        std::string strTime = buffer.substr(1, pos).to_string();
+        auto strptimeResult = Strptime(strTime.c_str(), "%s", &lastLogTime, nanosecondLength);
         if (NULL == strptimeResult || strptimeResult[0] != ']') {
             LOG_WARNING(sLogger,
                         ("parse apsara log time", "fail")("string", buffer)("timeformat", "%s"));
@@ -228,15 +233,20 @@ time_t ProcessorParseApsaraNative::ApsaraEasyReadLogTimeParser(StringView& buffe
     }
     // test other date format case
     {
-        std::string strTime = buffer.to_string();
-        if (IsPrefixString(strTime.c_str() + 1, timeStr) == true) {
+        size_t pos = buffer.find(']', 1);
+        if (pos == std::string::npos) {
+            LOG_WARNING(sLogger, ("parse apsara log time", "fail")("string", buffer));
+            return 0;
+        }
+        std::string strTime = buffer.substr(1, pos).to_string();
+        if (IsPrefixString(strTime.c_str(), timeStr) == true) {
             microTime = (int64_t)lastLogTime.tv_sec * 1000000 + lastLogTime.tv_nsec / 1000;
             return lastLogTime.tv_sec;
         }
         struct tm tm;
         memset(&tm, 0, sizeof(tm));
         int nanosecondLength = 0;
-        auto strptimeResult = Strptime(strTime.c_str() + 1, "%Y-%m-%d %H:%M:%S.%f", &lastLogTime, nanosecondLength);
+        auto strptimeResult = Strptime(strTime.c_str(), "%Y-%m-%d %H:%M:%S.%f", &lastLogTime, nanosecondLength);
         if (NULL == strptimeResult || strptimeResult[0] != ']') {
             LOG_WARNING(sLogger,
                         ("parse apsara log time", "fail")("string", buffer)("timeformat", "%Y-%m-%d %H:%M:%S.%f"));
