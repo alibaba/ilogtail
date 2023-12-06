@@ -43,7 +43,7 @@ struct SensitiveWordCastOption {
 
 struct Config {
     std::string mName;
-    Json::Value mDetail;
+    std::unique_ptr<Json::Value> mDetail;
     uint32_t mCreateTime = 0;
     const Json::Value* mGlobal = nullptr;
     std::vector<const Json::Value*> mInputs;
@@ -59,7 +59,7 @@ struct Config {
     bool mHasGoFlusher = false;
     bool mIsFirstProcessorJson = false;
 
-    Config(const std::string& name, Json::Value&& detail) : mName(name), mDetail(std::move(detail)) {}
+    Config(const std::string& name, std::unique_ptr<Json::Value>&& detail) : mName(name), mDetail(std::move(detail)) {}
 
     bool Parse();
 
@@ -84,6 +84,14 @@ struct Config {
 
     void ReplaceEnvVar();
 };
+
+inline bool operator==(const Config& lhs, const Config& rhs) {
+    return (lhs.mName == rhs.mName) && (*lhs.mDetail == *rhs.mDetail);
+}
+
+inline bool operator!=(const Config& lhs, const Config& rhs) {
+    return !(lhs == rhs);
+}
 
 bool LoadConfigDetailFromFile(const std::filesystem::path& filepath, Json::Value& detail);
 bool ParseConfigDetail(const std::string& content,

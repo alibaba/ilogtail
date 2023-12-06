@@ -14,8 +14,9 @@
 
 #include "config/watcher/ConfigWatcher.h"
 
-#include <unordered_set>
 #include <iostream>
+#include <memory>
+#include <unordered_set>
 
 #include "logger/Logger.h"
 #include "pipeline/PipelineManager.h"
@@ -59,7 +60,7 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                 lock.lock();
             }
 
-            const filesystem::path &path = entry.path();
+            const filesystem::path& path = entry.path();
             const string& configName = path.stem().string();
             const string& filepath = path.string();
             if (!filesystem::is_regular_file(entry.status(ec))) {
@@ -67,7 +68,9 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                 continue;
             }
             if (configSet.find(configName) != configSet.end()) {
-                LOG_WARNING(sLogger, ("more than 1 config with the same name is found", "skip current config")("filepath", filepath));
+                LOG_WARNING(
+                    sLogger,
+                    ("more than 1 config with the same name is found", "skip current config")("filepath", filepath));
                 continue;
             }
             configSet.insert(configName);
@@ -77,11 +80,11 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
             filesystem::file_time_type mTime = filesystem::last_write_time(path, ec);
             if (iter == mFileInfoMap.end()) {
                 mFileInfoMap[filepath] = make_pair(size, mTime);
-                Json::Value detail;
-                if (!LoadConfigDetailFromFile(path, detail)) {
+                unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
+                if (!LoadConfigDetailFromFile(path, *detail)) {
                     continue;
                 }
-                if (!IsConfigEnabled(configName, detail)) {
+                if (!IsConfigEnabled(configName, *detail)) {
                     continue;
                 }
                 Config config(configName, std::move(detail));
@@ -92,14 +95,14 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
             } else if (iter->second.first != size || iter->second.second != mTime) {
                 // for config currently running, we leave it untouched if new config is invalid
                 mFileInfoMap[filepath] = make_pair(size, mTime);
-                Json::Value detail;
-                if (!LoadConfigDetailFromFile(path, detail)) {
+                unique_ptr<Json::Value> detail = unique_ptr<Json::Value>(new Json::Value());
+                if (!LoadConfigDetailFromFile(path, *detail)) {
                     if (mPipelineManager->FindPipelineByName(configName)) {
                         diff.mUnchanged.push_back(configName);
                     }
                     continue;
                 }
-                if (!IsConfigEnabled(configName, detail)) {
+                if (!IsConfigEnabled(configName, *detail)) {
                     if (mPipelineManager->FindPipelineByName(configName)) {
                         diff.mRemoved.push_back(configName);
                     }
@@ -112,7 +115,7 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                         continue;
                     }
                     diff.mAdded.push_back(std::move(config));
-                } else if (detail != p->GetConfig()) {
+                } else if (*detail != p->GetConfig()) {
                     Config config(configName, std::move(detail));
                     if (!config.Parse()) {
                         diff.mUnchanged.push_back(configName);

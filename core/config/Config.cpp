@@ -93,12 +93,12 @@ bool Config::Parse() {
     }
 
     string errorMsg;
-    if (!GetOptionalUIntParam(mDetail, "createTime", mCreateTime, errorMsg)) {
+    if (!GetOptionalUIntParam(*mDetail, "createTime", mCreateTime, errorMsg)) {
         PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, noModule, mName);
     }
 
     string key = "global";
-    const Json::Value* itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    const Json::Value* itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!itr->isObject()) {
             PARAM_ERROR_RETURN(sLogger, "global module is not of type object", noModule, mName);
@@ -113,7 +113,7 @@ bool Config::Parse() {
     bool hasStreamInput = false;
 #endif
     key = "inputs";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (!itr) {
         PARAM_ERROR_RETURN(sLogger, "mandatory inputs module is missing", noModule, mName);
     }
@@ -177,7 +177,7 @@ bool Config::Parse() {
     }
 
     key = "processors";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!itr->isArray()) {
             PARAM_ERROR_RETURN(sLogger, "processors module is not of type array", noModule, mName);
@@ -255,7 +255,7 @@ bool Config::Parse() {
     }
 
     key = "flushers";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (!itr) {
         PARAM_ERROR_RETURN(sLogger, "mandatory flushers module is missing", noModule, mName);
     }
@@ -297,7 +297,7 @@ bool Config::Parse() {
     }
 
     key = "aggregators";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!IsFlushingThroughGoPipelineExisted()) {
             PARAM_ERROR_RETURN(sLogger, "aggregator plugins exist in native flushing mode", noModule, mName);
@@ -332,7 +332,7 @@ bool Config::Parse() {
     }
 
     key = "extensions";
-    itr = mDetail.find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr) {
         if (!HasGoPlugin()) {
             PARAM_ERROR_RETURN(sLogger, "extension plugins exist when no extended plugin is given", noModule, mName);
@@ -367,7 +367,7 @@ bool Config::Parse() {
 }
 
 void Config::ReplaceEnvVar() {
-    ReplaceEnvVarRef(mDetail);
+    ReplaceEnvVarRef(*mDetail);
 }
 
 bool LoadConfigDetailFromFile(const filesystem::path& filepath, Json::Value& detail) {
