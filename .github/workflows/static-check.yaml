@@ -42,7 +42,7 @@ jobs:
     steps:
       # prepare ubuntu environment
       - name: prepare ubuntu environment
-        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev git make
+        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install -y libsystemd-dev git make curl
       # Clean up space to prevent action from running out of disk space.
       - name: clean
         run: |
