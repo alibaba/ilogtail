@@ -87,6 +87,9 @@ bool ProcessorParseApsaraNative::ProcessEvent(const StringView& logPath, Pipelin
         return true;
     }
     StringView buffer = sourceEvent.GetContent(mSourceKey);
+    if (buffer.size() == 0) {
+        return true;
+    }
     mProcParseInSizeBytes->Add(buffer.size());
     int64_t logTime_in_micro = 0;
     time_t logTime = ApsaraEasyReadLogTimeParser(buffer, timeStrCache, lastLogTime, logTime_in_micro);
