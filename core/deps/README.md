@@ -1,8 +1,8 @@
 # Dependencies
 
 - [gflags](https://github.com/gflags/gflags): v2.2.1
-- [spdlog](https://github.com/gabime/spdlog/): v1.1.0
-- [jsoncpp](https://github.com/open-source-parsers/jsoncpp): v1.8.4
+- [spdlog](https://github.com/gabime/spdlog/): v1.12.0
+- [jsoncpp](https://github.com/open-source-parsers/jsoncpp): v1.9.3
 - [protobuf](https://github.com/protocolbuffers/protobuf): v2.5.0
 - [libunwind](https://www.nongnu.org/libunwind/): v1.2.1
 - [re2](https://github.com/google/re2): release/2018-09-01
@@ -11,7 +11,11 @@
 - [cityhash](https://github.com/google/cityhash/commit/8af9b8c2b889d80c22d6bc26ba0df1afb79a30db): latest
 - [liblz4](https://github.com/lz4/lz4): v1.8.3
 - [zlib](https://zlib.net/): v1.2.11
+- [benchmark](https://github.com/google/benchmark/): v1.6.1
+- [libpcap](https://www.tcpdump.org): v1.10.1
+- [gperftools](https://github.com/gperftools/gperftools): v2.9.1
+
 - libuuid
-    - get_dmi_uuid
+  - get_dmi_uuid
 - libpthread
 - libdl

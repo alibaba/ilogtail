@@ -6,6 +6,7 @@ When distributed in a binary form, Logtail may contain portions of the following
 
 - [https://www.openssl.org/source/license.html](https://www.openssl.org/source/apache-license-2.0.txt)
 - [https://github.com/pixie-io/pixie](https://github.com/pixie-io/pixie/blob/main/LICENSE)
+- [https://github.com/google/benchmark](https://github.com/google/benchmark/blob/main/LICENSE)
 
 ## BSD licenses
 
@@ -19,6 +20,7 @@ When distributed in a binary form, Logtail may contain portions of the following
 - [https://github.com/google/breakpad](https://github.com/google/breakpad/blob/main/LICENSE)
 - [https://github.com/google/leveldb](https://github.com/google/leveldb/blob/main/LICENSE)
 - [https://github.com/Cyan4973/xxHash](https://github.com/Cyan4973/xxHash/blob/dev/LICENSE)
+- [https://www.tcpdump.org](https://www.tcpdump.org/)
 
 ## MIT licenses
 
