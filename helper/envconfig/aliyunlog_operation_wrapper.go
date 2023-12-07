@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	aliyunlog "github.com/aliyun/aliyun-log-go-sdk"
+	aliyunlog "github.com/alibabacloud-go/sls-20201230"
 
 	"github.com/alibaba/ilogtail/pkg/config"
 	"github.com/alibaba/ilogtail/pkg/flags"
@@ -660,6 +660,7 @@ func (o *operationWrapper) updateConfigInner(config *AliyunLogConfigSpec) error 
 						serverConfig.InputDetail = configDetail
 						// update config
 						for i := 0; i < *flags.LogOperationMaxRetryTimes; i++ {
+							// 问题
 							err = o.logClient.UpdateConfig(project, serverConfig)
 							if err == nil {
 								break
