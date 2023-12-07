@@ -13,18 +13,18 @@
 // limitations under the License.
 
 #include "go_pipeline/LogtailPlugin.h"
-#include "common/LogtailCommonFlags.h"
-#include "common/TimeUtil.h"
-#include "logger/Logger.h"
-#include "config_manager/ConfigManager.h"
-#include "sender/Sender.h"
-#include "monitor/LogtailAlarm.h"
-#include "monitor/LogFileProfiler.h"
+
 #include "app_config/AppConfig.h"
 #include "common/DynamicLibHelper.h"
 #include "common/LogtailCommonFlags.h"
-#include "pipeline/PipelineManager.h"
+#include "common/TimeUtil.h"
+#include "config_manager/ConfigManager.h"
 #include "container_manager/DockerContainerPathCmd.h"
+#include "logger/Logger.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogtailAlarm.h"
+#include "pipeline/PipelineManager.h"
+#include "sender/Sender.h"
 
 DEFINE_FLAG_BOOL(enable_sls_metrics_format, "if enable format metrics in SLS metricstore log pattern", false);
 DEFINE_FLAG_BOOL(enable_containerd_upper_dir_detect,
@@ -90,42 +90,31 @@ bool LogtailPlugin::LoadPipeline(const std::string& pipelineName,
         goLogstore.p = logstore.c_str();
         long long goLogStoreKey = static_cast<long long>(logstoreKey);
 
-        GoInt loadRst = mLoadConfigFun(goProject, goLogstore, goConfigName, goLogStoreKey, goPluginConfig);
-        if (loadRst != 0) {
-            LOG_WARNING(sLogger,
-                        ("msg", "load plugin error")("project", project)("logstore", logstore)("config", pipelineName)(
-                            "content", pipeline)("result", loadRst));
-            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
-                                                   "load plugin config error, invalid config: " + pipelineName
-                                                       + ". please check you config and logtail's plugin log.",
-                                                   project,
-                                                   logstore,
-                                                   region);
-        }
-        return loadRst == 0;
+        return mLoadConfigFun(goProject, goLogstore, goConfigName, goLogStoreKey, goPluginConfig) == 0;
     }
+
     return false;
 }
 
 void LogtailPlugin::HoldOn(bool exitFlag) {
     if (mPluginValid && mHoldOnFun != NULL) {
-        LOG_INFO(sLogger, ("logtail plugin HoldOn", "start"));
+        LOG_INFO(sLogger, ("Go pipelines pause", "starts"));
         auto holdOnStart = GetCurrentTimeInMilliSeconds();
         mHoldOnFun(exitFlag ? 1 : 0);
         auto holdOnCost = GetCurrentTimeInMilliSeconds() - holdOnStart;
-        LOG_INFO(sLogger, ("logtail plugin HoldOn", "success")("cost", holdOnCost));
+        LOG_INFO(sLogger, ("Go pipelines pause", "succeeded")("cost", ToString(holdOnCost) + "ms"));
         if (holdOnCost >= 60 * 1000) {
             LogtailAlarm::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
-                                                   "Plugin HoldOn is too slow: " + std::to_string(holdOnCost));
+                                                   "Pausing Go pipelines took " + ToString(holdOnCost) + "ms");
         }
     }
 }
 
 void LogtailPlugin::Resume() {
     if (mPluginValid && mResumeFun != NULL) {
-        LOG_INFO(sLogger, ("logtail plugin Resume", "start"));
+        LOG_INFO(sLogger, ("Go pipelines resume", "starts"));
         mResumeFun();
-        LOG_INFO(sLogger, ("logtail plugin Resume", "success"));
+        LOG_INFO(sLogger, ("Go pipelines resume", "succeeded"));
     }
 }
 
@@ -333,10 +322,10 @@ bool LogtailPlugin::LoadPluginBase() {
         }
         int version = versionFun();
         if (!(version / 100 == 2 || version / 100 == 3)) {
-            LOG_ERROR(sLogger, ("check plugin adapter version error, version", version));
+            LOG_ERROR(sLogger, ("invalid plugin adapter version, version", version));
             return mPluginValid;
         }
-        LOG_INFO(sLogger, ("check plugin adapter version success, version", version));
+        LOG_INFO(sLogger, ("valid plugin adapter version, version", version));
 
         // Be compatible with old libPluginAdapter.so, V2 -> V1.
         auto registerV2Fun = (RegisterLogtailCallBackV2)loader.LoadMethod("RegisterLogtailCallBackV2", error);
@@ -448,10 +437,10 @@ bool LogtailPlugin::LoadPluginBase() {
         initRst = initBase();
     }
     if (initRst != 0) {
-        LOG_ERROR(sLogger, ("init plugin base error", initRst));
+        LOG_ERROR(sLogger, ("Go plugin system init", "failed")("res", initRst));
         mPluginValid = false;
     } else {
-        LOG_INFO(sLogger, ("init plugin base", "success"));
+        LOG_INFO(sLogger, ("Go plugin system init", "succeeded"));
         mPluginValid = true;
     }
     return mPluginValid;

@@ -82,7 +82,7 @@ struct Config {
 
     bool HasGoPlugin() const { return mHasGoFlusher || mHasGoProcessor || mHasGoInput; }
 
-    void ReplaceEnvVar();
+    bool ReplaceEnvVar();
 };
 
 inline bool operator==(const Config& lhs, const Config& rhs) {

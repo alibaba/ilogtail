@@ -85,13 +85,18 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                     continue;
                 }
                 if (!IsConfigEnabled(configName, *detail)) {
+                    LOG_INFO(sLogger, ("new config found and disabled", "skip current object")("config", configName));
                     continue;
                 }
                 Config config(configName, std::move(detail));
                 if (!config.Parse()) {
+                    LOG_WARNING(sLogger, ("new config found but invalid", "skip current object")("config", configName));
                     continue;
                 }
                 diff.mAdded.push_back(std::move(config));
+                LOG_INFO(
+                    sLogger,
+                    ("new config found and passed topology check", "prepare to build pipeline")("config", configName));
             } else if (iter->second.first != size || iter->second.second != mTime) {
                 // for config currently running, we leave it untouched if new config is invalid
                 mFileInfoMap[filepath] = make_pair(size, mTime);
@@ -105,6 +110,13 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                 if (!IsConfigEnabled(configName, *detail)) {
                     if (mPipelineManager->FindPipelineByName(configName)) {
                         diff.mRemoved.push_back(configName);
+                        LOG_INFO(sLogger,
+                                 ("existing valid config modified and disabled",
+                                  "prepare to stop current running pipeline")("config", configName));
+                    } else {
+                        LOG_INFO(sLogger,
+                                 ("existing invalid config modified and disabled", "skip current object")("config",
+                                                                                                          configName));
                     }
                     continue;
                 }
@@ -112,30 +124,47 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                 if (!p) {
                     Config config(configName, std::move(detail));
                     if (!config.Parse()) {
+                        LOG_WARNING(sLogger,
+                                 ("existing invalid config modified and remains invalid",
+                                  "skip current object")("config", configName));
                         continue;
                     }
                     diff.mAdded.push_back(std::move(config));
+                    LOG_INFO(sLogger,
+                             ("existing invalid config modified and passed topology check",
+                              "prepare to build pipeline")("config", configName));
                 } else if (*detail != p->GetConfig()) {
                     Config config(configName, std::move(detail));
                     if (!config.Parse()) {
                         diff.mUnchanged.push_back(configName);
+                        LOG_WARNING(sLogger,
+                                 ("existing valid config modified and becomes invalid",
+                                  "keep current pipeline running")("config", configName));
                         continue;
                     }
                     diff.mModified.push_back(std::move(config));
+                    LOG_INFO(sLogger,
+                             ("existing valid config modified and passed topology check",
+                              "prepare to rebuild pipeline")("config", configName));
                 } else {
                     diff.mUnchanged.push_back(configName);
+                    LOG_DEBUG(sLogger,
+                              ("existing valid config file modified, but no change found", "skip current object"));
                 }
             } else {
                 // 为了插件系统过渡使用
                 if (mPipelineManager->FindPipelineByName(configName)) {
                     diff.mUnchanged.push_back(configName);
                 }
+                LOG_DEBUG(sLogger, ("existing config file unchanged", "skip current object"));
             }
         }
     }
     for (const auto& name : mPipelineManager->GetAllPipelineNames()) {
         if (configSet.find(name) == configSet.end()) {
             diff.mRemoved.push_back(name);
+            LOG_INFO(sLogger,
+                     ("existing valid config is removed", "prepare to stop current running pipeline")("config", name));
         }
     }
     for (const auto& item : mFileInfoMap) {
@@ -144,6 +173,15 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
             mFileInfoMap.erase(item.first);
         }
     }
+
+    if (!diff.IsEmpty()) {
+        LOG_INFO(sLogger,
+                 ("config files scan done", "got updates, begin to update pipelines")("added", diff.mAdded.size())(
+                     "modified", diff.mModified.size())("removed", diff.mRemoved.size()));
+    } else {
+        LOG_DEBUG(sLogger, ("config files scan done", "no update"));
+    }
+
     return diff;
 }
 

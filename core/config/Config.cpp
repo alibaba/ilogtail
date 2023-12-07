@@ -45,12 +45,14 @@ static string UnescapeDollar(string::const_iterator beginIt, string::const_itera
     return outStr;
 }
 
-static string ReplaceEnvVarRefInStr(const string& inStr) {
-    string outStr;
+static bool ReplaceEnvVarRefInStr(const string& inStr, string& outStr) {
     string::const_iterator lastMatchEnd = inStr.begin();
     static boost::regex reg(R"((?<!\$)\${([\w]+)(:(.*?))?(?<!\$)})");
     boost::regex_iterator<string::const_iterator> it{inStr.begin(), inStr.end(), reg};
     boost::regex_iterator<string::const_iterator> end;
+    if (it == end) {
+        return false;
+    }
     for (; it != end; ++it) {
         outStr.append(UnescapeDollar(lastMatchEnd, (*it)[0].first)); // original part
         char* env = getenv((*it)[1].str().c_str());
@@ -65,31 +67,35 @@ static string ReplaceEnvVarRefInStr(const string& inStr) {
         lastMatchEnd = (*it)[0].second;
     }
     outStr.append(UnescapeDollar(lastMatchEnd, inStr.end())); // original part
-    return outStr;
+    return true;
 }
 
-static void ReplaceEnvVarRef(Json::Value& value) {
+static void ReplaceEnvVarRef(Json::Value& value, bool& res) {
     if (value.isString()) {
-        Json::Value tempValue{ReplaceEnvVarRefInStr(value.asString())};
+        string outStr;
+        res = ReplaceEnvVarRefInStr(value.asString(), outStr);
+        Json::Value tempValue{outStr};
         value.swapPayload(tempValue);
     } else if (value.isArray()) {
         Json::ValueIterator it = value.begin();
         Json::ValueIterator end = value.end();
         for (; it != end; ++it) {
-            ReplaceEnvVarRef(*it);
+            ReplaceEnvVarRef(*it, res);
         }
     } else if (value.isObject()) {
         Json::ValueIterator it = value.begin();
         Json::ValueIterator end = value.end();
         for (; it != end; ++it) {
-            ReplaceEnvVarRef(*it);
+            ReplaceEnvVarRef(*it, res);
         }
     }
 }
 
 bool Config::Parse() {
     if (BOOL_FLAG(enable_env_ref_in_config)) {
-        ReplaceEnvVar();
+        if (ReplaceEnvVar()) {
+            LOG_INFO(sLogger, ("env vars in config are replaced, config", mDetail->toStyledString())("config", mName));
+        }
     }
 
     string errorMsg;
@@ -366,8 +372,10 @@ bool Config::Parse() {
     return true;
 }
 
-void Config::ReplaceEnvVar() {
-    ReplaceEnvVarRef(*mDetail);
+bool Config::ReplaceEnvVar() {
+    bool res = false;
+    ReplaceEnvVarRef(*mDetail, res);
+    return res;
 }
 
 bool LoadConfigDetailFromFile(const filesystem::path& filepath, Json::Value& detail) {

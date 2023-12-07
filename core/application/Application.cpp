@@ -279,6 +279,7 @@ void Application::Exit() {
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
 #endif
+    LOG_INFO(sLogger, ("exit", "bye!"));
     exit(0);
 }
 

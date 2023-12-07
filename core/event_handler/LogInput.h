@@ -36,8 +36,7 @@ public:
         return ptr;
     }
 
-    void Resume() {} // TODO: Refine interface to avoid ambiguous.
-    void Resume(bool addCheckPointEventFlag = false);
+    void Resume();
     void Start();
     void HoldOn();
     void PushEventQueue(std::vector<Event*>& eventVec);

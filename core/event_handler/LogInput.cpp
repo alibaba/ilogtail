@@ -88,41 +88,21 @@ void LogInput::Start() {
 
     mInteruptFlag = false;
     new Thread([this]() { ProcessLoop(); });
-    LOG_INFO(sLogger, ("LogInput", "start"));
+    LOG_INFO(sLogger, ("event handle daemon", "started"));
 }
 
-void LogInput::Resume(bool addCheckPointEventFlag) {
-    // Resume sequence: inotify -> LogProcess -> LogInput -> polling (PollingModify -> PollingDirFile)
-    ConfigManager::GetInstance()->RegisterHandlers();
-    if (addCheckPointEventFlag) {
-        EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
-    }
-    LOG_INFO(sLogger, ("LogInput Resume", "start"));
-    // LogProcess::GetInstance()->Resume();
+void LogInput::Resume() {
+    LOG_INFO(sLogger, ("event handle daemon resume", "starts"));
     mInteruptFlag = false;
     mAccessMainThreadRWL.unlock();
-    PollingModify::GetInstance()->Resume();
-    PollingDirFile::GetInstance()->Resume();
-    LOG_INFO(sLogger, ("LogInput Resume", "success"));
+    LOG_INFO(sLogger, ("event handle daemon resume", "succeeded"));
 }
 
 void LogInput::HoldOn() {
-    LOG_INFO(sLogger, ("LogInput HoldOn", "start"));
-    auto holdOnStart = GetCurrentTimeInMilliSeconds();
-
-    // Hold on sequence: polling (PollingDirFile -> PollingModify) -> LogInput -> LogProcess
-    PollingDirFile::GetInstance()->HoldOn();
-    PollingModify::GetInstance()->HoldOn();
+    LOG_INFO(sLogger, ("event handle daemon pause", "starts"));
     mInteruptFlag = true;
     mAccessMainThreadRWL.lock();
-    // LogProcess::GetInstance()->HoldOn();
-
-    auto holdOnCost = GetCurrentTimeInMilliSeconds() - holdOnStart;
-    LOG_INFO(sLogger, ("LogInput HoldOn", "success")("cost", holdOnCost));
-    if (holdOnCost >= 60 * 1000) {
-        LogtailAlarm::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
-                                               "Input HoldOn is too slow: " + std::to_string(holdOnCost));
-    }
+    LOG_INFO(sLogger, ("event handle daemon pause", "succeeded"));
 }
 
 void LogInput::TryReadEvents(bool forceRead) {

@@ -96,8 +96,8 @@ void LogProcess::Start() {
     if (mInitialized)
         return;
     mInitialized = true;
-    mLocalTimeZoneOffsetSecond = GetLocalTimeZoneOffsetSecond();
-    LOG_INFO(sLogger, ("local timezone offset second", mLocalTimeZoneOffsetSecond));
+    // mLocalTimeZoneOffsetSecond = GetLocalTimeZoneOffsetSecond();
+    // LOG_INFO(sLogger, ("local timezone offset second", mLocalTimeZoneOffsetSecond));
     Sender::Instance()->SetFeedBackInterface(&mLogFeedbackQueue);
     mThreadCount = AppConfig::GetInstance()->GetProcessThreadCount();
     // mBufferCountLimit = INT32_FLAG(process_buffer_count_upperlimit_perthread) * mThreadCount;
@@ -107,6 +107,7 @@ void LogProcess::Start() {
         mThreadFlags[threadNo] = false;
         mProcessThreads[threadNo] = CreateThread([this, threadNo]() { ProcessLoop(threadNo); });
     }
+    LOG_INFO(sLogger, ("process daemon", "started"));
 }
 
 bool LogProcess::PushBuffer(LogBuffer* buffer, int32_t retryTimes) {
@@ -151,9 +152,9 @@ void LogProcess::DeletePriorityWithHoldOn(const LogstoreFeedBackKey& logstoreKey
 }
 
 void LogProcess::HoldOn() {
+    LOG_INFO(sLogger, ("process daemon pause", "starts"));
     mAccessProcessThreadRWL.lock();
     mLogFeedbackQueue.Lock();
-    int32_t tryTime = 0;
     while (true) {
         bool allThreadWait = true;
         for (int32_t threadNo = 0; threadNo < mThreadCount; ++threadNo) {
@@ -163,11 +164,8 @@ void LogProcess::HoldOn() {
             }
         }
         if (allThreadWait) {
-            LOG_INFO(sLogger, ("LogProcess", "hold on"));
+            LOG_INFO(sLogger, ("process daemon pause", "succeeded"));
             return;
-        }
-        if (++tryTime % 100 == 0) {
-            LOG_ERROR(sLogger, ("LogProcess thread is too slow or blocked with unknow error.", ""));
         }
         usleep(10 * 1000);
     }
@@ -175,9 +173,10 @@ void LogProcess::HoldOn() {
 
 
 void LogProcess::Resume() {
+    LOG_INFO(sLogger, ("process daemon resume", "starts"));
     mLogFeedbackQueue.Unlock();
     mAccessProcessThreadRWL.unlock();
-    LOG_INFO(sLogger, ("LogProcess", "resume"));
+    LOG_INFO(sLogger, ("process daemon resume", "succeeded"));
 }
 
 bool LogProcess::FlushOut(int32_t waitMs) {

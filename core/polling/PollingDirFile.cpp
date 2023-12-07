@@ -70,7 +70,7 @@ void PollingDirFile::Start() {
     ClearCache();
     mRuningFlag = true;
     mThreadPtr = CreateThread([this]() { Polling(); });
-    LOG_INFO(sLogger, ("PollingDirFile", "start"));
+    LOG_INFO(sLogger, ("polling discovery", "started"));
 }
 
 void PollingDirFile::Stop() {
@@ -86,15 +86,17 @@ void PollingDirFile::Stop() {
 }
 
 void PollingDirFile::HoldOn() {
+    LOG_INFO(sLogger, ("polling discovery pause", "starts"));
     mHoldOnFlag = true;
     mPollingThreadLock.lock();
-    LOG_INFO(sLogger, ("PollingDirFile", "hold on"));
+    LOG_INFO(sLogger, ("polling discovery pause", "succeeded"));
 }
 
 void PollingDirFile::Resume() {
+    LOG_INFO(sLogger, ("polling discovery resume", "starts"));
     mHoldOnFlag = false;
     mPollingThreadLock.unlock();
-    LOG_INFO(sLogger, ("PollingDirFile", "resume"));
+    LOG_INFO(sLogger, ("polling discovery resume", "succeeded"));
 }
 
 void PollingDirFile::CheckConfigPollingStatCount(const int32_t lastStatCount,

@@ -243,9 +243,6 @@ bool Pipeline::Init(Config&& config) {
 
 #ifndef APSARA_UNIT_TEST_MAIN
     if (!LoadGoPipelines()) {
-        LOG_ERROR(
-            mContext.GetLogger(),
-            ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")("config", mName));
         return false;
     }
 #endif
@@ -267,6 +264,7 @@ void Pipeline::Start() {
     for (const auto& input : mInputs) {
         input->Start();
     }
+    LOG_INFO(sLogger, ("pipeline start", "succeeded")("config", mName));
 }
 
 void Pipeline::Process(vector<PipelineEventGroup>& logGroupList) {
@@ -290,6 +288,7 @@ void Pipeline::Stop(bool isRemoving) {
     for (const auto& flusher : mFlushers) {
         flusher->Stop(isRemoving);
     }
+    LOG_INFO(sLogger, ("pipeline stop", "succeeded")("config", mName));
 }
 
 void Pipeline::MergeGoPipeline(const Json::Value& src, Json::Value& dst) {
@@ -335,6 +334,10 @@ bool Pipeline::LoadGoPipelines() const {
                                                         mContext.GetLogstoreName(),
                                                         mContext.GetRegion(),
                                                         mContext.GetLogstoreKey())) {
+            LOG_ERROR(mContext.GetLogger(),
+                      ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")(
+                          "config", mName)("Go pipeline num", "2")("Go pipeline content",
+                                                                   mGoPipelineWithoutInput.toStyledString()));
             return false;
         }
     }
@@ -345,6 +348,10 @@ bool Pipeline::LoadGoPipelines() const {
                                                         mContext.GetLogstoreName(),
                                                         mContext.GetRegion(),
                                                         mContext.GetLogstoreKey())) {
+            LOG_ERROR(mContext.GetLogger(),
+                      ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")(
+                          "config", mName)("Go pipeline num", "1")("Go pipeline content",
+                                                                   mGoPipelineWithInput.toStyledString()));
             return false;
         }
     }

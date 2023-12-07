@@ -48,7 +48,7 @@ void PollingModify::Start() {
     ClearCache();
     mRuningFlag = true;
     mThreadPtr = CreateThread([this]() { Polling(); });
-    LOG_INFO(sLogger, ("PollingModify", "start"));
+    LOG_INFO(sLogger, ("polling modify", "started"));
 }
 
 void PollingModify::Stop() {
@@ -64,15 +64,17 @@ void PollingModify::Stop() {
 }
 
 void PollingModify::Resume() {
+    LOG_INFO(sLogger, ("polling modify resume", "starts"));
     mHoldOnFlag = false;
     mPollingThreadLock.unlock();
-    LOG_INFO(sLogger, ("PollingModify", "resume"));
+    LOG_INFO(sLogger, ("polling modify resume", "succeeded"));
 }
 
 void PollingModify::HoldOn() {
+    LOG_INFO(sLogger, ("polling modify pause", "starts"));
     mHoldOnFlag = true;
     mPollingThreadLock.lock();
-    LOG_INFO(sLogger, ("PollingModify", "hold on"));
+    LOG_INFO(sLogger, ("polling modify pause", "succeeded"));
 }
 
 struct ModifySortItem {

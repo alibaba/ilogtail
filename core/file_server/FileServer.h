@@ -38,7 +38,7 @@ public:
     }
 
     void Start();
-    void Pause();
+    void Pause(bool isConfigUpdate = true);
 
     FileDiscoveryConfig GetFileDiscoveryConfig(const std::string& name) const;
     const std::unordered_map<std::string, FileDiscoveryConfig>& GetAllFileDiscoveryConfigs() const {
@@ -65,7 +65,7 @@ public:
     std::shared_ptr<std::vector<DockerContainerPath>> GetAndRemoveContainerInfo(const std::string& pipeline);
     void ClearContainerInfo();
     // 过渡使用
-    void Resume();
+    void Resume(bool isConfigUpdate = true);
     void Stop();
     uint32_t GetExactlyOnceConcurrency(const std::string& name) const;
     std::vector<std::string> GetExactlyOnceConfigs() const;
@@ -75,6 +75,8 @@ public:
 private:
     FileServer() = default;
     ~FileServer() = default;
+
+    void PauseInner();
 
     std::unordered_map<std::string, FileDiscoveryConfig> mPipelineNameFileDiscoveryConfigsMap;
     std::unordered_map<std::string, FileReaderConfig> mPipelineNameFileReaderConfigsMap;

@@ -81,8 +81,14 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     for (auto& config : diff.mModified) {
         auto p = BuildPipeline(std::move(config));
         if (!p) {
+            LOG_WARNING(
+                sLogger,
+                ("failed to build pipeline for existing config", "keep current pipeline running")("config", p->Name()));
             continue;
         }
+        LOG_INFO(sLogger,
+                 ("pipeline building for existing config succeeded",
+                  "stop the old pipeline and start the new one")("config", p->Name()));
         mPipelineNameEntityMap[config.mName]->Stop(false);
         DecreasePluginUsageCnt(mPipelineNameEntityMap[config.mName]->GetPluginStatistics());
         mPipelineNameEntityMap[config.mName] = p;
@@ -91,8 +97,12 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     for (auto& config : diff.mAdded) {
         auto p = BuildPipeline(std::move(config));
         if (!p) {
+            LOG_WARNING(sLogger,
+                        ("failed to build pipeline for new config", "skip current object")("config", p->Name()));
             continue;
         }
+        LOG_INFO(sLogger,
+                 ("pipeline building for new config succeeded", "begin to start pipeline")("config", p->Name()));
         mPipelineNameEntityMap[config.mName] = p;
         p->Start();
     }
@@ -178,6 +188,7 @@ string PipelineManager::GetPluginStatistics() const {
 }
 
 void PipelineManager::StopAllPipelines() {
+    LOG_INFO(sLogger, ("stop all pipelines", "starts"));
 #if defined(__ENTERPRISE__) && defined(__linux__)
     if (AppConfig::GetInstance()->GetOpenStreamLog()) {
         StreamLogManager::GetInstance()->Shutdown();
@@ -196,19 +207,20 @@ void PipelineManager::StopAllPipelines() {
         logProcessFlushFlag = LogProcess::GetInstance()->FlushOut(10);
     }
     if (!logProcessFlushFlag) {
-        LOG_WARNING(sLogger, ("flush log process buffer", "fail"));
+        LOG_WARNING(sLogger, ("flush process daemon queue", "failed"));
     } else {
-        LOG_INFO(sLogger, ("flush log process buffer", "success"));
+        LOG_INFO(sLogger, ("flush process daemon queue", "succeeded"));
     }
     LogProcess::GetInstance()->HoldOn();
 
     LogtailPlugin::GetInstance()->HoldOn(true);
 
     if (!(Sender::Instance()->FlushOut(INT32_FLAG(exit_flushout_duration)))) {
-        LOG_WARNING(sLogger, ("flush out sender data", "fail"));
+        LOG_WARNING(sLogger, ("flush SLS sender data", "failed"));
     } else {
-        LOG_INFO(sLogger, ("flush out sender data", "success"));
+        LOG_INFO(sLogger, ("flush SLS sender data", "succeeded"));
     }
+    LOG_INFO(sLogger, ("stop all pipelines", "succeeded"));
 }
 
 shared_ptr<Pipeline> PipelineManager::BuildPipeline(Config&& config) {

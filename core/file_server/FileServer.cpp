@@ -14,12 +14,14 @@
 
 #include "file_server/FileServer.h"
 
-#include "input/InputFile.h"
 #include "checkpoint/CheckPointManager.h"
 #include "common/Flags.h"
+#include "common/StringTools.h"
+#include "common/TimeUtil.h"
 #include "config_manager/ConfigManager.h"
 #include "controller/EventDispatcher.h"
 #include "event_handler/LogInput.h"
+#include "input/InputFile.h"
 #include "polling/PollingDirFile.h"
 #include "polling/PollingModify.h"
 
@@ -39,28 +41,60 @@ void FileServer::Start() {
         PollingDirFile::GetInstance()->Start();
     }
     LogInput::GetInstance()->Start();
+    LOG_INFO(sLogger, ("file server", "started"));
 }
 
-void FileServer::Pause() {
+void FileServer::Pause(bool isConfigUpdate) {
+    PauseInner();
+    if (isConfigUpdate) {
+        EventDispatcher::GetInstance()->DumpAllHandlersMeta(true);
+        CheckPointManager::Instance()->DumpCheckPointToLocal();
+        CheckPointManager::Instance()->ResetLastDumpTime();
+        EventDispatcher::GetInstance()->ClearBrokenLinkSet();
+        PollingDirFile::GetInstance()->ClearCache();
+        ConfigManager::GetInstance()->ClearFilePipelineMatchCache();
+    }
+}
+
+void FileServer::PauseInner() {
+    LOG_INFO(sLogger, ("file server pause", "starts"));
     // cache must be cleared at last, since logFileReader dump still requires the cache
+    auto holdOnStart = GetCurrentTimeInMilliSeconds();
+    if (BOOL_FLAG(enable_polling_discovery)) {
+        PollingDirFile::GetInstance()->HoldOn();
+        PollingModify::GetInstance()->HoldOn();
+    }
     LogInput::GetInstance()->HoldOn();
-    EventDispatcher::GetInstance()->DumpAllHandlersMeta(true);
-    CheckPointManager::Instance()->DumpCheckPointToLocal();
-    CheckPointManager::Instance()->ResetLastDumpTime();
-    EventDispatcher::GetInstance()->ClearBrokenLinkSet();
-    PollingDirFile::GetInstance()->ClearCache();
-    ConfigManager::GetInstance()->ClearFilePipelineMatchCache();
+    auto holdOnCost = GetCurrentTimeInMilliSeconds() - holdOnStart;
+    if (holdOnCost >= 60 * 1000) {
+        LogtailAlarm::GetInstance()->SendAlarm(HOLD_ON_TOO_SLOW_ALARM,
+                                               "Pausing file server took " + ToString(holdOnCost) + "ms");
+    }
+    LOG_INFO(sLogger, ("file server pause", "succeeded")("cost", ToString(holdOnCost) + "ms"));
 }
 
-void FileServer::Resume() {
-    ClearContainerInfo();
-    ConfigManager::GetInstance()->DoUpdateContainerPaths();
-    ConfigManager::GetInstance()->SaveDockerConfig();
-    LogInput::GetInstance()->Resume(true);
+void FileServer::Resume(bool isConfigUpdate) {
+    if (isConfigUpdate) {
+        ClearContainerInfo();
+        ConfigManager::GetInstance()->DoUpdateContainerPaths();
+        ConfigManager::GetInstance()->SaveDockerConfig();
+    }
+
+    LOG_INFO(sLogger, ("file server resume", "starts"));
+    ConfigManager::GetInstance()->RegisterHandlers();
+    if (isConfigUpdate) {
+        EventDispatcher::GetInstance()->AddExistedCheckPointFileEvents();
+    }
+    LogInput::GetInstance()->Resume();
+    if (BOOL_FLAG(enable_polling_discovery)) {
+        PollingModify::GetInstance()->Resume();
+        PollingDirFile::GetInstance()->Resume();
+    }
+    LOG_INFO(sLogger, ("file server resume", "succeeded"));
 }
 
 void FileServer::Stop() {
-    LogInput::GetInstance()->HoldOn();
+    PauseInner();
     EventDispatcher::GetInstance()->DumpAllHandlersMeta(false);
     CheckPointManager::Instance()->DumpCheckPointToLocal();
 }
@@ -113,8 +147,7 @@ void FileServer::RemoveMultilineConfig(const string& name) {
     mPipelineNameMultilineConfigsMap.erase(name);
 }
 
-void FileServer::SaveContainerInfo(const string& pipeline,
-                                   const shared_ptr<vector<DockerContainerPath>>& info) {
+void FileServer::SaveContainerInfo(const string& pipeline, const shared_ptr<vector<DockerContainerPath>>& info) {
     mAllDockerContainerPathMap[pipeline] = info;
 }
 

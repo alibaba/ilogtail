@@ -2302,7 +2302,7 @@ void ConfigUnittest::TestReplaceEnvVarRef() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(resStr, resJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
-    config->ReplaceEnvVar();
+    APSARA_TEST_TRUE(config->ReplaceEnvVar());
     APSARA_TEST_TRUE(*config->mDetail == resJson);
 }
 
