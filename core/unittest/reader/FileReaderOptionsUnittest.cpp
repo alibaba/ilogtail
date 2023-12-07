@@ -114,6 +114,17 @@ void FileReaderOptionsUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL(INT32_FLAG(logreader_max_rotate_queue_size), config->mRotatorQueueSize);
     APSARA_TEST_FALSE(config->mAppendingLogPositionMeta);
 
+    // FileEncoding
+    configStr = R"(
+        {
+            "FileEncoding": "utf16",
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    config.reset(new FileReaderOptions());
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
+    APSARA_TEST_EQUAL(FileReaderOptions::Encoding::UTF16, config->mFileEncoding);
+
     // TailSizeKB
     configStr = R"(
         {

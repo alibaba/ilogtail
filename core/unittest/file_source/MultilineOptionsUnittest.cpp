@@ -58,7 +58,7 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
             "StartPattern": "\\d+:\\d+:\\d",
             "ContinuePattern": "aaa",
             "EndPattern": "\\S+",
-            "UnmatchedContentTreatment": "split"
+            "UnmatchedContentTreatment": "single_line"
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -200,6 +200,16 @@ void MultilineOptionsUnittest::OnSuccessfulInit() const {
     config.reset(new MultilineOptions());
     APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
     APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::DISCARD, config->mUnmatchedContentTreatment);
+
+    configStr = R"(
+        {
+            "UnmatchedContentTreatment": "unknown"
+        }
+    )";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    config.reset(new MultilineOptions());
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, pluginName));
+    APSARA_TEST_EQUAL(MultilineOptions::UnmatchedContentTreatment::SINGLE_LINE, config->mUnmatchedContentTreatment);
 }
 
 UNIT_TEST_CASE(MultilineOptionsUnittest, OnSuccessfulInit)
