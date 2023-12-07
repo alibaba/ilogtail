@@ -215,7 +215,7 @@ void Application::Start() {
     LogProcess::GetInstance()->Start();
 
     time_t curTime = 0, lastProfilingCheckTime = 0, lastTcmallocReleaseMemTime = 0, lastConfigCheckTime = 0,
-           lastUpdateMetricTime = 0, lastCheckTagsTime = 0;
+           lastUpdateMetricTime = 0, lastCheckTagsTime = 0, lastCheckContainerUpdateTime = 0;
     while (true) {
         curTime = time(NULL);
         if (curTime - lastCheckTagsTime >= INT32_FLAG(file_tags_update_interval)) {
@@ -254,9 +254,12 @@ void Application::Start() {
         // 过渡使用
         EventDispatcher::GetInstance()->DumpCheckPointPeriod(curTime);
 
-        if (ConfigManager::GetInstance()->IsUpdateContainerPaths()) {
-            FileServer::GetInstance()->Pause();
-            FileServer::GetInstance()->Resume();
+        if (curTime - lastCheckContainerUpdateTime >= 2) {
+            if (ConfigManager::GetInstance()->IsUpdateContainerPaths()) {
+                FileServer::GetInstance()->Pause();
+                FileServer::GetInstance()->Resume();
+            }
+            lastCheckContainerUpdateTime = curTime;
         }
     }
 }
