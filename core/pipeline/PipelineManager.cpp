@@ -83,12 +83,12 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         if (!p) {
             LOG_WARNING(
                 sLogger,
-                ("failed to build pipeline for existing config", "keep current pipeline running")("config", p->Name()));
+                ("failed to build pipeline for existing config", "keep current pipeline running")("config", config.mName));
             continue;
         }
         LOG_INFO(sLogger,
                  ("pipeline building for existing config succeeded",
-                  "stop the old pipeline and start the new one")("config", p->Name()));
+                  "stop the old pipeline and start the new one")("config", config.mName));
         mPipelineNameEntityMap[config.mName]->Stop(false);
         DecreasePluginUsageCnt(mPipelineNameEntityMap[config.mName]->GetPluginStatistics());
         mPipelineNameEntityMap[config.mName] = p;
@@ -98,11 +98,11 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         auto p = BuildPipeline(std::move(config));
         if (!p) {
             LOG_WARNING(sLogger,
-                        ("failed to build pipeline for new config", "skip current object")("config", p->Name()));
+                        ("failed to build pipeline for new config", "skip current object")("config", config.mName));
             continue;
         }
         LOG_INFO(sLogger,
-                 ("pipeline building for new config succeeded", "begin to start pipeline")("config", p->Name()));
+                 ("pipeline building for new config succeeded", "begin to start pipeline")("config", config.mName));
         mPipelineNameEntityMap[config.mName] = p;
         p->Start();
     }

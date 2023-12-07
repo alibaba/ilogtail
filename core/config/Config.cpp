@@ -51,6 +51,7 @@ static bool ReplaceEnvVarRefInStr(const string& inStr, string& outStr) {
     boost::regex_iterator<string::const_iterator> it{inStr.begin(), inStr.end(), reg};
     boost::regex_iterator<string::const_iterator> end;
     if (it == end) {
+        outStr.append(UnescapeDollar(lastMatchEnd, inStr.end())); // original part
         return false;
     }
     for (; it != end; ++it) {
@@ -73,7 +74,9 @@ static bool ReplaceEnvVarRefInStr(const string& inStr, string& outStr) {
 static void ReplaceEnvVarRef(Json::Value& value, bool& res) {
     if (value.isString()) {
         string outStr;
-        res = ReplaceEnvVarRefInStr(value.asString(), outStr);
+        if (ReplaceEnvVarRefInStr(value.asString(), outStr)) {
+            res = true;
+        }
         Json::Value tempValue{outStr};
         value.swapPayload(tempValue);
     } else if (value.isArray()) {
