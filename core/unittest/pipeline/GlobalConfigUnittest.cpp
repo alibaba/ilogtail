@@ -123,7 +123,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
 
     configStr = R"""(
         {
-            "TopicType": "file_path",
+            "TopicType": "filepath",
             "TopicFormat": "/home/(.*)"
         }
     )""";
@@ -135,7 +135,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
 
     configStr = R"(
         {
-            "TopicType": "file_path"
+            "TopicType": "filepath"
         }
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
@@ -146,7 +146,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
 
     configStr = R"(
         {
-            "TopicType": "file_path",
+            "TopicType": "filepath",
             "TopicFormat": "\\d+[s"
         }
     )";

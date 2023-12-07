@@ -38,7 +38,7 @@ bool GlobalConfig::Init(const Json::Value& config, const string& configName, Jso
         mTopicType = TopicType::CUSTOM;
     } else if (topicType == "machine_group_topic") {
         mTopicType = TopicType::MACHINE_GROUP_TOPIC;
-    } else if (topicType == "file_path") {
+    } else if (topicType == "filepath") {
         mTopicType = TopicType::FILEPATH;
     } else if (topicType == "default") {
         mTopicType = TopicType::DEFAULT;
