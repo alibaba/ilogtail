@@ -83,7 +83,7 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     std::vector<PipelineEventGroup> eventGroupList1;
     eventGroupList1.emplace_back(std::move(eventGroup1));
     processorInstance.Process(eventGroupList1);
-    
+
     std::string outJson = eventGroupList1[0].ToJsonString();
     // judge result
     std::string expectJson = R"({
@@ -125,7 +125,7 @@ void ProcessorFilterNativeUnittest::TestLogFilterRule() {
     std::vector<PipelineEventGroup> eventGroupList2;
     eventGroupList2.emplace_back(std::move(eventGroup2));
     processorInstance.Process(eventGroupList2);
-    
+
     outJson = eventGroupList2[0].ToJsonString();
     // judge result
     APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
@@ -194,7 +194,7 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         std::vector<PipelineEventGroup> eventGroupList1;
         eventGroupList1.emplace_back(std::move(eventGroup1));
         processorInstance.Process(eventGroupList1);
-        
+
         std::string outJson = eventGroupList1[0].ToJsonString();
         // judge result
         std::string expectJson = R"({
@@ -236,7 +236,7 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         std::vector<PipelineEventGroup> eventGroupList2;
         eventGroupList2.emplace_back(std::move(eventGroup2));
         processorInstance.Process(eventGroupList2);
-        
+
         outJson = eventGroupList2[0].ToJsonString();
         // judge result
         APSARA_TEST_STREQ_FATAL("null", CompactJson(outJson).c_str());
@@ -349,7 +349,7 @@ void ProcessorFilterNativeUnittest::TestBaseFilter() {
         std::vector<PipelineEventGroup> eventGroupList1;
         eventGroupList1.emplace_back(std::move(eventGroup1));
         processorInstance.Process(eventGroupList1);
-        
+
         std::string outJson = eventGroupList1[0].ToJsonString();
         // judge result
         // judge result
