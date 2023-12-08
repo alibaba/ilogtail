@@ -109,7 +109,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "content" : "line1\nline2"
                 },
                 "timestamp" : 12345678901,
@@ -119,7 +118,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "content" : "line3\nline4"
                 },
                 "timestamp" : 12345678901,
@@ -175,8 +173,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -184,8 +181,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "content" : "value3\tvalue4",
-                    "__file_offset__": "0"
+                    "content" : "value3\tvalue4"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -209,7 +205,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "key1" : "value1",
                     "key2" : "value2",
                     "rawLog" : "value1\tvalue2"
@@ -221,7 +216,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "key1" : "value3",
                     "key2" : "value4",
                     "rawLog" : "value3\tvalue4"
@@ -258,8 +252,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -267,8 +260,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "content" : "value3\tvalue4",
-                    "__file_offset__": "0"
+                    "content" : "value3\tvalue4"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -292,7 +284,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "key2" : "value2",
                     "rawLog" : "value1"
                 },
@@ -303,7 +294,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "key2" : "value4",
                     "rawLog" : "value3"
                 },
@@ -339,8 +329,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -348,8 +337,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "content" : "value3\tvalue4",
-                    "__file_offset__": "0"
+                    "content" : "value3\tvalue4"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -373,7 +361,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "content" : "value1",
                     "key2" : "value2",
                     "rawLog" : "value1\tvalue2"
@@ -385,7 +372,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "content" : "value3",
                     "key2" : "value4",
                     "rawLog" : "value3\tvalue4"
@@ -449,8 +435,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -458,8 +443,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -467,8 +451,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -476,8 +459,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -485,8 +467,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -545,8 +526,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -554,8 +534,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -563,8 +542,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -572,8 +550,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -581,8 +558,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -641,8 +617,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -650,8 +625,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -659,8 +633,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -668,8 +641,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -677,8 +649,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
