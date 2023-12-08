@@ -15,13 +15,17 @@
  */
 
 #pragma once
+
 #include <stdio.h>
+
+#include <atomic>
+#include <condition_variable>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <atomic>
-#include "common/Thread.h"
+
 #include "common/Lock.h"
+#include "common/Thread.h"
 #include "profile_sender/ProfileSender.h"
 
 namespace logtail {

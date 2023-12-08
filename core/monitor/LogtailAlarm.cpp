@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "LogtailAlarm.h"
+#include "monitor/LogtailAlarm.h"
+
+#include "LogFileProfiler.h"
+#include "app_config/AppConfig.h"
 #include "common/Constants.h"
+#include "common/LogtailCommonFlags.h"
 #include "common/StringTools.h"
 #include "common/Thread.h"
-#include "common/LogtailCommonFlags.h"
-#include "common/version.h"
 #include "common/TimeUtil.h"
+#include "common/version.h"
+#include "config_manager/ConfigManager.h"
 #include "log_pb/sls_logs.pb.h"
 #include "sender/Sender.h"
-#include "config_manager/ConfigManager.h"
-#include "app_config/AppConfig.h"
-#include "LogFileProfiler.h"
 
 DEFINE_FLAG_INT32(logtail_alarm_interval, "the interval of two same type alarm message", 30);
 DEFINE_FLAG_INT32(logtail_low_level_alarm_speed, "the speed(count/second) which logtail's low level alarm allow", 100);
@@ -166,24 +167,24 @@ void LogtailAlarm::SendAllRegionAlarm() {
                 continue;
             }
 
-                // LOG_DEBUG(sLogger, ("3Send Alarm", region)("region", sendRegionIndex)("alarm index",
-                // mMessageType[sendAlarmTypeIndex]));
-                map<string, LogtailAlarmMessage*>& alarmMap = alarmBufferVec[sendAlarmTypeIndex];
-                if (alarmMap.size() == 0
-                    || currentTime - lastUpdateTimeVec[sendAlarmTypeIndex] < INT32_FLAG(logtail_alarm_interval)) {
-                    // go next alarm type
-                    ++sendAlarmTypeIndex;
-                    continue;
-                }
-                // check sender queue status, if invalid jump this region
-                LogstoreFeedBackKey alarmPrjLogstoreKey = GenerateLogstoreFeedBackKey(
-                    ProfileSender::GetInstance()->GetProfileProjectName(region), string("logtail_alarm"));
-                if (!Sender::Instance()->GetSenderFeedBackInterface()->IsValidToPush(alarmPrjLogstoreKey)) {
-                    // jump this region
-                    ++sendRegionIndex;
-                    sendAlarmTypeIndex = 0;
-                    continue;
-                }
+            // LOG_DEBUG(sLogger, ("3Send Alarm", region)("region", sendRegionIndex)("alarm index",
+            // mMessageType[sendAlarmTypeIndex]));
+            map<string, LogtailAlarmMessage*>& alarmMap = alarmBufferVec[sendAlarmTypeIndex];
+            if (alarmMap.size() == 0
+                || currentTime - lastUpdateTimeVec[sendAlarmTypeIndex] < INT32_FLAG(logtail_alarm_interval)) {
+                // go next alarm type
+                ++sendAlarmTypeIndex;
+                continue;
+            }
+            // check sender queue status, if invalid jump this region
+            LogstoreFeedBackKey alarmPrjLogstoreKey = GenerateLogstoreFeedBackKey(
+                ProfileSender::GetInstance()->GetProfileProjectName(region), string("logtail_alarm"));
+            if (!Sender::Instance()->GetSenderFeedBackInterface()->IsValidToPush(alarmPrjLogstoreKey)) {
+                // jump this region
+                ++sendRegionIndex;
+                sendAlarmTypeIndex = 0;
+                continue;
+            }
 
             // LOG_DEBUG(sLogger, ("4Send Alarm", region)("region", sendRegionIndex)("alarm index",
             // mMessageType[sendAlarmTypeIndex]));
@@ -231,24 +232,23 @@ void LogtailAlarm::SendAllRegionAlarm() {
                     contentPtr->set_value(messagePtr->mProjectName);
                 }
 
-                    if (!messagePtr->mCategory.empty()) {
-                        contentPtr = logPtr->add_contents();
-                        contentPtr->set_key("category");
-                        contentPtr->set_value(messagePtr->mCategory);
-                    }
-                    delete messagePtr;
+                if (!messagePtr->mCategory.empty()) {
+                    contentPtr = logPtr->add_contents();
+                    contentPtr->set_key("category");
+                    contentPtr->set_value(messagePtr->mCategory);
                 }
-                lastUpdateTimeVec[sendAlarmTypeIndex] = currentTime;
-                alarmMap.clear();
-                ++sendAlarmTypeIndex;
+                delete messagePtr;
             }
-            if (logGroup.logs_size() <= 0) {
-                continue;
-            }
-            // this is an anonymous send and non lock send
-            ProfileSender::GetInstance()->SendToProfileProject(region, logGroup);
-        } while (true);
-    }
+            lastUpdateTimeVec[sendAlarmTypeIndex] = currentTime;
+            alarmMap.clear();
+            ++sendAlarmTypeIndex;
+        }
+        if (logGroup.logs_size() <= 0) {
+            continue;
+        }
+        // this is an anonymous send and non lock send
+        ProfileSender::GetInstance()->SendToProfileProject(region, logGroup);
+    } while (true);
 }
 
 LogtailAlarm::LogtailAlarmVector* LogtailAlarm::MakesureLogtailAlarmMapVecUnlocked(const string& region) {
