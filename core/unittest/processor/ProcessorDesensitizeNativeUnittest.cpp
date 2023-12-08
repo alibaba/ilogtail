@@ -15,6 +15,8 @@
 #include "models/LogEvent.h"
 #include "plugin/instance/ProcessorInstance.h"
 #include "processor/ProcessorDesensitizeNative.h"
+#include "processor/ProcessorSplitLogStringNative.h"
+#include "processor/ProcessorSplitRegexNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -29,6 +31,8 @@ public:
     void TestCastSensWordFail();
     void TestCastSensWordLoggroup();
     void TestCastSensWordMulti();
+    void TestMultipleLines();
+
     PipelineContext mContext;
 };
 
@@ -43,6 +47,8 @@ UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordFail);
 UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordLoggroup);
 
 UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestCastSensWordMulti);
+
+UNIT_TEST_CASE(ProcessorDesensitizeNativeUnittest, TestMultipleLines);
 
 Json::Value
 ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey = std::string("cast1"),
@@ -61,6 +67,112 @@ ProcessorDesensitizeNativeUnittest::GetCastSensWordConfig(std::string sourceKey 
     config["ReplacedContentPattern"] = Json::Value(replacedContentPattern);
     config["ReplacingAll"] = Json::Value(replaceAll);
     return config;
+}
+
+void ProcessorDesensitizeNativeUnittest::TestMultipleLines() {
+    std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,
+dbf@@@324 FS2$%pwd,pwd=saf543#$@,,",
+                    "log.file.offset": "0"
+                },
+                "timestampNanosecond" : 0,
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+    })";
+
+
+    std::string expectJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "asf@@@324 FS2$%pwd,pwd=********,,",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            },
+            {
+                "contents" :
+                {
+                    "content" : "dbf@@@324 FS2$%pwd,pwd=********,,",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "timestampNanosecond" : 0,
+                "type" : 1
+            }
+        ]
+    })";
+
+    // ProcessorSplitLogStringNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Json::Value config = GetCastSensWordConfig("content");
+        std::string pluginId = "testID";
+        config["SplitChar"] = "\n";
+        config["AppendingLogPositionMeta"] = false;
+
+        // run function ProcessorSplitLogStringNative
+        ProcessorSplitLogStringNative processorSplitLogStringNative;
+        processorSplitLogStringNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
+        processorSplitLogStringNative.Process(eventGroup);
+
+        // run function ProcessorDesensitizeNative
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        processor.Process(eventGroup);
+
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
+    // ProcessorSplitRegexNative
+    {
+        // make events
+        auto sourceBuffer = std::make_shared<SourceBuffer>();
+        PipelineEventGroup eventGroup(sourceBuffer);
+        eventGroup.FromJsonString(inJson);
+
+        // make config
+        Json::Value config = GetCastSensWordConfig("content");
+        std::string pluginId = "testID";
+        config["StartPattern"] = ".*";
+        config["UnmatchedContentTreatment"] = "split";
+        config["AppendingLogPositionMeta"] = false;
+
+        // run function ProcessorSplitRegexNative
+        ProcessorSplitRegexNative processorSplitRegexNative;
+        processorSplitRegexNative.SetContext(mContext);
+        APSARA_TEST_TRUE_FATAL(processorSplitRegexNative.Init(config));
+        processorSplitRegexNative.Process(eventGroup);
+
+        // run function ProcessorDesensitizeNative
+        ProcessorDesensitizeNative& processor = *(new ProcessorDesensitizeNative);
+        ProcessorInstance processorInstance(&processor, pluginId);
+        APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+        processor.Process(eventGroup);
+
+        // judge result
+        std::string outJson = eventGroup.ToJsonString();
+        APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    }
 }
 
 void ProcessorDesensitizeNativeUnittest::TestInit() {
@@ -103,7 +215,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -153,7 +265,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -203,7 +315,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -254,7 +366,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -305,7 +417,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -360,7 +472,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -412,7 +524,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -464,7 +576,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -516,7 +628,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -569,7 +681,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -622,7 +734,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -675,7 +787,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -728,7 +840,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -781,7 +893,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -835,7 +947,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -886,7 +998,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -938,7 +1050,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -990,7 +1102,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1059,7 +1171,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
         processorInstance.Process(eventGroupList);
-        
     }
     {
         Json::Value config = GetCastSensWordConfig("id", "const", "********", "\\d{6}", "\\d{8}", true);
@@ -1070,7 +1181,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
         processorInstance.Process(eventGroupList);
-        
     }
     {
         Json::Value config = GetCastSensWordConfig("content", "const", "********", "'password':'", "[^']*", true);
@@ -1081,7 +1191,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
         APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
         // run function
         processorInstance.Process(eventGroupList);
-        
     }
 
     // judge result
@@ -1151,7 +1260,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1202,7 +1311,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1253,7 +1362,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1305,7 +1414,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :
@@ -1357,7 +1466,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
         std::vector<PipelineEventGroup> eventGroupList;
         eventGroupList.emplace_back(std::move(eventGroup));
         processorInstance.Process(eventGroupList);
-        
+
         // judge result
         std::string expectJson = R"({
             "events" :

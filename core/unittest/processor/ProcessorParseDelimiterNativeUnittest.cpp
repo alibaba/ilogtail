@@ -20,6 +20,7 @@
 #include "plugin/instance/ProcessorInstance.h"
 #include "processor/ProcessorParseDelimiterNative.h"
 #include "processor/ProcessorSplitLogStringNative.h"
+#include "processor/ProcessorSplitRegexNative.h"
 #include "unittest/Unittest.h"
 
 namespace logtail {
@@ -41,6 +42,7 @@ public:
     void TestProcessEventKeepUnmatch();
     void TestProcessEventDiscardUnmatch();
     void TestAllowingShortenedFields();
+    void TestExtend();
     PipelineContext mContext;
 };
 
@@ -54,6 +56,7 @@ UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestAddLog);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessEventKeepUnmatch);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestProcessEventDiscardUnmatch);
 UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestAllowingShortenedFields);
+UNIT_TEST_CASE(ProcessorParseDelimiterNativeUnittest, TestExtend);
 
 void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
     // make config
@@ -134,6 +137,254 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
     // judge result
     std::string outJson = eventGroup.ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+    // AllowingShortenedFields false
+    {
+        std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "123@@45
+012@@34",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+        })";
+
+        std::string expectJson = R"({
+            "events": [
+                {
+                    "contents": {
+                        "__raw__": "123@@45",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "__raw__": "012@@34",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+
+        // ProcessorSplitLogStringNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["SplitChar"] = '\n';
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitLogStringNative
+            ProcessorSplitLogStringNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+        // ProcessorSplitRegexNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["StartPattern"] = ".*";
+            config["UnmatchedContentTreatment"] = "split";
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitRegexNative
+            ProcessorSplitRegexNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+    }
+    // AllowingShortenedFields true
+    {
+        std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "123@@45
+012@@34",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+        })";
+
+        std::string expectJson = R"({
+            "events": [
+                {
+                    "contents": {
+                        "a": "123",
+                        "b": "45",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "a": "012",
+                        "b": "34",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+
+        // ProcessorSplitLogStringNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = true;
+            config["SplitChar"] = '\n';
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitLogStringNative
+            ProcessorSplitLogStringNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+        // ProcessorSplitRegexNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = true;
+            config["StartPattern"] = ".*";
+            config["UnmatchedContentTreatment"] = "split";
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitRegexNative
+            ProcessorSplitRegexNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+    }
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestInit() {
@@ -158,82 +409,645 @@ void ProcessorParseDelimiterNativeUnittest::TestInit() {
     APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
 }
 
+void ProcessorParseDelimiterNativeUnittest::TestExtend() {
+    // not Extend
+    {
+        std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "123@@456@@1@@2@@3
+012@@345@@1@@2@@3",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+        })";
+
+        std::string expectJson = R"({
+            "events": [
+                {
+                    "contents": {
+                        "__column3__": "@@2@@3",
+                        "a": "123",
+                        "b": "456",
+                        "c": "1",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "__column3__": "@@2@@3",
+                        "a": "012",
+                        "b": "345",
+                        "c": "1",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+
+        // ProcessorSplitLogStringNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["OverflowedFieldsTreatment"] = "keep";
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["SplitChar"] = '\n';
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitLogStringNative
+            ProcessorSplitLogStringNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+        // ProcessorSplitRegexNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["OverflowedFieldsTreatment"] = "keep";
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["StartPattern"] = ".*";
+            config["UnmatchedContentTreatment"] = "split";
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitRegexNative
+            ProcessorSplitRegexNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+    }
+    // not Extend
+    {
+        std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "123@@456@@1@@2@@3
+012@@345@@1@@2@@3",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+        })";
+
+        std::string expectJson = R"({
+            "events": [
+                {
+                    "contents": {
+                        "__column3__": "2",
+                        "__column4__": "3",
+                        "a": "123",
+                        "b": "456",
+                        "c": "1",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "__column3__": "2",
+                        "__column4__": "3",
+                        "a": "012",
+                        "b": "345",
+                        "c": "1",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+
+        // ProcessorSplitLogStringNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["SplitChar"] = '\n';
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitLogStringNative
+            ProcessorSplitLogStringNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+        // ProcessorSplitRegexNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["StartPattern"] = ".*";
+            config["UnmatchedContentTreatment"] = "split";
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitRegexNative
+            ProcessorSplitRegexNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+    }
+}
+
 void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
-    // make config
-    Json::Value config;
-    config["SourceKey"] = "content";
-    config["Separator"] = "@@";
-    config["Keys"] = Json::arrayValue;
-    config["Keys"].append("a");
-    config["Keys"].append("b");
-    config["Keys"].append("c");
-    config["KeepingSourceWhenParseFail"] = false;
-    config["KeepingSourceWhenParseSucceed"] = false;
-    config["AllowingShortenedFields"] = false;
-    config["SplitChar"] = '\n';
-    config["AppendingLogPositionMeta"] = true;
-    // make events
-    auto sourceBuffer = std::make_shared<SourceBuffer>();
-    PipelineEventGroup eventGroup(sourceBuffer);
-    std::string inJson = R"({
+    // case < field
+    {
+        std::string inJson = R"({
+        "events" :
+        [
+            {
+                "contents" :
+                {
+                    "content" : "123@@456
+012@@345",
+                    "log.file.offset": "0"
+                },
+                "timestamp" : 12345678901,
+                "type" : 1
+            }
+        ]
+        })";
+
+        std::string expectJson = R"({
+            "events": [
+                {
+                    "contents": {
+                        "__raw__": "123@@456",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "__raw__": "012@@345",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+
+        // ProcessorSplitLogStringNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["SplitChar"] = '\n';
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+
+            // run function ProcessorSplitLogStringNative
+            ProcessorSplitLogStringNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+        // ProcessorSplitRegexNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["StartPattern"] = ".*";
+            config["UnmatchedContentTreatment"] = "split";
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitRegexNative
+            ProcessorSplitRegexNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+    }
+
+    // case > field
+    {
+        std::string inJson = R"({
         "events" :
         [
             {
                 "contents" :
                 {
                     "content" : "123@@456@@789
-012@@345@@678
-"
+012@@345@@678",
+                    "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
             }
         ]
-    })";
-    eventGroup.FromJsonString(inJson);
-    // run function ProcessorSplitLogStringNative
-    ProcessorSplitLogStringNative processorSplitLogStringNative;
-    processorSplitLogStringNative.SetContext(mContext);
-    std::string pluginId = "testID";
-    APSARA_TEST_TRUE_FATAL(processorSplitLogStringNative.Init(config));
-    processorSplitLogStringNative.Process(eventGroup);
-    // run function ProcessorParseDelimiterNative
-    ProcessorParseDelimiterNative& processorDelimiterNative = *(new ProcessorParseDelimiterNative);
-    ProcessorInstance processorInstance(&processorDelimiterNative, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
-    processorDelimiterNative.Process(eventGroup);
-    std::string expectJson = R"({
+        })";
+
+        std::string expectJson = R"({
+            "events": [
+                {
+                    "contents": {
+                        "__column2__": "789",
+                        "a": "123",
+                        "b": "456",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                },
+                {
+                    "contents": {
+                        "__column2__": "678",
+                        "a": "012",
+                        "b": "345",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp": 12345678901,
+                    "timestampNanosecond": 0,
+                    "type": 1
+                }
+            ]
+        })";
+
+        // ProcessorSplitLogStringNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["SplitChar"] = '\n';
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitLogStringNative
+            ProcessorSplitLogStringNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+        // ProcessorSplitRegexNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["StartPattern"] = ".*";
+            config["UnmatchedContentTreatment"] = "split";
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitRegexNative
+            ProcessorSplitRegexNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+    }
+
+    // case = field
+    {
+        std::string inJson = R"({
         "events" :
         [
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
-                    "a": "123",
-                    "b": "456",
-                    "c": "789"
+                    "content" : "123@@456@@789
+012@@345@@678",
+                    "log.file.offset": "0"
                 },
                 "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
-                "type" : 1
-            },
-            {
-                "contents" :
-                {
-                    "__file_offset__": "14",
-                    "a": "012",
-                    "b": "345",
-                    "c": "678"
-                },
-                "timestamp" : 12345678901,
-                "timestampNanosecond": 0,
                 "type" : 1
             }
         ]
-    })";
-    // judge result
-    std::string outJson = eventGroup.ToJsonString();
-    APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        })";
+
+        std::string expectJson = R"({
+            "events" :
+            [
+                {
+                    "contents" :
+                    {
+                        "a": "123",
+                        "b": "456",
+                        "c": "789",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
+                    "type" : 1
+                },
+                {
+                    "contents" :
+                    {
+                        "a": "012",
+                        "b": "345",
+                        "c": "678",
+                        "log.file.offset": "0"
+                    },
+                    "timestamp" : 12345678901,
+                    "timestampNanosecond": 0,
+                    "type" : 1
+                }
+            ]
+        })";
+
+        // ProcessorSplitLogStringNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["SplitChar"] = '\n';
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitLogStringNative
+            ProcessorSplitLogStringNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+        // ProcessorSplitRegexNative
+        {
+            // make events
+            auto sourceBuffer = std::make_shared<SourceBuffer>();
+            PipelineEventGroup eventGroup(sourceBuffer);
+            eventGroup.FromJsonString(inJson);
+
+            // make config
+            Json::Value config;
+            config["SourceKey"] = "content";
+            config["Separator"] = "@@";
+            config["Quote"] = "'";
+            config["Keys"] = Json::arrayValue;
+            config["Keys"].append("a");
+            config["Keys"].append("b");
+            config["Keys"].append("c");
+            config["KeepingSourceWhenParseFail"] = true;
+            config["KeepingSourceWhenParseSucceed"] = false;
+            config["CopingRawLog"] = false;
+            config["RenamedSourceKey"] = "__raw__";
+            config["AllowingShortenedFields"] = false;
+            config["StartPattern"] = ".*";
+            config["UnmatchedContentTreatment"] = "split";
+            config["AppendingLogPositionMeta"] = false;
+
+            std::string pluginId = "testID";
+            // run function ProcessorSplitRegexNative
+            ProcessorSplitRegexNative processor;
+            processor.SetContext(mContext);
+            APSARA_TEST_TRUE_FATAL(processor.Init(config));
+            processor.Process(eventGroup);
+            // run function ProcessorParseDelimiterNative
+            ProcessorParseDelimiterNative& processorParseDelimiterNative = *(new ProcessorParseDelimiterNative);
+            ProcessorInstance processorInstance(&processorParseDelimiterNative, pluginId);
+            APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+            processorParseDelimiterNative.Process(eventGroup);
+            // judge result
+            std::string outJson = eventGroup.ToJsonString();
+            APSARA_TEST_STREQ_FATAL(CompactJson(expectJson).c_str(), CompactJson(outJson).c_str());
+        }
+    }
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
@@ -608,7 +1422,8 @@ void ProcessorParseDelimiterNativeUnittest::TestAddLog() {
     char value[] = "value";
     processor.AddLog(key, value, *logEvent);
     // check observability
-    APSARA_TEST_EQUAL_FATAL(strlen(key) + strlen(value) + 5, processor.GetContext().GetProcessProfile().logGroupSize);
+    APSARA_TEST_EQUAL_FATAL(int(strlen(key) + strlen(value) + 5),
+                            processor.GetContext().GetProcessProfile().logGroupSize);
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
@@ -749,16 +1564,16 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
     // check observablity
     int count = 5;
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
-    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "value1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcOutRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(expectValue.length() * count), processor.mProcParseInSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mProcOutRecordsTotal->GetValue());
     expectValue = "rawLogvalue1";
-    APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(expectValue.length() * count), processor.mProcParseOutSizeBytes->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcDiscardRecordsTotal->GetValue());
 
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mProcParseErrorTotal->GetValue());
 }
 
 void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
@@ -844,14 +1659,14 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
     // check observablity
     int count = 5;
     APSARA_TEST_EQUAL_FATAL(count, processor.GetContext().GetProcessProfile().parseFailures);
-    APSARA_TEST_EQUAL_FATAL(count, processorInstance.mProcInRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processorInstance.mProcInRecordsTotal->GetValue());
     std::string expectValue = "value1";
     APSARA_TEST_EQUAL_FATAL((expectValue.length()) * count, processor.mProcParseInSizeBytes->GetValue());
     // discard unmatch, so output is 0
-    APSARA_TEST_EQUAL_FATAL(0, processorInstance.mProcOutRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseOutSizeBytes->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcDiscardRecordsTotal->GetValue());
-    APSARA_TEST_EQUAL_FATAL(count, processor.mProcParseErrorTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processorInstance.mProcOutRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(0), processor.mProcParseOutSizeBytes->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mProcDiscardRecordsTotal->GetValue());
+    APSARA_TEST_EQUAL_FATAL(uint64_t(count), processor.mProcParseErrorTotal->GetValue());
 }
 
 } // namespace logtail
