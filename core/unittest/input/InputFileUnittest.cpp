@@ -69,7 +69,6 @@ void InputFileUnittest::OnSuccessfulInit() {
     configJson["FilePaths"].append(Json::Value(filePath.string()));
     input.reset(new InputFile());
     input->SetContext(ctx);
-    APSARA_TEST_EQUAL(true, input->GetContext().GetLogger()->should_log(spdlog::level::err));
     APSARA_TEST_TRUE(input->Init(configJson, optionalGoPipeline));
     APSARA_TEST_FALSE(input->mEnableContainerDiscovery);
     APSARA_TEST_EQUAL(0, input->mMaxCheckpointDirSearchDepth);

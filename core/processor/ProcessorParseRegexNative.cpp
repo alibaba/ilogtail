@@ -48,6 +48,14 @@ bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
         PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
     }
+    // Since the 'keys' field in old logtail config is an array with a single comma separated string inside (e.g.,
+    // ["k1,k2,k3"]), which is different from openAPI, chances are the 'key' field in openAPI is unintentionally set to
+    // the 'keys' field in logtail config. However, such wrong format can still work in logtail due to the conversion
+    // done in the server, which simply concatenates all strings in the array with comma. Therefor, to be compatibal
+    // with such wrong behavior, we must explicitly allow such format.
+    if (mKeys.size() == 1 && mKeys[0].find(',') != std::string::npos) {
+        mKeys = SplitString(mKeys[0], ",");
+    }
     for (const auto& it : mKeys) {
         if (it == mSourceKey) {
             mSourceKeyOverwritten = true;
