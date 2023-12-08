@@ -27,7 +27,7 @@
 #include <sys/types.h>
 
 #include <vector>
-#if !defined(LOGTAIL_NO_TC_MALLOC)
+#ifndef LOGTAIL_NO_TC_MALLOC
 #include <gperftools/malloc_extension.h>
 #include <gperftools/tcmalloc.h>
 #endif

@@ -15,11 +15,12 @@
  */
 
 #pragma once
+#include <boost/thread.hpp>
 
-#include <thread>
-#include <memory>
-#include <utility>
 #include <functional>
+#include <memory>
+#include <thread>
+#include <utility>
 
 #include "boost/thread.hpp"
 
