@@ -80,7 +80,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "rawLog" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"}",
                         "time" : "07/Jul/2022:10:30:28",
                         "url" : "POST /PutData?Category=YunOsAccountOpLog HTTP/1.1"
@@ -92,7 +91,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "92",
                         "__raw_log__" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":asdfsadf,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
                         "rawLog" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":asdfsadf,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}"
                     },
@@ -118,7 +116,7 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             config["CopingRawLog"] = true;
             config["RenamedSourceKey"] = "rawLog";
             config["SplitChar"] = '\0';
-            config["AppendingLogPositionMeta"] = true;
+            config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
 
@@ -161,7 +159,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "rawLog" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"}",
                         "time" : "07/Jul/2022:10:30:28",
                         "url" : "POST /PutData?Category=YunOsAccountOpLog HTTP/1.1"
@@ -173,7 +170,6 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "92",
                         "address" : "{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"}",
                         "age":"25",
                         "courses":"[\"Math\",\"English\",\"Science\"]",
@@ -204,7 +200,7 @@ void ProcessorParseJsonNativeUnittest::TestMultipleLines() {
             config["CopingRawLog"] = true;
             config["RenamedSourceKey"] = "rawLog";
             config["SplitChar"] = '\0';
-            config["AppendingLogPositionMeta"] = true;
+            config["AppendingLogPositionMeta"] = false;
 
             std::string pluginId = "testID";
 
@@ -280,8 +276,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
             {
                 "contents" :
                 {
-                    "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"}",
-                    "__file_offset__": "0"
+                    "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"}"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -290,8 +285,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
             {
                 "contents" :
                 {
-                    "content" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
-                    "__file_offset__": "0"
+                    "content" : "{\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -315,7 +309,6 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"}",
                     "time" : "07/Jul/2022:10:30:28",
                     "url" : "POST /PutData?Category=YunOsAccountOpLog HTTP/1.1"
@@ -327,7 +320,6 @@ void ProcessorParseJsonNativeUnittest::TestProcessJson() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "address" : "{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"}",
                     "age":"25",
                     "courses":"[\"Math\",\"English\",\"Science\"]",
@@ -365,8 +357,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
             {
                 "contents" :
                 {
-                    "content" : "{\"content\":\"content_test\",\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
-                    "__file_offset__": "0"
+                    "content" : "{\"content\":\"content_test\",\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -391,7 +382,6 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonContent() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "address" : "{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"}",
                     "age":"25",
                     "content":"content_test",
@@ -430,8 +420,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
             {
                 "contents" :
                 {
-                    "content" : "{\"rawLog\":\"content_test\",\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}",
-                    "__file_offset__": "0"
+                    "content" : "{\"rawLog\":\"content_test\",\"name\":\"Mike\",\"age\":25,\"is_student\":false,\"address\":{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"},\"courses\":[\"Math\",\"English\",\"Science\"],\"scores\":{\"Math\":90,\"English\":85,\"Science\":95}}"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -456,7 +445,6 @@ void ProcessorParseJsonNativeUnittest::TestProcessJsonRaw() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "address" : "{\"city\":\"Hangzhou\",\"postal_code\":\"100000\"}",
                     "age":"25",
                     "courses":"[\"Math\",\"English\",\"Science\"]",
@@ -495,8 +483,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"",
-                    "__file_offset__": "0"
+                    "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\""
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -540,7 +527,6 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\""
                 },
                 "timestamp" : 12345678901,
@@ -572,8 +558,7 @@ void ProcessorParseJsonNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\"",
-                    "__file_offset__": "0"
+                    "content" : "{\"url\": \"POST /PutData?Category=YunOsAccountOpLog HTTP/1.1\",\"time\": \"07/Jul/2022:10:30:28\""
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,

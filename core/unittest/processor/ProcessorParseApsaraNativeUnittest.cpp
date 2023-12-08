@@ -65,8 +65,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
                 {
                     "content" : "[2023-09-04 13:15:50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1
 [2023-09-04 13:15:33.2]\t[INFO]\t[2]\t/ilogtail/AppConfigBase.cpp:2\t\tAppConfigBase AppConfigBase:2
-[2023-09-04 13:15:22.3]\t[WARNING]\t[3]\t/ilogtail/AppConfigBase.cpp:3\t\tAppConfigBase AppConfigBase:3",
-                    "log.file.offset": "0"
+[2023-09-04 13:15:22.3]\t[WARNING]\t[3]\t/ilogtail/AppConfigBase.cpp:3\t\tAppConfigBase AppConfigBase:3"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -76,8 +75,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
                 {
                     "content" : "[2023-09-04 13:15
 :50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1
-[2023-09-04 13:15:22.3]\t[WARNING]\t[3]\t/ilogtail/AppConfigBase.cpp:3\t\tAppConfigBase AppConfigBase:3",
-                    "log.file.offset": "0"
+[2023-09-04 13:15:22.3]\t[WARNING]\t[3]\t/ilogtail/AppConfigBase.cpp:3\t\tAppConfigBase AppConfigBase:3"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -94,7 +92,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
                     "AppConfigBase AppConfigBase": "1",
                     "__LEVEL__": "ERROR",
                     "__THREAD__": "1",
-                    "log.file.offset": "0",
                     "microtime": "1693833350100000"
                 },
                 "timestamp": 1693833350,
@@ -107,7 +104,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
                     "AppConfigBase AppConfigBase": "2",
                     "__LEVEL__": "INFO",
                     "__THREAD__": "2",
-                    "log.file.offset": "0",
                     "microtime": "1693833333200000"
                 },
                 "timestamp": 1693833333,
@@ -120,7 +116,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
                     "AppConfigBase AppConfigBase": "3",
                     "__LEVEL__": "WARNING",
                     "__THREAD__": "3",
-                    "log.file.offset": "0",
                     "microtime": "1693833322300000"
                 },
                 "timestamp": 1693833322,
@@ -129,8 +124,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
             },
             {
                 "contents": {
-                    "__raw__": "[2023-09-04 13:15",
-                    "log.file.offset": "0"
+                    "__raw__": "[2023-09-04 13:15"
                 },
                 "timestamp": 12345678901,
                 "timestampNanosecond": 0,
@@ -138,8 +132,7 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
             },
             {
                 "contents": {
-                    "__raw__": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1",
-                    "log.file.offset": "0"
+                    "__raw__": ":50.1]\t[ERROR]\t[1]\t/ilogtail/AppConfigBase.cpp:1\t\tAppConfigBase AppConfigBase:1"
                 },
                 "timestamp": 12345678901,
                 "timestampNanosecond": 0,
@@ -151,7 +144,6 @@ void ProcessorParseApsaraNativeUnittest::TestMultipleLines() {
                     "AppConfigBase AppConfigBase": "3",
                     "__LEVEL__": "WARNING",
                     "__THREAD__": "3",
-                    "log.file.offset": "0",
                     "microtime": "1693833322300000"
                 },
                 "timestamp": 1693833322,
@@ -270,8 +262,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:04.862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
-                    "__file_offset__": "0"
+                    "content" : "[2023-09-04 13:15:04.862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -279,8 +270,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:16:04.862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
-                    "__file_offset__": "0"
+                    "content" : "[2023-09-04 13:16:04.862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -288,8 +278,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "[1693833364862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
-                    "__file_offset__": "0"
+                    "content" : "[1693833364862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -315,7 +304,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
                     "AppConfigBase AppConfigBase": "success",
                     "__LEVEL__": "INFO",
                     "__THREAD__": "385658",
-                    "__file_offset__": "0",
                     "microtime": "1693833304862181"
                 },
                 "timestamp": 1693833304,
@@ -328,7 +316,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
                     "AppConfigBase AppConfigBase": "success",
                     "__LEVEL__": "INFO",
                     "__THREAD__": "385658",
-                    "__file_offset__": "0",
                     "microtime": "1693833364862181"
                 },
                 "timestamp": 1693833364,
@@ -341,7 +328,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLine() {
                     "AppConfigBase AppConfigBase": "success",
                     "__LEVEL__": "INFO",
                     "__THREAD__": "385658",
-                    "__file_offset__": "0",
                     "microtime": "1693833364862181"
                 },
                 "timestamp": 1693833364,
@@ -373,8 +359,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:0]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
-                    "__file_offset__": "0"
+                    "content" : "[2023-09-04 13:15:0]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -382,8 +367,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:16:0[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
-                    "__file_offset__": "0"
+                    "content" : "[2023-09-04 13:16:0[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -391,8 +375,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessWholeLinePart() {
             {
                 "contents" :
                 {
-                    "content" : "[1234560	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
-                    "__file_offset__": "0"
+                    "content" : "[1234560	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -442,8 +425,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:04.862181]	[INFO]	[385658]	content:100		rawLog:success		__raw_log__:success",
-                    "__file_offset__": "0"
+                    "content" : "[2023-09-04 13:15:04.862181]	[INFO]	[385658]	content:100		rawLog:success		__raw_log__:success"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -451,8 +433,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -476,7 +457,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
                 "contents": {
                     "__LEVEL__": "INFO",
                     "__THREAD__": "385658",
-                    "__file_offset__": "0",
                     "__raw_log__": "success",
                     "content": "100",
                     "microtime": "1693833304862181",
@@ -489,7 +469,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "__raw_log__": "value1",
                     "rawLog": "value1"
                 },
@@ -522,8 +501,7 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
             {
                 "contents" :
                 {
-                    "content" : "[2023-09-04 13:15:04.862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success",
-                    "__file_offset__": "0"
+                    "content" : "[2023-09-04 13:15:04.862181]	[INFO]	[385658]	/ilogtail/AppConfigBase.cpp:100		AppConfigBase AppConfigBase:success"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -531,8 +509,7 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -558,7 +535,6 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
                     "AppConfigBase AppConfigBase": "success",
                     "__LEVEL__": "INFO",
                     "__THREAD__": "385658",
-                    "__file_offset__": "0",
                     "microtime": "1693833304862181",
                     "rawLog" : "[2023-09-04 13:15:04.862181]\t[INFO]\t[385658]\t/ilogtail/AppConfigBase.cpp:100\t\tAppConfigBase AppConfigBase:success"
                 },
@@ -569,7 +545,6 @@ void ProcessorParseApsaraNativeUnittest::TestUploadRawLog() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "__raw_log__": "value1",
                     "rawLog": "value1"
                 },
@@ -626,8 +601,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -635,8 +609,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -644,8 +617,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -653,8 +625,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -662,8 +633,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -687,7 +657,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -697,7 +666,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -707,7 +675,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -717,7 +684,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -727,7 +693,6 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -770,8 +735,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -779,8 +743,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -788,8 +751,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -797,8 +759,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -806,8 +767,7 @@ void ProcessorParseApsaraNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1

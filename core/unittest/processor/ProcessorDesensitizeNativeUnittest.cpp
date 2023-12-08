@@ -77,8 +77,7 @@ void ProcessorDesensitizeNativeUnittest::TestMultipleLines() {
                 "contents" :
                 {
                     "content" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,
-dbf@@@324 FS2$%pwd,pwd=saf543#$@,,",
-                    "log.file.offset": "0"
+dbf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -94,8 +93,7 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,",
             {
                 "contents" :
                 {
-                    "content" : "asf@@@324 FS2$%pwd,pwd=********,,",
-                    "log.file.offset": "0"
+                    "content" : "asf@@@324 FS2$%pwd,pwd=********,,"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -104,8 +102,7 @@ dbf@@@324 FS2$%pwd,pwd=saf543#$@,,",
             {
                 "contents" :
                 {
-                    "content" : "dbf@@@324 FS2$%pwd,pwd=********,,",
-                    "log.file.offset": "0"
+                    "content" : "dbf@@@324 FS2$%pwd,pwd=********,,"
                 },
                 "timestamp" : 12345678901,
                 "timestampNanosecond" : 0,
@@ -201,7 +198,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -223,7 +219,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,"
                     },
                     "timestamp" : 12345678901,
@@ -251,7 +246,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "\r\n\r\nasf@@\n\n@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -273,7 +267,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "\r\n\r\nasf@@\n\n@324 FS2$%pwd,pwd=********,,"
                     },
                     "timestamp" : 12345678901,
@@ -301,7 +294,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -323,7 +315,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -352,7 +343,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -374,7 +364,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=********,df"
                     },
                     "timestamp" : 12345678901,
@@ -403,7 +392,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=sdfpsw=543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -425,7 +413,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordConst() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=********,df"
                     },
                     "timestamp" : 12345678901,
@@ -458,7 +445,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -480,7 +466,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=91F6CFCF46787E8A02082B58F7117AFA,,"
                     },
                     "timestamp" : 12345678901,
@@ -510,7 +495,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -532,7 +516,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=91F6CFCF46787E8A02082B58F7117AFA,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -562,7 +545,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwdsaf543#$@,,pwd=12341"
                     },
                     "timestampNanosecond" : 0,
@@ -584,7 +566,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwdsaf543#$@,,pwd=F190CE9AC8445D249747CAB7BE43F7D5"
                     },
                     "timestamp" : 12345678901,
@@ -614,7 +595,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=12341"
                     },
                     "timestampNanosecond" : 0,
@@ -636,7 +616,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=F190CE9AC8445D249747CAB7BE43F7D5"
                     },
                     "timestamp" : 12345678901,
@@ -667,7 +646,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -689,7 +667,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=91F6CFCF46787E8A02082B58F7117AFA,,pwd=F190CE9AC8445D249747CAB7BE43F7D5,df"
                     },
                     "timestamp" : 12345678901,
@@ -720,7 +697,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=saf543#$@,,pwd=12341f"
                     },
                     "timestampNanosecond" : 0,
@@ -742,7 +718,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=91F6CFCF46787E8A02082B58F7117AFA,,pwd=2369B00C6DB80BF0794658225730FF0B"
                     },
                     "timestamp" : 12345678901,
@@ -773,7 +748,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=saf543#$@,,pwd=12341f,asfasf"
                     },
                     "timestampNanosecond" : 0,
@@ -795,7 +769,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "pwd=91F6CFCF46787E8A02082B58F7117AFA,,pwd=2369B00C6DB80BF0794658225730FF0B,asfasf"
                     },
                     "timestamp" : 12345678901,
@@ -826,7 +799,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -848,7 +820,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=91F6CFCF46787E8A02082B58F7117AFA,,"
                     },
                     "timestamp" : 12345678901,
@@ -879,7 +850,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,\npwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -901,7 +871,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMD5() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,\npwd=91F6CFCF46787E8A02082B58F7117AFA,,"
                     },
                     "timestamp" : 12345678901,
@@ -933,7 +902,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast0" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -955,7 +923,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast0" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestamp" : 12345678901,
@@ -984,7 +951,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "123214" : "asf@@@324 FS2$%psw,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -1006,8 +972,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "123214" : "asf@@@324 FS2$%psw,pwd=saf543#$@,,pwd=12341,df",
-                        "__file_offset__": "0"
+                        "123214" : "asf@@@324 FS2$%psw,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond" : 0,
@@ -1036,7 +1001,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -1058,7 +1022,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -1088,7 +1051,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -1110,7 +1072,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordFail() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -1137,8 +1098,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
                     "user" : "ali-sls-logtail",
                     "cast1" : "pwd=donottellanyone!,",
                     "id" : "33032119850506123X",
-                    "content" : "{'account':'18122100036969','password':'04adf38'};akProxy=null;",
-                    "__file_offset__": "0"
+                    "content" : "{'account':'18122100036969','password':'04adf38'};akProxy=null;"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -1149,8 +1109,7 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
                 {
                     "user" : "ali-sls-logtail1",
                     "cast1" : "pwd=dafddasf@@!123!,",
-                    "id" : "33032119891206123X",
-                    "__file_offset__": "0"
+                    "id" : "33032119891206123X"
                 },
                 "timestampNanosecond" : 0,
                 "timestamp" : 12345678901,
@@ -1200,7 +1159,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "cast1" : "pwd=********,",
                     "content" : "{'account':'18122100036969','password':'********'};akProxy=null;",
                     "id" : "330321********123X",
@@ -1213,7 +1171,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordLoggroup() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "cast1" : "pwd=********,",
                     "id" : "330321********123X",
                     "user" : "ali-sls-logtail1"
@@ -1246,7 +1203,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -1268,7 +1224,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,"
                     },
                     "timestamp" : 12345678901,
@@ -1297,7 +1252,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "\r\n\r\nasf@@\n\n@324 FS2$%pwd,pwd=saf543#$@,,"
                     },
                     "timestampNanosecond" : 0,
@@ -1319,7 +1273,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "\r\n\r\nasf@@\n\n@324 FS2$%pwd,pwd=********,,"
                     },
                     "timestamp" : 12345678901,
@@ -1348,7 +1301,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -1370,7 +1322,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=12341,df"
                     },
                     "timestamp" : 12345678901,
@@ -1400,7 +1351,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=saf543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -1422,7 +1372,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=********,df"
                     },
                     "timestamp" : 12345678901,
@@ -1452,7 +1401,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=sdfpsw=543#$@,,pwd=12341,df"
                     },
                     "timestampNanosecond" : 0,
@@ -1474,7 +1422,6 @@ void ProcessorDesensitizeNativeUnittest::TestCastSensWordMulti() {
                 {
                     "contents" :
                     {
-                        "__file_offset__": "0",
                         "cast1" : "asf@@@324 FS2$%pwd,pwd=********,,pwd=********,df"
                     },
                     "timestamp" : 12345678901,

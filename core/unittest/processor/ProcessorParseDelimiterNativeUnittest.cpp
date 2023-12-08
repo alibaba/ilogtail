@@ -83,8 +83,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
-                    "__file_offset__": "0"
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -92,8 +91,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -111,7 +109,6 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
         "events": [
             {
                 "contents": {
-                    "__file_offset__": "0",
                     "method": "POST",
                     "rawLog": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
                     "request_time": "0.024",
@@ -124,7 +121,6 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             },
             {
                 "contents": {
-                    "__file_offset__": "0",
                     "rawLog": "value1",
                     "time": "value1"
                 },
@@ -146,8 +142,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
                 "contents" :
                 {
                     "content" : "123@@45
-012@@34",
-                    "log.file.offset": "0"
+012@@34"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -159,8 +154,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
             "events": [
                 {
                     "contents": {
-                        "__raw__": "123@@45",
-                        "log.file.offset": "0"
+                        "__raw__": "123@@45"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -168,8 +162,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
                 },
                 {
                     "contents": {
-                        "__raw__": "012@@34",
-                        "log.file.offset": "0"
+                        "__raw__": "012@@34"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -271,8 +264,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
                 "contents" :
                 {
                     "content" : "123@@45
-012@@34",
-                    "log.file.offset": "0"
+012@@34"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -285,8 +277,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
                 {
                     "contents": {
                         "a": "123",
-                        "b": "45",
-                        "log.file.offset": "0"
+                        "b": "45"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -295,8 +286,7 @@ void ProcessorParseDelimiterNativeUnittest::TestAllowingShortenedFields() {
                 {
                     "contents": {
                         "a": "012",
-                        "b": "34",
-                        "log.file.offset": "0"
+                        "b": "34"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -419,8 +409,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
                 "contents" :
                 {
                     "content" : "123@@456@@1@@2@@3
-012@@345@@1@@2@@3",
-                    "log.file.offset": "0"
+012@@345@@1@@2@@3"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -435,8 +424,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
                         "__column3__": "@@2@@3",
                         "a": "123",
                         "b": "456",
-                        "c": "1",
-                        "log.file.offset": "0"
+                        "c": "1"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -447,8 +435,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
                         "__column3__": "@@2@@3",
                         "a": "012",
                         "b": "345",
-                        "c": "1",
-                        "log.file.offset": "0"
+                        "c": "1"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -548,8 +535,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
                 "contents" :
                 {
                     "content" : "123@@456@@1@@2@@3
-012@@345@@1@@2@@3",
-                    "log.file.offset": "0"
+012@@345@@1@@2@@3"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -565,8 +551,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
                         "__column4__": "3",
                         "a": "123",
                         "b": "456",
-                        "c": "1",
-                        "log.file.offset": "0"
+                        "c": "1"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -578,8 +563,7 @@ void ProcessorParseDelimiterNativeUnittest::TestExtend() {
                         "__column4__": "3",
                         "a": "012",
                         "b": "345",
-                        "c": "1",
-                        "log.file.offset": "0"
+                        "c": "1"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -680,8 +664,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                 "contents" :
                 {
                     "content" : "123@@456
-012@@345",
-                    "log.file.offset": "0"
+012@@345"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -693,8 +676,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
             "events": [
                 {
                     "contents": {
-                        "__raw__": "123@@456",
-                        "log.file.offset": "0"
+                        "__raw__": "123@@456"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -702,8 +684,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                 },
                 {
                     "contents": {
-                        "__raw__": "012@@345",
-                        "log.file.offset": "0"
+                        "__raw__": "012@@345"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -805,8 +786,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                 "contents" :
                 {
                     "content" : "123@@456@@789
-012@@345@@678",
-                    "log.file.offset": "0"
+012@@345@@678"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -820,8 +800,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                     "contents": {
                         "__column2__": "789",
                         "a": "123",
-                        "b": "456",
-                        "log.file.offset": "0"
+                        "b": "456"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -831,8 +810,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                     "contents": {
                         "__column2__": "678",
                         "a": "012",
-                        "b": "345",
-                        "log.file.offset": "0"
+                        "b": "345"
                     },
                     "timestamp": 12345678901,
                     "timestampNanosecond": 0,
@@ -929,8 +907,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                 "contents" :
                 {
                     "content" : "123@@456@@789
-012@@345@@678",
-                    "log.file.offset": "0"
+012@@345@@678"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -946,8 +923,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                     {
                         "a": "123",
                         "b": "456",
-                        "c": "789",
-                        "log.file.offset": "0"
+                        "c": "789"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
@@ -958,8 +934,7 @@ void ProcessorParseDelimiterNativeUnittest::TestMultipleLines() {
                     {
                         "a": "012",
                         "b": "345",
-                        "c": "678",
-                        "log.file.offset": "0"
+                        "c": "678"
                     },
                     "timestamp" : 12345678901,
                     "timestampNanosecond": 0,
@@ -1073,8 +1048,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,PutData?Category=YunOsAccountOpLog,0.024",
-                    "__file_offset__": "0"
+                    "content" : "2013-10-31 21:03:49,POST,PutData?Category=YunOsAccountOpLog,0.024"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1082,8 +1056,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:04:49,POST,PutData?Category=YunOsAccountOpLog,0.024",
-                    "__file_offset__": "0"
+                    "content" : "2013-10-31 21:04:49,POST,PutData?Category=YunOsAccountOpLog,0.024"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1103,7 +1076,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "method": "POST",
                     "request_time": "0.024",
                     "time": "2013-10-31 21:03:49",
@@ -1116,7 +1088,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "method": "POST",
                     "request_time": "0.024",
                     "time": "2013-10-31 21:04:49",
@@ -1157,8 +1128,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
-                    "__file_offset__": "0"
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1166,8 +1136,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024",
-                    "__file_offset__": "0"
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1175,8 +1144,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024",
-                    "__file_offset__": "0"
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1196,7 +1164,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "method": "POST",
                     "request_time": "0.024",
                     "time": "2013-10-31 21:03:49",
@@ -1209,7 +1176,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog": "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog,0.024"
                 },
                 "timestamp" : 12345678901,
@@ -1219,7 +1185,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessQuote() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog": "2013-10-31 21:03:49,POST,'PutData?Category=YunOs'AccountOpLog',0.024"
                 },
                 "timestamp" : 12345678901,
@@ -1258,8 +1223,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
-                    "__file_offset__": "0"
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1267,8 +1231,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1288,7 +1251,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "__raw_log__": "0.024",
                     "content": "PutData?Category=YunOsAccountOpLog",
                     "rawLog": "POST",
@@ -1301,7 +1263,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessKeyOverwritten() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "__raw_log__": "value1",
                     "rawLog": "value1"
                 },
@@ -1341,8 +1302,7 @@ void ProcessorParseDelimiterNativeUnittest::TestUploadRawLog() {
             {
                 "contents" :
                 {
-                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
-                    "__file_offset__": "0"
+                    "content" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1350,8 +1310,7 @@ void ProcessorParseDelimiterNativeUnittest::TestUploadRawLog() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1371,7 +1330,6 @@ void ProcessorParseDelimiterNativeUnittest::TestUploadRawLog() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "method": "POST",
                     "rawLog" : "2013-10-31 21:03:49,POST,'PutData?Category=YunOsAccountOpLog',0.024",
                     "request_time": "0.024",
@@ -1385,7 +1343,6 @@ void ProcessorParseDelimiterNativeUnittest::TestUploadRawLog() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "__raw_log__": "value1",
                     "rawLog": "value1"
                 },
@@ -1450,8 +1407,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1459,8 +1415,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1468,8 +1423,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1477,8 +1431,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1486,8 +1439,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1510,7 +1462,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -1520,7 +1471,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -1530,7 +1480,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -1540,7 +1489,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -1550,7 +1498,6 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "rawLog" : "value1"
                 },
                 "timestamp" : 12345678901,
@@ -1600,8 +1547,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1609,8 +1555,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1618,8 +1563,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1627,8 +1571,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -1636,8 +1579,7 @@ void ProcessorParseDelimiterNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
