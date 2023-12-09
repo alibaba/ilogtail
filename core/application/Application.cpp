@@ -1,5 +1,10 @@
 #include "application/Application.h"
 
+#ifndef LOGTAIL_NO_TC_MALLOC
+#include <gperftools/malloc_extension.h>
+#include <gperftools/tcmalloc.h>
+#endif
+
 #include <thread>
 
 #include "app_config/AppConfig.h"
@@ -19,7 +24,6 @@
 #include "event_handler/LogInput.h"
 #include "file_server/FileServer.h"
 #include "go_pipeline/LogtailPlugin.h"
-#include "gperftools/malloc_extension.h"
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "monitor/MetricExportor.h"
@@ -278,6 +282,7 @@ bool Application::TryGetUUID() {
 void Application::Exit() {
     PipelineManager::GetInstance()->StopAllPipelines();
     PluginRegistry::GetInstance()->UnloadPlugins();
+    LogtailAlarm::GetInstance()->Stop();
 #if defined(_MSC_VER)
     ReleaseWindowsSignalObject();
 #endif

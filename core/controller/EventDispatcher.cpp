@@ -27,10 +27,7 @@
 #include <sys/types.h>
 
 #include <vector>
-#ifndef LOGTAIL_NO_TC_MALLOC
-#include <gperftools/malloc_extension.h>
-#include <gperftools/tcmalloc.h>
-#endif
+
 #include "app_config/AppConfig.h"
 #include "checkpoint/CheckPointManager.h"
 #include "checkpoint/CheckpointManagerV2.h"
