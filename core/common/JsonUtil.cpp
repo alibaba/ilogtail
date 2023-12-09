@@ -89,6 +89,8 @@ string CompactJson(const string& inJson) {
             case '\\':
                 if (++ch == inJson.end()) { // skip next char after escape char
                     --ch;
+                } else {
+                    outJson << '\\';
                 }
                 break;
             default:
