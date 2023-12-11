@@ -23,7 +23,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "common/Thread.h"
 #include "config/provider/ConfigProvider.h"
 #include "config_server_pb/agent.pb.h"
 
@@ -75,9 +74,9 @@ private:
     std::vector<std::string> mConfigServerTags;
 
     std::future<void> mThreadRes;
-    std::mutex mThreadRunningMux;
+    mutable std::mutex mThreadRunningMux;
     bool mIsThreadRunning = true;
-    std::condition_variable mStopCV;
+    mutable std::condition_variable mStopCV;
     std::unordered_map<std::string, int64_t> mConfigNameVersionMap;
     bool mConfigServerAvailable = false;
 };
