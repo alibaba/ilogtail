@@ -70,7 +70,6 @@ void PollingDirFile::Start() {
     ClearCache();
     mRuningFlag = true;
     mThreadPtr = CreateThread([this]() { Polling(); });
-    LOG_INFO(sLogger, ("polling discovery", "started"));
 }
 
 void PollingDirFile::Stop() {
@@ -123,6 +122,7 @@ void PollingDirFile::CheckConfigPollingStatCount(const int32_t lastStatCount,
 }
 
 void PollingDirFile::Polling() {
+    LOG_INFO(sLogger, ("polling discovery", "started"));
     mHoldOnFlag = false;
     while (mRuningFlag) {
         LOG_DEBUG(sLogger, ("start dir file polling, mCurrentRound", mCurrentRound));

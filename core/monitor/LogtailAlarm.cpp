@@ -104,7 +104,6 @@ LogtailAlarm::LogtailAlarm() {
 
 void LogtailAlarm::Init() {
     mThreadRes = async(launch::async, &LogtailAlarm::SendAlarmLoop, this);
-    LOG_INFO(sLogger, ("alarm gathering", "started"));
 }
 
 void LogtailAlarm::Stop() {
@@ -123,9 +122,9 @@ void LogtailAlarm::Stop() {
 }
 
 bool LogtailAlarm::SendAlarmLoop() {
+    LOG_INFO(sLogger, ("alarm gathering", "started"));
     {
         unique_lock<mutex> lock(mThreadRunningMux);
-        mIsThreadRunning = true;
         while (mIsThreadRunning) {
             SendAllRegionAlarm();
             if (mStopCV.wait_for(lock, std::chrono::seconds(3), [this]() { return !mIsThreadRunning; })) {

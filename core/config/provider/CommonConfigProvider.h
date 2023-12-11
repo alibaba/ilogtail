@@ -16,8 +16,9 @@
 
 #pragma once
 
-#include <atomic>
+#include <condition_variable>
 #include <cstdint>
+#include <future>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -73,8 +74,10 @@ private:
     int mConfigServerAddressId = 0;
     std::vector<std::string> mConfigServerTags;
 
-    JThread mCheckUpdateThread;
-    std::atomic_bool mThreadIsRunning = false;
+    std::future<void> mThreadRes;
+    std::mutex mThreadRunningMux;
+    bool mIsThreadRunning = true;
+    std::condition_variable mStopCV;
     std::unordered_map<std::string, int64_t> mConfigNameVersionMap;
     bool mConfigServerAvailable = false;
 };

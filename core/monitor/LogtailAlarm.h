@@ -118,8 +118,8 @@ struct LogtailAlarmMessage {
 class LogtailAlarm {
 public:
     static LogtailAlarm* GetInstance() {
-        static LogtailAlarm ptr;
-        return &ptr;
+        static LogtailAlarm instance;
+        return &instance;
     }
 
     void Init();
@@ -147,7 +147,7 @@ private:
 
     std::future<bool> mThreadRes;
     std::mutex mThreadRunningMux;
-    bool mIsThreadRunning = false;
+    bool mIsThreadRunning = true;
     std::condition_variable mStopCV;
 
 

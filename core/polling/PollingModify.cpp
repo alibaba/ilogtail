@@ -48,7 +48,6 @@ void PollingModify::Start() {
     ClearCache();
     mRuningFlag = true;
     mThreadPtr = CreateThread([this]() { Polling(); });
-    LOG_INFO(sLogger, ("polling modify", "started"));
 }
 
 void PollingModify::Stop() {
@@ -237,7 +236,7 @@ bool PollingModify::UpdateDeletedFile(const SplitedFilePath& filePath,
 }
 
 void PollingModify::Polling() {
-    LOG_INFO(sLogger, ("PollingModify::Polling", "start"));
+    LOG_INFO(sLogger, ("polling modify", "started"));
     mHoldOnFlag = false;
     while (mRuningFlag) {
         {

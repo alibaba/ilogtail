@@ -88,7 +88,6 @@ void LogInput::Start() {
 
     mInteruptFlag = false;
     new Thread([this]() { ProcessLoop(); });
-    LOG_INFO(sLogger, ("event handle daemon", "started"));
 }
 
 void LogInput::Resume() {
@@ -344,7 +343,7 @@ void LogInput::UpdateCriticalMetric(int32_t curTime) {
 }
 
 void* LogInput::ProcessLoop() {
-    LOG_DEBUG(sLogger, ("LogInputThread", "Start"));
+    LOG_INFO(sLogger, ("event handle daemon", "started"));
     EventDispatcher* dispatcher = EventDispatcher::GetInstance();
     dispatcher->StartTimeCount();
     int32_t prevTime = time(NULL);

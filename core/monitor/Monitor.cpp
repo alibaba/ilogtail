@@ -113,7 +113,6 @@ bool LogtailMonitor::Init() {
 
     // Initialize monitor thread.
     mThreadRes = async(launch::async, &LogtailMonitor::Monitor, this);
-    LOG_INFO(sLogger, ("profiling", "started"));
     return true;
 }
 
@@ -131,12 +130,15 @@ void LogtailMonitor::Stop() {
 }
 
 void LogtailMonitor::Monitor() {
+    LOG_INFO(sLogger, ("profiling", "started"));
     int32_t lastMonitorTime = time(NULL);
     CpuStat curCpuStat;
     {
         unique_lock<mutex> lock(mThreadRunningMux);
-        mIsThreadRunning = true;
         while (mIsThreadRunning) {
+            if (mStopCV.wait_for(lock, std::chrono::seconds(1), [this]() { return !mIsThreadRunning; })) {
+                break;
+            }
             GetCpuStat(curCpuStat);
 
             // Update mRealtimeCpuStat for InputFlowControl.
@@ -195,10 +197,6 @@ void LogtailMonitor::Monitor() {
             if (BOOL_FLAG(logtail_dump_monitor_info)) {
                 if (!DumpMonitorInfo(monitorTime))
                     LOG_ERROR(sLogger, ("Fail to dump monitor info", ""));
-            }
-
-            if (mStopCV.wait_for(lock, std::chrono::seconds(1), [this]() { return !mIsThreadRunning; })) {
-                break;
             }
         }
     }
