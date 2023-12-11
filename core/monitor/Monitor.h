@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <condition_variable>>
+#include <condition_variable>
 #include <future>
 #include <mutex>
 #include <string>
