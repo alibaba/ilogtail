@@ -39,15 +39,35 @@ bool ProcessorParseApsaraNative::Init(const Json::Value& config) {
 
     // SourceKey
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
 
     // Timezone
     if (!GetOptionalStringParam(config, "Timezone", mTimezone, errorMsg)) {
-        PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
     } else if (!ParseLogTimeZoneOffsetSecond(mTimezone, false, mLogTimeZoneOffsetSecond)) {
-        PARAM_WARNING_IGNORE(
-            mContext->GetLogger(), "string param Timezone is not valid", sName, mContext->GetConfigName());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             "string param Timezone is not valid",
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
     }
 
     if (!mCommonParserOptions.Init(config, *mContext, sName)) {

@@ -16,20 +16,22 @@
 
 #pragma once
 
+#include <json/json.h>
+
 #include <cstdint>
 #include <string>
 #include <unordered_set>
 
-#include <json/json.h>
-
 namespace logtail {
+
+class PipelineContext;
 
 struct GlobalConfig {
     enum class TopicType { NONE, FILEPATH, MACHINE_GROUP_TOPIC, CUSTOM, DEFAULT };
 
     static const std::unordered_set<std::string> sNativeParam;
 
-    bool Init(const Json::Value& config, const std::string& configName, Json::Value& extendedParams);
+    bool Init(const Json::Value& config, const PipelineContext& ctx, Json::Value& extendedParams);
 
     TopicType mTopicType = TopicType::NONE;
     std::string mTopicFormat;

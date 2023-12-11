@@ -100,26 +100,28 @@ LogtailAlarm::LogtailAlarm() {
     mMessageType[OBSERVER_INIT_ALARM] = "OBSERVER_INIT_ALARM";
     mMessageType[OBSERVER_RUNTIME_ALARM] = "OBSERVER_RUNTIME_ALARM";
     mMessageType[OBSERVER_STOP_ALARM] = "OBSERVER_STOP_ALARM";
-
-    mThread.reset(new Thread([this]() { SendAlarmLoop(); }));
 }
 
-LogtailAlarm::~LogtailAlarm() {
-    Stop();
-    mThread->Wait(1000000); // thread should stop before members destruct
+void LogtailAlarm::Init() {
+    mIsThreadRunning = true;
+    mThreadRes = async(launch::async, &LogtailAlarm::SendAlarmLoop, this);
+    LOG_INFO(sLogger, ("alarm gathering", "started"));
+}
+
+void LogtailAlarm::Stop() {
+    mIsThreadRunning = false;
+    future_status s = mThreadRes.wait_for(chrono::seconds(1));
+    if (s == future_status::ready) {
+        LOG_INFO(sLogger, ("alarm gathering", "stopped successfully"));
+    } else {
+        LOG_WARNING(sLogger, ("alarm gathering", "forced to stopped"));
+    }
 }
 
 bool LogtailAlarm::SendAlarmLoop() {
-    {
-        std::unique_lock<std::mutex> lock(mStopMutex);
-        while (!mStopFlag) {
-            SendAllRegionAlarm();
-            if (mStopCV.wait_for(lock, std::chrono::seconds(3), [this]() { return mStopFlag; })) {
-                break;
-            }
-        }
+    while (mIsThreadRunning.load()) {
+        SendAllRegionAlarm();
     }
-    SendAllRegionAlarm();
     return true;
 }
 
@@ -300,15 +302,6 @@ void LogtailAlarm::SendAlarm(const LogtailAlarmType alarmType,
 
 void LogtailAlarm::ForceToSend() {
     INT32_FLAG(logtail_alarm_interval) = 0;
-}
-
-void LogtailAlarm::Stop() {
-    ForceToSend();
-    {
-        std::lock_guard<std::mutex> lock(mStopMutex);
-        mStopFlag = true;
-    }
-    mStopCV.notify_one();
 }
 
 bool LogtailAlarm::IsLowLevelAlarmValid() {

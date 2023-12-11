@@ -90,7 +90,13 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                 }
                 Config config(configName, std::move(detail));
                 if (!config.Parse()) {
-                    LOG_WARNING(sLogger, ("new config found but invalid", "skip current object")("config", configName));
+                    LOG_ERROR(sLogger, ("new config found but invalid", "skip current object")("config", configName));
+                    LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+                                                           "new config found but invalid: skip current object, config: "
+                                                               + configName,
+                                                           config.mProject,
+                                                           config.mLogstore,
+                                                           config.mRegion);
                     continue;
                 }
                 diff.mAdded.push_back(std::move(config));
@@ -124,9 +130,16 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                 if (!p) {
                     Config config(configName, std::move(detail));
                     if (!config.Parse()) {
-                        LOG_WARNING(sLogger,
-                                 ("existing invalid config modified and remains invalid",
-                                  "skip current object")("config", configName));
+                        LOG_ERROR(sLogger,
+                                    ("existing invalid config modified and remains invalid",
+                                     "skip current object")("config", configName));
+                        LogtailAlarm::GetInstance()->SendAlarm(
+                            CATEGORY_CONFIG_ALARM,
+                            "existing invalid config modified and remains invalid: skip current object, config: "
+                                + configName,
+                            config.mProject,
+                            config.mLogstore,
+                            config.mRegion);
                         continue;
                     }
                     diff.mAdded.push_back(std::move(config));
@@ -137,9 +150,16 @@ ConfigDiff ConfigWatcher::CheckConfigDiff() {
                     Config config(configName, std::move(detail));
                     if (!config.Parse()) {
                         diff.mUnchanged.push_back(configName);
-                        LOG_WARNING(sLogger,
-                                 ("existing valid config modified and becomes invalid",
-                                  "keep current pipeline running")("config", configName));
+                        LOG_ERROR(sLogger,
+                                    ("existing valid config modified and becomes invalid",
+                                     "keep current pipeline running")("config", configName));
+                        LogtailAlarm::GetInstance()->SendAlarm(
+                            CATEGORY_CONFIG_ALARM,
+                            "existing valid config modified and becomes invalid: skip current object, config: "
+                                + configName,
+                            config.mProject,
+                            config.mLogstore,
+                            config.mRegion);
                         continue;
                     }
                     diff.mModified.push_back(std::move(config));

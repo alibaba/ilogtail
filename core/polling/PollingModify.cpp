@@ -247,7 +247,7 @@ void PollingModify::Polling() {
             vector<SplitedFilePath> deletedFileVec;
             vector<Event*> pollingEventVec;
             int32_t statCount = 0;
-            LogtailMonitor::Instance()->UpdateMetric("polling_modify_size", mModifyCacheMap.size());
+            LogtailMonitor::GetInstance()->UpdateMetric("polling_modify_size", mModifyCacheMap.size());
             for (auto iter = mModifyCacheMap.begin(); iter != mModifyCacheMap.end(); ++iter) {
                 if (!mRuningFlag || mHoldOnFlag)
                     break;

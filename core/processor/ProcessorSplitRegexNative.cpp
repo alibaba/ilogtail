@@ -17,7 +17,6 @@
 #include "processor/ProcessorSplitRegexNative.h"
 
 #include <boost/regex.hpp>
-
 #include <string>
 
 #include "app_config/AppConfig.h"
@@ -38,7 +37,15 @@ bool ProcessorSplitRegexNative::Init(const Json::Value& config) {
 
     // SourceKey
     if (!GetOptionalStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceKey, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mSourceKey,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     if (!mMultiline.Init(config, *mContext, sName)) {
@@ -47,8 +54,15 @@ bool ProcessorSplitRegexNative::Init(const Json::Value& config) {
 
     // AppendingLogPositionMeta
     if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mAppendingLogPositionMeta, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mAppendingLogPositionMeta,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);

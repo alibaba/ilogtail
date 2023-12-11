@@ -32,7 +32,14 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
 
     // Include
     if (!GetOptionalMapParam(config, "Include", mInclude, errorMsg)) {
-        PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
     } else if (!mInclude.empty()) {
         std::vector<std::string> keys;
         std::vector<boost::regex> regs;
@@ -40,9 +47,13 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
         for (auto& include : mInclude) {
             if (!IsRegexValid(include.second)) {
                 PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     mContext->GetAlarm(),
                                      "value in map param Include is not a valid regex",
                                      sName,
-                                     mContext->GetConfigName());
+                                     mContext->GetConfigName(),
+                                     mContext->GetProjectName(),
+                                     mContext->GetLogstoreName(),
+                                     mContext->GetRegion());
                 hasError = true;
                 break;
             }
@@ -62,19 +73,35 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
         const char* key = "ConditionExp";
         const Json::Value* itr = config.find(key, key + strlen(key));
         if (itr == nullptr) {
-            PARAM_ERROR_RETURN(
-                mContext->GetLogger(), "param ConditionExp is missing", sName, mContext->GetConfigName());
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               "param ConditionExp is missing",
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
         }
         if (!itr->isObject()) {
             PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
                                "object param ConditionExp is not of type object",
                                sName,
-                               mContext->GetConfigName());
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
         }
         BaseFilterNodePtr root = ParseExpressionFromJSON(*itr);
         if (!root) {
-            PARAM_ERROR_RETURN(
-                mContext->GetLogger(), "object param ConditionExp is not valid", sName, mContext->GetConfigName());
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               "object param ConditionExp is not valid",
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
         }
         mConditionExp.swap(root);
         mFilterMode = Mode::EXPRESSION_MODE;
@@ -82,14 +109,26 @@ bool ProcessorFilterNative::Init(const Json::Value& config) {
 
     if (mFilterMode == Mode::BYPASS_MODE) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
                            "neither param Include nor param ConditionExp is valid",
                            sName,
-                           mContext->GetConfigName());
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
 
     // DiscardingNonUTF8
     if (!GetOptionalBoolParam(config, "DiscardingNonUTF8", mDiscardingNonUTF8, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mDiscardingNonUTF8, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mDiscardingNonUTF8,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     mProcFilterErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_FILTER_ERROR_TOTAL);

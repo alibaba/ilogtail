@@ -145,11 +145,11 @@ void PollingDirFile::Polling() {
             }
             sort(sortedConfigs.begin(), sortedConfigs.end(), FileDiscoveryOptions::CompareByPathLength);
 
-            LogtailMonitor::Instance()->UpdateMetric("config_count", nameConfigMap.size());
+            LogtailMonitor::GetInstance()->UpdateMetric("config_count", nameConfigMap.size());
             {
                 ScopedSpinLock lock(mCacheLock);
-                LogtailMonitor::Instance()->UpdateMetric("polling_dir_cache", mDirCacheMap.size());
-                LogtailMonitor::Instance()->UpdateMetric("polling_file_cache", mFileCacheMap.size());
+                LogtailMonitor::GetInstance()->UpdateMetric("polling_dir_cache", mDirCacheMap.size());
+                LogtailMonitor::GetInstance()->UpdateMetric("polling_file_cache", mFileCacheMap.size());
             }
 
             // Iterate all normal configs, make sure stat count will not exceed limit.

@@ -14,8 +14,8 @@
 
 #include "reader/FileReaderOptions.h"
 
-#include "common/Flags.h"
 #include "common/FileSystemUtil.h"
+#include "common/Flags.h"
 #include "common/ParamExtractor.h"
 
 using namespace std;
@@ -53,7 +53,14 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
     // FileEncoding
     string encoding;
     if (!GetOptionalStringParam(config, "FileEncoding", encoding, errorMsg)) {
-        PARAM_ERROR_RETURN(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(),
+                           ctx.GetAlarm(),
+                           errorMsg,
+                           pluginName,
+                           ctx.GetConfigName(),
+                           ctx.GetProjectName(),
+                           ctx.GetLogstoreName(),
+                           ctx.GetRegion());
     }
     encoding = ToLowerCaseString(encoding);
     if (encoding == "gbk") {
@@ -61,61 +68,131 @@ bool FileReaderOptions::Init(const Json::Value& config, const PipelineContext& c
     } else if (encoding == "utf16") {
         mFileEncoding = Encoding::UTF16;
     } else if (!encoding.empty() && encoding != "utf8") {
-        PARAM_ERROR_RETURN(ctx.GetLogger(), "string param FileEncoding is not valid", pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(),
+                           ctx.GetAlarm(),
+                           "string param FileEncoding is not valid",
+                           pluginName,
+                           ctx.GetConfigName(),
+                           ctx.GetProjectName(),
+                           ctx.GetLogstoreName(),
+                           ctx.GetRegion());
     }
 
     // TailingAllMatchedFiles
     if (!GetOptionalBoolParam(config, "TailingAllMatchedFiles", mTailingAllMatchedFiles, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mTailingAllMatchedFiles, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mTailingAllMatchedFiles,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // TailSizeKB
     uint32_t tailSize = INT32_FLAG(default_tail_limit_kb);
     if (!GetOptionalUIntParam(config, "TailSizeKB", tailSize, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, mTailSizeKB, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mTailSizeKB,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     } else if (tailSize > 100 * 1024 * 1024) {
         PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
                               "uint param TailSizeKB is larger than 104857600",
                               mTailSizeKB,
                               pluginName,
-                              ctx.GetConfigName());
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     } else {
         mTailSizeKB = tailSize;
     }
 
     // FlushTimeoutSecs
     if (!GetOptionalUIntParam(config, "FlushTimeoutSecs", mFlushTimeoutSecs, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, mFlushTimeoutSecs, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mFlushTimeoutSecs,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // ReadDelaySkipThresholdBytes
     if (!GetOptionalUIntParam(config, "ReadDelaySkipThresholdBytes", mReadDelaySkipThresholdBytes, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mReadDelaySkipThresholdBytes, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mReadDelaySkipThresholdBytes,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // ReadDelayAlertThresholdBytes
     if (!GetOptionalUIntParam(config, "ReadDelayAlertThresholdBytes", mReadDelayAlertThresholdBytes, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, mReadDelayAlertThresholdBytes, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mReadDelayAlertThresholdBytes,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // CloseUnusedReaderIntervalSec
     if (!GetOptionalUIntParam(config, "CloseUnusedReaderIntervalSec", mCloseUnusedReaderIntervalSec, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, mCloseUnusedReaderIntervalSec, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mCloseUnusedReaderIntervalSec,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // RotatorQueueSize
     if (!GetOptionalUIntParam(config, "RotatorQueueSize", mRotatorQueueSize, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            ctx.GetLogger(), errorMsg, mRotatorQueueSize, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mRotatorQueueSize,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // AppendingLogPositionMeta
     if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, mAppendingLogPositionMeta, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mAppendingLogPositionMeta,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     return true;

@@ -52,12 +52,26 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     // Project
     if (!GetMandatoryStringParam(config, "Project", mProject, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
 
     // Logstore
     if (!GetMandatoryStringParam(config, "Logstore", mLogstore, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
     mLogstoreKey = GenerateLogstoreFeedBackKey(mProject, mLogstore);
 
@@ -68,12 +82,27 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 #endif
         // Region
         if (!GetOptionalStringParam(config, "Region", mRegion, errorMsg)) {
-            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mRegion, sName, mContext->GetConfigName());
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                  mContext->GetAlarm(),
+                                  errorMsg,
+                                  mRegion,
+                                  sName,
+                                  mContext->GetConfigName(),
+                                  mContext->GetProjectName(),
+                                  mContext->GetLogstoreName(),
+                                  mContext->GetRegion());
         }
 
         // Endpoint
         if (!GetMandatoryStringParam(config, "Endpoint", mEndpoint, errorMsg)) {
-            PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               errorMsg,
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
         }
         mEndpoint = TrimString(mEndpoint);
         if (!mEndpoint.empty()) {
@@ -84,7 +113,14 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
 
     // Aliuid
     if (!GetOptionalStringParam(config, "Aliuid", mAliuid, errorMsg)) {
-        PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
     }
 #endif
 
@@ -92,14 +128,29 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     if (BOOL_FLAG(sls_client_send_compress)) {
         string compressType;
         if (!GetOptionalStringParam(config, "CompressType", compressType, errorMsg)) {
-            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "lz4", sName, mContext->GetConfigName());
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                  mContext->GetAlarm(),
+                                  errorMsg,
+                                  "lz4",
+                                  sName,
+                                  mContext->GetConfigName(),
+                                  mContext->GetProjectName(),
+                                  mContext->GetLogstoreName(),
+                                  mContext->GetRegion());
         } else if (compressType == "zstd") {
             mCompressType = CompressType::ZSTD;
         } else if (compressType == "none") {
             mCompressType = CompressType::NONE;
         } else if (!compressType.empty() && compressType != "lz4") {
-            PARAM_WARNING_DEFAULT(
-                mContext->GetLogger(), "string param CompressType is not valid", "lz4", sName, mContext->GetConfigName());
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                  mContext->GetAlarm(),
+                                  "string param CompressType is not valid",
+                                  "lz4",
+                                  sName,
+                                  mContext->GetConfigName(),
+                                  mContext->GetProjectName(),
+                                  mContext->GetLogstoreName(),
+                                  mContext->GetRegion());
         }
     } else {
         mCompressType = CompressType::NONE;
@@ -108,22 +159,53 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     // TelemetryType
     string telemetryType;
     if (!GetOptionalStringParam(config, "TelemetryType", telemetryType, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "logs", sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              "logs",
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     } else if (telemetryType == "metrics") {
         mTelemetryType = TelemetryType::METRIC;
     } else if (!telemetryType.empty() && telemetryType != "logs") {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), "string param TelemetryType is not valid", "logs", sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              "string param TelemetryType is not valid",
+                              "logs",
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     // FlowControlExpireTime
     if (!GetOptionalUIntParam(config, "FlowControlExpireTime", mFlowControlExpireTime, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mFlowControlExpireTime, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mFlowControlExpireTime,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     // MaxSendRate
     if (!GetOptionalIntParam(config, "MaxSendRate", mMaxSendRate, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mMaxSendRate, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mMaxSendRate,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
     Sender::Instance()->SetLogstoreFlowControl(mLogstoreKey, mMaxSendRate, mFlowControlExpireTime);
 
@@ -132,32 +214,64 @@ bool FlusherSLS::Init(const Json::Value& config, Json::Value& optionalGoPipeline
     const Json::Value* itr = config.find(key, key + strlen(key));
     if (itr) {
         if (!itr->isObject()) {
-            PARAM_WARNING_IGNORE(
-                mContext->GetLogger(), "param Batch is not of type object", sName, mContext->GetConfigName());
+            PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                 mContext->GetAlarm(),
+                                 "param Batch is not of type object",
+                                 sName,
+                                 mContext->GetConfigName(),
+                                 mContext->GetProjectName(),
+                                 mContext->GetLogstoreName(),
+                                 mContext->GetRegion());
         } else {
             // MergeType
             string mergeType;
             if (!GetOptionalStringParam(*itr, "Batch.MergeType", mergeType, errorMsg)) {
-                PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "topic", sName, mContext->GetConfigName());
+                PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                      mContext->GetAlarm(),
+                                      errorMsg,
+                                      "topic",
+                                      sName,
+                                      mContext->GetConfigName(),
+                                      mContext->GetProjectName(),
+                                      mContext->GetLogstoreName(),
+                                      mContext->GetRegion());
             } else if (mergeType == "logstore") {
                 mBatch.mMergeType = Batch::MergeType::LOGSTORE;
             } else if (!mergeType.empty() && mergeType != "topic") {
                 PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                      mContext->GetAlarm(),
                                       "string param Batch.MergeType is not valid",
                                       "topic",
                                       sName,
-                                      mContext->GetConfigName());
+                                      mContext->GetConfigName(),
+                                      mContext->GetProjectName(),
+                                      mContext->GetLogstoreName(),
+                                      mContext->GetRegion());
             }
 
             // SendIntervalSecs
             if (!GetOptionalUIntParam(*itr, "Batch.SendIntervalSecs", mBatch.mSendIntervalSecs, errorMsg)) {
-                PARAM_WARNING_DEFAULT(
-                    mContext->GetLogger(), errorMsg, mBatch.mSendIntervalSecs, sName, mContext->GetConfigName());
+                PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                      mContext->GetAlarm(),
+                                      errorMsg,
+                                      mBatch.mSendIntervalSecs,
+                                      sName,
+                                      mContext->GetConfigName(),
+                                      mContext->GetProjectName(),
+                                      mContext->GetLogstoreName(),
+                                      mContext->GetRegion());
             }
 
             // ShardHashKeys
             if (!GetOptionalListParam<string>(*itr, "Batch.ShardHashKeys", mBatch.mShardHashKeys, errorMsg)) {
-                PARAM_WARNING_IGNORE(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+                PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                     mContext->GetAlarm(),
+                                     errorMsg,
+                                     sName,
+                                     mContext->GetConfigName(),
+                                     mContext->GetProjectName(),
+                                     mContext->GetLogstoreName(),
+                                     mContext->GetRegion());
             }
         }
     }

@@ -29,8 +29,6 @@
 #include "streamlog/StreamLogManager.h"
 #endif
 
-DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
-
 using namespace std;
 
 namespace logtail {
@@ -81,9 +79,15 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     for (auto& config : diff.mModified) {
         auto p = BuildPipeline(std::move(config));
         if (!p) {
-            LOG_WARNING(
-                sLogger,
-                ("failed to build pipeline for existing config", "keep current pipeline running")("config", config.mName));
+            LOG_WARNING(sLogger,
+                        ("failed to build pipeline for existing config",
+                         "keep current pipeline running")("config", config.mName));
+            LogtailAlarm::GetInstance()->SendAlarm(
+                CATEGORY_CONFIG_ALARM,
+                "failed to build pipeline for existing config: keep current pipeline running, config: " + config.mName,
+                config.mProject,
+                config.mLogstore,
+                config.mRegion);
             continue;
         }
         LOG_INFO(sLogger,
@@ -99,6 +103,12 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
         if (!p) {
             LOG_WARNING(sLogger,
                         ("failed to build pipeline for new config", "skip current object")("config", config.mName));
+            LogtailAlarm::GetInstance()->SendAlarm(
+                CATEGORY_CONFIG_ALARM,
+                "failed to build pipeline for new config: skip current object, config: " + config.mName,
+                config.mProject,
+                config.mLogstore,
+                config.mRegion);
             continue;
         }
         LOG_INFO(sLogger,
@@ -215,11 +225,7 @@ void PipelineManager::StopAllPipelines() {
 
     LogtailPlugin::GetInstance()->HoldOn(true);
 
-    if (!(Sender::Instance()->FlushOut(INT32_FLAG(exit_flushout_duration)))) {
-        LOG_WARNING(sLogger, ("flush SLS sender data", "failed"));
-    } else {
-        LOG_INFO(sLogger, ("flush SLS sender data", "succeeded"));
-    }
+    // Sender should be stopped after profiling threads are stopped.
     LOG_INFO(sLogger, ("stop all pipelines", "succeeded"));
 }
 

@@ -799,7 +799,7 @@ void ConfigUpdatorUnittest::CaseSetup(bool replaceConfigAllowed) {
     ASSERT_TRUE(ret);
     ConfigManager::GetInstance()->mRegionType = REGION_CORP;
 
-    Sender::Instance()->InitSender();
+    Sender::Instance()->Init();
     Sender::Instance()->MockAsyncSend = MockAsyncSend;
     vector<string> filesToSend;
     Sender::Instance()->LoadFileToSend(time(NULL), filesToSend);

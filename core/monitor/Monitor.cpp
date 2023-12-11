@@ -19,31 +19,32 @@
 #elif defined(_MSC_VER)
 #include <Psapi.h>
 #endif
-#include <functional>
 #include <fstream>
-#include "common/Constants.h"
-#include "common/ExceptionBase.h"
-#include "common/StringTools.h"
-#include "common/LogtailCommonFlags.h"
-#include "common/TimeUtil.h"
-#include "common/RuntimeUtil.h"
-#include "common/DevInode.h"
-#include "common/version.h"
-#include "common/MachineInfoUtil.h"
-#include "log_pb/sls_logs.pb.h"
-#include "logger/Logger.h"
-#include "sender/Sender.h"
-#include "monitor/LogFileProfiler.h"
-#include "monitor/LogtailAlarm.h"
-#include "config_manager/ConfigManager.h"
+#include <functional>
+
 #include "app_config/AppConfig.h"
+#include "common/Constants.h"
+#include "common/DevInode.h"
+#include "common/ExceptionBase.h"
+#include "common/LogtailCommonFlags.h"
+#include "common/MachineInfoUtil.h"
+#include "common/RuntimeUtil.h"
+#include "common/StringTools.h"
+#include "common/TimeUtil.h"
+#include "common/version.h"
+#include "config_manager/ConfigManager.h"
 #include "event_handler/LogInput.h"
 #include "go_pipeline/LogtailPlugin.h"
+#include "log_pb/sls_logs.pb.h"
+#include "logger/Logger.h"
+#include "monitor/LogFileProfiler.h"
+#include "monitor/LogtailAlarm.h"
+#include "sender/Sender.h"
 #if defined(__linux__)
 #include "ObserverManager.h"
 #endif
-#include "sdk/Common.h"
 #include "application/Application.h"
+#include "sdk/Common.h"
 #ifdef __ENTERPRISE__
 #include "config/provider/EnterpriseConfigProvider.h"
 #endif
@@ -80,13 +81,14 @@ inline void CpuStat::Reset() {
     mCpuUsage = 0;
 }
 
-LogtailMonitor::LogtailMonitor() {
+LogtailMonitor::LogtailMonitor() = default;
+
+LogtailMonitor* LogtailMonitor::GetInstance() {
+    static LogtailMonitor instance;
+    return &instance;
 }
 
-LogtailMonitor::~LogtailMonitor() {
-}
-
-bool LogtailMonitor::InitMonitor() {
+bool LogtailMonitor::Init() {
     mScaledCpuUsageUpLimit = AppConfig::GetInstance()->GetCpuUsageUpLimit();
     mStatusCount = 0;
 
@@ -110,31 +112,26 @@ bool LogtailMonitor::InitMonitor() {
 #endif
 
     // Initialize monitor thread.
-    mMonitorRunning = true;
-    mMonitorThreadPtr = CreateThread([&] { this->Monitor(); });
+    mIsThreadRunning = true;
+    mThreadRes = async(launch::async, &LogtailMonitor::Monitor, this);
+    LOG_INFO(sLogger, ("profiling", "started"));
     return true;
 }
 
-bool LogtailMonitor::RemoveMonitor() {
-    mMonitorRunning = false;
-    try {
-        if (mMonitorThreadPtr != nullptr) {
-            mMonitorThreadPtr->GetValue(2000 * 1000);
-        }
-    } catch (const ExceptionBase& e) {
-        LOG_ERROR(sLogger, ("RemoveMonitor fail", e.ToString())("message", e.GetExceptionMessage()));
-        return false;
-    } catch (...) {
-        LOG_ERROR(sLogger, ("RemoveMonitor fail", "unknown exception"));
-        return false;
+void LogtailMonitor::Stop() {
+    mIsThreadRunning = false;
+    future_status s = mThreadRes.wait_for(chrono::seconds(1));
+    if (s == future_status::ready) {
+        LOG_INFO(sLogger, ("profiling", "stopped successfully"));
+    } else {
+        LOG_WARNING(sLogger, ("profiling", "forced to stopped"));
     }
-    return true;
 }
 
 void LogtailMonitor::Monitor() {
     int32_t lastMonitorTime = time(NULL);
     CpuStat curCpuStat;
-    while (mMonitorRunning) {
+    while (mIsThreadRunning.load()) {
         sleep(1);
         GetCpuStat(curCpuStat);
 
@@ -217,7 +214,8 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     auto now = GetCurrentLogtailTime();
     // Check input thread.
     int32_t lastReadEventTime = LogInput::GetInstance()->GetLastReadEventTime();
-    if (lastReadEventTime > 0 && (now.tv_sec - lastReadEventTime > AppConfig::GetInstance()->GetForceQuitReadTimeout())) {
+    if (lastReadEventTime > 0
+        && (now.tv_sec - lastReadEventTime > AppConfig::GetInstance()->GetForceQuitReadTimeout())) {
         LOG_ERROR(sLogger, ("last read event time is too old", lastReadEventTime)("prepare force exit", ""));
         LogtailAlarm::GetInstance()->SendAlarm(
             LOGTAIL_CRASH_ALARM, "last read event time is too old: " + ToString(lastReadEventTime) + " force exit");
@@ -295,7 +293,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "ecs_regioon_id", LogFileProfiler::mECSRegionID);
     ClearMetric();
 
-    if (!mMonitorRunning)
+    if (!mIsThreadRunning.load())
         return false;
 
     // Dump to local and send to enabled regions.
@@ -489,7 +487,7 @@ bool LogtailMonitor::IsHostIpChanged() {
 
 void LogtailMonitor::Suicide() {
     SendStatusProfile(true);
-    mMonitorRunning = false;
+    mIsThreadRunning = false;
     Application::GetInstance()->SetSigTermSignalFlag(true);
     sleep(15);
     _exit(1);

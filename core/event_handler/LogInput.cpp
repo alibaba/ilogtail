@@ -159,7 +159,7 @@ void LogInput::FlowControl() {
     int32_t curTime = time(NULL);
     if (curTime - lastCheckTime >= 1) {
         lastCheckTime = curTime;
-        double cpuUsageLevel = LogtailMonitor::Instance()->GetRealtimeCpuLevel();
+        double cpuUsageLevel = LogtailMonitor::GetInstance()->GetRealtimeCpuLevel();
         if (cpuUsageLevel >= 1.5) {
             sleepCount += 5;
             if (sleepCount > MAX_SLEEP_COUNT)
@@ -331,15 +331,15 @@ void LogInput::ProcessEvent(EventDispatcher* dispatcher, Event* ev) {
 }
 
 void LogInput::UpdateCriticalMetric(int32_t curTime) {
-    LogtailMonitor::Instance()->UpdateMetric("last_read_event_time",
+    LogtailMonitor::GetInstance()->UpdateMetric("last_read_event_time",
                                              GetTimeStamp(mLastReadEventTime, "%Y-%m-%d %H:%M:%S"));
 
-    LogtailMonitor::Instance()->UpdateMetric("event_tps", 1.0 * mEventProcessCount / (curTime - mLastUpdateMetricTime));
-    LogtailMonitor::Instance()->UpdateMetric("open_fd",
+    LogtailMonitor::GetInstance()->UpdateMetric("event_tps", 1.0 * mEventProcessCount / (curTime - mLastUpdateMetricTime));
+    LogtailMonitor::GetInstance()->UpdateMetric("open_fd",
                                              GloablFileDescriptorManager::GetInstance()->GetOpenedFilePtrSize());
-    LogtailMonitor::Instance()->UpdateMetric("register_handler", EventDispatcher::GetInstance()->GetHandlerCount());
-    LogtailMonitor::Instance()->UpdateMetric("reader_count", CheckPointManager::Instance()->GetReaderCount());
-    LogtailMonitor::Instance()->UpdateMetric("multi_config", AppConfig::GetInstance()->IsAcceptMultiConfig());
+    LogtailMonitor::GetInstance()->UpdateMetric("register_handler", EventDispatcher::GetInstance()->GetHandlerCount());
+    LogtailMonitor::GetInstance()->UpdateMetric("reader_count", CheckPointManager::Instance()->GetReaderCount());
+    LogtailMonitor::GetInstance()->UpdateMetric("multi_config", AppConfig::GetInstance()->IsAcceptMultiConfig());
     mEventProcessCount = 0;
 }
 

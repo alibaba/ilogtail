@@ -171,7 +171,6 @@ void LogProcess::HoldOn() {
     }
 }
 
-
 void LogProcess::Resume() {
     LOG_INFO(sLogger, ("process daemon resume", "starts"));
     mLogFeedbackQueue.Unlock();
@@ -230,7 +229,7 @@ void* LogProcess::ProcessLoop(int32_t threadNo) {
         }
 
         if (threadNo == 0 && curTime - lastUpdateMetricTime >= 40) {
-            static auto sMonitor = LogtailMonitor::Instance();
+            static auto sMonitor = LogtailMonitor::GetInstance();
 
             // atomic counter will be negative if process speed is too fast.
             sMonitor->UpdateMetric("process_tps", 1.0 * s_processCount / (curTime - lastUpdateMetricTime));

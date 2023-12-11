@@ -32,16 +32,36 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
 
     // SourceKey
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
 
     // Separator
     if (!GetMandatoryStringParam(config, "Separator", mSeparator, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
     if (mSeparator.size() > 4) {
-        PARAM_ERROR_RETURN(
-            mContext->GetLogger(), "mandatory string param Separator has more than 4 chars", sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           "mandatory string param Separator has more than 4 chars",
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
     // Compatible with old logic.
     if (mSeparator == "\\t") {
@@ -54,25 +74,50 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
     bool res = GetOptionalStringParam(config, "Quote", quoteStr, errorMsg);
     if (mSeparator.size() == 1) {
         if (!res) {
-            PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "\"", sName, mContext->GetConfigName());
+            PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                                  mContext->GetAlarm(),
+                                  errorMsg,
+                                  "\"",
+                                  sName,
+                                  mContext->GetConfigName(),
+                                  mContext->GetProjectName(),
+                                  mContext->GetLogstoreName(),
+                                  mContext->GetRegion());
         } else if (quoteStr.size() > 1) {
-            PARAM_ERROR_RETURN(
-                mContext->GetLogger(), "string param Quote is not a single char", sName, mContext->GetConfigName());
+            PARAM_ERROR_RETURN(mContext->GetLogger(),
+                               mContext->GetAlarm(),
+                               "string param Quote is not a single char",
+                               sName,
+                               mContext->GetConfigName(),
+                               mContext->GetProjectName(),
+                               mContext->GetLogstoreName(),
+                               mContext->GetRegion());
         } else if (!quoteStr.empty()) {
             mQuote = quoteStr[0];
         }
     } else if (!quoteStr.empty()) {
         PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
                              "string param Quote is not allowed when param Separator is not a single char",
                              sName,
-                             mContext->GetConfigName());
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
     }
 
     mDelimiterModeFsmParserPtr = new DelimiterModeFsmParser(mQuote, mSeparatorChar);
 
     // Keys
     if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
     for (const auto& key : mKeys) {
         if (key == mSourceKey) {
@@ -82,24 +127,43 @@ bool ProcessorParseDelimiterNative::Init(const Json::Value& config) {
 
     // AllowingShortenedFields
     if (!GetOptionalBoolParam(config, "AllowingShortenedFields", mAllowingShortenedFields, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mAllowingShortenedFields, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mAllowingShortenedFields,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     // OverflowedFieldsTreatment
     std::string overflowedFieldsTreatment;
     if (!GetOptionalStringParam(config, "OverflowedFieldsTreatment", overflowedFieldsTreatment, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "extend", sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              "extend",
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     } else if (overflowedFieldsTreatment == "keep") {
         mOverflowedFieldsTreatment = OverflowedFieldsTreatment::KEEP;
     } else if (overflowedFieldsTreatment == "discard") {
         mOverflowedFieldsTreatment = OverflowedFieldsTreatment::DISCARD;
     } else if (!overflowedFieldsTreatment.empty() && overflowedFieldsTreatment != "extend") {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
                               "string param OverflowedFieldsTreatment is not valid",
                               "extend",
                               sName,
-                              mContext->GetConfigName());
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     // ExtractingPartialFields

@@ -29,8 +29,11 @@ class GlobalConfigUnittest : public testing::Test {
 public:
     void OnSuccessfulInit() const;
 
+protected:
+    void SetUp() override { ctx.SetConfigName("test_config"); }
+
 private:
-    const string configName = "test_config";
+    PipelineContext ctx;
 };
 
 void GlobalConfigUnittest::OnSuccessfulInit() const {
@@ -58,7 +61,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_TRUE(extendedParams.isNull());
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::CUSTOM, config->mTopicType);
     APSARA_TEST_EQUAL("test_topic", config->mTopicFormat);
@@ -78,7 +81,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_TRUE(extendedParams.isNull());
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
     APSARA_TEST_EQUAL("", config->mTopicFormat);
@@ -94,7 +97,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
     APSARA_TEST_EQUAL("", config->mTopicFormat);
 
@@ -106,7 +109,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::MACHINE_GROUP_TOPIC, config->mTopicType);
     APSARA_TEST_EQUAL("test_topic", config->mTopicFormat);
 
@@ -117,7 +120,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
     APSARA_TEST_EQUAL("", config->mTopicFormat);
 
@@ -129,7 +132,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )""";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::FILEPATH, config->mTopicType);
     APSARA_TEST_EQUAL("/home/(.*)", config->mTopicFormat);
 
@@ -140,7 +143,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
     APSARA_TEST_EQUAL("", config->mTopicFormat);
 
@@ -152,7 +155,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
     APSARA_TEST_EQUAL("", config->mTopicFormat);
 
@@ -164,7 +167,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::DEFAULT, config->mTopicType);
     APSARA_TEST_EQUAL("", config->mTopicFormat);
 
@@ -176,7 +179,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_EQUAL(GlobalConfig::TopicType::NONE, config->mTopicType);
     APSARA_TEST_EQUAL("", config->mTopicFormat);
 
@@ -188,7 +191,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     )";
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_EQUAL(0, config->mProcessPriority);
 
     // extendedParam
@@ -205,7 +208,7 @@ void GlobalConfigUnittest::OnSuccessfulInit() const {
     APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(extendedParamStr, extendedParamJson, errorMsg));
     config.reset(new GlobalConfig());
-    APSARA_TEST_TRUE(config->Init(configJson, configName, extendedParams));
+    APSARA_TEST_TRUE(config->Init(configJson, ctx, extendedParams));
     APSARA_TEST_TRUE(extendedParamJson == extendedParams);
 }
 

@@ -936,7 +936,7 @@ public:
         AppConfig::GetInstance()->LoadAppConfig(STRING_FLAG(ilogtail_config));
         bool ret = ConfigManager::GetInstance()->LoadConfig(STRING_FLAG(user_log_config));
         assert(ret);
-        ret = Sender::Instance()->InitSender();
+        ret = Sender::Instance()->Init();
         assert(ret);
 
         if (gLogIntegrityTestFlag) {
@@ -2171,7 +2171,7 @@ public:
         int32_t defaultMonitorInterval = INT32_FLAG(monitor_interval);
         INT32_FLAG(monitor_interval) = 3;
         CaseSetUp();
-        LogtailMonitor::Instance()->InitMonitor();
+        LogtailMonitor::GetInstance()->Init();
         gStatusLogGroup.Clear();
         gStatusCount = 0;
         EnableNetWork();
@@ -2204,7 +2204,7 @@ public:
 #endif
         APSARA_TEST_EQUAL(log.contents(idx++).key(), "metric_json");
         APSARA_TEST_EQUAL(log.contents(idx++).key(), "status");
-        LogtailMonitor::Instance()->RemoveMonitor();
+        LogtailMonitor::GetInstance()->RemoveMonitor();
         CaseCleanUp();
         INT32_FLAG(monitor_interval) = defaultMonitorInterval;
         LOG_INFO(sLogger, ("TestMonitor() end", time(NULL)));

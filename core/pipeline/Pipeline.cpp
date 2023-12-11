@@ -59,6 +59,15 @@ bool Pipeline::Init(Config&& config) {
     // for special treatment below
     const InputFile* inputFile = nullptr;
 
+#ifdef __ENTERPRISE__
+    // to send alarm before flusherSLS is built, a temporary object is made, which will be overriden shortly after.
+    unique_ptr<FlusherSLS> SLSTmp = unique_ptr<FlusherSLS>(new FlusherSLS());
+    SLSTmp->mProject = config.mProject;
+    SLSTmp->mLogstore = config.mLogstore;
+    SLSTmp->mRegion = config.mRegion;
+    mContext.SetSLSInfo(SLSTmp.get());
+#endif
+
     int16_t pluginIndex = 0;
     for (auto detail : config.mInputs) {
         string name = (*detail)["Type"].asString();
@@ -231,13 +240,25 @@ bool Pipeline::Init(Config&& config) {
 
     if (inputFile && inputFile->mExactlyOnceConcurrency > 0) {
         if (IsFlushingThroughGoPipeline()) {
-            PARAM_ERROR_RETURN(
-                mContext.GetLogger(), "exactly once enabled when not in native mode exist", noModule, mName);
+            PARAM_ERROR_RETURN(mContext.GetLogger(),
+                               mContext.GetAlarm(),
+                               "exactly once enabled when not in native mode exist",
+                               noModule,
+                               mName,
+                               mContext.GetProjectName(),
+                               mContext.GetLogstoreName(),
+                               mContext.GetRegion());
         }
         // flusher_sls is guaranteed to exist here.
         if (mContext.GetSLSInfo()->mBatch.mMergeType != FlusherSLS::Batch::MergeType::TOPIC) {
-            PARAM_ERROR_RETURN(
-                mContext.GetLogger(), "exactly once enabled when flusher_sls.MergeType is not topic", noModule, mName);
+            PARAM_ERROR_RETURN(mContext.GetLogger(),
+                               mContext.GetAlarm(),
+                               "exactly once enabled when flusher_sls.MergeType is not topic",
+                               noModule,
+                               mName,
+                               mContext.GetProjectName(),
+                               mContext.GetLogstoreName(),
+                               mContext.GetRegion());
         }
     }
 
@@ -328,30 +349,40 @@ bool Pipeline::LoadGoPipelines() const {
     // note:
     // 目前按照从后往前顺序加载，即便without成功with失败导致without残留在插件系统中，也不会有太大的问题，但最好改成原子的。
     if (!mGoPipelineWithoutInput.isNull()) {
+        string content = mGoPipelineWithoutInput.toStyledString();
         if (!LogtailPlugin::GetInstance()->LoadPipeline(mName + "/2",
-                                                        mGoPipelineWithoutInput.toStyledString(),
+                                                        content,
                                                         mContext.GetProjectName(),
                                                         mContext.GetLogstoreName(),
                                                         mContext.GetRegion(),
                                                         mContext.GetLogstoreKey())) {
             LOG_ERROR(mContext.GetLogger(),
                       ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")(
-                          "config", mName)("Go pipeline num", "2")("Go pipeline content",
-                                                                   mGoPipelineWithoutInput.toStyledString()));
+                          "Go pipeline num", "2")("Go pipeline content", content)("config", mName));
+            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+                                                   "Go pipeline is invalid, content: " + content + ", config: " + mName,
+                                                   mContext.GetProjectName(),
+                                                   mContext.GetLogstoreName(),
+                                                   mContext.GetRegion());
             return false;
         }
     }
     if (!mGoPipelineWithInput.isNull()) {
+        string content = mGoPipelineWithInput.toStyledString();
         if (!LogtailPlugin::GetInstance()->LoadPipeline(mName + "/1",
-                                                        mGoPipelineWithInput.toStyledString(),
+                                                        content,
                                                         mContext.GetProjectName(),
                                                         mContext.GetLogstoreName(),
                                                         mContext.GetRegion(),
                                                         mContext.GetLogstoreKey())) {
             LOG_ERROR(mContext.GetLogger(),
                       ("failed to init pipeline", "Go pipeline is invalid, see logtail_plugin.LOG for detail")(
-                          "config", mName)("Go pipeline num", "1")("Go pipeline content",
-                                                                   mGoPipelineWithInput.toStyledString()));
+                          "Go pipeline num", "1")("Go pipeline content", content)("config", mName));
+            LogtailAlarm::GetInstance()->SendAlarm(CATEGORY_CONFIG_ALARM,
+                                                   "Go pipeline is invalid, content: " + content + ", config: " + mName,
+                                                   mContext.GetProjectName(),
+                                                   mContext.GetLogstoreName(),
+                                                   mContext.GetRegion());
             return false;
         }
     }

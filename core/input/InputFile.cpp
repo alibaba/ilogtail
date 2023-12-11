@@ -47,12 +47,24 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 
     // EnableContainerDiscovery
     if (!GetOptionalBoolParam(config, "EnableContainerDiscovery", mEnableContainerDiscovery, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, false, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              false,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     } else if (mEnableContainerDiscovery && !AppConfig::GetInstance()->IsPurageContainerMode()) {
         PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
                            "iLogtail is not in container, but container discovery is required",
                            sName,
-                           mContext->GetConfigName());
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
 
     if (mEnableContainerDiscovery) {
@@ -75,8 +87,14 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
     const Json::Value* itr = config.find(key, key + strlen(key));
     if (itr) {
         if (!itr->isObject()) {
-            PARAM_WARNING_IGNORE(
-                mContext->GetLogger(), "param Multiline is not of type object", sName, mContext->GetConfigName());
+            PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                                 mContext->GetAlarm(),
+                                 "param Multiline is not of type object",
+                                 sName,
+                                 mContext->GetConfigName(),
+                                 mContext->GetProjectName(),
+                                 mContext->GetLogstoreName(),
+                                 mContext->GetRegion());
         } else if (!mMultiline.Init(*itr, *mContext, sName)) {
             return false;
         }
@@ -84,23 +102,41 @@ bool InputFile::Init(const Json::Value& config, Json::Value& optionalGoPipeline)
 
     // MaxCheckpointDirSearchDepth
     if (!GetOptionalUIntParam(config, "MaxCheckpointDirSearchDepth", mMaxCheckpointDirSearchDepth, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mMaxCheckpointDirSearchDepth, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mMaxCheckpointDirSearchDepth,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     // ExactlyOnceConcurrency (param is unintentionally named as EnableExactlyOnce, which should be deprecated in the
     // future)
     uint32_t exactlyOnceConcurrency = 0;
     if (!GetOptionalUIntParam(config, "EnableExactlyOnce", exactlyOnceConcurrency, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mExactlyOnceConcurrency, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mExactlyOnceConcurrency,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     } else if (exactlyOnceConcurrency > static_cast<uint32_t>(INT32_FLAG(max_exactly_once_concurrency))) {
         PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
                               "uint param EnableExactlyOnce is larger than "
                                   + ToString(INT32_FLAG(max_exactly_once_concurrency)),
                               mExactlyOnceConcurrency,
                               sName,
-                              mContext->GetConfigName());
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     } else {
         mExactlyOnceConcurrency = exactlyOnceConcurrency;
     }

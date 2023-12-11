@@ -450,7 +450,7 @@ void AppConfig::LoadResourceConf(const Json::Value& confJson) {
         mSendRequestConcurrency = confJson["send_request_concurrency"].asInt();
     else
         mSendRequestConcurrency = INT32_FLAG(send_request_concurrency);
-    LogtailMonitor::Instance()->UpdateConstMetric("send_request_concurrency", mSendRequestConcurrency);
+    LogtailMonitor::GetInstance()->UpdateConstMetric("send_request_concurrency", mSendRequestConcurrency);
 
     if (confJson.isMember("process_thread_count") && confJson["process_thread_count"].isInt())
         mProcessThreadCount = confJson["process_thread_count"].asInt();
