@@ -16,8 +16,9 @@
 
 #pragma once
 
-#include <atomic>
+#include <condition_variable>>
 #include <future>
+#include <mutex>
 #include <string>
 
 #include "MetricStore.h"
@@ -144,7 +145,9 @@ private:
     void Suicide();
 
     std::future<void> mThreadRes;
-    std::atomic_bool mIsThreadRunning = false;
+    std::mutex mThreadRunningMux;
+    bool mIsThreadRunning = false;
+    std::condition_variable mStopCV;
 
     // Control report status profile frequency.
     int32_t mStatusCount;

@@ -112,14 +112,16 @@ bool LogtailMonitor::Init() {
 #endif
 
     // Initialize monitor thread.
-    mIsThreadRunning = true;
     mThreadRes = async(launch::async, &LogtailMonitor::Monitor, this);
     LOG_INFO(sLogger, ("profiling", "started"));
     return true;
 }
 
 void LogtailMonitor::Stop() {
-    mIsThreadRunning = false;
+    {
+        lock_guard<mutex> lock(mThreadRunningMux);
+        mIsThreadRunning = false;
+    }
     future_status s = mThreadRes.wait_for(chrono::seconds(1));
     if (s == future_status::ready) {
         LOG_INFO(sLogger, ("profiling", "stopped successfully"));
@@ -131,67 +133,76 @@ void LogtailMonitor::Stop() {
 void LogtailMonitor::Monitor() {
     int32_t lastMonitorTime = time(NULL);
     CpuStat curCpuStat;
-    while (mIsThreadRunning.load()) {
-        sleep(1);
-        GetCpuStat(curCpuStat);
+    {
+        unique_lock<mutex> lock(mThreadRunningMux);
+        mIsThreadRunning = true;
+        while (mIsThreadRunning) {
+            GetCpuStat(curCpuStat);
 
-        // Update mRealtimeCpuStat for InputFlowControl.
-        if (AppConfig::GetInstance()->IsInputFlowControl()) {
-            CalCpuStat(curCpuStat, mRealtimeCpuStat);
-        }
+            // Update mRealtimeCpuStat for InputFlowControl.
+            if (AppConfig::GetInstance()->IsInputFlowControl()) {
+                CalCpuStat(curCpuStat, mRealtimeCpuStat);
+            }
 
-        int32_t monitorTime = time(NULL);
+            int32_t monitorTime = time(NULL);
 #if defined(__linux__) // TODO: Add auto scale support for Windows.
-        // Update related CPU statistics for controlling resource auto scale (Linux only).
-        if (AppConfig::GetInstance()->IsResourceAutoScale()) {
-            CalCpuStat(curCpuStat, mCpuStatForScale);
-            CalOsCpuStat();
-            mCpuArrayForScale[mCpuArrayForScaleIdx % CPU_STAT_FOR_SCALE_ARRAY_SIZE] = mCpuStatForScale.mCpuUsage;
-            mOsCpuArrayForScale[mCpuArrayForScaleIdx % CPU_STAT_FOR_SCALE_ARRAY_SIZE] = mOsCpuStatForScale.mOsCpuUsage;
-            ++mCpuArrayForScaleIdx;
-            CheckScaledCpuUsageUpLimit();
-            LOG_DEBUG(
-                sLogger,
-                ("mCpuStatForScale", mCpuStatForScale.mCpuUsage)("mOsCpuStatForScale", mOsCpuStatForScale.mOsCpuUsage));
-        }
+            // Update related CPU statistics for controlling resource auto scale (Linux only).
+            if (AppConfig::GetInstance()->IsResourceAutoScale()) {
+                CalCpuStat(curCpuStat, mCpuStatForScale);
+                CalOsCpuStat();
+                mCpuArrayForScale[mCpuArrayForScaleIdx % CPU_STAT_FOR_SCALE_ARRAY_SIZE] = mCpuStatForScale.mCpuUsage;
+                mOsCpuArrayForScale[mCpuArrayForScaleIdx % CPU_STAT_FOR_SCALE_ARRAY_SIZE]
+                    = mOsCpuStatForScale.mOsCpuUsage;
+                ++mCpuArrayForScaleIdx;
+                CheckScaledCpuUsageUpLimit();
+                LOG_DEBUG(sLogger,
+                          ("mCpuStatForScale", mCpuStatForScale.mCpuUsage)("mOsCpuStatForScale",
+                                                                           mOsCpuStatForScale.mOsCpuUsage));
+            }
 #endif
 
-        // Update statistics and send to logtail_status_profile regularly.
-        // If CPU or memory limit triggered, send to logtail_suicide_profile.
-        if ((monitorTime - lastMonitorTime) < INT32_FLAG(monitor_interval))
-            continue;
-        lastMonitorTime = monitorTime;
+            // Update statistics and send to logtail_status_profile regularly.
+            // If CPU or memory limit triggered, send to logtail_suicide_profile.
+            if ((monitorTime - lastMonitorTime) < INT32_FLAG(monitor_interval))
+                continue;
+            lastMonitorTime = monitorTime;
 
-        // Memory usage has exceeded limit, try to free some timeout objects.
-        if (1 == mMemStat.mViolateNum) {
-            LOG_DEBUG(sLogger, ("Memory is upper limit", "run gabbage collection."));
-            LogInput::GetInstance()->SetForceClearFlag(true);
-        }
-        GetMemStat();
-        CalCpuStat(curCpuStat, mCpuStat);
-        // CalCpuLimit and CalMemLimit will check if the number of violation (CPU
-        // or memory exceeds limit) // is greater or equal than limits (
-        // flag(cpu_limit_num) and flag(mem_limit_num)).
-        // Returning true means too much violations, so we have to prepare to restart
-        // logtail to release resource.
-        // Mainly for controlling memory because we have no idea to descrease memory usage.
-        if (CheckCpuLimit() || CheckMemLimit()) {
-            LOG_ERROR(sLogger,
-                      ("Resource used by program exceeds upper limit",
-                       "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
-            Suicide();
-        }
+            // Memory usage has exceeded limit, try to free some timeout objects.
+            if (1 == mMemStat.mViolateNum) {
+                LOG_DEBUG(sLogger, ("Memory is upper limit", "run gabbage collection."));
+                LogInput::GetInstance()->SetForceClearFlag(true);
+            }
+            GetMemStat();
+            CalCpuStat(curCpuStat, mCpuStat);
+            // CalCpuLimit and CalMemLimit will check if the number of violation (CPU
+            // or memory exceeds limit) // is greater or equal than limits (
+            // flag(cpu_limit_num) and flag(mem_limit_num)).
+            // Returning true means too much violations, so we have to prepare to restart
+            // logtail to release resource.
+            // Mainly for controlling memory because we have no idea to descrease memory usage.
+            if (CheckCpuLimit() || CheckMemLimit()) {
+                LOG_ERROR(sLogger,
+                          ("Resource used by program exceeds upper limit",
+                           "prepare restart Logtail")("cpu_usage", mCpuStat.mCpuUsage)("mem_rss", mMemStat.mRss));
+                Suicide();
+            }
 
-        if (IsHostIpChanged()) {
-            Suicide();
-        }
+            if (IsHostIpChanged()) {
+                Suicide();
+            }
 
-        SendStatusProfile(false);
-        if (BOOL_FLAG(logtail_dump_monitor_info)) {
-            if (!DumpMonitorInfo(monitorTime))
-                LOG_ERROR(sLogger, ("Fail to dump monitor info", ""));
+            SendStatusProfile(false);
+            if (BOOL_FLAG(logtail_dump_monitor_info)) {
+                if (!DumpMonitorInfo(monitorTime))
+                    LOG_ERROR(sLogger, ("Fail to dump monitor info", ""));
+            }
+
+            if (mStopCV.wait_for(lock, std::chrono::seconds(1), [this]() { return !mIsThreadRunning; })) {
+                break;
+            }
         }
     }
+    SendStatusProfile(true);
 }
 
 template <typename T>
@@ -293,7 +304,7 @@ bool LogtailMonitor::SendStatusProfile(bool suicide) {
     AddLogContent(logPtr, "ecs_regioon_id", LogFileProfiler::mECSRegionID);
     ClearMetric();
 
-    if (!mIsThreadRunning.load())
+    if (!mIsThreadRunning)
         return false;
 
     // Dump to local and send to enabled regions.

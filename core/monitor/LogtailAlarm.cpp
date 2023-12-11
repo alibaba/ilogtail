@@ -103,13 +103,17 @@ LogtailAlarm::LogtailAlarm() {
 }
 
 void LogtailAlarm::Init() {
-    mIsThreadRunning = true;
     mThreadRes = async(launch::async, &LogtailAlarm::SendAlarmLoop, this);
     LOG_INFO(sLogger, ("alarm gathering", "started"));
 }
 
 void LogtailAlarm::Stop() {
-    mIsThreadRunning = false;
+    ForceToSend();
+    {
+        lock_guard<mutex> lock(mThreadRunningMux);
+        mIsThreadRunning = false;
+    }
+    mStopCV.notify_one();
     future_status s = mThreadRes.wait_for(chrono::seconds(1));
     if (s == future_status::ready) {
         LOG_INFO(sLogger, ("alarm gathering", "stopped successfully"));
@@ -119,9 +123,17 @@ void LogtailAlarm::Stop() {
 }
 
 bool LogtailAlarm::SendAlarmLoop() {
-    while (mIsThreadRunning.load()) {
-        SendAllRegionAlarm();
+    {
+        unique_lock<mutex> lock(mThreadRunningMux);
+        mIsThreadRunning = true;
+        while (mIsThreadRunning) {
+            SendAllRegionAlarm();
+            if (mStopCV.wait_for(lock, std::chrono::seconds(3), [this]() { return !mIsThreadRunning; })) {
+                break;
+            }
+        }
     }
+    SendAllRegionAlarm();
     return true;
 }
 

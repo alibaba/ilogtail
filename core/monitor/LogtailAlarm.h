@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <future>
 #include <map>
 #include <memory>
@@ -145,7 +146,10 @@ private:
     void SendAllRegionAlarm();
 
     std::future<bool> mThreadRes;
-    std::atomic_bool mIsThreadRunning = false;
+    std::mutex mThreadRunningMux;
+    bool mIsThreadRunning = false;
+    std::condition_variable mStopCV;
+
 
     std::vector<std::string> mMessageType;
     std::map<std::string, std::pair<std::shared_ptr<LogtailAlarmVector>, std::vector<int32_t> > > mAllAlarmMap;
