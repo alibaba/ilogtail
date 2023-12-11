@@ -29,8 +29,6 @@
 #include "streamlog/StreamLogManager.h"
 #endif
 
-DEFINE_FLAG_INT32(exit_flushout_duration, "exit process flushout duration", 20 * 1000);
-
 using namespace std;
 
 namespace logtail {
@@ -81,8 +79,20 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     for (auto& config : diff.mModified) {
         auto p = BuildPipeline(std::move(config));
         if (!p) {
+            LOG_WARNING(sLogger,
+                        ("failed to build pipeline for existing config",
+                         "keep current pipeline running")("config", config.mName));
+            LogtailAlarm::GetInstance()->SendAlarm(
+                CATEGORY_CONFIG_ALARM,
+                "failed to build pipeline for existing config: keep current pipeline running, config: " + config.mName,
+                config.mProject,
+                config.mLogstore,
+                config.mRegion);
             continue;
         }
+        LOG_INFO(sLogger,
+                 ("pipeline building for existing config succeeded",
+                  "stop the old pipeline and start the new one")("config", config.mName));
         mPipelineNameEntityMap[config.mName]->Stop(false);
         DecreasePluginUsageCnt(mPipelineNameEntityMap[config.mName]->GetPluginStatistics());
         mPipelineNameEntityMap[config.mName] = p;
@@ -91,8 +101,18 @@ void logtail::PipelineManager::UpdatePipelines(ConfigDiff& diff) {
     for (auto& config : diff.mAdded) {
         auto p = BuildPipeline(std::move(config));
         if (!p) {
+            LOG_WARNING(sLogger,
+                        ("failed to build pipeline for new config", "skip current object")("config", config.mName));
+            LogtailAlarm::GetInstance()->SendAlarm(
+                CATEGORY_CONFIG_ALARM,
+                "failed to build pipeline for new config: skip current object, config: " + config.mName,
+                config.mProject,
+                config.mLogstore,
+                config.mRegion);
             continue;
         }
+        LOG_INFO(sLogger,
+                 ("pipeline building for new config succeeded", "begin to start pipeline")("config", config.mName));
         mPipelineNameEntityMap[config.mName] = p;
         p->Start();
     }
@@ -178,6 +198,7 @@ string PipelineManager::GetPluginStatistics() const {
 }
 
 void PipelineManager::StopAllPipelines() {
+    LOG_INFO(sLogger, ("stop all pipelines", "starts"));
 #if defined(__ENTERPRISE__) && defined(__linux__)
     if (AppConfig::GetInstance()->GetOpenStreamLog()) {
         StreamLogManager::GetInstance()->Shutdown();
@@ -196,19 +217,16 @@ void PipelineManager::StopAllPipelines() {
         logProcessFlushFlag = LogProcess::GetInstance()->FlushOut(10);
     }
     if (!logProcessFlushFlag) {
-        LOG_WARNING(sLogger, ("flush log process buffer", "fail"));
+        LOG_WARNING(sLogger, ("flush process daemon queue", "failed"));
     } else {
-        LOG_INFO(sLogger, ("flush log process buffer", "success"));
+        LOG_INFO(sLogger, ("flush process daemon queue", "succeeded"));
     }
     LogProcess::GetInstance()->HoldOn();
 
     LogtailPlugin::GetInstance()->HoldOn(true);
 
-    if (!(Sender::Instance()->FlushOut(INT32_FLAG(exit_flushout_duration)))) {
-        LOG_WARNING(sLogger, ("flush out sender data", "fail"));
-    } else {
-        LOG_INFO(sLogger, ("flush out sender data", "success"));
-    }
+    // Sender should be stopped after profiling threads are stopped.
+    LOG_INFO(sLogger, ("stop all pipelines", "succeeded"));
 }
 
 shared_ptr<Pipeline> PipelineManager::BuildPipeline(Config&& config) {

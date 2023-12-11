@@ -23,57 +23,69 @@
 #include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
+
 const std::string ProcessorParseTimestampNative::sName = "processor_parse_timestamp_native";
-// const std::string ProcessorParseTimestampNative::PRECISE_TIMESTAMP_DEFAULT_KEY = "precise_timestamp";
 
 bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     std::string errorMsg;
+
+    // SourceKey
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
 
+    // SourceFormat
     if (!GetMandatoryStringParam(config, "SourceFormat", mSourceFormat, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
 
+    // SourceTimezone
     if (!GetOptionalStringParam(config, "SourceTimezone", mSourceTimezone, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceTimezone, sName, mContext->GetConfigName());
-    }
-    if (mSourceTimezone != ""
-        && !ParseLogTimeZoneOffsetSecond(mLogTimeZoneOffsetSecond, mSourceTimezone, errorMsg, true)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mLogTimeZoneOffsetSecond, sName, mContext->GetConfigName());
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             errorMsg,
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
+    } else if (!ParseLogTimeZoneOffsetSecond(mSourceTimezone, false, mLogTimeZoneOffsetSecond)) {
+        PARAM_WARNING_IGNORE(mContext->GetLogger(),
+                             mContext->GetAlarm(),
+                             "string param SourceTimezone is not valid",
+                             sName,
+                             mContext->GetConfigName(),
+                             mContext->GetProjectName(),
+                             mContext->GetLogstoreName(),
+                             mContext->GetRegion());
     }
 
+    // SourceYear
     if (!GetOptionalIntParam(config, "SourceYear", mSourceYear, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceYear, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mSourceYear,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
-    // mLegacyPreciseTimestampConfig.enabled = false;
-    // if (IsExist(config, "PreciseTimestampKey")) {
-    //     mLegacyPreciseTimestampConfig.enabled = true;
-
-    //     std::string preciseTimestampKey = PRECISE_TIMESTAMP_DEFAULT_KEY;
-    //     if (!GetOptionalStringParam(config, "PreciseTimestampKey", preciseTimestampKey, errorMsg)) {
-    //         PARAM_WARNING_DEFAULT(
-    //             mContext->GetLogger(), errorMsg, preciseTimestampKey, sName, mContext->GetConfigName());
-    //     }
-    //     mLegacyPreciseTimestampConfig.key = preciseTimestampKey;
-
-    //     std::string preciseTimestampUnit = "";
-    //     if (!GetOptionalStringParam(config, "PreciseTimestampUnit", preciseTimestampUnit, errorMsg)) {
-    //         PARAM_WARNING_DEFAULT(
-    //             mContext->GetLogger(), errorMsg, preciseTimestampUnit, sName, mContext->GetConfigName());
-    //     }
-    //     if (0 == preciseTimestampUnit.compare("ms")) {
-    //         mLegacyPreciseTimestampConfig.unit = TimeStampUnit::MILLISECOND;
-    //     } else if (0 == preciseTimestampUnit.compare("us")) {
-    //         mLegacyPreciseTimestampConfig.unit = TimeStampUnit::MICROSECOND;
-    //     } else if (0 == preciseTimestampUnit.compare("ns")) {
-    //         mLegacyPreciseTimestampConfig.unit = TimeStampUnit::NANOSECOND;
-    //     } else {
-    //         mLegacyPreciseTimestampConfig.unit = TimeStampUnit::MILLISECOND;
-    //     }
-    // }
 
     mParseTimeFailures = &(GetContext().GetProcessProfile().parseTimeFailures);
     mHistoryFailures = &(GetContext().GetProcessProfile().historyFailures);
@@ -83,6 +95,7 @@ bool ProcessorParseTimestampNative::Init(const Json::Value& config) {
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     mProcHistoryFailureTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_HISTORY_FAILURE_TOTAL);
+
     return true;
 }
 

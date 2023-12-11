@@ -20,10 +20,10 @@
 #include <fnmatch.h>
 #endif
 
+#include "common/FileSystemUtil.h"
 #include "common/LogtailCommonFlags.h"
 #include "common/ParamExtractor.h"
 #include "common/StringTools.h"
-#include "common/FileSystemUtil.h"
 
 using namespace std;
 
@@ -133,17 +133,39 @@ bool FileDiscoveryOptions::CompareByDepthAndCreateTime(
 
 bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext& ctx, const string& pluginName) {
     string errorMsg;
+
     // FilePaths + MaxDirSearchDepth
     if (!GetMandatoryListParam<string>(config, "FilePaths", mFilePaths, errorMsg)) {
-        PARAM_ERROR_RETURN(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(),
+                           ctx.GetAlarm(),
+                           errorMsg,
+                           pluginName,
+                           ctx.GetConfigName(),
+                           ctx.GetProjectName(),
+                           ctx.GetLogstoreName(),
+                           ctx.GetRegion());
     }
     if (mFilePaths.size() != 1) {
-        PARAM_ERROR_RETURN(ctx.GetLogger(), "param FilePaths has more than 1 element", pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(),
+                           ctx.GetAlarm(),
+                           "list param FilePaths has more than 1 element",
+                           pluginName,
+                           ctx.GetConfigName(),
+                           ctx.GetProjectName(),
+                           ctx.GetLogstoreName(),
+                           ctx.GetRegion());
     }
     auto dirAndFile = GetDirAndFileNameFromPath(mFilePaths[0]);
     mBasePath = dirAndFile.first, mFilePattern = dirAndFile.second;
     if (mBasePath.empty() || mFilePattern.empty()) {
-        PARAM_ERROR_RETURN(ctx.GetLogger(), "param FilePaths[0] is invalid", pluginName, ctx.GetConfigName());
+        PARAM_ERROR_RETURN(ctx.GetLogger(),
+                           ctx.GetAlarm(),
+                           "string param FilePaths[0] is invalid",
+                           pluginName,
+                           ctx.GetConfigName(),
+                           ctx.GetProjectName(),
+                           ctx.GetLogstoreName(),
+                           ctx.GetRegion());
     }
 #if defined(_MSC_VER)
     mBasePath = EncodingConverter::GetInstance()->FromUTF8ToACP(mBasePath);
@@ -160,26 +182,53 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
         }
         // MaxDirSearchDepth is only valid when parent path ends with **
         if (!GetOptionalIntParam(config, "MaxDirSearchDepth", mMaxDirSearchDepth, errorMsg)) {
-            PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, 0, pluginName, ctx.GetConfigName());
+            PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                                  ctx.GetAlarm(),
+                                  errorMsg,
+                                  mMaxDirSearchDepth,
+                                  pluginName,
+                                  ctx.GetConfigName(),
+                                  ctx.GetProjectName(),
+                                  ctx.GetLogstoreName(),
+                                  ctx.GetRegion());
         }
     }
     ParseWildcardPath();
 
     // PreservedDirDepth
     if (!GetOptionalIntParam(config, "PreservedDirDepth", mPreservedDirDepth, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, -1, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mPreservedDirDepth,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // ExcludeFilePaths
     if (!GetOptionalListParam<string>(config, "ExcludeFilePaths", mExcludeFilePaths, errorMsg)) {
-        PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                             ctx.GetAlarm(),
+                             errorMsg,
+                             pluginName,
+                             ctx.GetConfigName(),
+                             ctx.GetProjectName(),
+                             ctx.GetLogstoreName(),
+                             ctx.GetRegion());
     } else {
         for (size_t i = 0; i < mExcludeFilePaths.size(); ++i) {
             if (!filesystem::path(mExcludeFilePaths[i]).is_absolute()) {
                 PARAM_WARNING_IGNORE(ctx.GetLogger(),
-                                     "ExcludeFilePaths[" + ToString(i) + "] is not absolute",
+                                     ctx.GetAlarm(),
+                                     "string param ExcludeFilePaths[" + ToString(i) + "] is not absolute",
                                      pluginName,
-                                     ctx.GetConfigName());
+                                     ctx.GetConfigName(),
+                                     ctx.GetProjectName(),
+                                     ctx.GetLogstoreName(),
+                                     ctx.GetRegion());
                 continue;
             }
             bool isMultipleLevelWildcard = mExcludeFilePaths[i].find("**") != string::npos;
@@ -193,14 +242,25 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
 
     // ExcludeFiles
     if (!GetOptionalListParam<string>(config, "ExcludeFiles", mExcludeFiles, errorMsg)) {
-        PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                             ctx.GetAlarm(),
+                             errorMsg,
+                             pluginName,
+                             ctx.GetConfigName(),
+                             ctx.GetProjectName(),
+                             ctx.GetLogstoreName(),
+                             ctx.GetRegion());
     } else {
         for (size_t i = 0; i < mExcludeFiles.size(); ++i) {
             if (mExcludeFiles[i].find(filesystem::path::preferred_separator) != string::npos) {
                 PARAM_WARNING_IGNORE(ctx.GetLogger(),
-                                     "ExcludeFiles[" + ToString(i) + "] contains path separator",
+                                     ctx.GetAlarm(),
+                                     "string param ExcludeFiles[" + ToString(i) + "] contains path separator",
                                      pluginName,
-                                     ctx.GetConfigName());
+                                     ctx.GetConfigName(),
+                                     ctx.GetProjectName(),
+                                     ctx.GetLogstoreName(),
+                                     ctx.GetRegion());
                 continue;
             }
             mFileNameBlacklist.push_back(mExcludeFiles[i]);
@@ -209,14 +269,25 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
 
     // ExcludeDirs
     if (!GetOptionalListParam<string>(config, "ExcludeDirs", mExcludeDirs, errorMsg)) {
-        PARAM_WARNING_IGNORE(ctx.GetLogger(), errorMsg, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                             ctx.GetAlarm(),
+                             errorMsg,
+                             pluginName,
+                             ctx.GetConfigName(),
+                             ctx.GetProjectName(),
+                             ctx.GetLogstoreName(),
+                             ctx.GetRegion());
     } else {
         for (size_t i = 0; i < mExcludeDirs.size(); ++i) {
             if (!filesystem::path(mExcludeDirs[i]).is_absolute()) {
                 PARAM_WARNING_IGNORE(ctx.GetLogger(),
-                                     "ExcludeDirs[" + ToString(i) + "] is not absolute",
+                                     ctx.GetAlarm(),
+                                     "string param ExcludeDirs[" + ToString(i) + "] is not absolute",
                                      pluginName,
-                                     ctx.GetConfigName());
+                                     ctx.GetConfigName(),
+                                     ctx.GetProjectName(),
+                                     ctx.GetLogstoreName(),
+                                     ctx.GetRegion());
                 continue;
             }
             bool isMultipleLevelWildcard = mExcludeDirs[i].find("**") != string::npos;
@@ -241,14 +312,30 @@ bool FileDiscoveryOptions::Init(const Json::Value& config, const PipelineContext
     // AllowingCollectingFilesInRootDir
     if (!GetOptionalBoolParam(
             config, "AllowingCollectingFilesInRootDir", mAllowingCollectingFilesInRootDir, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, false, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mAllowingCollectingFilesInRootDir,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     } else if (mAllowingCollectingFilesInRootDir) {
         BOOL_FLAG(enable_root_path_collection) = mAllowingCollectingFilesInRootDir;
     }
 
     // AllowingIncludedByMultiConfigs
     if (!GetOptionalBoolParam(config, "AllowingIncludedByMultiConfigs", mAllowingIncludedByMultiConfigs, errorMsg)) {
-        PARAM_WARNING_DEFAULT(ctx.GetLogger(), errorMsg, false, pluginName, ctx.GetConfigName());
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mAllowingIncludedByMultiConfigs,
+                              pluginName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     return true;
@@ -598,8 +685,7 @@ bool FileDiscoveryOptions::IsSameDockerContainerPath(const string& paramsJSONStr
     }
 
     for (size_t i = 0; i < mContainerInfos->size(); ++i) {
-        unordered_map<string, DockerContainerPath>::iterator iter
-            = allPathMap.find((*mContainerInfos)[i].mContainerID);
+        unordered_map<string, DockerContainerPath>::iterator iter = allPathMap.find((*mContainerInfos)[i].mContainerID);
         // need delete
         if (iter == allPathMap.end()) {
             return false;
@@ -643,8 +729,7 @@ bool FileDiscoveryOptions::UpdateDockerContainerPath(const string& paramsJSONStr
     }
     // if update all, clear and reset
     mContainerInfos->clear();
-    for (unordered_map<string, DockerContainerPath>::iterator iter = allPathMap.begin();
-         iter != allPathMap.end();
+    for (unordered_map<string, DockerContainerPath>::iterator iter = allPathMap.begin(); iter != allPathMap.end();
          ++iter) {
         mContainerInfos->push_back(iter->second);
     }

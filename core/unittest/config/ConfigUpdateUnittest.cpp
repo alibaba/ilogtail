@@ -33,7 +33,7 @@ class PipelineMock : public Pipeline {
 public:
     bool Init(Config&& config) {
         mConfig = std::move(config.mDetail);
-        return mConfig["valid"].asBool();
+        return (*mConfig)["valid"].asBool();
     }
 };
 
@@ -78,9 +78,7 @@ protected:
         ConfigWatcher::GetInstance()->SetPipelineManager(PipelineManagerMock::GetInstance());
     }
 
-    static void TearDownTestCase() {
-        PluginRegistry::GetInstance()->UnloadPlugins();
-    }
+    static void TearDownTestCase() { PluginRegistry::GetInstance()->UnloadPlugins(); }
 
     void SetUp() override {
         filesystem::create_directories(configDir);

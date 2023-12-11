@@ -27,23 +27,9 @@
 
 namespace logtail {
 
-struct SensitiveWordCastOption {
-    static const int32_t MD5_OPTION = 0;
-    static const int32_t CONST_OPTION = 1;
-    int32_t option;
-    std::string key;
-    std::string constValue;
-    bool replaceAll;
-    std::shared_ptr<re2::RE2> mRegex; // deleted when config is deleted
-
-    SensitiveWordCastOption() : option(CONST_OPTION), replaceAll(false) {}
-
-    ~SensitiveWordCastOption() {}
-};
-
 struct Config {
     std::string mName;
-    Json::Value mDetail;
+    std::unique_ptr<Json::Value> mDetail;
     uint32_t mCreateTime = 0;
     const Json::Value* mGlobal = nullptr;
     std::vector<const Json::Value*> mInputs;
@@ -58,8 +44,12 @@ struct Config {
     bool mHasNativeFlusher = false;
     bool mHasGoFlusher = false;
     bool mIsFirstProcessorJson = false;
+    // for alarm only
+    std::string mProject;
+    std::string mLogstore;
+    std::string mRegion;
 
-    Config(const std::string& name, Json::Value&& detail) : mName(name), mDetail(std::move(detail)) {}
+    Config(const std::string& name, std::unique_ptr<Json::Value>&& detail) : mName(name), mDetail(std::move(detail)) {}
 
     bool Parse();
 
@@ -82,8 +72,16 @@ struct Config {
 
     bool HasGoPlugin() const { return mHasGoFlusher || mHasGoProcessor || mHasGoInput; }
 
-    void ReplaceEnvVar();
+    bool ReplaceEnvVar();
 };
+
+inline bool operator==(const Config& lhs, const Config& rhs) {
+    return (lhs.mName == rhs.mName) && (*lhs.mDetail == *rhs.mDetail);
+}
+
+inline bool operator!=(const Config& lhs, const Config& rhs) {
+    return !(lhs == rhs);
+}
 
 bool LoadConfigDetailFromFile(const std::filesystem::path& filepath, Json::Value& detail);
 bool ParseConfigDetail(const std::string& content,

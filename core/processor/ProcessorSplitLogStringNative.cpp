@@ -28,26 +28,49 @@ bool ProcessorSplitLogStringNative::Init(const Json::Value& config) {
 
     // SourceKey
     if (!GetOptionalStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, mSourceKey, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mSourceKey,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     // SplitChar
     int32_t splitter = '\n';
     if (!GetOptionalIntParam(config, "SplitChar", splitter, errorMsg)) {
-        PARAM_WARNING_DEFAULT(mContext->GetLogger(), errorMsg, "\\n", sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              "\\n",
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     } else {
         mSplitChar = static_cast<char>(splitter);
     }
 
     // AppendingLogPositionMeta
     if (!GetOptionalBoolParam(config, "AppendingLogPositionMeta", mAppendingLogPositionMeta, errorMsg)) {
-        PARAM_WARNING_DEFAULT(
-            mContext->GetLogger(), errorMsg, mAppendingLogPositionMeta, sName, mContext->GetConfigName());
+        PARAM_WARNING_DEFAULT(mContext->GetLogger(),
+                              mContext->GetAlarm(),
+                              errorMsg,
+                              mAppendingLogPositionMeta,
+                              sName,
+                              mContext->GetConfigName(),
+                              mContext->GetProjectName(),
+                              mContext->GetLogstoreName(),
+                              mContext->GetRegion());
     }
 
     mFeedLines = &(GetContext().GetProcessProfile().feedLines);
     mSplitLines = &(GetContext().GetProcessProfile().splitLines);
-    
+
     return true;
 }
 

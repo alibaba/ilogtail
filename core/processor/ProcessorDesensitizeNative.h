@@ -28,6 +28,10 @@ public:
 
     enum class DesensitizeMethod { MD5_OPTION, CONST_OPTION };
 
+    const std::string& Name() const override { return sName; }
+    bool Init(const Json::Value& config) override;
+    void Process(PipelineEventGroup& logGroup) override;
+
     // Source field name.
     std::string mSourceKey;
     // Desensitization method. Optional values include:
@@ -43,19 +47,14 @@ public:
     // Whether to replace all matching sensitive content.
     bool mReplacingAll = true;
 
-
-    const std::string& Name() const override { return sName; }
-    bool Init(const Json::Value& config) override;
-    void Process(PipelineEventGroup& logGroup) override;
-
 protected:
     bool IsSupportedEvent(const PipelineEventPtr& e) const override;
 
 private:
-    std::shared_ptr<re2::RE2> mRegex;
-
     void ProcessEvent(PipelineEventPtr& e);
     void CastOneSensitiveWord(std::string* value);
+
+    std::shared_ptr<re2::RE2> mRegex;
 
     CounterPtr mProcDesensitizeRecodesTotal;
 

@@ -19,35 +19,78 @@
 #include "app_config/AppConfig.h"
 #include "common/ParamExtractor.h"
 #include "monitor/MetricConstants.h"
-#include "plugin/instance/ProcessorInstance.h"
 
 namespace logtail {
+
 const std::string ProcessorParseRegexNative::sName = "processor_parse_regex_native";
 
 bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     std::string errorMsg;
+
+    // SourceKey
     if (!GetMandatoryStringParam(config, "SourceKey", mSourceKey, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
+
+    // Regex
     if (!GetMandatoryStringParam(config, "Regex", mRegex, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     } else if (!IsRegexValid(mRegex)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), "param Regex is not valid regex", sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           "mandatory string param Regex is not a valid regex",
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
+    mReg = boost::regex(mRegex);
+    mIsWholeLineMode = mRegex == "(.*)";
+
+    // Keys
     if (!GetMandatoryListParam(config, "Keys", mKeys, errorMsg)) {
-        PARAM_ERROR_RETURN(mContext->GetLogger(), errorMsg, sName, mContext->GetConfigName());
+        PARAM_ERROR_RETURN(mContext->GetLogger(),
+                           mContext->GetAlarm(),
+                           errorMsg,
+                           sName,
+                           mContext->GetConfigName(),
+                           mContext->GetProjectName(),
+                           mContext->GetLogstoreName(),
+                           mContext->GetRegion());
     }
-
-    mCommonParserOptions.Init(config, *mContext, sName);
-
-    for (auto& it : mKeys) {
+    // Since the 'keys' field in old logtail config is an array with a single comma separated string inside (e.g.,
+    // ["k1,k2,k3"]), which is different from openAPI, chances are the 'key' field in openAPI is unintentionally set to
+    // the 'keys' field in logtail config. However, such wrong format can still work in logtail due to the conversion
+    // done in the server, which simply concatenates all strings in the array with comma. Therefor, to be compatibal
+    // with such wrong behavior, we must explicitly allow such format.
+    if (mKeys.size() == 1 && mKeys[0].find(',') != std::string::npos) {
+        mKeys = SplitString(mKeys[0], ",");
+    }
+    for (const auto& it : mKeys) {
         if (it == mSourceKey) {
             mSourceKeyOverwritten = true;
             break;
         }
     }
-    mReg = boost::regex(mRegex);
-    mIsWholeLineMode = mRegex == "(.*)";
+
+    if (!mCommonParserOptions.Init(config, *mContext, sName)) {
+        return false;
+    }
 
     mParseFailures = &(GetContext().GetProcessProfile().parseFailures);
     mRegexMatchFailures = &(GetContext().GetProcessProfile().regexMatchFailures);
@@ -58,6 +101,7 @@ bool ProcessorParseRegexNative::Init(const Json::Value& config) {
     mProcDiscardRecordsTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_DISCARD_RECORDS_TOTAL);
     mProcParseErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_PARSE_ERROR_TOTAL);
     mProcKeyCountNotMatchErrorTotal = GetMetricsRecordRef().CreateCounter(METRIC_PROC_KEY_COUNT_NOT_MATCH_ERROR_TOTAL);
+
     return true;
 }
 

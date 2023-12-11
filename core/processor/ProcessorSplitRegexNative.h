@@ -33,7 +33,6 @@ public:
     std::string mSourceKey = DEFAULT_CONTENT_KEY;
     MultilineOptions mMultiline;
     bool mAppendingLogPositionMeta = false;
-    CommonParserOptions mCommonParserOptions;
 
     const std::string& Name() const override { return sName; }
     bool Init(const Json::Value& config) override;

@@ -40,14 +40,12 @@ bool ProcessorInstance::Init(const Json::Value& config, PipelineContext& context
 }
 
 void ProcessorInstance::Process(std::vector<PipelineEventGroup>& logGroupList) {
-    if (logGroupList.size() <= 0) {
+    if (logGroupList.empty()) {
         return;
     } 
     for (const auto& logGroup : logGroupList) {
         mProcInRecordsTotal->Add(logGroup.GetEvents().size());
     }
- 
-    PipelineEventGroup& logGroup = logGroupList[0];
 
     uint64_t startTime = GetCurrentTimeInMicroSeconds();
     mPlugin->Process(logGroupList);

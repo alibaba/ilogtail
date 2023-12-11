@@ -389,14 +389,12 @@ bool ParseTimeZoneOffsetSecond(const std::string& logTZ, int& logTZSecond) {
     return true;
 }
 
-bool ParseLogTimeZoneOffsetSecond(int& logTimeZoneOffsetSecond,
-                                  const std::string& logTZ,
-                                  std::string& errorMsg,
-                                  bool isAdjustmentNeeded) {
+bool ParseLogTimeZoneOffsetSecond(const std::string& logTZ, bool isAdjustmentNeeded, int& logTimeZoneOffsetSecond) {
+    if (logTZ.empty()) {
+        return true;
+    }
     int logTZSecond = 0;
     if (!ParseTimeZoneOffsetSecond(logTZ, logTZSecond)) {
-        errorMsg
-            = "invalid log time zone specified, will parse log time without time zone adjusted, time zone: " + logTZ;
         return false;
     } else {
         if (isAdjustmentNeeded) {

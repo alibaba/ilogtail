@@ -25,9 +25,8 @@ namespace logtail {
 
 class ProcessorParseRegexNativeUnittest : public ::testing::Test {
 public:
-    void SetUp() override { mContext.SetConfigName("project##config_0"); }
-
     void TestInit();
+    void OnSuccessfulInit();
     void TestProcessWholeLine();
     void TestProcessRegex();
     void TestAddLog();
@@ -37,26 +36,12 @@ public:
     void TestProcessRegexRaw();
     void TestProcessRegexContent();
 
-    PipelineContext mContext;
+protected:
+    void SetUp() override { ctx.SetConfigName("test_config"); }
+
+private:
+    PipelineContext ctx;
 };
-
-UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestInit);
-
-UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessWholeLine);
-
-UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessRegex);
-
-UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestAddLog);
-
-UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessEventKeepUnmatch);
-
-UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessEventDiscardUnmatch);
-
-UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessEventKeyCountUnmatch);
-
-UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessRegexRaw);
-
-UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessRegexContent);
 
 void ProcessorParseRegexNativeUnittest::TestInit() {
     // make config
@@ -74,7 +59,33 @@ void ProcessorParseRegexNativeUnittest::TestInit() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
+}
+
+void ProcessorParseRegexNativeUnittest::OnSuccessfulInit() {
+    // Keys
+    std::unique_ptr<ProcessorParseRegexNative> processor;
+    Json::Value configJson;
+    std::string configStr, errorMsg;
+
+    configStr = R"""(
+        {
+            "Type": "processor_parse_regex_native",
+            "SourceKey": "content",
+            "Keys": [
+                "k1,k2"
+            ],
+            "Regex": "(\\d+)\\s+(\\d+)"
+        }
+    )""";
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    processor.reset(new ProcessorParseRegexNative());
+    processor->SetContext(ctx);
+    processor->SetMetricsRecordRef(ProcessorParseRegexNative::sName, "1");
+    APSARA_TEST_TRUE(processor->Init(configJson));
+    APSARA_TEST_EQUAL(2, processor->mKeys.size());
+    APSARA_TEST_EQUAL("k1", processor->mKeys[0]);
+    APSARA_TEST_EQUAL("k2", processor->mKeys[1]);
 }
 
 void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
@@ -98,7 +109,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "content" : "line1\nline2"
                 },
                 "timestamp" : 12345678901,
@@ -108,7 +118,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "content" : "line3\nline4"
                 },
                 "timestamp" : 12345678901,
@@ -122,11 +131,11 @@ void ProcessorParseRegexNativeUnittest::TestProcessWholeLine() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    
+
     // judge result
     std::string outJson = eventGroupList[0].ToJsonString();
     APSARA_TEST_STREQ_FATAL(CompactJson(inJson).c_str(), CompactJson(outJson).c_str());
@@ -164,8 +173,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -173,8 +181,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "content" : "value3\tvalue4",
-                    "__file_offset__": "0"
+                    "content" : "value3\tvalue4"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -186,11 +193,11 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    
+
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -198,7 +205,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "key1" : "value1",
                     "key2" : "value2",
                     "rawLog" : "value1\tvalue2"
@@ -210,7 +216,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegex() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "key1" : "value3",
                     "key2" : "value4",
                     "rawLog" : "value3\tvalue4"
@@ -247,8 +252,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -256,8 +260,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "content" : "value3\tvalue4",
-                    "__file_offset__": "0"
+                    "content" : "value3\tvalue4"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -269,11 +272,11 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    
+
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -281,7 +284,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "key2" : "value2",
                     "rawLog" : "value1"
                 },
@@ -292,7 +294,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexRaw() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "key2" : "value4",
                     "rawLog" : "value3"
                 },
@@ -328,8 +329,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -337,8 +337,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "content" : "value3\tvalue4",
-                    "__file_offset__": "0"
+                    "content" : "value3\tvalue4"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -350,11 +349,11 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    
+
     // judge result
     std::string expectJson = R"({
         "events" :
@@ -362,7 +361,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "content" : "value1",
                     "key2" : "value2",
                     "rawLog" : "value1\tvalue2"
@@ -374,7 +372,6 @@ void ProcessorParseRegexNativeUnittest::TestProcessRegexContent() {
             {
                 "contents" :
                 {
-                    "__file_offset__": "0",
                     "content" : "value3",
                     "key2" : "value4",
                     "rawLog" : "value3\tvalue4"
@@ -405,7 +402,7 @@ void ProcessorParseRegexNativeUnittest::TestAddLog() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
 
     auto sourceBuffer = std::make_shared<SourceBuffer>();
     auto logEvent = LogEvent::CreateEvent(sourceBuffer);
@@ -438,8 +435,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -447,8 +443,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -456,8 +451,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -465,8 +459,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -474,8 +467,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -487,11 +479,11 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeepUnmatch() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    
+
 
     int count = 5;
 
@@ -534,8 +526,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -543,8 +534,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -552,8 +542,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -561,8 +550,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -570,8 +558,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1",
-                    "__file_offset__": "0"
+                    "content" : "value1"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -583,11 +570,11 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventDiscardUnmatch() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    
+
 
     int count = 5;
 
@@ -630,8 +617,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -639,8 +625,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -648,8 +633,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -657,8 +641,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -666,8 +649,7 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
             {
                 "contents" :
                 {
-                    "content" : "value1\tvalue2",
-                    "__file_offset__": "0"
+                    "content" : "value1\tvalue2"
                 },
                 "timestamp" : 12345678901,
                 "type" : 1
@@ -680,11 +662,11 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     ProcessorParseRegexNative& processor = *(new ProcessorParseRegexNative);
     std::string pluginId = "testID";
     ProcessorInstance processorInstance(&processor, pluginId);
-    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, mContext));
+    APSARA_TEST_TRUE_FATAL(processorInstance.Init(config, ctx));
     std::vector<PipelineEventGroup> eventGroupList;
     eventGroupList.emplace_back(std::move(eventGroup));
     processorInstance.Process(eventGroupList);
-    
+
 
     int count = 5;
     // check observablity
@@ -703,6 +685,17 @@ void ProcessorParseRegexNativeUnittest::TestProcessEventKeyCountUnmatch() {
     APSARA_TEST_EQUAL_FATAL(0, processor.mProcParseErrorTotal->GetValue());
     APSARA_TEST_EQUAL_FATAL(count, processor.mProcKeyCountNotMatchErrorTotal->GetValue());
 }
+
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestInit)
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, OnSuccessfulInit)
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessWholeLine)
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessRegex)
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestAddLog)
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessEventKeepUnmatch)
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessEventDiscardUnmatch)
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessEventKeyCountUnmatch)
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessRegexRaw)
+UNIT_TEST_CASE(ProcessorParseRegexNativeUnittest, TestProcessRegexContent)
 
 } // namespace logtail
 

@@ -14,11 +14,11 @@
 
 #include "config/provider/CommonConfigProvider.h"
 
+#include <json/json.h>
+
 #include <filesystem>
 #include <iostream>
 #include <random>
-
-#include <json/json.h>
 
 #include "app_config/AppConfig.h"
 #include "application/Application.h"
@@ -28,8 +28,8 @@
 #include "logger/Logger.h"
 #include "monitor/LogFileProfiler.h"
 #include "sdk/Common.h"
-#include "sdk/Exception.h"
 #include "sdk/CurlImp.h"
+#include "sdk/Exception.h"
 
 using namespace std;
 
@@ -38,7 +38,17 @@ DEFINE_FLAG_INT32(config_update_interval, "second", 10);
 namespace logtail {
 
 CommonConfigProvider::~CommonConfigProvider() {
-    mThreadIsRunning = false;
+    {
+        lock_guard<mutex> lock(mThreadRunningMux);
+        mIsThreadRunning = false;
+    }
+    mStopCV.notify_one();
+    future_status s = mThreadRes.wait_for(chrono::seconds(1));
+    if (s == future_status::ready) {
+        LOG_INFO(sLogger, ("common config provider", "stopped successfully"));
+    } else {
+        LOG_WARNING(sLogger, ("common config provider", "forced to stopped"));
+    }
 }
 
 void CommonConfigProvider::Init(const string& dir) {
@@ -82,23 +92,23 @@ void CommonConfigProvider::Init(const string& dir) {
         LOG_INFO(sLogger, ("ilogtail_configserver_tags", confJson["ilogtail_tags"].toStyledString()));
     }
 
-    mCheckUpdateThread = thread([this] { CheckUpdateThread(); });
+    mThreadRes = async(launch::async, &CommonConfigProvider::CheckUpdateThread, this);
 }
 
 void CommonConfigProvider::CheckUpdateThread() {
+    LOG_INFO(sLogger, ("common config provider", "started"));
     usleep((rand() % 10) * 100 * 1000);
     int32_t lastCheckTime = 0;
-    mThreadIsRunning = true;
-    while (mThreadIsRunning.load()) {
+    unique_lock<mutex> lock(mThreadRunningMux);
+    while (mIsThreadRunning) {
         int32_t curTime = time(NULL);
         if (curTime - lastCheckTime >= INT32_FLAG(config_update_interval)) {
             GetConfigUpdate();
             lastCheckTime = curTime;
         }
-        if (mThreadIsRunning.load())
-            sleep(1);
-        else
+        if (mStopCV.wait_for(lock, std::chrono::seconds(3), [this]() { return !mIsThreadRunning; })) {
             break;
+        }
     }
 }
 
@@ -313,9 +323,9 @@ void CommonConfigProvider::UpdateRemoteConfig(
                 error_code ec;
                 filesystem::rename(tmpFilePath, filePath, ec);
                 if (ec) {
-                    LOG_WARNING(
-                        sLogger,
-                        ("failed to dump config file", filePath.string())("error code", ec.value())("error msg", ec.message()));
+                    LOG_WARNING(sLogger,
+                                ("failed to dump config file",
+                                 filePath.string())("error code", ec.value())("error msg", ec.message()));
                     filesystem::remove(tmpFilePath, ec);
                 }
                 break;

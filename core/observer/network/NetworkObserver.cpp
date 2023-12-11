@@ -501,7 +501,7 @@ void NetworkObserver::EventLoop() {
             sPStat->FlushMetrics();
             sPDStat->FlushMetrics(BOOL_FLAG(sls_observer_network_protocol_stat));
             mNetworkStatistic->FlushMetrics();
-            LogtailMonitor::Instance()->UpdateMetric("observer_container_category",
+            LogtailMonitor::GetInstance()->UpdateMetric("observer_container_category",
                                                      ContainerProcessGroupManager::GetInstance()->GetContainerType());
             lastProfilingTime = nowTimeNs;
         }

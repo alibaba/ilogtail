@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <json/json.h>
+
 #include <memory>
 #include <string>
 
@@ -19,7 +21,6 @@
 #include "common/JsonUtil.h"
 #include "common/LogstoreFeedbackKey.h"
 #include "config/Config.h"
-#include <json/json.h>
 #include "pipeline/Pipeline.h"
 #include "plugin/PluginRegistry.h"
 #include "processor/ProcessorSplitLogStringNative.h"
@@ -51,7 +52,8 @@ private:
 };
 
 void PipelineUnittest::OnSuccessfulInit() const {
-    Json::Value configJson, goPipelineWithInput, goPipelineWithoutInput;
+    unique_ptr<Json::Value> configJson;
+    Json::Value goPipelineWithInput, goPipelineWithoutInput;
     string configStr, goPipelineWithInputStr, goPipelineWithoutInputStr, errorMsg;
     unique_ptr<Config> config;
     unique_ptr<Pipeline> pipeline;
@@ -79,7 +81,8 @@ void PipelineUnittest::OnSuccessfulInit() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -111,7 +114,8 @@ void PipelineUnittest::OnSuccessfulInit() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -122,7 +126,9 @@ void PipelineUnittest::OnSuccessfulInit() const {
     APSARA_TEST_EQUAL("", pipeline->GetContext().GetProjectName());
     APSARA_TEST_EQUAL("", pipeline->GetContext().GetLogstoreName());
     APSARA_TEST_EQUAL("", pipeline->GetContext().GetRegion());
+#ifndef __ENTERPRISE__
     APSARA_TEST_EQUAL(GenerateLogstoreFeedBackKey("", ""), pipeline->GetContext().GetLogstoreKey());
+#endif
 
     // extensions and extended global param
     configStr = R"(
@@ -201,7 +207,8 @@ void PipelineUnittest::OnSuccessfulInit() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
@@ -215,7 +222,7 @@ void PipelineUnittest::OnSuccessfulInit() const {
 }
 
 void PipelineUnittest::OnFailedInit() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
     unique_ptr<Pipeline> pipeline;
@@ -240,7 +247,8 @@ void PipelineUnittest::OnFailedInit() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -274,7 +282,8 @@ void PipelineUnittest::OnFailedInit() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -298,7 +307,8 @@ void PipelineUnittest::OnFailedInit() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -306,7 +316,8 @@ void PipelineUnittest::OnFailedInit() const {
 }
 
 void PipelineUnittest::OnInitVariousTopology() const {
-    Json::Value configJson, goPipelineWithInput, goPipelineWithoutInput;
+    unique_ptr<Json::Value> configJson;
+    Json::Value goPipelineWithInput, goPipelineWithoutInput;
     string configStr, goPipelineWithInputStr, goPipelineWithoutInputStr, errorMsg;
     unique_ptr<Config> config;
     unique_ptr<Pipeline> pipeline;
@@ -341,7 +352,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -379,7 +391,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -416,7 +429,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -482,7 +496,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -559,7 +574,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -608,7 +624,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -680,7 +697,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -729,7 +747,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -775,7 +794,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -801,7 +821,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -865,7 +886,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -909,7 +931,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -965,7 +988,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -1006,7 +1030,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1044,7 +1069,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1103,7 +1129,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -1173,7 +1200,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -1217,7 +1245,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1282,7 +1311,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -1326,7 +1356,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1367,7 +1398,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1415,7 +1447,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -1474,7 +1507,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -1513,7 +1547,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1583,7 +1618,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -1632,7 +1668,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1678,7 +1715,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1751,7 +1789,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -1835,7 +1874,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -1887,7 +1927,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -1966,7 +2007,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -2018,7 +2060,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -2067,7 +2110,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 
@@ -2129,7 +2173,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -2202,7 +2247,8 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -2249,13 +2295,14 @@ void PipelineUnittest::OnInitVariousTopology() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_FALSE(config->Parse());
 }
 
 void PipelineUnittest::OnInputFileWithMultiline() const {
-    Json::Value configJson;
+    unique_ptr<Json::Value> configJson;
     string configStr, errorMsg;
     unique_ptr<Config> config;
     unique_ptr<Pipeline> pipeline;
@@ -2287,7 +2334,8 @@ void PipelineUnittest::OnInputFileWithMultiline() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -2323,7 +2371,8 @@ void PipelineUnittest::OnInputFileWithMultiline() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -2358,7 +2407,8 @@ void PipelineUnittest::OnInputFileWithMultiline() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -2391,7 +2441,8 @@ void PipelineUnittest::OnInputFileWithMultiline() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
     pipeline.reset(new Pipeline());
@@ -2401,7 +2452,8 @@ void PipelineUnittest::OnInputFileWithMultiline() const {
 }
 
 void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
-    Json::Value configJson, goPipelineWithoutInput, goPipelineWithInput;
+    unique_ptr<Json::Value> configJson;
+    Json::Value goPipelineWithInput, goPipelineWithoutInput;
     string configStr, goPipelineWithoutInputStr, goPipelineWithInputStr, errorMsg;
     unique_ptr<Config> config;
     unique_ptr<Pipeline> pipeline;
@@ -2450,7 +2502,8 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));
     APSARA_TEST_TRUE(config->Parse());
@@ -2532,7 +2585,8 @@ void PipelineUnittest::OnInputFileWithContainerDiscovery() const {
             ]
         }
     )";
-    APSARA_TEST_TRUE(ParseJsonTable(configStr, configJson, errorMsg));
+    configJson.reset(new Json::Value());
+    APSARA_TEST_TRUE(ParseJsonTable(configStr, *configJson, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithInputStr, goPipelineWithInput, errorMsg));
     APSARA_TEST_TRUE(ParseJsonTable(goPipelineWithoutInputStr, goPipelineWithoutInput, errorMsg));
     config.reset(new Config(configName, std::move(configJson)));

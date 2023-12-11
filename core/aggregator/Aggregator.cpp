@@ -206,7 +206,7 @@ bool Aggregator::Add(const std::string& projectName,
 
     LogstoreFeedBackKey feedBackKey
         = config == NULL ? GenerateLogstoreFeedBackKey(projectName, category) : config->GetLogstoreKey();
-    int64_t key, logstoreKey;
+    int64_t key, logstoreKey = 0;
     if (mergeType == FlusherSLS::Batch::MergeType::LOGSTORE) {
         logstoreKey = HashString(projectName + "_" + category);
         key = logstoreKey;

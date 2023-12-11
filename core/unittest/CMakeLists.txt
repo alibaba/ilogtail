@@ -38,6 +38,7 @@ link_leveldb(${PROJECT_NAME})
 link_spl(${PROJECT_NAME})
 link_tcmalloc(${PROJECT_NAME})
 
+link_asan(${PROJECT_NAME})
 if (UNIX)
     target_link_libraries(${PROJECT_NAME} pthread uuid dl)
     if (ENABLE_COMPATIBLE_MODE)

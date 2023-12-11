@@ -18,6 +18,7 @@
 
 #include "common/LogstoreFeedbackQueue.h"
 #include "common/ParamExtractor.h"
+#include "pipeline/PipelineContext.h"
 
 using namespace std;
 
@@ -26,24 +27,38 @@ namespace logtail {
 const unordered_set<string> GlobalConfig::sNativeParam
     = {"TopicType", "TopicFormat", "ProcessPriority", "EnableTimestampNanosecond", "UsingOldContentTag"};
 
-bool GlobalConfig::Init(const Json::Value& config, const string& configName, Json::Value& extendedParams) {
+bool GlobalConfig::Init(const Json::Value& config, const PipelineContext& ctx, Json::Value& extendedParams) {
     const string moduleName = "global";
     string errorMsg;
 
     // TopicType
     string topicType;
     if (!GetOptionalStringParam(config, "TopicType", topicType, errorMsg)) {
-        PARAM_WARNING_IGNORE(sLogger, errorMsg, moduleName, configName);
+        PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                             ctx.GetAlarm(),
+                             errorMsg,
+                             moduleName,
+                             ctx.GetConfigName(),
+                             ctx.GetProjectName(),
+                             ctx.GetLogstoreName(),
+                             ctx.GetRegion());
     } else if (topicType == "custom") {
         mTopicType = TopicType::CUSTOM;
     } else if (topicType == "machine_group_topic") {
         mTopicType = TopicType::MACHINE_GROUP_TOPIC;
-    } else if (topicType == "file_path") {
+    } else if (topicType == "filepath") {
         mTopicType = TopicType::FILEPATH;
     } else if (topicType == "default") {
         mTopicType = TopicType::DEFAULT;
-    } else if (!topicType.empty()) {
-        PARAM_WARNING_IGNORE(sLogger, errorMsg, moduleName, configName);
+    } else if (!topicType.empty() && topicType != "none") {
+        PARAM_WARNING_IGNORE(ctx.GetLogger(),
+                             ctx.GetAlarm(),
+                             "string param TopicType is not valid",
+                             moduleName,
+                             ctx.GetConfigName(),
+                             ctx.GetProjectName(),
+                             ctx.GetLogstoreName(),
+                             ctx.GetRegion());
     }
 
     // TopicFormat
@@ -52,37 +67,82 @@ bool GlobalConfig::Init(const Json::Value& config, const string& configName, Jso
         if (!GetMandatoryStringParam(config, "TopicFormat", mTopicFormat, errorMsg)) {
             mTopicType = TopicType::NONE;
             LOG_WARNING(
-                sLogger,
+                ctx.GetLogger(),
                 ("problem encountered in config parsing", errorMsg)("action", "ignore param TopicType and TopicFormat")(
-                    "module", moduleName)("config", configName));
+                    "module", moduleName)("config", ctx.GetConfigName()));
+            ctx.GetAlarm().SendAlarm(CATEGORY_CONFIG_ALARM,
+                                     errorMsg
+                                         + ": ignore param TopicType and TopicFormat, config: " + ctx.GetConfigName(),
+                                     ctx.GetProjectName(),
+                                     ctx.GetLogstoreName(),
+                                     ctx.GetRegion());
         } else if (mTopicType == TopicType::FILEPATH && !NormalizeTopicRegFormat(mTopicFormat)) {
             mTopicType = TopicType::NONE;
             mTopicFormat.clear();
-            LOG_WARNING(
-                sLogger,
-                ("problem encountered in config parsing", "param TopicFormat is not valid")(
-                    "action", "ignore param TopicType and TopicFormat")("module", moduleName)("config", configName));
+            LOG_WARNING(ctx.GetLogger(),
+                        ("problem encountered in config parsing",
+                         "string param TopicFormat is not valid")("action", "ignore param TopicType and TopicFormat")(
+                            "module", moduleName)("config", ctx.GetConfigName()));
+            ctx.GetAlarm().SendAlarm(
+                CATEGORY_CONFIG_ALARM,
+                "string param TopicFormat is not valid: ignore param TopicType and TopicFormat, config: "
+                    + ctx.GetConfigName(),
+                ctx.GetProjectName(),
+                ctx.GetLogstoreName(),
+                ctx.GetRegion());
         }
     }
 
     // ProcessPriority
     uint32_t priority = 0;
     if (!GetOptionalUIntParam(config, "ProcessPriority", priority, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, moduleName, configName);
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mProcessPriority,
+                              moduleName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     } else if (priority > MAX_CONFIG_PRIORITY_LEVEL) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, 0, moduleName, configName);
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mProcessPriority,
+                              moduleName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     } else {
         mProcessPriority = priority;
     }
 
     // EnableTimestampNanosecond
     if (!GetOptionalBoolParam(config, "EnableTimestampNanosecond", mEnableTimestampNanosecond, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, moduleName, configName);
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mEnableTimestampNanosecond,
+                              moduleName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     // UsingOldContentTag
     if (!GetOptionalBoolParam(config, "UsingOldContentTag", mUsingOldContentTag, errorMsg)) {
-        PARAM_WARNING_DEFAULT(sLogger, errorMsg, false, moduleName, configName);
+        PARAM_WARNING_DEFAULT(ctx.GetLogger(),
+                              ctx.GetAlarm(),
+                              errorMsg,
+                              mUsingOldContentTag,
+                              moduleName,
+                              ctx.GetConfigName(),
+                              ctx.GetProjectName(),
+                              ctx.GetLogstoreName(),
+                              ctx.GetRegion());
     }
 
     for (auto itr = config.begin(); itr != config.end(); ++itr) {
