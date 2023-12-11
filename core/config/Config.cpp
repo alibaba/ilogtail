@@ -107,7 +107,7 @@ bool Config::Parse() {
 #ifdef __ENTERPRISE__
     // to send alarm, project, logstore and region should be extracted first.
     key = "flushers";
-    const Json::Value* it = mDetail->find(key.c_str(), key.c_str() + key.size());
+    itr = mDetail->find(key.c_str(), key.c_str() + key.size());
     if (itr && itr->isArray()) {
         for (Json::Value::ArrayIndex i = 0; i < itr->size(); ++i) {
             const Json::Value& plugin = (*itr)[i];
@@ -254,7 +254,8 @@ bool Config::Parse() {
 #ifdef __ENTERPRISE__
         } else if (pluginName == "input_stream") {
             if (!AppConfig::GetInstance()->GetOpenStreamLog()) {
-                PARAM_ERROR_RETURN(sLogger, "stream log is not enabled", noModule, mName, mProject, mLogstore, mRegion);
+                PARAM_ERROR_RETURN(
+                    sLogger, alarm, "stream log is not enabled", noModule, mName, mProject, mLogstore, mRegion);
             }
             hasStreamInput = true;
 #endif
@@ -276,8 +277,14 @@ bool Config::Parse() {
         }
 #ifdef __ENTERPRISE__
         if (hasStreamInput && !itr->empty()) {
-            PARAM_ERROR_RETURN(
-                sLogger, "processor plugins coexist with input_stream", noModule, mName, mProject, mLogstore, mRegion);
+            PARAM_ERROR_RETURN(sLogger,
+                               alarm,
+                               "processor plugins coexist with input_stream",
+                               noModule,
+                               mName,
+                               mProject,
+                               mLogstore,
+                               mRegion);
         }
 #endif
         bool isCurrentPluginNative = true;
@@ -473,6 +480,7 @@ bool Config::Parse() {
 #ifdef __ENTERPRISE__
         if (hasStreamInput && pluginName != "flusher_sls") {
             PARAM_ERROR_RETURN(sLogger,
+                               alarm,
                                "flusher plugins other than flusher_sls coexist with input_stream",
                                noModule,
                                mName,
