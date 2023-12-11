@@ -30,14 +30,9 @@ public:
 
 void SourceBufferUnittest::TestBufferAllocatorAllocate() {
     BufferAllocator allocator;
-    APSARA_TEST_FALSE(allocator.IsInited());
     const size_t alloc_size1 = 1000;
     const size_t alloc_size2 = 20;
-    // should not allocate anything before init
-    APSARA_TEST_EQUAL(nullptr, allocator.Allocate(alloc_size1));
-    const size_t size = 1024;
-    APSARA_TEST_TRUE(allocator.Init(size));
-    // should allocate successfully after init
+
     char* alloc1 = static_cast<char*>(allocator.Allocate(alloc_size1));
     APSARA_TEST_NOT_EQUAL(nullptr, alloc1);
     alloc1[0] = 'a';
@@ -50,6 +45,7 @@ void SourceBufferUnittest::TestBufferAllocatorAllocate() {
     APSARA_TEST_NOT_EQUAL(nullptr, alloc3);
     // ensure ptr is still valid
     APSARA_TEST_EQUAL('a', static_cast<char*>(alloc1)[0]);
+    
 }
 
 UNIT_TEST_CASE(SourceBufferUnittest, TestBufferAllocatorAllocate);

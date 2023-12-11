@@ -91,6 +91,7 @@ public:
 
     void SetTag(const StringView& key, const StringView& val);
     void SetTag(const std::string& key, const std::string& val);
+    void SetTag(const StringBuffer& key, const StringView& val);
     void SetTagNoCopy(const StringBuffer& key, const StringBuffer& val);
     const StringView& GetTag(const StringView& key) const;
     const GroupTags& GetTags() const { return mTags; };

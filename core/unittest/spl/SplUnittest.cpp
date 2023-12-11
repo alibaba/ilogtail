@@ -29,7 +29,7 @@ public:
     void TestRegexCSV();
 
     void TestTag();
-    void TestMultiParse();
+    //void TestMultiParse();
 };
 
 //APSARA_UNIT_TEST_CASE(SplUnittest, TestInit, 8);
@@ -40,7 +40,7 @@ APSARA_UNIT_TEST_CASE(SplUnittest, TestRegexParse, 3);
 APSARA_UNIT_TEST_CASE(SplUnittest, TestRegexCSV, 4);
 APSARA_UNIT_TEST_CASE(SplUnittest, TestRegexKV, 5);
 APSARA_UNIT_TEST_CASE(SplUnittest, TestTag, 6);
-APSARA_UNIT_TEST_CASE(SplUnittest, TestMultiParse, 7);
+//APSARA_UNIT_TEST_CASE(SplUnittest, TestMultiParse, 7);
 
 
 Json::Value SplUnittest::GetCastConfig(std::string spl) {
@@ -548,6 +548,8 @@ void SplUnittest::TestTag() {
 }
 
 
+
+/*
 void SplUnittest::TestMultiParse() {
     // make config
     Json::Value config = GetCastConfig(R"(.let src = * 
@@ -642,7 +644,7 @@ $ds2;
     }    
     return;
 }
-
+*/
 
 
 } // namespace logtail

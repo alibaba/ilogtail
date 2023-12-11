@@ -20,11 +20,15 @@ void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& er
         if (length >= LENGTH_FIELD_PREFIX_TAG && 
                 field.compare(0, LENGTH_FIELD_PREFIX_TAG, FIELD_PREFIX_TAG) == 0) { // __tag__:*
             mTagsIdxs.push_back(i);
+            mColumns.emplace_back(mLogGroup->GetSourceBuffer()->CopyString(StringView(mIOHeader->columnNames[i].mPtr, mIOHeader->columnNames[i].mLen).substr(LENGTH_FIELD_PREFIX_TAG)));
         } else { // content
             mContentsIdxs.push_back(i);
+            mColumns.emplace_back(mLogGroup->GetSourceBuffer()->CopyString(header.columnNames[i].mPtr, header.columnNames[i].mLen));
         }
     }
-
+    //for (auto& columName : mIOHeader->columnNames) {
+    //    mColumns.emplace_back(mLogGroup->GetSourceBuffer()->CopyString(columName.mPtr, columName.mLen));
+    //}
 }
 
 void PipelineEventGroupOutput::addRow(
@@ -56,14 +60,14 @@ void PipelineEventGroupOutput::addRow(
             continue;
         }
         if (row[idxContent].isNull()) {
-            targetEvent->SetContent(StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen), StringView(NULL_STR.c_str(), NULL_STR.length()));
+            targetEvent->SetContent(mColumns[idxContent], StringView(NULL_STR.c_str(), NULL_STR.length()));
         } else {
-            targetEvent->SetContent(StringView(mIOHeader->columnNames[idxContent].mPtr, mIOHeader->columnNames[idxContent].mLen), StringView(row[idxContent].mPtr, row[idxContent].mLen));
+            targetEvent->SetContent(mColumns[idxContent], StringView(row[idxContent].mPtr, row[idxContent].mLen));
         }
     }
 
     for (const auto& idxTag : mTagsIdxs) {
-        mLogGroupList->at(logGroupKeyIdx).SetTag(StringView(mIOHeader->columnNames[idxTag].mPtr, mIOHeader->columnNames[idxTag].mLen).substr(LENGTH_FIELD_PREFIX_TAG), StringView(row[idxTag].mPtr, row[idxTag].mLen));
+        mLogGroupList->at(logGroupKeyIdx).SetTag(mColumns[idxTag], StringView(row[idxTag].mPtr, row[idxTag].mLen));
     }
     
     mLogGroupList->at(logGroupKeyIdx).AddEvent(std::move(targetEvent));
