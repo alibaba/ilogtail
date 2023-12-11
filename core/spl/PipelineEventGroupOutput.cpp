@@ -26,9 +26,6 @@ void PipelineEventGroupOutput::setHeader(const IOHeader& header, std::string& er
             mColumns.emplace_back(mLogGroup->GetSourceBuffer()->CopyString(header.columnNames[i].mPtr, header.columnNames[i].mLen));
         }
     }
-    //for (auto& columName : mIOHeader->columnNames) {
-    //    mColumns.emplace_back(mLogGroup->GetSourceBuffer()->CopyString(columName.mPtr, columName.mLen));
-    //}
 }
 
 void PipelineEventGroupOutput::addRow(
