@@ -40,6 +40,8 @@ class PipelineEventGroupOutput : public Output {
         std::vector<int32_t> mTagsIdxs;
         std::vector<int32_t> mContentsIdxs;
         size_t lastTagStrHash = -1;
+
+        std::vector<StringBuffer> mColumns;
 };
 
 using PipelineEventGroupOutputPtr = std::shared_ptr<PipelineEventGroupOutput>;
