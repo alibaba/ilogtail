@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	aliyunlog "github.com/aliyun/aliyun-log-go-sdk"
+	aliyunlog "github.com/alibabacloud-go/sls-20201230/v5/client"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
 	"github.com/alibaba/ilogtail/pkg/logger"
@@ -69,11 +69,11 @@ func (decm *Manager) removeUselessCache() {
 func (decm *Manager) run() {
 	decm.shutdown = make(chan struct{})
 	var err error
-	var clientInterface aliyunlog.ClientInterface
+	var logClient **aliyunlog.Client
 	// always retry when create client interface fail
 	sleepInterval := 0
 	for {
-		clientInterface, err = createClientInterface(*flags.LogServiceEndpoint, *flags.DefaultAccessKeyID, *flags.DefaultAccessKeySecret, *flags.DefaultSTSToken, decm.shutdown)
+		logClient, err = createClientInterface(*flags.LogServiceEndpoint, *flags.DefaultAccessKeyID, *flags.DefaultAccessKeySecret, *flags.DefaultSTSToken, decm.shutdown)
 		if err != nil {
 			logger.Error(context.Background(), "DOCKER_ENV_CONFIG_INIT_ALARM", "create log clien interface, err", err)
 			sleepInterval += 5
@@ -85,14 +85,14 @@ func (decm *Manager) run() {
 			break
 		}
 	}
-	if clientInterface == nil {
+	if logClient == nil || *logClient == nil {
 		return
 	}
 	logger.Info(context.Background(), "create client interface success", "")
 	// always retry when create operator wrapper fail
 	sleepInterval = 0
 	for {
-		decm.operationWrapper, err = createAliyunLogOperationWrapper(*flags.DefaultLogProject, clientInterface)
+		decm.operationWrapper, err = createAliyunLogOperationWrapper(*flags.DefaultLogProject, logClient)
 		if err != nil {
 			logger.Error(context.Background(), "DOCKER_ENV_CONFIG_INIT_ALARM", "create log operation wrapper, err", err)
 			sleepInterval += 5

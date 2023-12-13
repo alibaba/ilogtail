@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	aliyunlog "github.com/aliyun/aliyun-log-go-sdk"
+	aliyunlog "github.com/alibabacloud-go/sls-20201230/v5/client"
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/alibaba/ilogtail/pkg/flags"
@@ -133,9 +133,10 @@ const (
 
 // AliyunLogConfigDetail logtail config detail
 type AliyunLogConfigDetail struct {
-	ConfigName    string                 `json:"configName"`
-	InputType     string                 `json:"inputType"`
-	LogtailConfig map[string]interface{} `json:"inputDetail"`
+	ConfigName string                   `json:"configName"`
+	Inputs     []map[string]interface{} `json:"inputs"`
+	Global     map[string]interface{}   `json:"global"`
+	Processors []map[string]interface{} `json:"processors"`
 }
 
 // Hash generate sha256 hash
@@ -148,15 +149,6 @@ func (alcs *AliyunLogConfigSpec) hash(hashValue string) {
 // Key return the unique key
 func (alcs *AliyunLogConfigSpec) Key() string {
 	return alcs.Project + "@" + alcs.LogtailConfig.ConfigName + "@" + alcs.ContainerName
-}
-
-// InitFromDockerInfo init AliyunLogConfigDetail from docker info with specific config name
-func (alcs *AliyunLogConfigDetail) InitFromDockerInfo(dockerInfo *helper.DockerInfoDetail,
-	config string,
-	configKeys []string,
-	configValues []string) error {
-
-	return nil
 }
 
 // all log config spec, must been cleared before next process
@@ -183,8 +175,9 @@ func isDockerStdout(configType string) bool {
 
 // nolint: unparam
 func initDockerStdoutConfig(dockerInfo *helper.DockerInfoDetail, config *AliyunLogConfigSpec, configType string) {
-	config.LogtailConfig.InputType = "plugin"
+	config.LogtailConfig.Inputs = make([]map[string]interface{}, 0, 1)
 	stdoutDetail := make(map[string]interface{})
+	stdoutDetail["Type"] = "service_docker_stdout"
 	switch configType {
 	case "stdout":
 		stdoutDetail["Stdout"] = true
@@ -206,52 +199,55 @@ func initDockerStdoutConfig(dockerInfo *helper.DockerInfoDetail, config *AliyunL
 	stdoutDetail["IncludeEnv"] = map[string]string{
 		*flags.LogConfigPrefix + config.LogtailConfig.ConfigName: configType,
 	}
-	stdoutConfig := map[string]interface{}{
-		"type":   "service_docker_stdout",
-		"detail": stdoutDetail,
-	}
-	config.LogtailConfig.LogtailConfig = map[string]interface{}{
-		"plugin": map[string]interface{}{
-			"inputs": []interface{}{stdoutConfig},
-			"global": map[string]interface{}{
-				"AlwaysOnline": true,
-			},
-		},
-	}
+	config.LogtailConfig.Inputs = append(config.LogtailConfig.Inputs, stdoutDetail)
+	config.LogtailConfig.Global = map[string]interface{}{"AlwaysOnline": true}
 }
 
 const invalidFilePattern = "invalid_file_pattern"
 
 // nolint: unparam
 func initFileConfig(k8sInfo *helper.K8SInfo, config *AliyunLogConfigSpec, filePath string, jsonFlag, dockerFile bool) {
-	config.LogtailConfig.InputType = "file"
+	config.LogtailConfig.Inputs = make([]map[string]interface{}, 0, 1)
 	logPath, filePattern, err := splitLogPathAndFilePattern(filePath)
+	var input map[string]interface{}
 	if err != nil {
 		logger.Error(context.Background(), "INVALID_DOCKER_ENV_CONFIG_ALARM", "invalid file config, you must input full file path", filePath, err)
 	}
 
 	if !jsonFlag {
-		config.LogtailConfig.LogtailConfig = map[string]interface{}{
-			"logType":     "common_reg_log",
-			"logPath":     logPath,
-			"filePattern": filePattern,
-			"dockerFile":  dockerFile,
-			"dockerIncludeEnv": map[string]string{
-				*flags.LogConfigPrefix + config.LogtailConfig.ConfigName: filePath,
+		input = map[string]interface{}{
+			"Type":                     "input_file",
+			"FilePaths":                []string{logPath + "/**/" + filePattern},
+			"EnableContainerDiscovery": dockerFile,
+			"ContainerFilters": map[string]map[string]interface{}{
+				"IncludeEnv": {
+					*flags.LogConfigPrefix + config.LogtailConfig.ConfigName: filePath,
+				},
 			},
+			"MaxDirSearchDepth": 20,
+			"FileEncoding":      "utf8",
 		}
 	} else {
-		config.LogtailConfig.LogtailConfig = map[string]interface{}{
-			"logType":     "json_log",
-			"logPath":     logPath,
-			"filePattern": filePattern,
-			"dockerFile":  dockerFile,
-			"dockerIncludeEnv": map[string]string{
-				*flags.LogConfigPrefix + config.LogtailConfig.ConfigName: filePath,
+		input = map[string]interface{}{
+			"Type":                     "input_file",
+			"FilePaths":                []string{logPath + "/**/" + filePattern},
+			"EnableContainerDiscovery": dockerFile,
+			"ContainerFilters": map[string]map[string]interface{}{
+				"IncludeEnv": {
+					*flags.LogConfigPrefix + config.LogtailConfig.ConfigName: filePath,
+				},
+			},
+			"MaxDirSearchDepth": 20,
+			"FileEncoding":      "utf8",
+		}
+		config.LogtailConfig.Processors = []map[string]interface{}{
+			{
+				"SourceKey": "content",
+				"Type":      "processor_parse_json_native",
 			},
 		}
 	}
-
+	config.LogtailConfig.Inputs = append(config.LogtailConfig.Inputs, input)
 	//  remove container name limit, this will not work when pod with a sidecar/init container which has same env
 	// if len(k8sInfo.Namespace) > 0 {
 	// 	config.LogtailConfig.LogtailConfig["dockerIncludeLabel"] = map[string]string{
